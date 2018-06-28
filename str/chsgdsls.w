@@ -639,7 +639,6 @@ if p-type-doc = "gds-matr"
    or p-type-doc = "inv"
    or p-type-doc = "price-list"
    or p-type-doc = "accor"
-   or p-type-doc = "elcos"
    or p-type-doc = "alc-type"
    or p-type-doc = "season"
    or p-type-doc = "order" + {&f-p}

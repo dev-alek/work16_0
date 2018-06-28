@@ -47,13 +47,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   case buf_ext-classif.classif-subject:
     when {&table_clients} then do:
       case buf_ext-classif.classif-name:
-        when {&extclass_clients_elcos} then do:
-          if g#db-num > 0 then do:
-            v-mess = substitute("Запрещено удалять коды клиента системы ЭЛКОС-ТАЛОН в УБД").
-            run err-mess in this-procedure ( input-output v-mess).
-            return error (if p-silent = yes then v-mess else '':U).
-          end.
-        end.
         when {&extclass_clients_parus} then do:
           if g#db-num > 0 then do:
             v-mess = substitute("Запрещено удалять коды клиента системы ПАРУС в УБД").
@@ -80,13 +73,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
     when {&table_goods} then do:
       case buf_ext-classif.classif-name:
-        when {&extclass_goods_elcos} then do:
-          if g#db-num > 0 then do:
-            v-mess = substitute("Запрещено удалять типы топлива для ЭЛКОС-ТАЛОН в УБД").
-            run err-mess in this-procedure ( input-output v-mess).
-            return error (if p-silent = yes then v-mess else '':U).
-          end.
-        end.
         when {&extclass_goods_accor} then do:
           if g#db-num > 0 then do:
             v-mess = substitute("Запрещено удалять типы топлива для выгрузки в АККОР в УБД").
@@ -191,16 +177,6 @@ CASE p-silent:
                               , p-mess)
             .
           end.
-          when {&extclass_clients_elcos} then do:
-            assign
-            p-mess = substitute("Код клиента в системе ЭЛКОС ТАЛОН: &1 для клиента &2&3"
-                              , buf_ext-classif.key#_one
-                              , v-obj-type
-                              , v-obj-code
-                              , {&new-line}
-                              , p-mess)
-            .
-          end.
           when {&extclass_clients_parus} then do:
             assign
             p-mess = substitute("Код клиента в системе ПАРУС: &1 для клиента &2&3"
@@ -244,14 +220,6 @@ CASE p-silent:
                                     , v-value-list, {&delim-key}))
         no-error .
         case buf_ext-classif.classif-name:
-          when {&extclass_goods_elcos} then do:
-            assign
-            p-mess = substitute("Код товара &1"
-                              , v-gds-code
-                              , {&new-line}
-                              , p-mess)
-            .
-          end.
           when  {&extclass_goods_accor} then do:
             assign
             p-mess = substitute("Код товара &1"

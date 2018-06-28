@@ -901,16 +901,6 @@ on error  undo , return error substitute( "&1. &2&3&4", vss-workfile, return-val
        run err-mess in this-procedure ( input-output v-mess).
        return error v-mess.
     end.
-case curr_c-ext-classif.classif-name:
-  when {&extclass_clients_elcos} then do:
-&scop fields-name-list "key#_one"
-   assign
-   v-label-param = "key#_one" + {&delim-par} + "Код клиента " + {&delim-par} + ""
-   p-description = "Классификатор ЭЛКОС-ТАЛОН"
-   .
-
-  end.
-end case.
  run proc-full-temp-changes in this-procedure (
                                              input  (buf_c-cli-hist.action = integer({&hn-create}))
                                             ,input  (buf_c-cli-hist.action = integer({&hn-delete}))

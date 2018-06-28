@@ -102,30 +102,6 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
   case p-classif-subject:
     when {&table_clients} then do:
       case p-classif-name:
-        when {&extclass_clients_elcos} then do:
-          if g#db-num > 0 then do:
-            v-mess = substitute("Запрещено добавлять коды клиента системы ЭЛКОС-ТАЛОН в УБД").
-            run err-mess in this-procedure ( input-output v-mess).
-            undo _main, return error (if p-silent = yes then v-mess else '':U).
-          end.
-          assign
-          v-obj-type = entry(lookup("obj-type":U
-                                            , v-field-list
-                                            , {&delim-key})
-                                      , v-value-list, {&delim-key})
-          v-obj-code = integer(entry(lookup("obj-code":U
-                                            , v-field-list
-                                            , {&delim-key})
-                                      , v-value-list, {&delim-key}))
-          no-error .
-          if not (v-obj-type = {&cmp}
-                  or
-                  v-obj-type = {&prs}) then do:
-            v-mess = substitute("В классификатор Клиенты системы ЭЛКОС-ТАЛОН можно добавлять только &1 или &2", {&cmp}, {&prs}).
-            run err-mess in this-procedure ( input-output v-mess).
-            undo _main, return error (if p-silent = yes then v-mess else '':U).
-        end.
-        end. /*when {&extclass_clients_elcos} then do:*/
         when {&extclass_clients_parus} then do:
           if g#db-num > 0 then do:
             v-mess = substitute("Запрещено добавлять коды клиента системы ПАРУС в УБД").
@@ -471,17 +447,12 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       define variable v-s   as logical   no-undo .
       define buffer buf_goods for ub.goods.
       case p-classif-name:
-        when {&extclass_goods_elcos}
-        or
         when {&extclass_goods_accor}
         or
         when {&extclass_goods_easyfuel}
         then do:
           if g#db-num > 0 then do:
             case p-classif-name:
-              when {&extclass_goods_elcos}  then do:
-                v-mess = substitute("Запрещено добавлять типы топлива в классификатор ЭЛКОС-ТАЛОН в УБД").
-              end.
               when {&extclass_goods_accor} then do:
                 v-mess = substitute("Запрещено добавлять типы топлива в классификатор АККОР в УБД").
               end.
@@ -681,16 +652,6 @@ CASE p-silent:
                               , p-mess)
             .
           end.
-          when {&extclass_clients_elcos} then do:
-            assign
-          p-mess = substitute("Код клиента в системе ЭЛКОС ТАЛОН: &1 для клиента &2&3&4&5"
-                              , p-key#_one
-                              , v-obj-type
-                              , v-obj-code
-                              , {&new-line}
-                              , p-mess)
-            .
-          end.
           when {&extclass_clients_parus} then do:
             assign
           p-mess = substitute("Код клиента в системе ПАРУС: &1 для клиента &2&3&4&5"
@@ -728,14 +689,6 @@ CASE p-silent:
       end.
       when {&table_goods} then do:
         case p-classif-name:
-          when {&extclass_goods_elcos} then do:
-            assign
-          p-mess = substitute("Код товара &1&2&3"
-                              , v-gds-code
-                              , {&new-line}
-                              , p-mess)
-            .
-          end.
           when  {&extclass_goods_accor} then do:
             assign
           p-mess = substitute("Код товара &1&2&3"
