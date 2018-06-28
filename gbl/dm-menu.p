@@ -414,7 +414,15 @@ procedure proc-create-menu-item :
   end.
 
 end procedure. /* proc-create-menu-item */
-
+ PROCEDURE journal-vsd :
+    DEFINE INPUT PARAMETER parparentproc        AS HANDLE               NO-UNDO.
+    DEFINE VARIABLE v-vsd-dialog AS  CLASS  ibs.th.ref.journal_vsd_abl  .  
+     v-vsd-dialog = NEW ibs.th.ref.journal_vsd_abl (  parparentproc  ) .
+     v-vsd-dialog:ShowModalDialog().
+     finally: 
+     DELETE  OBJECT v-vsd-dialog no-error.
+     end finally.
+END PROCEDURE. 
 procedure run-menu-drop-procedure :
 
   define input  parameter p-item-handle as widget-handle no-undo .
@@ -10450,6 +10458,44 @@ procedure chk-alcohol :
   end.
 
 end procedure. /* chk-alcohol */
+
+procedure chk-mercuri :
+
+  define output parameter p-enable-item as logical   no-undo .
+
+  define variable v-mercuri as character no-undo .
+  define variable par-type  as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    { gbl/conf-rd.i
+      "'mercuri':u"
+      "'':u"
+      "'':u"
+      0
+      "'':u"
+      "'':u"
+      "'':u"
+      no
+      v-mercuri
+      par-type
+      no-error
+    }
+    if v-mercuri = 'no':u or v-mercuri = ""
+    then do:
+      assign
+        p-enable-item = false
+      .
+    end.
+    else do:
+      assign
+        p-enable-item = true
+      .
+    end.
+  end.
+
+end procedure. /* chk-mercuri */
 
 procedure chk-holding :
 
