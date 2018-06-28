@@ -5843,6 +5843,33 @@ end procedure.
 &scop manual-edit-attr-sum-grp-gl  1
 &scop batch-edit-attr-sum-grp-gl  1
 
+
+/* Является подконтрольным ФГИС "Меркурий" */
+&glob type-attr-mercur_FGIS {&type-log}
+&glob format-attr-mercur_FGIS  "+/-"
+&glob label-attr-mercur_FGIS   "Является подконтрольным ФГИС Меркурий"
+&glob tooltip-attr-mercur_FGIS   "Является подконтрольным ФГИС Меркурий"
+&glob user-can-edit-attr-mercur_FGIS  true
+&glob output-display-attr-mercur_FGIS  true
+&glob other-attr-mercur_FGIS  ""
+&glob news-attr-mercur_FGIS true
+&glob copy-attr-mercur_FGIS  true
+&scop manual-edit-attr-mercur_FGIS  1
+&scop batch-edit-attr-mercur_FGIS  1
+
+/* Является скоропортящейся продукцией */
+&glob type-attr-perishable {&type-log}
+&glob format-attr-perishable  "+/-"
+&glob label-attr-perishable   "Является скоропортящейся продукцией"
+&glob tooltip-attr-perishable   "Является скоропортящейся продукцией"
+&glob user-can-edit-attr-perishable  true
+&glob output-display-attr-perishable  true
+&glob other-attr-perishable  ""
+&glob news-attr-perishable true
+&glob copy-attr-perishable  true
+&scop manual-edit-attr-perishable  1
+&scop batch-edit-attr-perishable  1
+
 &glob type-attr-15x80 {&type-char}
 &glob format-attr-15x80  "X(255)"
 &glob label-attr-15x80   "Текст поля СОСТАВ 15x80 (DIGI-SM)"
@@ -6180,6 +6207,10 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-mark
       {&attr-temp-full-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-temp-full-code}
+      &scop attr-code attr-perishable
+      {&attr-temp-full-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-full-code}
       &scop attr-code attr-15x80
@@ -6265,6 +6296,10 @@ do
       &scop attr-code attr-fasovka
       {&attr-temp-code}
       &scop attr-code attr-mark
+      {&attr-temp-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-temp-code}
+      &scop attr-code attr-perishable
       {&attr-temp-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-code}
@@ -6587,6 +6622,10 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-news-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-news-code}
+      &scop attr-code attr-perishable
+      {&attr-news-code}
       &scop attr-code attr-15x80
       {&attr-news-code}
       &scop attr-code attr-8x50
@@ -6666,6 +6705,10 @@ procedure gds-attr-copy :
       &scop attr-code attr-mark
       {&attr-copy-code}
       &scop attr-code attr-sum-grp-gl
+      {&attr-copy-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-copy-code}
+      &scop attr-code attr-perishable
       {&attr-copy-code}
       &scop attr-code attr-15x80
       {&attr-copy-code}
@@ -7133,6 +7176,10 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-manual-edit-code}
+      &scop attr-code attr-perishable
+      {&attr-manual-edit-code}
       &scop attr-code attr-mark
       {&attr-manual-edit-code}
       &scop attr-code attr-sum-grp-gl
@@ -7217,6 +7264,10 @@ do
       &scop attr-code attr-mark
       {&attr-batch-edit-code}
       &scop attr-code attr-sum-grp-gl
+      {&attr-batch-edit-code}
+      &scop attr-code attr-mercur_FGIS
+      {&attr-batch-edit-code}
+      &scop attr-code attr-perishable
       {&attr-batch-edit-code}
       &scop attr-code attr-calories
       {&attr-batch-edit-code}
