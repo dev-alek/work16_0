@@ -30,7 +30,6 @@ define variable vss-description as character no-undo initial "Триггер на удалени
 { cmp/trg-def.i  }
 { str/lib-trn.i  }
 { gbl/key-rec.i  }
-{ str/marks.i  }
 
 main-block:
 do transaction
