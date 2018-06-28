@@ -637,6 +637,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-staff-options}~
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
+,{&bef-attr-mercur}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list {&thbjattr-list}" ).
 
@@ -706,6 +707,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-
 ,{&bef-attr-staff-options}~
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
+,{&bef-attr-mercur}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list-all {&thbjattr-list-all}" ).
 
