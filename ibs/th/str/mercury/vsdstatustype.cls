@@ -36,10 +36,16 @@ class ibs.th.str.mercury.vsdstatustype:
   define property IsUtilized as integer init 4 no-undo
     get.
 
-  define property StatusList as character init "Требует проверки,Ошибка проверки,К гашению,Ошибка гашения,Погашен" no-undo
+  define property IsSent as integer init 5 no-undo
     get.
 
+  define property StatusList as character init "Требует проверки,Ошибка проверки,К гашению,Ошибка гашения,Погашен,Отправлен" no-undo
+    get.
+    
   define property VSDTypeList as character init "Входящий,Исходящий,Производственный,Возвратный,Транспортный" no-undo
+    get.
+  
+  define property PendingRepaymentList as character init "4,5" no-undo
     get.
 
   define property IsNeedCheckLbl as character no-undo
@@ -74,6 +80,13 @@ class ibs.th.str.mercury.vsdstatustype:
     get:
       IsUtilizedLbl = entry (5, StatusList).
       return IsUtilizedLbl.
+    end.
+    private set.
+    
+  define property IsSentLbl as character no-undo
+    get:
+      IsSentLbl = entry (6, StatusList).
+      return IsSentLbl.
     end.
     private set.
     
@@ -148,6 +161,12 @@ class ibs.th.str.mercury.vsdstatustype:
     return v-int.
   end.
   
+  method public Logical PendingRepayment (intSts as integer):
+    define variable v-int as integer no-undo.
+    v-int = lookup (string(intSts), PendingRepaymentList).
+    return v-int ne 0.
+  end.
+
   method public character VSDTypeLbl (intVSDType as integer):
     define variable v-str as character no-undo.
     v-str = entry (intVSDType, VSDTypeList).

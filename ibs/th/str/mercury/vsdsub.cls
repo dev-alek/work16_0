@@ -301,6 +301,12 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
       return vsdSts:StatusLbl(Status_).
     end.
     private set.
+    
+  define property PendingRepayment as logical no-undo
+    get:
+      return vsdSts:PendingRepayment(Status_).
+    end.
+    private set.  
 
   define property PartKey as character no-undo
     get.

@@ -65,11 +65,12 @@ DEFINE INPUT-OUTPUT PARAMETER DATASET FOR ds-vsd-set.
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-1 RECT-2 Btn_Cancel Btn_OK vTime ~
-v-date-start v-date-end vdoc-code vReqVerif vToExtin vRep vFalVerif ~
-vFalExting SelObj b-obj b-spisok 
+&Scoped-Define ENABLED-OBJECTS RECT-1 RECT-2 Btn_OK Btn_Cancel btn_cler ~
+vTime v-date-start v-date-end vdoc-code vReqVerif vToExtin vRep vFalVerif ~
+vFalExting vSent SelObj b-obj b-spisok 
 &Scoped-Define DISPLAYED-OBJECTS vTime v-date-start v-date-end vdoc-code ~
-vReqVerif vToExtin vRep vFalVerif vFalExting v-obj-list SelObj v-gds-list 
+vReqVerif vToExtin vRep vFalVerif vFalExting vSent v-obj-list SelObj ~
+v-gds-list 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -89,19 +90,23 @@ DEFINE BUTTON b-obj DEFAULT
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "":L 
-     SIZE 8 BY 1.1.
+     SIZE 8 BY 1.08.
 
 DEFINE BUTTON b-spisok 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "Товары" 
-     SIZE 8 BY 1.91 TOOLTIP "Выбор товаров".
+     SIZE 8 BY 1.92 TOOLTIP "Выбор товаров".
 
 DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
      LABEL "Отменить" 
      SIZE 12 BY 1
      BGCOLOR 8 .
+
+DEFINE BUTTON btn_cler 
+     LABEL "Сброс" 
+     SIZE 12 BY 1.
 
 DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "Применить" 
@@ -114,7 +119,7 @@ DEFINE VARIABLE v-gds-list AS CHARACTER
 
 DEFINE VARIABLE v-obj-list AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL LARGE
-     SIZE 58 BY 3.81 NO-UNDO.
+     SIZE 58 BY 3.79 NO-UNDO.
 
 DEFINE VARIABLE v-date-end AS DATE FORMAT "99/99/9999":U 
      LABEL "По" 
@@ -142,15 +147,15 @@ DEFINE VARIABLE SelObj AS CHARACTER INITIAL "Глобально"
           "Глобально", "Глобально",
 "По фирме", "По фирме",
 "Выборочно", "Выборочно"
-     SIZE 17 BY 2.19 NO-UNDO.
+     SIZE 17 BY 2.21 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 92 BY 4.52.
+     SIZE 92 BY 4.5.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 92 BY 4.52.
+     SIZE 92 BY 4.5.
 
 DEFINE VARIABLE vFalExting AS LOGICAL INITIAL yes 
      LABEL "Ошибка гашения" 
@@ -182,6 +187,11 @@ DEFINE VARIABLE vReqVerif AS LOGICAL INITIAL yes
      VIEW-AS TOGGLE-BOX
      SIZE 22 BY 1 NO-UNDO.
 
+DEFINE VARIABLE vSent AS LOGICAL INITIAL yes 
+     LABEL "Отправлен" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 11.13 BY .83 NO-UNDO.
+
 DEFINE VARIABLE vToExtin AS LOGICAL INITIAL yes 
      LABEL "К гашению" 
      VIEW-AS TOGGLE-BOX
@@ -196,30 +206,32 @@ DEFINE VARIABLE vToRegi AS LOGICAL INITIAL no
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     Btn_Cancel AT ROW 1.48 COL 8
-     Btn_OK AT ROW 1.48 COL 26
-     vTime AT ROW 3.86 COL 16 COLON-ALIGNED WIDGET-ID 22
-     v-date-start AT ROW 3.86 COL 34 COLON-ALIGNED WIDGET-ID 36
-     v-date-end AT ROW 3.86 COL 53 COLON-ALIGNED WIDGET-ID 38
-     vdoc-code AT ROW 3.86 COL 81 COLON-ALIGNED WIDGET-ID 40
-     vReqVerif AT ROW 5.52 COL 6 WIDGET-ID 2
-     vToExtin AT ROW 5.52 COL 38 WIDGET-ID 6
-     vRep AT ROW 5.52 COL 62 WIDGET-ID 10
+     Btn_OK AT ROW 1.5 COL 7
+     Btn_Cancel AT ROW 1.5 COL 22.5
+     btn_cler AT ROW 1.5 COL 35 WIDGET-ID 44
+     vTime AT ROW 3.88 COL 16 COLON-ALIGNED WIDGET-ID 22
+     v-date-start AT ROW 3.88 COL 34 COLON-ALIGNED WIDGET-ID 36
+     v-date-end AT ROW 3.88 COL 53 COLON-ALIGNED WIDGET-ID 38
+     vdoc-code AT ROW 3.88 COL 81 COLON-ALIGNED WIDGET-ID 40
+     vReqVerif AT ROW 5.5 COL 6 WIDGET-ID 2
+     vToExtin AT ROW 5.5 COL 38 WIDGET-ID 6
+     vRep AT ROW 5.5 COL 62 WIDGET-ID 10
      vFalVerif AT ROW 6.71 COL 6 WIDGET-ID 4
      vFalExting AT ROW 6.71 COL 38 WIDGET-ID 8
-     v-obj-list AT ROW 9.1 COL 34 NO-LABEL
-     SelObj AT ROW 10.05 COL 6 NO-LABEL
-     b-obj AT ROW 11.24 COL 23
-     v-gds-list AT ROW 13.86 COL 34 NO-LABEL
+     vSent AT ROW 6.71 COL 62 WIDGET-ID 42
+     v-obj-list AT ROW 9.08 COL 34 NO-LABEL
+     SelObj AT ROW 10.04 COL 6 NO-LABEL
+     b-obj AT ROW 11.25 COL 23
+     v-gds-list AT ROW 13.88 COL 34 NO-LABEL
      b-spisok AT ROW 15.71 COL 19 WIDGET-ID 26
-     vToRegi AT ROW 18.14 COL 7 WIDGET-ID 12
-     vFalRegis AT ROW 18.14 COL 27 WIDGET-ID 14
-     vRegis AT ROW 18.14 COL 54 WIDGET-ID 16
+     vToRegi AT ROW 18.13 COL 7 WIDGET-ID 12
+     vFalRegis AT ROW 18.13 COL 27 WIDGET-ID 14
+     vRegis AT ROW 18.13 COL 54 WIDGET-ID 16
      "Выбор товаров" VIEW-AS TEXT
-          SIZE 17 BY 1.67 TOOLTIP "Выбор товаров" AT ROW 13.86 COL 14 WIDGET-ID 30
-     RECT-1 AT ROW 8.86 COL 3 WIDGET-ID 32
+          SIZE 17 BY 1.67 TOOLTIP "Выбор товаров" AT ROW 13.88 COL 14 WIDGET-ID 30
+     RECT-1 AT ROW 8.88 COL 3 WIDGET-ID 32
      RECT-2 AT ROW 13.38 COL 3 WIDGET-ID 34
-     SPACE(3.59) SKIP(2.09)
+     SPACE(3.59) SKIP(2.11)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Фильтр ВСД"
@@ -350,6 +362,84 @@ DO:
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btn_cler
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_cler Dialog-Frame
+ON CHOOSE OF btn_cler IN FRAME Dialog-Frame /* Сброс */
+DO:
+   DEFINE VARIABLE v-object-available AS LOGICAL   NO-UNDO .
+   ASSIGN 
+        v-date-end   = TODAY
+        v-date-start = TODAY
+        vFalExting   = YES
+        vFalVerif    = YES 
+        vRep         = YES 
+        vReqVerif    = YES 
+        vToExtin     = YES
+        vTime        = 0
+        tt-vsd-filt.doc-code = ?
+        SelObj       = "Глобально"
+        v-obj-list   = "" 
+         
+        .
+     
+      
+      FOR EACH t-obj-list:
+         delete t-obj-list.
+      end.
+      
+      FOR EACH t-obj-list:
+         delete tt-gds-list.
+      end.
+      
+      FOR EACH db NO-LOCK
+        ON ERROR UNDO, RETURN NO-APPLY
+        :
+        FOR EACH clients NO-LOCK
+            WHERE clients.db-num = db.db-num
+            ON ERROR UNDO, RETURN NO-APPLY
+            :
+            { gbl/usobjava.i
+            v-cntxt-db-num
+            {&action-head-code-main}
+            v-cntxt-userid
+            clients.obj-type
+            clients.obj-code
+            v-object-available
+            no-error
+          }
+            IF ERROR-STATUS :ERROR
+                THEN 
+            DO:
+                MESSAGE
+                    vss-workfile vss-revision vss-description SKIP
+                    "Ошибка при вызове процедуры gbl/usobjava.i" SKIP
+                    ERROR-STATUS :GET-MESSAGE(1) SKIP
+                    RETURN-VALUE SKIP
+                    VIEW-AS ALERT-BOX ERROR .
+                UNDO, RETURN NO-APPLY .
+            END.
+
+            IF v-object-available = TRUE
+                THEN 
+            DO:
+                CREATE t-obj-list .
+                ASSIGN
+                    t-obj-list.obj-type = clients.obj-type
+                    t-obj-list.obj-code = clients.obj-code
+                    v-obj-list = v-obj-list + t-obj-list.obj-type + string( t-obj-list.obj-code ) + " ":U
+                    no-error.
+            END.
+        END.
+    END.
+     DISPLAY vTime v-date-start v-date-end vReqVerif vFalVerif vToExtin vFalExting 
+          vRep vSent SelObj v-obj-list
+      WITH FRAME Dialog-Frame.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Btn_OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
 ON CHOOSE OF Btn_OK IN FRAME Dialog-Frame /* Применить */
@@ -372,6 +462,8 @@ DO:
         vReqVerif
         vToExtin
         vdoc-code
+        vSent.
+    Assign
         tt-vsd-filt.date-end    = v-date-end    
         tt-vsd-filt.date-start  = v-date-start 
         tt-vsd-filt.fTime       = vtime         
@@ -380,8 +472,10 @@ DO:
         tt-vsd-filt.Rep         = vRep         
         tt-vsd-filt.ReqVerif    = vReqVerif     
         tt-vsd-filt.ToExtin     = vToExtin
+        tt-vsd-filt.Sent        = vSent
         tt-vsd-filt.doc-code    = vdoc-code      
     .
+   
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -548,8 +642,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         vReqVerif    = tt-vsd-filt.ReqVerif
         vToExtin     = tt-vsd-filt.ToExtin
         vdoc-code    = tt-vsd-filt.doc-code
+        vSent        = tt-vsd-filt.Sent
         .
-       
     { gbl/getcntxt.i get }
     
     . 
@@ -597,11 +691,11 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY vTime v-date-start v-date-end vdoc-code vReqVerif vToExtin vRep 
-          vFalVerif vFalExting v-obj-list SelObj v-gds-list 
+          vFalVerif vFalExting vSent v-obj-list SelObj v-gds-list 
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-1 RECT-2 Btn_Cancel Btn_OK vTime v-date-start v-date-end 
-         vdoc-code vReqVerif vToExtin vRep vFalVerif vFalExting SelObj b-obj 
-         b-spisok 
+  ENABLE RECT-1 RECT-2 Btn_OK Btn_Cancel btn_cler vTime v-date-start v-date-end 
+         vdoc-code vReqVerif vToExtin vRep vFalVerif vFalExting vSent SelObj 
+         b-obj b-spisok 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
