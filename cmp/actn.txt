@@ -1,4 +1,4 @@
-"159"
+"160
 "action-group"
 "edi"      "EDI"                     "Работа с системой EDI"                  "chk-is-edi"
 "action-group"
@@ -602,4 +602,5 @@
 "actn_egais-accept"                                  "object"                              "export"  "Отправка актов подтверждения в ЕГАИС"                                                                                             "Отправка актов подтверждения  в ЕГАИС"
 "actn_egais-send-doc"                                "object"                              "export"  "Отправка документов в ЕГАИС"                                                                                                      "Отправка документов(расход внешний, внутренний, возвраты) в ЕГАИС"
 "actn_egais-chg-sts-doc"                             "object"                              "export"  "Изменение статуса документа ЕГАИС"                                                                                                "Изменение статуса документа ЕГАИС"
+"actn_mercury-chg-vsd"                               "object"                              "export"  "Изменение ВСД"                                                                                                                    "Изменение ВСД"
 ?

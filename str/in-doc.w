@@ -8,6 +8,7 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
+using ibs.th.gbl.storage.*.
 DEFINE BUFFER t-doc FOR ub.trn-doc.
 
 
@@ -91,6 +92,7 @@ define buffer doc-line for ub.doc-line  .
 { ref/gdsoattr.i              }
 { str/cont-ms.i}
 {ref/imagelist.i}
+{ gbl/color.i }
 
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
@@ -208,9 +210,16 @@ define variable v-is-ptrl                   as   character                     n
 define variable v-data-type                 as   character                     no-undo.
 define variable is-doc-hold                 as   logical                       no-undo.
 define variable d-reason                    as   character                     no-undo.
+define variable ch-vsd as character no-undo .
 define variable is-fuel as logical no-undo initial no.
 define variable choice as integer no-undo.
 define variable isEgais  as logical   no-undo .
+define variable v-mercury-value as character no-undo .
+define variable v-mercury-type  as character no-undo .
+define variable vsdstrObj as class vsdtostorage no-undo.
+define variable bcol as handle extent no-undo.
+define variable hBrowse as handle no-undo.
+define variable ii as integer no-undo.
 
 define variable d-kg-after-qnty like ub.doc-line.fact-qnty  no-undo.
 define variable d-kg-price-rubl like ub.doc-line.price-rubl no-undo.
@@ -337,7 +346,8 @@ end.
 &scop sort-clmn_28-br-dtl   get-add-gtd( buffer ub.doc-line )
 &scop label-clmn_29-br-dtl  'Причина отклонения по РТ'
 &scop sort-clmn_29-br-dtl   lineattr-get-reason( buffer ub.doc-line )
-
+&scop label-clmn_30-br-dtl  'ВСД'
+&scop sort-clmn_30-br-dtl   get-vsdsts( buffer ub.doc-line )
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -358,7 +368,7 @@ end.
 &Scoped-define INTERNAL-TABLES  ub.doc-line ub.goods ub.gds-prt ub.gds-obj
 
 /* Definitions for BROWSE br-dtl                                        */
-&Scoped-define FIELDS-IN-QUERY-br-dtl {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} @ d-kg-fact-qnty {&sort-clmn_25-br-dtl} @ d-kg-price-base {&sort-clmn_26-br-dtl} @ d-kg-price-rubl {&sort-clmn_27-br-dtl} @ d-kg-after-qnty
+&Scoped-define FIELDS-IN-QUERY-br-dtl {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} @ d-kg-fact-qnty {&sort-clmn_25-br-dtl} @ d-kg-price-base {&sort-clmn_26-br-dtl} @ d-kg-price-rubl {&sort-clmn_27-br-dtl} @ d-kg-after-qnty {&sort-clmn_28-br-dtl} @ d-gtd-add {&sort-clmn_29-br-dtl} @ d-reason {&sort-clmn_30-br-dtl} @ ch-vsd
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-dtl {&sort-clmn_6-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl}
 &Scoped-define SELF-NAME br-dtl
 &Scoped-define QUERY-STRING-br-dtl FOR EACH  ub.doc-line WHERE  ub.doc-line.doc-code = t-doc.doc-code NO-LOCK, ~
@@ -487,6 +497,12 @@ FUNCTION get-add-gtd RETURNS character
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-mark d-in-doc 
+FUNCTION get-vsdsts RETURNS CHARACTER
+(buffer local-doc-line for doc-line ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -793,6 +809,7 @@ DEFINE BROWSE br-dtl
       {&sort-clmn_27-br-dtl} @ d-kg-after-qnty column-label {&label-clmn_27-br-dtl} format "->,>>>,>>>,>>>,>>9.999":U
       {&sort-clmn_28-br-dtl} @ d-gtd-add       column-label {&label-clmn_28-br-dtl} format "x(15)"
       {&sort-clmn_29-br-dtl} @ d-reason        column-label {&label-clmn_29-br-dtl} format "x(25)"
+      {&sort-clmn_30-br-dtl} @ ch-vsd          column-label {&label-clmn_30-br-dtl} format "x(3)"
       enable {&sort-clmn_6-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1689,6 +1706,19 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define BROWSE-NAME br-dtl
+&Scoped-define SELF-NAME br-dtl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-dtl d-in-doc
+ON row-display OF br-dtl IN FRAME d-in-doc
+DO:
+
+  run rowdisp .
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME t-doc.cst-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-doc.cst-code d-in-doc
@@ -2203,6 +2233,27 @@ run tax-name in this-procedure ( input {&road-tax}, output rdtaxname ).
 assign
   t-doc.road-tax :label in frame {&frame-name} = rdtaxname
 .
+
+{ gbl/conf-rd.i
+  "'mercuri':u"
+  "'':u"
+  "'':u"
+  0
+  "'':u"
+  "'':u"
+  "'':u"
+  no
+  v-mercury-value
+  v-mercury-type
+  no-error
+}
+hbrowse = browse br-dtl:handle.
+extent (bcol) = hbrowse:num-columns.
+bcol[1] = hbrowse:first-column.
+do ii = 1 to extent (bcol).  
+  bcol[ii] = hbrowse:get-browse-column (ii).
+end.
+
 { gbl/conf-rd.i  "'is-ptrl'" "''" "''" 0 "''" "''" "''" no v-is-ptrl v-data-type no-error }
 if error-status :error or v-data-type <> "L" or lookup( v-is-ptrl, "yes,no" ) = 0 then do:
   assign
@@ -6817,3 +6868,72 @@ function get-add-gtd returns character ( buffer local-doc-line for ub.doc-line )
 end function. /* get-add-gtd */
 &ANALYZE-RESUME
 /* _UIB-CODE-BLOCK-END */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-vsdsts d-in-doc 
+FUNCTION get-vsdsts RETURNS CHARACTER
+(buffer local-doc-line for doc-line ):
+  
+  def var v-mercury-prod as logical no-undo.
+  def buffer bf_gds for ub.goods.
+  
+  find first bf_gds where 
+        local-doc-line.artic = bf_gds.artic
+    and local-doc-line.prod-type = bf_gds.prod-type
+    and local-doc-line.prod-code = bf_gds.prod-code.
+  
+  if lookup(v-mercury-value, 'no':u) = 0
+  then do:
+    { gbl/gdscdat.i
+      bf_gds.gds-code
+      "'mercur_FGIS=request':u"
+      v-mercury-prod
+      no-error
+    }
+    if error-status :error
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка при определении атрибута товара" skip
+        "Код товара" bf_gds.gds-code skip
+        'mercur_FGIS=request':u skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+      undo, return error .
+    end.
+    if v-mercury-prod
+    then do:
+      vsdstrObj = new vsdtostorage ().
+      if vsdstrObj:exsistvsd( buffer local-doc-line )
+      then do:
+        delete object vsdstrObj no-error.
+        return "+".
+      end.
+      else do with frame {&FRAME-NAME}:
+        delete object vsdstrObj no-error.
+        return "-".
+      end.
+    end.
+  end.
+
+  return "".
+  
+end function.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rowdisp d-in-doc 
+procedure rowdisp :
+  
+  do ii = 1 to extent (bcol).  
+    if valid-handle (bcol[ii]) 
+    then do:
+      assign
+        bcol[ii]:bgcolor = RED_COLOR when get-vsdsts(buffer ub.doc-line) = "-".
+    end.
+  end.  
+  
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

@@ -1488,6 +1488,19 @@ procedure gdscdat :
           .
         end.
 
+        when 'mercur_FGIS=request':u
+        then do:
+          run gds-attr-value in this-procedure
+            (input  p-gds-code
+            ,input  {&attr-mercur_FGIS}
+            ,output v-attr-value
+            ,output v-attr-type
+            ) .
+          assign
+            p-return-attribute = lookup(v-attr-value, 'true,yes':u) > 0
+          .
+        end.
+
         otherwise do:
           message
             vss-workfile vss-revision vss-description skip
