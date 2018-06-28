@@ -60,10 +60,6 @@ CLASS ibs.th.ref.journal_vsd_trg:
         DO: 
             
             vsdsubsObj = CAST (pvsdsubs, vsdsubs).
-            
-            MESSAGE vsdsubsObj:VsdObjCurr:VSDTypeLbl
-                vsdsubsObj:VsdObjCurr:VSDType vsdsubsObj:VsdObjCurr:DBNum 
-            VIEW-AS ALERT-BOX.
             RUN str/vsd.w (INPUT parparentproc, INPUT {&lookup}, INPUT vsdsubsObj,INPUT no, OUTPUT vSave).
         END.
         RETURN.
