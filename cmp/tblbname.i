@@ -309,6 +309,7 @@ Creation date: 01/29/07
 &glob bef-table_c-gds-grp-obj c-gds-grp-obj
 &glob bef-table_c-gds-hist c-gds-hist
 &glob bef-table_c-gds-host-attr c-gds-host-attr
+&glob bef-table_c-gds-mercury c-gds-mercury
 &glob bef-table_c-gds-obj c-gds-obj
 &glob bef-table_c-gds-obj-attr c-gds-obj-attr
 &glob bef-table_c-gds-obj-prop c-gds-obj-prop
@@ -474,6 +475,7 @@ Creation date: 01/29/07
 &glob bef-table_c-var-deliv-gr-per-val c-var-deliv-gr-per-val
 &glob bef-table_c-variant-delivery c-variant-delivery
 &glob bef-table_c-varianty-delivery-gds-obj c-varianty-delivery-gds-obj
+&glob bef-table_c-vsd c-vsd
 &glob bef-table_c-wealth c-wealth
 &glob bef-table_c-wi-mode c-wi-mode
 &glob bef-table_c-wi-mode-attr c-wi-mode-attr
@@ -761,6 +763,8 @@ Creation date: 01/29/07
 &glob bef-table_gds-grp-obj gds-grp-obj
 &glob bef-table_gds-grp-obj-attr gds-grp-obj-attr
 &glob bef-table_gds-host-attr gds-host-attr
+&glob bef-table_gds-mercury gds-mercury
+&glob bef-table_gds-mercury-attr gds-mercury-attr
 &glob bef-table_gds-obj gds-obj
 &glob bef-table_gds-obj-attr gds-obj-attr
 &glob bef-table_gds-obj-flag gds-obj-flag
@@ -1194,6 +1198,8 @@ Creation date: 01/29/07
 &glob bef-table_variant-delivery variant-delivery
 &glob bef-table_variant-delivery-attr variant-delivery-attr
 &glob bef-table_varianty-delivery-gds-obj varianty-delivery-gds-obj
+&glob bef-table_vsd vsd
+&glob bef-table_vsd-attr vsd-attr
 &glob bef-table_wealth wealth
 &glob bef-table_wealth-attr wealth-attr
 &glob bef-table_who-lk who-lk
