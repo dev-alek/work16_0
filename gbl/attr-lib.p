@@ -4388,6 +4388,25 @@ character~
 &scop level-way-attr-obj-date "obj,host,global"
 &scop up-way-attr-obj-date "obj-date,obj-date,obj-date"
 
+/* Параметры для работы с ФГИС Меркурий */
+&scop type-attr-mercur            {&type-char}
+&scop format-attr-mercur          "x(40)"
+&scop label-attr-mercur           "Параметры для работы с ФГИС Меркурий"
+&scop tooltip-attr-mercur         "Параметры для работы с ФГИС Меркурий"
+&scop user-can-edit-attr-mercur   true
+&scop output-display-attr-mercur  true
+&scop other-attr-mercur           'spr-ext=gbl\mercur.w':U
+&scop prop-type-list-attr-mercur  'character,character,character,character,logical,logical,integer,character,integer':U
+&scop prop-label-list-attr-mercur 'APIKey,Логин входа в ИС,Логин,Пароль,Разрешено вводить код ВСД вручную,Разрешено закрывать документ без указ. ВСД,Тип взаимодействия,Настройки для печати QR-кода,Сервер'
+&scop prop-list-attr-mercur       'apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server'
+&scop global-attr-mercur true
+&scop host-attr-mercur true
+&scop shop-attr-mercur true
+&scop store-attr-mercur true
+&scop db-attr-mercur false
+&scop batch-edit-attr-mercur  0
+&scop level-way-attr-mercur "obj,host,global"
+&scop up-way-attr-mercur "mercur,mercur,mercur"
 
 /* Настройки производства  */
 &scop label-attr-fbrattr "Настройки производства"
@@ -4709,7 +4728,9 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-egais-host
       {&attr-temp-full-code}
-
+      &scop attr-code attr-mercur
+      {&attr-temp-full-code}
+      
       /* сюда добавлять новые параметры атрибутов объектов TH */
       otherwise do:
         undo, return error substitute("неизвестный атрибут объекта TH &1", p-upper-code ).
@@ -4885,8 +4906,9 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-egais-host
     {&attr-temp-code}
-
-    /* сюда добавлять новые параметры  */
+    &scop attr-code attr-mercur
+    {&attr-temp-code}
+    /* сюда добавлять новые параметры атрибутов клиентов */
     otherwise do:
       undo, return error substitute("неизвестный атрибут объекта TH &1 &2"
                                     , p-upper-code
@@ -5590,7 +5612,9 @@ on error undo, return error return-value
     {&attr-legacy-code}
     &scop attr-code attr-egais-host
     {&attr-legacy-code}
-    
+    &scop attr-code attr-mercur
+    {&attr-legacy-code}
+
     /* сюда добавлять новые параметры  */
     otherwise do:
       undo, return error substitute("неизвестная секция параметров TH &1"
