@@ -209,6 +209,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                   v-obj-type = {&stock}
                   or
                   v-obj-type = ''
+                  or v-obj-type = {&prs}
                   ) then do:
             v-mess = substitute("В классификатор Объекты внешних систем можно добавлять только <&1> или <&2> или <>", {&shop}, {&stock}).
             run err-mess in this-procedure ( input-output v-mess).
@@ -319,7 +320,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
               and recid(buf_ext-system) <> recid(buf2_ext-system)
               and (p-mode = {&add-def} or recid(buf_ext-classif) <> recid(buf2_ext-classif))
               then do:
-                v-mess = substitute("Для данного объекта уже определена внешняя система &2 с экспортом/импортом в БД &1"
+                v-mess = substitute("Для данного объекта уже определена внешняя система &1 с экспортом/импортом в БД &2"
                                   , buf2_ext-system.esys-id
                                   , buf2_ext-system.esys-db-num-exp).
                 run err-mess in this-procedure ( input-output v-mess).
@@ -451,7 +452,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                                 , buf2_ext-classif.CharKey_One
                                 , buf2_ext-classif.Key#_One
                                 , buf2_ext-classif.CharKey_two
-                                , buf2_ext-classif.Key#_two
+                                , buf2_ext-classif.charkey_three
                                 ).
               run err-mess in this-procedure ( input-output v-mess).
               undo _main, return error (if p-silent = yes then v-mess else '':U).
@@ -681,7 +682,7 @@ CASE p-silent:
             p-mess = substitute("Объект во внешней системе &1: &2&3 для объекта &4&5 &6&7"
                               , p-key#_one
                               , p-charkey_one
-                              , p-key#_two
+                            , p-charkey_three
                               , v-obj-type
                               , v-obj-code
                               , {&new-line}
