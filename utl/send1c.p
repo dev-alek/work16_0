@@ -33,6 +33,8 @@ if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn3)
     then run str/lib-trn3.p persistent no-error .
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn4)
     then run str/lib-trn4.p persistent no-error .
+if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
+    then run str/trdcalib.p persistent no-error .
 
 
 define temp-table tt-trn like ub.trn-doc.
