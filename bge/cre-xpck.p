@@ -293,7 +293,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       .
     end.
     else do:
-      if v-pack-num = v-fst-pck + 30 then do:    /*?????????????????????*/
+      if v-pack-num = v-fst-pck + 30
+      or (buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN}) and v-pack-num = v-fst-pck + 1)
+      then do:    /*?????????????????????*/
         assign
           p-cre-all-pck = false
         .
