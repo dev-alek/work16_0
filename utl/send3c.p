@@ -33,39 +33,37 @@ if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn3)
     then run str/lib-trn3.p persistent no-error .
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn4)
     then run str/lib-trn4.p persistent no-error .
-if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
-    then run str/trdcalib.p persistent no-error .
 
 
-define temp-table tt-trn like ub.trn-doc.
+define temp-table tt-rvs like ub.rvs-doc.
 define var v-doc-code as char no-undo.
 
 DEFINE FRAME frame1
   v-doc-code format "x(15)"
   with view-as dialog-box
-  title "Введите номер документа (накл., инв., перес."
+  title "Введите номер сверки"
 .
 
 update v-doc-code with frame frame1.
 
-find first ub.trn-doc where ub.trn-doc.doc-code = v-doc-code no-error.
+find first ub.rvs-doc where ub.rvs-doc.rvs-code = v-doc-code no-error.
 
-if not available (ub.trn-doc)
+if not available (ub.rvs-doc)
   then do:
-    message "Документ инвентаризации не найден: номер " v-doc-code view-as alert-box.
+    message "Документ сверки не найден: номер " v-doc-code view-as alert-box.
     return.
   end.
 
 
-buffer-copy trn-doc except trn-doc.status_ to tt-trn  assign tt-trn.status_ = "накл". /* для имитации изменения статуса на факт */
+buffer-copy rvs-doc except rvs-doc.status_ to tt-rvs  assign tt-rvs.status_ = "накл". /* для имитации изменения статуса на факт */
 
 { gbl/rum-runa.i
   ?
   this-procedure:handle
   ?
-  {&edoc-proc_event_trn-doc}
-  " buffer tt-trn:handle "
-  " buffer ub.trn-doc:handle "  ''
+  {&edoc-proc_event_rvs-doc}
+  " buffer tt-rvs:handle "
+  " buffer ub.rvs-doc:handle "  ''
   ''
   no-error
 }
@@ -74,5 +72,5 @@ then do:
   message return-value view-as alert-box.
 end.
 else do:
-  message trn-doc.doc-code " отправлен" view-as alert-box.
+  message rvs-doc.rvs-code " отправлен" view-as alert-box.
 end.

@@ -301,7 +301,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         undo, return error substitute("Передан неверный буфер [&1] вместо буфера для &2", v-newbh:table, {&table_shift-obj}).
       end.
       if v-has-oldbh
-      and v-oldbh:table <> {&table_shift-obj} then do:
+      and v-oldbh:table <> {&table_shift-obj} and v-oldbh:table <> "tt-shift" then do:
         undo, return error substitute("Передан неверный буфер [&1] вместо буфера для &2", v-oldbh:table, {&table_shift-obj}).
       end.
     end.

@@ -343,7 +343,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_price-doc}).
       end.
       if v-has-oldbh
-      and v-oldbh:table <> {&table_price-doc} then do:
+      and v-oldbh:table <> {&table_price-doc} and v-oldbh:table <> "tt-price-doc" then do:
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_price-doc}).
       end.
     end.

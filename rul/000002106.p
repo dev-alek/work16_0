@@ -361,7 +361,7 @@ procedure load-ruleset-context :
           end.
       
           if v-has-oldbh
-            and v-oldbh:table <> {&table_fin-doc} then 
+            and v-oldbh:table <> {&table_fin-doc} and v-oldbh:TABLE <> "tt-fin" then 
           do:
             undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_fin-doc}).
           end.
