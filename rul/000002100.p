@@ -354,7 +354,7 @@ procedure load-ruleset-context :
             undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_rvs-doc}).
           end.
           if v-has-oldbh
-            and v-oldbh:table <> {&table_rvs-doc} then 
+            and v-oldbh:table <> {&table_rvs-doc} and v-oldbh:table <> "tt-rvs" then 
           do:
             undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_rvs-doc}).
           end.
