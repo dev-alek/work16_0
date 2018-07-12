@@ -1244,32 +1244,6 @@ ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* АлкАтр */
     keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).
     vsdsubsObj = vsdStorageObj:getVSDsubs(input "part-key", input keypart).
     
-    define variable v-host-code as integer   no-undo .
-    define variable lok         as logical   no-undo .
-
-    { gbl/hostcode.i
-      v-obj-type
-      v-obj-code
-      v-host-code
-    }
-    
-
-    { gbl/chk-actg.i
-    v-cntxt-db-num
-    v-cntxt-userid
-    {&action-head-code-main}
-    'actn_mercury-chg-vsd':U
-    {&cntxt-object}
-    v-host-code
-    v-obj-type
-    v-obj-code
-    0
-    0
-    0
-    false
-    lok
-    }
-    
     if vsdsubsObj:iCounter = 0
     then do:
       if p-edit-mode = {&lookup}
@@ -1277,7 +1251,6 @@ ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* АлкАтр */
         message "К партии отсутсвуют ВСД" view-as alert-box.
         return.
       end.
-      lok = yes. /*для нового всд право не учитывается */
       vsdsubObj = new vsdsub ().
       vsdsubsObj:AddItem(vsdsubObj).
       vsdsubObj = vsdsubsObj:VsdObjCurr.
@@ -1293,13 +1266,7 @@ ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* АлкАтр */
         vsdsubObj:CliType = buf_trn.cli-type.
       end.
     end.
-    if p-edit-mode = {&lookup}
-    then do:
-      run str/vsd.w (input parparentproc, input {&lookup}, input vsdsubsObj, input lok, output isSave).
-    end.
-    else do:
-      run str/vsd.w (input parparentproc, input {&update}, input vsdsubsObj, input lok, output isSave).
-    end.
+    run str/vsd.w (input parparentproc, input {&update}, input vsdsubsObj, output isSave).
     if isSave then do:
       do ii = 1 to vsdsubsObj:GetItem(ii):
         vsdsubObj = vsdsubsObj:VsdObjCurr.
