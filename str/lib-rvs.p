@@ -1478,12 +1478,24 @@ define variable      v-water-qnty as decimal no-undo.
                 tt-meas-file.meas-vol-water = yes
               .
             end.
-            if tt-param.strfrfile = 'mass_total':U  then do: 
-                     assign
-                tt-meas-file.log-brutto = yes
-                tt-meas-file.measure-cli-qnty = decimal( trim( entry( 2, v_string-tmp, '=' ) ) )
-              . 
-                end.
+            if tt-param.strfrfile = 'mass_total':U  then 
+            do: 
+              run placelib_get-attr  ( input {&place-sert-urov}
+                ,input p-obj-code
+                ,input p-obj-type
+                ,input tt-meas-file.pl-code 
+                ,output v-value
+                ,output v-ok      ) no-error.
+              if v-ok and v-value = "yes" then do: 
+              if trim( entry( 2, v_string-tmp, '=' ) )  <> "-" and trim( entry( 2, v_string-tmp, '=' ) )  <> "" then 
+              do:
+                assign
+                  tt-meas-file.log-brutto       = yes
+                  tt-meas-file.measure-cli-qnty = decimal( trim( entry( 2, v_string-tmp, '=' ) ) )
+                  . 
+              end.
+            end.
+            end.  
           end.
           else do:
             put stream str-err unformatted
@@ -1626,16 +1638,6 @@ define variable      v-water-qnty as decimal no-undo.
         do:
           if tt-meas-file.log-brutto = yes then 
           do:
-            if tt-meas-file.density <> 0 or tt-meas-file.density <> ? then 
-            do:
-              assign
-                tt-meas-file.measure-qnty    = tt-meas-file.measure-cli-qnty / tt-meas-file.density 
-                tt-meas-file.brutto-qnty     = tt-meas-file.measure-qnty
-                tt-meas-file.brutto-cli-qnty = tt-meas-file.density * tt-meas-file.brutto-qnty
-                .
-            end.  
-            else 
-            do:
               if tt-meas-file.brutto-qnty <> 0 or tt-meas-file.brutto-qnty <> ? then 
               do:
                 assign
@@ -1649,7 +1651,6 @@ define variable      v-water-qnty as decimal no-undo.
                 put stream str-err unformatted 
                   'Не заданы объем и плотность'  skip .
               end.    
-            end.  
           end.  
         end.  
 
