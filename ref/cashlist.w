@@ -92,6 +92,7 @@ define variable filter-label0 as character no-undo init "Справочник_касс_" .
 
 define variable sort-column-name as character no-undo .
 define variable glog as logical no-undo .
+define variable v-glog as logical no-undo .
 DEFINE VARIABLE attr-option AS CHARACTER NO-UNDO.
 define VARIABLE v-mode AS CHARACTER NO-UNDO .
 define VARIABLE del-mode AS logical NO-UNDO .
@@ -478,6 +479,23 @@ DO:
       X_cash-desk.obj-code
       v-cash-desk-host-code
      }
+    { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_cashdesk-change_date_time':U
+        {&cntxt-object}
+        v-cash-desk-host-code
+        {&shop}
+        X_cash-desk.obj-code
+        0
+        0
+        0
+        false
+        v-glog
+        }
+    if v-glog then 
+    do:
       { gbl/chk-actg.i
       v-cntxt-db-num
       v-cntxt-userid
@@ -494,6 +512,7 @@ DO:
       glog
       }
       if NOT glog then return no-apply .
+end.
   END.
   if X_cash-desk.pos-type = {&cd-type-ibs-th} then do:
     run ref/cda-cc.w ( input parparentproc
@@ -514,6 +533,7 @@ DO:
                     ,input X_cash-desk.obj-code
                     ,input X_cash-desk.pos-type
                     ,input X_cash-desk.cash-num
+					,input v-glog
                   ) NO-ERROR.
    end.
 attr-option = ''.
