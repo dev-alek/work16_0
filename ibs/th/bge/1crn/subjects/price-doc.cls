@@ -107,7 +107,15 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
           if   (buf_price-doc.doc-num-es = ? or trim(buf_price-doc.doc-num-es) = "")
           and  (buf_price-doc.uid-es = ? or trim(buf_price-doc.uid-es) = "")
           then do :
-            sw:write-data-element ("cr-gs", string(1)).    
+            sw:write-data-element ("cr-gs", string(1)).
+          end.
+          else do :
+            sw:write-data-element ("cr-gs", string(0)).
+          end.
+          if   (buf_price-doc.doc-num-es = ? or trim(buf_price-doc.doc-num-es) = "")
+          and  (buf_price-doc.uid-es = ? or trim(buf_price-doc.uid-es) = "")
+          or buf_price-doc.status_ = {&act-overvalue}
+          then do :
             sw:start-element ("price-list") .
             for each buf_price-list no-lock where buf_price-list.doc-num = buf_price-doc.doc-num
                                               and buf_price-list.price-type = '',
@@ -121,7 +129,7 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
                 then sw:write-data-element ("qnty", string(buf_price-list.doc-qnty)).
               sw:end-element ("gds-sale")  .  
             end.
-          sw:end-element ("price-list") .
+            sw:end-element ("price-list") .
           end.
       
           sw:end-element ("price-doc") .
