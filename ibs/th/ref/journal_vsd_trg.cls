@@ -60,14 +60,14 @@ CLASS ibs.th.ref.journal_vsd_trg:
         DO: 
             
             vsdsubsObj = CAST (pvsdsubs, vsdsubs).
-            RUN str/vsd.w (INPUT parparentproc, INPUT {&lookup}, INPUT vsdsubsObj,INPUT no, OUTPUT vSave).
+            RUN str/vsd.w (INPUT parparentproc, INPUT {&lookup}, INPUT vsdsubsObj, OUTPUT vSave).
         END.
         RETURN.
 
     END METHOD.
     METHOD PUBLIC  VOID VSD_edit(INPUT pID AS INTEGER  , INPUT pdb-num AS INTEGER,input pvsdsubs AS Progress.Lang.Object   ):
-        message "Функционал находится в разработке." view-as alert-box.
-       /*DEFINE VARIABLE vsdsubsObj    AS CLASS vsdsubs      NO-UNDO.
+/*        message "Функционал находится в разработке." view-as alert-box. */
+       DEFINE VARIABLE vsdsubsObj    AS CLASS vsdsubs      NO-UNDO.
        DEFINE VARIABLE vsdsubObj     AS CLASS vsdsub       NO-UNDO.
        DEFINE VARIABLE vsdStorageObj AS CLASS vsdtostorage NO-UNDO.
        DEFINE BUFFER vsd FOR ub.vsd.
@@ -80,7 +80,7 @@ CLASS ibs.th.ref.journal_vsd_trg:
        THEN DO:                 
           
           vsdsubsObj = CAST (pvsdsubs, vsdsubs).
-          RUN str/vsd.w (INPUT parparentproc, INPUT {&update}, INPUT vsdsubsObj,INPUT yes, OUTPUT vSave).
+          RUN str/vsd.w (INPUT parparentproc, INPUT {&update}, INPUT vsdsubsObj, OUTPUT vSave).
           IF vSave 
           THEN DO:
              DO vi = 1 TO vsdsubsObj:GetItem(vi):
@@ -102,7 +102,7 @@ CLASS ibs.th.ref.journal_vsd_trg:
              END.
           END.
        END.
-    */
+    
         RETURN.
 
     END METHOD.
