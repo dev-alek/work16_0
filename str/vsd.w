@@ -35,7 +35,6 @@ using ibs.th.gbl.storage.*.
 define input  parameter parparentproc as   handle    no-undo .
 define input  parameter p-mode        as   character no-undo .
 define input  parameter vsdsubsObj    as   class vsdsubs   no-undo .
-define input  parameter p-lok         as   logical no-undo .
 define output parameter p-isSave      as   logical   no-undo .
 
 /* Local Variable Definitions ---                                       */
@@ -53,6 +52,7 @@ define variable vss-description as character no-undo init "Просмотр/Редактирован
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { gbl/thbjattr.i }
+{ cmp/library.i  }
 
 define buffer buf_vsd for ub.vsd.
 
@@ -60,7 +60,7 @@ define variable v-page           as integer   no-undo.
 define variable v-page-current   as integer   no-undo.
 define variable maxsec           as integer   no-undo init 6.
 define variable v-section-names  as character no-undo.
-
+define variable lok              as logical   no-undo .
 &scop max-labels 20
 &scop tab-height 25
 
@@ -666,6 +666,9 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   
   def var ii as int no-undo.
   
+  define variable v-host-code as integer   no-undo .
+
+
   vsdstrObj = new vsdtostorage ().
   
   vsdSts = new vsdstatustype ().
@@ -677,6 +680,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
     vsdsubCurr = vsdsubsObj:VsdObjCurr.
     v-section-names = v-section-names + "|" + vsdsubCurr:VSDTypeLbl.
   end.
+  v-section-names = trim (v-section-names, "|").
   
   if v-section-names = ""
     then do:
@@ -684,9 +688,28 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       vsdsubCurr:VSDType = vsdSts:VSDIn.
       vsdsubsObj:AddItem(vsdsubCurr).
       v-section-names = vsdsubCurr:VSDTypeLbl.
+      lok = yes. /*для нового всд право не учитывается */
     end.
-  
-  v-section-names = trim (v-section-names, "|").
+    else do:
+      if p-mode = {&update}
+      then do:
+        { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_mercury-chg-vsd':U
+        {&cntxt-object}
+        v-cntxt-host-code-obj
+        vsdsubCurr:ObjType
+        vsdsubCurr:ObjCode
+        0
+        0
+        0
+        false
+        lok
+        }
+      end.
+    end.
   
   { gbl/getsect.i run v-cntxt-obj-type v-cntxt-obj-code {&attr-mercur} }
   
@@ -773,7 +796,10 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE hide-disp-page Dialog-Frame 
 PROCEDURE hide-disp-page :
 find first ub.sys-ctrl.
-  if v-isManualVcd = true and p-mode = {&update} and (entry (v-page-current, v-section-names, "|") = vsdSts:VSDInLbl or entry (v-page-current, v-section-names, "|") = vsdSts:VSDTransLbl)
+  if v-isManualVcd = true and p-mode = {&update} 
+    and vsdsubCurr:Status_ = vsdSts:IsNeedCheck
+    and
+    (entry (v-page-current, v-section-names, "|") = vsdSts:VSDInLbl or entry (v-page-current, v-section-names, "|") = vsdSts:VSDTransLbl)
   then do:
     enable UUID_VSD with frame {&frame-name}.
   end.
@@ -817,7 +843,7 @@ find first ub.sys-ctrl.
   
   if entry (v-page-current, v-section-names, "|") = vsdSts:VSDInLbl or entry (v-page-current, v-section-names, "|") = vsdSts:VSDTransLbl
   then do:
-    if (vsdsubCurr:Status_ = vsdSts:IsErrCheck or vsdsubCurr:Status_ = vsdSts:IsErrUtilized) and p-lok
+    if (vsdsubCurr:Status_ = vsdSts:IsErrCheck or vsdsubCurr:Status_ = vsdSts:IsErrUtilized) and lok and p-mode = {&update}
       then enable StatusChar UUID_VSD with frame {&frame-name}.
   end.
   if UUID_VSD:edit-can-paste

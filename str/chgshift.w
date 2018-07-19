@@ -483,7 +483,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   { gbl/getcntxt.i get }
   RUN enable_UI.
-  RUN fill-lists.
+  RUN fill-lists (p-curr-obj-type, p-curr-obj-code) .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -683,16 +683,32 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-lists Dialog-Frame
 procedure fill-lists:
+define input parameter p-obj-type as character no-undo .
+define input parameter p-obj-code as integer no-undo .
+define variable v-pl-name as character no-undo .
+define variable v-pl-code as character no-undo .
+define buffer buf_place for ub.place .
+
     do with frame {&frame-name}:
         shift-reservoir-from:DELETE (1).
         shift-reservoir-to  :DELETE (1).
         
-        for each place
-            where place.obj-code = p-curr-obj-code
-            and place.obj-type = p-curr-obj-type:
-                shift-reservoir-from:ADD-LAST(place.loc1 + " " + place.pl-name, string(place.pl-code)).
-                shift-reservoir-to  :ADD-LAST(place.loc1 + " " + place.pl-name, string(place.pl-code)).
+        for each buf_place no-lock
+           where buf_place.obj-type = p-obj-type
+             and buf_place.obj-code = p-obj-code:
+          assign
+            v-pl-name = substitute("&1 &2", buf_place.loc1, buf_place.pl-name)
+            v-pl-code = string(buf_place.pl-code)
+          .
+          if trim(v-pl-name) = "" then v-pl-name = buf_place.pl-name .
+          if trim(v-pl-name) = "" then v-pl-name = "N Топливо" .
+          shift-reservoir-from:ADD-LAST(v-pl-name, v-pl-code).
+          shift-reservoir-to  :ADD-LAST(v-pl-name, v-pl-code).
         end.
     end.
-end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

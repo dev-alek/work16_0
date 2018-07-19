@@ -84,9 +84,9 @@ define temp-table temp_sheet1_line-data no-undo
     field OKEI              as character
     field EI                as character
     field OKDP              as character
-    field rezIzlQnty        as character
+    field rezIzlQnty        as decimal
     field rezIzlSum         as character
-    field rezNedQnty        as character
+    field rezNedQnty        as decimal
     field rezNedSum         as character
     field num2              as character
     field utochIzlQnty      as character
@@ -210,9 +210,9 @@ define input parameter p-gdscode        as character        no-undo.
 define input parameter p-OKEI           as character        no-undo.
 define input parameter p-EI             as character        no-undo.
 define input parameter p-OKDP           as character        no-undo.
-define input parameter p-rezIzlQnty     as character        no-undo.
+define input parameter p-rezIzlQnty     as decimal          no-undo.
 define input parameter p-rezIzlSum      as character        no-undo.
-define input parameter p-rezNedQnty     as character        no-undo.
+define input parameter p-rezNedQnty     as decimal          no-undo.
 define input parameter p-rezNedSum      as character        no-undo.
 define input parameter p-num2           as character        no-undo.
 define input parameter p-utochIzlQnty   as character        no-undo.

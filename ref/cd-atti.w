@@ -84,6 +84,7 @@ define input parameter p-db-num like ub.cash-desk-attr.db-num no-undo.
 define input parameter p-obj-code like ub.cash-desk-attr.obj-code no-undo.
 define input parameter p-pos-type like ub.cash-desk-attr.pos-type no-undo .
 define input parameter p-cash-num like ub.cash-desk-attr.cash-num no-undo .
+define input parameter p-glog   as LOGICAL no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -110,6 +111,8 @@ define variable temp-doc-rec as recid no-undo.
 define variable v-view-col as logical no-undo extent 6.
 define buffer buf_cash-desk for ub.cash-desk.
 DEFINE VARIABLE v-ch_ AS WIDGET-HANDLE NO-UNDO EXTENT 5.
+define variable v-glog as logical no-undo .
+define variable v-cash-desk-host-code as integer no-undo .
 
 &scoped-define  cd-attr-type-get-error message "Ошибка при определении названия и типа атрибута/параметра кассы!" ~
         "Обратитесь к администратору системы" skip error-status:get-message(1) skip ~
@@ -467,6 +470,10 @@ define variable v-correct as logical no-undo .
 define variable v-error-code as character no-undo .
 DEFINE VARIABLE jj AS INTEGER NO-UNDO.
   if not avail temp-hattr then return no-apply.
+    if not p-glog and Temp-hattr.code = "last-check-params" then 
+    return no-apply .  
+    if not v-glog and Temp-hattr.code <> "last-check-params" then return no-apply .
+  
   run cd-attr-code in this-procedure (
                                        input  temp-hattr.upper-attr-code
                                       ,input  temp-hattr.code
@@ -1202,6 +1209,31 @@ ASSIGN
 b-ins:MENU-MOUSE = 1
 b-send:MENU-MOUSE = 1
 .
+
+      { gbl/hostcode.i
+    {&shop}
+    p-obj-code
+    v-cash-desk-host-code
+    }
+    
+        { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_cashdesk-reference_input-deletion-updating':U
+        {&cntxt-object}
+        v-cash-desk-host-code
+        {&shop}
+        p-obj-code
+        0
+        0
+        0
+        false
+        v-glog
+        }
+
+        
+        
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1234,11 +1266,16 @@ DEFINE VARIABLE v-deleted as logical no-undo .
 define variable v-check as character no-undo .
 define variable v-error-code as character no-undo .
 define variable v-correct as logical no-undo .
+define variable glog  as logical no-undo .
 
 define variable loc#log as logical no-undo.
 case p-add:
   when yes then do:
     if p-mode <> {&add-def} then do:
+    if not p-glog and add-option = "last-check-params" then 
+    return no-apply .  
+    if not v-glog and add-option <> "last-check-params" then return no-apply .
+
       run temp-cd-attr-exist in this-procedure (
                                                    input p-db-num
                                                   ,input p-obj-code
@@ -1328,6 +1365,10 @@ case p-add:
     .
   end.
   when no then do:
+    if not p-glog and TEMP-hattr.code = "last-check-params" then 
+    return no-apply .  
+    if not v-glog and TEMP-hattr.code <> "last-check-params" then return no-apply .
+
     run cd-attr-code in this-procedure (
                                            input TEMP-hattr.upper-attr-code
                                           ,input TEMP-hattr.code

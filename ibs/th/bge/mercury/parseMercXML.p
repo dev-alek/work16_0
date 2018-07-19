@@ -163,6 +163,7 @@ PROCEDURE Characters:
   if v-ignorSect then return .
   
   v-str = GET-STRING(ppText,1) .
+  if v-str begins chr(10) then return .
 
   case gcCurrentElement :
     when "message" or

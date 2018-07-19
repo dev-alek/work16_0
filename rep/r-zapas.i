@@ -1536,7 +1536,7 @@ procedure proc-prt-1 :
                             put stream OutStr-html unformatted
                             '<TR>'skip
                                 '<TD colspan="2">' + substring(tmp#stroka,1,16) + '</TD>'skip
-                                '<TD>' + substring(tmp#stroka,17,60) + '</TD>'skip
+                                '<TD text_wrap="true">' + substring(tmp#stroka,17,160) + '</TD>'skip
                                 '<TD style="text-align: center"></TD>'skip
                                   '<TD num="0.000" val="' + fnc-convert-dot-to-colon(Tot-1-1,"->>>>>>>>>>>9.999",3) + '" style="text-align: right">' + if Tot-1-1 <> ? then fnc-convert-dot-to-colon(Tot-1-1,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
                                   '<TD style="text-align: right">' '</TD>'skip
@@ -1553,7 +1553,7 @@ procedure proc-prt-1 :
                             put stream OutStr-html unformatted
                             '<TR>'skip
                                 '<TD colspan="2">' + substring(tmp#stroka,1,16) + '</TD>'skip
-                                '<TD>' + substring(tmp#stroka,17,60) + '</TD>'skip
+                                '<TD text_wrap="true">' + substring(tmp#stroka,17,160) + '</TD>'skip
                                 '<TD style="text-align: center"></TD>'skip
                                   '<TD num="0.000" val="' + fnc-convert-dot-to-colon(Tot-1-1,"->>>>>>>>>>>9.999",3) + '" style="text-align: right">' + if Tot-1-1 <> ? then fnc-convert-dot-to-colon(Tot-1-1,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
                                   '<TD style="text-align: right">' '</TD>'skip
@@ -1570,7 +1570,7 @@ procedure proc-prt-1 :
                             put stream OutStr-html unformatted
                             '<TR>'skip
                                 '<TD colspan="2">' + substring(tmp#stroka,1,16) + '</TD>'skip
-                                '<TD>' + substring(tmp#stroka,17,60) + '</TD>'skip
+                                '<TD text_wrap="true">' + substring(tmp#stroka,17,160) + '</TD>'skip
                                 '<TD></TD>'skip
                                 '<TD style="text-align: center"></TD>'skip
                                   '<TD num="0.000" val="' + fnc-convert-dot-to-colon(Tot-1-1,"->>>>>>>>>>>9.999",3) + '" style="text-align: right">' + if Tot-1-1 <> ? then fnc-convert-dot-to-colon(Tot-1-1,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip

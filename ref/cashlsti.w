@@ -459,6 +459,7 @@ define variable v-rid-list as character no-undo .
                     ,input tt-cash-desk.obj-code
                     ,input tt-cash-desk.pos-type
                     ,input tt-cash-desk.cash-num
+					,input no
                   ).
   end.
 END.
@@ -504,6 +505,7 @@ define variable v-setted as logical no-undo .
                       ,input tt-cash-desk.obj-code
                       ,input tt-cash-desk.pos-type
                       ,input tt-cash-desk.cash-num
+					  ,input no
                     ).
     end.
   end case.

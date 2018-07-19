@@ -261,7 +261,7 @@ then do:
     p-ok = false
     p-mes = "Не удалось получить ответ от системы видеонаблюдения"
   .
-  output to value (session:temp-directory + "\svn-err.log") append .
+  output to value (ibs.th.gbl.gbl-inipar:logDir + "svn-err.log") append .
   put unformatted string(today, "99/99/9999") "    " string(time, "hh:mm:ss")
                   "    нет ответа от СВН IP " v-path skip.
   output close .

@@ -548,6 +548,7 @@ define buffer same-gds-prt  for ub.gds-prt.
         undo, return error (if p-silent then v-mess else '').
       end.
       /* проверяем, что топливный код - единственный */
+     /*
       find first buf2_prod-bc no-lock
         where buf2_prod-bc.b-code = p-b-code
           and buf2_prod-bc.b-str <> p-b-str no-error.
@@ -556,6 +557,7 @@ define buffer same-gds-prt  for ub.gds-prt.
         run err-mess in this-procedure ( input-output v-mess).
         undo, return error (if p-silent then v-mess else '').
       end.
+      */
     end. /*when {&loc-pt-code} */
     when 'unq-artc' then do:
       if buf_goods.artic <> p-b-str then do:

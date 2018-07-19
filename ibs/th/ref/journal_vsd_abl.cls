@@ -187,6 +187,8 @@ CLASS ibs.th.ref.journal_vsd_abl INHERITS Form:
         hDSVSd = DATASET dsVSd:HANDLE.
         bingvsd:HANDLE =  hDSvsd:TOP-NAV-QUERY.
         hbingvsd = bingvsd:HANDLE.
+        
+        
         hDSFILt = DATASET ds-vsd-set:HANDLE.
         bindttfilt:HANDLE = hDSFILt:TOP-NAV-QUERY. 
         CATCH e AS Progress.Lang.Error:
@@ -388,778 +390,775 @@ CLASS ibs.th.ref.journal_vsd_abl INHERITS Form:
         Visual Designer to avoid any incompatible modifications.
         
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
-        THIS-OBJECT:components = NEW System.ComponentModel.Container().
+        this-object:components = new System.ComponentModel.Container().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE tableDesc1 AS Progress.Data.TableDesc NO-UNDO.
-        tableDesc1 = NEW Progress.Data.TableDesc("vsd").
+        define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+        tableDesc1 = new Progress.Data.TableDesc("vsd").
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE resources AS Progress.Util.ResourceManager NO-UNDO.
-        resources = NEW Progress.Util.ResourceManager("ibs.th.ref.journal_vsd_abl").
+        define variable resources as Progress.Util.ResourceManager no-undo.
+        resources = new Progress.Util.ResourceManager("ibs.th.ref.journal_vsd_abl").
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE tableDesc2 AS Progress.Data.TableDesc NO-UNDO.
-        tableDesc2 = NEW Progress.Data.TableDesc("ttfilt").
-        THIS-OBJECT:Btn_lookup = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:dataGridView1 = NEW System.Windows.Forms.DataGridView().
-        THIS-OBJECT:dateTTHDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:nomTTHDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:nomAZSDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:articDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:vsdtypelblDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn1 = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:statusvsdDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:nomTTHpostDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:postDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:gdsnameDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:prodcodeDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:cOLobjDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:unitbaseDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:unitcliDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:ojdDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:bingvsd = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:COLobj = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:tableLayoutPanel1 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:gdsname = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:gdsnamemerc = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:gdscode = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:gdsmercguid = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:gdsguid = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:Btn_gds = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:btn_gds_merc = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:NomTTH = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:label3 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:btn_trndoc = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:panel1 = NEW System.Windows.Forms.Panel().
-        THIS-OBJECT:panel2 = NEW System.Windows.Forms.Panel().
-        THIS-OBJECT:Btn_clen = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:Sent = NEW System.Windows.Forms.CheckBox().
-        THIS-OBJECT:bindttFilt = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
-        THIS-OBJECT:btn_Filt = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:numericUpDown1 = NEW System.Windows.Forms.NumericUpDown().
-        THIS-OBJECT:btn_ref = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:Rep = NEW System.Windows.Forms.CheckBox().
-        THIS-OBJECT:FalVerif = NEW System.Windows.Forms.CheckBox().
-        THIS-OBJECT:ToExtin = NEW System.Windows.Forms.CheckBox().
-        THIS-OBJECT:FalExting = NEW System.Windows.Forms.CheckBox().
-        THIS-OBJECT:ReqVerif = NEW System.Windows.Forms.CheckBox().
-        THIS-OBJECT:dateTimePicker2 = NEW System.Windows.Forms.DateTimePicker().
-        THIS-OBJECT:label7 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:label6 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:dateTimePicker1 = NEW System.Windows.Forms.DateTimePicker().
-        THIS-OBJECT:label5 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:btn_prn = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:btn_edit = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:Btn_Cancel = NEW System.Windows.Forms.Button().
-        THIS-OBJECT:msgerr = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:label4 = NEW System.Windows.Forms.Label().
-        CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
-        CAST(THIS-OBJECT:bingvsd, System.ComponentModel.ISupportInitialize):BeginInit().
-        THIS-OBJECT:tableLayoutPanel1:SuspendLayout().
-        THIS-OBJECT:panel1:SuspendLayout().
-        THIS-OBJECT:panel2:SuspendLayout().
-        CAST(THIS-OBJECT:bindttFilt, System.ComponentModel.ISupportInitialize):BeginInit().
-        CAST(THIS-OBJECT:numericUpDown1, System.ComponentModel.ISupportInitialize):BeginInit().
-        THIS-OBJECT:SuspendLayout().
+        define variable tableDesc2 as Progress.Data.TableDesc no-undo.
+        tableDesc2 = new Progress.Data.TableDesc("ttfilt").
+        this-object:Btn_lookup = new System.Windows.Forms.Button().
+        this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
+        this-object:dateTTHDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:nomTTHDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:nomAZSDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:articDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:vsdtypelblDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:uUIDDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:statusvsdDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:nomTTHpostDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:postDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:gdsnameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:prodcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:cOLobjDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:unitbaseDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:unitcliDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:ojdDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:bingvsd = new Progress.Data.BindingSource(this-object:components).
+        this-object:uUIDDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:COLobj = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
+        this-object:gdsname = new System.Windows.Forms.TextBox().
+        this-object:gdsnamemerc = new System.Windows.Forms.TextBox().
+        this-object:gdscode = new System.Windows.Forms.TextBox().
+        this-object:gdsmercguid = new System.Windows.Forms.TextBox().
+        this-object:label1 = new System.Windows.Forms.Label().
+        this-object:label2 = new System.Windows.Forms.Label().
+        this-object:gdsguid = new System.Windows.Forms.TextBox().
+        this-object:Btn_gds = new System.Windows.Forms.Button().
+        this-object:btn_gds_merc = new System.Windows.Forms.Button().
+        this-object:NomTTH = new System.Windows.Forms.TextBox().
+        this-object:label3 = new System.Windows.Forms.Label().
+        this-object:btn_trndoc = new System.Windows.Forms.Button().
+        this-object:panel1 = new System.Windows.Forms.Panel().
+        this-object:panel2 = new System.Windows.Forms.Panel().
+        this-object:Btn_clen = new System.Windows.Forms.Button().
+        this-object:Sent = new System.Windows.Forms.CheckBox().
+        this-object:bindttFilt = new Progress.Data.BindingSource(this-object:components).
+        this-object:btn_Filt = new System.Windows.Forms.Button().
+        this-object:numericUpDown1 = new System.Windows.Forms.NumericUpDown().
+        this-object:btn_ref = new System.Windows.Forms.Button().
+        this-object:Rep = new System.Windows.Forms.CheckBox().
+        this-object:FalVerif = new System.Windows.Forms.CheckBox().
+        this-object:ToExtin = new System.Windows.Forms.CheckBox().
+        this-object:FalExting = new System.Windows.Forms.CheckBox().
+        this-object:ReqVerif = new System.Windows.Forms.CheckBox().
+        this-object:dateTimePicker2 = new System.Windows.Forms.DateTimePicker().
+        this-object:label7 = new System.Windows.Forms.Label().
+        this-object:label6 = new System.Windows.Forms.Label().
+        this-object:dateTimePicker1 = new System.Windows.Forms.DateTimePicker().
+        this-object:label5 = new System.Windows.Forms.Label().
+        this-object:btn_prn = new System.Windows.Forms.Button().
+        this-object:btn_edit = new System.Windows.Forms.Button().
+        this-object:Btn_Cancel = new System.Windows.Forms.Button().
+        this-object:msgerr = new System.Windows.Forms.TextBox().
+        this-object:label4 = new System.Windows.Forms.Label().
+        cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
+        cast(this-object:bingvsd, System.ComponentModel.ISupportInitialize):BeginInit().
+        this-object:tableLayoutPanel1:SuspendLayout().
+        this-object:panel1:SuspendLayout().
+        this-object:panel2:SuspendLayout().
+        cast(this-object:bindttFilt, System.ComponentModel.ISupportInitialize):BeginInit().
+        cast(this-object:numericUpDown1, System.ComponentModel.ISupportInitialize):BeginInit().
+        this-object:SuspendLayout().
         /*  */
         /* Btn_lookup */
         /*  */
-        THIS-OBJECT:Btn_lookup:Location = NEW System.Drawing.Point(204, 12).
-        THIS-OBJECT:Btn_lookup:Name = "Btn_lookup".
-        THIS-OBJECT:Btn_lookup:Size = NEW System.Drawing.Size(75, 23).
-        THIS-OBJECT:Btn_lookup:TabIndex = 0.
-        THIS-OBJECT:Btn_lookup:Text = "Просмотр".
-        THIS-OBJECT:Btn_lookup:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:Btn_lookup:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:Btn_lookup:Click:Subscribe(THIS-OBJECT:Btn_lookup_Click).
+        this-object:Btn_lookup:Location = new System.Drawing.Point(204, 12).
+        this-object:Btn_lookup:Name = "Btn_lookup".
+        this-object:Btn_lookup:Size = new System.Drawing.Size(75, 23).
+        this-object:Btn_lookup:TabIndex = 0.
+        this-object:Btn_lookup:Text = "Просмотр".
+        this-object:Btn_lookup:UseCompatibleTextRendering = true.
+        this-object:Btn_lookup:UseVisualStyleBackColor = true.
+        this-object:Btn_lookup:Click:Subscribe(this-object:Btn_lookup_Click).
         /*  */
         /* dataGridView1 */
         /*  */
-        THIS-OBJECT:dataGridView1:AllowUserToAddRows = FALSE.
-        THIS-OBJECT:dataGridView1:AllowUserToDeleteRows = FALSE.
-        THIS-OBJECT:dataGridView1:AllowUserToOrderColumns = TRUE.
-        DEFINE VARIABLE nestedvar0 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar0 = CAST(Progress.Util.EnumHelper:Or(CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:dataGridView1:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:dataGridView1:AutoGenerateColumns = FALSE.
-        THIS-OBJECT:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
+        this-object:dataGridView1:AllowUserToAddRows = false.
+        this-object:dataGridView1:AllowUserToDeleteRows = false.
+        this-object:dataGridView1:AllowUserToOrderColumns = true.
+        this-object:dataGridView1:AutoGenerateColumns = false.
+        this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar0 AS System.Windows.Forms.DataGridViewColumn EXTENT 15 NO-UNDO.
-        arrayvar0[1] = THIS-OBJECT:dateTTHDataGridViewTextBoxColumn.
-        arrayvar0[2] = THIS-OBJECT:nomTTHDataGridViewTextBoxColumn.
-        arrayvar0[3] = THIS-OBJECT:nomAZSDataGridViewTextBoxColumn.
-        arrayvar0[4] = THIS-OBJECT:articDataGridViewTextBoxColumn.
-        arrayvar0[5] = THIS-OBJECT:vsdtypelblDataGridViewTextBoxColumn.
-        arrayvar0[6] = THIS-OBJECT:uUIDDataGridViewTextBoxColumn1.
-        arrayvar0[7] = THIS-OBJECT:statusvsdDataGridViewTextBoxColumn.
-        arrayvar0[8] = THIS-OBJECT:nomTTHpostDataGridViewTextBoxColumn.
-        arrayvar0[9] = THIS-OBJECT:postDataGridViewTextBoxColumn.
-        arrayvar0[10] = THIS-OBJECT:gdsnameDataGridViewTextBoxColumn.
-        arrayvar0[11] = THIS-OBJECT:prodcodeDataGridViewTextBoxColumn.
-        arrayvar0[12] = THIS-OBJECT:cOLobjDataGridViewTextBoxColumn.
-        arrayvar0[13] = THIS-OBJECT:unitbaseDataGridViewTextBoxColumn.
-        arrayvar0[14] = THIS-OBJECT:unitcliDataGridViewTextBoxColumn.
-        arrayvar0[15] = THIS-OBJECT:ojdDataGridViewTextBoxColumn.
-        THIS-OBJECT:dataGridView1:Columns:AddRange(arrayvar0).
-        THIS-OBJECT:dataGridView1:DataSource = THIS-OBJECT:bingvsd.
-        THIS-OBJECT:dataGridView1:Location = NEW System.Drawing.Point(-2, 103).
-        THIS-OBJECT:dataGridView1:Name = "dataGridView1".
-        THIS-OBJECT:dataGridView1:ReadOnly = TRUE.
-        THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(852, 273).
-        THIS-OBJECT:dataGridView1:TabIndex = 1.
-        THIS-OBJECT:dataGridView1:CellContentClick:Subscribe(THIS-OBJECT:dataGridView1_CellContentClick).
+        define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 15 no-undo.
+        arrayvar0[1] = this-object:dateTTHDataGridViewTextBoxColumn.
+        arrayvar0[2] = this-object:nomTTHDataGridViewTextBoxColumn.
+        arrayvar0[3] = this-object:nomAZSDataGridViewTextBoxColumn.
+        arrayvar0[4] = this-object:articDataGridViewTextBoxColumn.
+        arrayvar0[5] = this-object:vsdtypelblDataGridViewTextBoxColumn.
+        arrayvar0[6] = this-object:uUIDDataGridViewTextBoxColumn1.
+        arrayvar0[7] = this-object:statusvsdDataGridViewTextBoxColumn.
+        arrayvar0[8] = this-object:nomTTHpostDataGridViewTextBoxColumn.
+        arrayvar0[9] = this-object:postDataGridViewTextBoxColumn.
+        arrayvar0[10] = this-object:gdsnameDataGridViewTextBoxColumn.
+        arrayvar0[11] = this-object:prodcodeDataGridViewTextBoxColumn.
+        arrayvar0[12] = this-object:cOLobjDataGridViewTextBoxColumn.
+        arrayvar0[13] = this-object:unitbaseDataGridViewTextBoxColumn.
+        arrayvar0[14] = this-object:unitcliDataGridViewTextBoxColumn.
+        arrayvar0[15] = this-object:ojdDataGridViewTextBoxColumn.
+        this-object:dataGridView1:Columns:AddRange(arrayvar0).
+        this-object:dataGridView1:DataSource = this-object:bingvsd.
+        this-object:dataGridView1:Location = new System.Drawing.Point(-2, 103).
+        this-object:dataGridView1:Name = "dataGridView1".
+        this-object:dataGridView1:ReadOnly = true.
+        this-object:dataGridView1:Size = new System.Drawing.Size(852, 273).
+        this-object:dataGridView1:TabIndex = 1.
+        this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
         /*  */
         /* dateTTHDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:dateTTHDataGridViewTextBoxColumn:DataPropertyName = "dateTTH".
-        THIS-OBJECT:dateTTHDataGridViewTextBoxColumn:HeaderText = "Дата ТТН".
-        THIS-OBJECT:dateTTHDataGridViewTextBoxColumn:Name = "dateTTHDataGridViewTextBoxColumn".
-        THIS-OBJECT:dateTTHDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:dateTTHDataGridViewTextBoxColumn:DataPropertyName = "dateTTH".
+        this-object:dateTTHDataGridViewTextBoxColumn:HeaderText = "Дата ТТН".
+        this-object:dateTTHDataGridViewTextBoxColumn:Name = "dateTTHDataGridViewTextBoxColumn".
+        this-object:dateTTHDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* nomTTHDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:nomTTHDataGridViewTextBoxColumn:DataPropertyName = "NomTTH".
-        THIS-OBJECT:nomTTHDataGridViewTextBoxColumn:HeaderText = "Номер ТТН".
-        THIS-OBJECT:nomTTHDataGridViewTextBoxColumn:Name = "nomTTHDataGridViewTextBoxColumn".
-        THIS-OBJECT:nomTTHDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:nomTTHDataGridViewTextBoxColumn:DataPropertyName = "NomTTH".
+        this-object:nomTTHDataGridViewTextBoxColumn:HeaderText = "Номер ТТН".
+        this-object:nomTTHDataGridViewTextBoxColumn:Name = "nomTTHDataGridViewTextBoxColumn".
+        this-object:nomTTHDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* nomAZSDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:nomAZSDataGridViewTextBoxColumn:DataPropertyName = "NomAZS".
-        THIS-OBJECT:nomAZSDataGridViewTextBoxColumn:HeaderText = "Объект".
-        THIS-OBJECT:nomAZSDataGridViewTextBoxColumn:Name = "nomAZSDataGridViewTextBoxColumn".
-        THIS-OBJECT:nomAZSDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:nomAZSDataGridViewTextBoxColumn:DataPropertyName = "NomAZS".
+        this-object:nomAZSDataGridViewTextBoxColumn:HeaderText = "Объект".
+        this-object:nomAZSDataGridViewTextBoxColumn:Name = "nomAZSDataGridViewTextBoxColumn".
+        this-object:nomAZSDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* articDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:articDataGridViewTextBoxColumn:DataPropertyName = "artic".
-        THIS-OBJECT:articDataGridViewTextBoxColumn:HeaderText = "Артикул товара".
-        THIS-OBJECT:articDataGridViewTextBoxColumn:Name = "articDataGridViewTextBoxColumn".
-        THIS-OBJECT:articDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:articDataGridViewTextBoxColumn:DataPropertyName = "artic".
+        this-object:articDataGridViewTextBoxColumn:HeaderText = "Артикул товара".
+        this-object:articDataGridViewTextBoxColumn:Name = "articDataGridViewTextBoxColumn".
+        this-object:articDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* vsdtypelblDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:vsdtypelblDataGridViewTextBoxColumn:DataPropertyName = "vsdtypelbl".
-        THIS-OBJECT:vsdtypelblDataGridViewTextBoxColumn:HeaderText = "Тип".
-        THIS-OBJECT:vsdtypelblDataGridViewTextBoxColumn:Name = "vsdtypelblDataGridViewTextBoxColumn".
-        THIS-OBJECT:vsdtypelblDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:vsdtypelblDataGridViewTextBoxColumn:DataPropertyName = "vsdtypelbl".
+        this-object:vsdtypelblDataGridViewTextBoxColumn:HeaderText = "Тип".
+        this-object:vsdtypelblDataGridViewTextBoxColumn:Name = "vsdtypelblDataGridViewTextBoxColumn".
+        this-object:vsdtypelblDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* uUIDDataGridViewTextBoxColumn1 */
         /*  */
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn1:DataPropertyName = "UUID".
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn1:HeaderText = "Номер ВСД".
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn1:Name = "uUIDDataGridViewTextBoxColumn1".
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn1:ReadOnly = TRUE.
+        this-object:uUIDDataGridViewTextBoxColumn1:DataPropertyName = "UUID".
+        this-object:uUIDDataGridViewTextBoxColumn1:HeaderText = "Номер ВСД".
+        this-object:uUIDDataGridViewTextBoxColumn1:Name = "uUIDDataGridViewTextBoxColumn1".
+        this-object:uUIDDataGridViewTextBoxColumn1:ReadOnly = true.
         /*  */
         /* statusvsdDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:statusvsdDataGridViewTextBoxColumn:DataPropertyName = "statusvsd".
-        THIS-OBJECT:statusvsdDataGridViewTextBoxColumn:HeaderText = "Статус ВСД".
-        THIS-OBJECT:statusvsdDataGridViewTextBoxColumn:Name = "statusvsdDataGridViewTextBoxColumn".
-        THIS-OBJECT:statusvsdDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:statusvsdDataGridViewTextBoxColumn:DataPropertyName = "statusvsd".
+        this-object:statusvsdDataGridViewTextBoxColumn:HeaderText = "Статус ВСД".
+        this-object:statusvsdDataGridViewTextBoxColumn:Name = "statusvsdDataGridViewTextBoxColumn".
+        this-object:statusvsdDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* nomTTHpostDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:nomTTHpostDataGridViewTextBoxColumn:DataPropertyName = "NomTTHpost".
-        THIS-OBJECT:nomTTHpostDataGridViewTextBoxColumn:HeaderText = "Номер ТТН поставщика".
-        THIS-OBJECT:nomTTHpostDataGridViewTextBoxColumn:Name = "nomTTHpostDataGridViewTextBoxColumn".
-        THIS-OBJECT:nomTTHpostDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:nomTTHpostDataGridViewTextBoxColumn:DataPropertyName = "NomTTHpost".
+        this-object:nomTTHpostDataGridViewTextBoxColumn:HeaderText = "Номер ТТН поставщика".
+        this-object:nomTTHpostDataGridViewTextBoxColumn:Name = "nomTTHpostDataGridViewTextBoxColumn".
+        this-object:nomTTHpostDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* postDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:postDataGridViewTextBoxColumn:DataPropertyName = "Post".
-        THIS-OBJECT:postDataGridViewTextBoxColumn:HeaderText = "Поставщик".
-        THIS-OBJECT:postDataGridViewTextBoxColumn:Name = "postDataGridViewTextBoxColumn".
-        THIS-OBJECT:postDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:postDataGridViewTextBoxColumn:DataPropertyName = "Post".
+        this-object:postDataGridViewTextBoxColumn:HeaderText = "Поставщик".
+        this-object:postDataGridViewTextBoxColumn:Name = "postDataGridViewTextBoxColumn".
+        this-object:postDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* gdsnameDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:gdsnameDataGridViewTextBoxColumn:DataPropertyName = "gdsname".
-        THIS-OBJECT:gdsnameDataGridViewTextBoxColumn:HeaderText = "Наименование товара".
-        THIS-OBJECT:gdsnameDataGridViewTextBoxColumn:Name = "gdsnameDataGridViewTextBoxColumn".
-        THIS-OBJECT:gdsnameDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:gdsnameDataGridViewTextBoxColumn:DataPropertyName = "gdsname".
+        this-object:gdsnameDataGridViewTextBoxColumn:HeaderText = "Наименование товара".
+        this-object:gdsnameDataGridViewTextBoxColumn:Name = "gdsnameDataGridViewTextBoxColumn".
+        this-object:gdsnameDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* prodcodeDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:prodcodeDataGridViewTextBoxColumn:DataPropertyName = "prod-code".
-        THIS-OBJECT:prodcodeDataGridViewTextBoxColumn:HeaderText = "Производитель".
-        THIS-OBJECT:prodcodeDataGridViewTextBoxColumn:Name = "prodcodeDataGridViewTextBoxColumn".
-        THIS-OBJECT:prodcodeDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:prodcodeDataGridViewTextBoxColumn:DataPropertyName = "prod-code".
+        this-object:prodcodeDataGridViewTextBoxColumn:HeaderText = "Производитель".
+        this-object:prodcodeDataGridViewTextBoxColumn:Name = "prodcodeDataGridViewTextBoxColumn".
+        this-object:prodcodeDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* cOLobjDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:cOLobjDataGridViewTextBoxColumn:DataPropertyName = "COLobj".
-        THIS-OBJECT:cOLobjDataGridViewTextBoxColumn:HeaderText = "Кол-во ВСД".
-        THIS-OBJECT:cOLobjDataGridViewTextBoxColumn:Name = "cOLobjDataGridViewTextBoxColumn".
-        THIS-OBJECT:cOLobjDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:cOLobjDataGridViewTextBoxColumn:DataPropertyName = "COLobj".
+        this-object:cOLobjDataGridViewTextBoxColumn:HeaderText = "Кол-во ВСД".
+        this-object:cOLobjDataGridViewTextBoxColumn:Name = "cOLobjDataGridViewTextBoxColumn".
+        this-object:cOLobjDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* unitbaseDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:unitbaseDataGridViewTextBoxColumn:DataPropertyName = "unit-base".
-        THIS-OBJECT:unitbaseDataGridViewTextBoxColumn:HeaderText = "Ед.изм.уч.".
-        THIS-OBJECT:unitbaseDataGridViewTextBoxColumn:Name = "unitbaseDataGridViewTextBoxColumn".
-        THIS-OBJECT:unitbaseDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:unitbaseDataGridViewTextBoxColumn:DataPropertyName = "unit-base".
+        this-object:unitbaseDataGridViewTextBoxColumn:HeaderText = "Ед.изм.уч.".
+        this-object:unitbaseDataGridViewTextBoxColumn:Name = "unitbaseDataGridViewTextBoxColumn".
+        this-object:unitbaseDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* unitcliDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:unitcliDataGridViewTextBoxColumn:DataPropertyName = "unit-cli".
-        THIS-OBJECT:unitcliDataGridViewTextBoxColumn:HeaderText = "Ед.изм.пост.".
-        THIS-OBJECT:unitcliDataGridViewTextBoxColumn:Name = "unitcliDataGridViewTextBoxColumn".
-        THIS-OBJECT:unitcliDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:unitcliDataGridViewTextBoxColumn:DataPropertyName = "unit-cli".
+        this-object:unitcliDataGridViewTextBoxColumn:HeaderText = "Ед.изм.пост.".
+        this-object:unitcliDataGridViewTextBoxColumn:Name = "unitcliDataGridViewTextBoxColumn".
+        this-object:unitcliDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* ojdDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:ojdDataGridViewTextBoxColumn:DataPropertyName = "ojd".
-        THIS-OBJECT:ojdDataGridViewTextBoxColumn:HeaderText = "Ожидает гашения(Ч.)".
-        THIS-OBJECT:ojdDataGridViewTextBoxColumn:Name = "ojdDataGridViewTextBoxColumn".
-        THIS-OBJECT:ojdDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        this-object:ojdDataGridViewTextBoxColumn:DataPropertyName = "ojd".
+        this-object:ojdDataGridViewTextBoxColumn:HeaderText = "Ожидает гашения(Ч.)".
+        this-object:ojdDataGridViewTextBoxColumn:Name = "ojdDataGridViewTextBoxColumn".
+        this-object:ojdDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* bingvsd */
         /*  */
-        THIS-OBJECT:bingvsd:AutoSort = TRUE.
-        THIS-OBJECT:bingvsd:AutoUpdate = TRUE.
-        THIS-OBJECT:bingvsd:MaxDataGuess = 0.
-        THIS-OBJECT:bingvsd:NoLOBs = FALSE.
-        THIS-OBJECT:bingvsd:Position = 0.
+        this-object:bingvsd:AutoSort = true.
+        this-object:bingvsd:AutoUpdate = true.
+        this-object:bingvsd:MaxDataGuess = 0.
+        this-object:bingvsd:NoLOBs = false.
+        this-object:bingvsd:Position = 0.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar1 AS "Progress.Data.TableDesc[]" NO-UNDO.
-        arrayvar1 = NEW "Progress.Data.TableDesc[]"(0).
+        define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
+        arrayvar1 = new "Progress.Data.TableDesc[]"(0).
         tableDesc1:ChildTables = arrayvar1.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar2 AS Progress.Data.ColumnPropDesc EXTENT 41 NO-UNDO.
-        arrayvar2[1] = NEW Progress.Data.ColumnPropDesc("cli-code", "?", Progress.Data.DataType:INTEGER).
-        arrayvar2[2] = NEW Progress.Data.ColumnPropDesc("cli-type", "?", Progress.Data.DataType:CHARACTER).
-        arrayvar2[3] = NEW Progress.Data.ColumnPropDesc("date-cr", "Дата оформления", Progress.Data.DataType:DATE).
-        arrayvar2[4] = NEW Progress.Data.ColumnPropDesc("date-out", "Дата выробатки", Progress.Data.DataType:CHARACTER).
-        arrayvar2[5] = NEW Progress.Data.ColumnPropDesc("db-num", "База данных создания", Progress.Data.DataType:INTEGER).
-        arrayvar2[6] = NEW Progress.Data.ColumnPropDesc("economic-sub", "Хоз. субъект", Progress.Data.DataType:CHARACTER).
-        arrayvar2[7] = NEW Progress.Data.ColumnPropDesc("expiry-date", "Срок годности", Progress.Data.DataType:CHARACTER).
-        arrayvar2[8] = NEW Progress.Data.ColumnPropDesc("expiry-date-2", "Срок годости 2", Progress.Data.DataType:CHARACTER).
-        arrayvar2[9] = NEW Progress.Data.ColumnPropDesc("expiry-out-date", "Срок выпуска", Progress.Data.DataType:CHARACTER).
-        arrayvar2[10] = NEW Progress.Data.ColumnPropDesc("fact-datetime", "?", Progress.Data.DataType:DATETIME_TZ).
-        arrayvar2[11] = NEW Progress.Data.ColumnPropDesc("gds-code", "?", Progress.Data.DataType:INTEGER).
-        arrayvar2[12] = NEW Progress.Data.ColumnPropDesc("gds-guid", "GUID товара", Progress.Data.DataType:CHARACTER).
-        arrayvar2[13] = NEW Progress.Data.ColumnPropDesc("gds-name-merc", "Наименование товара в Меркурии", Progress.Data.DataType:CHARACTER).
-        arrayvar2[14] = NEW Progress.Data.ColumnPropDesc("ID", "?", Progress.Data.DataType:INTEGER).
-        arrayvar2[15] = NEW Progress.Data.ColumnPropDesc("msg-err", "Описание ошибки", Progress.Data.DataType:CHARACTER).
-        arrayvar2[16] = NEW Progress.Data.ColumnPropDesc("note", "Примечание", Progress.Data.DataType:CHARACTER).
-        arrayvar2[17] = NEW Progress.Data.ColumnPropDesc("num-part", "Номер партии", Progress.Data.DataType:CHARACTER).
-        arrayvar2[18] = NEW Progress.Data.ColumnPropDesc("obj-code", "?", Progress.Data.DataType:INTEGER).
-        arrayvar2[19] = NEW Progress.Data.ColumnPropDesc("obj-type", "?", Progress.Data.DataType:CHARACTER).
-        arrayvar2[20] = NEW Progress.Data.ColumnPropDesc("part-key", "Ключ партии", Progress.Data.DataType:CHARACTER).
-        arrayvar2[21] = NEW Progress.Data.ColumnPropDesc("qnty", "Количество", Progress.Data.DataType:DECIMAL).
-        arrayvar2[22] = NEW Progress.Data.ColumnPropDesc("status_", "Статус ВСД", Progress.Data.DataType:INTEGER).
-        arrayvar2[23] = NEW Progress.Data.ColumnPropDesc("type-prod", "?", Progress.Data.DataType:CHARACTER).
-        arrayvar2[24] = NEW Progress.Data.ColumnPropDesc("UUID", "Номер ВСД", Progress.Data.DataType:CHARACTER).
-        arrayvar2[25] = NEW Progress.Data.ColumnPropDesc("vsd-num", "Номер ВСД", Progress.Data.DataType:CHARACTER).
-        arrayvar2[26] = NEW Progress.Data.ColumnPropDesc("vsd-type", "Тип ВСД", Progress.Data.DataType:INTEGER).
-        arrayvar2[27] = NEW Progress.Data.ColumnPropDesc("dateTTH", "Дата ТТН", Progress.Data.DataType:DATE).
-        arrayvar2[28] = NEW Progress.Data.ColumnPropDesc("NomTTH", "Номер ТТН", Progress.Data.DataType:CHARACTER).
-        arrayvar2[29] = NEW Progress.Data.ColumnPropDesc("NomAZS", "Объект", Progress.Data.DataType:CHARACTER).
-        arrayvar2[30] = NEW Progress.Data.ColumnPropDesc("artic", "Артикул товара", Progress.Data.DataType:CHARACTER).
-        arrayvar2[31] = NEW Progress.Data.ColumnPropDesc("vsdtypelbl", "Тип", Progress.Data.DataType:CHARACTER).
-        arrayvar2[32] = NEW Progress.Data.ColumnPropDesc("statusvsd", "Статус ВСД", Progress.Data.DataType:CHARACTER).
-        arrayvar2[33] = NEW Progress.Data.ColumnPropDesc("NomTTHpost", "Номер ТТН поставщика", Progress.Data.DataType:CHARACTER).
-        arrayvar2[34] = NEW Progress.Data.ColumnPropDesc("Post", "Поставщик", Progress.Data.DataType:CHARACTER).
-        arrayvar2[35] = NEW Progress.Data.ColumnPropDesc("gdsname", "Наименование товара", Progress.Data.DataType:CHARACTER).
-        arrayvar2[36] = NEW Progress.Data.ColumnPropDesc("prod-code", "Производитель", Progress.Data.DataType:CHARACTER).
-        arrayvar2[37] = NEW Progress.Data.ColumnPropDesc("COLobj", "Кол-во ВСД", Progress.Data.DataType:DECIMAL).
-        arrayvar2[38] = NEW Progress.Data.ColumnPropDesc("unit-base", "Ед.изм.уч.", Progress.Data.DataType:CHARACTER).
-        arrayvar2[39] = NEW Progress.Data.ColumnPropDesc("unit-cli", "Ед.изм.пост.", Progress.Data.DataType:CHARACTER).
-        arrayvar2[40] = NEW Progress.Data.ColumnPropDesc("ojd", "Ожидает гашения(Ч.)", Progress.Data.DataType:DECIMAL).
-        arrayvar2[41] = NEW Progress.Data.ColumnPropDesc("gdsmercguid", "gdsmercguid", Progress.Data.DataType:CHARACTER).
+        define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 41 no-undo.
+        arrayvar2[1] = new Progress.Data.ColumnPropDesc("cli-code", "?", Progress.Data.DataType:INTEGER).
+        arrayvar2[2] = new Progress.Data.ColumnPropDesc("cli-type", "?", Progress.Data.DataType:CHARACTER).
+        arrayvar2[3] = new Progress.Data.ColumnPropDesc("date-cr", "Дата оформления", Progress.Data.DataType:DATE).
+        arrayvar2[4] = new Progress.Data.ColumnPropDesc("date-out", "Дата выробатки", Progress.Data.DataType:CHARACTER).
+        arrayvar2[5] = new Progress.Data.ColumnPropDesc("db-num", "База данных создания", Progress.Data.DataType:INTEGER).
+        arrayvar2[6] = new Progress.Data.ColumnPropDesc("economic-sub", "Хоз. субъект", Progress.Data.DataType:CHARACTER).
+        arrayvar2[7] = new Progress.Data.ColumnPropDesc("expiry-date", "Срок годности", Progress.Data.DataType:CHARACTER).
+        arrayvar2[8] = new Progress.Data.ColumnPropDesc("expiry-date-2", "Срок годости 2", Progress.Data.DataType:CHARACTER).
+        arrayvar2[9] = new Progress.Data.ColumnPropDesc("expiry-out-date", "Срок выпуска", Progress.Data.DataType:CHARACTER).
+        arrayvar2[10] = new Progress.Data.ColumnPropDesc("fact-datetime", "?", Progress.Data.DataType:DATETIME_TZ).
+        arrayvar2[11] = new Progress.Data.ColumnPropDesc("gds-code", "?", Progress.Data.DataType:INTEGER).
+        arrayvar2[12] = new Progress.Data.ColumnPropDesc("gds-guid", "GUID товара", Progress.Data.DataType:CHARACTER).
+        arrayvar2[13] = new Progress.Data.ColumnPropDesc("gds-name-merc", "Наименование товара в Меркурии", Progress.Data.DataType:CHARACTER).
+        arrayvar2[14] = new Progress.Data.ColumnPropDesc("ID", "?", Progress.Data.DataType:INTEGER).
+        arrayvar2[15] = new Progress.Data.ColumnPropDesc("msg-err", "Описание ошибки", Progress.Data.DataType:CHARACTER).
+        arrayvar2[16] = new Progress.Data.ColumnPropDesc("note", "Примечание", Progress.Data.DataType:CHARACTER).
+        arrayvar2[17] = new Progress.Data.ColumnPropDesc("num-part", "Номер партии", Progress.Data.DataType:CHARACTER).
+        arrayvar2[18] = new Progress.Data.ColumnPropDesc("obj-code", "?", Progress.Data.DataType:INTEGER).
+        arrayvar2[19] = new Progress.Data.ColumnPropDesc("obj-type", "?", Progress.Data.DataType:CHARACTER).
+        arrayvar2[20] = new Progress.Data.ColumnPropDesc("part-key", "Ключ партии", Progress.Data.DataType:CHARACTER).
+        arrayvar2[21] = new Progress.Data.ColumnPropDesc("qnty", "Количество", Progress.Data.DataType:DECIMAL).
+        arrayvar2[22] = new Progress.Data.ColumnPropDesc("status_", "Статус ВСД", Progress.Data.DataType:INTEGER).
+        arrayvar2[23] = new Progress.Data.ColumnPropDesc("type-prod", "?", Progress.Data.DataType:CHARACTER).
+        arrayvar2[24] = new Progress.Data.ColumnPropDesc("UUID", "Номер ВСД", Progress.Data.DataType:CHARACTER).
+        arrayvar2[25] = new Progress.Data.ColumnPropDesc("vsd-num", "Номер ВСД", Progress.Data.DataType:CHARACTER).
+        arrayvar2[26] = new Progress.Data.ColumnPropDesc("vsd-type", "Тип ВСД", Progress.Data.DataType:INTEGER).
+        arrayvar2[27] = new Progress.Data.ColumnPropDesc("dateTTH", "Дата ТТН", Progress.Data.DataType:DATE).
+        arrayvar2[28] = new Progress.Data.ColumnPropDesc("NomTTH", "Номер ТТН", Progress.Data.DataType:CHARACTER).
+        arrayvar2[29] = new Progress.Data.ColumnPropDesc("NomAZS", "Объект", Progress.Data.DataType:CHARACTER).
+        arrayvar2[30] = new Progress.Data.ColumnPropDesc("artic", "Артикул товара", Progress.Data.DataType:CHARACTER).
+        arrayvar2[31] = new Progress.Data.ColumnPropDesc("vsdtypelbl", "Тип", Progress.Data.DataType:CHARACTER).
+        arrayvar2[32] = new Progress.Data.ColumnPropDesc("statusvsd", "Статус ВСД", Progress.Data.DataType:CHARACTER).
+        arrayvar2[33] = new Progress.Data.ColumnPropDesc("NomTTHpost", "Номер ТТН поставщика", Progress.Data.DataType:CHARACTER).
+        arrayvar2[34] = new Progress.Data.ColumnPropDesc("Post", "Поставщик", Progress.Data.DataType:CHARACTER).
+        arrayvar2[35] = new Progress.Data.ColumnPropDesc("gdsname", "Наименование товара", Progress.Data.DataType:CHARACTER).
+        arrayvar2[36] = new Progress.Data.ColumnPropDesc("prod-code", "Производитель", Progress.Data.DataType:CHARACTER).
+        arrayvar2[37] = new Progress.Data.ColumnPropDesc("COLobj", "Кол-во ВСД", Progress.Data.DataType:DECIMAL).
+        arrayvar2[38] = new Progress.Data.ColumnPropDesc("unit-base", "Ед.изм.уч.", Progress.Data.DataType:CHARACTER).
+        arrayvar2[39] = new Progress.Data.ColumnPropDesc("unit-cli", "Ед.изм.пост.", Progress.Data.DataType:CHARACTER).
+        arrayvar2[40] = new Progress.Data.ColumnPropDesc("ojd", "Ожидает гашения(Ч.)", Progress.Data.DataType:DECIMAL).
+        arrayvar2[41] = new Progress.Data.ColumnPropDesc("gdsmercguid", "gdsmercguid", Progress.Data.DataType:CHARACTER).
         tableDesc1:Columns = arrayvar2.
-        THIS-OBJECT:bingvsd:TableSchema = tableDesc1.
+        this-object:bingvsd:TableSchema = tableDesc1.
         /*  */
         /* uUIDDataGridViewTextBoxColumn */
         /*  */
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn:DataPropertyName = "UUID".
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn:HeaderText = "Номер ВСД".
-        THIS-OBJECT:uUIDDataGridViewTextBoxColumn:Name = "uUIDDataGridViewTextBoxColumn".
+        this-object:uUIDDataGridViewTextBoxColumn:DataPropertyName = "UUID".
+        this-object:uUIDDataGridViewTextBoxColumn:HeaderText = "Номер ВСД".
+        this-object:uUIDDataGridViewTextBoxColumn:Name = "uUIDDataGridViewTextBoxColumn".
         /*  */
         /* COLobj */
         /*  */
-        THIS-OBJECT:COLobj:DataPropertyName = "COLobj".
-        THIS-OBJECT:COLobj:HeaderText = "Кол-во ВСД".
-        THIS-OBJECT:COLobj:Name = "COLobj".
-        THIS-OBJECT:COLobj:ReadOnly = TRUE.
+        this-object:COLobj:DataPropertyName = "COLobj".
+        this-object:COLobj:HeaderText = "Кол-во ВСД".
+        this-object:COLobj:Name = "COLobj".
+        this-object:COLobj:ReadOnly = true.
         /*  */
         /* tableLayoutPanel1 */
         /*  */
-        DEFINE VARIABLE nestedvar1 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar1 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Bottom, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:tableLayoutPanel1:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:tableLayoutPanel1:ColumnCount = 5.
-        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(120))).
-        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(33))).
-        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(33))).
-        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(34))).
-        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:gdsname, 2, 0).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:gdsnamemerc, 2, 1).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:gdscode, 1, 0).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:gdsmercguid, 3, 0).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:label1, 0, 0).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:label2, 0, 1).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:gdsguid, 3, 1).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:Btn_gds, 4, 0).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:btn_gds_merc, 4, 1).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:NomTTH, 1, 2).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:label3, 0, 2).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:btn_trndoc, 4, 2).
-        THIS-OBJECT:tableLayoutPanel1:Location = NEW System.Drawing.Point(2, 384).
-        THIS-OBJECT:tableLayoutPanel1:Name = "tableLayoutPanel1".
-        THIS-OBJECT:tableLayoutPanel1:RowCount = 3.
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel1:Size = NEW System.Drawing.Size(848, 90).
-        THIS-OBJECT:tableLayoutPanel1:TabIndex = 2.
+        define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar0 = cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Bottom, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+        this-object:tableLayoutPanel1:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:tableLayoutPanel1:ColumnCount = 5.
+        this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(120))).
+        this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(33))).
+        this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(33))).
+        this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(34))).
+        this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:gdsname, 2, 0).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:gdsnamemerc, 2, 1).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:gdscode, 1, 0).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:gdsmercguid, 3, 0).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:label1, 0, 0).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:label2, 0, 1).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:gdsguid, 3, 1).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:Btn_gds, 4, 0).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:btn_gds_merc, 4, 1).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:NomTTH, 1, 2).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:label3, 0, 2).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:btn_trndoc, 4, 2).
+        this-object:tableLayoutPanel1:Location = new System.Drawing.Point(2, 384).
+        this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
+        this-object:tableLayoutPanel1:RowCount = 3.
+        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+        this-object:tableLayoutPanel1:Size = new System.Drawing.Size(848, 90).
+        this-object:tableLayoutPanel1:TabIndex = 2.
         /*  */
         /* gdsname */
         /*  */
-        DEFINE VARIABLE nestedvar2 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar2 = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:gdsname:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:gdsname:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bingvsd, "gdsname", TRUE)).
-        THIS-OBJECT:gdsname:Location = NEW System.Drawing.Point(353, 5).
-        THIS-OBJECT:gdsname:Name = "gdsname".
-        THIS-OBJECT:gdsname:ReadOnly = TRUE.
-        THIS-OBJECT:gdsname:Size = NEW System.Drawing.Size(224, 20).
-        THIS-OBJECT:gdsname:TabIndex = 1.
+        define variable nestedvar1 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar1 = System.Windows.Forms.AnchorStyles:Left.
+        this-object:gdsname:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:gdsname:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bingvsd, "gdsname", true)).
+        this-object:gdsname:Location = new System.Drawing.Point(353, 5).
+        this-object:gdsname:Name = "gdsname".
+        this-object:gdsname:ReadOnly = true.
+        this-object:gdsname:Size = new System.Drawing.Size(224, 20).
+        this-object:gdsname:TabIndex = 1.
         /*  */
         /* gdsnamemerc */
         /*  */
-        DEFINE VARIABLE nestedvar3 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar3 = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:gdsnamemerc:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar3, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:gdsnamemerc:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bingvsd, "gds-name-merc", TRUE)).
-        THIS-OBJECT:gdsnamemerc:Location = NEW System.Drawing.Point(353, 35).
-        THIS-OBJECT:gdsnamemerc:Name = "gdsnamemerc".
-        THIS-OBJECT:gdsnamemerc:ReadOnly = TRUE.
-        THIS-OBJECT:gdsnamemerc:Size = NEW System.Drawing.Size(224, 20).
-        THIS-OBJECT:gdsnamemerc:TabIndex = 3.
+        define variable nestedvar2 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar2 = System.Windows.Forms.AnchorStyles:Left.
+        this-object:gdsnamemerc:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:gdsnamemerc:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bingvsd, "gds-name-merc", true)).
+        this-object:gdsnamemerc:Location = new System.Drawing.Point(353, 35).
+        this-object:gdsnamemerc:Name = "gdsnamemerc".
+        this-object:gdsnamemerc:ReadOnly = true.
+        this-object:gdsnamemerc:Size = new System.Drawing.Size(224, 20).
+        this-object:gdsnamemerc:TabIndex = 3.
         /*  */
         /* gdscode */
         /*  */
-        DEFINE VARIABLE nestedvar4 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar4 = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:gdscode:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar4, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:gdscode:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bingvsd, "gds-code", TRUE, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "N0")).
-        THIS-OBJECT:gdscode:Location = NEW System.Drawing.Point(123, 5).
-        THIS-OBJECT:gdscode:Name = "gdscode".
-        THIS-OBJECT:gdscode:ReadOnly = TRUE.
-        THIS-OBJECT:gdscode:Size = NEW System.Drawing.Size(224, 20).
-        THIS-OBJECT:gdscode:TabIndex = 0.
+        define variable nestedvar3 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar3 = System.Windows.Forms.AnchorStyles:Left.
+        this-object:gdscode:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar3, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:gdscode:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bingvsd, "gds-code", true, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "N0")).
+        this-object:gdscode:Location = new System.Drawing.Point(123, 5).
+        this-object:gdscode:Name = "gdscode".
+        this-object:gdscode:ReadOnly = true.
+        this-object:gdscode:Size = new System.Drawing.Size(224, 20).
+        this-object:gdscode:TabIndex = 0.
         /*  */
         /* gdsmercguid */
         /*  */
-        DEFINE VARIABLE nestedvar5 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar5 = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:gdsmercguid:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar5, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:gdsmercguid:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bingvsd, "gdsmercguid", TRUE)).
-        THIS-OBJECT:gdsmercguid:Location = NEW System.Drawing.Point(583, 5).
-        THIS-OBJECT:gdsmercguid:Name = "gdsmercguid".
-        THIS-OBJECT:gdsmercguid:ReadOnly = TRUE.
-        THIS-OBJECT:gdsmercguid:Size = NEW System.Drawing.Size(231, 20).
-        THIS-OBJECT:gdsmercguid:TabIndex = 2.
+        define variable nestedvar4 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar4 = System.Windows.Forms.AnchorStyles:Left.
+        this-object:gdsmercguid:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar4, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:gdsmercguid:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bingvsd, "gdsmercguid", true)).
+        this-object:gdsmercguid:Location = new System.Drawing.Point(583, 5).
+        this-object:gdsmercguid:Name = "gdsmercguid".
+        this-object:gdsmercguid:ReadOnly = true.
+        this-object:gdsmercguid:Size = new System.Drawing.Size(231, 20).
+        this-object:gdsmercguid:TabIndex = 2.
         /*  */
         /* label1 */
         /*  */
-        THIS-OBJECT:label1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:label1:Location = NEW System.Drawing.Point(3, 0).
-        THIS-OBJECT:label1:Name = "label1".
-        THIS-OBJECT:label1:Size = NEW System.Drawing.Size(114, 30).
-        THIS-OBJECT:label1:TabIndex = 4.
-        THIS-OBJECT:label1:Text = "Товар TH".
-        THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label1:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:label1:Click:Subscribe(THIS-OBJECT:label1_Click_1).
+        this-object:label1:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:label1:Location = new System.Drawing.Point(3, 0).
+        this-object:label1:Name = "label1".
+        this-object:label1:Size = new System.Drawing.Size(114, 30).
+        this-object:label1:TabIndex = 4.
+        this-object:label1:Text = "Товар TH".
+        this-object:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        this-object:label1:UseCompatibleTextRendering = true.
+        this-object:label1:Click:Subscribe(this-object:label1_Click_1).
         /*  */
         /* label2 */
         /*  */
-        THIS-OBJECT:label2:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:label2:Location = NEW System.Drawing.Point(3, 30).
-        THIS-OBJECT:label2:Name = "label2".
-        THIS-OBJECT:label2:Size = NEW System.Drawing.Size(114, 30).
-        THIS-OBJECT:label2:TabIndex = 5.
-        THIS-OBJECT:label2:Text = "Товар ВСД".
-        THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label2:UseCompatibleTextRendering = TRUE.
+        this-object:label2:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:label2:Location = new System.Drawing.Point(3, 30).
+        this-object:label2:Name = "label2".
+        this-object:label2:Size = new System.Drawing.Size(114, 30).
+        this-object:label2:TabIndex = 5.
+        this-object:label2:Text = "Товар ВСД".
+        this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        this-object:label2:UseCompatibleTextRendering = true.
         /*  */
         /* gdsguid */
         /*  */
-        DEFINE VARIABLE nestedvar6 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar6 = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:gdsguid:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar6, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:gdsguid:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bingvsd, "gds-guid", TRUE)).
-        THIS-OBJECT:gdsguid:Location = NEW System.Drawing.Point(583, 35).
-        THIS-OBJECT:gdsguid:Name = "gdsguid".
-        THIS-OBJECT:gdsguid:ReadOnly = TRUE.
-        THIS-OBJECT:gdsguid:Size = NEW System.Drawing.Size(231, 20).
-        THIS-OBJECT:gdsguid:TabIndex = 6.
+        define variable nestedvar5 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar5 = System.Windows.Forms.AnchorStyles:Left.
+        this-object:gdsguid:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar5, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:gdsguid:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bingvsd, "gds-guid", true)).
+        this-object:gdsguid:Location = new System.Drawing.Point(583, 35).
+        this-object:gdsguid:Name = "gdsguid".
+        this-object:gdsguid:ReadOnly = true.
+        this-object:gdsguid:Size = new System.Drawing.Size(231, 20).
+        this-object:gdsguid:TabIndex = 6.
         /*  */
         /* Btn_gds */
         /*  */
-        THIS-OBJECT:Btn_gds:Anchor = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:Btn_gds:Image = CAST(resources:GetObject("Btn_gds.Image"), System.Drawing.Image).
-        THIS-OBJECT:Btn_gds:Location = NEW System.Drawing.Point(820, 3).
-        THIS-OBJECT:Btn_gds:Name = "Btn_gds".
-        THIS-OBJECT:Btn_gds:Size = NEW System.Drawing.Size(25, 23).
-        THIS-OBJECT:Btn_gds:TabIndex = 7.
-        THIS-OBJECT:Btn_gds:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:Btn_gds:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:Btn_gds:Click:Subscribe(THIS-OBJECT:Btn_gds_Click).
+        this-object:Btn_gds:Anchor = System.Windows.Forms.AnchorStyles:Left.
+        this-object:Btn_gds:Image = cast(resources:GetObject("Btn_gds.Image"), System.Drawing.Image).
+        this-object:Btn_gds:Location = new System.Drawing.Point(820, 3).
+        this-object:Btn_gds:Name = "Btn_gds".
+        this-object:Btn_gds:Size = new System.Drawing.Size(25, 23).
+        this-object:Btn_gds:TabIndex = 7.
+        this-object:Btn_gds:UseCompatibleTextRendering = true.
+        this-object:Btn_gds:UseVisualStyleBackColor = true.
+        this-object:Btn_gds:Click:Subscribe(this-object:Btn_gds_Click).
         /*  */
         /* btn_gds_merc */
         /*  */
-        THIS-OBJECT:btn_gds_merc:Image = CAST(resources:GetObject("btn_gds_merc.Image"), System.Drawing.Image).
-        THIS-OBJECT:btn_gds_merc:Location = NEW System.Drawing.Point(820, 33).
-        THIS-OBJECT:btn_gds_merc:Name = "btn_gds_merc".
-        THIS-OBJECT:btn_gds_merc:Size = NEW System.Drawing.Size(25, 23).
-        THIS-OBJECT:btn_gds_merc:TabIndex = 8.
-        THIS-OBJECT:btn_gds_merc:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:btn_gds_merc:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:btn_gds_merc:Click:Subscribe(THIS-OBJECT:btn_gds_merc_Click).
+        this-object:btn_gds_merc:Image = cast(resources:GetObject("btn_gds_merc.Image"), System.Drawing.Image).
+        this-object:btn_gds_merc:Location = new System.Drawing.Point(820, 33).
+        this-object:btn_gds_merc:Name = "btn_gds_merc".
+        this-object:btn_gds_merc:Size = new System.Drawing.Size(25, 23).
+        this-object:btn_gds_merc:TabIndex = 8.
+        this-object:btn_gds_merc:UseCompatibleTextRendering = true.
+        this-object:btn_gds_merc:UseVisualStyleBackColor = true.
+        this-object:btn_gds_merc:Click:Subscribe(this-object:btn_gds_merc_Click).
         /*  */
         /* NomTTH */
         /*  */
-        DEFINE VARIABLE nestedvar7 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar7 = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:NomTTH:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar7, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:NomTTH:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bingvsd, "NomTTH", TRUE)).
-        THIS-OBJECT:NomTTH:Location = NEW System.Drawing.Point(123, 65).
-        THIS-OBJECT:NomTTH:Name = "NomTTH".
-        THIS-OBJECT:NomTTH:ReadOnly = TRUE.
-        THIS-OBJECT:NomTTH:Size = NEW System.Drawing.Size(224, 20).
-        THIS-OBJECT:NomTTH:TabIndex = 9.
+        define variable nestedvar6 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar6 = System.Windows.Forms.AnchorStyles:Left.
+        this-object:NomTTH:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar6, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:NomTTH:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bingvsd, "NomTTH", true)).
+        this-object:NomTTH:Location = new System.Drawing.Point(123, 65).
+        this-object:NomTTH:Name = "NomTTH".
+        this-object:NomTTH:ReadOnly = true.
+        this-object:NomTTH:Size = new System.Drawing.Size(224, 20).
+        this-object:NomTTH:TabIndex = 9.
         /*  */
         /* label3 */
         /*  */
-        THIS-OBJECT:label3:Location = NEW System.Drawing.Point(3, 60).
-        THIS-OBJECT:label3:Name = "label3".
-        THIS-OBJECT:label3:Size = NEW System.Drawing.Size(100, 23).
-        THIS-OBJECT:label3:TabIndex = 10.
-        THIS-OBJECT:label3:Text = "Накладная".
-        THIS-OBJECT:label3:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label3:UseCompatibleTextRendering = TRUE.
+        this-object:label3:Location = new System.Drawing.Point(3, 60).
+        this-object:label3:Name = "label3".
+        this-object:label3:Size = new System.Drawing.Size(100, 23).
+        this-object:label3:TabIndex = 10.
+        this-object:label3:Text = "Накладная".
+        this-object:label3:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        this-object:label3:UseCompatibleTextRendering = true.
         /*  */
         /* btn_trndoc */
         /*  */
-        THIS-OBJECT:btn_trndoc:Image = CAST(resources:GetObject("btn_trndoc.Image"), System.Drawing.Image).
-        THIS-OBJECT:btn_trndoc:Location = NEW System.Drawing.Point(820, 63).
-        THIS-OBJECT:btn_trndoc:Name = "btn_trndoc".
-        THIS-OBJECT:btn_trndoc:Size = NEW System.Drawing.Size(25, 23).
-        THIS-OBJECT:btn_trndoc:TabIndex = 11.
-        THIS-OBJECT:btn_trndoc:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:btn_trndoc:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:btn_trndoc:Click:Subscribe(THIS-OBJECT:btn_trndoc_Click).
+        this-object:btn_trndoc:Image = cast(resources:GetObject("btn_trndoc.Image"), System.Drawing.Image).
+        this-object:btn_trndoc:Location = new System.Drawing.Point(820, 63).
+        this-object:btn_trndoc:Name = "btn_trndoc".
+        this-object:btn_trndoc:Size = new System.Drawing.Size(25, 23).
+        this-object:btn_trndoc:TabIndex = 11.
+        this-object:btn_trndoc:UseCompatibleTextRendering = true.
+        this-object:btn_trndoc:UseVisualStyleBackColor = true.
+        this-object:btn_trndoc:Click:Subscribe(this-object:btn_trndoc_Click).
         /*  */
         /* panel1 */
         /*  */
-        THIS-OBJECT:panel1:Controls:Add(THIS-OBJECT:panel2).
-        THIS-OBJECT:panel1:Controls:Add(THIS-OBJECT:btn_prn).
-        THIS-OBJECT:panel1:Controls:Add(THIS-OBJECT:btn_edit).
-        THIS-OBJECT:panel1:Controls:Add(THIS-OBJECT:Btn_Cancel).
-        THIS-OBJECT:panel1:Controls:Add(THIS-OBJECT:Btn_lookup).
-        THIS-OBJECT:panel1:Dock = System.Windows.Forms.DockStyle:Top.
-        THIS-OBJECT:panel1:Location = NEW System.Drawing.Point(0, 0).
-        THIS-OBJECT:panel1:Name = "panel1".
-        THIS-OBJECT:panel1:Size = NEW System.Drawing.Size(850, 100).
-        THIS-OBJECT:panel1:TabIndex = 3.
+        this-object:panel1:Controls:Add(this-object:panel2).
+        this-object:panel1:Controls:Add(this-object:btn_prn).
+        this-object:panel1:Controls:Add(this-object:btn_edit).
+        this-object:panel1:Controls:Add(this-object:Btn_Cancel).
+        this-object:panel1:Controls:Add(this-object:Btn_lookup).
+        this-object:panel1:Dock = System.Windows.Forms.DockStyle:Top.
+        this-object:panel1:Location = new System.Drawing.Point(0, 0).
+        this-object:panel1:Name = "panel1".
+        this-object:panel1:Size = new System.Drawing.Size(850, 100).
+        this-object:panel1:TabIndex = 3.
         /*  */
         /* panel2 */
         /*  */
-        THIS-OBJECT:panel2:BackColor = System.Drawing.SystemColors:Control.
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:Btn_clen).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:Sent).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:btn_Filt).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:numericUpDown1).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:btn_ref).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:Rep).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:FalVerif).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:ToExtin).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:FalExting).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:ReqVerif).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:dateTimePicker2).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:label7).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:label6).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:dateTimePicker1).
-        THIS-OBJECT:panel2:Controls:Add(THIS-OBJECT:label5).
-        THIS-OBJECT:panel2:Location = NEW System.Drawing.Point(41, 42).
-        THIS-OBJECT:panel2:Name = "panel2".
-        THIS-OBJECT:panel2:Size = NEW System.Drawing.Size(765, 55).
-        THIS-OBJECT:panel2:TabIndex = 5.
+        this-object:panel2:BackColor = System.Drawing.SystemColors:Control.
+        this-object:panel2:Controls:Add(this-object:Btn_clen).
+        this-object:panel2:Controls:Add(this-object:Sent).
+        this-object:panel2:Controls:Add(this-object:btn_Filt).
+        this-object:panel2:Controls:Add(this-object:numericUpDown1).
+        this-object:panel2:Controls:Add(this-object:btn_ref).
+        this-object:panel2:Controls:Add(this-object:Rep).
+        this-object:panel2:Controls:Add(this-object:FalVerif).
+        this-object:panel2:Controls:Add(this-object:ToExtin).
+        this-object:panel2:Controls:Add(this-object:FalExting).
+        this-object:panel2:Controls:Add(this-object:ReqVerif).
+        this-object:panel2:Controls:Add(this-object:dateTimePicker2).
+        this-object:panel2:Controls:Add(this-object:label7).
+        this-object:panel2:Controls:Add(this-object:label6).
+        this-object:panel2:Controls:Add(this-object:dateTimePicker1).
+        this-object:panel2:Controls:Add(this-object:label5).
+        this-object:panel2:Location = new System.Drawing.Point(41, 42).
+        this-object:panel2:Name = "panel2".
+        this-object:panel2:Size = new System.Drawing.Size(765, 55).
+        this-object:panel2:TabIndex = 5.
         /*  */
         /* Btn_clen */
         /*  */
-        THIS-OBJECT:Btn_clen:Location = NEW System.Drawing.Point(575, 5).
-        THIS-OBJECT:Btn_clen:Name = "Btn_clen".
-        THIS-OBJECT:Btn_clen:Size = NEW System.Drawing.Size(75, 23).
-        THIS-OBJECT:Btn_clen:TabIndex = 15.
-        THIS-OBJECT:Btn_clen:Text = "Сброс".
-        THIS-OBJECT:Btn_clen:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:Btn_clen:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:Btn_clen:Click:Subscribe(THIS-OBJECT:Btn_clen_Click).
+        this-object:Btn_clen:Location = new System.Drawing.Point(575, 5).
+        this-object:Btn_clen:Name = "Btn_clen".
+        this-object:Btn_clen:Size = new System.Drawing.Size(75, 23).
+        this-object:Btn_clen:TabIndex = 15.
+        this-object:Btn_clen:Text = "Сброс".
+        this-object:Btn_clen:UseCompatibleTextRendering = true.
+        this-object:Btn_clen:UseVisualStyleBackColor = true.
+        this-object:Btn_clen:Click:Subscribe(this-object:Btn_clen_Click).
         /*  */
         /* Sent */
         /*  */
-        THIS-OBJECT:Sent:DataBindings:Add(NEW System.Windows.Forms.Binding("CheckState", THIS-OBJECT:bindttFilt, "sent", TRUE)).
-        THIS-OBJECT:Sent:Location = NEW System.Drawing.Point(575, 29).
-        THIS-OBJECT:Sent:Name = "Sent".
-        THIS-OBJECT:Sent:Size = NEW System.Drawing.Size(82, 18).
-        THIS-OBJECT:Sent:TabIndex = 14.
-        THIS-OBJECT:Sent:Text = "Отправлен".
-        THIS-OBJECT:Sent:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:Sent:UseVisualStyleBackColor = TRUE.
+        this-object:Sent:DataBindings:Add(new System.Windows.Forms.Binding("CheckState", this-object:bindttFilt, "sent", true)).
+        this-object:Sent:Location = new System.Drawing.Point(575, 29).
+        this-object:Sent:Name = "Sent".
+        this-object:Sent:Size = new System.Drawing.Size(82, 18).
+        this-object:Sent:TabIndex = 14.
+        this-object:Sent:Text = "Отправлен".
+        this-object:Sent:UseCompatibleTextRendering = true.
+        this-object:Sent:UseVisualStyleBackColor = true.
         /*  */
         /* bindttFilt */
         /*  */
-        THIS-OBJECT:bindttFilt:MaxDataGuess = 0.
-        THIS-OBJECT:bindttFilt:NoLOBs = FALSE.
-        THIS-OBJECT:bindttFilt:Position = 0.
+        this-object:bindttFilt:MaxDataGuess = 0.
+        this-object:bindttFilt:NoLOBs = false.
+        this-object:bindttFilt:Position = 0.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar3 AS "Progress.Data.TableDesc[]" NO-UNDO.
-        arrayvar3 = NEW "Progress.Data.TableDesc[]"(0).
+        define variable arrayvar3 as "Progress.Data.TableDesc[]" no-undo.
+        arrayvar3 = new "Progress.Data.TableDesc[]"(0).
         tableDesc2:ChildTables = arrayvar3.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar4 AS Progress.Data.ColumnPropDesc EXTENT 10 NO-UNDO.
-        arrayvar4[1] = NEW Progress.Data.ColumnPropDesc("date-end", "date-end", Progress.Data.DataType:DATE).
-        arrayvar4[2] = NEW Progress.Data.ColumnPropDesc("date-start", "date-start", Progress.Data.DataType:DATE).
-        arrayvar4[3] = NEW Progress.Data.ColumnPropDesc("fTime", "fTime", Progress.Data.DataType:INTEGER).
-        arrayvar4[4] = NEW Progress.Data.ColumnPropDesc("FalExting", "FalExting", Progress.Data.DataType:LOGICAL).
-        arrayvar4[5] = NEW Progress.Data.ColumnPropDesc("FalVerif", "FalVerif", Progress.Data.DataType:LOGICAL).
-        arrayvar4[6] = NEW Progress.Data.ColumnPropDesc("Rep", "Rep", Progress.Data.DataType:LOGICAL).
-        arrayvar4[7] = NEW Progress.Data.ColumnPropDesc("ReqVerif", "ReqVerif", Progress.Data.DataType:LOGICAL).
-        arrayvar4[8] = NEW Progress.Data.ColumnPropDesc("ToExtin", "ToExtin", Progress.Data.DataType:LOGICAL).
-        arrayvar4[9] = NEW Progress.Data.ColumnPropDesc("doc-code", "doc-code", Progress.Data.DataType:CHARACTER).
-        arrayvar4[10] = NEW Progress.Data.ColumnPropDesc("sent", " отправлен", Progress.Data.DataType:LOGICAL).
+        define variable arrayvar4 as Progress.Data.ColumnPropDesc extent 10 no-undo.
+        arrayvar4[1] = new Progress.Data.ColumnPropDesc("date-end", "date-end", Progress.Data.DataType:DATE).
+        arrayvar4[2] = new Progress.Data.ColumnPropDesc("date-start", "date-start", Progress.Data.DataType:DATE).
+        arrayvar4[3] = new Progress.Data.ColumnPropDesc("fTime", "fTime", Progress.Data.DataType:INTEGER).
+        arrayvar4[4] = new Progress.Data.ColumnPropDesc("FalExting", "FalExting", Progress.Data.DataType:LOGICAL).
+        arrayvar4[5] = new Progress.Data.ColumnPropDesc("FalVerif", "FalVerif", Progress.Data.DataType:LOGICAL).
+        arrayvar4[6] = new Progress.Data.ColumnPropDesc("Rep", "Rep", Progress.Data.DataType:LOGICAL).
+        arrayvar4[7] = new Progress.Data.ColumnPropDesc("ReqVerif", "ReqVerif", Progress.Data.DataType:LOGICAL).
+        arrayvar4[8] = new Progress.Data.ColumnPropDesc("ToExtin", "ToExtin", Progress.Data.DataType:LOGICAL).
+        arrayvar4[9] = new Progress.Data.ColumnPropDesc("doc-code", "doc-code", Progress.Data.DataType:CHARACTER).
+        arrayvar4[10] = new Progress.Data.ColumnPropDesc("sent", " отправлен", Progress.Data.DataType:LOGICAL).
         tableDesc2:Columns = arrayvar4.
-        THIS-OBJECT:bindttFilt:TableSchema = tableDesc2.
+        this-object:bindttFilt:TableSchema = tableDesc2.
         /*  */
         /* btn_Filt */
         /*  */
-        THIS-OBJECT:btn_Filt:Location = NEW System.Drawing.Point(663, 26).
-        THIS-OBJECT:btn_Filt:Name = "btn_Filt".
-        THIS-OBJECT:btn_Filt:Size = NEW System.Drawing.Size(99, 23).
-        THIS-OBJECT:btn_Filt:TabIndex = 13.
-        THIS-OBJECT:btn_Filt:Text = "Расшир. фильтр".
-        THIS-OBJECT:btn_Filt:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:btn_Filt:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:btn_Filt:Click:Subscribe(THIS-OBJECT:btn_Filt_Click).
+        this-object:btn_Filt:Location = new System.Drawing.Point(663, 26).
+        this-object:btn_Filt:Name = "btn_Filt".
+        this-object:btn_Filt:Size = new System.Drawing.Size(99, 23).
+        this-object:btn_Filt:TabIndex = 13.
+        this-object:btn_Filt:Text = "Расшир. фильтр".
+        this-object:btn_Filt:UseCompatibleTextRendering = true.
+        this-object:btn_Filt:UseVisualStyleBackColor = true.
+        this-object:btn_Filt:Click:Subscribe(this-object:btn_Filt_Click).
         /*  */
         /* numericUpDown1 */
         /*  */
-        THIS-OBJECT:numericUpDown1:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindttFilt, "fTime", TRUE, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "N0")).
-        THIS-OBJECT:numericUpDown1:Location = NEW System.Drawing.Point(109, 3).
+        this-object:numericUpDown1:DataBindings:Add(new System.Windows.Forms.Binding("Value", this-object:bindttFilt, "fTime", true, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "N0")).
+        this-object:numericUpDown1:Location = new System.Drawing.Point(109, 3).
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true", Type="System.Int32").
-        DEFINE VARIABLE arrayvar5 AS INTEGER EXTENT 4 NO-UNDO.
+        define variable arrayvar5 as INTEGER extent 4 no-undo.
         arrayvar5[1] = 999999.
         arrayvar5[2] = 0.
         arrayvar5[3] = 0.
         arrayvar5[4] = 0.
-        THIS-OBJECT:numericUpDown1:Maximum = Progress.Util.DecimalHelper:Create(arrayvar5).
-        THIS-OBJECT:numericUpDown1:Name = "numericUpDown1".
-        THIS-OBJECT:numericUpDown1:Size = NEW System.Drawing.Size(79, 20).
-        THIS-OBJECT:numericUpDown1:TabIndex = 12.
+        this-object:numericUpDown1:Maximum = Progress.Util.DecimalHelper:Create(arrayvar5).
+        this-object:numericUpDown1:Name = "numericUpDown1".
+        this-object:numericUpDown1:Size = new System.Drawing.Size(79, 20).
+        this-object:numericUpDown1:TabIndex = 12.
         /*  */
         /* btn_ref */
         /*  */
-        THIS-OBJECT:btn_ref:Location = NEW System.Drawing.Point(663, 3).
-        THIS-OBJECT:btn_ref:Name = "btn_ref".
-        THIS-OBJECT:btn_ref:Size = NEW System.Drawing.Size(99, 23).
-        THIS-OBJECT:btn_ref:TabIndex = 11.
-        THIS-OBJECT:btn_ref:Text = "Обновить".
-        THIS-OBJECT:btn_ref:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:btn_ref:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:btn_ref:Click:Subscribe(THIS-OBJECT:btn_ref_Click).
+        this-object:btn_ref:Location = new System.Drawing.Point(663, 3).
+        this-object:btn_ref:Name = "btn_ref".
+        this-object:btn_ref:Size = new System.Drawing.Size(99, 23).
+        this-object:btn_ref:TabIndex = 11.
+        this-object:btn_ref:Text = "Обновить".
+        this-object:btn_ref:UseCompatibleTextRendering = true.
+        this-object:btn_ref:UseVisualStyleBackColor = true.
+        this-object:btn_ref:Click:Subscribe(this-object:btn_ref_Click).
         /*  */
         /* Rep */
         /*  */
-        THIS-OBJECT:Rep:DataBindings:Add(NEW System.Windows.Forms.Binding("CheckState", THIS-OBJECT:bindttFilt, "Rep", TRUE)).
-        THIS-OBJECT:Rep:Location = NEW System.Drawing.Point(500, 26).
-        THIS-OBJECT:Rep:Name = "Rep".
-        THIS-OBJECT:Rep:Size = NEW System.Drawing.Size(78, 24).
-        THIS-OBJECT:Rep:TabIndex = 10.
-        THIS-OBJECT:Rep:Text = "Погашен".
-        THIS-OBJECT:Rep:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:Rep:UseVisualStyleBackColor = TRUE.
+        this-object:Rep:DataBindings:Add(new System.Windows.Forms.Binding("CheckState", this-object:bindttFilt, "Rep", true)).
+        this-object:Rep:Location = new System.Drawing.Point(500, 26).
+        this-object:Rep:Name = "Rep".
+        this-object:Rep:Size = new System.Drawing.Size(78, 24).
+        this-object:Rep:TabIndex = 10.
+        this-object:Rep:Text = "Погашен".
+        this-object:Rep:UseCompatibleTextRendering = true.
+        this-object:Rep:UseVisualStyleBackColor = true.
         /*  */
         /* FalVerif */
         /*  */
-        THIS-OBJECT:FalVerif:DataBindings:Add(NEW System.Windows.Forms.Binding("CheckState", THIS-OBJECT:bindttFilt, "FalVerif", TRUE)).
-        THIS-OBJECT:FalVerif:Location = NEW System.Drawing.Point(130, 26).
-        THIS-OBJECT:FalVerif:Name = "FalVerif".
-        THIS-OBJECT:FalVerif:Size = NEW System.Drawing.Size(152, 24).
-        THIS-OBJECT:FalVerif:TabIndex = 9.
-        THIS-OBJECT:FalVerif:Text = "Ошибка проверки ВСД".
-        THIS-OBJECT:FalVerif:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:FalVerif:UseVisualStyleBackColor = TRUE.
+        this-object:FalVerif:DataBindings:Add(new System.Windows.Forms.Binding("CheckState", this-object:bindttFilt, "FalVerif", true)).
+        this-object:FalVerif:Location = new System.Drawing.Point(130, 26).
+        this-object:FalVerif:Name = "FalVerif".
+        this-object:FalVerif:Size = new System.Drawing.Size(152, 24).
+        this-object:FalVerif:TabIndex = 9.
+        this-object:FalVerif:Text = "Ошибка проверки ВСД".
+        this-object:FalVerif:UseCompatibleTextRendering = true.
+        this-object:FalVerif:UseVisualStyleBackColor = true.
         /*  */
         /* ToExtin */
         /*  */
-        THIS-OBJECT:ToExtin:DataBindings:Add(NEW System.Windows.Forms.Binding("CheckState", THIS-OBJECT:bindttFilt, "ToExtin", TRUE)).
-        THIS-OBJECT:ToExtin:Location = NEW System.Drawing.Point(288, 26).
-        THIS-OBJECT:ToExtin:Name = "ToExtin".
-        THIS-OBJECT:ToExtin:Size = NEW System.Drawing.Size(82, 24).
-        THIS-OBJECT:ToExtin:TabIndex = 8.
-        THIS-OBJECT:ToExtin:Text = "К гашению".
-        THIS-OBJECT:ToExtin:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:ToExtin:UseVisualStyleBackColor = TRUE.
+        this-object:ToExtin:DataBindings:Add(new System.Windows.Forms.Binding("CheckState", this-object:bindttFilt, "ToExtin", true)).
+        this-object:ToExtin:Location = new System.Drawing.Point(288, 26).
+        this-object:ToExtin:Name = "ToExtin".
+        this-object:ToExtin:Size = new System.Drawing.Size(82, 24).
+        this-object:ToExtin:TabIndex = 8.
+        this-object:ToExtin:Text = "К гашению".
+        this-object:ToExtin:UseCompatibleTextRendering = true.
+        this-object:ToExtin:UseVisualStyleBackColor = true.
         /*  */
         /* FalExting */
         /*  */
-        THIS-OBJECT:FalExting:DataBindings:Add(NEW System.Windows.Forms.Binding("CheckState", THIS-OBJECT:bindttFilt, "FalExting", TRUE)).
-        THIS-OBJECT:FalExting:Location = NEW System.Drawing.Point(376, 26).
-        THIS-OBJECT:FalExting:Name = "FalExting".
-        THIS-OBJECT:FalExting:Size = NEW System.Drawing.Size(118, 24).
-        THIS-OBJECT:FalExting:TabIndex = 7.
-        THIS-OBJECT:FalExting:Text = "Ошибка гашения".
-        THIS-OBJECT:FalExting:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:FalExting:UseVisualStyleBackColor = TRUE.
+        this-object:FalExting:DataBindings:Add(new System.Windows.Forms.Binding("CheckState", this-object:bindttFilt, "FalExting", true)).
+        this-object:FalExting:Location = new System.Drawing.Point(376, 26).
+        this-object:FalExting:Name = "FalExting".
+        this-object:FalExting:Size = new System.Drawing.Size(118, 24).
+        this-object:FalExting:TabIndex = 7.
+        this-object:FalExting:Text = "Ошибка гашения".
+        this-object:FalExting:UseCompatibleTextRendering = true.
+        this-object:FalExting:UseVisualStyleBackColor = true.
         /*  */
         /* ReqVerif */
         /*  */
-        THIS-OBJECT:ReqVerif:DataBindings:Add(NEW System.Windows.Forms.Binding("CheckState", THIS-OBJECT:bindttFilt, "ReqVerif", TRUE)).
-        THIS-OBJECT:ReqVerif:Location = NEW System.Drawing.Point(3, 26).
-        THIS-OBJECT:ReqVerif:Name = "ReqVerif".
-        THIS-OBJECT:ReqVerif:Size = NEW System.Drawing.Size(121, 24).
-        THIS-OBJECT:ReqVerif:TabIndex = 6.
-        THIS-OBJECT:ReqVerif:Text = "Требует проверки".
-        THIS-OBJECT:ReqVerif:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:ReqVerif:UseVisualStyleBackColor = TRUE.
+        this-object:ReqVerif:DataBindings:Add(new System.Windows.Forms.Binding("CheckState", this-object:bindttFilt, "ReqVerif", true)).
+        this-object:ReqVerif:Location = new System.Drawing.Point(3, 26).
+        this-object:ReqVerif:Name = "ReqVerif".
+        this-object:ReqVerif:Size = new System.Drawing.Size(121, 24).
+        this-object:ReqVerif:TabIndex = 6.
+        this-object:ReqVerif:Text = "Требует проверки".
+        this-object:ReqVerif:UseCompatibleTextRendering = true.
+        this-object:ReqVerif:UseVisualStyleBackColor = true.
         /*  */
         /* dateTimePicker2 */
         /*  */
-        THIS-OBJECT:dateTimePicker2:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindttFilt, "date-end", TRUE, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "D")).
-        THIS-OBJECT:dateTimePicker2:Location = NEW System.Drawing.Point(408, 4).
-        THIS-OBJECT:dateTimePicker2:Name = "dateTimePicker2".
-        THIS-OBJECT:dateTimePicker2:Size = NEW System.Drawing.Size(137, 20).
-        THIS-OBJECT:dateTimePicker2:TabIndex = 5.
+        this-object:dateTimePicker2:DataBindings:Add(new System.Windows.Forms.Binding("Value", this-object:bindttFilt, "date-end", true, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "D")).
+        this-object:dateTimePicker2:Location = new System.Drawing.Point(408, 4).
+        this-object:dateTimePicker2:Name = "dateTimePicker2".
+        this-object:dateTimePicker2:Size = new System.Drawing.Size(137, 20).
+        this-object:dateTimePicker2:TabIndex = 5.
         /*  */
         /* label7 */
         /*  */
-        THIS-OBJECT:label7:Location = NEW System.Drawing.Point(368, 4).
-        THIS-OBJECT:label7:Name = "label7".
-        THIS-OBJECT:label7:Size = NEW System.Drawing.Size(34, 20).
-        THIS-OBJECT:label7:TabIndex = 4.
-        THIS-OBJECT:label7:Text = "По:".
-        THIS-OBJECT:label7:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-        THIS-OBJECT:label7:UseCompatibleTextRendering = TRUE.
+        this-object:label7:Location = new System.Drawing.Point(368, 4).
+        this-object:label7:Name = "label7".
+        this-object:label7:Size = new System.Drawing.Size(34, 20).
+        this-object:label7:TabIndex = 4.
+        this-object:label7:Text = "По:".
+        this-object:label7:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+        this-object:label7:UseCompatibleTextRendering = true.
         /*  */
         /* label6 */
         /*  */
-        THIS-OBJECT:label6:ImageAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label6:Location = NEW System.Drawing.Point(194, 3).
-        THIS-OBJECT:label6:Name = "label6".
-        THIS-OBJECT:label6:Size = NEW System.Drawing.Size(23, 20).
-        THIS-OBJECT:label6:TabIndex = 3.
-        THIS-OBJECT:label6:Text = "C:".
-        THIS-OBJECT:label6:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-        THIS-OBJECT:label6:UseCompatibleTextRendering = TRUE.
+        this-object:label6:ImageAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        this-object:label6:Location = new System.Drawing.Point(194, 3).
+        this-object:label6:Name = "label6".
+        this-object:label6:Size = new System.Drawing.Size(23, 20).
+        this-object:label6:TabIndex = 3.
+        this-object:label6:Text = "C:".
+        this-object:label6:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+        this-object:label6:UseCompatibleTextRendering = true.
         /*  */
         /* dateTimePicker1 */
         /*  */
-        THIS-OBJECT:dateTimePicker1:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindttFilt, "date-start", TRUE, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "D")).
-        THIS-OBJECT:dateTimePicker1:Location = NEW System.Drawing.Point(223, 4).
-        THIS-OBJECT:dateTimePicker1:Name = "dateTimePicker1".
-        THIS-OBJECT:dateTimePicker1:Size = NEW System.Drawing.Size(139, 20).
-        THIS-OBJECT:dateTimePicker1:TabIndex = 2.
-        THIS-OBJECT:dateTimePicker1:Value = Progress.Util.DateTimeHelper:Create(2018, 6, 15, 0, 0, 0, 0).
+        this-object:dateTimePicker1:DataBindings:Add(new System.Windows.Forms.Binding("Value", this-object:bindttFilt, "date-start", true, System.Windows.Forms.DataSourceUpdateMode:OnValidation, ?, "D")).
+        this-object:dateTimePicker1:Location = new System.Drawing.Point(223, 4).
+        this-object:dateTimePicker1:Name = "dateTimePicker1".
+        this-object:dateTimePicker1:Size = new System.Drawing.Size(139, 20).
+        this-object:dateTimePicker1:TabIndex = 2.
+        this-object:dateTimePicker1:Value = Progress.Util.DateTimeHelper:Create(2018, 6, 15, 0, 0, 0, 0).
         /*  */
         /* label5 */
         /*  */
-        THIS-OBJECT:label5:ImageAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label5:Location = NEW System.Drawing.Point(3, 3).
-        THIS-OBJECT:label5:Name = "label5".
-        THIS-OBJECT:label5:Size = NEW System.Drawing.Size(100, 20).
-        THIS-OBJECT:label5:TabIndex = 0.
-        THIS-OBJECT:label5:Text = "Время гашения :".
-        THIS-OBJECT:label5:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label5:UseCompatibleTextRendering = TRUE.
+        this-object:label5:ImageAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        this-object:label5:Location = new System.Drawing.Point(3, 3).
+        this-object:label5:Name = "label5".
+        this-object:label5:Size = new System.Drawing.Size(100, 20).
+        this-object:label5:TabIndex = 0.
+        this-object:label5:Text = "Время гашения :".
+        this-object:label5:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        this-object:label5:UseCompatibleTextRendering = true.
         /*  */
         /* btn_prn */
         /*  */
-        THIS-OBJECT:btn_prn:Location = NEW System.Drawing.Point(285, 12).
-        THIS-OBJECT:btn_prn:Name = "btn_prn".
-        THIS-OBJECT:btn_prn:Size = NEW System.Drawing.Size(75, 23).
-        THIS-OBJECT:btn_prn:TabIndex = 4.
-        THIS-OBJECT:btn_prn:Text = "Печать".
-        THIS-OBJECT:btn_prn:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:btn_prn:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:btn_prn:Click:Subscribe(THIS-OBJECT:btn_prn_Click).
+        this-object:btn_prn:Location = new System.Drawing.Point(285, 12).
+        this-object:btn_prn:Name = "btn_prn".
+        this-object:btn_prn:Size = new System.Drawing.Size(75, 23).
+        this-object:btn_prn:TabIndex = 4.
+        this-object:btn_prn:Text = "Печать".
+        this-object:btn_prn:UseCompatibleTextRendering = true.
+        this-object:btn_prn:UseVisualStyleBackColor = true.
+        this-object:btn_prn:Click:Subscribe(this-object:btn_prn_Click).
         /*  */
         /* btn_edit */
         /*  */
-        THIS-OBJECT:btn_edit:Location = NEW System.Drawing.Point(123, 12).
-        THIS-OBJECT:btn_edit:Name = "btn_edit".
-        THIS-OBJECT:btn_edit:Size = NEW System.Drawing.Size(75, 23).
-        THIS-OBJECT:btn_edit:TabIndex = 2.
-        THIS-OBJECT:btn_edit:Text = "Изменить".
-        THIS-OBJECT:btn_edit:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:btn_edit:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:btn_edit:Click:Subscribe(THIS-OBJECT:btn_edit_Click).
+        this-object:btn_edit:Location = new System.Drawing.Point(123, 12).
+        this-object:btn_edit:Name = "btn_edit".
+        this-object:btn_edit:Size = new System.Drawing.Size(75, 23).
+        this-object:btn_edit:TabIndex = 2.
+        this-object:btn_edit:Text = "Изменить".
+        this-object:btn_edit:UseCompatibleTextRendering = true.
+        this-object:btn_edit:UseVisualStyleBackColor = true.
+        this-object:btn_edit:Click:Subscribe(this-object:btn_edit_Click).
         /*  */
         /* Btn_Cancel */
         /*  */
-        THIS-OBJECT:Btn_Cancel:Location = NEW System.Drawing.Point(41, 13).
-        THIS-OBJECT:Btn_Cancel:Name = "Btn_Cancel".
-        THIS-OBJECT:Btn_Cancel:Size = NEW System.Drawing.Size(75, 23).
-        THIS-OBJECT:Btn_Cancel:TabIndex = 1.
-        THIS-OBJECT:Btn_Cancel:Text = "Выход".
-        THIS-OBJECT:Btn_Cancel:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:Btn_Cancel:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:Btn_Cancel:Click:Subscribe(THIS-OBJECT:Btn_Cancel_Click).
+        this-object:Btn_Cancel:Location = new System.Drawing.Point(41, 13).
+        this-object:Btn_Cancel:Name = "Btn_Cancel".
+        this-object:Btn_Cancel:Size = new System.Drawing.Size(75, 23).
+        this-object:Btn_Cancel:TabIndex = 1.
+        this-object:Btn_Cancel:Text = "Выход".
+        this-object:Btn_Cancel:UseCompatibleTextRendering = true.
+        this-object:Btn_Cancel:UseVisualStyleBackColor = true.
+        this-object:Btn_Cancel:Click:Subscribe(this-object:Btn_Cancel_Click).
         /*  */
         /* msgerr */
         /*  */
-        DEFINE VARIABLE nestedvar8 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar8 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Bottom, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:msgerr:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar8, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:msgerr:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bingvsd, "msg-err", TRUE)).
-        THIS-OBJECT:msgerr:Location = NEW System.Drawing.Point(12, 503).
-        THIS-OBJECT:msgerr:Multiline = TRUE.
-        THIS-OBJECT:msgerr:Name = "msgerr".
-        THIS-OBJECT:msgerr:ReadOnly = TRUE.
-        THIS-OBJECT:msgerr:Size = NEW System.Drawing.Size(826, 40).
-        THIS-OBJECT:msgerr:TabIndex = 4.
+        define variable nestedvar7 as System.Windows.Forms.AnchorStyles no-undo.
+        nestedvar7 = cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Bottom, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+        this-object:msgerr:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar7, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        this-object:msgerr:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bingvsd, "msg-err", true)).
+        this-object:msgerr:Location = new System.Drawing.Point(12, 503).
+        this-object:msgerr:Multiline = true.
+        this-object:msgerr:Name = "msgerr".
+        this-object:msgerr:ReadOnly = true.
+        this-object:msgerr:Size = new System.Drawing.Size(826, 40).
+        this-object:msgerr:TabIndex = 4.
         /*  */
         /* label4 */
         /*  */
-        THIS-OBJECT:label4:Anchor = System.Windows.Forms.AnchorStyles:Bottom.
-        THIS-OBJECT:label4:Location = NEW System.Drawing.Point(24, 477).
-        THIS-OBJECT:label4:Name = "label4".
-        THIS-OBJECT:label4:Size = NEW System.Drawing.Size(792, 23).
-        THIS-OBJECT:label4:TabIndex = 5.
-        THIS-OBJECT:label4:Text = "Описание ошибки".
-        THIS-OBJECT:label4:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-        THIS-OBJECT:label4:UseCompatibleTextRendering = TRUE.
+        this-object:label4:Anchor = System.Windows.Forms.AnchorStyles:Bottom.
+        this-object:label4:Location = new System.Drawing.Point(24, 477).
+        this-object:label4:Name = "label4".
+        this-object:label4:Size = new System.Drawing.Size(792, 23).
+        this-object:label4:TabIndex = 5.
+        this-object:label4:Text = "Описание ошибки".
+        this-object:label4:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+        this-object:label4:UseCompatibleTextRendering = true.
         /*  */
         /* journal_vsd_abl */
         /*  */
-        THIS-OBJECT:ClientSize = NEW System.Drawing.Size(850, 546).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:label4).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:msgerr).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:tableLayoutPanel1).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:dataGridView1).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:panel1).
-        THIS-OBJECT:Name = "journal_vsd_abl".
-        THIS-OBJECT:Text = "Журнал ВСД".
-        THIS-OBJECT:Load:Subscribe(THIS-OBJECT:journal_vsd_abl_Load).
-        CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
-        CAST(THIS-OBJECT:bingvsd, System.ComponentModel.ISupportInitialize):EndInit().
-        THIS-OBJECT:tableLayoutPanel1:ResumeLayout(FALSE).
-        THIS-OBJECT:tableLayoutPanel1:PerformLayout().
-        THIS-OBJECT:panel1:ResumeLayout(FALSE).
-        THIS-OBJECT:panel2:ResumeLayout(FALSE).
-        CAST(THIS-OBJECT:bindttFilt, System.ComponentModel.ISupportInitialize):EndInit().
-        CAST(THIS-OBJECT:numericUpDown1, System.ComponentModel.ISupportInitialize):EndInit().
-        THIS-OBJECT:ResumeLayout(FALSE).
-        THIS-OBJECT:PerformLayout().
-        CATCH e AS Progress.Lang.Error:
-            UNDO, THROW e.
-        END CATCH.
+        this-object:ClientSize = new System.Drawing.Size(850, 546).
+        this-object:Controls:Add(this-object:label4).
+        this-object:Controls:Add(this-object:msgerr).
+        this-object:Controls:Add(this-object:tableLayoutPanel1).
+        this-object:Controls:Add(this-object:dataGridView1).
+        this-object:Controls:Add(this-object:panel1).
+        this-object:Name = "journal_vsd_abl".
+        this-object:Text = "Журнал ВСД".
+        this-object:Load:Subscribe(this-object:journal_vsd_abl_Load).
+        cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
+        cast(this-object:bingvsd, System.ComponentModel.ISupportInitialize):EndInit().
+        this-object:tableLayoutPanel1:ResumeLayout(false).
+        this-object:tableLayoutPanel1:PerformLayout().
+        this-object:panel1:ResumeLayout(false).
+        this-object:panel2:ResumeLayout(false).
+        cast(this-object:bindttFilt, System.ComponentModel.ISupportInitialize):EndInit().
+        cast(this-object:numericUpDown1, System.ComponentModel.ISupportInitialize):EndInit().
+        this-object:ResumeLayout(false).
+        this-object:PerformLayout().
+        catch e as Progress.Lang.Error:
+            undo, throw e.
+        end catch.
     END METHOD.
 
 	/*------------------------------------------------------------------------------

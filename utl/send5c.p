@@ -46,7 +46,7 @@ DEFINE FRAME frame1
 
 update v-doc-code with frame frame1.
 
-find first ub.fin-doc where ub.fin-doc.prn-doc-code = v-doc-code no-error.
+find first ub.fin-doc where ub.fin-doc.fin-doc-code = integer(v-doc-code) no-error.
 
 if not available (ub.fin-doc)
   then do:

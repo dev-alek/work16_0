@@ -85,7 +85,7 @@ tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS
 &Scoped-define FIRST-ENABLED-TABLE tt-place
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-hist b-help t-place-virtual ~
 place-type place-si r-sr-izm dead-balance place-diameter place-ratio-error ~
-dens-prov place-twice-code t-chk-max-qnty 
+dens-prov place-twice-code t-chk-max-qnty t-sert-urov 
 &Scoped-Define DISPLAYED-FIELDS tt-place.loc1 tt-place.loc2 tt-place.loc3 ~
 tt-place.loc4 tt-place.pl-name tt-place.is-meas tt-place.pl-code ~
 tt-place.issue-year tt-place.start-date tt-place.add-qnty tt-place.max-qnty ~
@@ -94,7 +94,7 @@ tt-place.PS
 &Scoped-define FIRST-DISPLAYED-TABLE tt-place
 &Scoped-Define DISPLAYED-OBJECTS t-place-virtual place-type place-si ~
 dead-balance place-diameter place-ratio-error dens-prov place-twice-code ~
-t-chk-max-qnty 
+t-chk-max-qnty t-sert-urov 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -126,129 +126,135 @@ DEFINE BUTTON b-quit AUTO-END-KEY
   SIZE 10 BY 1.
 
 DEFINE BUTTON r-sr-izm 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "r-sr-izm" 
-  SIZE 3 BY .88.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-sr-izm" 
+     SIZE 3 BY .88.
 
-DEFINE VARIABLE dead-balance      AS DECIMAL   FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-  LABEL "Мертвый остаток" 
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1 NO-UNDO.
+DEFINE VARIABLE dead-balance AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
+     LABEL "Мертвый остаток" 
+     VIEW-AS FILL-IN 
+     SIZE 11.63 BY 1 NO-UNDO.
 
-DEFINE VARIABLE dens-prov         AS DECIMAL   FORMAT "9.9999999999" INITIAL 0
-  LABEL "Плотность при поверке резервуара"
-  VIEW-AS FILL-IN
-  SIZE 18 BY 1 NO-UNDO.
-     
-DEFINE VARIABLE place-diameter    AS DECIMAL   FORMAT ">,>>>,>>9":U INITIAL 0 
-  LABEL "Диаметр резервуара(мм)" 
-  VIEW-AS FILL-IN 
-  SIZE 11.63 BY 1 NO-UNDO.
-     
-DEFINE VARIABLE place-ratio-error AS DECIMAL   FORMAT "9.99":U INITIAL .2 
-  LABEL "Относительная погрешность составления калибровочной таблицы" 
-  VIEW-AS FILL-IN
-  SIZE 18 BY 1 NO-UNDO.
+DEFINE VARIABLE dens-prov AS DECIMAL FORMAT "9.9999999999" INITIAL 0 
+     LABEL "Плотность при поверке резервуара" 
+     VIEW-AS FILL-IN 
+     SIZE 18 BY 1 NO-UNDO.
 
-DEFINE VARIABLE place-si          AS INTEGER   FORMAT ">>>,>>9":U INITIAL 0 
-  LABEL "Средство измерения"
-  VIEW-AS FILL-IN
-  SIZE 8.63 BY 1 NO-UNDO.
+DEFINE VARIABLE place-diameter AS DECIMAL FORMAT ">,>>>,>>9":U INITIAL 0 
+     LABEL "Диаметр резервуара(мм)" 
+     VIEW-AS FILL-IN 
+     SIZE 11.63 BY 1 NO-UNDO.
 
-DEFINE VARIABLE place-twice-code  AS character format "x(8)" 
-  LABEL "Код сдвоенного резервуара" 
-  VIEW-AS FILL-IN 
-  SIZE 17.5 BY 1 NO-UNDO.
+DEFINE VARIABLE place-ratio-error AS DECIMAL FORMAT "9.99":U INITIAL .2 
+     LABEL "Относительная погрешность составления калибровочной таблицы" 
+     VIEW-AS FILL-IN 
+     SIZE 18 BY 1 NO-UNDO.
 
-DEFINE VARIABLE place-type        AS INTEGER
-  VIEW-AS RADIO-SET VERTICAL
-  RADIO-BUTTONS
-  "Вертикальный", 1,
-  "Горизонтальный", 2
-  SIZE 17.63 BY 2.25 NO-UNDO.
+DEFINE VARIABLE place-si AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+     LABEL "Средство измерения" 
+     VIEW-AS FILL-IN 
+     SIZE 8.63 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-chk-max-qnty    AS LOGICAL   INITIAL no 
-  LABEL "Проверять макс. допустимое кол-во товара на месте хранения" 
-  VIEW-AS TOGGLE-BOX
-  SIZE 62.63 BY .83 NO-UNDO.
+DEFINE VARIABLE place-twice-code AS CHARACTER FORMAT "x(8)" 
+     LABEL "Код сдвоенного резервуара" 
+     VIEW-AS FILL-IN 
+     SIZE 17.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-place-virtual   AS LOGICAL   INITIAL no 
-  LABEL "Виртуальный резервуар" 
-  VIEW-AS TOGGLE-BOX
-  SIZE 27 BY 1 NO-UNDO.
+DEFINE VARIABLE place-type AS INTEGER 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Вертикальный", 1,
+"Горизонтальный", 2
+     SIZE 17.63 BY 2.25 NO-UNDO.
+
+DEFINE VARIABLE t-chk-max-qnty AS LOGICAL INITIAL no 
+     LABEL "Проверять макс. допустимое кол-во товара на месте хранения" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 62.63 BY .83 NO-UNDO.
+
+DEFINE VARIABLE t-place-virtual AS LOGICAL INITIAL no 
+     LABEL "Виртуальный резервуар" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 27 BY 1 NO-UNDO.
+
+DEFINE VARIABLE t-sert-urov AS LOGICAL INITIAL no 
+     LABEL "Уровнемер сертифицирован по массе" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 62.63 BY .83 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-pl-form
-  b-exit AT ROW 1 COL 2
-  b-quit AT ROW 1 COL 12
-  B-hist AT ROW 1 COL 66.63
-  b-help AT ROW 1 COL 76.63
-  tt-place.loc1 AT ROW 3 COL 10 COLON-ALIGNED
-  LABEL "Коорд&1"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  tt-place.loc2 AT ROW 3 COL 30.63 COLON-ALIGNED
-  LABEL "Коорд&2"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  tt-place.loc3 AT ROW 3 COL 51.63 COLON-ALIGNED
-  LABEL "Коорд&3"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  tt-place.loc4 AT ROW 3 COL 72.63 COLON-ALIGNED
-  LABEL "Коорд&4"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  tt-place.pl-name AT ROW 4.25 COL 10 COLON-ALIGNED
-  LABEL "Название"
-  VIEW-AS FILL-IN
-  SIZE 74 BY 1
-  t-place-virtual AT ROW 5.46 COL 47 WIDGET-ID 22
-  tt-place.is-meas AT ROW 5.5 COL 12
-  LABEL "Измеряется приборами"
-  VIEW-AS TOGGLE-BOX
-  SIZE 23.63 BY 1
-  tt-place.pl-code AT ROW 6.75 COL 10 COLON-ALIGNED
-  LABEL "Код"
-  VIEW-AS FILL-IN
-  SIZE 10.63 BY 1
-  tt-place.issue-year AT ROW 7.71 COL 30.63 COLON-ALIGNED
-  LABEL "Год выпуска"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  place-type AT ROW 7.75 COL 65 NO-LABEL WIDGET-ID 8
-  tt-place.start-date AT ROW 8.71 COL 30.63 COLON-ALIGNED
-  LABEL "Ввод в эксплуатацию"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  tt-place.add-qnty AT ROW 9.71 COL 30.63 COLON-ALIGNED
-  LABEL "Доп. кол-во (в трубопроводе)"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  place-si AT ROW 10.5 COL 70 COLON-ALIGNED WIDGET-ID 16
-  r-sr-izm AT ROW 10.5 COL 81
-  tt-place.max-qnty AT ROW 10.71 COL 30.63 COLON-ALIGNED
-  LABEL "Максимальное количество"
-  VIEW-AS FILL-IN
-  SIZE 11.63 BY 1
-  dead-balance AT ROW 11.71 COL 30.63 COLON-ALIGNED WIDGET-ID 18
-  place-diameter AT ROW 11.75 COL 70 COLON-ALIGNED WIDGET-ID 18
-  place-ratio-error AT ROW 13 COL 63.63 COLON-ALIGNED WIDGET-ID 20
-  dens-prov AT ROW 14.25 COL 63.63 COLON-ALIGNED
-  place-twice-code AT ROW 15.75 COL 64 COLON-ALIGNED WIDGET-ID 24
-  t-chk-max-qnty AT ROW 17 COL 3 WIDGET-ID 2
-  tt-place.PS AT ROW 18.5 COL 2 NO-LABEL
-  VIEW-AS EDITOR SCROLLBAR-VERTICAL
-  SIZE 84 BY 4
-  "Тип резервуара:" VIEW-AS TEXT
-  SIZE 15.63 BY .75 AT ROW 8 COL 47.63 WIDGET-ID 12
-  SPACE(23.36) SKIP(13.95)
-  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-  TITLE "Складское место".
+     b-exit AT ROW 1 COL 2
+     b-quit AT ROW 1 COL 12
+     B-hist AT ROW 1 COL 66.63
+     b-help AT ROW 1 COL 76.63
+     tt-place.loc1 AT ROW 3 COL 10 COLON-ALIGNED
+          LABEL "Коорд&1"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     tt-place.loc2 AT ROW 3 COL 30.63 COLON-ALIGNED
+          LABEL "Коорд&2"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     tt-place.loc3 AT ROW 3 COL 51.63 COLON-ALIGNED
+          LABEL "Коорд&3"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     tt-place.loc4 AT ROW 3 COL 72.63 COLON-ALIGNED
+          LABEL "Коорд&4"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     tt-place.pl-name AT ROW 4.25 COL 10 COLON-ALIGNED
+          LABEL "Название"
+          VIEW-AS FILL-IN 
+          SIZE 74 BY 1
+     t-place-virtual AT ROW 5.46 COL 47 WIDGET-ID 22
+     tt-place.is-meas AT ROW 5.5 COL 12
+          LABEL "Измеряется приборами"
+          VIEW-AS TOGGLE-BOX
+          SIZE 23.63 BY 1
+     tt-place.pl-code AT ROW 6.75 COL 10 COLON-ALIGNED
+          LABEL "Код"
+          VIEW-AS FILL-IN 
+          SIZE 10.63 BY 1
+     tt-place.issue-year AT ROW 7.71 COL 30.63 COLON-ALIGNED
+          LABEL "Год выпуска"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     place-type AT ROW 7.75 COL 65 NO-LABEL WIDGET-ID 8
+     tt-place.start-date AT ROW 8.71 COL 30.63 COLON-ALIGNED
+          LABEL "Ввод в эксплуатацию"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     tt-place.add-qnty AT ROW 9.71 COL 30.63 COLON-ALIGNED
+          LABEL "Доп. кол-во (в трубопроводе)"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     place-si AT ROW 10.5 COL 70 COLON-ALIGNED WIDGET-ID 16
+     r-sr-izm AT ROW 10.5 COL 81
+     tt-place.max-qnty AT ROW 10.71 COL 30.63 COLON-ALIGNED
+          LABEL "Максимальное количество"
+          VIEW-AS FILL-IN 
+          SIZE 11.63 BY 1
+     dead-balance AT ROW 11.71 COL 30.63 COLON-ALIGNED WIDGET-ID 18
+     place-diameter AT ROW 11.75 COL 70 COLON-ALIGNED WIDGET-ID 18
+     place-ratio-error AT ROW 13 COL 63.63 COLON-ALIGNED WIDGET-ID 20
+     dens-prov AT ROW 14.25 COL 63.63 COLON-ALIGNED
+     place-twice-code AT ROW 15.75 COL 64 COLON-ALIGNED WIDGET-ID 24
+     t-chk-max-qnty AT ROW 17 COL 3 WIDGET-ID 2
+     t-sert-urov AT ROW 18.08 COL 3 WIDGET-ID 26
+     tt-place.PS AT ROW 19.33 COL 2 NO-LABEL
+          VIEW-AS EDITOR SCROLLBAR-VERTICAL
+          SIZE 84 BY 4
+     "Тип резервуара:" VIEW-AS TEXT
+          SIZE 15.63 BY .75 AT ROW 8 COL 47.63 WIDGET-ID 12
+     SPACE(23.36) SKIP(14.87)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Складское место".
 
 
 /* *********************** Procedure Settings ************************ */
@@ -322,22 +328,23 @@ ASSIGN
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-pl-form
 ON CHOOSE OF b-exit IN FRAME d-pl-form /* Ввод */
-  DO:
-    { gbl/stdbtn.i }
-assign
-  tt-place.pl-name
-  tt-place.loc1
-  tt-place.loc2
-  tt-place.loc3
-  tt-place.loc4
-  tt-place.ps
-  tt-place.add-qnty
-  tt-place.is-meas
-  tt-place.max-qnty
-  tt-place.start-date
-  tt-place.issue-year
-  t-chk-max-qnty
-  t-place-virtual
+DO:
+  { gbl/stdbtn.i }
+  assign
+    tt-place.pl-name
+    tt-place.loc1
+    tt-place.loc2
+    tt-place.loc3
+    tt-place.loc4
+    tt-place.ps
+    tt-place.add-qnty
+    tt-place.is-meas
+    tt-place.max-qnty
+    tt-place.start-date
+    tt-place.issue-year
+    t-chk-max-qnty
+    t-place-virtual
+    t-sert-urov
   .
 if input frame {&frame-name} dens-prov <> dens-prov then 
 do:
@@ -385,40 +392,44 @@ do :
   ii = 0.
   do ii = 1 to num-entries({&list-place-attr},','):
     v-code = entry(ii,{&list-place-attr}) .
-    case v-code :
-      when {&place-type} then 
-        do :
-          v-value = place-type:screen-value .
-        end.
-      when {&place-SI} then 
-        do :
-          v-value = place-si:screen-value .
-        end.
-      when {&place-diameter} then 
-        do :
-          v-value =  place-diameter:screen-value.
-        end.
-      when {&dead-balance} then 
-        do :
-          v-value =  dead-balance:screen-value.
-        end.
-      when {&place-ratio-error} then 
-        do :
-          v-value = place-ratio-error:screen-value .
-        end.
-      when {&place-dens-prov} then 
-        do :
-          v-value = dens-prov:screen-value .
-        end.
-      when {&place-virtual} then 
-        do :
-          v-value = t-place-virtual:screen-value .
-        end.
-      when {&place-twice-code} then 
-        do: 
-          v-value = place-twice-code:screen-value .
-        end.
-    end case.
+      case v-code :
+          when {&place-type} then 
+              do :
+                  v-value = place-type:screen-value .
+              end.
+          when {&place-SI} then 
+              do :
+                  v-value = place-si:screen-value .
+              end.
+          when {&place-diameter} then 
+              do :
+                  v-value =  place-diameter:screen-value.
+              end.
+          when {&dead-balance} then 
+              do :
+                  v-value =  dead-balance:screen-value.
+              end.
+          when {&place-ratio-error} then 
+              do :
+                  v-value = place-ratio-error:screen-value .
+              end.
+          when {&place-dens-prov} then 
+              do :
+                  v-value = dens-prov:screen-value .
+              end.
+          when {&place-virtual} then 
+              do :
+                  v-value = t-place-virtual:screen-value .
+              end.
+          when {&place-twice-code} then 
+              do: 
+                  v-value = place-twice-code:screen-value .
+              end.
+          when {&place-sert-urov} then 
+              do: 
+                  v-value = t-sert-urov:screen-value .
+              end.
+      end case.
     find first ub.place no-lock where recid(ub.place) = p-rep-rec .
     run placelib_write-attr  (input v-code
       ,input p-obj-code
@@ -428,32 +439,8 @@ do :
       ,output v-ok      ) no-error.
 
   end.
-end.
-if AVAILABLE (ub.place) then 
-do:
-{ gbl/rum-runa.i
-    ?
-    this-procedure:handle
-    ?
-    {&thref-proc_ref-event}
-    " buffer ub.place:handle "
-    " buffer ub.place:handle "
-    ''
-    ''
-    no-error
-  }
-  if error-status :error
-    then
-  do:
-    message
-      error-status:get-message(1) skip
-      return-value
-      view-as alert-box error .
-
-    return no-apply .
-
   end.
-end.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -498,24 +485,25 @@ ON CHOOSE OF b-quit IN FRAME d-pl-form /* Отмена */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME r-sr-izm
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm d-pl-form
-ON CHOOSE OF r-sr-izm IN FRAME d-pl-form /*Справочник средств измерения*/
-  DO:
-    define variable v-node-code as integer   no-undo.
-    define variable v-sr-type   as character no-undo.
-    v-node-code = 0 .
-    run ref/sr-izm.w (input parparentproc ,
-      input ""            ,
-      input {&lookup}     ,
-      input-output v-node-code,
-      output v-sr-type) no-error.
-    if v-node-code <> 0 and v-node-code <> ? then 
-    do :
-      place-si = v-node-code.
-      place-si:screen-value = string(v-node-code).
+&Scoped-define SELF-NAME dens-prov
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL dens-prov d-pl-form
+ON LEAVE OF dens-prov IN FRAME d-pl-form /* Плотность при поверке резервуара */
+DO:
+  if input frame {&frame-name} {&self-name} <> {&self-name} then do:
+    if input frame {&frame-name} dens-prov = ?
+      or (  input frame {&frame-name} dens-prov <= 0
+            or input frame {&frame-name} dens-prov >= 1
+              )
+    then do:
+      message "Неверно определена плотность при поверке резервуара" view-as alert-box error.
+      apply "entry" to dens-prov .
+      return no-apply.
     end.
-  END.
+
+    assign frame {&frame-name} dens-prov.
+  end.
+
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -531,27 +519,24 @@ ON value-changed OF place-type IN FRAME d-pl-form /*Справочник средств измерения
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME dens-prov
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL dens-prov Dialog-Frame
-ON LEAVE OF dens-prov IN FRAME d-pl-form /* Плотность */
-  DO:
-    if input frame {&frame-name} {&self-name} <> {&self-name} then 
-    do:
-      if input frame {&frame-name} dens-prov = ?
-        or (  input frame {&frame-name} dens-prov <= 0
-        or input frame {&frame-name} dens-prov >= 1
-        )
-        then 
-      do:
-        message "Неверно определена плотность при поверке резервуара" view-as alert-box error.
-        apply "entry" to dens-prov .
-        return no-apply.
-      end.
 
-      assign frame {&frame-name} dens-prov.
-    end.
-
-  END.
+&Scoped-define SELF-NAME r-sr-izm
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm d-pl-form
+ON CHOOSE OF r-sr-izm IN FRAME d-pl-form /* r-sr-izm */
+DO:
+  define variable v-node-code as integer no-undo.
+  define variable v-sr-type as character no-undo.
+  v-node-code = 0 .
+  run ref/sr-izm.w (input parparentproc ,
+                    input ""            ,
+                    input {&lookup}     ,
+                    input-output v-node-code,
+                    output v-sr-type) no-error.
+  if v-node-code <> 0 and v-node-code <> ? then do :
+    place-si = v-node-code.
+    place-si:screen-value = string(v-node-code).
+  end.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -597,26 +582,23 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   case p-mode:
-    when {&update} then 
-      do:
-        find first locked_place exclusive-lock
-          where recid (locked_place) = p-rep-rec
-          no-error .
-      end.
-    when {&lookup} then 
-      do:
+    when {&update} then do:
+      find first locked_place exclusive-lock
+        where recid (locked_place) = p-rep-rec
+        no-error .
+    end.
+    when {&lookup} then do:
+      find first locked_place no-lock
+        where recid( locked_place ) = p-rep-rec
+        no-error .
+      if not available locked_place then do:
         find first locked_place no-lock
-          where recid( locked_place ) = p-rep-rec
-          no-error .
-        if not available locked_place then 
-        do:
-          find first locked_place no-lock
-            where locked_place.obj-type = p-obj-type
+          where locked_place.obj-type = p-obj-type
             and locked_place.obj-code = p-obj-code
-            and locked_place.pl-code = p-pl-code
-            no-error .
-        end.
+            and locked_place.pl-code  = p-pl-code
+          no-error .
       end.
+    end.
   end case.
   if not available locked_place
     and  p-mode <> {&add-def}
@@ -672,41 +654,33 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       ,output v-value
       ,output v-ok      ) no-error.
     case v-code :
-      when {&place-type} then 
-        do :
-          if v-ok then place-type = integer(v-value) .
-        end.
-      when {&place-SI} then 
-        do :
-          if v-ok then place-si = integer(v-value) .
-        end.
-      when {&place-diameter} then 
-        do :
-          if v-ok then place-diameter = decimal(v-value) .
-        end.
-      when {&dead-balance} then 
-        do :
-          if v-ok then dead-balance = decimal(v-value) .
-        end.
-      when {&place-ratio-error} then 
-        do :
-          if v-ok then place-ratio-error = decimal(v-value) .
-        end.
-      when {&place-dens-prov} then 
-        do :
-          if v-ok then dens-prov = decimal(v-value) .
-        end.
-      when {&place-virtual} then 
-        do :
-          if v-ok then t-place-virtual = logical(v-value) .
-        end.
-      when {&place-twice-code} then 
-        do: 
-          if v-ok then place-twice-code = v-value .
-          
-          
-        end.
-      
+      when {&place-type} then do :
+        if v-ok then place-type = integer(v-value) .
+      end.
+      when {&place-SI} then do :
+        if v-ok then place-si = integer(v-value) .
+      end.
+      when {&place-diameter} then do :
+        if v-ok then place-diameter = decimal(v-value) .
+      end.
+       when {&dead-balance} then do :
+        if v-ok then dead-balance = decimal(v-value) .
+      end.
+      when {&place-ratio-error} then do :
+        if v-ok then place-ratio-error = decimal(v-value) .
+      end.
+      when {&place-dens-prov} then do :
+        if v-ok then dens-prov = decimal(v-value) .
+      end.
+      when {&place-virtual} then do :
+        if v-ok then t-place-virtual = logical(v-value) .
+      end.
+      when {&place-twice-code} then do: 
+        if v-ok then place-twice-code = v-value .
+      end.
+      when {&place-sert-urov} then do :
+        if v-ok then t-sert-urov = logical(v-value) .
+      end.      
     end case.
   end.
   run Myenable in this-procedure .
@@ -749,20 +723,21 @@ PROCEDURE enable_UI :
                  Settings" section of the widget Property Sheets.
   ------------------------------------------------------------------------------*/
   DISPLAY t-place-virtual place-type place-si dead-balance place-diameter 
-    place-ratio-error dens-prov place-twice-code t-chk-max-qnty 
-    WITH FRAME d-pl-form.
-  IF AVAILABLE tt-place THEN
-    DISPLAY tt-place.loc1 tt-place.loc2 tt-place.loc3 tt-place.loc4
-      tt-place.pl-name tt-place.is-meas tt-place.pl-code tt-place.issue-year
-      tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS 
+          place-ratio-error dens-prov place-twice-code t-chk-max-qnty 
+          t-sert-urov 
       WITH FRAME d-pl-form.
-  ENABLE b-exit b-quit B-hist b-help tt-place.loc1 tt-place.loc2 tt-place.loc3
-    tt-place.loc4 tt-place.pl-name t-place-virtual tt-place.is-meas 
-    tt-place.issue-year place-type tt-place.start-date tt-place.add-qnty 
-    place-si r-sr-izm tt-place.max-qnty dead-balance place-diameter 
-    place-ratio-error dens-prov place-twice-code t-chk-max-qnty 
-    tt-place.PS 
-    WITH FRAME d-pl-form.
+  IF AVAILABLE tt-place THEN 
+    DISPLAY tt-place.loc1 tt-place.loc2 tt-place.loc3 tt-place.loc4 
+          tt-place.pl-name tt-place.is-meas tt-place.pl-code tt-place.issue-year 
+          tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS 
+      WITH FRAME d-pl-form.
+  ENABLE b-exit b-quit B-hist b-help tt-place.loc1 tt-place.loc2 tt-place.loc3 
+         tt-place.loc4 tt-place.pl-name t-place-virtual tt-place.is-meas 
+         tt-place.issue-year place-type tt-place.start-date tt-place.add-qnty 
+         place-si r-sr-izm tt-place.max-qnty dead-balance place-diameter 
+         place-ratio-error dens-prov place-twice-code t-chk-max-qnty 
+         t-sert-urov tt-place.PS 
+      WITH FRAME d-pl-form.
   {&OPEN-BROWSERS-IN-QUERY-d-pl-form}
 END PROCEDURE.
 
