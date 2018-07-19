@@ -148,14 +148,14 @@ DEFINE VARIABLE shift-num AS INTEGER FORMAT "99":U INITIAL 0
 DEFINE VARIABLE shift-reservoir-from AS CHARACTER FORMAT "X(8)" INITIAL ""
      VIEW-AS COMBO-BOX
      INNER-LINES 5
-     LIST-ITEM-PAIRS "def", 1
+     LIST-ITEM-PAIRS "def", "1"
      DROP-DOWN-LIST
      SIZE 18 BY 1 NO-UNDO.
      
 DEFINE VARIABLE shift-reservoir-to AS CHARACTER FORMAT "X(8)" INITIAL ""
      VIEW-AS COMBO-BOX
      INNER-LINES 5
-     LIST-ITEM-PAIRS "def", 1
+     LIST-ITEM-PAIRS "def", "1"
      DROP-DOWN-LIST
      SIZE 18 BY 1 NO-UNDO.
 
@@ -698,12 +698,16 @@ define buffer buf_place for ub.place .
         for each buf_place no-lock
            where buf_place.obj-type = p-obj-type
              and buf_place.obj-code = p-obj-code:
+          /* по задаче 4450 (задача отдела сопровождения ПСИ Смоленск от 24/VI-2018 :
+               такая избыточная проверка значений нужна, т.к. в Смоленске выдаёт ошибку
+               на вызове ADD-LAST(): в БД Смоленска запятая в наименовании резервуара */
           assign
-            v-pl-name = substitute("&1 &2", buf_place.loc1, buf_place.pl-name)
-            v-pl-code = string(buf_place.pl-code)
+            v-pl-name = substitute(  "&1 &2",  buf_place.loc1,  replace(buf_place.pl-name, ",", " ")  )
+            v-pl-code = substitute(  "&1",     buf_place.pl-code)
           .
-          if trim(v-pl-name) = "" then v-pl-name = buf_place.pl-name .
+          if trim(v-pl-name) = "" then v-pl-name = substitute("&1", buf_place.pl-name) .
           if trim(v-pl-name) = "" then v-pl-name = "N Топливо" .
+          if trim(v-pl-code) = "" then v-pl-code = "0" .
           shift-reservoir-from:ADD-LAST(v-pl-name, v-pl-code).
           shift-reservoir-to  :ADD-LAST(v-pl-name, v-pl-code).
         end.
