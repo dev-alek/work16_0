@@ -201,7 +201,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
           .
         end.
       end.
-      else do:
+      else if not g#news then do:
         for each buf_rvs-doc no-lock
           where buf_rvs-doc.obj-type = buf_pl-gds.obj-type
             and buf_rvs-doc.obj-code = buf_pl-gds.obj-code
@@ -271,7 +271,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       if buf_pl-gds.rvs-on = true then do:
         /* проверяем, что не существует документов сверки */
         /* в статусах {&permitted}, {&rvs-froze} */
-        for each buf_rvs-doc no-lock
+        if not g#news then for each buf_rvs-doc no-lock
           where buf_rvs-doc.obj-type = buf_pl-gds.obj-type
             and buf_rvs-doc.obj-code = buf_pl-gds.obj-code
             and ( buf_rvs-doc.status_  = {&permitted}
