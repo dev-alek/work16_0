@@ -123,17 +123,28 @@ define buffer buf_price-doc for ub.price-doc .
     end.  
   end.
   else do :    
-    run utl/ora-i301.p (
-      input this-procedure ,
-      input this-procedure ,
-      input table temp-price-doc ,
-      input table temp-price-list ,
-      output num-rec-ok2
-      ) no-error .
-    if error-status:error
+    if p-Price-Doc:doc-num <> ? and p-Price-Doc:doc-num <> ""
+    then do :  
+      find first buf_price-doc exclusive-lock where buf_price-doc.doc-num = p-Price-Doc:doc-num no-error.
+    end.
+    if not available buf_price-doc
     then do :
-      undo, return error return-value.
-    end.  
+      find first buf_price-doc exclusive-lock where buf_price-doc.uid-es = p-Price-Doc:doc-id no-error.  
+    end.
+    if not available buf_price-doc
+    then do :
+      run utl/ora-i301.p (
+        input this-procedure ,
+        input this-procedure ,
+        input table temp-price-doc ,
+        input table temp-price-list ,
+        output num-rec-ok2
+        ) no-error .
+      if error-status:error
+      then do :
+        undo, return error return-value.
+      end. 
+    end. 
   end.    
       
 procedure pcall-log-file :
