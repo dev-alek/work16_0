@@ -182,7 +182,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-ta
 { cmp/cr-prep.i 1 discnt-v-pdf-pcnt        11                ֻֿׂ-%                11   PDF-pcnt  }
 { cmp/cr-prep.i 1 discnt-v-pdf-FP          12                ֻֿׂ-װײ               12   PDF-FP  }
 { cmp/cr-prep.i 1 discnt-v-pdf-abs         13                ֻֿׂ-אבס              13   PDF-abs  }
-
+{ cmp/cr-prep.i 1 discnt-v-gift            14                ֿמהאנמך              14   Gift  }
 
 &glob discnt-v-list  '{&bef-discnt-v-unknown}~
 ,{&bef-discnt-v-pcnt}~
@@ -198,6 +198,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-ta
 ,{&bef-discnt-v-pdf-pcnt}~
 ,{&bef-discnt-v-pdf-FP}~
 ,{&bef-discnt-v-pdf-abs}~
+,{&bef-discnt-v-gift}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-v-list {&discnt-v-list}" ).
 
@@ -215,6 +216,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-v-
 ,{&bef-discnt-v-pdf-pcnt-full}~
 ,{&bef-discnt-v-pdf-FP-full}~
 ,{&bef-discnt-v-pdf-abs-full}~
+,{&bef-discnt-v-gift-full}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-v-list-full {&discnt-v-list-full}" ).
 
