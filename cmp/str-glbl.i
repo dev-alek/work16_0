@@ -2429,9 +2429,13 @@ end.
 &global-define discnt-v-pdf-abs '{&bef-discnt-v-pdf-abs}':U
 &global-define bef-discnt-v-pdf-abs-full ТПЛ-абс
 &global-define discnt-v-pdf-abs-full '{&bef-discnt-v-pdf-abs-full}':U
-&global-define discnt-v-list '0,1,2,3,4,5,6,7,8,9,10,11,12,13':U
-&global-define discnt-v-list-full '?,%,Абс,ФЦ,опция,Бонус,Категория,Флаг,Правило,%-Абс-ФЦ,Сумма,ТПЛ-%,ТПЛ-ФЦ,ТПЛ-абс':U
-&global-define discnt-v-name entry (lookup (~{&discnt-v-code}, '0,1,2,3,4,5,6,7,8,9,10,11,12,13':U), '?,%,Абс,ФЦ,опция,Бонус,Категория,Флаг,Правило,%-Абс-ФЦ,Сумма,ТПЛ-%,ТПЛ-ФЦ,ТПЛ-абс':U)
+&global-define bef-discnt-v-gift 14
+&global-define discnt-v-gift '{&bef-discnt-v-gift}':U
+&global-define bef-discnt-v-gift-full Подарок
+&global-define discnt-v-gift-full '{&bef-discnt-v-gift-full}':U
+&global-define discnt-v-list '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14':U
+&global-define discnt-v-list-full '?,%,Абс,ФЦ,опция,Бонус,Категория,Флаг,Правило,%-Абс-ФЦ,Сумма,ТПЛ-%,ТПЛ-ФЦ,ТПЛ-абс,Подарок':U
+&global-define discnt-v-name entry (lookup (~{&discnt-v-code}, '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14':U), '?,%,Абс,ФЦ,опция,Бонус,Категория,Флаг,Правило,%-Абс-ФЦ,Сумма,ТПЛ-%,ТПЛ-ФЦ,ТПЛ-абс,Подарок':U)
 &global-define bef-discnt-t-unknown 0
 &global-define discnt-t-unknown '{&bef-discnt-t-unknown}':U
 &global-define bef-discnt-t-unknown-full ?
@@ -6776,7 +6780,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 4071fca9cb06, 1364, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 0e4be9b58f6d, 1385, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -8111,8 +8115,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,cd-type-autotank,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define str-glbl_vss-revision 'Revision: 4071fca9cb06, 1364, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: f51e93a1df8e, 1312, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 0c8942711988, 479, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: eaa0c7a72fce, 1372, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 3b0ee21956f9, 1370, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 4071fca9cb06, 1364, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 0e4be9b58f6d, 1385, rls ':U
 &endif
