@@ -35,7 +35,11 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       Msg = Msg + {&new-line} + inArg.
     end.
 
-  &scop tag-interface 'checks':U
+  /* 16/VIII-2018 надо вокруг чеков сделать еще одну секцию с номером смены.
+     Связано это с тем, что если в пакет попадает несколько раз одна и таже смена,
+     1С уже не понимает какой набор чеков был последний, т.к. они все валятся в один раздел.
+  */
+  &scop tag-interface 'sales-p-shifts':U
   define property InitSecTag as character no-undo init {&tag-interface}
     get.
 
@@ -44,6 +48,9 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     set.
 
   define private variable libFindtank as class ibs.th.str.findtank no-undo . /* обёртка для findtank.i */
+
+  &scop tag-shift     'shift':U
+  &scop tag-checks    'checks':U
 
   &scop tag-message   'check':U
   &scop tag-section1  'chk-gds':U
@@ -69,50 +76,88 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
    Param:   insw = create sax-writer
   ------------------------------------------------------------------------------*/
   method public void CrContentToSW (insw as handle):
-    define variable v-fld-inkas-code as handle no-undo .
-    define variable v-fld-inkas-date as handle no-undo .
-    define variable v-fld-inkas-time as handle no-undo .
-    define variable v-fld-inkas-oper as handle no-undo .
+    define variable v-fld-host-code  as handle no-undo .
     define variable v-fld-obj-type   as handle no-undo .
     define variable v-fld-obj-code   as handle no-undo .
-    define variable v-inkas-code     as character no-undo .
-    define variable v-inkas-date     as date no-undo .
-    define variable v-inkas-time     as integer no-undo .
-    define variable v-inkas-dtime    as datetime no-undo .
-    define variable v-inkas-operator as character no-undo .
-    define variable v-user-name      as character no-undo .
+    define variable v-fld-shift-date as handle no-undo .
+    define variable v-fld-shift-num  as handle no-undo .
+    define variable v-host-code      as integer no-undo .
     define variable v-obj-type       as character no-undo .
     define variable v-obj-code       as integer no-undo .
+    define variable v-shift-date     as date no-undo .
+    define variable v-shift-num      as integer no-undo .
+    define variable v-user-name      as character no-undo .
+    define variable v-inkas-dtime    as datetime no-undo .
     define variable v-en-chktype     as enum-chk-type no-undo .
-    /* define buffer buf_inkas   for ub.inkas . */
-    define buffer over_buf_chk-doc        for ub.chk-doc .
-
-    Msg = "" .
-    if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись ПРОДАЖИ inkas") .
-
-    assign
-      v-fld-inkas-code = BufHandle:buffer-field( "inkas-code":U )
+    /* 16/VIII-2018 - добавлена секция <shift>
+Поля из inkas :
+    define variable v-fld-inkas-date as handle no-undo .
+    define variable v-fld-inkas-time as handle no-undo .
+    define variable v-inkas-date     as date no-undo .
+    define variable v-inkas-time     as integer no-undo .
       v-fld-inkas-date = BufHandle:buffer-field( "fact-date":U   )
       v-fld-inkas-time = BufHandle:buffer-field( "sys-time-int":U   )
-      v-fld-inkas-oper = BufHandle:buffer-field( "user-name":U  )
-      v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
-      v-fld-obj-code   = BufHandle:buffer-field( "obj-code":U  )
-    .
-    assign
-      v-inkas-code     = v-fld-inkas-code:buffer-value
       v-inkas-date     = v-fld-inkas-date:buffer-value
       v-inkas-time     = v-fld-inkas-time:buffer-value
-      v-inkas-dtime    = datetime(v-inkas-date, v-inkas-time * 1000)
-      v-inkas-operator = v-fld-inkas-oper:buffer-value
-      v-obj-type       = v-fld-obj-type:buffer-value
-      v-obj-code       = v-fld-obj-code:buffer-value
-    .
 
+    define variable v-fld-inkas-code as handle no-undo .
+    define variable v-inkas-code     as character no-undo .
+      v-fld-inkas-code = BufHandle:buffer-field( "inkas-code":U )
+      v-inkas-code     = v-fld-inkas-code:buffer-value
+
+    define variable v-fld-inkas-oper as handle no-undo .
+    define variable v-inkas-operator as character no-undo .
+      v-fld-inkas-oper = BufHandle:buffer-field( "user-name":U  )
+      v-inkas-operator = v-fld-inkas-oper:buffer-value
+    */
+    define buffer buf_inkas          for ub.inkas .
+    define buffer over_buf_chk-doc   for ub.chk-doc .
+
+    Msg = "" .
+    if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись СМЕНЫ shift_obj с документами продажи") .
+    
+    libFindtank = new ibs.th.str.findtank ().
+    
+    assign
+      v-fld-host-code  = BufHandle:buffer-field( "host-code":U  )
+      v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
+      v-fld-obj-code   = BufHandle:buffer-field( "obj-code":U  )
+      v-fld-shift-date = BufHandle:buffer-field( "shift-date":U  )
+      v-fld-shift-num  = BufHandle:buffer-field( "shift-num":U  )
+    .
+    assign
+      v-host-code  = v-fld-host-code:buffer-value
+      v-obj-type   = v-fld-obj-type:buffer-value
+      v-obj-code   = v-fld-obj-code:buffer-value
+      v-shift-date = v-fld-shift-date:buffer-value
+      v-shift-num  = v-fld-shift-num:buffer-value
+    .
+    
+    insw:start-element ({&tag-shift}) .
+    /* обязательность не указана; выгружаем по аналогии с секцией <checks>
+       (не спрашивайте, зачем выгружать дату и номер смены и внутри чека, и снаружи:
+        так надо, чтобы программисты из 1с смогли это понять)
+    */
+    if v-shift-date = ? then insw:write-empty-element ( "shift-date":U ) . /* Дата смены (Дата) */
+                        else insw:write-data-element (  "shift-date":U,  iso-date(v-shift-date)  ).
+    if v-shift-num  = ? then insw:write-empty-element ( "shift-num":U  ) .  /* Номер смены (Число) */
+                        else insw:write-data-element (  "shift-num":U,   string(v-shift-num)     ).
+    insw:start-element ({&tag-checks}) .
+    
+    for each buf_inkas no-lock
+       where buf_inkas.host-code  = v-host-code 
+         and buf_inkas.obj-type   = v-obj-type
+         and buf_inkas.obj-code   = v-obj-code
+         and buf_inkas.shift-date = v-shift-date
+         and buf_inkas.shift-num  = v-shift-num
+         and buf_inkas.status_    = {&fact}
+      /* and buf_inkas.fact-date  = buf_shift-obj.shift-date - не всегда, и не факт; не проверялось */
+    :
     /* 17/I-2018 Operator – надо выводить ФИО пользователя */
     { gbl/usrfulnm.i
-      v-inkas-operator
+      buf_inkas.user-name
       v-user-name }
-
+      
     /* 28/XI-2017 при выгрузке чеков надо еще запускать размаз чеков, иначе chk-pay-r нет. */
     run rep/rpychk0.p ( input "bgepych2"
                       , input v-obj-type
@@ -123,20 +168,23 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                       ,input ? /*p-shift-date-to*/
                       ,input ? /*p-shift-num-start*/
                       ,input ? /*p-shift-num-end*/
-                      , input v-inkas-code
+                      , input buf_inkas.inkas-code
                       ) .
-
-    libFindtank = new ibs.th.str.findtank ().
-
+                      
+    v-inkas-dtime = datetime(buf_inkas.fact-date, buf_inkas.sys-time-int * 1000) .
     for each over_buf_chk-doc no-lock
-       where over_buf_chk-doc.out-code = v-inkas-code:
+       where over_buf_chk-doc.out-code = buf_inkas.inkas-code:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
       v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
       if not error-status:error then
-        CrContentInterfaceToSW (insw, buffer over_buf_chk-doc
-          , v-inkas-code, v-inkas-dtime, v-user-name) .
+        CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name) .
     end . /* end_of for_each buf_chk-doc */
     
+
+    end. /* end_of for_each_inkas */
+    insw:end-element ({&tag-checks}) .
+    insw:end-element ({&tag-shift}) .
+
 
     catch exAppErrors as class Progress.Lang.AppError :
       Msg = exAppErrors:ReturnValue .
@@ -163,7 +211,6 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   ------------------------------------------------------------------------------*/
   method private void CrContentInterfaceToSW (insw as handle
                                           , buffer p-buf_chk-doc for ub.chk-doc
-                                          , input p-inkas-code     as character
                                           , input p-inkas-dtime    as datetime
                                           , input p-inkas-operator as character
                                           ) :
@@ -242,8 +289,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                  и ФИО оператора, который оформлял документ */
     if p-inkas-operator > "" then
       insw:write-data-element (  "operator":U,   p-inkas-operator           ). /* Оператор создавший документ (Строка) */
-    if p-inkas-code > "" then
-      insw:write-data-element (  "prdoc-num":U,  p-inkas-code               ). /* Номер документа продажи в GC (Строка) */
+    if p-buf_chk-doc.out-code > "" then // chk-doc.out-code хранит значение из inkas.inkas-code
+      insw:write-data-element (  "prdoc-num":U,  p-buf_chk-doc.out-code     ). /* Номер документа продажи в GC (Строка) */
     if p-inkas-dtime = ? then . else
       insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
 

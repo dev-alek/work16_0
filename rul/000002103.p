@@ -150,7 +150,6 @@ define variable v-fld-sht-status as handle no-undo .
 define variable v-custom-pack-name as character no-undo .
 define variable v-dump-ord-int64   as int64 no-undo .
 define buffer buf_shift-obj   for ub.shift-obj .
-define buffer buf_inkas       for ub.inkas .
 
 
 _main:
@@ -180,9 +179,8 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   */
   if (v-sht-status = {&sht-closed}) or (v-sht-status = {&sht-current}) then do:
     
-  IF context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  THEN do:
+  IF not context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) THEN
     undo _main, return error v-last-error-message .
-  end.
   
     subObj = new shift ().
     subObj:KeyRowid = v-doc-rowid.
@@ -209,12 +207,23 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   ExpData1:Route-data_{&release_1} .
     
 
-  if (v-sht-status = {&sht-closed}) or (v-sht-status = {&sht-current}) then do:
   /* 7/XII-2017 и к закрытию смены добавлена выгрузка чеков по всем продажам закрытой смены */
+  if (v-sht-status = {&sht-closed}) then do:
   for first buf_shift-obj no-lock
       where rowid(buf_shift-obj)  = v-doc-rowid
         and buf_shift-obj.status_ = {&sht-closed} :
     subObj2 = new check ().
+    IF not context_begin-esys-command( input string(v-esys-id-list)
+                                     , input-output v-esys-cmd-proc-handle
+                                     , output v-esys-cmd-code) THEN
+      undo _main, return error v-last-error-message .
+    
+    subObj2:BufHandle = buffer buf_shift-obj:HANDLE .
+    expObj:GetContent(subObj2).
+
+/* 16/VIII-2018 - вокруг чеков добавлена секция <shift>, отличная от секции, в которой выгружаются смены.
+                  Обход таблицы с продажами убран внутрь экспорта чеков.
+define buffer buf_inkas       for ub.inkas .
   for each buf_inkas no-lock
      where buf_inkas.host-code  = buf_shift-obj.host-code 
        and buf_inkas.obj-type   = buf_shift-obj.obj-type
@@ -224,11 +233,10 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
        and buf_inkas.status_    = {&fact}
     /* and buf_inkas.fact-date  = buf_shift-obj.shift-date - не всегда, и не факт; не проверялось */
   :
-    IF context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  THEN do:
-      undo _main, return error v-last-error-message .
-    end.
     subObj2:BufHandle = buffer buf_inkas:HANDLE .
     expObj:GetContent(subObj2).
+  end. /* end_of for_each_inkas */
+*/  
     IF not ExpData1:esys-add-dump-data ( INPUT expObj:Data
                                        , INPUT v-esys-cmd-proc-handle
                                        , INPUT v-esys-cmd-code
@@ -246,7 +254,6 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
       undo _main, return error v-last-error-message .
     &scop release_1 clear-data ( )
     ExpData1:Route-data_{&release_1} .
-  end. /* end_of for_each_inkas */
   end.
   end. /* end_of if_status_  */
 
