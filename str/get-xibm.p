@@ -2407,6 +2407,114 @@ define variable local-netto-for-sub-d as decimal no-undo .
 
 end procedure. /* proc-bonus */
 
+procedure proc-promo :
+/*
+
+идентификатор акции        cPromoId
+количество срабатываний    cPromoCount
+доп. инфо                  cPromoMisc
+
+*/
+define variable  Promo-Id        as char no-undo .
+define variable  promo-count     as integer no-undo .
+define variable  promo-misc      as character no-undo .
+
+define buffer buf_temp-temp for temp-temp .
+define buffer buf_chk-gds for ub.chk-gds.
+define variable local-netto-for-sub-d as decimal no-undo .
+/* run gbl\inidebug.p. */
+  do
+  on error undo, return error
+  :
+    if not exist then do:
+      for each buf_temp-temp where
+              buf_temp-temp.record-name = "CPromo":U
+        AND buf_temp-temp.id = v-id:
+        CASE buf_temp-temp.field-name:
+          when "cPromoId":U then do:
+            assign
+            Promo-Id = buf_temp-temp.field-value
+            no-error .
+          end.
+          when "cPromoCount":U then do:
+            assign
+            promo-count = integer(buf_temp-temp.field-value)
+            no-error .
+          end.
+          when "cPromoMisc":U then do:
+            assign
+            promo-misc = buf_temp-temp.field-value
+            no-error .
+          end.
+          
+          otherwise do:
+            error-status:error = no.
+          end.
+        END CASE.
+        if error-status:error then do:
+          {&error-in-file-format}
+        end.
+        delete buf_temp-temp.
+      end.
+      find first ub.chk-discnt where   ub.chk-discnt.doc-code = ub.chk-doc.doc-code
+      and ub.chk-discnt.record-type = 5
+      and ub.chk-discnt.promo-id = Promo-Id no-error.
+      if available ub.chk-discnt then do:
+          ub.chk-discnt.object-sum = ub.chk-discnt.object-sum + promo-count.
+      end.    
+      else do:
+          create ub.chk-discnt.
+          assign
+          ub.chk-discnt.doc-code = ub.chk-doc.doc-code
+          ub.chk-discnt.record-type = 5
+          ub.chk-discnt.promo-id = Promo-Id
+          ub.chk-discnt.line-num = 0
+          ub.chk-discnt.object-sum = promo-count
+          ub.chk-discnt.discnt-id = (var-discnt-id + 1)
+         /* ub.chk-discnt.discnt-id = (if bonus-trans-id_ = 0 then ub.chk-discnt.line-num else bonus-trans-id_) 
+          chk-discnt.time-oper = chk-gds.time-oper
+          chk-discnt.line-type = (if bonus-type-chr_ = 'I' or bonus-type-chr_ = '0'
+                                  then integer({&discnt-gds})
+                                  else (if bonus-type-chr_ = 'T'
+                                        then integer({&discnt-sub-total})
+                                        else integer({&discnt-unknown})
+                                       )
+                                  )
+          chk-discnt.pass-discnt = bonus-obj_
+          chk-discnt.value-type = integer({&discnt-v-bonus})
+          chk-discnt.src-d-card = bonus-card-no
+          chk-discnt.d-card = bonus-card-no
+          chk-discnt.discnt-value-abs = bonus-qty_
+          chk-discnt.discnt-value-pcnt = (if chk-discnt.line-type = integer({&discnt-gds})
+                                          then bonus-src-code_
+                                          else 0)
+          chk-discnt.discnt-type = bonus-reason_
+          chk-discnt.kateg = (if bonus-curr-code_ > 0
+                              then bonus-curr-code_
+                              else (if bonus-curr-code_ = kassa-rub-code
+                                    then 0
+                                    else -1 )
+                              )
+          chk-discnt.object-line-num = (if bonus-string <= 0
+                                        then bonus-string
+                                        else chk-gds.line-num)
+                                        */
+          chk-discnt.object-line-num = 0                              
+          chk-discnt.pay-desk = chk-doc.pay-desk
+          chk-discnt.obj-code = chk-doc.obj-code
+          chk-discnt.obj-type = chk-doc.obj-type
+          chk-discnt.chk-date = chk-doc.chk-date
+          chk-discnt.shift-date = chk-doc.shift-date
+          chk-discnt.shift-num = chk-doc.shift-num
+          chk-discnt.chk-time = chk-doc.chk-time
+          .
+          var-discnt-id = var-discnt-id + 1.
+      end.
+    end. /*if exist*/
+  end.
+
+end procedure. /* proc-bonus */
+
 procedure proc-disc :
 define variable lnd-spl as integer no-undo .
 define buffer buf_temp-temp for temp-temp .
@@ -2416,6 +2524,7 @@ define variable disc-reason_ as integer no-undo .
 define variable disc-vtype_ as integer no-undo .
 define variable disc-type_ as integer no-undo .
 define variable disc-mode_ as character no-undo .
+define variable disc-promo-id_ as character no-undo .
 define variable disc-sign_ as logical no-undo .
 define variable local-netto-for-sub-d as decimal no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
@@ -2493,7 +2602,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
         end.
         delete buf_temp-temp.
       end.
-   /*  if disc-mode_ = "C":U  then return. */ /* Игнорируем тип скидки С, который используется для хранения бонусов на кассе */ 
+      if disc-mode_ = "B":U  then return.  /* Игнорируем тип скидки B, который используется для хранения бонусов на кассе */ 
       if disc-mode_ <> 'T':U then do:
         find first buf_chk-gds where
                   buf_chk-gds.doc-code = chk-doc.doc-code
@@ -2517,7 +2626,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
             return.
           end.
         end.
-        else if disc-mode_ <> 'C':U then do:
+        else if not (disc-mode_ = 'C':U or disc-mode_ = 'P':U) then do:
             assign
             p-view-log = yes.
             run write-log-and-file in p-log-handle (
@@ -2566,7 +2675,11 @@ define buffer buf_chk-discnt for ub.chk-discnt.
       else do:
         local-netto-for-sub-d = netto-for-sub-d.
       end.
-      create ub.chk-discnt.
+      if disc-reason_ = 15 then do:
+          disc-promo-id_ = disc-d-card.
+          disc-d-card  = '':U.
+      end.    
+      create chk-discnt.
       assign
       ub.chk-discnt.doc-code = ub.chk-doc.doc-code
       ub.chk-discnt.record-type = if disc-mode_ = "C":U then 10 else 0
@@ -2613,6 +2726,8 @@ define buffer buf_chk-discnt for ub.chk-discnt.
       chk-discnt.obj-type = chk-doc.obj-type
       chk-discnt.chk-date = chk-doc.chk-date
       chk-discnt.chk-time = chk-doc.chk-time
+      chk-discnt.shift-date = chk-doc.shift-date
+      chk-discnt.shift-num = chk-doc.shift-num
       chk-discnt.object-qnty = (if chk-discnt.line-type = integer({&discnt-sub-total})
                                 then accum-src-for-sub-d
                                 else buf_chk-gds.src-qnty)
@@ -2620,8 +2735,9 @@ define buffer buf_chk-discnt for ub.chk-discnt.
                                then  local-netto-for-sub-d
                                else buf_chk-gds.src-sum)
       var-discnt-id = var-discnt-id + 1
-      sub-d = (if ub.chk-discnt.line-type = integer({&discnt-sub-total}) then (sub-d - disc-sum_) else sub-d)
-       sub-d = (if chk-discnt.line-type = integer({&discnt-sub-total}) then (sub-d - disc-sum_) else sub-d).
+      sub-d = (if chk-discnt.line-type = integer({&discnt-sub-total}) then (sub-d - disc-sum_) else sub-d)
+      chk-discnt.promo-id = disc-promo-id_ 
+      .
       if chk-discnt.record-type <> 10 then netto-for-sub-d =  netto-for-sub-d - chk-discnt.discnt-value-abs
       .
       if available buf_chk-gds  and chk-discnt.record-type <> 10 then
@@ -2877,6 +2993,10 @@ define variable v-time-loc-char as character no-undo .
           if v-start-check = 1 then
           run proc-bonus in this-procedure no-error .
         end.
+        when "CPromo":U then do:
+          if v-start-check = 1 then
+          run proc-promo in this-procedure no-error .
+        end.
         when "CDisc":U then do:
           if v-start-check = 1 then
           run proc-disc in this-procedure no-error .
@@ -2968,6 +3088,8 @@ define variable v-time-loc-char as character no-undo .
         when "CDisc":U
         or
         when "BonusAdd":U
+        or
+        when "CPromo":U
         or
         when "BonusAdd":U
         or

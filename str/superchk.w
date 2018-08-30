@@ -582,6 +582,7 @@ tt-chk-discnt.discnt-id COLUMN-LABEL "ID!транзакц" FORMAT ">>>>>>>>9"
 tt-chk-discnt.kateg COLUMN-LABEL "Код !валюты" FORMAT "->>>9"
 tt-chk-discnt.d-card COLUMN-LABEL "№ карты" FORMAT "X(20)"
 get-templ-rl-name( INPUT tt-chk-discnt.templ-rl-root) COLUMN-LABEL {&label_templ-rl-root} FORMAT "X(255)" WIDTH 50
+tt-chk-discnt.promo-id COLUMN-LABEL "Промо" FORMAT "X(20)"
 ENABLE
 tt-chk-discnt.discnt-value-abs
 tt-chk-discnt.discnt-value-pcnt
@@ -2706,7 +2707,7 @@ PROCEDURE check-ch-bc-ck :
 define input parameter p-price-sale like ub.gds-obj.price-sale no-undo.
 define input parameter p-price-base like ub.chk-gds.price-base no-undo.
 define variable glog as logical no-undo.
-if par-mode <> {&update} then return.
+if par-mode <> {&update} or p-price-base = 0 /* для подарков уберем проверку */ then return.
 if p-price-sale <> p-price-base  AND not ch-bc-ck then do:
     message
     "Цена товара, с которой пробит чек, НЕ РАВНА" skip
@@ -2723,7 +2724,7 @@ else do:
       message
       "Цена товара, с которой пробит чек, НЕ РАВНА" skip
       "прейскурантной цене товара (услуги), на который производится замена." skip
-      "Подтвердить смену товара  -  ДА, отказаться от изменения - НЕТ"
+      "Подтвердить смену товара  -  ДА, отказаться от изменения - НЕТ"  
       view-as alert-box
       WARNING buttons YES-NO update glog.
       if not glog then return error.
