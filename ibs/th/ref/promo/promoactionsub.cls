@@ -46,7 +46,7 @@ define variable vss-description as character no-undo initial "Объект акция.".
     end.
     private set.
     
-  define property ID as int64 init ?  no-undo
+  define property ID as int64  no-undo
     get.
     set (ID-arg as int64):
       ID = ID-arg.
@@ -68,7 +68,9 @@ define variable vss-description as character no-undo initial "Объект акция.".
    
      
   define property beg-date as Date no-undo
-    get.
+    get():
+       return if beg-date eq ? then today else beg-date.
+    end.   
     SET (arg as Date):
       if arg <> beg-date
       then do:
@@ -78,7 +80,9 @@ define variable vss-description as character no-undo initial "Объект акция.".
     END.  
   
   define property end-date as Date no-undo
-    get.
+    get():
+       return if end-date eq ? then today else end-date.
+    end.
     set(arg as Date):
       if arg <> end-date
       then do:
@@ -183,33 +187,27 @@ define variable vss-description as character no-undo initial "Объект акция.".
       end.
     end. 
       
-  define property Mode as char no-undo
-    get:
-      IF Mode  EQ ?
-      then
-         Mode = {&h-update}.
-      
-      return Mode.   
-    end.
+    define property Mode as char no-undo init "{&h-update}"
+    get.
     set.
     
     {ibs/th/ref/promo/propertyclass.i
      &Obj       = GoodsCrits
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,{&criterion},db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:criterion,db-num) }
     
     {ibs/th/ref/promo/propertyclass.i
      &Obj       = GoodsAppl
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,{&appl},db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:appl,db-num) }
       
      {ibs/th/ref/promo/propertyclass.i
      &Obj       = PromoSet
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,{&promoSet},db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:promoSet,db-num) }
    
     {ibs/th/ref/promo/propertyclass.i
      &Obj       = Criterion

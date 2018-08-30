@@ -170,14 +170,8 @@ define variable vss-description as character no-undo initial "Объект объекта акц
       end.
     end.
     
-    define property Mode as char no-undo
-    get:
-      IF Mode  EQ ?
-      then
-         Mode = {&h-update}.
-      
-      return Mode.   
-    end.
+    define property Mode as char no-undo init {&h-update}
+    get.
     set.
     
     define property Changed as logical no-undo

@@ -44,7 +44,7 @@ define variable vss-description as character no-undo initial "Объект подаркок ак
     end.
     private set.
     
-  define property ID as int64 init ?  no-undo
+  define property ID as int64  no-undo
     get.
     set (ID-arg as int64):
       ID = ID-arg.
@@ -131,14 +131,8 @@ define variable vss-description as character no-undo initial "Объект подаркок ак
       end.
     END.
     
-    define property Mode as char no-undo
-    get:
-      IF Mode  EQ ?
-      then
-         Mode = {&h-update}.
-      
-      return Mode.   
-    end.
+    define property Mode as char no-undo init "{&h-update}"
+    get.
     set.
     
     define property Changed as logical no-undo

@@ -35,14 +35,8 @@ define variable vss-description as character no-undo initial "Объект товар акции
     get.
     set.
     
-    define property Mode as char no-undo
-    get:
-      IF Mode  EQ ?
-      then
-         Mode = {&h-update}.
-      
-      return Mode.   
-    end.
+    define property Mode as char no-undo init "{&h-update}"
+    get.
     set.
     
     define property StatusErr as logical no-undo
@@ -161,12 +155,12 @@ define variable vss-description as character no-undo initial "Объект товар акции
         else return "".
       end.
     end.
-    
+     
     {ibs/th/ref/promo/propertyclass.i
      &Obj       = promoSetGoods
      &ObjClass  = promoGoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(idAction,id,{&promoSetGoods},db-num) } 
+     &storColec = getpromoGoodssubs(idAction,id,ibs.th.ref.promo.enum-promo-goods-type:promoSetGoods,db-num) } 
     
     define property Changed as logical no-undo
     get.

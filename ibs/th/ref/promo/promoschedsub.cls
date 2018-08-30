@@ -44,11 +44,9 @@ define variable vss-description as character no-undo initial "Сущность Заголовок
     end.
     private set.
     
-  define property ID as integer init ?  no-undo
+  define property ID as integer no-undo
     get.
-    set (ID-arg as int):
-      ID = ID-arg.
-    end.
+    set.
     
   define property dispname as char no-undo
     get.
@@ -100,14 +98,8 @@ define variable vss-description as character no-undo initial "Сущность Заголовок
       end.
     END.
 
-    define property Mode as char no-undo
-    get:
-      IF Mode  EQ ?
-      then
-         Mode = {&h-update}.
-      
-      return Mode.   
-    end.
+    define property Mode as char init {&h-update} no-undo
+    get.
     set.
     
     define property Changed as logical no-undo

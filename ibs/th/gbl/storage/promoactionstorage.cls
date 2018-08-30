@@ -207,25 +207,37 @@ class ibs.th.gbl.storage.promoactionstorage:
         promoactionsubsObj:AddItem(getDataStorage (buffer buf_promoaction)).
         // + set promosched-id
     end.  
-    //------------------------------------------------    
-/*    define variable vin as integer no-undo.
-    create buf_promoaction.
-do vin = 1000 to 1005 :
+    return promoactionsubsObj.
+  end method.
+    method public class promoactionsubs getpromoactionsubs (input iDate as date,input istatus as integer  ):
+    define buffer buf_promoaction for ub.promoaction.
+    define variable hQuery   as handle  no-undo .
+    define variable vStrWhere as character no-undo.
+    define variable promoactionsubsObj as class promoactionsubs.
+    promoactionsubsObj = new promoactionsubs ().
+    if idate <> ? 
+    then
+       vStrWhere = (if vStrWhere eq "" then "" else vStrWhere + " and ") + "buf_PromoAction.end-date >= " + string(idate).
     
-        assign
-           buf_promoaction.id = vin
-           buf_promoaction.nameAction = substitute ("nameAction &1", vin)
-           buf_promoaction.beg-date = today + vin 
-           buf_promoaction.end-date = today + vin + 2  
-           
-        .
+    if istatus <> ? 
+    then
+       vStrWhere = (if vStrWhere eq "" then "" else vStrWhere + " and ") + "buf_PromoAction.Status_ = "  + string(istatus).
+    
+    
+    vStrWhere = (if vStrWhere eq "" then "" else " where " + vStrWhere).
+    create query hQuery.  
+    hQuery:set-buffers(buffer buf_promoaction:HANDLE).
+     
+    hQuery:query-prepare("FOR EACH buf_promoaction " + vStrWhere).
+    hQuery:query-open ().
+    hQuery:get-first ().
+    do while hQuery:query-off-end = false :
         promoactionsubsObj:AddItem(getDataStorage (buffer buf_promoaction)).
-        
-end .  
-
-delete buf_promoaction.
-*/
-//--------------------------------------------------------
+        hQuery:get-next().
+    end.
+    hQuery:query-close() .
+    delete object hQuery.
+     
     return promoactionsubsObj.
   end method.
   
