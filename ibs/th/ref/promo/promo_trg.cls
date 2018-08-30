@@ -1739,7 +1739,9 @@ end . /* end_of низ таблицы и html-файла */
            v-sub:GdsCode  = tt-PromoSet.gds-code        
           /* v-sub:type     = {&promoSet} 
            tt-PromoSet.type = {&promoSet}*/            
-           v-sub:Mode     = tt-PromoSet.mode            
+           v-sub:Mode     = tt-PromoSet.mode 
+           v-sub:qnty     = tt-PromoSet.qnty
+           v-sub:NameSet  = tt-PromoSet.nameset          
         .
         updateObjForSetGoods(v-sub:promoSetGoods,v-sub:ID).
      end.    
