@@ -262,6 +262,7 @@ define variable vartype                     as character                     no-
 define variable isEgais                     as logical                       no-undo .
 define variable v-vid-action                as integer                       no-undo .
 define variable v-vid-param                 as longchar                      no-undo .
+define variable v-gds-null-price            as logical                       no-undo .
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 98 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -3348,17 +3349,28 @@ define buffer bf-units-cli for ub.units.
      view-as alert-box error buttons ok.
      return error.
   end.
-  if t-doc.status_ <> {&inquiry} then do:
+  run gds-attr-value in this-procedure (input  buf_goods.gds-code
+                                         ,input {&attr-null-price}
+                                         ,output v-gds-null-price
+                                         ,output v-attr-type ) no-error .                                         
+  if t-doc.status_ <> {&inquiry} and  not v-gds-null-price then do:
     if tt-fr-doc-line.price-cli = 0 or tt-fr-doc-line.price-cli = ? then do:
       message "Не указана цена в валюте поставщика." view-as alert-box error.
       return error.
     end.
-    if tt-fr-doc-line.price-cli < 0  then do:
-      message "Нельзя указывать отрицательные цены в валюте поставщика." view-as alert-box error.
-      return error.
-    end.
     if tt-fr-doc-line.price-base = 0 or tt-fr-doc-line.price-base = ? then do:
       message "Не указана цена в базовой валюте." view-as alert-box error.
+      return error.
+    end.       
+    if tt-fr-doc-line.price-rubl = 0 or tt-fr-doc-line.price-rubl = ? then do:
+      message "Не указана цена в {&abbr_rublyah}." view-as alert-box error.
+      return error.
+    end.
+  end.                                            
+  /*
+  if t-doc.status_ <> {&inquiry} then do:   
+    if tt-fr-doc-line.price-cli < 0  then do:
+      message "Нельзя указывать отрицательные цены в валюте поставщика." view-as alert-box error.
       return error.
     end.
     if tt-fr-doc-line.price-base < 0  then do:
@@ -3370,15 +3382,13 @@ define buffer bf-units-cli for ub.units.
               "ВАЛЮТНАЯ цена превышает 5,000 !" skip (2)
               "Вы не ошиблись ?"  view-as alert-box question.
     end.
-    if tt-fr-doc-line.price-rubl = 0 or tt-fr-doc-line.price-rubl = ? then do:
-      message "Не указана цена в {&abbr_rublyah}." view-as alert-box error.
-      return error.
-    end.
+
     if tt-fr-doc-line.price-rubl < 0 then do:
       message "Отрицательная цена в {&abbr_rublyah}."  view-as alert-box error.
       return error.
     end.
   end.
+  */
 end procedure.
 
 procedure check-price:
