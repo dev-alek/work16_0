@@ -2529,7 +2529,7 @@ define variable disc-sign_ as logical no-undo .
 define variable local-netto-for-sub-d as decimal no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_chk-discnt for ub.chk-discnt.
-
+define variable disc-gds-reason as int no-undo .
 
   do
   on error undo, return error
@@ -2578,7 +2578,10 @@ define buffer buf_chk-discnt for ub.chk-discnt.
                            then integer({&discnt-v-pcnt})
                            else (if buf_temp-temp.field-value = "A":U
                                  then integer({&discnt-v-abs})
+                                 else (if buf_temp-temp.field-value = "G":U
+                                 then integer({&discnt-v-gift}) 
                                  else integer({&discnt-v-unknown})
+                                      )
                                 )
                            )
             no-error .
@@ -2592,6 +2595,12 @@ define buffer buf_chk-discnt for ub.chk-discnt.
             assign
             disc-d-card = buf_temp-temp.field-value
             no-error .
+          end.
+          when "CDDoc":U then do:
+            assign
+            disc-gds-reason = int(buf_temp-temp.field-value) 
+            no-error .
+            error-status:error = no.
           end.
           otherwise do:
             error-status:error = no.
@@ -2737,6 +2746,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
       var-discnt-id = var-discnt-id + 1
       sub-d = (if chk-discnt.line-type = integer({&discnt-sub-total}) then (sub-d - disc-sum_) else sub-d)
       chk-discnt.promo-id = disc-promo-id_ 
+      chk-discnt.templ-rl-root = disc-gds-reason
       .
       if chk-discnt.record-type <> 10 then netto-for-sub-d =  netto-for-sub-d - chk-discnt.discnt-value-abs
       .
