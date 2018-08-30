@@ -46,25 +46,29 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
     DEFINE PRIVATE VARIABLE label5 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label2 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
-
-//DEFINE PUBLIC VARIABLE tabPage6 AS System.Windows.Forms.TabPage NO-UNDO.
-//define PUBLIC variable tabControl1 as System.Windows.Forms.TabControl no-undo.
+    
+    DEFINE VARIABLE ucMain7     AS ibs.th.ref.promo.uc_SelectsGCP       NO-UNDO.
+    
     define private variable m-promo-type as class ibs.th.ref.promo.promoType no-undo.
     {ibs/th/ref/promo/promoType.def ttMethodCalc}
     {ibs/th/ref/promo/promoType.def ttTypeCond}  
-    define private variable m-promo-trg as class ibs.th.ref.promo.promo_trg no-undo.
-    
-    
-
-    method Public VOID SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
-        m-promo-trg = v-promo-trg.
-        SetBind().
-        
-    end.
+    {ibs/th/ref/promo/promo_trg_heder.i &child_1 = ucMain7 &NotLocalEvent =yes}
     
     method Public VOID SetBind( ):
         bindPromoActionOne:handle = m-promo-trg:getQuery("promoActionOne2").
+        setDisable(m-promo-trg:modeView).
     end.
+    
+    method public VOID setDisable(input iModeView as logical  ):
+        assign
+            radioButton1:enabled = not iModeview 
+            radioButton2:enabled = not iModeview
+            //checkBox1:enabled = not iModeview
+            comboBox1:enabled = not iModeview
+            comboBox3:enabled = not iModeview
+           
+           .
+    end. 
         
     CONSTRUCTOR PUBLIC uc_TabPromoAction (  ):
         SUPER().
@@ -91,7 +95,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
     end.
 
     METHOD PUBLIC VOID Enabled_Controls(INPUT sender AS LOGICAL):
-        panel_SelectConditionItems:Enabled = sender.
+      //  panel_SelectConditionItems:Enabled = sender.
         tableLayoutPanel6:Enabled = sender.
         label6:Enabled = sender.
         comboBox3:Enabled = sender.
@@ -135,10 +139,10 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                checkBox1:Visible = TRUE.
                comboBox3:Visible = TRUE.
            END.   
-         IF comboBox3:Items:Count > 0 THEN 
+        /* IF comboBox3:Items:Count > 0 THEN 
          DO:
              comboBox3:SelectedIndex = 0.
-         END.
+         END.*/
         IF sender = 3  THEN 
         DO:
             label5:Visible = FALSE.
@@ -152,19 +156,31 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
             label6:Visible = FALSE.
             checkBox1:Visible = FALSE.
             comboBox3:Visible = FALSE.    
+        END.
+        IF sender = 5  THEN 
+        DO:
+            label5:Visible = FALSE.
+            label6:Visible = FALSE.
+            checkBox1:Visible = FALSE.
+            comboBox3:Visible = FALSE.    
         END.    
     END METHOD. 
 	
 	METHOD PRIVATE VOID Init_comboBox3(INPUT itypeDiscont AS LOGICAL,input iMethodCalc as integer ):
-        comboBox3:Items:Clear().
+	  define variable vtext as character no-undo.
+	      vtext = comboBox3:text.
+	      comboBox3:Items:Clear().
         label5:Text = "Независимые условия:".
         m-promo-type:CangeTypeDiscontAndMethodCalc(if itypeDiscont then 1 else 0,iMethodCalc).
         m-promo-type:typeTable("typecond", output table tttypecond).
         for each tttypecond:
             comboBox3:Items:Add(tttypecond.item).
+            if tttypecond.item eq vtext
+            then
+                comboBox3:text = vtext.
         end.    
         
-    END METHOD.
+    END METHOD. 
 
     METHOD PRIVATE VOID InitializeComponent(  ):
         
@@ -174,284 +190,286 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
         Visual Designer to avoid any incompatible modifications.
         
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
-        THIS-OBJECT:components = NEW System.ComponentModel.Container().
-        @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE tableDesc1 AS Progress.Data.TableDesc NO-UNDO.
-        tableDesc1 = NEW Progress.Data.TableDesc("tt-promoaction-one").
-        THIS-OBJECT:tableLayoutPanel1 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:tableLayoutPanel20 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:tableLayoutPanel7 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:checkBox1 = NEW System.Windows.Forms.CheckBox().
-        THIS-OBJECT:label5 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:label6 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:comboBox3 = NEW System.Windows.Forms.ComboBox().
-        THIS-OBJECT:bindPromoActionOne = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
-        THIS-OBJECT:tableLayoutPanel6 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:tableLayoutPanel10 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:radioButton1 = NEW System.Windows.Forms.RadioButton().
-        THIS-OBJECT:radioButton2 = NEW System.Windows.Forms.RadioButton().
-        THIS-OBJECT:comboBox1 = NEW System.Windows.Forms.ComboBox().
-        THIS-OBJECT:panel_SelectConditionItems = NEW System.Windows.Forms.Panel().
-        THIS-OBJECT:tableLayoutPanel1:SuspendLayout().
-        THIS-OBJECT:tableLayoutPanel20:SuspendLayout().
-        THIS-OBJECT:tableLayoutPanel7:SuspendLayout().
-        CAST(THIS-OBJECT:bindPromoActionOne, System.ComponentModel.ISupportInitialize):BeginInit().
-        THIS-OBJECT:tableLayoutPanel6:SuspendLayout().
-        THIS-OBJECT:tableLayoutPanel10:SuspendLayout().
-        THIS-OBJECT:SuspendLayout().
-        /*  */
-        /* tableLayoutPanel1 */
-        /*  */
-        THIS-OBJECT:tableLayoutPanel1:ColumnCount = 1.
-        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:tableLayoutPanel20, 0, 0).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:panel_SelectConditionItems, 0, 2).
-        THIS-OBJECT:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:tableLayoutPanel1:Location = NEW System.Drawing.Point(0, 0).
-        THIS-OBJECT:tableLayoutPanel1:Name = "tableLayoutPanel1".
-        THIS-OBJECT:tableLayoutPanel1:RowCount = 3.
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(65))).
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(7))).
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel1:Size = NEW System.Drawing.Size(901, 263).
-        THIS-OBJECT:tableLayoutPanel1:TabIndex = 1.
-        /*  */
-        /* tableLayoutPanel20 */
-        /*  */
-        THIS-OBJECT:tableLayoutPanel20:ColumnCount = 2.
-        THIS-OBJECT:tableLayoutPanel20:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel20:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel20:Controls:Add(THIS-OBJECT:tableLayoutPanel7, 1, 0).
-        THIS-OBJECT:tableLayoutPanel20:Controls:Add(THIS-OBJECT:tableLayoutPanel6, 0, 0).
-        THIS-OBJECT:tableLayoutPanel20:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:tableLayoutPanel20:Location = NEW System.Drawing.Point(3, 3).
-        THIS-OBJECT:tableLayoutPanel20:Name = "tableLayoutPanel20".
-        THIS-OBJECT:tableLayoutPanel20:RowCount = 1.
-        THIS-OBJECT:tableLayoutPanel20:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel20:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel20:Size = NEW System.Drawing.Size(895, 59).
-        THIS-OBJECT:tableLayoutPanel20:TabIndex = 2.
-        /*  */
-        /* tableLayoutPanel7 */
-        /*  */
-        THIS-OBJECT:tableLayoutPanel7:ColumnCount = 2.
-        THIS-OBJECT:tableLayoutPanel7:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
-        THIS-OBJECT:tableLayoutPanel7:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel7:Controls:Add(THIS-OBJECT:checkBox1, 1, 0).
-        THIS-OBJECT:tableLayoutPanel7:Controls:Add(THIS-OBJECT:label5, 0, 0).
-        THIS-OBJECT:tableLayoutPanel7:Controls:Add(THIS-OBJECT:label6, 0, 1).
-        THIS-OBJECT:tableLayoutPanel7:Controls:Add(THIS-OBJECT:comboBox3, 1, 1).
-        THIS-OBJECT:tableLayoutPanel7:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:tableLayoutPanel7:Location = NEW System.Drawing.Point(447, 0).
-        THIS-OBJECT:tableLayoutPanel7:Margin = NEW System.Windows.Forms.Padding(0).
-        THIS-OBJECT:tableLayoutPanel7:Name = "tableLayoutPanel7".
-        THIS-OBJECT:tableLayoutPanel7:RowCount = 2.
-        THIS-OBJECT:tableLayoutPanel7:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel7:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel7:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
-        THIS-OBJECT:tableLayoutPanel7:Size = NEW System.Drawing.Size(448, 59).
-        THIS-OBJECT:tableLayoutPanel7:TabIndex = 1.
-        /*  */
-        /* checkBox1 */
-        /*  */
-        THIS-OBJECT:checkBox1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:checkBox1:Location = NEW System.Drawing.Point(153, 3).
-        THIS-OBJECT:checkBox1:Name = "checkBox1".
-        THIS-OBJECT:checkBox1:Size = NEW System.Drawing.Size(292, 24).
-        THIS-OBJECT:checkBox1:TabIndex = 8.
-        THIS-OBJECT:checkBox1:Text = "Выбрать номенклатуру...".
-        THIS-OBJECT:checkBox1:UseCompatibleTextRendering = true.
-        THIS-OBJECT:checkBox1:UseVisualStyleBackColor = true.
-        THIS-OBJECT:checkBox1:Click:Subscribe(THIS-OBJECT:checkBox1_Click).
-        /*  */
-        /* label5 */
-        /*  */
-        THIS-OBJECT:label5:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:label5:Location = NEW System.Drawing.Point(3, 3).
-        THIS-OBJECT:label5:Margin = NEW System.Windows.Forms.Padding(3).
-        THIS-OBJECT:label5:Name = "label5".
-        THIS-OBJECT:label5:Size = NEW System.Drawing.Size(144, 24).
-        THIS-OBJECT:label5:TabIndex = 4.
-        THIS-OBJECT:label5:Text = "Независимые условия:".
-        THIS-OBJECT:label5:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label5:UseCompatibleTextRendering = true.
-        /*  */
-        /* label6 */
-        /*  */
-        THIS-OBJECT:label6:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:label6:Location = NEW System.Drawing.Point(3, 33).
-        THIS-OBJECT:label6:Margin = NEW System.Windows.Forms.Padding(3).
-        THIS-OBJECT:label6:Name = "label6".
-        THIS-OBJECT:label6:Size = NEW System.Drawing.Size(144, 24).
-        THIS-OBJECT:label6:TabIndex = 5.
-        THIS-OBJECT:label6:Text = "Вид условия:".
-        THIS-OBJECT:label6:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label6:UseCompatibleTextRendering = true.
-        /*  */
-        /* comboBox3 */
-        /*  */
-        THIS-OBJECT:comboBox3:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bindPromoActionOne, "typecondlbl", true)).
-        THIS-OBJECT:comboBox3:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:comboBox3:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
-        THIS-OBJECT:comboBox3:FormattingEnabled = true.
-        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar0 AS System.Object EXTENT 3 NO-UNDO.
-        arrayvar0[1] = "Количество по строке".
-        arrayvar0[2] = "Сумма по строке".
-        arrayvar0[3] = "Итог чека".
-        THIS-OBJECT:comboBox3:Items:AddRange(arrayvar0).
-        THIS-OBJECT:comboBox3:Location = NEW System.Drawing.Point(153, 33).
-        THIS-OBJECT:comboBox3:Name = "comboBox3".
-        THIS-OBJECT:comboBox3:Size = NEW System.Drawing.Size(292, 21).
-        THIS-OBJECT:comboBox3:TabIndex = 7.
-        THIS-OBJECT:comboBox3:SelectedIndexChanged:Subscribe(THIS-OBJECT:comboBox3_SelectedIndexChanged).
-        /*  */
-        /* bindPromoActionOne */
-        /*  */
-        THIS-OBJECT:bindPromoActionOne:MaxDataGuess = 0.
-        THIS-OBJECT:bindPromoActionOne:NoLOBs = false.
-        THIS-OBJECT:bindPromoActionOne:Position = 0.
-        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar1 AS "Progress.Data.TableDesc[]" NO-UNDO.
-        arrayvar1 = NEW "Progress.Data.TableDesc[]"(0).
-        tableDesc1:ChildTables = arrayvar1.
-        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        DEFINE VARIABLE arrayvar2 AS Progress.Data.ColumnPropDesc EXTENT 3 NO-UNDO.
-        arrayvar2[1] = NEW Progress.Data.ColumnPropDesc("TypeDiscontlog", "", Progress.Data.DataType:LOGICAL).
-        arrayvar2[2] = NEW Progress.Data.ColumnPropDesc("methodCalclbl", "", Progress.Data.DataType:CHARACTER).
-        arrayvar2[3] = NEW Progress.Data.ColumnPropDesc("typecondlbl", "", Progress.Data.DataType:CHARACTER).
-        tableDesc1:Columns = arrayvar2.
-        THIS-OBJECT:bindPromoActionOne:TableSchema = tableDesc1.
-        /*  */
-        /* tableLayoutPanel6 */
-        /*  */
-        THIS-OBJECT:tableLayoutPanel6:ColumnCount = 2.
-        THIS-OBJECT:tableLayoutPanel6:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
-        THIS-OBJECT:tableLayoutPanel6:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel6:Controls:Add(THIS-OBJECT:label1, 0, 0).
-        THIS-OBJECT:tableLayoutPanel6:Controls:Add(THIS-OBJECT:label2, 0, 1).
-        THIS-OBJECT:tableLayoutPanel6:Controls:Add(THIS-OBJECT:tableLayoutPanel10, 1, 0).
-        THIS-OBJECT:tableLayoutPanel6:Controls:Add(THIS-OBJECT:comboBox1, 1, 1).
-        THIS-OBJECT:tableLayoutPanel6:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:tableLayoutPanel6:Location = NEW System.Drawing.Point(0, 0).
-        THIS-OBJECT:tableLayoutPanel6:Margin = NEW System.Windows.Forms.Padding(0).
-        THIS-OBJECT:tableLayoutPanel6:Name = "tableLayoutPanel6".
-        THIS-OBJECT:tableLayoutPanel6:RowCount = 2.
-        THIS-OBJECT:tableLayoutPanel6:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel6:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel6:Size = NEW System.Drawing.Size(447, 59).
-        THIS-OBJECT:tableLayoutPanel6:TabIndex = 0.
-        /*  */
-        /* label1 */
-        /*  */
-        THIS-OBJECT:label1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:label1:Location = NEW System.Drawing.Point(3, 3).
-        THIS-OBJECT:label1:Margin = NEW System.Windows.Forms.Padding(3).
-        THIS-OBJECT:label1:Name = "label1".
-        THIS-OBJECT:label1:Size = NEW System.Drawing.Size(144, 24).
-        THIS-OBJECT:label1:TabIndex = 0.
-        THIS-OBJECT:label1:Text = "Вид скидки".
-        THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label1:UseCompatibleTextRendering = true.
-        /*  */
-        /* label2 */
-        /*  */
-        THIS-OBJECT:label2:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:label2:Location = NEW System.Drawing.Point(3, 33).
-        THIS-OBJECT:label2:Margin = NEW System.Windows.Forms.Padding(3).
-        THIS-OBJECT:label2:Name = "label2".
-        THIS-OBJECT:label2:Size = NEW System.Drawing.Size(144, 24).
-        THIS-OBJECT:label2:TabIndex = 1.
-        THIS-OBJECT:label2:Text = "Способ расчета".
-        THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label2:UseCompatibleTextRendering = true.
-        /*  */
-        /* tableLayoutPanel10 */
-        /*  */
-        THIS-OBJECT:tableLayoutPanel10:ColumnCount = 2.
-        THIS-OBJECT:tableLayoutPanel10:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel10:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel10:Controls:Add(THIS-OBJECT:radioButton1, 0, 0).
-        THIS-OBJECT:tableLayoutPanel10:Controls:Add(THIS-OBJECT:radioButton2, 1, 0).
-        THIS-OBJECT:tableLayoutPanel10:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:tableLayoutPanel10:Location = NEW System.Drawing.Point(153, 3).
-        THIS-OBJECT:tableLayoutPanel10:Name = "tableLayoutPanel10".
-        THIS-OBJECT:tableLayoutPanel10:RowCount = 1.
-        THIS-OBJECT:tableLayoutPanel10:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel10:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        THIS-OBJECT:tableLayoutPanel10:Size = NEW System.Drawing.Size(291, 24).
-        THIS-OBJECT:tableLayoutPanel10:TabIndex = 4.
-        /*  */
-        /* radioButton1 */
-        /*  */
-        THIS-OBJECT:radioButton1:Appearance = System.Windows.Forms.Appearance:Button.
-        THIS-OBJECT:radioButton1:Checked = true.
-        THIS-OBJECT:radioButton1:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindPromoActionOne, "TypeDiscontlog", true)).
-        THIS-OBJECT:radioButton1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:radioButton1:ForeColor = System.Drawing.Color:Green.
-        THIS-OBJECT:radioButton1:Location = NEW System.Drawing.Point(0, 0).
-        THIS-OBJECT:radioButton1:Margin = NEW System.Windows.Forms.Padding(0).
-        THIS-OBJECT:radioButton1:Name = "radioButton1".
-        THIS-OBJECT:radioButton1:Size = NEW System.Drawing.Size(145, 24).
-        THIS-OBJECT:radioButton1:TabIndex = 0.
-        THIS-OBJECT:radioButton1:TabStop = true.
-        THIS-OBJECT:radioButton1:Text = "Временная скидка".
-        THIS-OBJECT:radioButton1:UseCompatibleTextRendering = true.
-        THIS-OBJECT:radioButton1:UseVisualStyleBackColor = true.
-        THIS-OBJECT:radioButton1:CheckedChanged:Subscribe(THIS-OBJECT:radioButton1_CheckedChanged).
-        /*  */
-        /* radioButton2 */
-        /*  */
-        THIS-OBJECT:radioButton2:Appearance = System.Windows.Forms.Appearance:Button.
-        THIS-OBJECT:radioButton2:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:radioButton2:Location = NEW System.Drawing.Point(145, 0).
-        THIS-OBJECT:radioButton2:Margin = NEW System.Windows.Forms.Padding(0).
-        THIS-OBJECT:radioButton2:Name = "radioButton2".
-        THIS-OBJECT:radioButton2:Size = NEW System.Drawing.Size(146, 24).
-        THIS-OBJECT:radioButton2:TabIndex = 1.
-        THIS-OBJECT:radioButton2:Text = "Промо-набор".
-        THIS-OBJECT:radioButton2:UseCompatibleTextRendering = true.
-        THIS-OBJECT:radioButton2:UseVisualStyleBackColor = true.
-        /*  */
-        /* comboBox1 */
-        /*  */
-        THIS-OBJECT:comboBox1:DataBindings:Add(NEW System.Windows.Forms.Binding("Text", THIS-OBJECT:bindPromoActionOne, "methodCalclbl", true)).
-        THIS-OBJECT:comboBox1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:comboBox1:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
-        THIS-OBJECT:comboBox1:FormattingEnabled = true.
-        THIS-OBJECT:comboBox1:Location = NEW System.Drawing.Point(153, 33).
-        THIS-OBJECT:comboBox1:Name = "comboBox1".
-        THIS-OBJECT:comboBox1:Size = NEW System.Drawing.Size(291, 21).
-        THIS-OBJECT:comboBox1:TabIndex = 5.
-        THIS-OBJECT:comboBox1:SelectedIndexChanged:Subscribe(THIS-OBJECT:comboBox1_SelectedIndexChanged).
-        /*  */
-        /* panel_SelectConditionItems */
-        /*  */
-        THIS-OBJECT:panel_SelectConditionItems:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:panel_SelectConditionItems:Location = NEW System.Drawing.Point(0, 72).
-        THIS-OBJECT:panel_SelectConditionItems:Margin = NEW System.Windows.Forms.Padding(0).
-        THIS-OBJECT:panel_SelectConditionItems:Name = "panel_SelectConditionItems".
-        THIS-OBJECT:panel_SelectConditionItems:Size = NEW System.Drawing.Size(901, 191).
-        THIS-OBJECT:panel_SelectConditionItems:TabIndex = 3.
-        /*  */
-        /* uc_TabPromoAction */
-        /*  */
-        THIS-OBJECT:AutoScaleDimensions = NEW System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:tableLayoutPanel1).
-        THIS-OBJECT:Name = "uc_TabPromoAction".
-        THIS-OBJECT:Size = NEW System.Drawing.Size(901, 263).
-        THIS-OBJECT:tableLayoutPanel1:ResumeLayout(false).
-        THIS-OBJECT:tableLayoutPanel20:ResumeLayout(false).
-        THIS-OBJECT:tableLayoutPanel7:ResumeLayout(false).
-        CAST(THIS-OBJECT:bindPromoActionOne, System.ComponentModel.ISupportInitialize):EndInit().
-        THIS-OBJECT:tableLayoutPanel6:ResumeLayout(false).
-        THIS-OBJECT:tableLayoutPanel10:ResumeLayout(false).
-        THIS-OBJECT:ResumeLayout(false).
-        CATCH e AS Progress.Lang.Error:
-            UNDO, THROW e.
-        END CATCH.
+    this-object:components = new System.ComponentModel.Container().
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    define variable tableDesc2 as Progress.Data.TableDesc no-undo.
+    tableDesc2 = new Progress.Data.TableDesc("tt-promoaction-one").
+    this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:tableLayoutPanel20 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:tableLayoutPanel7 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:checkBox1 = new System.Windows.Forms.CheckBox().
+    this-object:label5 = new System.Windows.Forms.Label().
+    this-object:label6 = new System.Windows.Forms.Label().
+    this-object:comboBox3 = new System.Windows.Forms.ComboBox().
+    this-object:bindPromoActionOne = new Progress.Data.BindingSource(this-object:components).
+    this-object:tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:label1 = new System.Windows.Forms.Label().
+    this-object:label2 = new System.Windows.Forms.Label().
+    this-object:tableLayoutPanel10 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:radioButton1 = new System.Windows.Forms.RadioButton().
+    this-object:radioButton2 = new System.Windows.Forms.RadioButton().
+    this-object:comboBox1 = new System.Windows.Forms.ComboBox().
+    this-object:panel_SelectConditionItems = new System.Windows.Forms.Panel().
+    this-object:tableLayoutPanel1:SuspendLayout().
+    this-object:tableLayoutPanel20:SuspendLayout().
+    this-object:tableLayoutPanel7:SuspendLayout().
+    cast(this-object:bindPromoActionOne, System.ComponentModel.ISupportInitialize):BeginInit().
+    this-object:tableLayoutPanel6:SuspendLayout().
+    this-object:tableLayoutPanel10:SuspendLayout().
+    this-object:SuspendLayout().
+    /*  */
+    /* tableLayoutPanel1 */
+    /*  */
+    this-object:tableLayoutPanel1:ColumnCount = 1.
+    this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel20, 0, 0).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:panel_SelectConditionItems, 0, 2).
+    this-object:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel1:Location = new System.Drawing.Point(0, 0).
+    this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
+    this-object:tableLayoutPanel1:RowCount = 3.
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(65))).
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(7))).
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel1:Size = new System.Drawing.Size(901, 263).
+    this-object:tableLayoutPanel1:TabIndex = 1.
+    /*  */
+    /* tableLayoutPanel20 */
+    /*  */
+    this-object:tableLayoutPanel20:ColumnCount = 2.
+    this-object:tableLayoutPanel20:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel20:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel20:Controls:Add(this-object:tableLayoutPanel7, 1, 0).
+    this-object:tableLayoutPanel20:Controls:Add(this-object:tableLayoutPanel6, 0, 0).
+    this-object:tableLayoutPanel20:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel20:Location = new System.Drawing.Point(3, 3).
+    this-object:tableLayoutPanel20:Name = "tableLayoutPanel20".
+    this-object:tableLayoutPanel20:RowCount = 1.
+    this-object:tableLayoutPanel20:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel20:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel20:Size = new System.Drawing.Size(895, 59).
+    this-object:tableLayoutPanel20:TabIndex = 2.
+    /*  */
+    /* tableLayoutPanel7 */
+    /*  */
+    this-object:tableLayoutPanel7:ColumnCount = 2.
+    this-object:tableLayoutPanel7:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
+    this-object:tableLayoutPanel7:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel7:Controls:Add(this-object:checkBox1, 1, 0).
+    this-object:tableLayoutPanel7:Controls:Add(this-object:label5, 0, 0).
+    this-object:tableLayoutPanel7:Controls:Add(this-object:label6, 0, 1).
+    this-object:tableLayoutPanel7:Controls:Add(this-object:comboBox3, 1, 1).
+    this-object:tableLayoutPanel7:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel7:Location = new System.Drawing.Point(447, 0).
+    this-object:tableLayoutPanel7:Margin = new System.Windows.Forms.Padding(0).
+    this-object:tableLayoutPanel7:Name = "tableLayoutPanel7".
+    this-object:tableLayoutPanel7:RowCount = 2.
+    this-object:tableLayoutPanel7:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+    this-object:tableLayoutPanel7:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+    this-object:tableLayoutPanel7:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
+    this-object:tableLayoutPanel7:Size = new System.Drawing.Size(448, 59).
+    this-object:tableLayoutPanel7:TabIndex = 1.
+    /*  */
+    /* checkBox1 */
+    /*  */
+    this-object:checkBox1:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindPromoActionOne, "CritgoodsFl", true)).
+    this-object:checkBox1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:checkBox1:Location = new System.Drawing.Point(153, 3).
+    this-object:checkBox1:Name = "checkBox1".
+    this-object:checkBox1:Size = new System.Drawing.Size(292, 24).
+    this-object:checkBox1:TabIndex = 8.
+    this-object:checkBox1:Text = "Выбрать номенклатуру...".
+    this-object:checkBox1:UseCompatibleTextRendering = true.
+    this-object:checkBox1:UseVisualStyleBackColor = true.
+    this-object:checkBox1:Click:Subscribe(this-object:checkBox1_Click).
+    /*  */
+    /* label5 */
+    /*  */
+    this-object:label5:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label5:Location = new System.Drawing.Point(3, 3).
+    this-object:label5:Margin = new System.Windows.Forms.Padding(3).
+    this-object:label5:Name = "label5".
+    this-object:label5:Size = new System.Drawing.Size(144, 24).
+    this-object:label5:TabIndex = 4.
+    this-object:label5:Text = "Независимые условия:".
+    this-object:label5:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label5:UseCompatibleTextRendering = true.
+    /*  */
+    /* label6 */
+    /*  */
+    this-object:label6:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label6:Location = new System.Drawing.Point(3, 33).
+    this-object:label6:Margin = new System.Windows.Forms.Padding(3).
+    this-object:label6:Name = "label6".
+    this-object:label6:Size = new System.Drawing.Size(144, 24).
+    this-object:label6:TabIndex = 5.
+    this-object:label6:Text = "Вид условия:".
+    this-object:label6:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label6:UseCompatibleTextRendering = true.
+    /*  */
+    /* comboBox3 */
+    /*  */
+    this-object:comboBox3:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindPromoActionOne, "typecondlbl", true)).
+    this-object:comboBox3:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:comboBox3:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
+    this-object:comboBox3:FormattingEnabled = true.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar0 as System.Object extent 3 no-undo.
+    arrayvar0[1] = "Количество по строке".
+    arrayvar0[2] = "Сумма по строке".
+    arrayvar0[3] = "Итог чека".
+    this-object:comboBox3:Items:AddRange(arrayvar0).
+    this-object:comboBox3:Location = new System.Drawing.Point(153, 33).
+    this-object:comboBox3:Name = "comboBox3".
+    this-object:comboBox3:Size = new System.Drawing.Size(292, 21).
+    this-object:comboBox3:TabIndex = 7.
+    this-object:comboBox3:SelectedIndexChanged:Subscribe(this-object:comboBox3_SelectedIndexChanged).
+    /*  */
+    /* bindPromoActionOne */
+    /*  */
+    this-object:bindPromoActionOne:MaxDataGuess = 0.
+    this-object:bindPromoActionOne:NoLOBs = false.
+    this-object:bindPromoActionOne:Position = 0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
+    arrayvar1 = new "Progress.Data.TableDesc[]"(0).
+    tableDesc2:ChildTables = arrayvar1.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 4 no-undo.
+    arrayvar2[1] = new Progress.Data.ColumnPropDesc("TypeDiscontlog", "", Progress.Data.DataType:LOGICAL).
+    arrayvar2[2] = new Progress.Data.ColumnPropDesc("methodCalclbl", "", Progress.Data.DataType:CHARACTER).
+    arrayvar2[3] = new Progress.Data.ColumnPropDesc("typecondlbl", "", Progress.Data.DataType:CHARACTER).
+    arrayvar2[4] = new Progress.Data.ColumnPropDesc("CritgoodsFl", "CritgoodsFl", Progress.Data.DataType:LOGICAL).
+    tableDesc2:Columns = arrayvar2.
+    this-object:bindPromoActionOne:TableSchema = tableDesc2.
+    /*  */
+    /* tableLayoutPanel6 */
+    /*  */
+    this-object:tableLayoutPanel6:ColumnCount = 2.
+    this-object:tableLayoutPanel6:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
+    this-object:tableLayoutPanel6:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel6:Controls:Add(this-object:label1, 0, 0).
+    this-object:tableLayoutPanel6:Controls:Add(this-object:label2, 0, 1).
+    this-object:tableLayoutPanel6:Controls:Add(this-object:tableLayoutPanel10, 1, 0).
+    this-object:tableLayoutPanel6:Controls:Add(this-object:comboBox1, 1, 1).
+    this-object:tableLayoutPanel6:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel6:Location = new System.Drawing.Point(0, 0).
+    this-object:tableLayoutPanel6:Margin = new System.Windows.Forms.Padding(0).
+    this-object:tableLayoutPanel6:Name = "tableLayoutPanel6".
+    this-object:tableLayoutPanel6:RowCount = 2.
+    this-object:tableLayoutPanel6:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+    this-object:tableLayoutPanel6:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+    this-object:tableLayoutPanel6:Size = new System.Drawing.Size(447, 59).
+    this-object:tableLayoutPanel6:TabIndex = 0.
+    /*  */
+    /* label1 */
+    /*  */
+    this-object:label1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label1:Location = new System.Drawing.Point(3, 3).
+    this-object:label1:Margin = new System.Windows.Forms.Padding(3).
+    this-object:label1:Name = "label1".
+    this-object:label1:Size = new System.Drawing.Size(144, 24).
+    this-object:label1:TabIndex = 0.
+    this-object:label1:Text = "Вид скидки".
+    this-object:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label1:UseCompatibleTextRendering = true.
+    /*  */
+    /* label2 */
+    /*  */
+    this-object:label2:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label2:Location = new System.Drawing.Point(3, 33).
+    this-object:label2:Margin = new System.Windows.Forms.Padding(3).
+    this-object:label2:Name = "label2".
+    this-object:label2:Size = new System.Drawing.Size(144, 24).
+    this-object:label2:TabIndex = 1.
+    this-object:label2:Text = "Способ расчета".
+    this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label2:UseCompatibleTextRendering = true.
+    /*  */
+    /* tableLayoutPanel10 */
+    /*  */
+    this-object:tableLayoutPanel10:ColumnCount = 2.
+    this-object:tableLayoutPanel10:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel10:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel10:Controls:Add(this-object:radioButton1, 0, 0).
+    this-object:tableLayoutPanel10:Controls:Add(this-object:radioButton2, 1, 0).
+    this-object:tableLayoutPanel10:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel10:Location = new System.Drawing.Point(153, 3).
+    this-object:tableLayoutPanel10:Name = "tableLayoutPanel10".
+    this-object:tableLayoutPanel10:RowCount = 1.
+    this-object:tableLayoutPanel10:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel10:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel10:Size = new System.Drawing.Size(291, 24).
+    this-object:tableLayoutPanel10:TabIndex = 4.
+    /*  */
+    /* radioButton1 */
+    /*  */
+    this-object:radioButton1:Appearance = System.Windows.Forms.Appearance:Button.
+    this-object:radioButton1:Checked = true.
+    this-object:radioButton1:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindPromoActionOne, "TypeDiscontlog", true)).
+    this-object:radioButton1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:radioButton1:ForeColor = System.Drawing.Color:Green.
+    this-object:radioButton1:Location = new System.Drawing.Point(0, 0).
+    this-object:radioButton1:Margin = new System.Windows.Forms.Padding(0).
+    this-object:radioButton1:Name = "radioButton1".
+    this-object:radioButton1:Size = new System.Drawing.Size(145, 24).
+    this-object:radioButton1:TabIndex = 0.
+    this-object:radioButton1:TabStop = true.
+    this-object:radioButton1:Text = "Временная скидка".
+    this-object:radioButton1:UseCompatibleTextRendering = true.
+    this-object:radioButton1:UseVisualStyleBackColor = true.
+    this-object:radioButton1:CheckedChanged:Subscribe(this-object:radioButton1_CheckedChanged).
+    /*  */
+    /* radioButton2 */
+    /*  */
+    this-object:radioButton2:Appearance = System.Windows.Forms.Appearance:Button.
+    this-object:radioButton2:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:radioButton2:Location = new System.Drawing.Point(145, 0).
+    this-object:radioButton2:Margin = new System.Windows.Forms.Padding(0).
+    this-object:radioButton2:Name = "radioButton2".
+    this-object:radioButton2:Size = new System.Drawing.Size(146, 24).
+    this-object:radioButton2:TabIndex = 1.
+    this-object:radioButton2:Text = "Промо-набор".
+    this-object:radioButton2:UseCompatibleTextRendering = true.
+    this-object:radioButton2:UseVisualStyleBackColor = true.
+    /*  */
+    /* comboBox1 */
+    /*  */
+    this-object:comboBox1:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindPromoActionOne, "methodCalclbl", true)).
+    this-object:comboBox1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:comboBox1:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
+    this-object:comboBox1:FormattingEnabled = true.
+    this-object:comboBox1:Location = new System.Drawing.Point(153, 33).
+    this-object:comboBox1:Name = "comboBox1".
+    this-object:comboBox1:Size = new System.Drawing.Size(291, 21).
+    this-object:comboBox1:TabIndex = 5.
+    this-object:comboBox1:SelectedIndexChanged:Subscribe(this-object:comboBox1_SelectedIndexChanged).
+    /*  */
+    /* panel_SelectConditionItems */
+    /*  */
+    this-object:panel_SelectConditionItems:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:panel_SelectConditionItems:Location = new System.Drawing.Point(0, 72).
+    this-object:panel_SelectConditionItems:Margin = new System.Windows.Forms.Padding(0).
+    this-object:panel_SelectConditionItems:Name = "panel_SelectConditionItems".
+    this-object:panel_SelectConditionItems:Size = new System.Drawing.Size(901, 191).
+    this-object:panel_SelectConditionItems:TabIndex = 3.
+    /*  */
+    /* uc_TabPromoAction */
+    /*  */
+    this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
+    this-object:Controls:Add(this-object:tableLayoutPanel1).
+    this-object:Name = "uc_TabPromoAction".
+    this-object:Size = new System.Drawing.Size(901, 263).
+    this-object:tableLayoutPanel1:ResumeLayout(false).
+    this-object:tableLayoutPanel20:ResumeLayout(false).
+    this-object:tableLayoutPanel7:ResumeLayout(false).
+    cast(this-object:bindPromoActionOne, System.ComponentModel.ISupportInitialize):EndInit().
+    this-object:tableLayoutPanel6:ResumeLayout(false).
+    this-object:tableLayoutPanel10:ResumeLayout(false).
+    this-object:ResumeLayout(false).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
     END METHOD.
 
 	/*------------------------------------------------------------------------------
@@ -556,101 +574,71 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
 
     END METHOD.
     
-    DEFINE VARIABLE ucMain1     AS ibs.th.ref.promo.ucSelect_Items1     NO-UNDO.
-    DEFINE VARIABLE ucMain1_1   AS ibs.th.ref.promo.ucSelect_Items1_1   NO-UNDO.
-    DEFINE VARIABLE ucMain1_Set AS ibs.th.ref.promo.ucSelect_Items1_Set NO-UNDO.
-    DEFINE VARIABLE ucMain2     AS ibs.th.ref.promo.ucSelect_Items2     NO-UNDO.
-    DEFINE VARIABLE ucMain2_1   AS ibs.th.ref.promo.ucSelect_Items2_1   NO-UNDO.
-    DEFINE VARIABLE ucMain1_2   AS ibs.th.ref.promo.ucSelect_Items1_2   NO-UNDO. 
-    DEFINE VARIABLE ucMain3     AS ibs.th.ref.promo.ucSelect_Items3     NO-UNDO.
-    DEFINE VARIABLE ucMain4     AS ibs.th.ref.promo.ucSelect_Items4     NO-UNDO.
-    DEFINE VARIABLE ucMain5     AS ibs.th.ref.promo.ucSelect_Items5     NO-UNDO.
-    DEFINE VARIABLE ucMain5_Set AS ibs.th.ref.promo.ucSelect_Items5_Set NO-UNDO.
-    DEFINE VARIABLE ucMain6     AS ibs.th.ref.promo.ucSelect_Items6     NO-UNDO.
-    DEFINE VARIABLE ucMain6_1   AS ibs.th.ref.promo.ucSelect_Items6_1   NO-UNDO.
-    DEFINE VARIABLE ucMain7     AS ibs.th.ref.promo.ucSelect_Items7     NO-UNDO.
-    DEFINE VARIABLE ucMain7_1   AS ibs.th.ref.promo.ucSelect_Items7_1   NO-UNDO.
-    DEFINE VARIABLE ucMain7_2   AS ibs.th.ref.promo.ucSelect_Items7_2   NO-UNDO.
+    
     
     method public void cleanPanel():
         
         THIS-OBJECT:panel_SelectConditionItems:Controls:Clear().
-        if valid-object(ucMain1)        then delete object ucMain1.
-        if valid-object(ucMain1_1)      then delete object ucMain1_1.
-        if valid-object(ucMain1_Set)    then delete object ucMain1_Set.
-        if valid-object(ucMain2_1)      then delete object ucMain2_1.
-        if valid-object(ucMain1_2)      then delete object ucMain1_2.
-        if valid-object(ucMain2)        then delete object ucMain2.
-        if valid-object(ucMain3)        then delete object ucMain3.
-        if valid-object(ucMain4)        then delete object ucMain4.
-        if valid-object(ucMain5)        then delete object ucMain5.
-        if valid-object(ucMain5_Set)    then delete object ucMain5_Set.
-        if valid-object(ucMain6)        then delete object ucMain6.
-        if valid-object(ucMain6_1)      then delete object ucMain6_1.
         if valid-object(ucMain7)        then delete object ucMain7.
-        if valid-object(ucMain7_1)      then delete object ucMain7_1.
-        if valid-object(ucMain7_2)      then delete object ucMain7_2.
        
     end.
     
      
     METHOD PRIVATE VOID Show_Panet_SelectConditonItem( INPUT SelectItem AS int):
         cleanPanel().
-        
+        define variable vLoadForm as logical no-undo.
         assign
             label5:Visible    = FALSE
             checkBox1:Visible = label5:Visible
         .
-            
+        ucMain7 = NEW ibs.th.ref.promo.uc_SelectsGCP().    
         case SelectItem:
             when 1 then do:
                 IF radioButton1:Checked THEN
                 DO:
+                    
                     find first tttypeCond where tttypeCond.item eq comboBox3:SelectedItem:ToString() no-lock no-error.
                     if available tttypeCond 
-                    then do: 
+                    then do:
                         if tttypeCond.code = 1 // "Количество по строке"  
                         then do:
-                            ucMain1 = NEW ibs.th.ref.promo.ucSelect_Items1().
-                            ucMain1:SetPromoTrg(m-promo-trg).
-                            ucMain1:Dock = System.Windows.Forms.DockStyle:Fill.
-                            THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain1).
+                            ucMain7:INIT_Panel(checkBox1:Checked, yes, yes, no).
+                            ucMain7:PublicEvent("CritLable", "Количество, ед#Диапозон действия,ед#Скидка, %").
                             assign
                                 label5:Visible    = true
                                 checkBox1:Visible = label5:Visible
                             .
+                            vLoadForm = yes. 
                         end.
                         else IF tttypeCond.code = 2 // "Сумма по строке" 
                         then do:
-                            ucMain1_1 = NEW ibs.th.ref.promo.ucSelect_Items1_1().
-                            ucMain1_1:SetPromoTrg(m-promo-trg).
-                            ucMain1_1:Dock = System.Windows.Forms.DockStyle:Fill.
-                            THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain1_1).
+                            ucMain7:INIT_Panel(checkBox1:Checked, yes, yes, no).
+                            ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапозон действия, руб#Скидка, %").
                             assign
                                 label5:Visible    = true
                                 checkBox1:Visible = label5:Visible
                             .
+                            vLoadForm = yes.
                         end.
                         IF tttypeCond.code = 3 // "Итог чека" 
                         then do:
-                            ucMain1_2 = NEW ibs.th.ref.promo.ucSelect_Items1_2().
-                            ucMain1_2:SetPromoTrg(m-promo-trg).
-                            ucMain1_2:Dock = System.Windows.Forms.DockStyle:Fill.
-                            THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain1_2).
+                            ucMain7:INIT_Panel(no, no, yes, no).
+                            ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапозон действия, руб#Скидка, %").
+                            ucMain7:PublicEvent("swapCritAndDiscont", "").
+                            vLoadForm = yes.
                         END.
                     end.
                 END.
                 ELSE
                 DO:
-                    
-                    ucMain1_Set = NEW ibs.th.ref.promo.ucSelect_Items1_Set().
-                    ucMain1_Set:SetPromoTrg(m-promo-trg).
-                    ucMain1_Set:Dock = System.Windows.Forms.DockStyle:Fill.
-                    THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain1_Set).
+                    ucMain7:INIT_PromoSet().
+                    ucMain7:PublicEvent("showDiscontForSet", "").
+                    //ucMain7:PublicEvent("CritOneLable", "?#Скидка %").
+                    vLoadForm = yes.
                 END.
                 
             end .
-            when 2 then do:
+            when 2 then do: // абсолютная
                 
                 find first tttypeCond where tttypeCond.item eq comboBox3:SelectedItem:ToString() no-lock no-error.
                 if available tttypeCond 
@@ -659,48 +647,43 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                         label5:Visible    = true
                         checkBox1:Visible = label5:Visible
                     .
-                    IF tttypeCond.code = 1 // "Количество по строке" 
-                    then DO:
-                        ucMain2 = NEW ibs.th.ref.promo.ucSelect_Items2().
-                        ucMain2:SetPromoTrg(m-promo-trg).
-                        ucMain2:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain2).                    
-                    END.
-                    IF tttypeCond.code = 2 // "Сумма по строке"  
-                    then do :
-                        ucMain2_1 = NEW ibs.th.ref.promo.ucSelect_Items2_1().
-                        ucMain2_1:SetPromoTrg(m-promo-trg).
-                        ucMain2_1:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain2_1).
+                    if tttypeCond.code = 1 // "Количество по строке"  
+                    then do:
+                        ucMain7:INIT_Panel(checkBox1:Checked, yes, yes, no).
+                        ucMain7:PublicEvent("CritLable", "Количество, ед#Диапозон действия,ед#Скидка, руб").
+                        vLoadForm = yes.
+                    end.
+                    else if tttypeCond.code = 2 // "Сумма по строку"  
+                    then do:
+                        ucMain7:INIT_Panel(checkBox1:Checked, yes, yes, no).
+                        ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапозон действия, руб#Скидка, руб").
+                        vLoadForm = yes.
                     end.
                  end.
             end .
-            when 3 then do:
-                ucMain3 = NEW ibs.th.ref.promo.ucSelect_Items3().
-                ucMain3:SetPromoTrg(m-promo-trg).
-                ucMain3:Dock = System.Windows.Forms.DockStyle:Fill.
-                THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain3).
+            when 3 then do: // Скидка количеством
+                ucMain7:INIT_Panel(no, yes, no, no,no,yes). 
+                ucMain7:PublicEvent("CritOneLable", "Бесплатно#из").
+                ucMain7:PublicEvent("swapCritAndDiscont", "").
+                vLoadForm = yes.
             end .
-            when 4 then do:
-                ucMain4 = NEW ibs.th.ref.promo.ucSelect_Items4().
-                ucMain4:SetPromoTrg(m-promo-trg).
-                ucMain4:Dock = System.Windows.Forms.DockStyle:Fill.
-                THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain4).
+            when 4 then do: //Скидка процентом за количество
+                ucMain7:INIT_Panel(no, yes, no, no,no,yes). 
+                ucMain7:PublicEvent("CritOneLable", "Каждый#со скидкой#%").
+                vLoadForm = yes.
             end .
-            when 5 then do:
+            when 5 then do: // Фиксированная цена
                 IF radioButton1:Checked THEN
                 DO:
-                    ucMain5 = NEW ibs.th.ref.promo.ucSelect_Items5().
-                    ucMain5:SetPromoTrg(m-promo-trg).
-                    ucMain5:Dock = System.Windows.Forms.DockStyle:Fill.
-                    THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain5).                    
+                    ucMain7:INIT_Panel(no, yes, no, no). 
+                    ucMain7:PublicEvent("showPrice", "").
+                    vLoadForm = yes.
                 END.
                 ELSE
                 DO:
-                    ucMain5_Set = NEW ibs.th.ref.promo.ucSelect_Items5_Set().
-                    ucMain5_Set:SetPromoTrg(m-promo-trg).
-                    ucMain5_Set:Dock = System.Windows.Forms.DockStyle:Fill.
-                    THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain5_Set).  
+                    ucMain7:INIT_PromoSet().
+                    ucMain7:PublicEvent("CritOneLable", "?#Цена, руб").
+                    vLoadForm = yes.
                 END.
             end .
             when 6 then do:
@@ -709,26 +692,25 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                 then do:
                     if tttypeCond.code = 1 // "Количество по строке"  
                     then do:
-                        ucMain6 = NEW ibs.th.ref.promo.ucSelect_Items6().
-                        ucMain6:SetPromoTrg(m-promo-trg).
-                        ucMain6:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain6).
+                        ucMain7:INIT_Panel(checkBox1:Checked, no, no, no,yes,yes).
+                        ucMain7:PublicEvent("CritOneLable", "Количество от, ед").
                         assign
                             label5:Visible    = true
                             checkBox1:Visible = label5:Visible
+                            vLoadForm = yes
                         .
                     end.
                     else if    tttypeCond.code = 2 // "Сумма по строке"
                             or tttypeCond.code = 3 // "Итог чека"                       
                     then do :
-                        ucMain6_1 = NEW ibs.th.ref.promo.ucSelect_Items6_1().
-                        ucMain6_1:SetPromoTrg(m-promo-trg).
-                        ucMain6_1:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain6_1).
+                        ucMain7:INIT_Panel(if tttypeCond.code = 3 then no else checkBox1:Checked, no, no, no,yes,yes).
+                        ucMain7:PublicEvent("CritOneLable", "Сумма от, руб").
+                        vLoadForm = yes.
                         if    tttypeCond.code = 2 then
                         assign
                             label5:Visible    = true
                             checkBox1:Visible = label5:Visible
+                            
                         .
                     end.
                           
@@ -738,31 +720,38 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                 find first tttypeCond where tttypeCond.item eq comboBox3:SelectedItem:ToString() no-lock no-error.
                 if available tttypeCond 
                 then do:
+                    
                     if tttypeCond.code = 1 // "Количество по строке"  
                     then do:
-                        ucMain7 = NEW ibs.th.ref.promo.ucSelect_Items7().
-                        ucMain7:SetPromoTrg(m-promo-trg).
-                        ucMain7:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7).
+                        ucMain7:INIT_Panel(no, yes, yes, yes).
+                        ucMain7:PublicEvent("CritLable", "Количество, ед#Диапозон действия,ед#?").
+                        vLoadForm = yes.
                     end.
                     else if tttypeCond.code = 2 // "Сумма по строке"   
                     then do:
-                        ucMain7_1 = NEW ibs.th.ref.promo.ucSelect_Items7_1().
-                        ucMain7_1:SetPromoTrg(m-promo-trg).
-                        ucMain7_1:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7_1).
+                        ucMain7:INIT_Panel(no, yes, yes, yes).
+                        ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапозон действия, Руб#?").
+                        vLoadForm = yes.
                     end.
                     else if tttypeCond.code = 3 // "Итог чека"  
                     then do:
-                        ucMain7_2 = NEW ibs.th.ref.promo.ucSelect_Items7_2().
-                        ucMain7_2:SetPromoTrg(m-promo-trg).
-                        ucMain7_2:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7_2).
+                        ucMain7:INIT_Panel(no, no, yes, yes).
+                        ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапозон действия, Руб#?").
+                        vLoadForm = yes.
                     end.
+                     
                 end.    
             end .
             
          end case. 
+         if vLoadForm
+         then do:
+            ucMain7:SetPromoTrg(m-promo-trg).
+            ucMain7:Dock = System.Windows.Forms.DockStyle:Fill.
+            THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7).
+         end.
+         else
+            delete object ucMain7.    
          
          RETURN.
 
@@ -777,11 +766,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
     ------------------------------------------------------------------------------*/
     @VisualDesigner.
     METHOD PRIVATE VOID checkBox1_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-        
-        DEFINE VARIABLE dialog AS ibs.th.ref.promo.dSelectConditonItem.
-        dialog = NEW ibs.th.ref.promo.dSelectConditonItem(). 
-        dialog:SetPromoTrg(m-promo-trg).
-        WAIT-FOR dialog:ShowDialog().
+        if valid-object(ucMain7) then ucMain7:INIT_Panel(checkBox1:Checked).
         
         RETURN.
 

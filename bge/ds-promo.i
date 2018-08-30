@@ -43,6 +43,9 @@ define temp-table tt-promoaction-one no-undo
   field scheduleName     as character
   field scheduleType     as logical
   field extCodeSched     as character
+  field ChangDateFl      as logical
+  field simpGiftFl       as logical
+  field CritgoodsFl      as logical
   .
 
 define temp-table tt-PromoGoodsAppl no-undo

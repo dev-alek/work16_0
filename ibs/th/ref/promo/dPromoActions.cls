@@ -59,7 +59,7 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
     define private variable textBox5 as System.Windows.Forms.TextBox no-undo.
 
   /* --- собственные переменные --- */
-    {ibs/th/ref/promo/promo_trg_heder.i &NotLocalEvent =yes &notSetBind = yes}
+     {ibs/th/ref/promo/promo_trg_heder.i &child_1 = uc_TabPromoAction1 &child_2 = uc_TabPresents1 &NotLocalEvent =yes &notSetBind = yes}
     define private variable m-sub       as class Progress.Lang.Object no-undo .
     DEFINE private VARIABLE tabPage5Save AS System.Windows.Forms.TabPage NO-UNDO.
      {ibs/th/ref/promo/promoType.def ttMethodCalc}
@@ -86,6 +86,7 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
         InitializeComponent ( ).
         m-promo-trg = p-promo-trg.
         INIT_TAB_CONTROLS().
+        
             case p-mode:
             when {&add-def} then do:
                 Disable_Field(false).
@@ -94,7 +95,14 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
                 Disable_Field(true).
             end.
             when {&update} then do:
-                Disable_Field(false).
+                if    m-promo-trg:ModeChangeStatus
+                   or m-promo-trg:ModeEarlyTermination
+                then do:
+                  Disable_Field(true).
+                  buttonOk:enabled = yes.
+                end.
+                else  
+                   Disable_Field(false).
             end.
             otherwise do:
                 message "error" view-as alert-box.
@@ -175,409 +183,427 @@ end .
            
            Modifying the contents of this method using a code editor will invalidate any support for this file. */
         
-        this-object:buttonOk = new System.Windows.Forms.Button().
-        this-object:buttonCancel = new System.Windows.Forms.Button().
-        this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
-        this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
-        this-object:tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel().
-        this-object:tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel().
-        this-object:button1 = new System.Windows.Forms.Button().
-        this-object:button2 = new System.Windows.Forms.Button().
-        this-object:button3 = new System.Windows.Forms.Button().
-        this-object:tabControl1 = new System.Windows.Forms.TabControl().
-        this-object:tabPage1 = new System.Windows.Forms.TabPage().
-        this-object:uc_TabBase1 = new ibs.th.ref.promo.uc_TabBase().
-        this-object:tabPage2 = new System.Windows.Forms.TabPage().
-        this-object:uc_TabAZS1 = new ibs.th.ref.promo.uc_TabAZS().
-        this-object:tabPage3 = new System.Windows.Forms.TabPage().
-        this-object:uc_TabPromoAction1 = new ibs.th.ref.promo.uc_TabPromoAction().
-        this-object:tabPage4 = new System.Windows.Forms.TabPage().
-        this-object:uc_TabTypePay1 = new ibs.th.ref.promo.uc_TabTypePay().
-        this-object:tabPage5 = new System.Windows.Forms.TabPage().
-        this-object:uc_TabAddEdit1 = new ibs.th.ref.promo.uc_TabAddEdit().
-        this-object:tabPage6 = new System.Windows.Forms.TabPage().
-        this-object:uc_TabPresents1 = new ibs.th.ref.promo.uc_Tab_Presents().
-        this-object:tableLayoutPanel19 = new System.Windows.Forms.TableLayoutPanel().
-        this-object:textBox5 = new System.Windows.Forms.TextBox().
-        this-object:textBox6 = new System.Windows.Forms.TextBox().
-        this-object:label19 = new System.Windows.Forms.Label().
-        this-object:label20 = new System.Windows.Forms.Label().
-        this-object:label21 = new System.Windows.Forms.Label().
-        this-object:textBox7 = new System.Windows.Forms.TextBox().
-        this-object:tableLayoutPanel1:SuspendLayout().
-        this-object:tableLayoutPanel2:SuspendLayout().
-        this-object:tableLayoutPanel3:SuspendLayout().
-        this-object:tableLayoutPanel4:SuspendLayout().
-        this-object:tabControl1:SuspendLayout().
-        this-object:tabPage1:SuspendLayout().
-        this-object:tabPage2:SuspendLayout().
-        this-object:tabPage3:SuspendLayout().
-        this-object:tabPage4:SuspendLayout().
-        this-object:tabPage5:SuspendLayout().
-        this-object:tabPage6:SuspendLayout().
-        this-object:tableLayoutPanel19:SuspendLayout().
-        this-object:SuspendLayout().
-        /*  */
-        /* buttonOk */
-        /*  */
-        this-object:buttonOk:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:buttonOk:Location = new System.Drawing.Point(548, 3).
-        this-object:buttonOk:Name = "buttonOk".
-        this-object:buttonOk:Size = new System.Drawing.Size(124, 23).
-        this-object:buttonOk:TabIndex = 0.
-        this-object:buttonOk:Text = "Сохранить".
-        this-object:buttonOk:UseCompatibleTextRendering = true.
-        this-object:buttonOk:Click:Subscribe(this-object:okButton_Click).
-        /*  */
-        /* buttonCancel */
-        /*  */
-        this-object:buttonCancel:DialogResult = System.Windows.Forms.DialogResult:Cancel.
-        this-object:buttonCancel:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:buttonCancel:Location = new System.Drawing.Point(678, 3).
-        this-object:buttonCancel:Name = "buttonCancel".
-        this-object:buttonCancel:Size = new System.Drawing.Size(124, 23).
-        this-object:buttonCancel:TabIndex = 1.
-        this-object:buttonCancel:Text = "Отмена".
-        this-object:buttonCancel:UseCompatibleTextRendering = true.
-        this-object:buttonCancel:Click:Subscribe(this-object:cancelButton_Click).
-        /*  */
-        /* tableLayoutPanel1 */
-        /*  */
-        this-object:tableLayoutPanel1:ColumnCount = 1.
-        this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel2, 0, 2).
-        this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel3, 0, 0).
-        this-object:tableLayoutPanel1:Controls:Add(this-object:tabControl1, 0, 1).
-        this-object:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:tableLayoutPanel1:Location = new System.Drawing.Point(0, 0).
-        this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
-        this-object:tableLayoutPanel1:RowCount = 3.
-        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle()).
-        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(35))).
-        this-object:tableLayoutPanel1:Size = new System.Drawing.Size(811, 623).
-        this-object:tableLayoutPanel1:TabIndex = 2.
-        /*  */
-        /* tableLayoutPanel2 */
-        /*  */
-        this-object:tableLayoutPanel2:ColumnCount = 3.
-        this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
-        this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
-        this-object:tableLayoutPanel2:Controls:Add(this-object:buttonCancel, 2, 0).
-        this-object:tableLayoutPanel2:Controls:Add(this-object:buttonOk, 1, 0).
-        this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:tableLayoutPanel2:Location = new System.Drawing.Point(3, 591).
-        this-object:tableLayoutPanel2:Name = "tableLayoutPanel2".
-        this-object:tableLayoutPanel2:RowCount = 1.
-        this-object:tableLayoutPanel2:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        this-object:tableLayoutPanel2:Size = new System.Drawing.Size(805, 29).
-        this-object:tableLayoutPanel2:TabIndex = 0.
-        /*  */
-        /* tableLayoutPanel3 */
-        /*  */
-        this-object:tableLayoutPanel3:ColumnCount = 1.
-        this-object:tableLayoutPanel3:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        this-object:tableLayoutPanel3:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        this-object:tableLayoutPanel3:Controls:Add(this-object:tableLayoutPanel4, 0, 1).
-        this-object:tableLayoutPanel3:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:tableLayoutPanel3:Location = new System.Drawing.Point(3, 3).
-        this-object:tableLayoutPanel3:Name = "tableLayoutPanel3".
-        this-object:tableLayoutPanel3:RowCount = 2.
-        this-object:tableLayoutPanel3:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        this-object:tableLayoutPanel3:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-        this-object:tableLayoutPanel3:Size = new System.Drawing.Size(805, 64).
-        this-object:tableLayoutPanel3:TabIndex = 1.
-        this-object:tableLayoutPanel3:Visible = false.
-        /*  */
-        /* tableLayoutPanel4 */
-        /*  */
-        this-object:tableLayoutPanel4:ColumnCount = 7.
-        this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
-        this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(10))).
-        this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
-        this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(10))).
-        this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
-        this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(50))).
-        this-object:tableLayoutPanel4:Controls:Add(this-object:button1, 0, 0).
-        this-object:tableLayoutPanel4:Controls:Add(this-object:button2, 2, 0).
-        this-object:tableLayoutPanel4:Controls:Add(this-object:button3, 6, 0).
-        this-object:tableLayoutPanel4:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:tableLayoutPanel4:Location = new System.Drawing.Point(3, 35).
-        this-object:tableLayoutPanel4:Name = "tableLayoutPanel4".
-        this-object:tableLayoutPanel4:RowCount = 1.
-        this-object:tableLayoutPanel4:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        this-object:tableLayoutPanel4:Size = new System.Drawing.Size(799, 26).
-        this-object:tableLayoutPanel4:TabIndex = 0.
-        this-object:tableLayoutPanel4:Visible = false.
-        /*  */
-        /* button1 */
-        /*  */
-        this-object:button1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:button1:Location = new System.Drawing.Point(3, 3).
-        this-object:button1:Name = "button1".
-        this-object:button1:Size = new System.Drawing.Size(124, 20).
-        this-object:button1:TabIndex = 0.
-        this-object:button1:Text = "Записать и закрыть".
-        this-object:button1:UseCompatibleTextRendering = true.
-        this-object:button1:UseVisualStyleBackColor = true.
-        /*  */
-        /* button2 */
-        /*  */
-        this-object:button2:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:button2:Location = new System.Drawing.Point(143, 3).
-        this-object:button2:Name = "button2".
-        this-object:button2:Size = new System.Drawing.Size(124, 20).
-        this-object:button2:TabIndex = 1.
-        this-object:button2:Text = "Запись".
-        this-object:button2:UseCompatibleTextRendering = true.
-        this-object:button2:UseVisualStyleBackColor = true.
-        /*  */
-        /* button3 */
-        /*  */
-        this-object:button3:Location = new System.Drawing.Point(752, 3).
-        this-object:button3:Name = "button3".
-        this-object:button3:Size = new System.Drawing.Size(44, 20).
-        this-object:button3:TabIndex = 2.
-        this-object:button3:Text = "Еще".
-        this-object:button3:UseCompatibleTextRendering = true.
-        this-object:button3:UseVisualStyleBackColor = true.
-        /*  */
-        /* tabControl1 */
-        /*  */
-        this-object:tabControl1:Controls:Add(this-object:tabPage1).
-        this-object:tabControl1:Controls:Add(this-object:tabPage2).
-        this-object:tabControl1:Controls:Add(this-object:tabPage3).
-        this-object:tabControl1:Controls:Add(this-object:tabPage4).
-        this-object:tabControl1:Controls:Add(this-object:tabPage5).
-        this-object:tabControl1:Controls:Add(this-object:tabPage6).
-        this-object:tabControl1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:tabControl1:Location = new System.Drawing.Point(3, 73).
-        this-object:tabControl1:Name = "tabControl1".
-        this-object:tabControl1:SelectedIndex = 0.
-        this-object:tabControl1:Size = new System.Drawing.Size(805, 512).
-        this-object:tabControl1:TabIndex = 2.
-        this-object:tabControl1:SelectedIndexChanged:Subscribe(this-object:tabControl1_SelectedIndexChanged).
-        /*  */
-        /* tabPage1 */
-        /*  */
-        this-object:tabPage1:Controls:Add(this-object:uc_TabBase1).
-        this-object:tabPage1:Location = new System.Drawing.Point(4, 22).
-        this-object:tabPage1:Name = "tabPage1".
-        this-object:tabPage1:Padding = new System.Windows.Forms.Padding(3).
-        this-object:tabPage1:Size = new System.Drawing.Size(797, 486).
-        this-object:tabPage1:TabIndex = 0.
-        this-object:tabPage1:Text = "Основное".
-        this-object:tabPage1:UseVisualStyleBackColor = true.
-        /*  */
-        /* uc_TabBase1 */
-        /*  */
-        this-object:uc_TabBase1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:uc_TabBase1:Location = new System.Drawing.Point(3, 3).
-        this-object:uc_TabBase1:Name = "uc_TabBase1".
-        this-object:uc_TabBase1:Size = new System.Drawing.Size(791, 480).
-        this-object:uc_TabBase1:TabIndex = 0.
-        /*  */
-        /* tabPage2 */
-        /*  */
-        this-object:tabPage2:Controls:Add(this-object:uc_TabAZS1).
-        this-object:tabPage2:Location = new System.Drawing.Point(4, 22).
-        this-object:tabPage2:Name = "tabPage2".
-        this-object:tabPage2:Padding = new System.Windows.Forms.Padding(3).
-        this-object:tabPage2:Size = new System.Drawing.Size(797, 486).
-        this-object:tabPage2:TabIndex = 1.
-        this-object:tabPage2:Text = "Применение на АЗК/АЗС".
-        this-object:tabPage2:UseVisualStyleBackColor = true.
-        /*  */
-        /* uc_TabAZS1 */
-        /*  */
-        this-object:uc_TabAZS1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:uc_TabAZS1:Location = new System.Drawing.Point(3, 3).
-        this-object:uc_TabAZS1:Margin = new System.Windows.Forms.Padding(0).
-        this-object:uc_TabAZS1:Name = "uc_TabAZS1".
-        this-object:uc_TabAZS1:Size = new System.Drawing.Size(791, 480).
-        this-object:uc_TabAZS1:TabIndex = 0.
-        /*  */
-        /* tabPage3 */
-        /*  */
-        this-object:tabPage3:Controls:Add(this-object:uc_TabPromoAction1).
-        this-object:tabPage3:Location = new System.Drawing.Point(4, 22).
-        this-object:tabPage3:Name = "tabPage3".
-        this-object:tabPage3:Size = new System.Drawing.Size(797, 486).
-        this-object:tabPage3:TabIndex = 2.
-        this-object:tabPage3:Text = "Настройки промо-акций".
-        this-object:tabPage3:UseVisualStyleBackColor = true.
-        /*  */
-        /* uc_TabPromoAction1 */
-        /*  */
-        this-object:uc_TabPromoAction1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:uc_TabPromoAction1:Location = new System.Drawing.Point(0, 0).
-        this-object:uc_TabPromoAction1:Name = "uc_TabPromoAction1".
-        this-object:uc_TabPromoAction1:Size = new System.Drawing.Size(797, 486).
-        this-object:uc_TabPromoAction1:TabIndex = 0.
-        /*  */
-        /* tabPage4 */
-        /*  */
-        this-object:tabPage4:Controls:Add(this-object:uc_TabTypePay1).
-        this-object:tabPage4:Location = new System.Drawing.Point(4, 22).
-        this-object:tabPage4:Name = "tabPage4".
-        this-object:tabPage4:Size = new System.Drawing.Size(797, 486).
-        this-object:tabPage4:TabIndex = 3.
-        this-object:tabPage4:Text = "Типы оплаты".
-        this-object:tabPage4:UseVisualStyleBackColor = true.
-        /*  */
-        /* uc_TabTypePay1 */
-        /*  */
-        this-object:uc_TabTypePay1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:uc_TabTypePay1:Location = new System.Drawing.Point(0, 0).
-        this-object:uc_TabTypePay1:Name = "uc_TabTypePay1".
-        this-object:uc_TabTypePay1:Size = new System.Drawing.Size(797, 486).
-        this-object:uc_TabTypePay1:TabIndex = 0.
-        /*  */
-        /* tabPage5 */
-        /*  */
-        this-object:tabPage5:Controls:Add(this-object:uc_TabAddEdit1).
-        this-object:tabPage5:Location = new System.Drawing.Point(4, 22).
-        this-object:tabPage5:Name = "tabPage5".
-        this-object:tabPage5:Size = new System.Drawing.Size(797, 486).
-        this-object:tabPage5:TabIndex = 4.
-        this-object:tabPage5:Text = "Расписание".
-        this-object:tabPage5:UseVisualStyleBackColor = true.
-        /*  */
-        /* uc_TabAddEdit1 */
-        /*  */
-        this-object:uc_TabAddEdit1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:uc_TabAddEdit1:Location = new System.Drawing.Point(0, 0).
-        this-object:uc_TabAddEdit1:Name = "uc_TabAddEdit1".
-        this-object:uc_TabAddEdit1:Size = new System.Drawing.Size(797, 486).
-        this-object:uc_TabAddEdit1:TabIndex = 0.
-        /*  */
-        /* tabPage6 */
-        /*  */
-        this-object:tabPage6:Controls:Add(this-object:uc_TabPresents1).
-        this-object:tabPage6:Location = new System.Drawing.Point(4, 22).
-        this-object:tabPage6:Name = "tabPage6".
-        this-object:tabPage6:Size = new System.Drawing.Size(797, 486).
-        this-object:tabPage6:TabIndex = 5.
-        this-object:tabPage6:Text = "Подарки".
-        this-object:tabPage6:UseVisualStyleBackColor = true.
-        /*  */
-        /* uc_TabPresents1 */
-        /*  */
-        this-object:uc_TabPresents1:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:uc_TabPresents1:Location = new System.Drawing.Point(0, 0).
-        this-object:uc_TabPresents1:Name = "uc_TabPresents1".
-        this-object:uc_TabPresents1:Size = new System.Drawing.Size(797, 486).
-        this-object:uc_TabPresents1:TabIndex = 0.
-        /*  */
-        /* tableLayoutPanel19 */
-        /*  */
-        this-object:tableLayoutPanel19:ColumnCount = 2.
-        this-object:tableLayoutPanel19:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(110))).
-        this-object:tableLayoutPanel19:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        this-object:tableLayoutPanel19:Controls:Add(this-object:textBox5, 1, 2).
-        this-object:tableLayoutPanel19:Controls:Add(this-object:textBox6, 1, 0).
-        this-object:tableLayoutPanel19:Controls:Add(this-object:label19, 0, 0).
-        this-object:tableLayoutPanel19:Controls:Add(this-object:label20, 0, 1).
-        this-object:tableLayoutPanel19:Controls:Add(this-object:label21, 0, 2).
-        this-object:tableLayoutPanel19:Controls:Add(this-object:textBox7, 1, 1).
-        this-object:tableLayoutPanel19:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:tableLayoutPanel19:Location = new System.Drawing.Point(380, 3).
-        this-object:tableLayoutPanel19:Name = "tableLayoutPanel19".
-        this-object:tableLayoutPanel19:RowCount = 4.
-        this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
-        this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
-        this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
-        this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
-        this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
-        this-object:tableLayoutPanel19:Size = new System.Drawing.Size(371, 114).
-        this-object:tableLayoutPanel19:TabIndex = 1.
-        /*  */
-        /* textBox5 */
-        /*  */
-        this-object:textBox5:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:textBox5:Location = new System.Drawing.Point(113, 59).
-        this-object:textBox5:Name = "textBox5".
-        this-object:textBox5:Size = new System.Drawing.Size(255, 20).
-        this-object:textBox5:TabIndex = 10.
-        /*  */
-        /* textBox6 */
-        /*  */
-        this-object:textBox6:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:textBox6:Location = new System.Drawing.Point(113, 3).
-        this-object:textBox6:Name = "textBox6".
-        this-object:textBox6:Size = new System.Drawing.Size(255, 20).
-        this-object:textBox6:TabIndex = 9.
-        /*  */
-        /* label19 */
-        /*  */
-        this-object:label19:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:label19:Location = new System.Drawing.Point(3, 0).
-        this-object:label19:Name = "label19".
-        this-object:label19:Size = new System.Drawing.Size(104, 28).
-        this-object:label19:TabIndex = 4.
-        this-object:label19:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        this-object:label19:UseCompatibleTextRendering = true.
-        /*  */
-        /* label20 */
-        /*  */
-        this-object:label20:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:label20:Location = new System.Drawing.Point(3, 28).
-        this-object:label20:Name = "label20".
-        this-object:label20:Size = new System.Drawing.Size(104, 28).
-        this-object:label20:TabIndex = 7.
-        this-object:label20:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        this-object:label20:UseCompatibleTextRendering = true.
-        /*  */
-        /* label21 */
-        /*  */
-        this-object:label21:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:label21:Location = new System.Drawing.Point(3, 56).
-        this-object:label21:Name = "label21".
-        this-object:label21:Size = new System.Drawing.Size(104, 28).
-        this-object:label21:TabIndex = 5.
-        this-object:label21:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        this-object:label21:UseCompatibleTextRendering = true.
-        /*  */
-        /* textBox7 */
-        /*  */
-        this-object:textBox7:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:textBox7:Location = new System.Drawing.Point(113, 31).
-        this-object:textBox7:Name = "textBox7".
-        this-object:textBox7:Size = new System.Drawing.Size(255, 20).
-        this-object:textBox7:TabIndex = 8.
-        /*  */
-        /* dPromoActions */
-        /*  */
-        this-object:AcceptButton = this-object:buttonOk.
-        this-object:CancelButton = this-object:buttonCancel.
-        this-object:ClientSize = new System.Drawing.Size(811, 623).
-        this-object:Controls:Add(this-object:tableLayoutPanel1).
-        this-object:MaximizeBox = false.
-        this-object:MinimizeBox = false.
-        this-object:Name = "dPromoActions".
-        this-object:ShowInTaskbar = false.
-        this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
-        this-object:Text = "Просмотр/Редактирование Акции".
-        this-object:tableLayoutPanel1:ResumeLayout(false).
-        this-object:tableLayoutPanel2:ResumeLayout(false).
-        this-object:tableLayoutPanel3:ResumeLayout(false).
-        this-object:tableLayoutPanel4:ResumeLayout(false).
-        this-object:tabControl1:ResumeLayout(false).
-        this-object:tabPage1:ResumeLayout(false).
-        this-object:tabPage2:ResumeLayout(false).
-        this-object:tabPage3:ResumeLayout(false).
-        this-object:tabPage4:ResumeLayout(false).
-        this-object:tabPage5:ResumeLayout(false).
-        this-object:tabPage6:ResumeLayout(false).
-        this-object:tableLayoutPanel19:ResumeLayout(false).
-        this-object:tableLayoutPanel19:PerformLayout().
-        this-object:ResumeLayout(false).
-        catch e as Progress.Lang.Error:
-            undo, throw e.
-        end catch.
+    this-object:buttonOk = new System.Windows.Forms.Button().
+    this-object:buttonCancel = new System.Windows.Forms.Button().
+    this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:button1 = new System.Windows.Forms.Button().
+    this-object:button2 = new System.Windows.Forms.Button().
+    this-object:button3 = new System.Windows.Forms.Button().
+    this-object:tabControl1 = new System.Windows.Forms.TabControl().
+    this-object:tabPage1 = new System.Windows.Forms.TabPage().
+    this-object:uc_TabBase1 = new ibs.th.ref.promo.uc_TabBase().
+    this-object:tabPage2 = new System.Windows.Forms.TabPage().
+    this-object:uc_TabAZS1 = new ibs.th.ref.promo.uc_TabAZS().
+    this-object:tabPage3 = new System.Windows.Forms.TabPage().
+    this-object:uc_TabPromoAction1 = new ibs.th.ref.promo.uc_TabPromoAction().
+    this-object:tabPage4 = new System.Windows.Forms.TabPage().
+    this-object:uc_TabTypePay1 = new ibs.th.ref.promo.uc_TabTypePay().
+    this-object:tabPage5 = new System.Windows.Forms.TabPage().
+    this-object:uc_TabAddEdit1 = new ibs.th.ref.promo.uc_TabAddEdit().
+    this-object:tabPage6 = new System.Windows.Forms.TabPage().
+    this-object:uc_TabPresents1 = new ibs.th.ref.promo.uc_Tab_Presents().
+    this-object:tableLayoutPanel19 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:textBox5 = new System.Windows.Forms.TextBox().
+    this-object:textBox6 = new System.Windows.Forms.TextBox().
+    this-object:label19 = new System.Windows.Forms.Label().
+    this-object:label20 = new System.Windows.Forms.Label().
+    this-object:label21 = new System.Windows.Forms.Label().
+    this-object:textBox7 = new System.Windows.Forms.TextBox().
+    this-object:tableLayoutPanel1:SuspendLayout().
+    this-object:tableLayoutPanel2:SuspendLayout().
+    this-object:tableLayoutPanel3:SuspendLayout().
+    this-object:tableLayoutPanel4:SuspendLayout().
+    this-object:tabControl1:SuspendLayout().
+    this-object:tabPage1:SuspendLayout().
+    this-object:tabPage2:SuspendLayout().
+    this-object:tabPage3:SuspendLayout().
+    this-object:tabPage4:SuspendLayout().
+    this-object:tabPage5:SuspendLayout().
+    this-object:tabPage6:SuspendLayout().
+    this-object:tableLayoutPanel19:SuspendLayout().
+    this-object:SuspendLayout().
+    /*  */
+    /* buttonOk */
+    /*  */
+    this-object:buttonOk:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:buttonOk:Location = new System.Drawing.Point(722, 3).
+    this-object:buttonOk:Name = "buttonOk".
+    this-object:buttonOk:Size = new System.Drawing.Size(124, 23).
+    this-object:buttonOk:TabIndex = 0.
+    this-object:buttonOk:Text = "Сохранить".
+    this-object:buttonOk:UseCompatibleTextRendering = true.
+    this-object:buttonOk:Click:Subscribe(this-object:okButton_Click).
+    /*  */
+    /* buttonCancel */
+    /*  */
+    this-object:buttonCancel:DialogResult = System.Windows.Forms.DialogResult:Cancel.
+    this-object:buttonCancel:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:buttonCancel:Location = new System.Drawing.Point(852, 3).
+    this-object:buttonCancel:Name = "buttonCancel".
+    this-object:buttonCancel:Size = new System.Drawing.Size(124, 23).
+    this-object:buttonCancel:TabIndex = 1.
+    this-object:buttonCancel:Text = "Отмена".
+    this-object:buttonCancel:UseCompatibleTextRendering = true.
+    this-object:buttonCancel:Click:Subscribe(this-object:cancelButton_Click).
+    /*  */
+    /* tableLayoutPanel1 */
+    /*  */
+    this-object:tableLayoutPanel1:ColumnCount = 1.
+    this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel2, 0, 2).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel3, 0, 0).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:tabControl1, 0, 1).
+    this-object:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel1:Location = new System.Drawing.Point(0, 0).
+    this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
+    this-object:tableLayoutPanel1:RowCount = 3.
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle()).
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(35))).
+    this-object:tableLayoutPanel1:Size = new System.Drawing.Size(985, 623).
+    this-object:tableLayoutPanel1:TabIndex = 2.
+    /*  */
+    /* tableLayoutPanel2 */
+    /*  */
+    this-object:tableLayoutPanel2:ColumnCount = 3.
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:buttonCancel, 2, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:buttonOk, 1, 0).
+    this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel2:Location = new System.Drawing.Point(3, 591).
+    this-object:tableLayoutPanel2:Name = "tableLayoutPanel2".
+    this-object:tableLayoutPanel2:RowCount = 1.
+    this-object:tableLayoutPanel2:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel2:Size = new System.Drawing.Size(979, 29).
+    this-object:tableLayoutPanel2:TabIndex = 0.
+    /*  */
+    /* tableLayoutPanel3 */
+    /*  */
+    this-object:tableLayoutPanel3:ColumnCount = 1.
+    this-object:tableLayoutPanel3:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel3:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel3:Controls:Add(this-object:tableLayoutPanel4, 0, 1).
+    this-object:tableLayoutPanel3:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel3:Location = new System.Drawing.Point(3, 3).
+    this-object:tableLayoutPanel3:Name = "tableLayoutPanel3".
+    this-object:tableLayoutPanel3:RowCount = 2.
+    this-object:tableLayoutPanel3:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel3:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel3:Size = new System.Drawing.Size(979, 64).
+    this-object:tableLayoutPanel3:TabIndex = 1.
+    this-object:tableLayoutPanel3:Visible = false.
+    /*  */
+    /* tableLayoutPanel4 */
+    /*  */
+    this-object:tableLayoutPanel4:ColumnCount = 7.
+    this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
+    this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(10))).
+    this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
+    this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(10))).
+    this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
+    this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel4:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel4:Controls:Add(this-object:button1, 0, 0).
+    this-object:tableLayoutPanel4:Controls:Add(this-object:button2, 2, 0).
+    this-object:tableLayoutPanel4:Controls:Add(this-object:button3, 6, 0).
+    this-object:tableLayoutPanel4:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel4:Location = new System.Drawing.Point(3, 35).
+    this-object:tableLayoutPanel4:Name = "tableLayoutPanel4".
+    this-object:tableLayoutPanel4:RowCount = 1.
+    this-object:tableLayoutPanel4:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel4:Size = new System.Drawing.Size(973, 26).
+    this-object:tableLayoutPanel4:TabIndex = 0.
+    this-object:tableLayoutPanel4:Visible = false.
+    /*  */
+    /* button1 */
+    /*  */
+    this-object:button1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:button1:Location = new System.Drawing.Point(3, 3).
+    this-object:button1:Name = "button1".
+    this-object:button1:Size = new System.Drawing.Size(124, 20).
+    this-object:button1:TabIndex = 0.
+    this-object:button1:Text = "Записать и закрыть".
+    this-object:button1:UseCompatibleTextRendering = true.
+    this-object:button1:UseVisualStyleBackColor = true.
+    /*  */
+    /* button2 */
+    /*  */
+    this-object:button2:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:button2:Location = new System.Drawing.Point(143, 3).
+    this-object:button2:Name = "button2".
+    this-object:button2:Size = new System.Drawing.Size(124, 20).
+    this-object:button2:TabIndex = 1.
+    this-object:button2:Text = "Запись".
+    this-object:button2:UseCompatibleTextRendering = true.
+    this-object:button2:UseVisualStyleBackColor = true.
+    /*  */
+    /* button3 */
+    /*  */
+    this-object:button3:Location = new System.Drawing.Point(926, 3).
+    this-object:button3:Name = "button3".
+    this-object:button3:Size = new System.Drawing.Size(44, 20).
+    this-object:button3:TabIndex = 2.
+    this-object:button3:Text = "Еще".
+    this-object:button3:UseCompatibleTextRendering = true.
+    this-object:button3:UseVisualStyleBackColor = true.
+    /*  */
+    /* tabControl1 */
+    /*  */
+    this-object:tabControl1:Controls:Add(this-object:tabPage1).
+    this-object:tabControl1:Controls:Add(this-object:tabPage2).
+    this-object:tabControl1:Controls:Add(this-object:tabPage3).
+    this-object:tabControl1:Controls:Add(this-object:tabPage4).
+    this-object:tabControl1:Controls:Add(this-object:tabPage5).
+    this-object:tabControl1:Controls:Add(this-object:tabPage6).
+    this-object:tabControl1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tabControl1:Location = new System.Drawing.Point(3, 73).
+    this-object:tabControl1:Name = "tabControl1".
+    this-object:tabControl1:SelectedIndex = 0.
+    this-object:tabControl1:Size = new System.Drawing.Size(979, 512).
+    this-object:tabControl1:TabIndex = 2.
+    this-object:tabControl1:Selected:Subscribe(this-object:tabControl1_Selected).
+    /*  */
+    /* tabPage1 */
+    /*  */
+    this-object:tabPage1:Controls:Add(this-object:uc_TabBase1).
+    this-object:tabPage1:Location = new System.Drawing.Point(4, 22).
+    this-object:tabPage1:Name = "tabPage1".
+    this-object:tabPage1:Padding = new System.Windows.Forms.Padding(3).
+    this-object:tabPage1:Size = new System.Drawing.Size(971, 486).
+    this-object:tabPage1:TabIndex = 0.
+    this-object:tabPage1:Text = "Основное".
+    this-object:tabPage1:UseVisualStyleBackColor = true.
+    /*  */
+    /* uc_TabBase1 */
+    /*  */
+    this-object:uc_TabBase1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:uc_TabBase1:Location = new System.Drawing.Point(3, 3).
+    this-object:uc_TabBase1:Name = "uc_TabBase1".
+    this-object:uc_TabBase1:Size = new System.Drawing.Size(965, 480).
+    this-object:uc_TabBase1:TabIndex = 0.
+    /*  */
+    /* tabPage2 */
+    /*  */
+    this-object:tabPage2:Controls:Add(this-object:uc_TabAZS1).
+    this-object:tabPage2:Location = new System.Drawing.Point(4, 22).
+    this-object:tabPage2:Name = "tabPage2".
+    this-object:tabPage2:Padding = new System.Windows.Forms.Padding(3).
+    this-object:tabPage2:Size = new System.Drawing.Size(971, 486).
+    this-object:tabPage2:TabIndex = 1.
+    this-object:tabPage2:Text = "Применение на АЗК/АЗС".
+    this-object:tabPage2:UseVisualStyleBackColor = true.
+    /*  */
+    /* uc_TabAZS1 */
+    /*  */
+    this-object:uc_TabAZS1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:uc_TabAZS1:Location = new System.Drawing.Point(3, 3).
+    this-object:uc_TabAZS1:Margin = new System.Windows.Forms.Padding(0).
+    this-object:uc_TabAZS1:Name = "uc_TabAZS1".
+    this-object:uc_TabAZS1:Size = new System.Drawing.Size(965, 480).
+    this-object:uc_TabAZS1:TabIndex = 0.
+    /*  */
+    /* tabPage3 */
+    /*  */
+    this-object:tabPage3:Controls:Add(this-object:uc_TabPromoAction1).
+    this-object:tabPage3:Location = new System.Drawing.Point(4, 22).
+    this-object:tabPage3:Name = "tabPage3".
+    this-object:tabPage3:Size = new System.Drawing.Size(971, 486).
+    this-object:tabPage3:TabIndex = 2.
+    this-object:tabPage3:Text = "Настройки промоакций".
+    this-object:tabPage3:UseVisualStyleBackColor = true.
+    /*  */
+    /* uc_TabPromoAction1 */
+    /*  */
+    this-object:uc_TabPromoAction1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:uc_TabPromoAction1:Location = new System.Drawing.Point(0, 0).
+    this-object:uc_TabPromoAction1:Name = "uc_TabPromoAction1".
+    this-object:uc_TabPromoAction1:Size = new System.Drawing.Size(971, 486).
+    this-object:uc_TabPromoAction1:TabIndex = 0.
+    /*  */
+    /* tabPage4 */
+    /*  */
+    this-object:tabPage4:Controls:Add(this-object:uc_TabTypePay1).
+    this-object:tabPage4:Location = new System.Drawing.Point(4, 22).
+    this-object:tabPage4:Name = "tabPage4".
+    this-object:tabPage4:Size = new System.Drawing.Size(971, 486).
+    this-object:tabPage4:TabIndex = 3.
+    this-object:tabPage4:Text = "Типы оплаты".
+    this-object:tabPage4:UseVisualStyleBackColor = true.
+    /*  */
+    /* uc_TabTypePay1 */
+    /*  */
+    this-object:uc_TabTypePay1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:uc_TabTypePay1:Location = new System.Drawing.Point(0, 0).
+    this-object:uc_TabTypePay1:Name = "uc_TabTypePay1".
+    this-object:uc_TabTypePay1:Size = new System.Drawing.Size(971, 486).
+    this-object:uc_TabTypePay1:TabIndex = 0.
+    /*  */
+    /* tabPage5 */
+    /*  */
+    this-object:tabPage5:Controls:Add(this-object:uc_TabAddEdit1).
+    this-object:tabPage5:Location = new System.Drawing.Point(4, 22).
+    this-object:tabPage5:Name = "tabPage5".
+    this-object:tabPage5:Size = new System.Drawing.Size(971, 486).
+    this-object:tabPage5:TabIndex = 4.
+    this-object:tabPage5:Text = "Расписание".
+    this-object:tabPage5:UseVisualStyleBackColor = true.
+    /*  */
+    /* uc_TabAddEdit1 */
+    /*  */
+    this-object:uc_TabAddEdit1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:uc_TabAddEdit1:Location = new System.Drawing.Point(0, 0).
+    this-object:uc_TabAddEdit1:Name = "uc_TabAddEdit1".
+    this-object:uc_TabAddEdit1:Size = new System.Drawing.Size(971, 486).
+    this-object:uc_TabAddEdit1:TabIndex = 0.
+    /*  */
+    /* tabPage6 */
+    /*  */
+    this-object:tabPage6:Controls:Add(this-object:uc_TabPresents1).
+    this-object:tabPage6:Location = new System.Drawing.Point(4, 22).
+    this-object:tabPage6:Name = "tabPage6".
+    this-object:tabPage6:Size = new System.Drawing.Size(971, 486).
+    this-object:tabPage6:TabIndex = 5.
+    this-object:tabPage6:Text = "Подарки".
+    this-object:tabPage6:UseVisualStyleBackColor = true.
+    /*  */
+    /* uc_TabPresents1 */
+    /*  */
+    this-object:uc_TabPresents1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:uc_TabPresents1:Location = new System.Drawing.Point(0, 0).
+    this-object:uc_TabPresents1:Name = "uc_TabPresents1".
+    this-object:uc_TabPresents1:Size = new System.Drawing.Size(971, 486).
+    this-object:uc_TabPresents1:TabIndex = 0.
+    /*  */
+    /* tableLayoutPanel19 */
+    /*  */
+    this-object:tableLayoutPanel19:ColumnCount = 2.
+    this-object:tableLayoutPanel19:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(110))).
+    this-object:tableLayoutPanel19:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel19:Controls:Add(this-object:textBox5, 1, 2).
+    this-object:tableLayoutPanel19:Controls:Add(this-object:textBox6, 1, 0).
+    this-object:tableLayoutPanel19:Controls:Add(this-object:label19, 0, 0).
+    this-object:tableLayoutPanel19:Controls:Add(this-object:label20, 0, 1).
+    this-object:tableLayoutPanel19:Controls:Add(this-object:label21, 0, 2).
+    this-object:tableLayoutPanel19:Controls:Add(this-object:textBox7, 1, 1).
+    this-object:tableLayoutPanel19:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel19:Location = new System.Drawing.Point(380, 3).
+    this-object:tableLayoutPanel19:Name = "tableLayoutPanel19".
+    this-object:tableLayoutPanel19:RowCount = 4.
+    this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
+    this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
+    this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
+    this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(25))).
+    this-object:tableLayoutPanel19:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
+    this-object:tableLayoutPanel19:Size = new System.Drawing.Size(371, 114).
+    this-object:tableLayoutPanel19:TabIndex = 1.
+    /*  */
+    /* textBox5 */
+    /*  */
+    this-object:textBox5:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:textBox5:Location = new System.Drawing.Point(113, 59).
+    this-object:textBox5:Name = "textBox5".
+    this-object:textBox5:Size = new System.Drawing.Size(255, 20).
+    this-object:textBox5:TabIndex = 10.
+    /*  */
+    /* textBox6 */
+    /*  */
+    this-object:textBox6:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:textBox6:Location = new System.Drawing.Point(113, 3).
+    this-object:textBox6:Name = "textBox6".
+    this-object:textBox6:Size = new System.Drawing.Size(255, 20).
+    this-object:textBox6:TabIndex = 9.
+    /*  */
+    /* label19 */
+    /*  */
+    this-object:label19:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label19:Location = new System.Drawing.Point(3, 0).
+    this-object:label19:Name = "label19".
+    this-object:label19:Size = new System.Drawing.Size(104, 28).
+    this-object:label19:TabIndex = 4.
+    this-object:label19:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label19:UseCompatibleTextRendering = true.
+    /*  */
+    /* label20 */
+    /*  */
+    this-object:label20:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label20:Location = new System.Drawing.Point(3, 28).
+    this-object:label20:Name = "label20".
+    this-object:label20:Size = new System.Drawing.Size(104, 28).
+    this-object:label20:TabIndex = 7.
+    this-object:label20:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label20:UseCompatibleTextRendering = true.
+    /*  */
+    /* label21 */
+    /*  */
+    this-object:label21:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label21:Location = new System.Drawing.Point(3, 56).
+    this-object:label21:Name = "label21".
+    this-object:label21:Size = new System.Drawing.Size(104, 28).
+    this-object:label21:TabIndex = 5.
+    this-object:label21:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label21:UseCompatibleTextRendering = true.
+    /*  */
+    /* textBox7 */
+    /*  */
+    this-object:textBox7:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:textBox7:Location = new System.Drawing.Point(113, 31).
+    this-object:textBox7:Name = "textBox7".
+    this-object:textBox7:Size = new System.Drawing.Size(255, 20).
+    this-object:textBox7:TabIndex = 8.
+    /*  */
+    /* dPromoActions */
+    /*  */
+    this-object:AcceptButton = this-object:buttonOk.
+    this-object:CancelButton = this-object:buttonCancel.
+    this-object:ClientSize = new System.Drawing.Size(985, 623).
+    this-object:Controls:Add(this-object:tableLayoutPanel1).
+    this-object:Name = "dPromoActions".
+    this-object:ShowInTaskbar = false.
+    this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
+    this-object:Text = "Просмотр/Редактирование Акции".
+    this-object:tableLayoutPanel1:ResumeLayout(false).
+    this-object:tableLayoutPanel2:ResumeLayout(false).
+    this-object:tableLayoutPanel3:ResumeLayout(false).
+    this-object:tableLayoutPanel4:ResumeLayout(false).
+    this-object:tabControl1:ResumeLayout(false).
+    this-object:tabPage1:ResumeLayout(false).
+    this-object:tabPage2:ResumeLayout(false).
+    this-object:tabPage3:ResumeLayout(false).
+    this-object:tabPage4:ResumeLayout(false).
+    this-object:tabPage5:ResumeLayout(false).
+    this-object:tabPage6:ResumeLayout(false).
+    this-object:tableLayoutPanel19:ResumeLayout(false).
+    this-object:tableLayoutPanel19:PerformLayout().
+    this-object:ResumeLayout(false).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
     end method. 
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void tabControl1_Selected( input sender as System.Object, input e as System.Windows.Forms.TabControlEventArgs ):
+		uc_TabPromoAction1:cleanPanel().
+        uc_TabPresents1:clenObject().
+        if tabControl1:SelectedIndex  = 5 
+        then
+           uc_TabPresents1:Show_Panet_SelectConditonItem().
+        if tabControl1:SelectedIndex  = 2 
+        then
+           uc_TabPromoAction1:Show_Panet_SelectConditonItem(). 
+		return.
+
+	end method.
+
+
     method public void viewpage6 (input iFlag as logical) :
         if iFlag 
         then do:
@@ -661,10 +687,11 @@ define variable v-err-msg as character no-undo .
             button1:Enabled = false.
             button2:Enabled = false.
             button3:Enabled = false.
+            buttonOk:Enabled = false. 
             uc_TabPromoAction1:Enabled_Controls(false).
             uc_TabAddEdit1:Enabled= false.
             uc_TabAZS1:Enabled= false.
-            uc_TabBase1:Enabled= false.
+            //uc_TabBase1:Enabled= false.
             
             uc_TabTypePay1:Enabled= false.
             //uc_TabPresents1:Enabled= false.
@@ -673,24 +700,6 @@ define variable v-err-msg as character no-undo .
         
     end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	METHOD PRIVATE VOID tabControl1_SelectedIndexChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-	    
-	    uc_TabPromoAction1:cleanPanel().
-	    uc_TabPresents1:clenObject().
-	    if tabControl1:SelectedIndex  = 5 
-	    then
-	       uc_TabPresents1:Show_Panet_SelectConditonItem().
-	    if tabControl1:SelectedIndex  = 2 
-        then
-           uc_TabPromoAction1:Show_Panet_SelectConditonItem(). 
-        RETURN.
-
-	END METHOD.
     
 
 end class.

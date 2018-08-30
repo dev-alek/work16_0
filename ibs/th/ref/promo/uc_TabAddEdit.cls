@@ -54,7 +54,6 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     DEFINE PRIVATE VARIABLE checkBox3 AS System.Windows.Forms.CheckBox NO-UNDO.
     DEFINE PRIVATE VARIABLE checkBox2 AS System.Windows.Forms.CheckBox NO-UNDO.
     DEFINE PRIVATE VARIABLE button9 AS System.Windows.Forms.Button NO-UNDO.
-    DEFINE PRIVATE VARIABLE button8 AS System.Windows.Forms.Button NO-UNDO.
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE textBox2 AS System.Windows.Forms.TextBox NO-UNDO.
     DEFINE PRIVATE VARIABLE textBox1 AS System.Windows.Forms.TextBox NO-UNDO.
@@ -101,6 +100,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
       if valid-object(bindPromoActionOne:Handle) then bindPromoActionOne:Dispose().
     END DESTRUCTOR.
 
+
     method Public VOID SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
         m-promo-trg = v-promo-trg.
         SetBind().
@@ -131,23 +131,23 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
     THIS-OBJECT:components = NEW System.ComponentModel.Container().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE tableDesc1 AS Progress.Data.TableDesc NO-UNDO.
-    tableDesc1 = NEW Progress.Data.TableDesc("tt-promo-schedule-week3").
+    DEFINE VARIABLE tableDesc9 AS Progress.Data.TableDesc NO-UNDO.
+    tableDesc9 = NEW Progress.Data.TableDesc("tt-promo-schedule-week3").
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE dataGridViewCellStyle1 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-    dataGridViewCellStyle1 = NEW System.Windows.Forms.DataGridViewCellStyle().
+    DEFINE VARIABLE dataGridViewCellStyle5 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+    dataGridViewCellStyle5 = NEW System.Windows.Forms.DataGridViewCellStyle().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE dataGridViewCellStyle2 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-    dataGridViewCellStyle2 = NEW System.Windows.Forms.DataGridViewCellStyle().
+    DEFINE VARIABLE dataGridViewCellStyle6 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+    dataGridViewCellStyle6 = NEW System.Windows.Forms.DataGridViewCellStyle().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE tableDesc2 AS Progress.Data.TableDesc NO-UNDO.
-    tableDesc2 = NEW Progress.Data.TableDesc("tt-promo-schedule-week2").
+    DEFINE VARIABLE tableDesc10 AS Progress.Data.TableDesc NO-UNDO.
+    tableDesc10 = NEW Progress.Data.TableDesc("tt-promo-schedule-week2").
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE tableDesc3 AS Progress.Data.TableDesc NO-UNDO.
-    tableDesc3 = NEW Progress.Data.TableDesc("tt-promoaction-one").
+    DEFINE VARIABLE tableDesc11 AS Progress.Data.TableDesc NO-UNDO.
+    tableDesc11 = NEW Progress.Data.TableDesc("tt-promoaction-one").
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE tableDesc4 AS Progress.Data.TableDesc NO-UNDO.
-    tableDesc4 = NEW Progress.Data.TableDesc("tt-promo-schedule-week").
+    DEFINE VARIABLE tableDesc12 AS Progress.Data.TableDesc NO-UNDO.
+    tableDesc12 = NEW Progress.Data.TableDesc("tt-promo-schedule-week").
     THIS-OBJECT:tableLayoutPanel9 = NEW System.Windows.Forms.TableLayoutPanel().
     THIS-OBJECT:tableL_Detailed = NEW System.Windows.Forms.TableLayoutPanel().
     THIS-OBJECT:button1 = NEW System.Windows.Forms.Button().
@@ -182,7 +182,6 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:tableLayoutPanel13 = NEW System.Windows.Forms.TableLayoutPanel().
     THIS-OBJECT:label11 = NEW System.Windows.Forms.Label().
     THIS-OBJECT:textBox2 = NEW System.Windows.Forms.TextBox().
-    THIS-OBJECT:button8 = NEW System.Windows.Forms.Button().
     THIS-OBJECT:tableL_Easily = NEW System.Windows.Forms.TableLayoutPanel().
     THIS-OBJECT:flowLayoutPanel1 = NEW System.Windows.Forms.FlowLayoutPanel().
     THIS-OBJECT:checkBox2 = NEW System.Windows.Forms.CheckBox().
@@ -263,7 +262,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:tableL_Detailed:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
     THIS-OBJECT:tableL_Detailed:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
     THIS-OBJECT:tableL_Detailed:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
-    THIS-OBJECT:tableL_Detailed:Size = NEW System.Drawing.Size(773, 200).
+    THIS-OBJECT:tableL_Detailed:Size = NEW System.Drawing.Size(773, 300).
     THIS-OBJECT:tableL_Detailed:TabIndex = 9.
     THIS-OBJECT:tableL_Detailed:Visible = false.
     /*  */
@@ -346,7 +345,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar0 AS "Progress.Data.TableDesc[]" NO-UNDO.
     arrayvar0 = NEW "Progress.Data.TableDesc[]"(0).
-    tableDesc1:ChildTables = arrayvar0.
+    tableDesc9:ChildTables = arrayvar0.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar1 AS Progress.Data.ColumnPropDesc EXTENT 9 NO-UNDO.
     arrayvar1[1] = NEW Progress.Data.ColumnPropDesc("dtime-beg", "", Progress.Data.DataType:DATETIME).
@@ -358,8 +357,8 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     arrayvar1[7] = NEW Progress.Data.ColumnPropDesc("isday_fri", "", Progress.Data.DataType:LOGICAL).
     arrayvar1[8] = NEW Progress.Data.ColumnPropDesc("isday_sat", "", Progress.Data.DataType:LOGICAL).
     arrayvar1[9] = NEW Progress.Data.ColumnPropDesc("isday_sun", "", Progress.Data.DataType:LOGICAL).
-    tableDesc1:Columns = arrayvar1.
-    THIS-OBJECT:bindingSchedWeek3:TableSchema = tableDesc1.
+    tableDesc9:Columns = arrayvar1.
+    THIS-OBJECT:bindingSchedWeek3:TableSchema = tableDesc9.
     /*  */
     /* checkBox9 */
     /*  */
@@ -462,7 +461,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* dateTimePicker3 */
     /*  */
     THIS-OBJECT:dateTimePicker3:CustomFormat = "HH:mm".
-    THIS-OBJECT:dateTimePicker3:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindingSchedWeek3, "dtime-beg", true)).
+    THIS-OBJECT:dateTimePicker3:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindingSchedWeek3, "dtime-beg", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:dateTimePicker3:Dock = System.Windows.Forms.DockStyle:Fill.
     THIS-OBJECT:dateTimePicker3:Format = System.Windows.Forms.DateTimePickerFormat:Custom.
     THIS-OBJECT:dateTimePicker3:Location = NEW System.Drawing.Point(153, 4).
@@ -471,6 +470,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:dateTimePicker3:ShowUpDown = true.
     THIS-OBJECT:dateTimePicker3:Size = NEW System.Drawing.Size(158, 20).
     THIS-OBJECT:dateTimePicker3:TabIndex = 12.
+    THIS-OBJECT:dateTimePicker3:ValueChanged:Subscribe(THIS-OBJECT:dateTimePicker3_ValueChanged).
     /*  */
     /* label2 */
     /*  */
@@ -486,7 +486,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* dateTimePicker4 */
     /*  */
     THIS-OBJECT:dateTimePicker4:CustomFormat = "HH:mm".
-    THIS-OBJECT:dateTimePicker4:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindingSchedWeek3, "dtime-end", true)).
+    THIS-OBJECT:dateTimePicker4:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindingSchedWeek3, "dtime-end", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:dateTimePicker4:Dock = System.Windows.Forms.DockStyle:Fill.
     THIS-OBJECT:dateTimePicker4:Format = System.Windows.Forms.DateTimePickerFormat:Custom.
     THIS-OBJECT:dateTimePicker4:Location = NEW System.Drawing.Point(344, 4).
@@ -517,7 +517,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:dataGridView1:Name = "dataGridView1".
     THIS-OBJECT:dataGridView1:ReadOnly = true.
     THIS-OBJECT:dataGridView1:RowHeadersVisible = false.
-    THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(767, 134).
+    THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(767, 234).
     THIS-OBJECT:dataGridView1:TabIndex = 0.
     THIS-OBJECT:dataGridView1:CellFormatting:Subscribe(THIS-OBJECT:dataGridView1_CellFormatting).
     /*  */
@@ -531,9 +531,9 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* dtimebegDataGridViewTextBoxColumn */
     /*  */
     THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:DataPropertyName = "dtime-beg".
-    dataGridViewCellStyle1:Format = "t".
-    dataGridViewCellStyle1:NullValue = ?.
-    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle1.
+    dataGridViewCellStyle5:Format = "t".
+    dataGridViewCellStyle5:NullValue = ?.
+    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle5.
     THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:HeaderText = "время с".
     THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:Name = "dtimebegDataGridViewTextBoxColumn".
     THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:ReadOnly = true.
@@ -541,9 +541,9 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* dtimeendDataGridViewTextBoxColumn */
     /*  */
     THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:DataPropertyName = "dtime-end".
-    dataGridViewCellStyle2:Format = "t".
-    dataGridViewCellStyle2:NullValue = ?.
-    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle2.
+    dataGridViewCellStyle6:Format = "t".
+    dataGridViewCellStyle6:NullValue = ?.
+    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle6.
     THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:HeaderText = "время по".
     THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:Name = "dtimeendDataGridViewTextBoxColumn".
     THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:ReadOnly = true.
@@ -557,14 +557,14 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar3 AS "Progress.Data.TableDesc[]" NO-UNDO.
     arrayvar3 = NEW "Progress.Data.TableDesc[]"(0).
-    tableDesc2:ChildTables = arrayvar3.
+    tableDesc10:ChildTables = arrayvar3.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar4 AS Progress.Data.ColumnPropDesc EXTENT 3 NO-UNDO.
     arrayvar4[1] = NEW Progress.Data.ColumnPropDesc("wdaynum", "день недели", Progress.Data.DataType:INTEGER).
     arrayvar4[2] = NEW Progress.Data.ColumnPropDesc("dtime-beg", "время с", Progress.Data.DataType:DATETIME).
     arrayvar4[3] = NEW Progress.Data.ColumnPropDesc("dtime-end", "время по", Progress.Data.DataType:DATETIME).
-    tableDesc2:Columns = arrayvar4.
-    THIS-OBJECT:bindingSchedWeek2:TableSchema = tableDesc2.
+    tableDesc10:Columns = arrayvar4.
+    THIS-OBJECT:bindingSchedWeek2:TableSchema = tableDesc10.
     /*  */
     /* button9 */
     /*  */
@@ -623,13 +623,13 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar5 AS "Progress.Data.TableDesc[]" NO-UNDO.
     arrayvar5 = NEW "Progress.Data.TableDesc[]"(0).
-    tableDesc3:ChildTables = arrayvar5.
+    tableDesc11:ChildTables = arrayvar5.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar6 AS Progress.Data.ColumnPropDesc EXTENT 2 NO-UNDO.
     arrayvar6[1] = NEW Progress.Data.ColumnPropDesc("scheduleName", "", Progress.Data.DataType:CHARACTER).
     arrayvar6[2] = NEW Progress.Data.ColumnPropDesc("scheduleType", "", Progress.Data.DataType:LOGICAL).
-    tableDesc3:Columns = arrayvar6.
-    THIS-OBJECT:bindPromoActionOne:TableSchema = tableDesc3.
+    tableDesc11:Columns = arrayvar6.
+    THIS-OBJECT:bindPromoActionOne:TableSchema = tableDesc11.
     /*  */
     /* label10 */
     /*  */
@@ -695,21 +695,20 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* tableLayoutPanel13 */
     /*  */
     THIS-OBJECT:tableLayoutPanel13:BackColor = System.Drawing.SystemColors:Control.
-    THIS-OBJECT:tableLayoutPanel13:ColumnCount = 3.
+    THIS-OBJECT:tableLayoutPanel13:ColumnCount = 2.
     THIS-OBJECT:tableLayoutPanel9:SetColumnSpan(THIS-OBJECT:tableLayoutPanel13, 2).
     THIS-OBJECT:tableLayoutPanel13:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
     THIS-OBJECT:tableLayoutPanel13:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
     THIS-OBJECT:tableLayoutPanel13:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(70))).
     THIS-OBJECT:tableLayoutPanel13:Controls:Add(THIS-OBJECT:label11, 0, 0).
     THIS-OBJECT:tableLayoutPanel13:Controls:Add(THIS-OBJECT:textBox2, 1, 0).
-    THIS-OBJECT:tableLayoutPanel13:Controls:Add(THIS-OBJECT:button8, 2, 0).
     THIS-OBJECT:tableLayoutPanel13:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:tableLayoutPanel13:Location = NEW System.Drawing.Point(0, 320).
+    THIS-OBJECT:tableLayoutPanel13:Location = NEW System.Drawing.Point(0, 420).
     THIS-OBJECT:tableLayoutPanel13:Margin = NEW System.Windows.Forms.Padding(0).
     THIS-OBJECT:tableLayoutPanel13:Name = "tableLayoutPanel13".
     THIS-OBJECT:tableLayoutPanel13:RowCount = 1.
     THIS-OBJECT:tableLayoutPanel13:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    THIS-OBJECT:tableLayoutPanel13:Size = NEW System.Drawing.Size(773, 100).
+    THIS-OBJECT:tableLayoutPanel13:Size = NEW System.Drawing.Size(773, 50).
     THIS-OBJECT:tableLayoutPanel13:TabIndex = 7.
     /*  */
     /* label11 */
@@ -718,7 +717,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:label11:Location = NEW System.Drawing.Point(3, 3).
     THIS-OBJECT:label11:Margin = NEW System.Windows.Forms.Padding(3).
     THIS-OBJECT:label11:Name = "label11".
-    THIS-OBJECT:label11:Size = NEW System.Drawing.Size(144, 94).
+    THIS-OBJECT:label11:Size = NEW System.Drawing.Size(144, 44).
     THIS-OBJECT:label11:TabIndex = 0.
     THIS-OBJECT:label11:Text = "Комментарий:".
     THIS-OBJECT:label11:UseCompatibleTextRendering = true.
@@ -731,27 +730,14 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:textBox2:Multiline = true.
     THIS-OBJECT:textBox2:Name = "textBox2".
     THIS-OBJECT:textBox2:ScrollBars = System.Windows.Forms.ScrollBars:Vertical.
-    THIS-OBJECT:textBox2:Size = NEW System.Drawing.Size(553, 93).
+    THIS-OBJECT:textBox2:Size = NEW System.Drawing.Size(623, 43).
     THIS-OBJECT:textBox2:TabIndex = 1.
-    /*  */
-    /* button8 */
-    /*  */
-    DEFINE VARIABLE nestedvar2 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-    nestedvar2 = System.Windows.Forms.AnchorStyles:Top.
-    THIS-OBJECT:button8:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-    THIS-OBJECT:button8:Location = NEW System.Drawing.Point(706, 3).
-    THIS-OBJECT:button8:Name = "button8".
-    THIS-OBJECT:button8:Size = NEW System.Drawing.Size(64, 24).
-    THIS-OBJECT:button8:TabIndex = 3.
-    THIS-OBJECT:button8:Text = "Еще".
-    THIS-OBJECT:button8:UseCompatibleTextRendering = true.
-    THIS-OBJECT:button8:UseVisualStyleBackColor = true.
     /*  */
     /* tableL_Easily */
     /*  */
-    DEFINE VARIABLE nestedvar3 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-    nestedvar3 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-    THIS-OBJECT:tableL_Easily:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar3, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+    DEFINE VARIABLE nestedvar2 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+    nestedvar2 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+    THIS-OBJECT:tableL_Easily:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
     THIS-OBJECT:tableL_Easily:BackColor = System.Drawing.SystemColors:Control.
     THIS-OBJECT:tableL_Easily:ColumnCount = 5.
     THIS-OBJECT:tableLayoutPanel9:SetColumnSpan(THIS-OBJECT:tableL_Easily, 2).
@@ -813,7 +799,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar7 AS "Progress.Data.TableDesc[]" NO-UNDO.
     arrayvar7 = NEW "Progress.Data.TableDesc[]"(0).
-    tableDesc4:ChildTables = arrayvar7.
+    tableDesc12:ChildTables = arrayvar7.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     DEFINE VARIABLE arrayvar8 AS Progress.Data.ColumnPropDesc EXTENT 9 NO-UNDO.
     arrayvar8[1] = NEW Progress.Data.ColumnPropDesc("isday_mon", "", Progress.Data.DataType:LOGICAL).
@@ -825,8 +811,8 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     arrayvar8[7] = NEW Progress.Data.ColumnPropDesc("isday_sun", "", Progress.Data.DataType:LOGICAL).
     arrayvar8[8] = NEW Progress.Data.ColumnPropDesc("dtime-beg", "время с", Progress.Data.DataType:DATETIME).
     arrayvar8[9] = NEW Progress.Data.ColumnPropDesc("dtime-end", "время по", Progress.Data.DataType:DATETIME).
-    tableDesc4:Columns = arrayvar8.
-    THIS-OBJECT:bindingSchedWeek:TableSchema = tableDesc4.
+    tableDesc12:Columns = arrayvar8.
+    THIS-OBJECT:bindingSchedWeek:TableSchema = tableDesc12.
     /*  */
     /* checkBox3 */
     /*  */
@@ -1000,14 +986,14 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
 	@VisualDesigner.
 	METHOD PRIVATE VOID radioButton6_CheckedChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
         if radioButton6:Checked then do: // детальное -> простое 
-           m-promo-trg:week2Simple("promoSchedWeek") .
+           // m-promo-trg:week2Simple("promoSchedWeek") . 16/VIII-2018 - отменено копирование расписания при переключении
            radioButton6:ForeColor  = System.Drawing.Color:Green.
            radioButton5:ForeColor  = System.Drawing.Color:Black.
            tableL_Detailed:Visible = false.
            tableL_Easily:Visible = true.
         end.
         else do: // простое -> детальное
-           m-promo-trg:week2Detail("promoSchedWeek2") .
+           // m-promo-trg:week2Detail("promoSchedWeek2") . 16/VIII-2018 - отменено копирование расписания при переключении
            radioButton6:ForeColor  = System.Drawing.Color:Black.
            radioButton5:ForeColor  = System.Drawing.Color:Green.
            tableL_Easily:Visible = false.
@@ -1039,6 +1025,17 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     RETURN.
   END METHOD.
 
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  METHOD PRIVATE VOID dateTimePicker3_ValueChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
+    dateTimePicker4:MinDate = dateTimePicker3:Value .
+    RETURN.
+  END METHOD.
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -1047,7 +1044,10 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
   METHOD PRIVATE VOID button9_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
       if tableLayoutPanel1:Visible then do :
         // добавить введённые данные в список и закрыть панель
+         dateTimePicker3:Value = dateTimePicker3:Value .         
+         dateTimePicker4:Value = dateTimePicker4:Value .         
          bindingSchedWeek3:Assign().
+         
          m-promo-trg:add2Detail("promoSchedWeek2") .
          button1:Text = "Удалить" .
       end .

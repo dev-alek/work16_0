@@ -19,7 +19,7 @@ USING Progress.Windows.UserControl.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
-CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl: 
+CLASS ibs.th.ref.promo.uc_Mess INHERITS UserControl: 
   /* --- для cmp/vssrevis.i --- */
     define variable vss-revision       as character no-undo init "$Revision$":U .
     define variable vss-author         as character no-undo init "$Author$":U .
@@ -33,29 +33,18 @@ CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl:
     define private variable bindPromoMess as Progress.Data.BindingSource no-undo.
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE tableLayoutPanel2 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
-    DEFINE PRIVATE VARIABLE label2 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE textBox1 AS System.Windows.Forms.TextBox NO-UNDO.
     DEFINE PRIVATE VARIABLE tableLayoutPanel1 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
 
-    define private variable m-promo-trg as class ibs.th.ref.promo.promo_trg no-undo.
-    DEFINE PRIVATE VARIABLE textBox2 AS System.Windows.Forms.TextBox NO-UNDO.
-    
-    
-    method Public VOID SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
-        m-promo-trg = v-promo-trg.
-        SetBind().
-    end.
+    {ibs/th/ref/promo/promo_trg_heder.i &NotLocalEvent = yes}  
     
     method Public VOID SetBind( ):
-        bindPromoCrit:handle = m-promo-trg:getQuery("PromoCriterionOne").
         bindPromoMess:Handle = m-promo-trg:getQuery("promoMes").
-      /*  message valid-object(bindPromoActionOne:handle)
-        view-as alert-box.*/
-    end.
+      end.
     
         
-    CONSTRUCTOR PUBLIC ucSelect_Items6 (  ):
+    CONSTRUCTOR PUBLIC uc_Mess (  ):
         
         
         SUPER().
@@ -77,16 +66,14 @@ CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl:
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
         this-object:components = new System.ComponentModel.Container().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        define variable tableDesc1 as Progress.Data.TableDesc no-undo.
-        tableDesc1 = new Progress.Data.TableDesc("tt-PromoCriterion").
-        @VisualDesigner.FormMember (NeedsInitialize="true").
         define variable tableDesc2 as Progress.Data.TableDesc no-undo.
-        tableDesc2 = new Progress.Data.TableDesc("tt-PromoGift").
+        tableDesc2 = new Progress.Data.TableDesc("tt-PromoCriterion").
+        @VisualDesigner.FormMember (NeedsInitialize="true").
+        define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+        tableDesc1 = new Progress.Data.TableDesc("tt-PromoGift").
         this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
         this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
         this-object:label1 = new System.Windows.Forms.Label().
-        this-object:label2 = new System.Windows.Forms.Label().
-        this-object:textBox2 = new System.Windows.Forms.TextBox().
         this-object:bindPromoCrit = new Progress.Data.BindingSource(this-object:components).
         this-object:textBox1 = new System.Windows.Forms.TextBox().
         this-object:bindPromoMess = new Progress.Data.BindingSource(this-object:components).
@@ -120,8 +107,6 @@ CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl:
         this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
         this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
         this-object:tableLayoutPanel2:Controls:Add(this-object:label1, 0, 0).
-        this-object:tableLayoutPanel2:Controls:Add(this-object:label2, 2, 0).
-        this-object:tableLayoutPanel2:Controls:Add(this-object:textBox2, 3, 0).
         this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
         this-object:tableLayoutPanel2:Location = new System.Drawing.Point(3, 3).
         this-object:tableLayoutPanel2:Name = "tableLayoutPanel2".
@@ -141,27 +126,6 @@ CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl:
         this-object:label1:Text = "Сообщение".
         this-object:label1:UseCompatibleTextRendering = true.
         /*  */
-        /* label2 */
-        /*  */
-        this-object:label2:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:label2:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        this-object:label2:Location = new System.Drawing.Point(278, 0).
-        this-object:label2:Name = "label2".
-        this-object:label2:Size = new System.Drawing.Size(144, 29).
-        this-object:label2:TabIndex = 7.
-        this-object:label2:Text = "Количество от,ед".
-        this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        this-object:label2:UseCompatibleTextRendering = true.
-        /*  */
-        /* textBox2 */
-        /*  */
-        this-object:textBox2:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindPromoCrit, "mincrit", true)).
-        this-object:textBox2:Dock = System.Windows.Forms.DockStyle:Fill.
-        this-object:textBox2:Location = new System.Drawing.Point(428, 3).
-        this-object:textBox2:Name = "textBox2".
-        this-object:textBox2:Size = new System.Drawing.Size(119, 20).
-        this-object:textBox2:TabIndex = 8.
-        /*  */
         /* bindPromoCrit */
         /*  */
         this-object:bindPromoCrit:MaxDataGuess = 0.
@@ -170,12 +134,12 @@ CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl:
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
         arrayvar0 = new "Progress.Data.TableDesc[]"(0).
-        tableDesc1:ChildTables = arrayvar0.
+        tableDesc2:ChildTables = arrayvar0.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 1 no-undo.
         arrayvar1[1] = new Progress.Data.ColumnPropDesc("mincrit", "минимальное значение критерия", Progress.Data.DataType:DECIMAL).
-        tableDesc1:Columns = arrayvar1.
-        this-object:bindPromoCrit:TableSchema = tableDesc1.
+        tableDesc2:Columns = arrayvar1.
+        this-object:bindPromoCrit:TableSchema = tableDesc2.
         /*  */
         /* textBox1 */
         /*  */
@@ -195,23 +159,22 @@ CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl:
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         define variable arrayvar2 as "Progress.Data.TableDesc[]" no-undo.
         arrayvar2 = new "Progress.Data.TableDesc[]"(0).
-        tableDesc2:ChildTables = arrayvar2.
+        tableDesc1:ChildTables = arrayvar2.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         define variable arrayvar3 as Progress.Data.ColumnPropDesc extent 1 no-undo.
         arrayvar3[1] = new Progress.Data.ColumnPropDesc("mess", "сообщение", Progress.Data.DataType:CHARACTER).
-        tableDesc2:Columns = arrayvar3.
-        this-object:bindPromoMess:TableSchema = tableDesc2.
+        tableDesc1:Columns = arrayvar3.
+        this-object:bindPromoMess:TableSchema = tableDesc1.
         /*  */
-        /* ucSelect_Items6 */
+        /* uc_Mess */
         /*  */
         this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
         this-object:Controls:Add(this-object:tableLayoutPanel1).
-        this-object:Name = "ucSelect_Items6".
+        this-object:Name = "uc_Mess".
         this-object:Size = new System.Drawing.Size(556, 297).
         this-object:tableLayoutPanel1:ResumeLayout(false).
         this-object:tableLayoutPanel1:PerformLayout().
         this-object:tableLayoutPanel2:ResumeLayout(false).
-        this-object:tableLayoutPanel2:PerformLayout().
         cast(this-object:bindPromoCrit, System.ComponentModel.ISupportInitialize):EndInit().
         cast(this-object:bindPromoMess, System.ComponentModel.ISupportInitialize):EndInit().
         this-object:ResumeLayout(false).
@@ -220,16 +183,13 @@ CLASS ibs.th.ref.promo.ucSelect_Items6 INHERITS UserControl:
         end catch.
     END METHOD.
 
-    DESTRUCTOR PUBLIC ucSelect_Items6 ( ):
+    DESTRUCTOR PUBLIC uc_Mess ( ):
         if valid-object(m-promo-trg) then closeBind().
     END DESTRUCTOR.
     
     method private void closeBind():
        bindPromoMess:Assign().
-       bindPromoCrit:Assign().
        bindPromoMess:Dispose().
-       bindPromoCrit:Dispose().
- 
     end.
 
 END CLASS.

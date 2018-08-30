@@ -49,10 +49,13 @@ class ibs.th.ref.promo.wListActions inherits Form:
     define private variable tableLayoutPanel1 as System.Windows.Forms.TableLayoutPanel no-undo.
 
     DEFINE PRIVATE VARIABLE tableLayoutPanel2 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
+    DEFINE PRIVATE VARIABLE toolSBtn_Copy AS System.Windows.Forms.ToolStripButton NO-UNDO.
     define private variable toolSBtn_Exit as System.Windows.Forms.ToolStripButton no-undo.
+    DEFINE PRIVATE VARIABLE toolSBtn_History AS System.Windows.Forms.ToolStripButton NO-UNDO.
     DEFINE PRIVATE VARIABLE toolSBtn_Print AS System.Windows.Forms.ToolStripButton NO-UNDO.
     DEFINE PRIVATE VARIABLE toolSBtn_Star AS System.Windows.Forms.ToolStripButton NO-UNDO.
     DEFINE PRIVATE VARIABLE toolSBtn_Ok AS System.Windows.Forms.ToolStripButton NO-UNDO.
+    DEFINE PRIVATE VARIABLE toolSBtn_Status AS System.Windows.Forms.ToolStripButton NO-UNDO.
     define private variable toolSBtn_View as System.Windows.Forms.ToolStripButton no-undo.
     define private variable toolSBtn_Main as System.Windows.Forms.ToolStripButton no-undo.
     define private variable toolSBtn_Edit as System.Windows.Forms.ToolStripButton no-undo.
@@ -74,6 +77,12 @@ class ibs.th.ref.promo.wListActions inherits Form:
   /* --- собственные переменные --- */
     define variable m-promo-trg   as class  ibs.th.ref.promo.promo_trg no-undo .
     define public variable oPromoActionSubs as class  ibs.th.ref.promo.promoActionSubs no-undo .
+    define property parparentproc as handle no-undo
+    set(iH as handle):
+       if valid-object(m-promo-trg)
+       then
+          m-promo-trg:parparentproc = ih.
+    end.
   /* --- end_of собственные переменные --- */
     define private variable m-promo-type as class ibs.th.ref.promo.promoType no-undo.
     {ibs/th/ref/promo/promoType.def ttStatus}
@@ -206,448 +215,497 @@ class ibs.th.ref.promo.wListActions inherits Form:
         Visual Designer to avoid any incompatible modifications.
         
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
-    THIS-OBJECT:components = NEW System.ComponentModel.Container().
+    this-object:components = new System.ComponentModel.Container().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE tableDesc1 AS Progress.Data.TableDesc NO-UNDO.
-    tableDesc1 = NEW Progress.Data.TableDesc("tt-promoaction").
+    define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+    tableDesc1 = new Progress.Data.TableDesc("tt-promoaction").
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    DEFINE VARIABLE resources AS Progress.Util.ResourceManager NO-UNDO.
-    resources = NEW Progress.Util.ResourceManager("ibs.th.ref.promo.wListActions").
-    THIS-OBJECT:tableLayoutPanel1 = NEW System.Windows.Forms.TableLayoutPanel().
-    THIS-OBJECT:dataGridView1 = NEW System.Windows.Forms.DataGridView().
-    THIS-OBJECT:changDataGridViewCheckBoxColumn = NEW System.Windows.Forms.DataGridViewCheckBoxColumn().
-    THIS-OBJECT:nameActionDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn1 = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn1 = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:statuslblDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:idDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:extcodeDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:bindAction = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
-    THIS-OBJECT:tableLayoutPanel2 = NEW System.Windows.Forms.TableLayoutPanel().
-    THIS-OBJECT:toolStrip1 = NEW System.Windows.Forms.ToolStrip().
-    THIS-OBJECT:toolSBtn_Exit = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_Ok = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_Star = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_Add = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_Main = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_View = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_Edit = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_Delete = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:toolSBtn_Print = NEW System.Windows.Forms.ToolStripButton().
-    THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
-    THIS-OBJECT:dateTimePicker1 = NEW System.Windows.Forms.DateTimePicker().
-    THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
-    THIS-OBJECT:comboBox1 = NEW System.Windows.Forms.ComboBox().
-    THIS-OBJECT:button1 = NEW System.Windows.Forms.Button().
-    THIS-OBJECT:NameAction = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:dataGridViewTextBoxColumn1 = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:Chang = NEW System.Windows.Forms.DataGridViewCheckBoxColumn().
-    THIS-OBJECT:dataGridViewTextBoxColumn2 = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:status_lbl = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:id = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-    THIS-OBJECT:tableLayoutPanel1:SuspendLayout().
-    CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
-    CAST(THIS-OBJECT:bindAction, System.ComponentModel.ISupportInitialize):BeginInit().
-    THIS-OBJECT:tableLayoutPanel2:SuspendLayout().
-    THIS-OBJECT:toolStrip1:SuspendLayout().
-    THIS-OBJECT:SuspendLayout().
+    define variable resources as Progress.Util.ResourceManager no-undo.
+    resources = new Progress.Util.ResourceManager("ibs.th.ref.promo.wListActions").
+    this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
+    this-object:changDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
+    this-object:nameActionDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:begdateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:enddateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:statuslblDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:idDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:extcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:bindAction = new Progress.Data.BindingSource(this-object:components).
+    this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:toolStrip1 = new System.Windows.Forms.ToolStrip().
+    this-object:toolSBtn_Exit = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Ok = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Star = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Add = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Main = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_View = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Edit = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Copy = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Delete = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Status = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Print = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_History = new System.Windows.Forms.ToolStripButton().
+    this-object:label1 = new System.Windows.Forms.Label().
+    this-object:dateTimePicker1 = new System.Windows.Forms.DateTimePicker().
+    this-object:label2 = new System.Windows.Forms.Label().
+    this-object:comboBox1 = new System.Windows.Forms.ComboBox().
+    this-object:button1 = new System.Windows.Forms.Button().
+    this-object:NameAction = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:Chang = new System.Windows.Forms.DataGridViewCheckBoxColumn().
+    this-object:dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:begdateDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:enddateDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:status_lbl = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:id = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:tableLayoutPanel1:SuspendLayout().
+    cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
+    cast(this-object:bindAction, System.ComponentModel.ISupportInitialize):BeginInit().
+    this-object:tableLayoutPanel2:SuspendLayout().
+    this-object:toolStrip1:SuspendLayout().
+    this-object:SuspendLayout().
     /*  */
     /* tableLayoutPanel1 */
     /*  */
-    THIS-OBJECT:tableLayoutPanel1:ColumnCount = 1.
-    THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:dataGridView1, 0, 1).
-    THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:tableLayoutPanel2, 0, 0).
-    THIS-OBJECT:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:tableLayoutPanel1:Location = NEW System.Drawing.Point(0, 0).
-    THIS-OBJECT:tableLayoutPanel1:Name = "tableLayoutPanel1".
-    THIS-OBJECT:tableLayoutPanel1:RowCount = 2.
-    THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(40))).
-    THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    THIS-OBJECT:tableLayoutPanel1:Size = NEW System.Drawing.Size(792, 512).
-    THIS-OBJECT:tableLayoutPanel1:TabIndex = 0.
+    this-object:tableLayoutPanel1:ColumnCount = 1.
+    this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:dataGridView1, 0, 1).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel2, 0, 0).
+    this-object:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel1:Location = new System.Drawing.Point(0, 0).
+    this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
+    this-object:tableLayoutPanel1:RowCount = 2.
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(40))).
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel1:Size = new System.Drawing.Size(947, 427).
+    this-object:tableLayoutPanel1:TabIndex = 0.
     /*  */
     /* dataGridView1 */
     /*  */
-    THIS-OBJECT:dataGridView1:AllowUserToAddRows = false.
-    THIS-OBJECT:dataGridView1:AllowUserToDeleteRows = false.
-    THIS-OBJECT:dataGridView1:AllowUserToOrderColumns = true.
-    THIS-OBJECT:dataGridView1:AutoGenerateColumns = false.
-    THIS-OBJECT:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
-    THIS-OBJECT:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
+    this-object:dataGridView1:AllowUserToAddRows = false.
+    this-object:dataGridView1:AllowUserToDeleteRows = false.
+    this-object:dataGridView1:AllowUserToOrderColumns = true.
+    this-object:dataGridView1:AutoGenerateColumns = false.
+    this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
+    this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar0 AS System.Windows.Forms.DataGridViewColumn EXTENT 7 NO-UNDO.
-    arrayvar0[1] = THIS-OBJECT:changDataGridViewCheckBoxColumn.
-    arrayvar0[2] = THIS-OBJECT:nameActionDataGridViewTextBoxColumn.
-    arrayvar0[3] = THIS-OBJECT:begdateDataGridViewTextBoxColumn1.
-    arrayvar0[4] = THIS-OBJECT:enddateDataGridViewTextBoxColumn1.
-    arrayvar0[5] = THIS-OBJECT:statuslblDataGridViewTextBoxColumn.
-    arrayvar0[6] = THIS-OBJECT:idDataGridViewTextBoxColumn.
-    arrayvar0[7] = THIS-OBJECT:extcodeDataGridViewTextBoxColumn.
-    THIS-OBJECT:dataGridView1:Columns:AddRange(arrayvar0).
-    THIS-OBJECT:dataGridView1:DataSource = THIS-OBJECT:bindAction.
-    THIS-OBJECT:dataGridView1:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:dataGridView1:Location = NEW System.Drawing.Point(3, 43).
-    THIS-OBJECT:dataGridView1:MultiSelect = false.
-    THIS-OBJECT:dataGridView1:Name = "dataGridView1".
-    THIS-OBJECT:dataGridView1:ReadOnly = true.
-    THIS-OBJECT:dataGridView1:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
-    THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(786, 466).
-    THIS-OBJECT:dataGridView1:TabIndex = 0.
-    THIS-OBJECT:dataGridView1:CellContentClick:Subscribe(THIS-OBJECT:dataGridView1_CellContentClick).
-    THIS-OBJECT:dataGridView1:CellContentDoubleClick:Subscribe(THIS-OBJECT:dataGridView1_CellContentDoubleClick).
+    define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 7 no-undo.
+    arrayvar0[1] = this-object:changDataGridViewCheckBoxColumn.
+    arrayvar0[2] = this-object:nameActionDataGridViewTextBoxColumn.
+    arrayvar0[3] = this-object:begdateDataGridViewTextBoxColumn1.
+    arrayvar0[4] = this-object:enddateDataGridViewTextBoxColumn1.
+    arrayvar0[5] = this-object:statuslblDataGridViewTextBoxColumn.
+    arrayvar0[6] = this-object:idDataGridViewTextBoxColumn.
+    arrayvar0[7] = this-object:extcodeDataGridViewTextBoxColumn.
+    this-object:dataGridView1:Columns:AddRange(arrayvar0).
+    this-object:dataGridView1:DataSource = this-object:bindAction.
+    this-object:dataGridView1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:dataGridView1:Location = new System.Drawing.Point(3, 43).
+    this-object:dataGridView1:MultiSelect = false.
+    this-object:dataGridView1:Name = "dataGridView1".
+    this-object:dataGridView1:ReadOnly = true.
+    this-object:dataGridView1:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
+    this-object:dataGridView1:Size = new System.Drawing.Size(941, 381).
+    this-object:dataGridView1:TabIndex = 0.
+    this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
+    this-object:dataGridView1:CellContentDoubleClick:Subscribe(this-object:dataGridView1_CellContentDoubleClick).
     /*  */
     /* changDataGridViewCheckBoxColumn */
     /*  */
-    THIS-OBJECT:changDataGridViewCheckBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
-    THIS-OBJECT:changDataGridViewCheckBoxColumn:DataPropertyName = "Chang".
-    THIS-OBJECT:changDataGridViewCheckBoxColumn:HeaderText = "".
-    THIS-OBJECT:changDataGridViewCheckBoxColumn:Name = "changDataGridViewCheckBoxColumn".
-    THIS-OBJECT:changDataGridViewCheckBoxColumn:ReadOnly = true.
-    THIS-OBJECT:changDataGridViewCheckBoxColumn:Width = 20.
+    this-object:changDataGridViewCheckBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
+    this-object:changDataGridViewCheckBoxColumn:DataPropertyName = "Chang".
+    this-object:changDataGridViewCheckBoxColumn:HeaderText = "".
+    this-object:changDataGridViewCheckBoxColumn:Name = "changDataGridViewCheckBoxColumn".
+    this-object:changDataGridViewCheckBoxColumn:ReadOnly = true.
+    this-object:changDataGridViewCheckBoxColumn:Width = 20.
     /*  */
     /* nameActionDataGridViewTextBoxColumn */
     /*  */
-    THIS-OBJECT:nameActionDataGridViewTextBoxColumn:DataPropertyName = "nameAction".
-    THIS-OBJECT:nameActionDataGridViewTextBoxColumn:HeaderText = "Наим. акции".
-    THIS-OBJECT:nameActionDataGridViewTextBoxColumn:Name = "nameActionDataGridViewTextBoxColumn".
-    THIS-OBJECT:nameActionDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:nameActionDataGridViewTextBoxColumn:DataPropertyName = "nameAction".
+    this-object:nameActionDataGridViewTextBoxColumn:HeaderText = "Наим. акции".
+    this-object:nameActionDataGridViewTextBoxColumn:Name = "nameActionDataGridViewTextBoxColumn".
+    this-object:nameActionDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
     /* begdateDataGridViewTextBoxColumn1 */
     /*  */
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn1:DataPropertyName = "beg-date".
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn1:HeaderText = "Дата начала".
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn1:Name = "begdateDataGridViewTextBoxColumn1".
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn1:ReadOnly = true.
+    this-object:begdateDataGridViewTextBoxColumn1:DataPropertyName = "beg-date".
+    this-object:begdateDataGridViewTextBoxColumn1:HeaderText = "Дата начала".
+    this-object:begdateDataGridViewTextBoxColumn1:Name = "begdateDataGridViewTextBoxColumn1".
+    this-object:begdateDataGridViewTextBoxColumn1:ReadOnly = true.
     /*  */
     /* enddateDataGridViewTextBoxColumn1 */
     /*  */
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn1:DataPropertyName = "end-date".
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn1:HeaderText = "Дата конца".
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn1:Name = "enddateDataGridViewTextBoxColumn1".
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn1:ReadOnly = true.
+    this-object:enddateDataGridViewTextBoxColumn1:DataPropertyName = "end-date".
+    this-object:enddateDataGridViewTextBoxColumn1:HeaderText = "Дата конца".
+    this-object:enddateDataGridViewTextBoxColumn1:Name = "enddateDataGridViewTextBoxColumn1".
+    this-object:enddateDataGridViewTextBoxColumn1:ReadOnly = true.
     /*  */
     /* statuslblDataGridViewTextBoxColumn */
     /*  */
-    THIS-OBJECT:statuslblDataGridViewTextBoxColumn:DataPropertyName = "status_lbl".
-    THIS-OBJECT:statuslblDataGridViewTextBoxColumn:HeaderText = "Статус".
-    THIS-OBJECT:statuslblDataGridViewTextBoxColumn:Name = "statuslblDataGridViewTextBoxColumn".
-    THIS-OBJECT:statuslblDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:statuslblDataGridViewTextBoxColumn:DataPropertyName = "status_lbl".
+    this-object:statuslblDataGridViewTextBoxColumn:HeaderText = "Статус".
+    this-object:statuslblDataGridViewTextBoxColumn:Name = "statuslblDataGridViewTextBoxColumn".
+    this-object:statuslblDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
     /* idDataGridViewTextBoxColumn */
     /*  */
-    THIS-OBJECT:idDataGridViewTextBoxColumn:DataPropertyName = "id".
-    THIS-OBJECT:idDataGridViewTextBoxColumn:HeaderText = "id".
-    THIS-OBJECT:idDataGridViewTextBoxColumn:Name = "idDataGridViewTextBoxColumn".
-    THIS-OBJECT:idDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:idDataGridViewTextBoxColumn:DataPropertyName = "id".
+    this-object:idDataGridViewTextBoxColumn:HeaderText = "id".
+    this-object:idDataGridViewTextBoxColumn:Name = "idDataGridViewTextBoxColumn".
+    this-object:idDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
     /* extcodeDataGridViewTextBoxColumn */
     /*  */
-    THIS-OBJECT:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
-    THIS-OBJECT:extcodeDataGridViewTextBoxColumn:HeaderText = "Id во внеш.Сист".
-    THIS-OBJECT:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
-    THIS-OBJECT:extcodeDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
+    this-object:extcodeDataGridViewTextBoxColumn:HeaderText = "Id во внеш.Сист".
+    this-object:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
+    this-object:extcodeDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
     /* bindAction */
     /*  */
-    THIS-OBJECT:bindAction:AutoSort = true.
-    THIS-OBJECT:bindAction:AutoUpdate = true.
-    THIS-OBJECT:bindAction:MaxDataGuess = 0.
-    THIS-OBJECT:bindAction:NoLOBs = false.
-    THIS-OBJECT:bindAction:Position = 0.
+    this-object:bindAction:AutoSort = true.
+    this-object:bindAction:AutoUpdate = true.
+    this-object:bindAction:MaxDataGuess = 0.
+    this-object:bindAction:NoLOBs = false.
+    this-object:bindAction:Position = 0.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar1 AS "Progress.Data.TableDesc[]" NO-UNDO.
-    arrayvar1 = NEW "Progress.Data.TableDesc[]"(0).
+    define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
+    arrayvar1 = new "Progress.Data.TableDesc[]"(0).
     tableDesc1:ChildTables = arrayvar1.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar2 AS Progress.Data.ColumnPropDesc EXTENT 7 NO-UNDO.
-    arrayvar2[1] = NEW Progress.Data.ColumnPropDesc("status_lbl", "", Progress.Data.DataType:CHARACTER).
-    arrayvar2[2] = NEW Progress.Data.ColumnPropDesc("Chang", "", Progress.Data.DataType:LOGICAL).
-    arrayvar2[3] = NEW Progress.Data.ColumnPropDesc("beg-date", "Дата начала", Progress.Data.DataType:DATE).
-    arrayvar2[4] = NEW Progress.Data.ColumnPropDesc("end-date", "Дата конца", Progress.Data.DataType:DATE).
-    arrayvar2[5] = NEW Progress.Data.ColumnPropDesc("ext-code", "?", Progress.Data.DataType:CHARACTER).
-    arrayvar2[6] = NEW Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
-    arrayvar2[7] = NEW Progress.Data.ColumnPropDesc("nameAction", "Наим. акции", Progress.Data.DataType:CHARACTER).
+    define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 7 no-undo.
+    arrayvar2[1] = new Progress.Data.ColumnPropDesc("status_lbl", "", Progress.Data.DataType:CHARACTER).
+    arrayvar2[2] = new Progress.Data.ColumnPropDesc("Chang", "", Progress.Data.DataType:LOGICAL).
+    arrayvar2[3] = new Progress.Data.ColumnPropDesc("beg-date", "Дата начала", Progress.Data.DataType:DATE).
+    arrayvar2[4] = new Progress.Data.ColumnPropDesc("end-date", "Дата конца", Progress.Data.DataType:DATE).
+    arrayvar2[5] = new Progress.Data.ColumnPropDesc("ext-code", "?", Progress.Data.DataType:CHARACTER).
+    arrayvar2[6] = new Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
+    arrayvar2[7] = new Progress.Data.ColumnPropDesc("nameAction", "Наим. акции", Progress.Data.DataType:CHARACTER).
     tableDesc1:Columns = arrayvar2.
-    THIS-OBJECT:bindAction:TableSchema = tableDesc1.
+    this-object:bindAction:TableSchema = tableDesc1.
     /*  */
     /* tableLayoutPanel2 */
     /*  */
-    THIS-OBJECT:tableLayoutPanel2:ColumnCount = 8.
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(250))).
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(66.6666565))).
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(50))).
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(60))).
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(35))).
-    THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(33.3333397))).
-    THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:toolStrip1, 0, 0).
-    THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:label1, 2, 0).
-    THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:dateTimePicker1, 3, 0).
-    THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:label2, 4, 0).
-    THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:comboBox1, 5, 0).
-    THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:button1, 6, 0).
-    THIS-OBJECT:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:tableLayoutPanel2:Location = NEW System.Drawing.Point(3, 3).
-    THIS-OBJECT:tableLayoutPanel2:Name = "tableLayoutPanel2".
-    THIS-OBJECT:tableLayoutPanel2:RowCount = 1.
-    THIS-OBJECT:tableLayoutPanel2:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    THIS-OBJECT:tableLayoutPanel2:Size = NEW System.Drawing.Size(786, 34).
-    THIS-OBJECT:tableLayoutPanel2:TabIndex = 3.
+    this-object:tableLayoutPanel2:ColumnCount = 8.
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(350))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(66.6666565))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(60))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(35))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(33.3333397))).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:toolStrip1, 0, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:label1, 2, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:dateTimePicker1, 3, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:label2, 4, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:comboBox1, 5, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:button1, 6, 0).
+    this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:tableLayoutPanel2:Location = new System.Drawing.Point(3, 3).
+    this-object:tableLayoutPanel2:Name = "tableLayoutPanel2".
+    this-object:tableLayoutPanel2:RowCount = 1.
+    this-object:tableLayoutPanel2:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel2:Size = new System.Drawing.Size(941, 34).
+    this-object:tableLayoutPanel2:TabIndex = 3.
     /*  */
     /* toolStrip1 */
     /*  */
-    THIS-OBJECT:toolStrip1:AutoSize = false.
-    THIS-OBJECT:toolStrip1:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:toolStrip1:ImageScalingSize = NEW System.Drawing.Size(32, 32).
+    this-object:toolStrip1:AutoSize = false.
+    this-object:toolStrip1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:toolStrip1:ImageScalingSize = new System.Drawing.Size(32, 32).
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar3 AS System.Windows.Forms.ToolStripItem EXTENT 9 NO-UNDO.
-    arrayvar3[1] = THIS-OBJECT:toolSBtn_Exit.
-    arrayvar3[2] = THIS-OBJECT:toolSBtn_Ok.
-    arrayvar3[3] = THIS-OBJECT:toolSBtn_Star.
-    arrayvar3[4] = THIS-OBJECT:toolSBtn_Add.
-    arrayvar3[5] = THIS-OBJECT:toolSBtn_Main.
-    arrayvar3[6] = THIS-OBJECT:toolSBtn_View.
-    arrayvar3[7] = THIS-OBJECT:toolSBtn_Edit.
-    arrayvar3[8] = THIS-OBJECT:toolSBtn_Delete.
-    arrayvar3[9] = THIS-OBJECT:toolSBtn_Print.
-    THIS-OBJECT:toolStrip1:Items:AddRange(arrayvar3).
-    THIS-OBJECT:toolStrip1:Location = NEW System.Drawing.Point(0, 0).
-    THIS-OBJECT:toolStrip1:Name = "toolStrip1".
-    THIS-OBJECT:toolStrip1:Size = NEW System.Drawing.Size(250, 34).
-    THIS-OBJECT:toolStrip1:TabIndex = 2.
-    THIS-OBJECT:toolStrip1:Text = "toolStrip1".
-    THIS-OBJECT:toolStrip1:DoubleClick:Subscribe(THIS-OBJECT:toolStrip1_DoubleClick).
+    define variable arrayvar3 as System.Windows.Forms.ToolStripItem extent 12 no-undo.
+    arrayvar3[1] = this-object:toolSBtn_Exit.
+    arrayvar3[2] = this-object:toolSBtn_Ok.
+    arrayvar3[3] = this-object:toolSBtn_Star.
+    arrayvar3[4] = this-object:toolSBtn_Add.
+    arrayvar3[5] = this-object:toolSBtn_Main.
+    arrayvar3[6] = this-object:toolSBtn_View.
+    arrayvar3[7] = this-object:toolSBtn_Edit.
+    arrayvar3[8] = this-object:toolSBtn_Copy.
+    arrayvar3[9] = this-object:toolSBtn_Delete.
+    arrayvar3[10] = this-object:toolSBtn_Status.
+    arrayvar3[11] = this-object:toolSBtn_Print.
+    arrayvar3[12] = this-object:toolSBtn_History.
+    this-object:toolStrip1:Items:AddRange(arrayvar3).
+    this-object:toolStrip1:Location = new System.Drawing.Point(0, 0).
+    this-object:toolStrip1:Name = "toolStrip1".
+    this-object:toolStrip1:Size = new System.Drawing.Size(350, 34).
+    this-object:toolStrip1:TabIndex = 2.
+    this-object:toolStrip1:Text = "toolStrip1".
+    this-object:toolStrip1:DoubleClick:Subscribe(this-object:toolStrip1_DoubleClick).
     /*  */
     /* toolSBtn_Exit */
     /*  */
-    THIS-OBJECT:toolSBtn_Exit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Exit:Image = CAST(resources:GetObject("toolSBtn_Exit.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Exit:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Exit:Name = "toolSBtn_Exit".
-    THIS-OBJECT:toolSBtn_Exit:Size = NEW System.Drawing.Size(36, 31).
-    THIS-OBJECT:toolSBtn_Exit:Text = "Выход".
-    THIS-OBJECT:toolSBtn_Exit:Click:Subscribe(THIS-OBJECT:toolSBtn_Exit_Click).
+    this-object:toolSBtn_Exit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Exit:Image = cast(resources:GetObject("toolSBtn_Exit.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Exit:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Exit:Name = "toolSBtn_Exit".
+    this-object:toolSBtn_Exit:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_Exit:Text = "Выход".
+    this-object:toolSBtn_Exit:Click:Subscribe(this-object:toolSBtn_Exit_Click).
     /*  */
     /* toolSBtn_Ok */
     /*  */
-    THIS-OBJECT:toolSBtn_Ok:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Ok:Image = CAST(resources:GetObject("toolSBtn_Ok.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Ok:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Ok:Name = "toolSBtn_Ok".
-    THIS-OBJECT:toolSBtn_Ok:Size = NEW System.Drawing.Size(36, 31).
-    THIS-OBJECT:toolSBtn_Ok:Text = "Выбор".
-    THIS-OBJECT:toolSBtn_Ok:Visible = false.
-    THIS-OBJECT:toolSBtn_Ok:Click:Subscribe(THIS-OBJECT:toolSBtn_Ok_Click).
+    this-object:toolSBtn_Ok:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Ok:Image = cast(resources:GetObject("toolSBtn_Ok.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Ok:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Ok:Name = "toolSBtn_Ok".
+    this-object:toolSBtn_Ok:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_Ok:Text = "Выбор".
+    this-object:toolSBtn_Ok:Visible = false.
+    this-object:toolSBtn_Ok:Click:Subscribe(this-object:toolSBtn_Ok_Click).
     /*  */
     /* toolSBtn_Star */
     /*  */
-    THIS-OBJECT:toolSBtn_Star:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Star:Image = CAST(resources:GetObject("toolSBtn_Star.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Star:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Star:Name = "toolSBtn_Star".
-    THIS-OBJECT:toolSBtn_Star:Size = NEW System.Drawing.Size(36, 31).
-    THIS-OBJECT:toolSBtn_Star:Text = "Выделить все".
-    THIS-OBJECT:toolSBtn_Star:Visible = false.
-    THIS-OBJECT:toolSBtn_Star:Click:Subscribe(THIS-OBJECT:toolSBtn_Star_Click).
+    this-object:toolSBtn_Star:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Star:Image = cast(resources:GetObject("toolSBtn_Star.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Star:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Star:Name = "toolSBtn_Star".
+    this-object:toolSBtn_Star:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_Star:Text = "Выделить все".
+    this-object:toolSBtn_Star:Visible = false.
+    this-object:toolSBtn_Star:Click:Subscribe(this-object:toolSBtn_Star_Click).
     /*  */
     /* toolSBtn_Add */
     /*  */
-    THIS-OBJECT:toolSBtn_Add:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Add:Image = CAST(resources:GetObject("toolSBtn_Add.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Add:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Add:Name = "toolSBtn_Add".
-    THIS-OBJECT:toolSBtn_Add:Size = NEW System.Drawing.Size(36, 31).
-    THIS-OBJECT:toolSBtn_Add:Text = "Создать Акцию".
-    THIS-OBJECT:toolSBtn_Add:Click:Subscribe(THIS-OBJECT:toolSBtn_Add_Click).
+    this-object:toolSBtn_Add:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Add:Image = cast(resources:GetObject("toolSBtn_Add.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Add:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Add:Name = "toolSBtn_Add".
+    this-object:toolSBtn_Add:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_Add:Text = "Создать Акцию".
+    this-object:toolSBtn_Add:Click:Subscribe(this-object:toolSBtn_Add_Click).
     /*  */
     /* toolSBtn_Main */
     /*  */
-    THIS-OBJECT:toolSBtn_Main:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Main:Image = CAST(resources:GetObject("toolSBtn_Main.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Main:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Main:Name = "toolSBtn_Main".
-    THIS-OBJECT:toolSBtn_Main:Size = NEW System.Drawing.Size(36, 31).
-    THIS-OBJECT:toolSBtn_Main:Text = "Главная".
-    THIS-OBJECT:toolSBtn_Main:Visible = false.
-    THIS-OBJECT:toolSBtn_Main:Click:Subscribe(THIS-OBJECT:toolSBtn_Main_Click).
+    this-object:toolSBtn_Main:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Main:Image = cast(resources:GetObject("toolSBtn_Main.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Main:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Main:Name = "toolSBtn_Main".
+    this-object:toolSBtn_Main:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_Main:Text = "Главная".
+    this-object:toolSBtn_Main:Visible = false.
+    this-object:toolSBtn_Main:Click:Subscribe(this-object:toolSBtn_Main_Click).
     /*  */
     /* toolSBtn_View */
     /*  */
-    THIS-OBJECT:toolSBtn_View:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_View:Image = CAST(resources:GetObject("toolSBtn_View.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_View:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_View:Name = "toolSBtn_View".
-    THIS-OBJECT:toolSBtn_View:Size = NEW System.Drawing.Size(36, 31).
-    THIS-OBJECT:toolSBtn_View:Text = "Просмотр Акции".
-    THIS-OBJECT:toolSBtn_View:Click:Subscribe(THIS-OBJECT:toolSBtn_View_Click).
+    this-object:toolSBtn_View:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_View:Image = cast(resources:GetObject("toolSBtn_View.Image"), System.Drawing.Image).
+    this-object:toolSBtn_View:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_View:Name = "toolSBtn_View".
+    this-object:toolSBtn_View:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_View:Text = "Просмотр Акции".
+    this-object:toolSBtn_View:Click:Subscribe(this-object:toolSBtn_View_Click).
     /*  */
     /* toolSBtn_Edit */
     /*  */
-    THIS-OBJECT:toolSBtn_Edit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Edit:Image = CAST(resources:GetObject("toolSBtn_Edit.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Edit:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Edit:Name = "toolSBtn_Edit".
-    THIS-OBJECT:toolSBtn_Edit:Size = NEW System.Drawing.Size(36, 36).
-    THIS-OBJECT:toolSBtn_Edit:Text = "Редактировать Акцию".
-    THIS-OBJECT:toolSBtn_Edit:Click:Subscribe(THIS-OBJECT:toolSBtn_Edit_Click).
+    this-object:toolSBtn_Edit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Edit:Image = cast(resources:GetObject("toolSBtn_Edit.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Edit:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Edit:Name = "toolSBtn_Edit".
+    this-object:toolSBtn_Edit:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_Edit:Text = "Редактировать Акцию".
+    this-object:toolSBtn_Edit:Click:Subscribe(this-object:toolSBtn_Edit_Click).
+    /*  */
+    /* toolSBtn_Copy */
+    /*  */
+    this-object:toolSBtn_Copy:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Copy:Image = cast(resources:GetObject("toolSBtn_Copy.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Copy:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Copy:Name = "toolSBtn_Copy".
+    this-object:toolSBtn_Copy:Size = new System.Drawing.Size(36, 31).
+    this-object:toolSBtn_Copy:Text = "Копировать".
+    this-object:toolSBtn_Copy:Click:Subscribe(this-object:toolSBtn_Copy_Click).
     /*  */
     /* toolSBtn_Delete */
     /*  */
-    THIS-OBJECT:toolSBtn_Delete:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Delete:Image = CAST(resources:GetObject("toolSBtn_Delete.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Delete:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Delete:Name = "toolSBtn_Delete".
-    THIS-OBJECT:toolSBtn_Delete:Size = NEW System.Drawing.Size(36, 36).
-    THIS-OBJECT:toolSBtn_Delete:Text = "Удалить Акцию".
-    THIS-OBJECT:toolSBtn_Delete:Click:Subscribe(THIS-OBJECT:toolSBtn_Delete_Click).
+    this-object:toolSBtn_Delete:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Delete:Image = cast(resources:GetObject("toolSBtn_Delete.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Delete:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Delete:Name = "toolSBtn_Delete".
+    this-object:toolSBtn_Delete:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_Delete:Text = "Удалить Акцию".
+    this-object:toolSBtn_Delete:Click:Subscribe(this-object:toolSBtn_Delete_Click).
+    /*  */
+    /* toolSBtn_Status */
+    /*  */
+    this-object:toolSBtn_Status:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Status:Image = cast(resources:GetObject("toolSBtn_Status.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Status:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Status:Name = "toolSBtn_Status".
+    this-object:toolSBtn_Status:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_Status:Text = "Изм.Статуса".
+    this-object:toolSBtn_Status:Click:Subscribe(this-object:toolSBtn_Status_Click).
     /*  */
     /* toolSBtn_Print */
     /*  */
-    THIS-OBJECT:toolSBtn_Print:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-    THIS-OBJECT:toolSBtn_Print:Image = CAST(resources:GetObject("toolSBtn_Print.Image"), System.Drawing.Image).
-    THIS-OBJECT:toolSBtn_Print:ImageTransparentColor = System.Drawing.Color:Magenta.
-    THIS-OBJECT:toolSBtn_Print:Name = "toolSBtn_Print".
-    THIS-OBJECT:toolSBtn_Print:Size = NEW System.Drawing.Size(36, 36).
-    THIS-OBJECT:toolSBtn_Print:Text = "Печать".
-    THIS-OBJECT:toolSBtn_Print:Click:Subscribe(THIS-OBJECT:toolSBtn_Print_Click).
+    this-object:toolSBtn_Print:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Print:Image = cast(resources:GetObject("toolSBtn_Print.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Print:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Print:Name = "toolSBtn_Print".
+    this-object:toolSBtn_Print:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_Print:Text = "Печать".
+    this-object:toolSBtn_Print:Click:Subscribe(this-object:toolSBtn_Print_Click).
+    /*  */
+    /* toolSBtn_History */
+    /*  */
+    this-object:toolSBtn_History:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_History:Image = cast(resources:GetObject("toolSBtn_History.Image"), System.Drawing.Image).
+    this-object:toolSBtn_History:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_History:Name = "toolSBtn_History".
+    this-object:toolSBtn_History:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_History:Text = "История".
+    this-object:toolSBtn_History:Click:Subscribe(this-object:toolSBtn_History_Click).
     /*  */
     /* label1 */
     /*  */
-    THIS-OBJECT:label1:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:label1:Location = NEW System.Drawing.Point(313, 0).
-    THIS-OBJECT:label1:Name = "label1".
-    THIS-OBJECT:label1:Size = NEW System.Drawing.Size(44, 34).
-    THIS-OBJECT:label1:TabIndex = 3.
-    THIS-OBJECT:label1:Text = "Дата :".
-    THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-    THIS-OBJECT:label1:UseCompatibleTextRendering = true.
+    this-object:label1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label1:Location = new System.Drawing.Point(450, 0).
+    this-object:label1:Name = "label1".
+    this-object:label1:Size = new System.Drawing.Size(44, 34).
+    this-object:label1:TabIndex = 3.
+    this-object:label1:Text = "Дата :".
+    this-object:label1:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label1:UseCompatibleTextRendering = true.
     /*  */
     /* dateTimePicker1 */
     /*  */
-    THIS-OBJECT:dateTimePicker1:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:dateTimePicker1:Location = NEW System.Drawing.Point(363, 3).
-    THIS-OBJECT:dateTimePicker1:Name = "dateTimePicker1".
-    THIS-OBJECT:dateTimePicker1:Size = NEW System.Drawing.Size(144, 20).
-    THIS-OBJECT:dateTimePicker1:TabIndex = 4.
+    this-object:dateTimePicker1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:dateTimePicker1:Location = new System.Drawing.Point(500, 3).
+    this-object:dateTimePicker1:Name = "dateTimePicker1".
+    this-object:dateTimePicker1:Size = new System.Drawing.Size(144, 20).
+    this-object:dateTimePicker1:TabIndex = 4.
     /*  */
     /* label2 */
     /*  */
-    THIS-OBJECT:label2:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:label2:Location = NEW System.Drawing.Point(513, 0).
-    THIS-OBJECT:label2:Name = "label2".
-    THIS-OBJECT:label2:Size = NEW System.Drawing.Size(54, 34).
-    THIS-OBJECT:label2:TabIndex = 5.
-    THIS-OBJECT:label2:Text = "Статус :".
-    THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-    THIS-OBJECT:label2:UseCompatibleTextRendering = true.
+    this-object:label2:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:label2:Location = new System.Drawing.Point(650, 0).
+    this-object:label2:Name = "label2".
+    this-object:label2:Size = new System.Drawing.Size(54, 34).
+    this-object:label2:TabIndex = 5.
+    this-object:label2:Text = "Статус :".
+    this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label2:UseCompatibleTextRendering = true.
     /*  */
     /* comboBox1 */
     /*  */
-    THIS-OBJECT:comboBox1:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:comboBox1:FormattingEnabled = true.
-    THIS-OBJECT:comboBox1:Location = NEW System.Drawing.Point(573, 3).
-    THIS-OBJECT:comboBox1:Name = "comboBox1".
-    THIS-OBJECT:comboBox1:Size = NEW System.Drawing.Size(144, 21).
-    THIS-OBJECT:comboBox1:TabIndex = 6.
+    this-object:comboBox1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:comboBox1:FormattingEnabled = true.
+    this-object:comboBox1:Location = new System.Drawing.Point(710, 3).
+    this-object:comboBox1:Name = "comboBox1".
+    this-object:comboBox1:Size = new System.Drawing.Size(144, 21).
+    this-object:comboBox1:TabIndex = 6.
     /*  */
     /* button1 */
     /*  */
-    THIS-OBJECT:button1:Image = CAST(resources:GetObject("button1.Image"), System.Drawing.Image).
-    THIS-OBJECT:button1:Location = NEW System.Drawing.Point(720, 0).
-    THIS-OBJECT:button1:Margin = NEW System.Windows.Forms.Padding(0).
-    THIS-OBJECT:button1:Name = "button1".
-    THIS-OBJECT:button1:Size = NEW System.Drawing.Size(35, 34).
-    THIS-OBJECT:button1:TabIndex = 7.
-    THIS-OBJECT:button1:UseCompatibleTextRendering = true.
-    THIS-OBJECT:button1:UseVisualStyleBackColor = true.
-    THIS-OBJECT:button1:Click:Subscribe(THIS-OBJECT:button1_Click).
+    this-object:button1:Image = cast(resources:GetObject("button1.Image"), System.Drawing.Image).
+    this-object:button1:Location = new System.Drawing.Point(857, 0).
+    this-object:button1:Margin = new System.Windows.Forms.Padding(0).
+    this-object:button1:Name = "button1".
+    this-object:button1:Size = new System.Drawing.Size(35, 34).
+    this-object:button1:TabIndex = 7.
+    this-object:button1:UseCompatibleTextRendering = true.
+    this-object:button1:UseVisualStyleBackColor = true.
+    this-object:button1:Click:Subscribe(this-object:button1_Click).
     /*  */
     /* NameAction */
     /*  */
-    THIS-OBJECT:NameAction:DataPropertyName = "NameAction".
-    THIS-OBJECT:NameAction:FillWeight = Progress.Util.CastUtil:ToSingle(300).
-    THIS-OBJECT:NameAction:HeaderText = "Наименование акции".
-    THIS-OBJECT:NameAction:Name = "NameAction".
-    THIS-OBJECT:NameAction:Width = 407.
+    this-object:NameAction:DataPropertyName = "NameAction".
+    this-object:NameAction:FillWeight = Progress.Util.CastUtil:ToSingle(300).
+    this-object:NameAction:HeaderText = "Наименование акции".
+    this-object:NameAction:Name = "NameAction".
+    this-object:NameAction:Width = 407.
     /*  */
     /* dataGridViewTextBoxColumn1 */
     /*  */
-    THIS-OBJECT:dataGridViewTextBoxColumn1:DataPropertyName = "NameAction".
-    THIS-OBJECT:dataGridViewTextBoxColumn1:HeaderText = "NameAction".
-    THIS-OBJECT:dataGridViewTextBoxColumn1:Name = "dataGridViewTextBoxColumn1".
+    this-object:dataGridViewTextBoxColumn1:DataPropertyName = "NameAction".
+    this-object:dataGridViewTextBoxColumn1:HeaderText = "NameAction".
+    this-object:dataGridViewTextBoxColumn1:Name = "dataGridViewTextBoxColumn1".
     /*  */
     /* Chang */
     /*  */
-    THIS-OBJECT:Chang:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
-    THIS-OBJECT:Chang:DataPropertyName = "Chang".
-    THIS-OBJECT:Chang:FillWeight = Progress.Util.CastUtil:ToSingle(40.6091385).
-    THIS-OBJECT:Chang:HeaderText = "".
-    THIS-OBJECT:Chang:Name = "Chang".
-    THIS-OBJECT:Chang:Width = 20.
+    this-object:Chang:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
+    this-object:Chang:DataPropertyName = "Chang".
+    this-object:Chang:FillWeight = Progress.Util.CastUtil:ToSingle(40.6091385).
+    this-object:Chang:HeaderText = "".
+    this-object:Chang:Name = "Chang".
+    this-object:Chang:Width = 20.
     /*  */
     /* dataGridViewTextBoxColumn2 */
     /*  */
-    THIS-OBJECT:dataGridViewTextBoxColumn2:DataPropertyName = "nameAction".
-    THIS-OBJECT:dataGridViewTextBoxColumn2:FillWeight = Progress.Util.CastUtil:ToSingle(101.9434814).
-    THIS-OBJECT:dataGridViewTextBoxColumn2:HeaderText = "Наименование".
-    THIS-OBJECT:dataGridViewTextBoxColumn2:Name = "dataGridViewTextBoxColumn2".
-    THIS-OBJECT:dataGridViewTextBoxColumn2:Width = 138.
+    this-object:dataGridViewTextBoxColumn2:DataPropertyName = "nameAction".
+    this-object:dataGridViewTextBoxColumn2:FillWeight = Progress.Util.CastUtil:ToSingle(101.9434814).
+    this-object:dataGridViewTextBoxColumn2:HeaderText = "Наименование".
+    this-object:dataGridViewTextBoxColumn2:Name = "dataGridViewTextBoxColumn2".
+    this-object:dataGridViewTextBoxColumn2:Width = 138.
     /*  */
     /* begdateDataGridViewTextBoxColumn */
     /*  */
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn:DataPropertyName = "beg-date".
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(122.1251755).
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn:HeaderText = "Дата начала".
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn:Name = "begdateDataGridViewTextBoxColumn".
-    THIS-OBJECT:begdateDataGridViewTextBoxColumn:Width = 166.
+    this-object:begdateDataGridViewTextBoxColumn:DataPropertyName = "beg-date".
+    this-object:begdateDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(122.1251755).
+    this-object:begdateDataGridViewTextBoxColumn:HeaderText = "Дата начала".
+    this-object:begdateDataGridViewTextBoxColumn:Name = "begdateDataGridViewTextBoxColumn".
+    this-object:begdateDataGridViewTextBoxColumn:Width = 166.
     /*  */
     /* enddateDataGridViewTextBoxColumn */
     /*  */
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn:DataPropertyName = "end-date".
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(122.1251755).
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn:HeaderText = "Дата окончания".
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn:Name = "enddateDataGridViewTextBoxColumn".
-    THIS-OBJECT:enddateDataGridViewTextBoxColumn:Width = 166.
+    this-object:enddateDataGridViewTextBoxColumn:DataPropertyName = "end-date".
+    this-object:enddateDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(122.1251755).
+    this-object:enddateDataGridViewTextBoxColumn:HeaderText = "Дата окончания".
+    this-object:enddateDataGridViewTextBoxColumn:Name = "enddateDataGridViewTextBoxColumn".
+    this-object:enddateDataGridViewTextBoxColumn:Width = 166.
     /*  */
     /* status_lbl */
     /*  */
-    THIS-OBJECT:status_lbl:DataPropertyName = "status_lbl".
-    THIS-OBJECT:status_lbl:FillWeight = Progress.Util.CastUtil:ToSingle(101.9434814).
-    THIS-OBJECT:status_lbl:HeaderText = "Статус".
-    THIS-OBJECT:status_lbl:Name = "status_lbl".
-    THIS-OBJECT:status_lbl:Width = 138.
+    this-object:status_lbl:DataPropertyName = "status_lbl".
+    this-object:status_lbl:FillWeight = Progress.Util.CastUtil:ToSingle(101.9434814).
+    this-object:status_lbl:HeaderText = "Статус".
+    this-object:status_lbl:Name = "status_lbl".
+    this-object:status_lbl:Width = 138.
     /*  */
     /* id */
     /*  */
-    THIS-OBJECT:id:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
-    THIS-OBJECT:id:DataPropertyName = "id".
-    THIS-OBJECT:id:FillWeight = Progress.Util.CastUtil:ToSingle(91.456604).
-    THIS-OBJECT:id:HeaderText = "id".
-    THIS-OBJECT:id:Name = "id".
-    THIS-OBJECT:id:Width = 50.
+    this-object:id:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
+    this-object:id:DataPropertyName = "id".
+    this-object:id:FillWeight = Progress.Util.CastUtil:ToSingle(91.456604).
+    this-object:id:HeaderText = "id".
+    this-object:id:Name = "id".
+    this-object:id:Width = 50.
     /*  */
     /* wListActions */
     /*  */
-    THIS-OBJECT:ClientSize = NEW System.Drawing.Size(792, 512).
-    THIS-OBJECT:Controls:Add(THIS-OBJECT:tableLayoutPanel1).
-    THIS-OBJECT:Name = "wListActions".
-    THIS-OBJECT:Text = "Список акций".
-    THIS-OBJECT:KeyDown:Subscribe(THIS-OBJECT:wListActions_KeyDown).
-    THIS-OBJECT:tableLayoutPanel1:ResumeLayout(false).
-    CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
-    CAST(THIS-OBJECT:bindAction, System.ComponentModel.ISupportInitialize):EndInit().
-    THIS-OBJECT:tableLayoutPanel2:ResumeLayout(false).
-    THIS-OBJECT:toolStrip1:ResumeLayout(false).
-    THIS-OBJECT:toolStrip1:PerformLayout().
-    THIS-OBJECT:ResumeLayout(false).
-    CATCH e AS Progress.Lang.Error:
-      UNDO, THROW e.
-    END CATCH.
+    this-object:ClientSize = new System.Drawing.Size(947, 427).
+    this-object:Controls:Add(this-object:tableLayoutPanel1).
+    this-object:Name = "wListActions".
+    this-object:Text = "Список акций".
+    this-object:KeyDown:Subscribe(this-object:wListActions_KeyDown).
+    this-object:tableLayoutPanel1:ResumeLayout(false).
+    cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
+    cast(this-object:bindAction, System.ComponentModel.ISupportInitialize):EndInit().
+    this-object:tableLayoutPanel2:ResumeLayout(false).
+    this-object:toolStrip1:ResumeLayout(false).
+    this-object:toolStrip1:PerformLayout().
+    this-object:ResumeLayout(false).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
     end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void toolSBtn_Copy_Click( input sender as System.Object, input e as System.EventArgs ):
+		 m-promo-trg:copyOnePromo() . 
+     bindAction:handle:query-open.
+     bindAction:Refresh().
+		return.
+
+	end method.
 
     /*------------------------------------------------------------------------------
      Purpose: Резерв!
@@ -671,7 +729,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
        позиционируется буффер, рамположенный в _trg по экземпляру таблицы tt-promoaction из _trg;
        записи в локальном экземпляре таблицы tt-promoaction отсутствуют
     */
-      viewaction().
+      addaction().
       return.
 
 	end method.
@@ -681,12 +739,14 @@ class ibs.th.ref.promo.wListActions inherits Form:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
-	method private void toolSBtn_Print_Click( input sender as System.Object, input e as System.EventArgs ):
-    m-promo-trg:printPromoActionList() .
+	method private void toolSBtn_Status_Click( input sender as System.Object, input e as System.EventArgs ):
+		m-promo-trg:editOnePromoStatus().
+		bindAction:Refresh().
 		return.
+
 	end method.
 
-    method private void viewaction():
+    method private void Addaction():
         
     /* текущая строка data-grid автоматом позиционирует буффер по строке temp-table;
        позиционируется буффер, рамположенный в _trg по экземпляру таблицы tt-promoaction из _trg;
@@ -697,7 +757,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
         добавть запись - assignItem()
       */
       bindAction:handle:query-open.
-      bindAction:Refreshall().
+      bindAction:Refresh().
       return.
 
 	end method.
@@ -709,7 +769,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
 	@VisualDesigner.
 	method private void toolSBtn_Edit_Click( input sender as System.Object, input e as System.EventArgs ):
 	    m-promo-trg:editOnePromo().
-	    
+	   // bindAction:handle:query-open().
 	    bindAction:Refresh().
 		return.
 
@@ -758,7 +818,9 @@ class ibs.th.ref.promo.wListActions inherits Form:
     ------------------------------------------------------------------------------*/
     @VisualDesigner.
     method private void toolSBtn_Delete_Click( input sender as System.Object, input e as System.EventArgs ):
-        
+        m-promo-trg:DelOnePromo().
+        bindAction:handle:query-open().
+        bindAction:Refreshall().
         return.
 
     end method.
@@ -773,6 +835,26 @@ class ibs.th.ref.promo.wListActions inherits Form:
         return.
 
     end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void toolSBtn_Print_Click( input sender as System.Object, input e as System.EventArgs ):
+    m-promo-trg:printPromoActionList() .
+    return.
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void toolSBtn_History_Click( input sender as System.Object, input e as System.EventArgs ):
+    m-promo-trg:histOnePromo() .
+    return.
+  end method.
 
 
 
@@ -795,10 +877,13 @@ class ibs.th.ref.promo.wListActions inherits Form:
             THIS-OBJECT:toolSBtn_Edit:Visible               = not sender
             THIS-OBJECT:toolSBtn_Add:Visible                = not sender
             THIS-OBJECT:toolSBtn_Delete:Visible             = not sender
-            THIS-OBJECT:toolSBtn_Print:Visible              = not sender
             THIS-OBJECT:toolSBtn_Ok:Visible                 =     sender
             THIS-OBJECT:toolSBtn_Star:Visible               =     sender
-            THIS-OBJECT:dataGridView1:Columns[0]:Visible    = sender
+            THIS-OBJECT:toolSBtn_Copy:Visible               = not sender
+            THIS-OBJECT:toolSBtn_Status:Visible             = not sender
+            THIS-OBJECT:toolSBtn_Print:Visible              = not sender
+            THIS-OBJECT:toolSBtn_History:Visible            = not sender
+            THIS-OBJECT:dataGridView1:Columns[0]:Visible    =     sender
         .
         
 
