@@ -986,14 +986,14 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
 	@VisualDesigner.
 	METHOD PRIVATE VOID radioButton6_CheckedChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
         if radioButton6:Checked then do: // детальное -> простое 
-           // m-promo-trg:week2Simple("promoSchedWeek") . 16/VIII-2018 - отменено копирование расписания при переключении
+           // 16/VIII-2018 - отменено копирование расписания при переключении
            radioButton6:ForeColor  = System.Drawing.Color:Green.
            radioButton5:ForeColor  = System.Drawing.Color:Black.
            tableL_Detailed:Visible = false.
            tableL_Easily:Visible = true.
         end.
         else do: // простое -> детальное
-           // m-promo-trg:week2Detail("promoSchedWeek2") . 16/VIII-2018 - отменено копирование расписания при переключении
+           // 16/VIII-2018 - отменено копирование расписания при переключении
            radioButton6:ForeColor  = System.Drawing.Color:Black.
            radioButton5:ForeColor  = System.Drawing.Color:Green.
            tableL_Easily:Visible = false.
@@ -1042,18 +1042,27 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   METHOD PRIVATE VOID button9_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
+    define variable v-has-errors as logical no-undo .
+    
       if tableLayoutPanel1:Visible then do :
         // добавить введённые данные в список и закрыть панель
          dateTimePicker3:Value = dateTimePicker3:Value .         
          dateTimePicker4:Value = dateTimePicker4:Value .         
          bindingSchedWeek3:Assign().
          
-         m-promo-trg:add2Detail("promoSchedWeek2") .
-         button1:Text = "Удалить" .
+         v-has-errors = m-promo-trg:add2Detail("promoSchedWeek2") .
+         if v-has-errors then
+           bindingSchedWeek3:Refresh() .
+         else assign
+           button1:Text = "Удалить" 
+           tableLayoutPanel1:Visible = false    
+         .
       end .
-      else button1:Text = "Не добавлять" .
+      else assign
+        button1:Text = "Не добавлять" 
+        tableLayoutPanel1:Visible = true    
+      .
       
-      tableLayoutPanel1:Visible = not tableLayoutPanel1:Visible .   
     RETURN.
   END METHOD.
 

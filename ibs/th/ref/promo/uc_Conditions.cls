@@ -212,8 +212,8 @@ CLASS ibs.th.ref.promo.uc_Conditions INHERITS UserControl:
             button1:enabled = not iModeview 
             button2:enabled = not iModeview
             button3:enabled = not iModeview
-            THIS-OBJECT:dataGridView1:Columns[0]:ReadOnly = iModeview
-            THIS-OBJECT:dataGridView1:Columns[2]:ReadOnly = iModeview
+         /*   THIS-OBJECT:dataGridView1:Columns[0]:ReadOnly = iModeview
+            THIS-OBJECT:dataGridView1:Columns[2]:ReadOnly = iModeview */
          .
     end. 
     method Public VOID localEvent(input iEvent as character, input iEventParam as character  ):
@@ -284,9 +284,6 @@ CLASS ibs.th.ref.promo.uc_Conditions INHERITS UserControl:
     this-object:label1 = new System.Windows.Forms.Label().
     this-object:panel1 = new System.Windows.Forms.Panel().
     this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
-    this-object:mincritDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:spanDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:discontDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:bindPromoCrit = new Progress.Data.BindingSource(this-object:components).
     this-object:tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel().
     this-object:label2 = new System.Windows.Forms.Label().
@@ -296,6 +293,9 @@ CLASS ibs.th.ref.promo.uc_Conditions INHERITS UserControl:
     this-object:tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel().
     this-object:button4 = new System.Windows.Forms.Button().
     this-object:button5 = new System.Windows.Forms.Button().
+    this-object:mincritDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:spanDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:discontDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:tableLayoutPanel1:SuspendLayout().
     this-object:tableLayoutPanel2:SuspendLayout().
     this-object:panel1:SuspendLayout().
@@ -427,30 +427,6 @@ CLASS ibs.th.ref.promo.uc_Conditions INHERITS UserControl:
     this-object:dataGridView1:CellMouseClick:Subscribe(this-object:dataGridView1_CellMouseClick).
     this-object:dataGridView1:CellValueChanged:Subscribe(this-object:dataGridView1_CellValueChanged).
     /*  */
-    /* mincritDataGridViewTextBoxColumn */
-    /*  */
-    this-object:mincritDataGridViewTextBoxColumn:DataPropertyName = "mincrit".
-    this-object:mincritDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(83.7563477).
-    this-object:mincritDataGridViewTextBoxColumn:HeaderText = "Количество, ед".
-    this-object:mincritDataGridViewTextBoxColumn:Name = "mincritDataGridViewTextBoxColumn".
-    /*  */
-    /* spanDataGridViewTextBoxColumn */
-    /*  */
-    this-object:spanDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCells.
-    this-object:spanDataGridViewTextBoxColumn:DataPropertyName = "span".
-    this-object:spanDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(108.1218262).
-    this-object:spanDataGridViewTextBoxColumn:HeaderText = "Диапозон действия, ед".
-    this-object:spanDataGridViewTextBoxColumn:Name = "spanDataGridViewTextBoxColumn".
-    this-object:spanDataGridViewTextBoxColumn:ReadOnly = true.
-    this-object:spanDataGridViewTextBoxColumn:Width = 124.
-    /*  */
-    /* discontDataGridViewTextBoxColumn */
-    /*  */
-    this-object:discontDataGridViewTextBoxColumn:DataPropertyName = "discont".
-    this-object:discontDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(108.1218262).
-    this-object:discontDataGridViewTextBoxColumn:HeaderText = "Скидка, ед".
-    this-object:discontDataGridViewTextBoxColumn:Name = "discontDataGridViewTextBoxColumn".
-    /*  */
     /* bindPromoCrit */
     /*  */
     this-object:bindPromoCrit:AutoSort = true.
@@ -512,7 +488,7 @@ CLASS ibs.th.ref.promo.uc_Conditions INHERITS UserControl:
     this-object:label3:Name = "label3".
     this-object:label3:Size = new System.Drawing.Size(114, 24).
     this-object:label3:TabIndex = 1.
-    this-object:label3:Text = "Скидка, ед".
+    this-object:label3:Text = "Скидка".
     this-object:label3:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
     this-object:label3:UseCompatibleTextRendering = true.
     /*  */
@@ -578,6 +554,32 @@ CLASS ibs.th.ref.promo.uc_Conditions INHERITS UserControl:
     this-object:button5:UseCompatibleTextRendering = true.
     this-object:button5:UseVisualStyleBackColor = true.
     this-object:button5:Click:Subscribe(this-object:button5_Click).
+    /*  */
+    /* mincritDataGridViewTextBoxColumn */
+    /*  */
+    this-object:mincritDataGridViewTextBoxColumn:DataPropertyName = "mincrit".
+    this-object:mincritDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(83.7563477).
+    this-object:mincritDataGridViewTextBoxColumn:HeaderText = "Количество, ед".
+    this-object:mincritDataGridViewTextBoxColumn:Name = "mincritDataGridViewTextBoxColumn".
+    this-object:mincritDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* spanDataGridViewTextBoxColumn */
+    /*  */
+    this-object:spanDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCells.
+    this-object:spanDataGridViewTextBoxColumn:DataPropertyName = "span".
+    this-object:spanDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(108.1218262).
+    this-object:spanDataGridViewTextBoxColumn:HeaderText = "Диапозон действия, ед".
+    this-object:spanDataGridViewTextBoxColumn:Name = "spanDataGridViewTextBoxColumn".
+    this-object:spanDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:spanDataGridViewTextBoxColumn:Width = 124.
+    /*  */
+    /* discontDataGridViewTextBoxColumn */
+    /*  */
+    this-object:discontDataGridViewTextBoxColumn:DataPropertyName = "discont".
+    this-object:discontDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(108.1218262).
+    this-object:discontDataGridViewTextBoxColumn:HeaderText = "Скидка, ед".
+    this-object:discontDataGridViewTextBoxColumn:Name = "discontDataGridViewTextBoxColumn".
+    this-object:discontDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
     /* uc_Conditions */
     /*  */

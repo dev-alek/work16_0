@@ -34,7 +34,7 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
                                         &child_5         = uc_Canon1 // начала должны создаться условия если их нет
                                         &child_6         = uc_Mess1  // а потом сообщения или подарки
                                         
-                                        &NotSetbind      = yes
+                                        
                                         &NotLocalEvent = yes                                     
 } 
         
@@ -51,6 +51,19 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
 
     END CONSTRUCTOR.
 
+    method Public VOID SetBind( ):
+/*uc_Goods1:Visible = IsIndGoods.
+        uc_Goods2:Visible = IsGoods.
+        uc_Present1:Visible = IsPresents.
+        uc_Conditions1:Visible = IsConditions.*/
+        if uc_Canon1:Visible 
+        then
+           uc_Canon1:SetBind().
+        if uc_Mess1:Visible
+        then  
+           uc_Mess1:SetBind().
+    end.
+           
     METHOD PRIVATE VOID InitializeComponent(  ):
         
         /* NOTE: The following method is automatically generated.
@@ -246,6 +259,7 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
         if   not IsMess 
         then THIS-OBJECT:tableLayoutPanel1:ColumnStyles[vCount - 1]:Width = 0.    
         else THIS-OBJECT:tableLayoutPanel1:ColumnStyles[vCount - 1]= NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(vWidth)).
+        
         
         
         

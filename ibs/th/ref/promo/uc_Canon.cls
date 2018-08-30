@@ -25,7 +25,7 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
     DEFINE PRIVATE VARIABLE label2 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
 
-    {ibs/th/ref/promo/promo_trg_heder.i }
+    {ibs/th/ref/promo/promo_trg_heder.i &NotSetBind = yes}
     
     method Public VOID SetBind( ):
         bindPromocrit:Handle = m-promo-trg:getQuery("PromoCriterionOne").

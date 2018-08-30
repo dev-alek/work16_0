@@ -127,6 +127,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
     */
     destructor public wListActions ( ):
         bindAction:Dispose().
+        
       if     vDeleteTRG 
          and valid-object(m-promo-trg) 
       then 
@@ -224,13 +225,6 @@ class ibs.th.ref.promo.wListActions inherits Form:
     resources = new Progress.Util.ResourceManager("ibs.th.ref.promo.wListActions").
     this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
     this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
-    this-object:changDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
-    this-object:nameActionDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:begdateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:enddateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:statuslblDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:idDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:extcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:bindAction = new Progress.Data.BindingSource(this-object:components).
     this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
     this-object:toolStrip1 = new System.Windows.Forms.ToolStrip().
@@ -259,6 +253,13 @@ class ibs.th.ref.promo.wListActions inherits Form:
     this-object:enddateDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:status_lbl = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:id = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:changDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
+    this-object:nameActionDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:begdateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:enddateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:statuslblDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:idDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:extcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:tableLayoutPanel1:SuspendLayout().
     cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:bindAction, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -310,57 +311,6 @@ class ibs.th.ref.promo.wListActions inherits Form:
     this-object:dataGridView1:TabIndex = 0.
     this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
     this-object:dataGridView1:CellContentDoubleClick:Subscribe(this-object:dataGridView1_CellContentDoubleClick).
-    /*  */
-    /* changDataGridViewCheckBoxColumn */
-    /*  */
-    this-object:changDataGridViewCheckBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
-    this-object:changDataGridViewCheckBoxColumn:DataPropertyName = "Chang".
-    this-object:changDataGridViewCheckBoxColumn:HeaderText = "".
-    this-object:changDataGridViewCheckBoxColumn:Name = "changDataGridViewCheckBoxColumn".
-    this-object:changDataGridViewCheckBoxColumn:ReadOnly = true.
-    this-object:changDataGridViewCheckBoxColumn:Width = 20.
-    /*  */
-    /* nameActionDataGridViewTextBoxColumn */
-    /*  */
-    this-object:nameActionDataGridViewTextBoxColumn:DataPropertyName = "nameAction".
-    this-object:nameActionDataGridViewTextBoxColumn:HeaderText = "Наим. акции".
-    this-object:nameActionDataGridViewTextBoxColumn:Name = "nameActionDataGridViewTextBoxColumn".
-    this-object:nameActionDataGridViewTextBoxColumn:ReadOnly = true.
-    /*  */
-    /* begdateDataGridViewTextBoxColumn1 */
-    /*  */
-    this-object:begdateDataGridViewTextBoxColumn1:DataPropertyName = "beg-date".
-    this-object:begdateDataGridViewTextBoxColumn1:HeaderText = "Дата начала".
-    this-object:begdateDataGridViewTextBoxColumn1:Name = "begdateDataGridViewTextBoxColumn1".
-    this-object:begdateDataGridViewTextBoxColumn1:ReadOnly = true.
-    /*  */
-    /* enddateDataGridViewTextBoxColumn1 */
-    /*  */
-    this-object:enddateDataGridViewTextBoxColumn1:DataPropertyName = "end-date".
-    this-object:enddateDataGridViewTextBoxColumn1:HeaderText = "Дата конца".
-    this-object:enddateDataGridViewTextBoxColumn1:Name = "enddateDataGridViewTextBoxColumn1".
-    this-object:enddateDataGridViewTextBoxColumn1:ReadOnly = true.
-    /*  */
-    /* statuslblDataGridViewTextBoxColumn */
-    /*  */
-    this-object:statuslblDataGridViewTextBoxColumn:DataPropertyName = "status_lbl".
-    this-object:statuslblDataGridViewTextBoxColumn:HeaderText = "Статус".
-    this-object:statuslblDataGridViewTextBoxColumn:Name = "statuslblDataGridViewTextBoxColumn".
-    this-object:statuslblDataGridViewTextBoxColumn:ReadOnly = true.
-    /*  */
-    /* idDataGridViewTextBoxColumn */
-    /*  */
-    this-object:idDataGridViewTextBoxColumn:DataPropertyName = "id".
-    this-object:idDataGridViewTextBoxColumn:HeaderText = "id".
-    this-object:idDataGridViewTextBoxColumn:Name = "idDataGridViewTextBoxColumn".
-    this-object:idDataGridViewTextBoxColumn:ReadOnly = true.
-    /*  */
-    /* extcodeDataGridViewTextBoxColumn */
-    /*  */
-    this-object:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
-    this-object:extcodeDataGridViewTextBoxColumn:HeaderText = "Id во внеш.Сист".
-    this-object:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
-    this-object:extcodeDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
     /* bindAction */
     /*  */
@@ -526,7 +476,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
     this-object:toolSBtn_Delete:Image = cast(resources:GetObject("toolSBtn_Delete.Image"), System.Drawing.Image).
     this-object:toolSBtn_Delete:ImageTransparentColor = System.Drawing.Color:Magenta.
     this-object:toolSBtn_Delete:Name = "toolSBtn_Delete".
-    this-object:toolSBtn_Delete:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_Delete:Size = new System.Drawing.Size(36, 31).
     this-object:toolSBtn_Delete:Text = "Удалить Акцию".
     this-object:toolSBtn_Delete:Click:Subscribe(this-object:toolSBtn_Delete_Click).
     /*  */
@@ -536,7 +486,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
     this-object:toolSBtn_Status:Image = cast(resources:GetObject("toolSBtn_Status.Image"), System.Drawing.Image).
     this-object:toolSBtn_Status:ImageTransparentColor = System.Drawing.Color:Magenta.
     this-object:toolSBtn_Status:Name = "toolSBtn_Status".
-    this-object:toolSBtn_Status:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_Status:Size = new System.Drawing.Size(36, 31).
     this-object:toolSBtn_Status:Text = "Изм.Статуса".
     this-object:toolSBtn_Status:Click:Subscribe(this-object:toolSBtn_Status_Click).
     /*  */
@@ -546,7 +496,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
     this-object:toolSBtn_Print:Image = cast(resources:GetObject("toolSBtn_Print.Image"), System.Drawing.Image).
     this-object:toolSBtn_Print:ImageTransparentColor = System.Drawing.Color:Magenta.
     this-object:toolSBtn_Print:Name = "toolSBtn_Print".
-    this-object:toolSBtn_Print:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_Print:Size = new System.Drawing.Size(36, 31).
     this-object:toolSBtn_Print:Text = "Печать".
     this-object:toolSBtn_Print:Click:Subscribe(this-object:toolSBtn_Print_Click).
     /*  */
@@ -556,7 +506,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
     this-object:toolSBtn_History:Image = cast(resources:GetObject("toolSBtn_History.Image"), System.Drawing.Image).
     this-object:toolSBtn_History:ImageTransparentColor = System.Drawing.Color:Magenta.
     this-object:toolSBtn_History:Name = "toolSBtn_History".
-    this-object:toolSBtn_History:Size = new System.Drawing.Size(36, 36).
+    this-object:toolSBtn_History:Size = new System.Drawing.Size(36, 31).
     this-object:toolSBtn_History:Text = "История".
     this-object:toolSBtn_History:Click:Subscribe(this-object:toolSBtn_History_Click).
     /*  */
@@ -675,6 +625,57 @@ class ibs.th.ref.promo.wListActions inherits Form:
     this-object:id:Name = "id".
     this-object:id:Width = 50.
     /*  */
+    /* changDataGridViewCheckBoxColumn */
+    /*  */
+    this-object:changDataGridViewCheckBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
+    this-object:changDataGridViewCheckBoxColumn:DataPropertyName = "Chang".
+    this-object:changDataGridViewCheckBoxColumn:HeaderText = "".
+    this-object:changDataGridViewCheckBoxColumn:Name = "changDataGridViewCheckBoxColumn".
+    this-object:changDataGridViewCheckBoxColumn:ReadOnly = true.
+    this-object:changDataGridViewCheckBoxColumn:Width = 20.
+    /*  */
+    /* nameActionDataGridViewTextBoxColumn */
+    /*  */
+    this-object:nameActionDataGridViewTextBoxColumn:DataPropertyName = "nameAction".
+    this-object:nameActionDataGridViewTextBoxColumn:HeaderText = "Наим. акции".
+    this-object:nameActionDataGridViewTextBoxColumn:Name = "nameActionDataGridViewTextBoxColumn".
+    this-object:nameActionDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* begdateDataGridViewTextBoxColumn1 */
+    /*  */
+    this-object:begdateDataGridViewTextBoxColumn1:DataPropertyName = "beg-date".
+    this-object:begdateDataGridViewTextBoxColumn1:HeaderText = "Дата начала".
+    this-object:begdateDataGridViewTextBoxColumn1:Name = "begdateDataGridViewTextBoxColumn1".
+    this-object:begdateDataGridViewTextBoxColumn1:ReadOnly = true.
+    /*  */
+    /* enddateDataGridViewTextBoxColumn1 */
+    /*  */
+    this-object:enddateDataGridViewTextBoxColumn1:DataPropertyName = "end-date".
+    this-object:enddateDataGridViewTextBoxColumn1:HeaderText = "Дата конца".
+    this-object:enddateDataGridViewTextBoxColumn1:Name = "enddateDataGridViewTextBoxColumn1".
+    this-object:enddateDataGridViewTextBoxColumn1:ReadOnly = true.
+    /*  */
+    /* statuslblDataGridViewTextBoxColumn */
+    /*  */
+    this-object:statuslblDataGridViewTextBoxColumn:DataPropertyName = "status_lbl".
+    this-object:statuslblDataGridViewTextBoxColumn:HeaderText = "Статус".
+    this-object:statuslblDataGridViewTextBoxColumn:Name = "statuslblDataGridViewTextBoxColumn".
+    this-object:statuslblDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* idDataGridViewTextBoxColumn */
+    /*  */
+    this-object:idDataGridViewTextBoxColumn:DataPropertyName = "id".
+    this-object:idDataGridViewTextBoxColumn:HeaderText = "id".
+    this-object:idDataGridViewTextBoxColumn:Name = "idDataGridViewTextBoxColumn".
+    this-object:idDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* extcodeDataGridViewTextBoxColumn */
+    /*  */
+    this-object:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
+    this-object:extcodeDataGridViewTextBoxColumn:HeaderText = "Id во внеш.сист".
+    this-object:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
+    this-object:extcodeDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
     /* wListActions */
     /*  */
     this-object:ClientSize = new System.Drawing.Size(947, 427).
@@ -757,7 +758,8 @@ class ibs.th.ref.promo.wListActions inherits Form:
         добавть запись - assignItem()
       */
       bindAction:handle:query-open.
-      bindAction:Refresh().
+      bindAction:Refreshall().
+      bindAction:position = 100000 . // пока в конец списка
       return.
 
 	end method.
@@ -768,7 +770,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void toolSBtn_Edit_Click( input sender as System.Object, input e as System.EventArgs ):
-	    m-promo-trg:editOnePromo().
+	    m-promo-trg:editOnePromo(). 
 	   // bindAction:handle:query-open().
 	    bindAction:Refresh().
 		return.
@@ -794,8 +796,11 @@ class ibs.th.ref.promo.wListActions inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void toolSBtn_Star_Click( input sender as System.Object, input e as System.EventArgs ):
+	  define variable vPos as integer no-undo.
+	  vPos = bindAction:position.
 		m-promo-trg:changeRow(yes).
 		bindAction:Refreshall().
+		bindAction:position = vPos.
 		return.
 
 	end method.
@@ -818,9 +823,12 @@ class ibs.th.ref.promo.wListActions inherits Form:
     ------------------------------------------------------------------------------*/
     @VisualDesigner.
     method private void toolSBtn_Delete_Click( input sender as System.Object, input e as System.EventArgs ):
+        define variable vPos as integer no-undo.
+        vPos = bindAction:position.
         m-promo-trg:DelOnePromo().
         bindAction:handle:query-open().
         bindAction:Refreshall().
+        bindAction:position = vPos.
         return.
 
     end method.
@@ -920,8 +928,14 @@ class ibs.th.ref.promo.wListActions inherits Form:
 		IF   e:KeyCode = Keys:F3 AND e:Shift AND e:Alt 
          THEN
         DO:
-          MESSAGE "Тест F3  Shift Alt"
-            VIEW-AS ALERT-BOX.
+          message program-name( 1 ) skip( 1 )
+          vss-revision                  skip( 0 )
+          vss-author                    skip( 0 )
+          vss-date                      skip( 0 )
+          vss-workfile                  skip( 0 )
+          vss-archive                   skip( 1 )
+          vss-description               skip( 1 )
+  view-as alert-box title "Текущая программа".
         END.
 		RETURN.
 

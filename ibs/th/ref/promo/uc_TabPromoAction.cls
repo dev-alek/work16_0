@@ -633,7 +633,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                 DO:
                     ucMain7:INIT_PromoSet().
                     ucMain7:PublicEvent("showDiscontForSet", "").
-                    //ucMain7:PublicEvent("CritOneLable", "?#Скидка %").
+                    ucMain7:PublicEvent("CritOneLable", "?").
                     vLoadForm = yes.
                 END.
                 

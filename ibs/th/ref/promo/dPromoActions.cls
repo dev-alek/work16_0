@@ -90,9 +90,13 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
             case p-mode:
             when {&add-def} then do:
                 Disable_Field(false).
+                this-object:text = if m-promo-trg:ModeCopy
+                                   then "Копирование промоакции"
+                                   else "Создание промоакции".
             end .
             when {&lookup} then do:
                 Disable_Field(true).
+                this-object:text = "Просмотр промоакции".
             end.
             when {&update} then do:
                 if    m-promo-trg:ModeChangeStatus
@@ -103,6 +107,12 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
                 end.
                 else  
                    Disable_Field(false).
+                this-object:text =  if m-promo-trg:ModeChangeStatus
+                                   then "Смена статуса промо акции"
+                                   else if m-promo-trg:ModeEarlyTermination
+                                   then "Досрочное завершение промоакции"
+                                   
+                                   else "Редактироване промоакции".   
             end.
             otherwise do:
                 message "error" view-as alert-box.

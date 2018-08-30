@@ -37,7 +37,7 @@ CLASS ibs.th.ref.promo.uc_Mess INHERITS UserControl:
     DEFINE PRIVATE VARIABLE tableLayoutPanel1 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
 
-    {ibs/th/ref/promo/promo_trg_heder.i &NotLocalEvent = yes}  
+    {ibs/th/ref/promo/promo_trg_heder.i &NotLocalEvent = yes &NotSetBind = yes}  
     
     method Public VOID SetBind( ):
         bindPromoMess:Handle = m-promo-trg:getQuery("promoMes").
