@@ -4493,6 +4493,20 @@ procedure m-cash-rate-exe :
 
 END PROCEDURE.
 
+procedure promosend :
+define input parameter p-pos-type as character no-undo .
+define input parameter p-action as character no-undo .
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/promosend.p":U
+      , input (p-pos-type + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + p-action)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка промоакций на кассы &1", p-pos-type, {&cd-type-IBm-XML})
+  ) no-error.
+end procedure. /* run-2cashpay */
+
 procedure run-2cashpay :
 define input parameter p-pos-type as character no-undo .
 define input parameter p-action as character no-undo .
@@ -4520,6 +4534,38 @@ define input parameter p-action as character no-undo .   */
       , input substitute("Отсылка данных по маскам серийных МЦ на кассы ")
   ) no-error.
 end procedure. /* m-cash-wthser-exe */
+
+procedure m-promo-u-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run promosend in this-procedure ({&cd-type-IBm-XML}, 'U':U) .
+  end.
+
+end procedure. /* m-cash-pay-exe */
+
+procedure m-promo-d-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run promosend in this-procedure ({&cd-type-IBm-XML}, 'D':U) .
+  end.
+
+end procedure. /* m-cash-pay-exe */
+
+procedure m-gds-ef-exe :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run ref/promo.p ( input parparentproc, input false, output v-rid-list) no-error.
+  end.
+
+end procedure. /* m_gds-ef-exe */
+
 
 procedure m-cash-wthser-del-exe :
 /*define input parameter p-pos-type as character no-undo .
