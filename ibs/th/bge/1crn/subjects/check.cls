@@ -58,7 +58,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   &scop tag-item5     'chk-bonus-m':U
   &scop tag-section6  'chk-pays-r':U
   &scop tag-item6     'chk-pay-r':U
-
+  &scop tag-section7  'chk-promos':U
+  &scop tag-item7     'chk-promo':U
   constructor public check ():
   end constructor.
   
@@ -426,9 +427,11 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->9.9<"))                 ) . /* % скидки (Число) */
       
       /* обязательность 0-1 */
-      if buf_chk-discnt.promo-id > "" then
-      insw:write-data-element (  "promotion-code",  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
-
+      if buf_chk-discnt.promo-id > "" then do:
+        for first PromoAction where PromoAction.id =  int(buf_chk-discnt.promo-id) no-lock: 
+            insw:write-data-element (  "promotion-code", if PromoAction.ext-code > '' then PromoAction.ext-code else  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
+        end.
+      end.
       insw:end-element ({&tag-item3}) .
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section3}) .
     end . /* end_of for each buf_chk-discnt */
@@ -466,8 +469,22 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       insw:end-element ({&tag-item4}) .
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section4}) .
     end . /* end_of for each buf_chk-discnt */
+/* Выгружаем итоговую инфу по скидкам */
+        for each buf_chk-discnt no-lock
+       where buf_chk-discnt.doc-code    = p-buf_chk-doc.doc-code
+         and buf_chk-discnt.record-type = 5
+        
+    break by buf_chk-discnt.doc-code by buf_chk-discnt.promo-id :
+      if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section7}) .
+        insw:start-element ({&tag-item7}) .
+        for first PromoAction where PromoAction.id =  int(buf_chk-discnt.promo-id) no-lock: 
+            insw:write-data-element (  "promotion-code", if PromoAction.ext-code > '' then PromoAction.ext-code else  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
+        end.
+            insw:write-data-element (  "promotion-count",     left-trim(string(buf_chk-discnt.object-sum, "->>>>>>>>9.99"))   ) . /* Сумма начисленного бонуса (Число 15,2) */
 
-    
+       insw:end-element ({&tag-item7}) .
+      if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section7}) .
+    end . /* end_of for each buf_chk-discnt */
     /* section5 исключена */
 
 
