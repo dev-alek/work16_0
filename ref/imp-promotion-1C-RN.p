@@ -16,6 +16,8 @@
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 
+/* не используется с 24/VI-2018;
+   заменена на классы сущностей, работающие по таблицам PromotionSeries
 { cmp/trg-def.i }
 { cmp/str-glbl.i }
 { gbl/getcntxa.i }
@@ -1432,3 +1434,4 @@ procedure mainmenu_getcntxt :
   v-cntxt-db-num-obj = ub.clients.db-num .
   v-cntxt-is-admin =  ? .
 end procedure .
+*/

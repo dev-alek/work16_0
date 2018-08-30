@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Структура данных promotion:threshold в 1С
+Структура данных promotion:gifts:gd, promotion:threshold:gifts:gd в 1С
 
 Автор: Молотков Сергей
 Дата создания: 13/07/18
@@ -17,23 +17,15 @@ Creation date: 13/07/18
 block-level on error undo, throw.
 
 using Progress.Lang.*.
-using ibs.th.bge.1crn.subjects.subjects from propath.
 
-class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subjects.asubject: 
-  define property value_      as decimal    no-undo get. private set.
-  define property dscnt       as decimal    no-undo get. private set.
-  define property message_    as character  no-undo get. private set.
 
-  define property Gifts as subjects no-undo
-    get. 
-    private set.
+class ibs.th.bge.1crn.subjects.promotion_gift-gd inherits ibs.th.bge.1crn.subjects.asubject:
+   
+  define property gd-code as character  no-undo get. private set. // 1-1 Код товара
+  define property gd-qnty as decimal    no-undo get. private set. // 1-1 количество
   
-  define override property InitTag as character no-undo init "threshold"
+  define override property InitTag as character no-undo init "gd"
     get.
-    
-  constructor public promotion_threshold ():
-    InitListTag = "Gifts".
-  end constructor.
     
   &scoped-define attr-str      if inValue >= "" then inValue else ""
   &scoped-define attr-integer  if inValue >= "" then integer (inValue) else 0
@@ -41,9 +33,8 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
   &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "value"   then value_   = {&attr-dec} .
-      when "dscnt"   then dscnt    = {&attr-dec} .
-      when "message" then message_ = {&attr-str} .
+      when "gd-code" then gd-code = {&attr-str} .
+      when "gd-qnty" then gd-qnty = {&attr-dec} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -57,16 +48,11 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
     end catch .
   end method.
   
-  method override protected void SetPropProtected (SubsObj as subjects):
-    case SubsObj:InitTag:
-      when "Gifts" then Gifts = SubsObj.            
-    end case.
-  end method.
-  
   method override protected void CheckData ():
     def var v-str as char no-undo.
     assign
-      v-str = ",value" when value_ = ?
+      v-str = ",gd-code" when gd-code = ?
+      v-str = v-str + ",gd-qnty" when gd-qnty = ?
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
@@ -76,11 +62,9 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
       
   method override protected void ClearSub():
     assign
-      value_   = ?
-      dscnt    = ?
-      message_ = ?
+      gd-code = ?
+      gd-qnty = ?
     .
-    if valid-object(Gifts) then delete object Gifts .
   end method .   
 
 end class.
