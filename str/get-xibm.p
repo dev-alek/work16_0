@@ -2693,10 +2693,6 @@ define variable disc-gds-reason as int no-undo .
       ub.chk-discnt.doc-code = ub.chk-doc.doc-code
       ub.chk-discnt.record-type = if disc-mode_ = "C":U then 10 else 0
       ub.chk-discnt.discnt-id = (var-discnt-id + 1)
-      ub.chk-discnt.line-num = (if p-pos-type = {&cd-type-ibm-xml}
-                                then lnd-spl
-                                else (if available ub.chk-gds then ub.chk-gds.line-num else 0)
-                                )
       ub.chk-discnt.time-oper = v-time
       ub.chk-discnt.line-type = (if disc-mode_ = "I":U
                              then integer({&discnt-gds})
@@ -2748,6 +2744,20 @@ define variable disc-gds-reason as int no-undo .
       chk-discnt.promo-id = disc-promo-id_ 
       chk-discnt.templ-rl-root = disc-gds-reason
       .
+      
+      if ub.chk-discnt.line-type = integer({&discnt-sub-total}) then do:
+
+      ub.chk-discnt.line-num = (if p-pos-type = {&cd-type-ibm-xml}
+                                then lnd-spl - 1
+                                else (if available ub.chk-gds then ub.chk-gds.line-num else 0)
+                                ).
+      end.
+      else do:
+      ub.chk-discnt.line-num = (if p-pos-type = {&cd-type-ibm-xml}
+                                then lnd-spl
+                                else (if available ub.chk-gds then ub.chk-gds.line-num else 0)
+                                ).
+      end.                                  
       if chk-discnt.record-type <> 10 then netto-for-sub-d =  netto-for-sub-d - chk-discnt.discnt-value-abs
       .
       if available buf_chk-gds  and chk-discnt.record-type <> 10 then

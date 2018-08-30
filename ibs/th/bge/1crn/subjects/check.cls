@@ -48,7 +48,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     set.
 
   define private variable libFindtank as class ibs.th.str.findtank no-undo . /* обёртка для findtank.i */
-
+        
   &scop tag-shift     'shift':U
   &scop tag-checks    'checks':U
 
@@ -223,6 +223,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_chk-pay      for ub.chk-pay .
     define buffer buf_chk-pay-attr for ub.chk-pay-attr .
     define buffer buf_chk-discnt   for ub.chk-discnt .
+    define buffer bf_chk-discnt    for ub.chk-discnt .
     define buffer buf_chk-gds-pay  for ub.chk-gds-pay .
     define variable v-is-petrolium as logical no-undo . /* true = топливо */
     define variable v-is-pieces    as logical no-undo .
@@ -379,7 +380,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         
         
         /* далее обязательность 0-1 */
-        
+
         /* chk-gds.discnt - скидка относительно цены; чтобы получить скидку по строке - её надо умножать на количество */
         if (buf_chk-gds.discnt > 0) or (buf_chk-gds.discnt < 0) then
         insw:write-data-element (  "sum-discnt",
@@ -456,7 +457,6 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       if last-of(buf_chk-pay.doc-code) then insw:end-element ({&tag-section2}) .
     end . /* end_of for each buf_chk-pay */
 
-
     /* section3 обязательность 0-1 */
     for each buf_chk-discnt no-lock
        where buf_chk-discnt.doc-code = p-buf_chk-doc.doc-code
@@ -465,23 +465,51 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                buf_chk-discnt.record-type = 2 )
     break by buf_chk-discnt.doc-code :
       if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section3}) .
-      insw:start-element ({&tag-item3}) .
       
-      insw:write-data-element (  "discnt-num",       string(buf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
-      insw:write-data-element (  "line-num",         string(buf_chk-discnt.line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
-      insw:write-data-element (  "discnt-type",      string(buf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
-      insw:write-data-element (  "discntValueAbs",   left-trim(string(buf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
-      insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->9.9<"))                 ) . /* % скидки (Число) */
-      
-      /* обязательность 0-1 */
-      if buf_chk-discnt.promo-id > "" then do:
-        find first PromoAction where PromoAction.id =  int(buf_chk-discnt.promo-id) no-lock no-error.
+      /*если промоакции и скидка на подитог, необходимо размазать скидку на все товары*/
+      if buf_chk-discnt.promo-id > "" and buf_chk-discnt.line-type = integer({&discnt-sub-total}) then 
+      do:
+        for each bf_chk-discnt no-lock
+          where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and bf_chk-discnt.record-type = 1 break by bf_chk-discnt.object-line-num:
+          insw:start-element ({&tag-item3}) .
+          insw:write-data-element (  "discnt-num",       string(bf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
+          insw:write-data-element (  "line-num",         string(bf_chk-discnt.object-line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
+          insw:write-data-element (  "discnt-type",      string(bf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
+          insw:write-data-element (  "discntValueAbs",   left-trim(string(bf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
+          insw:write-data-element (  "discntValuePcnt",  left-trim(string(bf_chk-discnt.discnt-value-pcnt, "->9.9<"))                 ) . /* % скидки (Число) */
+          /* обязательность 0-1 */
+          if bf_chk-discnt.promo-id > "" then 
+          do:
+            find first PromoAction where PromoAction.id =  int(bf_chk-discnt.promo-id) no-lock no-error.
          
-        insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
+            insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  bf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
         
+          end.
+          if bf_chk-discnt.templ-rl-root > 0 then  insw:write-data-element (  "discntGdsReason",       string(bf_chk-discnt.templ-rl-root)          ) .
+          insw:end-element ({&tag-item3}) .
+        
+        end.
       end.
-      if buf_chk-discnt.templ-rl-root > 0 then  insw:write-data-element (  "discntGdsReason",       string(buf_chk-discnt.templ-rl-root)          ) .
-      insw:end-element ({&tag-item3}) .
+      else 
+      do:  
+        insw:start-element ({&tag-item3}) .
+        insw:write-data-element (  "discnt-num",       string(buf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
+        insw:write-data-element (  "line-num",         string(buf_chk-discnt.line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
+        insw:write-data-element (  "discnt-type",      string(buf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
+        insw:write-data-element (  "discntValueAbs",   left-trim(string(buf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
+        insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->9.9<"))                 ) . /* % скидки (Число) */
+        /* обязательность 0-1 */
+        if buf_chk-discnt.promo-id > "" then 
+        do:
+          find first PromoAction where PromoAction.id =  int(buf_chk-discnt.promo-id) no-lock no-error.
+         
+          insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
+        
+        end.
+        if buf_chk-discnt.templ-rl-root > 0 then  insw:write-data-element (  "discntGdsReason",       string(buf_chk-discnt.templ-rl-root)          ) .
+        insw:end-element ({&tag-item3}) .
+      
+      end.
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section3}) .
     end . /* end_of for each buf_chk-discnt */
 
