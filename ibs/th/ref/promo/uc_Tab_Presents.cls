@@ -16,6 +16,7 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 CLASS ibs.th.ref.promo.uc_Tab_Presents INHERITS UserControl: 
     
+    define private variable bindPromoActionOne as Progress.Data.BindingSource no-undo.
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE panel_SelectConditionItems AS System.Windows.Forms.Panel NO-UNDO.
     DEFINE PRIVATE VARIABLE tableLayoutPanel2 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
@@ -23,14 +24,33 @@ CLASS ibs.th.ref.promo.uc_Tab_Presents INHERITS UserControl:
     DEFINE PRIVATE VARIABLE radioButton2 AS System.Windows.Forms.RadioButton NO-UNDO.
     DEFINE PRIVATE VARIABLE radioButton1 AS System.Windows.Forms.RadioButton NO-UNDO.
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
-    DEFINE PRIVATE VARIABLE textBox1 AS System.Windows.Forms.TextBox NO-UNDO.
-    DEFINE PRIVATE VARIABLE ucSelect_Present1 AS ibs.th.ref.promo.ucSelect_Present NO-UNDO.
+    define private variable typeCond as System.Windows.Forms.TextBox no-undo.
+    {ibs/th/ref/promo/promoType.def ttTypeCond} 
 
+    define private variable m-promo-trg as class ibs.th.ref.promo.promo_trg no-undo.
+    define private variable m-promo-type as class ibs.th.ref.promo.promoType no-undo.
+        
+    method Public VOID SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
+        m-promo-trg = v-promo-trg.
+        
+        SetBind().
+    end.
+    
+    method Public VOID SetBind( ):
+        typeCond:visible = true.
+        bindPromoActionOne:handle = m-promo-trg:getQuery("promoActionOne4").
+        Show_Panet_SelectConditonItem(1).
+        typeCond:visible = false.
+     end.
+    
         
     CONSTRUCTOR PUBLIC uc_Tab_Presents (  ):
         
         
         SUPER().
+        m-promo-type = new ibs.th.ref.promo.promoType().
+        m-promo-type:TypeCondRefresh().
+        m-promo-type:typeTable("TypeCond", output table ttTypeCond).
         InitializeComponent().
         THIS-OBJECT:ComponentsCollection:ADD(THIS-OBJECT:components).
         CATCH e AS Progress.Lang.Error:
@@ -47,134 +67,156 @@ CLASS ibs.th.ref.promo.uc_Tab_Presents INHERITS UserControl:
         Visual Designer to avoid any incompatible modifications.
         
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
-        THIS-OBJECT:tableLayoutPanel1 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:panel_SelectConditionItems = NEW System.Windows.Forms.Panel().
-        THIS-OBJECT:ucSelect_Present1 = NEW ibs.th.ref.promo.ucSelect_Present().
-        THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:tableLayoutPanel2 = NEW System.Windows.Forms.TableLayoutPanel().
-        THIS-OBJECT:radioButton2 = NEW System.Windows.Forms.RadioButton().
-        THIS-OBJECT:radioButton1 = NEW System.Windows.Forms.RadioButton().
-        THIS-OBJECT:textBox1 = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:tableLayoutPanel1:SuspendLayout().
-        THIS-OBJECT:panel_SelectConditionItems:SuspendLayout().
-        THIS-OBJECT:tableLayoutPanel2:SuspendLayout().
-        THIS-OBJECT:SuspendLayout().
+        this-object:components = new System.ComponentModel.Container().
+        @VisualDesigner.FormMember (NeedsInitialize="true").
+        define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+        tableDesc1 = new Progress.Data.TableDesc("tt-promoaction-one").
+        this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
+        this-object:panel_SelectConditionItems = new System.Windows.Forms.Panel().
+        this-object:ucSelect_Present1 = new ibs.th.ref.promo.ucSelect_Present().
+        this-object:label1 = new System.Windows.Forms.Label().
+        this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
+        this-object:radioButton2 = new System.Windows.Forms.RadioButton().
+        this-object:radioButton1 = new System.Windows.Forms.RadioButton().
+        this-object:typeCond = new System.Windows.Forms.TextBox().
+        this-object:bindPromoActionOne = new Progress.Data.BindingSource(this-object:components).
+        this-object:tableLayoutPanel1:SuspendLayout().
+        this-object:panel_SelectConditionItems:SuspendLayout().
+        this-object:tableLayoutPanel2:SuspendLayout().
+        cast(this-object:bindPromoActionOne, System.ComponentModel.ISupportInitialize):BeginInit().
+        this-object:SuspendLayout().
         /*  */
         /* tableLayoutPanel1 */
         /*  */
-        THIS-OBJECT:tableLayoutPanel1:ColumnCount = 1.
-        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:panel_SelectConditionItems, 0, 2).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:label1, 0, 0).
-        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:tableLayoutPanel2, 0, 1).
-        THIS-OBJECT:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:tableLayoutPanel1:Location = NEW System.Drawing.Point(0, 0).
-        THIS-OBJECT:tableLayoutPanel1:Name = "tableLayoutPanel1".
-        THIS-OBJECT:tableLayoutPanel1:RowCount = 3.
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
-        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel1:Size = NEW System.Drawing.Size(593, 483).
-        THIS-OBJECT:tableLayoutPanel1:TabIndex = 0.
+        this-object:tableLayoutPanel1:ColumnCount = 1.
+        this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:panel_SelectConditionItems, 0, 2).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:label1, 0, 0).
+        this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel2, 0, 1).
+        this-object:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:tableLayoutPanel1:Location = new System.Drawing.Point(0, 0).
+        this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
+        this-object:tableLayoutPanel1:RowCount = 3.
+        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+        this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        this-object:tableLayoutPanel1:Size = new System.Drawing.Size(593, 483).
+        this-object:tableLayoutPanel1:TabIndex = 0.
         /*  */
         /* panel_SelectConditionItems */
         /*  */
-        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(THIS-OBJECT:ucSelect_Present1).
-        THIS-OBJECT:panel_SelectConditionItems:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:panel_SelectConditionItems:Location = NEW System.Drawing.Point(0, 60).
-        THIS-OBJECT:panel_SelectConditionItems:Margin = NEW System.Windows.Forms.Padding(0).
-        THIS-OBJECT:panel_SelectConditionItems:Name = "panel_SelectConditionItems".
-        THIS-OBJECT:panel_SelectConditionItems:Size = NEW System.Drawing.Size(593, 423).
-        THIS-OBJECT:panel_SelectConditionItems:TabIndex = 4.
+        this-object:panel_SelectConditionItems:Controls:Add(this-object:ucSelect_Present1).
+        this-object:panel_SelectConditionItems:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:panel_SelectConditionItems:Location = new System.Drawing.Point(0, 60).
+        this-object:panel_SelectConditionItems:Margin = new System.Windows.Forms.Padding(0).
+        this-object:panel_SelectConditionItems:Name = "panel_SelectConditionItems".
+        this-object:panel_SelectConditionItems:Size = new System.Drawing.Size(593, 423).
+        this-object:panel_SelectConditionItems:TabIndex = 4.
         /*  */
         /* ucSelect_Present1 */
         /*  */
-        THIS-OBJECT:ucSelect_Present1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:ucSelect_Present1:Location = NEW System.Drawing.Point(0, 0).
-        THIS-OBJECT:ucSelect_Present1:Name = "ucSelect_Present1".
-        THIS-OBJECT:ucSelect_Present1:Size = NEW System.Drawing.Size(593, 423).
-        THIS-OBJECT:ucSelect_Present1:TabIndex = 0.
+        this-object:ucSelect_Present1:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:ucSelect_Present1:Location = new System.Drawing.Point(0, 0).
+        this-object:ucSelect_Present1:Name = "ucSelect_Present1".
+        this-object:ucSelect_Present1:Size = new System.Drawing.Size(593, 423).
+        this-object:ucSelect_Present1:TabIndex = 0.
         /*  */
         /* label1 */
         /*  */
-        THIS-OBJECT:label1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:label1:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(12), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        THIS-OBJECT:label1:Location = NEW System.Drawing.Point(3, 3).
-        THIS-OBJECT:label1:Margin = NEW System.Windows.Forms.Padding(3).
-        THIS-OBJECT:label1:Name = "label1".
-        THIS-OBJECT:label1:Size = NEW System.Drawing.Size(587, 24).
-        THIS-OBJECT:label1:TabIndex = 1.
-        THIS-OBJECT:label1:Text = "Выбор подарков".
-        THIS-OBJECT:label1:UseCompatibleTextRendering = true.
+        this-object:label1:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:label1:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(12), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        this-object:label1:Location = new System.Drawing.Point(3, 3).
+        this-object:label1:Margin = new System.Windows.Forms.Padding(3).
+        this-object:label1:Name = "label1".
+        this-object:label1:Size = new System.Drawing.Size(587, 24).
+        this-object:label1:TabIndex = 1.
+        this-object:label1:Text = "Выбор подарков".
+        this-object:label1:UseCompatibleTextRendering = true.
         /*  */
         /* tableLayoutPanel2 */
         /*  */
-        THIS-OBJECT:tableLayoutPanel2:ColumnCount = 3.
-        THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(140))).
-        THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(140))).
-        THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:radioButton2, 1, 0).
-        THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:radioButton1, 0, 0).
-        THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:textBox1, 2, 0).
-        THIS-OBJECT:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:tableLayoutPanel2:Location = NEW System.Drawing.Point(0, 30).
-        THIS-OBJECT:tableLayoutPanel2:Margin = NEW System.Windows.Forms.Padding(0).
-        THIS-OBJECT:tableLayoutPanel2:Name = "tableLayoutPanel2".
-        THIS-OBJECT:tableLayoutPanel2:RowCount = 1.
-        THIS-OBJECT:tableLayoutPanel2:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-        THIS-OBJECT:tableLayoutPanel2:Size = NEW System.Drawing.Size(593, 30).
-        THIS-OBJECT:tableLayoutPanel2:TabIndex = 2.
+        this-object:tableLayoutPanel2:ColumnCount = 3.
+        this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(140))).
+        this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(140))).
+        this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        this-object:tableLayoutPanel2:Controls:Add(this-object:radioButton2, 1, 0).
+        this-object:tableLayoutPanel2:Controls:Add(this-object:radioButton1, 0, 0).
+        this-object:tableLayoutPanel2:Controls:Add(this-object:typeCond, 2, 0).
+        this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:tableLayoutPanel2:Location = new System.Drawing.Point(0, 30).
+        this-object:tableLayoutPanel2:Margin = new System.Windows.Forms.Padding(0).
+        this-object:tableLayoutPanel2:Name = "tableLayoutPanel2".
+        this-object:tableLayoutPanel2:RowCount = 1.
+        this-object:tableLayoutPanel2:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        this-object:tableLayoutPanel2:Size = new System.Drawing.Size(593, 30).
+        this-object:tableLayoutPanel2:TabIndex = 2.
         /*  */
         /* radioButton2 */
         /*  */
-        THIS-OBJECT:radioButton2:Appearance = System.Windows.Forms.Appearance:Button.
-        THIS-OBJECT:radioButton2:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:radioButton2:Location = NEW System.Drawing.Point(143, 3).
-        THIS-OBJECT:radioButton2:Name = "radioButton2".
-        THIS-OBJECT:radioButton2:Size = NEW System.Drawing.Size(134, 24).
-        THIS-OBJECT:radioButton2:TabIndex = 1.
-        THIS-OBJECT:radioButton2:Text = "Сложные".
-        THIS-OBJECT:radioButton2:UseCompatibleTextRendering = true.
-        THIS-OBJECT:radioButton2:UseVisualStyleBackColor = true.
+        this-object:radioButton2:Appearance = System.Windows.Forms.Appearance:Button.
+        this-object:radioButton2:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:radioButton2:Location = new System.Drawing.Point(143, 3).
+        this-object:radioButton2:Name = "radioButton2".
+        this-object:radioButton2:Size = new System.Drawing.Size(134, 24).
+        this-object:radioButton2:TabIndex = 1.
+        this-object:radioButton2:Text = "Сложные".
+        this-object:radioButton2:UseCompatibleTextRendering = true.
+        this-object:radioButton2:UseVisualStyleBackColor = true.
         /*  */
         /* radioButton1 */
         /*  */
-        THIS-OBJECT:radioButton1:Appearance = System.Windows.Forms.Appearance:Button.
-        THIS-OBJECT:radioButton1:Checked = true.
-        THIS-OBJECT:radioButton1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:radioButton1:ForeColor = System.Drawing.Color:Green.
-        THIS-OBJECT:radioButton1:Location = NEW System.Drawing.Point(3, 3).
-        THIS-OBJECT:radioButton1:Name = "radioButton1".
-        THIS-OBJECT:radioButton1:Size = NEW System.Drawing.Size(134, 24).
-        THIS-OBJECT:radioButton1:TabIndex = 0.
-        THIS-OBJECT:radioButton1:TabStop = true.
-        THIS-OBJECT:radioButton1:Text = "Порстые ".
-        THIS-OBJECT:radioButton1:UseCompatibleTextRendering = true.
-        THIS-OBJECT:radioButton1:UseVisualStyleBackColor = true.
-        THIS-OBJECT:radioButton1:CheckedChanged:Subscribe(THIS-OBJECT:radioButton1_CheckedChanged).
+        this-object:radioButton1:Appearance = System.Windows.Forms.Appearance:Button.
+        this-object:radioButton1:Checked = true.
+        this-object:radioButton1:Dock = System.Windows.Forms.DockStyle:Fill.
+        this-object:radioButton1:ForeColor = System.Drawing.Color:Green.
+        this-object:radioButton1:Location = new System.Drawing.Point(3, 3).
+        this-object:radioButton1:Name = "radioButton1".
+        this-object:radioButton1:Size = new System.Drawing.Size(134, 24).
+        this-object:radioButton1:TabIndex = 0.
+        this-object:radioButton1:TabStop = true.
+        this-object:radioButton1:Text = "Простые ".
+        this-object:radioButton1:UseCompatibleTextRendering = true.
+        this-object:radioButton1:UseVisualStyleBackColor = true.
+        this-object:radioButton1:CheckedChanged:Subscribe(this-object:radioButton1_CheckedChanged).
         /*  */
-        /* textBox1 */
+        /* typeCond */
         /*  */
-        THIS-OBJECT:textBox1:Location = NEW System.Drawing.Point(283, 3).
-        THIS-OBJECT:textBox1:Name = "textBox1".
-        THIS-OBJECT:textBox1:Size = NEW System.Drawing.Size(100, 20).
-        THIS-OBJECT:textBox1:TabIndex = 2.
-        THIS-OBJECT:textBox1:Visible = false.
+        this-object:typeCond:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindPromoActionOne, "typecondlbl", true)).
+        this-object:typeCond:Location = new System.Drawing.Point(283, 3).
+        this-object:typeCond:Name = "typeCond".
+        this-object:typeCond:Size = new System.Drawing.Size(100, 20).
+        this-object:typeCond:TabIndex = 2.
+        /*  */
+        /* bindPromoActionOne */
+        /*  */
+        this-object:bindPromoActionOne:MaxDataGuess = 0.
+        this-object:bindPromoActionOne:NoLOBs = false.
+        this-object:bindPromoActionOne:Position = 0.
+        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+        define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
+        arrayvar0 = new "Progress.Data.TableDesc[]"(0).
+        tableDesc1:ChildTables = arrayvar0.
+        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+        define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 1 no-undo.
+        arrayvar1[1] = new Progress.Data.ColumnPropDesc("typecondlbl", "Вид условия", Progress.Data.DataType:CHARACTER).
+        tableDesc1:Columns = arrayvar1.
+        this-object:bindPromoActionOne:TableSchema = tableDesc1.
         /*  */
         /* uc_Tab_Presents */
         /*  */
-        THIS-OBJECT:AutoScaleDimensions = NEW System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:tableLayoutPanel1).
-        THIS-OBJECT:Name = "uc_Tab_Presents".
-        THIS-OBJECT:Size = NEW System.Drawing.Size(593, 483).
-        THIS-OBJECT:tableLayoutPanel1:ResumeLayout(false).
-        THIS-OBJECT:panel_SelectConditionItems:ResumeLayout(false).
-        THIS-OBJECT:tableLayoutPanel2:ResumeLayout(false).
-        THIS-OBJECT:tableLayoutPanel2:PerformLayout().
-        THIS-OBJECT:ResumeLayout(false).
-        CATCH e AS Progress.Lang.Error:
-            UNDO, THROW e.
-        END CATCH.
+        this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
+        this-object:Controls:Add(this-object:tableLayoutPanel1).
+        this-object:Name = "uc_Tab_Presents".
+        this-object:Size = new System.Drawing.Size(593, 483).
+        this-object:tableLayoutPanel1:ResumeLayout(false).
+        this-object:panel_SelectConditionItems:ResumeLayout(false).
+        this-object:tableLayoutPanel2:ResumeLayout(false).
+        this-object:tableLayoutPanel2:PerformLayout().
+        cast(this-object:bindPromoActionOne, System.ComponentModel.ISupportInitialize):EndInit().
+        this-object:ResumeLayout(false).
+        catch e as Progress.Lang.Error:
+            undo, throw e.
+        end catch.
     END METHOD.
 
 
@@ -184,7 +226,7 @@ CLASS ibs.th.ref.promo.uc_Tab_Presents INHERITS UserControl:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	METHOD PRIVATE VOID radioButton1_CheckedChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-		THIS-OBJECT:panel_SelectConditionItems:Controls:Clear().
+		
         if radioButton1:Checked then do:
            radioButton1:ForeColor  = System.Drawing.Color:Green.
            radioButton2:ForeColor  = System.Drawing.Color:Black.
@@ -198,33 +240,72 @@ CLASS ibs.th.ref.promo.uc_Tab_Presents INHERITS UserControl:
 		RETURN.
 
 	END METHOD.
-	
+	DEFINE PRIVATE VARIABLE ucSelect_Present1 AS ibs.th.ref.promo.ucSelect_Present NO-UNDO.
+	DEFINE VARIABLE ucMain7   AS ibs.th.ref.promo.ucSelect_Items7   NO-UNDO.
 	DEFINE VARIABLE ucMain7_1   AS ibs.th.ref.promo.ucSelect_Items7_1   NO-UNDO.
+	DEFINE VARIABLE ucMain7_2   AS ibs.th.ref.promo.ucSelect_Items7_2   NO-UNDO.
 	
-	
-	METHOD PRIVATE VOID Show_Panet_SelectConditonItem( INPUT SelectItem AS int):
+	METHOD public VOID Show_Panet_SelectConditonItem():
+	    Show_Panet_SelectConditonItem(if radioButton1:checked then 1 else 2). 
+	end.
+	METHOD private VOID Show_Panet_SelectConditonItem( INPUT SelectItem AS int):
+	    THIS-OBJECT:panel_SelectConditionItems:Controls:Clear().
+	    clenObject().
+	     typeCond:visible = true.
+	    
 	    CASE SelectItem:
 	    	    WHEN 1 then do:
-	                ucSelect_Present1 = NEW ibs.th.ref.promo.ucSelect_Present().
+	    	        ucSelect_Present1 = NEW ibs.th.ref.promo.ucSelect_Present().
+	                ucSelect_Present1:SetPromoTrg(m-promo-trg).
                     ucSelect_Present1:Dock = System.Windows.Forms.DockStyle:Fill.
                     THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucSelect_Present1).
                 END.
                 
                 WHEN 2 then do:
-                        ucMain7_1 = NEW ibs.th.ref.promo.ucSelect_Items7_1().
-                        
-                        ucMain7_1:Dock = System.Windows.Forms.DockStyle:Fill.
-                        THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7_1).
+                    find first tttypeCond where tttypeCond.item eq typecond:Text no-lock no-error.
+                    if available tttypeCond 
+                    then do:
+                        if tttypeCond.code = 1 // "Количество по строке"  
+                        then do:
+                            ucMain7 = NEW ibs.th.ref.promo.ucSelect_Items7().
+                            ucMain7:SetPromoTrg(m-promo-trg).
+                            ucMain7:Dock = System.Windows.Forms.DockStyle:Fill.
+                            THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7).
+                        end.
+                        else if tttypeCond.code = 2 // "Сумма по строке"   
+                        then do:
+                            ucMain7_1 = NEW ibs.th.ref.promo.ucSelect_Items7_1().
+                            ucMain7_1:SetPromoTrg(m-promo-trg).
+                            ucMain7_1:Dock = System.Windows.Forms.DockStyle:Fill.
+                            THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7_1).
+                        end.
+                        else if tttypeCond.code = 3 // "Итог чека"  
+                        then do:
+                            ucMain7_2 = NEW ibs.th.ref.promo.ucSelect_Items7_2().
+                            ucMain7_2:SetPromoTrg(m-promo-trg).
+                            ucMain7_2:Dock = System.Windows.Forms.DockStyle:Fill.
+                            THIS-OBJECT:panel_SelectConditionItems:Controls:Add(ucMain7_2).
+                        end.
+                    end.
                 END.
                 
          END.
+         typeCond:visible = false.
 	   RETURN.
 
     END METHOD.
 
+    METHOD public void clenObject():
+        if valid-object(ucSelect_Present1)  then delete object ucSelect_Present1.
+        if valid-object(ucMain7)          then delete object ucMain7.
+        if valid-object(ucMain7_1)          then delete object ucMain7_1.
+        if valid-object(ucMain7_2)          then delete object ucMain7_2.
+    end.
 
     DESTRUCTOR PUBLIC uc_Tab_Presents ( ):
-
+        bindPromoActionOne:Dispose().
+        clenObject().
+        
     END DESTRUCTOR.
 
 END CLASS.

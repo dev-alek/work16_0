@@ -32,7 +32,7 @@ define output parameter oSubs   as class ibs.th.ref.promo.promoActionSubs no-und
   //iChange = not iChange.
   v-listact-brw:parparentproc = parparentproc.
   v-listact-brw:Visual_Buttons(iChange). 
-  wait-for System.Windows.Forms.Application:Run ( v-listact-brw ) .
+  wait-for  v-listact-brw:ShowDialog() .
   if iChange 
   then 
      oSubs = v-listact-brw:oPromoActionSubs.

@@ -93,7 +93,7 @@ CLASS ibs.th.ref.promo.uc_TabBase INHERITS UserControl:
         for each ttStatus:
             comboBox1:Items:Add(ttStatus.item).
         end. 
-        
+        delete object v-promo-type.
     end.    
     METHOD PRIVATE VOID InitializeComponent(  ):
         

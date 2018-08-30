@@ -20,6 +20,8 @@ USING Progress.Windows.UserControl.
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl: 
+    define private variable gdscodeDataGridViewTextBoxColumn1 as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+    define private variable gdscodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
   /* --- для cmp/vssrevis.i --- */
     define variable vss-revision       as character no-undo init "$Revision$":U .
     define variable vss-author         as character no-undo init "$Author$":U .
@@ -59,16 +61,17 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
     define private variable m-promo-trg as class ibs.th.ref.promo.promo_trg no-undo.
     
     
+
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
-	method private void dataGridView1_CellContentClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
-		bindPromoGift:dispose().
-                bindPromoGift:handle      = m-promo-trg:getQuery("PromoGiftForCrit",yes).
-		bindPromoGift:RefreshAll().
-		return.
+	method private void dataGridView1_CellMouseClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellMouseEventArgs ):
+		
+		bindPromoGift:handle      = m-promo-trg:getQuery("PromoGiftForCrit",yes).
+        bindPromoGift:RefreshAll().
+        return.
 
 	end method.
 
@@ -78,9 +81,9 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
     end.
     
     method Public VOID SetBind( ):
-         bindpromogoodsCrit:handle = m-promo-trg:getQuery("PromoGoodsCrit").
-         bindpromoCrit:handle      = m-promo-trg:getQuery("PromoCriterion").
-         bindPromoGift:handle      = m-promo-trg:getQuery("PromoGiftForCrit").
+         bindpromogoodsCrit:handle = m-promo-trg:getQuery("PromoGoodsAppl",yes).
+         bindpromoCrit:handle      = m-promo-trg:getQuery("PromoCriterion",yes).
+         bindPromoGift:handle      = m-promo-trg:getQuery("PromoGiftForCrit",yes).
 
        // bindPromoActionOne:handle = m-promo-trg:getQuery("promoActionOne2").
       /*  message valid-object(bindPromoActionOne:handle)
@@ -121,9 +124,11 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         tableDesc3 = new Progress.Data.TableDesc("tt-PromoCriterion").
         this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
         this-object:dataGridView3 = new System.Windows.Forms.DataGridView().
+        this-object:gdscodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
         this-object:gdsNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
         this-object:bindpromogoodsCrit = new Progress.Data.BindingSource(this-object:components).
         this-object:dataGridView2 = new System.Windows.Forms.DataGridView().
+        this-object:gdscodeDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
         this-object:gdsNameDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
         this-object:qntyDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
         this-object:bindPromoGift = new Progress.Data.BindingSource(this-object:components).
@@ -189,8 +194,9 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         this-object:dataGridView3:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
         this-object:dataGridView3:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 1 no-undo.
-        arrayvar0[1] = this-object:gdsNameDataGridViewTextBoxColumn.
+        define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 2 no-undo.
+        arrayvar0[1] = this-object:gdscodeDataGridViewTextBoxColumn.
+        arrayvar0[2] = this-object:gdsNameDataGridViewTextBoxColumn.
         this-object:dataGridView3:Columns:AddRange(arrayvar0).
         this-object:dataGridView3:DataSource = this-object:bindpromogoodsCrit.
         this-object:dataGridView3:Dock = System.Windows.Forms.DockStyle:Fill.
@@ -200,9 +206,18 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         this-object:dataGridView3:Size = new System.Drawing.Size(284, 253).
         this-object:dataGridView3:TabIndex = 8.
         /*  */
+        /* gdscodeDataGridViewTextBoxColumn */
+        /*  */
+        this-object:gdscodeDataGridViewTextBoxColumn:DataPropertyName = "gds-code".
+        this-object:gdscodeDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(55.8375626).
+        this-object:gdscodeDataGridViewTextBoxColumn:HeaderText = "Код товара".
+        this-object:gdscodeDataGridViewTextBoxColumn:Name = "gdscodeDataGridViewTextBoxColumn".
+        this-object:gdscodeDataGridViewTextBoxColumn:ReadOnly = true.
+        /*  */
         /* gdsNameDataGridViewTextBoxColumn */
         /*  */
         this-object:gdsNameDataGridViewTextBoxColumn:DataPropertyName = "gdsName".
+        this-object:gdsNameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(144.1624451).
         this-object:gdsNameDataGridViewTextBoxColumn:HeaderText = "Номенклатура".
         this-object:gdsNameDataGridViewTextBoxColumn:Name = "gdsNameDataGridViewTextBoxColumn".
         this-object:gdsNameDataGridViewTextBoxColumn:ReadOnly = true.
@@ -217,8 +232,9 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         arrayvar1 = new "Progress.Data.TableDesc[]"(0).
         tableDesc1:ChildTables = arrayvar1.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 1 no-undo.
+        define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 2 no-undo.
         arrayvar2[1] = new Progress.Data.ColumnPropDesc("gdsName", "", Progress.Data.DataType:CHARACTER).
+        arrayvar2[2] = new Progress.Data.ColumnPropDesc("gds-code", "gds-code", Progress.Data.DataType:INTEGER).
         tableDesc1:Columns = arrayvar2.
         this-object:bindpromogoodsCrit:TableSchema = tableDesc1.
         /*  */
@@ -230,9 +246,10 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         this-object:dataGridView2:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
         this-object:dataGridView2:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        define variable arrayvar3 as System.Windows.Forms.DataGridViewColumn extent 2 no-undo.
-        arrayvar3[1] = this-object:gdsNameDataGridViewTextBoxColumn1.
-        arrayvar3[2] = this-object:qntyDataGridViewTextBoxColumn.
+        define variable arrayvar3 as System.Windows.Forms.DataGridViewColumn extent 3 no-undo.
+        arrayvar3[1] = this-object:gdscodeDataGridViewTextBoxColumn1.
+        arrayvar3[2] = this-object:gdsNameDataGridViewTextBoxColumn1.
+        arrayvar3[3] = this-object:qntyDataGridViewTextBoxColumn.
         this-object:dataGridView2:Columns:AddRange(arrayvar3).
         this-object:dataGridView2:DataSource = this-object:bindPromoGift.
         this-object:dataGridView2:Dock = System.Windows.Forms.DockStyle:Fill.
@@ -241,6 +258,13 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         this-object:dataGridView2:ReadOnly = true.
         this-object:dataGridView2:Size = new System.Drawing.Size(285, 253).
         this-object:dataGridView2:TabIndex = 3.
+        /*  */
+        /* gdscodeDataGridViewTextBoxColumn1 */
+        /*  */
+        this-object:gdscodeDataGridViewTextBoxColumn1:DataPropertyName = "gds-code".
+        this-object:gdscodeDataGridViewTextBoxColumn1:HeaderText = "Код товара".
+        this-object:gdscodeDataGridViewTextBoxColumn1:Name = "gdscodeDataGridViewTextBoxColumn1".
+        this-object:gdscodeDataGridViewTextBoxColumn1:ReadOnly = true.
         /*  */
         /* gdsNameDataGridViewTextBoxColumn1 */
         /*  */
@@ -266,9 +290,10 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         arrayvar4 = new "Progress.Data.TableDesc[]"(0).
         tableDesc2:ChildTables = arrayvar4.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        define variable arrayvar5 as Progress.Data.ColumnPropDesc extent 2 no-undo.
+        define variable arrayvar5 as Progress.Data.ColumnPropDesc extent 3 no-undo.
         arrayvar5[1] = new Progress.Data.ColumnPropDesc("gdsName", "", Progress.Data.DataType:CHARACTER).
         arrayvar5[2] = new Progress.Data.ColumnPropDesc("qnty", "кол-во", Progress.Data.DataType:DECIMAL).
+        arrayvar5[3] = new Progress.Data.ColumnPropDesc("gds-code", "код товара", Progress.Data.DataType:INTEGER).
         tableDesc2:Columns = arrayvar5.
         this-object:bindPromoGift:TableSchema = tableDesc2.
         /*  */
@@ -388,7 +413,7 @@ CLASS ibs.th.ref.promo.ucSelect_Items7 INHERITS UserControl:
         this-object:dataGridView1:ReadOnly = true.
         this-object:dataGridView1:Size = new System.Drawing.Size(284, 253).
         this-object:dataGridView1:TabIndex = 2.
-        this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
+        this-object:dataGridView1:CellMouseClick:Subscribe(this-object:dataGridView1_CellMouseClick).
         /*  */
         /* mincritDataGridViewTextBoxColumn */
         /*  */

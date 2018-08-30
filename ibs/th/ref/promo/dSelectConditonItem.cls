@@ -19,7 +19,9 @@ class ibs.th.ref.promo.dSelectConditonItem inherits Form :
     define private variable components as System.ComponentModel.IContainer no-undo.
     define private variable buttonOk as System.Windows.Forms.Button no-undo.
     define private variable buttonCancel as System.Windows.Forms.Button no-undo.
+    define private variable gdscodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable gdsNameDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+    define private variable gdsNameDataGridViewTextBoxColumn1 as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable tableLayoutPanel_Basic as System.Windows.Forms.TableLayoutPanel no-undo.
     define private variable tableLayoutPanel2 as System.Windows.Forms.TableLayoutPanel no-undo.
     define private variable tableLayoutPanel1 as System.Windows.Forms.TableLayoutPanel no-undo.
@@ -89,8 +91,10 @@ class ibs.th.ref.promo.dSelectConditonItem inherits Form :
         this-object:button3 = new System.Windows.Forms.Button().
         this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
         this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
-        this-object:gdsNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
         this-object:bindPromoGoodsCrit = new Progress.Data.BindingSource(this-object:components).
+        this-object:gdsNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:gdscodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+        this-object:gdsNameDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
         this-object:tableLayoutPanel_Basic:SuspendLayout().
         this-object:tableLayoutPanel1:SuspendLayout().
         this-object:tableLayoutPanel2:SuspendLayout().
@@ -226,8 +230,9 @@ class ibs.th.ref.promo.dSelectConditonItem inherits Form :
         this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
         this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 1 no-undo.
-        arrayvar0[1] = this-object:gdsNameDataGridViewTextBoxColumn.
+        define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 2 no-undo.
+        arrayvar0[1] = this-object:gdscodeDataGridViewTextBoxColumn.
+        arrayvar0[2] = this-object:gdsNameDataGridViewTextBoxColumn1.
         this-object:dataGridView1:Columns:AddRange(arrayvar0).
         this-object:dataGridView1:DataSource = this-object:bindPromoGoodsCrit.
         this-object:dataGridView1:Dock = System.Windows.Forms.DockStyle:Fill.
@@ -236,13 +241,6 @@ class ibs.th.ref.promo.dSelectConditonItem inherits Form :
         this-object:dataGridView1:ReadOnly = true.
         this-object:dataGridView1:Size = new System.Drawing.Size(558, 223).
         this-object:dataGridView1:TabIndex = 3.
-        /*  */
-        /* gdsNameDataGridViewTextBoxColumn */
-        /*  */
-        this-object:gdsNameDataGridViewTextBoxColumn:DataPropertyName = "gdsName".
-        this-object:gdsNameDataGridViewTextBoxColumn:HeaderText = "Номенклатура".
-        this-object:gdsNameDataGridViewTextBoxColumn:Name = "gdsNameDataGridViewTextBoxColumn".
-        this-object:gdsNameDataGridViewTextBoxColumn:ReadOnly = true.
         /*  */
         /* bindPromoGoodsCrit */
         /*  */
@@ -254,21 +252,34 @@ class ibs.th.ref.promo.dSelectConditonItem inherits Form :
         arrayvar1 = new "Progress.Data.TableDesc[]"(0).
         tableDesc1:ChildTables = arrayvar1.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-        define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 12 no-undo.
+        define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 2 no-undo.
         arrayvar2[1] = new Progress.Data.ColumnPropDesc("gdsName", "", Progress.Data.DataType:CHARACTER).
-        arrayvar2[2] = new Progress.Data.ColumnPropDesc("sub", "", Progress.Data.DataType:PROGRESS_LANG_OBJECT).
-        arrayvar2[3] = new Progress.Data.ColumnPropDesc("mode", "", Progress.Data.DataType:CHARACTER).
-        arrayvar2[4] = new Progress.Data.ColumnPropDesc("db-num", "db-nun", Progress.Data.DataType:INTEGER).
-        arrayvar2[5] = new Progress.Data.ColumnPropDesc("gds-code", "gds-code", Progress.Data.DataType:INTEGER).
-        arrayvar2[6] = new Progress.Data.ColumnPropDesc("id", "?", Progress.Data.DataType:INT64).
-        arrayvar2[7] = new Progress.Data.ColumnPropDesc("idAction", "?", Progress.Data.DataType:int64).
-        arrayvar2[8] = new Progress.Data.ColumnPropDesc("IdSet", "Id набора", Progress.Data.DataType:int64).
-        arrayvar2[9] = new Progress.Data.ColumnPropDesc("NameSet", "Наименование промо набора", Progress.Data.DataType:CHARACTER).
-        arrayvar2[10] = new Progress.Data.ColumnPropDesc("price", "?", Progress.Data.DataType:DECIMAL).
-        arrayvar2[11] = new Progress.Data.ColumnPropDesc("qnty", "?", Progress.Data.DataType:DECIMAL).
-        arrayvar2[12] = new Progress.Data.ColumnPropDesc("type", "?", Progress.Data.DataType:INTEGER).
+        arrayvar2[2] = new Progress.Data.ColumnPropDesc("gds-code", "gds-code", Progress.Data.DataType:INTEGER).
         tableDesc1:Columns = arrayvar2.
         this-object:bindPromoGoodsCrit:TableSchema = tableDesc1.
+        /*  */
+        /* gdsNameDataGridViewTextBoxColumn */
+        /*  */
+        this-object:gdsNameDataGridViewTextBoxColumn:DataPropertyName = "gdsName".
+        this-object:gdsNameDataGridViewTextBoxColumn:HeaderText = "Номенклатура".
+        this-object:gdsNameDataGridViewTextBoxColumn:Name = "gdsNameDataGridViewTextBoxColumn".
+        this-object:gdsNameDataGridViewTextBoxColumn:Width = 515.
+        /*  */
+        /* gdscodeDataGridViewTextBoxColumn */
+        /*  */
+        this-object:gdscodeDataGridViewTextBoxColumn:DataPropertyName = "gds-code".
+        this-object:gdscodeDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(55.8375626).
+        this-object:gdscodeDataGridViewTextBoxColumn:HeaderText = "Код товара".
+        this-object:gdscodeDataGridViewTextBoxColumn:Name = "gdscodeDataGridViewTextBoxColumn".
+        this-object:gdscodeDataGridViewTextBoxColumn:ReadOnly = true.
+        /*  */
+        /* gdsNameDataGridViewTextBoxColumn1 */
+        /*  */
+        this-object:gdsNameDataGridViewTextBoxColumn1:DataPropertyName = "gdsName".
+        this-object:gdsNameDataGridViewTextBoxColumn1:FillWeight = Progress.Util.CastUtil:ToSingle(144.1624451).
+        this-object:gdsNameDataGridViewTextBoxColumn1:HeaderText = "Номенклатура".
+        this-object:gdsNameDataGridViewTextBoxColumn1:Name = "gdsNameDataGridViewTextBoxColumn1".
+        this-object:gdsNameDataGridViewTextBoxColumn1:ReadOnly = true.
         /*  */
         /* dSelectConditonItem */
         /*  */
@@ -281,7 +292,7 @@ class ibs.th.ref.promo.dSelectConditonItem inherits Form :
         this-object:Name = "dSelectConditonItem".
         this-object:ShowInTaskbar = false.
         this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
-        this-object:Text = "dSelectConditonItem".
+        this-object:Text = "Независимые условия".
         this-object:tableLayoutPanel_Basic:ResumeLayout(false).
         this-object:tableLayoutPanel1:ResumeLayout(false).
         this-object:tableLayoutPanel2:ResumeLayout(false).

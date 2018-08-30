@@ -505,11 +505,10 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
     @VisualDesigner.
     METHOD PRIVATE VOID comboBox1_SelectedIndexChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
         
-        /*IF tabControl1:TabPages:Count = 5 THEN
-        DO:
-           .
-            //tabControl1:TabPages:Add(tabPage6).
-        END.*/
+        Show_Panet_SelectConditonItem().
+    end.    
+    
+    METHOD public VOID Show_Panet_SelectConditonItem():
         find first ttMethodCalc where ttMethodCalc.item eq comboBox1:SelectedItem:ToString() no-lock no-error.
         if available ttMethodCalc 
         then do:
@@ -522,26 +521,28 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                m-promo-trg:ViewPage6(yes). 
             case ttMethodCalc.code: 
                 when 1 then do: // "Скидка процентом" 
-                    Init_comboBox_nUMBER(1).
                     Show_Panet_SelectConditonItem(1).
+                    Init_comboBox_nUMBER(1).
                 end .
                 when 2 then do: // Абсолютная (скидка суммой от цены)
                     Show_Panet_SelectConditonItem(2).
+                    Init_comboBox_nUMBER(2).
                 end .
                 when 3 then do: // Скидка количеством
-                    Init_comboBox_nUMBER(3).
                     Show_Panet_SelectConditonItem(3).
+                    Init_comboBox_nUMBER(3).
                 end .
                 when 4 then do: //Скидка процентом за количество
-                    Init_comboBox_nUMBER(4).
                     Show_Panet_SelectConditonItem(4).
+                    Init_comboBox_nUMBER(4).
                 end .
                 when 5 then do: // Фиксированная цена
-                    Init_comboBox_nUMBER(5).
                     Show_Panet_SelectConditonItem(5).
+                    Init_comboBox_nUMBER(5).
                 end .
                 when 6 then do: // Выдача сообщения
                     Show_Panet_SelectConditonItem(6).
+                    Init_comboBox_nUMBER(6).
                 end .
                 when 7 then do: // "Подарок"
                     Show_Panet_SelectConditonItem(7).
@@ -570,8 +571,8 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
     DEFINE VARIABLE ucMain7     AS ibs.th.ref.promo.ucSelect_Items7     NO-UNDO.
     DEFINE VARIABLE ucMain7_1   AS ibs.th.ref.promo.ucSelect_Items7_1   NO-UNDO.
     DEFINE VARIABLE ucMain7_2   AS ibs.th.ref.promo.ucSelect_Items7_2   NO-UNDO.
-     
-    METHOD PRIVATE VOID Show_Panet_SelectConditonItem( INPUT SelectItem AS int):
+    
+    method public void cleanPanel():
         
         THIS-OBJECT:panel_SelectConditionItems:Controls:Clear().
         if valid-object(ucMain1)        then delete object ucMain1.
@@ -589,6 +590,13 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
         if valid-object(ucMain7)        then delete object ucMain7.
         if valid-object(ucMain7_1)      then delete object ucMain7_1.
         if valid-object(ucMain7_2)      then delete object ucMain7_2.
+       
+    end.
+    
+     
+    METHOD PRIVATE VOID Show_Panet_SelectConditonItem( INPUT SelectItem AS int):
+        cleanPanel().
+        
         assign
             label5:Visible    = FALSE
             checkBox1:Visible = label5:Visible

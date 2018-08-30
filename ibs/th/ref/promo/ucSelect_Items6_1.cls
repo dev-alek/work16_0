@@ -221,9 +221,7 @@ CLASS ibs.th.ref.promo.ucSelect_Items6_1 INHERITS UserControl:
     END METHOD.
 
     DESTRUCTOR PUBLIC ucSelect_Items6_1 ( ):
-        bindPromoMess:Dispose().
-        bindPromoCrit:Dispose().
-          if valid-object(m-promo-trg) then closeBind().
+        if valid-object(m-promo-trg) then closeBind().
     END DESTRUCTOR.
     
     method private void closeBind():

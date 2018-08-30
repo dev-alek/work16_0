@@ -26,8 +26,26 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
   define variable vss-archive     as character no-undo initial "$Archive$":U . 
   define variable vss-description as character no-undo initial "Промо-акции вкладка Расписание". 
     
-  DEFINE PRIVATE VARIABLE bindingSchedWeek AS Progress.Data.BindingSource NO-UNDO.
+  DEFINE PRIVATE VARIABLE bindingSchedWeek3 AS Progress.Data.BindingSource NO-UNDO.
+  DEFINE PRIVATE VARIABLE button1 AS System.Windows.Forms.Button NO-UNDO.
+  DEFINE PRIVATE VARIABLE tableLayoutPanel1 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
+  DEFINE PRIVATE VARIABLE label2 AS System.Windows.Forms.Label NO-UNDO.
+  DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
+  DEFINE PRIVATE VARIABLE flowLayoutPanel2 AS System.Windows.Forms.FlowLayoutPanel NO-UNDO.
+  DEFINE PRIVATE VARIABLE dateTimePicker4 AS System.Windows.Forms.DateTimePicker NO-UNDO.
+  DEFINE PRIVATE VARIABLE dateTimePicker3 AS System.Windows.Forms.DateTimePicker NO-UNDO.
+  DEFINE PRIVATE VARIABLE checkBox9 AS System.Windows.Forms.CheckBox NO-UNDO.
+  DEFINE PRIVATE VARIABLE checkBox14 AS System.Windows.Forms.CheckBox NO-UNDO.
+  DEFINE PRIVATE VARIABLE checkBox13 AS System.Windows.Forms.CheckBox NO-UNDO.
+  DEFINE PRIVATE VARIABLE checkBox12 AS System.Windows.Forms.CheckBox NO-UNDO.
+  DEFINE PRIVATE VARIABLE checkBox11 AS System.Windows.Forms.CheckBox NO-UNDO.
+  DEFINE PRIVATE VARIABLE checkBox10 AS System.Windows.Forms.CheckBox NO-UNDO.
+  DEFINE PRIVATE VARIABLE checkBox1 AS System.Windows.Forms.CheckBox NO-UNDO.
   DEFINE PRIVATE VARIABLE bindPromoActionOne AS Progress.Data.BindingSource NO-UNDO.
+  DEFINE PRIVATE VARIABLE bindingSchedWeek AS Progress.Data.BindingSource NO-UNDO.
+  DEFINE PRIVATE VARIABLE bindingSchedWeek2 AS Progress.Data.BindingSource NO-UNDO.
+  DEFINE PRIVATE VARIABLE dtimeendDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
+  DEFINE PRIVATE VARIABLE dtimebegDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
     DEFINE PRIVATE VARIABLE checkBox8 AS System.Windows.Forms.CheckBox NO-UNDO.
     DEFINE PRIVATE VARIABLE checkBox7 AS System.Windows.Forms.CheckBox NO-UNDO.
     DEFINE PRIVATE VARIABLE checkBox6 AS System.Windows.Forms.CheckBox NO-UNDO.
@@ -47,11 +65,8 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     DEFINE PRIVATE VARIABLE tableL_Detailed AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
     DEFINE PRIVATE VARIABLE radioButton6 AS System.Windows.Forms.RadioButton NO-UNDO.
     DEFINE PRIVATE VARIABLE radioButton5 AS System.Windows.Forms.RadioButton NO-UNDO.
-    DEFINE PRIVATE VARIABLE radioButton4 AS System.Windows.Forms.RadioButton NO-UNDO.
-    DEFINE PRIVATE VARIABLE radioButton3 AS System.Windows.Forms.RadioButton NO-UNDO.
     DEFINE PRIVATE VARIABLE label9 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label8 AS System.Windows.Forms.Label NO-UNDO.
-    DEFINE PRIVATE VARIABLE label7 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label13 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label12 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label11 AS System.Windows.Forms.Label NO-UNDO.
@@ -60,20 +75,16 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     DEFINE PRIVATE VARIABLE dateTimePicker2 AS System.Windows.Forms.DateTimePicker NO-UNDO.
     DEFINE PRIVATE VARIABLE dateTimePicker1 AS System.Windows.Forms.DateTimePicker NO-UNDO.
     DEFINE PRIVATE VARIABLE dataGridView1 AS System.Windows.Forms.DataGridView NO-UNDO.
+  DEFINE PRIVATE VARIABLE wdaynum AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
 
     define private variable m-promo-trg as class ibs.th.ref.promo.promo_trg no-undo.
+
+  define private variable g-week-days as character no-undo initial
+    "понедельник,вторник,среда,четверг,пятница,суббота,воскресенье" .
+  define private variable a-week-days as character extent 7 no-undo initial
+    ["понедельник","вторник","среда","четверг","пятница","суббота","воскресенье"] .
     
     
-    method Public VOID SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
-        m-promo-trg = v-promo-trg.
-        SetBind().
-    end.
-    
-    method Public VOID SetBind( ):
-        bindPromoActionOne:handle = m-promo-trg:getQuery("promoActionOne3").
-        bindingSchedWeek:handle   = m-promo-trg:getQuery("promoSchedWeek").
-    end.
-        
     CONSTRUCTOR PUBLIC uc_TabAddEdit (  ):
         SUPER().
         InitializeComponent().
@@ -84,11 +95,31 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     END CONSTRUCTOR.
     
     DESTRUCTOR PUBLIC uc_TabAddEdit ( ):
-      bindingSchedWeek:Assign().
-      bindingSchedWeek:Dispose().
-      bindPromoActionOne:Assign().
-      bindPromoActionOne:Dispose().
+      if valid-object(bindingSchedWeek3:Handle)  then bindingSchedWeek3:Dispose().
+      if valid-object(bindingSchedWeek2:Handle)  then bindingSchedWeek2:Dispose().
+      if valid-object(bindingSchedWeek:Handle)   then bindingSchedWeek:Dispose().
+      if valid-object(bindPromoActionOne:Handle) then bindPromoActionOne:Dispose().
     END DESTRUCTOR.
+
+    method Public VOID SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
+        m-promo-trg = v-promo-trg.
+        SetBind().
+    end method.
+    
+    method Public VOID SetBind( ):
+        bindPromoActionOne:handle  = m-promo-trg:getQuery("promoActionOne3").
+        // развести открытие запросов в зависимоси от типа расписания?
+        bindingSchedWeek:handle    = m-promo-trg:getQuery("promoSchedWeek").
+        bindingSchedWeek2:handle   = m-promo-trg:getQuery("promoSchedWeek2").
+        bindingSchedWeek3:handle   = m-promo-trg:getQuery("promoSchedWeek3").
+    end method.
+        
+    method public void AssignBind( ):
+      bindingSchedWeek2:Assign().
+      bindingSchedWeek:Assign().
+      bindPromoActionOne:Assign().
+    end method .
+
 
     METHOD PRIVATE VOID InitializeComponent(  ):
         
@@ -101,16 +132,44 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:components = NEW System.ComponentModel.Container().
     @VisualDesigner.FormMember (NeedsInitialize="true").
     DEFINE VARIABLE tableDesc1 AS Progress.Data.TableDesc NO-UNDO.
-    tableDesc1 = NEW Progress.Data.TableDesc("tt-promoaction-one").
+    tableDesc1 = NEW Progress.Data.TableDesc("tt-promo-schedule-week3").
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    DEFINE VARIABLE dataGridViewCellStyle1 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+    dataGridViewCellStyle1 = NEW System.Windows.Forms.DataGridViewCellStyle().
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    DEFINE VARIABLE dataGridViewCellStyle2 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+    dataGridViewCellStyle2 = NEW System.Windows.Forms.DataGridViewCellStyle().
     @VisualDesigner.FormMember (NeedsInitialize="true").
     DEFINE VARIABLE tableDesc2 AS Progress.Data.TableDesc NO-UNDO.
-    tableDesc2 = NEW Progress.Data.TableDesc("tt-promo-schedule-week").
+    tableDesc2 = NEW Progress.Data.TableDesc("tt-promo-schedule-week2").
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    DEFINE VARIABLE tableDesc3 AS Progress.Data.TableDesc NO-UNDO.
+    tableDesc3 = NEW Progress.Data.TableDesc("tt-promoaction-one").
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    DEFINE VARIABLE tableDesc4 AS Progress.Data.TableDesc NO-UNDO.
+    tableDesc4 = NEW Progress.Data.TableDesc("tt-promo-schedule-week").
     THIS-OBJECT:tableLayoutPanel9 = NEW System.Windows.Forms.TableLayoutPanel().
     THIS-OBJECT:tableL_Detailed = NEW System.Windows.Forms.TableLayoutPanel().
-    THIS-OBJECT:radioButton4 = NEW System.Windows.Forms.RadioButton().
-    THIS-OBJECT:radioButton3 = NEW System.Windows.Forms.RadioButton().
+    THIS-OBJECT:button1 = NEW System.Windows.Forms.Button().
+    THIS-OBJECT:tableLayoutPanel1 = NEW System.Windows.Forms.TableLayoutPanel().
+    THIS-OBJECT:flowLayoutPanel2 = NEW System.Windows.Forms.FlowLayoutPanel().
+    THIS-OBJECT:checkBox1 = NEW System.Windows.Forms.CheckBox().
+    THIS-OBJECT:bindingSchedWeek3 = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
+    THIS-OBJECT:checkBox9 = NEW System.Windows.Forms.CheckBox().
+    THIS-OBJECT:checkBox10 = NEW System.Windows.Forms.CheckBox().
+    THIS-OBJECT:checkBox11 = NEW System.Windows.Forms.CheckBox().
+    THIS-OBJECT:checkBox12 = NEW System.Windows.Forms.CheckBox().
+    THIS-OBJECT:checkBox13 = NEW System.Windows.Forms.CheckBox().
+    THIS-OBJECT:checkBox14 = NEW System.Windows.Forms.CheckBox().
+    THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
+    THIS-OBJECT:dateTimePicker3 = NEW System.Windows.Forms.DateTimePicker().
+    THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
+    THIS-OBJECT:dateTimePicker4 = NEW System.Windows.Forms.DateTimePicker().
     THIS-OBJECT:dataGridView1 = NEW System.Windows.Forms.DataGridView().
-    THIS-OBJECT:label7 = NEW System.Windows.Forms.Label().
+    THIS-OBJECT:wdaynum = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+    THIS-OBJECT:bindingSchedWeek2 = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
     THIS-OBJECT:button9 = NEW System.Windows.Forms.Button().
     THIS-OBJECT:label8 = NEW System.Windows.Forms.Label().
     THIS-OBJECT:label9 = NEW System.Windows.Forms.Label().
@@ -140,7 +199,11 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:dateTimePicker2 = NEW System.Windows.Forms.DateTimePicker().
     THIS-OBJECT:tableLayoutPanel9:SuspendLayout().
     THIS-OBJECT:tableL_Detailed:SuspendLayout().
+    THIS-OBJECT:tableLayoutPanel1:SuspendLayout().
+    THIS-OBJECT:flowLayoutPanel2:SuspendLayout().
+    CAST(THIS-OBJECT:bindingSchedWeek3, System.ComponentModel.ISupportInitialize):BeginInit().
     CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
+    CAST(THIS-OBJECT:bindingSchedWeek2, System.ComponentModel.ISupportInitialize):BeginInit().
     CAST(THIS-OBJECT:bindPromoActionOne, System.ComponentModel.ISupportInitialize):BeginInit().
     THIS-OBJECT:tableLayoutPanel12:SuspendLayout().
     THIS-OBJECT:tableLayoutPanel13:SuspendLayout().
@@ -188,11 +251,10 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:tableL_Detailed:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
     THIS-OBJECT:tableL_Detailed:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(130))).
     THIS-OBJECT:tableL_Detailed:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:radioButton4, 2, 0).
-    THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:radioButton3, 1, 0).
+    THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:button1, 1, 0).
+    THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:tableLayoutPanel1, 0, 1).
     THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:dataGridView1, 0, 2).
-    THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:label7, 0, 0).
-    THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:button9, 0, 1).
+    THIS-OBJECT:tableL_Detailed:Controls:Add(THIS-OBJECT:button9, 0, 0).
     THIS-OBJECT:tableL_Detailed:Location = NEW System.Drawing.Point(0, 120).
     THIS-OBJECT:tableL_Detailed:Margin = NEW System.Windows.Forms.Padding(0).
     THIS-OBJECT:tableL_Detailed:Name = "tableL_Detailed".
@@ -200,72 +262,321 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:tableL_Detailed:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
     THIS-OBJECT:tableL_Detailed:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
     THIS-OBJECT:tableL_Detailed:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    THIS-OBJECT:tableL_Detailed:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
     THIS-OBJECT:tableL_Detailed:Size = NEW System.Drawing.Size(773, 200).
     THIS-OBJECT:tableL_Detailed:TabIndex = 9.
     THIS-OBJECT:tableL_Detailed:Visible = false.
     /*  */
-    /* radioButton4 */
+    /* button1 */
     /*  */
-    THIS-OBJECT:radioButton4:Appearance = System.Windows.Forms.Appearance:Button.
-    THIS-OBJECT:radioButton4:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:radioButton4:Location = NEW System.Drawing.Point(283, 3).
-    THIS-OBJECT:radioButton4:Name = "radioButton4".
-    THIS-OBJECT:radioButton4:Size = NEW System.Drawing.Size(124, 24).
-    THIS-OBJECT:radioButton4:TabIndex = 10.
-    THIS-OBJECT:radioButton4:Text = "По вренмени".
-    THIS-OBJECT:radioButton4:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-    THIS-OBJECT:radioButton4:UseCompatibleTextRendering = true.
-    THIS-OBJECT:radioButton4:UseVisualStyleBackColor = true.
+    THIS-OBJECT:button1:Dock = System.Windows.Forms.DockStyle:Fill.
+    THIS-OBJECT:button1:Location = NEW System.Drawing.Point(153, 3).
+    THIS-OBJECT:button1:Name = "button1".
+    THIS-OBJECT:button1:Size = NEW System.Drawing.Size(124, 24).
+    THIS-OBJECT:button1:TabIndex = 10.
+    THIS-OBJECT:button1:Text = "Удалить".
+    THIS-OBJECT:button1:UseCompatibleTextRendering = true.
+    THIS-OBJECT:button1:UseVisualStyleBackColor = true.
+    THIS-OBJECT:button1:Click:Subscribe(THIS-OBJECT:button1_Click).
     /*  */
-    /* radioButton3 */
+    /* tableLayoutPanel1 */
     /*  */
-    THIS-OBJECT:radioButton3:Appearance = System.Windows.Forms.Appearance:Button.
-    THIS-OBJECT:radioButton3:Checked = true.
-    THIS-OBJECT:radioButton3:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:radioButton3:ForeColor = System.Drawing.Color:Green.
-    THIS-OBJECT:radioButton3:Location = NEW System.Drawing.Point(153, 3).
-    THIS-OBJECT:radioButton3:Name = "radioButton3".
-    THIS-OBJECT:radioButton3:Size = NEW System.Drawing.Size(124, 24).
-    THIS-OBJECT:radioButton3:TabIndex = 9.
-    THIS-OBJECT:radioButton3:TabStop = true.
-    THIS-OBJECT:radioButton3:Text = "По дням недели".
-    THIS-OBJECT:radioButton3:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-    THIS-OBJECT:radioButton3:UseCompatibleTextRendering = true.
-    THIS-OBJECT:radioButton3:UseVisualStyleBackColor = true.
-    THIS-OBJECT:radioButton3:CheckedChanged:Subscribe(THIS-OBJECT:radioButton3_CheckedChanged).
+    DEFINE VARIABLE nestedvar1 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+    nestedvar1 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+    THIS-OBJECT:tableLayoutPanel1:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+    THIS-OBJECT:tableLayoutPanel1:BackColor = System.Drawing.SystemColors:Control.
+    THIS-OBJECT:tableLayoutPanel1:ColumnCount = 5.
+    THIS-OBJECT:tableL_Detailed:SetColumnSpan(THIS-OBJECT:tableLayoutPanel1, 4).
+    THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(150))).
+    THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(30))).
+    THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(271))).
+    THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:flowLayoutPanel2, 4, 0).
+    THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:label1, 2, 0).
+    THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:dateTimePicker3, 1, 0).
+    THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:label2, 0, 0).
+    THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:dateTimePicker4, 3, 0).
+    THIS-OBJECT:tableLayoutPanel1:Location = NEW System.Drawing.Point(0, 30).
+    THIS-OBJECT:tableLayoutPanel1:Margin = NEW System.Windows.Forms.Padding(0).
+    THIS-OBJECT:tableLayoutPanel1:Name = "tableLayoutPanel1".
+    THIS-OBJECT:tableLayoutPanel1:RowCount = 1.
+    THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    THIS-OBJECT:tableLayoutPanel1:Size = NEW System.Drawing.Size(773, 30).
+    THIS-OBJECT:tableLayoutPanel1:TabIndex = 9.
+    THIS-OBJECT:tableLayoutPanel1:Visible = false.
+    /*  */
+    /* flowLayoutPanel2 */
+    /*  */
+    THIS-OBJECT:flowLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox1).
+    THIS-OBJECT:flowLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox9).
+    THIS-OBJECT:flowLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox10).
+    THIS-OBJECT:flowLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox11).
+    THIS-OBJECT:flowLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox12).
+    THIS-OBJECT:flowLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox13).
+    THIS-OBJECT:flowLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox14).
+    THIS-OBJECT:flowLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
+    THIS-OBJECT:flowLayoutPanel2:Location = NEW System.Drawing.Point(509, 0).
+    THIS-OBJECT:flowLayoutPanel2:Margin = NEW System.Windows.Forms.Padding(7, 0, 0, 0).
+    THIS-OBJECT:flowLayoutPanel2:MinimumSize = NEW System.Drawing.Size(250, 0).
+    THIS-OBJECT:flowLayoutPanel2:Name = "flowLayoutPanel2".
+    THIS-OBJECT:flowLayoutPanel2:Size = NEW System.Drawing.Size(264, 30).
+    THIS-OBJECT:flowLayoutPanel2:TabIndex = 15.
+    /*  */
+    /* checkBox1 */
+    /*  */
+    THIS-OBJECT:checkBox1:AutoSize = true.
+    THIS-OBJECT:checkBox1:Checked = true.
+    THIS-OBJECT:checkBox1:CheckState = System.Windows.Forms.CheckState:Checked.
+    THIS-OBJECT:checkBox1:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek3, "isday_mon", true)).
+    THIS-OBJECT:checkBox1:Location = NEW System.Drawing.Point(0, 4).
+    THIS-OBJECT:checkBox1:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
+    THIS-OBJECT:checkBox1:Name = "checkBox1".
+    THIS-OBJECT:checkBox1:Size = NEW System.Drawing.Size(38, 18).
+    THIS-OBJECT:checkBox1:TabIndex = 0.
+    THIS-OBJECT:checkBox1:Text = "Пн".
+    THIS-OBJECT:checkBox1:UseCompatibleTextRendering = true.
+    THIS-OBJECT:checkBox1:UseVisualStyleBackColor = true.
+    /*  */
+    /* bindingSchedWeek3 */
+    /*  */
+    THIS-OBJECT:bindingSchedWeek3:MaxDataGuess = 0.
+    THIS-OBJECT:bindingSchedWeek3:NoLOBs = false.
+    THIS-OBJECT:bindingSchedWeek3:Position = 0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    DEFINE VARIABLE arrayvar0 AS "Progress.Data.TableDesc[]" NO-UNDO.
+    arrayvar0 = NEW "Progress.Data.TableDesc[]"(0).
+    tableDesc1:ChildTables = arrayvar0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    DEFINE VARIABLE arrayvar1 AS Progress.Data.ColumnPropDesc EXTENT 9 NO-UNDO.
+    arrayvar1[1] = NEW Progress.Data.ColumnPropDesc("dtime-beg", "", Progress.Data.DataType:DATETIME).
+    arrayvar1[2] = NEW Progress.Data.ColumnPropDesc("dtime-end", "", Progress.Data.DataType:DATETIME).
+    arrayvar1[3] = NEW Progress.Data.ColumnPropDesc("isday_mon", "", Progress.Data.DataType:LOGICAL).
+    arrayvar1[4] = NEW Progress.Data.ColumnPropDesc("isday_tue", "", Progress.Data.DataType:LOGICAL).
+    arrayvar1[5] = NEW Progress.Data.ColumnPropDesc("isday_wed", "", Progress.Data.DataType:LOGICAL).
+    arrayvar1[6] = NEW Progress.Data.ColumnPropDesc("isday_thu", "", Progress.Data.DataType:LOGICAL).
+    arrayvar1[7] = NEW Progress.Data.ColumnPropDesc("isday_fri", "", Progress.Data.DataType:LOGICAL).
+    arrayvar1[8] = NEW Progress.Data.ColumnPropDesc("isday_sat", "", Progress.Data.DataType:LOGICAL).
+    arrayvar1[9] = NEW Progress.Data.ColumnPropDesc("isday_sun", "", Progress.Data.DataType:LOGICAL).
+    tableDesc1:Columns = arrayvar1.
+    THIS-OBJECT:bindingSchedWeek3:TableSchema = tableDesc1.
+    /*  */
+    /* checkBox9 */
+    /*  */
+    THIS-OBJECT:checkBox9:AutoSize = true.
+    THIS-OBJECT:checkBox9:Checked = true.
+    THIS-OBJECT:checkBox9:CheckState = System.Windows.Forms.CheckState:Checked.
+    THIS-OBJECT:checkBox9:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek3, "isday_tue", true)).
+    THIS-OBJECT:checkBox9:Location = NEW System.Drawing.Point(38, 4).
+    THIS-OBJECT:checkBox9:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
+    THIS-OBJECT:checkBox9:Name = "checkBox9".
+    THIS-OBJECT:checkBox9:Size = NEW System.Drawing.Size(36, 18).
+    THIS-OBJECT:checkBox9:TabIndex = 1.
+    THIS-OBJECT:checkBox9:Text = "Вт".
+    THIS-OBJECT:checkBox9:UseCompatibleTextRendering = true.
+    THIS-OBJECT:checkBox9:UseVisualStyleBackColor = true.
+    /*  */
+    /* checkBox10 */
+    /*  */
+    THIS-OBJECT:checkBox10:AutoSize = true.
+    THIS-OBJECT:checkBox10:Checked = true.
+    THIS-OBJECT:checkBox10:CheckState = System.Windows.Forms.CheckState:Checked.
+    THIS-OBJECT:checkBox10:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek3, "isday_wed", true)).
+    THIS-OBJECT:checkBox10:Location = NEW System.Drawing.Point(74, 4).
+    THIS-OBJECT:checkBox10:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
+    THIS-OBJECT:checkBox10:Name = "checkBox10".
+    THIS-OBJECT:checkBox10:Size = NEW System.Drawing.Size(38, 18).
+    THIS-OBJECT:checkBox10:TabIndex = 2.
+    THIS-OBJECT:checkBox10:Text = "Ср".
+    THIS-OBJECT:checkBox10:UseCompatibleTextRendering = true.
+    THIS-OBJECT:checkBox10:UseVisualStyleBackColor = true.
+    /*  */
+    /* checkBox11 */
+    /*  */
+    THIS-OBJECT:checkBox11:AutoSize = true.
+    THIS-OBJECT:checkBox11:Checked = true.
+    THIS-OBJECT:checkBox11:CheckState = System.Windows.Forms.CheckState:Checked.
+    THIS-OBJECT:checkBox11:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek3, "isday_thu", true)).
+    THIS-OBJECT:checkBox11:Location = NEW System.Drawing.Point(112, 4).
+    THIS-OBJECT:checkBox11:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
+    THIS-OBJECT:checkBox11:Name = "checkBox11".
+    THIS-OBJECT:checkBox11:Size = NEW System.Drawing.Size(36, 18).
+    THIS-OBJECT:checkBox11:TabIndex = 3.
+    THIS-OBJECT:checkBox11:Text = "Чт".
+    THIS-OBJECT:checkBox11:UseCompatibleTextRendering = true.
+    THIS-OBJECT:checkBox11:UseVisualStyleBackColor = true.
+    /*  */
+    /* checkBox12 */
+    /*  */
+    THIS-OBJECT:checkBox12:AutoSize = true.
+    THIS-OBJECT:checkBox12:Checked = true.
+    THIS-OBJECT:checkBox12:CheckState = System.Windows.Forms.CheckState:Checked.
+    THIS-OBJECT:checkBox12:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek3, "isday_fri", true)).
+    THIS-OBJECT:checkBox12:Location = NEW System.Drawing.Point(148, 4).
+    THIS-OBJECT:checkBox12:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
+    THIS-OBJECT:checkBox12:Name = "checkBox12".
+    THIS-OBJECT:checkBox12:Size = NEW System.Drawing.Size(37, 18).
+    THIS-OBJECT:checkBox12:TabIndex = 4.
+    THIS-OBJECT:checkBox12:Text = "Пт".
+    THIS-OBJECT:checkBox12:UseCompatibleTextRendering = true.
+    THIS-OBJECT:checkBox12:UseVisualStyleBackColor = true.
+    /*  */
+    /* checkBox13 */
+    /*  */
+    THIS-OBJECT:checkBox13:AutoSize = true.
+    THIS-OBJECT:checkBox13:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek3, "isday_sat", true)).
+    THIS-OBJECT:checkBox13:ForeColor = System.Drawing.Color:Red.
+    THIS-OBJECT:checkBox13:Location = NEW System.Drawing.Point(185, 4).
+    THIS-OBJECT:checkBox13:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
+    THIS-OBJECT:checkBox13:Name = "checkBox13".
+    THIS-OBJECT:checkBox13:Size = NEW System.Drawing.Size(38, 18).
+    THIS-OBJECT:checkBox13:TabIndex = 5.
+    THIS-OBJECT:checkBox13:Text = "Сб".
+    THIS-OBJECT:checkBox13:UseCompatibleTextRendering = true.
+    THIS-OBJECT:checkBox13:UseVisualStyleBackColor = true.
+    /*  */
+    /* checkBox14 */
+    /*  */
+    THIS-OBJECT:checkBox14:AutoSize = true.
+    THIS-OBJECT:checkBox14:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek3, "isday_sun", true)).
+    THIS-OBJECT:checkBox14:ForeColor = System.Drawing.Color:Red.
+    THIS-OBJECT:checkBox14:Location = NEW System.Drawing.Point(223, 4).
+    THIS-OBJECT:checkBox14:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
+    THIS-OBJECT:checkBox14:Name = "checkBox14".
+    THIS-OBJECT:checkBox14:Size = NEW System.Drawing.Size(36, 18).
+    THIS-OBJECT:checkBox14:TabIndex = 6.
+    THIS-OBJECT:checkBox14:Text = "Вс".
+    THIS-OBJECT:checkBox14:UseCompatibleTextRendering = true.
+    THIS-OBJECT:checkBox14:UseVisualStyleBackColor = true.
+    /*  */
+    /* label1 */
+    /*  */
+    THIS-OBJECT:label1:Location = NEW System.Drawing.Point(314, 0).
+    THIS-OBJECT:label1:Name = "label1".
+    THIS-OBJECT:label1:Size = NEW System.Drawing.Size(24, 23).
+    THIS-OBJECT:label1:TabIndex = 14.
+    THIS-OBJECT:label1:Text = "по:".
+    THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    THIS-OBJECT:label1:UseCompatibleTextRendering = true.
+    /*  */
+    /* dateTimePicker3 */
+    /*  */
+    THIS-OBJECT:dateTimePicker3:CustomFormat = "HH:mm".
+    THIS-OBJECT:dateTimePicker3:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindingSchedWeek3, "dtime-beg", true)).
+    THIS-OBJECT:dateTimePicker3:Dock = System.Windows.Forms.DockStyle:Fill.
+    THIS-OBJECT:dateTimePicker3:Format = System.Windows.Forms.DateTimePickerFormat:Custom.
+    THIS-OBJECT:dateTimePicker3:Location = NEW System.Drawing.Point(153, 4).
+    THIS-OBJECT:dateTimePicker3:Margin = NEW System.Windows.Forms.Padding(3, 4, 0, 0).
+    THIS-OBJECT:dateTimePicker3:Name = "dateTimePicker3".
+    THIS-OBJECT:dateTimePicker3:ShowUpDown = true.
+    THIS-OBJECT:dateTimePicker3:Size = NEW System.Drawing.Size(158, 20).
+    THIS-OBJECT:dateTimePicker3:TabIndex = 12.
+    /*  */
+    /* label2 */
+    /*  */
+    THIS-OBJECT:label2:Dock = System.Windows.Forms.DockStyle:Fill.
+    THIS-OBJECT:label2:Location = NEW System.Drawing.Point(3, 0).
+    THIS-OBJECT:label2:Name = "label2".
+    THIS-OBJECT:label2:Size = NEW System.Drawing.Size(144, 30).
+    THIS-OBJECT:label2:TabIndex = 0.
+    THIS-OBJECT:label2:Text = "Время с:".
+    THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    THIS-OBJECT:label2:UseCompatibleTextRendering = true.
+    /*  */
+    /* dateTimePicker4 */
+    /*  */
+    THIS-OBJECT:dateTimePicker4:CustomFormat = "HH:mm".
+    THIS-OBJECT:dateTimePicker4:DataBindings:Add(NEW System.Windows.Forms.Binding("Value", THIS-OBJECT:bindingSchedWeek3, "dtime-end", true)).
+    THIS-OBJECT:dateTimePicker4:Dock = System.Windows.Forms.DockStyle:Fill.
+    THIS-OBJECT:dateTimePicker4:Format = System.Windows.Forms.DateTimePickerFormat:Custom.
+    THIS-OBJECT:dateTimePicker4:Location = NEW System.Drawing.Point(344, 4).
+    THIS-OBJECT:dateTimePicker4:Margin = NEW System.Windows.Forms.Padding(3, 4, 0, 0).
+    THIS-OBJECT:dateTimePicker4:Name = "dateTimePicker4".
+    THIS-OBJECT:dateTimePicker4:ShowUpDown = true.
+    THIS-OBJECT:dateTimePicker4:Size = NEW System.Drawing.Size(158, 20).
+    THIS-OBJECT:dateTimePicker4:TabIndex = 13.
     /*  */
     /* dataGridView1 */
     /*  */
+    THIS-OBJECT:dataGridView1:AllowUserToAddRows = false.
+    THIS-OBJECT:dataGridView1:AllowUserToDeleteRows = false.
+    THIS-OBJECT:dataGridView1:AllowUserToResizeRows = false.
+    THIS-OBJECT:dataGridView1:AutoGenerateColumns = false.
     THIS-OBJECT:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
     THIS-OBJECT:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    DEFINE VARIABLE arrayvar2 AS System.Windows.Forms.DataGridViewColumn EXTENT 3 NO-UNDO.
+    arrayvar2[1] = THIS-OBJECT:wdaynum.
+    arrayvar2[2] = THIS-OBJECT:dtimebegDataGridViewTextBoxColumn.
+    arrayvar2[3] = THIS-OBJECT:dtimeendDataGridViewTextBoxColumn.
+    THIS-OBJECT:dataGridView1:Columns:AddRange(arrayvar2).
     THIS-OBJECT:tableL_Detailed:SetColumnSpan(THIS-OBJECT:dataGridView1, 4).
+    THIS-OBJECT:dataGridView1:DataSource = THIS-OBJECT:bindingSchedWeek2.
     THIS-OBJECT:dataGridView1:Dock = System.Windows.Forms.DockStyle:Fill.
     THIS-OBJECT:dataGridView1:Location = NEW System.Drawing.Point(3, 63).
     THIS-OBJECT:dataGridView1:Name = "dataGridView1".
+    THIS-OBJECT:dataGridView1:ReadOnly = true.
+    THIS-OBJECT:dataGridView1:RowHeadersVisible = false.
     THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(767, 134).
     THIS-OBJECT:dataGridView1:TabIndex = 0.
+    THIS-OBJECT:dataGridView1:CellFormatting:Subscribe(THIS-OBJECT:dataGridView1_CellFormatting).
     /*  */
-    /* label7 */
+    /* wdaynum */
     /*  */
-    THIS-OBJECT:label7:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:label7:Location = NEW System.Drawing.Point(3, 0).
-    THIS-OBJECT:label7:Name = "label7".
-    THIS-OBJECT:label7:Size = NEW System.Drawing.Size(144, 30).
-    THIS-OBJECT:label7:TabIndex = 1.
-    THIS-OBJECT:label7:Text = "Группировка:".
-    THIS-OBJECT:label7:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-    THIS-OBJECT:label7:UseCompatibleTextRendering = true.
+    THIS-OBJECT:wdaynum:DataPropertyName = "wdaynum".
+    THIS-OBJECT:wdaynum:HeaderText = "день недели".
+    THIS-OBJECT:wdaynum:Name = "wdaynum".
+    THIS-OBJECT:wdaynum:ReadOnly = true.
+    /*  */
+    /* dtimebegDataGridViewTextBoxColumn */
+    /*  */
+    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:DataPropertyName = "dtime-beg".
+    dataGridViewCellStyle1:Format = "t".
+    dataGridViewCellStyle1:NullValue = ?.
+    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle1.
+    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:HeaderText = "время с".
+    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:Name = "dtimebegDataGridViewTextBoxColumn".
+    THIS-OBJECT:dtimebegDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* dtimeendDataGridViewTextBoxColumn */
+    /*  */
+    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:DataPropertyName = "dtime-end".
+    dataGridViewCellStyle2:Format = "t".
+    dataGridViewCellStyle2:NullValue = ?.
+    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle2.
+    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:HeaderText = "время по".
+    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:Name = "dtimeendDataGridViewTextBoxColumn".
+    THIS-OBJECT:dtimeendDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* bindingSchedWeek2 */
+    /*  */
+    THIS-OBJECT:bindingSchedWeek2:AutoSort = true.
+    THIS-OBJECT:bindingSchedWeek2:MaxDataGuess = 0.
+    THIS-OBJECT:bindingSchedWeek2:NoLOBs = false.
+    THIS-OBJECT:bindingSchedWeek2:Position = 0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    DEFINE VARIABLE arrayvar3 AS "Progress.Data.TableDesc[]" NO-UNDO.
+    arrayvar3 = NEW "Progress.Data.TableDesc[]"(0).
+    tableDesc2:ChildTables = arrayvar3.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    DEFINE VARIABLE arrayvar4 AS Progress.Data.ColumnPropDesc EXTENT 3 NO-UNDO.
+    arrayvar4[1] = NEW Progress.Data.ColumnPropDesc("wdaynum", "день недели", Progress.Data.DataType:INTEGER).
+    arrayvar4[2] = NEW Progress.Data.ColumnPropDesc("dtime-beg", "время с", Progress.Data.DataType:DATETIME).
+    arrayvar4[3] = NEW Progress.Data.ColumnPropDesc("dtime-end", "время по", Progress.Data.DataType:DATETIME).
+    tableDesc2:Columns = arrayvar4.
+    THIS-OBJECT:bindingSchedWeek2:TableSchema = tableDesc2.
     /*  */
     /* button9 */
     /*  */
     THIS-OBJECT:button9:Dock = System.Windows.Forms.DockStyle:Fill.
-    THIS-OBJECT:button9:Location = NEW System.Drawing.Point(3, 33).
+    THIS-OBJECT:button9:Location = NEW System.Drawing.Point(3, 3).
     THIS-OBJECT:button9:Name = "button9".
     THIS-OBJECT:button9:Size = NEW System.Drawing.Size(144, 24).
     THIS-OBJECT:button9:TabIndex = 4.
     THIS-OBJECT:button9:Text = "Добавить".
     THIS-OBJECT:button9:UseCompatibleTextRendering = true.
     THIS-OBJECT:button9:UseVisualStyleBackColor = true.
+    THIS-OBJECT:button9:Click:Subscribe(THIS-OBJECT:button9_Click).
     /*  */
     /* label8 */
     /*  */
@@ -310,15 +621,15 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:bindPromoActionOne:NoLOBs = false.
     THIS-OBJECT:bindPromoActionOne:Position = 0.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar0 AS "Progress.Data.TableDesc[]" NO-UNDO.
-    arrayvar0 = NEW "Progress.Data.TableDesc[]"(0).
-    tableDesc1:ChildTables = arrayvar0.
+    DEFINE VARIABLE arrayvar5 AS "Progress.Data.TableDesc[]" NO-UNDO.
+    arrayvar5 = NEW "Progress.Data.TableDesc[]"(0).
+    tableDesc3:ChildTables = arrayvar5.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar1 AS Progress.Data.ColumnPropDesc EXTENT 2 NO-UNDO.
-    arrayvar1[1] = NEW Progress.Data.ColumnPropDesc("scheduleName", "", Progress.Data.DataType:CHARACTER).
-    arrayvar1[2] = NEW Progress.Data.ColumnPropDesc("scheduleType", "", Progress.Data.DataType:INTEGER).
-    tableDesc1:Columns = arrayvar1.
-    THIS-OBJECT:bindPromoActionOne:TableSchema = tableDesc1.
+    DEFINE VARIABLE arrayvar6 AS Progress.Data.ColumnPropDesc EXTENT 2 NO-UNDO.
+    arrayvar6[1] = NEW Progress.Data.ColumnPropDesc("scheduleName", "", Progress.Data.DataType:CHARACTER).
+    arrayvar6[2] = NEW Progress.Data.ColumnPropDesc("scheduleType", "", Progress.Data.DataType:LOGICAL).
+    tableDesc3:Columns = arrayvar6.
+    THIS-OBJECT:bindPromoActionOne:TableSchema = tableDesc3.
     /*  */
     /* label10 */
     /*  */
@@ -353,7 +664,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* radioButton5 */
     /*  */
     THIS-OBJECT:radioButton5:Appearance = System.Windows.Forms.Appearance:Button.
-    THIS-OBJECT:radioButton5:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindPromoActionOne, "scheduleType", true)).
+    THIS-OBJECT:radioButton5:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindPromoActionOne, "scheduleType", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:radioButton5:Dock = System.Windows.Forms.DockStyle:Fill.
     THIS-OBJECT:radioButton5:Location = NEW System.Drawing.Point(133, 3).
     THIS-OBJECT:radioButton5:Name = "radioButton5".
@@ -425,9 +736,9 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /*  */
     /* button8 */
     /*  */
-    DEFINE VARIABLE nestedvar1 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-    nestedvar1 = System.Windows.Forms.AnchorStyles:Top.
-    THIS-OBJECT:button8:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+    DEFINE VARIABLE nestedvar2 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+    nestedvar2 = System.Windows.Forms.AnchorStyles:Top.
+    THIS-OBJECT:button8:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
     THIS-OBJECT:button8:Location = NEW System.Drawing.Point(706, 3).
     THIS-OBJECT:button8:Name = "button8".
     THIS-OBJECT:button8:Size = NEW System.Drawing.Size(64, 24).
@@ -438,9 +749,9 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /*  */
     /* tableL_Easily */
     /*  */
-    DEFINE VARIABLE nestedvar2 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-    nestedvar2 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-    THIS-OBJECT:tableL_Easily:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+    DEFINE VARIABLE nestedvar3 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+    nestedvar3 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+    THIS-OBJECT:tableL_Easily:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar3, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
     THIS-OBJECT:tableL_Easily:BackColor = System.Drawing.SystemColors:Control.
     THIS-OBJECT:tableL_Easily:ColumnCount = 5.
     THIS-OBJECT:tableLayoutPanel9:SetColumnSpan(THIS-OBJECT:tableL_Easily, 2).
@@ -484,7 +795,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:checkBox2:AutoSize = true.
     THIS-OBJECT:checkBox2:Checked = true.
     THIS-OBJECT:checkBox2:CheckState = System.Windows.Forms.CheckState:Checked.
-    THIS-OBJECT:checkBox2:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_mon", true)).
+    THIS-OBJECT:checkBox2:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_mon", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:checkBox2:Location = NEW System.Drawing.Point(0, 4).
     THIS-OBJECT:checkBox2:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
     THIS-OBJECT:checkBox2:Name = "checkBox2".
@@ -500,33 +811,29 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:bindingSchedWeek:NoLOBs = false.
     THIS-OBJECT:bindingSchedWeek:Position = 0.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar2 AS "Progress.Data.TableDesc[]" NO-UNDO.
-    arrayvar2 = NEW "Progress.Data.TableDesc[]"(0).
-    tableDesc2:ChildTables = arrayvar2.
+    DEFINE VARIABLE arrayvar7 AS "Progress.Data.TableDesc[]" NO-UNDO.
+    arrayvar7 = NEW "Progress.Data.TableDesc[]"(0).
+    tableDesc4:ChildTables = arrayvar7.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    DEFINE VARIABLE arrayvar3 AS Progress.Data.ColumnPropDesc EXTENT 13 NO-UNDO.
-    arrayvar3[1] = NEW Progress.Data.ColumnPropDesc("isday_mon", "", Progress.Data.DataType:LOGICAL).
-    arrayvar3[2] = NEW Progress.Data.ColumnPropDesc("isday_tue", "", Progress.Data.DataType:LOGICAL).
-    arrayvar3[3] = NEW Progress.Data.ColumnPropDesc("isday_wed", "", Progress.Data.DataType:LOGICAL).
-    arrayvar3[4] = NEW Progress.Data.ColumnPropDesc("isday_thu", "", Progress.Data.DataType:LOGICAL).
-    arrayvar3[5] = NEW Progress.Data.ColumnPropDesc("isday_fri", "", Progress.Data.DataType:LOGICAL).
-    arrayvar3[6] = NEW Progress.Data.ColumnPropDesc("isday_sat", "", Progress.Data.DataType:LOGICAL).
-    arrayvar3[7] = NEW Progress.Data.ColumnPropDesc("isday_sun", "", Progress.Data.DataType:LOGICAL).
-    arrayvar3[8] = NEW Progress.Data.ColumnPropDesc("promosched-id", "?", Progress.Data.DataType:INTEGER).
-    arrayvar3[9] = NEW Progress.Data.ColumnPropDesc("timebeg", "Время с", Progress.Data.DataType:INTEGER).
-    arrayvar3[10] = NEW Progress.Data.ColumnPropDesc("timeend", "Время по", Progress.Data.DataType:INTEGER).
-    arrayvar3[11] = NEW Progress.Data.ColumnPropDesc("wdaylist", "Дни недели", Progress.Data.DataType:CHARACTER).
-    arrayvar3[12] = NEW Progress.Data.ColumnPropDesc("dtime-beg", "время с", Progress.Data.DataType:DATETIME).
-    arrayvar3[13] = NEW Progress.Data.ColumnPropDesc("dtime-end", "время по", Progress.Data.DataType:DATETIME).
-    tableDesc2:Columns = arrayvar3.
-    THIS-OBJECT:bindingSchedWeek:TableSchema = tableDesc2.
+    DEFINE VARIABLE arrayvar8 AS Progress.Data.ColumnPropDesc EXTENT 9 NO-UNDO.
+    arrayvar8[1] = NEW Progress.Data.ColumnPropDesc("isday_mon", "", Progress.Data.DataType:LOGICAL).
+    arrayvar8[2] = NEW Progress.Data.ColumnPropDesc("isday_tue", "", Progress.Data.DataType:LOGICAL).
+    arrayvar8[3] = NEW Progress.Data.ColumnPropDesc("isday_wed", "", Progress.Data.DataType:LOGICAL).
+    arrayvar8[4] = NEW Progress.Data.ColumnPropDesc("isday_thu", "", Progress.Data.DataType:LOGICAL).
+    arrayvar8[5] = NEW Progress.Data.ColumnPropDesc("isday_fri", "", Progress.Data.DataType:LOGICAL).
+    arrayvar8[6] = NEW Progress.Data.ColumnPropDesc("isday_sat", "", Progress.Data.DataType:LOGICAL).
+    arrayvar8[7] = NEW Progress.Data.ColumnPropDesc("isday_sun", "", Progress.Data.DataType:LOGICAL).
+    arrayvar8[8] = NEW Progress.Data.ColumnPropDesc("dtime-beg", "время с", Progress.Data.DataType:DATETIME).
+    arrayvar8[9] = NEW Progress.Data.ColumnPropDesc("dtime-end", "время по", Progress.Data.DataType:DATETIME).
+    tableDesc4:Columns = arrayvar8.
+    THIS-OBJECT:bindingSchedWeek:TableSchema = tableDesc4.
     /*  */
     /* checkBox3 */
     /*  */
     THIS-OBJECT:checkBox3:AutoSize = true.
     THIS-OBJECT:checkBox3:Checked = true.
     THIS-OBJECT:checkBox3:CheckState = System.Windows.Forms.CheckState:Checked.
-    THIS-OBJECT:checkBox3:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_tue", true)).
+    THIS-OBJECT:checkBox3:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_tue", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:checkBox3:Location = NEW System.Drawing.Point(38, 4).
     THIS-OBJECT:checkBox3:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
     THIS-OBJECT:checkBox3:Name = "checkBox3".
@@ -541,7 +848,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:checkBox4:AutoSize = true.
     THIS-OBJECT:checkBox4:Checked = true.
     THIS-OBJECT:checkBox4:CheckState = System.Windows.Forms.CheckState:Checked.
-    THIS-OBJECT:checkBox4:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_wed", true)).
+    THIS-OBJECT:checkBox4:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_wed", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:checkBox4:Location = NEW System.Drawing.Point(74, 4).
     THIS-OBJECT:checkBox4:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
     THIS-OBJECT:checkBox4:Name = "checkBox4".
@@ -556,7 +863,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:checkBox5:AutoSize = true.
     THIS-OBJECT:checkBox5:Checked = true.
     THIS-OBJECT:checkBox5:CheckState = System.Windows.Forms.CheckState:Checked.
-    THIS-OBJECT:checkBox5:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_thu", true)).
+    THIS-OBJECT:checkBox5:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_thu", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:checkBox5:Location = NEW System.Drawing.Point(112, 4).
     THIS-OBJECT:checkBox5:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
     THIS-OBJECT:checkBox5:Name = "checkBox5".
@@ -571,7 +878,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:checkBox6:AutoSize = true.
     THIS-OBJECT:checkBox6:Checked = true.
     THIS-OBJECT:checkBox6:CheckState = System.Windows.Forms.CheckState:Checked.
-    THIS-OBJECT:checkBox6:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_fri", true)).
+    THIS-OBJECT:checkBox6:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_fri", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:checkBox6:Location = NEW System.Drawing.Point(148, 4).
     THIS-OBJECT:checkBox6:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
     THIS-OBJECT:checkBox6:Name = "checkBox6".
@@ -584,7 +891,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* checkBox7 */
     /*  */
     THIS-OBJECT:checkBox7:AutoSize = true.
-    THIS-OBJECT:checkBox7:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_sat", true)).
+    THIS-OBJECT:checkBox7:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_sat", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:checkBox7:ForeColor = System.Drawing.Color:Red.
     THIS-OBJECT:checkBox7:Location = NEW System.Drawing.Point(185, 4).
     THIS-OBJECT:checkBox7:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
@@ -598,7 +905,7 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     /* checkBox8 */
     /*  */
     THIS-OBJECT:checkBox8:AutoSize = true.
-    THIS-OBJECT:checkBox8:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_sun", true)).
+    THIS-OBJECT:checkBox8:DataBindings:Add(NEW System.Windows.Forms.Binding("Checked", THIS-OBJECT:bindingSchedWeek, "isday_sun", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
     THIS-OBJECT:checkBox8:ForeColor = System.Drawing.Color:Red.
     THIS-OBJECT:checkBox8:Location = NEW System.Drawing.Point(223, 4).
     THIS-OBJECT:checkBox8:Margin = NEW System.Windows.Forms.Padding(0, 4, 0, 0).
@@ -665,7 +972,12 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     THIS-OBJECT:tableLayoutPanel9:ResumeLayout(false).
     THIS-OBJECT:tableLayoutPanel9:PerformLayout().
     THIS-OBJECT:tableL_Detailed:ResumeLayout(false).
+    THIS-OBJECT:tableLayoutPanel1:ResumeLayout(false).
+    THIS-OBJECT:flowLayoutPanel2:ResumeLayout(false).
+    THIS-OBJECT:flowLayoutPanel2:PerformLayout().
+    CAST(THIS-OBJECT:bindingSchedWeek3, System.ComponentModel.ISupportInitialize):EndInit().
     CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
+    CAST(THIS-OBJECT:bindingSchedWeek2, System.ComponentModel.ISupportInitialize):EndInit().
     CAST(THIS-OBJECT:bindPromoActionOne, System.ComponentModel.ISupportInitialize):EndInit().
     THIS-OBJECT:tableLayoutPanel12:ResumeLayout(false).
     THIS-OBJECT:tableLayoutPanel13:ResumeLayout(false).
@@ -680,37 +992,22 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
     END CATCH.
     END METHOD.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	METHOD PRIVATE VOID radioButton3_CheckedChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-		    if radioButton3:Checked then do:
-           radioButton3:ForeColor  = System.Drawing.Color:Green.
-           radioButton4:ForeColor  = System.Drawing.Color:Black.
-        end.
-        else do:
-           radioButton3:ForeColor  = System.Drawing.Color:Black.
-           radioButton4:ForeColor  = System.Drawing.Color:Green.
-        end.
-        
-		RETURN.
-	END METHOD.
 
 	/*------------------------------------------------------------------------------
-	 Purpose:
+	 Purpose: переключение расписания ПРОСТОЕ-ДЕТАЛЬНОЕ
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	METHOD PRIVATE VOID radioButton6_CheckedChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-		    if radioButton6:Checked then do:
+        if radioButton6:Checked then do: // детальное -> простое 
+           m-promo-trg:week2Simple("promoSchedWeek") .
            radioButton6:ForeColor  = System.Drawing.Color:Green.
            radioButton5:ForeColor  = System.Drawing.Color:Black.
-           tableL_Easily:Visible = true.
            tableL_Detailed:Visible = false.
+           tableL_Easily:Visible = true.
         end.
-        else do:
+        else do: // простое -> детальное
+           m-promo-trg:week2Detail("promoSchedWeek2") .
            radioButton6:ForeColor  = System.Drawing.Color:Black.
            radioButton5:ForeColor  = System.Drawing.Color:Green.
            tableL_Easily:Visible = false.
@@ -719,6 +1016,64 @@ CLASS ibs.th.ref.promo.uc_TabAddEdit INHERITS UserControl:
 
 		RETURN.
 	END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  METHOD PRIVATE VOID dataGridView1_CellFormatting(
+   INPUT sender AS System.Object
+ , INPUT e      AS System.Windows.Forms.DataGridViewCellFormattingEventArgs ):
+   define variable v-iday as integer no-undo .
+   
+   // выводить наименования дней недели вместо номеров дней недели
+   if (dataGridView1:Columns[e:ColumnIndex]:Name = "wdaynum") then do :
+     v-iday = e:Value .
+     if v-iday > 0 then assign 
+       e:Value = a-week-days[v-iday]
+       e:FormattingApplied = true
+     .       
+   end .
+   
+    RETURN.
+  END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  METHOD PRIVATE VOID button9_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
+      if tableLayoutPanel1:Visible then do :
+        // добавить введённые данные в список и закрыть панель
+         bindingSchedWeek3:Assign().
+         m-promo-trg:add2Detail("promoSchedWeek2") .
+         button1:Text = "Удалить" .
+      end .
+      else button1:Text = "Не добавлять" .
+      
+      tableLayoutPanel1:Visible = not tableLayoutPanel1:Visible .   
+    RETURN.
+  END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  METHOD PRIVATE VOID button1_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
+      if tableLayoutPanel1:Visible then do :
+        tableLayoutPanel1:Visible = false .   
+        button1:Text = "Удалить" .
+      end .
+      else do :
+        // удалить из списка строку под курсором; панель не открывать 
+         m-promo-trg:delFromDetail("promoSchedWeek2") .
+      end .
+      
+    RETURN.
+  END METHOD.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:

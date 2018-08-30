@@ -59,12 +59,12 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
     define private variable textBox5 as System.Windows.Forms.TextBox no-undo.
 
   /* --- собственные переменные --- */
-    define private variable m-promo-trg as class ibs.th.ref.promo.promo_trg no-undo .
+    {ibs/th/ref/promo/promo_trg_heder.i &NotLocalEvent =yes &notSetBind = yes}
     define private variable m-sub       as class Progress.Lang.Object no-undo .
     DEFINE private VARIABLE tabPage5Save AS System.Windows.Forms.TabPage NO-UNDO.
      {ibs/th/ref/promo/promoType.def ttMethodCalc}
   /* --- end_of собственные переменные --- */
-  
+   
     //{ bge/ds-promo.i &ref}
     
     constructor public dPromoActions( ):
@@ -121,7 +121,7 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
       if valid-object(uc_TabAddEdit1)       then delete object uc_TabAddEdit1 .
       if valid-object(uc_TabAZS1)           then delete object uc_TabAZS1 .
       if valid-object(uc_TabBase1)          then delete object uc_TabBase1 .
-      //if valid-object(uc_TabPresents1)      then delete object uc_TabPresents1 .
+      if valid-object(uc_TabPresents1)      then delete object uc_TabPresents1 .
       if valid-object(uc_TabPromoAction1)   then delete object uc_TabPromoAction1 .
       if valid-object(uc_TabTypePay1)       then delete object uc_TabTypePay1 .
     end.     
@@ -129,7 +129,10 @@ class ibs.th.ref.promo.dPromoActions inherits Form :
     method private void okButton_Click (sender as System.Object, e as System.EventArgs):
 
 do on error undo, throw:
-      // bindingSounce:Assign() внутри :
+      uc_TabAddEdit1:AssignBind() .
+      m-promo-trg:checkPromoAction() .
+
+      // для остальных вкладок bindingSounce:Assign() внутри :
       deleteObject().
          
   define variable v-err-msg as character no-undo .  
@@ -153,10 +156,6 @@ do on error undo, throw:
   finally: 
   end finally.
 end .    
-        // вызвать:
-        // 1. чтение введённых значений отсюда
-        // 2. проверку введённых значений
-//        m-promo-trg:checkPromoAction() .
         this-object:DialogResult = System.Windows.Forms.DialogResult:Ok.
         this-object:Close ( ).
         
@@ -601,6 +600,7 @@ end .
        // uc_TabPresents1:SetPromoTrg(m-promo-trg).
         
         uc_TabTypePay1:SetPromoTrg(m-promo-trg).
+        uc_TabPresents1:SetPromoTrg(m-promo-trg).
         /*
         DEFINE VARIABLE uc_TabBase as ibs.th.ref.promo.uc_TabBase no-undo.
         uc_TabBase = NEW ibs.th.ref.promo.uc_TabBase().
@@ -667,7 +667,7 @@ define variable v-err-msg as character no-undo .
             uc_TabBase1:Enabled= false.
             
             uc_TabTypePay1:Enabled= false.
-            uc_TabPresents1:Enabled= false.
+            //uc_TabPresents1:Enabled= false.
             
         end.
         
@@ -679,17 +679,16 @@ define variable v-err-msg as character no-undo .
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	METHOD PRIVATE VOID tabControl1_SelectedIndexChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-	    /*
-        IF tabControl1:TabPages:Count = 5 THEN
-        DO:
-            tabControl1:TabPages:Add(tabPage6).
-        END.
-	    ELSE
-	    DO:
-		tabControl1:TabPages:Remove(tabPage6).
-		END.
-		*/
-		RETURN.
+	    
+	    uc_TabPromoAction1:cleanPanel().
+	    uc_TabPresents1:clenObject().
+	    if tabControl1:SelectedIndex  = 5 
+	    then
+	       uc_TabPresents1:Show_Panet_SelectConditonItem().
+	    if tabControl1:SelectedIndex  = 2 
+        then
+           uc_TabPromoAction1:Show_Panet_SelectConditonItem(). 
+        RETURN.
 
 	END METHOD.
     
