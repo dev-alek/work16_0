@@ -50,3 +50,9 @@ define variable v-time as integer no-undo .
       // 14/VIII-2018 - поле отсутствует buf_c-{&main-tbl}.is-del             = true
     .
   end. /* end_of not-g-news */
+  
+  for each ub.PromoGift where ub.PromoGift.idaction eq {&main-tbl}.idAction
+                          and ub.PromoGift.idCrit   eq {&main-tbl}.id
+  exclusive-lock:
+     delete ub.PromoGift.
+  end.  

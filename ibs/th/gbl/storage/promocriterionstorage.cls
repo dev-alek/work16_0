@@ -144,7 +144,7 @@ class ibs.th.gbl.storage.promoCriterionstorage:
     if valid-object(promoCriterionsubObj:Gifts)
     then do:
           vStorageGiftOBj = new promoGiftStorage().
-          vStorageGiftOBj:updateDBAll(promoCriterionsubObj:Gifts).
+          vStorageGiftOBj:updateDBAll(promoCriterionsubObj:Gifts,promoCriterionsubObj:idAction,promoCriterionsubObj:ID,promoCriterionsubObj:db-num).
     end.
     return.
     finally:

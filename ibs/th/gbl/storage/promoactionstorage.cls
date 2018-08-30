@@ -118,6 +118,7 @@ class ibs.th.gbl.storage.promoactionstorage:
       vSchedDays = ipromoactionsubObj:ScheduleWeek
       vSchedule  = ipromoactionsubObj:Schedule
     .
+    CleanChildObj(ipromoactionsubObj).
    if valid-object (vSchedDays) and valid-object (vSchedule) then do:
      vStorageschedwObj = new promoSchedwstorage ().       
 //   vStorageschedwObj:updateDBAll(vSchedDays, buf_promoaction.Db-num, buf_promoaction.promosched-id) .
@@ -354,6 +355,162 @@ class ibs.th.gbl.storage.promoactionstorage:
     
     define variable v-sub as class promoactionsub no-undo .
     getDataStorage (inpromoactionSubObj,buffer buf_promoaction).
+  end.
+  method public void CleanChildObj (inpromoactionSubObj as class promoactionsub):
+    case inpromoactionSubObj:methodCalc:
+    when 1 then do: //"Скидка процентом" 
+       IF inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:ensolo then // временная
+       DO:
+          if inpromoactionSubObj:typecond = 1 // "Количество по строке"  
+          then
+             this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no).
+          else IF inpromoactionSubObj:typecond = 2 // "Сумма по строке" 
+          then 
+             this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no).
+          IF inpromoactionSubObj:typecond = 3 // "Итог чека" 
+          then  
+             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no).
+       end.
+       ELSE
+          this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, yes, no).
+                
+       end .
+       when 2 then do: // абсолютная
+            this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no).
+       end.     
+       when 3 then do: // Скидка количеством
+          this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes).
+       end .
+       when 4 then do: //Скидка процентом за количество
+          this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes).
+       end .
+       when 5 then do: // Фиксированная цена
+          IF inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:ensolo 
+          then 
+             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, yes, no).
+          else 
+             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, no, yes).
+       end .
+       when 6 then do:
+          if    inpromoactionSubObj:typecond = 1 // "Количество по строке"  
+             or inpromoactionSubObj:typecond = 2 // "Сумма по строке"
+          then 
+             this-object:CleanChildObj(inpromoactionSubObj, yes, not inpromoactionSubObj:CritgoodsFl, yes, no, yes).
+          else if inpromoactionSubObj:typecond = 3 // "Итог чека"                       
+          then 
+             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, yes).
+       end .
+       when 7 then do:
+          if inpromoactionSubObj:typecond = 1 // "Количество по строке"  
+          then 
+             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, no).
+          else if inpromoactionSubObj:typecond = 2 // "Сумма по строке"   
+          then 
+             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, no).
+          else if inpromoactionSubObj:typecond = 3 // "Итог чека"  
+          then
+             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no).
+       end.
+              
+    end case.
+    
+  end.  
+  method public void CleanChildObj (inpromoactionSubObj as class promoactionsub,
+  input iCleanGoodsAppl as logical,
+  input iCleanGoodsCrit as logical,
+  input iCleanPromoSet  as logical,
+  input iCleanCriterion  as logical,
+  input iCleanCriterionNotOne  as logical /*,
+  input iCleanGiftNotMess  as logical */
+  ):
+    define variable vGoods as class  promogoodssubs no-undo.
+    define variable vGood  as class  promogoodssub no-undo.
+    define variable vCriterions as class  promoCriterionsubs no-undo.
+    define variable vCriterion  as class  promoCriterionsub no-undo.
+    define variable vCriterionOne  as class  promoCriterionsub no-undo.
+    
+    define variable vI as integer no-undo.
+    define variable vcount as integer no-undo.
+    if iCleanGoodsAppl 
+    then do: 
+      vGoods = inpromoactionSubObj:GoodsAppl.
+      vcount = vGoods:GetItem(1).
+      do vi = vcount   to 1 by -1 :
+        vGoods:GetItem(vi).
+        vGood = vGoods:promoGoodsObjCurr.
+        if vGood:Mode eq {&h-create}
+        then
+           vGoods:DeleteItem(vi).
+        else
+           vGood:Mode = {&h-delete}.     
+      end.
+    end.
+    if iCleanGoodsCrit 
+    then do: 
+      vGoods = inpromoactionSubObj:GoodsCrits.
+      do vi =  vGoods:GetItem(vi)  to 1 by -1 :
+        vGoods:GetItem(vi).
+        vGood = vGoods:promoGoodsObjCurr.
+        if vGood:Mode eq {&h-create}
+        then
+           vGoods:DeleteItem(vi).
+        else
+           vGood:Mode = {&h-delete}.     
+      end.
+    end.   
+    if iCleanPromoSet 
+    then do: 
+      vGoods = inpromoactionSubObj:PromoSet.
+      do vi =  vGoods:GetItem(vi)  to 1 by -1 :
+        vGoods:GetItem(vi).
+        vGood = vGoods:promoGoodsObjCurr.
+        if vGood:Mode eq {&h-create}
+        then
+           vGoods:DeleteItem(vi).
+        else
+           vGood:Mode = {&h-delete}.     
+      end.
+    end.
+    if iCleanCriterion 
+    then do: 
+      vCriterions = inpromoactionSubObj:Criterion.
+      do vi =  vCriterions:GetItem(vi)  to 1 by -1 :
+        vCriterions:GetItem(vi).
+        vCriterion = vCriterions:promoCriterionObjCurr.
+        if vCriterion:Mode eq {&h-create}
+        then
+           vCriterions:DeleteItem(vi).
+        else
+           vCriterion:Mode = {&h-delete}.     
+      end.
+    end.
+    if iCleanCriterionNotOne 
+    then do: 
+      vCriterions = inpromoactionSubObj:Criterion.
+      block-critOne:
+      do vi =  1 to vCriterions:GetItem(vi)   :
+        vCriterion = vCriterions:promoCriterionObjCurr.
+        if vCriterion:Mode ne  {&h-delete}
+        then do:
+           vCriterionone = vCriterion.
+           leave block-critOne.
+        end.   
+             
+      end.
+      do vi =  vCriterions:GetItem(vi)  to 1 by -1 :
+        vCriterions:GetItem(vi).
+        vCriterion = vCriterions:promoCriterionObjCurr.
+        if vCriterionone ne vCriterion
+        then do:
+          
+          if vCriterion:Mode eq {&h-create}
+          then
+             vCriterions:DeleteItem(vi).
+          else
+             vCriterion:Mode = {&h-delete}.
+        end.          
+      end.
+    end.
   end.
 
 end class.

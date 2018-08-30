@@ -31,7 +31,7 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
 define buffer buf_c-{&main-tbl} for ub.c-{&main-tbl} .
 define variable v-date as date no-undo .
 define variable v-time as integer no-undo .
-
+define buffer buf_promogoods for {&main-tbl}.
 
   if not ibs.th.gbl.gbl-var:g#news then do :
     run cur-time in this-procedure (output v-date, output v-time).
@@ -49,3 +49,8 @@ define variable v-time as integer no-undo .
       // 14/VIII-2018 - поле отсутствует buf_c-{&main-tbl}.is-del             = true
     .
   end. /* end_of not-g-news */
+  for each buf_promogoods where buf_promogoods.idaction eq {&main-tbl}.idAction
+                          and buf_promogoods.IdSet      eq {&main-tbl}.id
+  exclusive-lock:
+     delete buf_promogoods.
+  end

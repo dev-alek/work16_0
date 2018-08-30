@@ -483,7 +483,7 @@ end . /* end_of низ таблицы и html-файла */
                         for each tt-PromoCriterion where tt-PromoCriterion.mode eq {&h-update} :
                             if vFirst 
                             then
-                                tt-PromoCriterion.mode = {&h-delete}.
+                              . // tt-PromoCriterion.mode = {&h-delete}.
                             else
                                 vFirst = yes.
                         end.
@@ -509,20 +509,20 @@ end . /* end_of низ таблицы и html-файла */
                         /*message tt-PromoCriterion.idAction "tt-PromoCriterion.idAction"
                            view-as alert-box.*/        
                         hQuery:set-buffers(buffer tt-PromoCriterion:HANDLE). 
-                        hQuery:query-prepare("FOR EACH tt-PromoCriterion " /*+ if not available tt-promoaction-one then "" else (
+                        hQuery:query-prepare("FOR EACH tt-PromoCriterion " + if not available tt-promoaction-one then "" else (
                                                  "where tt-PromoCriterion.idaction eq " + string(tt-promoaction-one.id) +
-                                                 "  and tt-PromoCriterion.mode     ne {&h-delete}")*/).
+                                                 "  and tt-PromoCriterion.mode     ne {&h-delete}")).
                         
                     end.
                     when "PromoGiftForAction" 
                     then do: 
                         hQuery:set-buffers(buffer tt-PromoGift:HANDLE). 
-                        hQuery:query-prepare("FOR EACH tt-PromoGift " + if not available tt-promoaction-one then "" else (
-                                                 "where tt-PromoGift.idaction eq " + string(tt-promoaction-one.id) +
+                        hQuery:query-prepare("FOR EACH tt-PromoGift " + (if not available tt-promoaction-one then "where true " else (
+                                                 "where tt-PromoGift.idaction eq " + string(tt-promoaction-one.id) )) +
                                                  "  and tt-PromoGift.idCrit   eq 0 "  +
                                                  "  and tt-PromoGift.GDS-CODE NE 0" +
                                                  "  and tt-PromoGift.mode     ne {&h-delete}"
-                                            )).
+                                            ).
                     end.
                     when "PromoMes" 
                     then do: 
@@ -551,12 +551,13 @@ end . /* end_of низ таблицы и html-файла */
                     when "PromoGiftForCrit" 
                     then do: 
                         hQuery:set-buffers(buffer tt-PromoGift:HANDLE). 
-                        hQuery:query-prepare("FOR EACH tt-PromoGift " + if not available tt-PromoCriterion then "" else (
+                        hQuery:query-prepare("FOR EACH tt-PromoGift " + (if not available tt-PromoCriterion then "where true" else (
                                                  "where tt-PromoGift.idaction eq " + string(tt-PromoCriterion.idAction) +
-                                                 "  and tt-PromoGift.idCrit   eq " + string(tt-PromoCriterion.id) +
+                                                 "  and tt-PromoGift.idCrit   eq " + string(tt-PromoCriterion.id) )) +
+                                                 "  and tt-PromoGift.idCrit   ne 0 "  +
                                                  "  and tt-PromoGift.GDS-CODE NE 0" +
                                                  "  and tt-PromoGift.mode     ne {&h-delete}"
-                                            )).
+                                            ).
                     end.
                     when "promoSchedWeek" 
                     then do:
@@ -999,7 +1000,7 @@ end . /* end_of низ таблицы и html-файла */
     m-local-sec          = m-local-sec - 1.
     // для режима добавления включить tracking-changes на время инициализации полей
     // для режима редактирования - включить после инициализации   
-    //if p-mode = {&add-def} then temp-table tt-promoaction-one:tracking-changes = true . 
+    //if p-mode = {&add-def} then temp-table tt-promoaction-one:tracking-changes = true .
     create tt-promoaction-one.
     assign 
        tt-PromoAction-one.id             = p-sub:ID
@@ -1066,8 +1067,8 @@ end . /* end_of низ таблицы и html-файла */
      CreateTableForCrite     (p-mode, p-sub:Criterion ).
      CreateTableForGift      (p-mode, p-sub:Gifts     ).
      CreateTableForObject    (p-mode, p-sub:Objects     ).
-     find first tt-PromoGoodsCrite no-error.
-     tt-PromoAction-one.CritgoodsFl = available tt-PromoGoodsCrite.
+     //find first tt-PromoGoodsCrite no-error.
+     tt-PromoAction-one.CritgoodsFl = p-sub:CritgoodsFl.   //available tt-PromoGoodsCrite.
      find first tt-PromoGift where tt-PromoGift.gds-code ne 0 and tt-PromoGift.idCrit ne 0 no-error.
      tt-PromoAction-one.simpGiftFl = not available tt-PromoGift.
       do vi = 1 to num-entries(tt-PromoAction-one.paymenttype,{&delim-par}):
@@ -1345,6 +1346,36 @@ end . /* end_of низ таблицы и html-файла */
      // if p-mode = {&update} then temp-table tt-PromoGift:tracking-changes = true .
   end method. // end_of_CreateTableForGift
 
+
+  // отрезает секунды и милисекунды от value из dateTimePicker
+  method private void roundDtime (
+    input  p-wdaynum   as integer 
+  , input  p-dtimebeg1 as datetime
+  , input  p-dtimeend1 as datetime
+  , output p-temp-id   as integer
+  , output p-itimebeg2 as integer
+  , output p-itimeend2 as integer
+  , output p-dtimebeg2 as datetime
+  , output p-dtimeend2 as datetime
+  ) :
+    assign
+      p-itimebeg2 = integer( truncate(  mtime(p-dtimebeg1) / 1000 / 60,  0  ) ) 
+      p-itimeend2 = integer( truncate(  mtime(p-dtimeend1) / 1000 / 60,  0  ) )
+    .
+    // в id время кладётся минутами, иначе не хватит разрядности
+    p-temp-id = (-1) *
+    (
+          100000000 * p-wdaynum
+            + 10000 * p-itimebeg2 
+                    + p-itimeend2
+    ) no-error.
+    assign
+      p-itimebeg2 = p-itimebeg2 * 60
+      p-itimeend2 = p-itimeend2 * 60
+      p-dtimebeg2 = datetime (today, p-itimebeg2 * 1000)
+      p-dtimeend2 = datetime (today, p-itimeend2 * 1000)
+    .
+  end method . // end_of roundDtime
   method public void CreateTableForSchedw0
   ( input  p-mode as character
   , input  p-subs as class promoschedwsubs
@@ -1363,6 +1394,7 @@ end . /* end_of низ таблицы и html-файла */
         assign
           tt-promo-schedule-week.db-num = v-sub:db-num
           tt-promo-schedule-week.promosched-id = v-sub:schedId
+          // время начала и окончания приходит из БД округлённое, без секунд
           tt-promo-schedule-week.timebeg   = v-sub:timebeg
           tt-promo-schedule-week.timeend   = v-sub:timeend
           tt-promo-schedule-week.dtime-beg = datetime (today, tt-promo-schedule-week.timebeg * 1000)
@@ -1419,32 +1451,67 @@ end . /* end_of низ таблицы и html-файла */
   ) :
     define variable vI     as int no-undo.
     define variable v-sub  as promoschedwsub no-undo .
+    define variable v-wdaylist as character no-undo .
+    define variable i-num  as integer no-undo .
+    define variable i-size as integer no-undo .
+    define variable s-wday as character no-undo .
     define variable i-wday as integer no-undo .
+    define variable v-isFirst as logical no-undo .
+    define variable v-temp-id  as integer no-undo .
+    define variable v-itimebeg as integer no-undo .
+    define variable v-itimeend as integer no-undo .
+    define variable v-dtimebeg as datetime no-undo .
+    define variable v-dtimeend as datetime no-undo .
+    define variable v-dtimebeg2 as datetime no-undo .
+    define variable v-dtimeend2 as datetime no-undo .
+    
     if valid-object(p-subs) then do:
     // if p-mode = {&add-def} then temp-table tt-PromoGift:tracking-changes = true . 
     do vi = 1 to p-subs:GetItem(vI):
         v-sub = p-subs:promoSchedwObjCurr .
-        create tt-promo-schedule-week2 .
-        assign
-          tt-promo-schedule-week2.sub           = v-sub 
-          tt-promo-schedule-week2.id            = v-sub:ID
-          tt-promo-schedule-week2.db-num        = v-sub:db-num
-          tt-promo-schedule-week2.promosched-id = v-sub:schedId
-          tt-promo-schedule-week2.dtime-beg = datetime (today, v-sub:timebeg * 1000)
-          tt-promo-schedule-week2.dtime-end = datetime (today, v-sub:timeend * 1000)
-          tt-promo-schedule-week2.wdaylist  = v-sub:wdaylist
-        .
-        if p-mode = {&add-def} 
-        then do:
-          tt-promo-schedule-week2.promosched-id = m-local-sec.
-          tt-promo-schedule-week2.mode          = {&h-create}.
-          
-        end.
-        i-wday = integer(tt-promo-schedule-week2.wdaylist) no-error .
-        if i-wday > 0 then 
-//          tt-promo-schedule-week2.wdaylabel = entry(i-wday, g-week-days)
-          tt-promo-schedule-week2.wdaynum = i-wday
-        .
+        
+        v-itimebeg = v-sub:timebeg .
+        v-itimeend = v-sub:timeend .
+        v-dtimebeg = datetime (today, v-itimebeg * 1000) .
+        v-dtimeend = datetime (today, v-itimeend * 1000) .
+        
+        v-wdaylist = v-sub:wdaylist .
+        i-size = num-entries (v-wdaylist) .
+        v-isFirst = true .
+        do i-num = 1 to i-size :
+          s-wday = entry(i-num, v-wdaylist) .
+          i-wday = integer(s-wday) no-error .
+          if i-wday > 0 then do :
+            roundDtime (i-wday, v-dtimebeg, v-dtimeend,
+              output v-temp-id,
+              output v-itimebeg, output v-itimeend,
+              output v-dtimebeg2, output v-dtimeend2) .
+
+            create tt-promo-schedule-week2 .
+            if v-isFirst then assign
+              tt-promo-schedule-week2.sub = v-sub 
+              tt-promo-schedule-week2.id  = v-sub:ID
+              v-isFirst = false
+            .
+            else assign
+              tt-promo-schedule-week2.id  = v-temp-id
+            .
+            assign
+              tt-promo-schedule-week2.db-num        = v-sub:db-num
+              tt-promo-schedule-week2.promosched-id = v-sub:schedId
+              tt-promo-schedule-week2.dtime-beg = v-dtimebeg
+              tt-promo-schedule-week2.dtime-end = v-dtimeend
+//            tt-promo-schedule-week2.wdaylabel = entry(i-wday, g-week-days)
+              tt-promo-schedule-week2.wdaynum  = i-wday
+              tt-promo-schedule-week2.wdaylist = s-wday
+            .
+            if p-mode = {&add-def} 
+            then do:
+              tt-promo-schedule-week2.promosched-id = m-local-sec.
+              tt-promo-schedule-week2.mode          = {&h-create}.
+            end.
+          end . // end_of i-wday>0
+        end . // end_of do on wdaylist   
     end.
     // if p-mode = {&update} then temp-table tt-PromoGift:tracking-changes = true .
     end. // end_of valid-object(subs)
@@ -1480,8 +1547,10 @@ end . /* end_of низ таблицы и html-файла */
            p-sub:NameAction      = tt-PromoAction-one.nameAction      
            p-sub:promosched-id   = tt-PromoAction-one.promosched-id   
            p-sub:typecondlbl     = tt-PromoAction-one.typecondlbl        
-           p-sub:TypeDiscont     = if tt-PromoAction-one.TypeDiscontlog then 1 else 2     
+           p-sub:TypeDiscont     = if tt-PromoAction-one.TypeDiscontlog then 1 else 2
+           p-sub:CritgoodsFl     = tt-PromoAction-one.CritgoodsFl     
            v-sched-sub           = p-sub:Schedule
+           
          .
          // даже если в акции отсутствовало расписание - здесь p-sub:Schedule уже есть всегда
          assign
@@ -1709,8 +1778,11 @@ end . /* end_of низ таблицы и html-файла */
     define variable v-subd  as class promoSchedwSub no-undo.
     define variable vi      as integer no-undo .
     define variable v-days  as character no-undo .
-    define variable v-timebeg as integer no-undo .
-    define variable v-timeend as integer no-undo .
+    define variable v-itimebeg as integer no-undo .
+    define variable v-itimeend as integer no-undo .
+    define variable v-temp-id  as integer no-undo .
+    define variable v-dtimebeg as datetime no-undo .
+    define variable v-dtimeend as datetime no-undo .
     /* для простого расписания на одна запись в temp-table распределяется в коллекцию так:
        - первая строка в коллекции обновляется, согласно отображению на экране;
        - остальным строчкам коллекции проставляется delete
@@ -1724,8 +1796,6 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
     for first tt-promo-schedule-week:
       v-days = "".
       assign
-        v-timebeg  = integer( truncate(  mtime(tt-promo-schedule-week.dtime-beg) / 1000,  0  ) ) 
-        v-timeend  = integer( truncate(  mtime(tt-promo-schedule-week.dtime-end) / 1000,  0  ) )
         v-days = v-days + ",1" when tt-promo-schedule-week.isday_mon
         v-days = v-days + ",2" when tt-promo-schedule-week.isday_tue
         v-days = v-days + ",3" when tt-promo-schedule-week.isday_wed
@@ -1736,6 +1806,10 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
       .
       v-days = substring(v-days, 2) .
       
+      roundDtime (0, tt-promo-schedule-week.dtime-beg, tt-promo-schedule-week.dtime-end,
+           output v-temp-id,
+           output v-itimebeg, output v-itimeend,
+           output v-dtimebeg, output v-dtimeend) .
       if valid-object(p-subs) then do :
         vi = p-subs:GetItem(1) .
         if vi > 0 then do :
@@ -1753,18 +1827,18 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
           . 
         end.
         assign
-          v-sub:timebeg  = v-timebeg 
-          v-sub:timeend  = v-timeend
+          v-sub:timebeg  = v-itimebeg 
+          v-sub:timeend  = v-itimeend
           v-sub:wdaylist = v-days
         .
       end .
       else do :
         // если расписания не было - то пишем его только если что-нибудь поменялось
-        if (v-days <> "1,2,3,4,5,6,7") or (v-timebeg <> 0) or (v-timeend <> 86340) then do :
+        if (v-days <> "1,2,3,4,5,6,7") or (v-itimebeg <> 0) or (v-itimeend <> 86340) then do :
           v-sub = new promoSchedwSub().
           assign
-            v-sub:timebeg  = v-timebeg 
-            v-sub:timeend  = v-timeend
+            v-sub:timebeg  = v-itimebeg 
+            v-sub:timeend  = v-itimeend
             v-sub:wdaylist = v-days
             v-sub:Mode     = {&h-create}
           .
@@ -1784,11 +1858,16 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
     define variable v-suba  as class promoSchedwSub no-undo.
     define variable vi      as integer no-undo .
     define variable v-ancorValid as logical no-undo .
+    define variable v-ancorOut   as logical no-undo .
+    define variable v-temp-id    as integer no-undo .
+    define variable v-dtimebeg   as datetime no-undo .
+    define variable v-dtimeend   as datetime no-undo .
+    define variable v-itimebeg   as integer no-undo .
+    define variable v-itimeend   as integer no-undo .
 
     /* если до этого расписания в акции не было - сливаем его как есть из tt-promo-schedule-week2 */
     if not valid-object (p-subs) then p-subs = new promoSchedwSubs().
     
-      
     // 1. из коллекции удалить все дни, кроме якорного (т.е. где id = promosched-id)
     v-ancorValid = false .
     do vi = 1 to p-subs:GetItem(vI):
@@ -1802,28 +1881,55 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
 
     // 2. якорную запись коллекции (если коллекцияя была непустая) обновить,
     //    остальные запись из tt-promo-schedule-week2 добавить
-    define variable v-add-new as logical no-undo .    
+    if v-ancorValid then do :
+      // если якорная запись присутствует в tt-promo-schedule-week2 - обновить её
+      // иначе взять любую другую и обновить ею.
+      v-ancorOut = false .
+      for each tt-promo-schedule-week2:
+        if tt-promo-schedule-week2.id = v-suba:Id then do :
+          roundDtime (0, tt-promo-schedule-week2.dtime-beg, tt-promo-schedule-week2.dtime-end,
+            output v-temp-id,
+            output v-itimebeg, output v-itimeend,
+            output v-dtimebeg, output v-dtimeend) .
+          assign
+            v-suba:timebeg  = v-itimebeg
+            v-suba:timeend  = v-itimeend
+            v-suba:wdaylist = substitute(  "&1",  tt-promo-schedule-week2.wdaynum  )
+          .
+          delete tt-promo-schedule-week2 .
+          v-ancorOut = true .
+          leave .
+        end .
+      end .
+      if not v-ancorOut then for first tt-promo-schedule-week2:
+          roundDtime (0, tt-promo-schedule-week2.dtime-beg, tt-promo-schedule-week2.dtime-end,
+            output v-temp-id,
+            output v-itimebeg, output v-itimeend,
+            output v-dtimebeg, output v-dtimeend) .
+          assign
+            v-suba:timebeg  = v-itimebeg
+            v-suba:timeend  = v-itimeend
+            v-suba:wdaylist = substitute(  "&1",  tt-promo-schedule-week2.wdaynum  )
+          .
+          delete tt-promo-schedule-week2 .
+      end .
+    end . // end_of v-ancorValid
+    
     for each tt-promo-schedule-week2:
-      if v-ancorValid then do :
-        if tt-promo-schedule-week2.id = v-suba:Id then assign
-          v-sub = v-suba
-          v-add-new = false
-        .
-        else v-add-new = true .  
-      end .
-      else v-add-new = true .  
-      
-      if v-add-new then do :
-        v-sub = new promoSchedwSub().
-        p-subs:AddItem(v-sub).
-        assign
-          v-sub:db-num  = tt-promo-schedule-week2.db-num
-          v-sub:Mode    = {&h-create}
-        . 
-      end .
+      // записи добавленные в tt-promo-schedule-week2 из формы ввода имеют отрицательный id и округлённое время
+      // записи, загруженные из БД, имеют положительный id и округлённое время
+      v-sub = new promoSchedwSub().
+      p-subs:AddItem(v-sub).
+      roundDtime (0, tt-promo-schedule-week2.dtime-beg, tt-promo-schedule-week2.dtime-end,
+           output v-temp-id,
+           output v-itimebeg, output v-itimeend,
+           output v-dtimebeg, output v-dtimeend) .
       assign
-        v-sub:timebeg  = integer( truncate(  mtime(tt-promo-schedule-week2.dtime-beg) / 1000,  0  ) ) 
-        v-sub:timeend  = integer( truncate(  mtime(tt-promo-schedule-week2.dtime-end) / 1000,  0  ) )
+        v-sub:db-num  = tt-promo-schedule-week2.db-num
+        v-sub:schedId = tt-promo-schedule-week2.promosched-id
+        v-sub:Mode    = {&h-create}
+        v-sub:timebeg  = v-itimebeg
+        v-sub:timeend  = v-itimeend
   //      v-sub:wdaylist = substitute(  "&1",  lookup(tt-promo-schedule-week2.wdaylabel, g-week-days) )
         v-sub:wdaylist = substitute(  "&1",  tt-promo-schedule-week2.wdaynum  )
       .
@@ -1847,129 +1953,73 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
     return v-mode-fun .
   end method .
 
-  /* переключение расписания (отменено с 16/VIII-2018)
-     1. если целевая таблица пустая:
-        a) из ПРОСТОГО в ДЕТАЛЬНОЕ - копируем простое с сохранением
-           - количества дней,
-           - db-num,
-           - id только на первую запись (у простого расписания id = promotion-id; первая запись детального расписания будет якорной)
-        б) из ДЕТАЛЬНОГО в ПРОСТОЕ - копируем только
-           - дни,
-           - db-num
-           - id якорной записи (т.е. где id = promotion-id)
-     2. если целевая таблица заполнена:
-        a,б) не копируем: просто переключаемся между разными расписаниями
-     Т.к. на момент ввода расписания оно уже известно, то его многократное переключение лишнее.
-     Поэтому исключаем функционал переключения при малейших проблемах.
+  /* Т.к. на момент ввода расписания оно уже известно, то его многократное переключение лишнее.
+     Поэтому функционал переключения будет исключён при малейших проблемах.
+     16/VIII-2018 автоматическое создание расписания при переключении с ПРОСТОГО на ДЕТАЛЬНОЕ
+                  и с ДЕТАЛЬНОГО на ПРОСТОЕ отменено 
   */
-  method public void week2Detail(input p-bind-qname as character) :
-    define variable v-is-first as logical no-undo .
+  define private variable e-add-message as character no-undo .
+  define private variable e-ign-message as character no-undo .
+  define private variable e-has-inputs  as logical no-undo .
+  define private variable e-has-errors  as logical no-undo .
+  method public logical add2Detail(input p-bind-qname as character) :
+    define variable v-has-errors as logical no-undo .
     define variable v-h-query  as handle no-undo .
     define variable v-is-ok    as logical no-undo .
-    if not can-find (first tt-promo-schedule-week2) then do :
-      v-is-first = true .
-      if tt-promo-schedule-week.isday_mon then v-is-first = createDetail ("1", buffer tt-promo-schedule-week, v-is-first) .
-      if tt-promo-schedule-week.isday_tue then v-is-first = createDetail ("2", buffer tt-promo-schedule-week, v-is-first) .
-      if tt-promo-schedule-week.isday_wed then v-is-first = createDetail ("3", buffer tt-promo-schedule-week, v-is-first) .
-      if tt-promo-schedule-week.isday_thu then v-is-first = createDetail ("4", buffer tt-promo-schedule-week, v-is-first) .
-      if tt-promo-schedule-week.isday_fri then v-is-first = createDetail ("5", buffer tt-promo-schedule-week, v-is-first) .
-      if tt-promo-schedule-week.isday_sat then v-is-first = createDetail ("6", buffer tt-promo-schedule-week, v-is-first) .
-      if tt-promo-schedule-week.isday_sun then v-is-first = createDetail ("7", buffer tt-promo-schedule-week, v-is-first) .
-    end .
-    v-h-query = getQuery(p-bind-qname, no).
-    v-is-ok = v-h-query:QUERY-OPEN ( ).
-  end method .
-  method private logical createDetail (input p-wday     as character,
-                                      buffer p-buf-week for tt-promo-schedule-week,
-                                       input p-is-first as logical) :
-    define variable v-is-first as logical no-undo .
-    define variable i-wday as integer no-undo .
-    v-is-first = p-is-first .
-    i-wday = integer (p-wday) no-error .
-    if not error-status:error then do :
-      create tt-promo-schedule-week2 .
-      /* id пришедшие из БД имеют положительно значение,
-         id записей, ещё не ушедших в БД - отрицательные.
-         0 оставлять нельзя: при попытке добавить вторую такую запись будет key-violation во временной таблице.
-         id якорной записи совпадает с id расписания
-      */
-      if v-is-first then assign
-        tt-promo-schedule-week2.id  = p-buf-week.id
-        tt-promo-schedule-week2.sub = p-buf-week.sub
-      .
-      else            
-        tt-promo-schedule-week2.id = (-1) * (
-            100000000 * i-wday
-          + (  integer( truncate(mtime(p-buf-week.dtime-beg) / 1000 / 60, 0) )  ) * 10000
-          +                      mtime(p-buf-week.dtime-end) / 1000 / 60
-        ) .
-      
       assign
-        tt-promo-schedule-week2.promosched-id = p-buf-week.promosched-id
-        tt-promo-schedule-week2.dtime-beg     = p-buf-week.dtime-beg
-        tt-promo-schedule-week2.dtime-end     = p-buf-week.dtime-end
-        tt-promo-schedule-week2.db-num        = p-buf-week.db-num
-        tt-promo-schedule-week2.wdaylist      = p-wday
-//      tt-promo-schedule-week2.wdaylabel     = entry(i-wday, g-week-days)
-        tt-promo-schedule-week2.wdaynum       = i-wday
-        tt-promo-schedule-week2.mode          = p-buf-week.mode
+        e-add-message = substitute("Добавлены дни недели:&1", {&new-line})
+        e-ign-message = substitute("Дни недели:&1", {&new-line})
+        e-has-inputs  = false
+        e-has-errors  = false
       .
-      v-is-first = false .
-    end .
-    return v-is-first .
-  end method .                                    
-  
-  method public void week2Simple(input p-bind-qname as character) :
-    define variable v-h-query  as handle no-undo .
-    define variable v-is-ok    as logical no-undo .
-    define variable i-wday     as integer no-undo .
-    if not can-find (first tt-promo-schedule-week) then do :
-      create tt-promo-schedule-week.
-      for each tt-promo-schedule-week2 :
-        assign
-          tt-promo-schedule-week.sub           = tt-promo-schedule-week2.sub
-            when (tt-promo-schedule-week2.id = tt-promo-schedule-week2.promosched-id)  
-          tt-promo-schedule-week.db-num        = tt-promo-schedule-week2.db-num
-          tt-promo-schedule-week.promosched-id = tt-promo-schedule-week2.promosched-id
-// проставить минимальное и максимальное найденное время ?
-//          tt-promo-schedule-week.dtime-beg     = tt-promo-schedule-week2.dtime-beg 
-//          tt-promo-schedule-week.dtime-end     = tt-promo-schedule-week.dtime-end
-        .
-//      i-wday = lookup (tt-promo-schedule-week2.wdaylabel, g-week-days) no-error .
-        i-wday = tt-promo-schedule-week2.wdaynum .
-        if i-wday > 0 then
-          tt-promo-schedule-week.wdaylist = tt-promo-schedule-week.wdaylist + substitute(",&1", i-wday) .
+      // ...и снимать галочки на тот случай, если при добавлении будет ошибка и панель ввода останется на экране
+      if tt-promo-schedule-week3.isday_mon then do :
+        v-has-errors = createDetail2 ("1", buffer tt-promo-schedule-week3) .
+        tt-promo-schedule-week3.isday_mon = v-has-errors .
+        e-has-errors = (e-has-errors or v-has-errors) .
       end .
-      assign
-        tt-promo-schedule-week.id       = tt-promo-schedule-week.promosched-id
-        tt-promo-schedule-week.wdaylist = substring(tt-promo-schedule-week.wdaylist, 2)
+      if tt-promo-schedule-week3.isday_tue then do :
+        v-has-errors = createDetail2 ("2", buffer tt-promo-schedule-week3) .
+        tt-promo-schedule-week3.isday_tue = v-has-errors .
+        e-has-errors = (e-has-errors or v-has-errors) .
+      end .
+      if tt-promo-schedule-week3.isday_wed then do :
+        v-has-errors = createDetail2 ("3", buffer tt-promo-schedule-week3) .
+        tt-promo-schedule-week3.isday_wed = v-has-errors .
+        e-has-errors = (e-has-errors or v-has-errors) .
+      end .
+      if tt-promo-schedule-week3.isday_thu then do :
+        v-has-errors = createDetail2 ("4", buffer tt-promo-schedule-week3) .
+        tt-promo-schedule-week3.isday_thu = v-has-errors .
+        e-has-errors = (e-has-errors or v-has-errors) .
+      end .
+      if tt-promo-schedule-week3.isday_fri then do :
+        v-has-errors = createDetail2 ("5", buffer tt-promo-schedule-week3) .
+        tt-promo-schedule-week3.isday_fri = v-has-errors .
+        e-has-errors = (e-has-errors or v-has-errors) .
+      end .
+      if tt-promo-schedule-week3.isday_sat then do :
+        v-has-errors = createDetail2 ("6", buffer tt-promo-schedule-week3) .
+        tt-promo-schedule-week3.isday_sat = v-has-errors .
+        e-has-errors = (e-has-errors or v-has-errors) .
+      end .
+      if tt-promo-schedule-week3.isday_sun then do :
+        v-has-errors = createDetail2 ("7", buffer tt-promo-schedule-week3) .
+        tt-promo-schedule-week3.isday_sun = v-has-errors .
+        e-has-errors = (e-has-errors or v-has-errors) .
+      end .
+    v-h-query = getQuery(p-bind-qname, no).
+    v-is-ok = v-h-query:QUERY-OPEN ( ).
+    v-has-errors = e-has-errors .
+    if v-has-errors then do :
+      if e-has-inputs then
+        e-add-message = e-add-message + {&new-line} + e-ign-message 
       .
-      assign
-        tt-promo-schedule-week.isday_mon = can-do(tt-promo-schedule-week.wdaylist, "1")
-        tt-promo-schedule-week.isday_tue = can-do(tt-promo-schedule-week.wdaylist, "2")
-        tt-promo-schedule-week.isday_wed = can-do(tt-promo-schedule-week.wdaylist, "3")
-        tt-promo-schedule-week.isday_thu = can-do(tt-promo-schedule-week.wdaylist, "4")
-        tt-promo-schedule-week.isday_fri = can-do(tt-promo-schedule-week.wdaylist, "5")
-        tt-promo-schedule-week.isday_sat = can-do(tt-promo-schedule-week.wdaylist, "6")
-        tt-promo-schedule-week.isday_sun = can-do(tt-promo-schedule-week.wdaylist, "7")
-      .
+      else e-add-message = e-ign-message .
+      e-add-message = e-add-message + "содержат пересечение интервалов." .  
+      message e-add-message view-as alert-box.
     end .
-    v-h-query = getQuery(p-bind-qname, no).
-    v-is-ok = v-h-query:QUERY-OPEN ( ).
-  end method .
-
-  method public void add2Detail(input p-bind-qname as character) :
-    define variable v-h-query  as handle no-undo .
-    define variable v-is-ok    as logical no-undo .
-      if tt-promo-schedule-week3.isday_mon then createDetail2 ("1", buffer tt-promo-schedule-week3) .
-      if tt-promo-schedule-week3.isday_tue then createDetail2 ("2", buffer tt-promo-schedule-week3) .
-      if tt-promo-schedule-week3.isday_wed then createDetail2 ("3", buffer tt-promo-schedule-week3) .
-      if tt-promo-schedule-week3.isday_thu then createDetail2 ("4", buffer tt-promo-schedule-week3) .
-      if tt-promo-schedule-week3.isday_fri then createDetail2 ("5", buffer tt-promo-schedule-week3) .
-      if tt-promo-schedule-week3.isday_sat then createDetail2 ("6", buffer tt-promo-schedule-week3) .
-      if tt-promo-schedule-week3.isday_sun then createDetail2 ("7", buffer tt-promo-schedule-week3) .
-    v-h-query = getQuery(p-bind-qname, no).
-    v-is-ok = v-h-query:QUERY-OPEN ( ).
+    return v-has-errors .
   end method .
   method public void delFromDetail(input p-bind-qname as character) :
     define variable v-h-query  as handle no-undo .
@@ -1979,34 +2029,62 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
     v-h-query = getQuery(p-bind-qname, no).
     v-is-ok = v-h-query:QUERY-OPEN ( ).
   end method .
-  method private void createDetail2 (input p-wday     as character,
+  define private variable a-week-days as character extent 7 no-undo initial
+    ["понедельник","вторник","среда","четверг","пятница","суббота","воскресенье"] .
+  method private logical createDetail2 (input p-wday     as character,
                                       buffer p-buf-week for tt-promo-schedule-week3) :
-    define variable i-wday as integer no-undo .
+    define variable i-wday     as integer no-undo .
+    define variable v-dtimebeg as datetime no-undo .
+    define variable v-dtimeend as datetime no-undo .
+    define variable v-temp-id  as integer no-undo .
+    define variable v-itimebeg as integer no-undo .
+    define variable v-itimeend as integer no-undo .
+    define variable v-has-err  as logical no-undo .
+    
     i-wday = integer (p-wday) no-error .
     if not error-status:error then do :
+      roundDtime (i-wday, p-buf-week.dtime-beg, p-buf-week.dtime-end,
+           output v-temp-id,
+           output v-itimebeg, output v-itimeend,
+           output v-dtimebeg, output v-dtimeend) .
+      // пересечение и касание времени в пределах дня
+      if can-find (first tt-promo-schedule-week2
+                   where tt-promo-schedule-week2.wdaynum = i-wday
+                     and tt-promo-schedule-week2.dtime-beg <= v-dtimeend
+                     and tt-promo-schedule-week2.dtime-end >= v-dtimebeg 
+                  ) then do :
+        v-has-err = true .
+        e-ign-message = e-ign-message + substitute("&1(&2-&3)&4"
+        , a-week-days[i-wday]
+        , string(v-itimebeg, "hh:mm")
+        , string(v-itimeend, "hh:mm")
+        , {&new-line}
+        ).
+        return v-has-err .                
+      end .
+      v-has-err = false .
       if not can-find (first tt-promo-schedule-week2
                        where tt-promo-schedule-week2.wdaynum = i-wday
-                         and tt-promo-schedule-week2.dtime-beg = p-buf-week.dtime-beg
-                         and tt-promo-schedule-week2.dtime-end = p-buf-week.dtime-beg) then do :
-      create tt-promo-schedule-week2 .
-        tt-promo-schedule-week2.id = (-1) * (
-            100000000 * i-wday
-          + (  integer( truncate(mtime(p-buf-week.dtime-beg) / 1000 / 60, 0) )  ) * 10000
-          +                      mtime(p-buf-week.dtime-end) / 1000 / 60
-        ) no-error.
-      if error-status:error then delete tt-promo-schedule-week2 . else do :
-      assign
+                         and tt-promo-schedule-week2.dtime-beg = v-dtimebeg
+                         and tt-promo-schedule-week2.dtime-end = v-dtimeend) then do :
+        create tt-promo-schedule-week2 .
+        tt-promo-schedule-week2.id = v-temp-id no-error.
+        if error-status:error then delete tt-promo-schedule-week2 . else do :
+          assign
         tt-promo-schedule-week2.promosched-id = p-buf-week.promosched-id
-        tt-promo-schedule-week2.dtime-beg     = p-buf-week.dtime-beg
-        tt-promo-schedule-week2.dtime-end     = p-buf-week.dtime-end
+        tt-promo-schedule-week2.dtime-beg     = v-dtimebeg
+        tt-promo-schedule-week2.dtime-end     = v-dtimeend
         tt-promo-schedule-week2.wdaylist      = p-wday
         tt-promo-schedule-week2.wdaynum       = i-wday
         tt-promo-schedule-week2.mode          = {&h-create}
-      .
-      end .
+          .
+          e-has-inputs  = true .
+          e-add-message = e-add-message + substitute("&1&2", a-week-days[i-wday], {&new-line}).
+        end .
       end .
     end .
-    return .
+    else v-has-err = true .
+    return v-has-err .
   end method .
   method public void delgds(input iName as character ):
     case iName:
