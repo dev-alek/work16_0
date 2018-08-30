@@ -14,7 +14,12 @@ Author: Ruban Dmitriy
 Creation date: 11/07/18
 
 */
-TRIGGER PROCEDURE FOR WRITE OF c-PromoCriterion.
+block-level on error undo, throw.
+
+TRIGGER PROCEDURE FOR WRITE OF ub.c-PromoCriterion
+  NEW BUFFER new-c-PromoCriterion
+  OLD BUFFER old-c-PromoCriterion
+.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .

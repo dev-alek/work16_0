@@ -14,8 +14,12 @@ Author:
 Creation date: 11/07/18
 
 */
+block-level on error undo, throw.
 
-TRIGGER PROCEDURE FOR WRITE OF c-PromoGoods.
+TRIGGER PROCEDURE FOR WRITE OF ub.c-PromoGoods
+  NEW BUFFER new-c-PromoGoods
+  OLD BUFFER old-c-PromoGoods
+.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .

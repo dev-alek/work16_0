@@ -14,8 +14,12 @@ Author:
 Creation date: 11/07/18
 
 */
+block-level on error undo, throw.
 
-TRIGGER PROCEDURE FOR WRITE OF c-promo-schedule-week.
+TRIGGER PROCEDURE FOR WRITE OF ub.c-promo-schedule-week
+  NEW BUFFER new-c-promo-schedule-week
+  OLD BUFFER old-c-promo-schedule-week
+.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .

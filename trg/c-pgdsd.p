@@ -14,6 +14,7 @@ Author:
 Creation date: 11/07/18
 
 */
+block-level on error undo, throw.
 
 TRIGGER PROCEDURE FOR DELETE OF c-PromoGoods.
 
@@ -24,3 +25,9 @@ define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер удаления с-PromoGoods". 
 { cmp/vssrevis.i }
+
+  undo, throw new Progress.Lang.AppError(
+    substitute(  "&1: Ошибка удаления истории промо-акций [&2]." +
+                " Запрещено уделание истории из таблицы c-PromoGoods [id=&3]",
+                 vss-workfile, ub.c-PromoGoods.idAction, ub.c-PromoGoods.id  )
+  ) .
