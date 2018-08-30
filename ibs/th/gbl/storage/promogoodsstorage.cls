@@ -108,6 +108,7 @@ class ibs.th.gbl.storage.promogoodsstorage:
     assign
       buf_promoGoods.id     = next-value (s-promoGoods-id, ub)
       buf_promoGoods.db-num = promoGoodssubObj:db-num
+      promoGoodssubObj:ID   = buf_promoGoods.id   
     no-error.
     if error-status:error
     then do:
@@ -155,21 +156,23 @@ class ibs.th.gbl.storage.promogoodsstorage:
   end method.
   
   method public class promoGoodssubs getpromoGoodssubs (input idaction as int64,
-                                                        input iTYPE as int,
+                                                        input iTYPE as ibs.th.ref.promo.enum-promo-goods-type,
                                                         input idb-num as integer ):
     define buffer buf_promogoods for ub.promogoods.                                                        
     define variable promoGoodssubsObj as class promoGoodssubs.
+    define variable vType as integer no-undo.
+    vType = iTYPE:getvalue().
     promoGoodssubsObj = new promoGoodssubs ().
     assign
         promoGoodssubsObj:idaction = idaction
-        promoGoodssubsObj:type     = itype
+        promoGoodssubsObj:type     = vtype
         promoGoodssubsObj:db-num   = idb-num
     .
     if idaction > 0
     then
     for each buf_promoGoods   where buf_promoGoods.idaction eq idaction
                                 and buf_promoGoods.idSet    eq 0
-                                and buf_promoGoods.type     eq itype
+                                and buf_promoGoods.type     eq vType
                                 and buf_promoGoods.db-num   eq idb-num
     no-lock:
     
@@ -182,14 +185,17 @@ class ibs.th.gbl.storage.promogoodsstorage:
   
   method public class promoGoodssubs getpromoGoodssubs (input idaction as int64,
                                                         input iIdSet    as int64,
-                                                        input iTYPE    as int,
+                                                        input iTYPE    as ibs.th.ref.promo.enum-promo-goods-type,
                                                         input idb-num  as integer ):
     define buffer buf_promogoods for ub.promogoods.                                                        
     define variable promoGoodssubsObj as class promoGoodssubs.
+    define variable vType as integer no-undo.
+    vType = iTYPE:getvalue().
+    
     promoGoodssubsObj = new promoGoodssubs ().
     assign
         promoGoodssubsObj:idaction = idaction
-        promoGoodssubsObj:type     = itype
+        promoGoodssubsObj:type     = vtype
         promoGoodssubsObj:db-num   = idb-num
         promoGoodssubsObj:IdSet    = iIdSet
     . 
@@ -198,7 +204,7 @@ class ibs.th.gbl.storage.promogoodsstorage:
     then
     for each buf_promoGoods   where buf_promoGoods.idaction eq idaction
                                 and buf_promoGoods.idSet     eq iIdSet
-                                and buf_promoGoods.type     eq itype
+                                and buf_promoGoods.type     eq vtype
                                 and buf_promoGoods.db-num  eq idb-num
     no-lock:
         promoGoodssubsObj:AddItem(getDataStorage (buffer buf_promoGoods)).

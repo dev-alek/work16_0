@@ -60,24 +60,31 @@ class ibs.th.gbl.storage.promoSchedwstorage:
 
   
   method public void updateDBAll( input inObjList as {&class_subs}  ):
-      updateDBAll (inObjList,?).
+      // 01/VIII-2018 пока ни от куда не вызывался
+      updateDBAll (inObjList,?,?).
   end.
-  method public void updateDBAll( input inObjList as {&class_subs}, input idb-num as integer):
+  method public void updateDBAll( input inObjList as {&class_subs}
+                                , input idb-num   as integer
+                                , input ishced-id as integer ):
+    /* вызывается только из promoactionstorage:updatedbchiled();
+       p-sched-id читается из класса PromoAction после формы редактирования до записи в БД */
       define variable vi as int no-undo.
       define variable v-sub as {&class_sub} no-undo .
       define variable v-sched-id as integer no-undo .
       
-      v-sched-id = 0 .
+      v-sched-id = ishced-id .
       do vi = 1 to inObjList:GetItem(vi):
          v-sub = inObjList:promoSchedwObjCurr .
-         assign
-           v-sub:db-num  = idb-num    when idb-num > 0
-           v-sub:schedId = v-sched-id when v-sched-id > 0
-         .
          case v-sub:Mode :
            when {&h-create} then do:
+             assign
+               v-sub:db-num  = idb-num    when (v-sub:db-num  = 0) and (idb-num    > 0)
+               v-sub:schedId = v-sched-id when (v-sub:schedId = 0) and (v-sched-id > 0)
+             .
              insertDB(v-sub).
-             if v-sched-id = 0 then v-sched-id = v-sub:schedId .
+             assign
+               v-sched-id = v-sub:schedId when v-sched-id = 0
+             .
            end .
            when {&h-update} then     
              updateDB(v-sub).

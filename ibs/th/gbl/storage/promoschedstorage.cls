@@ -123,10 +123,12 @@ class ibs.th.gbl.storage.promoSchedstorage:
   end method.
   
   method private void setDataStorage (input inObj as class {&class_sub}, buffer inbf for ub.promo-schedule ):
+    define variable v-status as ibs.th.ref.promo.enum-sched-status no-undo .
+    v-status = inObj:status_ .
     assign
       inbf.dispname       = inObj:dispname
       inbf.sched-type     = inObj:schedType
-      inbf.status_        = inObj:status_:getvalue()
+      inbf.status_        = v-status:getvalue() when valid-object(v-status)
       inbf.ext-code-sched = inObj:extCodeSched
     .
     validate  inbf.

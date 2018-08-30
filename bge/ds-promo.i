@@ -25,7 +25,7 @@ define temp-table tt-promoaction no-undo
   like ub.PromoAction
   
   field status_lbl       as character
-  field sub as class Progress.Lang.Object
+  field sub as class Progress.Lang.Object serialize-hidden
   FIELD mode AS char
   field Chang as logical
   .
@@ -41,7 +41,7 @@ define temp-table tt-promoaction-one no-undo
   field methodCalclbl    as character
   field typecondlbl      as character
   field scheduleName     as character
-  field scheduleType     as integer
+  field scheduleType     as logical
   field extCodeSched     as character
   .
 
@@ -49,33 +49,34 @@ define temp-table tt-PromoGoodsAppl no-undo
   like ub.PromoGoods
   
   FIELD gdsName AS char 
-  field sub as class Progress.Lang.Object
+  field sub as class Progress.Lang.Object //serialize-hidden
   FIELD mode AS char
   .
 define temp-table tt-PromoGoodsCrite no-undo
-  like ub.PromoGoods
+  like tt-PromoGoodsAppl
   
-  FIELD gdsName AS char 
-  field sub as class Progress.Lang.Object
-  FIELD mode AS char
+  /* FIELD gdsName AS char 
+  field sub as class Progress.Lang.Object serialize-hidden
+  FIELD mode AS char */
   .  
 define temp-table tt-PromoSet no-undo
   like ub.PromoGoods
-   
-  field sub as class Progress.Lang.Object
+  
+  FIELD gdsName AS char  
+  field sub as class Progress.Lang.Object serialize-hidden
   FIELD mode AS char
   .  
 define temp-table tt-PromoSetGoods no-undo
-  like ub.PromoGoods
+  like tt-PromoGoodsAppl
   
-  FIELD gdsName AS char 
-  field sub as class Progress.Lang.Object
-  FIELD mode AS char
+  /* FIELD gdsName AS char 
+  field sub as class Progress.Lang.Object serialize-hidden
+  FIELD mode AS char */
   .  
 define temp-table tt-PromoCriterion no-undo
   like ub.PromoCriterion
   field span as character  
-  field sub as Progress.Lang.Object
+  field sub as Progress.Lang.Object serialize-hidden
   FIELD mode AS char
   .
 
@@ -83,7 +84,7 @@ define temp-table tt-PromoGift no-undo
   like ub.PromoGift
    
   FIELD gdsName AS char
-  field sub as class Progress.Lang.Object
+  field sub as class Progress.Lang.Object serialize-hidden
   FIELD mode AS char
   .
   
@@ -95,7 +96,7 @@ define temp-table tt-PromoObject no-undo
   FIELD FirmName AS char
   FIELD objDbNum AS integer
   
-  field sub as class Progress.Lang.Object
+  field sub as class Progress.Lang.Object serialize-hidden
   FIELD mode AS char
   .
 
@@ -115,10 +116,28 @@ define temp-table tt-promo-schedule-week no-undo
   field isday_fri as logical
   field isday_sat as logical
   field isday_sun as logical
-
-  field sub  as class Progress.Lang.Object
+  
+  field sub  as class Progress.Lang.Object serialize-hidden
   field mode as character
 .
+
+define temp-table tt-promo-schedule-week2 no-undo
+  like ub.promo-schedule-week
+
+  field dtime-beg as datetime
+  field dtime-end as datetime
+//field wdaylabel as character
+  field wdaynum   as integer
+  
+  field sub  as class Progress.Lang.Object serialize-hidden
+  field mode as character
+.
+
+define temp-table tt-promo-schedule-week3 no-undo
+  like tt-promo-schedule-week
+.
+define buffer tt-PromoCriterion-two for tt-PromoCriterion .
+define buffer tt-PromoGift-two for tt-PromoGift .
 
 define dataset ds-promoaction-one
   for tt-promoaction-one
@@ -132,6 +151,8 @@ define dataset ds-promoaction-one
   , tt-PromoObject
 //  , tt-promo-schedule
   , tt-promo-schedule-week
+  , tt-promo-schedule-week2
+  , tt-promo-schedule-week3
 //  data-relation relGoodsAppl  for tt-promoaction-one, tt-PromoGoodsAppl     relation-fields (id, idaction)
   //data-relation relGoodsCrite for tt-promoaction-one, tt-PromoGoodsCrite    relation-fields (id, idaction) nested
   //data-relation relCriterion  for tt-promoaction-one, tt-PromoCriterion     relation-fields (id, idaction) nested
@@ -140,5 +161,14 @@ define dataset ds-promoaction-one
 //  data-relation relPromoWeek  for tt-promo-schedule, tt-promo-schedule-week relation-fields (id, promosched-id)
 .
 
+define variable hBuf-tt-PromoGoodsAppl-two as handle no-undo .
+define dataset ds-PromoCriterion
+  for tt-PromoCriterion-two
+  , tt-PromoGift-two
+  data-relation relGoodsAppl  for tt-PromoCriterion-two, tt-PromoGift-two  relation-fields (id, idcrit)
+.
+define variable hDset-ds-promoaction-two as handle no-undo .
+define variable hQtop-ds-promoaction-two as handle no-undo .
+define variable hQrel-ds-promoaction-two as handle no-undo .
 &endif
 /* $Workfile$ e n d */

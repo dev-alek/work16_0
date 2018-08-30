@@ -69,7 +69,7 @@ class ibs.th.gbl.storage.promoactionstorage:
     define variable vDb-num as integer no-undo.
     create buf_promoaction.
     assign
-      vID                    = next-value (s-promoaction-id, ub)
+      vID                    = if promoactionsubObj:id > 0 then promoactionsubObj:id else next-value (s-promoaction-id, ub)
       buf_promoaction.id     = vID
       vDb-num                = ibs.th.gbl.gbl-var:g#db-num
       buf_promoaction.db-num = vDb-num
@@ -109,22 +109,32 @@ class ibs.th.gbl.storage.promoactionstorage:
     define variable vStorageObjectOBj as class promoObjectStorage.
     define variable vStorageschedObj  as class promoSchedstorage.
     define variable vStorageschedwObj as class promoSchedwstorage.
+    define variable vSchedDays        as class promoSchedwsubs.
     define variable vSchedDay         as class promoSchedwsub.
     define variable vSchedule         as class promoSchedsub.
+    define variable v-sched-id        as integer no-undo .
     
-   if    valid-object (ipromoactionsubObj:Schedule)
-     and valid-object (ipromoactionsubObj:ScheduleWeek) then do:
+    assign
+      vSchedDays = ipromoactionsubObj:ScheduleWeek
+      vSchedule  = ipromoactionsubObj:Schedule
+    .
+   if valid-object (vSchedDays) and valid-object (vSchedule) then do:
      vStorageschedwObj = new promoSchedwstorage ().       
-     vStorageschedwObj:updateDBAll(ipromoactionsubObj:ScheduleWeek, buf_promoaction.Db-num).
-     vSchedDay = ipromoactionsubObj:ScheduleWeek:promoSchedwObjCurr .
+//   vStorageschedwObj:updateDBAll(vSchedDays, buf_promoaction.Db-num, buf_promoaction.promosched-id) .
+     vStorageschedwObj:updateDBAll(vSchedDays, buf_promoaction.Db-num, ipromoactionsubObj:promosched-id) .
      
      vStorageschedObj  = new promoSchedstorage ().
-     vSchedule = ipromoactionsubObj:Schedule .
      case vSchedule:Mode :
        when {&h-create} then do:
-         vSchedule:ID     = vSchedDay:schedId .
          vSchedule:db-num = buf_promoaction.Db-num .
-         ipromoactionsubObj:promosched-id = vSchedule:ID .
+         
+         vSchedDay  = vSchedDays:promoSchedwObjCurr .
+         v-sched-id = if valid-object(vSchedDay) then vSchedDay:schedId else next-value (s-promosched-id, ub) .
+         assign
+           vSchedule:ID = v-sched-id 
+           ipromoactionsubObj:promosched-id = v-sched-id
+         .
+         
          vStorageschedObj:insertDB(vSchedule).
        end .
        when {&h-update} then     
@@ -241,6 +251,39 @@ class ibs.th.gbl.storage.promoactionstorage:
     return promoactionsubsObj.
   end method.
   
+   method public class promoactionsub CopyObject (input inpromoactionObj as class promoactionsub):
+    define variable promoactionsubObj  as class promoactionsub.
+    promoactionsubObj = new promoactionsub ().
+    //promoactionsubObj = cast(inpromoactionObj:Clone(),promoactionsub). 
+    assign
+         // id ставляем чтобы начита потомков с родителя     
+        promoactionsubObj:ID          = inpromoactionObj:ID
+        promoactionsubObj:Mode        = {&h-create}
+        promoactionsubObj:status_          = 0
+        promoactionsubObj:NameAction  = inpromoactionObj:NameAction
+                                                     
+        promoactionsubObj:beg-date         = inpromoactionObj:beg-date
+        promoactionsubObj:end-date        = inpromoactionObj:end-date
+        promoactionsubObj:nameAction       = inpromoactionObj:nameAction
+        promoactionsubObj:TypeDiscontEnum      = inpromoactionObj:TypeDiscontEnum
+        promoactionsubObj:methodCalc       = inpromoactionObj:methodCalc
+        promoactionsubObj:typecond         = inpromoactionObj:typecond
+        promoactionsubObj:promosched-id    = inpromoactionObj:promosched-id
+        promoactionsubObj:db-num           = inpromoactionObj:db-num // - заполнился при create
+        promoactionsubObj:changeDate      = inpromoactionObj:changeDate    
+        promoactionsubObj:comment          = inpromoactionObj:comment
+        promoactionsubObj:description      = inpromoactionObj:description    
+        promoactionsubObj:ext-code          = inpromoactionObj:ext-code 
+        promoactionsubObj:paymenttype      = inpromoactionObj:paymenttype 
+        promoactionsubObj:priority         = inpromoactionObj:priority 
+        
+        
+        
+    .
+    promoactionsubObj:refreshChildObj().
+    promoactionsubObj:id = 0.
+    return promoactionsubObj.
+    end.
     
   method private void setDataStorage (input inpromoactionObj as class promoactionsub, buffer inbf_promoaction for ub.promoaction ):
     

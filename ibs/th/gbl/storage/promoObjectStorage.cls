@@ -61,25 +61,25 @@ class ibs.th.gbl.storage.promoObjectStorage:
   end.     
   method public void updateDBAll( input PromoObjectsubsObj as PromoObjectsubs ,input pIdParent as int64,input pdb-num as integer  ):
       define variable vi as int no-undo.
-      
+      define variable vSub as Class PromoObjectsub no-undo.
       do vi =  1 to PromoObjectsubsObj:GetItem(vi):
+         vSub = PromoObjectsubsObj:PromoObjectObjCurr.
          if pIdParent ne ?
          then 
-            PromoObjectsubsObj:PromoObjectObjCurr:idAction = pIdParent.
+            vSub:idAction = pIdParent.
          
          if pdb-num ne ?
          then 
-            PromoObjectsubsObj:PromoObjectObjCurr:db-num = pdb-num.
-         
-         if      PromoObjectsubsObj:PromoObjectObjCurr:Mode eq {&h-create}
+            vSub:db-num = pdb-num.
+          if      vSub:Mode eq {&h-create}
          then
-            insertDB(PromoObjectsubsObj:PromoObjectObjCurr).
-         else if PromoObjectsubsObj:PromoObjectObjCurr:Mode eq {&h-update}
+            insertDB(vSub).
+         else if vSub:Mode eq {&h-update}
          then     
-            updateDB(PromoObjectsubsObj:PromoObjectObjCurr).
-         else if PromoObjectsubsObj:PromoObjectObjCurr:Mode eq {&h-delete}
+            updateDB(vSub).
+         else if vSub:Mode eq {&h-delete}
          then     
-            deleteDB(PromoObjectsubsObj:PromoObjectObjCurr). 
+            deleteDB(vSub). 
             
       end.    
   end.
@@ -145,7 +145,7 @@ class ibs.th.gbl.storage.promoObjectStorage:
     define buffer buf_promoObject for ub.promoObject.
     define variable PromoObjectsubsObj as class PromoObjectsubs.
     PromoObjectsubsObj = new PromoObjectsubs ().
-    
+   
     for each buf_PromoObject  where buf_PromoObject.idAction = pId
                                    and buf_PromoObject.db-num = idb-num
     no-lock: 
