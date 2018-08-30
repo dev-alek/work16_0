@@ -33,6 +33,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property nds-code      as integer      no-undo get. private set.
   define property enbl-ne       as integer      no-undo get. private set.
   define property enbl-zc       as integer      no-undo get. private set.
+  define property enbl-exc      as integer      no-undo get. private set.
   define property srvc-type     as integer      no-undo get. private set.
   define property fuel-type     as character    no-undo get. private set.
   define property max-dnsty     as decimal      no-undo get. private set.
@@ -152,6 +153,11 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
           assign 
             enbl-zc = integer(inValue).
         end.
+      when "enbl-exc" then 
+        do:
+          assign 
+            enbl-exc = integer(inValue).
+        end.
       when "srvc-type" then 
         do:
           assign 
@@ -265,6 +271,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         nds-code      = ?
         enbl-ne       = ?
         enbl-zc       = ?
+        enbl-exc      = ?
         srvc-type     = ?
         fuel-type     = ?
         max-dnsty     = ?
