@@ -15,7 +15,7 @@ Creation date: 11/07/18
 
 */
 
-TRIGGER PROCEDURE FOR WRITE OF ñ-promo-schedule-week.
+TRIGGER PROCEDURE FOR WRITE OF c-promo-schedule-week.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .

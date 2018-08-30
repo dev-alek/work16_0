@@ -773,6 +773,20 @@ Creation date: 01/29/07
 &glob table_c-prod-bc-db-attr-full '{&bef-table_c-prod-bc-db-attr-full}':U
 &glob bef-table_c-profile-by-profile-full Ист привязки проф к проф
 &glob table_c-profile-by-profile-full '{&bef-table_c-profile-by-profile-full}':U
+&glob bef-table_c-promo-schedule-full История заголовков расписаний акций
+&glob table_c-promo-schedule-full '{&bef-table_c-promo-schedule-full}':U
+&glob bef-table_c-promo-schedule-week-full История расписаний акций
+&glob table_c-promo-schedule-week-full '{&bef-table_c-promo-schedule-week-full}':U
+&glob bef-table_c-PromoAction-full История акций
+&glob table_c-PromoAction-full '{&bef-table_c-PromoAction-full}':U
+&glob bef-table_c-PromoCriterion-full История критериев акций
+&glob table_c-PromoCriterion-full '{&bef-table_c-PromoCriterion-full}':U
+&glob bef-table_c-PromoGift-full История подарков акций
+&glob table_c-PromoGift-full '{&bef-table_c-PromoGift-full}':U
+&glob bef-table_c-PromoGoods-full История товаров акций
+&glob table_c-PromoGoods-full '{&bef-table_c-PromoGoods-full}':U
+&glob bef-table_c-PromoObject-full История объектов акций
+&glob table_c-PromoObject-full '{&bef-table_c-PromoObject-full}':U
 &glob bef-table_c-prop-head-full История ОПИСАНИЯ СВОЙСТВ
 &glob table_c-prop-head-full '{&bef-table_c-prop-head-full}':U
 &glob bef-table_c-prop-ref-full История типов срезов хранилища
@@ -1885,6 +1899,22 @@ Creation date: 01/29/07
 &glob table_prog-message-lang-full '{&bef-table_prog-message-lang-full}':U
 &glob bef-table_prog-message-lang-attr-full Атрибуты для prog-message-lang
 &glob table_prog-message-lang-attr-full '{&bef-table_prog-message-lang-attr-full}':U
+&glob bef-table_promo-schedule-full promosche
+&glob table_promo-schedule-full '{&bef-table_promo-schedule-full}':U
+&glob bef-table_promo-schedule-week-full promo-schedule-week
+&glob table_promo-schedule-week-full '{&bef-table_promo-schedule-week-full}':U
+&glob bef-table_PromoAction-full Акции
+&glob table_PromoAction-full '{&bef-table_PromoAction-full}':U
+&glob bef-table_PromoAttr-full атрибуты акций
+&glob table_PromoAttr-full '{&bef-table_PromoAttr-full}':U
+&glob bef-table_PromoCriterion-full Критерии
+&glob table_PromoCriterion-full '{&bef-table_PromoCriterion-full}':U
+&glob bef-table_PromoGift-full PromoGift
+&glob table_PromoGift-full '{&bef-table_PromoGift-full}':U
+&glob bef-table_PromoGoods-full товары критерия акции
+&glob table_PromoGoods-full '{&bef-table_PromoGoods-full}':U
+&glob bef-table_PromoObject-full объекты акции
+&glob table_PromoObject-full '{&bef-table_PromoObject-full}':U
 &glob bef-table_prop-head-full Объекты-операнды машины правил
 &glob table_prop-head-full '{&bef-table_prop-head-full}':U
 &glob bef-table_prop-head-attr-full Атрибуты для prop-head

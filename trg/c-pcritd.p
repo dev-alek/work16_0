@@ -15,10 +15,11 @@ Creation date: 11/07/18
 
 */
 TRIGGER PROCEDURE FOR DELETE OF c-PromoCriterion.
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
-define variable vss-description as character no-undo init "Тригер удаления с-PromoCriterion". 
+define variable vss-description as character no-undo init "Тригер изменение c-PromoCriterion". 
 { cmp/vssrevis.i }

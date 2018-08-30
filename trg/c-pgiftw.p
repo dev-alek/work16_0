@@ -15,7 +15,7 @@ Creation date: 11/07/18
 
 */
 
-TRIGGER PROCEDURE FOR WRITE OF ñ-PromoGift.
+TRIGGER PROCEDURE FOR WRITE OF c-PromoGift.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
