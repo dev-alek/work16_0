@@ -27,8 +27,9 @@ class ibs.th.adm.upd.observupd:
   define property List1 as character init "vsd,gds-mercury,c-vsd,c-gds-mercury" no-undo 
     get.
 
-  define property TargetDBShm as integer init 1 no-undo 
+  define property TargetDBShm as integer no-undo 
     get.
+    private set.
 
   define property CurrDBShm as integer  no-undo 
     get.
@@ -53,13 +54,33 @@ class ibs.th.adm.upd.observupd:
   define property Msg as character no-undo
     get.
     private set.
-
+  define private variable  m-upd-list-df      as character extent 2 no-undo
+    initial ["cmp/18051601.df", 
+             "cmp/18062801.df"] .
+  define private variable  m-upd-list-chk      as character extent 2 no-undo
+    initial ["TABLE:gds-mercury", 
+             "TABLE:PromoAction"] .
+             
+  define property upd-df as character no-undo
+  get():
+    return if extent (m-upd-list-df) > CurrDBShm
+           then m-upd-list-df[CurrDBShm + 1]
+           else "".
+  end.
+  
+  define property upd-list-chk as character no-undo
+  get():
+    return if extent (m-upd-list-chk) > CurrDBShm
+           then m-upd-list-chk[CurrDBShm + 1]
+           else "".
+  end.
+  
   constructor observupd ():
     
     define buffer buf_sys-ctrl for ub.sys-ctrl.
     define buffer buf_db for ub.db.
     find first buf_sys-ctrl no-lock.
-
+    TargetDBShm = extent(m-upd-list-df).
     DbNum = buf_sys-ctrl.db-num.
     
     find first buf_db no-lock where buf_db.db-num = DbNum.
@@ -153,25 +174,47 @@ class ibs.th.adm.upd.observupd:
   end.
   
   method public void writeResult (input inShm as integer):
-
+    
+    define variable vI as integer no-undo.
+    define variable vStrChk as character no-undo.
     define buffer buf_db for ub.db.
     define buffer buf_sys-ctrl for ub.sys-ctrl.
     on write of ub.db override do: end.
     
     if inShm > 0
-    then do:
-      find first _file no-lock where _file._file-name = 'gds-mercury' no-error.
-      if not available (_file)
+    then do vi = 1 to num-entries(upd-list-chk):
+      vStrChk = entry(vi,upd-list-chk).
+      if vStrChk begins "TABLE:"
+      then do:
+        vStrChk = substring(vStrChk,7). 
+        find first _file no-lock where _file._file-name = vStrChk  no-error.
+        if not available (_file)
         then do:
-          Msg = substitute ( "Обновление схемы БД до версии 1 завершилось неудачно. Работа с ней запрещена!" ).
+          Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Работа с ней запрещена!",inShm ).
+          IsErr = true.
+          return. 
+        end.
+      end.  
+      else if vStrChk begins "Field:"
+      then do:
+        vStrChk = substring(vStrChk,7).
+        find first _file no-lock where _file._file-name = entry(1,vStrChk,".")  no-error.
+        if available _file
+        then
+           FIND FIRST _field OF _file WHERE _field._Field-Name =  entry(2,vStrChk,".") NO-LOCK NO-ERROR.
+        if not available (_field)
+        then do:
+          Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Работа с ней запрещена!", inShm ).
           IsErr = true.
           return.
         end.
+      end.
     end.
     
     find first buf_sys-ctrl no-lock.
     find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
     buf_db.reserve1-char = string (inShm).
+    CurrDBShm = inShm.
     buf_db.reserve2-char = "deferred-callnews".
     release buf_db.
     isUpdShm = true.

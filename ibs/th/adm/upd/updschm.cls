@@ -68,10 +68,12 @@ class ibs.th.adm.upd.updschm:
 
   define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
-
+  define private variable m-user-passwd       as character no-undo .
+  define private variable m-prowin32FileName  as character no-undo.
+  define private variable m-FileDf            as character no-undo.
+  
     
   constructor public updschm (input inConPar as char):
-
     obsrvdbObj = new observupd ().
     
     CurrDBShm   = obsrvdbObj:CurrDBShm.  
@@ -79,23 +81,16 @@ class ibs.th.adm.upd.updschm:
     DbNum       = obsrvdbObj:DbNum.      
     TargetDBShm = obsrvdbObj:TargetDBShm.
     ConPar      = inConPar.
+    m-FileDf    = obsrvdbObj:upd-df.
     isNeedUpd = obsrvdbObj:isneedupg().
     if obsrvdbObj:IsErr
     then do:
       Msg = obsrvdbObj:Msg.
       IsErr = true.
     end.
-    delete object obsrvdbObj.
     
-  end constructor.
-
-  method public void upddbshm ():
-    
-    disconnect value ('ub').
-    
-    define variable v-user-passwd       as character no-undo .
     assign
-      v-user-passwd = substitute("-U &1 -P &2":U
+      m-user-passwd = substitute("-U &1 -P &2":U
                                 ,"sysadm"
                                 ,"sysadm"
                                 )
@@ -105,10 +100,33 @@ class ibs.th.adm.upd.updschm:
     if loadDFProcFile <> ?
     then isRcode = true.
     else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
-     
+    m-prowin32FileName =  search ("bin/prowin32.exe").
+    delete object obsrvdbObj.
+    
+  end constructor.
+
+  method public void upddbshm ():
+    define variable vCurrDBShmOld as integer no-undo.
+    Block-UpdOne:
+    do while CurrDBShm < TargetDBShm :
+      isUpdShm = no.
+      upddbshmOne().
+      if vCurrDBShmOld >= CurrDBShm 
+      then 
+        isErr = yes.
+      if isErr
+      then 
+        leave Block-UpdOne.
+    end.
+    return.
+  end.    
+  method public void upddbshmOne ():  
+    
+    disconnect value ('ub').
+    
     if CurrDBShm < TargetDBShm
     then do:
-      upddbshm-1().
+      upddbshm-1(m-FileDf).
       if isErr then 
       do:
         Msg =
@@ -120,8 +138,8 @@ class ibs.th.adm.upd.updschm:
         return.
       end.
     end.
-    connect value(substitute(ConPar + " &1", v-user-passwd)).  
-    NewCurrDBShm = 1.
+    connect value(substitute(ConPar + " &1", m-user-passwd)).  
+    NewCurrDBShm = CurrDBShm + 1.
     obsrvdbObj = new observupd ().
     obsrvdbObj:writeResult(NewCurrDBShm).
     if obsrvdbObj:IsErr
@@ -131,32 +149,23 @@ class ibs.th.adm.upd.updschm:
       IsErr = true.
       return.  
     end.
+    m-FileDf = obsrvdbObj:upd-df.
     delete object obsrvdbObj no-error.
     disconnect value ("ub").
+    CurrDBShm = NewCurrDBShm.
     isUpdShm = true.
   end method.
   
-  method private void upddbshm-1 ():
-
-    define variable v-int as integer no-undo.
-    
-    if CurrDBShm < 1
-    then do:
-      loaddf ("cmp/18051601.df").
-      if IsErr = true
-        then return.
-        
-    end.
-    
+  method private void upddbshm-1 (input iDf as character ):
+    loaddf (iDf).
+    if IsErr = true
+      then return.
   end method.
 
   method private void loaddf (input inFileDF as char):
     
     def var v-filedfname as character no-undo.
-    def var v-prowin32FileName as character no-undo.
     def var v-cmd-comm as character no-undo.
-
-    v-prowin32FileName =  search ("bin/prowin32.exe").
     
     v-filedfname = search (inFileDF).
     if v-filedfname = ?
@@ -166,10 +175,9 @@ class ibs.th.adm.upd.updschm:
       return.
     end.
     if isRcode
-    then v-cmd-comm = substitute ("&4 &1 -U sysadm -P sysadm -rx -p &2 -param &3,yes", ConPar, loadDFprocFile, v-filedfname, v-prowin32FileName).
-    else v-cmd-comm = substitute ("&4 &1 -U sysadm -P sysadm -p &2 -param &3,yes", ConPar, loadDFprocFile, v-filedfname, v-prowin32FileName).
+    then v-cmd-comm = substitute ("&4 &1 -U sysadm -P sysadm -rx -p &2 -param &3,yes", ConPar, loadDFprocFile, v-filedfname, m-prowin32FileName).
+    else v-cmd-comm = substitute ("&4 &1 -U sysadm -P sysadm -p &2 -param &3,yes", ConPar, loadDFprocFile, v-filedfname, m-prowin32FileName).
     os-command silent value (v-cmd-comm).
-  
   end.
 
 end class.
