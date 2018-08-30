@@ -56,6 +56,7 @@ define buffer bf_chk-doc for ub.chk-doc .
 define buffer buf_shift-obj for ub.shift-obj.
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_place for ub.place.
+define buffer bf_chk-discnt for ub.chk-discnt.
 
 do
 on error undo, return error
@@ -189,13 +190,18 @@ on error undo, return error
   bf_chk-doc.shift-num = v-check-shift-num
   bf_chk-doc.shift-name = string(integer(v-check-shift-name))
   .
-  
   /* если изменилось что-то, то пишем в параметр об изменении этого чека */
   if bf_chk-doc.shift-date    <> v-check-shift-date
     or bf_chk-doc.shift-num   <> v-check-shift-num
     or bf_chk-doc.shift-name  <> string(integer(v-check-shift-name)) then
         p-changed = true.
-  
+    for each bf_chk-discnt where bf_chk-discnt.doc-code = bf_chk-doc.doc-code:
+    assign
+      bf_chk-discnt.shift-date = v-check-shift-date
+      bf_chk-discnt.shift-num = v-check-shift-num
+      .    
+    release bf_chk-discnt.        
+    end.
   if lookup("shift-reservoir-to", p-change-fields) > 0 then
     do:
       /* меняем резеруар у товаров в чеке */
