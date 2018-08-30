@@ -100,7 +100,7 @@ define variable vss-description as character no-undo initial "Объект критерий ак
      &StorClass = promoGiftStorage
      &storColec = getpromoGiftSubs(idAction,id,db-num) }
     
-    define property Mode as char no-undo init "{&h-update}"
+    define property Mode as char no-undo init {&h-update}
     get.
     set.
     

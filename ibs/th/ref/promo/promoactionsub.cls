@@ -187,7 +187,7 @@ define variable vss-description as character no-undo initial "Объект акция.".
       end.
     end. 
       
-    define property Mode as char no-undo init "{&h-update}"
+    define property Mode as char no-undo init {&h-update}
     get.
     set.
     
@@ -196,6 +196,16 @@ define variable vss-description as character no-undo initial "Объект акция.".
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
      &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:criterion,db-num) }
+     
+    define property CritgoodsFl as logical no-undo init ?
+    get():
+      return if CritgoodsFl eq ?
+             then if valid-object (this-object:GoodsCrits)
+                  then GoodsCrits:iCounter ne 0
+                  else no
+             else no.    
+    end.  
+    set.
     
     {ibs/th/ref/promo/propertyclass.i
      &Obj       = GoodsAppl

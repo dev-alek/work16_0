@@ -131,7 +131,7 @@ define variable vss-description as character no-undo initial "Объект подаркок ак
       end.
     END.
     
-    define property Mode as char no-undo init "{&h-update}"
+    define property Mode as char no-undo init {&h-update}
     get.
     set.
     
