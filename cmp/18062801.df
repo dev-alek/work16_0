@@ -1,0 +1,41 @@
+ADD SEQUENCE "s-promoaction-id"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+ADD SEQUENCE "s-promoGoods-id"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+ADD SEQUENCE "s-promoCriterion-id"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+ADD SEQUENCE "s-promoGift-id"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+ADD SEQUENCE "s-promoobject-id"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+ADD SEQUENCE "s-promosched-id"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+
+ADD SEQUENCE "s-promo-chip"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+  MAX-VAL 2147483647
+
+.
+PSC
+cpstream=1251
+.
+0000010831
