@@ -107,7 +107,7 @@ CLASS ibs.th.ref.journal_vsd_abl INHERITS Form:
     { cmp/library.i class} 
     { cmp/str-glbl.i class}
     { gbl/getcntxt.i def }
-   //  { gbl/prn-lib.i   }
+   //111  { gbl/prn-lib.i   }
    /* { gbl/userobjs.i }*/
   
     { bge/ds-vsd-set.i }  

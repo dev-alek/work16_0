@@ -680,10 +680,12 @@ define variable v-ischg-ext-type as logical no-undo .
     and not buf_trn-doc.flag_
     and buf_trn-doc.status_ = {&wayb}
     then do:
+        /*
       if buf_trn-doc.tot-cli = 0 then do:
         message "Вы не ввели сумму для проверки." view-as alert-box information.
         return error.
       end.
+      */
       if v-cntxt-db-num  = bf-db_clients.db-num then do:
         run gbl/d-askw.w
           (input "Вопрос" /* Заголовок окна */

@@ -779,11 +779,22 @@ on error undo, return error return-value
                 if first-of(buf_esys-route.esr-oper)
                 then sw:start-element (buf_esys-route.esr-oper) .
                 
+                if buf_esys-route.esr-oper = "sales-p-shifts"
+                then do :
+                  sw:start-element ("sales-p-shift") .
+                    sw:write-data-element ("tbl-ord", string(buf_esys-route.esr-tbl-ord)) .
+                end.
+                
                 for each buf_esys-route-dump where buf_esys-route-dump.esrd-dump-ord = buf_esys-route.esr-dump-ord:
                   v-longdata = "" .
                   fix-codepage(v-longdata) = "UTF-8" .
                   copy-lob from buf_esys-route-dump.esrd-blob-value-rec to v-longdata no-convert.
                   sw:write-fragment (v-longdata) .
+                end.
+                
+                if buf_esys-route.esr-oper = "sales-p-shifts"
+                then do :
+                  sw:end-element ("sales-p-shift") .
                 end.
                 
                 if last-of(buf_esys-route.esr-oper)

@@ -469,7 +469,7 @@ for each buf_price-doc-forming-gds no-lock where
     run gds-attr-value in this-procedure (input ub.goods.gds-code
                                          ,input {&attr-null-price}
                                          ,output v-gds-null-price
-                                         ,output v-type ) no-error .
+                                         ,output v-type ) no-error .                                  
     if buf_price-doc-forming-gds.price-sale-doc   = ? or (buf_price-doc-forming-gds.price-sale-doc   = 0 and not logical(v-gds-null-price) ) 
                 then return error substitute ("Продажная цена по товару &1 &2 &3 = &4" ,  buf_price-doc-forming-gds.artic , buf_price-doc-forming-gds.prod-type ,buf_price-doc-forming-gds.prod-code, buf_price-doc-forming-gds.price-sale-doc  ) .
     if buf_price-doc-forming-gds.price-sale-rubl  = ? or (buf_price-doc-forming-gds.price-sale-rubl  = 0 and not logical(v-gds-null-price) )

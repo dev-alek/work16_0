@@ -922,7 +922,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     { gbl/getcntxt.i get }
     define variable v-parent-handle as handle no-undo .
     v-parent-handle = this-procedure:instantiating-procedure .
-    if lookup("cb_set-cp-list", v-parent-handle :internal-entries) > 0 then do:
+    // ак как запустили из класса v-parent-handle не существует
+    if valid-object(v-parent-handle) and lookup("cb_set-cp-list", v-parent-handle :internal-entries) > 0 then do:
       run cb_set-cp-list in v-parent-handle (output p-rid-list).
     end.
     v-rid-list = p-rid-list.

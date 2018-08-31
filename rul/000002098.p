@@ -241,6 +241,8 @@ run write-log  in p-log-handle (
   do transaction:
     v-err-message = "" .
     parseSubObj = new parsesub ().
+    parseSubObj:setParent(parparentproc, p-parent-handle, p-log-handle) .
+
     impSubObj = new impsubject (parseSubObj).
     parseSubObj:Parse1CRNSub(file-name).
     catch exAppErrors as class Progress.Lang.AppError :

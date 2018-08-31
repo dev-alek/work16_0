@@ -220,7 +220,7 @@ if p-disc-reason <> 0 then do:
     when 2 then do:
       return integer({&discnt-t-d-card}).
     end.
-    when 3 then do:
+    when 3 or when 15 then do:
       return integer({&discnt-t-promo}).
     end.
     when 4 then do:

@@ -55,6 +55,7 @@ define variable v-oss as character no-undo.
 
 define variable v-gtd as character no-undo .
 define variable v-is-gas as character no-undo .
+define variable v-ban-bonus as character no-undo .
 define variable v-ptrl-as-good as character no-undo .
 define variable v-type as character no-undo .
 define variable disc-b-code as integer no-undo .
@@ -329,6 +330,15 @@ if (lookup({&petrolium}, loc-units.type) > 0 AND lookup({&divisional}, loc-units
      cash-gds.gds-stat = cash-gds.gds-stat + 64.
    end.
 end.
+/* товары-исключения */
+   run gds-attr-value in this-procedure  (
+                                          input cash-gds.gds-code
+                                         ,input {&attr-ban-bonus}
+                                         ,output v-ban-bonus
+                                         ,output v-type) no-error.
+  assign
+   cash-gds.wd = int(logical(v-ban-bonus))
+   no-error .                                       
 if how-temp-disc = {&dGR-temp-disc} then do:
   case temp-discnt-method_:
     when "" then do:

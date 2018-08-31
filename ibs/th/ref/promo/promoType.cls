@@ -1,0 +1,111 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+ 
+Типы для акций.
+
+Автор: Рубан Дмитрий Андреевич
+Дата создания: 11/07/18
+Author: 
+Creation date: 11/07/18
+
+*/
+using Progress.Lang.*.
+
+block-level on error undo, throw.
+
+class ibs.th.ref.promo.promoType:  
+define variable vss-revision    as character no-undo initial "$Revision$":U .
+define variable vss-author      as character no-undo initial "$Author$":U .
+define variable vss-date        as character no-undo initial "$Date$":U .
+define variable vss-workfile    as character no-undo initial "$Workfile$":U .
+define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-description as character no-undo initial "Типы для акций.". 
+  
+{ibs/th/ref/promo/promoType.def tt-type} 
+{ibs/th/ref/promo/promoType.def ttTypeOut}  
+CONSTRUCTOR PUBLIC promoType(  ):
+    TypeDiscontrefresh().
+    methodCalcrefresh().
+    typecondrefresh().
+    Status_refresh().
+end.    
+{ibs/th/ref/promo/promotype.i
+    &NameType = TypeDiscont
+    &ListType = "Временная скидка,Промо-набор"
+}
+{ibs/th/ref/promo/promotype.i
+    &NameType = methodCalc
+    &ListType = "Скидка процентом,Абсолютная (скидка суммой от цены),Скидка количеством,Скидка процентом за количество,Фиксированная цена,Выдача сообщения,Подарок"
+}
+{ibs/th/ref/promo/promotype.i
+    &NameType = typecond
+    &ListType = "Количество по строке,Сумма по строке,Сумма в документе"
+} 
+
+{ibs/th/ref/promo/promotype.i
+    &NameType = Status_
+    &ListType = "Настройки в работе,Активная,Заблокирована"
+    &Shift    =  1
+} 
+method public character typeLbl (ilist as character ,intType as integer ):
+    find first tt-type where tt-type.list eq ilist
+                         and tt-type.code eq intType
+                         no-error. 
+    return if available tt-type then tt-type.item else ?.
+end.
+
+method public integer typeInt (ilist as character ,chartype as character):
+    find first tt-type where tt-type.list eq ilist
+                         and tt-type.item eq charType
+                         no-error. 
+    return if available tt-type then tt-type.code else ?.
+end.
+method public void typeTable (ilist as character,output table ttTypeOut ):
+    define variable vi as integer  no-undo.
+    define buffer tt-type for tt-type.
+    for each ttTypeOut:
+        delete ttTypeOut.
+    end.
+    do vi = 1 to num-entries(ilist):
+        for each tt-type where tt-type.list eq entry(vi,ilist):
+            create ttTypeOut.
+            buffer-copy tt-type to ttTypeOut.
+        end.
+    end.        
+end.
+ 
+method public void CangeTypeDiscont (input iTypeDiscont as int):
+    if iTypeDiscont eq 1
+    then
+       methodCalclist = methodCalclistall.
+    else
+       methodCalclist = "Скидка процентом,Фиксированная цена".   
+    methodCalcRefresh().   
+  end.
+
+
+method public void CangeTypeDiscontAndMethodCalc (input iTypeDiscont as int,input iMethodCalc as int):
+    
+    if iTypeDiscont = 1
+    then do:
+        if    iMethodCalc eq 1
+           or iMethodCalc eq 6
+           or iMethodCalc eq 7
+        then   
+            TypeCondList = TypeCondListAll.
+        else if  iMethodCalc eq 2
+        then
+            TypeCondList = "Количество по строке,Сумма по строке". 
+        else
+            TypeCondList = "".     
+    end.
+    else
+        TypeCondList = "".      
+    TypeCondRefresh().   
+  end.
+end class.

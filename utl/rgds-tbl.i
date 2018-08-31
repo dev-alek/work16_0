@@ -225,6 +225,10 @@ abc-analysis-gds-obj~
 ,c-vsd~
 ,gds-mercury~
 ,c-gds-mercury~
+,PromoGift~
+,PromoGoods~
+,c-PromoGift~
+,c-PromoGoods~
 ":U
 
 procedure valid-ren-gdsc-tbl-list :

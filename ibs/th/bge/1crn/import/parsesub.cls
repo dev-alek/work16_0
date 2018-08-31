@@ -135,14 +135,25 @@ class ibs.th.bge.1crn.import.parsesub:
 
   
   /*---------------- Объекты для скидок ----------*/  
-  define variable promotionSubjectObj                      as class promotion                   no-undo.
-  define variable promotion_gdSubjectObj                   as class promotion_gd                no-undo.
-  define variable promotion_shedule-lineSubjectObj         as class promotion_shedule-line      no-undo.
-  define variable promotion_thresholdSubjectObj            as class promotion_threshold         no-undo.
-  
-  define variable promotion_gdListSubjectsObj              as class subjects                    no-undo.
-  define variable promotion_shedule-lineListSubjectsObj    as class subjects                    no-undo.
-  define variable promotion_thresholdListSubjectsObj       as class subjects                    no-undo.
+  define variable promotionSubjectObj                   as class promotion               no-undo. // <promotion>
+  define variable promotionSheduleObj                   as class promotion_schedule      no-undo. // promotion:schedule
+  define variable promotion_shedule-lineListSubjectsObj as class subjects                no-undo. // promotion:schedule:schedule-lines
+  define variable promotion_shedule-lineSubjectObj      as class promotion_schedule-line no-undo. // promotion:schedule:schedule-lines:schedule-line
+  define variable promotion_thresholdListSubjectsObj    as class subjects                no-undo. // promotion:thresholds
+  define variable promotion_thresholdSubjectObj         as class promotion_threshold     no-undo. // promotion:thresholds:threshold
+  define variable promotion_t_giftListSubjectsObj       as class subjects                no-undo. // promotion:thresholds:threshold:gifts
+  define variable promotion_t_giftSubjectObj            as class promotion_gift-gd       no-undo. // promotion:thresholds:threshold:gifts:gd
+  define variable promotion_gdsListSubjectsObj          as class subjects                no-undo. // promotion:gds
+  define variable promotion_gdsSubjectObj               as class promotion_gds-gd        no-undo. // promotion:gds:gd
+  define variable promotion_gdListSubjectsObj           as class subjects                no-undo. // promotion:gds-addcond
+  define variable promotion_gdSubjectObj                as class promotion_gd            no-undo. // promotion:gds-addcond:gd
+  define variable promotionPromosetObj                  as class promotion_promoset      no-undo. // promotion:promoset
+  define variable promotion_psListSubjectsObj           as class subjects                no-undo. // promotion:promoset:ps-sections
+  define variable promotion_psSubjectObj                as class promotion_ps-section    no-undo. // promotion:promoset:ps-sections:ps-section
+  define variable promotion_p_gdListSubjectsObj         as class subjects                no-undo. // promotion:promoset:ps-sections:ps-section:gds
+  define variable promotion_p_gdSubjectObj              as class promotion_gd            no-undo. // promotion:promoset:ps-sections:ps-section:gds:gd
+  define variable promotion_giftListSubjectsObj         as class subjects                no-undo. // promotion:gifts
+  define variable promotion_giftSubjectObj              as class promotion_gift-gd       no-undo. // promotion:gifts:gd
   
   define variable imppromotionEventHndlrObj                as class imppromotion                no-undo.
 /*---------------- Объекты для скидок ---------- конец*/  
@@ -151,6 +162,10 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
   define variable iNum             as integer   no-undo. /* примерный счетчик элемента */
+
+  define private variable parparentproc   as handle no-undo .
+  define private variable p-parent-handle as handle no-undo .
+  define private variable p-log-handle    as handle no-undo .
 
 
   define property MsgPrivate as character no-undo
@@ -266,17 +281,8 @@ class ibs.th.bge.1crn.import.parsesub:
 /*    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().  */
 /*    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").*/
     
-	  promotionSubjectObj = new promotion().                  
-	  promotion_gdSubjectObj = new promotion_gd().               
-		promotion_shedule-lineSubjectObj = new promotion_shedule-line().     
-    promotion_thresholdSubjectObj = new promotion_threshold().         
-                                         
-    promotion_gdListSubjectsObj = new subjects ("gds").            
-    promotion_shedule-lineListSubjectsObj = new subjects ("schedule").
-    promotion_thresholdListSubjectsObj = new subjects ("thresholds").    
-  
-    imppromotionEventHndlrObj = new imppromotion ().
-  
+    /* создание экземпляров объектов промо-акций перенесено внутрь парсинга */
+    
     trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().
     trn-gdSubjectObj = new trn-gd ().
     imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().
@@ -292,7 +298,17 @@ class ibs.th.bge.1crn.import.parsesub:
 		
   end constructor.
   
-  
+  method public void setParent (
+  input parparentproc   as handle
+, input p-parent-handle as handle
+, input p-log-handle    as handle
+  ) :
+    assign
+      this-object:parparentproc   = parparentproc
+      this-object:p-parent-handle = p-parent-handle
+      this-object:p-log-handle    = p-log-handle
+    .
+  end method .
 
   method public logical Parse1CRNSub (input inFileName as character):
 
@@ -329,6 +345,9 @@ class ibs.th.bge.1crn.import.parsesub:
     define variable hNoderef     as handle    no-undo.
     define variable hText        as handle    no-undo.
     define variable client       as character no-undo.
+    
+    define variable v-iSubject   as class ibs.th.bge.1crn.subjects.isubject no-undo .
+    define variable v-iImpSub    as class ibs.th.bge.1crn.import.iimpsubject no-undo .    
 
     create x-noderef hNoderef.
     create x-noderef hText .
@@ -446,10 +465,23 @@ class ibs.th.bge.1crn.import.parsesub:
           ReceivedSubjectPublish(trn-fuel-doc-inSubjectObj, imptrn-fuel-docEventHndlrObj).
         end.
         when "promotion" then do:
-          GetChildrenSub (hNoderef, (level + 1), promotionSubjectObj).
-          ReceivedSubjectPublish(promotionSubjectObj, imppromotionEventHndlrObj).
+          // экземпляр promotionSubjectObj создаётся перед первым импортом
+          if not valid-object(promotionSubjectObj)       then promotionSubjectObj       = new promotion(). // <promotion>
+          if not valid-object(imppromotionEventHndlrObj) then do :
+            imppromotionEventHndlrObj = new imppromotion ().
+            imppromotionEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) .
+          end .
+          // экземпляр promotionSubjectObj очищается перед началом каждого нового объекта внутри GetChildrenSub()
+          v-iSubject = promotionSubjectObj .
+          v-iImpSub  = imppromotionEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
       end case.
+      // --> вставить GetChildrenSub и ReceivedSubjectPublish сюда
+      
+      // после отработки GetChildrenSub() вызывает GetChildren() и ещё раз просматривает все дочерние элементы сущности верхнего уровня 
       GetChildren(hNoderef, (level + 1)).
     end.
     
@@ -470,8 +502,9 @@ class ibs.th.bge.1crn.import.parsesub:
       undo, throw exAnyErrors .
     end catch .
     finally :
-      delete object hNoderef.
-      delete object hText.
+      // если мы зашли внутрь пустого элемента <tag/> - его num-children = 0 и объекты hNoderef и hText не созданы 
+      if valid-object(hNoderef) then delete object hNoderef.
+      if valid-object(hText)    then delete object hText.
     end finally .
     
   end method.
@@ -506,35 +539,99 @@ class ibs.th.bge.1crn.import.parsesub:
     define variable i            as integer   no-undo.
     define variable hNoderef     as handle    no-undo.
     define variable hText        as handle    no-undo.
+    define variable v-need-parse as logical   no-undo .
     create x-noderef hNoderef.
     create x-noderef hText .
-    if valid-object (subjectObj)
-    then do: 
+    
+    if valid-object (subjectObj) then do: 
       subjectObj:SetProp( hParent:name, "").
-    end.
+      
+      /* обработка атрибутов самого объекта (выполняется после инициализации объекта) */
+      case hparent:name :
+        when "schedule" then do: // promotion:schedule; subjectObj = promotionSheduleObj
+          // вместо тега <sch-code> могу прислать аттрибут "sch-code"
+          subjectObj:SetProp( "sch-code" , hparent:get-attribute ("sch-code") ).
+        end .
+        otherwise .
+      end case .
+    end. // end_of_valid_object_subjectObj
+
+      
     repeat i = 1 to hParent:num-children:
       good = hparent:get-child(hnoderef,i) no-error.
       if not good then 
           leave.
       if hnoderef:subtype <> "element" then
           next.
+      /* htext = содержимое тега: <tag>htext</tag>
+         для обязательных тегов значение должно быть определено */
       good = hnoderef:get-child(htext, 1) no-error .
       if not good
         then next.
       iNum = iNum + 1.
+
       /*обработка зависимых объектов.*/
       case hnoderef:name:
+        /* ----- имена секций любого уровня вложенности ----- */
         when "price-list" or when "recipe-gds" or
         when "sections" or when "calibration-table" or
-        when "barcodes" or when "cal-tbl" or when "gds" or when "schedule" or when "thresholds" or
+        when "barcodes" or when "cal-tbl" or
         when "nb-carriers" or when "nb-suppliers" or when "prts"
-        then do: /*первый уровень. зависимых объектов gds-sale или Рецепты recipe-gds  */
-          if hnoderef:name = "schedule"
-          then do:
-            subjectObj:SetProp( "sch-code" , hnoderef:get-attribute ("sch-code")).
-          end.
-          GetChildrenSub (hNoderef, (level + 1), ?). /*проваливаемся дальше в секцию*/
+        then do:
+          GetChildrenSub (hNoderef, (level + 1), ?).
+          /* только проваливается дальше в секцию;
+             внутри секции:
+                или присутствует when с обработкой элемента секции,
+                или присуисивует секция, в которую надо провалиться,
+                или GetChildrenSub пройдёт насквозь без выполнения действий.
+             Правило: на каждое имя секции в текущем when должен быть when c именем элемента секции.
+          */
         end.
+        when "gds" then do :
+          // _SubjectObj[]: валидный только для коллекций, чьи теги присутствуют в импортируемом сейчас пакете;
+          v-need-parse = true . 
+          // по убыванию уровня вложенности:
+          if v-need-parse and valid-object (promotion_psSubjectObj) then do: // promotion:promoset:ps-sections:ps-section:gds
+            if promotion_psSubjectObj:IsInitSubForWrite then do:
+              promotion_p_gdListSubjectsObj = new subjects ("gds") .
+               GetChildrenSub (hNoderef, (level + 1), ?).
+              promotion_psSubjectObj:SetProp (promotion_p_gdListSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (promotionSubjectObj) then do: // promotion:gds
+            if promotionSubjectObj:IsInitSubForWrite then do: 
+              promotion_gdsListSubjectsObj = new subjects ("gds") .
+               GetChildrenSub (hNoderef, (level + 1), ?).
+              promotionSubjectObj:SetProp (promotion_gdsListSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
+        when "gifts" then do :
+          v-need-parse = true . 
+          if v-need-parse and valid-object (promotion_thresholdSubjectObj) then do : // promotion:thresholds:threshold:gifts
+            if promotion_thresholdSubjectObj:IsInitSubForWrite then do:
+              promotion_t_giftListSubjectsObj = new subjects ("gifts") .
+                   GetChildrenSub (hNoderef, (level + 1), ?).
+              promotion_thresholdSubjectObj:SetProp (promotion_t_giftListSubjectsObj).
+              v-need-parse = false . 
+            end .
+          end .
+          if v-need-parse and valid-object (promotionSubjectObj) then do : // promotion:gifts
+            if promotionSubjectObj:IsInitSubForWrite then do:
+              promotion_giftListSubjectsObj = new subjects ("gifts") .        
+                 GetChildrenSub (hNoderef, (level + 1), ?).
+              promotionSubjectObj:SetProp (promotion_giftListSubjectsObj).
+              v-need-parse = false . 
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
+        
+        /* ----- обработка элементов, вложенных в секции
+                 (классы, вложенные в коллекции или в родительские классы) ----- */
         when "gds-sale" then do: /*второй уровень с данными. обработка зависимой сущности gds-sale */
           case true : 
             when price-doc-impSubjectObj:IsInitSubForWrite then do: /*идет запись переоценки*/
@@ -612,12 +709,77 @@ class ibs.th.bge.1crn.import.parsesub:
             end.
           end case.
         end.
-        when "bank"
-        then do: /*идет запись bank-accounts_bankSubjectObj*/  
+        when "bank" then do: /*идет запись bank-accounts_bankSubjectObj*/  
           if not valid-object(bank-accounts_bankSubjectObj) then bank-accounts_bankSubjectObj = new bank-accounts_bank ().  .        
           /* а вот здесь уже создаем объект сущнности*/
           GetChildrenSub (hNoderef, (level + 1), bank-accounts_bankSubjectObj).
           bank-accountsSubjectObj:SetProp (bank-accounts_bankSubjectObj).
+        end.
+        when "schedule" then do: // promotion:schedule
+          // экземпляр promotionSheduleObj создаётся перед импортом первой промо-акции
+          if not valid-object(promotionSheduleObj) then
+            promotionSheduleObj = new promotion_schedule().
+          // экземпляр promotionSheduleObj очищается внутри GetChildrenSub()
+          GetChildrenSub (hNoderef, (level + 1), promotionSheduleObj).
+          // экземпляр promotionSheduleObj постоянно перепокладывается в промо-акцию
+          promotionSubjectObj:SetProp (promotionSheduleObj). // здесь promotionSubjectObj = subjectObj
+        end .
+        when "schedule-lines" then do : // promotion:schedule:schedule-lines
+          if not valid-object(promotionSheduleObj) then
+            undo, throw new Progress.Lang.AppError("отсутствует секция schedule для секции schedule-lines") .
+          if promotionSheduleObj:IsInitSubForWrite then do:
+            promotion_shedule-lineListSubjectsObj = new subjects ("schedule-lines").
+            GetChildrenSub (hNoderef, (level + 1), ?).
+            promotionSheduleObj:SetProp (promotion_shedule-lineListSubjectsObj).
+          end .
+        end.
+        when "schedule-line" then do: // promotion:schedule:schedule-lines:schedule-line
+            if not valid-object(promotion_shedule-lineListSubjectsObj) then
+              undo, throw new Progress.Lang.AppError("отсутствует секция schedule-lines для перечня schedule-line") .
+            promotion_shedule-lineListSubjectsObj:Add(  new promotion_schedule-line()  ).
+            promotion_shedule-lineSubjectObj = cast (promotion_shedule-lineListSubjectsObj:SubjectObjCurr, promotion_schedule-line).
+            GetChildrenSub (hNoderef, (level + 1), promotion_shedule-lineSubjectObj).
+        end.
+        when "thresholds" then do : // promotion:thresholds
+          if promotionSubjectObj:IsInitSubForWrite then do:
+            promotion_thresholdListSubjectsObj = new subjects ("thresholds") .
+            GetChildrenSub (hNoderef, (level + 1), ?).
+            promotionSubjectObj:SetProp (promotion_thresholdListSubjectsObj).
+          end .
+        end.
+        when "threshold" then do: // promotion:thresholds:threshold
+          if promotionSubjectObj:IsInitSubForWrite then do:
+            promotion_thresholdListSubjectsObj:Add(  new promotion_threshold()  ).
+            promotion_thresholdSubjectObj = cast (promotion_thresholdListSubjectsObj:SubjectObjCurr, promotion_threshold).
+            GetChildrenSub (hNoderef, (level + 1), promotion_thresholdSubjectObj).
+          end .
+        end.
+        when "gds-addcond" then do : // promotion:gds-addcond
+          if promotionSubjectObj:IsInitSubForWrite then do:
+            promotion_gdListSubjectsObj = new subjects ("gds-addcond") .
+               GetChildrenSub (hNoderef, (level + 1), ?).
+            promotionSubjectObj:SetProp (promotion_gdListSubjectsObj).
+          end .
+        end.
+        when "promoset" then do: // promotion:promoset
+          if not valid-object(promotionPromosetObj) then
+            promotionPromosetObj = new promotion_promoset().
+          GetChildrenSub (hNoderef, (level + 1), promotionPromosetObj).
+          promotionSubjectObj:SetProp (promotionPromosetObj).
+        end .
+        when "ps-sections" then do : // promotion:promoset:ps-sections
+          if promotionPromosetObj:IsInitSubForWrite then do:
+            promotion_psListSubjectsObj = new subjects ("ps-sections").
+            GetChildrenSub (hNoderef, (level + 1), ?).
+            promotionPromosetObj:SetProp (promotion_psListSubjectsObj).
+          end .
+        end.
+        when "ps-section" then do: // promotion:promoset:ps-sections:ps-section
+          if promotionPromosetObj:IsInitSubForWrite then do :
+            promotion_psListSubjectsObj:Add(  new promotion_ps-section()  ).
+            promotion_psSubjectObj = cast (promotion_psListSubjectsObj:SubjectObjCurr, promotion_ps-section).
+            GetChildrenSub (hNoderef, (level + 1), promotion_psSubjectObj).
+          end .
         end.
         when "cal-tbl" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
           case true : 
@@ -663,13 +825,48 @@ class ibs.th.bge.1crn.import.parsesub:
               GetChildrenSub (hNoderef, (level + 1), trn-gd-fuelSubjectObj).
               trn-fuel-doc-inSubjectObj:SetProp (trn-fuel-doc-inlistSubjectsObj).
             end.
-            when promotionSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
-              if not valid-object(promotion_gdListSubjectsObj) then promotion_gdListSubjectsObj = new subjects ("gds") .        
-              promotion_gdListSubjectsObj:Add(new promotion_gd()). /* а вот здесь уже создаем объект сущнности*/
-              promotion_gdSubjectObj = cast (promotion_gdListSubjectsObj:SubjectObjCurr, promotion_gd).
-              GetChildrenSub (hNoderef, (level + 1), promotion_gdSubjectObj).
-              promotionSubjectObj:SetProp (promotion_gdListSubjectsObj).
-            end.
+            when promotionSubjectObj:IsInitSubForWrite then do: // все :gd, прямо или косвенно вложенные в promotion
+              v-need-parse = true . 
+              if v-need-parse and valid-object (promotion_psSubjectObj) then do : // promotion:promoset:ps-sections:ps-section:gds:gd
+                if promotion_psSubjectObj:IsInitSubForWrite then do:
+                  promotion_p_gdListSubjectsObj:Add(  new promotion_gd()  ).
+                  promotion_p_gdSubjectObj = cast (promotion_p_gdListSubjectsObj:SubjectObjCurr, promotion_gd).
+                  GetChildrenSub (hNoderef, (level + 1), promotion_p_gdSubjectObj).
+                  v-need-parse = false .
+                end.
+              end .
+              if v-need-parse and valid-object (promotion_thresholdSubjectObj) then do : // promotion:thresholds:threshold:gifts:gd
+                if promotion_thresholdSubjectObj:IsInitSubForWrite then do:
+                  promotion_t_giftListSubjectsObj:Add(  new promotion_gift-gd()  ).
+                  promotion_t_giftSubjectObj = cast (promotion_t_giftListSubjectsObj:SubjectObjCurr, promotion_gift-gd).
+                  GetChildrenSub (hNoderef, (level + 1), promotion_t_giftSubjectObj).
+                  v-need-parse = false .
+                end.
+              end .
+              if v-need-parse then do :
+                v-need-parse = false .
+                case hParent:name :
+                // один блок обработки на три коллекции:
+                // родительский объект разложит их по местам внутри promotion:SetProp                
+                when "gds" then do: // promotion:gds:gd
+                  promotion_gdsListSubjectsObj:Add(  new promotion_gds-gd()  ).
+                  promotion_gdsSubjectObj = cast (promotion_gdsListSubjectsObj:SubjectObjCurr, promotion_gds-gd).
+                  GetChildrenSub (hNoderef, (level + 1), promotion_gdsSubjectObj).
+                end .                
+                when "gds-addcond" then do: // promotion:gds-addcond:gd
+                  promotion_gdListSubjectsObj:Add(  new promotion_gd()  ).
+                  promotion_gdSubjectObj = cast (promotion_gdListSubjectsObj:SubjectObjCurr, promotion_gd).
+                  GetChildrenSub (hNoderef, (level + 1), promotion_gdSubjectObj).
+                end .
+                when "gifts" then do: // promotion:gifts:gd
+                  promotion_giftListSubjectsObj:Add(  new promotion_gift-gd()  ).
+                  promotion_giftSubjectObj = cast (promotion_giftListSubjectsObj:SubjectObjCurr, promotion_gift-gd).
+                  GetChildrenSub (hNoderef, (level + 1), promotion_giftSubjectObj).
+                end .
+                otherwise v-need-parse = true .
+                end case .
+              end .  
+            end . // end_of_promotionSubjectObj
             otherwise do:
               
             end.
@@ -685,34 +882,6 @@ class ibs.th.bge.1crn.import.parsesub:
               trn-gd-doc-inSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
             end.
           end.
-        end.
-        when "schedule-line" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
-          case true : 
-            when promotionSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
-              if not valid-object(promotion_shedule-lineListSubjectsObj) then promotion_shedule-lineListSubjectsObj = new subjects ("schedule") .        
-              promotion_shedule-lineListSubjectsObj:Add(new promotion_shedule-line()). /* а вот здесь уже создаем объект сущнности*/
-              promotion_shedule-lineSubjectObj = cast (promotion_shedule-lineListSubjectsObj:SubjectObjCurr, promotion_shedule-line).
-              GetChildrenSub (hNoderef, (level + 1), promotion_shedule-lineSubjectObj).
-              promotionSubjectObj:SetProp (promotion_shedule-lineListSubjectsObj).
-            end.
-            otherwise do:
-              
-            end.
-          end case.
-        end.
-        when "threshold" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
-          case true : 
-            when promotionSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
-              if not valid-object(promotion_thresholdListSubjectsObj) then promotion_thresholdListSubjectsObj = new subjects ("thresholds") .        
-              promotion_thresholdListSubjectsObj:Add(new promotion_threshold()). /* а вот здесь уже создаем объект сущнности*/
-              promotion_thresholdSubjectObj = cast (promotion_thresholdListSubjectsObj:SubjectObjCurr, promotion_threshold).
-              GetChildrenSub (hNoderef, (level + 1), promotion_thresholdSubjectObj).
-              promotionSubjectObj:SetProp (promotion_thresholdListSubjectsObj).
-            end.
-            otherwise do:
-              
-            end.
-          end case.
         end.
         when "nb-carrier" then do: /* второй уровень с данными. обработка зависимой сущности clientsSubjectObj  */
           case true : 
@@ -742,15 +911,20 @@ class ibs.th.bge.1crn.import.parsesub:
             end.
           end case.
         end.
-        otherwise do: /*конечный уровень*/
-          subjectObj:SetProp( hNoderef:name, hText:node-value).
+        
+        /* ----- конечный уровень
+                 (не коллекции, не классы, только сами поля классов скалярного типа) ----- */
+        otherwise do:
+          if valid-object(subjectObj) then subjectObj:SetProp( hNoderef:name, hText:node-value).
         end.
       end case.
     end.
     if valid-object (subjectObj)
       then subjectObj:SetProp( hParent:name, "").
     delete object hNoderef.
-    delete object hText.
+    /* между закрывающим и следующим закрывающим тегами может не быть ни одного ELEMENT,
+       и тогда hText не будет определён */
+    if valid-object(hText) then delete object hText.
   end method.
   
 	/*------------------------------------------------------------------------------
@@ -758,7 +932,6 @@ class ibs.th.bge.1crn.import.parsesub:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public parsesub ( ):
-  
 /*    delete object businessUnitsSubjectObj no-error.         */
 /*    delete object impbusinessUnitsEventHndlrObj no-error.   */
 /*    delete object cliGrpSubjectObj no-error.                */

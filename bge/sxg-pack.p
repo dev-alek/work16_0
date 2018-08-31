@@ -482,24 +482,62 @@ procedure file-s-g :
 
               end.
             end.
+            when integer({&esys-dm-erp-1C-RN}) then do:
+              assign
+                v-arh-name = search( "exe/7z.exe":U )
+              .
+              if v-arh-name = ? then do:
+                assign
+                  v-arh-name = search( "exe/7za.exe":U )
+                .
+              end.
+              assign
+                v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
+                v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".zip":U
+                v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
+              .
+              os-command silent
+                value( substitute( "&1 a -tzip -y &2 &3":U, v-arh-name, v-file-source-arj, v-file-source ) )
+              .
+              /* проверим наличие заархивированного файла */
+              assign
+                file-info:file-name = v-file-source-arj
+              .
+              if file-info:file-type = ?
+                or not ( file-info:file-type begins "F":U )
+                or file-info:file-size = 0
+              then do:
+                return error substitute( "&1. Заархивированный файл &2 не найден или имеет нулевой размер.", vss-workfile, v-file-source-arj ).
+              end.
+              run write-to-log in p-parent-handle ( substitute( "Файл &1 заархивирован в &2)", v-file-source, v-file-source-arj ) ).
+            end.
             otherwise do:
-          assign
-            v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-            v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-            v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-            v-file-source-all = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".*":U
-          .
-          
-          os-command silent
-            value( v-arh-name )
-            value( "-add -path=none ":U )
-            value( v-file-source-arj )
-            value( v-file-source-all )
-            value( ">> pkzipc-log.txt" )
-          .
-          run write-to-log in p-parent-handle ( substitute( "Файл &1 заархивирован в &2)", v-file-source, v-file-source-arj ) ).
-        end.
-      end.
+              assign
+                v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
+                v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".zip":U
+                v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
+                v-file-source-all = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".*":U
+              .
+              
+              os-command silent
+                value( v-arh-name )
+                value( "-add -path=none ":U )
+                value( v-file-source-arj )
+                value( v-file-source-all )
+                value( ">> pkzipc-log.txt" )
+              .
+              /* проверим наличие заархивированного файла */
+              assign
+                file-info:file-name = v-file-source-arj
+              .
+              if file-info:file-type = ?
+                or not ( file-info:file-type begins "F":U )
+              then do:
+                return error substitute( "&1. Заархивированный файл &2 не найден.", vss-workfile, v-file-source-arj ).
+              end.
+              run write-to-log in p-parent-handle ( substitute( "Файл &1 заархивирован в &2)", v-file-source, v-file-source-arj ) ).
+            end.
+          end.
         end.
       end. /*if p-arch = true then do:*/
       else do:

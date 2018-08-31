@@ -751,6 +751,21 @@ abc-analysis~
 ,c-gds-mercury~
 ,gds-mercury~
 ,gds-mercury-attr~
+,c-promo-schedule~
+,c-promo-schedule-week~
+,c-PromoAction~
+,c-PromoCriterion~
+,c-PromoGift~
+,c-PromoGoods~
+,c-PromoObject~
+,promo-schedule~
+,promo-schedule-week~
+,PromoAction~
+,PromoAttr~
+,PromoCriterion~
+,PromoGift~
+,PromoGoods~
+,PromoObject~
 ':U .
 
 

@@ -102,13 +102,16 @@ if cash-gds.std-discnt-rule > 0 then do:
     end.
   end.
 end.
-if cash-gds.wd > 0 then do:
+if cash-gds.wd > 1 then do:
   find first cash-dis-rule no-lock where
             cash-dis-rule.rule-num =  cash-gds.wd-rule no-error .
   if available cash-dis-rule then  do:
     assign
     wd-option = integer(cash-dis-rule.discnt-value).
   end.
+end.
+if cash-gds.wd = 1 then do:  /* запрет может устанавливаться из 2-х мест. из правил скидок и по глоб.атрибуту товара. Если по глоб.атрибуту, то в wd будет стоять 1. */
+   wd-option = 1.
 end.
 if cash-gds.wgd > 0 then do:
   find first cash-dis-rule no-lock where
