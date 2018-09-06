@@ -490,6 +490,29 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                        ,output v-1c-stat
                                        ,output v-ack-err
                                         ) .
+                  if v-1c-stat = 1
+                  then do :
+                    run bge/oxmloutx.p ( input parparentproc
+                                        ,input p-parent-handle
+                                        ,input p-log-handle
+                                        ,input substitute("one-pack,&1,&2,&3,&4,&5"
+                                                    ,v-cur-db-num
+                                                    ,buf_ext-system.esys-id
+                                                    ,buf_ext-system.db-num
+                                                    ,g#db-num
+                                                    ,v-ack-err)
+              
+                                  ) no-error.
+                    if error-status:error then do:
+                      run write-log in p-log-handle (
+                                                  input 2
+                                                , ( vss-workfile + {&space-char}
+                                        + substitute( "ERROR!!! Ошибка при отправке одного пакета данных в ВС &1", buf_ext-system.esys-id ) + {&new-line}
+                                        + substitute( "&1", error-status:get-message(error-status:num-messages) ) + {&new-line}
+                                        + substitute( "&1", return-value ) )
+                                                ) .
+                    end.
+                  end.                      
                 end.
                 else do :
                   run bge/cmdeigen.p (
