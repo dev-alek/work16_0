@@ -30,6 +30,8 @@ define variable hRoot as handle no-undo.
 define variable log_         as logical   no-undo.
 
 define buffer buf_sent for ub.esys-pck-sent .
+define buffer buf_route for ub.esys-route .
+define buffer buf_dump for ub.esys-route-dump .
 
 
 /* ********************  Preprocessor Definitions  ******************** */
@@ -70,6 +72,14 @@ then do :
         buf_sent.esps-rcvdtime = string(time, "HH:MM:SS")
         buf_sent.esps-rcvdtimeint = time
       .
+      for each buf_route exclusive-lock where buf_route.esys-id = buf_sent.esys-id
+                                          and buf_route.db-num = buf_sent.db-num
+                                          and buf_route.esr-last-pack = buf_sent.esps-pack-num :
+        for each buf_dump where buf_dump.esrd-dump-ord = buf_route.esr-dump-ord:
+          delete buf_dump no-error .
+        end.
+        delete buf_route .
+      end.
     end.                                     
 end.
 
