@@ -2208,7 +2208,7 @@ define variable sort-column-phrase as character no-undo .
                                 r-doc.obj-type =  &1&2&1 and ~
                                 r-doc.obj-code =  &3    ~
                                ' , ~{&double-quote~} , varobj-type , varobj-code  ) "
-              &use-ind    = "use-index obj-date "
+              &use-ind    = "use-index shift "
               &by         = "  " }
                 if v-cntxt-db-num = bf_clients.db-num then
                     enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
