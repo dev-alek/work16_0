@@ -49,11 +49,11 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
       ELSE DO:
          DEFINE TEMP-TABLE tempUser NO-UNDO LIKE {1}._User.
 
-         BUFFER-COPY {1}._User EXCEPT {1}._User._Password TO tempUser ASSIGN tempUser._Password = {1}.user-login.user-password-encoded
+         BUFFER-COPY {1}._User EXCEPT {1}._User._Password {1}._User._TenantId TO tempUser ASSIGN tempUser._Password = {1}.user-login.user-password-encoded
          .
          DELETE {1}._User.
          CREATE {1}._User.
-         BUFFER-COPY tempUser TO _User.
+         BUFFER-COPY tempUser EXCEPT tempUser._TenantId TO _User.
       END.
       assign
         {1}._user._user-name = substitute('&1 &2 &3'
