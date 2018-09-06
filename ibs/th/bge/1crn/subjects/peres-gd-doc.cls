@@ -242,7 +242,7 @@ index sum-type is primary unique sum-type.
         sw:start-element ("gd").
           write-data-element ("gd-code-from", string-mth (bf_goods.gds-code)).
           write-data-element ("gd-code-to", string-mth (bf-plus_goods.gds-code)).
-          write-data-element ("qnty", string-mth (round (abs(bf_parts.fact-qnty), 3))).
+          write-data-element ("qnty", string-mth (round (abs(bf_doc-line.fact-qnty), 3))).
           write-data-element ("sum-from", string-mth (round (get-write-off-sum-rubl (buffer bf_doc-line), 3))).
           write-data-element ("sum-to", string-mth (round (get-income-sum-rbl (buffer bf_doc-line, buffer bf-plus_doc-line ), 3))).
         sw:end-element ("gd").
