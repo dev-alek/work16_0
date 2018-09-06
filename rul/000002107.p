@@ -354,7 +354,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_trn-doc}).
       end.
       if v-has-oldbh
-      and v-oldbh:table <> {&table_fbr-doc} then do:
+      and v-oldbh:table <> {&table_fbr-doc} and v-oldbh:TABLE <> "tt-fbr" then do:
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_trn-doc}).
       end.
     end.
