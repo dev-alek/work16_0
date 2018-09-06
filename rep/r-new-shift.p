@@ -1479,7 +1479,7 @@ procedure first-line-tog1-html :
                       <td colspan="15"></td>
                     </tr>
                     <tr>
-                      <td colspan="20" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="20" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="20" style="text-align: center;"> НР &3 </td>
@@ -1492,7 +1492,7 @@ procedure first-line-tog1-html :
                     </tr>'
                 ,
                 v-host-name,
-                string(p-obj-code),
+                string(ub.clients.obj-name),
                 string(v-rep-shift-close-date,"99.99.9999"),
                 String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
                 String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -1802,7 +1802,7 @@ procedure first-line-tog2-html :
                       <td colspan="13"></td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="18" style="text-align: center;"> НР &3 </td>
@@ -1815,7 +1815,7 @@ procedure first-line-tog2-html :
                     </tr>'
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -2205,7 +2205,7 @@ procedure first-line-tog3-html :
                       <td colspan="8"></td>
                     </tr>
                     <tr>
-                      <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="13" style="text-align: center;"> НР &3 </td>
@@ -2218,7 +2218,7 @@ procedure first-line-tog3-html :
                     </tr>'
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -2567,7 +2567,7 @@ procedure first-line-tog4-html :
                       <td colspan="3"></td>
                     </tr>
                     <tr>
-                      <td colspan="6" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="6" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="6" style="text-align: center;"> НР &3 </td>
@@ -2580,7 +2580,7 @@ procedure first-line-tog4-html :
                     </tr>'
                 ,
                 rep-shift-store-name,
-                string(p-obj-code),
+                string(ub.clients.obj-name),
                 string(v-rep-shift-close-date,"99.99.9999"),
                 String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
                 String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -2793,7 +2793,7 @@ procedure first-line-tog5-html :
                       <td colspan="4"></td>
                     </tr>
                     <tr>
-                      <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="7" style="text-align: center;"> НР &3 </td>
@@ -2806,7 +2806,7 @@ procedure first-line-tog5-html :
                     </tr>'
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -3020,7 +3020,7 @@ procedure first-line-tog5-1-html :
                       <td colspan="4"></td>
                     </tr>
                     <tr>
-                      <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="8" style="text-align: center;"> НР &3 </td>
@@ -3033,7 +3033,7 @@ procedure first-line-tog5-1-html :
                     </tr>'
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -3243,7 +3243,7 @@ procedure first-line-tog7-html :
                       <td colspan="3"></td>
                     </tr>
                     <tr>
-                      <td colspan="5" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="5" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="5" style="text-align: center;"> НР &3 </td>
@@ -3256,7 +3256,7 @@ procedure first-line-tog7-html :
                     </tr>'
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -3384,7 +3384,7 @@ procedure first-line-tog8-html :
                       <td></td>
                     </tr>
                     <tr>
-                      <td colspan="3" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="3" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="3" style="text-align: center;"> НР &3 </td>
@@ -3398,7 +3398,7 @@ procedure first-line-tog8-html :
                     '
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -3549,7 +3549,7 @@ procedure first-line-tog9-html :
                       <td colspan="8"></td>
                     </tr>
                     <tr>
-                      <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="13" style="text-align: center;"> НР &3 </td>
@@ -3562,7 +3562,7 @@ procedure first-line-tog9-html :
                     </tr>'
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
@@ -3782,7 +3782,7 @@ procedure first-line-tog10-html :
                       <td colspan="4"></td>
                     </tr>
                     <tr>
-                      <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер югя ╧ &2</td>
+                      <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">ялеммши нрвер &2</td>
                     </tr>
                     <tr>
                       <td colspan="8" style="text-align: center;"> НР &3 </td>
@@ -3795,7 +3795,7 @@ procedure first-line-tog10-html :
                     </tr>'
             ,
             rep-shift-store-name,
-            string(p-obj-code),
+            string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
             String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
             String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
