@@ -344,7 +344,10 @@ v-label-param = v-label-param
  + "xd-an-code" + {&delim-par} + "Код статьи для курсовых разниц" + {&delim-par} + "" + {&delim-flf}
  + "xd-grp-code" + {&delim-par} + "Код группы для генерации проводок по К.Р." + {&delim-par} + "" + {&delim-flf}
  + "xdn-an-code" + {&delim-par} + "Код статьи для отрицательных курсовых разниц" + {&delim-par} + "" + {&delim-flf}
- + "xdn-grp-code" + {&delim-par} + "Код группы для генерации проводок по отриц. К.Р." + {&delim-par} + ""  .
+ /* 28/VIII-2018 Возьмем старое неиспользующеся поле для того, чтобы хранить в нем код БД,
+                 с которой система будет копировать права и расписания при создании новой БД */
+ + "xdn-grp-code" + {&delim-par} + "Номер БД для копирования прав и расписания при импорте из 1С" + {&delim-par} + ""  .
+ 
  run proc-full-temp-changes in this-procedure (
                                              input buf_c-cli-hist.action = integer({&hn-create})
                                             ,input buf_c-cli-hist.action = integer({&hn-delete})

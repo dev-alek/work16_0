@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,11 +8,11 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-config
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-config 
 /*
 
 $Revision$
@@ -53,8 +53,9 @@ define variable vss-description as character no-undo init "Настройки системы Sys
 { cmp/str-glbl.i }
 { cmp/library.i }
 { cmp/showinf.i }
+/* 28/VIII-2018 - не используется
 { gbl/getcntxt.i def }
-
+*/
 
 
 define variable all-prt_ like ub.shop.all-prt no-undo.
@@ -75,7 +76,7 @@ define buffer buf_clients for ub.clients.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -87,25 +88,25 @@ define buffer buf_clients for ub.clients.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-FIELDS X_sysconf.rsrv-time X_sysconf.load-time ~
-X_sysconf.holidays ub.X_sysconf.out-line-discnt ub.X_sysconf.price-calc ~
-ub.X_sysconf.out-rate ub.X_sysconf.no-eq ub.X_sysconf.in-ov ~
-ub.X_sysconf.unit-cli-perm ub.X_sysconf.inout-price ub.X_sysconf.in-perm ~
-X_sysconf.in-pay X_sysconf.out-pay X_sysconf.ret-pay X_sysconf.ret-sup-pay ~
-X_sysconf.down-pay X_sysconf.inv-pay X_sysconf.chk-pay X_sysconf.fbr-pay
-&Scoped-define ENABLED-TABLES X_sysconf ub.X_sysconf
+X_sysconf.holidays X_sysconf.out-line-discnt X_sysconf.price-calc ~
+X_sysconf.out-rate X_sysconf.no-eq X_sysconf.in-ov X_sysconf.unit-cli-perm ~
+X_sysconf.inout-price X_sysconf.in-perm X_sysconf.in-pay X_sysconf.out-pay ~
+X_sysconf.ret-pay X_sysconf.ret-sup-pay X_sysconf.down-pay ~
+X_sysconf.inv-pay X_sysconf.chk-pay X_sysconf.fbr-pay ~
+X_sysconf.xdn-grp-code 
+&Scoped-define ENABLED-TABLES X_sysconf
 &Scoped-define FIRST-ENABLED-TABLE X_sysconf
-&Scoped-define SECOND-ENABLED-TABLE ub.X_sysconf
-&Scoped-Define ENABLED-OBJECTS b-exit RECT-1 b-quit b-tocd b-help b-inpay ~
-b-outpay b-retpay b-suppay b-spipay b-invpay b-realpay b-fbrpay
+&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-tocd b-help RECT-1 b-inpay ~
+b-outpay b-retpay b-suppay b-spipay b-invpay b-realpay b-fbrpay 
 &Scoped-Define DISPLAYED-FIELDS X_sysconf.rsrv-time X_sysconf.load-time ~
-X_sysconf.holidays ub.X_sysconf.out-line-discnt ub.X_sysconf.price-calc ~
-ub.X_sysconf.out-rate ub.X_sysconf.no-eq ub.X_sysconf.in-ov ~
-ub.X_sysconf.unit-cli-perm ub.X_sysconf.inout-price ub.X_sysconf.in-perm ~
-X_sysconf.in-pay X_sysconf.out-pay X_sysconf.ret-pay X_sysconf.ret-sup-pay ~
-X_sysconf.down-pay X_sysconf.inv-pay X_sysconf.chk-pay X_sysconf.fbr-pay
-&Scoped-define DISPLAYED-TABLES X_sysconf ub.X_sysconf
+X_sysconf.holidays X_sysconf.out-line-discnt X_sysconf.price-calc ~
+X_sysconf.out-rate X_sysconf.no-eq X_sysconf.in-ov X_sysconf.unit-cli-perm ~
+X_sysconf.inout-price X_sysconf.in-perm X_sysconf.in-pay X_sysconf.out-pay ~
+X_sysconf.ret-pay X_sysconf.ret-sup-pay X_sysconf.down-pay ~
+X_sysconf.inv-pay X_sysconf.chk-pay X_sysconf.fbr-pay ~
+X_sysconf.xdn-grp-code 
+&Scoped-define DISPLAYED-TABLES X_sysconf
 &Scoped-define FIRST-DISPLAYED-TABLE X_sysconf
-&Scoped-define SECOND-DISPLAYED-TABLE ub.X_sysconf
 
 
 /* Custom List Definitions                                              */
@@ -121,81 +122,81 @@ X_sysconf.down-pay X_sysconf.inv-pay X_sysconf.chk-pay X_sysconf.fbr-pay
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Ввод ":L
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Ввод ":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-fbrpay
+DEFINE BUTTON b-fbrpay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-inpay
+DEFINE BUTTON b-inpay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-invpay
+DEFINE BUTTON b-invpay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-outpay
+DEFINE BUTTON b-outpay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена":L
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-realpay
+DEFINE BUTTON b-realpay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-retpay
+DEFINE BUTTON b-retpay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-spipay
+DEFINE BUTTON b-spipay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-suppay
+DEFINE BUTTON b-suppay 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "":L
-     SIZE 3 BY .92.
+     LABEL "":L 
+     SIZE 3 BY .91.
 
-DEFINE BUTTON b-tocd
-     LABEL "&На кассу"
+DEFINE BUTTON b-tocd 
+     LABEL "&На кассу" 
      SIZE 10 BY 1.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 3 GRAPHIC-EDGE
-     SIZE 34 BY 9.25
+     EDGE-PIXELS 3 GRAPHIC-EDGE    
+     SIZE 34 BY 9.24
      BGCOLOR 8 .
 
 
@@ -206,88 +207,91 @@ DEFINE FRAME d-config
      b-quit AT ROW 1 COL 11
      b-tocd AT ROW 1 COL 41
      b-help AT ROW 1 COL 69
-     X_sysconf.rsrv-time AT ROW 2 COL 30 COLON-ALIGNED
-          VIEW-AS FILL-IN
+     X_sysconf.rsrv-time AT ROW 2 COL 31.8 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 4 BY 1
      X_sysconf.load-time AT ROW 2 COL 60 COLON-ALIGNED
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 4 BY 1
-     X_sysconf.holidays AT ROW 3 COL 52.5 COLON-ALIGNED
-          VIEW-AS FILL-IN
-          SIZE 11.63 BY 1
-     ub.X_sysconf.out-line-discnt AT ROW 5 COL 43
+     X_sysconf.holidays AT ROW 3 COL 52.6 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 11.6 BY 1
+     X_sysconf.out-line-discnt AT ROW 5 COL 43
           VIEW-AS TOGGLE-BOX
-          SIZE 22 BY .83
-     ub.X_sysconf.price-calc AT ROW 6 COL 2
+          SIZE 22 BY .81
+     X_sysconf.price-calc AT ROW 6 COL 2
           VIEW-AS TOGGLE-BOX
-          SIZE 36.5 BY .83
-     ub.X_sysconf.out-rate AT ROW 6 COL 43
+          SIZE 36.6 BY .81
+     X_sysconf.out-rate AT ROW 6 COL 43
           VIEW-AS TOGGLE-BOX
-          SIZE 22 BY .83
-     ub.X_sysconf.no-eq AT ROW 7 COL 2
-          LABEL "&Запрещен приход при отсутствии цен"
+          SIZE 22 BY .81
+     X_sysconf.no-eq AT ROW 7 COL 2
           VIEW-AS TOGGLE-BOX
-          SIZE 37.5 BY .83
-     ub.X_sysconf.in-ov AT ROW 7 COL 43
+          SIZE 37.6 BY .81
+     X_sysconf.in-ov AT ROW 7 COL 43
           VIEW-AS TOGGLE-BOX
-          SIZE 23 BY .83
-     ub.X_sysconf.unit-cli-perm AT ROW 8 COL 2
+          SIZE 23 BY .81
+     X_sysconf.unit-cli-perm AT ROW 8 COL 2
           VIEW-AS TOGGLE-BOX
-          SIZE 32.5 BY .83
-     ub.X_sysconf.inout-price AT ROW 8 COL 43
+          SIZE 32.6 BY .81
+     X_sysconf.inout-price AT ROW 8 COL 43
           VIEW-AS TOGGLE-BOX
-          SIZE 32 BY .83
-     ub.X_sysconf.in-perm AT ROW 9 COL 2
-          LABEL "&Добавление ПН на пассивном складе / Перемещение по цене магазина"
+          SIZE 32 BY .81
+     X_sysconf.in-perm AT ROW 9 COL 2
           VIEW-AS TOGGLE-BOX
-          SIZE 69 BY .83
-     X_sysconf.in-pay AT ROW 11.5 COL 30.5 COLON-ALIGNED
+          SIZE 69 BY .81
+     X_sysconf.in-pay AT ROW 11.52 COL 30.6 COLON-ALIGNED
           LABEL "п&рихода"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-inpay AT ROW 11.5 COL 39.5 WIDGET-ID 6
-     X_sysconf.out-pay AT ROW 12.5 COL 30.5 COLON-ALIGNED
+     b-inpay AT ROW 11.52 COL 39.6 WIDGET-ID 6
+     X_sysconf.out-pay AT ROW 12.52 COL 30.6 COLON-ALIGNED
           LABEL "рас&хода"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-outpay AT ROW 12.5 COL 39.5 WIDGET-ID 10
-     X_sysconf.ret-pay AT ROW 13.5 COL 30.5 COLON-ALIGNED
+     b-outpay AT ROW 12.52 COL 39.6 WIDGET-ID 10
+     X_sysconf.ret-pay AT ROW 13.52 COL 30.6 COLON-ALIGNED
           LABEL "во&зврата"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-retpay AT ROW 13.5 COL 39.5 WIDGET-ID 14
-     X_sysconf.ret-sup-pay AT ROW 14.5 COL 30.5 COLON-ALIGNED
+     b-retpay AT ROW 13.52 COL 39.6 WIDGET-ID 14
+     X_sysconf.ret-sup-pay AT ROW 14.52 COL 30.6 COLON-ALIGNED
           LABEL "возвра&та пост."
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-suppay AT ROW 14.5 COL 39.5 WIDGET-ID 18
-     X_sysconf.down-pay AT ROW 15.5 COL 30.5 COLON-ALIGNED
+     b-suppay AT ROW 14.52 COL 39.6 WIDGET-ID 18
+     X_sysconf.down-pay AT ROW 15.52 COL 30.6 COLON-ALIGNED
           LABEL "списани&я"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-spipay AT ROW 15.5 COL 39.5 WIDGET-ID 16
-     X_sysconf.inv-pay AT ROW 16.5 COL 30.5 COLON-ALIGNED
+     b-spipay AT ROW 15.52 COL 39.6 WIDGET-ID 16
+     X_sysconf.inv-pay AT ROW 16.52 COL 30.6 COLON-ALIGNED
           LABEL "и&нвентар."
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-invpay AT ROW 16.5 COL 39.5 WIDGET-ID 8
-     X_sysconf.chk-pay AT ROW 17.5 COL 30.5 COLON-ALIGNED
+     b-invpay AT ROW 16.52 COL 39.6 WIDGET-ID 8
+     X_sysconf.chk-pay AT ROW 17.52 COL 30.6 COLON-ALIGNED
           LABEL "продажи"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-realpay AT ROW 17.5 COL 39.5 WIDGET-ID 12
-     X_sysconf.fbr-pay AT ROW 18.5 COL 30.5 COLON-ALIGNED
+     b-realpay AT ROW 17.52 COL 39.6 WIDGET-ID 12
+     X_sysconf.fbr-pay AT ROW 18.52 COL 30.6 COLON-ALIGNED
           LABEL "производства"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     b-fbrpay AT ROW 18.5 COL 39.5 WIDGET-ID 4
+     b-fbrpay AT ROW 18.52 COL 39.6 WIDGET-ID 4
+     X_sysconf.xdn-grp-code AT ROW 20.52 COL 70 COLON-ALIGNED HELP
+          "" WIDGET-ID 24
+          LABEL "Номер БД для копирования прав при импорте из 1С" FORMAT ">>>>>>>>9"
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
      "Оплаты :" VIEW-AS TEXT
-          SIZE 8.5 BY .92 AT ROW 11.5 COL 15 WIDGET-ID 2
-          FGCOLOR 4
-     RECT-1 AT ROW 10.75 COL 13
-     SPACE(28.99) SKIP(0.53)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 8.6 BY .91 AT ROW 11.52 COL 15 WIDGET-ID 2
+          FGCOLOR 4 
+     RECT-1 AT ROW 10.76 COL 13
+     SPACE(36.99) SKIP(2.04)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Системные настройки для объекта (начальные значения)":L
          DEFAULT-BUTTON b-exit.
 
@@ -310,7 +314,7 @@ DEFINE FRAME d-config
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX d-config
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME d-config:SCROLLABLE       = FALSE.
 
 /* SETTINGS FOR FILL-IN X_sysconf.chk-pay IN FRAME d-config
@@ -321,11 +325,7 @@ ASSIGN
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN X_sysconf.in-pay IN FRAME d-config
    EXP-LABEL                                                            */
-/* SETTINGS FOR TOGGLE-BOX ub.sysconf.in-perm IN FRAME d-config
-   EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN X_sysconf.inv-pay IN FRAME d-config
-   EXP-LABEL                                                            */
-/* SETTINGS FOR TOGGLE-BOX ub.sysconf.no-eq IN FRAME d-config
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN X_sysconf.out-pay IN FRAME d-config
    EXP-LABEL                                                            */
@@ -333,6 +333,8 @@ ASSIGN
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN X_sysconf.ret-sup-pay IN FRAME d-config
    EXP-LABEL                                                            */
+/* SETTINGS FOR FILL-IN X_sysconf.xdn-grp-code IN FRAME d-config
+   EXP-LABEL EXP-FORMAT EXP-HELP                                        */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -346,7 +348,7 @@ ASSIGN
 */  /* DIALOG-BOX d-config */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -377,6 +379,7 @@ assign
         X_sysconf.rsrv-time
         X_sysconf.load-time
         X_sysconf.holidays
+        X_sysconf.xdn-grp-code
         .
         if v-to-c-d = yes then
         assign
@@ -604,7 +607,7 @@ DO:
     cd-pb-alt_ = X_sysconf.cd-pb-alt
     cd-pb-base_ = X_sysconf.cd-pb-base
     cd-sc-base_ = X_sysconf.cd-sc-base.
-    run adm/to-cd.w ( INPUT (if v-cntxt-db-num = 0 then {&update} else {&lookup})
+    run adm/to-cd.w ( INPUT (if ibs.th.gbl.gbl-var:g#db-num = 0 then {&update} else {&lookup})
                      ,INPUT X_sysconf.host-code
                      ,INPUT {&shop}
                      ,INPUT 0
@@ -632,7 +635,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-config
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-config 
 
 
 /* ***************************  Main Block  *************************** */
@@ -652,7 +655,15 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  /* 28/VIII-2018 не используется.   
   { gbl/getcntxt.i get }
+  Внутри вызывается mainmenu_getcntxt in parparentproc.
+  Какой именно экземпляр mainmenu_getcntxt вызывается - зависит от parparentproc.
+  Отследить значение parparentproc по исходным текстам не представляется возможным.
+  Единственная переменная, используемая в текущем модуле из getcntxt.i, это v-cntxt-db-num.
+  Заменена на ibs.th.gbl.gbl-var:g#db-num - номер текщей БД 
+  */
+  
   find X_sysconf where X_sysconf.host-code = p-curr-host-code.
   find first buf_clients no-lock where
             buf_clients.obj-type = {&cmp}
@@ -678,7 +689,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -697,26 +708,27 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  IF AVAILABLE X_sysconf THEN
-    DISPLAY X_sysconf.rsrv-time X_sysconf.load-time X_sysconf.holidays
-          X_sysconf.out-line-discnt X_sysconf.price-calc X_sysconf.out-rate
-          X_sysconf.no-eq X_sysconf.in-ov X_sysconf.unit-cli-perm
-          X_sysconf.inout-price X_sysconf.in-perm X_sysconf.in-pay
-          X_sysconf.out-pay X_sysconf.ret-pay X_sysconf.ret-sup-pay
-          X_sysconf.down-pay X_sysconf.inv-pay X_sysconf.chk-pay
-          X_sysconf.fbr-pay
+  IF AVAILABLE X_sysconf THEN 
+    DISPLAY X_sysconf.rsrv-time X_sysconf.load-time X_sysconf.holidays 
+          X_sysconf.out-line-discnt X_sysconf.price-calc X_sysconf.out-rate 
+          X_sysconf.no-eq X_sysconf.in-ov X_sysconf.unit-cli-perm 
+          X_sysconf.inout-price X_sysconf.in-perm X_sysconf.in-pay 
+          X_sysconf.out-pay X_sysconf.ret-pay X_sysconf.ret-sup-pay 
+          X_sysconf.down-pay X_sysconf.inv-pay X_sysconf.chk-pay 
+          X_sysconf.fbr-pay X_sysconf.xdn-grp-code 
       WITH FRAME d-config.
-  ENABLE b-exit RECT-1 b-quit b-tocd b-help X_sysconf.rsrv-time
-         X_sysconf.load-time X_sysconf.holidays X_sysconf.out-line-discnt
-         X_sysconf.price-calc X_sysconf.out-rate X_sysconf.no-eq
-         X_sysconf.in-ov X_sysconf.unit-cli-perm X_sysconf.inout-price
-         X_sysconf.in-perm X_sysconf.in-pay b-inpay X_sysconf.out-pay b-outpay
-         X_sysconf.ret-pay b-retpay X_sysconf.ret-sup-pay b-suppay
-         X_sysconf.down-pay b-spipay X_sysconf.inv-pay b-invpay
-         X_sysconf.chk-pay b-realpay X_sysconf.fbr-pay b-fbrpay
+  ENABLE b-exit b-quit b-tocd b-help RECT-1 X_sysconf.rsrv-time 
+         X_sysconf.load-time X_sysconf.holidays X_sysconf.out-line-discnt 
+         X_sysconf.price-calc X_sysconf.out-rate X_sysconf.no-eq 
+         X_sysconf.in-ov X_sysconf.unit-cli-perm X_sysconf.inout-price 
+         X_sysconf.in-perm X_sysconf.in-pay b-inpay X_sysconf.out-pay b-outpay 
+         X_sysconf.ret-pay b-retpay X_sysconf.ret-sup-pay b-suppay 
+         X_sysconf.down-pay b-spipay X_sysconf.inv-pay b-invpay 
+         X_sysconf.chk-pay b-realpay X_sysconf.fbr-pay b-fbrpay 
+         X_sysconf.xdn-grp-code 
       WITH FRAME d-config.
   {&OPEN-BROWSERS-IN-QUERY-d-config}
 END PROCEDURE.
@@ -724,7 +736,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable d-config
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable d-config 
 PROCEDURE Myenable :
 IF AVAILABLE X_sysconf THEN
     DISPLAY X_sysconf.rsrv-time X_sysconf.load-time X_sysconf.holidays
@@ -733,7 +745,7 @@ IF AVAILABLE X_sysconf THEN
           X_sysconf.inout-price X_sysconf.in-perm X_sysconf.in-pay
           X_sysconf.down-pay X_sysconf.out-pay X_sysconf.inv-pay
           X_sysconf.ret-pay X_sysconf.chk-pay X_sysconf.ret-sup-pay
-          X_sysconf.fbr-pay
+          X_sysconf.fbr-pay X_sysconf.xdn-grp-code
       WITH FRAME d-config.
   ENABLE b-exit b-quit b-tocd b-help X_sysconf.rsrv-time X_sysconf.load-time
          X_sysconf.holidays X_sysconf.out-line-discnt X_sysconf.price-calc
@@ -741,9 +753,9 @@ IF AVAILABLE X_sysconf THEN
          X_sysconf.unit-cli-perm X_sysconf.inout-price X_sysconf.in-perm
          X_sysconf.in-pay X_sysconf.down-pay X_sysconf.out-pay
          X_sysconf.inv-pay X_sysconf.ret-pay X_sysconf.chk-pay
-         X_sysconf.ret-sup-pay X_sysconf.fbr-pay RECT-1
+         X_sysconf.ret-sup-pay X_sysconf.fbr-pay RECT-1 X_sysconf.xdn-grp-code
       WITH FRAME d-config.
-IF v-cntxt-db-num <> 0 THEN DO:
+IF ibs.th.gbl.gbl-var:g#db-num <> 0 THEN DO:
     HIDE
     b-exit IN FRAME {&FRAME-NAME}.
     ASSIGN
@@ -755,3 +767,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
