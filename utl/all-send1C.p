@@ -49,6 +49,7 @@ define temp-table tt-shift like ub.shift-obj .
 define temp-table tt-trn like ub.trn-doc.
 define temp-table tt-price-doc like ub.price-doc.
 define temp-table tt-rvs like ub.rvs-doc.
+define temp-table tt-fbr like ub.fbr-doc.
 define temp-table tt-fin like ub.fin-doc.
 
 DEFINE FRAME frame1
@@ -162,6 +163,34 @@ do:
 end.
 for each tt-rvs:
     delete tt-rvs .
+end.    
+end.
+
+for each ub.fbr-doc where ub.fbr-doc.obj-code = buf_shift-obj.obj-code and
+    ub.fbr-doc.obj-type = buf_shift-obj.obj-type and
+    ub.fbr-doc.shift-date = buf_shift-obj.shift-date and
+    ub.fbr-doc.shift-num = buf_shift-obj.shift-num:
+
+    buffer-copy fbr-doc except fbr-doc.status_ to tt-fbr  assign 
+        tt-fbr.status_ = "накл". /* для имитации изменения статуса на факт */
+/*Выгрузка сверок*/
+{ gbl/rum-runa.i
+  ?
+  this-procedure:handle
+  ?
+  {&edoc-proc_event_fbr-doc}
+  " buffer tt-fbr:handle "
+  " buffer ub.fbr-doc:handle "  ''
+  ''
+  no-error
+}
+if error-status:error 
+    then 
+do:
+    message return-value view-as alert-box.
+end.
+for each tt-fbr:
+    delete tt-fbr .
 end.    
 end.
 

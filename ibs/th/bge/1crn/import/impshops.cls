@@ -493,6 +493,102 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       .
     end.
 
+
+    /* 28/VIII-2018 Если номер БД для начальных настроек больше нуля,
+                    то после создания нового объекта и новой БД копируем с заданной БД расписание и права. */
+    define buffer buf_sysconf for ub.sysconf . 
+    if v-mode = {&add-def} then do :
+      /* 28/VIII-2018 При загрузке нового объекта смотрим его фирму, смотрим начальные настройки.
+                      Название параметра «Номер БД для копирования прав и расписания при импорте из 1С».
+                      Хранится в поле sysconf.xdn-grp-code */
+      find first buf_sysconf no-lock where buf_sysconf.host-code = v-host-code no-error .
+      if available buf_sysconf then do :
+        if buf_sysconf.xdn-grp-code > 0 then do :
+          
+          /* 28/VIII-2018 Таблицы по правам для копирования:
+Action-role
+Action-role-attr
+Action-role-item
+Расписание: schedule, schedule-attr
+          */
+          define buffer buf_Action-role      for ub.action-role .
+          define buffer buf_Action-role-attr for ub.action-role-attr .
+          define buffer buf_Action-role-item for ub.action-role-item .
+          define buffer buf_Action-role2      for ub.action-role .
+          define buffer buf_Action-role-attr2 for ub.action-role-attr .
+          define buffer buf_Action-role-item2 for ub.action-role-item .
+          for each buf_Action-role-item2 exclusive-lock
+             where buf_Action-role-item2.db-num = v-db-num :
+            delete buf_Action-role-item2 .
+          end .
+          for each buf_Action-role-attr2 exclusive-lock
+             where buf_Action-role-attr2.db-num = v-db-num :
+            delete buf_Action-role-attr2 .
+          end .
+          for each buf_Action-role2 exclusive-lock
+             where buf_Action-role2.db-num = v-db-num :
+            delete buf_Action-role2 .
+          end .
+          for each buf_Action-role no-lock
+             where buf_Action-role.db-num = buf_sysconf.xdn-grp-code :
+            create buf_Action-role2 .
+            buffer-copy buf_Action-role to buf_Action-role2
+            assign
+              buf_Action-role2.db-num = v-db-num
+            .
+          end .
+          for each buf_Action-role-attr no-lock
+             where buf_Action-role-attr.db-num = buf_sysconf.xdn-grp-code :
+            create buf_Action-role-attr2 .
+            buffer-copy buf_Action-role-attr to buf_Action-role-attr2
+            assign
+              buf_Action-role-attr2.db-num = v-db-num
+            .
+          end .
+          for each buf_Action-role-item no-lock
+             where buf_Action-role-item.db-num = buf_sysconf.xdn-grp-code :
+            create buf_Action-role-item2 .
+            buffer-copy buf_Action-role-item to buf_Action-role-item2
+            assign
+              buf_Action-role-item2.db-num = v-db-num
+            .
+          end .
+          /* 05/IX-2018 - временно исключить расписания из копирования
+          define buffer buf_schedule      for ub.schedule .
+          define buffer buf_schedule-attr for ub.schedule-attr .
+          define buffer buf_schedule2      for ub.schedule .
+          define buffer buf_schedule-attr2 for ub.schedule-attr .
+          for each buf_schedule-attr2 exclusive-lock
+             where buf_schedule-attr2.cre-db-num = v-db-num :
+            delete buf_schedule-attr2 .
+          end .
+          for each buf_schedule2 exclusive-lock
+             where buf_schedule2.cre-db-num = v-db-num :
+            delete buf_schedule2 .
+          end .
+          for each buf_schedule no-lock
+             where buf_schedule.cre-db-num = buf_sysconf.xdn-grp-code :
+            create buf_schedule2 .
+            buffer-copy buf_schedule to buf_schedule2
+            assign
+              buf_schedule2.cre-db-num  = v-db-num
+              buf_schedule2.db-num-char = objImp:code_ // = string(v-obj-code) = string(v-db-num) 
+            .
+          end .
+          for each buf_schedule-attr no-lock
+             where buf_schedule-attr.cre-db-num = buf_sysconf.xdn-grp-code :
+            create buf_schedule-attr2 .
+            buffer-copy buf_schedule-attr to buf_schedule-attr2
+            assign
+              buf_schedule-attr2.cre-db-num = v-db-num
+            .
+          end .
+          */
+        end . // end_of if buf_sysconf.xdn-grp-code
+      end .
+    end . // end_of копирование прав для v-mode = &add-def
+    
+
     /* При создании объекта магазин в системе автоматически создавать группу ценообразования для него и ГТПЛ. */
     define variable proc-typl-ad as class typl-ad no-undo .
     define variable v-plt-id     as integer no-undo .

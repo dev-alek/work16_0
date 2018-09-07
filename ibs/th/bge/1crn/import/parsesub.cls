@@ -225,9 +225,6 @@ class ibs.th.bge.1crn.import.parsesub:
     paymentTypeSubjectObj = new payment-type ().
     impPaymentTypeEventHndlrObj = new imppayment-type ().
     
-    shopsSubjectObj = new shops ().
-    impShopsEventHndlrObj = new impshops ().
-    
     paymentTypeGroupSubjectObj = new payment-type-group ().
     impPaymentTypeGroupEventHndlrObj = new imppayment-type-group ().
 
@@ -281,7 +278,10 @@ class ibs.th.bge.1crn.import.parsesub:
 /*    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().  */
 /*    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").*/
     
-    /* создание экземпл€ров объектов промо-акций перенесено внутрь парсинга */
+    /* создание экземпл€ров объектов:
+       - ј« 
+       - промо-акций
+       перенесено внутрь парсинга */
     
     trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().
     trn-gdSubjectObj = new trn-gd ().
@@ -293,8 +293,6 @@ class ibs.th.bge.1crn.import.parsesub:
     trn-gd-fuelSubjectObj = new trn-gd-fuel ().
     imptrn-fuel-docEventHndlrObj = new imptrn-fuel-doc ().
     trn-fuel-doc-inlistSubjectsObj = new subjects ("gds").
-    
-		
 		
   end constructor.
   
@@ -364,6 +362,35 @@ class ibs.th.bge.1crn.import.parsesub:
         nameChildrenCurr = hnoderef:name.
       end.
       case hNoderef:name:
+        when "azk" then do:
+          // экземпл€р shopsSubjectObj создаЄтс€ перед первым импортом
+          if not valid-object(shopsSubjectObj)       then shopsSubjectObj       = new shops (). // <azk>
+          if not valid-object(impShopsEventHndlrObj) then do :
+            impShopsEventHndlrObj = new impshops ().
+            // impShopsEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) . - пока не требуетс€
+          end .
+          // экземпл€р shopsSubjectObj очищаетс€ перед началом каждого нового объекта внутри GetChildrenSub()
+          v-iSubject = shopsSubjectObj .
+          v-iImpSub  = impShopsEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "promotion" then do:
+          // экземпл€р promotionSubjectObj создаЄтс€ перед первым импортом
+          if not valid-object(promotionSubjectObj)       then promotionSubjectObj       = new promotion(). // <promotion>
+          if not valid-object(imppromotionEventHndlrObj) then do :
+            imppromotionEventHndlrObj = new imppromotion ().
+            imppromotionEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) .
+          end .
+          // экземпл€р promotionSubjectObj очищаетс€ перед началом каждого нового объекта внутри GetChildrenSub()
+          v-iSubject = promotionSubjectObj .
+          v-iImpSub  = imppromotionEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+
         when "business-unit" then do:
           GetChildrenSub (hNoderef, (level + 1), businessUnitsSubjectObj).
           ReceivedSubjectPublish(businessUnitsSubjectObj, impbusinessUnitsEventHndlrObj).
@@ -403,10 +430,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "payment-type" then do:
           GetChildrenSub (hNoderef, (level + 1), paymentTypeSubjectObj).
           ReceivedSubjectPublish(paymentTypeSubjectObj, impPaymentTypeEventHndlrObj).
-        end.
-        when "azk" then do:
-          GetChildrenSub (hNoderef, (level + 1), shopsSubjectObj).
-          ReceivedSubjectPublish(shopsSubjectObj, impShopsEventHndlrObj).
         end.
         when "unit" then do:
           GetChildrenSub (hNoderef, (level + 1), unitsSubjectObj).
@@ -463,20 +486,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "trn-fuel-doc" then do:
           GetChildrenSub (hNoderef, (level + 1), trn-fuel-doc-inSubjectObj).
           ReceivedSubjectPublish(trn-fuel-doc-inSubjectObj, imptrn-fuel-docEventHndlrObj).
-        end.
-        when "promotion" then do:
-          // экземпл€р promotionSubjectObj создаЄтс€ перед первым импортом
-          if not valid-object(promotionSubjectObj)       then promotionSubjectObj       = new promotion(). // <promotion>
-          if not valid-object(imppromotionEventHndlrObj) then do :
-            imppromotionEventHndlrObj = new imppromotion ().
-            imppromotionEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) .
-          end .
-          // экземпл€р promotionSubjectObj очищаетс€ перед началом каждого нового объекта внутри GetChildrenSub()
-          v-iSubject = promotionSubjectObj .
-          v-iImpSub  = imppromotionEventHndlrObj .
-          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
-          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
-          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
       end case.
       // --> вставить GetChildrenSub и ReceivedSubjectPublish сюда

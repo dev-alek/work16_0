@@ -4889,6 +4889,153 @@ procedure restore-s-gds-mercury-id :
 
     {&update-sequence}
   end.
-  
-
 end procedure. /* restore-s-vsd-id */
+
+&scoped-define sequence-name s-promo-chip
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-PromoAction
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-PromoCriterion
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-PromoGift
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-PromoGoods
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-PromoObject
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-promo-schedule
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-promo-schedule-week
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+    
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-promo-chip */
+&scoped-define sequence-name s-promoaction-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define table-name      PromoAction
+    &scoped-define seq-field-name  id
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    
+    {&validate-sequence}
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-promoaction-id */
+&scoped-define sequence-name s-promoCriterion-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define table-name      PromoCriterion
+    &scoped-define seq-field-name  id
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+
+    {&validate-sequence}
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-promoCriterion-id */
+&scoped-define sequence-name s-promoGift-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define table-name      PromoGift
+    &scoped-define seq-field-name  id
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+
+    {&validate-sequence}
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-promoGift-id */
+&scoped-define sequence-name s-promoGoods-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define table-name      PromoGoods
+    &scoped-define seq-field-name  id
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+
+    {&validate-sequence}
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-promoGoods-id */
+&scoped-define sequence-name s-promoobject-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define table-name      PromoObject
+    &scoped-define seq-field-name  id
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+
+    {&validate-sequence}
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-promoobject-id */
+&scoped-define sequence-name s-promosched-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+    &scoped-define seq-field-name  id
+
+    &scoped-define table-name      promo-schedule
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      promo-schedule-week
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+    
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-promosched-id */

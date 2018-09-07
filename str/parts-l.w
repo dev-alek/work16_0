@@ -94,6 +94,7 @@ define variable vsdsubsObj as class vsdsubs no-undo.
 define variable vsdsubObj  as class vsdsub no-undo.
 define variable vsdStorageObj as class vsdtostorage no-undo.
 define variable vsdSts as class vsdstatustype no-undo.
+define variable v-vozvr-perem-no-fact as logical no-undo.
 
 define new shared buffer  parts for ub.parts  .
 define buffer  buf_trn for ub.trn-doc  .
@@ -1246,7 +1247,7 @@ ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* АлкАтр */
     
     if vsdsubsObj:iCounter = 0
     then do:
-      if p-edit-mode = {&lookup}
+      if p-edit-mode = {&lookup} and not v-vozvr-perem-no-fact
       then do:
         message "К партии отсутсвуют ВСД" view-as alert-box.
         return.
@@ -2333,7 +2334,7 @@ define variable v-alcohol-prod as logical.
       where buf_trn-doc.doc-code = p-doc-code no-error
       .
     
-    if p-doc-code = ? or p-doc-code = "" or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+    if p-doc-code = ? or p-doc-code = "" or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}  or  buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem})
     then do:
       { gbl/conf-rd.i
         "'mercuri':u"
@@ -2369,6 +2370,9 @@ define variable v-alcohol-prod as logical.
             view-as alert-box error .
           undo, return error .
         end.
+        if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} and buf_trn-doc.status_ <> {&fact}
+        then  
+          v-vozvr-perem-no-fact = true.
       end.
       else do:
         assign

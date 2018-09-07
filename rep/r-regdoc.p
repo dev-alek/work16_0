@@ -1539,13 +1539,17 @@ on error undo, return error
       if varcur-cons-vat-pc = ? then do :
          assign varcur-cons-vat-pc = 0 .
       end.
-
+      FIND FIRST doc-line WHERE doc-line.doc-code  = buf_parts.out-code 
+                            AND doc-line.artic     = buf_parts.artic 
+                            AND doc-line.prod-type = buf_parts.prod-type
+                            AND doc-line.prod-code = buf_parts.prod-code
+                            NO-LOCK NO-ERROR.
       run clcprtsl_calc-ttable in this-procedure
          ( input TRUE  /* paris-doc         */
          , input TRUE  /* paris-cur         */
          , input 0     /* parroad-tax       */
          , input 0     /* parexcise         */
-         , input buf_parts.vat-pc     /* parvat-pc */
+         , input IF (AVAIL doc-line) THEN doc-line.VAT-pc ELSE ?     /* parvat-pc */
          , input 0     /* parcons-vat-pc    */
          , input 0     /* parslt-pc         */
          , input p-base-rate     /* parbase-rate      */

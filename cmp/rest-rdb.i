@@ -136,6 +136,7 @@ assortment-matrix~
 ,contract~
 ,contract-line~
 ,contract-specif~
+,contract-specif-attr~
 ,country~
 ,c-country~
 ,criterion-analysis~

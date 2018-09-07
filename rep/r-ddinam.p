@@ -860,12 +860,12 @@ procedure report-exec :
                       and buf_fin-doc.payer-code = buf_sysconf.sale-code
                       then do:   /*контрагент-реализация*/
                         assign
-                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-rubl
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
                         .
                       end.
                       else do:
                         assign
-                          v-income-other = v-income-other + buf_fin-doc.sum-rubl
+                          v-income-other = v-income-other + buf_fin-doc.sum-doc
                         .
                        end.
                 end.
@@ -877,12 +877,12 @@ procedure report-exec :
                       use-index pi no-error.
                       if available buf_clients-attr then do :
                         assign
-                          v-expense-bank = v-expense-bank + buf_fin-doc.sum-rubl
+                          v-expense-bank = v-expense-bank + buf_fin-doc.sum-doc
                         .
                       end.
                       else do :
                         assign
-                          v-expense-other = v-expense-other + buf_fin-doc.sum-rubl
+                          v-expense-other = v-expense-other + buf_fin-doc.sum-doc
                         .
                       end.
                 end.
