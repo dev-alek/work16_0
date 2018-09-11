@@ -154,12 +154,12 @@ define variable v-col5-propis  as character no-undo .
 define variable v-col6-propis  as character no-undo .
 define variable abbr           as character no-undo .
 
-define variable v-ost-begin-all    as integer no-undo .
-define variable v-income-realiz-all as integer no-undo .
-define variable v-income-other-all  as integer no-undo .
-define variable v-expense-bank-all  as integer no-undo .
-define variable v-expense-other-all as integer no-undo .
-define variable v-ost-end-all      as integer no-undo .
+define variable v-ost-begin-all    as decimal no-undo .
+define variable v-income-realiz-all as decimal no-undo .
+define variable v-income-other-all  as decimal no-undo .
+define variable v-expense-bank-all  as decimal no-undo .
+define variable v-expense-other-all as decimal no-undo .
+define variable v-ost-end-all      as decimal no-undo .
 
 define variable x-store-code    like ub.clients.obj-code   no-undo .
 define variable x-store-type    like ub.clients.obj-type   no-undo .
