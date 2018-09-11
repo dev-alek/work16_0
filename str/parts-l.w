@@ -2333,7 +2333,7 @@ define variable v-alcohol-prod as logical.
     find first buf_trn-doc no-lock
       where buf_trn-doc.doc-code = p-doc-code no-error
       .
-    
+    v-vozvr-perem-no-fact = false.
     if p-doc-code = ? or p-doc-code = "" or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}  or  buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem})
     then do:
       { gbl/conf-rd.i
@@ -2370,7 +2370,7 @@ define variable v-alcohol-prod as logical.
             view-as alert-box error .
           undo, return error .
         end.
-        if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} and buf_trn-doc.status_ <> {&fact}
+        if available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} and buf_trn-doc.status_ <> {&fact}
         then  
           v-vozvr-perem-no-fact = true.
       end.
