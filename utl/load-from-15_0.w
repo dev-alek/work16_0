@@ -34,7 +34,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Загрузка данных из TH 15.0 через сокет-сервер".
 { cmp/vssrevis.i }
-{ cmp/str-glbl.i }
+{ cmp/trg-def.i }
 { cmp/library.i }
 { cmp/showinf.i }
 { str/placelib.i }
@@ -43,6 +43,8 @@ define variable vss-description as character no-undo init "Загрузка данных из TH
 { gbl/cd-attr.i }
 { gbl/getcntxt.i def }
 { gbl/waitfram.i }
+{ utl/tt301.i    }
+{ gbl/getcntxa.i }
 
 &GLOBAL-DEFINE defined_parparentproc yes
 
@@ -364,6 +366,9 @@ end procedure.
 define variable v-has-records as logical no-undo .
 define variable glog        as logical   no-undo.
 
+define variable v-line as character no-undo .
+define variable num-rec-ok2 as integer no-undo .
+
 define variable cmd as character no-undo .
 define variable vI    as int64    no-undo.
 define variable vBuff as handle   no-undo.
@@ -381,6 +386,9 @@ DEFINE VARIABLE iLength     AS INTEGER  NO-UNDO.
 
 DEFINE STREAM lsIN.
 DEFINE STREAM lsOUT.
+
+define stream log-stream .
+define stream err-stream .
 
 define temp-table tt-cash-desk like ub.cash-desk .
 define temp-table tt-cash-desk-attr like ub.cash-desk-attr
@@ -413,6 +421,20 @@ define temp-table tt-place-loc
   field loc1 as character
   index pi as primary unique
     pl-code
+.
+
+define temp-table tt-gds-price
+  field gds-code as integer
+  field price as decimal
+  index pi as primary unique
+    gds-code
+.
+
+define temp-table tt-gds-mapping
+  field gds-code15 as integer
+  field gds-code16 as integer
+  index pi as primary 
+    gds-code15
 .
   
 /* _UIB-CODE-BLOCK-END */
@@ -721,7 +743,7 @@ DO:
                                      and ub.price-list.obj-code = v-cntxt-obj-code :
       v-has-records = true .
       leave.
-    end. 
+    end.
     if v-has-records
     then do :
       message "На объекте есть переоценки!" view-as alert-box.
@@ -729,6 +751,8 @@ DO:
     end.                                 
   end.
   
+  output stream log-stream to value("load-from-15_0.log") append .
+  output stream err-stream to value("load-from-15_0.err") append .
   if v-cashdesk
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Кассы..." ).
@@ -741,6 +765,11 @@ DO:
       undo .
     end.
   end.
+  output stream log-stream close .
+  output stream err-stream close .
+  
+  output stream log-stream to value("load-from-15_0.log") append .
+  output stream err-stream to value("load-from-15_0.err") append .
   if v-schem
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Топология..." ).
@@ -753,6 +782,11 @@ DO:
       undo .
     end.
   end.
+  output stream log-stream close .
+  output stream err-stream close .
+  
+  output stream log-stream to value("load-from-15_0.log") append .
+  output stream err-stream to value("load-from-15_0.err") append .
   if v-pumpdoc
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Инвентаризация счетчиков ТРК" ).
@@ -765,9 +799,26 @@ DO:
       undo .
     end.
   end.  
+  output stream log-stream close .
+  output stream err-stream close .
+  
+  output stream log-stream to value("load-from-15_0.log") append .
+  output stream err-stream to value("load-from-15_0.err") append .
   if v-price
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Цены" ).
+    
+    empty temp-table tt-gds-mapping .
+    input from value(v-file-path) .
+    repeat:
+      import unformatted v-line.
+      create tt-gds-mapping .
+      assign
+        tt-gds-mapping.gds-code15 = integer(trim(entry(1, v-line, ";"))) .
+        tt-gds-mapping.gds-code16 = integer(trim(entry(2, v-line, ";"))) .
+      .
+    end.
+    input close.
     run load_price no-error .
     if error-status:error
     then do :
@@ -777,6 +828,9 @@ DO:
       undo .
     end.
   end.
+  output stream log-stream close .
+  output stream err-stream close .
+  
   run waitfram-hide in this-procedure .
   message "ГОТОВО!" view-as alert-box.
 END.
@@ -863,19 +917,75 @@ procedure load_price :
   myParser = NEW ObjectModelParser().
   myJsonObj = CAST(myParser:ParseFile(search("price.json")), JsonObject).
   
-/*  run parse-json(input temp-table tt-cash-desk:default-buffer-handle, input "cash-desk") .          */
-/*  run parse-json(input temp-table tt-cash-desk-attr:default-buffer-handle, input "cash-desk-attr") .*/
+  run parse-json(input temp-table tt-gds-price:default-buffer-handle, input "tt-gds-price") .
   
   /* Delete all objects created by this procedure to avoid memory leaks */
   DELETE OBJECT myResultObj NO-ERROR.
   DELETE OBJECT results-array NO-ERROR.
   DELETE OBJECT myJsonObj NO-ERROR.
   DELETE OBJECT myParser    NO-ERROR.
+  
+  create temp-price-doc .
+  assign
+    temp-price-doc.doc-date = today
+    temp-price-doc.doc-num  = 1
+    temp-price-doc.line-num = 1
+    temp-price-doc.obj-code = v-cntxt-obj-code
+    temp-price-doc.obj-type = v-cntxt-obj-type
+    temp-price-doc.doc-id   = "_"
+  .
+  
+  put stream log-stream unformatted now "   Начинаем загрузку цен..." skip .
+  
+  for each tt-gds-price no-lock :
+    find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-gds-price.gds-code no-error .
+    if available tt-gds-mapping
+    then do :
+      find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
+      if available ub.goods
+      then do :
+        create temp-price-list.
+        assign
+          temp-price-list.doc-num = 1
+          temp-price-list.line-num = 1
+          temp-price-list.gds-code = tt-gds-mapping.gds-code16
+          temp-price-list.price-sale = tt-gds-price.price
+        .
+        put stream log-stream unformatted
+          "Код в 15.0 " string(tt-gds-price.gds-code) " .Код в 16.0 " string(tt-gds-mapping.gds-code16)
+          " . Цена: " string(tt-gds-price.price) skip .
+      end.
+      else do :
+        put stream err-stream unformatted
+          "Не найден товар с кодом " string(tt-gds-mapping.gds-code16) " .Код в 15.0 " string(tt-gds-price.gds-code)
+          " . Цена: " string(tt-gds-price.price) skip .
+      end.
+    end.
+    else do :
+      put stream err-stream unformatted
+        "В файле соответствия " v-file-path " нет данных по товару с кодом " string(tt-gds-price.gds-code)
+        " . Цена: " string(tt-gds-price.price) skip .
+    end.
+  end.
+  
+  run utl/ora-i301.p (
+    input this-procedure ,
+    input this-procedure ,
+    input table temp-price-doc ,
+    input table temp-price-list ,
+    output num-rec-ok2
+    ) no-error .
+  if error-status:error
+  then do :
+    undo, return error return-value.
+  end.
+  
+  put stream log-stream unformatted now "   Цены загружены!" skip .
+  
 end procedure .
 
 procedure load_cashdesk :
   define variable v-rid as recid no-undo .
-  
   
   cmd = substitute ("&1 &2/THGetInfo?GetCashDesk >&3", search ("exe/curl.exe"), v-addr, "cashdesk-temp.json").
   os-command silent value (cmd).
@@ -893,6 +1003,8 @@ procedure load_cashdesk :
   DELETE OBJECT myJsonObj NO-ERROR.
   DELETE OBJECT myParser    NO-ERROR.
   
+  put stream log-stream unformatted now "   Начинаем загрузку касс..." skip .
+  
   for each tt-cash-desk where not tt-cash-desk.is-del exclusive-lock :
     tt-cash-desk.addr-path = replace(tt-cash-desk.addr-path, "|", chr(4)) .
     for first tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
@@ -901,7 +1013,10 @@ procedure load_cashdesk :
                                          and tt-cash-desk-attr.cash-num = tt-cash-desk.cash-num
                                          and tt-cash-desk-attr.attr-code = "fr-type" :
       tt-cash-desk.fr-type = tt-cash-desk-attr.attr-value .                                    
-    end.                                       
+    end.          
+     
+    put stream log-stream unformatted "Касса " tt-cash-desk.pos-type " №" tt-cash-desk.cash-num " IP: " entry(2,tt-cash-desk.addr-path, chr(4)) skip.       
+                        
     run ref/cashdsk1.p (
      input-output v-rid
     ,input {&add-def}
@@ -971,6 +1086,8 @@ procedure load_cashdesk :
       end case.                                   
     end.                                       
   end.
+  
+  put stream log-stream unformatted now "   Кассы загружены!" skip .
    
 end procedure.
 
@@ -1023,8 +1140,10 @@ procedure load_schem :
     end.
   end. 
   
+  put stream log-stream unformatted now "   Начинаем загрузку топологии..." skip .
   
   for each tt-pump no-lock :
+    put stream log-stream unformatted "ТРК №" string(tt-pump.pump-code) skip .
     run pumpav in this-procedure
       ( input v-cntxt-obj-type
        ,input v-cntxt-obj-code
@@ -1036,6 +1155,7 @@ procedure load_schem :
   end.
   
   for each tt-nozzle no-lock :
+    put stream log-stream unformatted "Пистолет №" string(tt-nozzle.nozzle-code) skip .
     run nozzleav (input v-cntxt-obj-type,
                         v-cntxt-obj-code,
                         tt-nozzle.nozzle-code) no-error.
@@ -1045,6 +1165,7 @@ procedure load_schem :
   end.
   
   for each tt-pump-nozzle no-lock :
+    put stream log-stream unformatted "Связка ТРК-Пистолет №" string(tt-pump-nozzle.pump-code) "-" string(tt-pump-nozzle.nozzle-code) skip .
     run pumpnzav in this-procedure ( input v-cntxt-obj-type
                                      ,input v-cntxt-obj-code
                                      ,input tt-pump-nozzle.pump-code
@@ -1059,6 +1180,7 @@ procedure load_schem :
   
   for each tt-place no-lock :
     if tt-place.status_ = "удал" then next . /* Удаленные не загружаем */
+    put stream log-stream unformatted "Резервуар координата1 " string(tt-place.loc1) skip .
     run ref/place01.p
       ( input-output v-rep-rec
       , input {&add-def}
@@ -1156,6 +1278,7 @@ procedure load_schem :
     for each tt-pl-pump no-lock where tt-pl-pump.obj-type   = tt-place.obj-type
                                   and tt-pl-pump.obj-code   = tt-place.obj-code
                                   and tt-pl-pump.pl-code    = tt-place.pl-code :
+      put stream log-stream unformatted "Связка Резервуар-ТРК №" string(ub.place.loc1) "-" string(tt-pl-pump.pump-code) skip .                              
       run plpumpav in this-procedure
                (input v-cntxt-obj-type,
                 input v-cntxt-obj-code,
@@ -1179,6 +1302,7 @@ procedure load_schem :
       then do:
         next. /* Переносим только текущие связки рез-трк-пистолет */
       end.
+      put stream log-stream unformatted "Связка Резервуар-ТРК-Пистолет №" string(ub.place.loc1) "-" string(tt-pl-pump-nozzle.pump-code) "-" string(tt-pl-pump-nozzle.nozzle-code) skip . 
       run plpmnzav in this-procedure
         ( input v-cntxt-obj-type
          ,input v-cntxt-obj-code
@@ -1192,7 +1316,7 @@ procedure load_schem :
     end.                                                                                                             
   end.
   
-  
+  put stream log-stream unformatted now "   Топология загружена!" skip .
 end procedure.
 
 procedure load_pumpdoc :
@@ -1219,8 +1343,10 @@ procedure load_pumpdoc :
   DELETE OBJECT myJsonObj NO-ERROR.
   DELETE OBJECT myParser    NO-ERROR.
   
+  put stream log-stream unformatted now "   Начинаем загрузку инвентаризации счётчиков ТРК..." skip .
       
   for each tt-icnt-doc no-lock :
+    put stream log-stream unformatted "Номер документа в 15.0   " tt-icnt-doc.doc-code skip .
     for each tt-icnt-line exclusive-lock where tt-icnt-line.doc-code = tt-icnt-doc.doc-code :
       find first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-icnt-line.gds-code no-error.
       if not available tt-gds-prod
@@ -1291,6 +1417,8 @@ procedure load_pumpdoc :
       undo, return error return-value.
     end.             
   end.
+  
+  put stream log-stream unformatted now "   Инвентаризация счётчиков ТРК загружена!" skip .
 
 end procedure.
 
@@ -1355,3 +1483,14 @@ procedure fix-codepage_ :
   input STREAM lsIN close.
   output STREAM lsOUT close.
 end procedure.  
+
+procedure pcall-log-file :
+define input  parameter p-message as character no-undo .
+  do
+  on error undo, return error return-value
+  :
+    put stream log-stream unformatted p-message skip .
+
+  end.
+
+end procedure. /* pcall-log-file */
