@@ -813,10 +813,9 @@ DO:
     repeat:
       import unformatted v-line.
       create tt-gds-mapping .
-      assign
-        tt-gds-mapping.gds-code15 = integer(trim(entry(1, v-line, ";"))) .
-        tt-gds-mapping.gds-code16 = integer(trim(entry(2, v-line, ";"))) .
-      .
+      tt-gds-mapping.gds-code15 = integer(trim(entry(1, v-line, ";"))) .
+      tt-gds-mapping.gds-code16 = integer(trim(entry(2, v-line, ";"))) no-error .
+      if error-status:error then leave .
     end.
     input close.
     run load_price no-error .
@@ -941,6 +940,9 @@ procedure load_price :
     find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-gds-price.gds-code no-error .
     if available tt-gds-mapping
     then do :
+      if tt-gds-mapping.gds-code15 = 0 or tt-gds-mapping.gds-code15 = ?
+      or tt-gds-mapping.gds-code16 = 0 or tt-gds-mapping.gds-code16 = ?
+      then next .
       find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
       if available ub.goods
       then do :
