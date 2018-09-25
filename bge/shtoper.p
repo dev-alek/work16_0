@@ -540,7 +540,8 @@ no-error
     ).
   end.
   run export-stk-den in this-procedure (
-    input p-obj-type
+    input p-host-code
+    , input p-obj-type
     , input p-obj-code
     , input p-shift-date
     , input p-shift-num
@@ -1094,13 +1095,14 @@ on error undo, return error
                     buf_temp_techPro.gds-code = buf_goods.gds-code
                     buf_temp_techPro.gds-name = buf_goods.gds-name
                   .
+                    /* 07/IX-2018 - не используетс€. ¬озвращает предустановленное значение no
                   run get-goods-envd in this-procedure (
                     input p-obj-type
                     , input p-obj-code
                     , input buf_goods.gds-code
                     , output buf_temp_techPro.envd
-                    ).
-
+                    ). */
+                    buf_temp_techPro.envd = no .
                   for each buf_doc-pl no-lock
                      where buf_doc-pl.gds-code = buf_goods.gds-code 
                        and buf_doc-pl.obj-code = p-obj-code
@@ -1190,6 +1192,7 @@ on error undo, return error
         for each buf_temp_chk-doc where buf_temp_chk-doc.gds-code = buf_temp_techPro.gds-code and buf_temp_chk-doc.chk-type = integer({&rcpt-tech-refuell}) :
           run wp-xmltagopen( input 3, input "techProChk", input "" ).
           run wp-xmltagput( input 4, "ChkDate"    , input string( buf_temp_chk-doc.chk-date   ), input 0 ).
+          run wp-xmltagput( input 4, "ChkTime"    , input string( buf_temp_chk-doc.chk-time, "hh:mm:ss"   ), input 0 ).
           run wp-xmltagput( input 4, "ChkNum"     , input string( buf_temp_chk-doc.doc-code   ), input 0 ).
           run wp-xmltagput( input 4, "ChkNumDesk" , input string( buf_temp_chk-doc.pay-desk   ), input 0 ).
           run wp-xmltagput( input 4, "ChkQnty"    , input string( buf_temp_chk-doc.qnty       ), input 0 ).
@@ -1371,10 +1374,16 @@ procedure export-techChk :
     empty temp-table buf_temp_chk-doc.
     empty temp-table buf_temp_chk-gds.
           
-    for each buf_chk-doc where (buf_chk-doc.chk-type = integer({&rcpt-trans-transfer}) or buf_chk-doc.chk-type = integer({&rcpt-trans-cancell}) or 
-        buf_chk-doc.chk-type = integer({&rcpt-unlock-trans}) or buf_chk-doc.chk-type = integer({&rcpt-overflow})) 
-        and buf_chk-doc.shift-date = p-shift-date and buf_chk-doc.shift-num = p-shift-num
-        and buf_chk-doc.obj-code = p-obj-code and buf_chk-doc.obj-type = p-obj-type    :
+    for each buf_chk-doc no-lock
+       where buf_chk-doc.obj-type = p-obj-type 
+         and buf_chk-doc.obj-code = p-obj-code
+         and buf_chk-doc.shift-date = p-shift-date
+         and buf_chk-doc.shift-num  = p-shift-num
+         and (buf_chk-doc.chk-type = integer({&rcpt-trans-transfer})
+           or buf_chk-doc.chk-type = integer({&rcpt-trans-cancell})
+           or buf_chk-doc.chk-type = integer({&rcpt-unlock-trans})
+           or buf_chk-doc.chk-type = integer({&rcpt-overflow})
+             ) :
         find first buf_temp_chk-doc where buf_temp_chk-doc.doc-code = buf_chk-doc.doc-code no-error.
 
       if not AVAILABLE buf_temp_chk-doc then do:
@@ -1396,16 +1405,15 @@ procedure export-techChk :
         find first buf_bar-code where buf_bar-code.b-code = buf_chk-gds.b-code no-error .
         if AVAILABLE buf_bar-code then 
         do:
-          find FIRST buf_goods where buf_goods.gds-code = buf_bar-code.gds-code no-error .
-          if AVAILABLE buf_goods then 
-          do:
-            find first buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_chk-gds.doc-code and buf_temp_chk-gds.line-num = buf_chk-gds.line-num no-error . 
+            find first buf_temp_chk-gds
+                 where buf_temp_chk-gds.doc-code = buf_chk-gds.doc-code
+                   and buf_temp_chk-gds.line-num = buf_chk-gds.line-num no-error . 
             if not AVAILABLE buf_temp_chk-gds then 
             do:
               create buf_temp_chk-gds .
               assign      
                 buf_temp_chk-gds.doc-code    = buf_chk-gds.doc-code         
-                buf_temp_chk-gds.gds-code    = buf_goods.gds-code
+                buf_temp_chk-gds.gds-code    = buf_bar-code.gds-code
                 buf_temp_chk-gds.b-code      = buf_chk-gds.b-code
                 buf_temp_chk-gds.qnty        = buf_chk-gds.doc-qnty
                 buf_temp_chk-gds.nozzle-code = buf_chk-gds.nozzle-code
@@ -1418,7 +1426,6 @@ procedure export-techChk :
                 if buf_chk-gds.write-off-code = 1 then buf_temp_chk-gds.sbros-type = "пролито".
               end.     
             end.
-          end.    
         end.                        
       end.   
     end.                       
@@ -1651,12 +1658,14 @@ define variable moving  as logical no-undo init yes.
               buf_temp_stkShiftEnd.qnty      = 0.0
               buf_temp_stkShiftEnd.cli-qnty  = 0.0
             .
+              /* 07/IX-2018 - не используетс€. ¬озвращает предустановленное значение no            
             run get-goods-envd in this-procedure (
                   input p-obj-type
                 , input p-obj-code
                 , input buf_goods.gds-code
                 , output buf_temp_stkShiftEnd.envd
-            ).
+            ). */
+              buf_temp_stkShiftEnd.envd = no .
           end.
         end.
         assign
@@ -1760,12 +1769,14 @@ define variable moving  as logical no-undo init yes.
               buf_temp_stkShiftOpen.qnty      = 0.0
               buf_temp_stkShiftOpen.cli-qnty  = 0.0
             .
+              /* 07/IX-2018 - не используетс€. ¬озвращает предустановленное значение no
             run get-goods-envd in this-procedure (
                   input p-obj-type
                 , input p-obj-code
                 , input buf_goods.gds-code
                 , output buf_temp_stkShiftOpen.envd
-            ).
+            ). */
+              buf_temp_stkShiftOpen.envd = no .            
           end.
         end.
         assign
@@ -2000,12 +2011,14 @@ define input parameter p-shift-num  as integer          no-undo.
             buf_temp_stkTNP.gds-code = buf_goods.gds-code
             buf_temp_stkTNP.gds-name = buf_goods.gds-name
           .
+            /* 07/IX-2018 - не используетс€. ¬озвращает предустановленное значение no
           run get-goods-envd in this-procedure (
                 input p-obj-type
               , input p-obj-code
               , input buf_goods.gds-code
               , output buf_temp_stkTNP.envd
-          ).
+          ). */
+            buf_temp_stkTNP.envd = no .          
         end.
         assign
           buf_temp_stkTNP.end-sumSale = buf_stk-line.sum-rubl
@@ -2200,12 +2213,14 @@ define input parameter p-shift-num  as integer          no-undo.
                 buf_temp_sumPriceSale.gds-code = buf_goods.gds-code
                 buf_temp_sumPriceSale.gds-name = buf_goods.gds-name
               .
+                /* 07/IX-2018 - не используетс€. ¬озвращает предустановленное значение no
               run get-goods-envd in this-procedure (
                     input p-obj-type
                   , input p-obj-code
                   , input buf_goods.gds-code
                   , output buf_temp_sumPriceSale.envd
-              ).
+              ). */
+                buf_temp_sumPriceSale.envd = no .              
             end.
           end.
           assign
@@ -2243,11 +2258,11 @@ end procedure. /* export-price-sum */
 /*==========================================================================*/
 /* остатки денежных средств */
 procedure export-stk-den :
+  define input parameter p-host-code  as character        no-undo .
   define input parameter p-obj-type   as character        no-undo .
   define input parameter p-obj-code   as integer          no-undo .
   define input parameter p-shift-date as date             no-undo .
   define input parameter p-shift-num  as integer          no-undo .
-  define variable v-host-code  as integer no-undo . /* отдать на вход в fostatok() */
   define variable v-ost-begin  as decimal no-undo .
   define variable v-ost-end    as decimal no-undo .
   define variable Fact-order-1 like ub.stk-tot.Fact-order no-undo .
@@ -2256,9 +2271,8 @@ procedure export-stk-den :
   /* функци€ fostatok() перебирает все магазины, равные заданному, из таблицы obj-list */
   run create_obj-list in this-procedure (p-obj-type, p-obj-code).
 
-  { gbl/hostcode.i p-obj-type p-obj-code v-host-code }
   run fostatok in this-procedure (
-    input   v-host-code /* gbl/hostcode.i : obj-type + obj-code = host-code */
+    input   p-host-code
     ,input   p-obj-code
     ,input   p-obj-type
     
@@ -2279,7 +2293,7 @@ procedure export-stk-den :
     ,output  Fact-order-1
     ) no-error .
   run fostatok in this-procedure (
-    input   v-host-code
+    input   p-host-code
     ,input   p-obj-code
     ,input   p-obj-type
     
@@ -2308,7 +2322,7 @@ procedure export-stk-den :
 
 end procedure.  /* export-stk-den */
 /*==========================================================================*/
-procedure get-goods-envd :
+/* procedure get-goods-envd : 07/IX-2018 - не используетс€. ¬озвращает предустановленное значение no
 define input parameter p-obj-type   as character        no-undo.
 define input parameter p-obj-code   as integer          no-undo.
 define input parameter p-gds-code   as integer          no-undo.
@@ -2360,4 +2374,4 @@ define output parameter p-is-envd   as logical          no-undo.
         end.
     end.       ***/
   end.
-end procedure. /* get-goods-envd */
+end procedure. /* get-goods-envd */ */

@@ -507,6 +507,17 @@ define variable vss-description as character no-undo init "Информация об объекте
   " "
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Загрузка данных из ТН v15.0'"
+  "'utl/load-from-15_0.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_adm_check}                                                      */
 /* АРМ Администратор   Утилиты/Проверки                                       */

@@ -81,9 +81,11 @@ define temp-table tt-imp-parts no-undo
 .
 
 define temp-table temp_parts no-undo like ub.parts
+/* 14/IX-2018 - не используется. Присвоения перенаправлены в старые поля - artic + prod_type + prod_code
   field new_artic     as character
   field new_prod-type as character
   field new_prod-code as integer
+*/  
   field new-cli-type  as character
   field new-cli-code  as integer
   index pi is primary
@@ -169,7 +171,6 @@ define variable v-count-err   as integer no-undo .
 define variable local-trace-on as logical no-undo .
 
 define buffer new_ext-classif for ub.ext-classif  .
-define buffer new_trn-doc     for ub.trn-doc  .
 define buffer new_line        for temp-line  .
 define buffer buf2_temp_parts for temp_parts  .
 define buffer old_contract-specif for ub.contract-specif  .
@@ -222,6 +223,9 @@ end.
 define variable p-from-version as character no-undo .
 p-from-version = {&thth150-from-version} .
 
+&scop my-message substitute("Перенос партий свободной зоны из &1 в 16.0 ...", p-from-version)
+{&display-message}.
+
 v-f-cli-type = {&cmp} .
 
 define stream f-err-lines .
@@ -242,20 +246,15 @@ case p-from-version:
   end.
   */
 end case.
-/*
-log-file-name = substitute("&1.txt", entry(1, entry(num-entries(this-procedure:file-name, {&slash-char}), this-procedure:file-name, {&slash-char}), ".")).
-*/
 
-&scop my-message substitute("Перенос партий свободной зоны из &1 в 16.0 ...", p-from-version)
-{&display-message}.
 /*run save-conf-par in this-procedure .*/
 
 
-  /* поиск соответствия старого obj-code p-from-version версии в 16.0 */
+  /* p-obj-type и p-obj-code заданы для целевой системы; информация об исходной системе не требуется */
   assign
     new_obj-type = p-obj-type
     new_obj-code = p-obj-code
-  . // никакого соответствия не нужно: p-obj-type и p-obj-code заданы для целевой системы; информация об исходной системе не требуется.
+  .  
   find first buf_shop no-lock where buf_shop.obj-code = new_obj-code no-error .
   if available buf_shop then do:
     new_purch-code = if buf_shop.purch-code > 0 then buf_shop.purch-code else {&bef-repayment-code} .
@@ -267,31 +266,55 @@ log-file-name = substitute("&1.txt", entry(1, entry(num-entries(this-procedure:f
       new_obj-code
       new_host-code
       }
-    { gbl/curobjdt.i
+    { gbl/objdtget.i
       new_obj-type
       new_obj-code
       to-day
+      no-error
     }
-
+      
 run import_file in this-procedure (p-in-file) .
 
-/* ----- перекодировка их supp-code-15_0 в наш supp-code_16_0 ----- */
-define temp-table w-osn no-undo
-  field supp-code-16_0 as integer
-  field supp-code-15_0 as integer
-.
+/* ----- перекодировка их xxx-15_0 в наш xxx_16_0 ----- */
 define stream fosnid.
 define variable v-osn-fname as character no-undo .
-v-osn-fname = substitute("&1_supp.txt", p-obj-code) .
+define variable v-art-fname as character no-undo .
+define temp-table w-osn no-undo
+  field supp-code-15_0 as integer
+  field supp-code-16_0 as integer
+.
+// 19/IX-2018 сопоставление товаров потребовалось переделать с артикулов на коды товаров 
+define temp-table w-gds no-undo
+  field gds-code-15_0 as integer
+  field gds-code-16_0 as integer
+.
+
+/* ----- коды поставщиков ----- */
+v-osn-fname = substitute("&1_supp.txt", new_obj-code) .
+&scop my-message substitute("чтение файла соответствия поставщиков &1", v-osn-fname)
+{&display-message}.
 input stream fosnid from value (v-osn-fname).
 repeat:
   create w-osn.
-  import stream fosnid w-osn.
+  import stream fosnid delimiter ';' w-osn.
 end.
 input stream fosnid close.
+// последняя пустая строка в импортируемом файле:
 find w-osn where w-osn.supp-code-16_0 = 0 and w-osn.supp-code-15_0 = 0 no-error.
 if available w-osn then delete w-osn.
-/* ----- end_of перекодировка их supp-code-15_0 в наш supp-code_16_0 ----- */
+
+/* ----- коды товаров ----- */
+v-art-fname = substitute("&1_gds.txt", new_obj-code) .
+&scop my-message substitute("чтение файла соответствия товаров &1", v-art-fname)
+{&display-message}.
+input stream fosnid from value (v-art-fname).
+repeat:
+  create w-gds.
+  import stream fosnid delimiter ';' w-gds.
+end.
+input stream fosnid close.
+find w-gds where w-gds.gds-code-16_0 = 0 and w-gds.gds-code-15_0 = 0 no-error.
+if available w-gds then delete w-gds.
 
 
     empty temp-table temp-line no-error .
@@ -306,9 +329,7 @@ if available w-osn then delete w-osn.
     , substring(  v-str,  r-index(v-str, "\") + 1  )
   ) .
   output stream f-err-lines to value(v-err-file-name) .  
-
-
-run create_temp_parts in this-procedure (p-obj-code, p-obj-type).
+  run create_temp_parts in this-procedure (new_obj-code, new_obj-type, new_host-code).
   output stream f-err-lines close .
   
 /* импорт шапки */
@@ -330,19 +351,39 @@ define stream f-inp .
 procedure import_file private:
 define input parameter p-file-name as character no-undo .
 define variable v-imp-row as character no-undo .
+define variable v-err-msg as character no-undo .
 define buffer buf_tt-parts for tt-imp-parts .
 
+  &scop my-message v-err-msg
+      
   empty temp-table tt-imp-parts .
   v-count-all = 0 .
+  v-err-msg = "" .
+
+  file-info:file-name = p-file-name .
+  if file-info:file-type = ? then do :
+    v-err-msg = substitute("Отсутствует файл для импорта &1", p-file-name) .
+    {&display-message}.
+    undo, throw new Progress.Lang.AppError (v-err-msg) .
+  end .
+    
+do on error undo, throw:
+  
   input stream f-inp from value(p-file-name) no-echo .
   repeat on endkey undo, leave:
-    /* строки импортируемого файла, содержащие ошибке, сохранить в отдельном файле того же формата;
+    /* строки импортируемого файла, содержащие ошибки, сохранить в отдельном файле того же формата;
        поэтому каждую прочитанную строку необходимо разбирать поэнтриво и хранить в текстовом виде
        вместе с записью, которая по ней создалась во временной таблице */
     // import stream f-inp DELIMITER ';' tt-imp-parts2 .
     v-imp-row = "" .
     import stream f-inp unformatted v-imp-row .
+    v-count-all = v-count-all + 1 .
     if v-imp-row > "" then do:
+      if num-entries(v-imp-row, ';') <> 22 then do :
+        v-err-msg = "количество полей отличается от 22" .
+        leave .
+      end .
+      
       create buf_tt-parts .
       assign
         buf_tt-parts.artic         = substring(  entry( 1, v-imp-row, ';'),  7  ) // отрезаем начальное "PART: &1;"
@@ -358,31 +399,57 @@ define buffer buf_tt-parts for tt-imp-parts .
         buf_tt-parts.supp-type     =             entry(21, v-imp-row, ';')
         buf_tt-parts.cont-prn-code =             entry(22, v-imp-row, ';')
         buf_tt-parts.imp-row       =                       v-imp-row
-        v-count-all = v-count-all + 1
       .
+      
+    end . // end_of v-imp-row > ""
+  end. // end_of repeat
+  
+  catch exAppErrors as class Progress.Lang.AppError :
+    v-err-msg = exAppErrors:ReturnValue .
+    if v-err-msg > "" then . else do :
+      v-err-msg = exAppErrors:GetMessage(1) . 
+      if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .
     end .
-  end.
-  input stream f-inp close.
-
-if local-trace-on then do:
-define variable dsXmlFileName as character no-undo .
-dsXmlFileName = substitute("&1.xml", entry(1, p-file-name, ".")).
-temp-table tt-imp-parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+  end catch .
+  catch exProErrors as class Progress.Lang.ProError :
+    v-err-msg = exProErrors:GetMessage(1) . 
+    if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+  end catch .
+  catch exAnyErrors as class Progress.Lang.Error:
+    v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+  end catch .
+  finally: 
+    input stream f-inp close.
+    if v-err-msg > "" then do :
+      v-err-msg = substitute ("Ошибка в строке &1 файла &2: &3 [&4]", v-count-all, p-file-name, v-err-msg, v-imp-row) .
+      {&display-message}.
+      undo, throw new Progress.Lang.AppError (v-err-msg) .
+    end .
+  end finally.
 end .
+  
+
+    if local-trace-on then do:
+      define variable dsXmlFileName as character no-undo .
+      dsXmlFileName = substitute("&1.xml", entry(1, p-file-name, ".")).
+      temp-table tt-imp-parts:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-8").
+    end .
 end procedure . /* import_file */
 
 
 define stream f-tgds .
 procedure create_temp_parts private :
-define input parameter p-obj-code as integer no-undo .
-define input parameter p-obj-type as character no-undo .
+define input parameter p-obj-code  as integer no-undo .
+define input parameter p-obj-type  as character no-undo .
+define input parameter p-host-code as integer no-undo .
 define variable v-last-date as date no-undo .
+define variable v-artic     as character no-undo .
 define variable v-prod-type as character no-undo .
 define variable v-prod-code as integer no-undo .
-define variable v-host-code as integer no-undo .
 define variable v-contract-code as integer no-undo .
 define variable new_cli-type  as character no-undo .
 define variable new_cli-code  as integer   no-undo .
+define variable new_gds-code  as integer no-undo .
 define variable v-is-supp-err as logical no-undo .
 define variable v-is-cont-err as logical no-undo .
 define variable v-is-good-err as logical no-undo .
@@ -392,8 +459,6 @@ define buffer buf_goods    for ub.goods .
 define buffer buf_contract for ub.contract .
 define buffer new_clients  for ub.clients .
 
-  { gbl/hostcode.i p-obj-type p-obj-code v-host-code }
-  
   &scop my-message v-my-message
   
 
@@ -402,7 +467,7 @@ v-count-err = 0 .
   for each buf_tt-parts
   break by buf_tt-parts.supp-code
         by buf_tt-parts.cont-prn-code
-        by buf_tt-parts.artic
+        by buf_tt-parts.gds-code
   :
     if first-of (buf_tt-parts.supp-code) then do:
       /* Если у партии не указан код поставщика - такую строку считать ошибочной и не обрабатывать.
@@ -458,21 +523,30 @@ v-count-err = 0 .
       .
     end .
 
-    if first-of (buf_tt-parts.artic) then do:
-      /* в идеале в формате импорта может быть задан производитель (элемент сразу за артикулом).
-         Если он задан, то искать парой. Если нет - то первый попавшийся */                       
-      find first buf_goods no-lock
-           where buf_goods.artic = buf_tt-parts.artic no-error .
-      if available buf_goods then assign
-        v-prod-type = buf_goods.prod-type
-        v-prod-code = buf_goods.prod-code
-        v-is-good-err = false
-      .
+    if first-of (buf_tt-parts.gds-code) then do:
+      /* поиск соответствия старого gds-code из версии p-from-version в новых кодах версии 16.0 */
+      find first w-gds where w-gds.gds-code-15_0 = buf_tt-parts.gds-code no-error .
+      if available w-gds then do :
+        new_gds-code = w-gds.gds-code-16_0 .
+        find first buf_goods no-lock
+             where buf_goods.gds-code = new_gds-code no-error .
+        if available buf_goods then assign
+          v-artic     = buf_goods.artic
+          v-prod-type = buf_goods.prod-type
+          v-prod-code = buf_goods.prod-code
+          v-is-good-err = false
+        .
+        else assign
+          v-artic     = ""
+          v-prod-type = ""
+          v-prod-code = 0
+          v-is-good-err = true
+          v-my-message  = substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16", new_gds-code )
+        .
+      end .
       else assign
-        v-prod-type = ""
-        v-prod-code = 0
+        v-my-message  = substitute ("Отсутствует код товара &1 из вер.15 в файле соответствия &2", buf_tt-parts.gds-code, v-art-fname )
         v-is-good-err = true
-        v-my-message  = substitute ("Отсутствует товар с артикулом &1 в справочнике товаров БД", buf_tt-parts.artic )
       .
       /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
       if v-is-good-err then do :
@@ -485,10 +559,10 @@ v-count-err = 0 .
       v-count-err = v-count-err + 1 .
       next .
     end .
-    /* 26/IV-2018  Товары с ненайденным договором надо отображатьв логе */
+    /* 26/IV-2018  Товары с ненайденным договором надо отображать в логе */
     if v-is-cont-err then do :
       v-my-message  = substitute ("Отсутствует договор № &1 в целевой БД. Товар &2 будет загружен без указания договора.",
-                                  buf_tt-parts.cont-prn-code, buf_tt-parts.artic ) .
+                                  buf_tt-parts.cont-prn-code, new_gds-code ) .
       {&display-message}.
     end .
 
@@ -497,16 +571,18 @@ v-count-err = 0 .
     do :
     create temp_parts.
     assign
-      temp_parts.artic      = buf_tt-parts.artic
+      temp_parts.artic      = v-artic // 19/IX-2018 поле из импорта buf_tt-parts.artic игнорируется
       temp_parts.prod-type  = v-prod-type
       temp_parts.prod-code  = v-prod-code
+      /* 14/IX-2018 - не используются
       temp_parts.new_artic     = buf_tt-parts.artic
       temp_parts.new_prod-type = v-prod-type
       temp_parts.new_prod-code = v-prod-code
+      */
 
       temp_parts.obj-type   = p-obj-type
       temp_parts.obj-code   = p-obj-code
-      temp_parts.host-code  = v-host-code 
+      temp_parts.host-code  = p-host-code 
 
       temp_parts.supp-code  = buf_tt-parts.supp-code
       temp_parts.supp-type  = buf_tt-parts.supp-type
@@ -517,7 +593,8 @@ v-count-err = 0 .
 //      temp_parts.out-code создаётся пустым и потом заполняется номером документа, в который внесён товар по данной партии 
       temp_parts.part-code  = buf_tt-parts.part-code // Код, определяющий конкретную партию внутри одного прихода
 
-//  field gds-code      as integer
+//  field gds-code      as integer - в таблице parts не предусмотрено поле gds-code
+
       temp_parts.price-rubl = buf_tt-parts.price-rubl // вместо price-cli используется price-rubl
       temp_parts.fact-qnty  = buf_tt-parts.fact-qnty
       temp_parts.VAT-type   = {&inc-VAT}
@@ -624,9 +701,14 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
     do : /* 16/IV-2018 перенос создания партий из create-nakl() */
     create tt-parts.
     assign
+      /* 14/IX-2018 - поля new_prod-type, new_prod-code и new_artic заменены на свои аналоги без new_
       tt-parts.prod-type      = temp_parts.new_prod-type
       tt-parts.prod-code      = temp_parts.new_prod-code
       tt-parts.artic          = temp_parts.new_artic
+      */
+      tt-parts.prod-type      = temp_parts.prod-type
+      tt-parts.prod-code      = temp_parts.prod-code
+      tt-parts.artic          = temp_parts.artic
       
       tt-parts.obj-type       = new_obj-type
       tt-parts.obj-code       = new_obj-code
@@ -826,6 +908,7 @@ define input parameter new_cli-code as integer no-undo .
 define variable n-d as character no-undo .
 define variable v-ext-doc-type as character no-undo .
 define buffer buf_goods for ub.goods .
+define buffer new_trn-doc     for ub.trn-doc  .
 
 do on error undo, return error return-value :
   run doc-code in this-procedure
@@ -891,11 +974,11 @@ do on error undo, return error return-value :
     tt-trn-doc.contract-code = temp-line.contract-code
     tt-trn-doc.doc-type      = {&income}
     tt-trn-doc.internal      = false
-    tt-trn-doc.cr-db-num     = v-cntxt-db-num
+    tt-trn-doc.cr-db-num     = ibs.th.gbl.gbl-var:g#db-num
     tt-trn-doc.office        = false
     tt-trn-doc.fact-num      = 0
     tt-trn-doc.PS            = "Перенос остатков"
-    tt-trn-doc.creid         = v-cntxt-userid
+    tt-trn-doc.creid         = ibs.th.gbl.gbl-var:g#userid
     tt-trn-doc.flag_         = false
     tt-trn-doc.ext-doc-type  = v-ext-doc-type
     tt-trn-doc.discnt-type   = ""
@@ -963,14 +1046,18 @@ do on error undo, return error return-value :
 
   assign
    new_trn-doc.contract-code = temp-line.contract-code /* уже было присвоено при создании tt-trn-doc */
-   new_trn-doc.exch-rate  = tt-trn-doc.exch-rate
-   new_trn-doc.exch-scale = tt-trn-doc.exch-scale
-   new_trn-doc.exch-date  = to-day
-   new_trn-doc.exch-code  = tt-trn-doc.exch-code
-   new_trn-doc.status_    = {&wayb}
+   new_trn-doc.exch-rate   = tt-trn-doc.exch-rate
+   new_trn-doc.exch-scale  = tt-trn-doc.exch-scale
+   new_trn-doc.exch-date   = to-day
+   new_trn-doc.exch-code   = tt-trn-doc.exch-code
+   new_trn-doc.status_     = {&wayb}
    new_trn-doc.hold-doc-code-child   = "no-hold"
    new_trn-doc.hold-doc-code-parent  = "no-hold"
-   new_trn-doc.print-rubl = v-print-rubl
+   new_trn-doc.print-rubl  = v-print-rubl
+   
+   /* 19/IX-2018  Для того, чтобы 1С мог отделить документы переноса остатков от обычных документов,
+                   при импорте в код основания документа принудительно проставлять значение 24. */
+   new_trn-doc.reason-code = 24  
   .
   
  define variable dsXmlFileName1 as character no-undo .
@@ -1020,6 +1107,7 @@ do on error undo, return error return-value :
     and temp-2exists.doc-code = n-d) then next .
     */
 
+      /* 14/IX-2018 - поля new_prod-type, new_prod-code и new_artic заменены на свои аналоги без new_
     find first tt-doc-line exclusive-lock where
               tt-doc-line.doc-code       = n-d and
               tt-doc-line.artic          = buf2_temp_parts.new_artic   and
@@ -1030,6 +1118,17 @@ do on error undo, return error return-value :
            where buf_goods.artic     = buf2_temp_parts.new_artic
              and buf_goods.prod-type = buf2_temp_parts.new_prod-type
              and buf_goods.prod-code = buf2_temp_parts.new_prod-code no-error .
+      */       
+    find first tt-doc-line exclusive-lock where
+              tt-doc-line.doc-code       = n-d and
+              tt-doc-line.artic          = buf2_temp_parts.artic   and
+              tt-doc-line.prod-type      = buf2_temp_parts.prod-type and
+              tt-doc-line.prod-code      = buf2_temp_parts.prod-code no-error .
+    if not available tt-doc-line then do:
+      find first buf_goods no-lock
+           where buf_goods.artic     = buf2_temp_parts.artic
+             and buf_goods.prod-type = buf2_temp_parts.prod-type
+             and buf_goods.prod-code = buf2_temp_parts.prod-code no-error .
       if not available buf_goods then next .
       create  tt-doc-line.
       assign
@@ -1037,9 +1136,16 @@ do on error undo, return error return-value :
       tt-doc-line.obj-type       = new_obj-type
       tt-doc-line.obj-code       = new_obj-code
       tt-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
+      
+      /* 14/IX-2018 - поля new_prod-type, new_prod-code и new_artic заменены на свои аналоги без new_
       tt-doc-line.artic          = buf2_temp_parts.new_artic
       tt-doc-line.prod-type      = buf2_temp_parts.new_prod-type
       tt-doc-line.prod-code      = buf2_temp_parts.new_prod-code
+      */
+      tt-doc-line.artic          = buf2_temp_parts.artic
+      tt-doc-line.prod-type      = buf2_temp_parts.prod-type
+      tt-doc-line.prod-code      = buf2_temp_parts.prod-code
+
       tt-doc-line.prt-root       = buf_goods.prt-root
       tt-doc-line.unit-cli       = buf_goods.unit-base
       tt-doc-line.slt-pc         = buf2_temp_parts.slt-pc
@@ -1190,102 +1296,6 @@ end .
 end. /*doe*/
 end procedure. /* create-nakl */
 
-
-/* 19/IV-2018 не используется
-procedure find-doc :
-define input  parameter p-obj-type as character no-undo .
-define input  parameter p-obj-code as integer   no-undo .
-define output parameter p-err as logical   no-undo .
-define variable v-err2 as logical   no-undo .
-do
-on error undo, return error return-value
-:
-define buffer buf_trn-doc for ub.trn-doc  .
-define buffer buf_parts   for ub.parts  .
-define buffer buf_goods   for ub.goods  .
-
-define variable v-err as integer   no-undo .
-p-err = false .
-  for each buf_trn-doc no-lock where
-           buf_trn-doc.obj-type = p-obj-type and
-           buf_trn-doc.obj-code = p-obj-code and
-           buf_trn-doc.status_ <> {&fact}
-  :
-    &scop my-message substitute("Не закрыт документ &1  &2 " , buf_trn-doc.doc-code , buf_trn-doc.doc-type )
-    {&display-message}.
-    p-err = true  .
-  end.
-  for each buf_parts no-lock where
-          buf_parts.obj-type = p-obj-type and
-          buf_parts.obj-code = p-obj-code and
-          buf_parts.out-code = {&free-code} and
-          buf_parts.fact-qnty > 0  and
-          buf_parts.contract-code > 0
-   :
-      if not can-find( first old_contract-specif no-lock where
-                        old_contract-specif.contract-num = buf_parts.contract-code and
-                        old_contract-specif.host-code    = buf_parts.host-code ) then next.
-
-      find first buf_goods no-lock where
-                buf_goods.artic     = buf_parts.artic and
-                buf_goods.prod-type = buf_parts.prod-type and
-                buf_goods.prod-code = buf_parts.prod-code
-                  no-error .
-      find first  old_contract-specif no-lock where
-                  old_contract-specif.contract-num = buf_parts.contract-code and
-                  old_contract-specif.host-code    = buf_parts.host-code and
-                  old_contract-specif.gds-code     = buf_goods.gds-code  no-error .
-      if not available old_contract-specif then do:
-        &scop my-message substitute("Будет мешать закрытию ПН : Товара &1 &2 &3 &4 нет в текущей спецификации Договора Внутр.№ &5" , buf_goods.prod-type, buf_goods.prod-code ,buf_goods.artic,buf_goods.gds-name , buf_parts.contract-code )
-        {&display-message}.
-      end.
-      else do:
-       { str/ckcntspc.i
-        buf_parts.host-code
-        buf_parts.contract-code
-        buf_goods.gds-code
-        true
-        buf_parts.VAT-type
-        buf_parts.VAT-pc
-        no-error
-       }
-       if error-status :error then do:
-        &scop my-message substitute("Товара &1 &2 &3 &4 нет в текущей спецификации Договора Внутр.№ &5" , buf_goods.prod-type, buf_goods.prod-code ,buf_goods.artic,buf_goods.gds-name , old_contract-specif.contract-num )
-        {&display-message}.
-       end.
-     end.
-   end. /*  for each buf_parts no-lock where*/
-
-   for each buf_parts no-lock where
-            buf_parts.obj-type = p-obj-type and
-            buf_parts.obj-code = p-obj-code and
-            buf_parts.out-code = {&free-code} and
-            buf_parts.fact-qnty < 0
-   :
-      find first buf_goods no-lock where
-                buf_goods.artic     = buf_parts.artic and
-                buf_goods.prod-type = buf_parts.prod-type and
-                buf_goods.prod-code = buf_parts.prod-code and
-                buf_goods.stts = 0 no-error .
-    if available buf_goods then do:
-      /*
-      put stream str unformatted
-      substitute("&5&1&5 &2 &5&3&5 &4" , buf_goods.prod-type, buf_goods.prod-code ,buf_goods.artic, 0 , {&double-quote} )
-      skip.
-      */
-      p-err = true  .
-      v-err2 = true  .
-    end.
-  end. /*for each buf_parts no-lock where*/
-
-  if v-err2 = true  then do:
-    &scop my-message substitute("Есть отрицательные партии в свободной зоне ! Сделайте инвентаризацию по товарам из списка negparts.gds" )
-    {&display-message}.
-  end.
-
-end. /*doe*/
-end procedure. /* find-doc */
-*/
 
 procedure clos-trn2 :
 define input parameter p-trn-code as character no-undo .
