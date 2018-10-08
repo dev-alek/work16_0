@@ -15,18 +15,17 @@ Creation date: 01/30/15
 
 */
 
-using Progress.Lang.*.
-using ibs.th.skt.Commands.*.
-using ibs.th.skt.ControlledClients.*.
+using ibs.th.gbl.*.
 using ibs.th.skt.Adapters.*.
-using ibs.th.skt.*.
+using ibs.th.str.alcohol.*.
 
 
 class ibs.th.skt.ControlledClients.TSD : 
 
-  &scop delimiteFld chr(9)
+  &scop delimiteFld chr(30)
   &scop delimiterLine chr(31)
   
+  { str/marks.i         }
   { cmp/str-glbl.i class}
   {ibs/th/skt/ControlledClients/TSDTT.i}
   
@@ -54,6 +53,20 @@ class ibs.th.skt.ControlledClients.TSD :
     get.
     set.
 
+  define public property CurrDecSeparator as character no-undo init "."
+      get.
+      set.
+
+  define public property CurrDecSeparatorTH as character no-undo init ","
+      get:
+        return session:numeric-separator.
+      end.
+      set.
+
+  define public property IsAlcWB as logical no-undo init false
+      get.
+      set.
+      
   define public property CP as character no-undo
     get.
     set.
@@ -70,12 +83,13 @@ class ibs.th.skt.ControlledClients.TSD :
   define private buffer buf_trn-doc   for ub.trn-doc.
   define private buffer buf_doc-line  for ub.doc-line.
   define private buffer buf_parts     for ub.parts.
+  define private buffer buf_gen-attr  for ub.gen-attr.
   
   define private variable tthDocument as handle no-undo.
   define private stream tsdstream.
   define private variable logWrite as class LogWrite no-undo.
-  define private variable isAlcWB as logical no-undo init false.  /* !!!!!!!!!!!!!!!!!!!!!!!!!!!Сделать нормально!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-
+  define private variable keyrec as class keyrec no-undo.
+  define private variable v-keyrec as character no-undo.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -83,7 +97,8 @@ class ibs.th.skt.ControlledClients.TSD :
   ------------------------------------------------------------------------------*/
 		
   constructor public TSD (  ):
-    
+
+    keyrec = new keyrec ().
     logWrite = new LogWrite().
 		
   end constructor.
@@ -105,6 +120,12 @@ class ibs.th.skt.ControlledClients.TSD :
   method private void tsdstreamopen (streamFile as char):
     
     output stream tsdstream to value (streamFile).
+
+  end method.
+
+  method private void tsdstreamopenapp (streamFile as char):
+    
+    output stream tsdstream to value (streamFile) append.
 
   end method.
 
@@ -142,6 +163,7 @@ class ibs.th.skt.ControlledClients.TSD :
     
     define variable cHeader    as character no-undo.
     define variable cLine      as longchar no-undo.
+    define variable cMarkLine  as longchar no-undo.
     define variable dFactSum   as decimal   no-undo.
     define variable factQnty   as character no-undo.
     define variable docQnty    as character no-undo.
@@ -154,7 +176,9 @@ class ibs.th.skt.ControlledClients.TSD :
     define variable sec      as integer no-undo.
     define variable timeleft as integer no-undo. 
     define variable decDocQnty as decimal no-undo.
-    define variable decFactQnty as decimal no-undo. 
+    define variable decFactQnty as decimal no-undo.
+    define variable jj as integer no-undo.
+    define variable jjm as integer no-undo.
 
     def    var      internal-b-code like ub.bar-code.b-code no-undo .
     def    var      full-b-code     as character init "" no-undo .
@@ -165,8 +189,12 @@ class ibs.th.skt.ControlledClients.TSD :
     
     run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
     run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.  
+    
+    
+    os-delete value (search ("MT_documents.txt")) no-error.
+    os-delete value (search ("MT_lines.txt")) no-error.
+    os-delete value (search ("MT_MarkLines.txt")) no-error.
 
-        
     for each buf_trn-doc where 
             buf_trn-doc.obj-type = ObjType 
         and buf_trn-doc.obj-code = ObjCode 
@@ -205,17 +233,18 @@ class ibs.th.skt.ControlledClients.TSD :
           docType = "Inv".
         end.
       end case.
-      
+      def var pos as int no-undo.
       if not isAlcWB or docType = 'inv'
       then do:
+        pos = 0.
         for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code no-lock:
           find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type.
           find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
           internal-b-code = buf_bar-code.b-code.
           { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
-          
-          decDocQnty = buf_doc-line.doc-qnty - buf_doc-line.fact-qnty.
-          decFactQnty = buf_doc-line.doc-qnty.
+          pos = pos + 1.
+          decDocQnty = if docType = 'inv' then buf_doc-line.doc-qnty - buf_doc-line.fact-qnty else buf_doc-line.doc-qnty.
+          decFactQnty = if docType = 'inv' then buf_doc-line.doc-qnty else buf_doc-line.fact-qnty.
           
           assign
             priceSale   = if buf_doc-line.price-rubl <> 0 and buf_doc-line.price-rubl <> ? then string (buf_doc-line.price-rubl) else "0"
@@ -227,78 +256,81 @@ class ibs.th.skt.ControlledClients.TSD :
             factQnty  = if buf_doc-line.fact-qnty > -1 and buf_doc-line.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
             docQnty  = if buf_doc-line.doc-qnty > -1 and buf_doc-line.doc-qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
             .
-          cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).
+          cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).
+        tsdstreamopenapp("MT_lines.txt"). 
+          jjm = jjm + 1.
+          put stream tsdstream unformatted string (jjm) + {&delimiteFld} + buf_trn-doc.doc-code + {&delimiteFld} + (if docType = 'inv' then string (pos) else string (buf_doc-line.line-num)) + {&delimiteFld} + string (buf_goods.gds-code) + {&delimiteFld} 
+          + string (buf_goods.gds-name) + {&delimiteFld} + buf_goods.unit-base + {&delimiteFld} + full-b-code + {&delimiteFld} + 
+          priceSale + {&delimiteFld} + docQnty + {&delimiteFld} + 
+          "0" + {&delimiteFld} + "" + {&delimiteFld} + 
+          "" + {&delimiterLine}.
+        tsdstreamclose().
+          
           dFactSum = buf_doc-line.fact-qnty + dFactSum.
         end.
       end.
       else do:
+        def var v-alc-code as char no-undo.
+        pos = 0.
         for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code no-lock:
           find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type.
           find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
           
+          for each buf_parts no-lock where
+            buf_parts.obj-type = buf_trn-doc.obj-type and 
+            buf_parts.obj-code = buf_trn-doc.obj-code and 
+            buf_parts.artic = buf_doc-line.artic and
+            buf_parts.prod-type = buf_doc-line.prod-type and
+            buf_parts.prod-code = buf_doc-line.prod-code and
+            buf_parts.out-code = buf_trn-doc.doc-code:
           
-          if true /*not docType = 'inv'*/ then do:
-          
-            for each buf_parts no-lock where
-              buf_parts.obj-type = buf_trn-doc.obj-type and 
-              buf_parts.obj-code = buf_trn-doc.obj-code and 
-              buf_parts.artic = buf_doc-line.artic and
-              buf_parts.prod-type = buf_doc-line.prod-type and
-              buf_parts.prod-code = buf_doc-line.prod-code and
-              buf_parts.out-code = buf_trn-doc.doc-code:
-            
-              internal-b-code = buf_bar-code.b-code.
-              { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
+            internal-b-code = buf_bar-code.b-code.
+            { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
 
-              
-              assign
-                priceSale   = if buf_parts.price-rubl <> 0 and buf_parts.price-rubl <> ? then string (buf_parts.price-rubl) else "0"
-                factQnty    = string (decFactQnty)
-                docQnty    = string (decDocQnty)
-                .
-              assign
-                priceSale = if buf_parts.price-rubl > -1 and buf_parts.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-                factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
-                docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
-                .
-              cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty, if num-entries  (buf_parts.alc-ref-ab-path, ",") < 3 then "" else entry (3, buf_parts.alc-ref-ab-path, ","), buf_parts.part-code).
-              dFactSum = buf_doc-line.fact-qnty + dFactSum.
-            end.
-            
-          end.
-          else do:
-            
-             /*for each buf_parts no-lock where
-              buf_parts.obj-type = buf_trn-doc.obj-type and 
-              buf_parts.obj-code = buf_trn-doc.obj-code and 
-              buf_parts.artic = buf_doc-line.artic and
-              buf_parts.prod-type = buf_doc-line.prod-type and
-              buf_parts.prod-code = buf_doc-line.prod-code and
-                (buf_parts.out-code = {&free-code} or
-                buf_parts.out-code = ub.trn-doc.doc-code):
-            
-              internal-b-code = buf_bar-code.b-code.
-              { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
-              
-              decDocQnty = if docType = 'inv' then buf_parts.qnty - buf_parts.fact-qnty else buf_parts.qnty.
-              decFactQnty = if docType = 'inv' then buf_parts.qnty else buf_parts.fact-qnty.
-              
-              assign
-                priceSale   = if buf_parts.price-rubl <> 0 and buf_parts.price-rubl <> ? then string (buf_parts.price-rubl) else "0"
-                factQnty    = string (decFactQnty)
-                docQnty    = string (decDocQnty)
-                .
-              assign
-                priceSale = if buf_parts.price-rubl > -1 and buf_parts.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-                factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
-                docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
+            decDocQnty = buf_parts.qnty.
+            decFactQnty = buf_parts.fact-qnty.
+            assign
+              priceSale   = if buf_parts.price-rubl <> 0 and buf_parts.price-rubl <> ? then string (buf_parts.price-rubl) else "0"
+              factQnty    = string (decFactQnty)
+              docQnty    = string (decDocQnty)
               .
-              cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty, if num-entries  (buf_parts.alc-ref-ab-path, ",") < 3 then "" else entry (3, buf_parts.alc-ref-ab-path, ","), buf_parts.in-code + chr(4) + buf_parts.part-code).
-              dFactSum = buf_doc-line.fact-qnty + dFactSum.
-            end.*/
+            assign
+              priceSale = if buf_parts.price-rubl > -1 and buf_parts.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
+              factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
+              docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
+              .
+            keyrec:GenKeyRec({&table_parts}, buffer buf_parts:handle, output v-keyrec).
+            v-alc-code = if num-entries  (buf_parts.alc-ref-ab-path, ",") < 3 then "" else entry (3, buf_parts.alc-ref-ab-path, ",").
+            cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', 
+            buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty, v-alc-code, buf_parts.part-code + "@@" + string (buf_goods.gds-code)).
             
+
+            pos = pos + 1.
+            
+            
+            tsdstreamopenapp("MT_lines.txt"). 
+              jjm = jjm + 1.
+              put stream tsdstream unformatted string (jjm) + {&delimiteFld} + buf_trn-doc.doc-code + {&delimiteFld} + string (pos) + {&delimiteFld} + string (buf_goods.gds-code) + {&delimiteFld} 
+              + string (buf_goods.gds-name) + {&delimiteFld} + buf_goods.unit-base + {&delimiteFld} + full-b-code + {&delimiteFld} + 
+              priceSale + {&delimiteFld} + docQnty + {&delimiteFld} + 
+              "0" + {&delimiteFld} + v-alc-code + {&delimiteFld} + 
+              buf_parts.part-code + "@@" + string (buf_goods.gds-code) + {&delimiterLine}.
+            tsdstreamclose().
+            
+            
+            tsdstreamopenapp("MT_MarkLines.txt").
+            for each buf_gen-attr no-lock where buf_gen-attr.p-key = v-keyrec and buf_gen-attr.table-name = {&excise-mark}:
+              jj = jj + 1.
+              cMarkLine = cMarkLine + substitute ('<MarkLines DocName="&1"  MarkCode="&2" Sts="&3" PartIDTH="&4" />', buf_doc-line.doc-code, buf_gen-attr.attr-code, "TH", buf_parts.part-code + "@@" + string (buf_goods.gds-code)).
+              put stream tsdstream unformatted string (jj) + {&delimiteFld} + buf_trn-doc.doc-code + {&delimiteFld} + buf_gen-attr.attr-code + {&delimiteFld} 
+              + buf_parts.part-code + "@@" + string (buf_goods.gds-code) + {&delimiteFld} + "TH" + {&delimiterLine}.
+            end.
+            tsdstreamclose().            
+
+            
+            dFactSum = buf_doc-line.fact-qnty + dFactSum.
           end.
-          
+            
           
         end.      
       end.
@@ -312,10 +344,23 @@ class ibs.th.skt.ControlledClients.TSD :
           , buf_trn-doc.obj-code 
           , buf_trn-doc.obj-type
           , dFactSum
-          , string(datetime(buf_trn-doc.doc-date, buf_trn-doc.real-time-create), "99.99.9999 HH:MM:SS")
+          , iso-date (datetime-tz (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))
           , buf_trn-doc.user-name
           ).
-      SomeStr = SomeStr + cHeader + cLine.
+      
+      find first buf_user where buf_user.user-id = buf_trn-doc.user-name.
+      
+      tsdstreamopenapp("MT_documents.txt"). 
+        put stream tsdstream unformatted buf_trn-doc.doc-code + {&delimiteFld} + 
+        docType + {&delimiteFld} + "false" + {&delimiteFld} + buf_trn-doc.status_ + string (buf_trn-doc.flag, "+/-") + {&delimiteFld} + 
+        string (buf_trn-doc.cli-code) + {&delimiteFld} + buf_trn-doc.cli-type + {&delimiteFld} + 
+        string (buf_trn-doc.obj-code) + {&delimiteFld} + buf_trn-doc.obj-type + {&delimiteFld} + 
+        buf_trn-doc.user-name + {&delimiteFld} + buf_user.user-login + {&delimiteFld} +
+        string (dFactSum) + {&delimiteFld} + string (iso-date (datetime-tz (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))) + {&delimiterLine}.
+      tsdstreamclose().
+      
+      
+      SomeStr = SomeStr + cHeader + cLine + cMarkLine.
     end.
     SomeStr = substitute ('<?xml version="1.0" encoding="&1"?><TSD>', CP) + SomeStr + ('</TSD>').
     output stream logTSD to value ("logSKTTSD.txt").
@@ -396,9 +441,13 @@ class ibs.th.skt.ControlledClients.TSD :
     define variable dVatPc      as decimal   no-undo.
 
     tsdstreamopen("TH_goods.txt").
+    cicle:
     for each buf_goods where buf_goods.stts = 0 and gds-type = 'т' no-lock use-index ists:
       
       find first buf_gds-obj where buf_gds-obj.gds-code = buf_goods.gds-code no-lock no-error.
+      if not available (buf_gds-obj)
+        then next cicle.
+      
       find first buf_bar-code where buf_bar-code.gds-code = buf_goods.gds-code and buf_bar-code.stts = 0 no-lock use-index prt-parts no-error.
       
       /*run ibs\th\skt\Adapters\AdapteeProcBcprcex.p
@@ -421,14 +470,14 @@ class ibs.th.skt.ControlledClients.TSD :
         countryName = if available ub.country then ub.country.long-name else ""
         .
       assign
-        priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-        factQnty  = if available buf_gds-obj and buf_gds-obj.fact-qnty > -1 and buf_gds-obj.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
-        freeQnty  = if available buf_gds-obj and buf_gds-obj.free-qnty > -1 and buf_gds-obj.free-qnty < 1 then replace (freeQnty, ".", "0,") else replace (freeQnty, ".", ",")
+        priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0" + CurrDecSeparatorTH) else replace (priceSale, ".",  CurrDecSeparatorTH)
+        factQnty  = if available buf_gds-obj and buf_gds-obj.fact-qnty > -1 and buf_gds-obj.fact-qnty < 1 then replace (factQnty, ".", "0" + CurrDecSeparatorTH) else replace (factQnty, ".", CurrDecSeparatorTH)
+        freeQnty  = if available buf_gds-obj and buf_gds-obj.free-qnty > -1 and buf_gds-obj.free-qnty < 1 then replace (freeQnty, ".", "0" + CurrDecSeparatorTH) else replace (freeQnty, ".", CurrDecSeparatorTH)
         .
       
       put stream tsdstream unformatted 
         string (buf_goods.gds-code) + {&delimiteFld} + 
-        buf_goods.gds-name + {&delimiteFld} + 
+        trim (buf_goods.gds-name, chr (9)) + {&delimiteFld} + 
         buf_goods.unit-base + {&delimiteFld} +
         priceSale + {&delimiteFld} +
         vatPc + {&delimiteFld} +
@@ -482,8 +531,8 @@ class ibs.th.skt.ControlledClients.TSD :
           cliBaseRate = string (buf_bar-code.cli-base-rate)
           .
         assign 
-          priceSale = if available buf_price-all and buf_price-all.price-sale > -1 and buf_price-all.price-sale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-          cliBaseRate = if buf_bar-code.cli-base-rate > -1 and buf_bar-code.cli-base-rate < 1 then replace (cliBaseRate, ".", "0,") else replace (cliBaseRate, ".", ",")
+          priceSale = if available buf_price-all and buf_price-all.price-sale > -1 and buf_price-all.price-sale < 1 then replace (priceSale, ".", "0" + CurrDecSeparatorTH) else replace (priceSale, ".", CurrDecSeparatorTH)
+          cliBaseRate = if buf_bar-code.cli-base-rate > -1 and buf_bar-code.cli-base-rate < 1 then replace (cliBaseRate, ".", "0" + CurrDecSeparatorTH) else replace (cliBaseRate, ".", CurrDecSeparatorTH)
           .
       
         create TempBCode.
@@ -542,7 +591,7 @@ class ibs.th.skt.ControlledClients.TSD :
   end.
 
   
-  method public logical ImpWB (table TempTrnDoc, table TempDocLine, userId_ as char):
+  method public logical ImpWB (table TempTrnDoc, table TempDocLine, table TempMarkLine, userId_ as char):
 
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_doc-line      for ub.doc-line.
@@ -571,6 +620,12 @@ class ibs.th.skt.ControlledClients.TSD :
             )  no-error.
     if available buf_trn-doc then 
     do:   
+
+      for each ub.gen-attr where num-entries (ub.gen-attr.p-key, {&delim-key}) > 6 and entry (7, ub.gen-attr.p-key, {&delim-key}) = buf_trn-doc.doc-code:
+        find first TempMarkLine where TempMarkLine.DocName = buf_trn-doc.doc-code and ub.gen-attr.attr-code = TempMarkLine.MarkCode and TempMarkLine.Sts = "TSD" no-error.
+        if not available (TempMarkLine)
+          then delete ub.gen-attr.
+      end.
       
       for each TempDocLine no-lock break by TempDocLine.gds-code:
         find first ub.goods where ub.goods.gds-code  = TempDocLine.gds-code
@@ -590,7 +645,6 @@ class ibs.th.skt.ControlledClients.TSD :
           next.
         end.
       end.
-      
       os-delete value (search ("doctsd.txt")) no-error.
       os-delete value (search ("newdoctsd.txt")) no-error.
       output stream str1 to value ("doctsd.txt").
@@ -608,7 +662,7 @@ class ibs.th.skt.ControlledClients.TSD :
         run gbl/filnline.p (input ("doctsd.txt"), output varzero-string).
         if varzero-string 
         then do:
-          run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input "doctsd.txt" ) no-error.
+          run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input "doctsd.txt", if IsAlcWB then "rsvmarks" else "" ) no-error.
           if error-status:error then do:
             LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
             SomeStr = getStatusXml(false, LogWrite:LogStr).
@@ -622,7 +676,7 @@ class ibs.th.skt.ControlledClients.TSD :
         run gbl/filnline.p (input ("newdoctsd.txt"), output varzero-string).
         if varzero-string 
         then do:
-          run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input "newdoctsd.txt" ) no-error.
+          run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input "newdoctsd.txt", if IsAlcWB then "rsvmarks" else "" ) no-error.
           if error-status:error then do:
             LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
             SomeStr = getStatusXml(false, LogWrite:LogStr).
@@ -637,39 +691,6 @@ class ibs.th.skt.ControlledClients.TSD :
       os-delete value (search ("doctsd.txt")) no-error.
       os-delete value (search ("newdoctsd.txt")) no-error.
       
-      
-      run bge/egais-marks-find.p persistent (output hLibMarks) no-error .
-      for each TempDocLine no-lock break by TempDocLine.gds-code:
-        find first ub.goods where ub.goods.gds-code  = TempDocLine.gds-code
-          no-lock no-error .
-        find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code
-          and buf_doc-line.artic = ub.goods.artic
-          and buf_doc-line.prod-type = ub.goods.prod-type
-          and buf_doc-line.prod-code = ub.goods.prod-code
-          no-error  .
-        if available buf_doc-line then do:
-          
-          for each buf_parts where
-            buf_parts.obj-type = buf_trn-doc.obj-type and 
-            buf_parts.obj-code = buf_trn-doc.obj-code and 
-            buf_parts.artic = buf_doc-line.artic and
-            buf_parts.prod-type = buf_doc-line.prod-type and
-            buf_parts.prod-code = buf_doc-line.prod-code and
-            buf_parts.out-code = buf_trn-doc.doc-code and
-            buf_parts.part-code = TempDocLine.PartIDTH:
-            
-            buf_parts.fact-qnty = TempDocLine.fact-qnty.
-            if TempDocLine.aclMarksList <> ""
-            then do:
-              do ii = 1 to num-entries (TempDocLine.aclMarksList, ";"):
-                run create-mark in hLibMarks (input entry (ii, TempDocLine.aclMarksList, ";"), buffer buf_parts, output glog, output mes ).
-              end.
-            end.
-          end.
-          
-        end.
-      end.
-      delete object hLibMarks no-error.
       run gbl/calc-trn.p (?, recid(buf_trn-doc)) no-error .
       
       SomeStr = getStatusXml(true, "").
@@ -775,7 +796,7 @@ class ibs.th.skt.ControlledClients.TSD :
       run gbl/filnline.p (input ("doctsd.txt"), output varzero-string).
       if varzero-string 
       then do:
-        run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input "doctsd.txt" ) no-error.
+        run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input "doctsd.txt", if IsAlcWB then "rsvmarks" else "" ) no-error.
         if error-status:error then do:
           LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
           SomeStr = getStatusXml(false, LogWrite:LogStr).
@@ -789,7 +810,7 @@ class ibs.th.skt.ControlledClients.TSD :
       run gbl/filnline.p (input ("newdoctsd.txt"), output varzero-string).
       if varzero-string 
       then do:
-        run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input "newdoctsd.txt" ) no-error.
+        run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input "newdoctsd.txt", if IsAlcWB then "rsvmarks" else ""  ) no-error.
         if error-status:error then do:
           LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
           SomeStr = getStatusXml(false, LogWrite:LogStr).
@@ -912,5 +933,17 @@ class ibs.th.skt.ControlledClients.TSD :
   
     end.
   end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  destructor public TSD ( ):
+    
+    delete object keyrec no-error.
+    
+  end destructor.
+
+
 
 end class.
