@@ -388,6 +388,7 @@ PROCEDURE connproc :
 
   /* читаем сокет и разбираем полученую информацию. */
     v-bytes = hSocket:get-bytes-available().
+    if v-bytes = 0 then leave ContBlock.
     v-str = socketRead(hSocket:handle,v-bytes).
     RUN write-to-log('SOCKET-READ:' + v-str ).
     /*ждем окончание передачи шапки. Признак конца шапки - двойной перевод строки*/
@@ -611,7 +612,7 @@ FUNCTION SocketRead RETURNS CHARACTER
     run write-to-log("bad handle").
   end.
   SET-SIZE(b) = l + 1.
-  v-read = h:READ(b, 1, l, 1) no-error.
+  v-read = h:READ(b, 1, l, 2) no-error .
   if not v-read  or error-status:error then return ''.
   /*message v-read.  */
   s = GET-STRING(b,1).
