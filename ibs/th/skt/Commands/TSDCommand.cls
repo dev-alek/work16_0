@@ -304,13 +304,15 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
             
             create TempDocLine.
             assign
-              TempDocLine.line-num   = integer (hRow:get-attribute("Pos"))
-              TempDocLine.gds-code   = integer (hRow:get-attribute("GoodsID"))
-              TempDocLine.b-code     = string (hRow:get-attribute("BC"))
-              TempDocLine.fact-qnty  = decimal(cFactQnty)
-              TempDocLine.doc-qnty   = decimal(cDocQnty)
-              TempDocLine.price-rubl = decimal(cPriceRubl)
-              TempDocLine.RowSum     = decimal(cRowSum)
+              TempDocLine.line-num     = integer (hRow:get-attribute("Pos"))
+              TempDocLine.gds-code     = integer (hRow:get-attribute("GoodsID"))
+              TempDocLine.b-code       = string (hRow:get-attribute("BC"))
+              TempDocLine.fact-qnty    = decimal(cFactQnty)
+              TempDocLine.doc-qnty     = decimal(cDocQnty)
+              TempDocLine.price-rubl   = decimal(cPriceRubl)
+              TempDocLine.RowSum       = decimal(cRowSum)
+              TempDocLine.aclMarksList = string (hRow:get-attribute("AlcMarks"))
+              TempDocLine.PartIDTH = string (hRow:get-attribute("PartIDTH"))
               .
           end.
         when "SN" then

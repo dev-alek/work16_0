@@ -114,6 +114,10 @@ DEFINE BUTTON b-exit AUTO-GO
      LABEL "&Выход"
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-alcmark
+     LABEL "&АлкМарк"
+     SIZE 10 BY 1.
+
 DEFINE BUTTON b-help
      LABEL "Помо&щь"
      SIZE 8.75 BY 1.
@@ -131,6 +135,7 @@ DEFINE RECTANGLE RECT-2
 /* ************************  Frame Definitions  *********************** */
 DEFINE FRAME {&FRAME-NAME}
   b-exit                    AT ROW  1 COL  2.00
+  b-alcmark                 AT ROW  2 COL  2.00
   b-help                    AT ROW  1 COL  2.00
   ub.doc-line.artic         AT ROW  2.00 COL 19.00 COLON-ALIGNED NO-LABEL VIEW-AS FILL-IN SIZE-CHARS 11.63 BY 1.00
   ub.goods.gds-name         AT ROW  2.00 COL 32.00 COLON-ALIGNED NO-LABEL VIEW-AS FILL-IN SIZE-CHARS 41.00 BY 1.00 FGCOLOR 4
@@ -230,6 +235,13 @@ DO:
     end.
   END.
 END.
+
+on leave of b-alcmark IN FRAME {&FRAME-NAME}  /* АлкМарк */
+do:
+
+  
+
+end.
 
 on leave of v-inv_peresort IN FRAME {&FRAME-NAME}  /* Стало */
 do:

@@ -69,22 +69,26 @@ procedure create-mark :
                                         ,input (buffer buf_parts:handle)
                                         ,output v-parts-uniq-key-rec).
     find first cr_gen-attr no-lock where cr_gen-attr.table-name = {&excise-mark}
+                                     and cr_gen-attr.p-key begins "parts"
+                                     and num-entries (cr_gen-attr.p-key, {&delim-key}) >= 8
                                      and entry(8, cr_gen-attr.p-key, {&delim-key}) <> {&free-code}
                                      and cr_gen-attr.attr-code = p-mark no-error .
     if available cr_gen-attr
     then do :
         p-ok = false .
-        p-mes = "Уже есть запись с этой маркой" + {&new-line} + cr_gen-attr.p-key  .
+        p-mes = substitute ("Уже есть запись с маркой &1&2&3", p-mark, {&new-line}, cr_gen-attr.p-key)  .
         return .
     end.
     else do :
         find first cr_gen-attr no-lock where cr_gen-attr.table-name = {&excise-mark}
+                                         and cr_gen-attr.p-key begins "parts"
+                                         and num-entries (cr_gen-attr.p-key, {&delim-key}) >= 8
                                          and entry(8, cr_gen-attr.p-key, {&delim-key}) = {&free-code}
                                          and cr_gen-attr.attr-code = p-mark no-error .
         if available cr_gen-attr
         then do :
             p-ok = false .
-            p-mes = "Уже есть запись с этой маркой в свободной зоне" .
+            p-mes = substitute ("Уже есть запись с маркой &1&2&3", p-mark, {&new-line}, cr_gen-attr.p-key).
             return .
         end.
         else do :                                 

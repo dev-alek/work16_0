@@ -28,6 +28,7 @@ using ibs.th.skt.Adapters.*.
 
 { cmp/library.i  }
 { utl/tt506.i}
+{ str/inv-marks-tt.i }
 {ibs/th/skt/ControlledClients/TSDTT.i}
 
 define shared variable g#auto-user-id as character no-undo .
@@ -35,6 +36,7 @@ define shared variable g#auto-user-id as character no-undo .
 
 define input  parameter table for  TempTrnDoc.
 define input  parameter table for  TempDocLine.
+define input  parameter table for  tt-marks.
 define input  parameter userId_ as character no-undo.
 
 define variable iDbNum as integer no-undo.
@@ -92,6 +94,7 @@ do:
     input table temp_trn-doc ,
     input table temp_gds-line ,
     input table temp_grp-line ,
+    input table tt-marks ,
     output num-rec-ok
     ) no-error .
   if error-status:error 

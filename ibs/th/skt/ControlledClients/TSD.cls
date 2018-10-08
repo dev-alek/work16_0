@@ -32,6 +32,7 @@ class ibs.th.skt.ControlledClients.TSD :
   
   define stream str1 .
   define stream str2 .
+  define stream logTSD .
 
   define public property SomeStr as longchar no-undo
     get.
@@ -68,9 +69,13 @@ class ibs.th.skt.ControlledClients.TSD :
   define private buffer buf_prod-bc   for ub.prod-bc.
   define private buffer buf_trn-doc   for ub.trn-doc.
   define private buffer buf_doc-line  for ub.doc-line.
+  define private buffer buf_parts     for ub.parts.
+  
   define private variable tthDocument as handle no-undo.
   define private stream tsdstream.
   define private variable logWrite as class LogWrite no-undo.
+  define private variable isAlcWB as logical no-undo init false.  /* !!!!!!!!!!!!!!!!!!!!!!!!!!!Сделать нормально!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -84,6 +89,14 @@ class ibs.th.skt.ControlledClients.TSD :
   end constructor.
 
 
+
+  define temp-table TempBCode no-undo
+    field gds-code as integer
+    field b-str as character
+    field priceSale as character
+    field unit-cli  as character
+    field cliBaseRate as character
+    index pi is unique primary b-str.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -139,7 +152,7 @@ class ibs.th.skt.ControlledClients.TSD :
     define variable hour     as integer no-undo.
     define variable minute   as integer no-undo.
     define variable sec      as integer no-undo.
-    define variable timeleft as integer no-undo.
+    define variable timeleft as integer no-undo. 
     define variable decDocQnty as decimal no-undo.
     define variable decFactQnty as decimal no-undo. 
 
@@ -193,28 +206,103 @@ class ibs.th.skt.ControlledClients.TSD :
         end.
       end case.
       
-      for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code no-lock:
-        find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type.
-        find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
-        internal-b-code = buf_bar-code.b-code.
-        { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
-        
-        decDocQnty = if docType = 'inv' then buf_doc-line.doc-qnty - buf_doc-line.fact-qnty else buf_doc-line.doc-qnty.
-        decFactQnty = if docType = 'inv' then buf_doc-line.doc-qnty else buf_doc-line.fact-qnty.
-        
-        assign
-          priceSale   = if buf_doc-line.price-rubl <> 0 and buf_doc-line.price-rubl <> ? then string (buf_doc-line.price-rubl) else "0"
-          factQnty    = string (decFactQnty)
-          docQnty    = string (decDocQnty)
-          .
-        assign
-          priceSale = if buf_doc-line.price-rubl > -1 and buf_doc-line.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-          factQnty  = if buf_doc-line.fact-qnty > -1 and buf_doc-line.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
-          docQnty  = if buf_doc-line.doc-qnty > -1 and buf_doc-line.doc-qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
-          .
-        cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).
-        dFactSum = buf_doc-line.fact-qnty + dFactSum.
+      if not isAlcWB or docType = 'inv'
+      then do:
+        for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code no-lock:
+          find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type.
+          find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
+          internal-b-code = buf_bar-code.b-code.
+          { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
+          
+          decDocQnty = buf_doc-line.doc-qnty - buf_doc-line.fact-qnty.
+          decFactQnty = buf_doc-line.doc-qnty.
+          
+          assign
+            priceSale   = if buf_doc-line.price-rubl <> 0 and buf_doc-line.price-rubl <> ? then string (buf_doc-line.price-rubl) else "0"
+            factQnty    = string (decFactQnty)
+            docQnty    = string (decDocQnty)
+            .
+          assign
+            priceSale = if buf_doc-line.price-rubl > -1 and buf_doc-line.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
+            factQnty  = if buf_doc-line.fact-qnty > -1 and buf_doc-line.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
+            docQnty  = if buf_doc-line.doc-qnty > -1 and buf_doc-line.doc-qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
+            .
+          cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).
+          dFactSum = buf_doc-line.fact-qnty + dFactSum.
+        end.
       end.
+      else do:
+        for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code no-lock:
+          find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type.
+          find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
+          
+          
+          if true /*not docType = 'inv'*/ then do:
+          
+            for each buf_parts no-lock where
+              buf_parts.obj-type = buf_trn-doc.obj-type and 
+              buf_parts.obj-code = buf_trn-doc.obj-code and 
+              buf_parts.artic = buf_doc-line.artic and
+              buf_parts.prod-type = buf_doc-line.prod-type and
+              buf_parts.prod-code = buf_doc-line.prod-code and
+              buf_parts.out-code = buf_trn-doc.doc-code:
+            
+              internal-b-code = buf_bar-code.b-code.
+              { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
+
+              
+              assign
+                priceSale   = if buf_parts.price-rubl <> 0 and buf_parts.price-rubl <> ? then string (buf_parts.price-rubl) else "0"
+                factQnty    = string (decFactQnty)
+                docQnty    = string (decDocQnty)
+                .
+              assign
+                priceSale = if buf_parts.price-rubl > -1 and buf_parts.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
+                factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
+                docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
+                .
+              cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty, if num-entries  (buf_parts.alc-ref-ab-path, ",") < 3 then "" else entry (3, buf_parts.alc-ref-ab-path, ","), buf_parts.part-code).
+              dFactSum = buf_doc-line.fact-qnty + dFactSum.
+            end.
+            
+          end.
+          else do:
+            
+             /*for each buf_parts no-lock where
+              buf_parts.obj-type = buf_trn-doc.obj-type and 
+              buf_parts.obj-code = buf_trn-doc.obj-code and 
+              buf_parts.artic = buf_doc-line.artic and
+              buf_parts.prod-type = buf_doc-line.prod-type and
+              buf_parts.prod-code = buf_doc-line.prod-code and
+                (buf_parts.out-code = {&free-code} or
+                buf_parts.out-code = ub.trn-doc.doc-code):
+            
+              internal-b-code = buf_bar-code.b-code.
+              { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
+              
+              decDocQnty = if docType = 'inv' then buf_parts.qnty - buf_parts.fact-qnty else buf_parts.qnty.
+              decFactQnty = if docType = 'inv' then buf_parts.qnty else buf_parts.fact-qnty.
+              
+              assign
+                priceSale   = if buf_parts.price-rubl <> 0 and buf_parts.price-rubl <> ? then string (buf_parts.price-rubl) else "0"
+                factQnty    = string (decFactQnty)
+                docQnty    = string (decDocQnty)
+                .
+              assign
+                priceSale = if buf_parts.price-rubl > -1 and buf_parts.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
+                factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
+                docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
+              .
+              cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty, if num-entries  (buf_parts.alc-ref-ab-path, ",") < 3 then "" else entry (3, buf_parts.alc-ref-ab-path, ","), buf_parts.in-code + chr(4) + buf_parts.part-code).
+              dFactSum = buf_doc-line.fact-qnty + dFactSum.
+            end.*/
+            
+          end.
+          
+          
+        end.      
+      end.
+      
       FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
       cHeader = substitute ('<header DocType="&1" DocName="&2" ClientID="&3" ClientType="&4" ObjectID="&5" ObjectType="&6" FactSum="&7" StartDate="&8" userID = "&9" />'
           , docType
@@ -230,6 +318,9 @@ class ibs.th.skt.ControlledClients.TSD :
       SomeStr = SomeStr + cHeader + cLine.
     end.
     SomeStr = substitute ('<?xml version="1.0" encoding="&1"?><TSD>', CP) + SomeStr + ('</TSD>').
+    output stream logTSD to value ("logSKTTSD.txt").
+    export stream logTSD SomeStr.
+    output stream logTSD close.
 
   end method.
 
@@ -244,10 +335,10 @@ class ibs.th.skt.ControlledClients.TSD :
     find first buf_clients no-lock 
       where buf_clients.obj-type = ObjType and buf_clients.obj-code = ObjCode no-error.
     if available (buf_clients) 
-      then statusOK = true.
-      else statusOK = false.
+      then statusOK = true. 
+	  else statusOK = false. 
     SomeStr = 
-      if statusOK = true 
+      if true 
         then getStatusXml(statusOK, "") 
         else if lookup (SN, confPar) = 0 then getStatusXml(statusOK, "LIC") else getStatusXml(statusOK, "OBJ").
     
@@ -395,25 +486,57 @@ class ibs.th.skt.ControlledClients.TSD :
           cliBaseRate = if buf_bar-code.cli-base-rate > -1 and buf_bar-code.cli-base-rate < 1 then replace (cliBaseRate, ".", "0,") else replace (cliBaseRate, ".", ",")
           .
       
-        put stream tsdstream unformatted
-          string (buf_goods.gds-code) + {&delimiteFld} +
-          full-b-code + {&delimiteFld} +
-          priceSale + {&delimiteFld} +
-          buf_bar-code.unit-cli + {&delimiteFld} +
-          cliBaseRate + {&delimiterLine}.
+        create TempBCode.
+              
+        assign
+          TempBCode.gds-code = buf_goods.gds-code
+          TempBCode.b-str = full-b-code
+          TempBCode.priceSale = priceSale
+          TempBCode.unit-cli = buf_bar-code.unit-cli
+          TempBCode.cliBaseRate = cliBaseRate 
+        no-error.
+        
+        if error-status:error 
+        then do:
+          delete TempBCode.
+          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибка передачи бар-кода &1 в ТСД.", full-b-code).
+        end.
+        
         for each buf_prod-bc no-lock where buf_prod-bc.b-code = buf_bar-code.b-code and buf_prod-bc.bc-on = yes:
           
-          put stream tsdstream unformatted
-          string (buf_goods.gds-code) + {&delimiteFld} +
-          buf_prod-bc.b-str + {&delimiteFld} +
-          priceSale + {&delimiteFld} +
-          buf_bar-code.unit-cli + {&delimiteFld} +
-          cliBaseRate + {&delimiterLine}.
+          
+        create TempBCode.
+              
+          assign
+            TempBCode.gds-code = buf_goods.gds-code
+            TempBCode.b-str = buf_prod-bc.b-str
+            TempBCode.priceSale = priceSale
+            TempBCode.unit-cli = buf_bar-code.unit-cli
+            TempBCode.cliBaseRate = cliBaseRate 
+          no-error.
+          
+          if error-status:error
+          then do:
+            delete TempBCode.
+            LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибка передачи бар-кода &1 в ТСД.", buf_prod-bc.b-str).
+          end.
           
         end.
       end.
 
     end.
+    
+    for each TempBCode:
+        
+        put stream tsdstream unformatted
+          string (TempBCode.gds-code) + {&delimiteFld} +
+          TempBCode.b-str + {&delimiteFld} +
+          TempBCode.priceSale + {&delimiteFld} +
+          TempBCode.unit-cli + {&delimiteFld} +
+          TempBCode.cliBaseRate + {&delimiterLine}.
+          
+    end.
+    
     tsdstreamclose().
     
   end.
@@ -424,9 +547,12 @@ class ibs.th.skt.ControlledClients.TSD :
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_doc-line      for ub.doc-line.
     define buffer buf_doc-line-attr for ub.doc-line-attr.
-    define variable adapterOra-i516 as class AdapterOra-i516.
-    define variable glog            as logical         no-undo.
-    define variable varzero-string  as logical no-undo.
+    define variable adapterOra-i516 as class   AdapterOra-i516.
+    define variable glog           as logical   no-undo.
+    define variable mes            as character no-undo.
+    define variable hLibMarks      as handle    no-undo.
+    define variable ii             as integer   no-undo.
+    define variable varzero-string as logical   no-undo.
     
     find first TempTrnDoc.
     find first buf_trn-doc exclusive-lock where buf_trn-doc.doc-code = TempTrnDoc.ext-doc-code
@@ -455,7 +581,7 @@ class ibs.th.skt.ControlledClients.TSD :
           and buf_doc-line.prod-code = ub.goods.prod-code
           no-error  .
         if available buf_doc-line then do:
-
+          
         end.
         else do:
           LogWrite:LogStr = substitute ( "В накладной &1 отсутсвует товар с кодом &2.", TempTrnDoc.ext-doc-code, TempDocLine.gds-code ).
@@ -510,6 +636,42 @@ class ibs.th.skt.ControlledClients.TSD :
       end.
       os-delete value (search ("doctsd.txt")) no-error.
       os-delete value (search ("newdoctsd.txt")) no-error.
+      
+      
+      run bge/egais-marks-find.p persistent (output hLibMarks) no-error .
+      for each TempDocLine no-lock break by TempDocLine.gds-code:
+        find first ub.goods where ub.goods.gds-code  = TempDocLine.gds-code
+          no-lock no-error .
+        find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code
+          and buf_doc-line.artic = ub.goods.artic
+          and buf_doc-line.prod-type = ub.goods.prod-type
+          and buf_doc-line.prod-code = ub.goods.prod-code
+          no-error  .
+        if available buf_doc-line then do:
+          
+          for each buf_parts where
+            buf_parts.obj-type = buf_trn-doc.obj-type and 
+            buf_parts.obj-code = buf_trn-doc.obj-code and 
+            buf_parts.artic = buf_doc-line.artic and
+            buf_parts.prod-type = buf_doc-line.prod-type and
+            buf_parts.prod-code = buf_doc-line.prod-code and
+            buf_parts.out-code = buf_trn-doc.doc-code and
+            buf_parts.part-code = TempDocLine.PartIDTH:
+            
+            buf_parts.fact-qnty = TempDocLine.fact-qnty.
+            if TempDocLine.aclMarksList <> ""
+            then do:
+              do ii = 1 to num-entries (TempDocLine.aclMarksList, ";"):
+                run create-mark in hLibMarks (input entry (ii, TempDocLine.aclMarksList, ";"), buffer buf_parts, output glog, output mes ).
+              end.
+            end.
+          end.
+          
+        end.
+      end.
+      delete object hLibMarks no-error.
+      run gbl/calc-trn.p (?, recid(buf_trn-doc)) no-error .
+      
       SomeStr = getStatusXml(true, "").
       return true.
       

@@ -602,6 +602,7 @@ do:
       assign
         frame {&frame-name} tt-fr-doc-line.cli-qnty
       .
+      run calc-vat-pc in this-procedure.
       run calc-all in this-procedure
         ( input varcli-qnty-calc
         ) no-error .

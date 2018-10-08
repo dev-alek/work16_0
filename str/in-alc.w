@@ -411,15 +411,20 @@ ON CHOOSE OF b-code-egais IN FRAME Dialog-Frame
 ON CHOOSE OF b-exmark IN FRAME Dialog-Frame
 DO:
   define VARIABLE ii as integer no-undo .
-    if code-egais = "" then do:
-        MESSAGE "Необходимо заполнить поле 'Код товара в ЕГАИС"
-        VIEW-AS ALERT-BOX.
-        RETURN .
-    end.    
+  if code-egais = "" then 
+  do:
+    MESSAGE "Необходимо заполнить поле 'Код товара в ЕГАИС"
+      VIEW-AS ALERT-BOX.
+    RETURN .
+  end.    
   do on error undo, return no-apply:
-      run bge/egais-ab-marks.w (parparentproc, "", ?, code-egais, buf_parts.qnty, p-mode, input-output table tt-marks) .
-   end.
-   run MyEnable.
+    run bge/egais-ab-marks.w (parparentproc, "", ?, code-egais, buf_parts.qnty, p-mode + "," + v-parts-uniq-key-rec, input-output table tt-marks) .
+  end.
+  run count-marks(OUTPUT v-alc-mark-count) no-error.
+  v-alc-mark-name = v-alc-mark-count.
+  display
+    v-alc-mark-name
+    with frame {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -661,54 +666,6 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE count-marks Dialog-Frame 
-PROCEDURE count-marks :
-    /*------------------------------------------------------------------------------
-      Purpose:
-      Parameters:  <none>
-      Notes:
-    ------------------------------------------------------------------------------*/
-    do
-        on error undo, return error
-        :
-        define output PARAMETER p-ii as integer no-undo .
-        define buffer buf_gen-attr for ub.gen-attr .
-        define buffer buf_tt-marks for tt-marks .
-
-        find first buf_tt-marks no-error .
-        if not AVAILABLE buf_tt-marks then 
-        do:
-
-            run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
-                ,input (buffer buf_parts:handle)
-                ,output v-parts-uniq-key-rec).
-
-
-            for each buf_gen-attr where buf_gen-attr.table-name = {&excise-mark}
-                and buf_gen-attr.p-key = v-parts-uniq-key-rec
-                :
-                find first buf_tt-marks where buf_tt-marks.mark = buf_gen-attr.attr-code no-error .
-                if not AVAILABLE buf_tt-marks then 
-                do:                                       
-                    create buf_tt-marks .
-                    ASSIGN
-                        buf_tt-marks.mark               = buf_gen-attr.attr-code
-                        buf_tt-marks.parts              = buf_gen-attr.p-key
-                        buf_tt-marks.reserv             = buf_gen-attr.whole-send-news
-                        buf_tt-marks.num                = ""
-                        buf_tt-marks.gds-part-position_ = ?
-                        buf_tt-marks.alc-code           = code-egais
-                        buf_tt-marks.gds-code           = p-gds-code 
-                        .
-                end.
-            end. 
-        end.   
-            for EACH buf_tt-marks where buf_tt-marks.alc-code = code-egais:
-                p-ii = p-ii + 1 .
-            end.    
-
-    end.
-END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -759,103 +716,128 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
 PROCEDURE MyEnable :
-    /*------------------------------------------------------------------------------
-          Purpose:
-          Parameters:  <none>
-          Notes:
-        ------------------------------------------------------------------------------*/
-             
-    run adm/shattri.p (
-        input "get":U
-        ,input p-alc-imp-type
-        ,input p-alc-imp-code
-        ,input {&attr-nakl_par}
-        ,input  "mark-alchol"
-        ,output v-value-character
-        ,output v-value-date
-        ,output v-value-decimal
-        ,output v-value-integer
-        ,output v-value-mark
-        ,output par-type
-        ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
-        ) no-error .
- 
-    define buffer buf_clients for ub.clients.
-    assign
-        v-alc-mark-db-num         = p-alc-mark-db-num
-        v-alc-mark-code           = p-alc-mark-code
-        v-alc-bottling-date       = p-alc-bottling-date
-        v-alc-ref-a-path          = entry(1,p-alc-ref-ab-path,",")     
-        v-alc-ref-b-path          = entry(2,p-alc-ref-ab-path,",")      
-        when num-entries (p-alc-ref-ab-path) > 1
-        code-egais                = entry(3,p-alc-ref-ab-path,",")      
-        when num-entries (p-alc-ref-ab-path) > 2
-        group-alc-prod            = entry(4,p-alc-ref-ab-path,",")      
-        when num-entries (p-alc-ref-ab-path) > 3
-        v-alc-quality-certif-path = p-alc-quality-certif-path
-        v-alc-certif-path         = p-alc-certif-path
-        v-alc-imp-type            = p-alc-imp-type
-        v-alc-imp-code            = p-alc-imp-code
+  /*------------------------------------------------------------------------------
+        Purpose:
+        Parameters:  <none>
+        Notes:
+      ------------------------------------------------------------------------------*/
+  define buffer buf_tt-marks for tt-marks .
+  define buffer buf_gen-attr for ub.gen-attr.
+  define buffer buf_clients  for ub.clients.
+                     
+  run adm/shattri.p (
+    input "get":U
+    ,input p-alc-imp-type
+    ,input p-alc-imp-code
+    ,input {&attr-nakl_par}
+    ,input  "mark-alchol"
+    ,output v-value-character
+    ,output v-value-date
+    ,output v-value-decimal
+    ,output v-value-integer
+    ,output v-value-mark
+    ,output par-type
+    ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+    ) no-error .
+
+  assign
+    v-alc-mark-db-num         = p-alc-mark-db-num
+    v-alc-mark-code           = p-alc-mark-code
+    v-alc-bottling-date       = p-alc-bottling-date
+    v-alc-ref-a-path          = entry(1,p-alc-ref-ab-path,",")     
+    v-alc-ref-b-path          = entry(2,p-alc-ref-ab-path,",")      
+    when num-entries (p-alc-ref-ab-path) > 1
+    code-egais                = entry(3,p-alc-ref-ab-path,",")      
+    when num-entries (p-alc-ref-ab-path) > 2
+    group-alc-prod            = entry(4,p-alc-ref-ab-path,",")      
+    when num-entries (p-alc-ref-ab-path) > 3
+    v-alc-quality-certif-path = p-alc-quality-certif-path
+    v-alc-certif-path         = p-alc-certif-path
+    v-alc-imp-type            = p-alc-imp-type
+    v-alc-imp-code            = p-alc-imp-code
     no-error  .
 
 
-    find first buf_clients no-lock
-        where buf_clients.obj-type = v-alc-imp-type
-        and buf_clients.obj-code = v-alc-imp-code
-        no-error .
-    if available buf_clients
-        then 
-    do:
-        assign
-            v-alc-imp-name = buf_clients.obj-name
-            .
+  find first buf_clients no-lock
+    where buf_clients.obj-type = v-alc-imp-type
+    and buf_clients.obj-code = v-alc-imp-code
+    no-error .
+  if available buf_clients
+    then 
+  do:
+    assign
+      v-alc-imp-name = buf_clients.obj-name
+      .
+  end.
+    
+  run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+    ,input (buffer buf_parts:handle)
+    ,output v-parts-uniq-key-rec).
+
+  for each buf_gen-attr where buf_gen-attr.table-name = {&excise-mark}
+    and buf_gen-attr.p-key = v-parts-uniq-key-rec
+    :
+    find first buf_tt-marks where buf_tt-marks.mark = buf_gen-attr.attr-code no-error .
+    if not AVAILABLE buf_tt-marks then 
+    do:                                       
+      create buf_tt-marks .
+      ASSIGN
+        buf_tt-marks.mark               = buf_gen-attr.attr-code
+        buf_tt-marks.parts              = buf_gen-attr.p-key
+        buf_tt-marks.reserv             = buf_gen-attr.whole-send-news
+        buf_tt-marks.num                = ""
+        buf_tt-marks.gds-part-position_ = ?
+        buf_tt-marks.alc-code           = code-egais
+        buf_tt-marks.gds-code           = p-gds-code 
+        .
     end.
- 
-    run count-marks(OUTPUT v-alc-mark-count) no-error.
-    v-alc-mark-name = v-alc-mark-count .
+  end.
+    
+  run count-marks(OUTPUT v-alc-mark-count) no-error.
+  v-alc-mark-name = v-alc-mark-count.
 
+  display
+    v-alc-mark-name
+    v-alc-bottling-date
+    v-alc-ref-a-path
+    v-alc-ref-b-path
+    code-egais
+    group-alc-prod
+    v-alc-quality-certif-path
+    v-alc-certif-path
+    v-alc-imp-type
+    v-alc-imp-code
+    v-alc-imp-name
+    with frame {&frame-name}.
 
-    display
-        v-alc-mark-name
-        v-alc-bottling-date
-        v-alc-ref-a-path
-        v-alc-ref-b-path
-        code-egais
-        group-alc-prod
-        v-alc-quality-certif-path
-        v-alc-certif-path
-        v-alc-imp-type
-        v-alc-imp-code
-        v-alc-imp-name
-        with frame {&frame-name}.
+  view frame {&frame-name}.
 
-    view frame {&frame-name}.
-
-    if p-mode = {&lookup} then 
+  if p-mode = {&lookup} then 
+  do:
+    assign
+      b-cancel:label  = "&Выход"
+      b-cancel:column = 1
+      .
+    hide b-save in frame {&frame-name}.
+    enable B-cancel B-Help with frame {&frame-name}.
+    if v-value-mark then 
     do:
-        assign
-            b-cancel:label  = "&Выход"
-            b-cancel:column = 1
-            .
-        hide b-save in frame {&frame-name}.
-        enable B-cancel B-Help with frame {&frame-name}.
-        if v-value-mark then 
-        do:
-            enable  b-exmark WITH frame {&frame-name}.
-        end.    
-    end.
-    else 
+      enable  b-exmark WITH frame {&frame-name}.
+    end.    
+  end.
+  else 
+  do:
+    enable all with frame {&frame-name}.
+    DISABLE v-alc-mark-name WITH frame {&frame-name}.
+    if v-value-mark = no then 
     do:
-        enable all with frame {&frame-name}.
-        DISABLE v-alc-mark-name WITH frame {&frame-name}.
-        if v-value-mark = no then 
-        do:
-            DISABLE  b-exmark WITH frame {&frame-name}.
-        end.    
-        apply "entry" to v-alc-bottling-date in frame {&frame-name}.
-    end.
+      DISABLE  b-exmark WITH frame {&frame-name}.
+    end.    
+    apply "entry" to v-alc-bottling-date in frame {&frame-name}.
+  end.
 
   return.
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -863,13 +845,14 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
 PROCEDURE proc-save :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
 
-  if p-mode = {&lookup} then do:
+  if p-mode = {&lookup} then 
+  do:
     return error.
   end.
 
@@ -884,26 +867,28 @@ PROCEDURE proc-save :
     group-alc-prod
     v-alc-imp-type
     v-alc-imp-code
-  .
+    .
 
 
   IF v-alc-imp-type <> ""
-  OR v-alc-imp-code <> 0
-  THEN DO:
-      FIND buf_clients WHERE buf_clients.obj-type = v-alc-imp-type
-                         and buf_clients.obj-code = v-alc-imp-code
-                       no-lock
-                       no-error
-                       .
-      if NOT available buf_clients then do:
-         message SUBSTITUTE ( "Указанный импортер (&1 &2) не найден"
-                            , v-alc-imp-type
-                            , v-alc-imp-code
-                            )
-            view-as alert-box error.
-         apply "entry" to v-alc-imp-type in frame {&frame-name}.
-         return error.
-      End.
+    OR v-alc-imp-code <> 0
+    THEN 
+  DO:
+    FIND buf_clients WHERE buf_clients.obj-type = v-alc-imp-type
+      and buf_clients.obj-code = v-alc-imp-code
+      no-lock
+      no-error
+      .
+    if NOT available buf_clients then 
+    do:
+      message SUBSTITUTE ( "Указанный импортер (&1 &2) не найден"
+        , v-alc-imp-type
+        , v-alc-imp-code
+        )
+        view-as alert-box error.
+      apply "entry" to v-alc-imp-type in frame {&frame-name}.
+      return error.
+    End.
   END.
 
   /*if (v-alc-ref-ab-path <> "") and (search (v-alc-ref-ab-path) = ?) then do:
@@ -913,14 +898,16 @@ PROCEDURE proc-save :
     return error.
   end.*/
 
-  if (v-alc-quality-certif-path <> "") and (search (v-alc-quality-certif-path) = ?) then do:
+  if (v-alc-quality-certif-path <> "") and (search (v-alc-quality-certif-path) = ?) then 
+  do:
     message "Указанный файл удостоверения качества не найден"
       view-as alert-box error.
     apply "entry" to v-alc-quality-certif-path in frame {&frame-name}.
     return error.
   end.
 
-  if (v-alc-certif-path <> "") and (search (v-alc-certif-path) = ?) then do:
+  if (v-alc-certif-path <> "") and (search (v-alc-certif-path) = ?) then 
+  do:
     message "Указанный файл сертификата соответствия не найден"
       view-as alert-box error.
     apply "entry" to v-alc-certif-path in frame {&frame-name}.
@@ -928,24 +915,29 @@ PROCEDURE proc-save :
   end.
 
   assign
-        p-alc-mark-db-num         = v-alc-mark-db-num
-        p-alc-mark-code           = v-alc-mark-code
-        p-alc-bottling-date       = v-alc-bottling-date
-        p-alc-ref-ab-path          = v-alc-ref-a-path + "," + v-alc-ref-b-path + "," +   code-egais + "," +  group-alc-prod      
+    p-alc-mark-db-num         = v-alc-mark-db-num
+    p-alc-mark-code           = v-alc-mark-code
+    p-alc-bottling-date       = v-alc-bottling-date
+    p-alc-ref-ab-path         = v-alc-ref-a-path + "," + v-alc-ref-b-path + "," +   code-egais + "," +  group-alc-prod      
                   
-/*        p-alc-ref-b-path          = v-alc-ref-b-path*/
-        p-alc-quality-certif-path = v-alc-quality-certif-path
-        p-alc-certif-path         = v-alc-certif-path
-        p-alc-imp-type            = v-alc-imp-type
-        p-alc-imp-code            = v-alc-imp-code
-        save-flag                 = yes
-        .
+    /*        p-alc-ref-b-path          = v-alc-ref-b-path*/
+    p-alc-quality-certif-path = v-alc-quality-certif-path
+    p-alc-certif-path         = v-alc-certif-path
+    p-alc-imp-type            = v-alc-imp-type
+    p-alc-imp-code            = v-alc-imp-code
+    save-flag                 = yes
+    .
         
 
-run check-marks no-error .
-run save-marks no-error .
-     
+  run check-marks no-error .
+  run save-marks no-error .
+  if error-status:error
+    then 
+  do:
+    return error.
+  end.
   return.
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -993,21 +985,21 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-marks Dialog-Frame 
 PROCEDURE check-marks :
-    /*------------------------------------------------------------------------------
-      Purpose:
-      Parameters:  <none>
-      Notes:
-    ------------------------------------------------------------------------------*/
-    do
-        on error undo, return error
-        :
-        if buf_parts.qnty <> decimal(v-alc-mark-count) then 
-        do:
-        MESSAGE substitute ("Кол-во марок &1 не соответствует кол-ву &2 в партии товаров", v-alc-mark-count, buf_parts.qnty)
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  do
+    on error undo, return error
+    :
+    if buf_parts.qnty <> decimal(v-alc-mark-count) then 
+    do:
+      MESSAGE substitute ("Кол-во марок &1 не соответствует кол-ву &2 в партии товаров", v-alc-mark-count, buf_parts.qnty)
         VIEW-AS ALERT-BOX.
-         end.    
-         
+      return error.
     end.
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1015,34 +1007,77 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-marks Dialog-Frame 
 PROCEDURE save-marks :
-    /*------------------------------------------------------------------------------
-      Purpose:
-      Parameters:  <none>
-      Notes:
-    ------------------------------------------------------------------------------*/
-    do
-        on error undo, return error
-        :
-        /*сохранение марок*/
-        define variable hndl-proc-egais-marks-lib as handle.
-        define variable v-parts-key-rec           as character no-undo .
-        define variable v-rezerv                  as integer   no-undo .
-        define buffer bf_gen-attr  for ub.gen-attr .
-        define buffer buf_tt-marks for tt-marks .
-        
-        for each bf_gen-attr where bf_gen-attr.table-name = {&excise-mark}
-                                and bf_gen-attr.p-key = v-parts-uniq-key-rec :
-            delete bf_gen-attr .
-        end.                             
-        for EACH buf_tt-marks where buf_tt-marks.alc-code = code-egais : 
-                           
-                run bge/egais-marks-find.p persistent (output hndl-proc-egais-marks-lib) no-error .
-
-                run create-mark in hndl-proc-egais-marks-lib (input buf_tt-marks.mark, buffer buf_parts, output v-parts-key-rec, output v-rezerv).
-        end.
-        delete object hndl-proc-egais-marks-lib no-error. /* не забываем удалять также при любом ошибочном (досрочном) выходе вашей процедуры */
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  do
+    on error undo, return error
+    :
+    /*сохранение марок*/
+    define variable hndl-proc-egais-marks-lib as handle.
+    define variable v-mes                     as character no-undo .
+    define variable v-rezerv                  as logical   no-undo .
+    define buffer bf_gen-attr  for ub.gen-attr .
+    define buffer buf_tt-marks for tt-marks .
+    run bge/egais-marks-find.p persistent (output hndl-proc-egais-marks-lib) no-error .
+    
+    do trans:   
+    
+    run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+      ,input (buffer buf_parts:handle)
+      ,output v-parts-uniq-key-rec).
+    
+    for each bf_gen-attr where bf_gen-attr.table-name = {&excise-mark}
+      and bf_gen-attr.p-key = v-parts-uniq-key-rec :
+      delete bf_gen-attr .
     end.
+    for EACH buf_tt-marks where buf_tt-marks.alc-code = code-egais :
+      find first bf_gen-attr where bf_gen-attr.table-name = {&excise-mark}
+                              and bf_gen-attr.p-key begins "parts"
+                              and bf_gen-attr.attr-code = buf_tt-marks.mark
+                              and num-entries (bf_gen-attr.p-key, {&delim-key}) >= 8  
+                              and entry(8, bf_gen-attr.p-key, {&delim-key}) = {&free-code}
+                              no-error .
+      if available (bf_gen-attr)
+        then delete bf_gen-attr.
+    end.
+
+    for EACH buf_tt-marks where buf_tt-marks.alc-code = code-egais : 
+      run create-mark in hndl-proc-egais-marks-lib (input buf_tt-marks.mark, buffer buf_parts, output v-rezerv, output v-mes).
+      if not v-rezerv 
+      then do:
+        message v-mes view-as alert-box error.
+        delete object hndl-proc-egais-marks-lib no-error.
+        undo, return error.
+      end.
+    end.
+    
+    end.
+    delete object hndl-proc-egais-marks-lib no-error. /* не забываем удалять также при любом ошибочном (досрочном) выходе вашей процедуры */
+  end.
 END PROCEDURE.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE count-marks Dialog-Frame 
+PROCEDURE count-marks :
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  define output PARAMETER p-ii as integer no-undo .
+  
+  do on error undo, return error:
+    define buffer buf_tt-marks for tt-marks .
+    for EACH buf_tt-marks where buf_tt-marks.alc-code = code-egais:
+      p-ii = p-ii + 1 .
+    end.    
+  end.
+END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

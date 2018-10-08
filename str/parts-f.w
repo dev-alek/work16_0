@@ -925,6 +925,9 @@ DO:
                 end.
             end. /* else*/
         end. /* available buf_parts */
+        else do:
+          message "В начале сохраните партию." view-as alert-box information title "Сообщение".
+        end.
     end.
 END.
 
