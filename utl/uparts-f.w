@@ -62,6 +62,7 @@ define variable vss-description as character no-undo init "Редактирование партии
 { trg/partrqst.i }
 { str/plgdsfnd.i }
 { str/hvrdtax.i  }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { trg/partrsrv.i }
 { trg/partsfnc.i }

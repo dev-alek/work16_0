@@ -128,6 +128,9 @@ define variable vss-description as character no-undo initial "Процедура резервир
 { gbl/getcntxt.i def }
 { gbl/getsect.i  def }
 { str/lib-trn.i  }
+
+define stream alc-rsrv .
+
 { trg/partrqst.i }
 { trg/rsrgdsck.i }
 { trg/partscr.i  }
@@ -138,6 +141,7 @@ define variable vss-description as character no-undo initial "Процедура резервир
 { trg/rsrvincr.i }
 { trg/partrsrv.i }
 { str/hvrdtax.i  }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { str/trdcalib.i }
 { trg/holdprts.i }

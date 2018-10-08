@@ -39,6 +39,7 @@ define variable vss-description as character no-undo initial "Триггер на запись 
 { trg/partrqst.i }
 { str/lib-trn.i  }
 { str/hvrdtax.i  }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { trg/set-cli.i  }
 { trg/trnbccr.i  }

@@ -47,6 +47,7 @@ define variable vss-description as character no-undo initial "Создание и заполне
 { trg/partrqst.i }
 { str/trdcalib.i }
 { trg/holdprts.i }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { str/get-pr.i def }
 { str/corparts.i }

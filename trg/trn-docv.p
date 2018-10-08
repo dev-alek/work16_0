@@ -30,6 +30,7 @@ define variable vss-description as character no-undo init "Дополнительные провер
 { trg/trndocrs.i }
 { trg/partrqst.i }
 { str/hvrdtax.i  }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { trg/partrsrv.i }
 p-err = false .

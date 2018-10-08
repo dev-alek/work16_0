@@ -30,6 +30,7 @@ define variable vss-description as character no-undo initial "Триггер на удалени
 { cmp/trg-def.i  }
 { str/lib-trn.i  }
 { gbl/key-rec.i  }
+{ str/marks.i  }
 
 main-block:
 do transaction
@@ -114,6 +115,17 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
       :
          delete ub.parts-root.
       end.
+      
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer ub.parts:handle)
+                                        ,output part-key-rec).
+      for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                             and ub.gen-attr.p-key =  part-key-rec
+      on error undo main-block, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+      :
+         delete ub.gen-attr.
+      end. 
+
       define variable vsds as class ibs.th.str.mercury.vsdsubs no-undo.
       define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
       define variable ii as integer no-undo.
