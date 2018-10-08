@@ -74,6 +74,8 @@ define {2} {3} temp-table tt-marks
     field impor-full-name     as character            LABEL "Импортер"       FORMAT "X(130)" 
     field prod-full-name      as character            LABEL "Производитель"  FORMAT "X(130)" 
     field flag                as logical              label "T"
+    field reserv              as integer              label "R"
+    field parts               as character            label "Партия"         format "X(130)"
     index pi as primary unique
         mark
 .

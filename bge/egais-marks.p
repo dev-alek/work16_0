@@ -53,7 +53,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   input parparentproc ,
   input ""  ,
   input 0   ,
-  input ""  
+  input ""  ,
+  input 0   ,
+  input {&update} ,
+  input-output table tt-marks
   ) .
 
 end.

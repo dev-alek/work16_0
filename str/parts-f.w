@@ -811,6 +811,7 @@ DO:
               (input parparentproc
               ,input {&update}
               ,input p-gds-code
+              ,buffer buf_parts
               ,input-output v-alc-mark-db-num
               ,input-output v-alc-mark-code
               ,input-output v-alc-bottling-date
@@ -827,6 +828,7 @@ DO:
             (  input parparentproc
               ,input p-mode
               ,input p-gds-code
+              ,buffer buf_parts
               ,input-output v-alc-mark-db-num
               ,input-output v-alc-mark-code
               ,input-output v-alc-bottling-date

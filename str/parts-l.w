@@ -1156,6 +1156,7 @@ end.
       (input        parparentproc
       ,input       v-mode-alc
       ,input p-gds-code
+      ,buffer ub.parts
       ,input-output v-alc-mark-db-num
       ,input-output v-alc-mark-code
       ,input-output v-alc-bottling-date
