@@ -23,6 +23,8 @@ using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
 
+&scop CRLF chr(13) + chr(10)
+&scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 
 class ibs.th.skt.ControlledClients.atdclient : 
   
@@ -43,7 +45,9 @@ class ibs.th.skt.ControlledClients.atdclient :
   
   method public void hndler (req as class ibs.th.skt.Commands.SimpleRequest):
     define variable vExp as class ibs.th.bge.atd.dict-atd-exp no-undo.
- 
+    define variable mbuffer-out as character no-undo.
+    define variable vLC as longchar no-undo.
+    define variable v-cont-length as integer no-undo.
     define buffer bclients    for ub.clients.
 
     find first bclients where bclients.obj-type = 'маг'
@@ -62,20 +66,27 @@ class ibs.th.skt.ControlledClients.atdclient :
                                     bclients.obj-type,
                                     bclients.obj-code).
        
-       req:Content.
-       case req:QueryPar:
-         when "GetObj"       
-           then SomeStr = vExp:GetNObjectTable().
-         when "GetCashDesk"  
-           then SomeStr = vExp:GetNCassaTable().
-         when "GetFuel"      
-           then SomeStr = vExp:GetReCodesTable().
-         when "GetTank"      
-           then SomeStr = vExp:GetNTankTable().
-         otherwise SomeStr = "".
-       end case.
-          
-       delete object vExp.
+      req:Content.
+      case req:QueryPar:
+        when "GetObj"       
+        then 
+          vLC = vExp:GetNObjectTable().
+        when "GetCashDesk"  
+        then 
+          vLC = vExp:GetNCassaTable().
+        when "GetFuel"      
+        then 
+          vLC = vExp:GetReCodesTable().
+        when "GetTank"      
+        then 
+          vLC = vExp:GetNTankTable().
+        otherwise 
+        vLC = "".
+      end case.
+      delete object vExp.
+      v-cont-length = length(vLC,"RAW":U).
+      SomeStr = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/jason&1Content-Length: &3&2&4",{&CRLF},{&HdEnd},string(v-cont-length),vLC).
+      vLC = ?.
     end. 
   end method.
   

@@ -41,6 +41,19 @@ class ibs.th.skt.ClientControl:
     end.
     cast(ttCommands.objCommand, ibs.th.skt.Commands.ICommand):Execute_(req, output resp).    
   end method.
+  
+  method public void SendRequest ( numcmd as int, req as memptr, resp as class IResponse, h as handle, lpar as character ):
+    
+    logWrite = new LogWrite().
+    
+    find first ttCommands where ttCommands.numCmd = numcmd no-lock no-error.
+    if not available (ttCommands) then 
+    do:
+      logWrite:LogStr = "Для данного клиента не создана комманда.".
+      return error .
+    end.
+    cast(ttCommands.objCommand, ibs.th.skt.Commands.TSDCommand):Execute_(req, output resp, h, lpar).    
+  end method.
 
 
   method public void SetCommandForClient ( numcmd as int, cmd as class ICommand ):
