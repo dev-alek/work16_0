@@ -602,6 +602,7 @@ do:
       assign
         frame {&frame-name} tt-fr-doc-line.cli-qnty
       .
+      run calc-vat-pc in this-procedure.
       run calc-all in this-procedure
         ( input varcli-qnty-calc
         ) no-error .
@@ -1510,7 +1511,7 @@ end.
 on choose of b-alc-attr in frame {&frame-name} do:
 
   define variable save-flag  as logical   no-undo.
-
+  define buffer buf_parts for ub.parts .
   { gbl/stdbtn.i }
 
   /* Если у строки накладной больше одной партии, то корректировка
@@ -1522,12 +1523,19 @@ on choose of b-alc-attr in frame {&frame-name} do:
     view-as alert-box information.
     return no-apply.
   end.
-
+find first buf_parts where buf_parts.obj-type  = t-doc.obj-type           and
+                          buf_parts.obj-code  = t-doc.obj-code           and
+                          buf_parts.prod-type = tt-fr-doc-line.prod-type and
+                          buf_parts.prod-code = tt-fr-doc-line.prod-code and
+                          buf_parts.artic     = tt-fr-doc-line.artic     and
+                          buf_parts.out-code  = t-doc.doc-code           no-lock no-error.
+                          
   do on error undo, return no-apply:
     run str/in-alc.w
       (input        parParentProc
       ,input        (if parline-mode <> {&lookup} then {&update} else {&lookup})
       ,input buf_goods.gds-code
+      ,buffer buf_parts
       ,input-output tt-fr-doc-line.alc-mark-db-num
       ,input-output tt-fr-doc-line.alc-mark-code
       ,input-output tt-fr-doc-line.alc-bottling-date

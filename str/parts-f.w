@@ -59,6 +59,7 @@ define variable vss-description as character no-undo init "Редактирование партий
 { trg/partrqst.i }
 { str/plgdsfnd.i }
 { str/hvrdtax.i  }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { trg/partrsrv.i }
 { trg/partsfnc.i }
@@ -811,6 +812,7 @@ DO:
               (input parparentproc
               ,input {&update}
               ,input p-gds-code
+              ,buffer buf_parts
               ,input-output v-alc-mark-db-num
               ,input-output v-alc-mark-code
               ,input-output v-alc-bottling-date
@@ -827,6 +829,7 @@ DO:
             (  input parparentproc
               ,input p-mode
               ,input p-gds-code
+              ,buffer buf_parts
               ,input-output v-alc-mark-db-num
               ,input-output v-alc-mark-code
               ,input-output v-alc-bottling-date
@@ -922,6 +925,9 @@ DO:
                 end.
             end. /* else*/
         end. /* available buf_parts */
+        else do:
+          message "В начале сохраните партию." view-as alert-box information title "Сообщение".
+        end.
     end.
 END.
 

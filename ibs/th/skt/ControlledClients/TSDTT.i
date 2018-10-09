@@ -17,6 +17,12 @@ Creation date: 01/30/15
 
 /* ***************************  Definitions  ************************** */
 
+
+/* ********************  Preprocessor Definitions  ******************** */
+
+
+/* ***************************  Main Block  *************************** */
+
   define temp-table TempTrnDoc no-undo
     field line-num      as integer
     field ext-doc-code  as character
@@ -30,6 +36,21 @@ Creation date: 01/30/15
     field doc-id        as character
     index pi line-num ext-doc-code .
 
+  define temp-table TempTrnDocMT no-undo
+    field DocName    as character
+    field DocType    as character
+    field Complete_  as logical
+    field Status_    as character
+    field ClientID   as integer
+    field ClientType as character
+    field ObjectID   as integer
+    field ObjectType as character
+    field UserID_     as character
+    field UserName   as character
+    field FactSum    as decimal
+    field StartDate  as character
+  .
+  
   define temp-table TempDocLine no-undo
     field line-num     as integer
     field gds-code     as integer
@@ -45,8 +66,44 @@ Creation date: 01/30/15
     field vsd-uuid     as character
     field part-id      as character
     field aclMarksList as character
-    field PartIDTH     as character
+    field PartIDTH as character
     index pi
     line-num
     gds-code
+    .
+    
+  define temp-table TempTrnLineMT no-undo
+    field lineid    as integer 
+    field docname   as character   
+    field pos       as integer
+    field goodsid   as integer 
+    field goodsname as character
+    field UnitBC    as character
+    field BC        as character
+    field Price_    as character
+    field DocQnty   as character
+    field FactQnty  as character
+    field AlcCode   as character
+    field PartIDTH  as character
+  .
+
+  define temp-table TempMarkLine no-undo
+    field DocName  as character
+    field MarkCode as character
+    field PartIDTH as character
+    field Sts      as character
+    index pi
+    DocName
+    MarkCode
+    .
+
+  define temp-table TempMarkLineMT no-undo
+    field LineId   as integer
+    field DocName  as character
+    field MarkCode as character
+    field PartIDTH as character
+    field Sts      as character
+    index pi
+    DocName
+    MarkCode
     .

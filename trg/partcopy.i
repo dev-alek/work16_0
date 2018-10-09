@@ -21,6 +21,8 @@ p-free-output-copy  false  копирование партии в документ, в свободную, расходную
                     true   копирование партии в свободную, расходную зону
                            закрытие документа до статуса {&fact}
 */
+{ str/marks.i }
+
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
@@ -32,6 +34,19 @@ procedure partcopy :
   define parameter buffer buf_parts          for ub.parts .
 
   define variable vss-description as character no-undo init "partcopy-01: процедура копирования партии".
+  
+  define variable v-value-character as character no-undo .
+  define variable v-value-date      as date no-undo .
+  define variable v-value-decimal   as decimal no-undo .
+  define variable v-value-integer   as integer no-undo .
+  define variable v-izlcstpr        as logical no-undo .
+  define variable v-tth             as handle no-undo .
+  define variable v-type            as character no-undo .
+  
+  define variable part-key-rec      as character no-undo .
+  define variable orig-part-key-rec as character no-undo .
+  
+  define buffer buf_gen-attr for ub.gen-attr .
 
   /* процедура создания партии в свободной или расходной зоне */
   do
@@ -52,6 +67,7 @@ procedure partcopy :
         undo, return error .
       end.
     end.
+
 
     if buf_orig_parts.out-code <> p-out-code
     then do:
@@ -96,6 +112,22 @@ procedure partcopy :
           buf_parts.real-qnty = 0
           buf_parts.cli-qnty  = 0
         .
+        
+        run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_orig_parts:handle)
+                                        ,output orig-part-key-rec).
+        run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).                                
+        for each ub.gen-attr no-lock where ub.gen-attr.table-name = {&excise-mark}
+                                       and ub.gen-attr.p-key =  orig-part-key-rec :
+            create buf_gen-attr .
+            buffer-copy ub.gen-attr to buf_gen-attr
+            assign
+                buf_gen-attr.p-key = part-key-rec
+                buf_gen-attr.whole-send-news = 0
+            .                                
+        end.
 
         /* сделаем партию доступной для поиска через первичный индекс */
         /* todo - возможно это не нужно, так как блок выделен в отдельную процедуру */
@@ -149,6 +181,17 @@ procedure partcopy-update-parts :
 
   define variable v-rsrv-code     as character no-undo .
   define variable v-goods-twounit as logical   no-undo .
+  
+  define variable v-value-character as character no-undo .
+  define variable v-value-date      as date no-undo .
+  define variable v-value-decimal   as decimal no-undo .
+  define variable v-value-integer   as integer no-undo .
+  define variable v-izlcstpr        as logical no-undo .
+  define variable v-tth             as handle no-undo .
+  define variable v-type            as character no-undo .
+  
+  define variable v-exch-rate  like ub.curr-accnt.exch-rate no-undo .
+  define variable v-exch-scale like ub.curr-accnt.exch-scale no-undo .
 
   do
   on error undo, return error return-value
@@ -170,6 +213,34 @@ procedure partcopy-update-parts :
         return-value skip
         view-as alert-box error .
       undo, return error .
+    end.
+    
+    if buf_trn-doc.ext-doc-type = {&TDEDT_inv}
+    then do :
+        delete object v-tth no-error.
+        run adm/shattri.p (
+           input "get":U
+          ,input buf_trn-doc.obj-type
+          ,input buf_trn-doc.obj-code
+          ,input {&attr-inv-obj}
+          ,input  "izlcstpr"
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-izlcstpr
+          ,output v-type
+          ,INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+          delete object v-tth no-error.      
+        if error-status:error then do:
+          message "Ошибка при получение параметра izlcstpr"
+          view-as alert-box.
+          return error.
+        end. 
+    end.
+    else do :
+        v-izlcstpr = false .
     end.
 
     /* определяется, что товар учитывается в двух единицах измерения */
@@ -819,66 +890,69 @@ procedure partcopy-update-parts :
               v-rsrv-code = {&output-code}
             .
           end.
-
-          run partcopy in this-procedure
-            (input  true      /* p-free-output-copy */
-            ,input  v-rsrv-code /* p-out-code         */
-            ,buffer archive_parts  /* buf_orig_parts     */
-            ,buffer buf_parts /* buf_parts          */
-            ) no-error .
-          if error-status :error
-          then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              vss-include-info{&vssseq} skip
-              "Ошибка при создании партии" skip
-              "Документ" p-doc-code skip
-              "Объект" p-obj-type p-obj-code skip
-              "Артикул" p-artic p-prod-type p-prod-code skip
-              "Партия" archive_parts.in-code archive_parts.part-code skip
-              "Резерв" v-rsrv-code skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box error .
-            undo, return error .
-          end.
-
-          /* количества у порожденной партии должны быть отрицательными
-            независимо от количества, хранящегося в архивной партии
-          */
-          assign
-            buf_parts.qnty      = buf_parts.qnty - abs(archive_parts.fact-qnty)
-            buf_parts.fact-qnty = buf_parts.qnty
-          .
-          if v-goods-twounit = true
-          then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              vss-include-info{&vssseq} skip
-              "Запрещено порождение партий," skip
-              "который учитывается по двум единицам измерения" skip
-              "Документ" p-doc-code skip
-              "Объект" p-obj-type p-obj-code skip
-              "Артикул" p-artic p-prod-type p-prod-code skip
-              "Партия" archive_parts.in-code archive_parts.part-code skip
-              "Количество по документу" archive_parts.qnty skip
-              "Фактическое количество" archive_parts.fact-qnty skip
-              "Клиентское количество" archive_parts.cli-qnty skip
-              view-as alert-box error .
-            undo, return error .
-          end.
-          else do:
-            if buf_parts.cli-base-rate <> 0
-            then do:
+          
+          if not v-izlcstpr
+          then do :
+              run partcopy in this-procedure
+                (input  true      /* p-free-output-copy */
+                ,input  v-rsrv-code /* p-out-code         */
+                ,buffer archive_parts  /* buf_orig_parts     */
+                ,buffer buf_parts /* buf_parts          */
+                ) no-error .
+              if error-status :error
+              then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  vss-include-info{&vssseq} skip
+                  "Ошибка при создании партии" skip
+                  "Документ" p-doc-code skip
+                  "Объект" p-obj-type p-obj-code skip
+                  "Артикул" p-artic p-prod-type p-prod-code skip
+                  "Партия" archive_parts.in-code archive_parts.part-code skip
+                  "Резерв" v-rsrv-code skip
+                  error-status :get-message(1) skip
+                  return-value skip
+                  view-as alert-box error .
+                undo, return error .
+              end.
+    
+              /* количества у порожденной партии должны быть отрицательными
+                независимо от количества, хранящегося в архивной партии
+              */
               assign
-                buf_parts.cli-qnty = buf_parts.fact-qnty / buf_parts.cli-base-rate
+                buf_parts.qnty      = buf_parts.qnty - abs(archive_parts.fact-qnty)
+                buf_parts.fact-qnty = buf_parts.qnty
               .
-            end.
-            else do:
-              assign
-                buf_parts.cli-qnty = 0
-              .
-            end.
+              if v-goods-twounit = true
+              then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  vss-include-info{&vssseq} skip
+                  "Запрещено порождение партий," skip
+                  "который учитывается по двум единицам измерения" skip
+                  "Документ" p-doc-code skip
+                  "Объект" p-obj-type p-obj-code skip
+                  "Артикул" p-artic p-prod-type p-prod-code skip
+                  "Партия" archive_parts.in-code archive_parts.part-code skip
+                  "Количество по документу" archive_parts.qnty skip
+                  "Фактическое количество" archive_parts.fact-qnty skip
+                  "Клиентское количество" archive_parts.cli-qnty skip
+                  view-as alert-box error .
+                undo, return error .
+              end.
+              else do:
+                if buf_parts.cli-base-rate <> 0
+                then do:
+                  assign
+                    buf_parts.cli-qnty = buf_parts.fact-qnty / buf_parts.cli-base-rate
+                  .
+                end.
+                else do:
+                  assign
+                    buf_parts.cli-qnty = 0
+                  .
+                end.
+              end.
           end.
         end.
 
@@ -916,6 +990,16 @@ procedure partcopy-update-parts-delete :
   define variable v-unrv-sign as integer   no-undo .
 
   define variable v-goods-twounit as logical   no-undo .
+  
+  define variable v-value-character as character no-undo .
+  define variable v-value-date      as date no-undo .
+  define variable v-value-decimal   as decimal no-undo .
+  define variable v-value-integer   as integer no-undo .
+  define variable v-izlcstpr        as logical no-undo .
+  define variable v-tth             as handle no-undo .
+  define variable v-type            as character no-undo .
+  
+  define variable part-key-rec as character no-undo .
 
   do
   on error undo, return error return-value
@@ -937,6 +1021,34 @@ procedure partcopy-update-parts-delete :
         return-value skip
         view-as alert-box error .
       undo, return error .
+    end.
+    
+    if buf_trn-doc.ext-doc-type = {&TDEDT_inv}
+    then do :
+        delete object v-tth no-error.
+        run adm/shattri.p (
+           input "get":U
+          ,input buf_trn-doc.obj-type
+          ,input buf_trn-doc.obj-code
+          ,input {&attr-inv-obj}
+          ,input  "izlcstpr"
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-izlcstpr
+          ,output v-type
+          ,INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+          delete object v-tth no-error.      
+        if error-status:error then do:
+          message "Ошибка при получение параметра izlcstpr"
+          view-as alert-box.
+          return error.
+        end. 
+    end.
+    else do :
+        v-izlcstpr = false .
     end.
 
     /* определяется, что товар учитывается в двух единицах измерения */
@@ -1042,34 +1154,53 @@ procedure partcopy-update-parts-delete :
             view-as alert-box error .
           undo, return error .
         end.
+        
+        if v-izlcstpr then v-need-unrv = false .
 
         if v-need-rsrv = true
         then do:
-          run partcopy in this-procedure
-            (input  true          /* p-free-output-copy */
-            ,input  v-rsrv-code   /* p-out-code         */
-            ,buffer archive_parts /* buf_orig_parts     */
-            ,buffer buf_parts     /* buf_parts          */
-            ) no-error .
-          if error-status :error
-          then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              vss-include-info{&vssseq} skip
-              "Ошибка при создании партии" skip
-              "Документ" p-doc-code skip
-              "Объект" p-obj-type p-obj-code skip
-              "Артикул" p-artic p-prod-type p-prod-code skip
-              "Партия" archive_parts.in-code archive_parts.part-code skip
-              "Необходимо резервировать" v-need-rsrv skip
-              "Резерв" v-rsrv-code skip
-              "Необходимо снятие резервов" v-need-unrv skip
-              "Снятие резервов" v-unrv-code skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box error .
-            undo, return error .
-          end.
+          release buf_parts no-error .
+          if archive_parts.out-code <> v-rsrv-code and v-rsrv-sign = -1 and v-izlcstpr
+          then do:              
+              find first buf_parts exclusive-lock
+                where buf_parts.obj-type  = archive_parts.obj-type
+                  and buf_parts.obj-code  = archive_parts.obj-code
+                  and buf_parts.artic     = archive_parts.artic
+                  and buf_parts.prod-type = archive_parts.prod-type
+                  and buf_parts.prod-code = archive_parts.prod-code
+                  and buf_parts.in-code   = archive_parts.out-code
+                  and buf_parts.out-code  = v-rsrv-code
+                  and buf_parts.part-code = archive_parts.part-code
+                no-error.
+          end .      
+          if not available  buf_parts
+          then do :     
+              run partcopy in this-procedure
+                (input  true          /* p-free-output-copy */
+                ,input  v-rsrv-code   /* p-out-code         */
+                ,buffer archive_parts /* buf_orig_parts     */
+                ,buffer buf_parts     /* buf_parts          */
+                ) no-error .
+              if error-status :error
+              then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  vss-include-info{&vssseq} skip
+                  "Ошибка при создании партии" skip
+                  "Документ" p-doc-code skip
+                  "Объект" p-obj-type p-obj-code skip
+                  "Артикул" p-artic p-prod-type p-prod-code skip
+                  "Партия" archive_parts.in-code archive_parts.part-code skip
+                  "Необходимо резервировать" v-need-rsrv skip
+                  "Резерв" v-rsrv-code skip
+                  "Необходимо снятие резервов" v-need-unrv skip
+                  "Снятие резервов" v-unrv-code skip
+                  error-status :get-message(1) skip
+                  return-value skip
+                  view-as alert-box error .
+                undo, return error .
+              end.
+          end.    
 
           if new(buf_parts)
           then do:
@@ -1242,36 +1373,62 @@ procedure partcopy-update-parts-delete :
                 undo, return error .
               end.
             end.
+            run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).
+            for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                                     and ub.gen-attr.p-key =  part-key-rec
+            on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+            :
+                delete ub.gen-attr.
+            end. 
             delete buf_parts .
           end.
         end.
 
         if v-need-unrv = true
         then do:
-          run partcopy in this-procedure
-            (input  true          /* p-free-output-copy */
-            ,input  v-unrv-code   /* p-out-code         */
-            ,buffer archive_parts /* buf_orig_parts     */
-            ,buffer buf_parts     /* buf_parts          */
-            ) no-error .
-          if error-status :error
-          then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              vss-include-info{&vssseq} skip
-              "Ошибка при создании партии" skip
-              "Документ" p-doc-code skip
-              "Объект" p-obj-type p-obj-code skip
-              "Артикул" p-artic p-prod-type p-prod-code skip
-              "Партия" archive_parts.in-code archive_parts.part-code skip
-              "Необходимо резервировать" v-need-rsrv skip
-              "Резерв" v-rsrv-code skip
-              "Необходимо снятие резервов" v-need-unrv skip
-              "Снятие резервов" v-unrv-code skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box error .
-            undo, return error .
+          release buf_parts no-error .
+          if archive_parts.out-code <> v-unrv-code and v-unrv-sign = -1 and v-izlcstpr
+          then do:              
+              find first buf_parts exclusive-lock
+                where buf_parts.obj-type  = archive_parts.obj-type
+                  and buf_parts.obj-code  = archive_parts.obj-code
+                  and buf_parts.artic     = archive_parts.artic
+                  and buf_parts.prod-type = archive_parts.prod-type
+                  and buf_parts.prod-code = archive_parts.prod-code
+                  and buf_parts.in-code   = archive_parts.out-code
+                  and buf_parts.out-code  = v-unrv-code
+                  and buf_parts.part-code = archive_parts.part-code
+                no-error.
+          end .      
+          if not available  buf_parts
+          then do :
+              run partcopy in this-procedure
+                (input  true          /* p-free-output-copy */
+                ,input  v-unrv-code   /* p-out-code         */
+                ,buffer archive_parts /* buf_orig_parts     */
+                ,buffer buf_parts     /* buf_parts          */
+                ) no-error .
+              if error-status :error
+              then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  vss-include-info{&vssseq} skip
+                  "Ошибка при создании партии" skip
+                  "Документ" p-doc-code skip
+                  "Объект" p-obj-type p-obj-code skip
+                  "Артикул" p-artic p-prod-type p-prod-code skip
+                  "Партия" archive_parts.in-code archive_parts.part-code skip
+                  "Необходимо резервировать" v-need-rsrv skip
+                  "Резерв" v-rsrv-code skip
+                  "Необходимо снятие резервов" v-need-unrv skip
+                  "Снятие резервов" v-unrv-code skip
+                  error-status :get-message(1) skip
+                  return-value skip
+                  view-as alert-box error .
+                undo, return error .
+              end.
           end.
 
           if new(buf_parts)
@@ -1439,6 +1596,15 @@ procedure partcopy-update-parts-delete :
                   view-as alert-box error .
                 undo, return error .
               end.
+            end.
+            run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).
+            for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                                     and ub.gen-attr.p-key =  part-key-rec
+            on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+            :
+                delete ub.gen-attr.
             end.
             delete buf_parts .
           end.

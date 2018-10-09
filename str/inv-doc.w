@@ -806,6 +806,10 @@ define button b-notes
      label "При&м":l
      size 9 by 1.
 
+define button b-alcmark
+     label "АлкМарк":l
+     size 9 by 1.
+
 define button b-add
      label "&Добав":l
      size 9 by 1.
@@ -1021,6 +1025,7 @@ define frame {&FRAME-NAME}
   b-list                       at row 2   col 28
   b-unscn                      at row 2   col 37
   b-notes                      at row 2   col 46
+  b-alcmark                    at row 2   col 55
   b-parts-                     at row 2   col 64
   b-updprt-                    at row 2   col 73
   b-parts                      at row 2   col 82
@@ -1226,6 +1231,17 @@ assign
 { str/trn-tr.i inv no }
 
 { str/sch-line.i doc-line {&BROWSE-NAME} }
+end.
+
+on choose of b-alcmark in frame {&FRAME-NAME} do:
+
+  run str/inv-marks.w (parparentproc, t-doc.doc-code, ?).
+  find first ub.doc-line no-lock where recid( ub.doc-line ) = line-rec no-error.
+  if available ub.doc-line then do:
+    display {&disp-list} with browse {&BROWSE-NAME}.
+  end.
+  run ui-on in this-procedure ( input "" ).
+
 end.
 
 on choose of b-inv-prsrt in frame {&FRAME-NAME}
@@ -1961,6 +1977,10 @@ else do:
  end.
  else do:
    display t-doc.fact-date t-doc.fact-qnty t-doc.shift-date t-doc.shift-num t-doc.shift-name r-sht with frame {&frame-name}.
+ end.
+ if t-doc.status_ = {&permitted}
+ then do:
+  enable b-alcmark with frame {&frame-name}.
  end.
 end.
 

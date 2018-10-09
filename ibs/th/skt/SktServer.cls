@@ -40,13 +40,21 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv". /*список клиентов через запятую, с которыми работает сокет-сервер*/
+  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
   define private variable req           as class     IRequest      no-undo.
   define private variable resp          as class     IResponse     no-undo.
   define private variable client_       as character no-undo.
 
   define public property LogMsg as character no-undo
+    get.
+    set.
+
+  define public property QueryParam as character no-undo
+    get.
+    set.
+
+  define public property ClientPar as character no-undo
     get.
     set.
   
@@ -63,6 +71,7 @@ class ibs.th.skt.SktServer:
     define variable tmCommand     as class TableMenuCommand.
     define variable kioskCommand  as class KioskCommand.
     define variable webCommand    as class webCommand.
+    define variable atdclientcmd  as class atdclientcmd.
 		
     clientControl = new ClientControl(). /*количество возможных комманд соответсвует кол-ву клиентов*/
     
@@ -84,11 +93,13 @@ class ibs.th.skt.SktServer:
       kioskCommand = new KioskCommand().
       clientControl:SetCommandForClient(lookup("kiosk",clientList), kioskCommand).
     end.
-    run gbl/conf-rd.p ("is-wbsrv", "", "", 0, "", "", "", no, output conf-par, output par-type) .
+    run gbl/conf-rd.p ("is-wbsrv", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       webCommand = new webCommand().
       clientControl:SetCommandForClient(lookup("websrv",clientList), webCommand).
     end.
+    atdclientcmd = new atdclientcmd ().
+    clientControl:SetCommandForClient(lookup("atdclient",clientList), atdclientcmd).
 
   end constructor.
 
@@ -102,6 +113,8 @@ class ibs.th.skt.SktServer:
     resp = new SimpleResponse().
     cast(req, ibs.th.skt.Commands.SimpleRequest):Content = content.
     cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket = hndlSocket.
+    if QueryParam <> ""
+      then cast(req, ibs.th.skt.Commands.SimpleRequest):QueryPar = QueryParam.
     identifyClients().
     if client_ <> ? then 
     do:
@@ -115,12 +128,66 @@ class ibs.th.skt.SktServer:
     delete object req no-error.
     delete object resp no-error.
   end.
+  
+  /*------------------------------------------------------------------------------
+   Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
+   Notes:
+  ------------------------------------------------------------------------------*/
+  method public void RequestProcessing (content as memptr, hndlSocket as handle, lpar as character):
+    req = new SimpleRequest().
+    resp = new SimpleResponse().
+    cast(req, ibs.th.skt.Commands.SimpleRequest):ContentBuff = content.
+    cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket = hndlSocket.
+    identifyClients().
+    client_ = "tsd".
+    if client_ <> ? then 
+    do:
+      clientControl:SendRequest(lookup (client_,clientList), cast(req, ibs.th.skt.Commands.SimpleRequest):ContentBuff, resp, hndlSocket, lpar) no-error.
+      if error-status:error then 
+      do:
+        return error return-value.
+      end.
+/*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
+    end.
+    delete object req no-error.
+    delete object resp no-error.
+  end.
+
+  /*------------------------------------------------------------------------------
+   Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
+   Notes:
+  ------------------------------------------------------------------------------*/
+  /*method public void RequestProcessing (contentObj as class content, hndlSocket as handle):
+    req = new SimpleRequest().
+    resp = new SimpleResponse().
+    cast(req, ibs.th.skt.Commands.SimpleRequest):ContentObj = contentObj.
+    cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket = hndlSocket.
+    identifyClients().
+    if client_ <> ? then 
+    do:
+      clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
+      if error-status:error then 
+      do:
+        return error return-value.
+      end.
+/*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
+    end.
+    delete object req no-error.
+    delete object resp no-error.
+  end.*/
 
   method private void identifyClients ():
     define variable hRoot   as handle.
     define variable hDoc    as handle.
     def    var      mbuffer as memptr.
 
+    if ClientPar <> ""
+    then do:
+      client_ = ClientPar.
+      return.
+    end.
+    
+    
     if not (cast(req, ibs.th.skt.Commands.SimpleRequest):Content matches '*<data req="gds"*' or cast(req, ibs.th.skt.Commands.SimpleRequest):Content matches '*<data req="grp"*')
       then do:
     

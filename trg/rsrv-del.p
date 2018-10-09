@@ -43,6 +43,7 @@ define variable vss-description as character no-undo initial "Снятие резервирова
 { str/lib-trn.i  }
 { str/hvrdtax.i  }
 { trg/partrqst.i }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 { trg/trndocrs.i }
 { trg/rsrvindl.i }

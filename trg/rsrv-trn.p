@@ -51,6 +51,7 @@ define variable vss-description as character no-undo init "Резервирование по пар
 { trg/partrqst.i }
 { str/lib-trn.i  }
 { str/hvrdtax.i  }
+{ gbl/key-rec.i  }
 { trg/partcopy.i }
 
 define variable unrv-code as character no-undo .

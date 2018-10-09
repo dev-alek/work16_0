@@ -417,7 +417,7 @@ DO:
         message "Выберите строку" view-as alert-box .
         return no-apply.
     end. 
-    run bge/egais-ab-marks.w (parparentproc, tt-gds-act.num, tt-gds-act.position_, tt-gds-act.alc-code) .
+    run bge/egais-ab-marks.w (parparentproc, tt-gds-act.num, tt-gds-act.position_, tt-gds-act.alc-code, tt-gds-act.qnty, {&update}, input-output table tt-marks) .
     assign ii = 0 .
     for each tt-marks no-lock where tt-marks.num = tt-gds-act.num and tt-marks.gds-part-position_ = tt-gds-act.position_ :
         ii = ii + 1 .

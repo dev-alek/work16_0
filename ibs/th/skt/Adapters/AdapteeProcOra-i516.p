@@ -32,6 +32,12 @@ using ibs.th.skt.Adapters.*.
 {ibs/th/skt/ControlledClients/TSDTT.i}
 { gbl/getcntxt.i def }
 
+define temp-table tt-excisemarks no-undo
+  field excisemarks      as character
+  field beforRefB             as character
+  index pi
+  excisemarks
+  .
 define shared variable g#auto-user-id as character no-undo .
 
 
@@ -48,7 +54,6 @@ do:
   define variable num-rec-ok as logical no-undo.
   define variable ii         as integer no-undo.
   define variable logWrite   as class   LogWrite no-undo.
-  define variable v-doc-code as character no-undo.
 
   logWrite = new LogWrite().
   
@@ -72,8 +77,6 @@ do:
       temp_trn-doc.exch-scale    = 1
       temp_trn-doc.contract-code = ?
       temp_trn-doc.price-type    = if TempTrnDoc.ext-doc-type = {&TDEDT_Ras_Vnesh } then "TSFTSD" else ""
-      temp_trn-doc.doc-code      = TempTrnDoc.ext-doc-code
-      temp_trn-doc.doc-id        = TempTrnDoc.doc-id
       .
     
   end.
@@ -83,18 +86,13 @@ do:
     create temp_doc-line.
     
     assign
-      temp_doc-line.line-num     = TempDocLine.line-num
-      temp_doc-line.gds-code     = TempDocLine.gds-code
-      temp_doc-line.fact-qnty    = TempDocLine.fact-qnty
-      temp_doc-line.doc-qnty     = TempDocLine.doc-qnty
-      temp_doc-line.price-cli    = TempDocLine.price-rubl
-      temp_doc-line.price-rubl   = TempDocLine.price-rubl
-      temp_doc-line.doc-code     = temp_trn-doc.doc-code
-      temp_doc-line.doc-density  = TempDocLine.fact-dnsty
-      temp_doc-line.fact-density = TempDocLine.fact-dnsty
-      temp_doc-line.cli-qnty     = TempDocLine.cli-qnty
-      temp_doc-line.part-id      = TempDocLine.part-id
-      temp_doc-line.vsd-uuid     = TempDocLine.vsd-uuid
+      temp_doc-line.line-num   = TempDocLine.line-num
+      temp_doc-line.gds-code   = TempDocLine.gds-code
+      temp_doc-line.fact-qnty  = TempDocLine.fact-qnty
+      temp_doc-line.doc-qnty   = TempDocLine.doc-qnty
+      temp_doc-line.price-cli  = TempDocLine.price-rubl
+      temp_doc-line.price-rubl = TempDocLine.price-rubl
+      temp_doc-line.doc-code   = temp_trn-doc.doc-code
       .
     
   end.
@@ -102,49 +100,18 @@ do:
   { gbl/curdbnum.i
       iDbNum
     }
-  find first temp_doc-line where temp_doc-line.fact-density > 0 no-error.
-  if available (temp_doc-line)
-  then do:
-    run utl/ora-i517.p (
-      input this-procedure ,
-      input this-procedure ,
-      input table temp_trn-doc ,
-      input table temp_doc-line ,
-      output v-doc-code,
-      output num-rec-ok
-      ) no-error .
-    if error-status:error 
-      then return error return-value.
-  end.
-  else do:
-    run utl/ora-i516.p (
-      input this-procedure ,
-      input this-procedure ,
-      input table temp_trn-doc ,
-      input table temp_doc-line ,
-      output v-doc-code,
-      output num-rec-ok
-      ) no-error .
-    if error-status:error 
-      then return error return-value.
-  end.
-  find first ub.trn-doc no-lock where ub.trn-doc.doc-code  = v-doc-code no-error.
-  case ub.trn-doc.ext-doc-type:
-    when {&TDEDT_Pri_Vnesh} then do trans:
-      disable triggers for load of ub.trn-doc.
-      find current ub.trn-doc exclusive-lock .  
-      ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}.
-      ub.trn-doc.internal = true.
-      ub.trn-doc.discnt-type = {&percent}.
-    end.
-    when {&TDEDT_Vozvrat_Vnesh} then do trans:
-      disable triggers for load of ub.trn-doc.
-      find current ub.trn-doc exclusive-lock .  
-      ub.trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem}.
-      ub.trn-doc.internal = true.
-      ub.trn-doc.discnt-type = {&percent}.
-    end.
-  end case.  
+  
+  run utl/ora-i516.p (
+    input this-procedure ,
+    input this-procedure ,
+    input table temp_trn-doc ,
+    input table temp_doc-line ,
+    input table tt-excisemarks,
+    output num-rec-ok
+    ) no-error .
+  if error-status:error 
+    then return error return-value.
+  
   
 
 end.

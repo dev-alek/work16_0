@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: $
+$Author: $
+$Date: $
+$Workfile: $
+$Archive: $
                                         
 Файл глобальных определений
 
@@ -6780,7 +6780,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 0e4be9b58f6d, 1385, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 2fbde5a0ef14, 1493, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7415,7 +7415,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-nakl_par '{&bef-attr-nakl_par}':U
 &global-define bef-attr-nakl_par-full nakl_par
 &global-define attr-nakl_par-full '{&bef-attr-nakl_par-full}':U
-&global-define bef-prop-list-attr-nakl_par date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty
+&global-define bef-prop-list-attr-nakl_par date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol
 &global-define prop-list-attr-nakl_par '{&bef-prop-list-attr-nakl_par}':U
 &global-define bef-attr-nakl_par_date-close-period date-close-period
 &global-define attr-nakl_par_date-close-period '{&bef-attr-nakl_par_date-close-period}':U
@@ -7457,6 +7457,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-nakl_par_gtd-to-imp-prod '{&bef-attr-nakl_par_gtd-to-imp-prod}':U
 &global-define bef-attr-nakl_par_exc-max-qnty exc-max-qnty
 &global-define attr-nakl_par_exc-max-qnty '{&bef-attr-nakl_par_exc-max-qnty}':U
+&global-define bef-attr-nakl_par_mark-alchol mark-alchol
+&global-define attr-nakl_par_mark-alchol '{&bef-attr-nakl_par_mark-alchol}':U
 &global-define bef-attr-fin-plan fin-plan
 &global-define attr-fin-plan '{&bef-attr-fin-plan}':U
 &global-define bef-prop-list-attr-fin-plan fin-ostatok-start,fin-plan-pri,fin-proch,fin-proch-ras
@@ -8118,5 +8120,5 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 3b0ee21956f9, 1370, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 0e4be9b58f6d, 1385, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 2fbde5a0ef14, 1493, rls ':U
 &endif

@@ -1,0 +1,312 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Класс для экспорта справочных данных для АТД клиента
+
+Автор: Курбет Антон
+Дата создания: 23/07/18
+Author: Kurbet Anton
+Creation date: 23/07/18
+
+*/
+
+using Progress.Lang.*.
+
+class ibs.th.bge.atd.dict-atd-exp: 
+   {cmp/str-glbl.i class}
+   {str/lib-trn.i class}
+   
+   define private property pFilePath    as character no-undo get. set.
+   define private property pCurDbNum    as int64     no-undo get. set.
+   define private property pCurObjType  as character no-undo get. set.
+   define private property pCurObjCode  as int64     no-undo get. set.
+   define private property pAtdReg      as character no-undo get. set.
+
+   define temp-table ttgoods no-undo
+      field GlobalCode as int64  
+      field LocalCode  as int64
+   index ndx GlobalCode.
+  
+   define temp-table ttclients no-undo
+      field Name_Object as character
+      field SiteID      as int64
+      field Address     as character
+   index ndx Name_Object.
+   
+   define temp-table ttcashdesks no-undo
+      field IP             as character 
+      field Name           as int64     
+      field NObjectId_Name as int64
+   index ndx IP.
+   
+   define temp-table tttanks no-undo
+      field TankNumber as int64
+      field Grade      as int64
+      field Grade_Name as character
+   index ndx TankNumber. 
+   
+   constructor public dict-atd-exp (iFilePath as character, 
+                                    iDbNum    as int64,
+                                    iObjType  as character,
+                                    iObjCode  as int64):
+      define variable vPType as character no-undo.
+      
+      run gbl/conf-rd.p ("atd-reg","","",0,"","","",yes,output pAtdReg,output vPType) no-error.
+     
+      assign 
+         pFilePath   = iFilePath
+         pCurDbNum   = iDbNum
+         pCurObjType = iObjType
+         pCurObjCode = iObjCode
+      .
+      if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
+      then run str/lib-trn.p persistent no-error .
+   end constructor.
+   
+   constructor public dict-atd-exp (iDbNum    as int64,
+                                    iObjType  as character,
+                                    iObjCode  as int64):
+      define variable vPType as character no-undo.
+      
+      run gbl/conf-rd.p ("atd-reg","","",0,"","","",yes,output pAtdReg,output vPType) no-error.
+      
+      assign 
+         pCurDbNum   = iDbNum
+         pCurObjType = iObjType
+         pCurObjCode = iObjCode
+      .
+      if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
+      then run str/lib-trn.p persistent no-error .
+   end constructor.
+
+   destructor dict-atd-exp():
+
+   end destructor.
+   
+   method void WriteFile(input iFileName as char, input iContents as longchar):
+      copy-lob iContents to file iFileName.
+   end method.
+   
+   method public void RunFileTask():
+      if pCurObjType <> 'маг' then do:
+         message substitute("Выгрузка по объекту типа : &1 не производится!",pFilePath)
+         view-as alert-box.
+         return.
+      end.
+      
+      if pAtdReg = '' or pAtdReg = ? then do:
+         message "Выгрузка при выключенном параметре atd-reg не производится!"
+         view-as alert-box.
+         return.
+      end.
+      
+      CrtReCodesTable().
+      CrtNObjectTable().
+      CrtNCassaTable().
+      CrtNTankTable().
+   
+      WriteFile(pFilePath + "\ReCodesTables.tbl",ExpJson(temp-table ttgoods:handle)).
+      WriteFile(pFilePath + "\NObject.tbl",ExpJson(temp-table ttclients:handle)).
+      WriteFile(pFilePath + "\NCassa.tbl",ExpJson(temp-table ttcashdesks:handle)).
+      WriteFile(pFilePath + "\NTank.tbl",ExpJson(temp-table tttanks:handle)).
+
+      message substitute("Выгрузка в &1 завершена!",pFilePath)
+      view-as alert-box.
+   end method.
+   
+   method public longchar GetReCodesTable():
+      CrtReCodesTable().
+      return ExpJson(temp-table ttgoods:handle).
+   end method.
+
+   method public longchar GetNObjectTable():
+      CrtNObjectTable().
+      return ExpJson(temp-table ttclients:handle).
+   end method.
+
+   method public longchar GetNCassaTable():
+      CrtNCassaTable().
+      return ExpJson(temp-table ttcashdesks:handle).
+   end method.
+
+   method public longchar GetNTankTable():
+      CrtNTankTable().
+      return ExpJson(temp-table tttanks:handle).
+   end method.
+   
+   method private void CrtReCodesTable():
+
+      define buffer bgoods    for ub.goods.
+      define buffer bbar-code for ub.bar-code.
+      define buffer bprod-bc  for ub.prod-bc.
+      
+      define variable vIsPetrol  as logical no-undo init yes.
+      define variable vIsPieces  as logical no-undo.
+      
+      loop:
+      for each bgoods where  bgoods.stts = 0  
+      no-lock:
+
+         { str/is-petrl.i
+           bgoods.artic
+           bgoods.prod-type
+           bgoods.prod-code
+           vIsPetrol
+           vIsPieces
+         }
+
+         if not vIsPetrol then next loop.
+        
+         for each bbar-code where bbar-code.gds-code = bgoods.gds-code
+         no-lock,
+            each bprod-bc where bprod-bc.b-code = bbar-code.b-code
+            no-lock:
+               create ttgoods.
+               assign 
+                  ttgoods.GlobalCode = bgoods.gds-code 
+                  ttgoods.LocalCode = int64(bprod-bc.b-str)
+               .
+         end.
+      end.
+      
+   end method.
+
+   method private void CrtNObjectTable():
+
+      define buffer bclients  for ub.clients.
+      define buffer bshop     for ub.shop.
+      define buffer bfirm     for ub.firm.
+      define buffer bperson   for ub.person.
+      
+      define variable vAddr   as character no-undo.
+      define variable vN      as int64     no-undo.  
+      
+      assign 
+         vAddr = pAtdReg
+         vN = length(vAddr)
+      .
+      if vN < 3 then vAddr = fill("0", 3 - vN) + vAddr.
+       
+      for first bclients where bclients.obj-type = pCurObjType
+                           and bclients.obj-code = pCurObjCode
+                           /*and bclients.db-num   = pCurDbNum*/
+                           and bclients.stts     = 0  
+      no-lock,
+         first bshop where bshop.obj-code = bclients.obj-code
+         no-lock:
+            
+            create ttclients.
+            assign 
+               ttclients.Name_Object = bclients.obj-name 
+               ttclients.SiteID      = bclients.obj-code
+               ttclients.Address     = vAddr              
+            .
+      end.
+      
+   end method.
+
+   method private void CrtNCassaTable():
+
+      define buffer bclients    for ub.clients.
+      define buffer bcash-desk  for ub.cash-desk.
+      
+      for first bclients where bclients.obj-type = pCurObjType
+                           and bclients.obj-code = pCurObjCode
+                           /*and bclients.db-num   = pCurDbNum*/
+                           and bclients.stts     = 0  
+      no-lock,
+         each bcash-desk where bcash-desk.obj-code = bclients.obj-code
+                           and bcash-desk.is-del   = no   
+         no-lock:
+            
+            create ttcashdesks.
+            assign 
+               ttcashdesks.Name           = bcash-desk.cash-num 
+               ttcashdesks.IP             = FilterIPandPort(bcash-desk.addr-path)
+               ttcashdesks.NObjectId_Name = bclients.obj-code                
+            .
+      end.
+   end method.
+
+   method private void CrtNTankTable():
+
+      define buffer bclients  for ub.clients.
+      define buffer bpl-gds   for ub.pl-gds.
+      define buffer bbar-code for ub.bar-code.
+      define buffer bprod-bc  for ub.prod-bc.
+      define buffer bplace    for ub.place.
+      define buffer bgoods    for ub.goods.
+      
+      for each bplace where bplace.obj-type = pCurObjType
+                        and bplace.obj-code = pCurObjCode
+                        /*and bplace.db-num   = pCurDbNum*/
+                        and bplace.status_  = ''
+      no-lock, 
+         each bpl-gds where bpl-gds.obj-type = bplace.obj-type
+                        and bpl-gds.pl-code  = bplace.pl-code   
+         no-lock,
+            first bbar-code where bbar-code.b-code = bpl-gds.gds-code
+            no-lock,
+               first bgoods where bgoods.gds-code = bpl-gds.gds-code
+               no-lock:
+    
+               find first bprod-bc where bprod-bc.b-code = bbar-code.b-code
+               no-lock no-error.
+               
+               create tttanks.
+               assign 
+                  tttanks.TankNumber    = int64(bplace.loc1) 
+                  tttanks.Grade         = if available bprod-bc 
+                                          then int64(bprod-bc.b-str)
+                                          else bbar-code.b-code
+                  tttanks.Grade_Name    = bgoods.gds-name               
+               no-error.
+      end.
+   end method.
+   
+   method private longchar ExpJson(input hTab as handle):
+      define variable vRes as longchar no-undo.
+      
+      hTab:write-json ("longchar",vRes,no,"utf-8",yes,yes).
+      vRes = codepage-convert(vRes,"1251","utf-8").      
+      return vRes.
+
+   end method.
+
+   method private char FilterIPandPort( input iStr as character ):
+      
+      define variable vRes as character   no-undo.
+      define variable vI   as int64       no-undo init 1.
+      define variable vC   as character   no-undo.
+
+      do while (vI <= length(iStr)):
+         vC = substring(iStr,vI,1).
+         if vC >= '0' and vC <= '9' then leave.
+         vI = vI + 1.
+      end.
+      
+      if vI < length(iStr) then do:
+         vRes = substring(iStr,vI).
+         vI = length(vRes).
+         do while (vI > 0):
+            vC = substring(vRes,vI,1).
+            if vC >= '0' and vC <= '9' then leave.
+            vI = vI - 1.
+         end.
+         
+         if vI > 0 then do:
+            vRes = substring(vRes,1,vI).
+            /* TODO: можно еще много чего писать */
+         end.
+      end.
+         
+      return vRes.
+
+   end method.
+
+end class.

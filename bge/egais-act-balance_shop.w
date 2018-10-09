@@ -633,7 +633,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-marks Dialog-Frame
 on choose of menu-item m-marks in menu m-add 
 DO:
-    run bge/egais-ab-marks.w (parparentproc, tt-act-header.num, ?, "") .
+    run bge/egais-ab-marks.w (parparentproc, tt-act-header.num, ?, "", tt-gds-act.qnty, {&update}, input-output table tt-marks) .
     for each tt-marks exclusive-lock where tt-marks.gds-part-position_ = ? and tt-marks.num = tt-act-header.num :
         find first tt-gds-act exclusive-lock where tt-gds-act.alc-code = tt-marks.alc-code no-error .
         if not available tt-gds-act then do :

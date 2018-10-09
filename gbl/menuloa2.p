@@ -581,6 +581,16 @@ define variable vss-description as character no-undo init "".
   "yes"
 }
 { gbl/menuload.i
+  {&bef-menuload_adm_impexp}
+  "'Ёкспорт справочных данных дл€ ј“ƒ клиента'"
+  "'utl/dict-atd-exp-run.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
   {&bef-menuload_adm_function}
   "'ѕересчет учетной цены в переоценке на момент закрыти€ по всем объектам'"
   "'utl/pr-csac.p'"
