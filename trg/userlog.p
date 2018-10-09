@@ -8,9 +8,9 @@ $Archive$
 
 Процедура заполнения таблицы истории пользователя.
 
-Автор: Белоусов Илья Александрович
+Автор: Гюнтнер Виктор Арнольдович
 Дата создания: 03/27/08
-Author: Ilia Belousov
+Author: Victor Guntner
 Creation date: 03/27/08
 
 Input:
@@ -66,7 +66,7 @@ define variable vss-description as character no-undo init "Процедура заполнения 
     define variable is-cctv as logical no-undo .
 
     define variable v-action-type   as character no-undo .
-  
+     
 do
 for buf_c-user-log
   , buf_temp_userlog-bush
@@ -173,6 +173,7 @@ on error undo, return error
     then do:
         return error substitute( "&1. Уникальный ключ имеет неопределенное значение. Имя таблицы &2.", vss-workfile, p-tbl-name ).
     end.
+
     assign
         v-corr-user-db-num = p-table-handle :buffer-field( "corr-user-db-num":U ) :buffer-value            
         v-corr-date        = p-table-handle :buffer-field( "corr-date":U ) :buffer-value   
@@ -321,10 +322,12 @@ on error undo, return error
                 buf_c-user-log.corr-user-name = g#userid.
                 
         end.
-        
+ 
         if buf_c-user-log.corr-user-name = "" then do:
-               buf_c-user-log.corr-user-name = p-table-handle :buffer-field( "user-id":U ) :buffer-value no-error. /*нужно разбираться*/ 
-        end.    
+          assign
+            buf_c-user-log.corr-user-name = p-table-handle :buffer-field( "user-id":U ) :buffer-value no-error.
+        end.
+    
     end.
     /* Обработка таблиц истории, связанных в кусты */
     for each buf_temp_userlog-bush
@@ -351,9 +354,21 @@ on error undo, return error
             then do:
                 undo, return error substitute( "&1. Ошибка вычисления первичного ключа родительской таблицы '&2' для таблицы '&3'", vss-description, v-parent-name, p-tbl-name ).
             end.
-            assign
-                v-value-list = string( p-table-handle :buffer-field( "subject":U ) :buffer-value )
+            
+        if not valid-handle( p-table-handle :buffer-field( "subject":U ) )
+            then
+        do:
+            undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля subject", vss-description, p-tbl-name ).
+              assign
+                v-value-list = string(p-tbl-name)
             .
+        end.
+        else do:  
+            assign
+                v-value-list = string( p-table-handle :buffer-field("subject":U ) :buffer-value )
+            .            
+        end.
+          
             run schemlib-set-buffer in this-procedure (
                   input v-parent-name
                 , input v-field-list
@@ -387,6 +402,7 @@ on error undo, return error
                 buf_c-user-log.head-table       = v-parent-name
                 buf_c-user-log.uniq-key-rec     = v-unique-key-rec
             .
+
         end.
     end.
     if valid-handle( v-parent-buffer-handle )
@@ -397,6 +413,7 @@ end.
 
 { gbl/conf-rd.i "'is-cctv'"  "''" "''" 0 "''" "''" "''"  no par-is-cctv par-type      no-error}
 is-cctv = lookup(par-is-cctv, "true,yes":U) > 0 .
+return-value = "".
 
 if p-video-action <> 0 and p-video-action <> ? and is-cctv
     then 

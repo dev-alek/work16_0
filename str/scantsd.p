@@ -28,6 +28,7 @@ define input  parameter v-num          as integer   no-undo.
 define input  parameter add-sens  as logical no-undo.  /* активна ли кнопка добавить в документе : yes / no - вызов из документа,? - вызов из гл. меню - привязка партий к складским местам */
 define input  parameter p-doc-rec as recid no-undo .
 define input  parameter p-name-file as character no-undo .
+define input  parameter p-action    as character no-undo .
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
@@ -146,6 +147,7 @@ define buffer bb_bar-code for ub.bar-code.
 define temp-table tt-bar-code-doc no-undo
 field b-c      as integer   /*бар-код  */
 field scn-qnty as decimal   /*кол-во   */
+field alcmark  as character /*марка   */
 index pi is primary b-c.
 
 { str/scr-neb.i }
@@ -499,8 +501,9 @@ for each anlz-bc on error undo, return error return-value :
          rate     = 1
          pl-str   = anlz-bc.scn-pl
          mess     = anlz-bc.des.
+  find first tt-bar-code-doc where tt-bar-code-doc.b-c = anlz-bc.b-c. 
   run proc-code in this-procedure (input anlz-bc.scn-pl
-                                  ,input (if anlz-bc.rez = "place" then "place" else "")
+                                  ,input (if anlz-bc.rez = "place" then "place" else if p-action = "rsvmarks" then p-action else "")
                                   ,input varscales-pref
                                   ,input varpgscales-pref
                                   ) no-error.
@@ -544,7 +547,7 @@ for each main-bc on error undo, return error return-value :
          pl-str   = main-bc.scn-pl
          mess     = main-bc.des.
   run proc-code in this-procedure (input main-bc.scn-pl
-                                  ,input (if main-bc.rez = "place" then "place" else "")
+                                  ,input (if main-bc.rez = "place" then "place" else if p-action = "rsvmarks" then p-action else "")
                                   ,input varscales-pref
                                   ,input varpgscales-pref
                                   ) no-error.
@@ -555,18 +558,6 @@ for each main-bc on error undo, return error return-value :
     assign
       j = j + 1.
     display j with frame a.
-    run gbl/calc-trn.p (  this-procedure , recid(t-doc)) no-error .
-    if error-status :error then 
-    do:
-      undo, return error substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
-    end.
-    if t-doc.doc-type = {&inventory} then do:
-      run str/clcsumga.p ( input t-doc.doc-code ).
-      if error-status :error then 
-      do:
-        undo, return error substitute(" Ошибка пересчета документа &1 &2" , error-status :get-message(1)  , return-value) .
-      end.
-    end.
   end.
 end.
 end.
@@ -575,6 +566,20 @@ output stream log close.
 output stream err close.
 output stream ler close.
 output stream cur close.
+
+run gbl/calc-trn.p (  this-procedure , recid(t-doc)) no-error .
+if error-status :error then 
+do:
+  undo, return error substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
+end.
+if t-doc.doc-type = {&inventory} then do:
+  run str/clcsumga.p ( input t-doc.doc-code ).
+  if error-status :error then 
+  do:
+    undo, return error substitute(" Ошибка пересчета документа &1 &2" , error-status :get-message(1)  , return-value) .
+  end.
+end.
+
 if is-err then do:
     /*message "Во время загрузки файла:" scan-txt "обнаружены ошибки." skip
             "Смотрите ler файл."
