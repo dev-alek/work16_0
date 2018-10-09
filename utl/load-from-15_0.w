@@ -161,93 +161,93 @@ procedure plpmnzav:
     { str/ptrlv.i "rvs-doc-"  }
     { str/ptrlv.i "icnt-doc-" }
     /*Проверяем то, что нет еще такой связки резервуар-ТРК в журнале резервуар-ТРК-пистолет*/
-    if nzpl-spl(parobj-type, parobj-code) <> yes then do:
-      find first bf_pl-pump-nozzle no-lock
-        where bf_pl-pump-nozzle.obj-type   = parobj-type
-          and bf_pl-pump-nozzle.obj-code   = parobj-code
-          and bf_pl-pump-nozzle.pl-code    = parpl-code
-          and bf_pl-pump-nozzle.pump-code  = parpump-code
-        no-error.
-      if available bf_pl-pump-nozzle then do:
-        return error substitute("Резервуар &1 уже связан с ТРК &2, через пистолет &3", parpl-code, parpump-code, bf_pl-pump-nozzle.nozzle-code) {&str-obj}.
-      end.
-    end.
+/*    if nzpl-spl(parobj-type, parobj-code) <> yes then do:                                                                                                  */
+/*      find first bf_pl-pump-nozzle no-lock                                                                                                                 */
+/*        where bf_pl-pump-nozzle.obj-type   = parobj-type                                                                                                   */
+/*          and bf_pl-pump-nozzle.obj-code   = parobj-code                                                                                                   */
+/*          and bf_pl-pump-nozzle.pl-code    = parpl-code                                                                                                    */
+/*          and bf_pl-pump-nozzle.pump-code  = parpump-code                                                                                                  */
+/*        no-error.                                                                                                                                          */
+/*      if available bf_pl-pump-nozzle then do:                                                                                                              */
+/*        return error substitute("Резервуар &1 уже связан с ТРК &2, через пистолет &3", parpl-code, parpump-code, bf_pl-pump-nozzle.nozzle-code) {&str-obj}.*/
+/*      end.                                                                                                                                                 */
+/*    end.                                                                                                                                                   */
     do /*transaction*/
     on error undo, return error return-value
     :
       /*Если есть привязка к топливу*/
-      find first bf_pl-gds-pump no-lock
-        where bf_pl-gds-pump.obj-type  = parobj-type
-          and bf_pl-gds-pump.obj-code  = parobj-code
-          and bf_pl-gds-pump.pl-code   = parpl-code
-          and bf_pl-gds-pump.pump-code = parpump-code
-        no-error.
-      if available bf_pl-gds-pump then do:
-        /*Если есть еще резервуар который льет такое же топливо через эту же ТРК*/
-        find first bf-other_pl-gds-pump no-lock
-          where bf-other_pl-gds-pump.obj-type  = bf_pl-gds-pump.obj-type
-            and bf-other_pl-gds-pump.obj-code  = bf_pl-gds-pump.obj-code
-            and bf-other_pl-gds-pump.gds-code  = bf_pl-gds-pump.gds-code
-            and bf-other_pl-gds-pump.pump-code = bf_pl-gds-pump.pump-code
-            and bf-other_pl-gds-pump.pl-code  <> bf_pl-gds-pump.pl-code
-          no-error.
-
-        if available bf-other_pl-gds-pump then do:
-          if nzpl-spl(parobj-type, parobj-code) <> yes then do:
-            /*А из какого резервуара он льет*/
-            find first bf-other_pl-pump-nozzle no-lock
-              where bf-other_pl-pump-nozzle.obj-type  = bf-other_pl-gds-pump.obj-type
-                and bf-other_pl-pump-nozzle.obj-code  = bf-other_pl-gds-pump.obj-code
-                and bf-other_pl-pump-nozzle.pl-code   = bf-other_pl-gds-pump.pl-code
-                and bf-other_pl-pump-nozzle.pump-code = bf-other_pl-gds-pump.pump-code
-              no-error.
-            if available bf-other_pl-pump-nozzle then do:
-              /*Из разных пистолетов на одной ТРК нельзя торговать одним и тем же топливом*/
-              if bf-other_pl-pump-nozzle.nozzle-code <> parnozzle-code then do:
-                return error substitute ("На объекте &1 &2 ТРК &3 через пистолет &4 торгует топливом с внутренним кодом &5 из резервуара &6.&7"
-                                         + "КАСССА не возвращает номер пистолета в чеке, .&7"
-                                         + "поэтому нельзя торговать одним и тем же топливом на одной ТРК через разные пистолеты.&7"
-                                         , bf-other_pl-pump-nozzle.obj-type
-                                         , bf-other_pl-pump-nozzle.obj-code
-                                         , bf-other_pl-pump-nozzle.pump-code
-                                         , bf-other_pl-pump-nozzle.nozzle-code
-                                         , bf-other_pl-gds-pump.gds-code
-                                         , bf-other_pl-gds-pump.pl-code
-                                         , {&new-line}
-                                        ).
-              end.
-            end.
-          end.
-          else do:
-            find current bf_pl-gds-pump exclusive-lock.
-            assign
-              bf_pl-gds-pump.status_ = {&blocked-status}.
-          end.
-        end.
-        /*Идем по остальным резервуарам льющим через данный пистолет на данной ТРК*/
-        for each bf-other_pl-pump-nozzle where bf-other_pl-pump-nozzle.obj-type    = parobj-type
-                                            and bf-other_pl-pump-nozzle.obj-code    = parobj-code
-                                            and bf-other_pl-pump-nozzle.pump-code   = parpump-code
-                                            and bf-other_pl-pump-nozzle.nozzle-code = parnozzle-code
-                                            no-lock on error undo, return error return-value :
-          find first bf-other_pl-gds-pump where bf-other_pl-gds-pump.obj-type  = bf-other_pl-pump-nozzle.obj-type
-                                            and bf-other_pl-gds-pump.obj-code  = bf-other_pl-pump-nozzle.obj-code
-                                            and bf-other_pl-gds-pump.pl-code   = bf-other_pl-pump-nozzle.pl-code
-                                            and bf-other_pl-gds-pump.pump-code = bf-other_pl-pump-nozzle.pump-code no-lock no-error.
-          if available bf-other_pl-gds-pump then do:
-            if bf-other_pl-gds-pump.gds-code <> bf_pl-gds-pump.gds-code then do:
-              return error substitute ("На объекте &1 &2 ТРК &3 через пистолет &4 торгует топливом с внутренним кодом &5 из резервуара &6. Вы хотите торговать топливом с внутренним кодом &7. Разными видами топлива через один пистолет на одной ТРК торговать нельзя.",
-                                        bf-other_pl-pump-nozzle.obj-type,
-                                        bf-other_pl-pump-nozzle.obj-code,
-                                        bf-other_pl-pump-nozzle.pump-code,
-                                        bf-other_pl-pump-nozzle.nozzle-code,
-                                        bf-other_pl-gds-pump.gds-code,
-                                        bf-other_pl-gds-pump.pl-code,
-                                        bf_pl-gds-pump.gds-code).
-            end.
-          end.
-        end.
-      end.
+/*      find first bf_pl-gds-pump no-lock                                                                                                                                                                                                                                   */
+/*        where bf_pl-gds-pump.obj-type  = parobj-type                                                                                                                                                                                                                      */
+/*          and bf_pl-gds-pump.obj-code  = parobj-code                                                                                                                                                                                                                      */
+/*          and bf_pl-gds-pump.pl-code   = parpl-code                                                                                                                                                                                                                       */
+/*          and bf_pl-gds-pump.pump-code = parpump-code                                                                                                                                                                                                                     */
+/*        no-error.                                                                                                                                                                                                                                                         */
+/*      if available bf_pl-gds-pump then do:                                                                                                                                                                                                                                */
+/*        /*Если есть еще резервуар который льет такое же топливо через эту же ТРК*/                                                                                                                                                                                        */
+/*        find first bf-other_pl-gds-pump no-lock                                                                                                                                                                                                                           */
+/*          where bf-other_pl-gds-pump.obj-type  = bf_pl-gds-pump.obj-type                                                                                                                                                                                                  */
+/*            and bf-other_pl-gds-pump.obj-code  = bf_pl-gds-pump.obj-code                                                                                                                                                                                                  */
+/*            and bf-other_pl-gds-pump.gds-code  = bf_pl-gds-pump.gds-code                                                                                                                                                                                                  */
+/*            and bf-other_pl-gds-pump.pump-code = bf_pl-gds-pump.pump-code                                                                                                                                                                                                 */
+/*            and bf-other_pl-gds-pump.pl-code  <> bf_pl-gds-pump.pl-code                                                                                                                                                                                                   */
+/*          no-error.                                                                                                                                                                                                                                                       */
+/*                                                                                                                                                                                                                                                                          */
+/*        if available bf-other_pl-gds-pump then do:                                                                                                                                                                                                                        */
+/*          if nzpl-spl(parobj-type, parobj-code) <> yes then do:                                                                                                                                                                                                           */
+/*            /*А из какого резервуара он льет*/                                                                                                                                                                                                                            */
+/*            find first bf-other_pl-pump-nozzle no-lock                                                                                                                                                                                                                    */
+/*              where bf-other_pl-pump-nozzle.obj-type  = bf-other_pl-gds-pump.obj-type                                                                                                                                                                                     */
+/*                and bf-other_pl-pump-nozzle.obj-code  = bf-other_pl-gds-pump.obj-code                                                                                                                                                                                     */
+/*                and bf-other_pl-pump-nozzle.pl-code   = bf-other_pl-gds-pump.pl-code                                                                                                                                                                                      */
+/*                and bf-other_pl-pump-nozzle.pump-code = bf-other_pl-gds-pump.pump-code                                                                                                                                                                                    */
+/*              no-error.                                                                                                                                                                                                                                                   */
+/*            if available bf-other_pl-pump-nozzle then do:                                                                                                                                                                                                                 */
+/*              /*Из разных пистолетов на одной ТРК нельзя торговать одним и тем же топливом*/                                                                                                                                                                              */
+/*              if bf-other_pl-pump-nozzle.nozzle-code <> parnozzle-code then do:                                                                                                                                                                                           */
+/*                return error substitute ("На объекте &1 &2 ТРК &3 через пистолет &4 торгует топливом с внутренним кодом &5 из резервуара &6.&7"                                                                                                                           */
+/*                                         + "КАСССА не возвращает номер пистолета в чеке, .&7"                                                                                                                                                                             */
+/*                                         + "поэтому нельзя торговать одним и тем же топливом на одной ТРК через разные пистолеты.&7"                                                                                                                                      */
+/*                                         , bf-other_pl-pump-nozzle.obj-type                                                                                                                                                                                               */
+/*                                         , bf-other_pl-pump-nozzle.obj-code                                                                                                                                                                                               */
+/*                                         , bf-other_pl-pump-nozzle.pump-code                                                                                                                                                                                              */
+/*                                         , bf-other_pl-pump-nozzle.nozzle-code                                                                                                                                                                                            */
+/*                                         , bf-other_pl-gds-pump.gds-code                                                                                                                                                                                                  */
+/*                                         , bf-other_pl-gds-pump.pl-code                                                                                                                                                                                                   */
+/*                                         , {&new-line}                                                                                                                                                                                                                    */
+/*                                        ).                                                                                                                                                                                                                                */
+/*              end.                                                                                                                                                                                                                                                        */
+/*            end.                                                                                                                                                                                                                                                          */
+/*          end.                                                                                                                                                                                                                                                            */
+/*          else do:                                                                                                                                                                                                                                                        */
+/*            find current bf_pl-gds-pump exclusive-lock.                                                                                                                                                                                                                   */
+/*            assign                                                                                                                                                                                                                                                        */
+/*              bf_pl-gds-pump.status_ = {&blocked-status}.                                                                                                                                                                                                                 */
+/*          end.                                                                                                                                                                                                                                                            */
+/*        end.                                                                                                                                                                                                                                                              */
+/*        /*Идем по остальным резервуарам льющим через данный пистолет на данной ТРК*/                                                                                                                                                                                      */
+/*        for each bf-other_pl-pump-nozzle where bf-other_pl-pump-nozzle.obj-type    = parobj-type                                                                                                                                                                          */
+/*                                            and bf-other_pl-pump-nozzle.obj-code    = parobj-code                                                                                                                                                                         */
+/*                                            and bf-other_pl-pump-nozzle.pump-code   = parpump-code                                                                                                                                                                        */
+/*                                            and bf-other_pl-pump-nozzle.nozzle-code = parnozzle-code                                                                                                                                                                      */
+/*                                            no-lock on error undo, return error return-value :                                                                                                                                                                            */
+/*          find first bf-other_pl-gds-pump where bf-other_pl-gds-pump.obj-type  = bf-other_pl-pump-nozzle.obj-type                                                                                                                                                         */
+/*                                            and bf-other_pl-gds-pump.obj-code  = bf-other_pl-pump-nozzle.obj-code                                                                                                                                                         */
+/*                                            and bf-other_pl-gds-pump.pl-code   = bf-other_pl-pump-nozzle.pl-code                                                                                                                                                          */
+/*                                            and bf-other_pl-gds-pump.pump-code = bf-other_pl-pump-nozzle.pump-code no-lock no-error.                                                                                                                                      */
+/*          if available bf-other_pl-gds-pump then do:                                                                                                                                                                                                                      */
+/*            if bf-other_pl-gds-pump.gds-code <> bf_pl-gds-pump.gds-code then do:                                                                                                                                                                                          */
+/*              return error substitute ("На объекте &1 &2 ТРК &3 через пистолет &4 торгует топливом с внутренним кодом &5 из резервуара &6. Вы хотите торговать топливом с внутренним кодом &7. Разными видами топлива через один пистолет на одной ТРК торговать нельзя.",*/
+/*                                        bf-other_pl-pump-nozzle.obj-type,                                                                                                                                                                                                 */
+/*                                        bf-other_pl-pump-nozzle.obj-code,                                                                                                                                                                                                 */
+/*                                        bf-other_pl-pump-nozzle.pump-code,                                                                                                                                                                                                */
+/*                                        bf-other_pl-pump-nozzle.nozzle-code,                                                                                                                                                                                              */
+/*                                        bf-other_pl-gds-pump.gds-code,                                                                                                                                                                                                    */
+/*                                        bf-other_pl-gds-pump.pl-code,                                                                                                                                                                                                     */
+/*                                        bf_pl-gds-pump.gds-code).                                                                                                                                                                                                         */
+/*            end.                                                                                                                                                                                                                                                          */
+/*          end.                                                                                                                                                                                                                                                            */
+/*        end.                                                                                                                                                                                                                                                              */
+/*      end.                                                                                                                                                                                                                                                                */
 
       create bf_pl-pump-nozzle.
       assign
@@ -319,11 +319,11 @@ procedure plpumpav:
       if available bf-other_pl-gds-pump
         and nzpl-spl(bf-other_pl-gds-pump.obj-type, bf-other_pl-gds-pump.obj-code) <> yes
       then do:
-        message
-          "Через ТРК с номером " parpump-code " уже продается топливо " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name
-          " которое связано с резервуаром " bf-other_pl-gds-pump.pl-code "." skip
-          "Данная привязка Резервуар-ТРК-Товар получит статус блокированный."
-          view-as alert-box information.
+/*        message                                                                                                                                           */
+/*          "Через ТРК с номером " parpump-code " уже продается топливо " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name*/
+/*          " которое связано с резервуаром " bf-other_pl-gds-pump.pl-code "." skip                                                                         */
+/*          "Данная привязка Резервуар-ТРК-Товар получит статус блокированный."                                                                             */
+/*          view-as alert-box information.                                                                                                                  */
         assign
           varstatus = {&blocked-status}
         .
@@ -1294,16 +1294,16 @@ procedure load_schem :
     for each tt-pl-pump-nozzle no-lock where  tt-pl-pump-nozzle.obj-type   = tt-place.obj-type
                                           and tt-pl-pump-nozzle.obj-code   = tt-place.obj-code
                                           and tt-pl-pump-nozzle.pl-code    = tt-place.pl-code :     
-      find first tt-pl-gds-pump where tt-pl-gds-pump.obj-type = tt-pl-pump-nozzle.obj-type and
-                                              tt-pl-gds-pump.obj-code = tt-pl-pump-nozzle.obj-code and
-                                              tt-pl-gds-pump.pl-code = tt-pl-pump-nozzle.pl-code and
-                                              tt-pl-gds-pump.pump-code = tt-pl-pump-nozzle.pump-code and 
-                                              tt-pl-gds-pump.status_ = 'тек'
-                                              no-lock no-error.
-      if not available tt-pl-gds-pump
-      then do:
-        next. /* Переносим только текущие связки рез-трк-пистолет */
-      end.
+/*      find first tt-pl-gds-pump where tt-pl-gds-pump.obj-type = tt-pl-pump-nozzle.obj-type and          */
+/*                                              tt-pl-gds-pump.obj-code = tt-pl-pump-nozzle.obj-code and  */
+/*                                              tt-pl-gds-pump.pl-code = tt-pl-pump-nozzle.pl-code and    */
+/*                                              tt-pl-gds-pump.pump-code = tt-pl-pump-nozzle.pump-code and*/
+/*                                              tt-pl-gds-pump.status_ = 'тек'                            */
+/*                                              no-lock no-error.                                         */
+/*      if not available tt-pl-gds-pump                                                                   */
+/*      then do:                                                                                          */
+/*        next. /* Переносим только текущие связки рез-трк-пистолет */                                    */
+/*      end.                                                                                              */
       put stream log-stream unformatted "Связка Резервуар-ТРК-Пистолет №" string(ub.place.loc1) "-" string(tt-pl-pump-nozzle.pump-code) "-" string(tt-pl-pump-nozzle.nozzle-code) skip . 
       run plpmnzav in this-procedure
         ( input v-cntxt-obj-type
@@ -1315,7 +1315,34 @@ procedure load_schem :
       if error-status:error then do:
          undo, return error return-value.
       end.
-    end.                                                                                                             
+    end.   
+    
+    for each tt-pl-gds-pump where tt-pl-gds-pump.obj-type = tt-place.obj-type and
+                                  tt-pl-gds-pump.obj-code = tt-place.obj-code and
+                                  tt-pl-gds-pump.pl-code = tt-place.pl-code,
+    first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-pl-gds-pump.gds-code :
+      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
+      if not available ub.prod-bc
+      then do :
+        undo, return error "No short-code" .
+      end.
+      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
+      if not available ub.bar-code
+      then do :
+        undo, return error "No bar-code" .
+      end.
+      find first pl-gds-pump exclusive-lock where pl-gds-pump.obj-type = v-cntxt-obj-type
+                                              and pl-gds-pump.obj-code = v-cntxt-obj-code
+                                              and pl-gds-pump.pl-code  = ub.place.pl-code  
+                                              and pl-gds-pump.gds-code = ub.bar-code.gds-code   
+                                              and pl-gds-pump.pump-code = tt-pl-gds-pump.pump-code   
+                                              no-error.
+      if available pl-gds-pump
+      then do :
+        pl-gds-pump.status_ = tt-pl-gds-pump.status_ .
+      end.                                                          
+    end.
+                                                                                                              
   end.
   
   put stream log-stream unformatted now "   Топология загружена!" skip .
