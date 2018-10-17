@@ -571,7 +571,7 @@ end.
       undo main-block, return error return-value .
     end.
 
-    if not g#news
+    if not g#news and not g#esys
     then do:
     /* проверяем факт дату, время */
       if ub.trn-doc.fact-date = ? and ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :

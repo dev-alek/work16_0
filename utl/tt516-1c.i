@@ -46,30 +46,34 @@ field hold-obj-type as character
 field hold-obj-code as integer
 field ship-num as character
 field ship-date as date
+field doc-id as character
 
 index pi line-num doc-code .
 
 define temp-table temp_doc-line no-undo
-field line-num    as integer
-field doc-code    as character
-field gds-code    as integer
-field artic       as character     /* не присылают */
-field prod-type   as character     /* не присылают */
-field prod-code   as integer       /* не присылают */
-field cli-qnty    as decimal
-field doc-qnty    as decimal
-field fact-qnty   as decimal
-field price-rubl  as decimal
-field price-cli   as decimal
-field vat-pc      as decimal
-field cons-vat-pc as decimal
-field refA        as character
-field refB        as character
-field beforRefB   as character
-field alc-code    as character
-field alc-type-code as character
-field importer-th as character
-field line-num-str as character /* порядок чтения из xml */ /* не присылают */
+  field line-num      as integer
+  field doc-code      as character
+  field gds-code      as integer
+  field artic         as character     /* не присылают */
+  field prod-type     as character     /* не присылают */
+  field prod-code     as integer       /* не присылают */
+  field cli-qnty      as decimal
+  field doc-qnty      as decimal
+  field fact-qnty     as decimal
+  field doc-density   as decimal
+  field fact-density  as decimal
+  field price-rubl    as decimal
+  field price-cli     as decimal
+  field vat-pc        as decimal
+  field cons-vat-pc   as decimal
+  field refA          as character
+  field refB          as character
+  field alc-code      as character
+  field alc-type-code as character
+  field vsd-uuid     as character
+  field part-id       as character
+  field importer-th   as character
+  field line-num-str  as character /* порядок чтения из xml */ /* не присылают */
 index pi
 doc-code
 line-num

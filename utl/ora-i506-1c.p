@@ -15,17 +15,13 @@ Creation date: 04/05/06
 
 */
 
-using ibs.th.str.alcohol.excisemarks from propath.
-
-{ utl/tt506.i    }
-{ str/inv-marks-tt.i }
+{ utl/tt506-1c.i    }
 
 define input  parameter parparentproc as widget-handle no-undo .
 define input  parameter p-log-handle  as handle no-undo .
 define input  PARAMETER TABLE FOR  temp_trn-doc.
 define input  PARAMETER TABLE FOR  temp_gds-line.
 define input  PARAMETER TABLE FOR  temp_grp-line.
-define input  PARAMETER TABLE FOR  tt-marks.
 define output parameter p-ok-doc as integer   no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -57,40 +53,12 @@ define variable vss-description as character no-undo init "Импорт инвентаризаций
 { gbl/orapreps.i }
 { gbl/key-rec.i }
 { cmp/gds-list.i gds-list def "new shared" }
-{ trg/trndocrs.i }
-
-
-&scop partrqst-prefix v-total-parts-
-{&partrqst-var}
-{ trg/partrqst.i }
-{ trg/partcopy.i }
-{ trg/partrsrv.i }
-
-
-define buffer buf_parts   for ub.parts.
-define buffer buf_parts_free   for ub.parts.
-define variable v-goods-serial  as logical no-undo .
-define variable v-goods-twounit as logical no-undo .
-define variable v-real-chg-qnty like ub.parts.qnty no-undo .
-define variable v-parts-recid   as recid   no-undo .
-define variable excisemarksObj  as class excisemarks no-undo .
-define variable key-rec-parts as character no-undo .
-
-define temp-table tt-marks-forParts no-undo like tt-marks.
 
 
 define temp-table tt2-doc-line      no-undo like lib-trn_ret-line.
 define temp-table anlz-bc no-undo
 field b-c as integer
 index pi b-c.
-
-define temp-table tt-parts-marks no-undo 
-  field gds-code as integer
-  field in-code as character
-  field out-code as character
-  field qnty as decimal
-  field rowid-part as rowid
-.
 
 define variable v-end-message as character no-undo .
 
@@ -151,14 +119,8 @@ define variable v-rowid         as rowid no-undo .
 define variable v-table-name    as character no-undo .
 define variable v-uniq-key-rec  as character no-undo .
 define variable is-tsd as logical no-undo .
-define variable is-egais as logical no-undo .
 define variable not-is-new as logical no-undo .
 define variable varzero-string as logical no-undo .
-
-define variable v-vat-type   as character no-undo .
-define variable v-vat-pc     as decimal   no-undo .
-define variable v-slt-type   as character no-undo .
-define variable v-slt-pc     as decimal   no-undo .
 
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
@@ -167,8 +129,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    for each  temp_trn-doc :
        if temp_trn-doc.cli-code = - 1
         then is-tsd = true. 
-       if temp_trn-doc.cli-code = - 2
-        then is-egais = true.
        for each temp_gds-line where
                 temp_gds-line.line-num = temp_trn-doc.line-num :
            if temp_gds-line.doc-code <> temp_trn-doc.doc-code then do:
@@ -202,12 +162,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
     run get-db-num in parparentproc (output v-cntxt-db-num ) .
     run get-userid in parparentproc (output v-cntxt-userid ) .
-    
-/*    if num-entries (v-cntxt-userid) > 1 
-    then do:
-      v-cntxt-userid = entry (1, v-cntxt-userid).
-      is-egais = true.
-    end.*/
 
     { gbl/curr-r-b.i
       v-curr-r-b
@@ -291,7 +245,7 @@ for each  temp_trn-doc :
       temp_trn-doc.contract-code =  buf_contract.contract-code .
    end.
 
-  if temp_trn-doc.cli-code > 0 then do:
+  if temp_trn-doc.cli-code <> 0 and temp_trn-doc.cli-code <> -1 then do:
       run who-cli-ora in this-procedure (
           input  temp_trn-doc.cli-code ,
           output temp_trn-doc.cli-type ,
@@ -356,12 +310,6 @@ for each  temp_trn-doc :
         leave.
       end.
 
-  end.
-  
-  if is-egais
-  then do:
-    find first new_trn-doc where new_trn-doc.doc-code = temp_trn-doc.doc-code.
-    not-is-new = true.
   end.
     
   if not not-is-new 
@@ -493,524 +441,226 @@ for each  temp_trn-doc :
     end.
   end.
 
+  k = 0 .
+  for each  temp_gds-line  no-lock  where
+            temp_gds-line.doc-code = temp_trn-doc.doc-code by temp_gds-line.line-num :
+            run ora-ver-goods ( temp_gds-line.gds-code )  no-error .
+              if error-status :error then do:
+                  v-end-message = return-value .
+                  run pcall-log-file in p-log-handle ( input v-end-message ) .
+                  undo, return error v-end-message.
+              end.
 
-  if not is-egais then do:
-    k = 0 .
-    for each  temp_gds-line  no-lock  where
-              temp_gds-line.doc-code = temp_trn-doc.doc-code by temp_gds-line.line-num :
-              run ora-ver-goods ( temp_gds-line.gds-code )  no-error .
-                if error-status :error then do:
-                    v-end-message = return-value .
-                    run pcall-log-file in p-log-handle ( input v-end-message ) .
-                    undo, return error v-end-message.
-                end.
-  
-        find first buf_goods where buf_goods.gds-code  = temp_gds-line.gds-code
-                                   no-lock no-error .
-        if error-status :error then do:
-            v-end-message = substitute("Ошибка: нет товара &1 &2 &3 " , temp_gds-line.gds-code , error-status :get-message(1)  , return-value) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-        end.
-  
-      { gbl/gdsobjcr.i
-        tt-trn-doc.obj-type
-        tt-trn-doc.obj-code
-        buf_goods.artic
-        buf_goods.prod-type
-        buf_goods.prod-code
-        ub.gds-obj
-        no-error
-        }
-  
-      create anlz-bc .
-      { gbl/gdsbcode.i
-        buf_goods.gds-code
-        ?
-        anlz-bc.b-c
-        }
-      k = k + 1  .
-    end.
-  
-    for each  temp_grp-line  no-lock  where
-              temp_grp-line.doc-code = temp_trn-doc.doc-code by temp_grp-line.line-num :
-  
-       v-end-message = substitute(" &1 - &2 - &3  " ,
-          temp_grp-line.depart-code ,
-          temp_grp-line.class-code  ,
-          temp_grp-line.subclass-code
-              ) .
-      run pcall-log-file in p-log-handle ( input v-end-message ) .
-  
-  
-                find first buf_ext-classif no-lock where
-                          buf_ext-classif.classif-subject = {&table_gds-grp}
-                      and buf_ext-classif.classif-name = {&extclass_gds-grp_rpm}
-                      and buf_ext-classif.db-num = - 1
-                     /* and buf_ext-classif.charkey_one = string(temp_grp-line.group-code)*/
-                      and buf_ext-classif.key#_one    = temp_grp-line.depart-code
-                      and buf_ext-classif.key#_two    = temp_grp-line.class-code
-                      and buf_ext-classif.key#_three  = temp_grp-line.subclass-code no-error.
-                if available buf_ext-classif then do:
-                  RUN gen-row-keyr IN THIS-PROCEDURE ( INPUT buf_ext-classif.uniq-key-rec
-                                                      ,INPUT ?
-                                                      ,INPUT "ub"
-                                                      ,INPUT ? /*p-bh-handle*/
-                                                      ,INPUT NO-LOCK
-                                                      ,OUTPUT v-rowid
-                                                      ,OUTPUT v-table-name) NO-ERROR.
-                  find first buf_gds-grp no-lock where
-                      rowid(buf_gds-grp) = v-rowid no-error.
-                      if error-status :error then do:
-                          v-end-message = substitute ( "Ошибка: нет группы &1 &2 &3 &4 &5 " ,
-                              temp_grp-line.depart-code   ,
-                              temp_grp-line.class-code    ,
-                              temp_grp-line.subclass-code ,
-                              error-status :get-message(1) ,
-                              return-value
-                              ) .
-                          run pcall-log-file in p-log-handle ( input v-end-message ) .
-                          undo, return error v-end-message.
-                      end.
-                end.
-                else do:
-                    v-end-message = substitute ( "Ошибка: нет группы &1 &2 &3  " ,
-                              temp_grp-line.depart-code ,
-                              temp_grp-line.class-code  ,
-                              temp_grp-line.subclass-code     ) .
-                    run pcall-log-file in p-log-handle ( input v-end-message ) .
-                    undo, return error v-end-message.
-                 end.
-  
-       v-end-message = substitute("Соответствие групп &1 - &2 - &3  >>  &4" ,
-          temp_grp-line.depart-code ,
-          temp_grp-line.class-code  ,
-          temp_grp-line.subclass-code ,
-          buf_gds-grp.node-code    ) .
-      run pcall-log-file in p-log-handle ( input v-end-message ) .
-  
-       for each buf_goods no-lock where
-                buf_goods.grp-code = buf_gds-grp.node-code :
-  
-      if buf_goods.stts <> 0  then do:
-          v-end-message = substitute("Пропускаю товар &1 &2&3  из группы  &4 , его статус не ТЕКУЩИЙ" ,
-                    buf_goods.artic ,
-                    buf_goods.prod-type ,
-                    buf_goods.prod-code  ,
-                    buf_gds-grp.node-code    ) .
+      find first buf_goods where buf_goods.gds-code  = temp_gds-line.gds-code
+                                 no-lock no-error .
+      if error-status :error then do:
+          v-end-message = substitute("Ошибка: нет товара &1 &2 &3 " , temp_gds-line.gds-code , error-status :get-message(1)  , return-value) .
           run pcall-log-file in p-log-handle ( input v-end-message ) .
-          next.
+          undo, return error v-end-message.
       end.
-  
-             { gbl/gdsobjcr.i
-                tt-trn-doc.obj-type
-                tt-trn-doc.obj-code
-                buf_goods.artic
-                buf_goods.prod-type
-                buf_goods.prod-code
-                ub.gds-obj
-                no-error
-                }
-    
-    
-  
-             find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = new_trn-doc.doc-code
-               and buf_doc-line.artic = buf_goods.artic
-               and buf_doc-line.prod-type = buf_goods.prod-type
-               and buf_doc-line.prod-code = buf_goods.prod-code
-             no-error  .
-             if not available buf_doc-line then 
-             do:
-               create anlz-bc .
-               { gbl/gdsbcode.i
-                      buf_goods.gds-code
-                      ?
-                      anlz-bc.b-c
-                      no-error }
-               if error-status :error then 
-               do:
-                 v-end-message = substitute("anlz-bc &1 &2 &3 &4" ,
-                   buf_goods.gds-code ,
-                   anlz-bc.b-c ,
-                   return-value ,
-                   error-status:get-message(1) ) .
-                 run pcall-log-file in p-log-handle ( input v-end-message ) .
+
+    { gbl/gdsobjcr.i
+      tt-trn-doc.obj-type
+      tt-trn-doc.obj-code
+      buf_goods.artic
+      buf_goods.prod-type
+      buf_goods.prod-code
+      ub.gds-obj
+      no-error
+      }
+
+    create anlz-bc .
+    { gbl/gdsbcode.i
+      buf_goods.gds-code
+      ?
+      anlz-bc.b-c
+      }
+    k = k + 1  .
+   end.
+
+  for each  temp_grp-line  no-lock  where
+            temp_grp-line.doc-code = temp_trn-doc.doc-code by temp_grp-line.line-num :
+
+     v-end-message = substitute(" &1 - &2 - &3  " ,
+        temp_grp-line.depart-code ,
+        temp_grp-line.class-code  ,
+        temp_grp-line.subclass-code
+            ) .
+    run pcall-log-file in p-log-handle ( input v-end-message ) .
+
+
+              find first buf_ext-classif no-lock where
+                        buf_ext-classif.classif-subject = {&table_gds-grp}
+                    and buf_ext-classif.classif-name = {&extclass_gds-grp_rpm}
+                    and buf_ext-classif.db-num = - 1
+                   /* and buf_ext-classif.charkey_one = string(temp_grp-line.group-code)*/
+                    and buf_ext-classif.key#_one    = temp_grp-line.depart-code
+                    and buf_ext-classif.key#_two    = temp_grp-line.class-code
+                    and buf_ext-classif.key#_three  = temp_grp-line.subclass-code no-error.
+              if available buf_ext-classif then do:
+                RUN gen-row-keyr IN THIS-PROCEDURE ( INPUT buf_ext-classif.uniq-key-rec
+                                                    ,INPUT ?
+                                                    ,INPUT "ub"
+                                                    ,INPUT ? /*p-bh-handle*/
+                                                    ,INPUT NO-LOCK
+                                                    ,OUTPUT v-rowid
+                                                    ,OUTPUT v-table-name) NO-ERROR.
+                find first buf_gds-grp no-lock where
+                    rowid(buf_gds-grp) = v-rowid no-error.
+                    if error-status :error then do:
+                        v-end-message = substitute ( "Ошибка: нет группы &1 &2 &3 &4 &5 " ,
+                            temp_grp-line.depart-code   ,
+                            temp_grp-line.class-code    ,
+                            temp_grp-line.subclass-code ,
+                            error-status :get-message(1) ,
+                            return-value
+                            ) .
+                        run pcall-log-file in p-log-handle ( input v-end-message ) .
+                        undo, return error v-end-message.
+                    end.
+              end.
+              else do:
+                  v-end-message = substitute ( "Ошибка: нет группы &1 &2 &3  " ,
+                            temp_grp-line.depart-code ,
+                            temp_grp-line.class-code  ,
+                            temp_grp-line.subclass-code     ) .
+                  run pcall-log-file in p-log-handle ( input v-end-message ) .
+                  undo, return error v-end-message.
                end.
-               k = k + 1  .
+
+     v-end-message = substitute("Соответствие групп &1 - &2 - &3  >>  &4" ,
+        temp_grp-line.depart-code ,
+        temp_grp-line.class-code  ,
+        temp_grp-line.subclass-code ,
+        buf_gds-grp.node-code    ) .
+    run pcall-log-file in p-log-handle ( input v-end-message ) .
+
+     for each buf_goods no-lock where
+              buf_goods.grp-code = buf_gds-grp.node-code :
+
+    if buf_goods.stts <> 0  then do:
+        v-end-message = substitute("Пропускаю товар &1 &2&3  из группы  &4 , его статус не ТЕКУЩИЙ" ,
+                  buf_goods.artic ,
+                  buf_goods.prod-type ,
+                  buf_goods.prod-code  ,
+                  buf_gds-grp.node-code    ) .
+        run pcall-log-file in p-log-handle ( input v-end-message ) .
+        next.
+    end.
+
+           { gbl/gdsobjcr.i
+              tt-trn-doc.obj-type
+              tt-trn-doc.obj-code
+              buf_goods.artic
+              buf_goods.prod-type
+              buf_goods.prod-code
+              ub.gds-obj
+              no-error
+              }
+  
+  
+
+           find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = new_trn-doc.doc-code
+             and buf_doc-line.artic = buf_goods.artic
+             and buf_doc-line.prod-type = buf_goods.prod-type
+             and buf_doc-line.prod-code = buf_goods.prod-code
+           no-error  .
+           if not available buf_doc-line then 
+           do:
+             create anlz-bc .
+             { gbl/gdsbcode.i
+                    buf_goods.gds-code
+                    ?
+                    anlz-bc.b-c
+                    no-error }
+             if error-status :error then 
+             do:
+               v-end-message = substitute("anlz-bc &1 &2 &3 &4" ,
+                 buf_goods.gds-code ,
+                 anlz-bc.b-c ,
+                 return-value ,
+                 error-status:get-message(1) ) .
+               run pcall-log-file in p-log-handle ( input v-end-message ) .
              end.
-       end.
-     end.
-  
-     run str/use-list.p (input this-procedure , input-output line-rec, input recid(new_trn-doc) , input false  , input (buffer anlz-bc:handle) ) no-error .
-     if error-status :error then do:
-          v-end-message = substitute("Ошибка1 &1 &2" , error-status :get-message(1)  , return-value) .
-          run pcall-log-file in p-log-handle ( input v-end-message ) .
-          undo, return error v-end-message.
-     end.
-     /*дополнительная проверка на количества*/
-     define buffer buf_gds-obj for ub.gds-obj  .
-  
-     for each buf_doc-line exclusive-lock where
-              buf_doc-line.doc-code = new_trn-doc.doc-code and not is-tsd and not is-egais:
-         find first  buf_gds-obj no-lock where
-                     buf_gds-obj.obj-type  = new_trn-doc.obj-type  and
-                     buf_gds-obj.obj-code  = new_trn-doc.obj-code  and
-                     buf_gds-obj.artic     = buf_doc-line.artic    and
-                     buf_gds-obj.prod-type = buf_doc-line.prod-type    and
-                     buf_gds-obj.prod-code = buf_doc-line.prod-code    no-error .
-  
-         if available buf_gds-obj and  buf_doc-line.doc-qnty <> buf_gds-obj.fact-qnty then
-            buf_doc-line.doc-qnty = buf_gds-obj.fact-qnty.
-            
-            
-         
-     end.
-  
-     run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
-        if error-status :error then do:
-          v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
-          run pcall-log-file in p-log-handle ( input v-end-message ) .
-          undo, return error v-end-message.
-        end.
-  
-     run add-nn (new_trn-doc.doc-code , temp_trn-doc.doc-code , string(temp_trn-doc.doc-date) ) no-error .
-      if error-status:error then do :
-          v-end-message = substitute(" Ошибка записи атрибута документа &1 &2" , error-status :get-message(1)  , return-value) .
-          run pcall-log-file in p-log-handle ( input v-end-message ) .
-          undo, return error v-end-message.
-      end.
-      
-     if not not-is-new 
-     then do: 
-       run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-        if error-status:error then do :
-            v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-        end.
-     end.
-      
-     if not not-is-new and not is-egais 
-     then do: 
-       run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-        if error-status:error then do :
-            v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-        end.
+             k = k + 1  .
+           end.
      end.
    end.
 
+   run str/use-list.p (input this-procedure , input-output line-rec, input recid(new_trn-doc) , input false  , input (buffer anlz-bc:handle) ) no-error .
+   if error-status :error then do:
+        v-end-message = substitute("Ошибка1 &1 &2" , error-status :get-message(1)  , return-value) .
+        run pcall-log-file in p-log-handle ( input v-end-message ) .
+        undo, return error v-end-message.
+   end.
+   /*дополнительная проверка на количества*/
+   define buffer buf_gds-obj for ub.gds-obj  .
 
-  case true:
-    when is-tsd then 
-      do:
-     
-        run gbl/filnline.p (input "addinvtsd.txt", output varzero-string).
-        if varzero-string = true 
-          then run str/scantsd.p ( this-procedure, 1, input no , input recid(new_trn-doc) ,input "addinvtsd.txt", input "" ).
-     
-        run gbl/filnline.p (input "invtsd.txt", output varzero-string).
-        if varzero-string = true 
-          then run str/scantsd.p ( this-procedure, 2, input no , input recid(new_trn-doc) ,input "invtsd.txt", input "" ).
+   for each buf_doc-line exclusive-lock where
+            buf_doc-line.doc-code = new_trn-doc.doc-code and not is-tsd:
+       find first  buf_gds-obj no-lock where
+                   buf_gds-obj.obj-type  = new_trn-doc.obj-type  and
+                   buf_gds-obj.obj-code  = new_trn-doc.obj-code  and
+                   buf_gds-obj.artic     = buf_doc-line.artic    and
+                   buf_gds-obj.prod-type = buf_doc-line.prod-type    and
+                   buf_gds-obj.prod-code = buf_doc-line.prod-code    no-error .
 
-        os-delete value (search ("invtsd.txt")) no-error.
-        os-delete value (search ("addinvtsd.txt")) no-error.
-        
-      end.
-    when is-egais then 
-    do:
-   
-      excisemarksObj = new excisemarks (new_trn-doc.obj-type, new_trn-doc.obj-code).
-      
-      for each temp_gds-line:
-      
-        for each tt-marks where tt-marks.line-num = temp_gds-line.line-num
-          and tt-marks.gds-code = temp_gds-line.gds-code
-          and tt-marks.isCurr = false:
-      
-          excisemarksObj:GetRowOutFreePartsForMarks(tt-marks.excisemark, output v-rowid).
-          if excisemarksObj:StatusErr
-            then 
-          do:
-            v-end-message = substitute(" Ошибка &1", excisemarksObj:ReturnMsg ) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-          end.
+       if available buf_gds-obj and  buf_doc-line.doc-qnty <> buf_gds-obj.fact-qnty then
+          buf_doc-line.doc-qnty = buf_gds-obj.fact-qnty.
           
-          tt-marks.rowid-part = v-rowid.
           
-          find first buf_parts where rowid (buf_parts) = v-rowid no-lock no-error.
+       
+   end.
 
-          find first buf_goods no-lock
-            where buf_goods.gds-code = temp_gds-line.gds-code .
-        
-        
-          find first tt-parts-marks where available (buf_parts) and tt-parts-marks.rowid-part = rowid (buf_parts) no-error.
-        
-          if not available (tt-parts-marks)
-            then create tt-parts-marks.
-        
-          assign
-            tt-parts-marks.gds-code   = buf_goods.gds-code
-            tt-parts-marks.out-code   = if v-rowid = ? then ? else buf_parts.out-code
-            tt-parts-marks.in-code    = if v-rowid = ? then ? else buf_parts.in-code
-            tt-parts-marks.qnty       = tt-parts-marks.qnty + 1
-            tt-parts-marks.rowid-part = v-rowid
-            .
-      
-        end.
-      
-      end.     
-      
-    
-      for each tt-parts-marks where tt-parts-marks.out-code = {&output-code}:      
-    
-    
-        find first buf_parts exclusive-lock where rowid (buf_parts) = tt-parts-marks.rowid-part.
-      
-      
-        { gbl/gdscdat.i
-        tt-parts-marks.gds-code
-        "'serial=request':u"
-        v-goods-serial
-        no-error
-      }
-      
-        { gbl/gdscdat.i
-        tt-parts-marks.gds-code
-        "'twounit=request':u"
-        v-goods-twounit
-        no-error
-      }
-      
-        run partrsrv in this-procedure
-          (input  tt-parts-marks.qnty - buf_parts.qnty      /* p-chg-qnty      */
-          ,input  v-goods-serial  /* p-goods-serial  */
-          ,input  v-goods-twounit /* p-goods-twounit */
-          ,input  false           /* p-unreserv-only */
-          ,buffer buf_parts       /* buf_orig_parts  */
-          ,buffer new_trn-doc     /* buf_trn-doc     */
-          ,output v-real-chg-qnty /* p-real-chg-qnty */
-          ,output v-parts-recid   /* p-parts-recid   */
-          ) no-error .
-        if error-status :error
-          then 
-        do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при резервировании партии" skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo, return error .
-        end.
-
-        { gbl/unitqnty.i
-        buf_goods.unit-base
-        buf_parts.artic
-        buf_parts.prod-type
-        buf_parts.prod-code
-        "''"
-        buf_parts.fact-qnty
-        no-error
-      }
-        if error-status :error
-          then 
-        do:
-          message
-            "Не прошел контроль количества товара" skip
-            "Попробуйте ввести другое количество" skip
-            view-as alert-box information .
-          undo, return error .
-        end.
-
-        run trg/rsrv-gds.p
-          (input parparentproc
-          ,buffer buf_doc-line    /* doc-line        */
-          ,input 0 /* v-chg-free-qnty */
-          ,input v-real-chg-qnty /* v-chg-out-qnty  */
-          ,input table temp-trndocrs-gds-dtl-rsrv
-          ,input table temp-trndocrs-pl-gds-rsrv
-          ) no-error.
-        if error-status :error
-        then do:
-          if error-status :get-message(1) <> ""
-          then do:
-            message
-              vss-workfile vss-revision vss-description skip
-              "Невозможно зарезервировать товар по признакам" skip
-              "Объект" buf_doc-line.obj-type buf_doc-line.obj-code skip
-              "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box .
-          end.
-          undo, return error .
-        end.
-      
-        for each tt-marks where tt-marks.rowid-part = tt-parts-marks.rowid-part:
-          excisemarksObj:RestoreMarkToFreeZone(buffer buf_parts, tt-marks.exciseMark).
-        end.
-      
-      end.
-
-      for each buf_doc-line where
-        buf_doc-line.doc-code = new_trn-doc.doc-code:
-        
-        for each buf_parts_free where
-              buf_parts_free.obj-type = buf_doc-line.obj-type
-          and buf_parts_free.obj-code = buf_doc-line.obj-code
-          and buf_parts_free.artic = buf_doc-line.artic
-          and buf_parts_free.prod-type = buf_doc-line.prod-type 
-          and buf_parts_free.prod-code = buf_doc-line.prod-code
-          and buf_parts_free.out-code = {&free-code}:
-          
-          excisemarksObj:keyRecObj:GenKeyRec ("parts", buffer buf_parts_free:handle, output key-rec-parts).
-          
-          find first tt-parts-marks where tt-parts-marks.rowid-part = rowid (buf_parts_free) no-error.
-
-          { gbl/gdscdat.i
-          tt-parts-marks.gds-code
-          "'serial=request':u"
-          v-goods-serial
-          no-error
-          }
-        
-          { gbl/gdscdat.i
-          tt-parts-marks.gds-code
-          "'twounit=request':u"
-          v-goods-twounit
-          no-error
-          }
-        
-          run partrsrv in this-procedure
-            (input  if available (tt-parts-marks) then tt-parts-marks.qnty - buf_parts_free.qnty else - buf_parts_free.qnty    /* p-chg-qnty      */
-            ,input  v-goods-serial  /* p-goods-serial  */
-            ,input  v-goods-twounit /* p-goods-twounit */
-            ,input  false           /* p-unreserv-only */
-            ,buffer buf_parts_free       /* buf_orig_parts  */
-            ,buffer new_trn-doc     /* buf_trn-doc     */
-            ,output v-real-chg-qnty /* p-real-chg-qnty */
-            ,output v-parts-recid   /* p-parts-recid   */
-            ) no-error .
-          if error-status :error
-            then 
-          do:
-            message
-              vss-workfile vss-revision vss-description skip
-              "Ошибка при резервировании партии" skip
-              error-status :get-message(1) skip
-              return-value skip
-              view-as alert-box error .
-            undo, return error .
-          end.
-          
-          if available (buf_parts_free)
-          then do:  
-            { gbl/unitqnty.i
-            buf_goods.unit-base
-            buf_parts_free.artic
-            buf_parts_free.prod-type
-            buf_parts_free.prod-code
-            "''"
-            buf_parts_free.fact-qnty
-            no-error
-            }
-            if error-status :error
-              then 
-            do:
-              message
-                "Не прошел контроль количества товара" skip
-                "Попробуйте ввести другое количество" skip
-                view-as alert-box information .
-              undo, return error .
-            end.
-          end.
-          
-          run trg/rsrv-gds.p
-            (input parparentproc
-            ,buffer buf_doc-line    /* doc-line        */
-            ,input v-real-chg-qnty /* v-chg-free-qnty */
-            ,input 0  /* v-chg-out-qnty  */
-            ,input table temp-trndocrs-gds-dtl-rsrv
-            ,input table temp-trndocrs-pl-gds-rsrv
-            ) no-error.
-          if error-status :error
-          then do:
-            if error-status :get-message(1) <> ""
-            then do:
-              message
-                vss-workfile vss-revision vss-description skip
-                "Невозможно зарезервировать товар по признакам" skip
-                "Объект" buf_doc-line.obj-type buf_doc-line.obj-code skip
-                "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
-                error-status :get-message(1) skip
-                return-value skip
-                view-as alert-box .
-            end.
-            undo, return error .
-          end.
-
-          
-          excisemarksObj:GetTableMarksForParts(key-rec-parts, input-output table tt-marks-forParts).
-          if excisemarksObj:StatusErr
-            then 
-          do:
-            v-end-message = substitute(" Ошибка &1", excisemarksObj:ReturnMsg ) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-          end.
-          
-          for each tt-marks-forParts :
-            
-            find first tt-marks where tt-marks.isCurr and tt-marks.exciseMark = tt-marks-forParts.exciseMark no-lock no-error.
-            
-            if available (tt-marks)
-              then next.
-            
-            excisemarksObj:RemoveMarkFromFreeZoneToInvMinus(key-rec-parts, tt-marks-forParts.exciseMark, new_trn-doc.doc-code).
-            if excisemarksObj:StatusErr
-              then 
-            do:
-              v-end-message = substitute(" Ошибка &1", excisemarksObj:ReturnMsg ) .
-              run pcall-log-file in p-log-handle ( input v-end-message ) .
-              undo, return error v-end-message.
-            end.
-            
-          end.
-        
-        
-        end.
-      
-      end.
-   
-      for each tt-marks where tt-marks.rowid-part = ?:
-      
-        excisemarksObj:CrMarkForInvDoc(buffer new_trn-doc, string (tt-marks.gds-code) + "," + tt-marks.exciseMark ).
-        if excisemarksObj:StatusErr
-          then 
-        do:
-          v-end-message = substitute(" Ошибка &1", excisemarksObj:ReturnMsg ) .
-          run pcall-log-file in p-log-handle ( input v-end-message ) .
-          undo, return error v-end-message.
-        end.
-      
-      end.
-        
-      run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
-      if error-status :error then 
-      do:
+   run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
+      if error-status :error then do:
         v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
         undo, return error v-end-message.
       end.
+
+   run add-nn (new_trn-doc.doc-code , temp_trn-doc.doc-code , string(temp_trn-doc.doc-date) ) no-error .
+    if error-status:error then do :
+        v-end-message = substitute(" Ошибка записи атрибута документа &1 &2" , error-status :get-message(1)  , return-value) .
+        run pcall-log-file in p-log-handle ( input v-end-message ) .
+        undo, return error v-end-message.
     end.
-      
-      
-  end case.
-   
-   
+    
+   if not not-is-new 
+   then do: 
+     run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+      if error-status:error then do :
+          v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          undo, return error v-end-message.
+      end.
+   end.
+    
+   if not not-is-new 
+   then do: 
+     run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+      if error-status:error then do :
+          v-end-message = substitute(" Ошибка2 &1 &2" , error-status :get-message(1)  , return-value) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          undo, return error v-end-message.
+      end.
+   end.
+
+   if is-tsd 
+   then do:
+     
+     run gbl/filnline.p (input "addinvtsd.txt", output varzero-string).
+     if varzero-string = true 
+      then run str/scantsd.p ( this-procedure, 1, input no , input recid(new_trn-doc) ,input "addinvtsd.txt" ).
+     
+     run gbl/filnline.p (input "invtsd.txt", output varzero-string).
+     if varzero-string = true 
+      then run str/scantsd.p ( this-procedure, 2, input no , input recid(new_trn-doc) ,input "invtsd.txt" ).
+
+     os-delete value (search ("invtsd.txt")) no-error.
+     os-delete value (search ("addinvtsd.txt")) no-error.
+        
+   end.
 
    assign
         v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)

@@ -18,8 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.bge.1crn.import.*.
-using ibs.th.skt.Adapters.AdapterOra-i516 from propath.
-using ibs.th.skt.Adapters.AdapterOra-i506 from propath.
+using ibs.th.skt.Adapters.AdapterOra-i516-1c from propath.
 
 block-level on error undo, throw.
 
@@ -49,12 +48,12 @@ class ibs.th.bge.1crn.import.imptrn-fuel-doc implements ibs.th.bge.1crn.import.i
     define variable ii        as integer   no-undo.
     define variable objTrnDoc  as class     trn-fuel-doc-in no-undo.
     define variable objGd      as class     trn-gd-fuel     no-undo.
-    define variable adapObj    as class     AdapterOra-i516 no-undo.
+    define variable adapObj    as class     AdapterOra-i516-1c no-undo.
     define variable objGds     as class     subjects        no-undo.
     
     objTrnDoc = cast (subjectObj, trn-fuel-doc-in).
     
-    adapObj = new AdapterOra-i516 ().
+    adapObj = new AdapterOra-i516-1c ().
     
     find first ub.sys-ctrl.
     
