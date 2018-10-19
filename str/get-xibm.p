@@ -2534,6 +2534,7 @@ define variable disc-gds-reason as int no-undo .
   do
   on error undo, return error
   :
+  if ub.chk-doc.chk-type = integer({&rcpt-annu}) then return.  /* Для аннулированных чеков не будет закачивать скидки, а то дальше куча ошибок лезет */     
     if not exist then do:
       for each buf_temp-temp where
               buf_temp-temp.record-name = "CDisc":U
@@ -2618,6 +2619,7 @@ define variable disc-gds-reason as int no-undo .
               AND buf_chk-gds.line-num = lnd-spl no-error .
         if disc-mode_ = 'I':U then do:
           if not Available buf_chk-gds then do:
+              
             assign
             p-view-log = yes.
             run write-log-and-file in p-log-handle (
@@ -2631,8 +2633,8 @@ define variable disc-gds-reason as int no-undo .
                                     , chk-num_
                                     , pay-desk_
                                                 )).
-
             return.
+           
           end.
         end.
         else if not (disc-mode_ = 'C':U or disc-mode_ = 'P':U) then do:
@@ -2748,7 +2750,7 @@ define variable disc-gds-reason as int no-undo .
       if ub.chk-discnt.line-type = integer({&discnt-sub-total}) then do:
 
       ub.chk-discnt.line-num = (if p-pos-type = {&cd-type-ibm-xml}
-                                then lnd-spl - 1
+                                then lnd-spl
                                 else (if available ub.chk-gds then ub.chk-gds.line-num else 0)
                                 ).
       end.

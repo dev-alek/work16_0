@@ -15,7 +15,18 @@ Creation date: 04/05/06
 
 */
 
+using ibs.th.str.alcohol.*.
+
 { utl/tt516.i    }
+
+
+define temp-table tt-excisemarks no-undo
+  field excisemarks      as character
+  field refB             as character
+  index pi
+  excisemarks
+  refB
+  .
 
 &glob pt1_cost 'TSFCST':U
 &glob pt2_sale 'TSFRET':U
@@ -27,7 +38,7 @@ define input  parameter parparentproc as widget-handle no-undo .
 define input  parameter p-log-handle  as handle no-undo .
 define input  PARAMETER TABLE FOR  temp_trn-doc.
 define input  PARAMETER TABLE FOR  temp_doc-line.
-define output parameter p-doc-code as character   no-undo .
+define input  PARAMETER TABLE FOR  tt-excisemarks.
 define output parameter p-ok-doc as integer   no-undo .
 
 
@@ -140,6 +151,7 @@ define variable is-egais as logical no-undo .
 define variable is-unit-error   as logical no-undo .
 define variable v-internal      as logical no-undo .
 
+define variable objMarks as class excisemarks no-undo.
 
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
@@ -267,13 +279,77 @@ for each  temp_trn-doc :
      end.
 
 
+    find first buf_contract no-lock where
+               not (is-egais or is-tsd) and
+               temp_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+               buf_contract.contract-code =  temp_trn-doc.cli-code and
+               buf_contract.host-code     =  temp_trn-doc.host-code 
+               no-error .
 
-    temp_trn-doc.contract-code =  0 .
+   if not available  buf_contract then do:
+      temp_trn-doc.contract-code =  0 .
+   end.
+   else do:
+      temp_trn-doc.contract-code =  buf_contract.contract-code .
+   end.
+    
+    def var ii as int no-undo.
+    for each buf_contract no-lock where
+           is-egais and
+           temp_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+           buf_contract.cli-code =  temp_trn-doc.cli-code and
+           buf_contract.cli-code =  temp_trn-doc.cli-code and
+           buf_contract.host-code =  temp_trn-doc.host-code 
+           :
+      ii = ii + 1.
+      temp_trn-doc.contract-code =  buf_contract.contract-code .
+      if ii > 1 then do:
+        temp_trn-doc.contract-code =  0 .
+        leave.
+      end.
+    end.
+
 
    v-specif = false .
 
+   if temp_trn-doc.contract-code  > 0 then do:
+      find first  ub.contract-specif no-lock where
+                  ub.contract-specif.contract-num = temp_trn-doc.contract-code and
+                  ub.contract-specif.host-code    = temp_trn-doc.host-code
+                  no-error .
+      if available ub.contract-specif then
+      assign
+        v-specif = true
+        temp_trn-doc.vat-type = ub.contract-specif.VAT-type
+      .
 
+   end.
 
+   if temp_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
+      if available buf_contract then do:
+         if buf_contract.curr-code <> temp_trn-doc.exch-code then do:
+                    v-end-message =  substitute("По договору &3   ожидалась валюта &1  пришла &2 " ,
+                    buf_contract.curr-code,
+                    temp_trn-doc.exch-code,
+                    temp_trn-doc.contract-code ) .
+                    run pcall-log-file in p-log-handle (input v-end-message) .
+                    undo, return error v-end-message.
+      end.
+      end.
+   end.
+
+   if not (temp_trn-doc.cli-type = {&cmp} or temp_trn-doc.cli-type = {&prs} or temp_trn-doc.cli-type = {&stock} or temp_trn-doc.cli-type = {&shop}) /*для oracle вообще не присылают, значит из tsd*/ 
+   then do: 
+     run who-cli-ora in this-procedure (
+       input  temp_trn-doc.cli-code ,
+       output temp_trn-doc.cli-type ,
+       output temp_trn-doc.cli-code
+       ) no-error .
+     if error-status :error then return error return-value .
+   end.
+   else do:
+     if not is-egais then is-tsd = true.
+   end.
 
 /* *******************************88888   */
 /*
@@ -416,19 +492,15 @@ assign
 .
 { str/getctxtp.i get this-procedure }
 
-/*    run doc-code in this-procedure   */
-/*      ( input  "main":U,             */
-/*        input  temp_trn-doc.obj-type,*/
-/*        input  temp_trn-doc.obj-code,*/
-/*        input  ? ,                   */
-/*        output n-d ) no-error.       */
-    
-    n-d = temp_trn-doc.doc-code.
-    
-    find first ub.trn-doc where ub.trn-doc.doc-code = temp_trn-doc.doc-code no-error.
-    
-    if available (ub.trn-doc) then do:
-      v-end-message =  "Ошибка при генерации номера документа. chip"  + return-value  + error-status :get-message(1) + "Документ с номер " + ub.trn-doc.doc-code + " уже есть" .
+    run doc-code in this-procedure
+      ( input  "main":U,
+        input  temp_trn-doc.obj-type,
+        input  temp_trn-doc.obj-code,
+        input  ? ,
+        output n-d ) no-error.
+
+    if error-status:error then do:
+      v-end-message =  "Ошибка при генерации номера документа. chip"  + return-value  + error-status :get-message(1) .
       run pcall-log-file in p-log-handle (input v-end-message) .
       undo, return error v-end-message.
     end.
@@ -438,7 +510,7 @@ assign
       assign
       tt-trn-doc.pay-code             = v-cntxp-out-pay
       tt-trn-doc.status_              = "temp"
-      tt-trn-doc.doc-code             = temp_trn-doc.doc-code
+      tt-trn-doc.doc-code             = n-d
       tt-trn-doc.doc-date             = to-day
       tt-trn-doc.doc-type             = v-doc-type
       tt-trn-doc.internal             = v-internal
@@ -545,7 +617,7 @@ assign
     end.
 
 
-    find first new_trn-doc where new_trn-doc.doc-code = temp_trn-doc.doc-code  exclusive-lock no-error .
+    find first new_trn-doc where new_trn-doc.doc-code = n-d  exclusive-lock no-error .
 
     if not available new_trn-doc then do:
       v-end-message = substitute(" Ошибка &1" , error-status :get-message(1)  , return-value) .
@@ -571,7 +643,9 @@ assign
         parrec-doc = recid (new_trn-doc)
     .
     
-
+  if (is-tsd or is-egais) and (new_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or new_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) 
+    then 
+  do:
     find first ub.shift-obj no-lock
       where ub.shift-obj.obj-type = new_trn-doc.obj-type
       and ub.shift-obj.obj-code = new_trn-doc.obj-code
@@ -585,7 +659,7 @@ assign
         new_trn-doc.shift-date = ub.shift-obj.shift-date
         .
     end.
-
+  end.
   
   k = 0 .
 
@@ -779,13 +853,8 @@ assign
               tt2-doc-line.prt-root       = buf_goods.prt-root
               tt2-doc-line.unit-cli       = buf_goods.unit-base when not is-egais
               tt2-doc-line.unit-cli       = buf_goods.unit-cli when is-egais 
-              
               tt2-doc-line.doc-density    = 1 / tt2-doc-line.cli-base-rate
               tt2-doc-line.fact-density   = 1 / tt2-doc-line.cli-base-rate
-              
-              tt2-doc-line.doc-density    = temp_doc-line.fact-density when temp_doc-line.fact-density <> ? and temp_doc-line.fact-density > 0 
-              tt2-doc-line.fact-density   = temp_doc-line.doc-density when temp_doc-line.fact-density <> ? and temp_doc-line.fact-density > 0
-              
               tt2-doc-line.obj-code       = tt-trn-doc.obj-code
               tt2-doc-line.obj-type       = tt-trn-doc.obj-type
               .
@@ -931,36 +1000,6 @@ assign
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
-          assign
-            tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> "".
-          
-/*          define variable vsdObj as class ibs.th.str.mercury.vsdsub no-undo.
-          define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
-          define variable vsdsts as class ibs.th.str.mercury.vsdstatustype no-undo.
-          define variable keyrecObj as class ibs.th.gbl.keyrec no-undo.
-          define variable keypart as character no-undo.
-          if temp_doc-line.vsd-uuid <> '' and temp_doc-line.vsd-uuid <> ?
-          then do:
-            vsdstr = new ibs.th.gbl.storage.vsdtostorage ().
-            keyrecObj = new ibs.th.gbl.keyrec ().
-            keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).
-            vsdSts = new ibs.th.str.mercury.vsdstatustype ().
-            vsdObj = new ibs.th.str.mercury.vsdsub ().
-            vsdObj:VSDType = vsdSts:VSDIn.
-            vsdObj:PartKey = keypart.
-            vsdObj:GdsCode = temp_doc-line.gds-code.
-            vsdObj:ObjType = new_trn-doc.obj-type.
-            vsdObj:ObjCode = new_trn-doc.obj-code.
-            vsdObj:CliCode = new_trn-doc.cli-code.
-            vsdObj:CliType = new_trn-doc.cli-type.
-            vsdObj:UUID = temp_doc-line.vsd-uuid.
-            vsdstr:insertDB(vsdObj).
-            delete object vsdObj no-error.
-            delete object vsdSts no-error.
-            delete object vsdstr no-error.
-            delete object keyrecObj no-error.
-          end.*/
-          
           if is-tsd and v-ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
             run unitqnty1 (
               input tt2-doc-line.unit-cli, 
@@ -1246,12 +1285,12 @@ end.
                   end.
                 end.
 
-   run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-        if error-status:error then do :
-           v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
-           run pcall-log-file in p-log-handle ( input v-end-message ) .
-           undo, return error v-end-message.
-        end.
+            run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+                if error-status:error then do :
+                   v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
+                   run pcall-log-file in p-log-handle ( input v-end-message ) .
+                   undo, return error v-end-message.
+                end.
 
             end.
           assign
@@ -1268,7 +1307,7 @@ end.
 
   end.
 
-   run add-nn (new_trn-doc.doc-code , temp_trn-doc.doc-id ) no-error .
+   run add-nn (new_trn-doc.doc-code , temp_trn-doc.doc-code ) no-error .
     if error-status:error then do :
         v-end-message = substitute(" Ошибка записи атрибута документа &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
@@ -1316,6 +1355,7 @@ end.
     end.
 
     if is-egais then do:
+      objMarks = new excisemarks (new_trn-doc.obj-type, new_trn-doc.obj-code).
       for each  ub.doc-line where ub.doc-line.doc-code = new_trn-doc.doc-code:
         find first buf_goods where ub.doc-line.artic = buf_goods.artic and
           ub.doc-line.prod-type = buf_goods.prod-type  and
@@ -1353,17 +1393,30 @@ end.
                            ) no-error .
           if error-status :error
           then do:
+            delete object objMarks no-error.
             message
               vss-workfile vss-revision vss-description skip
               "Ошибка при вызове процедуры partps.p" skip
               error-status :get-message(1) skip
               return-value skip
               view-as alert-box error .
+            delete object objMarks no-error.
             run waitfram-hide.
             undo, return error .
           end.
+          for each tt-excisemarks where tt-excisemarks.refB = temp_doc-line.beforRefB:
+            objMarks:CrMarkForParts(buffer ub.parts, tt-excisemarks.excisemarks).
+            if objMarks:StatusErr
+            then do:
+              v-end-message = objMarks:ReturnMsg.
+              delete object objMarks no-error. 
+              undo, return error v-end-message.
+            end.
+          end.
+          
         end.      
       end.
+      delete object objMarks no-error.
       
     end.
     
@@ -1375,7 +1428,6 @@ end.
      run pcall-log-file in p-log-handle (input v-end-message) .
 
      p-ok-doc = p-ok-doc + 1.
-     p-doc-code = new_trn-doc.doc-code.
 
 end.
 end.
@@ -1531,7 +1583,8 @@ define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
 
-
+if is-tsd or (is-egais and not v-ext-doc-type = {&TDEDT_Vozvrat_Vnesh})
+  then return.
 run str/trn-stat.p (
     input  parparentproc ,
     input  this-procedure ,
@@ -1553,7 +1606,6 @@ run str/trn-stat.p (
         undo, return error v-end-message.
     end.
   end.
-  
 end procedure. /* clos-trn2 */
 
 
@@ -1649,13 +1701,39 @@ define input  parameter p-doc-out as character no-undo .
   do
   on error undo, return error return-value
   :
+  if not is-egais 
+  then do:
+    find first ub.doc-attr exclusive-lock where
+             ub.doc-attr.doc-code = p-doc-code and
+             ub.doc-attr.attr-code = {&trdcattr-nids} no-error .
+    if not available ub.doc-attr then create ub.doc-attr.
+    assign
+      ub.doc-attr.doc-code = p-doc-code
+      ub.doc-attr.attr-code = {&trdcattr-nids}
+      ub.doc-attr.attr-value = p-doc-out
+    .
+  end.
+  else do:
     { str/tdat-wrt.i
       p-doc-code
-      {&trdcattr-nids}
+      {&trdcattr-negais}
       p-doc-out
       no-error
     }
-   end.
+    { str/tdat-wrt.i
+      p-doc-code
+      {&trdcattr-nids}
+      entry(2,p-doc-out,{&delim-cmd})
+      no-error
+    }
+    { str/tdat-wrt.i
+      p-doc-code
+      {&trdcattr-dids}
+      entry(3,p-doc-out,{&delim-cmd})
+      no-error
+    }
+  end.
+  end.
 
 end procedure. /* add-nn */
 

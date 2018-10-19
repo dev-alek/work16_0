@@ -18,8 +18,8 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.bge.1crn.import.*.
-using ibs.th.skt.Adapters.AdapterOra-i516 from propath.
-using ibs.th.skt.Adapters.AdapterOra-i506 from propath.
+using ibs.th.skt.Adapters.AdapterOra-i516-1c from propath.
+using ibs.th.skt.Adapters.AdapterOra-i506-1c from propath.
 
 block-level on error undo, throw.
 
@@ -27,7 +27,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
   
   { cmp/str-glbl.i class }
   
-  {ibs/th/skt/ControlledClients/TSDTT.i}
+  {ibs/th/skt/ControlledClients/TSDTT-1c.i}
   
   define buffer buf_clients for ub.clients.
   
@@ -51,13 +51,13 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     define variable objTrnDoc  as class     trn-gd-doc-in   no-undo.
     define variable objGd      as class     trn-gd          no-undo.
     define variable objPrt     as class     trn-prt         no-undo.
-    define variable adapObj    as class     AdapterOra-i516 no-undo.
+    define variable adapObj    as class     AdapterOra-i516-1c no-undo.
     define variable objGds     as class     subjects        no-undo.
     define variable objPrts    as class     subjects        no-undo.
     
     objTrnDoc = cast (subjectObj, trn-gd-doc-in).
     
-    adapObj = new AdapterOra-i516 ().
+    adapObj = new AdapterOra-i516-1c ().
     
     find first ub.sys-ctrl.
     

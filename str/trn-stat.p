@@ -3364,11 +3364,19 @@ procedure ie-date:
     if bf_trn-doc.fact-date  <> ?
       or bf_trn-doc.shift-date <> ?
     then do:
+  
      if bf_trn-doc.fact-time = 0 or bf_trn-doc.fact-time = ? then
         bf_trn-doc.fact-time = time.
       if bf_trn-doc.fact-date = ? and bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
         { gbl/curobjdt.i bf_trn-doc.obj-type bf_trn-doc.obj-code bf_trn-doc.fact-date }    
       end.
+      
+      if g#esys and bf_trn-doc.fact-date = ?
+        then do: 
+          bf_trn-doc.fact-date = now.
+          return.
+        end.
+      
       run gbl/chk-date.p
           ( input bf_trn-doc.obj-type
           , input bf_trn-doc.obj-code
