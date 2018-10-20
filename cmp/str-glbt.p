@@ -274,7 +274,7 @@ attr-contr-in }
 /* атрибутЫ накладных от глобального к объекту  */
 { cmp/cr-prep.i 1 attr-nakl_par  nakl_par nakl_par nakl_par nakl_par  }
 { cmp/cr-prepc.i 1 prop-list-attr-nakl_par
-"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol"
+"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,edit-fact-wayb"
 attr-nakl_par }
 
 /*Планируемые цифры */
@@ -468,7 +468,7 @@ attr-prt-obj }
 /* атрибут глобальный  -  ОТЧЕТЫ */
 { cmp/cr-prep.i 1 attr-report-glob  report-glob report-glob report-glob report-glob }
 { cmp/cr-prepc.i 1 prop-list-attr-report-glob
-"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format"
+"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens"
 attr-report-glob }
 
 /* атрибут по фирме  -  ОТЧЕТЫ */
@@ -537,7 +537,7 @@ attr-fbrattr
 { cmp/cr-prep.i 1 attr-petrol petrol " " petrol }
 
 { cmp/cr-prepc.i 1 prop-list-attr-petrol
-"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert"
+"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info"
 attr-petrol
 }
 
@@ -570,10 +570,10 @@ attr-srv-auth-ASU
 "egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys"
 attr-egais-host }
 
- /*набор опций работы с документами МЦ*/
+/*набор опций работы с документами МЦ*/
 { cmp/cr-prep.i 1 attr-mercur                 mercur                  " " mercur }
 { cmp/cr-prepc.i 1 prop-list-attr-mercur
-"apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server"
+"apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server,proxy-addres,proxy-login,proxy-pswd"
 attr-mercur }
 /* сюда добавлять новые названия атрибутов объектов TH */
 

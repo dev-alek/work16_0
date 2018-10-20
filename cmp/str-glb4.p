@@ -344,6 +344,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 /* Атрибут клиента - Список юр.лиц, платежами которых можно закрывать ФО:*/
 { cmp/cr-prep.i 1 attr-cli-for-close-fo cli-for-close-fo " " cli-for-close-fo }
 
+/* Атрибут клиента - Климатическая группа:*/
+{ cmp/cr-prep.i 1 attr-cli-clim-grp cli-clim-grp " " cli-clim-grp }
+
+/* Атрибут клиента - Выведен из эксплуатации:*/
+{ cmp/cr-prep.i 1 attr-cli-decommissioned cli-decommissioned " " cli-decommissioned }
+
 /* сюда добавлять новые названия атрибутов клиентов */
 
 /* список атрибутов клиентов */
@@ -394,6 +400,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 ,{&bef-attr-tank-farm-for}~
 ,{&bef-attr-auto-tank-for}~
 ,{&bef-attr-cli-for-close-fo}~
+,{&bef-attr-cli-clim-grp}~
+,{&bef-attr-cli-decommissioned}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-list {&clntattr-list}" ).
 
@@ -423,6 +431,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 
 /* Тип услуги */
 { cmp/cr-prep.i 1 attr-office-type     office-type     " " office-type     }
+
+/* Признак предмета расчета */
+{ cmp/cr-prep.i 1 attr-item-matter-mark     item-matter-mark     " " item-matter-mark     }
+
+/* Группа НП */
+{ cmp/cr-prep.i 1 attr-group-np         group-np     " " group-np     }
 
 /* Тип топлива */
 { cmp/cr-prep.i 1 attr-fuel-type     fuel-type     " " fuel-type     }
@@ -511,6 +525,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Изображения */
 { cmp/cr-prep.i 1 attr-image-list       image-list       " " image-list       }
 
+/* Доп. ед. изм. */
+{ cmp/cr-prep.i 1 attr-MercUnits       MercUnits       " " MercUnits       }
+
+
 /* сюда добавлять новые названия атрибутов товаров */
 
 /* список атрибутов товаров */
@@ -519,6 +537,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-is-gas}~
 ,{&bef-attr-ptrl-without-rvs}~
 ,{&bef-attr-office-type}~
+,{&bef-attr-item-matter-mark}~
+,{&bef-attr-group-np}~
 ,{&bef-attr-fuel-type}~
 ,{&bef-attr-is-loyalty-payment}~
 ,{&bef-attr-ban-bonus}~
@@ -548,6 +568,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-qnty-on-pallet}~
 ,{&bef-attr-weight-of-pallet}~
 ,{&bef-attr-image-list}~
+,{&bef-attr-MercUnits}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-list {&gds-attr-list}" ).
 
@@ -555,6 +576,30 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-
 { cmp/cr-prepc.i 1 prop-list-attr-office-type
 "oss-pay,tso-ret,card-act"
 attr-office-type
+}
+
+/*"Реализуемый товар кроме подакцизного;
+Реализуемый подакцизный товар;
+Выполняемая работа;
+Оказываемая услуга;
+Прием ставок при проведени азартных игр;
+Выплата денежных средств при проведени азартных игр;
+Прием денежных средств при реализации лотерейных билетов;
+Выплата выигрыша при проведении лотерей;
+Предоставление прав на использование результатов интеллектуальной деятельности;
+Аванс, задаток, предоплата, кредит...;
+Вознаграждение пользователя, являющегося платежным агентом"*/
+/* Признак предмета расчета */
+
+{ cmp/cr-prepc.i 1 prop-list-attr-item-matter-mark 
+"1,2,3,4,5,6,7,8,9,10,11"
+attr-item-matter-mark
+}
+
+/* Группы НП */
+{ cmp/cr-prepc.i 1 prop-list-attr-group-np
+"I,II,III,IV"
+attr-group-np
 }
 
 /* типы топлива */
@@ -989,6 +1034,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-no-sent-ftp        no-sent-ftp          " " no-sent-ftp     }
 { cmp/cr-prep.i 1 attr-esys-gln-net            gln-net              " " gln-net         }
 { cmp/cr-prep.i 1 attr-esys-gln-provider       gln-provider         " " gln-provider    }
+/* Использование цифровой подписи при обмене с ВС */
+{ cmp/cr-prep.i 1 attr-esys-cert-sign          cert-sign            " " cert-sign         }
+{ cmp/cr-prep.i 1 attr-esys-cert-sign-subject  cert-sign-subject    " " cert-sign-subject }
+{ cmp/cr-prep.i 1 attr-esys-cert-sign-issuer   cert-sign-issuer     " " cert-sign-issuer  }
+{ cmp/cr-prep.i 1 attr-esys-cert-file-ext      cert-file-ext        " " cert-file-ext     }
 
 
 /* сюда добавлять новые названия атрибутов баз данных */
@@ -1005,6 +1055,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 ,{&bef-attr-esys-no-sent-ftp}~
 ,{&bef-attr-esys-gln-net}~
 ,{&bef-attr-esys-gln-provider}~
+,{&bef-attr-esys-cert-sign}~
+,{&bef-attr-esys-cert-sign-subject}~
+,{&bef-attr-esys-cert-sign-issuer}~
+,{&bef-attr-esys-cert-file-ext}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define ext-system-attr-list {&ext-system-attr-list}" ).
 
@@ -1229,6 +1283,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Список не предоставленных документов */
 { cmp/cr-prep.i 1 trdcattr-spisok-not-doc "spisok-not-doc" " " "spisok-not-doc" }
 
+/* Признак топливной накладной */
+{ cmp/cr-prep.i 1 trdcattr-is-fuel "is-fuel" " " "is-fuel" }
+
 &glob trdcattr-list '~
 {&bef-trdcattr-hold-part-code}~
 ,{&bef-trdcattr-dov}~
@@ -1318,6 +1375,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-seals-condition}~
 ,{&bef-trdcattr-doc-not}~
 ,{&bef-trdcattr-spisok-not-doc}~
+,{&bef-trdcattr-is-fuel}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 
@@ -1636,6 +1694,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define tpsi-doc-
 &glob tpsi-ext-doc-types '~~~~~~~{&bef-TDEDT_Ras_Vnesh},~
 ~~~~~~~{&bef-TDEDT_Ras_Perem},~
 ~~~~~~~{&bef-TDEDT_Pri_Vnesh},~
+~~~~~~~{&bef-TDEDT_Ras_Vnesh_Kass},~
 ~~~~~~~{&bef-TDEDT_Pri_Perem}~
 ':U
 
