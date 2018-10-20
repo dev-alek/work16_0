@@ -3383,7 +3383,11 @@ end.
 &global-define attr-auto-tank-for '{&bef-attr-auto-tank-for}':U
 &global-define bef-attr-cli-for-close-fo cli-for-close-fo
 &global-define attr-cli-for-close-fo '{&bef-attr-cli-for-close-fo}':U
-&global-define clntattr-list 'doc-start,arh-detail,arh-start,ahsp-detail,ahsp-start,aht-detail,aht-start,arh-del,ahsp-del,aht-del,arh-calc,ahsp-calc,aht-calc,arh-recalc,ahsp-recalc,aht-recalc,is-inkassator,shftrep2,db,is-superviser,purch-code,als-gds,alien,envd,kpp,pharm,upd-date-time,holdfirm-code,vat-register,bge-incr-last-shift-date,bge-incr-last-shift-num,bge-sap-sng-last-shift,egrip-date,egrip-num,cli-local,cli-alc-producer,region-code,foreign-producer,main-accholder,not-corr-op,veto-man-doc,requisite-alc-decl,division-code,supp-np,tank-farm-for,auto-tank-for,cli-for-close-fo':U
+&global-define bef-attr-cli-clim-grp cli-clim-grp
+&global-define attr-cli-clim-grp '{&bef-attr-cli-clim-grp}':U
+&global-define bef-attr-cli-decommissioned cli-decommissioned
+&global-define attr-cli-decommissioned '{&bef-attr-cli-decommissioned}':U
+&global-define clntattr-list 'doc-start,arh-detail,arh-start,ahsp-detail,ahsp-start,aht-detail,aht-start,arh-del,ahsp-del,aht-del,arh-calc,ahsp-calc,aht-calc,arh-recalc,ahsp-recalc,aht-recalc,is-inkassator,shftrep2,db,is-superviser,purch-code,als-gds,alien,envd,kpp,pharm,upd-date-time,holdfirm-code,vat-register,bge-incr-last-shift-date,bge-incr-last-shift-num,bge-sap-sng-last-shift,egrip-date,egrip-num,cli-local,cli-alc-producer,region-code,foreign-producer,main-accholder,not-corr-op,veto-man-doc,requisite-alc-decl,division-code,supp-np,tank-farm-for,auto-tank-for,cli-for-close-fo,cli-clim-grp,cli-decommissioned':U
 &global-define clntattr-list-to-dc-list 'db,is-superviser':u
 &global-define bef-attr-gds-attr-lock lock
 &global-define attr-gds-attr-lock '{&bef-attr-gds-attr-lock}':U
@@ -3397,6 +3401,10 @@ end.
 &global-define attr-ptrl-without-rvs '{&bef-attr-ptrl-without-rvs}':U
 &global-define bef-attr-office-type office-type
 &global-define attr-office-type '{&bef-attr-office-type}':U
+&global-define bef-attr-item-matter-mark item-matter-mark
+&global-define attr-item-matter-mark '{&bef-attr-item-matter-mark}':U
+&global-define bef-attr-group-np group-np
+&global-define attr-group-np '{&bef-attr-group-np}':U
 &global-define bef-attr-fuel-type fuel-type
 &global-define attr-fuel-type '{&bef-attr-fuel-type}':U
 &global-define bef-attr-is-loyalty-payment is-loyalty-payment
@@ -3455,7 +3463,9 @@ end.
 &global-define attr-weight-of-pallet '{&bef-attr-weight-of-pallet}':U
 &global-define bef-attr-image-list image-list
 &global-define attr-image-list '{&bef-attr-image-list}':U
-&global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,mark,sum-grp-gl,mercur_FGIS,perishable,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list':U
+&global-define bef-attr-MercUnits MercUnits
+&global-define attr-MercUnits '{&bef-attr-MercUnits}':U
+&global-define gds-attr-list 'alcohol-prod,egais-name,is-gas,ptrl-without-rvs,office-type,item-matter-mark,group-np,fuel-type,is-loyalty-payment,ban-bonus,null-price,fasovka,mark,sum-grp-gl,mercur_FGIS,perishable,15x80,8x50,6x50,calories,protein,fat,carbohydrate,calc-cal-rec,cash-parts,ptrl-as-good,dflt-insalepr,gds-ptrl-densities,length-of,width-of,height-of,qnty-in-box,weight-box,qnty-on-pallet,weight-of-pallet,image-list,MercUnits':U
 &global-define bef-prop-list-attr-office-type oss-pay,tso-ret,card-act
 &global-define prop-list-attr-office-type '{&bef-prop-list-attr-office-type}':U
 &global-define bef-attr-office-type_oss-pay oss-pay
@@ -3464,6 +3474,40 @@ end.
 &global-define attr-office-type_tso-ret '{&bef-attr-office-type_tso-ret}':U
 &global-define bef-attr-office-type_card-act card-act
 &global-define attr-office-type_card-act '{&bef-attr-office-type_card-act}':U
+&global-define bef-prop-list-attr-item-matter-mark 1,2,3,4,5,6,7,8,9,10,11
+&global-define prop-list-attr-item-matter-mark '{&bef-prop-list-attr-item-matter-mark}':U
+&global-define bef-attr-item-matter-mark_1 1
+&global-define attr-item-matter-mark_1 '{&bef-attr-item-matter-mark_1}':U
+&global-define bef-attr-item-matter-mark_2 2
+&global-define attr-item-matter-mark_2 '{&bef-attr-item-matter-mark_2}':U
+&global-define bef-attr-item-matter-mark_3 3
+&global-define attr-item-matter-mark_3 '{&bef-attr-item-matter-mark_3}':U
+&global-define bef-attr-item-matter-mark_4 4
+&global-define attr-item-matter-mark_4 '{&bef-attr-item-matter-mark_4}':U
+&global-define bef-attr-item-matter-mark_5 5
+&global-define attr-item-matter-mark_5 '{&bef-attr-item-matter-mark_5}':U
+&global-define bef-attr-item-matter-mark_6 6
+&global-define attr-item-matter-mark_6 '{&bef-attr-item-matter-mark_6}':U
+&global-define bef-attr-item-matter-mark_7 7
+&global-define attr-item-matter-mark_7 '{&bef-attr-item-matter-mark_7}':U
+&global-define bef-attr-item-matter-mark_8 8
+&global-define attr-item-matter-mark_8 '{&bef-attr-item-matter-mark_8}':U
+&global-define bef-attr-item-matter-mark_9 9
+&global-define attr-item-matter-mark_9 '{&bef-attr-item-matter-mark_9}':U
+&global-define bef-attr-item-matter-mark_10 10
+&global-define attr-item-matter-mark_10 '{&bef-attr-item-matter-mark_10}':U
+&global-define bef-attr-item-matter-mark_11 11
+&global-define attr-item-matter-mark_11 '{&bef-attr-item-matter-mark_11}':U
+&global-define bef-prop-list-attr-group-np I,II,III,IV
+&global-define prop-list-attr-group-np '{&bef-prop-list-attr-group-np}':U
+&global-define bef-attr-group-np_I I
+&global-define attr-group-np_I '{&bef-attr-group-np_I}':U
+&global-define bef-attr-group-np_II II
+&global-define attr-group-np_II '{&bef-attr-group-np_II}':U
+&global-define bef-attr-group-np_III III
+&global-define attr-group-np_III '{&bef-attr-group-np_III}':U
+&global-define bef-attr-group-np_IV IV
+&global-define attr-group-np_IV '{&bef-attr-group-np_IV}':U
 &global-define bef-prop-list-attr-fuel-type petrol,diesel-sum,diesel-wint,metan
 &global-define prop-list-attr-fuel-type '{&bef-prop-list-attr-fuel-type}':U
 &global-define bef-attr-fuel-type_petrol petrol
@@ -3799,7 +3843,15 @@ end.
 &global-define attr-esys-gln-net '{&bef-attr-esys-gln-net}':U
 &global-define bef-attr-esys-gln-provider gln-provider
 &global-define attr-esys-gln-provider '{&bef-attr-esys-gln-provider}':U
-&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck,no-sent-ftp,gln-net,gln-provider':u
+&global-define bef-attr-esys-cert-sign cert-sign
+&global-define attr-esys-cert-sign '{&bef-attr-esys-cert-sign}':U
+&global-define bef-attr-esys-cert-sign-subject cert-sign-subject
+&global-define attr-esys-cert-sign-subject '{&bef-attr-esys-cert-sign-subject}':U
+&global-define bef-attr-esys-cert-sign-issuer cert-sign-issuer
+&global-define attr-esys-cert-sign-issuer '{&bef-attr-esys-cert-sign-issuer}':U
+&global-define bef-attr-esys-cert-file-ext cert-file-ext
+&global-define attr-esys-cert-file-ext '{&bef-attr-esys-cert-file-ext}':U
+&global-define ext-system-attr-list 'need-gen-new-xpack,FTP,Login,Password,Path,IN-dir,OUT-dir,save-oxml-pck,no-sent-ftp,gln-net,gln-provider,cert-sign,cert-sign-subject,cert-sign-issuer,cert-file-ext':u
 &global-define bef-trdcattr-hold-part-code hold-part-code
 &global-define trdcattr-hold-part-code '{&bef-trdcattr-hold-part-code}':U
 &global-define bef-trdcattr-dov dov
@@ -3994,7 +4046,9 @@ end.
 &global-define trdcattr-doc-not '{&bef-trdcattr-doc-not}':U
 &global-define bef-trdcattr-spisok-not-doc spisok-not-doc
 &global-define trdcattr-spisok-not-doc '{&bef-trdcattr-spisok-not-doc}':U
-&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,idCountryContr,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition,doc-not,spisok-not-doc':U
+&global-define bef-trdcattr-is-fuel is-fuel
+&global-define trdcattr-is-fuel '{&bef-trdcattr-is-fuel}':U
+&global-define trdcattr-list 'hold-part-code,dov,dids,dateinv,nids,ddog,ndog,dsf,nsf,addsum,clcasol,clcaswt,scanfile,indoclnsum,purchlimit,purchcodelist,expense_own,envd,fbroperator,fbrauto,0rsrv-date,1ord_time,21ord_phone,22ord_contact,2befpay,3ord_Nchek,4dchek,first-price,4ord_dl,5deliv,6sumwrk,7sumsrk,8ord_adr,9ord_hwo,1postpay,2postNchek,3postdchek,QntyPlace,discnt-stop,discnt-other,m_inc,DFinDoc,NFinDoc,PlaceStorage,Packer,Dispath,price-target,edi,negais,egais,ddov,ndov,Recipient,Shipper,Auto,Driver,print-num,idCountryContr,olsuppcntr,t_pass-fname,t_pass-position,t_accept-fname,t_accept-position,ndovwho,car-time,nosn,relprpdf,ora-exp-seq-num,need-saledc,ser_on_pack,cargo-desc,carry-type,cargo-mass,exp-trans,zakaz-number,zakaz-date,delivery-date,delivery-time,,autoent,car-num,fio-driver,,inspection-cert,condition,seals-condition,doc-not,spisok-not-doc,is-fuel':U
 &global-define bef-lineattr-flora_ps flora_ps
 &global-define lineattr-flora_ps '{&bef-lineattr-flora_ps}':U
 &global-define bef-lineattr-flora_gds-code fl_gds-code
@@ -4220,9 +4274,9 @@ end.
 &global-define tpsi-internal-income-full '{&bef-tpsi-internal-income-full}':U
 &global-define tpsi-doc-kinds 'tpsi-hold-expense,tpsi-internal-expense,tpsi-hold-income,tpsi-internal-income':U
 &global-define tpsi-doc-kinds-full 'Межфирм.расход по ТПСИ,Внутр.расход по ТПСИ,Межфирм.приход по ТПСИ,Внутр.приход по ТПСИ':U
-&global-define tpsi-ext-doc-types '~{&bef-TDEDT_Ras_Vnesh},~{&bef-TDEDT_Ras_Perem},~{&bef-TDEDT_Pri_Vnesh},~{&bef-TDEDT_Pri_Perem}':U
+&global-define tpsi-ext-doc-types '~{&bef-TDEDT_Ras_Vnesh},~{&bef-TDEDT_Ras_Perem},~{&bef-TDEDT_Pri_Vnesh},~{&bef-TDEDT_Ras_Vnesh_Kass},~{&bef-TDEDT_Pri_Perem}':U
 &global-define tpsi-doc-name-k entry (lookup (~{&tpsi-doc-kind}, 'tpsi-hold-expense,tpsi-internal-expense,tpsi-hold-income,tpsi-internal-income':U), 'Межфирм.расход по ТПСИ,Внутр.расход по ТПСИ,Межфирм.приход по ТПСИ,Внутр.приход по ТПСИ':U)
-&global-define tpsi-doc-name-e entry (lookup (~{&tpsi-doc-ext}, '{&bef-TDEDT_Ras_Vnesh},{&bef-TDEDT_Ras_Perem},{&bef-TDEDT_Pri_Vnesh},{&bef-TDEDT_Pri_Perem}':U), 'Межфирм.расход по ТПСИ,Внутр.расход по ТПСИ,Межфирм.приход по ТПСИ,Внутр.приход по ТПСИ':U)
+&global-define tpsi-doc-name-e entry (lookup (~{&tpsi-doc-ext}, '{&bef-TDEDT_Ras_Vnesh},{&bef-TDEDT_Ras_Perem},{&bef-TDEDT_Pri_Vnesh},{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Pri_Perem}':U), 'Межфирм.расход по ТПСИ,Внутр.расход по ТПСИ,Межфирм.приход по ТПСИ,Внутр.приход по ТПСИ':U)
 &global-define bef-sale-add-tech-refuell trf
 &global-define sale-add-tech-refuell '{&bef-sale-add-tech-refuell}':U
 &global-define bef-sale-add-tech-refuell-full ТехПролив
@@ -6780,7 +6834,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 2fbde5a0ef14, 1493, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: f5243dcbaa85, 1513, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7415,7 +7469,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-nakl_par '{&bef-attr-nakl_par}':U
 &global-define bef-attr-nakl_par-full nakl_par
 &global-define attr-nakl_par-full '{&bef-attr-nakl_par-full}':U
-&global-define bef-prop-list-attr-nakl_par date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol
+&global-define bef-prop-list-attr-nakl_par date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,edit-fact-wayb
 &global-define prop-list-attr-nakl_par '{&bef-prop-list-attr-nakl_par}':U
 &global-define bef-attr-nakl_par_date-close-period date-close-period
 &global-define attr-nakl_par_date-close-period '{&bef-attr-nakl_par_date-close-period}':U
@@ -7459,6 +7513,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-nakl_par_exc-max-qnty '{&bef-attr-nakl_par_exc-max-qnty}':U
 &global-define bef-attr-nakl_par_mark-alchol mark-alchol
 &global-define attr-nakl_par_mark-alchol '{&bef-attr-nakl_par_mark-alchol}':U
+&global-define bef-attr-nakl_par_attr-PN attr-PN
+&global-define attr-nakl_par_attr-PN '{&bef-attr-nakl_par_attr-PN}':U
+&global-define bef-attr-nakl_par_edit-fact-wayb edit-fact-wayb
+&global-define attr-nakl_par_edit-fact-wayb '{&bef-attr-nakl_par_edit-fact-wayb}':U
 &global-define bef-attr-fin-plan fin-plan
 &global-define attr-fin-plan '{&bef-attr-fin-plan}':U
 &global-define bef-prop-list-attr-fin-plan fin-ostatok-start,fin-plan-pri,fin-proch,fin-proch-ras
@@ -7877,7 +7935,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-report-glob '{&bef-attr-report-glob}':U
 &global-define bef-attr-report-glob-full report-glob
 &global-define attr-report-glob-full '{&bef-attr-report-glob-full}':U
-&global-define bef-prop-list-attr-report-glob actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format
+&global-define bef-prop-list-attr-report-glob actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens
 &global-define prop-list-attr-report-glob '{&bef-prop-list-attr-report-glob}':U
 &global-define bef-attr-report-glob_actuate actuate
 &global-define attr-report-glob_actuate '{&bef-attr-report-glob_actuate}':U
@@ -7899,6 +7957,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-report-glob_cplot '{&bef-attr-report-glob_cplot}':U
 &global-define bef-attr-report-glob_rep-shift-format rep-shift-format
 &global-define attr-report-glob_rep-shift-format '{&bef-attr-report-glob_rep-shift-format}':U
+&global-define bef-attr-report-glob_cdens cdens
+&global-define attr-report-glob_cdens '{&bef-attr-report-glob_cdens}':U
 &global-define bef-attr-report-firm report-firm
 &global-define attr-report-firm '{&bef-attr-report-firm}':U
 &global-define bef-attr-report-firm-full report-firm
@@ -8015,7 +8075,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fbrattr_fbr-mrgn-max '{&bef-attr-fbrattr_fbr-mrgn-max}':U
 &global-define bef-attr-petrol petrol
 &global-define attr-petrol '{&bef-attr-petrol}':U
-&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert
+&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info
 &global-define prop-list-attr-petrol '{&bef-prop-list-attr-petrol}':U
 &global-define bef-attr-petrol_rvsnmter rvsnmter
 &global-define attr-petrol_rvsnmter '{&bef-attr-petrol_rvsnmter}':U
@@ -8051,6 +8111,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-petrol_Delta-mass-horiz '{&bef-attr-petrol_Delta-mass-horiz}':U
 &global-define bef-attr-petrol_Delta-mass-vert Delta-mass-vert
 &global-define attr-petrol_Delta-mass-vert '{&bef-attr-petrol_Delta-mass-vert}':U
+&global-define bef-attr-petrol_dop-info dop-info
+&global-define attr-petrol_dop-info '{&bef-attr-petrol_dop-info}':U
 &global-define bef-attr-staff-options staff
 &global-define attr-staff-options '{&bef-attr-staff-options}':U
 &global-define bef-prop-list-attr-staff-options noanshftstaff,obyznumbukv,minparol
@@ -8091,7 +8153,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-egais-host_egais-exsys '{&bef-attr-egais-host_egais-exsys}':U
 &global-define bef-attr-mercur mercur
 &global-define attr-mercur '{&bef-attr-mercur}':U
-&global-define bef-prop-list-attr-mercur apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server
+&global-define bef-prop-list-attr-mercur apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server,proxy-addres,proxy-login,proxy-pswd
 &global-define prop-list-attr-mercur '{&bef-prop-list-attr-mercur}':U
 &global-define bef-attr-mercur_apikey apikey
 &global-define attr-mercur_apikey '{&bef-attr-mercur_apikey}':U
@@ -8111,14 +8173,20 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-mercur_qrcode '{&bef-attr-mercur_qrcode}':U
 &global-define bef-attr-mercur_server server
 &global-define attr-mercur_server '{&bef-attr-mercur_server}':U
+&global-define bef-attr-mercur_proxy-addres proxy-addres
+&global-define attr-mercur_proxy-addres '{&bef-attr-mercur_proxy-addres}':U
+&global-define bef-attr-mercur_proxy-login proxy-login
+&global-define attr-mercur_proxy-login '{&bef-attr-mercur_proxy-login}':U
+&global-define bef-attr-mercur_proxy-pswd proxy-pswd
+&global-define attr-mercur_proxy-pswd '{&bef-attr-mercur_proxy-pswd}':U
 &global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U
 &global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,mercur,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,cd-type-autotank,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
-&global-define str-glbl_vss-revision 'Revision: 4071fca9cb06, 1364, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: f51e93a1df8e, 1312, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: 3b0ee21956f9, 1370, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 2fbde5a0ef14, 1493, rls ':U
+&global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: f51e93a1df8e, 1311, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: f5243dcbaa85, 1513, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
+&global-define str-glblt_vss-revision 'Revision: f5243dcbaa85, 1513, rls ':U
 &endif
