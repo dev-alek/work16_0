@@ -6834,7 +6834,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: f5243dcbaa85, 1513, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: c8532328889b, 1516, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -8075,7 +8075,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-fbrattr_fbr-mrgn-max '{&bef-attr-fbrattr_fbr-mrgn-max}':U
 &global-define bef-attr-petrol petrol
 &global-define attr-petrol '{&bef-attr-petrol}':U
-&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info
+&global-define bef-prop-list-attr-petrol rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water
 &global-define prop-list-attr-petrol '{&bef-prop-list-attr-petrol}':U
 &global-define bef-attr-petrol_rvsnmter rvsnmter
 &global-define attr-petrol_rvsnmter '{&bef-attr-petrol_rvsnmter}':U
@@ -8113,6 +8113,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-petrol_Delta-mass-vert '{&bef-attr-petrol_Delta-mass-vert}':U
 &global-define bef-attr-petrol_dop-info dop-info
 &global-define attr-petrol_dop-info '{&bef-attr-petrol_dop-info}':U
+&global-define bef-attr-petrol_otkl-fact-volue otkl-fact-volue
+&global-define attr-petrol_otkl-fact-volue '{&bef-attr-petrol_otkl-fact-volue}':U
+&global-define bef-attr-petrol_otkl-temp otkl-temp
+&global-define attr-petrol_otkl-temp '{&bef-attr-petrol_otkl-temp}':U
+&global-define bef-attr-petrol_otkl-density otkl-density
+&global-define attr-petrol_otkl-density '{&bef-attr-petrol_otkl-density}':U
+&global-define bef-attr-petrol_otkl-water otkl-water
+&global-define attr-petrol_otkl-water '{&bef-attr-petrol_otkl-water}':U
 &global-define bef-attr-staff-options staff
 &global-define attr-staff-options '{&bef-attr-staff-options}':U
 &global-define bef-prop-list-attr-staff-options noanshftstaff,obyznumbukv,minparol
@@ -8188,5 +8196,5 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl3_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: f5243dcbaa85, 1513, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
-&global-define str-glblt_vss-revision 'Revision: f5243dcbaa85, 1513, rls ':U
+&global-define str-glblt_vss-revision 'Revision: c8532328889b, 1516, rls ':U
 &endif
