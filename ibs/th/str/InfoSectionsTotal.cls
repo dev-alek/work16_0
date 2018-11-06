@@ -17,6 +17,8 @@ Creation date: 09/29/2015
 
 using Progress.Lang.*.
 using ibs.th.str.*.
+using ibs.th.gbl.storage.*.
+using ibs.th.ref.*.
 
 
 
@@ -27,6 +29,7 @@ class ibs.th.str.InfoSectionsTotal:
   define private buffer buf_doc-line  for ub.doc-line.
   define private buffer buf_doc-line-attr for ub.doc-line-attr.
   define private buffer buf_goods  for ub.goods.
+  define private buffer buf_trn  for ub.trn-doc.
   
   define stream log-algo.
 
@@ -165,19 +168,54 @@ class ibs.th.str.InfoSectionsTotal:
 
   define property RdcDnstvalue as character no-undo
     get.
-    set.    
+    set.
+
+  define property ObjType as character no-undo
+    get.
+    set.
+    
+  define property ObjCode as integer no-undo
+    get.
+    set.
+
+  define property ParNl as class partpnloss no-undo
+    get.
+    set.
+    
+  define property TPNormPLSum as decimal no-undo
+    get.
+    set.
+
+  define property TPNormAutoSum as decimal no-undo
+    get.
+    set.
+    
+  define property TPNormSum as decimal no-undo
+    get.
+    set.
+
 
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-		
+  
+  define private variable NLStorage as class normloss no-undo.
+  
   method public void Initialization (inTrnDocNum as char, inGdsCode as int):
     
     assign
       TrnDocNum = inTrnDocNum
       GdsCode = inGdsCode
     .
+    find first buf_trn no-lock where buf_trn.doc-code = TrnDocNum.
+    ObjCode = buf_trn.obj-code.
+    ObjType = buf_trn.obj-type.
+
+    NLStorage = new normloss ().
+    
+    Parnl = new partpnloss ().
+    
 		
   end method.
 
@@ -302,6 +340,28 @@ class ibs.th.str.InfoSectionsTotal:
     end.
 
   end method.
+  
+  method public class InfoSection GetInfoSectionProp (inTankCord1 as char):
+    
+    define variable objInfoSec as class InfoSection.
+    
+    for first ttObjInfoSecProp :
+      objInfoSec = cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ).
+      InfoSectionCurr = objInfoSec.
+      if InfoSectionCurr:ListTank = inTankCord1
+      then do:
+        return objInfoSec.        
+      end.  
+      else do:
+        InfoSectionCurr = ?.
+        return ?.
+      end.
+    end.
+
+  end method.  
+  
+  
+  
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -349,32 +409,38 @@ class ibs.th.str.InfoSectionsTotal:
       EndRealTime = ?
       StartRealTime = ?
       StartRealDate = ?
-      
+      TPNormPLSum = 0
+      TPNormAutoSum = 0
+      TPNormSum = 0
     .
     do ii = 1 to SectionNum :
+      GetInfoSectionProp (ii).
       assign
-        GetInfoSectionProp(ii):CliQnty = GetInfoSectionProp(ii):DocDensity * GetInfoSectionProp(ii):DocQnty
-        CarVolTotal = GetInfoSectionProp(ii):CarVol + CarVolTotal
-        TankVolTotal = GetInfoSectionProp(ii):TankVol + TankVolTotal
-        TankWaterVolTotal = GetInfoSectionProp(ii):TankWater + TankWaterVolTotal
-        TankWeightTotal = GetInfoSectionProp(ii):TankWeight + TankWeightTotal
-        DocQntyTotal = GetInfoSectionProp(ii):DocQnty + DocQntyTotal
-        FactQntyTotal = GetInfoSectionProp(ii):FactQnty + FactQntyTotal
-        FactKgQntyTotal = GetInfoSectionProp(ii):FactKgQnty + FactKgQntyTotal
+        InfoSectionCurr:CliQnty = InfoSectionCurr:DocDensity * InfoSectionCurr:DocQnty
+        CarVolTotal = InfoSectionCurr:CarVol + CarVolTotal
+        TankVolTotal = InfoSectionCurr:TankVol + TankVolTotal
+        TankWaterVolTotal = InfoSectionCurr:TankWater + TankWaterVolTotal
+        TankWeightTotal = InfoSectionCurr:TankWeight + TankWeightTotal
+        DocQntyTotal = InfoSectionCurr:DocQnty + DocQntyTotal
+        FactQntyTotal = InfoSectionCurr:FactQnty + FactQntyTotal
+        FactKgQntyTotal = InfoSectionCurr:FactKgQnty + FactKgQntyTotal
+        TPNormPLSum = InfoSectionCurr:TPNormPL + TPNormPLSum
+        TPNormAutoSum = InfoSectionCurr:TPNormAuto + TPNormAutoSum
+        TPNormSum = InfoSectionCurr:TPNorm + TPNormSum
       .
-      CliQntyTotal = GetInfoSectionProp(ii):CliQnty + CliQntyTotal.
-      if StartRealDate = ? or datetime (GetInfoSectionProp(ii):DateStart, GetInfoSectionProp(ii):TimeStart) < datetime (StartRealDate, StartRealTime) 
+      CliQntyTotal = InfoSectionCurr:CliQnty + CliQntyTotal.
+      if StartRealDate = ? or datetime (InfoSectionCurr:DateStart, InfoSectionCurr:TimeStart) < datetime (StartRealDate, StartRealTime) 
       then do:
         assign
-          StartRealTime = GetInfoSectionProp(ii):TimeStart
-          StartRealDate = GetInfoSectionProp(ii):DateStart
+          StartRealTime = InfoSectionCurr:TimeStart
+          StartRealDate = InfoSectionCurr:DateStart
         .
       end.
-      if EndRealDate = ? or datetime (GetInfoSectionProp(ii):DateEnd, GetInfoSectionProp(ii):TimeEnd) > datetime (EndRealDate, EndRealTime)
+      if EndRealDate = ? or datetime (InfoSectionCurr:DateEnd, InfoSectionCurr:TimeEnd) > datetime (EndRealDate, EndRealTime)
       then do:
         assign
-          EndRealTime = GetInfoSectionProp(ii):TimeEnd
-          EndRealDate = GetInfoSectionProp(ii):DateEnd
+          EndRealTime = InfoSectionCurr:TimeEnd
+          EndRealDate = InfoSectionCurr:DateEnd
         .
       end.
     end.
@@ -454,261 +520,272 @@ class ibs.th.str.InfoSectionsTotal:
     .
     
     do ii = 1 to SectionNum:
-      
+      GetInfoSectionProp (ii).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'car-vol' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):CarVol).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:CarVol).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tests' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):Tests).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:Tests).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'certif-fuel' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = GetInfoSectionProp(ii):CertifFuel.
+      buf_doc-line-attr.attr-value = InfoSectionCurr:CertifFuel.
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'norm-doc' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = GetInfoSectionProp(ii):NormDoc.
+      buf_doc-line-attr.attr-value = InfoSectionCurr:NormDoc.
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'num-passport' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = GetInfoSectionProp(ii):NumPassport.
+      buf_doc-line-attr.attr-value = InfoSectionCurr:NumPassport.
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'validity-certif' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = GetInfoSectionProp(ii):ValidityCertif.      
+      buf_doc-line-attr.attr-value = InfoSectionCurr:ValidityCertif.      
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'passport-plotn' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = GetInfoSectionProp(ii):PassportPlotn.
+      buf_doc-line-attr.attr-value = InfoSectionCurr:PassportPlotn.
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'place-si' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):PlaceSi).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:PlaceSi).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'kol-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):KolProb).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:KolProb).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'num-print-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):NumPrintProb).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:NumPrintProb).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'date-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):DateProb).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:DateProb).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'hour-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):HourProb).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:HourProb).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'min-prob' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):MinProb).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:MinProb).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'date-pov-plotn' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):DatePovPlotn).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:DatePovPlotn).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'num-plotn' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = GetInfoSectionProp(ii):NumPlotn.
+      buf_doc-line-attr.attr-value = InfoSectionCurr:NumPlotn.
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'date-start' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string (GetInfoSectionProp(ii):DateStart).
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:DateStart).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'time-start' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TimeStart ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TimeStart ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'date-end' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):DateEnd ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DateEnd ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'time-end' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TimeEnd ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TimeEnd ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-vol' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TankVol ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankVol ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TankTemp ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankTemp ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-water' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TankWater ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankWater ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-density' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TankDensity ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankDensity ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-weight' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TankWeight ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankWeight ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'mouth' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):Mouth ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:Mouth ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'a-b-tarir' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):ABTarir ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:ABTarir ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'diameter' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):Diameter ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:Diameter ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-density-pomi' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TankDensityPomi ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankDensityPomi ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-vol-pomi' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TankVolPomi ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankVolPomi ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'dens-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):DensTemp ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DensTemp ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'section-name' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = GetInfoSectionProp(ii):SectionName.
+      buf_doc-line-attr.attr-value = InfoSectionCurr:SectionName.
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'doc-qnty' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):DocQnty ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DocQnty ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'doc-dens' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):DocDensity ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DocDensity ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'fact-dens' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):FactDensity ).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:FactDensity ).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'fact-qnty' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):FactQnty).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:FactQnty).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'acc-pomi' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):AccPOMI).
-/*      create buf_doc-line-attr.
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AccPOMI).
+      create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'acc-ship' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):AccShip).*/
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AccShip).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'rn-algo' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):RnAlgo).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:RnAlgo).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'dop-info' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):AccAbsFact) + ',' + string ( GetInfoSectionProp(ii):NaturalLoss) 
-              + ',' + (if GetInfoSectionProp(ii):Deficit <> 0 then string ( - GetInfoSectionProp(ii):Deficit) else string ( GetInfoSectionProp(ii):Excess)).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AccAbsFact) + ',' + string ( InfoSectionCurr:NaturalLoss) 
+              + ',' + (if InfoSectionCurr:Deficit <> 0 then string ( - InfoSectionCurr:Deficit) else string ( InfoSectionCurr:Excess)).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'is-kp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):IsKP).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:IsKP).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'list-tank' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):ListTank).
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:ListTank).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'ttn-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( GetInfoSectionProp(ii):TTNTemp ).
-      
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TTNTemp ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'tp-norm-pl' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TPNormPL).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'tp-norm-auto' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TPNormAuto).      
       
       release buf_doc-line-attr.
       
@@ -716,8 +793,14 @@ class ibs.th.str.InfoSectionsTotal:
 
   end method.
 
-  
   method public void RNAlgo (ii as int, output MP as decimal):
+
+    RNAlgo(ii, MP, no).
+    
+  end.
+  
+  
+  method public void RNAlgo (ii as int, output MP as decimal, IsManual as log):
 
     def var dMP  as decimal no-undo.
     def var MF   as decimal no-undo.
@@ -734,9 +817,9 @@ class ibs.th.str.InfoSectionsTotal:
     def var v-ok as logical no-undo.
     
     assign
-      MTTH = GetInfoSectionProp(ii):DocQnty * GetInfoSectionProp(ii):DocDensity
-      MF = GetInfoSectionProp(ii):TankWeight
-      dF = GetInfoSectionProp(ii):AccPomi
+      MTTH = InfoSectionCurr:DocQnty * InfoSectionCurr:DocDensity
+      MF = InfoSectionCurr:TankWeight
+      dF = InfoSectionCurr:AccPomi
       NPE = NormalWastage
       dmd = MF * dF * 0.01
       dMP = MF - MTTH
@@ -745,15 +828,15 @@ class ibs.th.str.InfoSectionsTotal:
     .
     
 
-    if not GetInfoSectionProp(ii):IsKP 
+    if not InfoSectionCurr:IsKP or IsManual
     then do: 
       if abs (dMP) <= dmd /* условие (22) */
       then do:
         MP = MTTH.
-        GetInfoSectionProp(ii):AccAbsFact = dmd.
-        GetInfoSectionProp(ii):RnAlgo = "условие 22".
+        InfoSectionCurr:AccAbsFact = dmd.
+        InfoSectionCurr:RnAlgo = "условие 22".
         output stream log-algo to value ("log-algo-pomi.txt") append.
-        putheader(GetInfoSectionProp(ii)).
+        putheader(InfoSectionCurr).
         put stream log-algo unformatted
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
@@ -771,11 +854,11 @@ class ibs.th.str.InfoSectionsTotal:
       if abs (dMP) <= dmd + dMed /* условие (25) */
       then do:
         MP = MTTH - ME.
-        GetInfoSectionProp(ii):AccAbsFact = dmd + dMed.
-        GetInfoSectionProp(ii):NaturalLoss = ME.
-        GetInfoSectionProp(ii):RnAlgo = "условие 25".
+        InfoSectionCurr:AccAbsFact = dmd + dMed.
+        InfoSectionCurr:NaturalLoss = ME.
+        InfoSectionCurr:RnAlgo = "условие 25".
         output stream log-algo to value ("log-algo-pomi.txt") append.
-        putheader(GetInfoSectionProp(ii)).
+        putheader(InfoSectionCurr).
         put stream log-algo unformatted
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
@@ -791,10 +874,10 @@ class ibs.th.str.InfoSectionsTotal:
       end.
     end.
 
-    if not GetInfoSectionProp(ii):IsKP 
+    if not InfoSectionCurr:IsKP and not isManual
     then do: 
-      message substitute ("»меютс€ расхождени€ с документарным количеством больше допустимого. “ребуетс€ комиссионный прием нефтепродукта. ѕродолжить (дл€ секции &1 будет установлен флаг комиссионного приема)?", ii)
-      view-as alert-box question buttons yes-no update v-ok .
+      message substitute ("¬ы€влено сверхнормативное расхождение ƒанных ““Ќ с данными в ј÷. “ребуетс€ комиссионный прием. ѕродолжить (необходимо подать за€вку в соответсвии с прин€той схемой обращени€)?")
+      view-as alert-box question buttons yes-no title "¬опрос" update v-ok .
       if not v-ok
       then do:
         MP = ?.
@@ -802,7 +885,7 @@ class ibs.th.str.InfoSectionsTotal:
       end.
       IsFlagKPChg = true.
       assign
-        GetInfoSectionProp(ii):IsKP = true
+        InfoSectionCurr:IsKP = true
       .
       MP = ?.
       return.
@@ -817,23 +900,25 @@ class ibs.th.str.InfoSectionsTotal:
       return.
     end.
     
-    def var MKP    as decimal no-undo.
-    def var dMKP   as decimal no-undo.
-    def var dmKPd  as decimal no-undo.
-    def var delKP  as decimal no-undo.
-    def var delTTH as decimal no-undo.
-    def var dTTH   as decimal no-undo.
-    def var dKP    as decimal no-undo.
-    def var MKPK   as decimal no-undo.
-    def var dmTTHd as decimal no-undo.
-    def var X1     as decimal no-undo.
-    def var X2     as decimal no-undo.
-    def var X3     as decimal no-undo.
-    def var X4     as decimal no-undo.
+    def var MKP      as decimal no-undo.
+    def var dMKP     as decimal no-undo.
+    def var dmKPd    as decimal no-undo.
+    def var delKP    as decimal no-undo.
+    def var delTTH   as decimal no-undo.
+    def var dTTH     as decimal no-undo.
+    def var dKP      as decimal no-undo.
+    def var MKPK     as decimal no-undo.
+    def var dmTTHd   as decimal no-undo.
+    def var X1       as decimal no-undo.
+    def var X2       as decimal no-undo.
+    def var X3       as decimal no-undo.
+    def var X4       as decimal no-undo.
+    def var NTruck   as decimal no-undo.
+    def var NStorage as decimal no-undo.
 
     MKP = MF.
     dMKP = MKP - MTTH.
-    dKP = GetInfoSectionProp(ii):AccPomi. /*if AccComm = ? then 0 else AccComm.*/
+    dKP = InfoSectionCurr:AccPomi. /*if AccComm = ? then 0 else AccComm.*/
     
     dmKPd = MKP * dF * 0.01.
     delKP = dF * MKP * 0.01. /*одно и тоже дл€ нагл€дности с документацией*/
@@ -842,10 +927,10 @@ class ibs.th.str.InfoSectionsTotal:
     if abs(dMKP) <= dmKPd /* условие (30) */
     then do:
       MP = MTTH.
-      GetInfoSectionProp(ii):AccAbsFact = dmKPd.
-      GetInfoSectionProp(ii):RnAlgo = "условие 30".
+      InfoSectionCurr:AccAbsFact = dmKPd.
+      InfoSectionCurr:RnAlgo = "условие 30".
       output stream log-algo to value ("log-algo-pomi.txt") append.
-      putheader(GetInfoSectionProp(ii)).
+      putheader(InfoSectionCurr).
       put stream log-algo unformatted
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
@@ -877,7 +962,7 @@ class ibs.th.str.InfoSectionsTotal:
     end.
     
     
-    dTTH = AccShip.
+    dTTH = InfoSectionCurr:AccShip.
     dmTTHd = MTTH * dTTH * 0.01.
     
 
@@ -894,11 +979,11 @@ class ibs.th.str.InfoSectionsTotal:
     then do: 
       I = MKPK - MTTH.
       MP = MKPK.
-      GetInfoSectionProp(ii):AccAbsFact = delTTH + delKP.
-      GetInfoSectionProp(ii):Excess = I.
-      GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 35".
+      InfoSectionCurr:AccAbsFact = delTTH + delKP.
+      InfoSectionCurr:Excess = I.
+      InfoSectionCurr:RnAlgo = "условие 32 и условие 35".
       output stream log-algo to value ("log-algo-pomi.txt") append.
-      putheader(GetInfoSectionProp(ii)).
+      putheader(InfoSectionCurr).
       put stream log-algo unformatted
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
@@ -934,11 +1019,11 @@ class ibs.th.str.InfoSectionsTotal:
     then do: 
       MP = MKP - delKP.
       I = MKP - MTTH - delKP.
-      GetInfoSectionProp(ii):AccAbsFact = delTTH + delKP.
-      GetInfoSectionProp(ii):Excess = I.
-      GetInfoSectionProp(ii):RnAlgo = "нет условие 32 и условие 35".
+      InfoSectionCurr:AccAbsFact = delTTH + delKP.
+      InfoSectionCurr:Excess = I.
+      InfoSectionCurr:RnAlgo = "нет условие 32 и условие 35".
       output stream log-algo to value ("log-algo-pomi.txt") append.
-      putheader(GetInfoSectionProp(ii)).
+      putheader(InfoSectionCurr).
       put stream log-algo unformatted
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
@@ -975,11 +1060,11 @@ class ibs.th.str.InfoSectionsTotal:
       then do:
         ME = MTTH - MKP - dmKPd.
         MP = MTTH - ME.
-        GetInfoSectionProp(ii):AccAbsFact = dmKPd + dMed.
-        GetInfoSectionProp(ii):NaturalLoss = ME.
-        GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 44 и условие 45".
+        InfoSectionCurr:AccAbsFact = dmKPd + dMed.
+        InfoSectionCurr:NaturalLoss = ME.
+        InfoSectionCurr:RnAlgo = "условие 32 и условие 44 и условие 45".
         output stream log-algo to value ("log-algo-pomi.txt") append.
-        putheader(GetInfoSectionProp(ii)).
+        putheader(InfoSectionCurr).
         put stream log-algo unformatted
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
@@ -1019,12 +1104,12 @@ class ibs.th.str.InfoSectionsTotal:
         MP = MKPK.
         ME = dMEd.
         H = MTTH - MKPK - ME.
-        GetInfoSectionProp(ii):AccAbsFact = dmKPd + dMed.
-        GetInfoSectionProp(ii):NaturalLoss = ME.
-        GetInfoSectionProp(ii):Deficit = H.
-        GetInfoSectionProp(ii):RnAlgo = "условие 32 и условие 44 и нет условие 45".
+        InfoSectionCurr:AccAbsFact = dmKPd + dMed.
+        InfoSectionCurr:NaturalLoss = ME.
+        InfoSectionCurr:Deficit = H.
+        InfoSectionCurr:RnAlgo = "условие 32 и условие 44 и нет условие 45".
         output stream log-algo to value ("log-algo-pomi.txt") append.
-        putheader(GetInfoSectionProp(ii)).
+        putheader(InfoSectionCurr).
         put stream log-algo unformatted
           "MTTH  = " string(MTTH) {&new-line}
           "MF  = " string(MF) {&new-line}
@@ -1062,12 +1147,12 @@ class ibs.th.str.InfoSectionsTotal:
       ME = dMEd.
       MP = MKP + delKP.
       H = MTTH - MKP - delKP - ME.
-      GetInfoSectionProp(ii):AccAbsFact = delTTH + delKP.
-      GetInfoSectionProp(ii):NaturalLoss = ME.
-      GetInfoSectionProp(ii):Deficit = H.
-      GetInfoSectionProp(ii):RnAlgo =  "нет условие 32 и условие 44".
+      InfoSectionCurr:AccAbsFact = delTTH + delKP.
+      InfoSectionCurr:NaturalLoss = ME.
+      InfoSectionCurr:Deficit = H.
+      InfoSectionCurr:RnAlgo =  "нет условие 32 и условие 44".
       output stream log-algo to value ("log-algo-pomi.txt") append.
-      putheader(GetInfoSectionProp(ii)).
+      putheader(InfoSectionCurr).
       put stream log-algo unformatted
         "MTTH  = " string(MTTH) {&new-line}
         "MF  = " string(MF) {&new-line}
@@ -1097,6 +1182,33 @@ class ibs.th.str.InfoSectionsTotal:
       output stream log-algo close.
       return.
     end.
+
+    finally:
+      
+      find first ub.place where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = "6" no-error. 
+      
+      assign
+        Parnl:ObjType = ObjType 
+        Parnl:ObjCode = ObjCode
+        Parnl:GdsCode = GdsCode
+        Parnl:AutoNum = CarNum
+        Parnl:OnDate = buf_trn.doc-date
+      .
+      
+      Parnl:PlCode = ub.place.pl-code no-error.
+      Parnl:SecNum = InfoSectionCurr:SectionName.
+      NLStorage:getNormLoss(Parnl).
+      InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
+      InfoSectionCurr:TPNormPL = (MF / 1000 * ParNl:PLNormLoss).
+      output stream log-algo to value ("log-algo-pomi.txt") append.
+      put stream log-algo unformatted
+        "MTP = " InfoSectionCurr:TPNorm {&new-line}
+        "NHH = " string(Parnl:AutoNormLoss) {&new-line}
+        "NPR = " string(Parnl:PLNormLoss) {&new-line}.
+      output stream log-algo close.
+    end finally.
+      
+    
 
   end method.
   

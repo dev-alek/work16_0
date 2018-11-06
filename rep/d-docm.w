@@ -1315,7 +1315,10 @@ PROCEDURE print-docs :
     define variable v-form-amount       as integer      no-undo.
     define variable v-user-action       as character    no-undo.
     define variable v-printed           as logical      no-undo.
-
+    define variable v-log               as logical      no-undo.
+    define variable listGdsProcActn     as character init "rep/inv-3p.p,rep/inv-3.p,rep/inv-19.p,rep/inv-8l.p,rep/inv-8.p,rep/inv-26.p,rep/inv-3del.p,rep/inv-pst.p,rep/inv-3slg.p,rep/inv-pst.p" no-undo. /*список отчетов, требущий проверки прав*/
+    define variable listPtrlProcActn    as character init "rep/inv-3-kg.p,rep/r-orsvx1.p,rep/r-np34.p,rep/r-orioxl.p,rep/r-orsvxl.p" no-undo. /*список отчетов, требущий проверки прав*/
+    
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_t_tmp#list    for tmp#list.
     define buffer buf_tmp#list      for tmp#list.
@@ -1336,6 +1339,7 @@ on error undo, return error
     output close.
     output to value( string( session:temp-directory + {&DF_Name} + string( g#report-num ) ) + ".txl" ) .
     output close.
+
     for each temp_form-list
     by temp_form-list.doc-code
     on error undo, return error
@@ -1346,6 +1350,83 @@ on error undo, return error
         :
             if buf_tmp#list.last-use <> no
             then do:
+              
+              
+              if lookup (buf_tmp#list.proc-name, listGdsProcActn) > 0
+              then do:
+                /* Проверка прав */
+                  { gbl/chk-actg.i
+                    v-cntxt-db-num
+                    v-cntxt-userid
+                    {&action-head-code-main}
+                    'actn_inv-gds_report':U
+                    {&cntxt-global}
+                    0
+                    '':U
+                    0
+                    0
+                    0
+                    0
+                    false
+                    v-log
+                  }
+                 if not v-log then do:
+                   message
+                     "Недостаточно прав для вывода на печать"
+                     skip
+                     buf_tmp#list.blank-name "."
+                     skip
+                     " "
+                     skip
+                     "Для вывода на печать"
+                     skip
+                     buf_tmp#list.blank-name
+                     skip
+                     "обратитесь в службу поддержки."                 
+                   view-as alert-box error title "Ошибка".
+                   
+                   next.
+                 end.
+               end.
+               
+              if lookup (buf_tmp#list.proc-name, listPtrlProcActn) > 0
+              then do:
+                /* Проверка прав */
+                  { gbl/chk-actg.i
+                    v-cntxt-db-num
+                    v-cntxt-userid
+                    {&action-head-code-main}
+                    'actn_inv-ptrl_report':U
+                    {&cntxt-global}
+                    0
+                    '':U
+                    0
+                    0
+                    0
+                    0
+                    false
+                    v-log
+                  }
+                 if not v-log then do:
+                   message
+                     "Недостаточно прав для вывода на печать"
+                     skip
+                     buf_tmp#list.blank-name "."
+                     skip
+                     " "
+                     skip
+                     "Для вывода на печать"
+                     skip
+                     buf_tmp#list.blank-name
+                     skip
+                     "обратитесь в службу поддержки."                 
+                   view-as alert-box error title "Ошибка".
+                   
+                   next.
+                 end.
+               end.
+                            
+              
                 find first buf_t_tmp#list no-lock
                      where buf_t_tmp#list.id = temp_form-list.id
                 .
@@ -1391,7 +1472,7 @@ on error undo, return error
                 if error-status :error
                 then do:
                     message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
-                end.  
+                end.
                 case num-entries( buf_tmp#list.proc-param )
                 :
                     when 0

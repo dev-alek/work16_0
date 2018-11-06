@@ -1355,9 +1355,8 @@ procedure lib-rwds_ccwstsum :
   define variable v_data-type             as character no-undo.
   define variable v-is-petrol             as logical   no-undo.
   define variable v-is-pieces             as logical   no-undo.
+  define variable NormWast                as class ibs.th.ref.normwastsub no-undo.
   define variable v-normal-wastage        as decimal   no-undo.
-  define variable v-normal-wastage-winter as decimal   no-undo init ?.
-  define variable v-normal-wastage-summer as decimal   no-undo init ?.
   define variable attr-type               as character no-undo.
   define variable v-petrol                as logical   no-undo.
   define variable v-value                 as character no-undo.
@@ -1412,16 +1411,19 @@ procedure lib-rwds_ccwstsum :
         assign v-petrol = if logical(v-value) then no else yes .
       end.
       if v-petrol then do:
+        
+        NormWast = new ibs.th.ref.normwastsub ().
+        NormWast:ParGdsOAttr:GdsCode = bf_goods.gds-code.
+        NormWast:ParGdsOAttr:ObjType = wast-cur-trn-doc.obj-type.
+        NormWast:ParGdsOAttr:ObjCode = wast-cur-trn-doc.obj-code.
+        NormWast:ParGdsOAttr:OnDate = if wast-cur-trn-doc.fact-date <> ? then wast-cur-trn-doc.fact-date else wast-cur-trn-doc.doc-date.
+        
+        
       /* у топлива в атрибутах, т.к. до 3-х знаков после запятой */
         run gds-o-normal-wastage-value in this-procedure
-                          ( input bf_goods.gds-code
-                           , input wast-cur-trn-doc.obj-type
-                           , input wast-cur-trn-doc.obj-type
-                           , input if wast-cur-trn-doc.fact-date <> ? then wast-cur-trn-doc.fact-date else wast-cur-trn-doc.doc-date
-                           , output v-normal-wastage-winter
-                           , output v-normal-wastage-summer
-                           , output v-normal-wastage
+                          ( input-output NormWast
                           ) no-error.
+        v-normal-wastage = NormWast:NormalWastageDate.
       end.
       else do:
         assign v-normal-wastage = if bf_goods.normal-wastage <> 0 and bf_goods.normal-wastage <> ? then bf_goods.normal-wastage  else 0 .
@@ -1491,15 +1493,18 @@ procedure lib-rwds_ccwstsum :
       end.
       if v-petrol then do:
       /* у топлива в атрибутах, т.к. до 3-х знаков после запятой */
+      
+        NormWast = new ibs.th.ref.normwastsub ().
+        NormWast:ParGdsOAttr:GdsCode = bf_goods.gds-code.
+        NormWast:ParGdsOAttr:ObjType = wast-cur-trn-doc.obj-type.
+        NormWast:ParGdsOAttr:ObjCode = wast-cur-trn-doc.obj-code.
+        NormWast:ParGdsOAttr:OnDate = if wast-cur-trn-doc.fact-date <> ? then wast-cur-trn-doc.fact-date else wast-cur-trn-doc.doc-date.
+      
         run gds-o-normal-wastage-value in this-procedure
-                          ( input bf_goods.gds-code
-                           , input wast-cur-trn-doc.obj-type
-                           , input wast-cur-trn-doc.obj-type
-                           , input if wast-cur-trn-doc.fact-date <> ? then wast-cur-trn-doc.fact-date else wast-cur-trn-doc.doc-date
-                           , output v-normal-wastage-winter
-                           , output v-normal-wastage-summer
-                           , output v-normal-wastage
+                          ( input-output NormWast
                           ) no-error.
+        v-normal-wastage = NormWast:NormalWastageDate.
+        
       end.
       else do:
         assign

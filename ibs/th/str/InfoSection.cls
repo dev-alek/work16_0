@@ -205,6 +205,25 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
+  define property AccShip as decimal no-undo
+    get.
+    set.
+
+  define property TPNormAuto as decimal no-undo
+    get.
+    set.
+
+  define property TPNormPL as decimal no-undo
+    get.
+    set.
+
+  define property TPNorm as decimal no-undo
+    get:
+      return TPNormAuto + TPNormPL.
+    end.      
+
+
+
   /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -412,13 +431,13 @@ class ibs.th.str.InfoSection:
 /*          if error-status:error or inAttrValue = ""        */
 /*            then AccCommission = ?.                        */
 /*        end.                                               */
-/*      when 'acc-ship' then                                 */
-/*        do:                                                */
-/*          assign                                           */
-/*            AccShip = decimal (inAttrValue) no-error.      */
-/*          if error-status:error or inAttrValue = ""        */
-/*            then AccShip = 0.25.                           */
-/*        end.                                               */
+      when 'acc-ship' then
+        do:
+          assign
+            AccShip = decimal (inAttrValue) no-error.
+          if error-status:error or inAttrValue = ""
+            then AccShip = 0. /*0.25.*/
+        end.
       when 'rn-algo' then 
         do:
           assign
@@ -464,7 +483,16 @@ class ibs.th.str.InfoSection:
           assign
             AccPomi = decimal (inAttrValue) no-error.
         end.
-      
+      when 'tp-norm-auto' then 
+        do:
+          assign
+            TPNormAuto = decimal (inAttrValue) no-error.
+        end.
+      when 'tp-norm-pl' then 
+        do:
+          assign
+            TPNormPL = decimal (inAttrValue) no-error.
+        end.
     end case.
 		
 

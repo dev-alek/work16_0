@@ -384,9 +384,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     &scop attr-code trdcattr-time-pour
     &scop tag-code time-pour
     {&create-record-cust}
-    &scop attr-code trdcattr-acc-ship
-    &scop tag-code acc-ship
-    {&create-record-cust}
     &scop attr-code trdcattr-doc-not
     &scop tag-code doc-not
     {&create-record-cust}
@@ -492,6 +489,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
             write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
             /*время отбора пробы часы/минут HourProb MinProb*/
             write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
+            write-data-element ("acc-ship", string (infoSecObj:AccShip)).
+            write-data-element ("tp-norm", string (infoSecObj:TPNorm)).
+            
           sw:end-element ("sc").
         end.
       end.

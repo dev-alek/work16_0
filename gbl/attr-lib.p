@@ -11898,58 +11898,82 @@ procedure gds-o-normal-wastage-value :
 do
 on error undo, return error
 :
-  define input parameter p-gds-code  as integer      no-undo.
-  define input parameter p-obj-type  as character    no-undo.
-  define input parameter p-obj-code  as integer      no-undo.
-  define input parameter p-date      as date      no-undo.
-  define output parameter p-normal-wastage-winter as decimal      no-undo init ?. /*ест. убыль зимой*/
-  define output parameter p-normal-wastage-summer as decimal      no-undo init ?. /*ест. убыль летом*/
-  define output parameter p-normal-wastage-date   as decimal      no-undo init ?. /*ест. убыль на указанную дату если p-date не ?*/
+  define input-output parameter objNormWast as class ibs.th.ref.normwastsub no-undo.
+
   define variable v-mes as character no-undo .
+  
+  if not valid-object (objNormWast)
+  then do:
+     message
+      skip "objNormWast is null reference"
+      view-as alert-box error .
+    undo, return error .
+  end.
+  
+  if not valid-object (objNormWast:ParGdsOAttr)
+  then do:
+     message
+      skip "objNormWast:ParGdsOAttrObj is null reference"
+      view-as alert-box error .
+    undo, return error .
+  end.
   
   define buffer buf_goods for ub.goods.
   define buffer buf_normal-wastage-gds-obj-attr      for ub.gds-obj-attr.
   
   find first buf_goods no-lock where
-             buf_goods.gds-code = p-gds-code no-error .
+             buf_goods.gds-code = objNormWast:ParGdsOAttr:GdsCode no-error .
   if not avail buf_goods then do:
     message
-      skip "Не удалось найти товар с кодом" p-gds-code
+      skip "Не удалось найти товар с кодом" objNormWast:ParGdsOAttr:GdsCode
       view-as alert-box error .
     undo, return error .
   end.
 
   find first buf_normal-wastage-gds-obj-attr no-lock
-      where buf_normal-wastage-gds-obj-attr.gds-code = p-gds-code
+      where buf_normal-wastage-gds-obj-attr.gds-code = objNormWast:ParGdsOAttr:GdsCode
         and buf_normal-wastage-gds-obj-attr.attr-code = {&attr-normal-wastage-o}
-        and buf_normal-wastage-gds-obj-attr.obj-type  = p-obj-type
-        and buf_normal-wastage-gds-obj-attr.obj-code  = p-obj-code
+        and buf_normal-wastage-gds-obj-attr.obj-type  = objNormWast:ParGdsOAttr:ObjType
+        and buf_normal-wastage-gds-obj-attr.obj-code  = objNormWast:ParGdsOAttr:ObjCode
   no-error .
   if available buf_normal-wastage-gds-obj-attr then do:
 
     define variable v-temp-str1 as character no-undo .
     v-temp-str1 = buf_normal-wastage-gds-obj-attr.attr-value.
     
-    if num-entries (v-temp-str1, ";") = 2 then do:
-      assign
-        p-normal-wastage-summer   =  decimal(trim(entry(1, v-temp-str1, ";":U)))
-        p-normal-wastage-winter   =  decimal(trim(entry(2, v-temp-str1, ";":U)))
-      .
-    end.
-    else do:
-      assign
-        p-normal-wastage-summer   =  decimal(trim(v-temp-str1))
-        p-normal-wastage-winter   =  decimal(trim(v-temp-str1))
-      .
-    end.
-    if p-date <> ?
+    case num-entries (v-temp-str1, ";"):
+      when 2 then do:
+        assign
+          objNormWast:NormalWastageSummer =  decimal(trim(entry(1, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageWinter =  decimal(trim(entry(2, v-temp-str1, ";":U)))
+        .        
+      end.
+      when 4 then do:
+        assign
+          objNormWast:NormalWastageTransSummer   =  decimal(trim(entry(1, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageTransWinter   =  decimal(trim(entry(2, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageSummer   =  decimal(trim(entry(3, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageWinter   =  decimal(trim(entry(4, v-temp-str1, ";":U)))
+        .        
+      end.
+      when 0 then do:
+        assign
+          objNormWast:NormalWastageSummer   =  decimal(trim(v-temp-str1))
+          objNormWast:NormalWastageWinter   =  decimal(trim(v-temp-str1))
+        .       
+      end.
+    end case.
+
+    if objNormWast:ParGdsOAttr:OnDate <> ?
     then do:
-      if 3 < month (p-date) and month (p-date) < 10
+      if 3 < month (objNormWast:ParGdsOAttr:OnDate) and month (objNormWast:ParGdsOAttr:OnDate) < 10
       then do:
-        p-normal-wastage-date = p-normal-wastage-summer.
+        objNormWast:NormalWastageDate = objNormWast:NormalWastageSummer.
+        objNormWast:NormalWastageTransDate = objNormWast:NormalWastageTransSummer.
       end.
       else do:
-        p-normal-wastage-date = p-normal-wastage-winter.
+        objNormWast:NormalWastageDate = objNormWast:NormalWastageWinter.
+        objNormWast:NormalWastageTransDate = objNormWast:NormalWastageTransWinter.
       end.
        
     end.

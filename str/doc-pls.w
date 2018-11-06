@@ -860,6 +860,8 @@ DO:
           ) .
     end.
     else do :
+        if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and buf_trn-doc.flag_
+          then v-mode = {&lookup}.
         run str/doc-pl.w
           ( input parparentproc
           , input v-mode

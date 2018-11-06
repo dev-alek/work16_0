@@ -263,6 +263,8 @@ define variable isEgais                     as logical                       no-
 define variable v-vid-action                as integer                       no-undo .
 define variable v-vid-param                 as longchar                      no-undo .
 define variable v-gds-null-price            as logical                       no-undo .
+define variable is-fuel                     as logical                      no-undo .
+
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -2030,6 +2032,17 @@ empty temp-table thbjattr_thbj-attr.
      if varvalue <> ? and varvalue <> ""
        then isEgais = true.
 
+    { str/tdat-val.i                                    
+       t-doc.doc-code
+       {&trdcattr-is-fuel}
+       varvalue 
+       vartype no-error} 
+    
+    if varvalue = "yes"
+      then is-fuel = true.
+      
+    
+
    assign
      rdtaxcdvalue  = {&road-tax-code}
      exctaxcdvalue = {&excise-tax-code}
@@ -2605,9 +2618,7 @@ if varrvs-place = yes then do:
     
     
     
-    define variable v-normal-wastage        as decimal no-undo init ?.
-    define variable v-normal-wastage-winter as decimal no-undo init ?.
-    define variable v-normal-wastage-summer as decimal no-undo init ?.
+    define variable NormWast as class ibs.th.ref.normwastsub no-undo.
 
     if stfactplvalue <> ""  then 
     do:
@@ -2635,15 +2646,22 @@ if varrvs-place = yes then do:
       end.
     end.
 
+    NormWast = new ibs.th.ref.normwastsub ().
+    NormWast:ParGdsOAttr:GdsCode = buf_goods.gds-code.
+    NormWast:ParGdsOAttr:ObjType = t-doc.obj-type.
+    NormWast:ParGdsOAttr:ObjCode = t-doc.obj-code.
+    NormWast:ParGdsOAttr:OnDate = today.
+
     run gds-o-normal-wastage-value in this-procedure
-    ( input buf_goods.gds-code
-     , input t-doc.obj-type
-     , input t-doc.obj-code
-     , input today
-     , output v-normal-wastage-winter
-     , output v-normal-wastage-summer
-     , output v-normal-wastage
-    ).
+    ( input-output NormWast).
+
+/*    input buf_goods.gds-code         */
+/*     , input t-doc.obj-type          */
+/*     , input t-doc.obj-code          */
+/*     , input today                   */
+/*     , output v-normal-wastage-winter*/
+/*     , output v-normal-wastage-summer*/
+/*     , output v-normal-wastage       */
 
     infoSectionsTotal = new InfoSectionsTotal().
 
@@ -2700,7 +2718,7 @@ if varrvs-place = yes then do:
       infoSectionsTotal:CliQntyInput = varcli-qnty-input
       infoSectionsTotal:DensityInput = vardensity-input
       infoSectionsTotal:DocQntyInput = vardoc-qnty-input
-      infoSectionsTotal:NormalWastage = if v-normal-wastage = ? then 0 else v-normal-wastage
+      infoSectionsTotal:NormalWastage = NormWast:NormalWastageTransDate
       infoSectionsTotal:IsRNAlgo = if ptrlprop-algoincome = 2 then true else false
       infoSectionsTotal:PercAcc = varpercauto
       infoSectionsTotal:AccShip = varrn-acc-ship
@@ -3253,6 +3271,16 @@ if parline-mode <> {&lookup} then do:
 end.
 enable b-quit b-help with frame {&frame-name}.
 run disp-total in this-procedure.
+end.
+if is-petrolium = yes and is-pieces = no then do:
+  disable 
+    tt-fr-doc-line.doc-density
+    tt-fr-doc-line.fact-qnty
+    tt-fr-doc-line.fact-qnty-kg
+    tt-fr-doc-line.doc-qnty
+    tt-fr-doc-line.cli-qnty
+    tt-fr-doc-line.temperature
+    tt-fr-doc-line.doc-density with frame {&frame-name}.
 end.
 end procedure. /* ui-on */
 

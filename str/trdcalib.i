@@ -1299,6 +1299,20 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-time-pour true
 &glob sort-trdcattr-time-pour 190
 
+
+/* Топливная накладная */
+&glob fillin_width-trdcattr-is-fuel 3
+&glob fillin_height-trdcattr-is-fuel 1
+&glob type-trdcattr-is-fuel {&type-log}
+&glob format-trdcattr-is-fuel "yes/no"
+&glob label-trdcattr-is-fuel "Признак топливной накладной"
+&glob tooltip-trdcattr-is-fuel "Признак топливной накладной"
+&glob user-can-edit-trdcattr-is-fuel false
+&glob output-display-trdcattr-is-fuel false
+&glob other-trdcattr-is-fuel '':u
+&glob news-trdcattr-is-fuel true
+&glob sort-trdcattr-is-fuel 100
+
 &if "{1}" = "class" &then
 &else
 define new global shared variable g#trdcalib as handle no-undo.

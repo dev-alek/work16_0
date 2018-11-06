@@ -1,5 +1,8 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Procedure
+using ibs.th.gbl.storage.*.
+&ANALYZE-RESUME
 /* Connected Databases 
           ub               PROGRESS
 */
@@ -125,6 +128,7 @@ define variable varrecid         as recid     no-undo.
 define variable rvs-rec          as recid     no-undo.
 define variable varlog           as logical   no-undo.
 define variable p-auto           as char      no-undo.
+define variable rvsinvstrObj     as class rvsinvstr no-undo.
 /*define variable p-autorvs as logical no-undo.*/
 
 
@@ -2063,6 +2067,8 @@ define input parameter pardoc-rec as recid no-undo.
                 end.
                 undo, return error.
             end.
+            rvsinvstrObj = new rvsinvstr ().
+            rvsinvstrObj:DeleteDB(r-doc.rvs-code, r-doc.obj-type, r-doc.obj-code).
 
             run waitfram-hide in this-procedure .
         end.

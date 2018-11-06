@@ -2031,20 +2031,39 @@ define variable v-ischg-ext-type as logical no-undo .
              return error.
           end.
           if (v-not-eq-count <> 2) then do: /* <> Да для всех */
-              run gbl/d-askw.w(
-                  input "Накладная"
-                  ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
-                                "Количество по строке накладной: " + string(buf_doc-line.doc-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
-                                "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
-                                "Подтвердить количество в накладной?"
-                ,input "|^"
-                ,input "Да|Да (для всех)|Нет"
-                ,input "подтвердить для текущей позиции|подтвердить для всех позиций|отменить переход документа в статус факт"
-                ,input 1
-                ,input 3
-                ,output v-not-eq-count
-                ).
-                
+              
+              if v-is-petrl = true
+                and v-is-pieces = false 
+              then do:
+                run gbl/d-askw.w(
+                    input "Накладная"
+                    ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
+                                  "Количество по строке накладной: " + string(buf_doc-line.cli-qnty) + " " + string(buf_goods.unit-cli) + {&new-line} +
+                                  "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty * buf_doc-line.fact-density) + " " + string(buf_goods.unit-base) + {&new-line} +
+                                  "Подтвердить количество в накладной?"
+                  ,input "|^"
+                  ,input "Да|Да (для всех)|Нет"
+                  ,input "подтвердить для текущей позиции|подтвердить для всех позиций|отменить переход документа в статус факт"
+                  ,input 1
+                  ,input 3
+                  ,output v-not-eq-count
+                  ).
+                end.
+                else do:
+                  run gbl/d-askw.w(
+                      input "Накладная"
+                      ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
+                                    "Количество по строке накладной: " + string(buf_doc-line.doc-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
+                                    "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
+                                    "Подтвердить количество в накладной?"
+                    ,input "|^"
+                    ,input "Да|Да (для всех)|Нет"
+                    ,input "подтвердить для текущей позиции|подтвердить для всех позиций|отменить переход документа в статус факт"
+                    ,input 1
+                    ,input 3
+                    ,output v-not-eq-count
+                    ).
+                end.
                 if (v-not-eq-count = 3) then return error.
             end.
           /*if not varlog then  return error.*/

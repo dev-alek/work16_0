@@ -1414,9 +1414,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                           + {&new-line}
                           + substitute( "по месту хр. &1 (&4): &2, по сверкам: &3"
                                       ,tt-doc-pl.pl-code
-                                      ,tt-doc-pl.fact-qnty
-                                      ,( v-rvs-qnty-after - v-rvs-qnty-before )
-                                      ,buf_goods.unit-base
+                                      ,tt-doc-pl.cli-fact-qnty
+                                      ,( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before )
+                                      ,buf_goods.unit-cli
                                       ) .
             .
           end.

@@ -392,6 +392,10 @@ DEFINE BUTTON b-open
      LABEL "&Открыть":L
      SIZE 8 BY 1.
 
+DEFINE BUTTON b-copy
+     LABEL "&Копия":L
+     SIZE 8 BY 1.
+
 DEFINE BUTTON b-unrv
      LABEL "Р&езерв":L
      SIZE 9 BY 1.
@@ -1182,6 +1186,7 @@ DEFINE FRAME {&frame-name}
      b-del    AT ROW 2.3 COL 30
      b-close  AT ROW 2.3 COL 39
      b-open   AT ROW 2.3 COL 47
+     b-copy   AT ROW 2.3 COL 92
      b-unrv   AT ROW 2.3 COL 55
      b-exp    AT ROW 2.3 COL 64
      b-f-ed   AT ROW 2.3 COL 72
@@ -1636,6 +1641,16 @@ end.
 
 on choose of b-add in frame {&frame-name} /* Добав */
 do:
+  vardoc-mode = {&add-def}.
+  run local-add in this-procedure no-error.
+  if pardoc-rec <> ? then do:
+    reposition {&browse-name} to recid pardoc-rec no-error.
+  end.
+end.
+
+on choose of b-copy in frame {&frame-name}
+do:
+  vardoc-mode = {&add-copy}.
   run local-add in this-procedure no-error.
   if pardoc-rec <> ? then do:
     reposition {&browse-name} to recid pardoc-rec no-error.
@@ -3635,6 +3650,13 @@ case parlist-mode :
     end.
   end.
 end case.
+
+if parext-doc-type = {&TDEDT_Pri_Vnesh} and b-add:sensitive in frame {&frame-name} = true
+then do:
+  enable b-copy with frame {&frame-name}.
+  display b-copy with frame {&frame-name}.
+end.
+
 end procedure.
 
 procedure enb-2 :
@@ -3813,7 +3835,8 @@ if  error-status :error  = false then do:
 end.
 
 
-assign vardoc-mode = {&add-def}.
+if not vardoc-mode = {&add-copy} 
+  then assign vardoc-mode = {&add-def}.
 if parinternal then do:
   if partype = ? or partype = "?" then
     partype = {&expense}.
@@ -4072,6 +4095,8 @@ when {&income} then do:
   end.
   if can-do ({&wayb_inquiry}, parstat) then do:
     if not parinternal then do:
+      if vardoc-mode = {&add-copy}
+      then pardoc-rec = recid (t-doc).
       run str/in-doc.w (input parparentproc, input-output pardoc-rec, input vardoc-mode, input {&income}, input no, input-output varnext-prev,input parext-doc-type, input paris-hold, input-output varline-rec, input br-handle, input bf-handle, input parstat).
     end.
     else do:
@@ -6940,6 +6965,7 @@ b-sel when lookup("b-sel":U, bttns) > 0
 b-quit b-lkp b-print b-exp b-history b-sch b-help br-docs b-rep b-f-ed
 sch-code sch-date sch-fact sch-objtype sch-objcode sch-sum ed-notes b-uf b-filter-ext b-scaner
 b-akt WITH FRAME {&frame-name}.
+hide b-copy in FRAME {&frame-name}.
 
 /* НЕ ЗНАЮ КОГДА ОН ВИДЕН */
 run make-sf-button.
