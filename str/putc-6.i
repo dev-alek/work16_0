@@ -78,6 +78,7 @@ name-cash = cash-cash.cash-name + ' ' + name-cash1 + ' ' + name-cash2 .
       run bgelib-tag-put in this-procedure ( input 3, input "CashierName"         , input name-cash, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierParol"        , input cash-cash.psswd, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierLock"         , input cash-cash.stts, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierINN"          , input person.inn, input 1 ).
       run bgelib-tag-close in this-procedure ( input 2, input "Cashier").
     END.
   end.
@@ -100,6 +101,7 @@ name-cash = cash-cash.cash-name + ' ' + name-cash1 + ' ' + name-cash2 .
       run bgelib-tag-put in this-procedure ( input 3, input "CashierName"         , input name-cash, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierParol"        , input cash-cash.psswd, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierLock"         , input cash-cash.stts, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierINN"          , input (person.inn), input 1 ).
       run bgelib-tag-close in this-procedure ( input 2, input "Cashier").
     END.
   end.
