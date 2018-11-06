@@ -20,8 +20,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 run bgelib-tag-open in this-procedure ( input 2, input "Client"
                                       , input substitute("ctrl='&1' tms='&2' code='&3'"
-                                      , 'ADD':U  /*всегда ADD клиента а карту ингода DEL!!!*/
-                                      , OS2-time, cash-cli.cli-code + 1000000000 * cash-cli.justface)).
+                                      , if cash-cli.cli-code ne ? 
+                                        then 'ADD':U  /*всегда ADD клиента а карту ингода DEL!!!*/
+                                        else if action = "U"
+                                        then 'ADD':U
+                                        else "DEL":U 
+                                      , OS2-time, if cash-cli.cli-code eq ?
+                                                  then "*"
+                                                  else string(cash-cli.cli-code + 1000000000 * cash-cli.justface))).
 
 run bgelib-tag-put in this-procedure ( input 3, input "ClientName"       , input entry(1, cash-cli.cli-name, {&delim-par}), input 1 ).
 run bgelib-tag-put in this-procedure ( input 3, input "ClientCity"       , input cash-cli.cli-city, input 1 ).
@@ -52,19 +58,21 @@ run bgelib-tag-close in this-procedure ( input 2, input "Client").
 
   run bgelib-tag-open in this-procedure ( input 2, input "DiscountCard"
                                         , input substitute("ctrl='&1' tms='&2' code='&3'"
-                                        ,
-                                          (if g#news or run-from = "O":U or run-from = "E":U
-                                            then
-                                              (if lookup({&current-status}, cash-cli.status_ ) > 0
-                                              then "ADD":U
-                                              else "DEL":U
-                                              )
-                                            else (if action = "U"
-                                                  then 'ADD':U
-                                                  else "DEL":U
-                                                  )
-                                          )
-                                        , OS2-time, cash-cli.d-card)).
+                                                           ,(if g#news or run-from = "O":U or run-from = "E":U
+                                                             then
+                                                                (if lookup({&current-status}, cash-cli.status_ ) > 0
+                                                                 then "ADD":U
+                                                                 else "DEL":U
+                                                                 )
+                                                             else (if action = "U"
+                                                                   then 'ADD':U
+                                                                   else "DEL":U
+                                                                  )
+                                                             )
+                                                           , OS2-time 
+                                                           , (if cash-cli.d-card eq ? 
+                                                              then "*"
+                                                              else string(cash-cli.d-card)))).
   run bgelib-tag-put in this-procedure ( input 3, input "DCClient"
                                         , input (cash-cli.cli-code + 1000000000 * cash-cli.justface)
                                         , input 0 ).
@@ -135,7 +143,9 @@ run bgelib-tag-close in this-procedure ( input 2, input "Client").
                                                                 else "DEL":U
                                                                 )
                                                               ,OS2-time
-                                                              ,cash-cli.d-card
+                                                              ,if cash-cli.d-card eq ? 
+                                                               then "*"
+                                                               else string(cash-cli.d-card)
                                                               )).
     run bgelib-tag-put in this-procedure ( input 3, input "ACWLCardVer"
                                           ,input cash-cli.ef-format

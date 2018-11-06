@@ -206,6 +206,9 @@ CASE choice:
   when 3 then do:
     return.
   end.
+  when 4 then do:
+    rid-list = "*".
+  end.
 END CASE.
 CASE p-pos-type:
   when {&cd-type-IBM}

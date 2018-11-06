@@ -14,7 +14,16 @@ Author: Dmitry Ukhanov
 Creation date: 08/16/07
 
 */
-
+&if "{1}" = "class"
+&then
+method private void cplgdspm
+( parobj-type  like ub.pl-gds-pump.obj-type ,
+  parobj-code  like ub.pl-gds-pump.obj-code , 
+  parpl-code   like ub.pl-gds-pump.pl-code  , 
+  pargds-code  like ub.pl-gds-pump.gds-code ,
+  parpump-code like ub.pl-gds-pump.pump-code,
+  parstatus    like ub.pl-gds-pump.status_  ):
+&else
 procedure cplgdspm :
   define input parameter parobj-type  like ub.pl-gds-pump.obj-type  no-undo.
   define input parameter parobj-code  like ub.pl-gds-pump.obj-code  no-undo.
@@ -22,10 +31,10 @@ procedure cplgdspm :
   define input parameter pargds-code  like ub.pl-gds-pump.gds-code  no-undo.
   define input parameter parpump-code like ub.pl-gds-pump.pump-code no-undo.
   define input parameter parstatus    like ub.pl-gds-pump.status_   no-undo.
-
-  do
+&endif
+  /*do
   on error undo, return error return-value
-  :
+  :*/
 
     define buffer bf_pl-gds-pump          for ub.pl-gds-pump.
     define buffer bf_pl-pump-nozzle       for ub.pl-pump-nozzle.
@@ -92,5 +101,5 @@ procedure cplgdspm :
         end.
       end.
     end.
-  end.
-end procedure. /* cplgdspm */
+  /*end.*/
+end . // procedure/method /* cplgdspm */

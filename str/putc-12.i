@@ -119,7 +119,7 @@ CASE pos-type:
                                                   then "ADD":U
                                                   else "DEL":U)
                                            )
-                                          ,OS2-time, cash-txn.tax-code)).
+                                          ,OS2-time, if cash-txn.tax-code eq ? then "*" else string(cash-txn.tax-code))).
     run bgelib-tag-put in this-procedure ( input 3, input "TaxCatName"
                                           , input trim(cash-txn.tax-name, {&space-char}), input 1 ).
   end.

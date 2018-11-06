@@ -704,6 +704,10 @@ end.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+     
+  publish "ResponseToQuestion" (output p-number ).
+  if   p-number eq 0 
+  then do:
   RUN enable_UI.
 
   if  p-default-button > 0
@@ -716,6 +720,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  end.
 END.
 RUN disable_UI.
 

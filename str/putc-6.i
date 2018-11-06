@@ -79,9 +79,17 @@ CASE pos-type:
                                                                                              then "ADD":U
                                                                                              else "DEL":U)
                                                                                           , OS2-time
-                                                                                          , cash-cash.cash-code)).
+                                                                                          , if cash-cash.cash-code eq ? then "*" else string(cash-cash.cash-code))).
+if available ub.person
+then do:                                                                                         
 name-cash1 = if ub.person.name1 <> "" then (substring(ub.person.name1,1,1) + '.') else ''.
 name-cash2 = if ub.person.name2 <> "" then (substring(ub.person.name2,1,1) + '.') else ''.
+name-cash = cash-cash.cash-name + ' ' + name-cash1 + ' ' + name-cash2 .
+end.
+else
+assign
+name-cash1 = ""
+name-cash2 = ""
 name-cash = cash-cash.cash-name + ' ' + name-cash1 + ' ' + name-cash2 .
 
 /*
@@ -106,7 +114,7 @@ end.
       run bgelib-tag-put in this-procedure ( input 3, input "CashierName"         , input name-cash, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierParol"        , input cash-cash.psswd, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierLock"         , input cash-cash.stts, input 1 ).
-      run bgelib-tag-put in this-procedure ( input 3, input "CashierINN"          , input person.inn, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierINN"          , input if available person then string(person.inn) else "", input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierShadow"       , input enc-passwd, input 1 ).
       run bgelib-tag-close in this-procedure ( input 2, input "Cashier").
     END.

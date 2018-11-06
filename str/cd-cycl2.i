@@ -104,7 +104,10 @@ BY for-cash-desk.cash-num:
   by cash-cli.cli-type
   by cash-cli.cli-code
   :
-    if for-cash-desk.pos-type = {&cd-type-maria} then do:
+    if cash-cli.cli-code eq ?
+    then do: 
+    end.
+    else if for-cash-desk.pos-type = {&cd-type-maria} then do:
     end.
     else do:
       FIND FIRST ub.dis-card-type No-LOCK WHERE

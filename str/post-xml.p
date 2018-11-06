@@ -41,7 +41,8 @@ define variable vss-description as character no-undo init "«апуск на выполнение 
 { cmp/str-glbl.i }
 { gbl/windows.i  }
 { gbl/runrepid.i }
-
+message "post-xml"
+view-as alert-box.
 /*командна€ строка*/
 define variable Cmd                       AS CHARacter                No-UNDO.
 define variable cmd-out                   as character                no-undo .

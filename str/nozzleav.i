@@ -18,10 +18,19 @@ Creation date: 08/12/99
 
 */
 { str/ptrlv.i "def"}
+&if "{1}" eq "class"
+&then
+method private void nozzleav(
+parobj-type    like ub.clients.obj-type,
+parobj-code    like ub.clients.obj-code,
+parnozzle-code like ub.nozzle.nozzle-code 
+):
+&else
 procedure nozzleav:
 define input parameter parobj-type    like ub.clients.obj-type   no-undo.
 define input parameter parobj-code    like ub.clients.obj-code   no-undo.
 define input parameter parnozzle-code like ub.nozzle.nozzle-code no-undo.
+&endif
 define buffer bf_clients for ub.clients.
 define buffer bf_nozzle  for ub.nozzle.
 { str/ptrlv.i "ov+"}
@@ -35,6 +44,6 @@ create bf_nozzle.
 assign bf_nozzle.obj-type    = parobj-type
        bf_nozzle.obj-code    = parobj-code
        bf_nozzle.nozzle-code = parnozzle-code.
-end procedure.
+end. // procedure/method
 { str/ptrlv.i "undef"}
 /* $Workfile$ e n d */

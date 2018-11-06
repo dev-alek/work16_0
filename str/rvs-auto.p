@@ -33,7 +33,10 @@ define variable vss-date        as character no-undo initial "$Date$":U.
 define variable vss-workfile    as character no-undo initial "$Workfile$":U.
 define variable vss-archive     as character no-undo initial "$Archive$":U.
 define variable vss-description as character no-undo initial "Автоматическое создание контрольной сверки":U.
-
+DEFINE VARIABLE mParam AS CHARACTER NO-UNDO.
+DEFINE VARIABLE mRVSNull AS LOGICAL NO-UNDO.
+publish "RVSParam" (output mParam).
+mRVSNull = logical (entry(1,mParam)).
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { str/lib-trn.i  }
@@ -46,8 +49,9 @@ define variable vss-description as character no-undo initial "Автоматическое соз
 { str/trdcalib.i }
 { str/rvsttdef.i }
 { gbl/getsect.i def }
-
+{ str/placelib.i }
 { gbl/ptrlprop.i def }
+{ ref/gds-attr.i }
 
 define variable v-ret-msg   as character no-undo.
 
@@ -112,8 +116,10 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
   then do:
     undo Main-Block, return 'Нет учета топлива в системе.' .
   end.
-
-  get-key-value section 'revision' key 'rvs-object' value v-obj-list.
+  publish "getObjList" (output v-obj-list).
+  if v-obj-list eq ""
+  then
+     get-key-value section 'revision' key 'rvs-object' value v-obj-list.
 
   if v-obj-list = ? or v-obj-list = '':U then do:
     undo Main-Block, return 'Не указан ни один объект в секции [revision] ini-файла (rvs-object).' .
@@ -436,56 +442,102 @@ end.
         ) .
       undo block_obj, next block_obj .
     end.
-
-    find first tt-meas no-error .
+    if not mRVSNull 
+    then do:
+        find first tt-meas no-error .
+        
+        if     available tt-meas
+         
+        then do:
     
-    if available tt-meas then do:
+          /* varcur-data = true - при автоматическом создании всегда читаем текущие данные */
+          { str/rvsplace.i
+            buf_rvs-doc.obj-type
+            buf_rvs-doc.obj-code
+            ?
+            true
+            false
+            tt-meas-file
+            tt-meas
+            no-error
+          }
+          if error-status :error then do:
+            run add-msg in this-procedure
+              ( input true
+              , input substitute( 'Ошибка при получении данных с приборов на резервуарах для объекта &1 &2 .&3&4&3&5'
+                                  , v-obj-type
+                                  , v-obj-code
+                                  , {&new-line}
+                                  , error-status :get-message( 1 )
+                                  , return-value
+                                )
+              ) .
+            undo block_obj, next block_obj .
+          end.
+        end.
+        { str/fall-plc.i
+          buf_rvs-doc.obj-type
+          buf_rvs-doc.obj-code
+          buf_rvs-doc.rvs-code
+          ?
+          no-error
+        }
+        if error-status :error then do:
+          run add-msg in this-procedure
+            ( input true
+            , input substitute( 'Ошибка при сохранении данных с приборов на резервуарах для объекта &1 &2 .&3&4&3&5'
+                                , v-obj-type
+                                , v-obj-code
+                                , {&new-line}
+                , error-status :get-message( 1 )
+                , return-value
+                )
+                ) .
+            undo block_obj, next block_obj .
+        end.
+    end.    
+    else do:
+        define variable v-value as character no-undo.
+        define variable vType as character no-undo.
+        define variable v-min-dens as decimal no-undo.
+        for each buf_rvs-line exclusive-lock
+        where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+        and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+        and buf_rvs-line.obj-code = buf_rvs-doc.obj-code:
+            run placelib_get-attr  ( input {&place-dens-prov}
+                ,input buf_rvs-line.obj-code
+                ,input buf_rvs-line.obj-type
+                ,input buf_rvs-line.pl-code
+                ,output v-value
+                ,output v-ok      ) no-error. 
+                buf_rvs-line.state-measure-qnty = 0.01.  
+                buf_rvs-line.state-density = dec(v-value).
+            if    buf_rvs-line.state-density eq 0
+               or buf_rvs-line.state-density eq ?
+            then do:
+                run gds-attr-value in this-procedure
+                    ( input  buf_rvs-line.gds-code
+                     ,input  {&attr-gds-ptrl-densities}
+                     ,output v-value
+                     ,output vtype) .
+                if v-value <> "" and v-value <> ? then 
+                do:
+                   assign
+                      v-min-dens = decimal(replace(entry(1, v-value, "-":U ), "кг\л", "":U))
+                      buf_rvs-line.state-density = v-min-dens
+                      // v-max-dens = decimal(replace(entry(2, v-value, "-":U ), "кг\л":U, "":U))
+                      no-error.
+                end.
+            end.
+            if    buf_rvs-line.state-density eq 0
+               or buf_rvs-line.state-density eq ?
+            then
+               buf_rvs-line.state-density = 0.75.
+          
+         end.
+            
+    end. 
 
-      /* varcur-data = true - при автоматическом создании всегда читаем текущие данные */
-      { str/rvsplace.i
-        buf_rvs-doc.obj-type
-        buf_rvs-doc.obj-code
-        ?
-        true
-        false
-        tt-meas-file
-        tt-meas
-        no-error
-      }
-      if error-status :error then do:
-        run add-msg in this-procedure
-          ( input true
-          , input substitute( 'Ошибка при получении данных с приборов на резервуарах для объекта &1 &2 .&3&4&3&5'
-                              , v-obj-type
-                              , v-obj-code
-                              , {&new-line}
-                              , error-status :get-message( 1 )
-                              , return-value
-                            )
-          ) .
-        undo block_obj, next block_obj .
-      end.
-    end.
-    { str/fall-plc.i
-      buf_rvs-doc.obj-type
-      buf_rvs-doc.obj-code
-      buf_rvs-doc.rvs-code
-      ?
-      no-error
-    }
-    if error-status :error then do:
-      run add-msg in this-procedure
-        ( input true
-        , input substitute( 'Ошибка при сохранении данных с приборов на резервуарах для объекта &1 &2 .&3&4&3&5'
-                            , v-obj-type
-                            , v-obj-code
-                            , {&new-line}
-                            , error-status :get-message( 1 )
-                            , return-value
-                          )
-        ) .
-      undo block_obj, next block_obj .
-    end.
     if ptrlprop-autopump = true then do:
       { str/pump-sh.i
         buf_rvs-doc.obj-type
@@ -535,7 +587,9 @@ end.
       end.
 
       find first tt-pump-nozzle no-error .
-      if can-find( first tt-pump-nozzle ) then do:
+      if     can-find( first tt-pump-nozzle )
+         and not mRVSNull      
+      then do:
         /* varcur-data = true - при автоматическом создании всегда читаем текущие данные */
         { str/rvs-pump.i
           parparentproc
@@ -564,7 +618,7 @@ end.
         end.
       end.
     end.
-
+     
     for each buf_rvs-line exclusive-lock
       where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
         and buf_rvs-line.obj-type = buf_rvs-doc.obj-type

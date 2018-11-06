@@ -183,6 +183,11 @@ if choice = 1 then do:
         END.
     END.
 end.
+else if choice = 4 then do:
+  create cash-txn.
+  assign
+     cash-txn.tax-code = ?.
+end.  
 else do:
     tax-rate-rid = "".
     run ref/tax-tree.w (parparentproc,

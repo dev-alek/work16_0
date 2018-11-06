@@ -451,8 +451,35 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
        .
     end.
   /* возможно понадобится закрытие до приказа */
-    if temp-price-doc.doc-id <> "_" /* При тираже не надо закрывать переоценку (utl/load-form-15_0.w)*/
+    if temp-price-doc.doc-id = "_" /* При тираже надо закрывать переоценку до Акта (utl/load-form-15_0.w)*/
     then do :
+      run str/diallog.w
+          ( this-procedure
+          , this-procedure
+          , if (temp-price-doc.doc-num-ES <> ? and temp-price-doc.doc-num-ES <> "")
+            or (temp-price-doc.doc-id <> ? and temp-price-doc.doc-id <> "")
+            then ('str/pdf-clos.p':U + {&delim-par} + '1' + {&delim-par} + '2' + {&delim-par} + '1')
+            else 'str/pdf-clos.p':U
+          , ( string(recid(buf_price-doc-forming)) + {&delim-par} +
+             'no' + {&delim-par} +
+             'no' + {&delim-par} +
+             '?' +  {&delim-par} +
+             '?' +  {&delim-par} +
+             {&fact} + {&delim-par} +
+             '?' + {&delim-par} +
+             'no' + {&delim-par} +
+             'no' + {&delim-par} +
+             'yes'  )
+          , yes /*p-auto-go*/
+          , '':U
+          , 'Закрытие ДНЦ') no-error .
+          if error-status :error then do:
+              v-end-message = error-status :get-message(1)  + return-value  .
+              run pcall-log-file in p-log-handle (input v-end-message) .
+              undo, return error v-end-message.
+          end.
+    end.
+    else do :
       run str/diallog.w
           ( this-procedure
           , this-procedure

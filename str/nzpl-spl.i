@@ -17,16 +17,22 @@ Creation date: 01/12/06
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+&if "{1}" ="class"
+&then
+method private logical nzpl-spl
+&else
+function nzpl-spl returns logical
+&endif
 
-FUNCTION nzpl-spl returns logical(input p-obj-type as character
+(input p-obj-type as character
                                 , input p-obj-code as integer):
 define variable v-dopi    as integer no-undo .
 define variable v-param-type as character no-undo .
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
 define variable v-value-decimal as decimal no-undo .
-define variable v-value-integer as INTEGER no-undo .
-define variable v-value-logical AS LOGICAL no-undo .
+define variable v-value-integer as integer no-undo .
+define variable v-value-logical as logical no-undo .
 define variable v-tth as handle no-undo .
 define variable dflt-cd as character no-undo .
 
@@ -56,22 +62,42 @@ delete object v-tth.
 assign
 v-dopi = v-value-integer no-error .
 if v-dopi >= 6 then return yes.
-END FUNCTION.
+end. // FUNCTION/method
 
-FUNCTION nzpl-two returns logical (input p-obj-type as character
+&if "{1}" ="class"
+&then
+method private logical nzpl-two 
+&else
+FUNCTION nzpl-two returns logical 
+&endif 
+                                 (input p-obj-type as character
                                   , input p-obj-code as integer):
   define variable v-nzpl-two as logical no-undo.
-  run nzpl-two-proc (input p-obj-type, input p-obj-code, output v-nzpl-two).
+  &if "{1}" <> "class"
+  &then
+  run
+  &endif 
+  nzpl-two-proc (input p-obj-type, input p-obj-code, output v-nzpl-two).
   return v-nzpl-two.
-END FUNCTION.
+end. // FUNCTION/method
 
+&if "{1}" ="class"
+&then
+method private void nzpl-two-proc
+( input p-obj-type   as character,
+  input p-obj-code   as integer ,
+  output varge-two-pl as logical
+):
+&else
 procedure nzpl-two-proc :
 define input  parameter p-obj-type   as character no-undo.
 define input  parameter p-obj-code   as integer   no-undo.
 define output parameter varge-two-pl as logical   no-undo.
+&endif
+
 define buffer bf_pl-gds-pump       for ub.pl-gds-pump.
 define buffer bf-other_pl-gds-pump for ub.pl-gds-pump.
-do on error undo, return error return-value :
+//do on error undo, return error return-value :
 assign
   varge-two-pl = no.
 for each bf_pl-gds-pump where bf_pl-gds-pump.obj-type = p-obj-type        and
@@ -89,7 +115,7 @@ for each bf_pl-gds-pump where bf_pl-gds-pump.obj-type = p-obj-type        and
     leave.
   end.
 end.
-end.
-end procedure.
+//end.
+end. // procedure/method .
 
 /* $Workfile$ e n d */

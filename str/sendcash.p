@@ -239,6 +239,7 @@ else do:
       end. /*not "R"*/
     end.
     when 1 then do:
+      
       run write-log-and-file in p-log-handle (
             input 1
           , input log-file-name
@@ -282,6 +283,36 @@ else do:
           .
         end.
       END.
+    end.
+    when 4 then do:
+      if mode = "D" 
+      then do:
+      run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input substitute("&1 магазина &2 всех кассиров"
+                            , (if mode = "U" then "Пересылка на кассы" else "Удаление с касс" )
+                            , i-obj-code)
+          ).
+      run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input substitute("Подготовка данных")
+                                          ).
+    
+          create cash-cash.
+          assign
+          cash-cash.cash-code = ?
+          
+          no-error.
+          validate cash-cash no-error.
+          if error-status:error
+          then
+            message error-status:get-message(1)
+            view-as alert-box.
+       end.
     end.
   END CASE.
   if can-find(first cash-cash) then do:
