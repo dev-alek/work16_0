@@ -599,6 +599,27 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 view-as alert-box error .
               undo block_tr, return error .
             end.
+            
+            find first rvs-line-attr exclusive-lock
+                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                   and rvs-line-attr.attr-code = "input-type" no-error.
+            if not available rvs-line-attr then do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "input-type"
+              .
+            end.
+            if varcur-rvs then rvs-line-attr.attr-value = 'à' .
+            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ô' .
 
             run cur-time in this-procedure
               ( output v-today

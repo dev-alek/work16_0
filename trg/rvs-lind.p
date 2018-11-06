@@ -33,6 +33,18 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+
+    for each ub.rvs-line-attr
+       where ub.rvs-line-attr.rvs-code = ub.rvs-line.rvs-code
+         and ub.rvs-line-attr.obj-type = ub.rvs-line.obj-type
+         and ub.rvs-line-attr.obj-code = ub.rvs-line.obj-code
+         and ub.rvs-line-attr.pl-code  = ub.rvs-line.pl-code
+         and ub.rvs-line-attr.gds-code = ub.rvs-line.gds-code
+    on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    :
+      delete ub.rvs-line-attr .
+    end.
+         
     for each ub.rvs-line-pump
       where ub.rvs-line-pump.rvs-code = ub.rvs-line.rvs-code
         and ub.rvs-line-pump.obj-type = ub.rvs-line.obj-type

@@ -33,6 +33,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define buffer buf_c-rvs-line-pump     for ub.c-rvs-line-pump .
   define buffer buf_parent_user-account for ub.user-account .
   define buffer buf_user-account        for ub.user-account .
+  define buffer buf_place-attr          for ub.place-attr .
   
   define TEMP-TABLE tt-rvs-doc like ub.c-rvs-doc
     field del-f as integer .
@@ -49,6 +50,10 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define variable v-dnsty     as decimal   no-undo .
   define variable v-wght      as decimal   no-undo .
   define variable v-ex-df     as decimal   no-undo .
+  define variable v-line-input-type as character no-undo .
+  define variable v-doc-input-type as character no-undo .
+  define variable v-input-type-list as character no-undo .
+  define variable er-wght-pipeline as decimal   no-undo .
 
   define property Msg as character no-undo
     get.
@@ -160,6 +165,52 @@ sw = insw .
           .
       end.
     end.
+    
+    v-input-type-list = '' .
+    for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = tt-rvs-doc.rvs-code:
+      find first buf_rvs-line-attr no-lock
+            where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+            and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+            and buf_rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+            and buf_rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+            and buf_rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+            and buf_rvs-line-attr.attr-code = 'input-type'
+            no-error.
+      if available buf_rvs-line-attr
+      then do :
+        v-input-type-list = v-input-type-list + ',' + buf_rvs-line-attr.attr-value .
+      end.
+    end.  
+    
+    if can-do(v-input-type-list, 'à')
+    and not can-do(v-input-type-list, 'ô')
+    and not can-do(v-input-type-list, 'ê')
+    and not can-do(v-input-type-list, 'ï') 
+    then v-doc-input-type = 'à'.
+    
+    if can-do(v-input-type-list, 'ô')
+    and not can-do(v-input-type-list, 'à')
+    and not can-do(v-input-type-list, 'ê')
+    and not can-do(v-input-type-list, 'ï') 
+    then v-doc-input-type = 'ô'.
+    
+    if can-do(v-input-type-list, 'à')
+    and can-do(v-input-type-list, 'ô')
+    and not can-do(v-input-type-list, 'ê')
+    and not can-do(v-input-type-list, 'ï') 
+    then v-doc-input-type = 'àê'.
+    
+    if can-do(v-input-type-list, 'ê')
+    or can-do(v-input-type-list, 'ï') 
+    then v-doc-input-type = 'ôê'.
+    
+    if can-do(v-input-type-list, 'ð')
+    and not can-do(v-input-type-list, 'à')
+    and not can-do(v-input-type-list, 'ô')
+    and not can-do(v-input-type-list, 'ê')
+    and not can-do(v-input-type-list, 'ï') 
+    then v-doc-input-type = 'ð'.
+      
     if tt-rvs-doc.del-f = 0 then 
     do:
       for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = tt-rvs-doc.rvs-code:
@@ -199,6 +250,7 @@ sw = insw .
     sw:write-data-element ("doc-date-f", if tt-rvs-doc.fact-date = ? then "" else iso-date(datetime(tt-rvs-doc.fact-date, (tt-rvs-doc.sys-time-int * 1000 )))).
     sw:write-data-element ("del-f", if tt-rvs-doc.del-f = ? then "" else string(tt-rvs-doc.del-f)).
     sw:write-data-element ("doc-type", string(v-type)).
+    sw:write-data-element ("inp-type", v-doc-input-type).
     sw:write-data-element ("shift-date", if tt-rvs-doc.shift-date = ? then "" else iso-date(tt-rvs-doc.shift-date)).
     sw:write-data-element ("shift-num", if tt-rvs-doc.shift-num = ? then "" else string(tt-rvs-doc.shift-num)).
     sw:write-data-element ("auto-cr", string(v-autorvs)).
@@ -207,8 +259,43 @@ sw = insw .
     sw:write-data-element ("operator", if v-user-name = ? then "" else string(v-user-name)).
     sw:start-element ("tanks") .
     for each tt-rvs-line no-lock:
+      for each buf_rvs-line-attr no-lock
+        where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        and buf_rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        and buf_rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        and buf_rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code:
+        case buf_rvs-line-attr.attr-code:
+          when "izmer-density" then
+            do:
+              v-dnsty = decimal(buf_rvs-line-attr.attr-value) . 
+            end.
+          when "delta-mass-qnty" then
+            do:
+              v-wght = decimal(buf_rvs-line-attr.attr-value) .
+            end.
+          when "CriticalDif" then
+            do:
+              v-ex-df = decimal(buf_rvs-line-attr.attr-value) .
+            end.
+          when "input-type" then
+            do:
+              v-line-input-type = buf_rvs-line-attr.attr-value .
+            end.
+        end case .
+      end.
+      find first buf_place-attr no-lock where buf_place-attr.attr-code   = "place-error-mass"
+                                          and buf_place-attr.obj-code    = tt-rvs-line.obj-code
+                                          and buf_place-attr.obj-type    = tt-rvs-line.obj-type
+                                          and buf_place-attr.pl-code     = tt-rvs-line.pl-code no-error.
+      if available buf_place-attr
+      then do :
+        er-wght-pipeline = tt-rvs-line.state-add-qnty * v-dnsty * decimal(buf_place-attr.attr-value) / 100 no-error.  
+      end.
+      else er-wght-pipeline = ? .                                
       sw:start-element ("tank") .
       sw:write-data-element ("tank-num"  , if tt-rvs-line.pl-code = ? then "0" else string(tt-rvs-line.pl-code)).
+      sw:write-data-element ("inp-type"  , v-line-input-type).
       sw:write-data-element ("gd-code"  , if tt-rvs-line.gds-code = ? then "0" else string(tt-rvs-line.gds-code)).
       sw:write-data-element ("tank-ost" , if tt-rvs-line.measure-qnty = ? then "0" else string(tt-rvs-line.measure-qnty)).
       sw:write-data-element ("tank-ost-tc" , if tt-rvs-line.measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.measure-tc-qnty)).
@@ -232,6 +319,8 @@ sw = insw .
       sw:write-data-element ("tank-ost-tc-fact" , if tt-rvs-line.state-measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-tc-qnty)).
       sw:write-data-element ("tank-dnst-fact" , if tt-rvs-line.state-density = ? then "0" else string-mth(tt-rvs-line.state-density)).
       sw:write-data-element ("pipeline-qnty-fact" , if tt-rvs-line.state-add-qnty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty)).
+      sw:write-data-element ("pipeline-wght-fact" , if tt-rvs-line.state-add-qnty * v-dnsty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty * v-dnsty)).
+      sw:write-data-element ("er-wght-pipeline" , if er-wght-pipeline = ? then "0" else string-mth(er-wght-pipeline)).
       sw:write-data-element ("tank-ost-br-fact" , if tt-rvs-line.state-brutto-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty)).
       sw:write-data-element ("tank-ost-br-tc-fact" , if tt-rvs-line.state-brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-tc-qnty)).
       sw:write-data-element ("tank-wtr-fact" , if (tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty)).
@@ -246,29 +335,10 @@ sw = insw .
       sw:write-data-element ("tnk-t2-fact" , if tt-rvs-line.state-temp-layer2 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer2)).
       sw:write-data-element ("tnk-t3-fact" , if tt-rvs-line.state-temp-layer3 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer3)).
       sw:write-data-element ("tnk-flng-fact" , if tt-rvs-line.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line.state-cf-qnty)).
-      for each buf_rvs-line-attr no-lock
-        where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-        and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-        and buf_rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-        and buf_rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-        and buf_rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code:
-        case buf_rvs-line-attr.attr-code:
-          when "izmer-density" then
-            do:
-              v-dnsty = decimal(buf_rvs-line-attr.attr-value) . 
-            end.
-          when "delta-mass-qnty" then
-            do:
-              v-wght = decimal(buf_rvs-line-attr.attr-value) .
-            end.
-          when "CriticalDif" then
-            do:
-              v-ex-df = decimal(buf_rvs-line-attr.attr-value) .
-            end.
-        end case .
-      end.
+      
       sw:write-data-element ("ms-dnsty" , string-mth(v-dnsty)).
       sw:write-data-element ("er-wght" , string-mth(v-wght)).
+      sw:write-data-element ("abs-er-wght" , if (tt-rvs-line.state-measure-cli-qnty * v-wght / 100) = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty * v-wght / 100)).
       sw:write-data-element ("ex-df" , string-mth(v-ex-df)).
       sw:end-element ("tank")  .
     end.
