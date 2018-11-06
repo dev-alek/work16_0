@@ -92,14 +92,16 @@ define temp-table temp_twowin_itemsSelected_col no-undo
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 ~
-RECT-4 t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl ~
-rvs-wt-email B-set_dop-info r-algrvspt t-rvsnmter t-invclipt f-invclipt ~
-b-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
-t-mand-chioce-autocar delta-horiz delta-vert v-dop-info 
+RECT-4 RECT-5 RECT-6 t-autopump-izm t-autopump t-avtinvpm t-olddens ~
+r-expptrl r-inpptrl rvs-wt-email B-set_dop-info r-algrvspt t-rvsnmter ~
+t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc mass-proc ~
+r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert ~
+otkl-temp otkl-density otkl-water v-dop-info 
 &Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
 t-olddens r-expptrl r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter t-invclipt ~
 f-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
-t-mand-chioce-autocar delta-horiz delta-vert v-dop-info f-invclipt-name 
+t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp ~
+otkl-density otkl-water v-dop-info f-invclipt-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -166,6 +168,26 @@ DEFINE VARIABLE mass-proc AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE otkl-density AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
+     LABEL "Плотности" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
+DEFINE VARIABLE otkl-fact-volue AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Фактического объема" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
+DEFINE VARIABLE otkl-temp AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Температуры" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
+DEFINE VARIABLE otkl-water AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Воды" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
 DEFINE VARIABLE rvs-wt-email AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
      SIZE 60 BY .96 NO-UNDO.
@@ -205,10 +227,10 @@ DEFINE VARIABLE r-expptrl AS CHARACTER
 "Объем", "volume"
      SIZE 23.5 BY .83 NO-UNDO.
 
-DEFINE VARIABLE r-inpptrl AS CHARACTER
+DEFINE VARIABLE r-inpptrl AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
-"Масса+плотность", "weight",
+          "Масса+плотность", "weight",
 "Объем+плотность", "volume",
 "Масса+объем", "weight+",
 "Объем+масса", "volume+"
@@ -218,7 +240,7 @@ DEFINE VARIABLE r-temp-for-pomi AS INTEGER
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
           "15°С", 1,
-          "20°С", 2
+"20°С", 2
      SIZE 17 BY .75 TOOLTIP "Используется только при передаче в ПО к МИ" NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
@@ -236,6 +258,14 @@ DEFINE RECTANGLE RECT-3
 DEFINE RECTANGLE RECT-4
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 96.5 BY 4.17.
+
+DEFINE RECTANGLE RECT-5
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 43.5 BY 7.25.
+
+DEFINE RECTANGLE RECT-6
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 52.5 BY 7.25.
 
 DEFINE VARIABLE t-autopump AS LOGICAL INITIAL no 
      LABEL "Автоматические сверки создавать с чтением всех счетчиков ТРК" 
@@ -299,39 +329,48 @@ DEFINE FRAME shattrpt
      mass-proc AT ROW 27.38 COL 46.75 COLON-ALIGNED WIDGET-ID 100
      r-algoincptrl AT ROW 28.38 COL 38.13 NO-LABEL WIDGET-ID 118
      t-mand-chioce-autocar AT ROW 29.33 COL 3.63 WIDGET-ID 106
-     delta-horiz AT ROW 32.54 COL 2.5 NO-LABEL WIDGET-ID 110
-     delta-vert AT ROW 32.54 COL 24 NO-LABEL WIDGET-ID 122
+     otkl-fact-volue AT ROW 32.5 COL 72.63 COLON-ALIGNED WIDGET-ID 506
+     delta-horiz AT ROW 32.71 COL 3.5 NO-LABEL WIDGET-ID 110
+     delta-vert AT ROW 32.71 COL 25 NO-LABEL WIDGET-ID 122
+     otkl-temp AT ROW 33.58 COL 72.63 COLON-ALIGNED WIDGET-ID 508
+     otkl-density AT ROW 34.71 COL 72.63 COLON-ALIGNED WIDGET-ID 510
+     otkl-water AT ROW 35.79 COL 72.63 COLON-ALIGNED WIDGET-ID 512
      v-dop-info AT ROW 13 COL 3.5 NO-LABEL WIDGET-ID 498
      f-invclipt-name AT ROW 19.83 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
+     "вертикальных" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 25 WIDGET-ID 124
      "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
           SIZE 52 BY .63 AT ROW 26.58 COL 3.5 WIDGET-ID 86
+     "Максимально допустимые отклонения:" VIEW-AS TEXT
+          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED WIDGET-ID 504
+     "Настройки инвентаризации по сверке" VIEW-AS TEXT
+          SIZE 35.5 BY .67 AT ROW 15.08 COL 3 WIDGET-ID 78
+     "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
+          SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
      "горизонтальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.71 COL 2.5 WIDGET-ID 126
-     "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
-          SIZE 57.5 BY .67 AT ROW 30.75 COL 2.5 WIDGET-ID 112
-     "вертикальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.71 COL 24 WIDGET-ID 124
-     "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
-          SIZE 61 BY .83 AT ROW 7.25 COL 3.5 WIDGET-ID 54
-     "Температура, к которой приводиться плотность и объем (°С) :" VIEW-AS TEXT
-          SIZE 60 BY .67 AT ROW 21.33 COL 4 WIDGET-ID 94
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 3.5 WIDGET-ID 126
      "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
           SIZE 34.5 BY 1 AT ROW 28.38 COL 3.63 WIDGET-ID 116
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
           SIZE 62.5 BY .96 AT ROW 10.79 COL 3.5 WIDGET-ID 94
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
           SIZE 64.5 BY .96 AT ROW 10.08 COL 3.5 WIDGET-ID 92
-     "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
-          SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
-     "Настройки инвентаризации по сверке" VIEW-AS TEXT
-          SIZE 35.5 BY .67 AT ROW 15.08 COL 3 WIDGET-ID 78
      "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
           SIZE 49 BY .83 AT ROW 7.92 COL 3.5 WIDGET-ID 48
+     "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
+          SIZE 42 BY .67 AT ROW 30.92 COL 3.5 WIDGET-ID 112
      RECT-1 AT ROW 22.33 COL 2.5 WIDGET-ID 38
      RECT-2 AT ROW 14.71 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 7 COL 2.5 WIDGET-ID 66
      RECT-4 AT ROW 26.33 COL 2.5 WIDGET-ID 84
-     SPACE(1.24) SKIP(7.62)
+     RECT-5 AT ROW 30.75 COL 2.63 WIDGET-ID 500
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE  WIDGET-ID 100.
+
+/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
+DEFINE FRAME shattrpt
+     RECT-6 AT ROW 30.75 COL 46.5 WIDGET-ID 502
+     SPACE(1.24) SKIP(0.12)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки работы с ТОПЛИВНЫМ товаром" WIDGET-ID 100.
@@ -373,8 +412,14 @@ ASSIGN
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN v-dop-info IN FRAME shattrpt
    ALIGN-L                                                              */
+/* SETTINGS FOR TEXT-LITERAL "Максимально допустимые отклонения:"
+          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED        */
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
+
+
+/* Setting information for Queries and Browse Widgets fields            */
 
 &ANALYZE-SUSPEND _QUERY-BLOCK DIALOG-BOX shattrpt
 /* Query rebuild information for DIALOG-BOX shattrpt
@@ -741,14 +786,15 @@ PROCEDURE enable_UI :
   DISPLAY t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
           rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt 
           r-temp-for-pomi r-denstclc mass-proc r-algoincptrl 
-          t-mand-chioce-autocar delta-horiz delta-vert v-dop-info 
-          f-invclipt-name 
+          t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp 
+          otkl-density otkl-water v-dop-info f-invclipt-name 
       WITH FRAME shattrpt.
-  ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 t-autopump-izm 
-         t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl rvs-wt-email 
-         B-set_dop-info r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt 
-         r-temp-for-pomi r-denstclc mass-proc r-algoincptrl 
-         t-mand-chioce-autocar delta-horiz delta-vert v-dop-info 
+  ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 RECT-5 RECT-6 
+         t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
+         rvs-wt-email B-set_dop-info r-algrvspt t-rvsnmter t-invclipt 
+         f-invclipt b-invclipt r-temp-for-pomi r-denstclc mass-proc 
+         r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz 
+         delta-vert otkl-temp otkl-density otkl-water v-dop-info 
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.
@@ -900,6 +946,34 @@ on error undo, return error return-value
               r-algoincptrl :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
               .
           end.
+      when {&attr-petrol_otkl-fact-volue} then 
+          do: 
+            assign
+              otkl-fact-volue = thbjattr_thbj-attr.property-value-decimal 
+              otkl-fact-volue :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.
+      when {&attr-petrol_otkl-temp} then 
+          do: 
+            assign
+              otkl-temp = thbjattr_thbj-attr.property-value-decimal 
+              otkl-temp :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.          
+      when {&attr-petrol_otkl-density} then 
+          do: 
+            assign
+              otkl-density = thbjattr_thbj-attr.property-value-decimal 
+              otkl-density :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.          
+      when {&attr-petrol_otkl-water} then 
+          do: 
+            assign
+              otkl-water = thbjattr_thbj-attr.property-value-decimal 
+              otkl-water :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.                                            
       when {&attr-petrol_mand-choice-autocar} then 
           do: 
             assign

@@ -2736,6 +2736,43 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+
+    v-prop-code = "{&bef-attr-petrol_otkl-fact-volue}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      
+    v-prop-code = "{&bef-attr-petrol_otkl-temp}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+    v-prop-code = "{&bef-attr-petrol_otkl-density}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+    v-prop-code = "{&bef-attr-petrol_otkl-water}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
       v-prop-code = "{&bef-attr-petrol_mand-choice-autocar}".
 &scop ptype logical
 &scop prop-value no
