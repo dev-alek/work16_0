@@ -928,7 +928,7 @@ if parstatus = {&wayb} and
      end.
      else do:
        /* ошибка проверки факт кол-ва */
-       if ln_doc-line.fact-qnty <> varfact-qnty then do:
+       /*if ln_doc-line.fact-qnty <> varfact-qnty then do:
           { str/chkqtpl.i
             varstfactpl
             varupdate
@@ -1002,7 +1002,7 @@ if parstatus = {&wayb} and
               end.
             end.
           end.
-       end.
+       end.*/
      end.
    end.
 end.

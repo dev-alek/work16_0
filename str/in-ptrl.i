@@ -74,12 +74,13 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define output parameter p-rvs-qnty-after      like ub.rvs-line.state-measure-qnty no-undo .
       define output parameter p-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
       define output parameter p-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
+      define output parameter p-delta-mass-qnty     as decimal no-undo .
 
       define buffer bf_bef_rvs-doc  for ub.rvs-doc  .
       define buffer bf_aft_rvs-doc  for ub.rvs-doc  .
       define buffer bf_bef_rvs-line for ub.rvs-line .
       define buffer bf_aft_rvs-line for ub.rvs-line .
-
+      define buffer bf_rvs-line-attr for ub.rvs-line-attr .
       assign
         p-rvs-qnty-before     = 0.0
         p-rvs-qnty-after      = 0.0
@@ -124,10 +125,23 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           then do:
             next .
           end.
+          find first bf_rvs-line-attr no-lock
+            where bf_rvs-line-attr.rvs-code = bf_aft_rvs-line.rvs-code
+              and bf_rvs-line-attr.obj-type = bf_aft_rvs-line.obj-type
+              and bf_rvs-line-attr.obj-code = bf_aft_rvs-line.obj-code
+              and bf_rvs-line-attr.pl-code = bf_aft_rvs-line.pl-code
+              and bf_rvs-line-attr.gds-code = p-gds-code 
+              and bf_rvs-line-attr.attr-code = "delta-mass-qnty"
+              no-error.
+              
+          if available (bf_rvs-line-attr)
+          then p-delta-mass-qnty = decimal (bf_rvs-line-attr.attr-value).
+          else p-delta-mass-qnty = 0.65. 
           assign
             p-rvs-qnty-after     = p-rvs-qnty-after     + bf_aft_rvs-line.state-measure-qnty
             p-rvs-cli-qnty-after = p-rvs-cli-qnty-after + bf_aft_rvs-line.state-measure-cli-qnty
           .
+          release bf_rvs-line-attr.
         end. /* for each bf_aft_rvs-line */
       end. /* if available bf_aft_rvs-doc */
     end procedure. /* return-rvs-qnty */
@@ -317,7 +331,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-density         like ub.rvs-line.state-density          no-undo .
-
+        define variable v-delta-mass-qnty as decimal   no-undo .
         assign
           v-pl-code = ?
         .
@@ -753,6 +767,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                  ,output v-rvs-qnty-after
                  ,output v-rvs-cli-qnty-before
                  ,output v-rvs-cli-qnty-after
+                 ,output v-delta-mass-qnty
                 ) no-error .
               if error-status :error then do:
                 undo block_tr, return error return-value .
@@ -972,7 +987,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               assign
                 v-new-fact-qnty = p-new-fact-qnty
                 .
-
             do ii = 1 to p-infoSectionsTotal:SectionNum : 
 
               def var v-calc-density like ub.rvs-line.state-density no-undo .
@@ -1270,7 +1284,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-log                 as   logical                            no-undo .
         define variable v-chg                 as   logical                            no-undo .
         define variable v-st-doc              as   logical                            no-undo .
-
+        define variable v-delta-mass-qnty as decimal   no-undo .
+        
         if p-stfactplvalue <> "":U
           and p-revision = true
         then do:
@@ -1285,6 +1300,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               ,output v-rvs-qnty-after
               ,output v-rvs-cli-qnty-before
               ,output v-rvs-cli-qnty-after
+              ,output v-delta-mass-qnty
             ) no-error .
           if error-status :error then do:
             return error return-value .
@@ -1384,12 +1400,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-tot-qnty-pl   as decimal   no-undo .
         define variable v-tot-qnty-rvs  as decimal   no-undo .
 
-        define variable v-add-option-bt as character no-undo .
-        define variable v-add-option-ps as character no-undo .
-        define variable v-answ-num      as integer   no-undo .
-        define variable v-edit-doc-pl   as integer   no-undo .
-        define variable v-set-doc-pl    as integer   no-undo .
-
+        define variable v-add-option-bt   as character no-undo .
+        define variable v-add-option-ps   as character no-undo .
+        define variable v-answ-num        as integer   no-undo .
+        define variable v-edit-doc-pl     as integer   no-undo .
+        define variable v-set-doc-pl      as integer   no-undo .
+        define variable v-delta-mass-qnty as decimal   no-undo .
 
         define buffer buf_goods for ub.goods .
 
@@ -1415,6 +1431,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
              ,output v-rvs-qnty-after
              ,output v-rvs-cli-qnty-before
              ,output v-rvs-cli-qnty-after
+             ,output v-delta-mass-qnty
             ) no-error .
           if error-status :error then do:
             return error return-value .
@@ -1424,25 +1441,41 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             v-tot-qnty-rvs = v-tot-qnty-rvs + ( v-rvs-qnty-after - v-rvs-qnty-before )
             v-tot-qnty-pl  = v-tot-qnty-pl  + tt-doc-pl.fact-qnty
           .
-          if absolute( ( v-rvs-qnty-after - v-rvs-qnty-before ) - tt-doc-pl.fact-qnty ) > tt-doc-pl.fact-qnty * 0.0065 then do:
-            if v-message = "":U then do:
-              assign
-                v-message = "Факт. кол-во по местам хранения и по сверкам:".
-              .
-            end.
-            assign
-              v-message = v-message
-                          + {&new-line}
-                          + substitute( "по месту хр. &1 (&4): &2, по сверкам: &3"
-                                      ,tt-doc-pl.pl-code
-                                      ,tt-doc-pl.cli-fact-qnty
-                                      ,( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before )
-                                      ,buf_goods.unit-cli
-                                      ) .
-            .
+          if absolute( ( v-rvs-qnty-after - v-rvs-qnty-before ) - tt-doc-pl.fact-qnty ) > tt-doc-pl.fact-qnty * v-delta-mass-qnty / 100 then do:
+/*            if v-message = "":U then do:                                               */
+/*              assign                                                                   */
+/*                v-message = "Факт. кол-во по местам хранения и по сверкам:".           */
+/*              .                                                                        */
+/*            end.                                                                       */
+/*            assign                                                                     */
+/*              v-message = v-message                                                    */
+/*                          + {&new-line}                                                */
+/*                          + substitute( "по месту хр. &1 (&4): &2, по сверкам: &3"     */
+/*                                      ,tt-doc-pl.pl-code                               */
+/*                                      ,tt-doc-pl.cli-fact-qnty                         */
+/*                                      ,( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before )*/
+/*                                      ,buf_goods.unit-cli                              */
+/*                                      ) .                                              */
+/*            .                                                                          */
+            v-message = substitute ("Факт. кол-во по сверкам по месту хр. &6: &1 &2 &3не совпадает с факт. кол-вом по ТТН: &4 &2.&3Расхождение после слива НП превышает погрешность измерения резервуара &5 &2." 
+              ,( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before )
+              ,buf_goods.unit-cli
+              ,{&new-line}
+              ,tt-doc-pl.cli-fact-qnty
+              ,round (tt-doc-pl.cli-fact-qnty * v-delta-mass-qnty / 100, 3)
+              ,tt-doc-pl.pl-code
+              ).
+            
+            message v-message view-as alert-box information title "Сообщение".
+            
+            
+            
           end.
         end. /* for each tt-doc-pl */
-
+        
+        if v-message <> "":U
+          then return.
+        
         if v-message <> "":U
           and ( v-count-pl > 1
                 or ( v-count-pl = 1
@@ -1535,6 +1568,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                  ,output v-rvs-qnty-after
                  ,output v-rvs-cli-qnty-before
                  ,output v-rvs-cli-qnty-after
+                 ,output v-delta-mass-qnty
                 ) no-error .
               if error-status :error then do:
                 return error return-value .
@@ -1711,6 +1745,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           buf_rvs-doc.is-full   = no
           buf_rvs-doc.doc-date  = v-today
         .
+        find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
+        if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
+        then do:
+          buf_rvs-doc.agnt = ub.user-account.psn-code.
+          buf_rvs-doc.boss = ub.user-account.psn-code.
+          buf_rvs-doc.wrkr = ub.user-account.psn-code.
+        end.
+        
         run gbl/factdate.p
           ( input        buf_rvs-doc.obj-type
           ,input        buf_rvs-doc.obj-code
@@ -1754,6 +1796,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           buf_rvs-doc.is-full   = no
           buf_rvs-doc.doc-date  = v-today
         .
+        find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
+        if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
+        then do:
+          buf_rvs-doc.agnt = ub.user-account.psn-code.
+          buf_rvs-doc.boss = ub.user-account.psn-code.
+          buf_rvs-doc.wrkr = ub.user-account.psn-code.
+        end.
+        
         run gbl/factdate.p
           ( input        buf_rvs-doc.obj-type
             ,input        buf_rvs-doc.obj-code

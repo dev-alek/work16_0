@@ -117,18 +117,18 @@ define buffer buf_doc-pl for ub.doc-pl.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Rect-Main Rect-Bottom Rect-Left Rect-Right ~
 Rect-Top RECT-3 RECT-1 RECT-4 RECT-5 RECT-6 RECT-8 RECT-7 b-save b-quit ~
-b-del-sec b-help f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-cli-qnty ~
-f-size f-car-vol f-num-passport f-norm-doc f-certif-fuel f-validity-certif ~
-f-a-b-tarir f-mouth f-tank-water f-tank-temp f-tank-density f-dens-temp ~
-f-EU-weight f-list-tank r-list-tank f-loss-norm f-acc-ship f-num-plotn ~
-f-date-pov-plotn f-date-start f-hour-start f-min-start f-date-end ~
-f-hour-end f-min-end f-tests f-num-print-prob f-kol-prob f-hour-prob ~
-f-min-prob f-date-prob 
+b-del-sec b-help f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-acc-ship ~
+f-cli-qnty f-size f-car-vol f-num-passport f-norm-doc f-certif-fuel ~
+f-validity-certif f-a-b-tarir f-mouth f-tank-water f-tank-temp ~
+f-tank-density f-dens-temp f-EU-weight f-list-tank r-list-tank f-loss-norm ~
+f-num-plotn f-date-pov-plotn f-date-start f-hour-start f-min-start ~
+f-date-end f-hour-end f-min-end f-tests f-num-print-prob f-kol-prob ~
+f-hour-prob f-min-prob f-date-prob 
 &Scoped-Define DISPLAYED-OBJECTS f-sec-num f-ttn-temp f-doc-qnty f-doc-dens ~
-f-cli-qnty f-size f-car-vol f-num-passport f-text1 f-norm-doc f-text2 ~
-f-certif-fuel f-text3 f-validity-certif f-a-b-tarir f-mouth f-tank-water ~
-f-tank-vol f-tank-temp f-tank-density f-dens-temp f-EU-weight f-list-tank ~
-f-loss-norm f-acc-ship f-place-si f-num-plotn f-date-pov-plotn ~
+f-acc-ship f-cli-qnty f-size f-car-vol f-num-passport f-text1 f-norm-doc ~
+f-text2 f-certif-fuel f-text3 f-validity-certif f-a-b-tarir f-mouth ~
+f-tank-water f-tank-vol f-tank-temp f-tank-density f-dens-temp f-EU-weight ~
+f-list-tank f-loss-norm f-place-si f-num-plotn f-date-pov-plotn ~
 f-tank-weight f-tank-density-pomi f-acc-weight f-tank-vol-pomi f-date-start ~
 f-hour-start f-min-start f-date-end f-hour-end f-min-end f-tests ~
 f-num-print-prob f-kol-prob f-hour-prob f-min-prob f-date-prob ~
@@ -219,22 +219,22 @@ DEFINE VARIABLE f-a-b-tarir AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-acc-ship AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0
-     LABEL "    Погр. изм. пост." 
+DEFINE VARIABLE f-acc-ship AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0 
+     LABEL "Погр.изм.пост." 
      VIEW-AS FILL-IN 
-     SIZE 14 BY 1 NO-UNDO.
+     SIZE 8.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-acc-weight AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL ? 
      LABEL "Погр. изм. массы" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-car-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-car-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Объем по паспорту в литрах" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-car-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-car-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Объем по паспорту в литрах" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -278,7 +278,7 @@ DEFINE VARIABLE f-doc-dens AS DECIMAL FORMAT ">>9.9999999999":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-qnty AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-doc-qnty AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "  Кол-во по док." 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -318,7 +318,7 @@ DEFINE VARIABLE f-list-tank AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 42.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-loss-norm AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-loss-norm AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Тех. потери по нормам, кг" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -399,17 +399,17 @@ DEFINE VARIABLE f-tank-temp AS DECIMAL FORMAT "->9":U INITIAL ?
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-tank-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "     Объем топлива" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-vol-pomi AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL ? 
+DEFINE VARIABLE f-tank-vol-pomi AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL ? 
      LABEL "Объем топлива приведенный" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-tank-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Объем топлива" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -527,10 +527,11 @@ DEFINE FRAME Dialog-Frame
      b-help AT ROW 1 COL 87.38
      f-sec-num AT ROW 3.75 COL 16.25 COLON-ALIGNED WIDGET-ID 84
      f-car-vol-total AT ROW 3.75 COL 31.13 COLON-ALIGNED WIDGET-ID 90
-     f-ttn-temp AT ROW 3.79 COL 52.63 COLON-ALIGNED WIDGET-ID 132
+     f-ttn-temp AT ROW 3.79 COL 53.5 COLON-ALIGNED WIDGET-ID 132
      f-doc-qnty AT ROW 3.79 COL 80.5 COLON-ALIGNED WIDGET-ID 86
      f-doc-dens AT ROW 4.96 COL 21.25 COLON-ALIGNED WIDGET-ID 106
      f-tank-weight-total AT ROW 4.96 COL 31.13 COLON-ALIGNED WIDGET-ID 92
+     f-acc-ship AT ROW 4.96 COL 53.5 COLON-ALIGNED WIDGET-ID 140
      f-cli-qnty AT ROW 4.96 COL 80.5 COLON-ALIGNED WIDGET-ID 108
      f-size AT ROW 6.13 COL 80.5 COLON-ALIGNED WIDGET-ID 20
      f-car-vol AT ROW 6.17 COL 30.25 COLON-ALIGNED
@@ -555,7 +556,6 @@ DEFINE FRAME Dialog-Frame
      f-list-tank AT ROW 19.21 COL 48.5 COLON-ALIGNED WIDGET-ID 124
      r-list-tank AT ROW 19.21 COL 93.25 WIDGET-ID 126
      f-loss-norm AT ROW 20.25 COL 29 COLON-ALIGNED WIDGET-ID 138
-     f-acc-ship AT ROW 20.25 COL 80.38 COLON-ALIGNED WIDGET-ID 140
      f-place-si AT ROW 21.92 COL 22 COLON-ALIGNED WIDGET-ID 16
      r-sr-izm AT ROW 21.92 COL 28.5 WIDGET-ID 18
      f-num-plotn AT ROW 23.04 COL 9 COLON-ALIGNED WIDGET-ID 76
@@ -1101,6 +1101,7 @@ do:
   
   if infoSectionTotal:IsRNAlgo
   then do:
+    infoSectionTotal:InfoSectionCurr:TankWeight = f-tank-weight.
     def var v-m as decimal no-undo.
     infoSectionTotal:RNAlgo(v-page-current, output v-m, yes).
     f-EU-weight:screen-value = string (infoSectionTotal:InfoSectionCurr:NaturalLoss).
@@ -2394,17 +2395,17 @@ define variable ii as integer no-undo.
   
   infoSectionTotal:CalculateTotal().
   case false: 
-  when 0.001 > abs (infoSectionTotal:DocQntyTotal - infoSectionTotal:DocQntyLine) then 
+  when 0.01 > abs (infoSectionTotal:DocQntyTotal - infoSectionTotal:DocQntyLine) then 
   do:
     message substitute ("Количество по документу - &1 не совпадает с суммой количества по документу - &2 по секциям", infoSectionTotal:DocQntyLine, infoSectionTotal:DocQntyTotal) view-as alert-box error.
     return error.
   end.
-  when 0.001 > abs (infoSectionTotal:DocDensityAvg - infoSectionTotal:DocDensLine) then 
+  when 0.01 > abs (infoSectionTotal:DocDensityAvg - infoSectionTotal:DocDensLine) then 
   do:
     message substitute ("Плотность по документу - &1 не совпадает со средней плотностью по документу - &2 по секциям", infoSectionTotal:DocDensLine, infoSectionTotal:DocDensityAvg) view-as alert-box error.
     return error.
   end.
-  when 0.001 > abs (infoSectionTotal:DocDensityAvg * infoSectionTotal:DocQntyTotal - infoSectionTotal:DocCliLine) then 
+  when 0.01 > abs (infoSectionTotal:DocDensityAvg * infoSectionTotal:DocQntyTotal - infoSectionTotal:DocCliLine) then 
   do:
     message substitute ("Масса по документу - &1 не совпадает с суммой масс по документу - &2 по секциям", infoSectionTotal:DocCliLine, infoSectionTotal:DocDensityAvg * infoSectionTotal:DocQntyTotal) view-as alert-box error.
     return error.
@@ -2750,15 +2751,15 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-cli-qnty f-size f-car-vol 
-          f-num-passport f-text1 f-norm-doc f-text2 f-certif-fuel f-text3 
-          f-validity-certif f-a-b-tarir f-mouth f-tank-water f-tank-vol 
-          f-tank-temp f-tank-density f-dens-temp f-EU-weight f-list-tank 
-          f-loss-norm f-acc-ship f-place-si f-num-plotn f-date-pov-plotn 
-          f-tank-weight f-tank-density-pomi f-acc-weight f-tank-vol-pomi 
-          f-date-start f-hour-start f-min-start f-date-end f-hour-end f-min-end 
-          f-tests f-num-print-prob f-kol-prob f-hour-prob f-min-prob f-date-prob 
-          f-place-si-name
+  DISPLAY f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-acc-ship f-cli-qnty 
+          f-size f-car-vol f-num-passport f-text1 f-norm-doc f-text2 
+          f-certif-fuel f-text3 f-validity-certif f-a-b-tarir f-mouth 
+          f-tank-water f-tank-vol f-tank-temp f-tank-density f-dens-temp 
+          f-EU-weight f-list-tank f-loss-norm f-place-si f-num-plotn 
+          f-date-pov-plotn f-tank-weight f-tank-density-pomi f-acc-weight 
+          f-tank-vol-pomi f-date-start f-hour-start f-min-start f-date-end 
+          f-hour-end f-min-end f-tests f-num-print-prob f-kol-prob f-hour-prob 
+          f-min-prob f-date-prob f-place-si-name 
       WITH FRAME Dialog-Frame.
   ENABLE Rect-Main Rect-Bottom Rect-Left Rect-Right Rect-Top RECT-3 RECT-1 
          RECT-4 RECT-5 RECT-6 RECT-8 RECT-7 b-save b-quit b-del-sec b-help 
@@ -2784,8 +2785,8 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
   if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) then do:
     enable {&list-1} with frame {&frame-name}.
     hide {&list-1} in frame {&frame-name}.
-    display f-doc-qnty f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
-    enable f-doc-qnty f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
+    display f-doc-qnty f-acc-ship f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
+    enable f-doc-qnty f-acc-ship f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
     if infoSectionTotal:CliQntyInput and (p-mode = {&update} or p-mode = {&add-def})
       then enable f-cli-qnty with frame {&frame-name}.
     else disable f-cli-qnty with frame {&frame-name}.

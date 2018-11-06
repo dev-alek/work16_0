@@ -121,9 +121,14 @@ class ibs.th.gbl.storage.normloss:
         and bf_pl-attr.obj-code = parTPforNorm:ObjCode
         and bf_pl-attr.attr-code = "place-local" /*наземный 1 подземный 2.*/
       no-error.
-    if bf_pl-attr.attr-value = "1"
-      then locate = "0".
-      else locate = "1".
+    if available (bf_pl-attr)
+    then do:
+      if bf_pl-attr.attr-value = "1"
+        then locate = "0". /*наземный*/
+        else locate = "1". /*поземный*/
+    end.
+    else locate = "1". /*по умолчанию 1 подземный, так как в интерфейсе, если нет атрибута то отбражается подземный*/
+    
     find first bf_gds-attr no-lock where 
           bf_gds-attr.gds-code = parTPforNorm:GdsCode
       and bf_gds-attr.attr-code = {&attr-group-np}
@@ -134,7 +139,7 @@ class ibs.th.gbl.storage.normloss:
       and bf_cli-attr.attr-code = {&attr-cli-clim-grp}
       no-error.
     
-    if available (bf_pl-attr) and available (bf_cli-attr) and available (bf_gds-attr) and parTPforNorm:OnDate <> ?
+    if available (bf_cli-attr) and available (bf_gds-attr) and parTPforNorm:OnDate <> ?
     then do:
       if num-entries (bf_cli-attr.attr-value) = 3
       then do: 
@@ -165,7 +170,7 @@ class ibs.th.gbl.storage.normloss:
      
     for first buf_auto-tank no-lock where buf_auto-tank.auto-num = ( parTPforNorm:AutoNum + chr(35) + parTPforNorm:SecNum ):
       assign 
-        maxlvl = buf_auto-tank.brutto-qnty
+        maxlvl = buf_auto-tank.brutto-qnty / 1000
       no-error. 
     end.
     

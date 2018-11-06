@@ -25,7 +25,7 @@ define input  parameter parmode         as   character           no-undo. /* реж
 define input  parameter pardoc-code     like ub.trn-doc.doc-code no-undo. /* номер документа */
 define input  parameter parcheck-return as   logical             no-undo. /* проверка старого возврата */
 define input  parameter pardb-num       like ub.db.db-num        no-undo. /* номер БД на которой производим операцию */
-define input  parameter parin-ov        as   logical             no-undo. /* включена переоценка по приходу */
+define input  parameter parin-ov        as   logical             no-undo. /* включеiна переоценка по приходу */
 define input  parameter parrsrv-time    as   integer             no-undo. /* интервал резервирования по расходной накладной */
 define input  parameter parload-time    as   integer             no-undo. /* интервал оформления внутреннего прихода */
 define input  parameter parholidays     as   character           no-undo. /* выходные дни в неделе */
@@ -176,6 +176,7 @@ define variable v-is-add-doc as logical   no-undo init false  .
 define variable v-reasonm as logical   no-undo init false .
 define variable v-reasonme as character no-undo .
 define variable v-attr-PN  as character no-undo .
+define variable v-attr-dop-info  as character no-undo .
 define variable v-is-ord-doc as logical   no-undo init false .
 define variable v-event-code as character no-undo .
 define variable v-is-hold as logical   no-undo .
@@ -311,6 +312,7 @@ end.
 
 v-reasonme      = "".
 v-attr-PN       = "".
+v-attr-dop-info = "".
 { gbl/getsect.i run bf_trn-doc.obj-type bf_trn-doc.obj-Code {&attr-nakl_par} }
 for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_minusprt}  then varminus-parts = thbjattr_thbj-attr.property-value-logical .
@@ -319,7 +321,10 @@ for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_inv-ship}  then inv-shipvalue  = thbjattr_thbj-attr.property-value-logical .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_attr-PN}   then v-attr-PN      = thbjattr_thbj-attr.property-value-character .
 end.
-
+{ gbl/getsect.i run bf_trn-doc.obj-type bf_trn-doc.obj-Code {&attr-petrol} }
+for each thbjattr_thbj-attr :
+  if thbjattr_thbj-attr.prop-code = {&attr-petrol_dop-info} then v-attr-dop-info = thbjattr_thbj-attr.property-value-character .  
+end.
 
 { gbl/conf-rd.i  "'is-addch'"  bf_trn-doc.host-code  bf_trn-doc.obj-type  bf_trn-doc.obj-code  "''"  "''"  "''"  no  is-add-charg  par-type  no-error}
 if is-add-charg <> 'yes' then is-add-charg = 'no' .
@@ -561,9 +566,9 @@ then do:
                            and bf_goods.prod-code = bf_doc-line.prod-code
                            and bf_goods.prod-type = bf_doc-line.prod-type no-error.
     
-    if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.001
-      or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.001
-      or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.001
+    if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.01
+      or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.01
+      or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.01
     then do:
       v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8",
                                       {&new-line}, 
@@ -580,7 +585,7 @@ then do:
     end.
     if varstatus = {&fact} then do:
       if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
-         or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.001)
+         or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.01)
       then do:
         v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6",
                                         {&new-line}, 
@@ -715,7 +720,6 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                             , replace( bf_trn-doc.doc-code, "*", "$" ) ).
   end.
   end.
-  
   /*проверка на заполнение обязательных атрибутов в накладной*/
   if v-attr-PN <> "" then do:
       v-error-attr = "" .
@@ -726,7 +730,26 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         run waitfram-hide in this-procedure no-error.
         undo, return error "Не все атрибуты накладной заполнены.".
       end.  
-  end.  
+  end.
+  v-error-attr = "".
+  do ii = 1 to num-entries (v-attr-dop-info):
+    find first buf_doc-attr no-lock 
+      where buf_doc-attr.doc-code = pardoc-code 
+        and buf_doc-attr.attr-code = entry (ii, v-attr-dop-info) no-error. 
+    
+    if not available (buf_doc-attr) or (available (buf_doc-attr) and 
+      (buf_doc-attr.attr-value = "" 
+      or buf_doc-attr.attr-value = "" or buf_doc-attr.attr-value = ? or buf_doc-attr.attr-value = "?")
+      )
+    then do:
+      v-error-attr = v-error-attr + ", " + entry (ii, v-attr-dop-info).
+    end.
+  end.
+  if v-error-attr <> "" then do:
+    run waitfram-hide in this-procedure no-error.
+    undo, return error "Не все обязательные поля по доп. информации накладной заполнены".
+  end.
+    
       if bf_trn-doc.status_ <> {&inquiry}  then do:
   /* */
   define variable v-reasonm-type-n as character no-undo.

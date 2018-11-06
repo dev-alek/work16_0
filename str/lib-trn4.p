@@ -2032,6 +2032,14 @@ define variable v-ischg-ext-type as logical no-undo .
           end.
           if (v-not-eq-count <> 2) then do: /* <> Да для всех */
               
+              { str/is-petrl.i
+                buf_doc-line.artic
+                buf_doc-line.prod-type
+                buf_doc-line.prod-code
+                v-is-petrl
+                v-is-pieces
+              }
+              
               if v-is-petrl = true
                 and v-is-pieces = false 
               then do:
@@ -2039,7 +2047,7 @@ define variable v-ischg-ext-type as logical no-undo .
                     input "Накладная"
                     ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
                                   "Количество по строке накладной: " + string(buf_doc-line.cli-qnty) + " " + string(buf_goods.unit-cli) + {&new-line} +
-                                  "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty * buf_doc-line.fact-density) + " " + string(buf_goods.unit-base) + {&new-line} +
+                                  "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty * buf_doc-line.fact-density) + " " + string(buf_goods.unit-cli) + {&new-line} +
                                   "Подтвердить количество в накладной?"
                   ,input "|^"
                   ,input "Да|Да (для всех)|Нет"

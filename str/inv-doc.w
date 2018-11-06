@@ -319,7 +319,7 @@ DEFINE VARIABLE f-izlnedos-2 as decimal format "->>>,>>>,>>9.999":U
      fgcolor 4
      NO-UNDO.
 
-DEFINE VARIABLE f-izlheader as character init "  Излишек / " format "x(20)"
+DEFINE VARIABLE f-izlheader as character init "Излишек /     " format "x(20)"
      VIEW-AS FILL-IN
      SIZE 20 BY 1 NO-UNDO.
 
@@ -1785,6 +1785,7 @@ do while parnext-prev :
         parnext-prev = no.
       return error.
     end.
+    run fill-mol.
     WAIT-FOR GO OF FRAME {&FRAME-NAME} FOCUS {&BROWSE-NAME}.
   end. /* main-block */
 end. /* do while */
@@ -2204,13 +2205,14 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
     rvsinvsubsDeficitObj:RvsInvStrObj:FillSumByDeficit(rvsinvsubsDeficitObj).
     rvsinvsubsOverObj:RvsInvStrObj:FillSumByOver(rvsinvsubsOverObj).
     f-notbal-2 = absolute ( rvsinvsubsDeficitObj:DiffSum ).
-    f-acc-2 = rvsinvsubsDeficitObj:MeteringErrSum.
-    f-mnorml-2 = rvsinvsubsDeficitObj:TPNormalSum.
-    f-meu-2 = rvsinvsubsDeficitObj:NormalWastageSum.
-
+    f-acc-2 = rvsinvsubsDeficitObj:MeteringErrWastSum.
+    f-mnorml-2 = rvsinvsubsDeficitObj:TPWastSum.
+    f-meu-2 = rvsinvsubsDeficitObj:NaturWastageSum.
+    f-izlnedos = rvsinvsubsOverObj:DeficitOverSum.
+    f-izlnedos-2 = absolut (rvsinvsubsDeficitObj:DeficitOverSum).
 
     f-notbal = rvsinvsubsOverObj:DiffSum.
-    f-acc = rvsinvsubsOverObj:MeteringErrSum.
+    f-acc = rvsinvsubsOverObj:MeteringErrWastSum.
     
     assign
       f-acc-2:screen-value = string (f-acc-2)
@@ -2221,53 +2223,27 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
       f-mnorml-2:screen-value = string (f-mnorml-2)
     .
     
-    
-/*    for each bf_rvs-line where bf_rvs-line.rvs-code = bf_rvs.rvs-code  :               */
-/*      for each bf_rvs-l-attr where bf_rvs-l-attr.rvs-code = bf_rvs.rvs-code            */
-/*        :                                                                              */
-/*        if deviation-fact(buffer bf_rvs-line) < 0                                      */
-/*        then isNedos = true.                                                           */
-/*        else isNedos = false.                                                          */
-/*                                                                                       */
-/*                                                                                       */
-/*                                                                                       */
-/*        case bf_rvs-l-attr.attr-code:                                                  */
-/*          when "CriticalDif" then do:                                                  */
-/*            assign                                                                     */
-/*              f-notbal-2 = f-notbal-2 + decimal (bf_rvs-l-attr.attr-value) when isNedos*/
-/*              f-notbal = f-notbal + decimal (bf_rvs-l-attr.attr-value) when not isNedos*/
-/*            .                                                                          */
-/*          end.                                                                         */
-/*          when "delta-mass-qnty" then do:                                              */
-/*            assign                                                                     */
-/*              f-acc-2 = f-acc-2 + decimal (bf_rvs-l-attr.attr-value) when isNedos      */
-/*              f-acc = f-acc  + decimal (bf_rvs-l-attr.attr-value) when not isNedos     */
-/*            .                                                                          */
-/*          end.                                                                         */
-/*        end case.                                                                      */
-/*      end.                                                                             */
-/*                                                                                       */
-/*                                                                                       */
-/*    end.                                                                               */
-
-    def var isNedos as logical no-undo.
-    for each ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code no-lock:
-      v-dec = fncdiffqntykg ( buffer ub.doc-line ).
-      if v-dec < 0
-      then
-        assign
-          isNedos = true
-          v-dec = abs (v-dec)
-        .
-      assign
-        f-izlnedos-2 = f-izlnedos-2 + v-dec when isNedos
-        f-izlnedos = f-izlnedos-2 + v-dec when not isNedos
-      .
-    end.
     assign
       f-izlnedos-2:screen-value = string (f-izlnedos-2)
       f-izlnedos:screen-value = string (f-izlnedos)
     .
+/*                                                                             */
+/*    def var isNedos as logical no-undo.                                      */
+/*    for each ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code no-lock:*/
+/*      v-dec = fncdiffqntykg ( buffer ub.doc-line ).                          */
+/*      if v-dec < 0                                                           */
+/*      then                                                                   */
+/*        assign                                                               */
+/*          isNedos = true                                                     */
+/*          v-dec = abs (v-dec)                                                */
+/*        .                                                                    */
+/*      else isNedos = false.                                                  */
+/*      assign                                                                 */
+/*        f-izlnedos-2 = f-izlnedos-2 + v-dec when isNedos                     */
+/*        f-izlnedos = f-izlnedos + v-dec when not isNedos                     */
+/*      .                                                                      */
+/*    end.                                                                     */
+
     
   end.
   

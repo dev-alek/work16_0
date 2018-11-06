@@ -19,6 +19,11 @@ class ibs.th.gbl.storage.rvsinvstr:
   define property ListAttr as character init "MeteringErr,Diff,TPNormalPL,TPNormalAuto,NormalWastage"
     get.
   
+  
+  def private var v-metererrwast as dec no-undo.
+  def private var v-natur-wast as dec no-undo.
+  def private var v-tp-wast as dec no-undo.
+  
   method public void insertDB( input rvsinvsubObj as class rvsinvsub  ):
     
     define buffer bf_rvs-l-attr for ub.rvs-line-attr.
@@ -49,6 +54,7 @@ class ibs.th.gbl.storage.rvsinvstr:
     bf_rvs-l-attr.attr-value = string (rvsinvsubObj:NormalWastage).
 
     finally:
+      SetWast(rvsinvsubObj).
       release bf_rvs-l-attr.
     end finally.
       
@@ -150,6 +156,7 @@ class ibs.th.gbl.storage.rvsinvstr:
     bf_rvs-l-attr.attr-value = string (rvsinvsubObj:NormalWastage).
     
     finally:
+      SetWast(rvsinvsubObj).
       release bf_rvs-l-attr.
     end finally.
     
@@ -199,6 +206,10 @@ class ibs.th.gbl.storage.rvsinvstr:
     define buffer bf_rvs-l-attr for ub.rvs-line-attr.
     define buffer bf_rvs-l-attr-1 for ub.rvs-line-attr.
     
+    def var v-metererrnorm as dec no-undo.
+    def var v-natur-norm as dec no-undo.
+    def var v-tp-norm as dec no-undo.
+    
     for each bf_rvs-l-attr no-lock where 
           bf_rvs-l-attr.rvs-code = rvsinvsubsObj:RvsCode
       and bf_rvs-l-attr.obj-type = rvsinvsubsObj:ObjType
@@ -220,21 +231,109 @@ class ibs.th.gbl.storage.rvsinvstr:
             rvsinvsubsObj:DiffSum = rvsinvsubsObj:DiffSum + decimal (bf_rvs-l-attr-1.attr-value).            
           end.
           when "TPNormalAuto" then do:
-            rvsinvsubsObj:TPNormalAutoSum = rvsinvsubsObj:TPNormalSum  + decimal (bf_rvs-l-attr-1.attr-value).
+            v-tp-norm = v-tp-norm + decimal (bf_rvs-l-attr-1.attr-value).
           end.
           when "TPNormalPl" then do:
-            rvsinvsubsObj:TPNormalPlSum = rvsinvsubsObj:TPNormalSum  + decimal (bf_rvs-l-attr-1.attr-value).
+            v-tp-norm = v-tp-norm + decimal (bf_rvs-l-attr-1.attr-value).
           end.
           when "NormalWastage" then do:
-            rvsinvsubsObj:NormalWastageSum = rvsinvsubsObj:NormalWastageSum + decimal (bf_rvs-l-attr-1.attr-value).
+            v-natur-norm = decimal (bf_rvs-l-attr-1.attr-value).
+
           end.
           when "MeteringErr" then do:
-            rvsinvsubsObj:MeteringErrSum = rvsinvsubsObj:MeteringErrSum + decimal (bf_rvs-l-attr-1.attr-value).
+            v-metererrnorm = decimal (bf_rvs-l-attr-1.attr-value).
           end.
         end case.
-      
+        
+       
       end.
+      SetWast(decimal (bf_rvs-l-attr.attr-value), v-metererrnorm, v-natur-norm, v-tp-norm ).
+      rvsinvsubsObj:NaturWastageSum = rvsinvsubsObj:NaturWastageSum + v-natur-wast.
+      rvsinvsubsObj:MeteringErrWastSum = rvsinvsubsObj:MeteringErrWastSum + v-metererrwast.
+      rvsinvsubsObj:TPWastSum = rvsinvsubsObj:TPWastSum  + v-tp-wast.
+      
     end.
+    
+  end.
+  
+  method public void SetWast (rvsinvObj as rvsinvsub):
+    
+    SetWast (rvsinvObj:Diff, rvsinvObj:MeteringErr, rvsinvObj:NormalWastage, rvsinvObj:TPNormal).
+    assign
+      rvsinvObj:MeterErrWast = v-metererrwast
+      rvsinvObj:NaturWast = v-natur-wast
+      rvsinvObj:TPWast = v-tp-wast
+    .
+  end.
+  
+  method private void SetWast (inDiff as decimal, inMetErrN as decimal, inNaturN as decimal, inTPN as decimal):
+    
+    if absolute (inDiff) < inMetErrN
+      then 
+        assign
+          v-metererrwast = inDiff
+          v-natur-wast = 0
+          v-tp-wast = 0
+        .
+    else
+      if absolute (inDiff) < inMetErrN + inNaturN
+        then
+          assign
+            v-metererrwast = inMetErrN
+            v-natur-wast = inDiff - inMetErrN
+            v-tp-wast = 0
+          .
+        else
+          if absolute (inDiff) < inMetErrN + inNaturN + inTPN
+          then
+            assign
+              v-metererrwast = inMetErrN
+              v-natur-wast = inNaturN
+              v-tp-wast = inDiff - (inMetErrN + inNaturN)
+            .
+          else
+            assign
+              v-metererrwast = inMetErrN
+              v-natur-wast = inNaturN
+              v-tp-wast = inTPN
+            .
+  end.
+  
+  method public logical FillSub ( rvsinvsubObj as class rvsinvsub):
+    
+    define buffer bf_rvs-l-attr for ub.rvs-line-attr.
+    define variable isRvsInv as logical no-undo init false. /*инвентаризация по сверке*/
+    for each bf_rvs-l-attr no-lock where 
+          bf_rvs-l-attr.rvs-code = rvsinvsubObj:RvsCode
+      and bf_rvs-l-attr.obj-type = rvsinvsubObj:ObjType
+      and bf_rvs-l-attr.obj-code = rvsinvsubObj:ObjCode
+      and bf_rvs-l-attr.gds-code = rvsinvsubObj:GdsCode
+      and bf_rvs-l-attr.pl-code = rvsinvsubObj:PlCode
+        :
+      
+      case bf_rvs-l-attr.attr-code:
+        when "Diff" then do:
+          rvsinvsubObj:Diff = decimal (bf_rvs-l-attr.attr-value).
+                      
+        end.
+        when "TPNormalAuto" then do:
+          rvsinvsubObj:TPNormalAuto = decimal (bf_rvs-l-attr.attr-value).
+        end.
+        when "TPNormalPl" then do:
+          rvsinvsubObj:TPNormalPl = decimal (bf_rvs-l-attr.attr-value).
+        end.
+        when "NormalWastage" then do:
+          rvsinvsubObj:NormalWastage = decimal (bf_rvs-l-attr.attr-value).
+        end.
+        when "MeteringErr" then do:
+          rvsinvsubObj:MeteringErr = decimal (bf_rvs-l-attr.attr-value).
+        end.
+      end case.
+
+      isRvsInv = true.
+    end.
+    SetWast(rvsinvsubObj).    
+    return isRvsInv.
     
   end.
   
@@ -251,18 +350,16 @@ class ibs.th.gbl.storage.rvsinvstr:
     def var ii as int no-undo.
     
     assign
-      RvsInvSubsObj:MeteringErrSum = 0
-      RvsInvSubsObj:NormalWastageSum = 0
-      RvsInvSubsObj:TPNormalAutoSum = 0
-      RvsInvSubsObj:TPNormalPlSum = 0
+      RvsInvSubsObj:MeteringErrWastSum = 0
+      RvsInvSubsObj:TPWastSum = 0
+      RvsInvSubsObj:NaturWastageSum = 0
       RvsInvSubsObj:DiffSum = 0
     .
     do ii = 1 to RvsInvSubsObj:iCounter:
       assign
-        RvsInvSubsObj:MeteringErrSum = RvsInvSubsObj:RvsInvSubCurr:MeteringErr + RvsInvSubsObj:MeteringErrSum
-        RvsInvSubsObj:NormalWastageSum = RvsInvSubsObj:RvsInvSubCurr:NormalWastage + RvsInvSubsObj:NormalWastageSum
-        RvsInvSubsObj:TPNormalPlSum = RvsInvSubsObj:RvsInvSubCurr:TPNormalPl + RvsInvSubsObj:TPNormalPlSum
-        RvsInvSubsObj:TPNormalAutoSum = RvsInvSubsObj:RvsInvSubCurr:TPNormalAuto + RvsInvSubsObj:TPNormalAutoSum
+        RvsInvSubsObj:MeteringErrWastSum = RvsInvSubsObj:RvsInvSubCurr:MeterErrWast + RvsInvSubsObj:MeteringErrWastSum
+        RvsInvSubsObj:NaturWastageSum = RvsInvSubsObj:RvsInvSubCurr:NaturWast + RvsInvSubsObj:NaturWastageSum
+        RvsInvSubsObj:TPWastSum = RvsInvSubsObj:RvsInvSubCurr:TPWast + RvsInvSubsObj:TPWastSum
         RvsInvSubsObj:DiffSum = RvsInvSubsObj:RvsInvSubCurr:Diff + RvsInvSubsObj:DiffSum
       .
     end.

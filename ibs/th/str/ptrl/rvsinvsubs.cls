@@ -34,30 +34,26 @@ class ibs.th.str.ptrl.rvsinvsubs inherits asubjects:
     get.
     set.
   
-  define property MeteringErrSum as decimal no-undo
+  define property MeteringErrWastSum as decimal no-undo
     get.
     set.
 
-  define property NormalWastageSum as decimal no-undo
+  define property NaturWastageSum as decimal no-undo
     get.
     set.
 
-  define property TPNormalAutoSum as decimal no-undo
+  define property TPWastSum as decimal no-undo
     get.
     set.
-    
-  define property TPNormalPlSum as decimal no-undo
-    get.
-    set.
-
-  define property TPNormalSum as decimal no-undo
-    get:
-      return TPNormalAutoSum + TPNormalPlSum. 
-    end.
 
   define property DiffSum as decimal no-undo
     get.
     set.
+
+  define property DeficitOverSum as decimal no-undo
+    get:
+      return (absolut (DiffSum) - TPWastSum - NaturWastageSum - MeteringErrWastSum).
+    end.
 
   define property RvsInvStrObj as class rvsinvstr no-undo
     get:

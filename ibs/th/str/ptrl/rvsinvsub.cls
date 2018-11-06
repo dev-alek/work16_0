@@ -10,6 +10,7 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+using ibs.th.gbl.storage.*.
 
 
 class ibs.th.str.ptrl.rvsinvsub: 
@@ -34,6 +35,10 @@ class ibs.th.str.ptrl.rvsinvsub:
     get.
     set.
   
+  define property Diff as decimal no-undo
+    get.
+    set.
+  
   define property MeteringErr as decimal no-undo
     get.
     set.
@@ -55,8 +60,29 @@ class ibs.th.str.ptrl.rvsinvsub:
       return TPNormalAuto + TPNormalPl.
     end.
 
-  define property Diff as decimal no-undo
+  define property MeterErrWast as decimal no-undo
     get.
     set.
+
+  define property TPWast as decimal no-undo
+    get.
+    set.
+
+  define property NaturWast as decimal no-undo
+    get.
+    set.
+    
+  define property RvsInvStrObj as class rvsinvstr no-undo
+    get:
+      if not valid-object ( RvsInvStrObj )
+        then return new rvsinvstr ().
+        else return RvsInvStrObj.
+    end.
+    set.
+    
+  define property DeficitOver as decimal no-undo
+    get:
+      return (absolute (Diff) - TPWast - NaturWast -  MeterErrWast) .
+    end.
 
 end class.

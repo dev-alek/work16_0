@@ -2582,6 +2582,9 @@ do on error undo main-block, leave main-block :
    b-in-attr-fuel:sensitive = true.
    /*end.*/
    
+   if pardoc-mode = {&update}
+     then run fill-mol in this-procedure. 
+   
    IF mImagePh THEN
 DO:
     DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
@@ -2662,8 +2665,8 @@ ELSE
          no-error 
       }  
       
-      if varattr = "yes"
-        then is-fuel = true.
+      run fill-mol.
+      
       
     end.
 

@@ -18,7 +18,7 @@ Creation date: 11/14/06
 using ibs.th.str.ptrl.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.str.*.
-using ibs.th.gbl.logging.* from propath.
+using ibs.th.gbl.logging.*.
 
 define input  parameter parparentproc as handle    no-undo.
 define input  parameter p-rvs-rowid   as rowid     no-undo .
@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "создание топливных до
 { gbl/ptrlprop.i def }
 { ref/gdsoattr.i     }
 { str/placelib.i     }
+{ gbl/attr-lib.i     }
 
 do
 on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -85,12 +86,17 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   .
   define buffer buf_tt-line-for-doc for tt-line-for-doc .
 
-  define buffer buf-spi_trn-doc     for ub.trn-doc .
-  define buffer buf-spi_doc-line    for ub.doc-line .
-  define buffer buf-spi_inv-line    for ub.inv-line .
-  define buffer buf-spi_gds-dtl     for ub.gds-dtl .
-  define buffer buf-spi_parts       for ub.parts .
-  define buffer buf-spi_doc-pl      for ub.doc-pl .
+  define buffer buf-spi_trn-doc        for ub.trn-doc .
+  define buffer buf-spi_doc-line       for ub.doc-line .
+  define buffer buf-spi_inv-line       for ub.inv-line .
+  define buffer buf-spi_gds-dtl        for ub.gds-dtl .
+  define buffer buf-spi_parts          for ub.parts .
+  define buffer buf-spi_doc-pl         for ub.doc-pl .
+  define buffer buf_rvs-line_wast      for ub.rvs-line.
+  define buffer buf_rvs-doc_wast       for ub.rvs-doc.
+  define buffer buf_rvs-line_wast_next for ub.rvs-line.
+  define buffer buf_rvs-doc_wast_next  for ub.rvs-doc.
+  
 
   define variable chs-gds-inv                         as   logical                       no-undo.
   define variable vartot-docold                       like ub.trn-doc.tot-doc            no-undo.
@@ -164,12 +170,21 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable dM as decimal no-undo.
   define variable dMMBd as decimal no-undo.
   define variable MKN as decimal no-undo.
+  define variable MKKN as decimal no-undo.
   define variable MFO as decimal no-undo.
   define variable beta1 as decimal no-undo.
   define variable beta2 as decimal no-undo.
-  define variable Mfot as decimal no-undo.
-  define variable Mfor as decimal no-undo.
+  define variable MFOT as decimal no-undo.
+  define variable MFOR as decimal no-undo.
+  define variable MI as decimal no-undo.
+  define variable dMPT as decimal no-undo.
+  define variable dMPOT as decimal no-undo.
+  define variable MPOT as decimal no-undo.
+  define variable dMHREY as decimal no-undo.
+  define variable MNED as decimal no-undo.
   
+  define variable v-decommiss-str as character no-undo.
+  define variable v-par-type as character no-undo.
   
 
 
@@ -205,7 +220,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   end.
 
   logger:Path = "log-rvsinv.log".
-  
+  logger:StrLogPut =
+      {&new-line} + 
+      "-----------------------------------------------" + {&new-line} +
+      string (now) + {&new-line}.  
   assign
     v-log = no
   .
@@ -224,6 +242,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     p-docs-info = "":U
   .
   /* создание документа инвентаризации */
+  
   block_cre-inv :
   do transaction
   on error  undo block_cre-inv, retry block_cre-inv
@@ -435,7 +454,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         and buf_goods.prod-code = buf_doc-line.prod-code
     on error undo block_cre-inv, retry block_cre-inv
     :
-      
       K1 = K1-all.
       
       find first buf_rvs-line no-lock
@@ -483,7 +501,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       
       v-normal-wastage = NormWast:NormalWastageDate.
       
-      if v-normal-wastage = 0 then do:
+      if v-normal-wastage = ? then do:
         assign
           K2 = 0.0
         .
@@ -619,6 +637,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             v-wastage-qnty-cli    = 0.0
             v-reserv-qnty-base    = 0.0
             v-reserv-qnty-cli     = 0.0
+            v-normal-tp           = 0.0
+            v-normal-tp-auto      = 0.0
+            v-normal-tp-pl        = 0.0
           .
           if ptrlprop-expptrl = {&calc-petrol-weight} then do:
             /* работаем относительно килограммов */
@@ -636,6 +657,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               v-metering-error = v-metering-error-base
             .
           end.
+          
           if (O_PKH - O_FACT) <= 0  then do:
           /* излишки */
             if (O_FACT - O_PKH) - v-metering-error <= 0 then do:
@@ -648,7 +670,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               case ptrlprop-algrvspt :
                 when 1 then do:
                 end.
-                when 2 then do:
+                when 3 then do:
                   if v-metering-error > (O_FACT - O_PKH) then do:
                     /* уменьшим погрешность измерения, чтобы она была не больше дельты РКН и ФАКТ */
                     if ptrlprop-expptrl = {&calc-petrol-weight} then do:
@@ -705,14 +727,51 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   varfact-order-prev-inv = 0
                 .
               end.
+
+              &scop proc-name clntattr-value
+              {&run_proc_attr-lib}
+              (input buf_rvs-line.obj-type
+              ,input buf_rvs-line.obj-code
+              ,input  {&attr-cli-decommissioned}
+              ,output v-decommiss-str
+              ,output v-par-type
+              ) .
+              
+              if v-decommiss-str = "yes":u /*опред. ест. убыль для неэксплуат. азс*/
+              then do:
+                def var ii as int no-undo.
+                find first ub.trn-doc where ub.trn-doc.doc-code = bf-prev_doc-line.doc-code no-error.
+                if available (ub.inv-doc)
+                then do:
+                  do ii = integer (ub.trn-doc.fact-date) to integer (today):
+                    
+                    NormWast = new ibs.th.ref.normwastsub ().
+                    NormWast:ParGdsOAttr:GdsCode = buf_goods.gds-code.
+                    NormWast:ParGdsOAttr:ObjType = buf_trn-doc.obj-type.
+                    NormWast:ParGdsOAttr:ObjCode = buf_trn-doc.obj-code.
+                    NormWast:ParGdsOAttr:OnDate = if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date.
+                    
+                  /* у топлива в атрибутах, т.к. до 3-х знаков после запятой */
+                    run gds-o-normal-wastage-value in this-procedure
+                                      ( input-output NormWast
+                                      ) no-error.
+                    
+                  
+                  end.
+                  
+                  
+                end.
+                
+                
+                
+                
+              end.
               
               logger:StrLogPut =
-                    {&new-line} + 
-                    "-----------------------------------------------" + {&new-line} +
-                    string (now) + {&new-line} +
-                    "Технологические потери по документам ПН в межинвентаризационный период (если есть)"
+                    "Технологические потери по документам ПН в межинвентаризационный период (если есть)" + 
+                    "Объект: " + buf_rvs-line.obj-type + string (buf_rvs-line.obj-code) + {&new-line} +
+                    "Товар: " + string (buf_goods.gds-code) + " - " + buf_goods.gds-name
                     .
-              
               for each bf-wst_doc-line no-lock
                 where ( bf-wst_doc-line.obj-type         = buf_doc-line.obj-type
                         and bf-wst_doc-line.obj-code     = buf_doc-line.obj-code
@@ -756,7 +815,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   
                   InfoSecsObj = new InfoSectionsTotal ().
                   
-                  find first ub.place where ub.place.pl-code = buf_rvs-line.pl-code and ub.place.pl-code = buf_rvs-line.obj-code and ub.place.obj-type = buf_rvs-line.obj-type no-error.
+                  find first ub.place where ub.place.pl-code = buf_rvs-line.pl-code 
+                    and ub.place.obj-code = buf_rvs-line.obj-code and ub.place.obj-type = buf_rvs-line.obj-type no-error.
                   
                   if available (ub.place)
                   then do:
@@ -770,16 +830,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                       v-normal-tp = v-normal-tp + InfoSecsObj:InfoSectionCurr:TPNorm.
                       v-normal-tp-auto = v-normal-tp-auto + InfoSecsObj:InfoSectionCurr:TPNormAuto.
                       v-normal-tp-pl = v-normal-tp-pl + InfoSecsObj:InfoSectionCurr:TPNormPL.
+                      logger:StrLogPut =
+                            "Номер ПН: " + bf-wst_doc-line.doc-code + {&new-line} +
+                            "Место хранения:" + string (ub.place.pl-code) + " - " + ub.place.pl-name + {&new-line} +
+                            "Потери при сливе в резервуар: " + string (InfoSecsObj:InfoSectionCurr:TPNormPL) + {&new-line} +
+                            "Потери при сливе из АЦ: " + string (InfoSecsObj:InfoSectionCurr:TPNormAuto) + {&new-line} +
+                            "Сумма технолог. потерь: " + string (InfoSecsObj:InfoSectionCurr:TPNorm) + {&new-line}
+                            .
                     end.
-                    
-                    logger:StrLogPut =
-                          bf-wst_doc-line.obj-type + string (bf-wst_doc-line.obj-code) + {&new-line} +
-                          bf-wst_doc-line.doc-code + {&new-line} +
-                          "Место хранения:" + string (ub.place.pl-code) + {&new-line} +
-                          "Потери при сливе в резервуар: " + string (InfoSecsObj:InfoSectionCurr:TPNormPL) + {&new-line} +
-                          "Потери при сливе из АЦ: " + string (InfoSecsObj:InfoSectionCurr:TPNormAuto) + {&new-line} +
-                          "Сумма технолог. потерь: " + string (InfoSecsObj:InfoSectionCurr:TPNorm) + {&new-line}
-                          .
                     
                   end.
                 end.
@@ -793,6 +851,35 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 v-normal-wastage-dens = WST-cli / WST-base
               .
             end.
+            
+            
+            
+            
+            case ptrlprop-algrvspt :
+              when 3 then do:
+                
+                for each buf_rvs-doc_wast where 
+                        buf_rvs-doc_wast.obj-type = buf_rvs-line.obj-type 
+                    and buf_rvs-doc_wast.obj-code = buf_rvs-line.obj-code
+                    and buf_rvs-doc_wast.fact-order >  varfact-order-prev-inv
+                :
+                  for each buf_rvs-line_wast where buf_rvs-line_wast.rvs-code = buf_rvs-doc_wast.rvs-code
+                      and buf_rvs-line_wast.obj-type = buf_rvs-line.obj-type
+                      and buf_rvs-line_wast.obj-code = buf_rvs-line.obj-code
+                      and buf_rvs-line_wast.pl-code = buf_rvs-line.pl-code
+                  :
+/*                    find first buf_rvs-line_wast where                            */
+/*                          buf_rvs-line_wast.obj-type = buf_rvs-line.obj-type      */
+/*                      and buf_rvs-line_wast.obj-code = buf_rvs-line.obj-code      */
+/*                      buf_rvs-line_wast.rvs-prev-code = buf_rvs-line_wast.rvs-code*/
+                    
+                    
+                  end.
+                  
+                end.
+              end.
+            end case.
+            
 
             if ptrlprop-expptrl = {&calc-petrol-weight} then do:
               /* работаем относительно килограммов */
@@ -838,9 +925,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               v-wastage-qnty-base = v-normal-wastage-base
               v-wastage-qnty-cli  = v-normal-wastage-cli
             .
+
             case ptrlprop-algrvspt :
               when 1 then do:
-                if (O_PKH - O_FACT) - v-metering-error - v-normal-wastage - v-normal-tp <= 0 then do:
+                if (O_PKH - O_FACT) - v-metering-error - v-normal-wastage <= 0 then do:
                   /* все укладывается в погрешность + естественная убыль */
                   assign
                     v-rsrv-qnty          = 0.0
@@ -887,7 +975,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   .
                 end.
               end.
-              when 2 then do:
+              when 3 then do:
                 if v-normal-wastage = (O_PKH - O_FACT) then do:
                   /* естественная убыль покрыла разницу */
                   assign
@@ -899,9 +987,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   .
                 end.
                 else do:
-                  if (O_PKH - O_FACT) - v-metering-error - v-normal-wastage - v-normal-tp <= 0 then do:
+                  if (O_PKH - O_FACT) - v-metering-error - v-normal-wastage <= 0 then do:
                     /* все укладывается в погрешность + естественная убыль */
-                    if v-metering-error > (O_PKH - O_FACT) - v-normal-wastage - v-normal-tp  then do:
+                    if v-metering-error > (O_PKH - O_FACT) - v-normal-wastage  then do:
                       /* уменьшим погрешность измерения, чтобы она была не больше дельты РКН и ФАКТ с учетом ЕУ */
                       if ptrlprop-expptrl = {&calc-petrol-weight} then do:
                         assign
@@ -940,6 +1028,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   end.
                 end.
               end.
+              when 2 then do:
+
+              end.
+              
+              
             end case.
             if v-cre-add-docs   = true
               and v-normal-wastage-base <> 0.0
@@ -954,7 +1047,106 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               .
             end.
           end. /* недостача */
+          if ptrlprop-algrvspt = 2
+          then do:
+          
+            rvsinvsubObj = new rvsinvsub ().
+            
+            rvsinvsubObj:RvsCode  = buf_rvs-line.rvs-code.
+            rvsinvsubObj:ObjType  = buf_rvs-line.obj-type.
+            rvsinvsubObj:ObjCode  = buf_rvs-line.obj-code.
+            rvsinvsubObj:PlCode   = buf_rvs-line.pl-code. 
+            rvsinvsubObj:GdsCode  = buf_rvs-line.gds-code.
+            MKN = O_PKH-cli.
+            MFO = O_FACT-cli.
+            MFOR = buf_rvs-line.state-measure-cli-qnty.
+            MFOT = buf_rvs-line.state-add-qnty * buf_rvs-line.state-density.
+            beta1 = K1.
+            beta2 = K3.
+            dMMBd = (beta1 * MFOR + beta2 * MFOT) / 100.
+            rvsinvsubObj:Diff = MFO - MKN.
+            
+            dM = MFO - MKN.
+            if absolute (dM) <= dMMBd
+            then do:
+              v-rsrv-qnty = 0.
+              v-reserv-qnty-cli = 0.
+            end.
+            else do: /*излишки*/
+              if MFO > MKN
+              then do:
+                dM = MFO - MKN.
+                MI = dM - dMMBd. 
+                MKKN = MKN + MI.
+                v-rsrv-qnty = (MI) / buf_rvs-line.state-density.
+              end.
+              else do: /*недостача*/
+                dMPT = v-normal-tp.
+                dMPOT = dMHREY + dMPT.
+                MPOT = MKN - MFO - dMMBd.
+                if absolute (dM) <= dMMBd + dMPOT
+                then do:
+                  MKKN = MFO + dMMBd.
+                end.
+                else do:
+                  MKKN = MFO + dMMBd.
+/*                  MNED = MKN - MFO - dMMBd - dMPOT.*/
+                end.
+                v-rsrv-qnty = (MKKN - MKN) / buf_rvs-line.state-density.
+              end.
+              
+            end.
 
+            
+
+            if v-rsrv-qnty >= 0 /*не баланс всегда отрицательное число, но для удобства сделаем ему знак плюч если излишки*/ 
+            then do: 
+               rvsinvsubObj:Diff = absolute (rvsinvsubObj:Diff).
+            end.
+            else do:
+               rvsinvsubObj:Diff = - absolute (rvsinvsubObj:Diff).
+            end.
+            rvsinvsubObj:MeteringErr = dMMBd.
+            if rvsinvsubObj:Diff < 0
+            then do:
+              rvsinvsubObj:NormalWastage = dMHREY.
+              rvsinvsubObj:TPNormalAuto = v-normal-tp-auto.
+              rvsinvsubObj:TPNormalPl = v-normal-tp-pl.
+            end.
+            else do:
+              rvsinvsubObj:NormalWastage = 0.
+              rvsinvsubObj:TPNormalAuto = 0.
+              rvsinvsubObj:TPNormalPl = 0.
+            end.
+            rvsinvstrObj = new rvsinvstr ().
+            rvsinvstrObj:insertDB(rvsinvsubObj).
+            logger:StrLogPut =
+                  "--------------" + {&new-line} +
+                  "Данные для инвентаризации:" +
+                  {&new-line} + 
+                  rvsinvsubObj:ObjType + string (rvsinvsubObj:ObjCode) + {&new-line} +
+                  "Сверка:" + rvsinvsubObj:RvsCode + {&new-line} +
+                  "Место хранения:" + string (rvsinvsubObj:PlCode) + {&new-line} +
+                  "Расчетно-книжный остаток (включая трубопровод) MKN: " + string (MKN) + {&new-line} +
+                  "Факт. остаток по рез. изм. в резер. MFOR: " + string (MFOR) + {&new-line} +
+                  "Факт. остаток по рез. изм. в трубопроводе MFOT: " + string (MFOT) + {&new-line} +
+                  "Факт. остаток по рез. изм. MFO: " + string (MFO) + {&new-line} +
+                  "Погр.изм. резер. beta1, %: " + string (beta1) + {&new-line} +
+                  "Погр.изм. трубопровод beta2, %: " + string (beta2) + {&new-line} +
+                  "Допускаемый небаланс dMMBd = (beta1 * MFOR + beta2 * MFOT) / 100: " + string(dMMBd) + {&new-line} +
+                  "Сумма по ПН технол. потерь в резервуаре: " + string (v-normal-tp-pl) + {&new-line} +
+                  "Сумма по ПН технол. потерь при сливе из АЦ: " + string (v-normal-tp-auto) + {&new-line} +
+                  "Общая сумма по ПН технол. потерь dMPT: " + string (v-normal-tp) + {&new-line} +
+                  "Общая сумма ест. убыли при хр. dMHREY : " + string (dMHREY) + {&new-line} +
+                  "Небаланс |dM|: " + string (absolute (dM)) + {&new-line} +
+                  "Недостача MNED : " + string (absolute (MNED)) + {&new-line} +
+                  "Излишки MI : " + string (absolute (MI)) + {&new-line} +
+                  "Скорректированный расчетно-книжный остаток (включая трубопровод) MKKN: " + string (MKKN) + {&new-line}
+                  .
+            
+            
+          end.
+          
           if ptrlprop-expptrl = {&calc-petrol-weight} then do:
             /* работаем относительно килограммов */
             assign
@@ -988,59 +1180,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               .
             end.
           end.
-          
-          rvsinvsubObj = new rvsinvsub ().
-          
-          rvsinvsubObj:RvsCode  = buf_rvs-line.rvs-code.
-          rvsinvsubObj:ObjType  = buf_rvs-line.obj-type.
-          rvsinvsubObj:ObjCode  = buf_rvs-line.obj-code.
-          rvsinvsubObj:PlCode   = buf_rvs-line.pl-code. 
-          rvsinvsubObj:GdsCode  = buf_rvs-line.gds-code.
-          rvsinvsubObj:Diff = (O_PKH-cli + v-reserv-qnty-cli) - O_FACT-cli .
-          if v-reserv-qnty-cli >= 0 /*не баланс всегда отрицательное число, но для удобства сделаем ему знак плюч если излишки*/ 
-          then do: 
-             rvsinvsubObj:Diff = absolute (rvsinvsubObj:Diff).
-          end.
-          
-          rvsinvsubObj:MeteringErr = v-metering-qnty-cli.
-          if rvsinvsubObj:Diff < 0
-          then do:
-            rvsinvsubObj:NormalWastage = v-normal-wastage-cli.
-            rvsinvsubObj:TPNormalAuto = v-normal-tp-auto.
-            rvsinvsubObj:TPNormalPl = v-normal-tp-pl.
-          end.
-          else do:
-            rvsinvsubObj:NormalWastage = 0.
-            rvsinvsubObj:TPNormalAuto = 0.
-            rvsinvsubObj:TPNormalPl = 0.
-          end.
-          rvsinvstrObj = new rvsinvstr ().
-          rvsinvstrObj:insertDB(rvsinvsubObj).
-          
-          dM = rvsinvsubObj:Diff.
-          MKN = O_PKH-cli.
-          MFO = O_FACT-cli.
-          MFOR = buf_rvs-line.state-measure-cli-qnty.
-          MFOT = buf_rvs-line.state-add-qnty * buf_rvs-line.state-density.
-          beta1 = K1.
-          beta2 = K3.
-          
-          logger:StrLogPut =
-                "--------------" + {&new-line} +
-                "Данные для инвентаризации:" +
-                {&new-line} + 
-                rvsinvsubObj:ObjType + string (rvsinvsubObj:ObjCode) + {&new-line} +
-                "Сверка:" + rvsinvsubObj:RvsCode + {&new-line} +
-                "Место хранения:" + string (rvsinvsubObj:PlCode) + {&new-line} +
-                "Расчетно-книжный остаток (включая трубопровод) MKN: " + string (MKN) + {&new-line} +
-                "Факт. остаток по рез. изм. в резер. MFOR: " + string (MFOR) + {&new-line} +
-                "Факт. остаток по рез. изм. в трубопроводе MFOT: " + string (MFOT) + {&new-line} +
-                "Факт. остаток по рез. изм. MFO: " + string (MFO) + {&new-line} +
-                "Погр.изм. резер. beta1: " + string (beta1) + {&new-line} +
-                "Погр.изм. трубопровод beta2: " + string (beta2) + {&new-line} +
-                "Допускаемый небаланс dMMBd: " + string(dMMBd) + {&new-line} +
-                "Небаланс |dM|: " + string (dM) + {&new-line}
-                .
 
           if v-reserv-qnty-base <> 0 then do:
             assign

@@ -634,6 +634,11 @@ end.
     if error-status :error then do:
       return error substitute ("&1 &2 &3", return-value, error-status :get-message(1), error-status :get-message(2)).
     end.
+    find first ub.user-account no-lock where ub.user-account.user-id = g#userid no-error.
+    if available (ub.user-account) and not (ub.user-account.psn-code = 0 or ub.user-account.psn-code = 0)
+    then do:
+      ub.trn-doc.wrkr = ub.user-account.psn-code.
+    end.
   end.
 
   /* определяем фактический номер документа */

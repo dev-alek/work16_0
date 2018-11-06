@@ -1185,27 +1185,31 @@ class ibs.th.str.InfoSectionsTotal:
 
     finally:
       
-      find first ub.place where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = "6" no-error. 
-      
-      assign
-        Parnl:ObjType = ObjType 
-        Parnl:ObjCode = ObjCode
-        Parnl:GdsCode = GdsCode
-        Parnl:AutoNum = CarNum
-        Parnl:OnDate = buf_trn.doc-date
-      .
-      
-      Parnl:PlCode = ub.place.pl-code no-error.
-      Parnl:SecNum = InfoSectionCurr:SectionName.
-      NLStorage:getNormLoss(Parnl).
-      InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
-      InfoSectionCurr:TPNormPL = (MF / 1000 * ParNl:PLNormLoss).
-      output stream log-algo to value ("log-algo-pomi.txt") append.
-      put stream log-algo unformatted
-        "MTP = " InfoSectionCurr:TPNorm {&new-line}
-        "NHH = " string(Parnl:AutoNormLoss) {&new-line}
-        "NPR = " string(Parnl:PLNormLoss) {&new-line}.
-      output stream log-algo close.
+      find first ub.place no-lock where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = InfoSectionCurr:ListTank no-error. 
+      if available (ub.place)
+      then do:
+        assign
+          Parnl:ObjType = ObjType 
+          Parnl:ObjCode = ObjCode
+          Parnl:GdsCode = GdsCode
+          Parnl:AutoNum = CarNum
+          Parnl:OnDate = buf_trn.doc-date
+        .
+        
+        Parnl:PlCode = ub.place.pl-code no-error.
+		release ub.place.
+        Parnl:SecNum = InfoSectionCurr:SectionName.
+        NLStorage:getNormLoss(Parnl).
+        InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
+        InfoSectionCurr:TPNormPL = (MF / 1000 * ParNl:PLNormLoss).
+        output stream log-algo to value ("log-algo-pomi.txt") append.
+        put stream log-algo unformatted
+          "MTP = " InfoSectionCurr:TPNorm {&new-line}
+          "NHH = " string(Parnl:AutoNormLoss) {&new-line}
+          "NPR = " string(Parnl:PLNormLoss) {&new-line}.
+        output stream log-algo close.
+      end.
+
     end finally.
       
     

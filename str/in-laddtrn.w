@@ -225,7 +225,7 @@ DEFINE VARIABLE f-insp AS CHARACTER FORMAT "X(256)":U INITIAL "Свидетельство о п
      VIEW-AS FILL-IN 
      SIZE 24.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-insp-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Свидетельство о поверке:" 
+DEFINE VARIABLE f-insp-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Дата свидет. о поверке:" 
      VIEW-AS FILL-IN 
      SIZE 24.5 BY 1 NO-UNDO.
 
@@ -334,8 +334,8 @@ DEFINE FRAME Dialog-Frame
      f-item-pour AT ROW 13.29 COL 82.5 RIGHT-ALIGNED NO-LABEL
      f-acc-ship-2 AT ROW 14.46 COL 1.5 NO-LABEL WIDGET-ID 106
      f-acc-ship AT ROW 14.46 COL 38.13 NO-LABEL WIDGET-ID 42
-     f-doc AT ROW 15.67 COL 4.5 NO-LABEL WIDGET-ID 108
-     b-doc AT ROW 15.75 COL 2 WIDGET-ID 48
+     f-doc AT ROW 14.67 COL 4.5 NO-LABEL WIDGET-ID 108
+     b-doc AT ROW 14.75 COL 2 WIDGET-ID 48
      f-item-doc AT ROW 16.79 COL 82.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 46
      SPACE(0.87) SKIP(0.37)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -480,6 +480,12 @@ DO:
      apply "entry" to f-min-income in frame {&frame-name} .
      return no-apply .
   end.
+  
+  /*find ub.clients no-lock where
+       ub.clients.obj-type = f-ptbocode and
+       ub.clients.obj-code = f-ptbotype no-error .
+  
+  
   find ub.clients no-lock where
        ub.clients.obj-type = f-autoent-obj-type and
        ub.clients.obj-code = f-autoent-obj-code no-error .
@@ -488,8 +494,10 @@ DO:
     assign
       v-log = no
     .
-    message "Не найдено автопредприятие " f-autoent-obj-type " " f-autoent-obj-code " ." skip
-            "Cохраняемся без ссылки на автопредприятие?"
+    message "Автопредприятие " f-autoent-obj-type " " f-autoent-obj-code " " f-autoent-obj-name  
+    "не является перевозчиком для Нефтебазы "  "." 
+    skip
+    "Cохранить?"
     view-as alert-box question buttons yes-no update v-log .
     if v-log <> yes
     then do:
@@ -499,13 +507,13 @@ DO:
       f-autoent-obj-type = ""
       f-autoent-obj-code = ?
     .
-  end.
+  end.*/
   
-  if f-car-num:SCREEN-VALUE = "" or f-car-num:SCREEN-VALUE = "?" then do:
-    MESSAGE "Введите Гос.№ автоцистерны."
-    VIEW-AS ALERT-BOX.
-      return no-apply .
-  end.     
+/*  if f-car-num:SCREEN-VALUE = "" or f-car-num:SCREEN-VALUE = "?" then do:*/
+/*    MESSAGE "Введите Гос.№ автоцистерны."                                */
+/*    VIEW-AS ALERT-BOX.                                                   */
+/*      return no-apply .                                                  */
+/*  end.                                                                   */
   
 /*  if f-insp-cert:screen-value = "" then do:  */
 /*    MESSAGE "Введите свидетельство о поверке"*/
@@ -520,17 +528,17 @@ DO:
 /*      return no-apply .                                                  */
 /*    end.                                                                 */
   
-  if f-fio:SCREEN-VALUE = "" or f-fio:SCREEN-VALUE = "?" then do:
-    MESSAGE "Введите Ф.И.О. водителя-экспедитора"
-    VIEW-AS ALERT-BOX.
-    return no-apply.
-  end.
-  
-  if f-min-income = ? or f-hour-income = ? then do:
-    MESSAGE "Введите время прибытия на АЗС"
-    VIEW-AS ALERT-BOX.
-    return no-apply.
-  end.
+/*  if f-fio:SCREEN-VALUE = "" or f-fio:SCREEN-VALUE = "?" then do:*/
+/*    MESSAGE "Введите Ф.И.О. водителя-экспедитора"                */
+/*    VIEW-AS ALERT-BOX.                                           */
+/*    return no-apply.                                             */
+/*  end.                                                           */
+/*                                                                 */
+/*  if f-min-income = ? or f-hour-income = ? then do:              */
+/*    MESSAGE "Введите время прибытия на АЗС"                      */
+/*    VIEW-AS ALERT-BOX.                                           */
+/*    return no-apply.                                             */
+/*  end.                                                           */
   
 /*  if f-min-pour = ? or f-hour-pour = ? then do:*/
 /*    MESSAGE "Введите время налива"             */
@@ -543,16 +551,16 @@ DO:
        ub.clients.obj-code = f-ptbocode no-error .
   if not available ub.clients
   then do:
-    assign
-      v-log = no
-    .
-    message "Не найдена нефтебаза " f-ptbotype " " f-ptbocode " ." skip
-            "Cохраняемся без ссылки на нефтебазу?"
-    view-as alert-box question buttons yes-no update v-log .
-    if v-log <> yes
-    then do:
-      return no-apply .
-    end.
+/*    assign                                                             */
+/*      v-log = no                                                       */
+/*    .                                                                  */
+/*    message "Не найдена нефтебаза " f-ptbotype " " f-ptbocode " ." skip*/
+/*            "Cохраняемся без ссылки на нефтебазу?"                     */
+/*    view-as alert-box question buttons yes-no update v-log .           */
+/*    if v-log <> yes                                                    */
+/*    then do:                                                           */
+/*      return no-apply .                                                */
+/*    end.                                                               */
     assign
       f-ptbotype = ""
       f-ptbocode = ?
@@ -616,7 +624,14 @@ DO:
   assign v-rec-tank = ?
          v-rec-meas = ?.
   
-  if v-autoent-obj-code <> 0 and v-autoent-obj-code <> ?
+  run str/auto-tn.w (input parparentproc,
+              input "b-sel",
+              input v-autoent-obj-type,
+              input v-autoent-obj-code,
+              output v-rec-tank,
+              output v-rec-meas) no-error.
+  
+/*  if v-autoent-obj-code <> 0 and v-autoent-obj-code <> ?
   and can-find (first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
                                                and auto-tank-attr.attr-value = v-autoent-obj-type + string(v-autoent-obj-code))
   then do :
@@ -639,7 +654,7 @@ DO:
                   input 0,
                   output v-rec-tank,
                   output v-rec-meas) no-error.
-  end.
+  end.*/
   if v-rec-tank <> ? then do:
     find first auto-tank where recid (auto-tank) = v-rec-tank no-lock.
     assign
@@ -647,6 +662,7 @@ DO:
     .
     display f-car-num with frame {&frame-name}.
   end.
+  apply "leave" to f-car-num in frame {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -800,13 +816,52 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-num Dialog-Frame
 ON return OF f-car-num IN FRAME Dialog-Frame
 DO:
+  
+  apply "leave" to f-car-num in frame {&frame-name} .
+  
 /*  apply "entry" to f-car-vol in frame {&frame-name}.*/
-return no-apply.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME f-car-num
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-num Dialog-Frame
+ON leave OF f-car-num IN FRAME Dialog-Frame
+DO:
+  assign
+    f-car-num.
+  find first auto-tank where auto-tank.auto-num = f-car-num no-lock no-error.
+  if not available (auto-tank) and not (f-car-num = ? or f-car-num = "" or f-car-num = "?")
+  then do:
+   message "АЦ с таким гос. номером не найдена. Введите корректный номер АЦ или выберите из справочника." view-as alert-box information title "Сообщение".
+   apply "entry" to f-car-num in frame {&frame-name} .
+   return no-apply .
+  end.
+  
+  find first auto-tank-attr where auto-tank-attr.attr-code = "auto-firm" and auto-tank-attr.auto-num = auto-tank.auto-num no-error.
+  if available (auto-tank-attr)
+  then do:
+    assign
+      f-autoent-obj-type = substring (auto-tank-attr.attr-value, 1, 3)
+      f-autoent-obj-code = integer (substring (auto-tank-attr.attr-value, 4)).
+      f-autoent-obj-type:screen-value = f-autoent-obj-type.
+      f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
+      assign
+        v-autoent-obj-type = f-autoent-obj-type
+        v-autoent-obj-code =  f-autoent-obj-code
+      .
+      run disp-obj-name.
+  end.
+  
+  
+/*  apply "entry" to f-car-vol in frame {&frame-name}.*/
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME f-condition
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-condition Dialog-Frame
@@ -1206,11 +1261,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               assign
                 f-seals-condition = buf_doc-attr.attr-value.
         end.
-        when {&trdcattr-acc-ship} then do:
-            assign
-              f-acc-ship = decimal (buf_doc-attr.attr-value) no-error.
-              v-avai-acc-ship = true.
-        end.
+/*        when {&trdcattr-acc-ship} then do:                            */
+/*            assign                                                    */
+/*              f-acc-ship = decimal (buf_doc-attr.attr-value) no-error.*/
+/*              v-avai-acc-ship = true.                                 */
+/*        end.                                                          */
         when {&trdcattr-doc-not} then do:
             assign
               b-doc =  logical(buf_doc-attr.attr-value) no-error.
@@ -1280,6 +1335,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             f-item-doc
         in frame Dialog-Frame . 
     end.
+    hide 
+    f-acc-ship-2 f-acc-ship
+    in frame Dialog-Frame .
 
     
   find first ub.trn-doc no-lock where ub.trn-doc.doc-code = p-doc-code no-error.
@@ -1418,12 +1476,12 @@ find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code .
               f-seals-condition-2:fgcolor = 12
               .
         end.
-        when {&trdcattr-acc-ship} then do:
+/*        when {&trdcattr-acc-ship} then do:
             assign
               f-acc-ship:fgcolor  = 12
               f-acc-ship-2:fgcolor  = 12
               .
-        end.
+        end.*/
         when {&trdcattr-doc-not} then do:
             assign
               b-doc:fgcolor = 12
@@ -1497,7 +1555,7 @@ PROCEDURE disp-obj-name :
   disp ub.clients.obj-name @ f-autoent-obj-name with frame {&frame-name}.
   else do:
       display ? @ f-autoent-obj-name with frame {&frame-name}.
-      apply "choose" to b-clients in frame {&frame-name}.
+/*      apply "choose" to b-clients in frame {&frame-name}.*/
   end.
 
 END PROCEDURE.
@@ -1603,10 +1661,10 @@ PROCEDURE save-attr :
             assign
               v-attr-value = (if v-attr-value = ? then "" else v-attr-value) + {&delim-par} + f-seals-condition-2 when f-seals-condition-2 <> "".
         end.
-        when {&trdcattr-acc-ship} then do:
-            assign
-              v-attr-value = string (f-acc-ship) when string (f-acc-ship) <> "".
-        end.
+/*        when {&trdcattr-acc-ship} then do:                                      */
+/*            assign                                                              */
+/*              v-attr-value = string (f-acc-ship) when string (f-acc-ship) <> "".*/
+/*        end.                                                                    */
         when {&trdcattr-doc-not} then do:
             assign
               v-attr-value = string (b-doc) when string (b-doc) <> "".
@@ -1620,7 +1678,7 @@ PROCEDURE save-attr :
         end.
       end case.
       
-      find first buf_doc-attr no-lock
+      find first buf_doc-attr
         where buf_doc-attr.doc-code  = p-doc-code
           and buf_doc-attr.attr-code = tt-upd-attr-fuel.code
         no-error .
