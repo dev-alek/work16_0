@@ -771,12 +771,30 @@ class ibs.th.gbl.storage.vsdtostorage:
   end.
 
   method public logical exsistuuid (inVsdSubObj as class vsdsub):
+    define variable trnDoc as character no-undo.
+    define variable isExsistTRN as logical no-undo. 
+    return exsistuuid(inVsdSubObj, output isExsistTRN ).
+  end.
+  
+  method public logical exsistuuidwithtrn (inVsdSubObj as class vsdsub):
+    define variable trnDoc as character no-undo.
+    define variable isExsistTRN as logical no-undo.
+    if exsistuuid(inVsdSubObj, output isExsistTRN )
+    then 
+      if isExsistTRN 
+        then return true.
+    return false.
+  end.
+
+  method private logical exsistuuid (inVsdSubObj as class vsdsub, output isExsistTRN as log): /* uuid проверка наличия uuid в связке с документом*/
     
     define variable trnDoc as character no-undo. 
-    
     find first buf_vsd no-lock where recid (buf_vsd) <> inVsdSubObj:VsdRecid and buf_vsd.UUID = inVsdSubObj:UUID no-error.
     if available (buf_vsd)
     then do:
+      if can-find (first ub.trn-doc no-lock where ub.trn-doc.doc-code = trnDoc)
+        then isExsistTRN = true.
+        else isExsistTRN = false.
       trnDoc = entry (7,buf_vsd.part-key, {&delim-key}) no-error.
       Msg = substitute ("ВСД UUID &1 уже заведен в системе. Документ - &2. Товар - &3.", buf_vsd.UUID, trnDoc, buf_vsd.gds-code ).
       inVsdSubObj:setStatusErr(true).
