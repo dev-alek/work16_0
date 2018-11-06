@@ -290,12 +290,22 @@ CASE par-pos-type:
           v-paymentetc = v-paymentetc + "," + "FuelCard" + ":" + buf_cash-pay-attr.attr-value . 
         end.    
     
+    
       
     run bgelib-tag-put in this-procedure ( input 3, input "PaymentEtc":U
                                              ,input (trim(v-paymentetc,","))
                                             ,input 1
                                                      ).
-        
+    find first buf_cash-pay-attr no-lock where buf_cash-pay-attr.cdpay-code = cash-pay.cdpay-code
+        and buf_cash-pay-attr.curr-code = cash-pay.curr-code
+        and buf_cash-pay-attr.attr-code = "cash-type-pay-fr" no-error .
+    if AVAILABLE buf_cash-pay-attr then do:
+       run bgelib-tag-put in this-procedure ( input 3, input "PaymentFRType":U
+                                             ,input buf_cash-pay-attr.attr-value
+                                            ,input 1
+                                                     ).  
+    end.
+              
     run bgelib-tag-open in this-procedure ( input 3, input "PaymentStatus"
                                           , input "":U).
     run bgelib-tag-put in this-procedure ( input 4, input "PSCash":U
