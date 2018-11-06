@@ -162,13 +162,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   end . // end_of чтение параметров
 
   case v-action:
-    when "take":U then do:
-      v-msg-templ-start  = "Прием пакетов данных из ВС &1 '&2'" .
-      /* @FUTU образец:
+    /* @FUTU образец:
          Завершён приём и разбор пакетов данных. Принято пакетов 0, разобрано пакетов 0.
          В идеале ещё и:
          Разобрано из ранее принятых пакетов 0.
-      */ 
+    */ 
+    when "take":U then do:
+      v-msg-templ-start  = "Прием пакетов данных из ВС &1 '&2'" .
       v-msg-templ-finish = "Завершен прием пакетов данных из ВС '&1'" .
     end.
     when "analys":U then do:
@@ -188,7 +188,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   end case.
 
   /* код точки интеграции читаем заранее, до цикла;
-     наличие точки интеграции проверяется внутри цикла цикле только для метода доставки &esys-dm-erp-1C-RN */
+     наличие точки интеграции проверяется внутри цикла только для метода доставки &esys-dm-erp-1C-RN */
   run db-attr-value in this-procedure
                (input  ibs.th.gbl.gbl-var:g#db-num
                ,input {&attr-int-point}
@@ -259,7 +259,19 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         g#esys-source-esys = buf_ext-system.esys-id
         .
         
-          /* 29/VIII-2018  параметры настройки ЭЦП перенесены из ini-файла в настройки внешней системы */
+          if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+          then do :
+              if (v-sender-id = ? or trim(v-sender-id) = "")
+              then do :
+                  run write-log in p-log-handle (
+                        input 2
+                      , input 'Нет атрибута БД "Номер точки интеграции". Без него работа с системой 1С-ERP не возможна!'
+                  ).
+                  undo _ext-system, next _ext-system.
+              end.
+          end.
+          
+        do:  /* 29/VIII-2018  параметры настройки ЭЦП добавлены в настройки внешней системы */
           run ext-system-attr-value in this-procedure (
                                       input  buf_ext-system.esys-id
                                      ,input  buf_ext-system.db-num
@@ -343,18 +355,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
             v-cert-subj-name   = ""
             v-sign-fileext     = ""
           .
-          
-          if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
-          then do :
-              if (v-sender-id = ? or trim(v-sender-id) = "")
-              then do :
-                  run write-log in p-log-handle (
-                        input 2
-                      , input 'Нет атрибута БД "Номер точки интеграции". Без него работа с системой 1С-ERP не возможна!'
-                  ).
-                  undo _ext-system, next _ext-system.
-              end.
-          end.
+        end . // end_of параметры настройки ЭЦП
           
           run bge/lockesys.p (
              input buf_ext-system.esys-id
@@ -403,14 +404,11 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
             */
             run write-log in p-log-handle (  input 2
                ,substitute(v-msg-templ-start, buf_ext-system.esys-id, buf_ext-system.esys-name ) ) .
-            
-            if v-cert-enabled then do :
-              run write-log in p-log-handle (  input 2
-                 ,substitute("Используются файлы электронной подписи с расширением '.&1'", v-sign-fileext)
-                                            ) .
-            end .
-            else run write-log in p-log-handle (  input 2,  "Файлы электронной подписи не используются."  ) .
-
+            run write-log in p-log-handle (  input 2
+                 ,( if v-cert-enabled then substitute("Используются файлы электронной подписи с расширением '.&1'", v-sign-fileext)
+                                      else "Файлы электронной подписи не используются." )            
+                                          ) .
+                                          
             /*начинаем сканирование директории*/
             assign
               v-take-count   = 0
@@ -602,15 +600,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     end .
                 end.
                 for each temp-filelist no-lock :
+                    if temp-filelist.file-name begins "err_" then do :
+                          delete temp-filelist .
+                          next .
+                    end.
                     if integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)
                     or temp-filelist.file-name begins "ack_"
                     or temp-filelist.file-name begins "err_"
                     then do :
-                        if temp-filelist.file-name begins "err_"
-                        then do :
-                          delete temp-filelist .
-                          next .
-                        end.
                         /* 24/VIII-2018 заглушка (такая же стоит в bge/espcknum.p):
                               исключаем файлы с электронной подисью,
                               чтобы они читались строго позже файлов с данными */
@@ -849,6 +846,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     finally: 
                       set-size(v-sign-data) = 0 .
                       if v-err-msg > "" then do :
+                        v-return-error = 1.
                         set-size(v-pack-data) = 0 .
                         run write-log in p-log-handle ( input 2, input v-err-msg ).
                         // ... - и без сертификата блокируем дальнейшую работу
@@ -872,7 +870,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                         + substitute( "&1", return-value ) )
                                                 ) .
                         end .
-                        undo _ext-system, next _ext-system.
+                        // undo _ext-system, next _ext-system.
                       end .
                     end finally.
                   end . // end_of if_cert
@@ -885,6 +883,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                         которая передаёт имя файла в parseSub, где файл снова читается с диска
                         и парсится, теперь уже по настоящему.
                   */
+                  if v-return-error = 0 then do :
                   run bge/cmdeigen.p (
                                         input parparentproc
                                         ,input this-procedure:handle
@@ -897,10 +896,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                         ,input v-espr-pack-num
                                         ,input add-log-file-name
                                         ) no-error.
-                  if error-status:error then do:
-                    set-size(v-pack-data) = 0 .
-                    v-return-error = 1.
-                  end.
+                  if error-status:error then v-return-error = 1.
+                  end .
                   set-size(v-pack-data) = 0 .
                   if not can-find(first  ub.esys-pck-rcvd no-lock
                                     where ub.esys-pck-rcvd.esys-id  = buf_Ext-system.esys-id
@@ -913,6 +910,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                   end.
                   else v-analys-count = v-analys-count + 1 . // для итогового сообщения о количестве обработанных пакетов
                 end.  
+
                 if v-return-error > 0 then do:
                 if v-err-type = '' then do:
                   assign
@@ -1010,6 +1008,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                   run gbl/ren-file.p (input v-full-path,
                                       input (v-path + "\err_" + v-file-name)
                                       ) no-error.
+                  if v-cert-enabled then do :
+                    v-position = r-index(v-sign-file, "\") .
+                  run gbl/ren-file.p (input v-sign-file,
+                                      input (v-path + "\err_" + substring(v-sign-file, v-position + 1))
+                                      ) no-error.
+                  end .
                 end.
                 if v-return-error > 0
                 and buf_ext-system.delivery-method <> integer({&esys-dm-exite-edi})
