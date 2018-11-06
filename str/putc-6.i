@@ -18,6 +18,7 @@ Creation date: 11/28/05
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
+define stream finp.
 PROCEDURE putc-6.
 def input param pos-type as char no-undo.
 def var ii  as  int     no-undo.
@@ -40,6 +41,13 @@ def var ii  as  int     no-undo.
 define VARIABLE name-cash as character no-undo.
 define VARIABLE name-cash1 as character no-undo.
 define VARIABLE name-cash2 as character no-undo.
+define variable ufo-passwd as character no-undo.
+define variable ufo-enc20  as character format "x(20)" no-undo.
+define variable enc-passwd as character no-undo.
+/* 23/V-2018 на время input throught ... появляется консольное окно;
+             вместо этого делаем os-command no-console ... с выводом в файл */
+define variable v-shadow-fname as character no-undo .
+
 CASE pos-type:
   when {&cd-type-ibm} then do:
     FOR EACH cash-cash NO-LOCK use-index icash:
@@ -61,6 +69,7 @@ CASE pos-type:
     END.
   end.
   when {&cd-type-ibm-xml} then do:
+    v-shadow-fname = substitute( "pass&1.dat" , string(random(1, 80000), "99999") ) .
     FOR EACH cash-cash NO-LOCK use-index icash:
       find first ub.person where ub.person.psn-code = cash-cash.psn-code no-error.
 &scop max-cash-code 999
@@ -75,14 +84,35 @@ name-cash1 = if ub.person.name1 <> "" then (substring(ub.person.name1,1,1) + '.'
 name-cash2 = if ub.person.name2 <> "" then (substring(ub.person.name2,1,1) + '.') else ''.
 name-cash = cash-cash.cash-name + ' ' + name-cash1 + ' ' + name-cash2 .
 
+/*
+ Имя: ufo_passwd <пароль> [<шифрованный>]
+ Если задан только один аргумент - шифрование пароля.
+ Программа шифрует его и выдает зашифрованный вариант в стандартный вывод.
+ Зашифрованный пароль - строка из 20 шестнадцатиричных цифр.
+*/
+enc-passwd = "".
+ufo-passwd = search('exe/ufo_passwd.exe':u).
+if ufo-passwd > "" then do:
+  os-command silent value(ufo-passwd) value(cash-cash.psswd) > value(v-shadow-fname) .
+  input stream finp from value(v-shadow-fname) .
+  repeat:
+    import stream finp unformatted ufo-enc20 no-error.
+    enc-passwd = enc-passwd + ufo-enc20.
+  end.
+  input stream finp close.
+  os-delete value(v-shadow-fname).
+end.
+
       run bgelib-tag-put in this-procedure ( input 3, input "CashierName"         , input name-cash, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierParol"        , input cash-cash.psswd, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierLock"         , input cash-cash.stts, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierINN"          , input person.inn, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierShadow"       , input enc-passwd, input 1 ).
       run bgelib-tag-close in this-procedure ( input 2, input "Cashier").
     END.
   end.
   when {&cd-type-Autotank} then do:
+    v-shadow-fname = substitute( "pass&1.dat" , string(random(1, 80000), "99999") ) .
     FOR EACH cash-cash NO-LOCK use-index icash:
       find first ub.person where ub.person.psn-code = cash-cash.psn-code no-error.
 &scop max-cash-code 999
@@ -98,10 +128,30 @@ name-cash1 = if ub.person.name1 <> "" then (substring(ub.person.name1,1,1) + '.'
 name-cash2 = if ub.person.name2 <> "" then (substring(ub.person.name2,1,1) + '.') else ''.
 name-cash = cash-cash.cash-name + ' ' + name-cash1 + ' ' + name-cash2 .
 
+/*
+ Имя: ufo_passwd <пароль> [<шифрованный>]
+ Если задан только один аргумент - шифрование пароля.
+ Программа шифрует его и выдает зашифрованный вариант в стандартный вывод.
+ Зашифрованный пароль - строка из 20 шестнадцатиричных цифр.
+*/
+enc-passwd = "".
+ufo-passwd = search('exe/ufo_passwd.exe':u).
+if ufo-passwd > "" then do:
+  os-command silent value(ufo-passwd) value(cash-cash.psswd) > value(v-shadow-fname) .
+  input stream finp from value(v-shadow-fname) .
+  repeat:
+    set stream finp ufo-enc20.
+    enc-passwd = enc-passwd + ufo-enc20.
+  end.
+  input stream finp close.
+  os-delete value(v-shadow-fname).
+end.
+
       run bgelib-tag-put in this-procedure ( input 3, input "CashierName"         , input name-cash, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierParol"        , input cash-cash.psswd, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierLock"         , input cash-cash.stts, input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierINN"          , input (person.inn), input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierShadow"       , input enc-passwd, input 1 ).
       run bgelib-tag-close in this-procedure ( input 2, input "Cashier").
     END.
   end.
