@@ -130,6 +130,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable trn-gd-doc-inlistSubjectsObj             as class subjects                    no-undo.
   define variable trn-prt-doc-inlistSubjectsObj             as class subjects                    no-undo.
 
+  define variable normlossSubjectObj                        as class normloss                  no-undo.
+  define variable impnormlossEventHndlrObj                as class impnormloss                no-undo.
+
   define variable trn-fuel-doc-inSubjectObj      as class trn-fuel-doc-in no-undo.
   define variable trn-gd-fuelSubjectObj          as class trn-gd-fuel     no-undo.
   define variable imptrn-fuel-docEventHndlrObj   as class imptrn-fuel-doc no-undo.
@@ -215,6 +218,9 @@ class ibs.th.bge.1crn.import.parsesub:
     contractsSubjectObj = new contracts ().
     impContractsEventHndlrObj = new impcontracts ().
 
+    normlossSubjectObj = new normloss ().
+    impnormlossEventHndlrObj = new impnormloss ().
+    
     currencySubjectObj = new currency ().
     impCurrencyEventHndlrObj = new impcurrency ().
     
@@ -421,6 +427,10 @@ class ibs.th.bge.1crn.import.parsesub:
         when "contract" then do:
           GetChildrenSub (hNoderef, (level + 1), contractsSubjectObj).
           ReceivedSubjectPublish(contractsSubjectObj, impContractsEventHndlrObj).
+        end.
+        when "norm-loss" then do:
+          GetChildrenSub (hNoderef, (level + 1), normlossSubjectObj).
+          ReceivedSubjectPublish(normlossSubjectObj, impnormlossEventHndlrObj).
         end.
         when "country" then do:
           GetChildrenSub (hNoderef, (level + 1), countrySubjectObj).
