@@ -35,6 +35,7 @@ define input  parameter       p-bttns            as character     no-undo .
 define input-output parameter p-context          AS character     no-undo .
 define OUTPUT parameter       p-action-role-code as integer       no-undo .
 define INPUT-OUTPUT parameter p-rid-list         as character     no-undo .
+define INPUT  parameter       p-db-num           as integer       no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -60,6 +61,7 @@ define variable v-current-db-num              as integer   no-undo .
 define variable v-can-edit-action-role        as logical   no-undo .
 define variable v-current-db-num-screen-value as character no-undo .
 define variable v-current-context             as character no-undo .
+define variable v-on-gbl                      as logical   no-undo.
 
 define variable v-action-role-context         as character no-undo format "x(8)" column-label "Контекст".
 define variable v-action-role-item-state      as character no-undo format "x(3)" column-label "Вкл" .
@@ -315,6 +317,7 @@ DEFINE BROWSE browse-action-role
     QUERY browse-action-role DISPLAY
     mark-string(recid(action-role), p-rid-list) @ v-action-role-select
     get-action-role-context(BUFFER action-role) @ v-action-role-context COLUMN-LABEL "Привязка" format "x(12)"
+    action-role.db-num column-label "БД"
     action-role.action-role-name COLUMN-LABEL "Название группы прав"
     action-role.action-role-description
 /* _UIB-CODE-BLOCK-END */
@@ -1178,6 +1181,10 @@ end.
   "run refresh-query-action-role in this-procedure .
    run refresh-query-action-item in this-procedure ."
    }
+{ adm/actn-gbl.i
+  v-on-gbl
+  no-error
+}
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
@@ -1185,9 +1192,14 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
+if p-db-num = 0 then do:
     assign
         v-current-db-num = v-cntxt-db-num
         .
+  end.
+  else v-current-db-num = p-db-num .
+  if v-on-gbl then v-current-db-num = 0.
+  
     run can-edit-action-role
         (input  v-current-db-num
         ,output v-can-edit-action-role
@@ -2078,6 +2090,8 @@ PROCEDURE local-open-query-action-role :
       Notes:
     -------------------------------------------------------------*/
 
+  define variable v-num-db    as integer      no-undo.
+
     do
         with frame {&frame-name}
         on error undo, return error return-value
@@ -2097,7 +2111,9 @@ PROCEDURE local-open-query-action-role :
                 .
         END.
 
-
+        v-num-db = if v-on-gbl then 0
+                   else v-current-db-num
+        .
         case p-context:
             WHEN {&cntxt-global} OR
             WHEN {&cntxt-firm}   OR
@@ -2105,12 +2121,12 @@ PROCEDURE local-open-query-action-role :
                 DO:
                     open query browse-action-role
                         for each  action-role no-lock
-                        where action-role.db-num              = v-current-db-num
+                        where action-role.db-num            = v-num-db
                         and action-role.action-head-code    = {&action-head-code-main}
                         and action-role.action-role-context = p-context
                         , first temp_filter-fields
-                        where temp_filter-fields.action-role-code    = action-role.action-role-code
-                        and (     temp_filter-fields.record-on         = yes
+                        where temp_filter-fields.action-role-code  = action-role.action-role-code
+                        and (     temp_filter-fields.record-on     = yes
                         or tb-filter-role = no
                         )
                         by action-role.action-role-name
@@ -2120,11 +2136,11 @@ PROCEDURE local-open-query-action-role :
             DO:
                 open query browse-action-role
                     for each action-role no-lock
-                    where action-role.db-num = v-current-db-num
-                    and action-role.action-head-code = {&action-head-code-main}
+                    where action-role.db-num                = v-num-db
+                    and action-role.action-head-code        = {&action-head-code-main}
                     , first temp_filter-fields
-                    where temp_filter-fields.action-role-code    = action-role.action-role-code
-                    and (     temp_filter-fields.record-on         = yes
+                    where temp_filter-fields.action-role-code = action-role.action-role-code
+                    and (     temp_filter-fields.record-on    = yes
                     or tb-filter-role = no
                     )
                     by action-role.action-role-context
@@ -2196,7 +2212,8 @@ PROCEDURE post_enable_UI :
       FALSE
       v-ok
     }
-    if v-ok = FALSE
+    if v-ok = FALSE or 
+      (v-on-gbl and v-cntxt-db-num <> 0)
         then 
     do:
         disable
@@ -2645,4 +2662,5 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 

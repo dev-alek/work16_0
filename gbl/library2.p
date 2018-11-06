@@ -1336,6 +1336,7 @@ procedure chk-actg :
   define variable v-ok    as logical      no-undo.
   define variable v-on-gds    as logical      no-undo.
   define variable v-on-grp    as logical      no-undo.
+  define variable v-on-gbl    as logical      no-undo.
   define variable v-full-user-name      as character no-undo .
   define variable v-error-message       as character no-undo .
   define variable v-check-db-num        as integer   no-undo .
@@ -1461,6 +1462,14 @@ if p-ok then leave check_block .
         .
         leave check_block . /* --->>>--- */
       end.
+
+      { adm/actn-gbl.i
+        v-on-gbl
+        no-error
+      }
+      /* if v-on-gbl then
+        v-check-db-num = 0.
+        */
 
       /* ¬ключена работа прав по групп товаров. »щем имеет ли ограничение по группе данное право. */
       if v-on-grp then do:
@@ -2546,6 +2555,42 @@ on error undo, return error
 
 end. /* do on error */
 end procedure. /* actn-grp */
+
+/*==========================================================================*/
+/* включена ли в системе глобальна€ настройка прав */
+procedure actn-gbl :
+define output parameter p-on as logical          no-undo.
+
+define buffer buf_global-state             for ub.global-state .
+define buffer buf_global-state-attr        for ub.global-state-attr .
+
+do
+on error undo, return error
+:
+   FIND FIRST buf_global-state
+        NO-LOCK
+        .
+   FIND FIRST buf_global-state-attr
+        WHERE buf_global-state-attr.gls-id    = buf_global-state.gls-id
+          AND buf_global-state-attr.attr-code = "action-gbl"
+        NO-LOCK
+        NO-error
+        .
+   IF  AVAILABLE buf_global-state-attr
+   AND LOGICAL(buf_global-state-attr.attr-value)
+   THEN DO:
+      assign
+         p-on = TRUE
+      .
+   END.
+   ELSE DO:
+      assign
+         p-on = FALSE
+      .
+   END.
+
+end. /* do on error */
+end procedure. /* actn-gbl */
 
 /*==========================================================================*/
 procedure actgrpcd :

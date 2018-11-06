@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -11,7 +11,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Глобальные параметры для включения прав по товарам и группам товаров
+Глобальные параметры для включения прав
 
 Автор: Белоусов Илья Александрович
 Дата создания: 03/28/08
@@ -34,6 +34,7 @@ DEFINE BUFFER buf_global-state      FOR ub.global-state .
 DEFINE BUFFER buf_global-state-attr FOR ub.global-state-attr .
 
 /* Parameters Definitions ---                                           */
+/*define input  parameter parparentproc     as widget-handle no-undo .*/
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -41,17 +42,19 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Глобальные параметры для включения прав по товарам и группам товаров".
+define variable vss-description as character no-undo init "Глобальные параметры для включения прав".
+
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { cmp/showinf.i  }
+{ cmp/trg-def.i  }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -62,9 +65,9 @@ define variable vss-description as character no-undo init "Глобальные параметры 
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help ~
-tg-action-gds-groups
-&Scoped-Define DISPLAYED-OBJECTS tg-action-gds-groups
+&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help tg-action-gds-groups ~
+tg-action-gbl 
+&Scoped-Define DISPLAYED-OBJECTS tg-action-gds-groups tg-action-gbl 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -79,30 +82,30 @@ tg-action-gds-groups
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE tg-action-gds-groups AS LOGICAL INITIAL no
-     LABEL "Включить права на работу с группами товаров"
+DEFINE VARIABLE tg-action-gbl AS LOGICAL INITIAL no 
+     LABEL "Глобальная настройка прав" 
      VIEW-AS TOGGLE-BOX
      SIZE 59 BY .79 NO-UNDO.
 
-/*DEFINE VARIABLE tg-action-goods AS LOGICAL INITIAL no*/
-/*     LABEL "Включить права на работу с товарами"*/
-/*     VIEW-AS TOGGLE-BOX*/
-/*     SIZE 59 BY .79 NO-UNDO.*/
+DEFINE VARIABLE tg-action-gds-groups AS LOGICAL INITIAL no 
+     LABEL "Включить права на работу с группами товаров" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 59 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -111,12 +114,12 @@ DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 55
-     /*tg-action-goods AT ROW 2.92 COL 4 WIDGET-ID 2*/
      tg-action-gds-groups AT ROW 4.08 COL 4 WIDGET-ID 4
-     SPACE(2.19) SKIP(1.03)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "Включение прав на работу с товарами"
+     tg-action-gbl AT ROW 5.5 COL 4 WIDGET-ID 6
+     SPACE(2.24) SKIP(1.24)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Включение прав на работу"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit WIDGET-ID 100.
 
 
@@ -137,14 +140,14 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -168,6 +171,7 @@ DO:
   assign
 /*    tg-action-goods*/
     tg-action-gds-groups
+    tg-action-gbl
   .
   RUN global-save IN THIS-PROCEDURE .
 END.
@@ -190,7 +194,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -206,9 +210,11 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  
    RUN global-read IN THIS-PROCEDURE .
-
    RUN enable_UI.
+   run ui-enable in this-procedure.
+
    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -225,7 +231,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -244,12 +250,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY tg-action-gds-groups
+  DISPLAY tg-action-gds-groups tg-action-gbl 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-quit b-help tg-action-gds-groups
+  ENABLE b-exit b-quit b-help tg-action-gds-groups tg-action-gbl 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -258,7 +264,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE global-read Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE global-read Dialog-Frame 
 PROCEDURE global-read :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -295,18 +301,34 @@ PROCEDURE global-read :
       .
       RELEASE buf_global-state-attr .
    END.
+
+   FIND FIRST buf_global-state-attr
+      WHERE buf_global-state-attr.gls-id = buf_global-state.gls-id
+         AND buf_global-state-attr.attr-code = "action-gbl"
+      NO-LOCK
+      NO-error
+      .
+   IF AVAILABLE buf_global-state-attr
+   THEN DO:
+      assign
+         tg-action-gbl = LOGICAL(buf_global-state-attr.attr-value)
+      .
+      RELEASE buf_global-state-attr .
+   END.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE global-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE global-save Dialog-Frame 
 PROCEDURE global-save :
 /*------------------------------------------------------------------------------
   Purpose:
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+
+   define variable v-on-gbl as logical no-undo.
 
 /*   FIND FIRST buf_global-state-attr*/
 /*      WHERE buf_global-state-attr.gls-id = buf_global-state.gls-id*/
@@ -347,10 +369,99 @@ PROCEDURE global-save :
       buf_global-state-attr.attr-value = STRING(tg-action-gds-groups)
    .
 
+   FIND FIRST buf_global-state-attr
+      WHERE buf_global-state-attr.gls-id = buf_global-state.gls-id
+         AND buf_global-state-attr.attr-code = "action-gbl"
+      EXCLUSIVE-LOCK
+      NO-error
+      .
+   IF NOT AVAILABLE buf_global-state-attr
+   THEN DO:
+      create buf_global-state-attr.
+      assign
+         buf_global-state-attr.gls-id = buf_global-state.gls-id
+         buf_global-state-attr.attr-code = "action-gbl"
+         v-on-gbl = tg-action-gbl
+      .
+   END.
+   ELSE
+      v-on-gbl = (not logical(buf_global-state-attr.attr-value)) and tg-action-gbl.
+
+   assign
+      buf_global-state-attr.attr-value = STRING(tg-action-gbl)
+   .
+
+   if v-on-gbl then
+   do:
+     for each action-role no-lock
+       where action-role.db-num = 0
+     :
+       run str/callnews.p
+         (input {&table_action-role}
+         ,input (buffer action-role :handle)
+         ).
+     end.
+
+     for each action-role-attr no-lock
+       where action-role-attr.db-num = 0
+     :
+       run str/callnews.p
+         (input {&table_action-role-attr}
+         ,input (buffer action-role-attr :handle)
+         ).
+     end.
+
+     for each action-role-item no-lock
+       where action-role-item.db-num = 0
+     :
+       run str/callnews.p
+         (input {&table_action-role-item}
+         ,input (buffer action-role-item :handle)
+         ).
+     end.
+
+     for each action-role-item-attr no-lock
+       where action-role-item-attr.db-num = 0
+     :
+       run str/callnews.p
+         (input {&table_action-role-item-attr}
+         ,input (buffer action-role-item-attr :handle)
+         ).
+     end.
+   end.
+
    RELEASE buf_global-state-attr .
+    /* Должен сработать тригер и все уйдет в новости */
+   FIND FIRST buf_global-state
+        exclusive-LOCK
+        .
+   if buf_global-state.whole-send-news = 0 then buf_global-state.whole-send-news = 1.
+                                            else buf_global-state.whole-send-news = 0.
    RELEASE buf_global-state .
 
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-enable Dialog-Frame
+PROCEDURE ui-enable :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+do
+with frame {&frame-name}
+on error undo, return error
+:
+  if g#db-num <> 0 then do:
+    assign
+      tg-action-gbl:sensitive = false
+    .
+  end.
+end.
+END PROCEDURE. /* ui-enable */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

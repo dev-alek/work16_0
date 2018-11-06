@@ -91,6 +91,8 @@ define variable vss-description as character no-undo init "Редактирование привяз
 define variable v-context  as character no-undo format "x(8)" column-label "Привязка".
 define variable v-state    as character no-undo format "x(3)" column-label "Вкл" .
 DEFINE VARIABLE g#log      AS LOGICAL   NO-UNDO.
+define variable v-on-grp    as logical      no-undo.
+define variable v-on-gbl    as logical      no-undo.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -265,7 +267,8 @@ DEFINE BROWSE browse-br_user-login-action-role
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS browse-br_user-login-action-role Dialog-Frame _FREEFORM
   QUERY browse-br_user-login-action-role DISPLAY
       get-role-context(BUFFER br_tt-user-login-action-role) @ v-context column-label "Привязка" FORMAT "x(12)"
-           br_tt-user-login-action-role.role-name                                column-label "Название группы прав"
+      br_tt-user-login-action-role.role-name                                column-label "Название группы прав"
+       br_tt-user-login-action-role.db-num  column-label "БД"    
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 47.5 BY 16.75
@@ -554,7 +557,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
        ASSIGN
         FRAME Dialog-Frame:TITLE = SUBSTITUTE ( "Права пользователя &1", usrnickf( p-user-id ) )
      .
-
+    { adm/actn-grp.i
+      v-on-grp
+      no-error
+    }
+    { adm/actn-gbl.i
+  v-on-gbl
+  no-error
+}
 
   RUN enable_UI.
   RUN post_enable_UI IN THIS-PROCEDURE.
@@ -608,7 +618,9 @@ PROCEDURE add-action-roles :
                         , input-output v-context
                         , output v-action-role-code
                         , INPUT-OUTPUT v-rid-list
+                        , input p-db-num
                         ) .
+                 
       IF v-rid-list <> "" THEN
       DO current-role = 1 TO NUM-ENTRIES(v-rid-list) :
          find first buf_action-role
@@ -617,7 +629,7 @@ PROCEDURE add-action-roles :
               .
          v-rec-list = "" .
          v-gds-grp = false .
-         for each buf_action-role-item no-lock
+         if v-on-grp then for each buf_action-role-item no-lock
            where buf_action-role-item.action-head-code = buf_action-role.action-head-code
              and buf_action-role-item.action-role-code = buf_action-role.action-role-code
              :
@@ -662,6 +674,7 @@ PROCEDURE add-action-roles :
                     , input "":U
                     , input-output v-rec-list).
                end.
+               
                for each  userobjs_temp-user-obj
                   :
                   FIND FIRST buf_clients
@@ -823,7 +836,7 @@ DEFINE BUFFER buf_user-login-action-role FOR ub.user-login-action-role.
                                  NO-LOCK.
       IF NOT CAN-FIND( FIRST buf_user-login-action-role
                        WHERE buf_user-login-action-role.db-num           = p-db-num
-                         AND buf_user-login-action-role.action-head-code = {&action-head-code-main}
+                         AND buf_user-login-action-role.action-head-code = buf_action-role.action-head-code
                          AND buf_user-login-action-role.action-role-code = buf_action-role.action-role-code
                          AND buf_user-login-action-role.action-role-context  = buf_action-role.action-role-context
                          AND buf_user-login-action-role.user-id          = p-user-id
@@ -836,7 +849,7 @@ DEFINE BUFFER buf_user-login-action-role FOR ub.user-login-action-role.
          create buf_user-login-action-role .
          assign
            buf_user-login-action-role.db-num               = p-db-num
-           buf_user-login-action-role.action-head-code     = {&action-head-code-main}
+           buf_user-login-action-role.action-head-code     = buf_action-role.action-head-code
            buf_user-login-action-role.user-login-role-code = NEXT-VALUE(s-user-login-action-role)
            buf_user-login-action-role.user-id              = p-user-id
            buf_user-login-action-role.action-role-code     = buf_action-role.action-role-code
@@ -947,7 +960,7 @@ on error undo, return error
 
    IF v-changed then do:
       find first buf_action-role
-           where buf_action-role.db-num = br_tt-user-login-action-role.db-num
+           where buf_action-role.db-num = (if v-on-gbl then 0 else br_tt-user-login-action-role.db-num)
              and buf_action-role.action-head-code = br_tt-user-login-action-role.action-head-code
              and buf_action-role.action-role-code = br_tt-user-login-action-role.action-role-code
              no-lock
@@ -1394,7 +1407,7 @@ on error undo, return error
 
       FIND
       FIRST buf_action-role
-      WHERE buf_action-role.db-num                      = p-db-num
+      WHERE buf_action-role.db-num                      = (if v-on-gbl then 0 else p-db-num)
         AND buf_action-role.action-head-code            = {&action-head-code-main}
         AND buf_action-role.action-role-code            = buf_user-login-action-role.action-role-code
       NO-LOCK
@@ -1621,7 +1634,7 @@ do
 on error undo, return error
 :
 
-    IF p-db-num <> v-cntxt-db-num THEN DO:
+    IF p-db-num <> v-cntxt-db-num and v-cntxt-db-num <> 0 THEN DO:
         DISABLE
               b-add
               b-del
@@ -1832,7 +1845,6 @@ define buffer buf_temp_onewin_items    for temp_onewin_items .
 
 define variable v-ok    as logical      no-undo.
 define variable v-code    as character    no-undo.
-
 do
 on error undo, return error
 :
@@ -1844,7 +1856,7 @@ on error undo, return error
        no-lock
        ,
        EACH buf_action-role-item
-         where buf_action-role-item.db-num = p-db-num
+         where buf_action-role-item.db-num = (if v-on-gbl then 0 else p-db-num)
          and buf_action-role-item.action-head-code = buf_tt-user-login-action-role.action-head-code
          and buf_action-role-item.action-role-code = buf_tt-user-login-action-role.action-role-code
          no-lock
@@ -1905,7 +1917,7 @@ on error undo, return error
    run onewin_clear in this-procedure.
 
    FOR EACH  buf_action-role-item
-         where buf_action-role-item.db-num = p-db-num
+         where buf_action-role-item.db-num = ( if v-on-gbl then 0 else p-db-num)
          and buf_action-role-item.action-head-code = p-action-head-code
          and buf_action-role-item.action-role-code = p-action-role-code
          no-lock,

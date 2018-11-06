@@ -18,7 +18,7 @@ Creation date: 03/05/2011
 
 
             if can-find( first buf_action-role-item no-lock
-              where buf_action-role-item.db-num           = v-check-db-num
+              where buf_action-role-item.db-num           = (if v-on-gbl then 0 else v-check-db-num)
                 and buf_action-role-item.action-head-code = p-action-head-code
                 and buf_action-role-item.action-role-code = buf_user-login-action-role.action-role-code
                 and buf_action-role-item.action-item-code = buf_action-item.action-item-code)

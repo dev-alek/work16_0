@@ -579,8 +579,8 @@ DO:
         end.
         define variable v-yesno    as logical      no-undo.
         message
-                 "Создать логин для нового пользователя"
-            skip "в текущей базе данных?"
+                 "Создать логин для нового пользователя?"
+/*            skip "в текущей базе данных?"*/
         view-as alert-box question
         buttons yes-no
         title "Создание логина"
@@ -635,8 +635,8 @@ DO:
         if v-created = yes
         then do:
             find first buf_user-login no-lock
-                 where buf_user-login.db-num   = v-cntxt-db-num
-                   and buf_user-login.user-id  = v-user-id
+                 where buf_user-login.user-id  = v-user-id
+/*                   and buf_user-login.db-num   = v-cntxt-db-num*/
             .
             reposition br-login to rowid rowid( buf_user-login ) no-error.
         end.
@@ -1712,6 +1712,7 @@ PROCEDURE can-edit-login :
       p-can-edit = ( p-db-num = v-cntxt-db-num
                     or
                     buf_db.db-key = '':U
+                    or v-cntxt-db-num = 0
                    )
     .
   end.
@@ -2653,7 +2654,7 @@ on error undo, return error
                 end.
             end.        /* for each buf_user-login */
         end.
-        if v-have-login = yes
+        if v-have-login = yes and v-cntxt-db-num <> 0
         then do:
             disable
                 b-add-2
@@ -2664,7 +2665,7 @@ on error undo, return error
                 b-add-2
             .
         end.
-        if buf_init_user-login.db-num = v-cntxt-db-num
+        if buf_init_user-login.db-num = v-cntxt-db-num or v-cntxt-db-num = 0
         then do:
             enable
                 b-chg-2
@@ -3633,7 +3634,7 @@ do
 on error undo, return error
 :
     { gbl/user-adm.i
-        v-cntxt-db-num
+        p-db-num
         p-user-id
         v-user-adm
     }
@@ -3650,7 +3651,7 @@ on error undo, return error
             run str/useractn.w (
                   input parparentproc
                 , input buf_init_user-account.user-id
-                , input v-cntxt-db-num
+                , input p-db-num
             ).
          end.
     end.
@@ -3658,7 +3659,7 @@ on error undo, return error
         run str/useractn.w (
               input parparentproc
             , input buf_init_user-account.user-id
-            , input v-cntxt-db-num
+            , input p-db-num
         ).
     end.
 end.
@@ -3792,10 +3793,11 @@ for buf_user-login
   , buf_user-account
 on error undo, return error
 :
+
     run str/usrloged.w (
           input parparentproc
         , input {&update}
-        , input p-db-num
+        , input-output p-db-num
         , input p-user-id
         , input "":U
         , input false
@@ -4079,13 +4081,15 @@ on error undo, return error return-value
     define variable v-user-administrator as logical   no-undo .
     define variable v-max-discnt         as decimal   no-undo .
     define variable v-quest-print        as logical   no-undo .
+    define variable v-tmp-dbnum          as integer   no-undo .
 
     /* редактирование логина пользователя */
     /* запись захвачена и не может быть изменена */
+    v-tmp-dbnum = buf_user-login.db-num.
     run str/usrloged.w (
           input parparentproc
         , input {&update}
-        , input buf_user-login.db-num
+        , input-output v-tmp-dbnum
         , input buf_user-login.user-id
         , input buf_user-login.user-login
         , input buf_user-login.user-administrator
@@ -4097,6 +4101,11 @@ on error undo, return error return-value
         , output v-max-discnt
         , output v-quest-print
     ) .
+    if v-tmp-dbnum = ? then
+       return.
+    assign
+       buf_user-login.db-num = v-tmp-dbnum
+       p-db-num = buf_user-login.db-num.
     if v-update-data = true
     then do:        /* сохранение данных в базу отдельной транзакцией */
         do transaction

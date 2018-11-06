@@ -93,6 +93,7 @@ DEFINE VARIABLE g#log      AS LOGICAL   NO-UNDO.
 define variable v-flt-role    as character    no-undo.
 define variable v-flt-item    as character    no-undo.
 
+define variable v-on-gbl    as logical      no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -274,6 +275,9 @@ DEFINE BROWSE browse-br_user-login-action-role
 
 /*      br_action-role.action-role-description                         column-label "Описание группы прав"
       br_user-login-action-role.host-code
+br_user-login-action-role.db-num
+br_user-login-action-role.user-id
+ br_user-login-action-role.user-login-role-code
       br_action-role.action-role-code
       br_user-login-action-role.obj-type
       br_user-login-action-role.obj-code
@@ -660,6 +664,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   { gbl/getcntxt.i get }
+{ adm/actn-gbl.i
+  v-on-gbl
+  no-error
+}
 
   RUN fill-wp IN THIS-PROCEDURE.
   FIND FIRST br_tt-work-place no-lock.
@@ -718,6 +726,7 @@ PROCEDURE add-action-roles :
                         , input-output v-context
                         , output v-action-role-code
                         , INPUT-OUTPUT v-rid-list
+                        , input p-db-num
                         ) .
       IF v-context <> br_tt-work-place.context THEN DO:
          message
@@ -850,7 +859,7 @@ on error undo, return error
                                              )
                                              )
             no-lock,
-            FIRST buf_action-role        WHERE buf_action-role.db-num                      = p-db-num
+            FIRST buf_action-role        WHERE buf_action-role.db-num                      = (if v-on-gbl then 0 else p-db-num)
                                           AND buf_action-role.action-head-code            = {&action-head-code-main}
                                           AND buf_action-role.action-role-code            = buf_user-login-action-role.action-role-code
                                           and buf_action-role.action-role-context         = br_tt-work-place.context
@@ -1171,7 +1180,7 @@ PROCEDURE post_enable_UI :
 do
 on error undo, return error
 :
-   IF p-db-num <> v-cntxt-db-num THEN DO:
+   IF p-db-num <> v-cntxt-db-num and v-cntxt-db-num <> 0 THEN DO:
       DISABLE
             b-add
             b-del
@@ -1496,7 +1505,7 @@ PROCEDURE query-action-role :
                                                    )
                                                   )
                 no-lock,
-                FIRST br_action-role        WHERE br_action-role.db-num                      = p-db-num
+                FIRST br_action-role        WHERE br_action-role.db-num                      = (if v-on-gbl then 0 else p-db-num)
                                               AND br_action-role.action-head-code            = {&action-head-code-main}
                                               AND br_action-role.action-role-code            = br_user-login-action-role.action-role-code
                                               and br_action-role.action-role-context         = br_tt-work-place.context

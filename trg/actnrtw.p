@@ -44,6 +44,23 @@ do transaction
 on error   undo main-block, return error substitute('actnrtw error main-block,&1', return-value )
 on end-key undo main-block, return error substitute('actnrtw end-key main-block,&1', return-value )
 :
+if g#news then do:  /* Переписываем item-code на всякий случай, если разъехались */
+
+          find first ub.action-item
+            where ub.action-item.action-head-code = ub.action-role-item.action-head-code
+            and ub.action-item.action-item-id  = ub.action-role-item.action-item-id
+            no-lock
+            no-error
+            .
+          if available ub.action-item then 
+          do:
+            assign
+              ub.action-role-item.action-item-code = ub.action-item.action-item-code
+              .
+          end.
+
+
+end.
 if not g#news then do:
 
         run cur-time in this-procedure(output v-date, output v-time).

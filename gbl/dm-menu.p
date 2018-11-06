@@ -3258,6 +3258,7 @@ procedure m_action-role :
                        , input-output v-context
                        , output v-action-role-code
                        , input-output v-rid-list
+                       , input v-cntxt-db-num 
                        ) .
   end.
 

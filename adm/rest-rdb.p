@@ -50,6 +50,7 @@ define variable ser-wth-conf-par as logical no-undo.
 
 define variable par-type as character no-undo.
 define variable fin-doc-par as integer no-undo.
+define variable v-on-gbl as logical no-undo.
 
 define temp-table temp-cash-desk no-undo
   field last-date like ub.chk-doc.chk-date
@@ -1171,6 +1172,68 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
     end.
 
+    { adm/actn-gbl.i
+      v-on-gbl
+      no-error
+    }
+    if v-on-gbl then do:
+      output stream slog to rest-rdb.txt append .
+      export stream slog "action-role":U cur-time-string() .
+      output stream slog close .
+
+      for each ub.action-role no-lock
+        where ub.action-role.db-num = 0
+      on error  undo, return error substitute( "&1 (action-role). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (action-role). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (action-role). endkey", vss-workfile )
+      :
+        create dst.action-role.
+        buffer-copy ub.action-role to dst.action-role .
+      end.
+
+      output stream slog to rest-rdb.txt append .
+      export stream slog "action-role-attr":U cur-time-string() .
+      output stream slog close .
+
+      for each ub.action-role-attr no-lock
+        where ub.action-role-attr.db-num = 0
+      on error  undo, return error substitute( "&1 (action-role-attr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (action-role-attr). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (action-role-attr). endkey", vss-workfile )
+      :
+        create dst.action-role-attr.
+        buffer-copy ub.action-role-attr to dst.action-role-attr .
+      end.
+
+      output stream slog to rest-rdb.txt append .
+      export stream slog "action-role-item":U cur-time-string() .
+      output stream slog close .
+
+      for each ub.action-role-item no-lock
+        where ub.action-role-item.db-num = 0
+      on error  undo, return error substitute( "&1 (action-role-item). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (action-role-item). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (action-role-item). endkey", vss-workfile )
+      :
+        create dst.action-role-item.
+        buffer-copy ub.action-role-item to dst.action-role-item .
+      end.
+
+      output stream slog to rest-rdb.txt append .
+      export stream slog "action-role-item-attr":U cur-time-string() .
+      output stream slog close .
+
+      for each ub.action-role-item-attr no-lock
+        where ub.action-role-item-attr.db-num = 0
+      on error  undo, return error substitute( "&1 (action-role-item-attr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (action-role-item-attr). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (action-role-item-attr). endkey", vss-workfile )
+      :
+        create dst.action-role-item-attr.
+        buffer-copy ub.action-role-item-attr to dst.action-role-item-attr .
+      end.
+
+    end.
 
     for each buf_rrdb-option where
             buf_rrdb-option.dump-point = "ref"
