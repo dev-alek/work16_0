@@ -294,7 +294,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageSum:Padding = new System.Windows.Forms.Padding(3).
     this-object:tabPageSum:Size = new System.Drawing.Size(702, 718).
     this-object:tabPageSum:TabIndex = 0.
-    this-object:tabPageSum:Text = "Сумма".
+    this-object:tabPageSum:Text = "Итого".
     this-object:tabPageSum:UseVisualStyleBackColor = true.
     /*  */
     /* tankSectionSumControl */
@@ -451,6 +451,12 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
   end.
 
+
+  method public void SetSecName (arg as char):
+    
+    tabControl:SelectedTab:Text = arg.
+    
+  end. 
 
   /*------------------------------------------------------------------------------
    Purpose:

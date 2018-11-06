@@ -21,7 +21,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   
   { cmp/str-glbl.i class}
   
-  define property idSecTabPage as integer                            no-undo
+  define property idSecTabPage as integer no-undo
     get.
     private set.
   
@@ -129,9 +129,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable DateTimePickerDateArr        as System.Windows.Forms.DateTimePicker extent 4 no-undo.
   define private variable DateTimePickerTimeArr        as System.Windows.Forms.DateTimePicker extent 3 no-undo.
   
-  define private variable maskedTextBoxArr             as System.Windows.Forms.MaskedTextBox  extent 18 no-undo.
+  define private variable maskedTextBoxArr             as System.Windows.Forms.MaskedTextBox  extent 20 no-undo.
   
-  define private variable maskedTextBoxDocArr          as System.Windows.Forms.MaskedTextBox  extent 8 no-undo.
+  define private variable maskedTextBoxDocArr          as System.Windows.Forms.MaskedTextBox  extent 6 no-undo.
   
   define private variable maskedTextBoxOnlyReadOnlyArr as System.Windows.Forms.MaskedTextBox  extent 6 no-undo.
 
@@ -332,7 +332,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     SetControls().
 
     assign
-      maskedTextBoxArr[1 ] = this-object:maskedTextBoxNumPassport
+      maskedTextBoxArr[1] = this-object:maskedTextBoxNumPassport
       maskedTextBoxArr[2] = this-object:maskedTextBoxNormDoc    
       maskedTextBoxArr[3] = this-object:maskedTextBoxCertifFuel     
       maskedTextBoxArr[4] = this-object:maskedTextBoxValidityCertif 
@@ -349,17 +349,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxArr[15] = this-object:maskedTextBoxPassportPlotn  
       maskedTextBoxArr[16] = this-object:maskedTextBoxTests          
       maskedTextBoxArr[17] = this-object:maskedTextBoxKolProb        
-      maskedTextBoxArr[18] = this-object:maskedTextBoxNumPrintProb   
+      maskedTextBoxArr[18] = this-object:maskedTextBoxNumPrintProb
+      maskedTextBoxArr[19] = this-object:maskedTextBoxCarVol
+      maskedTextBoxArr[20] = this-object:maskedTextBoxDiameter   
       .
     assign    
       maskedTextBoxDocArr[1] = this-object:maskedTextBoxDocDens
       maskedTextBoxDocArr[2] = this-object:maskedTextBoxDocQnty
       maskedTextBoxDocArr[3] = this-object:maskedTextBoxSecName
       maskedTextBoxDocArr[4] = this-object:maskedTextBoxCliQnty
-      maskedTextBoxDocArr[5] = this-object:maskedTextBoxCarVol
-      maskedTextBoxDocArr[6] = this-object:maskedTextBoxDiameter
-      maskedTextBoxDocArr[7] = this-object:maskedTextBoxTTNTemp
-      maskedTextBoxDocArr[8] = this-object:maskedTextBoxAccShip
+      maskedTextBoxDocArr[5] = this-object:maskedTextBoxTTNTemp
+      maskedTextBoxDocArr[6] = this-object:maskedTextBoxAccShip
     .
     
     assign
@@ -455,11 +455,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       
       do ii = 1 to extent (maskedTextBoxDocArr):
         
-        this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
+        this-object:maskedTextBoxDocArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
         maskedTextBoxDocArr[ii]:ReadOnly = false.
-        maskedTextBoxDocArr[ii]:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
 /*        maskedTextBoxDocArr[ii]:TextChanged:Subscribe(this-object:ValueChgMaskTBox_5_3).*/
-        
+        this-object:maskedTextBoxCarVol:Visible = false.
+        this-object:maskedTextBoxDiameter:Visible = false.
+        label2:Visible = false.
+        label6:Visible = false.
       end.
       
       if not infoSecsObj:CliQntyInput
@@ -983,14 +985,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxAccShip:Location = new System.Drawing.Point(575, 10).
     this-object:maskedTextBoxAccShip:Name = "maskedTextBoxAccShip".
     this-object:maskedTextBoxAccShip:Size = new System.Drawing.Size(97, 20).
-    this-object:maskedTextBoxAccShip:TabIndex = 14.
+    this-object:maskedTextBoxAccShip:TabIndex = 3.
     /*  */
     /* maskedTextBoxSecName */
     /*  */
     this-object:maskedTextBoxSecName:Location = new System.Drawing.Point(148, 10).
     this-object:maskedTextBoxSecName:Name = "maskedTextBoxSecName".
     this-object:maskedTextBoxSecName:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxSecName:TabIndex = 13.
+    this-object:maskedTextBoxSecName:TabIndex = 1.
+    this-object:maskedTextBoxSecName:Leave:Subscribe(this-object:maskedTextBoxSecName_Leave).
+    this-object:maskedTextBoxSecName:KeyPress:Subscribe(this-object:KeyPressMaskTBInt).
     /*  */
     /* label7 */
     /*  */
@@ -1068,7 +1072,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxCliQnty:Location = new System.Drawing.Point(149, 35).
     this-object:maskedTextBoxCliQnty:Name = "maskedTextBoxCliQnty".
     this-object:maskedTextBoxCliQnty:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxCliQnty:TabIndex = 5.
+    this-object:maskedTextBoxCliQnty:TabIndex = 4.
     this-object:maskedTextBoxCliQnty:Leave:Subscribe(this-object:CalcDoc).
     /*  */
     /* maskedTextBoxDiameter */
@@ -1077,14 +1081,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDiameter:Location = new System.Drawing.Point(373, 58).
     this-object:maskedTextBoxDiameter:Name = "maskedTextBoxDiameter".
     this-object:maskedTextBoxDiameter:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxDiameter:TabIndex = 4.
+    this-object:maskedTextBoxDiameter:TabIndex = 8.
     /*  */
     /* maskedTextBoxDocQnty */
     /*  */
     this-object:maskedTextBoxDocQnty:Location = new System.Drawing.Point(575, 34).
     this-object:maskedTextBoxDocQnty:Name = "maskedTextBoxDocQnty".
     this-object:maskedTextBoxDocQnty:Size = new System.Drawing.Size(97, 20).
-    this-object:maskedTextBoxDocQnty:TabIndex = 3.
+    this-object:maskedTextBoxDocQnty:TabIndex = 6.
     this-object:maskedTextBoxDocQnty:Leave:Subscribe(this-object:CalcDoc).
     /*  */
     /* maskedTextBoxCarVol */
@@ -1093,14 +1097,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(149, 61).
     this-object:maskedTextBoxCarVol:Name = "maskedTextBoxCarVol".
     this-object:maskedTextBoxCarVol:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxCarVol:TabIndex = 2.
+    this-object:maskedTextBoxCarVol:TabIndex = 7.
     /*  */
     /* maskedTextBoxTTNTemp */
     /*  */
     this-object:maskedTextBoxTTNTemp:Location = new System.Drawing.Point(373, 11).
     this-object:maskedTextBoxTTNTemp:Name = "maskedTextBoxTTNTemp".
     this-object:maskedTextBoxTTNTemp:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxTTNTemp:TabIndex = 1.
+    this-object:maskedTextBoxTTNTemp:TabIndex = 2.
     /*  */
     /* maskedTextBoxDocDens */
     /*  */
@@ -1108,7 +1112,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDocDens:Location = new System.Drawing.Point(373, 34).
     this-object:maskedTextBoxDocDens:Name = "maskedTextBoxDocDens".
     this-object:maskedTextBoxDocDens:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxDocDens:TabIndex = 0.
+    this-object:maskedTextBoxDocDens:TabIndex = 5.
     this-object:maskedTextBoxDocDens:Leave:Subscribe(this-object:CalcDoc).
     /*  */
     /* groupBox7 */
@@ -1583,6 +1587,21 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
   end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void maskedTextBoxSecName_Leave( input sender as System.Object, input e as System.EventArgs ):
+		
+		def var v-maskTextBox as System.Windows.Forms.MaskedTextBox no-undo.
+		v-maskTextBox = cast(sender, System.Windows.Forms.MaskedTextBox).
+		tanksecsObj:SetSecName (v-maskTextBox:Text).
+		
+		return.
+
+	end method.
+
   method private void SetControls ():
     
     def var infoSecObj as class InfoSection no-undo.
@@ -1715,7 +1734,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   @VisualDesigner.
   method private void KeyPressMaskTBInt( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs):
 
-    KeyPressMaskTBInt (sender, e, 99999999).
+    KeyPressMaskTBInt (sender, e, 9).
 
   end method.  
   
@@ -1739,18 +1758,27 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       then return.
     
     finally:
-      
-      if asc (e:KeyChar) = 46
+      e:Handled = not isNumeral(e:KeyChar).
+      if not e:Handled 
       then do:
-        startcursor = index (v-maskTextBox:Text, ".").
-      end.
-      else do:
-         e:Handled = not isNumeral(e:KeyChar).
-        if not e:Handled 
+        
+        if length (v-maskTextBox:Text) < maxLenthInt
         then do:
-          v-maskTextBox:Text = this-object:ValueChgToInt (v-maskTextBox:Text, maxLenthInt, input-output startcursor).
+          return.
+        end.
+        else do:
+          if length (v-maskTextBox:Text) > maxLenthInt - 1
+          then do:
+            v-maskTextBox:Text = substring (v-maskTextBox:Text, 1, length (v-maskTextBox:Text) - 1 ).
+            if v-maskTextBox:Text = ""
+              then v-maskTextBox:Text = "0".
+            if startcursor = maxLenthInt
+              then startcursor = startcursor - 1.
+          end.
+          v-maskTextBox:Text = this-object:ValueChgToInt (v-maskTextBox:Text, maxLenthInt, input-output startcursor).          
         end.
       end.
+      
       v-maskTextBox:SelectionStart = startcursor.
     end.
 
@@ -1795,11 +1823,26 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       then do:
         if startcursor <> 0 and startcursor = index (v-maskTextBox:Text, ".") - 1
           then startcursor = startcursor + 1.
-        if startcursor < index (v-maskTextBox:Text, ".") or startcursor = 1 
-          then 
-            v-maskTextBox:Text = this-object:ValueChgToInt (v-maskTextBox:Text, maxLenthInt, input-output startcursor).
-          else
-            v-maskTextBox:Text = this-object:ValueChgToFractional (v-maskTextBox:Text, maxLenthFractional, input-output startcursor).
+        if (length (entry (1, v-maskTextBox:Text, ".")) < maxLenthInt or startcursor < index (v-maskTextBox:Text, ".") ) and (index (v-maskTextBox:Text, ".") = 0 or startcursor <= index (v-maskTextBox:Text, ".") or startcursor = 0) 
+        then do:
+          if length (entry (1, v-maskTextBox:Text, ".")) < maxLenthInt
+            then return.
+          v-maskTextBox:Text = this-object:ValueChgToInt (v-maskTextBox:Text, maxLenthInt, input-output startcursor).
+        end.
+        else do:
+          if index (v-maskTextBox:Text, ".") = 0
+          then do:
+            v-maskTextBox:Text = v-maskTextBox:Text + '.'.
+            startcursor = startcursor + 1.
+          end.
+          if startcursor < index (v-maskTextBox:Text, ".")
+            then do: 
+              v-maskTextBox:SelectionStart = index (v-maskTextBox:Text, ".").
+              startcursor = v-maskTextBox:SelectionStart.
+            end.
+          v-maskTextBox:Text = this-object:ValueChgToFractional (v-maskTextBox:Text, maxLenthFractional, input-output startcursor).
+        end.
+        
       end.
       v-maskTextBox:SelectionStart = startcursor.
     end.
