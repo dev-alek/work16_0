@@ -411,10 +411,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                           
             /*начинаем сканирование директории*/
             assign
-              v-take-count   = 0
-              v-analys-count = 0
               v-espr-pack-num = -1
-              v-rcvd-pack = false
               v-custom-pack-name = ''
             .
             // внутри espcknum.p очищается temp-filelist и вызывается его заполнение через run filelist-init
@@ -425,12 +422,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                           ,input oxml-exch-dir
                           ,input oxml-heap-dir
                           ,input v-sign-fileext
-                          ,input-output v-espr-pack-num
+                          ,input-output v-espr-pack-num    // передаётся в sxg-pack.p
                           ,input-output v-custom-pack-name
                           ,output v-espr-pack-name
-                          ,output v-source-dir
-                          ,output v-target-dir
-                          ,output v-temp-dir
+                          ,output v-source-dir // передаётся в sxg-pack.p
+                          ,output v-target-dir // передаётся в sxg-pack.p
+                          ,output v-temp-dir   // передаётся в sxg-pack.p
                           ,output v-log-file-name
                           ,output v-list-file-name
                           ,output v-custom-pack-flag
@@ -448,6 +445,11 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
               undo _ext-system, next _ext-system.
             end.
 
+            assign
+              v-take-count   = 0
+              v-analys-count = 0
+              v-rcvd-pack = false
+            .
             if lookup( v-action, "take,take+analys":U ) <> 0 then do:
 
               /* копируем скопом все файлы из exch в heap

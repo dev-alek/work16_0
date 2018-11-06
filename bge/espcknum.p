@@ -111,20 +111,18 @@ on error undo, return error
         find last buf_esys-pck-rcvd
           where buf_esys-pck-rcvd.esys-id = p-esys-id
              and buf_esys-pck-rcvd.db-num = p-db-num
-             and buf_esys-pck-rcvd.espr-cr-db-num = g#db-num
-          use-index pi
-          no-error
-        .
-        if not available buf_esys-pck-rcvd then do:  /* не было ни одного пакета */
+             and buf_esys-pck-rcvd.espr-cr-db-num = ibs.th.gbl.gbl-var:g#db-num
+          use-index pi no-error .
+        if available buf_esys-pck-rcvd then do:
+          p-pack-num = buf_esys-pck-rcvd.espr-pack-num + 1 .
+        end.
+        else do:  /* не было ни одного пакета */
           // p-pack-num = first-pack-num ( input p-esys-id, input p-db-num ) . 12/IX-2018 - не используется
           p-pack-num = (if p-delivery-method = integer({&esys-dm-nn})
                         or p-delivery-method = integer({&esys-dm-nnold})
                         or p-delivery-method = integer({&esys-dm-oracle-retail})
                   then 1
                   else 0) .
-        end.
-        else do:
-          p-pack-num = buf_esys-pck-rcvd.espr-pack-num + 1 .
         end.
       end.
       when "fget":U then do:
@@ -134,18 +132,16 @@ on error undo, return error
         find last buf_esys-pck-sent share-lock
           where buf_esys-pck-sent.esys-id = p-esys-id
             and buf_esys-pck-sent.db-num = p-db-num
-            and buf_esys-pck-sent.esps-cr-db-num = g#db-num
-          use-index pi
-          no-error
-        .
-        if not available buf_esys-pck-sent then do:  /* не было ни одного пакета */
-          assign
-            p-pack-num = if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then 1 else 0
-          .
-        end.
-        else do:
+            and buf_esys-pck-sent.esps-cr-db-num = ibs.th.gbl.gbl-var:g#db-num
+          use-index pi no-error .
+        if available buf_esys-pck-sent then do:
           assign
             p-pack-num = buf_esys-pck-sent.esps-pack-num + 1
+          .
+        end.
+        else do:  /* не было ни одного пакета */
+          assign
+            p-pack-num = if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then 1 else 0
           .
         end.
         release buf_esys-pck-sent.
@@ -202,8 +198,8 @@ on error undo, return error
       assign
         v-work-dir   = "ES" + v-esysid-str + "-":U + v-dbnum-str
         p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + v-esysid-str
-        p-source-dir = oxml-exch-dir + {&back-slash-char} +  v-work-dir
-        p-target-dir = oxml-heap-dir + {&back-slash-char} +  v-work-dir
+        p-source-dir = oxml-exch-dir + {&back-slash-char} + v-work-dir
+        p-target-dir = oxml-heap-dir + {&back-slash-char} + v-work-dir
         p-log-file-name  =  (if p-delivery-method = integer({&esys-dm-oracle-retail})
                             then (oxml-heap-dir + {&back-slash-char} + v-dbnum-str + "-":U + "ES" + v-esysid-str)
                             else (oxml-heap-dir + {&back-slash-char} + "actions.log")
@@ -232,11 +228,40 @@ on error undo, return error
   end case.
   p-list-file-name =  oxml-heap-dir + {&back-slash-char} + "lst":U + string( p-pack-num, "999999999") + ".":U .
 
+  /* если каталога source-dir нет, то создадим его */
+  file-info:file-name = p-source-dir .
+  if file-info:file-type begins "D":U then . else do :
+    os-create-dir value( p-source-dir ).
+    if os-error <> 0 then do:
+      run gbl/os-errnm.p ( input os-error, output v-mess ).
+      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
+                             ,vss-workfile
+                             ,p-source-dir
+                             ,{&new-line}
+                             ,v-mess
+                           ).
+
+    end.
+  end.
+  
+  /* если каталога target-dir нет, то создадим его */
+  file-info:file-name = p-target-dir .
+  if file-info:file-type begins "D":U then . else do :
+    os-create-dir value( p-target-dir ).
+    if os-error <> 0 then do:
+      run gbl/os-errnm.p ( input os-error, output v-mess ) .
+      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
+                             ,vss-workfile
+                             ,p-target-dir
+                             ,{&new-line}
+                             ,v-mess
+                           ).
+    end.
+  end.
+
 
   /* 3. имя файла */
-  if (p-action = "put" or p-action = "fput")
-  and p-custom-pack-name <> ?
-  and p-custom-pack-name <> '' then do:
+  if (p-action = "put" or p-action = "fput") and p-custom-pack-name > '' then do:
     assign
     p-pack-name = p-custom-pack-name
     p-custom-pack-flag = yes
@@ -284,11 +309,9 @@ on error undo, return error
     if p-action = "get" then do:
       if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
 
-          for each buf_temp-filelist no-lock:
-            delete buf_temp-filelist.
-          end.
+          empty temp-table temp-filelist .
           run filelist-init in this-procedure
-          (input p-source-dir
+          (input p-source-dir /* внутри требуется наличие p-source-dir */
           ,input false
           ,input ""
           ,input ""
@@ -365,43 +388,6 @@ on error undo, return error
     end. /*if p-action = "get" then do:*/
   end. /*else if (p-action = "put" or p-action = "fput")*/
 
-  /* если каталога source-dir нет, то создадим его */
-  assign
-    file-info:file-name = p-source-dir
-  .
-  if file-info:file-type = ?
-    or not ( file-info:file-type begins "D":U ) then do:
-    os-create-dir value( p-source-dir ).
-    if os-error <> 0 then do:
-      run gbl/os-errnm.p ( input os-error
-                           ,output v-mess).
-      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
-                             ,vss-workfile
-                             ,p-target-dir
-                             ,{&new-line}
-                             ,v-mess
-                           ).
-
-    end.
-  end.
-  /* если каталога target-dir нет, то создадим его */
-  assign
-    file-info:file-name = p-target-dir
-  .
-  if file-info:file-type = ?
-    or not ( file-info:file-type begins "D":U ) then do:
-    os-create-dir value( p-target-dir ).
-    if os-error <> 0 then do:
-       run gbl/os-errnm.p ( input os-error
-                           ,output v-mess) .
-      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
-                             ,vss-workfile
-                             ,p-target-dir
-                             ,{&new-line}
-                             ,v-mess
-                           ).
-    end.
-  end.
 
 end.
 

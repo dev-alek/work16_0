@@ -254,7 +254,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.
       leave gen-pack .
     end.
-    run bge/espcknum.p
+    run bge/espcknum.p // 28/X-2018 - v-source-dir и v-target-dir не используются
       ( input "put":U
        ,input p-esys-id
        ,input p-db-num
