@@ -605,7 +605,9 @@ DEFINE BUFFER buf_chk-discnt   for ub.chk-discnt .
       run wp-xmltagput  in this-procedure ( input 3, input "TaxCode"  , input string( buf_chk-gds.b-code      ), input 0 ).
       run wp-xmltagput  in this-procedure ( input 3, input "Sum"      , input string( buf_chk-gds.src-sum     ), input 0 ).   
       run wp-xmltagput  in this-procedure ( input 3, input "CSTCode"  , input string( buf_chk-gds.depart-type, "X(4)" ), input 1 ).
-      run wp-xmltagput  in this-procedure ( input 3, input "CSTValue" , input string( buf_chk-gds.road-tax    ), input 0 ). 
+      run wp-xmltagput  in this-procedure ( input 3, input "CSTValue" , input string( buf_chk-gds.road-tax    ), input 0 ).
+      run wp-xmltagput  in this-procedure ( input 3, input "VATRate"  , input string( buf_chk-gds.vat-pc      ), input 0 ).
+      run wp-xmltagput  in this-procedure ( input 3, input "VAT"      , input string( buf_chk-gds.vat-sum-rubl), input 0 ). 
       run wp-xmltagclose in this-procedure ( input 2, input "checkBody" ).
     end. 
     for each buf_chk-pay no-lock

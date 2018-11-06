@@ -392,7 +392,12 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         
         if buf_chk-gds.pass-gds > 0 then
         insw:write-data-element (  "dry-chk",  string(buf_chk-gds.pass-gds)  ) . /* Признак сухого чека (Число 1,0) */
-
+        
+        if buf_chk-gds.VAT-pc ne ? then
+        insw:write-data-element (  "vat-rate",  string(buf_chk-gds.VAT-pc)  ) .
+        
+        if buf_chk-gds.VAT-sum-rubl ne ? then
+        insw:write-data-element (  "vat",  string(buf_chk-gds.VAT-sum-rubl)  ) .
         /* обязательность 0-1
            «Оператор» это оператор сотовой связи. Берется из атрибута строки чека с кодом oss-code.
            Название подтягивается из соответствующего справочника.
