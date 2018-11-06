@@ -21,12 +21,13 @@ enum ibs.th.bge.1crn.enum-chk-type:
     encashment =  2 /* инкассаци€ */
     enfund     =  3 /* кассовый фонд */
     enreturn   =  6 /* возврат */
-    enzrep     = 12 /* Z отчет (12) */
+    enannu     =  8 /* &rcpt-annu  = јннул€ци€ */
+    enzrep     = 12 /* &rcpt-z-rep = Z отчет (12) */
   .
   define enum           
-    entranscancell  = 14 /* сброс топливной транзакции */
-    enoverflow      = 15 /* переливы */
-    entranstransfer = 16 /* перевод транзакции */
-    entechrefuell   = 17 /* тех. пролив. */
+    entranscancell  = 14 /* &rcpt-trans-cancell  = сброс топливной транзакции */
+    enoverflow      = 15 /* &rcpt-overflow       = переливы */
+    entranstransfer = 16 /* &rcpt-trans-transfer = перевод транзакции */
+    entechrefuell   = 17 /* &rcpt-tech-refuell   = тех. пролив. */
   .
 end enum .
