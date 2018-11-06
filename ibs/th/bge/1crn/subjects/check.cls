@@ -214,6 +214,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                                           , input p-inkas-dtime    as datetime
                                           , input p-inkas-operator as character
                                           ) :
+    define buffer buf_chk-doc-attr for ub.chk-doc-attr .
     define buffer buf_dis-card     for ub.dis-card .
     define buffer buf_chk-gds      for ub.chk-gds .
     define buffer buf_bar-code     for ub.bar-code .
@@ -273,6 +274,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     /* обязательность 0-1 */
     
     /* 28/XI-2017 term-num будет строкой, поэтому пустой можно, и необязательный. */
+    find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
+                                  and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
+             no-lock no-error.
+    if avail buf_chk-doc-attr
+    then
+       insw:write-data-element( "CHNumberKKT",  buf_chk-doc-attr.attr-value).
+       
     if "" > "" then insw:write-data-element ( "term-num", "" ).  /* Номер терминала POS (Строка) */
 
     if p-buf_chk-doc.d-card > "" then do:

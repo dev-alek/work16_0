@@ -3243,6 +3243,7 @@ define input parameter p-obj-code       as integer      no-undo.
     /*признак чека со списанными товарами*/
 
     define buffer buf_chk-doc       for ub.chk-doc.
+    define buffer buf_chk-doc-attr  for ub.chk-doc-attr.
     define buffer buf_chk-gds       for ub.chk-gds.
     define buffer buf_chk-pay       for ub.chk-pay.
     define buffer buf_bar-code      for ub.bar-code.
@@ -3320,6 +3321,12 @@ on error undo, return error
         then do:        /* Чек изменен вручную */
             run wp-xmltagput( input 4, input "manualChanged"  , input "yes":U                               , input 2 ).
         end.
+        find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq buf_chk-doc.doc-code
+                                      and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
+             no-lock no-error.
+        if avail buf_chk-doc-attr
+        then
+           run wp-xmltagput( input 4, input "CHNumberKKT", input buf_chk-doc-attr.attr-value, input 2 ).
         if buf_chk-doc.d-card <> "":U
         then do:
             if available buf_dis-card

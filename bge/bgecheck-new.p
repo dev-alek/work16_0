@@ -209,10 +209,11 @@ end .
     define variable v-is-ok      as logical no-undo .
     define variable v-d-card     as character no-undo.
     define variable v-manual-add as character no-undo .
-    define buffer buf_chk-doc     for ub.chk-doc .
-    define buffer buf_chk-pay     for ub.chk-pay .
-    define buffer buf_tt-cash-pay for tt-cash-pay .
-    define buffer buf_c-chk-doc   for ub.c-chk-doc .
+    define buffer buf_chk-doc      for ub.chk-doc .
+    define buffer buf_chk-doc-attr for ub.chk-doc-attr .
+    define buffer buf_chk-pay      for ub.chk-pay .
+    define buffer buf_tt-cash-pay  for tt-cash-pay .
+    define buffer buf_c-chk-doc    for ub.c-chk-doc .
 
     if p-pack-lim > 0 then 
       p-pack-lim = p-pack-lim * 1024 * 1024 . /* 90 * 1024 * 1024 = 94371840 байт */
@@ -444,6 +445,12 @@ end .
           leave .
         end .
         run wp-xmltagput   in this-procedure ( input 3, input "manual", v-manual-add, input 0 ). 
+        find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq buf_chk-doc.doc-code
+                                      and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
+             no-lock no-error.
+        if avail buf_chk-doc-attr
+        then
+           run wp-xmltagput( input 3, input "CHNumberKKT", input buf_chk-doc-attr.attr-value, input 2 ).
         run wp-xmltagclose in this-procedure ( input 2, input "checkHead").
         /* end_of заголовок чека */      
     

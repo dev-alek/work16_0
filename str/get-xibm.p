@@ -576,7 +576,7 @@ define variable v-old as character no-undo .
 define variable v-step as integer   no-undo .
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_chk-doc for ub.chk-doc.
-
+define variable vCHNumberKKT as character no-undo.
 do
 on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
 :
@@ -771,7 +771,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           doc-num2_ = (if buf_temp-temp.field-value = "0" then "":u else buf_temp-temp.field-value)
           no-error .
         end.
-        
+        when "CHNumberKKT":U then do:
+          
+          assign
+          vCHNumberKKT = buf_temp-temp.field-value
+          no-error .
+        end.
         /*    todo
         when "CHSEnd":U then do:
         end.
@@ -959,6 +964,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         ub.chk-doc.correct = no
         .
       end.
+      if vCHNumberKKT ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberKKT"
+           chk-doc-attr.attr-value = vCHNumberKKT
+        .
+      end.  
       mc-prev-code = ub.chk-doc.doc-code.
     end. /* not(can-find) */
     else
@@ -1127,6 +1141,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       if error-status:error then do:
         ub.chk-doc.correct = no.
       end.
+      if vCHNumberKKT ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberKKT"
+           chk-doc-attr.attr-value = vCHNumberKKT
+        .
+      end. 
       if ub.chk-doc.chk-type = integer({&income-corr}) or ub.chk-doc.chk-type = integer({&expense-corr})
       then do :
         assign
