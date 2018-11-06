@@ -4848,6 +4848,27 @@ procedure restore-s-sr-izmerenia :
   end.
 
 end procedure. /* restore-s-sr-izmerenia */
+
+procedure restore-s-norm-loss :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define sequence-name   s-norm-loss
+
+    &scoped-define table-name      norm-loss
+    &scoped-define seq-field-name  id
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+
+end procedure. /* restore-s-sr-izmerenia */
+
 procedure restore-s-gds-mercury-id :
   define input parameter p-curr-db-num as integer no-undo.
 
@@ -5018,6 +5039,41 @@ procedure restore-{&sequence-name} :
     {&update-sequence}
   end.
 end procedure. /* restore-s-promoobject-id */
+&scoped-define sequence-name s-tech-prol-pwd
+procedure restore-{&sequence-name} :
+    define input parameter p-curr-db-num as integer no-undo.
+
+    do
+        on error undo, return error
+        :
+        {&init-validation}
+
+    &scoped-define table-name      tech-prol-pwd
+    &scoped-define seq-field-name  id
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+
+        {&validate-sequence}
+        {&update-sequence}
+    end.
+end procedure. /* restore-s-tech-prol-pwd */
+
+&scoped-define sequence-name s-c-tech-prol-pwd_chip-num
+procedure restore-{&sequence-name} :
+    define input parameter p-curr-db-num as integer no-undo.
+
+    do
+        on error undo, return error
+        :
+        {&init-validation}
+
+    &scoped-define table-name      c-tech-prol-pwd
+    &scoped-define seq-field-name  chip-num
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+
+        {&validate-sequence}
+        {&update-sequence}
+    end.
+end procedure. /* restore-s-tech-prol-pwd */
 &scoped-define sequence-name s-promosched-id
 procedure restore-{&sequence-name} :
   define input parameter p-curr-db-num as integer no-undo.
