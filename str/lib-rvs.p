@@ -2614,14 +2614,17 @@ IF available tt-meas-file and   tt-meas-file.log-brutto = no THEN DO:
         for last pl-level no-lock
             where pl-level.pl-code  = bf_rvs-line.pl-code
             and pl-level.obj-code =  bf_rvs-line.obj-code
-            and pl-level.obj-type = bf_rvs-line.obj-type by pl-level.pl-level
+            and pl-level.obj-type = bf_rvs-line.obj-type 
+            by pl-level.pl-level
             :
             CalibTable = Substitute("&1=&2","1",(pl-level.pl-qnty / (pl-level.pl-level))) .
         end.
       for each  pl-level no-lock
           where pl-level.pl-code  = bf_rvs-line.pl-code
             and pl-level.obj-code = bf_rvs-line.obj-code
-            and pl-level.obj-type = bf_rvs-line.obj-type by pl-level.pl-level
+            and pl-level.obj-type = bf_rvs-line.obj-type 
+            and pl-level.pl-level / bf_rvs-line.level-total > 0.7 and pl-level.pl-level / bf_rvs-line.level-total < 1.3
+            by pl-level.pl-level
             :
             if CalibTable = "" then CalibTable = Substitute("&1=&2",(pl-level.pl-level ),pl-level.pl-qnty ) .
                               else CalibTable = CalibTable + ";" + Substitute("&1=&2",(pl-level.pl-level ),pl-level.pl-qnty ) .
