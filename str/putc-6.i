@@ -37,6 +37,9 @@ def var ii  as  int     no-undo.
     NEXT.                                                                            ~
   end
 
+define VARIABLE name-cash as character no-undo.
+define VARIABLE name-cash1 as character no-undo.
+define VARIABLE name-cash2 as character no-undo.
 CASE pos-type:
   when {&cd-type-ibm} then do:
     FOR EACH cash-cash NO-LOCK use-index icash:
@@ -59,7 +62,7 @@ CASE pos-type:
   end.
   when {&cd-type-ibm-xml} then do:
     FOR EACH cash-cash NO-LOCK use-index icash:
-		find first ub.person where ub.person.psn-code = cash-cash.psn-code no-error.
+      find first ub.person where ub.person.psn-code = cash-cash.psn-code no-error.
 &scop max-cash-code 999
       {&validate-cash-cash}.
       run bgelib-tag-open in this-procedure ( input 2, input "Cashier", input substitute("ctrl='&1' tms='&2' code='&3'"
@@ -68,9 +71,27 @@ CASE pos-type:
                                                                                              else "DEL":U)
                                                                                           , OS2-time
                                                                                           , cash-cash.cash-code)).
-define VARIABLE name-cash as character no-undo.
-define VARIABLE name-cash1 as character no-undo.
-define VARIABLE name-cash2 as character no-undo.
+name-cash1 = if ub.person.name1 <> "" then (substring(ub.person.name1,1,1) + '.') else ''.
+name-cash2 = if ub.person.name2 <> "" then (substring(ub.person.name2,1,1) + '.') else ''.
+name-cash = cash-cash.cash-name + ' ' + name-cash1 + ' ' + name-cash2 .
+
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierName"         , input name-cash, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierParol"        , input cash-cash.psswd, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "CashierLock"         , input cash-cash.stts, input 1 ).
+      run bgelib-tag-close in this-procedure ( input 2, input "Cashier").
+    END.
+  end.
+  when {&cd-type-Autotank} then do:
+    FOR EACH cash-cash NO-LOCK use-index icash:
+      find first ub.person where ub.person.psn-code = cash-cash.psn-code no-error.
+&scop max-cash-code 999
+      {&validate-cash-cash}.
+      run bgelib-tag-open in this-procedure ( input 2, input "Cashier", input substitute("ctrl='&1' tms='&2' code='&3'"
+                                                                                          , (if action = "U":U
+                                                                                             then "ADD":U
+                                                                                             else "DEL":U)
+                                                                                          , OS2-time
+                                                                                          , cash-cash.cash-code)). 
 
 name-cash1 = if ub.person.name1 <> "" then (substring(ub.person.name1,1,1) + '.') else ''.
 name-cash2 = if ub.person.name2 <> "" then (substring(ub.person.name2,1,1) + '.') else ''.

@@ -38,7 +38,8 @@ define buffer for-cash-desk for ub.cash-desk.
               ({&cd-type-NCR-GM} + {&comma-char} +
                {&cd-type-IBM-XML} + {&comma-char} +
                {&cd-type-MAGIA-XML} + {&comma-char} +
-               {&cd-type-NCR-AS-R}
+               {&cd-type-NCR-AS-R} + {&comma-char} +
+               {&cd-type-Autotank}
                )) > 0
      and for-cash-desk.autonomy = integer({&cd-slave})) then NEXT.
 

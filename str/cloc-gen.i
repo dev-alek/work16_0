@@ -26,7 +26,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 case {&cd-buffer}.pos-type:
 &if "{&cdt-IBM-XML}" = "yes" or "{&cdt-infokiosk}" = "yes"  or "{&cdt-autotank}" = "yes"  &then
   &if "{&cdt-IBM-XML}" = "yes"  &then
-    when {&cd-type-IBM-XML}
+    when {&cd-type-IBM-XML} or when {&cd-type-autotank}
   &endif
   &if "{&cdt-infokiosk}" = "yes"  &then
     &if "{&cdt-IBM-XML}" = "yes"  &then

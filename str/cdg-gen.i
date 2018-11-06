@@ -41,11 +41,10 @@ then do:
   .
 end.
 
-
 case {&cd-buffer}.pos-type:
 &if "{&cdt-IBM-XML}" = "yes"  or "{&cdt-MAGIA-XML}" = "yes" or "{&cdt-infokiosk}" = "yes" or "{&cdt-autotank}" = "yes"  &then
   &if "{&cdt-IBM-XML}" = "yes"  &then
-    when {&cd-type-IBM-XML}
+    when {&cd-type-IBM-XML} or when {&cd-type-autotank}
   &endif
   &if "{&cdt-MAGIA-XML}" = "yes" &then
     &if "{&cdt-IBM-XML}" = "yes" &then
