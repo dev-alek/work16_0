@@ -307,9 +307,11 @@ do
         , error-status :get-message ( 1 ) ).
     end.
   end.
+  
   define variable v-is as logical no-undo .
   buffer-compare old_pl-gds to new_pl-gds
     case-sensitive save result in v-is .
+  if  new new_pl-gds then v-is = yes .      
   if v-is then 
   do:
 

@@ -440,7 +440,31 @@ do :
 
   end.
   end.
+if AVAILABLE (ub.place) then 
+do:
+{ gbl/rum-runa.i
+    ?
+    this-procedure:handle
+    ?
+    {&thref-proc_ref-event}
+    " buffer ub.place:handle "
+    " buffer ub.place:handle "
+    ''
+    ''
+    no-error
+  }
+  if error-status :error
+    then
+  do:
+    message
+      error-status:get-message(1) skip
+      return-value
+      view-as alert-box error .
 
+    return no-apply .
+
+  end.
+end.
 END.
 
 /* _UIB-CODE-BLOCK-END */

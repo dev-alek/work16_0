@@ -36,46 +36,7 @@ define variable v-shift-name as character no-undo.
 
 /*ищем текущую открытую смену*/
 { gbl/curshift.i pobj-type pobj-code v-shift-date v-shift-num v-shift-name no-error}
-if not error-status:error and v-shift-num > 0 then  do:
-/*есть открытая смена на объекте*/
-  find first ub.rvs-doc no-lock where
-             ub.rvs-doc.obj-type = pobj-type and
-             ub.rvs-doc.obj-code = pobj-code and
-             ub.rvs-doc.shift-date = v-shift-date and
-             ub.rvs-doc.shift-num = v-shift-num and
-             ub.rvs-doc.status_ = {&fact} and
-             ub.rvs-doc.rvs-type = {&rvs-shift} no-error.
-  if avail ub.rvs-doc then do:
-    for each ub.rvs-line no-lock where
-             ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code and
-             ub.rvs-line.pl-code  = ppl-code:
-      if ub.rvs-line.system-qnty <> 0 then do:
-        return error
-       ("объект " + pobj-type + string(pobj-code) + {&new-line} +
-       "резервуар " + string(ppl-code) + {&new-line} +
-       "топливо " + string(ub.rvs-line.gds-code) + {&new-line} +
-       "имеются ненулевые книжные остатки по сверке текущей смены")
-       .
-      end.
-      if ub.rvs-line.state-measure-qnty <> 0 then do:
-        return error
-       ("объект " + pobj-type + string(pobj-code) + {&new-line} +
-       "резервуар " + string(ppl-code) + {&new-line} +
-       "топливо " + string(ub.rvs-line.gds-code) + {&new-line} +
-       "имеются ненулевые подтвержденные фактические остатки по сверке текущей смены")
-       .
-      end.
-    end. /*for each ub.rvs-line wher*/
-  end. /*if avail ub.rvs-doc*/
-  else do:
-    return error
-    ("объект " + pobj-type + string(pobj-code) + {&new-line} +
-     "не было сверки по текущей смене типа " + {&rvs-shift})
-     .
-  end.
-end. /*смена открыта*/
-else do:
-  /*пересменок*/
+
   /*находим последнюю закрытую смену по объекту*/
   find last ub.shift-obj no-lock where
             ub.shift-obj.obj-type = pobj-type and
@@ -115,7 +76,6 @@ else do:
     end.
     else return error.
   end. /*if avail ub.shift-obj*/
-end. /*пересменок*/
 
 find first ub.doc-pl no-lock where
            ub.doc-pl.obj-type = pobj-type and
@@ -132,6 +92,13 @@ then do:
                          , ub.doc-pl.gds-code
                          ) .
 end. /* if available ub.doc-pl */
+
+find first ub.pl-gds no-lock where ub.pl-gds.obj-type = pobj-type and
+           ub.pl-gds.obj-code = pobj-code and
+           ub.pl-gds.pl-code  = ppl-code  no-error .
+           if available (ub.pl-gds) then do:
+             return error .
+           end.  
 
 _deletion:
 do on error undo _deletion, return error return-value:
