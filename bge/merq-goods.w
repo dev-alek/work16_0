@@ -230,37 +230,42 @@ define menu POPUP-MENU-b-import
 /* Definitions of the field level widgets                               */
 define button b-cancel auto-end-key 
   label "Выход" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-connect 
   label "Связать" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-del 
   label "Удалить" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-import 
   label "Сервис" 
-  size 15 by 1.13 tooltip "Импорт"
+  size 13 by 1.13 tooltip "Импорт"
   bgcolor 8 .
 
 define button b-lkp 
   label "Просмотр" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-load 
   label "Запрос" 
-  size 15 by 1.13 tooltip "Отправить запрос в Меркурий"
+  size 13 by 1.13 tooltip "Отправить запрос в Меркурий"
   bgcolor 8 .
 
 define button b-mark 
   label "&*" 
   size 3 by 1.13.
+  
+define button b-alt-units 
+  label "Доп. ед. изм." 
+  size 14 by 1.13
+  bgcolor 8 .
 
 define button b-prod 
   image-up file "btn-down-arrow":U
@@ -286,7 +291,7 @@ define button b-unmark
 
 define button b-update 
   label "Изменить" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define variable v-prod      as character format "X(11)" 
@@ -343,12 +348,13 @@ define browse br-goods
 
 define frame Dialog-Frame
   b-cancel at row 1.25 col 2
-  b-load at row 1.25 col 17
-  b-lkp at row 1.25 col 32
-  b-update at row 1.25 col 47
-  b-del at row 1.25 col 62
-  b-connect at row 1.25 col 77
-  b-import at row 1.25 col 92
+  b-load at row 1.25 col 15
+  b-lkp at row 1.25 col 28
+  b-update at row 1.25 col 41
+  b-del at row 1.25 col 54
+  b-connect at row 1.25 col 67
+  b-alt-units at row 1.25 col 80
+  b-import at row 1.25 col 94
   r-type at row 2.5 col 2.25 no-label widget-id 20
   b-prod at row 2.5 col 71.5
   b-spisok at row 3.25 col 22.25 widget-id 26
@@ -787,6 +793,20 @@ on choose of b-prod in frame Dialog-Frame
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-alt-units
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-alt-units Dialog-Frame
+on choose of b-alt-units in frame Dialog-Frame
+do:
+  if not available tt-gds then return no-apply .
+  
+  run ref\alt-units.w (input parparentproc,
+                       input (if v-cntxt-db-num = 0 then {&update} else {&lookup}),
+                       input tt-gds.gds-code) . 
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-sel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all Dialog-Frame
@@ -1011,7 +1031,7 @@ procedure enable_UI :
   display r-type rs-sort 
     with frame Dialog-Frame.
   enable b-cancel b-load b-lkp b-update b-del b-connect b-import r-type b-mark 
-    b-sel-all b-unmark rs-sort br-goods 
+    b-sel-all b-unmark rs-sort br-goods b-alt-units
     with frame Dialog-Frame.
   view frame Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

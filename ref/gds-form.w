@@ -627,6 +627,7 @@ def MENU m-dopinf
     MENU-ITEM m-dopinf-8 LABEL "Индикаторы товара на объекте"  ACCELERATOR "ALT-f2"
     MENU-ITEM m-dopinf-AM LABEL "Ассортиментные матрицы"
     MENU-ITEM m-dopinf-AC LABEL "Дополнительные расходы"
+    MENU-ITEM m-dopinf-AU LABEL "Дополнительные единицы измерения"
 .
 
 def MENU m-prodbc
@@ -1081,7 +1082,11 @@ on choose of MENU-ITEM m-dopinf-AC in menu m-dopinf DO:
   run proc-b-add-inf(input-output dopinf-option) no-error.
   if error-status:error then return no-apply.
 end.
-
+on choose of MENU-ITEM m-dopinf-AU in menu m-dopinf DO:
+  dopinf-option = "alt-units":U.
+  run proc-b-add-inf(input-output dopinf-option) no-error.
+  if error-status:error then return no-apply.
+end.
 
 
 on choose of MENU-ITEM m-dopinf-9 in menu m-dopinf DO:
@@ -4793,7 +4798,18 @@ PROCEDURE proc-b-add-inf:
       v-update-add-prop = v-update-add-prop OR v-updated-now
       .
     END.
-
+    WHEN "alt-units":U then do:
+      run ref/alt-units.w (input parParentProc,
+                           input mode,
+                           input goods.gds-code) no-error.
+      if error-status :error
+      then do:
+        assign
+          loc-DOPINF-option = "":U
+        .
+        undo, return error.
+      end.
+    END.
     WHEN "orders":U then do:
       if not v-flag-gds-prop-entry or true  then do:
         run fill-attr-tables in this-procedure  ({&table_gds-obj-prop} + 'obj' , mode) no-error.

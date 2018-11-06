@@ -6242,6 +6242,18 @@ end procedure.
 &scop    manual-edit-attr-image-list 0
 &scop     batch-edit-attr-image-list 0
 
+/* Доп. ед. изм. */
+&scop type-attr-MercUnits {&type-char}
+&scop format-attr-MercUnits  "X(100)"
+&scop label-attr-MercUnits   "Дополнительные единицы измерения"
+&scop tooltip-attr-MercUnits   "Дополнительные единицы измерения"
+&scop user-can-edit-attr-MercUnits  false
+&scop output-display-attr-MercUnits  false
+&scop other-attr-MercUnits  ""
+&scop news-attr-MercUnits true
+&scop copy-attr-MercUnits  true
+&scop manual-edit-attr-MercUnits 0
+&scop batch-edit-attr-MercUnits  0
 
 
 /* сюда добавлять новые параметры атрибутов товаров */
@@ -6377,6 +6389,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-image-list
       {&attr-temp-full-code}
+      &scop attr-code attr-MercUnits
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -6468,6 +6482,8 @@ do
       &scop attr-code attr-fuel-type
       {&attr-temp-code}
       &scop attr-code attr-image-list
+      {&attr-temp-code}
+      &scop attr-code attr-MercUnits
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -6794,6 +6810,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-image-list
       {&attr-news-code}
+      &scop attr-code attr-MercUnits
+      {&attr-news-code}
       
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -6879,6 +6897,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-fuel-type
       {&attr-copy-code}
       &scop attr-code attr-image-list
+      {&attr-copy-code}
+      &scop attr-code attr-MercUnits
       {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -7410,6 +7430,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-image-list
       {&attr-manual-edit-code}
+      &scop attr-code attr-MercUnits
+      {&attr-manual-edit-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара &1", p-code ).
@@ -7490,6 +7512,8 @@ do
       &scop attr-code attr-fuel-type
       {&attr-batch-edit-code}
       &scop attr-code attr-image-list
+      {&attr-batch-edit-code}
+      &scop attr-code attr-MercUnits
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
