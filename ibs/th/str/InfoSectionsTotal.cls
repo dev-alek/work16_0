@@ -19,12 +19,14 @@ using Progress.Lang.*.
 using ibs.th.str.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.ref.*.
+using ibs.th.gbl.ptrl.par.*.
 
 
 
 class ibs.th.str.InfoSectionsTotal: 
 
 { cmp/str-glbl.i class}
+{ gbl/attr-lib.i class}
 
   define private buffer buf_doc-line  for ub.doc-line.
   define private buffer buf_doc-line-attr for ub.doc-line-attr.
@@ -32,7 +34,8 @@ class ibs.th.str.InfoSectionsTotal:
   define private buffer buf_trn  for ub.trn-doc.
   
   define stream log-algo.
-
+  define stream outstream.
+  
   define private temp-table ttObjInfoSecProp no-undo
     field iSecNum as integer
     field objInfoSecProp as class Progress.Lang.Object
@@ -41,6 +44,18 @@ class ibs.th.str.InfoSectionsTotal:
   define property TrnDocNum as character no-undo
     get.
     private set.
+
+  define property Parentproc as handle no-undo
+    get.
+    set.
+    
+  define property Mode as character no-undo
+    get.
+    private set.    
+
+  define property WasSetting as logical no-undo
+    get.
+    set.
 
   define property GdsCode as integer no-undo
     get.
@@ -54,9 +69,9 @@ class ibs.th.str.InfoSectionsTotal:
     get.
     private set.
 
-  define property InfoSectionProp as class InfoSection no-undo
+  define property idSecCurr as integer no-undo
     get.
-    set.
+    private set.
 
   define property InfoSectionCurr as class InfoSection no-undo
     get.
@@ -194,6 +209,20 @@ class ibs.th.str.InfoSectionsTotal:
     get.
     set.
 
+  define property PrtlPropObj as class ptrlprop no-undo
+    get.
+    private set.
+
+  define property FuelType as character no-undo
+    get.
+    private set.
+
+  define property TempForPomi as decimal no-undo
+    get:
+      if PrtlPropObj:ptrlprop-temp-for-pomi = 1
+        then return 15.
+        else return 20.
+    end.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -202,8 +231,26 @@ class ibs.th.str.InfoSectionsTotal:
   
   define private variable NLStorage as class normloss no-undo.
   
+  
+  constructor public InfoSectionsTotal (inTrnDocNum as char, inGdsCode as int, inMode as char):
+    
+    Mode = inMode.
+    
+    Initialization (inTrnDocNum, inGdsCode).
+    
+  end.
+
+  constructor public InfoSectionsTotal ():
+    
+  end.
+  
   method public void Initialization (inTrnDocNum as char, inGdsCode as int):
     
+    define variable rdc-dnstvalue as character no-undo.
+    define variable rdc-dnsttype as character no-undo.
+    define variable v-gds-attr-value as character no-undo .
+    define variable v-gds-attr-type  as character no-undo .
+
     assign
       TrnDocNum = inTrnDocNum
       GdsCode = inGdsCode
@@ -215,7 +262,27 @@ class ibs.th.str.InfoSectionsTotal:
     NLStorage = new normloss ().
     
     Parnl = new partpnloss ().
+    PrtlPropObj = ptrlpropproc:GetPropPtrl(ObjType, ObjCode).
+
+    &scop proc-name gds-attr-value
+    {&run_proc_attr-lib}
+      (input  GdsCode
+      ,input  {&attr-fuel-type}
+      ,output v-gds-attr-value
+      ,output v-gds-attr-type
+      ) no-error .
+    if error-status :error
+    then do:
+      FuelType = "".
+    end.
+    else FuelType = v-gds-attr-value.
     
+    run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
+    if error-status:error or lookup (FuelType, "metan,propan") > 0 then 
+    do:
+      RdcDnstvalue = "not".
+    end.
+    RdcDnstvalue = rdc-dnstvalue.
 		
   end method.
 
@@ -243,7 +310,6 @@ class ibs.th.str.InfoSectionsTotal:
   method public void GetDBAllAttr():
     
     define variable ii as integer no-undo.
-    
     clearObj().
 
     find first buf_doc-line-attr where buf_doc-line-attr.doc-code = TrnDocNum 
@@ -259,7 +325,9 @@ class ibs.th.str.InfoSectionsTotal:
 
     do ii = 1 to SectionNum :
 
-      InfoSectionProp = new InfoSection().
+      InfoSectionCurr = new InfoSection().
+      
+      InfoSectionCurr:idSec = ii.
       
       for each buf_doc-line-attr where buf_doc-line-attr.doc-code = TrnDocNum 
         and buf_doc-line-attr.gds-code = GdsCode
@@ -271,11 +339,11 @@ class ibs.th.str.InfoSectionsTotal:
           attrCode = entry (1, buf_doc-line-attr.attr-code, {&delim-par}) no-error.
         if error-status:error then next.
         
-        InfoSectionProp:SetProp (attrCode, buf_doc-line-attr.attr-value).
+        InfoSectionCurr:SetProp (attrCode, buf_doc-line-attr.attr-value).
 
       end.
 
-      if SectionNum = 1
+      /*if SectionNum = 1
       then do:
         find first buf_goods no-lock where buf_goods.gds-code = GdsCode no-error. 
         find first buf_doc-line no-lock where
@@ -285,19 +353,19 @@ class ibs.th.str.InfoSectionsTotal:
                                and buf_goods.prod-type = buf_doc-line.prod-type no-error.
         if available (buf_doc-line) then 
           assign
-            InfoSectionProp:CliQnty = buf_doc-line.cli-qnty
-/*            InfoSectionProp:FactQnty = buf_doc-line.fact-qnty*/
-            InfoSectionProp:DocDensity = buf_doc-line.doc-density
-            InfoSectionProp:DocQnty = buf_doc-line.doc-qnty
-/*            InfoSectionProp:FactDensity = buf_doc-line.fact-density*/
-/*            InfoSectionProp:FactKgQnty = buf_doc-line.fact-density * buf_doc-line.fact-qnty*/
+            InfoSectionCurr:CliQnty = buf_doc-line.cli-qnty
+/*            InfoSectionCurr:FactQnty = buf_doc-line.fact-qnty*/
+            InfoSectionCurr:DocDensity = buf_doc-line.doc-density
+            InfoSectionCurr:DocQnty = buf_doc-line.doc-qnty
+/*            InfoSectionCurr:FactDensity = buf_doc-line.fact-density*/
+/*            InfoSectionCurr:FactKgQnty = buf_doc-line.fact-density * buf_doc-line.fact-qnty*/
           .
-      end.
+      end.*/
       
       create ttObjInfoSecProp.
       assign
         ttObjInfoSecProp.iSecNum = ii 
-        ttObjInfoSecProp.objInfoSecProp = cast (InfoSectionProp, Progress.Lang.Object).
+        ttObjInfoSecProp.objInfoSecProp = cast (InfoSectionCurr, Progress.Lang.Object).
       
     end.
     CalculateTotal ().
@@ -312,15 +380,17 @@ class ibs.th.str.InfoSectionsTotal:
   ------------------------------------------------------------------------------*/
 
   method public void NewSection(  ):
-    
-    InfoSectionProp = new InfoSection().
+
+    InfoSectionCurr = new InfoSection().
     assign 
       SectionNum = SectionNum + 1.
     create ttObjInfoSecProp.
     assign
       ttObjInfoSecProp.iSecNum = SectionNum
-      ttObjInfoSecProp.objInfoSecProp = InfoSectionProp
+      ttObjInfoSecProp.objInfoSecProp = InfoSectionCurr
     .
+    idSecCurr = SectionNum.
+    InfoSectionCurr:idSec = SectionNum.
 
   end method.
 
@@ -328,6 +398,11 @@ class ibs.th.str.InfoSectionsTotal:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
+  method public class InfoSection GetInfoSectionProp ():
+    
+    return GetInfoSectionProp (1).
+    
+  end.
 
   method public class InfoSection GetInfoSectionProp (inSecNum as integer):
     
@@ -335,7 +410,8 @@ class ibs.th.str.InfoSectionsTotal:
     
     for first ttObjInfoSecProp where ttObjInfoSecProp.iSecNum = inSecNum:
       objInfoSec = cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ).
-      InfoSectionCurr = objInfoSec.  
+      InfoSectionCurr = objInfoSec.
+      idSecCurr = inSecNum.
       return objInfoSec.
     end.
 
@@ -350,6 +426,7 @@ class ibs.th.str.InfoSectionsTotal:
       InfoSectionCurr = objInfoSec.
       if InfoSectionCurr:ListTank = inTankCord1
       then do:
+        idSecCurr = ttObjInfoSecProp.iSecNum.
         return objInfoSec.        
       end.  
       else do:
@@ -371,7 +448,8 @@ class ibs.th.str.InfoSectionsTotal:
   method public void DeleteSection( inNum as int  ):
     
     def var ii as integer no-undo.
-    
+    define variable objInfoSec as class InfoSection.
+        
     find first ttObjInfoSecProp where ttObjInfoSecProp.iSecNum = inNum.
     delete object ttObjInfoSecProp.objInfoSecProp.
     delete ttObjInfoSecProp.
@@ -380,6 +458,9 @@ class ibs.th.str.InfoSectionsTotal:
       assign
         ii = ii + 1
         ttObjInfoSecProp.iSecNum = ii.
+        idSecCurr = ttObjInfoSecProp.iSecNum.
+        objInfoSec = cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ).
+        objInfoSec:idSec = ii.
     end.
     SectionNum = SectionNum - 1.
 
@@ -461,6 +542,7 @@ class ibs.th.str.InfoSectionsTotal:
       delete object ttObjInfoSecProp.objInfoSecProp.
       delete ttObjInfoSecProp.
     end.
+    SectionNum = 0.
 
   end method.
 
@@ -1185,30 +1267,6 @@ class ibs.th.str.InfoSectionsTotal:
 
     finally:
       
-      find first ub.place no-lock where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = InfoSectionCurr:ListTank no-error. 
-      if available (ub.place)
-      then do:
-        assign
-          Parnl:ObjType = ObjType 
-          Parnl:ObjCode = ObjCode
-          Parnl:GdsCode = GdsCode
-          Parnl:AutoNum = CarNum
-          Parnl:OnDate = buf_trn.doc-date
-        .
-        
-        Parnl:PlCode = ub.place.pl-code no-error.
-		release ub.place.
-        Parnl:SecNum = InfoSectionCurr:SectionName.
-        NLStorage:getNormLoss(Parnl).
-        InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
-        InfoSectionCurr:TPNormPL = (MF / 1000 * ParNl:PLNormLoss).
-        output stream log-algo to value ("log-algo-pomi.txt") append.
-        put stream log-algo unformatted
-          "MTP = " InfoSectionCurr:TPNorm {&new-line}
-          "NHH = " string(Parnl:AutoNormLoss) {&new-line}
-          "NPR = " string(Parnl:PLNormLoss) {&new-line}.
-        output stream log-algo close.
-      end.
 
     end finally.
       
@@ -1216,6 +1274,337 @@ class ibs.th.str.InfoSectionsTotal:
 
   end method.
   
+  method public void CalcWeight ():  
+  
+    define variable ToolType                as integer no-undo.
+    define variable DeltaAbs_R              as decimal no-undo.
+    define variable DeltaAbs_Tv             as decimal no-undo.
+    define variable DeltaAbs_Tr             as decimal no-undo.
+    define variable NeckType                as integer no-undo.
+    define variable Dgor                    as decimal no-undo.
+    define variable NeckWidth               as decimal no-undo.
+    define variable NeckHeight              as decimal no-undo.
+    define variable error-string            as character no-undo.
+    define variable v-mm as com-handle.
+    define variable v-proc as character no-undo.
+  /*  define buffer buf_clob-bind    for ub.clob-bind.*/
+    define buffer buf_sr-izmerenia    for ub.sr-izmerenia .
+/*    run save-page.*/
+/*    assign        */
+/*    f-car-vol     */
+/*    f-tank-vol    */
+/*    f-a-b-tarir   */
+/*    f-size        */
+/*    f-tank-temp   */
+/*    f-tank-density*/
+/*    f-dens-temp   */
+/*    f-place-si    */
+/*    .             */
+  
+  
+    case RdcDnstvalue:
+      when "pomi-rn" then do:
+        _trpomi :
+          do on error undo, return no-apply :
+    
+  
+            /*данные по средству измерения резервуара для ПО МИ*/
+          find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSi no-error.
+          if not available buf_sr-izmerenia then do :
+            message
+              substitute( 'Не найдено средство измерения с кодом &1', InfoSectionCurr:PlaceSi ) skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          else do :
+            assign
+              ToolType               = buf_sr-izmerenia.sr-type
+              DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+              DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+              DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
+              .
+          end.
+          /*..........................................*/
+          v-proc = "Rosneft.MethodOfMetering31" .
+    
+          release object v-mm no-error.
+          v-mm = ?.
+    
+          create value("Rosneft.MethodOfMetering31") v-mm no-error.
+          if error-status:error
+          or not VALID-HANDLE(v-mm)
+          then do:
+            release object v-mm no-error.
+            v-mm = ?.
+            message
+              substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply .
+          end.
+          else do :
+            if InfoSectionCurr:CarVol = ? or InfoSectionCurr:CarVol = 0 then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Введите Объем по паспорту в литрах"  skip
+              view-as alert-box error.
+/*              apply "entry" to f-car-vol in frame {&frame-name} .*/
+/*              undo _trpomi, return no-apply  .*/
+            end.
+            
+            if InfoSectionCurr:ABTarir = ? or InfoSectionCurr:ABTarir = 0 then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Введите Уровень цистерны относительно тарировочной планки"  skip
+              view-as alert-box error.
+/*              apply "entry" to f-a-b-tarir in frame {&frame-name} .*/
+/*              undo _trpomi, return no-apply  .                     */
+            end.
+/*              assign                                         */
+/*              f-size              = string (decimal (f-size))*/
+/*              f-size:screen-value = string (decimal (f-size))*/
+/*              no-error.                                      */
+            if error-status:error then 
+            do:
+              assign
+                NeckType = 1
+                NeckWidth = decimal (entry (1,InfoSectionCurr:Diameter, "/")) 
+                NeckHeight = decimal (entry (2,InfoSectionCurr:Diameter, "/"))
+                Dgor = 0
+                no-error.
+            end.
+            else do: 
+            assign 
+              NeckType = 0 
+              Dgor = decimal (InfoSectionCurr:Diameter).
+            end.  
+            if InfoSectionCurr:Diameter = ? or InfoSectionCurr:Diameter = "0" then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Введите Внутренний диаметр горловины"  skip
+              view-as alert-box error.
+/*              apply "entry" to f-size in frame {&frame-name} .*/
+/*              undo _trpomi, return no-apply  .                */
+            end.
+            if InfoSectionCurr:TankTemp = ? then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Введите Температуру"  skip
+              view-as alert-box error.
+/*              apply "entry" to f-tank-temp in frame {&frame-name} .*/
+/*              undo _trpomi, return no-apply  .                     */
+            end.
+            if InfoSectionCurr:TankDensity = ? or InfoSectionCurr:TankDensity = 0 then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Введите Плотность топлива для ПО МИ"  skip
+              view-as alert-box error.
+/*              apply "entry" to f-tank-density in frame {&frame-name} .*/
+/*              undo _trpomi, return no-apply  .                        */
+            end.
+            assign
+              v-mm:V_real                 = InfoSectionCurr:CarVol
+              v-mm:DeltaH                 = InfoSectionCurr:ABTarir
+              v-mm:Dgor                   = Dgor
+              v-mm:NeckType               = NeckType 
+              v-mm:NeckWidth              = NeckWidth  
+              v-mm:NeckHeight             = NeckHeight  
+              v-mm:Tv                     = InfoSectionCurr:TankTemp
+              v-mm:Tr                     = InfoSectionCurr:DensTemp
+              v-mm:R                      = ( InfoSectionCurr:TankDensity * 1000 )
+              v-mm:Tcy                    = TempForPomi
+              v-mm:ToolType               = ToolType
+              v-mm:A_Reservoir            = 0.0000125
+              v-mm:DeltaOtn_V             = 0.4
+              v-mm:DeltaAbs_R             = DeltaAbs_R
+              v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
+              v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
+            .
+            v-mm:Exec() .
+            output stream outstream to value ("pomi.log") append.
+            put stream outstream
+              {&new-line}
+              "-----------------------------------------------"
+              {&new-line}
+                                         now                     skip
+              'Номер документа:'         TrnDocNum              skip
+              'Секция:'                  InfoSectionCurr:SectionName         skip
+              'Процедура'                v-proc                  skip
+              'V_real                 =' InfoSectionCurr:CarVol              skip
+              'DeltaH                 =' InfoSectionCurr:ABTarir             skip
+              'Dgor                   =' Dgor                    skip
+              'NeckType               =' NeckType                skip 
+              'NeckWidth              =' NeckWidth               skip
+              'NeckHeight             =' NeckHeight              skip
+              'Tv                     =' InfoSectionCurr:TankTemp             skip
+              'Tr                     =' InfoSectionCurr:DensTemp             skip
+              'R                      =' ( InfoSectionCurr:TankDensity * 1000 ) skip
+              'Tcy                    =' TempForPomi           skip
+              'ToolType               =' ToolType                skip
+              'A_Reservoir            =' string (0.0000125)      skip
+              'DeltaOtn_V             =' 0.4                     skip
+              'DeltaAbs_R             =' DeltaAbs_R              skip
+              'DeltaAbs_Tv            =' DeltaAbs_Tv             skip
+              'DeltaAbs_Tr            =' DeltaAbs_Tr             skip
+              'Vcy                    =' v-mm:Vcy               skip 
+              'Rcy                    =' v-mm:Rcy               skip
+              'V                      =' v-mm:V                 skip
+              'CTL_base_alt           =' v-mm:CTL_base_alt      skip 
+              'CPL_base_alt           =' v-mm:CPL_base_alt      skip 
+              'CTPL_base_alt          =' v-mm:CTPL_base_alt     skip
+              'Fp_base_alt            =' v-mm:Fp_base_alt       skip
+              'CTL_obs_base           =' v-mm:CTL_obs_base      skip
+              'CPL_obs_base           =' v-mm:CPL_obs_base      skip
+              'CTPL_obs_base          =' v-mm:CTPL_obs_base     skip
+              'Fp_obs_base            =' v-mm:Fp_obs_base       skip
+              'Rv                     =' v-mm:Rv                skip
+              'DeltaOtn_Vcy           =' v-mm:DeltaOtn_Vcy      skip 
+              'M                      =' v-mm:M                 skip
+              'Mcy                    =' v-mm:Mcy               skip
+              'DeltaOtn_M             =' v-mm:DeltaOtn_M        skip
+            .
+            output stream outstream close.
+            if v-mm:Result <> 0 then do :
+              error-string = v-mm:ResultDetail .
+              output stream outstream to value ("pomi.log") append.
+                put stream outstream error-string format "x(1024)" skip.
+              output stream outstream close.
+              release object v-mm no-error.
+              v-mm = ?.
+              message
+                substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
+              view-as alert-box error.
+              undo _trpomi, return no-apply  .
+            end.
+            else do :
+              assign
+                InfoSectionCurr:TankDensityPomi    = decimal(v-mm:Rcy) / 1000
+                InfoSectionCurr:TankVolPomi        = v-mm:Vcy 
+                InfoSectionCurr:TankWeight     = v-mm:Mcy
+                InfoSectionCurr:AccPomi = round (v-mm:DeltaOtn_M, 3)
+              .
+/*              display                  */
+/*                f-tank-density-pomi    */
+/*                f-tank-vol-pomi        */
+/*                f-tank-weight          */
+/*                f-acc-weight           */
+/*              with frame {&frame-name}.*/
+              output stream outstream to value ("pomi.log") append.
+                put stream outstream
+                "v-mm:Rcy" InfoSectionCurr:TankDensityPomi       skip
+                "v-mm:Vcy" InfoSectionCurr:TankVolPomi           skip
+                "v-mm:Mcy" InfoSectionCurr:TankWeight            skip 
+                "v-mm:v-mm:DeltaOtn_M" InfoSectionCurr:AccPomi skip .
+              output stream outstream close.
+              release object v-mm no-error.
+              v-mm = ?.
+            end.
+          end.
+        end.
+      end.
+      when "th" then do:
+          
+          def var v-tank-density-pomi as decimal no-undo.
+          def var v-tank-vol-pomi as decimal no-undo.
+          
+          if lookup (FuelType, "petrol,diesel-sum,diesel-wint") > 0
+          then do:
+            message
+              substitute('Ошибка определения типа топлива &1 или не верный тип товлива &2', return-value, FuelType) 
+            view-as alert-box error.
+            undo, return error return-value .
+          end.
+          
+          run str/rdcdnst.p (input InfoSectionCurr:TankDensityPomi * 1000
+                        ,input InfoSectionCurr:DensTemp
+                        ,input InfoSectionCurr:TankVol
+                        ,input InfoSectionCurr:TankTemp
+                        ,input FuelType
+                        ,output v-tank-density-pomi 
+                        ,output v-tank-vol-pomi)
+          no-error.
+          if not error-status:error then do:
+            InfoSectionCurr:TankDensityPomi = v-tank-density-pomi.
+            InfoSectionCurr:TankVolPomi = v-tank-vol-pomi.
+            InfoSectionCurr:TankWeight = InfoSectionCurr:TankDensityPomi * InfoSectionCurr:TankVolPomi . 
+            
+/*            display                  */
+/*              f-tank-vol-pomi        */
+/*              f-tank-density-pomi    */
+/*              f-tank-weight          */
+/*            with frame {&frame-name}.*/
+
+          end.
+          else do:
+            message
+              substitute('Ошибка при рассчете приведенных значений плотности и объема: &1', return-value) 
+            view-as alert-box error.
+            undo, return no-apply  .
+          end.
+      end.
+      
+    end case.
+    
+    
+    def var dMP  as decimal no-undo.
+    def var MF   as decimal no-undo.
+    def var dMF  as decimal no-undo.
+    def var MTTH as decimal no-undo.
+    def var md   as decimal no-undo.
+    def var dmd  as decimal no-undo.
+    def var dF   as decimal no-undo.
+    def var NPE  as decimal no-undo.
+    def var ME   as decimal no-undo.
+    def var dMEd as decimal no-undo.
+    
+    assign
+      MTTH = InfoSectionCurr:DocQnty * InfoSectionCurr:DocDensity
+      MF = InfoSectionCurr:TankWeight
+      dF = InfoSectionCurr:AccPomi
+      NPE = NormalWastage
+      dmd = MF * dF * 0.01
+      dMP = MF - MTTH
+      dMEd = MTTH * NPE * 0.001.
+      ME = MTTH - MF - dmd.
+    .
+    if abs(dMP) > dmd + dMed
+    then do:
+      ME = dMEd.
+    end. 
+    InfoSectionCurr:NaturalLoss = ME.
+    
+    find first ub.place no-lock where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = InfoSectionCurr:ListTank no-error. 
+    if available (ub.place)
+    then do:
+      assign
+        Parnl:ObjType = ObjType 
+        Parnl:ObjCode = ObjCode
+        Parnl:GdsCode = GdsCode
+        Parnl:AutoNum = CarNum
+        Parnl:OnDate = buf_trn.doc-date
+      .
+      
+      Parnl:PlCode = ub.place.pl-code no-error.
+      release ub.place.
+      Parnl:SecNum = InfoSectionCurr:SectionName.
+      NLStorage:getNormLoss(Parnl).
+      InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
+      InfoSectionCurr:TPNormPL = (InfoSectionCurr:TankWeight / 1000 * ParNl:PLNormLoss).
+      output stream log-algo to value ("log-algo-pomi.txt") append.
+      put stream log-algo unformatted
+        "MTP = " InfoSectionCurr:TPNorm {&new-line}
+        "NHH = " string(Parnl:AutoNormLoss) {&new-line}
+        "NPR = " string(Parnl:PLNormLoss) {&new-line}.
+      output stream log-algo close.
+    end.
+
+  
+  
+  end.
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:

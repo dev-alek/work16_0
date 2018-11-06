@@ -33,6 +33,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     { str/placelib.i }
     
     define variable infoSectionsTotal       as class InfoSectionsTotal no-undo.
+    define variable tanksForm               as class ibs.th.str.ptrl.forms.tanksections no-undo.
     define variable v-prt-autoent-obj-type as character    no-undo .
     define variable v-prt-autoent-obj-code as character    no-undo .
     define variable v-prt-start-real-date  like ub.rvs-line.real-date    no-undo .
@@ -946,8 +947,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               end.
             end.
           end.
-
-          run str/in-ladd.w
+          tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
+          wait-for tanksForm:ShowDialog().
+          
+          
+/*          run str/in-ladd.w
             ( input        parParentProc
              ,input        p-mode
              ,input        p-doc-code
@@ -957,7 +961,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             ) no-error .
           if error-status :error then do:
             undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
-          end.
+          end.*/
           
           def var ii as int no-undo.
           def var infoSectionObj as class InfoSection no-undo.
@@ -976,9 +980,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
           end.
 
-          if v-setting = false then p-infoSectionsTotal:GetDBAllAttr().
+          if p-infoSectionsTotal:WasSetting = false then p-infoSectionsTotal:GetDBAllAttr().
 
-            if v-setting = true
+            if p-infoSectionsTotal:WasSetting = true
               and p-mode <> {&lookup}
               and p-stfactplvalue <> "":U
               and (p-auto-tank = true or p-infoSectionsTotal:IsRNAlgo)

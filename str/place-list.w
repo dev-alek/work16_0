@@ -230,9 +230,17 @@ END.
 ON choose OF Btn_mark IN FRAME Dialog-Frame /* * */
 do:
 
+  def buffer bf_tt-pl for tt-pl.
+
   if available (tt-pl)
   then do:
      tt-pl.mark = if tt-pl.mark = "*" then "" else "*".
+     for each bf_tt-pl where bf_tt-pl.mark = "*" and bf_tt-pl.pl-coord <> tt-pl.pl-coord:
+       
+       bf_tt-pl.mark = "".
+     
+     end.
+     
      BROWSE-2:refresh ().
      BROWSE-2:select-next-row( ).
   end.

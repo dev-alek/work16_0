@@ -104,9 +104,30 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
-  define property PlaceSi as integer no-undo
+  define property PlSiName as character no-undo
+    get.
+    private set.
+  
+
+  define property UserMode as logical init false no-undo
     get.
     set.
+  
+  define property PlaceSi as integer no-undo
+    get.
+    set (a as int):
+      def buffer buf_sr-izmerenia for ub.sr-izmerenia.
+      find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = a no-error.
+      if available buf_sr-izmerenia then do:
+        PlaceSi = a.
+        PlSiName = buf_sr-izmerenia.sr-model.
+      end.
+      else do:
+        if UserMode = true
+          then message "Введено неизвестное стредство измерения" view-as alert-box.
+      end.
+      release buf_sr-izmerenia.
+    end.
 
   define property TankDensityPomi as decimal no-undo
     get.
@@ -219,10 +240,12 @@ class ibs.th.str.InfoSection:
 
   define property TPNorm as decimal no-undo
     get:
-      return TPNormAuto + TPNormPL.
-    end.      
+      return round (TPNormAuto + TPNormPL, 0).
+    end.
 
-
+  define property idSec as integer no-undo
+    get.
+    set.
 
   /*------------------------------------------------------------------------------
  Purpose:

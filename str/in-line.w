@@ -19,6 +19,7 @@ create : —ÛÒÎÓ‚ ¿ÎÂÍÒÂÈ ﬁ¸Â‚Ë˜
 */
 
 using ibs.th.str.*.
+using ibs.th.str.ptrl.forms.* from propath.
 
 &scop FRAME-NAME     d-in-line
 
@@ -1432,10 +1433,6 @@ do:
     v-new-density       = tt-fr-doc-line.fact-density
     v-new-cli-fact-qnty = tt-fr-doc-line.fact-qnty-kg
   .
-  infoSectionsTotal:DocQntyLine = tt-fr-doc-line.doc-qnty.
-  infoSectionsTotal:DocDensLine = tt-fr-doc-line.doc-density.
-  infoSectionsTotal:DocCliLine = tt-fr-doc-line.cli-qnty.
-  infoSectionsTotal:FlagTrn = t-doc.flag_.
   run proc-b-addinfo in this-procedure
     ( input        parparentproc
      ,input        ( if parline-mode <> {&lookup} then {&update} else {&lookup} )
@@ -1495,12 +1492,11 @@ do:
     v-new-density       = tt-fr-doc-line.fact-density
     v-new-cli-fact-qnty = tt-fr-doc-line.fact-qnty-kg
   .
-  if parline-mode <> {&add-def} then infoSectionsTotal:GetDBAllAttr().
-  infoSectionsTotal:DocQntyLine = tt-fr-doc-line.doc-qnty.
-  infoSectionsTotal:DocDensLine = tt-fr-doc-line.doc-density.
-  infoSectionsTotal:DocCliLine = tt-fr-doc-line.cli-qnty.
-  infoSectionsTotal:FlagTrn = t-doc.flag_.
-  run str/in-ladd.w
+  tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
+  wait-for tanksForm:ShowDialog().
+
+   
+  /*run str/in-ladd.w
     ( input        parParentProc
      ,input        parline-mode
      ,input        infoSectionsTotal:TrnDocNum
@@ -1510,9 +1506,9 @@ do:
     ) no-error .
   if error-status :error then do:
     return no-apply.
-  end.
+  end.*/
 
-  if was_setting = false 
+  if infoSectionsTotal:WasSetting = false 
   then infoSectionsTotal:GetDBAllAttr().
   else do:
     infoSectionsTotal:CalculateTotal().
@@ -1911,6 +1907,7 @@ do:
       end.
       
       delete object infoSectionsTotal no-error.
+      delete object tanksForm no-error.
       
     end.
   
@@ -2746,8 +2743,13 @@ if varrvs-place = yes then do:
 /*     , output v-normal-wastage-summer*/
 /*     , output v-normal-wastage       */
 
-    infoSectionsTotal = new InfoSectionsTotal().
-
+    infoSectionsTotal = new InfoSectionsTotal(t-doc.doc-code, buf_goods.gds-code, parline-mode).
+    
+        
+    if infoSectionsTotal:Mode = "ƒŒ¡¿¬À≈Õ»≈" and infoSectionsTotal:SectionNum = 0 then do:
+      infoSectionsTotal:NewSection().
+    end.
+    
     define variable l-ok as logical   no-undo .
   
       { gbl/chk-actg.i
@@ -2796,7 +2798,6 @@ if varrvs-place = yes then do:
     }
 
 
-    infoSectionsTotal:Initialization(t-doc.doc-code, buf_goods.gds-code).
     assign
       infoSectionsTotal:CliQntyInput = varcli-qnty-input
       infoSectionsTotal:DensityInput = vardensity-input
@@ -2806,7 +2807,9 @@ if varrvs-place = yes then do:
       infoSectionsTotal:PercAcc = varpercauto
       infoSectionsTotal:AccShip = varrn-acc-ship
       infoSectionsTotal:CarNum = varcar-num
-      .
+      infoSectionsTotal:FlagTrn = t-doc.flag_
+      infoSectionsTotal:Parentproc = parparentproc
+    .
 
     if parline-mode <> {&add-def} then do:
       infoSectionsTotal:GetDBAllAttr().
@@ -2816,7 +2819,10 @@ if varrvs-place = yes then do:
       v-prt-end-real-time = infoSectionsTotal:EndRealTime.
     end.
     
+    if parline-mode <> {&add-def} then infoSectionsTotal:GetDBAllAttr().
+
     
+    tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
     
     /*run str/in-ladd.w
       ( input        parParentProc
