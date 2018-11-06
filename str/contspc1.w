@@ -276,31 +276,31 @@ DEFINE FRAME Dialog-Frame
      FILL-bonus AT ROW 7 COL 1.88 WIDGET-ID 72
      vat-type AT ROW 8.21 COL 14.88 COLON-ALIGNED NO-LABEL
      FILL-VAT-pc AT ROW 8.25 COL 5.13 COLON-ALIGNED
-     fi-unit-cli AT ROW 11.92 COL 19.38 COLON-ALIGNED WIDGET-ID 32
-     b-units AT ROW 11.92 COL 28.5 WIDGET-ID 30
-     FILL-cli-base-rate AT ROW 11.92 COL 29.63 COLON-ALIGNED NO-LABEL
-     FILL-price AT ROW 11.92 COL 38.13 COLON-ALIGNED NO-LABEL
-     FILL-qnty AT ROW 11.92 COL 60.63 COLON-ALIGNED NO-LABEL
-     fi-unit-cli-ord AT ROW 13.04 COL 19.38 COLON-ALIGNED WIDGET-ID 44
-     b-units-ord AT ROW 13.04 COL 28.5 WIDGET-ID 40
-     fi-cli-base-rate-ord AT ROW 13.04 COL 29.63 COLON-ALIGNED HELP
+     fi-unit-cli AT ROW 11.92 COL 20.38 COLON-ALIGNED WIDGET-ID 32
+     b-units AT ROW 11.92 COL 29.5 WIDGET-ID 30
+     FILL-cli-base-rate AT ROW 11.92 COL 30.63 COLON-ALIGNED NO-LABEL
+     FILL-price AT ROW 11.92 COL 39.13 COLON-ALIGNED NO-LABEL
+     FILL-qnty AT ROW 11.92 COL 61.63 COLON-ALIGNED NO-LABEL
+     fi-unit-cli-ord AT ROW 13.04 COL 20.38 COLON-ALIGNED WIDGET-ID 44
+     b-units-ord AT ROW 13.04 COL 29.5 WIDGET-ID 40
+     fi-cli-base-rate-ord AT ROW 13.04 COL 30.63 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 42
-     fi-unit-cli-rcv AT ROW 14.21 COL 19.38 COLON-ALIGNED WIDGET-ID 54
-     b-units-rcv AT ROW 14.21 COL 28.5 WIDGET-ID 50
-     fi-cli-base-rate-rcv AT ROW 14.21 COL 29.63 COLON-ALIGNED HELP
+     fi-unit-cli-rcv AT ROW 14.21 COL 20.38 COLON-ALIGNED WIDGET-ID 54
+     b-units-rcv AT ROW 14.21 COL 29.5 WIDGET-ID 50
+     fi-cli-base-rate-rcv AT ROW 14.21 COL 30.63 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 52
      FILL-1 AT ROW 2.21 COL 8.88 COLON-ALIGNED
      FILL-2 AT ROW 2.21 COL 27
-     FILL-3 AT ROW 3.42 COL 13.63 COLON-ALIGNED
-     FILL-unit-base AT ROW 10.92 COL 19.38 COLON-ALIGNED WIDGET-ID 6
-     v-qnty-ord AT ROW 13.13 COL 60.75 COLON-ALIGNED NO-LABEL WIDGET-ID 66
-     v-price-cli-ord AT ROW 13.17 COL 38.25 COLON-ALIGNED NO-LABEL WIDGET-ID 64
-     v-qnty-rcv AT ROW 14.25 COL 60.75 COLON-ALIGNED NO-LABEL WIDGET-ID 70
-     v-price-cli-rcv AT ROW 14.29 COL 38.25 COLON-ALIGNED NO-LABEL WIDGET-ID 68
+     FILL-3 AT ROW 3.42 COL 14.63 COLON-ALIGNED
+     FILL-unit-base AT ROW 10.92 COL 20.38 COLON-ALIGNED WIDGET-ID 6
+     v-qnty-ord AT ROW 13.13 COL 61.75 COLON-ALIGNED NO-LABEL WIDGET-ID 66
+     v-price-cli-ord AT ROW 13.17 COL 39.25 COLON-ALIGNED NO-LABEL WIDGET-ID 64
+     v-qnty-rcv AT ROW 14.25 COL 61.75 COLON-ALIGNED NO-LABEL WIDGET-ID 70
+     v-price-cli-rcv AT ROW 14.29 COL 39.25 COLON-ALIGNED NO-LABEL WIDGET-ID 68
      "%" VIEW-AS TEXT
           SIZE 1.75 BY .67 AT ROW 8.38 COL 14.63
      "Единицы измерения                      Цена                  Количество" VIEW-AS TEXT
-          SIZE 79 BY 1 AT ROW 9.58 COL 2 WIDGET-ID 4
+          SIZE 79 BY 1 AT ROW 9.58 COL 3 WIDGET-ID 4
           BGCOLOR 3 FGCOLOR 15
      SPACE(2.12) SKIP(7.54)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -425,7 +425,7 @@ do:
   if ref-rec = ? then return no-apply.
   find buf_units where recid (buf_units) = ref-rec no-lock.
   assign fi-unit-cli  = buf_units.unit-name.
-  display fi-unit-cli with FRAME page-1.
+  display fi-unit-cli with FRAME Dialog-Frame.
   apply "entry":U to FILL-cli-base-rate .
 end.
 
@@ -445,7 +445,7 @@ do:
   if ref-rec = ? then return no-apply.
   find buf_units where recid (buf_units) = ref-rec no-lock.
   assign fi-unit-cli-ord  = buf_units.unit-name.
-  display fi-unit-cli-ord with FRAME page-1.
+  display fi-unit-cli-ord with FRAME Dialog-Frame.
   apply "entry":U to fi-cli-base-rate-ord .
 end.
 
@@ -465,7 +465,7 @@ do:
   if ref-rec = ? then return no-apply.
   find buf_units where recid (buf_units) = ref-rec no-lock.
   assign fi-unit-cli-rcv  = buf_units.unit-name.
-  display fi-unit-cli-rcv with FRAME page-1.
+  display fi-unit-cli-rcv with FRAME Dialog-Frame.
   apply "entry":U to fi-cli-base-rate-rcv .
 end.
 
@@ -477,14 +477,14 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-unit-cli Dialog-Frame
 ON leave OF fi-unit-cli IN FRAME Dialog-Frame /* Ед.изм в накладной */
 do:
-find ub.units where ub.units.unit-name = input frame {&frame-name} fi-unit-cli no-lock no-error.
+find ub.units where ub.units.unit-name = input frame Dialog-Frame fi-unit-cli no-lock no-error.
   if not available ub.units then do:
     message "Неправильная единица измерения поставщика." view-as alert-box.
-    display fi-unit-cli with FRAME page-1.
+    display fi-unit-cli with FRAME Dialog-Frame.
     apply "choose" to b-units.
     return no-apply.
   end.
-  assign frame {&frame-name} fi-unit-cli.
+  assign frame Dialog-Frame fi-unit-cli.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -494,7 +494,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-unit-cli Dialog-Frame
 ON return OF fi-unit-cli IN FRAME Dialog-Frame /* Ед.изм в накладной */
 do:
-  apply "entry" to FILL-cli-base-rate in frame {&frame-name}.
+  apply "entry" to FILL-cli-base-rate in frame Dialog-Frame.
   return no-apply.
 end.
 
@@ -506,14 +506,14 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-unit-cli-ord Dialog-Frame
 ON leave OF fi-unit-cli-ord IN FRAME Dialog-Frame /* Ед.изм в заказе */
 do:
-  find ub.units where ub.units.unit-name = input frame {&frame-name} fi-unit-cli-ord no-lock no-error.
+  find ub.units where ub.units.unit-name = input frame Dialog-Frame fi-unit-cli-ord no-lock no-error.
   if not available ub.units then do:
     message "Неправильная единица измерения поставщика." view-as alert-box.
-    display fi-unit-cli-ord with FRAME page-1.
+    display fi-unit-cli-ord with FRAME Dialog-Frame.
     apply "choose" to b-units-ord.
     return no-apply.
   end.
-  assign frame {&frame-name} fi-unit-cli-ord.
+  assign frame Dialog-Frame fi-unit-cli-ord.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -523,7 +523,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-unit-cli-ord Dialog-Frame
 ON return OF fi-unit-cli-ord IN FRAME Dialog-Frame /* Ед.изм в заказе */
 do:
-  apply "entry" to fi-cli-base-rate-ord in frame {&frame-name}.
+  apply "entry" to fi-cli-base-rate-ord in frame Dialog-Frame.
   return no-apply.
 end.
 
@@ -553,14 +553,14 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-unit-cli-rcv Dialog-Frame
 ON leave OF fi-unit-cli-rcv IN FRAME Dialog-Frame /* Ед.изм в поставке */
 do:
-  find ub.units where ub.units.unit-name = input frame {&frame-name} fi-unit-cli-rcv no-lock no-error.
+  find ub.units where ub.units.unit-name = input frame Dialog-Frame fi-unit-cli-rcv no-lock no-error.
   if not available ub.units then do:
     message "Неправильная единица измерения поставщика." view-as alert-box.
-    display fi-unit-cli-rcv with FRAME page-1.
+    display fi-unit-cli-rcv with FRAME Dialog-Frame.
     apply "choose" to b-units-rcv.
     return no-apply.
   end.
-  assign frame {&frame-name} fi-unit-cli-rcv.
+  assign frame Dialog-Frame fi-unit-cli-rcv.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -570,7 +570,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-unit-cli-rcv Dialog-Frame
 ON return OF fi-unit-cli-rcv IN FRAME Dialog-Frame /* Ед.изм в поставке */
 do:
-  apply "entry" to fi-cli-base-rate-rcv in frame {&frame-name}.
+  apply "entry" to fi-cli-base-rate-rcv in frame Dialog-Frame.
   return no-apply.
 end.
 

@@ -40,11 +40,7 @@ define variable vss-description as character no-undo init "Загрузка товара из ER
 { gbl/gate-clb.i }
 { ref/grplib.i }
 { bge/tmpcxmlh.i }
-
-// { bge/getoxmlh.i } 23/VIII-2018 xmllib.i и tmpcxmlh.i вставлены напрямую
 { str/xmllib.i }
-{ bge/tmpcxmlh.i }
-
 { gbl/xmlchar.i }
 { gbl/tmpreldf.i }
 { gbl/tmpreld2.i }
@@ -73,12 +69,15 @@ define buffer buf_prod-bc for ub.prod-bc.
 
 define variable v-barcode as class goods_barcode .
 define variable v-barcodes as class subjects .
+define variable v-addunits as class subjects .
+define variable v-addunit as class ibs.th.bge.1crn.subjects.unit-add-code .
 
 define variable parparentproc     as widget-handle no-undo .
 define variable v-stts            as integer      no-undo .
 define variable v-rid             as recid        no-undo .
 define variable v-bc-rid          as recid        no-undo .
 define variable v-rid-pbc         as recid        no-undo .
+define variable v-gds-code        as integer      no-undo .
 define variable v-gds-mode        as character    no-undo .
 define variable v-node-code       as integer      no-undo .
 define variable v-nbc             as integer      no-undo .
@@ -122,12 +121,11 @@ define variable v-barcode-list  as longchar  no-undo .
 
   parparentproc = this-procedure:handle .
   
-  v-barcodes = p-GdsObj:barcode .
   
   v-unit-spl-code = p-GdsObj:unit-spl-code no-error.
   if v-unit-spl-code = ? or v-unit-spl-code = "" then v-unit-spl-code = p-GdsObj:unit-code .
   
-  find first ub.clients no-lock where ub.clients.db-num = g#db-num
+  find first ub.clients no-lock where ub.clients.db-num   = ibs.th.gbl.gbl-var:g#db-num
                                   and ub.clients.obj-type = {&shop}
                                   and ub.clients.stts = 0 .
   
@@ -144,7 +142,8 @@ define variable v-barcode-list  as longchar  no-undo .
       undo, return error substitute("&1 не найдена", {&empty-scale} ) .
   end.
   
-  find first buf_goods no-lock where buf_goods.gds-code = integer(p-GdsObj:code_) no-error.
+  v-gds-code = integer(p-GdsObj:code_) .
+  find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error.
   if not available buf_goods
   then do :
       assign
@@ -263,7 +262,7 @@ define variable v-barcode-list  as longchar  no-undo .
                   , input ub.clients.obj-code /*par-obj-code like ub.clients.obj-code */
                   , input (if p-GdsObj:gds-type = {&gds-goods} or p-GdsObj:gds-type = "н":U or p-GdsObj:gds-type = "б":U or p-GdsObj:gds-type = "р":U  then  yes else no)
                   , input ? /*par-copy-rec as recid recid записи с которой копируем*/
-                  , input integer(p-GdsObj:code_)
+                  , input v-gds-code
                   , input p-GdsObj:artic
                   , input "орг":U
                   , input integer(p-GdsObj:prod-code)
@@ -329,7 +328,7 @@ define variable v-barcode-list  as longchar  no-undo .
       undo, return error v-err-mess .
   end.
   
-  if v-nbc = 0 or v-nbc = ? then v-nbc = integer(p-GdsObj:code_) .
+  if v-nbc = 0 or v-nbc = ? then v-nbc = v-gds-code .
   
   case p-GdsObj:fuel-type :
     when "1" then v-fuel-type = "petrol".
@@ -407,7 +406,9 @@ define variable v-barcode-list  as longchar  no-undo .
        end.                                
   end.   
 
+  /* ----- баркоды товара ----- */
   v-barcode-list = "" .
+  v-barcodes = p-GdsObj:barcode .
   if valid-object (v-barcodes)
   then do :
       find base-bar-code no-lock where
@@ -435,7 +436,7 @@ define variable v-barcode-list  as longchar  no-undo .
                  v-barcode:bcode + " . Товар " + p-GdsObj:code_) .
             end.
             else do :
-              if ub.bar-code.gds-code = integer(p-GdsObj:code_)
+              if ub.bar-code.gds-code = v-gds-code
               then do :
                   ub.prod-bc.bc-on = true .
                   next ii_ .
@@ -458,7 +459,7 @@ define variable v-barcode-list  as longchar  no-undo .
         end.
         if ub.goods.unit-base <> v-barcode:unit-code and v-bc-mode = {&add-def}
         then do :
-            find first ub.bar-code where ub.bar-code.gds-code = integer(p-GdsObj:code_)
+            find first ub.bar-code where ub.bar-code.gds-code = v-gds-code
                                      and ub.bar-code.unit-cli = v-barcode:unit-code 
                                      no-error.
             if not available ub.bar-code
@@ -584,13 +585,68 @@ define variable v-barcode-list  as longchar  no-undo .
       end.
   end.
   
-  for each buf_bar-code no-lock where buf_bar-code.gds-code = integer(p-GdsObj:code_),
+  for each buf_bar-code no-lock where buf_bar-code.gds-code = v-gds-code,
     each buf_prod-bc exclusive-lock where buf_prod-bc.b-code = buf_bar-code.b-code :
      if lookup( buf_prod-bc.b-str, v-barcode-list ) = 0
      then do :
        buf_prod-bc.bc-on = false .  
      end.
   end.
+  /* ----- end_of баркоды товара ----- */
+  
+  /* ----- дополнительные единицы измерения товара ----- */
+  define variable v-i-counter as integer no-undo .
+  define variable v-i-num     as integer no-undo .
+  define variable v-stub      as integer no-undo .
+  define variable v-add-unit-name as character no-undo .
+  define variable v-add-unit-k    as decimal no-undo .
+  define variable v-unitsubs  as class ibs.th.str.mercury.unitsubs no-undo .
+  define variable v-unitsub   as class ibs.th.str.mercury.unitsub no-undo .
+  define variable v-unitstore as class ibs.th.gbl.storage.unitmercstr no-undo .
+  v-addunits = p-GdsObj:unit-add-codes .
+  if valid-object (v-addunits) then do :
+    // буфер с импортируемым товаром мог уйти с записи в цикле создания баркодов
+    find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
+    if not available buf_goods then
+      undo, throw new Progress.Lang.AppError( substitute(
+        "Потеряна импортируемая запись с кодом товара [&1]", v-gds-code
+      ) ) .
+  
+    v-unitsubs = new ibs.th.str.mercury.unitsubs () . 
+    v-i-counter = v-addunits:iCounter .
+    do v-i-num = 1 to v-i-counter :
+      v-stub = v-addunits:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
+      v-addunit = cast(v-addunits:SubjectObjCurr, ibs.th.bge.1crn.subjects.unit-add-code) .
+      assign
+        v-add-unit-name = v-addunit:unit-code
+        v-add-unit-k    = v-addunit:unit-k
+      .
+      if not can-find (first buf_units where buf_units.unit-name = v-add-unit-name) then
+      undo, throw new Progress.Lang.AppError( substitute(
+        "Дополнительная единица измерения [&1] товара [&2] отсутствует в справочнике единиц измерения."
+        , v-add-unit-name, v-gds-code
+      ) ) .
+      if buf_goods.unit-base = v-add-unit-name then
+      undo, throw new Progress.Lang.AppError( substitute(
+        "Дополнительная единица измерения [&1] товара [&2] совпадает с учётной единицей измерения товара."
+        , v-add-unit-name, v-gds-code
+      ) ) .
+
+      v-unitsub = new ibs.th.str.mercury.unitsub () .
+      v-unitsub:UnitName = v-add-unit-name .
+      v-unitsub:UnitCoef = v-add-unit-k .
+      v-unitsubs:AddItem(v-unitsub) .
+    end . // end_of_p-GdsObj:unit-add-codes[]
+    
+    v-unitstore = new ibs.th.gbl.storage.unitmercstr () .
+    v-unitstore:writeDB(v-unitsubs, v-gds-code) .
+    // ?? доп.еи, которые не пришли в пакете - стереть? 
+    // unitsStr:deleteDB(p-gds-code) . - сотрёт все
+    
+    if valid-object (v-unitstore) then delete object v-unitstore . 
+    if valid-object (v-unitsubs) then delete object v-unitsubs .
+  end . // end_of valid_addunits  
+  /* ----- end_of дополнительные единицы измерения товара ----- */
   
   if p-GdsObj:enbl-zc = 1
   then do :
@@ -695,6 +751,7 @@ define variable v-barcode-list  as longchar  no-undo .
   
   
   procedure mainmenu_getcntxt :
+  // @FUTU дописать перечень мест, из которых вызывается данная процедура 
     define output parameter v-cntxt-db-num        as integer   no-undo . /* текущая БД            */   
     define output parameter v-cntxt-userid        as character no-undo . /* текущий пользователь  */   
     define output parameter v-cntxt-level         as character no-undo . /* уровень контекста     */   
@@ -704,8 +761,8 @@ define variable v-barcode-list  as longchar  no-undo .
     define output parameter v-cntxt-db-num-obj    as integer   no-undo . /* база текущего объекта */   
     define output parameter v-cntxt-is-admin      as logical   no-undo . /* база текущего объекта */  
     
-    run  get-db-num (output v-cntxt-db-num ) no-error .
-    v-cntxt-userid = g#userid .
+    v-cntxt-db-num = ibs.th.gbl.gbl-var:g#db-num .
+    v-cntxt-userid = ibs.th.gbl.gbl-var:g#userid .
     v-cntxt-level = ? .
     v-cntxt-host-code-obj = ub.clients.host-code .
     v-cntxt-obj-type = ub.clients.obj-type .

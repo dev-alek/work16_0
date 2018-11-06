@@ -21,7 +21,9 @@ using Progress.Lang.*.
 
 class ibs.th.bge.1crn.subjects.contr-price-docs_price-list inherits ibs.th.bge.1crn.subjects.asubject:
 
-  define property gds-code    as character    no-undo get. private set.
+  define property gds-code      as character    no-undo get. private set.
+  define property unit-spl-code as character    no-undo get. private set.
+  define property unit-k        as decimal      no-undo get. private set.
   define property price-sale  as decimal      no-undo get. private set.
   define property nds-code    as decimal      no-undo get. private set.
   define property min-otkl    as decimal      no-undo get. private set.
@@ -31,48 +33,53 @@ class ibs.th.bge.1crn.subjects.contr-price-docs_price-list inherits ibs.th.bge.1
     get. 
     
      
+  &scoped-define attr-str      if inValue >= "" then inValue else ""
+  &scoped-define attr-integer  if inValue >= "" then integer (inValue) else 0
+  &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
+  &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "gds-code" then do:
-        assign gds-code = inValue .
-      end.
-      when "price-sale" then do:
-        assign price-sale = decimal(inValue) .
-      end.
-      when "nds-code" then do:
-        assign nds-code = decimal (inValue) .
-      end.
-      when "min-otkl" then do:
-        assign min-otkl = decimal (inValue) .
-      end.
-      when "max-otkl" then do:
-        assign max-otkl = decimal (inValue) .
-      end.
+      when "gds-code"      then gds-code      = {&attr-str} .
+      when "unit-spl-code" then unit-spl-code = {&attr-str} .
+      when "unit-k"        then unit-k        = {&attr-dec} .
+      when "price-sale" then price-sale = {&attr-dec} .
+      when "nds-code"   then nds-code   = {&attr-dec} .
+      when "min-otkl"   then min-otkl   = {&attr-dec} .
+      when "max-otkl"   then max-otkl   = {&attr-dec} .
     end case.
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
   end.
 
 
   method override protected void CheckData ():
-
     def var v-str as char no-undo.
-    
     assign
-      v-str = v-str + ",gds-code" when gds-code = ?
+      v-str = ",gds-code" when gds-code = ?
       v-str = v-str + ",price-sale" when price-sale = ?
       v-str = v-str + ",nds-code" when nds-code = ?
       v-str = v-str + ",min-otkl" when min-otkl = ?
       v-str = v-str + ",max-otkl" when max-otkl = ?
     .
-    v-str = trim (v-str, ",").
-    if v-str > ''
-    then 
-      undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
+    v-str = substring(v-str, 2).
+    if v-str > "" then undo, throw new Progress.Lang.AppError(
+      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+    ) .
   end.
   
   method override protected void ClearSub():
     assign 
-      gds-code     = ?
+      gds-code      = ?
+      unit-spl-code = ?
+      unit-k        = ?
       price-sale   = ?
       nds-code     = ?
       min-otkl     = ?

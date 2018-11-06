@@ -18,7 +18,6 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
-using ibs.th.bge.1crn.subjects.contr-price-docs_price-list from propath.
 using ibs.th.bge.1crn.subjects.contr-price-docs from propath.
 
 class ibs.th.bge.1crn.subjects.contr-price-docs inherits ibs.th.bge.1crn.subjects.asubject:
@@ -34,57 +33,56 @@ class ibs.th.bge.1crn.subjects.contr-price-docs inherits ibs.th.bge.1crn.subject
     get. 
     
   constructor public contr-price-docs ():
-    InitListTag = "gds-sale".
+    InitListTag = "price-list".
   end constructor.
       
+  &scoped-define attr-str      if inValue >= "" then inValue else ""
+  &scoped-define attr-integer  if inValue >= "" then integer (inValue) else 0
+  &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
+  &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "doc-id" then do:
-        assign doc-id = inValue .
-      end.
-      when "doc-num" then do:
-        assign doc-num = inValue .
-      end.
-      when "doc-date" then do:
-        assign doc-date = inValue .
-      end.
-      when "contr-code" then do:
-        assign contr-code = inValue.
-      end.
-      when "cont-code" then do:
-        assign cont-code = inValue.
-      end.
+      when "doc-id"     then doc-id     = {&attr-str} .
+      when "doc-num"    then doc-num    = {&attr-str} .
+      when "doc-date"   then doc-date   = {&attr-str} .
+      when "contr-code" then contr-code = {&attr-str} .
+      when "cont-code"  then cont-code  = {&attr-str} .
     end case.
-  end.
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
+  end method.
 
   method override protected void SetPropProtected(SubsObj as subjects):
 
     case SubsObj:InitTag:   
-      when "gds-sale" then
-        do:
-          price-list = SubsObj.            
-        end.
+      when "price-list" then price-list = SubsObj.            
     end case.
 
-  end.
+  end method.
   
   method override protected void CheckData ():
-
     def var v-str as char no-undo.
     
     assign
-      v-str = "doc-id" when doc-id = ?
-      v-str = "doc-num" when doc-num = ?
-      v-str = "doc-date" when doc-date = ?
+      v-str = ",doc-id" when doc-id = ?
+      v-str = v-str + "doc-num" when doc-num = ?
+      v-str = v-str + "doc-date" when doc-date = ?
       v-str = v-str + ",contr-code" when contr-code = ?
       v-str = v-str + ",cont-code" when cont-code = ?
     .
-    v-str = trim (v-str, ",").
-    if v-str > ''
-    then 
-      undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
-  end.
+    v-str = substring(v-str, 2).
+    if v-str > "" then undo, throw new Progress.Lang.AppError(
+      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+    ) .
+  end method.
   
   method override protected void ClearSub():
     assign 
@@ -94,7 +92,7 @@ class ibs.th.bge.1crn.subjects.contr-price-docs inherits ibs.th.bge.1crn.subject
       contr-code   = ?
       cont-code    = ?
     .
-    delete object price-list no-error . 
+    if valid-object(price-list) then delete object price-list no-error . 
   end.
 
 end class.

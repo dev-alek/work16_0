@@ -25,7 +25,7 @@ block-level on error undo, throw.
 class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
-  { cmp/str-glbl.i }
+//  { cmp/str-glbl.i }
    
   define variable specattr as class specattr no-undo .   
   define variable spegrpmt as class spegrpmt no-undo . 
@@ -44,6 +44,9 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
     define variable v-Gds-sale   as class   contr-price-docs_price-list no-undo.
     define variable v_price-list as class   subjects                    no-undo.
     
+    define variable v-contr-code as integer no-undo .
+    define variable v-gds-code   as integer no-undo .
+    define variable v-unit-cli   as character no-undo .
     define variable ii           as integer no-undo .
     define variable is-create    as logical no-undo .
     
@@ -52,37 +55,48 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
     define buffer buf_contract      for ub.contract .
     
     v-ContrPrice = cast (subjectObj, contr-price-docs).
-    v_price-list = v-ContrPrice:price-list .
-    /*Найти договор, к которому относиться спецификация*/
+    assign
+      v-contr-code = integer(v-ContrPrice:cont-code)
+      v_price-list = v-ContrPrice:price-list
+    .
     
+    /*Найти договор, к которому относиться спецификация*/
     find first buf_contract no-lock
-      where       buf_contract.contract-code = integer(v-ContrPrice:cont-code) 
-      /*      buf_contract.contract-date     = date(date-1C(v-ContrPrice:doc-date))*/
-      /*      and                                                                  */
-
-      /*      and buf_contract.cli-type          = {&cmp} /*заглушка*/             */
-      /*      and buf_contract.cli-code          = integer(v-ContrPrice:contr-code)*/
-      /*      and buf_contract.contract-type     = {&contr-buy-sale} /*заглушка*/  */
+         where buf_contract.contract-code = v-contr-code
+        // and buf_contract.host-code     = v-host-code
       no-error .
-    if not AVAILABLE buf_contract then 
-    do:
+    if not AVAILABLE buf_contract then do:
       Msg = "Контракт не найден с кодом:" + v-ContrPrice:cont-code .
-      return error Msg.
+      undo, throw new Progress.Lang.AppError(Msg) .
+      // return error Msg.
     end.  
-    else 
-    do:
+ 
+
       if VALID-OBJECT (v_price-list) then 
       do:
         do ii = 1 to v_price-list:Get(ii):
           v-Gds-sale = cast (v_price-list:SubjectObjCurr, contr-price-docs_price-list).
-          find first b_goods no-lock where b_goods.gds-code = INTEGER (v-Gds-sale:gds-code) no-error .
-          if AVAILABLE b_goods then 
-          do:
+          assign
+            v-gds-code = INTEGER (v-Gds-sale:gds-code)
+            v-unit-cli =          v-Gds-sale:unit-spl-code 
+          .
+          find first b_goods no-lock where b_goods.gds-code = v-gds-code no-error .
+          if not AVAILABLE b_goods then do:
+            Msg = "Товар не найден с кодом:" + v-Gds-sale:gds-code .
+            undo, throw new Progress.Lang.AppError(Msg) .
+            // return error Msg.
+          end .
+          
             find first ub.contract-specif EXCLUSIVE-LOCK
               where ub.contract-specif.host-code    = buf_contract.host-code
               and ub.contract-specif.contract-num = buf_contract.contract-code
               and ub.contract-specif.gds-code     = b_goods.gds-code
-              no-error .
+              no-error no-wait .
+            if locked(ub.contract-specif) then do:
+              Msg = substitute("Запись с товаром [&1] в спецификации договора [&2] занята другим пользователем",
+                               b_goods.gds-code, buf_contract.contract-code ) .
+              undo, throw new Progress.Lang.AppError(Msg) .
+            end . 
             if NOT available ub.contract-specif then 
             do:
 
@@ -102,7 +116,7 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
               ub.contract-specif.cli-base-rate     = b_goods.cli-base-rate
               ub.contract-specif.price-cli         = v-Gds-sale:price-sale
               ub.contract-specif.unit-base         = b_goods.unit-base
-              ub.contract-specif.unit-cli          = b_goods.unit-base
+              ub.contract-specif.unit-cli          = if (v-unit-cli > "") then v-unit-cli else b_goods.unit-base
               ub.contract-specif.unit-cli-ord      = b_goods.unit-base
               ub.contract-specif.unit-cli-rcv      = b_goods.unit-base
               ub.contract-specif.cli-base-rate     = 1
@@ -132,16 +146,12 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
                 .
             end.
             ub.contract-specif-attr.attr-value = string(v-Gds-sale:min-otkl) .               
-          end.
-          else 
-          do:
-            Msg = "Товар не найден с кодом:" + v-Gds-sale:gds-code .
-            return error Msg.
-          end.  
+
         end.
       end.
-    end.
+
   end method.
+/* 18/IX-2018 - не используется  
   method private character date-1C (inValue as character):
     
     def var v-str as character no-undo.
@@ -151,5 +161,5 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
     return v-str.
     
   end.
-
+*/
 end class.
