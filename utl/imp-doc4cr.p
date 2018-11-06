@@ -161,6 +161,10 @@ define temp-table temp-2exists no-undo
   prod-code
 .
 
+define temp-table tt-trn-close no-undo
+  field trn-code as character
+.
+
 define temp-table tt-trn-doc   no-undo like ub.trn-doc .
 define temp-table tt2-doc-line no-undo like lib-trn_ret-line .
 define temp-table tt-doc-line  no-undo like ub.doc-line .
@@ -196,6 +200,27 @@ define variable p-from-version as character initial {&thth150-from-version} no-u
 {&display-message}.
 
 
+  /* 29/X-2018 накладные разрешается вкачивать только в объект текущей БД */    
+  define variable v-db-num as integer   no-undo .
+  { gbl/objdbnum.i
+     p-obj-type
+     p-obj-code
+     v-db-num
+  }
+  if v-db-num <> ibs.th.gbl.gbl-var:g#db-num then do :
+    &scop my-message substitute("Накладные разрешается вкачивать только в объект текущей БД. Номер текущей базы данных &1, номер базы данных выбранного объекта &2", ibs.th.gbl.gbl-var:g#db-num, v-db-num) 
+    {&display-message}.
+    undo, throw new Progress.Lang.AppError ({&my-message}) .
+  end .
+
+  if p-is-close then do :
+    /* скопировано из trn-tri.i */
+    if not can-find (first ub.pay-type where ub.pay-type.obj-code = v-cntxp-in-pay) then do:
+      &scop my-message substitute("В настройках объекта &1 указан вид оплаты прихода &2, который отсутствует в справочнике.", p-obj-code, v-cntxp-in-pay) 
+      {&display-message}.
+      undo, throw new Progress.Lang.AppError ({&my-message}) .
+    end .
+  end .
 
 
 /* ----- перекодировка их xxx-15_0 в наш xxx_16_0 ----- */
@@ -265,7 +290,7 @@ if available w-gds then delete w-gds.
       to-day
       no-error
     }
-      
+  
 
     empty temp-table temp-line no-error .
     EMPTY TEMP-TABLE temp_parts no-error .
@@ -273,11 +298,15 @@ if available w-gds then delete w-gds.
 
 
 define stream f-err-lines .
+if p-retry-fname > '' then . else do :
+  p-retry-fname = substitute("&1imp-parts.err", ibs.th.gbl.gbl-inipar:logDir ) .
+end .
 output stream f-err-lines to value(p-retry-fname) .  
 run create_temp_parts in this-procedure (new_obj-code, new_obj-type, new_host-code, output p-count-err).
 output stream f-err-lines close .
   
 /* импорт шапки */
+empty temp-table tt-trn-close .
 run import-hed in this-procedure no-error .
     if error-status :error then do:
       &scop my-message substitute("ошибка при импорте ПН  &1 &2" , error-status :get-message(1) , return-value )
@@ -285,6 +314,17 @@ run import-hed in this-procedure no-error .
       return error  .
     end.
 
+  /* 29/X-2018 сначала всё импортируем, потом всё закрываем. */
+  for each tt-trn-close :
+    &scop my-message substitute(" Закрытие документа &1 на ФАКТ" , tt-trn-close.trn-code )
+    {&display-message}.
+    run clos-trn2 in this-procedure (tt-trn-close.trn-code) no-error .
+    if not can-find (first trn-doc where trn-doc.doc-code = tt-trn-close.trn-code
+                                     and trn-doc.status_  = {&fact}) then do:
+      &scop my-message substitute("Не удалось закрыть на факт ПН &1 &2 &3" ,tt-trn-close.trn-code , return-value , error-status :get-message(1) )
+      {&display-message}.
+     end.
+  end .
 
 
 
@@ -541,6 +581,13 @@ price-prod-vat;decimal;->>,>>9.99;Цена производителя;Цена производителя;0;Цена п
 
   end . /* end_of for_each_tt-parts */
 // output stream f-tgds close .
+
+  if p-count-err > 0 then do :
+    v-my-message  = substitute (
+      "Строки с ошибками выведены в файл &1. Файл предназначен для повторного испорта в ручном режиме"
+    , p-retry-fname ) .
+    {&display-message}.
+  end .
   
 if local-trace-on then do:
  define variable dsXmlFileName as character no-undo .
@@ -690,6 +737,9 @@ if local-trace-on then do:
 end.
   end. /* for each temp_parts break*/
 
+  &scop my-message substitute("обработано &1 партий", dsLineCount  )
+  {&display-message}.
+
   /* связка полей temp-line.prod-type + prod-code + artic меняется на temp-line.num;
      поля temp_parts.price-rubl и temp_parts.part-code из признаков разделения по накладным исключены */
   for each temp-line  break
@@ -729,7 +779,6 @@ end.
       empty temp-table tt2-doc-line .
       empty temp-table tt-doc-line .
       empty temp-table tt-gds-dtl .
-/*      empty temp-table tt-parts .*/
       for each lib-trn_ret-doc :
         delete lib-trn_ret-doc.
       end.
@@ -1194,23 +1243,33 @@ end .
   .
   
   if p-is-close then do :
-    run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-    find first new_trn-doc where new_trn-doc.doc-code = n-d  no-lock no-error .
-    if new_trn-doc.status_ <> {&fact} then do:
+  /* 29/X-2018 сначала всё импортируем, потом всё закрываем.
+    &scop my-message substitute(" Закрытие документа &1 на ФАКТ" , new_trn-doc.doc-code )
+    {&display-message}.
+      run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+      find first new_trn-doc where new_trn-doc.doc-code = n-d  no-lock no-error .
+      if new_trn-doc.status_ <> {&fact} then do:
     &scop my-message substitute("Не удалось закрыть на факт ПН &1 &2 &3" ,n-d , return-value , error-status :get-message(1) )
     {&display-message}.
-    end.
+      end.
+  */
+      create tt-trn-close .
+      assign tt-trn-close.trn-code = new_trn-doc.doc-code .
   end .
-
 end. /*doe*/
 end procedure. /* create-nakl */
 
 
 procedure clos-trn2 :
 define input parameter p-trn-code as character no-undo .
+define variable v-cntxt-rsrv-time  as integer   no-undo .
+define variable v-cntxt-load-time  as integer   no-undo .
+define variable v-cntxt-holidays  as character no-undo .
+define variable varchg-inv as logical no-undo .
 do
 on error undo, return error return-value
 :
+/* 29/X-2018
 define buffer buf_s-trn-doc for ub.trn-doc.
 define variable varmode            as   character           no-undo.
 define variable varstatus          like ub.trn-doc.status_  no-undo.
@@ -1218,33 +1277,17 @@ define variable varflag            like ub.trn-doc.flag     no-undo.
 define variable varcopystatus      like ub.trn-doc.status_  no-undo.
 define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
-define variable varchg-inv as logical no-undo .
 define variable v-cntxt-cash-pay as integer   no-undo .
 define variable v-cntxt-in-ov as logical   no-undo .
 define variable v-cntxt-base-code as integer   no-undo .
-define variable v-cntxt-rsrv-time  as integer   no-undo .
-define variable v-cntxt-load-time  as integer   no-undo .
-define variable v-cntxt-holidays  as character no-undo .
-define variable v-db-num as integer   no-undo .
-  { gbl/objdbnum.i
-     v-cntxt-obj-type
-     v-cntxt-obj-code
-     v-db-num
-     }
-
-  // ошибка при чтении PropGet in gbl-var:g#db-num
-  if v-db-num <> ibs.th.gbl.gbl-var:g#db-num then return .
-
-  &scop my-message substitute(" Закрытие документа &1 на ФАКТ" , p-trn-code )
-  {&display-message}.
-
+*/
   run str/trn-stat.p (
     input  parparentproc  ,
     input  this-procedure ,
     input  {&close-fact} ,
     input  p-trn-code,
     input  false /* проверка старого возврата */ ,
-    input  v-cntxt-db-num,
+    input  ibs.th.gbl.gbl-var:g#db-num,
     input  false /* проверка переоценки */,
     input  v-cntxt-rsrv-time,
     input  v-cntxt-load-time,
@@ -1254,7 +1297,7 @@ define variable v-db-num as integer   no-undo .
     output table gds-list1 )
     no-error.
     if error-status:error then do :
-        &scop my-message substitute(" Ошибка при закрытии документа &3 &1 &2" , error-status :get-message(1)  , return-value , p-trn-code )
+        &scop my-message substitute(" Ошибка при закрытии документа &2 &1" , return-value , p-trn-code )
         {&display-message}.
     end.
 end. /*doe*/

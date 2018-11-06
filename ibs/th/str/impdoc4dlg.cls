@@ -257,7 +257,6 @@ CLASS ibs.th.str.impdoc4dlg INHERITS Form :
     /* cbCloseFact */
     /*  */
     THIS-OBJECT:cbCloseFact:CausesValidation = false.
-    THIS-OBJECT:cbCloseFact:Enabled = false.
     THIS-OBJECT:cbCloseFact:Location = NEW System.Drawing.Point(170, 68).
     THIS-OBJECT:cbCloseFact:Name = "cbCloseFact".
     THIS-OBJECT:cbCloseFact:Size = NEW System.Drawing.Size(310, 24).

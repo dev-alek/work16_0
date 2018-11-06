@@ -2015,6 +2015,7 @@ define variable v-ischg-ext-type as logical no-undo .
         end.
       end.
     end.
+
     if buf_trn-doc.doc-type <> {&inventory} then do:
       for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code:
         find first buf_goods where buf_goods.artic     = buf_doc-line.artic     and
@@ -2078,6 +2079,7 @@ define variable v-ischg-ext-type as logical no-undo .
         end.
       end.
     end.
+    
     if buf_trn-doc.doc-type = {&income} and
       buf_trn-doc.internal = no        then do: /*Выделеные проверки внешнего прихода*/
       for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code:
@@ -2368,12 +2370,7 @@ define variable v-ischg-ext-type as logical no-undo .
         v-mess = 
           vss-workfile + vss-revision + vss-description + {&new-line} +
           "Ошибка при закрытии документа " + buf_trn-doc.doc-code + {&new-line} +
-          return-value + {&new-line} +
-          trim( error-status :get-message( 1 ) ) +
-          trim( error-status :get-message( 2 ) ) + 
-          trim( error-status :get-message( 3 ) ) +
-          trim( error-status :get-message( 4 ) ) +
-          trim( error-status :get-message( 5 ) ) + {&new-line}.
+          return-value + {&new-line} .
         run userlogingerr in this-procedure ( buffer buf_trn-doc, 57, v-mess, v-cntxt-db-num) no-error.
         message
           v-mess

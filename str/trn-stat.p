@@ -208,14 +208,42 @@ define variable keyrecObj as class keyrec no-undo.
 define variable v-error-attr  as character no-undo .
 define variable is-fuel          as   character            no-undo.
 define variable parisfueltype    as   character            no-undo.
+define variable v-show-str       as character no-undo .
 
 define stream str-err.
 
 /*define temp-table tt-doc-pl no-undo like ub.doc-pl .*/
 
+  vartime = time. /* время начала процесса для хронометрирования */
+
 do transaction
 on error undo, return error return-value
 :
+
+  v-show-str = substitute ( '&1 документа "&2"', 
+    (if parmode = {&open-doc} then "Открытие" else "Закрытие"),
+    pardoc-code 
+  ) .
+  run waitfram-show in this-procedure ( v-show-str ) no-error.
+
+  find first bf_trn-doc where bf_trn-doc.doc-code = pardoc-code no-error.
+  if not available bf_trn-doc
+  then do:
+    run waitfram-hide in this-procedure no-error.
+    return error substitute( 'Не найден документ с номером "&1".', pardoc-code ).
+  end.
+
+  if bf_trn-doc.status_ = {&fact}
+  or bf_trn-doc.status_ = {&ready}
+  or bf_trn-doc.status_ = {&rejected}
+  then do:
+    run waitfram-hide in this-procedure no-error.
+    return error substitute( 'Документ "&1" в статусе "&2". Операции с ним невозможны.'
+                          , bf_trn-doc.doc-code
+                          , bf_trn-doc.status_ ).
+  end.
+
+  
 { gbl/curr-r-b.i varr-b }
 
 if valid-handle(parparentproc)
@@ -231,29 +259,9 @@ then do:
 end.
 else do:
   assign
-    v-curr-db-num = g#db-num
-    v-curr-userid = g#userid
+    v-curr-db-num = ibs.th.gbl.gbl-var:g#db-num
+    v-curr-userid = ibs.th.gbl.gbl-var:g#userid
   .
-end.
-
-assign
-  vartime = time.
-if parmode = {&open-doc}
-then do:
-  run waitfram-show in this-procedure ( input substitute( 'Открытие документа "&1". Время &2.'
-                                                        , pardoc-code
-                                                        , string( time - vartime, "hh:mm:ss":U ) ) ) no-error.
-end.
-else do:
-  run waitfram-show in this-procedure ( input substitute( 'Закрытие документа "&1". Время: &2'
-                                                        , pardoc-code
-                                                        , string( time - vartime, "hh:mm:ss":U ) ) ) no-error.
-end.
-find first bf_trn-doc where bf_trn-doc.doc-code = pardoc-code no-error.
-if not available bf_trn-doc
-then do:
-  run waitfram-hide in this-procedure no-error.
-  return error substitute( 'Не найден документ с номером "&1".', bf_trn-doc.doc-code ).
 end.
 
 assign
@@ -261,14 +269,17 @@ assign
   varoldflag = bf_trn-doc.flag_ 
   .
 
-if search( replace( bf_trn-doc.doc-code, "*", "$" ) + ".err" ) <> ?
+define variable v-trn-doc-code as character no-undo .
+v-trn-doc-code = replace( bf_trn-doc.doc-code, "*", "$" ) .
+if search( v-trn-doc-code + ".err" ) <> ?
 then do:
-  os-delete value( replace( bf_trn-doc.doc-code, "*", "$" ) + ".err" ).
+  os-delete value( v-trn-doc-code + ".err" ).
  if bf_trn-doc.ext-doc-type = {&TDEDT_Inv}
  then do:
-    os-delete value(replace( bf_trn-doc.doc-code, "*", "$" ) + "-чеки.err").
+    os-delete value(v-trn-doc-code + "-чеки.err").
   end.
 end.
+
 
 
 /* Получим из ТПЛ автопереоценок нужные переменные */
@@ -332,15 +343,6 @@ end.
 if is-add-charg <> 'yes' then is-add-charg = 'no' .
 
 run str/my-obj.p (input bf_trn-doc.obj-type, input bf_trn-doc.obj-code, input pardb-num, output varmy-obj).
-if bf_trn-doc.status_ = {&fact}
-or bf_trn-doc.status_ = {&ready}
-or bf_trn-doc.status_ = {&rejected}
-then do:
-   run waitfram-hide in this-procedure no-error.
-   return error substitute( 'Документ "&1" в статусе "&2" . Операции с ним невозможны.'
-                          , bf_trn-doc.doc-code
-                          , bf_trn-doc.status_ ).
-end.
 run waitfram-show in this-procedure ( input substitute( 'Определяем статус для установки в документе "&1".'
                                                       , pardoc-code ) ) no-error.
 run str/trn-graf.p ( input bf_trn-doc.doc-code,
@@ -390,6 +392,7 @@ if varhold-doc = true then do:
     end.
   end. /*for each*/
 end.
+
 define variable stfactplvalue as character no-undo.
 define variable stfactpltype as character no-undo.
 { gbl/conf-rd.i
@@ -818,6 +821,9 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         end.
       end.
 
+      /* Параметр "is-fin" (Доступна группа меню Взаиморасчёты) задаётся через
+         'АРМ Администратор/Справочники/Настройки и конфигурация системы'
+          или при первоначальной настройке системы */
       { gbl/conf-rd.i "'is-fin'"  "''" "''" 0 "''" "''" "''" no is-fin par-type no-error }
 
       if is-fin = "yes" or
@@ -839,10 +845,10 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         ,input-output table-handle v-tth-contr
         ) no-error  .
         if error-status:error then do:
-          delete object v-tth-contr.
+          if valid-object(v-tth-contr) then delete object v-tth-contr.
           undo, return error return-value + error-status :get-message(1) .
         end.
-        delete object v-tth-contr.
+        if valid-object(v-tth-contr) then delete object v-tth-contr.
       end.
 
       assign
@@ -863,10 +869,10 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
               ,input-output table-handle v-tth
               ) no-error .
         if error-status:error then do:
-          delete object v-tth.
+          if valid-object(v-tth) then delete object v-tth.
           undo, return error return-value + error-status :get-message(1) .
         end.
-        delete object v-tth.
+        if valid-object(v-tth) then delete object v-tth.
 
         _ii:
         do ii = 1 to num-entries(v-value-character, ';':U):
@@ -896,8 +902,32 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         then do:
             if (bf_trn-doc.contract-code = 0 or bf_trn-doc.contract-code = ?)
             then do:
-              run waitfram-hide in this-procedure no-error.
-              undo, return error "Не указан номер договора.".
+              run waitfram-hide in this-procedure .
+              /* Почему не даёт закрывать приходную накладную без указания договора:
+  
+bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} = ie   = приход внешний
+bf_trn-doc.status_      = {&wayb}            = wayb = накл
+
+hold-doc-01: определяет тип документа - холдинговый или нет
+varhold-doc = gbl/hold-doc.i = (
+    ( buf_trn-doc.hold-doc-code-child  <> ""
+  and buf_trn-doc.hold-doc-code-child  <> "no-hold":u )
+or
+    ( buf_trn-doc.hold-doc-code-parent <> ""
+  and buf_trn-doc.hold-doc-code-parent <> "no-hold":u )
+                               ) - холдинговый 
+
+(bf_trn-doc.flag_ = no  and varhold-doc = no or - незакрытый и нехолдинговый, или
+ bf_trn-doc.flag_ = yes and varhold-doc = yes)  - закрытый и холдинговый
+         
+        ,input  bf_trn-doc.obj-type
+        ,input  bf_trn-doc.obj-code
+varcontract  = attr-contr-in (Настройки для Накладных в разрезе ВЗАИМОРАСЧЕТОВ) +
+               contr-in-income (Обязательная ссылка на договор в приходной накладной)
+        
+vartechproliv = no
+              */              
+              undo, return error "Не указан номер договора. В Настройках для Накладных в разрезе ВЗАИМОРАСЧЕТОВ установлена Обязательная ссылка на договор в приходной накладной.".
             end.
         end.
         else do:
@@ -912,11 +942,12 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
           end.
           if (parcontract-code = "" or parcontract-code = ?)
           then do:
-            run waitfram-hide in this-procedure no-error.
-            undo, return error "Не указан номер договора.".
+            run waitfram-hide in this-procedure .
+            undo, return error "Не указан номер договора. В Настройках для Накладных в разрезе ВЗАИМОРАСЧЕТОВ установлена Обязательная ссылка на договор в приходной накладной.".
           end.
         end.
       end.
+      
       if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and
         bf_trn-doc.status_      = {&wayb}            and
         varhold-doc             = no                 and

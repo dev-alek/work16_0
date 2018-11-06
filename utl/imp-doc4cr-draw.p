@@ -11,7 +11,8 @@ define input  parameter table for tt-imp-parts .
                        , this-procedure // хронометраж через write-log-and-file()
                        , ""             // имя лог-файла, в который выводится хронометраж
                        , iUtil:Obj-code
-                       , iUtil:Obj-type                       , false          // true - закрывать созданные документы (не реализовано)
+                       , iUtil:Obj-type
+                       , true // закрывать созданные документы
                        , iosn-fname // список соответствия поставщиков
                        , iart-fname // список соответствия товаров
                        , iretry-fname // файл для повторного импорта
