@@ -46,6 +46,7 @@ define variable p-action      as character no-undo . /* {&fact}  до какого стату
 define variable p-trn-doc     as character no-undo . /* Номер ПН */
 define variable p-ask-pr      as logical   no-undo . /* Молча закрывать переоценки */
 define variable p-do      as logical   no-undo .  /* оптим или пессим закрытие */
+define variable p-auto      as logical   no-undo . /* OXML, ... */
 
 define variable log-file-name                as character      no-undo init "pdf-clos.txt".
 define variable o-db-num as integer   no-undo .
@@ -69,7 +70,9 @@ define variable vss-description as character no-undo init "Закрытие документа на
 { str/doc-code.i }
 { trg/factord.i  }
 { str/alt-calc.i "func"  }
-{ str/alt-calc.i "proc" "''"  "''"  }
+p-auto  = logical (entry(10,p-parameter,{&delim-par})) no-error .
+  if error-status :error then p-auto = false .
+{ str/alt-calc.i "proc" "''"  "''" p-auto }
 { str/alt-calc.i "ver-modificator-price-is-null" }
 { str/mpl-lib2.i }
 { str/mpl-lib3.i }
@@ -95,6 +98,7 @@ assign
   .
   p-do    = logical (entry(9,p-parameter,{&delim-par})) no-error .
   if error-status :error then p-do = false .
+  
 
 define buffer buf_price-list-type            for ub.price-list-type  .
 define buffer buf_price-doc-forming-gds      for ub.price-doc-forming-gds  .

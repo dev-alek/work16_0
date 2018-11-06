@@ -258,12 +258,19 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
         end.
 
 
-        run ora-ver-goods ( buf_bar-code.gds-code )  no-error .
+        if (temp-price-doc.doc-num-ES <> ? and temp-price-doc.doc-num-ES <> "")
+        or (temp-price-doc.doc-id <> ? and temp-price-doc.doc-id <> "")
+        then do :
+        
+        end.
+        else do :
+          run ora-ver-goods ( buf_bar-code.gds-code )  no-error .
           if error-status :error then do:
               v-end-message = substitute(" По бар-коду &1 товар &2 &3 " , temp-price-list.bar-code , buf_bar-code.gds-code , return-value ) .   .
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
+        end.
 
         find first buf_goods no-lock  where
                    buf_goods.gds-code = buf_bar-code.gds-code no-error .
@@ -460,6 +467,8 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
              '?' +  {&delim-par} +
              {&order} + {&delim-par} +
              '?' + {&delim-par} +
+             'yes' + {&delim-par} +
+             'no' + {&delim-par} +
              'yes'  )
           , yes /*p-auto-go*/
           , '':U
