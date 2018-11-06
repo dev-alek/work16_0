@@ -828,42 +828,22 @@ DO:
               next.
             end.
             assign
-              ub.contract-specif.cli-base-rate-rcv = v-cli-base-rate-rcv.
-          end.
-
-          if v-price <> ? then do:
-            assign
-              ub.contract-specif.price-cli = v-price.
-          end.
-          if v-prc <> ? then do:
-            assign
-              ub.contract-specif.prc = v-prc.
-          end.
-          if v-vat-type <> ? then do:
-            assign
-              ub.contract-specif.vat-type  = v-vat-type.
-          end.
-          if v-qnty <> ? then do:
-            assign
-              ub.contract-specif.qnty      = v-qnty
-              ub.contract-specif.sum-cli   = v-price * v-qnty.
-          end.
-          if v-vat-pc <> ? then do:
-            assign
-              ub.contract-specif.VAT-pc    = v-vat-pc.
-          end.
-          if v-unit-cli <> ? then do:
-            assign
-              ub.contract-specif.unit-cli          = v-unit-cli.
-          end.
-          if v-unit-cli-ord <> ? then do:
-            assign
-              ub.contract-specif.unit-cli-ord      = v-unit-cli-ord.
-          end.
-          if v-unit-cli-rcv <> ? then do:
-            assign
-              ub.contract-specif.unit-cli-rcv      = v-unit-cli-rcv.
-          end.
+              ub.contract-specif.cli-base-rate-rcv = v-cli-base-rate-rcv
+              ub.contract-specif.cli-base-rate     = v-cli-base-rate
+            .
+        end.
+        
+        assign
+          ub.contract-specif.price-cli    = v-price        when (v-price <> ?)
+          ub.contract-specif.prc          = v-prc          when (v-prc <> ?)
+          ub.contract-specif.vat-type     = v-vat-type     when (v-vat-type <> ?)
+          ub.contract-specif.qnty         = v-qnty         when (v-qnty <> ?)
+          ub.contract-specif.sum-cli      = ub.contract-specif.price-cli * ub.contract-specif.qnty
+          ub.contract-specif.VAT-pc       = v-vat-pc       when (v-vat-pc <> ?)
+          ub.contract-specif.unit-cli     = v-unit-cli     when (v-unit-cli <> ?)
+          ub.contract-specif.unit-cli-ord = v-unit-cli-ord when (v-unit-cli-ord <> ?)
+          ub.contract-specif.unit-cli-rcv = v-unit-cli-rcv when (v-unit-cli-rcv <> ?)
+        .
 
            run write-bonus in this-procedure (
                buf_contract.contract-code  ,
@@ -1018,7 +998,9 @@ DO:
               undo, return no-apply.
             end.
             assign
-              ub.contract-specif.cli-base-rate-rcv = v-cli-base-rate-rcv.
+              ub.contract-specif.cli-base-rate-rcv = v-cli-base-rate-rcv
+              ub.contract-specif.cli-base-rate     = v-cli-base-rate
+            .
           end.
 
 

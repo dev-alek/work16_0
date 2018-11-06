@@ -431,8 +431,11 @@ do:
                        output v-ret-unit-coeff) . 
   if v-ret-unit-name > "" then do :
     if can-find (first buf_units where buf_units.unit-name = v-ret-unit-name) then do :
-      fi-unit-cli = v-ret-unit-name .
-      display fi-unit-cli with FRAME Dialog-Frame.
+      assign
+      fi-unit-cli        = v-ret-unit-name
+      FILL-cli-base-rate = v-ret-unit-coeff
+      .
+      display fi-unit-cli FILL-cli-base-rate with FRAME Dialog-Frame.
       apply "entry":U to FILL-cli-base-rate .
     end .
   end .

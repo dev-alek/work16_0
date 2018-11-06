@@ -47,6 +47,7 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
     define variable v-contr-code as integer no-undo .
     define variable v-gds-code   as integer no-undo .
     define variable v-unit-cli   as character no-undo .
+    define variable v-cli-base-rate as decimal no-undo .
     define variable ii           as integer no-undo .
     define variable is-create    as logical no-undo .
     
@@ -78,7 +79,8 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
           v-Gds-sale = cast (v_price-list:SubjectObjCurr, contr-price-docs_price-list).
           assign
             v-gds-code = INTEGER (v-Gds-sale:gds-code)
-            v-unit-cli =          v-Gds-sale:unit-spl-code 
+            v-unit-cli =          v-Gds-sale:unit-spl-code
+            v-cli-base-rate =     v-Gds-sale:unit-k
           .
           find first b_goods no-lock where b_goods.gds-code = v-gds-code no-error .
           if not AVAILABLE b_goods then do:
@@ -119,7 +121,7 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
               ub.contract-specif.unit-cli          = if (v-unit-cli > "") then v-unit-cli else b_goods.unit-base
               ub.contract-specif.unit-cli-ord      = b_goods.unit-base
               ub.contract-specif.unit-cli-rcv      = b_goods.unit-base
-              ub.contract-specif.cli-base-rate     = 1
+              ub.contract-specif.cli-base-rate     = if (v-cli-base-rate > 0) then v-cli-base-rate else 1
               ub.contract-specif.cli-base-rate-ord = 1
               ub.contract-specif.cli-base-rate-rcv = 1
               

@@ -265,7 +265,8 @@ define variable v-vid-action                as integer                       no-
 define variable v-vid-param                 as longchar                      no-undo .
 define variable v-gds-null-price            as logical                       no-undo .
 define variable is-fuel                     as logical                      no-undo .
-define variable v-specif-unit-list          as character                    no-undo . /* ед.изм. из спецификации договора */
+define variable v-specif-unit-list          as character no-undo . /* ед.изм. из спецификации договора */
+define variable v-specif-cli-base-rate      as decimal no-undo .   /* коэф. к базовой ЕИ для ЕИ из договора */ 
 
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
@@ -392,28 +393,32 @@ define frame d-in-line
   tt-fr-doc-line.artic                 at row 1    col 15    colon-aligned label "&Артикул"           view-as fill-in size 18    by 1
   tt-fr-doc-line.gds-name              at row 1    col 35    colon-aligned no-label                   view-as text    size 48    by 1 fgcolor 4
   varalc-prod                          at row 1    col 86                  no-label                   view-as text    size 2     by 1 fgcolor 4
+  
   tt-fr-doc-line.prod-code             at row 2    col 16    colon-aligned label "&Производитель"     view-as fill-in size 7     by 1
   tt-fr-doc-line.prod-type             at row 2    col 22    colon-aligned no-label                   view-as fill-in size 11.63 by 1
   tt-fr-doc-line.obj-name              at row 2    col 30    colon-aligned format "x(30)" no-label                   view-as text    size 35    by 1 fgcolor 4
   tt-fr-doc-line.last-date             at row 2    col 70    colon-aligned format "99/99/9999" label "Годен до"
   b-choose-last-date                   AT ROW 2    COL 83
   tt-fr-doc-line.last-num-day          at row 2    col 86    format "->>>>9" no-label
+  
   tt-fr-doc-line.cli-art               at row 3    col 21    colon-aligned label "Артикул поставщика"   format "x(16)"
-  b-docsec                             at row 7    col 32  
   v-goods-ms-base                      at row 3    col 42    label "Объем штуки"                                               fgcolor 4  
-
   tt-fr-doc-line.alpha1                at row 3    col 77    colon-aligned label "Страна"             view-as text    size 4    by 0.7
   r-country                            at row 3    col 83
   tt-fr-doc-line.short-name            at row 3    col 85    colon-aligned no-label                   view-as text    size 10    by 0.7 fgcolor 4
+  
   tt-fr-doc-line.cli-qnty              at row 5    col 10.5  colon-aligned label "По &ТТН"            view-as fill-in size 16    by 1 fgcolor 4 format "->>,>>>,>>9.999":U
   tt-fr-doc-line.unit-cli              at row 5    col 26.5  colon-aligned no-label                   view-as fill-in size 7     by 1 fgcolor 4
   r-units                              at row 5    col 35.5                no-label
-  tt-fr-doc-line.cst-code              at row 5    col 55  colon-aligned label "ГТД" FORMAT "X(31)"
-  tt-fr-doc-line.doc-density     format ">>9.9999999999" AT ROW 6    COL 10.5  COLON-ALIGNED LABEL "Плотность"          VIEW-AS FILL-IN SIZE 16    BY 1 fgcolor 4
-  tt-fr-doc-line.temperature     format "->9.99"      AT ROW 6    COL 30  COLON-ALIGNED LABEL "Т"                  VIEW-AS FILL-IN SIZE 7    BY 1 fgcolor 4
-  tt-fr-doc-line.cli-base-rate   format ">>,>>9.9999999999"      AT ROW 6    COL 40  COLON-ALIGNED NO-LABEL  VIEW-AS FILL-IN SIZE 18 BY 1
+  tt-fr-doc-line.cst-code              at row 5    col 55    colon-aligned label "ГТД" FORMAT "X(31)"
+  
+  tt-fr-doc-line.doc-density           at row 6    col 10.5  colon-aligned format    ">>9.9999999999" label "Плотность"          VIEW-AS FILL-IN SIZE 16 BY 1 fgcolor 4
+  tt-fr-doc-line.temperature           at row 6    col 30    colon-aligned format    "->9.99"         label "Т"                  VIEW-AS FILL-IN SIZE 7  BY 1 fgcolor 4
+  tt-fr-doc-line.cli-base-rate         at row 6    col 40    colon-aligned format ">>,>>9.9999999999" no-label                   VIEW-AS FILL-IN SIZE 18 BY 1
+  
   tt-fr-doc-line.doc-qnty  format ">>>,>>>,>>9.<<<"  at row 7    col 10.5  colon-aligned label "По &накл"           view-as fill-in size 16    by 1
   tt-fr-doc-line.unit-base             at row 7    col 26.5  colon-aligned no-label                   view-as text    size 7     by 1
+  b-docsec                             at row 7    col 32  
   tt-fr-doc-line.fact-qnty    format ">>>,>>>,>>9.<<<"  at row 8    col 10.5  colon-aligned    label "&Факт"           view-as fill-in size 16    by 1
   tt-fr-doc-line.fact-qnty-kg format ">>>,>>>,>>9.<<<"  at row 8    col 30.0  colon-aligned no-label                   view-as fill-in size 16    by 1
   tt-fr-doc-line.vat-pc                 at row 8    col 50    colon-aligned
@@ -609,13 +614,8 @@ do:
       assign
         frame {&frame-name} tt-fr-doc-line.cli-qnty
       .
-      run calc-vat-pc in this-procedure.
-      run calc-all in this-procedure
-        ( input varcli-qnty-calc
-        ) no-error .
-      if error-status :error then do:
-        return no-apply.
-      end.
+      run calc-all    in this-procedure ( input varcli-qnty-calc ) no-error .
+      if error-status :error then return no-apply.
       run calc-vat-pc in this-procedure.
 
       if varrvs-place = true
@@ -1013,7 +1013,10 @@ do:
   if error-status :error then do:
     return no-apply.
   end.
-  else apply "entry":U to tt-fr-doc-line.cli-base-rate .
+  else do :
+    apply "entry":U to tt-fr-doc-line.cli-base-rate .
+    apply "leave":U to tt-fr-doc-line.cli-base-rate . // чтобы пересчиталась закупочная цена
+  end .
 end.
 
 on return of tt-fr-doc-line.cli-base-rate in frame {&frame-name} do:
@@ -1945,7 +1948,8 @@ do on error   undo main-block, leave main-block
          assign parline-mode = {&update}
                 line-rec  = recid(ub.doc-line).
       end.
-      else assign parline-mode = {&add-def}.
+      else assign parline-mode = {&add-def}
+                  line-rec = ? .
    end.
    { gbl/curr-r-b.i varr-b }
    { gbl/conf-rd.i "'is-custm'" 0 "''" 0 "''" "''" "''" no  custvalue     custtype     no-error }
@@ -2056,9 +2060,11 @@ empty temp-table thbjattr_thbj-attr.
      exctaxcdvalue = {&excise-tax-code}
      vattaxcdvalue = {&vat-tax-code}.
    case parline-mode :
+     /* 22/X-2018 - избавление от "ЦИКЛ":u и присвоение line-rec = ?. было выполнено в строке 1935
      when {&add-def} or when "ЦИКЛ":u then do:
        line-rec = ?.
      end.
+     */
      when {&update} then do:
        find ub.doc-line where recid (ub.doc-line) = line-rec no-error.
        if not available ub.doc-line then do:
@@ -2083,7 +2089,14 @@ empty temp-table thbjattr_thbj-attr.
          where buf_contract-specif.host-code    = t-doc.host-code 
            and buf_contract-specif.contract-num = t-doc.contract-code
            and buf_contract-specif.gds-code     = buf_goods.gds-code no-error .
-    v-specif-unit-list = if available buf_contract-specif then buf_contract-specif.unit-cli else "" .
+    if available buf_contract-specif then assign
+      v-specif-unit-list     = buf_contract-specif.unit-cli
+      v-specif-cli-base-rate = buf_contract-specif.cli-base-rate
+    .
+    else assign
+      v-specif-unit-list     = ""
+      v-specif-cli-base-rate = 1
+    .
   end .
 
    run ui-on in this-procedure no-error.
@@ -2190,7 +2203,7 @@ case parline-mode :
   when {&lookup}  then prt-mode = {&lookup}.
   when {&update}  then prt-mode = {&prt-def}.
   when {&add-def} then prt-mode = {&prt-def}.
-  when "ЦИКЛ":u   then prt-mode = {&prt-def}.
+  /* when "ЦИКЛ":u   then prt-mode = {&prt-def}. - было преобразовано в строке 1935 */
 end.
 disable all with frame {&frame-name}.
 assign
@@ -2221,34 +2234,32 @@ find first tt-fr-doc-line no-error.
 if not available tt-fr-doc-line then do:
    { str/kndinpin.i
      buf_goods.gds-code
-     t-doc.cli-type
-     t-doc.cli-code
-     t-doc.obj-type
-     t-doc.obj-code
-     varext-gds-type
-     varcli-qnty-input
-     vardensity-input
-     varcli-base-rate-input
-     vardoc-qnty-input
-     varfact-qnty-input
-     varprice-cli-input
-     varbase-price-input
-     vartax-3-input
-     varcli-qnty-calc
-     vardensity-calc
-     varcli-base-rate-calc
-     vardoc-qnty-calc
-     varfact-qnty-calc
-     varprice-cli-calc
-     varbase-price-calc
-     vartax-3-calc
-     varround
+   t-doc.cli-type
+   t-doc.cli-code
+   t-doc.obj-type
+   t-doc.obj-code
+   varext-gds-type
+   varcli-qnty-input
+   vardensity-input
+   varcli-base-rate-input
+   vardoc-qnty-input
+   varfact-qnty-input
+   varprice-cli-input
+   varbase-price-input
+   vartax-3-input
+   varcli-qnty-calc
+   vardensity-calc
+   varcli-base-rate-calc
+   vardoc-qnty-calc
+   varfact-qnty-calc
+   varprice-cli-calc
+   varbase-price-calc
+   vartax-3-calc
+   varround
      no-error }
    if error-status :error then return error "Ошибка при вызове процедуры kndinpin(in-line.w)" + return-value.
 
-   if parline-mode = "ЦИКЛ":u
-     or parline-mode = {&add-def}
-   then do:
+   if parline-mode = {&add-def} then do:
      run cr-tt-fr-doc-line in this-procedure
        ( input "create"
         ,input ?
@@ -2275,7 +2286,7 @@ assign
 .
 
 /*Добавление*/
-if parline-mode = "ЦИКЛ":u or
+if /* 22/X-2018 parline-mode = "ЦИКЛ":u or */
    parline-mode = {&add-def} then do:
    /*Прием по продажной цене*/
    if v-insalepr = true then do:
@@ -3857,7 +3868,7 @@ procedure calc-vat-pc:
   display tt-fr-doc-line.vat-pc sum-vat with frame {&frame-name}.
 end procedure.
 
-procedure cr-tt-fr-doc-line:
+procedure cr-tt-fr-doc-line private:
   /*!!!Создание temporary-table!!!*/
   define input parameter parmode        as character no-undo.
   define input parameter parrecdoc-line as recid     no-undo.
@@ -3912,8 +3923,12 @@ procedure cr-tt-fr-doc-line:
 
   if parmode = "create" then do:
     assign
+  /* 22/X-2018 
       tt-fr-doc-line.unit-cli      = if v-specif-unit-list > "":U then v-specif-unit-list else  buf_goods.unit-cli
       tt-fr-doc-line.cli-base-rate = buf_goods.cli-base-rate
+  */
+      tt-fr-doc-line.unit-cli      = (if v-specif-unit-list > "" then v-specif-unit-list     else buf_goods.unit-cli)
+      tt-fr-doc-line.cli-base-rate = (if v-specif-unit-list > "" then (v-specif-cli-base-rate) else buf_goods.cli-base-rate)
       tt-fr-doc-line.doc-density   = ?
       tt-fr-doc-line.fact-density  = ?
       tt-fr-doc-line.temperature   = ?
