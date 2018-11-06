@@ -71,6 +71,7 @@ on error undo, return error
   define buffer buf_parts             for ub.parts .
   define buffer buf_vsd               for ub.vsd .
   define buffer buf_clients           for ub.clients .
+  define buffer buf_esys-all-attr     for ub.esys-all-attr .
   
   define variable mercury       as class mercury   no-undo.
   define variable vsdStorage    as class vsdtostorage.
@@ -191,12 +192,13 @@ on error undo, return error
       
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
     mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server).
+    mercury:vsdId = ub.esys-all-attr.key1.
   
     case ub.esys-all-attr.key2 :  
       when 1
       then do :  
         objKeyRec = new keyrec () .
-        find first buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value no-error.
+        find first buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value and buf_vsd.ID =  ub.esys-all-attr.key1 no-error.
         if not available buf_vsd then next .
         objKeyRec:GenRowKeyr(buf_vsd.part-key, ?, "ub", ?, ?, v-part-rowid, v-tbl-name) .
         delete object objKeyRec no-error .
@@ -207,7 +209,7 @@ on error undo, return error
           next ans_.
         end.                  
         run write-to-log( "Получение ответа на запрос ВСД по UUID " + buf_vsd.UUID ) .                  
-        mercury:receiveVetDoc(input ub.esys-all-attr.key7, input LC(ub.esys-all-attr.attr-value), input buf_parts.cli-qnty, output v-Status_, output v-Msg) . 
+        mercury:receiveVetDoc(input ub.esys-all-attr.key7, input LC(ub.esys-all-attr.attr-value), input buf_parts.qnty, input buf_parts.fact-qnty, input (buf_vsd.status_ = vsdStsType:IsUtilized), output v-Status_, output v-Msg) . 
         if v-Status_ = "COMPLETED"
         then ub.esys-all-attr.key3 = "Ответ получен" .
         else do :
@@ -363,11 +365,24 @@ on error undo, return error
               if entry(1, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
               or entry(2, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
               then do :
-                vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
-                vsdsTHObj:VsdObjCurr:MsgErr = "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." .
-                vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
-                run write-to-log( "UUID ВСД: " + vsdsTHObj:VsdObjCurr:UUID + " .   Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика. Запрос не отправлен." ) .
-                next vsds_.
+                if vsdsTHObj:VsdObjCurr:CliType = 'маг'
+                then do :
+                  if entry(2, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
+                  then do :
+                    vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
+                    vsdsTHObj:VsdObjCurr:MsgErr = "Не заполнен GUID предприятия поставщика." .
+                    vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
+                    message "UUID ВСД: " vsdsTHObj:VsdObjCurr:UUID skip "Не заполнены GUID предприятия поставщика." skip "Запрос не отправлен." view-as alert-box .
+                    next vsds_.
+                  end.
+                end.
+                else do :
+                  vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
+                  vsdsTHObj:VsdObjCurr:MsgErr = "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." .
+                  vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
+                  message "UUID ВСД: " vsdsTHObj:VsdObjCurr:UUID skip "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." skip "Запрос не отправлен." view-as alert-box .
+                  next vsds_.
+                end.
               end .
             end.
             else do :
@@ -384,7 +399,7 @@ on error undo, return error
                                                 and ub.esys-all-attr.attr-value = vsdsTHObj:VsdObjCurr:UUID
                                                 and ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID
                                                 and ub.esys-all-attr.key2 = 1
-                                                and ub.esys-all-attr.key3 <> "Запрос отклонён"
+                                                and ub.esys-all-attr.key3 = "Запрос отправлен"
                                                 no-error .
           if available ub.esys-all-attr then next  vsds_.
           run write-to-log( "Отправка запроса на получение ВСД по UUID " + vsdsTHObj:VsdObjCurr:UUID ) .
@@ -420,7 +435,7 @@ on error undo, return error
                                                 and ub.esys-all-attr.attr-value = vsdsTHObj:VsdObjCurr:UUID
                                                 and ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID
                                                 and ub.esys-all-attr.key2 = 2
-                                                and ub.esys-all-attr.key3 <> "Запрос отклонён"
+                                                and ub.esys-all-attr.key3 = "Запрос отправлен"
                                                 no-error .
           if available ub.esys-all-attr then next  vsds_.
           
@@ -434,7 +449,7 @@ on error undo, return error
             next vsds_.
           end. 
           run write-to-log( "Отправка запроса на гашение ВСД с UUID " + vsdsTHObj:VsdObjCurr:UUID ) .
-          mercury:processIncomingConsignment(vsdsTHObj, buf_parts.cli-qnty, v-appId, v-status_, v-Msg) .
+          mercury:processIncomingConsignment(vsdsTHObj, buf_parts.qnty, buf_parts.fact-qnty, v-appId, v-status_, v-Msg) .
           if v-status_ <> "ACCEPTED"
           then do :
             v-Msg = trim(trim(v-Msg, chr(10))) .
@@ -452,6 +467,7 @@ on error undo, return error
             ub.esys-all-attr.key2 = 2
             ub.esys-all-attr.key8 = g#auto-user-id
           .
+          ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID .
           ub.esys-all-attr.attr-value = LC(vsdsTHObj:VsdObjCurr:UUID) .
         end.
       end.

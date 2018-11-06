@@ -139,6 +139,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,cd-video-link-attr~
 ,gds-mercury~
 ,gds-mercury-attr~
+,units-attr~
 ":U.
 
 

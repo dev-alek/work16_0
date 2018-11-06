@@ -753,6 +753,7 @@ abc-analysis~
 ,c-gds-mercury~
 ,gds-mercury~
 ,gds-mercury-attr~
+,units-attr~
 ,c-promo-schedule~
 ,c-promo-schedule-week~
 ,c-PromoAction~
@@ -1251,7 +1252,6 @@ abc-analysis-doc-attr~
 ,tnved-item-attr~
 ,turnover-buyer-main-attr~
 ,turnover-group-attr~
-,units-attr~
 ,upgrade-attr~
 ,user-account-attr~
 ,user-conn-attr~

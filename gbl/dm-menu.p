@@ -3495,6 +3495,22 @@ procedure m-units-exe :
 
 end procedure. /* m-units-exe */
 
+procedure m-units-merc-exe :
+
+  define variable rid#          as recid     no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run bge/units-merc.w
+      (input  parparentproc
+      ,input  no
+      ,output rid#
+      ) .
+  end.
+
+end procedure. /* m-units-exe */
+
 procedure m-tares-exe :
 
   define variable v-rid-list as character no-undo .

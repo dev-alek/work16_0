@@ -22,6 +22,7 @@ using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.str.clients.*.
 
+define input parameter p-vsdId as int64 no-undo .
 
 define variable v-appId as character no-undo .
 define variable v-status as character no-undo .
@@ -115,10 +116,6 @@ DEFINE INPUT PARAMETER hAttributes  AS HANDLE NO-UNDO.
       
       v-parsesub = "vetDocument" .
     end. 
-/*    when "merc:vetDocument"       */
-/*    then do :                     */
-/*      v-parsesub = "vetDocument" .*/
-/*    end .                         */
     when "bs:uuid"
     then do :
       case v-parsesub :
@@ -136,6 +133,9 @@ DEFINE INPUT PARAMETER hAttributes  AS HANDLE NO-UNDO.
     when "dt:businessEntity" then v-parsesub = "businessEntity" .
     when "dt:enterprise" then v-parsesub = "enterprise" .
     when "vd:purpose" then v-parsesub = "purpose" .
+    when "vd:broker" then v-parsesub = "broker" .
+    when "dt:packingType" then v-parsesub = "packingType" .
+    when "vd:laboratoryResearch" then v-parsesub = "laboratoryResearch" .
     when "vd:dateOfProduction" then v-parsesub2 = "dateOfProduction" .
     when "vd:expiryDate" then v-parsesub2 = "expiryDate" .
     when "vd:consignor" then v-parsesub2 = "consignor" .
@@ -164,6 +164,8 @@ PROCEDURE Characters:
   
   v-str = GET-STRING(ppText,1) .
   if v-str begins chr(10) then return .
+  
+  if v-parsesub = "laboratoryResearch" then return .
 
   case gcCurrentElement :
     when "message" or
@@ -180,7 +182,7 @@ PROCEDURE Characters:
       case v-parsesub :
         when "vetDocument"
         then do :
-          find first buf_vsd no-lock where buf_vsd.UUID = v-str no-error.
+          find first buf_vsd no-lock where buf_vsd.UUID = v-str and buf_vsd.ID = p-vsdId no-error.
           if not available buf_vsd
           then do :
             vsdTHObj = new vsdsub ().
@@ -195,6 +197,14 @@ PROCEDURE Characters:
             temp-vsdsTHObj = vsdStorage:getVSDsubs(buffer buf_vsd) .
             vsdsTHObj:AddItem(temp-vsdsTHObj:VsdObjCurr) .
             vsdsTHObj:VsdObjCurr:EconomicSub = v-issuerId .
+            vsdsTHObj:VsdObjCurr:TTNissueDate = "" .
+            vsdsTHObj:VsdObjCurr:TTNissueNumber = "" .
+            vsdsTHObj:VsdObjCurr:TTNissueSeries= "" .
+            vsdsTHObj:VsdObjCurr:TTNrelationshipType = "" .
+            vsdsTHObj:VsdObjCurr:TTNtype = "" .
+            vsdsTHObj:VsdObjCurr:PackageGuid = "" .
+            vsdsTHObj:VsdObjCurr:PackageLevel = "" .
+            vsdsTHObj:VsdObjCurr:PackageQnty = "" .
           end .
         end.
       end case.
@@ -252,6 +262,8 @@ PROCEDURE Characters:
         when "unit" then vsdsTHObj:VsdObjCurr:UnitGuid = v-str .
         when "country" then vsdsTHObj:VsdObjCurr:OrigCountryGuid = v-str .
         when "purpose" then vsdsTHObj:VsdObjCurr:PurposeGuid = v-str .
+        when "broker" then vsdsTHObj:VsdObjCurr:BrokerGuid = v-str .
+        when "packingType" then vsdsTHObj:VsdObjCurr:PackageGuid = vsdsTHObj:VsdObjCurr:PackageGuid + chr(4) + v-str .
       end case.
     end. 
     when "dt:name"
@@ -267,7 +279,10 @@ PROCEDURE Characters:
     then do :
       v-dateCr = v-str .
       case v-parsesub2 :
-        when "referencedDocument" then vsdsTHObj:VsdObjCurr:TTNissueDate = v-str .
+        when "referencedDocument"
+        then do :
+          vsdsTHObj:VsdObjCurr:TTNissueDate = vsdsTHObj:VsdObjCurr:TTNissueDate + chr(4) + v-str .
+        end.
         when "authentication" then do : end .
         otherwise do :
           vsdsTHObj:VsdObjCurr:DateCr = date(integer(substring(v-dateCr, 6,2)), integer(substring(v-dateCr, 9,2)), integer(substring(v-dateCr, 1,4))) .
@@ -291,6 +306,8 @@ PROCEDURE Characters:
     when "dt:month" then v-month = v-str .
     when "dt:day" then v-day = v-str no-error.
     when "dt:hour" then v-hour = v-str no-error.
+    when "dt:quantity" then vsdsTHObj:VsdObjCurr:PackageQnty = vsdsTHObj:VsdObjCurr:PackageQnty + chr(4) + v-str .
+    when "dt:level" then vsdsTHObj:VsdObjCurr:PackageLevel = vsdsTHObj:VsdObjCurr:PackageLevel + chr(4) + v-str .
     when "dt:role"
     then do :
       case v-parsesub2 :
@@ -303,7 +320,10 @@ PROCEDURE Characters:
     when "vd:issueNumber"
     then do :
       case v-parsesub2 :
-        when "referencedDocument" then vsdsTHObj:VsdObjCurr:TTNissueNumber = v-str .
+        when "referencedDocument"
+        then do :
+          vsdsTHObj:VsdObjCurr:TTNissueNumber = vsdsTHObj:VsdObjCurr:TTNissueNumber + chr(4) + v-str .
+        end.
         otherwise do :
           
         end .
@@ -312,7 +332,10 @@ PROCEDURE Characters:
     when "vd:issueSeries"
     then do :
       case v-parsesub2 :
-        when "referencedDocument" then vsdsTHObj:VsdObjCurr:TTNissueSeries = v-str .
+        when "referencedDocument"
+        then do :
+          vsdsTHObj:VsdObjCurr:TTNissueSeries = vsdsTHObj:VsdObjCurr:TTNissueSeries + chr(4) + v-str .
+        end.
         otherwise do :
           
         end .
@@ -321,7 +344,10 @@ PROCEDURE Characters:
     when "vd:type"
     then do :
       case v-parsesub2 :
-        when "referencedDocument" then vsdsTHObj:VsdObjCurr:TTNtype = v-str .
+        when "referencedDocument"
+        then do :
+          vsdsTHObj:VsdObjCurr:TTNtype = vsdsTHObj:VsdObjCurr:TTNtype + chr(4) + v-str .
+        end.
         otherwise do :
           
         end .
@@ -330,7 +356,10 @@ PROCEDURE Characters:
     when "vd:relationshipType"
     then do :
       case v-parsesub2 :
-        when "referencedDocument" then vsdsTHObj:VsdObjCurr:TTNrelationshipType = v-str .
+        when "referencedDocument"
+        then do :
+          vsdsTHObj:VsdObjCurr:TTNrelationshipType = vsdsTHObj:VsdObjCurr:TTNrelationshipType + chr(4) + v-str .
+        end.
         otherwise do :
           
         end .
@@ -439,12 +468,22 @@ PROCEDURE EndElement:
     when "dt:businessEntity" then v-parsesub = "" .
     when "dt:enterprise" then v-parsesub = "" .
     when "vd:purpose" then v-parsesub = "" .
+    when "vd:broker" then v-parsesub = "" .
+    when "dt:packingType" then v-parsesub = "" .
+    when "vd:laboratoryResearch" then v-parsesub = "" .
     when "vd:dateOfProduction" then v-parsesub2 = "" .
     when "vd:expiryDate" then v-parsesub2 = "" .
     when "vd:consignor" then v-parsesub2 = "" .
     when "vd:consignee" then v-parsesub2 = "" .
     when "vd:producer" then v-parsesub2 = "" .
-    when "vd:referencedDocument" then v-parsesub2 = "" .
+    when "vd:referencedDocument"
+    then do :
+      v-parsesub2 = "" .
+      if num-entries(vsdsTHObj:VsdObjCurr:TTNissueSeries, chr(4)) < num-entries(vsdsTHObj:VsdObjCurr:TTNtype, chr(4))
+      then do :
+        vsdsTHObj:VsdObjCurr:TTNissueSeries = vsdsTHObj:VsdObjCurr:TTNissueSeries + chr(4) .
+      end.
+    end.  
     when "vd:authentication" then v-parsesub2 = "" .
   end case.
 END.

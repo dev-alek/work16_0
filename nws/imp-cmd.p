@@ -1323,6 +1323,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_c-gds-mercury}
             or when {&table_vsd-attr}
             or when {&table_gds-mercury-attr}
+            or when {&table_units-attr}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec
