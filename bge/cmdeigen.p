@@ -22,6 +22,7 @@ define input parameter p-esys-id as integer   no-undo .
 define input parameter p-db-num as integer   no-undo .
 define input parameter p-cr-db-num as integer no-undo .
 define input parameter p-xml-file-name as character no-undo .
+define input parameter p-pack-data as memptr no-undo . // с 23/VIII-2018 xml-файл читается из memptr, а не из файла 
 define input parameter p-pack-num as integer   no-undo .
 define input parameter p-log-file-name as character no-undo .
 
@@ -39,7 +40,7 @@ define variable vss-description as character no-undo init "Импорт файла XML из в
 { rul/tempcxml.i "NEW SHARED" }
 /*должно быть шаред чтобы был доступ к temp-xml-tables глубоко внизу*/
 { gbl/gate-clb.i }
-{ bge/tmpcxmlh.i }
+// { bge/tmpcxmlh.i } 23/VIII-2018 - подключается в составе getoxmlh.i
 { rul/xmlischn.i shared }
 { bge/impxcbsh.i }
 { bge/getoxmlh.i }
@@ -115,6 +116,7 @@ v-rec-cnt       label "Основных записей" format ">>>>>>>>>9" skip
 with view-as dialog-box side-labels 1 columns three-d title "** Разбор пакета"
 .
 
+// @FUTU вызывается ТОЛЬКО из bge/oxmlinx.p; проверку активной транзакции можно вынести наружу.
 if transaction then do:
   message
     vss-workfile vss-revision vss-description skip
@@ -223,8 +225,8 @@ on error undo, return error return-value
                                                  input p-log-handle
                                                 ,input "write-to-log"
                                                  ).
-
   run getoxmlh in this-procedure ( input v-full-path
+                                  ,input p-pack-data
                                   ,input v-headerh
                                   ,input buf_ext-system.delivery-method
                                   ) no-error.

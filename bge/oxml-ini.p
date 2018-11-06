@@ -52,69 +52,41 @@ on error undo, return error
       v-str-err = "":U
     .
     /* дирректории в которых происходит обмен пакетами */
-    get-key-value section "OXML"
-                      key "oxml-exch-dir"
-                    value oxml-exch-dir.
-    get-key-value section "OXML"
-                      key "oxml-dir"
-                    value oxml-heap-dir.
-    if oxml-exch-dir <> ?
-    and oxml-heap-dir <> ?
-    and oxml-exch-dir = oxml-heap-dir then do:
+    oxml-exch-dir = ibs.th.gbl.gbl-inipar:oxmlExchDir .
+    oxml-heap-dir = ibs.th.gbl.gbl-inipar:oxmlDir .
+    if oxml-exch-dir = ? then
+      v-str-err = v-str-err + substitute( "Отсутствует настройка каталога OpenXML (oxml-exch-dir).&1", {&new-line} ) .
+    else if oxml-heap-dir = ? then
+      v-str-err = v-str-err + substitute( "Отсутствует настройка каталога OpenXML (oxml-dir).&1", {&new-line} ) .
+    else if oxml-exch-dir = oxml-heap-dir then do:
       v-str-err = v-str-err +
-      substitute("Каталог EXCH (секция OXML параметр oxml-exch-dir)&1" +
-                 "и каталог HEAP (секция OXML параметр oxml-dir)&1 НЕ ДОЛЖНЫ СОВПАДАТЬ!!!&1"  +
-                 "Это нарушит работу системы OXML!!!"
-                 , {&New-line}).
-
+      substitute("Каталог EXCH (&2)&1" +
+                 "и каталог HEAP (&3)&1" +
+                 "должны быть различными.&1"  +
+                 "Совпадение каталогов EXCH и HEAP нарушит работу системы OXML!"
+                 , {&New-line}
+                 , ibs.th.gbl.gbl-inipar:oxmlExchDirKeyName
+                 , ibs.th.gbl.gbl-inipar:oxmlDirKeyName).
     end.
     else do:
-    if oxml-exch-dir = ? then do:
-      assign
-        v-str-err = v-str-err + substitute( "Отсутствует настройка каталога OpenXML (oxml-exch-dir).&1", {&new-line} )
+      file-info:file-name = oxml-exch-dir .
+      if file-info:file-type = ? or not ( file-info:file-type begins "D":U ) then assign
+        v-str-err = v-str-err + substitute( "Каталог &1 отсутствует.&2", oxml-exch-dir, {&new-line} )
+      .
+      else assign
+        oxml-exch-dir = file-info:full-pathname
+      .
+      
+      file-info:file-name = oxml-heap-dir .
+      if file-info:file-type = ? or not ( file-info:file-type begins "D":U ) then assign
+        v-str-err = v-str-err + substitute( "Каталог &1 отсутствует.&2", oxml-heap-dir, {&new-line} )
+      .
+      else assign
+        oxml-heap-dir = file-info:full-pathname
+        log-file-name = oxml-heap-dir + {&back-slash-char} + "openxml.log"
       .
     end.
-    else do:
-      assign
-        file-info:file-name = oxml-exch-dir
-      .
-      if file-info:file-type = ?
-        or not ( file-info:file-type begins "D":U )
-      then do:
-        assign
-          v-str-err = v-str-err + substitute( "Каталог &1 отсутствует.&2", oxml-exch-dir, {&new-line} )
-        .
-      end.
-      else do:
-        assign
-          oxml-exch-dir = file-info:full-pathname
-        .
-      end.
-    end.
-    if oxml-heap-dir = ? then do:
-      assign
-          v-str-err = v-str-err + substitute( "Отсутствует настройка каталога OpenXML (oxml-dir).&1", {&new-line} )
-      .
-    end.
-    else do:
-      assign
-        file-info:file-name = oxml-heap-dir
-      .
-      if file-info:file-type = ?
-        or not ( file-info:file-type begins "D":U )
-      then do:
-        assign
-          v-str-err = v-str-err + substitute( "Каталог &1 отсутствует.&2", oxml-heap-dir, {&new-line} )
-        .
-      end.
-      else do:
-        assign
-          oxml-heap-dir = file-info:full-pathname
-          log-file-name = oxml-heap-dir + {&back-slash-char} + "openxml.log"
-        .
-      end.
-    end.
-    end.
+    
     assign
       v-str-err = right-trim( v-str-err, {&new-line} )
     .

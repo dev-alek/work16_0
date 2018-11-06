@@ -21,6 +21,7 @@ define input        parameter p-db-num         like ub.ext-system.db-num no-undo
 define input        parameter p-delivery-method as integer   no-undo .
 define input        parameter oxml-exch-dir    as character no-undo .
 define input        parameter oxml-heap-dir    as character no-undo .
+define input        parameter p-sign-fileext   as character no-undo .
 define input-output parameter p-pack-num       as   integer      no-undo .
 define input-output parameter p-custom-pack-name as character no-undo .
 /*имя файла возвращается без расширения!!!!*/
@@ -57,12 +58,27 @@ FUNCTION nws-db-format returns character ( input p-db-num as integer):
   .
   return v-nws-db-format.
 END FUNCTION.
+/* 12/IX-2018 - повторный поиск ext-system не используется
+function first-pack-num returns integer (  input p-esys-id as integer,
+                                           input p-db-num  as integer  ) :
+  define variable v-pack-num as integer no-undo .
+  // @FUTU параметр p-delivery-method скорее всего взят с искомого buf_ext-system.delivery-method
+  define buffer buf_ext-system for ub.ext-system .
+  find first buf_ext-system no-lock
+       where buf_ext-system.esys-id = p-esys-id
+         and buf_ext-system.db-num = p-db-num no-error .
+  if available buf_ext-system then
+    v-pack-num = (if buf_ext-system.delivery-method = integer({&esys-dm-nn})
+                  or buf_ext-system.delivery-method = integer({&esys-dm-nnold})
+                  or buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail})
+                  then 1
+                  else 0)
+  .
+  else v-pack-num = 0 .
+  return v-pack-num .
+end function .
+*/
 
-
-
-do
-on error undo, return error
-:
   define buffer buf_esys-pck-sent for ub.esys-pck-sent .
   define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd .
   define buffer buf_esys-pck-keys for ub.esys-pck-keys .
@@ -76,7 +92,17 @@ on error undo, return error
   
   define variable v-ftp-path-in as character no-undo .
   define variable v-type as character no-undo .
+  define variable v-dbnum-str as character no-undo .
+  define variable v-esysid-str as character no-undo .
+  define variable v-num-entries as integer no-undo .
 
+
+
+do
+on error undo, return error
+:
+
+  /* 1. номер пакета */
   if p-pack-num = -1 then do:
     v-new-pack = yes.
     case p-action :
@@ -90,22 +116,15 @@ on error undo, return error
           no-error
         .
         if not available buf_esys-pck-rcvd then do:  /* не было ни одного пакета */
-          define buffer buf_ext-system for ub.ext-system.
-          find first buf_ext-system no-lock where
-                    buf_ext-system.esys-id = p-esys-id
-                and buf_ext-system.db-num = p-db-num.
-          assign
-            p-pack-num = (if buf_ext-system.delivery-method = integer({&esys-dm-nn})
-                          or buf_ext-system.delivery-method = integer({&esys-dm-nnold})
-                          or buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail})
-                          then 1
-                          else 0)
-          .
+          // p-pack-num = first-pack-num ( input p-esys-id, input p-db-num ) . 12/IX-2018 - не используется
+          p-pack-num = (if p-delivery-method = integer({&esys-dm-nn})
+                        or p-delivery-method = integer({&esys-dm-nnold})
+                        or p-delivery-method = integer({&esys-dm-oracle-retail})
+                  then 1
+                  else 0) .
         end.
         else do:
-          assign
-            p-pack-num = buf_esys-pck-rcvd.espr-pack-num + 1
-          .
+          p-pack-num = buf_esys-pck-rcvd.espr-pack-num + 1 .
         end.
       end.
       when "fget":U then do:
@@ -137,8 +156,10 @@ on error undo, return error
         or p-delivery-method = integer({&esys-dm-contour-edi}))
         and v-new-pack
         then do:
+           /* 25/IX-2018 - как будто v-custom-pack-name только присваивается
            define variable v-custom-pack-name as character no-undo .
            v-custom-pack-name = p-custom-pack-name.
+           */
         end.
       end.
       when "fput" then do:
@@ -146,11 +167,18 @@ on error undo, return error
         p-pack-num = if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then 1 else 0.
       end.
       otherwise do:
+        /* 25/IX-2018 - сообщение на экран заменено на сообщение в вызывающую процедуру
         message
           vss-workfile vss-revision vss-description skip
-          "Не предусмотрена операция" p-action "для" vss-workfile
+          
           view-as alert-box error.
         return error.
+        */
+        return error substitute("&1 &2 &3&4Не предусмотрена операция &5 для &1&4"
+                             ,vss-workfile, vss-revision, vss-description 
+                             ,{&new-line}
+                             ,p-action
+                           ).
       end.
     end case.
   end. /*if p-pack-num = -1 then do:*/
@@ -158,21 +186,28 @@ on error undo, return error
     v-new-pack = yes.
     p-pack-num = abs(p-pack-num).
   end.
+
+  
+  /* 2. имя директории */
+  assign
+    v-esysid-str = esys-id-format( p-esys-id )
+    v-dbnum-str  = nws-db-format( ibs.th.gbl.gbl-var:g#db-num )
+  .
+  
   case p-action :
     when "get":U
     or
     when "fget":U
     then do:
       assign
-        v-work-dir   = "ES" + esys-id-format( p-esys-id ) + "-":U + nws-db-format( g#db-num )
-        p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + esys-id-format( p-esys-id )
+        v-work-dir   = "ES" + v-esysid-str + "-":U + v-dbnum-str
+        p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + v-esysid-str
         p-source-dir = oxml-exch-dir + {&back-slash-char} +  v-work-dir
         p-target-dir = oxml-heap-dir + {&back-slash-char} +  v-work-dir
         p-log-file-name  =  (if p-delivery-method = integer({&esys-dm-oracle-retail})
-                            then (oxml-heap-dir + {&back-slash-char} + nws-db-format( g#db-num ) + "-":U + "ES" + esys-id-format( p-esys-id ))
+                            then (oxml-heap-dir + {&back-slash-char} + v-dbnum-str + "-":U + "ES" + v-esysid-str)
                             else (oxml-heap-dir + {&back-slash-char} + "actions.log")
                             )
-        p-list-file-name =  oxml-heap-dir + {&back-slash-char} + "lst":U + string( p-pack-num, "999999999") + ".":U
       .
     end.
     when "put":U
@@ -180,12 +215,11 @@ on error undo, return error
     when "fput"
     then do:
       assign
-      v-work-dir   = nws-db-format( g#db-num ) + "-":U + "ES" + esys-id-format( p-esys-id )
-      p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + nws-db-format( g#db-num )
+      v-work-dir   = v-dbnum-str + "-":U + "ES" + v-esysid-str
+      p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + v-dbnum-str
       p-source-dir = oxml-heap-dir + {&back-slash-char} + v-work-dir
       p-target-dir = oxml-exch-dir + {&back-slash-char} + v-work-dir
       p-log-file-name  =  oxml-heap-dir + {&back-slash-char} + "actions.log"
-      p-list-file-name =  oxml-heap-dir + {&back-slash-char} + "lst":U + string( p-pack-num, "999999999") + ".":U
       .
     end.
     otherwise do:
@@ -196,6 +230,10 @@ on error undo, return error
       return error.
     end.
   end case.
+  p-list-file-name =  oxml-heap-dir + {&back-slash-char} + "lst":U + string( p-pack-num, "999999999") + ".":U .
+
+
+  /* 3. имя файла */
   if (p-action = "put" or p-action = "fput")
   and p-custom-pack-name <> ?
   and p-custom-pack-name <> '' then do:
@@ -255,13 +293,27 @@ on error undo, return error
           ,input ""
           ,input ""
           ) no-error.
+          
           for each buf_temp-filelist exclusive-lock :
-              if num-entries(buf_temp-filelist.file-name, "_") = 4
-              or (num-entries(buf_temp-filelist.file-name, "_") = 5 and buf_temp-filelist.file-name begins "ack")
-              then do :
-              end.
+              /* 23/VIII-2018 заглушка: исключаем файлы с электронной подисью,
+                              чтобы они читались строго позже файлов с данными */
+              if (p-sign-fileext > "") and (buf_temp-filelist.file-extension = p-sign-fileext) then do :
+                  delete buf_temp-filelist .
+                  next .
+              end . 
+              /* 05/IX-2018 ещё заглушка: если в настройках в bge/oxmlspci.w указали неправильное расширение,
+                                          а файлы с электронной подписью всё же пришли */
+              if can-do("p7s,p7c", buf_temp-filelist.file-extension) then do :
+                  delete buf_temp-filelist .
+                  next .
+              end . 
+            v-num-entries = num-entries(buf_temp-filelist.file-name, "_") .
+              if v-num-entries = 4
+              or (v-num-entries = 5 and buf_temp-filelist.file-name begins "ack")
+              then .
               else do :
                   delete buf_temp-filelist .
+                  next .
               end.
           end.
           find first buf_temp-filelist no-error.
@@ -270,13 +322,14 @@ on error undo, return error
               p-custom-pack-name = buf_temp-filelist.file-name .
           end.
       end.
+      
       find first buf_esys-all-attr share-lock where
               buf_esys-all-attr.attr-code = {&attr-custom-pack-name}
           and buf_esys-all-attr.table-name = {&table_esys-pck-rcvd}
           and buf_esys-all-attr.key1 = p-pack-num
           and buf_esys-all-attr.key2 = p-esys-id
           and buf_esys-all-attr.key5 = p-db-num
-          and buf_esys-all-attr.key6 = g#db-num no-error.
+          and buf_esys-all-attr.key6 = ibs.th.gbl.gbl-var:g#db-num no-error.
       assign
       p-pack-name = get-short-pack-name( input p-action
                                       , input p-pack-num
@@ -303,7 +356,7 @@ on error undo, return error
           buf_esys-all-attr.key1 = p-pack-num
           buf_esys-all-attr.key2 = p-esys-id
           buf_esys-all-attr.key5 = p-db-num
-          buf_esys-all-attr.key6 = g#db-num
+          buf_esys-all-attr.key6 = ibs.th.gbl.gbl-var:g#db-num
           .
         end.
         buf_esys-all-attr.attr-value = p-custom-pack-name .

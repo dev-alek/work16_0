@@ -35,11 +35,6 @@ define variable vss-description as character no-undo init "Подготовка пакета(ов)
 { gbl/findlock.i }
 { bge/esallatr.i  }
 
-do
-on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
-on stop   undo, return error substitute( "&1. stop", vss-workfile )
-on endkey undo, return error substitute( "&1. endkey", vss-workfile )
-:
   define variable v-pack-num   as integer   no-undo .
   define variable v-pack-name  as character no-undo .
   define variable v-source-dir as character no-undo .
@@ -82,6 +77,13 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     route-cnt   label "Основных записей"
     rec-cnt     label "Привязанных"
     with view-as dialog-box side-labels 1 columns three-d title "** Формирование пакета".
+
+
+do
+on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+on stop   undo, return error substitute( "&1. stop", vss-workfile )
+on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+:
 
   if transaction then do:
     message
@@ -142,17 +144,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       and buf_esys-route.esr-last-pack = -1
     no-error
   .
-  if available buf_esys-route then do:
-    assign
-      v-last-tbl-ord = buf_esys-route.esr-tbl-ord
-    .
-  end.
-  else do:
-    assign
-      v-last-tbl-ord = 0
-    .
-
-  end.
+  v-last-tbl-ord = if available buf_esys-route then buf_esys-route.esr-tbl-ord else 0 .
 
   view frame inf.
   do with frame inf
@@ -269,6 +261,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
        ,input buf_ext-system.delivery-method
        ,input oxml-exch-dir
        ,input oxml-heap-dir
+       ,input ""
        ,input-output v-pack-num
        ,input-output v-custom-pack-name
        ,output v-pack-name

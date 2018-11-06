@@ -38,7 +38,7 @@ define variable vss-description as character no-undo init "Импорт файла XML".
 { rul/tempcxml.i "SHARED" }
 /*должно быть шаред чтобы был доступ к temp-xml-tables глубоко внизу*/
 { gbl/gate-clb.i }
-{ bge/tmpcxmlh.i }
+// { bge/tmpcxmlh.i } - 23/VIII-2018 подключается в составе getoxmlh.i
 { bge/getoxmlh.i }
 { gbl/xmlchar.i }
 { gbl/tmpreldf.i }
@@ -131,7 +131,8 @@ on error undo, return error return-value
   end.
   v-headerh = v-header-th:default-buffer-handle.
   run getoxmlh in this-procedure ( input v-full-path
-                                   ,input v-headerh
+                                  ,input ? // или передать memptr в который загружен xml-файл  
+                                  ,input v-headerh
                                   ,input -1 /*p-delivery-method - нет тут*/
                                    ) no-error.
   define buffer buf_rec for temp_xmllib_rec.

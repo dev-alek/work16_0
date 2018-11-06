@@ -73,7 +73,11 @@ define variable vss-description as character no-undo init "Библиотека процедур д
 { ref/grplib.i }
 { ref/ggrplist.i ggrp-list def "SHARED" }
 { bge/tmpcxmlh.i }
-{ bge/getoxmlh.i }
+
+// { bge/getoxmlh.i } 23/VIII-2018 xmllib.i и tmpcxmlh.i вставлены напрямую
+{ str/xmllib.i }
+// { bge/tmpcxmlh.i } 23/VIII-2018 - уже было вставлено
+
 { gbl/xmlchar.i }
 
 

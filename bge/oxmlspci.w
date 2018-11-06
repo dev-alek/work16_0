@@ -8,9 +8,9 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_ext-system FOR ub.ext-system.
-DEFINE TEMP-TABLE tt-ext-system NO-UNDO LIKE ub.ext-system.
-DEFINE TEMP-TABLE tt-ext-system-attr NO-UNDO LIKE ub.ext-system-attr.
+DEFINE BUFFER locked_ext-system FOR ext-system.
+DEFINE TEMP-TABLE tt-ext-system NO-UNDO LIKE ext-system.
+DEFINE TEMP-TABLE tt-ext-system-attr NO-UNDO LIKE ext-system-attr.
 
 
 
@@ -34,6 +34,11 @@ Creation date: 02/19/08
 Input:
 
 Output:
+
+@NOTE  расширения для имён файлов с цифровой подписью:
+  // https://docs.microsoft.com/ru-ru/dotnet/api/system.security.cryptography.pkcs.signedcms?view=netframework-4.7.2
+  // envelopedData   application/pkcs7-mime        .p7m
+  // signedData      application/pkcs7-signature   .p7s.p7c    
 
 */
 /* ***************************  Definitions  ************************** */
@@ -68,6 +73,7 @@ define variable link-option as character no-undo .
 
 define variable v-ii as integer no-undo.
 define variable v-type as character no-undo.
+define variable v-attr-code as character no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -118,10 +124,11 @@ tt-ext-system.esys-num-days-keep-exp tt-ext-system.esys-max-p-size ~
 tt-ext-system.max-p-queue tt-ext-system.max-p-time 
 &Scoped-define ENABLED-TABLES tt-ext-system
 &Scoped-define FIRST-ENABLED-TABLE tt-ext-system
-&Scoped-Define ENABLED-OBJECTS b-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit ~
-b-links b-help f-ftp-ip f-login FI-delivery-method f-password f-ftp-path ~
+&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-links b-help RECT-1 RECT-2 ~
+RECT-3 RECT-4 f-ftp-ip f-login FI-delivery-method f-password f-ftp-path ~
 f-ftp-path-in f-ftp-path-out b-db-export f-exp-db-name t-delete-pck-on ~
-T-exp-conf-wait b-db-import f-imp-db-name T-imp-conf-send l-save-oxml-pck ~
+T-exp-conf-wait b-db-import f-imp-db-name T-imp-conf-send tg-cert-sign ~
+fi-cert-sign-subject fi-cert-sign-issuer cb-cert-file-ext l-save-oxml-pck ~
 FILL-IN-4 
 &Scoped-Define DISPLAYED-FIELDS tt-ext-system.esys-id ~
 tt-ext-system.esys-des tt-ext-system.esys-type tt-ext-system.esys-name ~
@@ -136,7 +143,8 @@ tt-ext-system.max-p-queue tt-ext-system.max-p-time
 &Scoped-Define DISPLAYED-OBJECTS fi-des-label f-ftp-ip f-login ~
 FI-delivery-method f-password fi-screen-pass f-ftp-path f-ftp-path-in ~
 f-ftp-path-out f-exp-db-name t-delete-pck-on T-exp-conf-wait f-imp-db-name ~
-T-imp-conf-send l-save-oxml-pck FILL-IN-4 
+T-imp-conf-send tg-cert-sign fi-cert-sign-subject fi-cert-sign-issuer ~
+cb-cert-file-ext l-save-oxml-pck FILL-IN-4 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -192,6 +200,13 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE VARIABLE cb-cert-file-ext AS CHARACTER FORMAT "X(4)" 
+     LABEL "Расширение в имени файла с ЭЦП" 
+     VIEW-AS COMBO-BOX INNER-LINES 2
+     LIST-ITEMS "p7s","p7c" 
+     DROP-DOWN-LIST
+     SIZE 14 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-exp-db-name AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
      SIZE 32 BY 1 NO-UNDO.
@@ -230,9 +245,19 @@ DEFINE VARIABLE f-password AS CHARACTER FORMAT "X(24)":U
      VIEW-AS FILL-IN NATIVE 
      SIZE 24 BY 1 NO-UNDO.
 
+DEFINE VARIABLE fi-cert-sign-issuer AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Издатель сертификата" 
+     VIEW-AS FILL-IN 
+     SIZE 40 BY 1 NO-UNDO.
+
+DEFINE VARIABLE fi-cert-sign-subject AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Владелец сертификата (~"Субъект~")" 
+     VIEW-AS FILL-IN 
+     SIZE 40 BY 1 NO-UNDO.
+
 DEFINE VARIABLE FI-delivery-method AS CHARACTER FORMAT "X(256)":U INITIAL "Метод доставки:" 
      VIEW-AS FILL-IN 
-     SIZE 15.5 BY 1 NO-UNDO.
+     SIZE 15.6 BY 1 NO-UNDO.
 
 DEFINE VARIABLE fi-des-label AS CHARACTER FORMAT "X(256)":U INITIAL "Описание:" 
      VIEW-AS FILL-IN 
@@ -253,36 +278,41 @@ DEFINE VARIABLE l-save-oxml-pck AS CHARACTER FORMAT "X(256)":U INITIAL "дн."
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 47.5 BY 12.04.
+     SIZE 47.6 BY 11.48.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE    
-     SIZE 12.5 BY 1.25
+     SIZE 12.6 BY 1.24
      BGCOLOR 8 FGCOLOR 8 .
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 48 BY 7.08.
+     SIZE 48 BY 6.48.
 
 DEFINE RECTANGLE RECT-4
      EDGE-PIXELS 2 GRAPHIC-EDGE    
-     SIZE 12.5 BY 1.25
+     SIZE 12.6 BY 1.24
      BGCOLOR 8 FGCOLOR 8 .
 
 DEFINE VARIABLE t-delete-pck-on AS LOGICAL INITIAL no 
      LABEL "Удал. ф-лы из HEAP" 
      VIEW-AS TOGGLE-BOX
-     SIZE 22 BY 1.08 NO-UNDO.
+     SIZE 22 BY 1.1 NO-UNDO.
 
 DEFINE VARIABLE T-exp-conf-wait AS LOGICAL INITIAL no 
      LABEL "Ждет подтв. после экспорта" 
      VIEW-AS TOGGLE-BOX
-     SIZE 31.5 BY 1.08 NO-UNDO.
+     SIZE 31.6 BY 1.1 NO-UNDO.
 
 DEFINE VARIABLE T-imp-conf-send AS LOGICAL INITIAL no 
      LABEL "Посылает подтв. после импорта" 
      VIEW-AS TOGGLE-BOX
-     SIZE 33 BY 1.08 NO-UNDO.
+     SIZE 33 BY 1.1 NO-UNDO.
+
+DEFINE VARIABLE tg-cert-sign AS LOGICAL INITIAL no 
+     LABEL "Использовать электронную подпись" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 46 BY .81 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -297,102 +327,106 @@ DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 11
      b-links AT ROW 1 COL 26 WIDGET-ID 24
      b-help AT ROW 1 COL 95
-     tt-ext-system.esys-id AT ROW 2.25 COL 11 COLON-ALIGNED WIDGET-ID 26
+     tt-ext-system.esys-id AT ROW 2.24 COL 11 COLON-ALIGNED WIDGET-ID 26
           LABEL "Код"
           VIEW-AS FILL-IN 
           SIZE 10 BY 1
-     fi-des-label AT ROW 2.25 COL 51 NO-LABEL
-     tt-ext-system.esys-des AT ROW 2.25 COL 61.5 NO-LABEL
+     fi-des-label AT ROW 2.24 COL 51 NO-LABEL
+     tt-ext-system.esys-des AT ROW 2.24 COL 61.6 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
-          SIZE 34.5 BY 2
-     tt-ext-system.esys-type AT ROW 3.58 COL 11 COLON-ALIGNED WIDGET-ID 64
+          SIZE 34.6 BY 2
+     tt-ext-system.esys-type AT ROW 3.57 COL 11 COLON-ALIGNED WIDGET-ID 64
           LABEL "Тип ВС" FORMAT "->,>>>,>>9"
           VIEW-AS COMBO-BOX INNER-LINES 10
           LIST-ITEM-PAIRS "Item 1",0
           DROP-DOWN-LIST
-          SIZE 34.5 BY 1
-     tt-ext-system.esys-name AT ROW 4.92 COL 3
+          SIZE 34.6 BY 1
+     tt-ext-system.esys-name AT ROW 4.91 COL 3
           LABEL "Название" FORMAT "X(30)"
           VIEW-AS FILL-IN 
-          SIZE 34.5 BY 1
-     f-ftp-ip AT ROW 5 COL 59.5 COLON-ALIGNED WIDGET-ID 48
-     f-login AT ROW 6 COL 59.5 COLON-ALIGNED WIDGET-ID 50
-     FI-delivery-method AT ROW 6.33 COL 2.88 NO-LABEL WIDGET-ID 42
-     tt-ext-system.delivery-method AT ROW 6.33 COL 16.5 COLON-ALIGNED NO-LABEL WIDGET-ID 28
+          SIZE 34.6 BY 1
+     f-ftp-ip AT ROW 5 COL 59.6 COLON-ALIGNED WIDGET-ID 48
+     f-login AT ROW 6 COL 59.6 COLON-ALIGNED WIDGET-ID 50
+     FI-delivery-method AT ROW 6.33 COL 2.8 NO-LABEL WIDGET-ID 42
+     tt-ext-system.delivery-method AT ROW 6.33 COL 16.6 COLON-ALIGNED NO-LABEL WIDGET-ID 28
           VIEW-AS COMBO-BOX 
           LIST-ITEM-PAIRS "Item 1",1,
                      "Item 2",2
           DROP-DOWN-LIST
           SIZE 29 BY 1
-     f-password AT ROW 7 COL 59.5 COLON-ALIGNED WIDGET-ID 52 BLANK 
-     fi-screen-pass AT ROW 7.25 COL 59.5 COLON-ALIGNED NO-LABEL WIDGET-ID 54
-     f-ftp-path AT ROW 8 COL 59.5 COLON-ALIGNED WIDGET-ID 56
-     f-ftp-path-in AT ROW 9 COL 59.5 COLON-ALIGNED WIDGET-ID 66
-     tt-ext-system.esys-have-export AT ROW 9.21 COL 3.5
+     f-password AT ROW 7 COL 59.6 COLON-ALIGNED WIDGET-ID 52 BLANK 
+     fi-screen-pass AT ROW 7.24 COL 59.6 COLON-ALIGNED NO-LABEL WIDGET-ID 54
+     f-ftp-path AT ROW 8 COL 59.6 COLON-ALIGNED WIDGET-ID 56
+     f-ftp-path-in AT ROW 9 COL 59.6 COLON-ALIGNED WIDGET-ID 66
+     tt-ext-system.esys-have-export AT ROW 9.19 COL 3.6
           LABEL "Экспорт"
           VIEW-AS TOGGLE-BOX
-          SIZE 10.5 BY .83
-     f-ftp-path-out AT ROW 10 COL 59.5 COLON-ALIGNED WIDGET-ID 68
-     tt-ext-system.esys-db-num-exp AT ROW 10.5 COL 4.5 COLON-ALIGNED
+          SIZE 10.6 BY .81
+     f-ftp-path-out AT ROW 10 COL 59.6 COLON-ALIGNED WIDGET-ID 68
+     tt-ext-system.esys-db-num-exp AT ROW 10.52 COL 4.6 COLON-ALIGNED
           LABEL "БД" FORMAT ">>>>9"
           VIEW-AS FILL-IN 
-          SIZE 5.5 BY 1
-     b-db-export AT ROW 10.5 COL 12 WIDGET-ID 16
-     f-exp-db-name AT ROW 10.5 COL 14 COLON-ALIGNED NO-LABEL WIDGET-ID 20
+          SIZE 5.6 BY 1
+     b-db-export AT ROW 10.52 COL 12 WIDGET-ID 16
+     f-exp-db-name AT ROW 10.52 COL 14 COLON-ALIGNED NO-LABEL WIDGET-ID 20
      t-delete-pck-on AT ROW 12 COL 55 WIDGET-ID 62
-     tt-ext-system.save-days-pck-num AT ROW 12 COL 82.5 COLON-ALIGNED WIDGET-ID 58
+     tt-ext-system.save-days-pck-num AT ROW 12 COL 82.6 COLON-ALIGNED WIDGET-ID 58
           LABEL "через"
           VIEW-AS FILL-IN 
-          SIZE 5.5 BY 1.08
-     tt-ext-system.esys-send-news-exp AT ROW 12.25 COL 6.5
+          SIZE 5.6 BY 1.1
+     tt-ext-system.esys-send-news-exp AT ROW 12.24 COL 6.6
           LABEL "Отправлять в новости"
           VIEW-AS TOGGLE-BOX
-          SIZE 24 BY .83
-     T-exp-conf-wait AT ROW 13.25 COL 6.5 WIDGET-ID 30
+          SIZE 24 BY .81
+     T-exp-conf-wait AT ROW 13.24 COL 6.6 WIDGET-ID 30
      tt-ext-system.esys-have-import AT ROW 14 COL 52 WIDGET-ID 6
           LABEL "Импорт"
           VIEW-AS TOGGLE-BOX
-          SIZE 10.5 BY .83
-     tt-ext-system.esys-num-days-keep-exp AT ROW 14.5 COL 37 COLON-ALIGNED
+          SIZE 10.6 BY .81
+     tt-ext-system.esys-num-days-keep-exp AT ROW 14.52 COL 37 COLON-ALIGNED
           LABEL "Дней хранения пакетов" FORMAT ">,>>>,>>9"
           VIEW-AS FILL-IN 
           SIZE 9 BY 1
-     tt-ext-system.esys-max-p-size AT ROW 15.75 COL 37 COLON-ALIGNED WIDGET-ID 40
+     tt-ext-system.esys-max-p-size AT ROW 15.76 COL 37 COLON-ALIGNED WIDGET-ID 40
           LABEL "Макс. размер пакета" FORMAT ">,>>>,>>9"
           VIEW-AS FILL-IN 
           SIZE 9 BY 1
      tt-ext-system.esys-db-num-imp AT ROW 16 COL 53 COLON-ALIGNED WIDGET-ID 10
           LABEL "БД" FORMAT ">>>>9"
           VIEW-AS FILL-IN 
-          SIZE 5.5 BY 1
-     b-db-import AT ROW 16 COL 60.5 WIDGET-ID 18
-     f-imp-db-name AT ROW 16.08 COL 62.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
+          SIZE 5.6 BY 1
+     b-db-import AT ROW 16 COL 60.6 WIDGET-ID 18
+     f-imp-db-name AT ROW 16.1 COL 62.6 COLON-ALIGNED NO-LABEL WIDGET-ID 22
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-ext-system.esys-send-news-imp AT ROW 17.5 COL 55 WIDGET-ID 12
+     tt-ext-system.esys-send-news-imp AT ROW 17.52 COL 55 WIDGET-ID 12
           LABEL "Отправлять в новости"
           VIEW-AS TOGGLE-BOX
-          SIZE 24 BY .83
-     tt-ext-system.max-p-queue AT ROW 18.25 COL 37 COLON-ALIGNED WIDGET-ID 34
+          SIZE 24 BY .81
+     tt-ext-system.max-p-queue AT ROW 18.24 COL 37 COLON-ALIGNED WIDGET-ID 34
           LABEL "Кол-во неподтв. пакетов" FORMAT ">>>9"
           VIEW-AS FILL-IN 
           SIZE 9 BY 1
-     T-imp-conf-send AT ROW 18.5 COL 55 WIDGET-ID 32
-     tt-ext-system.max-p-time AT ROW 19.5 COL 37 COLON-ALIGNED WIDGET-ID 36
+     T-imp-conf-send AT ROW 18.52 COL 55 WIDGET-ID 32
+     tt-ext-system.max-p-time AT ROW 19.52 COL 40.2 COLON-ALIGNED WIDGET-ID 36
           LABEL "Время ожидания потверждения > (мин)"
           VIEW-AS FILL-IN 
           SIZE 9 BY 1 TOOLTIP "max время, черепз котор. должен отправляться очередной пакет"
-     l-save-oxml-pck AT ROW 12.25 COL 91 COLON-ALIGNED NO-LABEL WIDGET-ID 60
-     FILL-IN-4 AT ROW 17.25 COL 2.38 COLON-ALIGNED NO-LABEL WIDGET-ID 38
-     RECT-1 AT ROW 9.5 COL 1.5
-     RECT-2 AT ROW 9 COL 2.5
-     RECT-3 AT ROW 14.5 COL 50 WIDGET-ID 8
-     RECT-4 AT ROW 13.75 COL 51.5 WIDGET-ID 14
-     SPACE(34.49) SKIP(6.74)
+     tg-cert-sign AT ROW 21.24 COL 4 WIDGET-ID 70
+     fi-cert-sign-issuer AT ROW 22.19 COL 38 COLON-ALIGNED WIDGET-ID 72
+     fi-cert-sign-subject AT ROW 23.38 COL 38 COLON-ALIGNED WIDGET-ID 74
+     cb-cert-file-ext AT ROW 24.57 COL 38 COLON-ALIGNED WIDGET-ID 76
+     l-save-oxml-pck AT ROW 12.24 COL 91 COLON-ALIGNED NO-LABEL WIDGET-ID 60
+     FILL-IN-4 AT ROW 17.24 COL 2.4 COLON-ALIGNED NO-LABEL WIDGET-ID 38
+     RECT-1 AT ROW 9.52 COL 1.6
+     RECT-2 AT ROW 9 COL 2.6
+     RECT-3 AT ROW 14.52 COL 50 WIDGET-ID 8
+     RECT-4 AT ROW 13.76 COL 51.6 WIDGET-ID 14
+     SPACE(34.39) SKIP(10.99)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Внешняя подсистема Open XML"
@@ -792,6 +826,19 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME tg-cert-sign
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tg-cert-sign Dialog-Frame
+ON VALUE-CHANGED OF tg-cert-sign IN FRAME Dialog-Frame /* Использовать электронную подпись */
+DO:
+  assign tg-cert-sign .
+  run proc-value-changed-cert-sign in this-procedure (input tg-cert-sign) no-error .
+  if error-status:error then return no-apply .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -823,7 +870,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       view-as alert-box error.
       undo, return error.
    end.
-   if p-mode <> {&lookup} and v-cntxt-db-num > 0 then do:
+// if p-mode <> {&lookup} and v-cntxt-db-num > 0 then do: - 29/VIII-2018 заменено на ibs.th.gbl.gbl-var:g#db-num
+   if p-mode <> {&lookup} and ibs.th.gbl.gbl-var:g#db-num > 0 then do:
       message
       substitute("Нельзя редактировать или добавлять специальную внешнюю систему в УБД")
       view-as alert-box error.
@@ -863,16 +911,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          delete tt-ext-system-attr.
        end.
        do v-ii = 1 to num-entries({&form-esys-attr}):
+         v-attr-code = entry(v-ii, {&form-esys-attr}) .
          create tt-ext-system-attr.
          assign
          tt-ext-system-attr.esys-id = tt-ext-system.esys-id
          tt-ext-system-attr.db-num = tt-ext-system.db-num
-         tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr})
+         tt-ext-system-attr.esya-attr-code = v-attr-code
           .
          run ext-system-attr-value (
                                       input  tt-ext-system.esys-id
                                      ,input  tt-ext-system.db-num
-                                     ,input entry(v-ii, {&form-esys-attr})
+                                     ,input  v-attr-code
                                      ,output tt-ext-system-attr.esya-attr-value
                                      ,output v-type) .
           release tt-ext-system-attr.
@@ -923,6 +972,7 @@ PROCEDURE enable_UI :
   DISPLAY fi-des-label f-ftp-ip f-login FI-delivery-method f-password 
           fi-screen-pass f-ftp-path f-ftp-path-in f-ftp-path-out f-exp-db-name 
           t-delete-pck-on T-exp-conf-wait f-imp-db-name T-imp-conf-send 
+          tg-cert-sign fi-cert-sign-subject fi-cert-sign-issuer cb-cert-file-ext 
           l-save-oxml-pck FILL-IN-4 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-ext-system THEN 
@@ -935,7 +985,7 @@ PROCEDURE enable_UI :
           tt-ext-system.esys-send-news-imp tt-ext-system.max-p-queue 
           tt-ext-system.max-p-time 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit b-links b-help 
+  ENABLE b-exit b-quit b-links b-help RECT-1 RECT-2 RECT-3 RECT-4 
          tt-ext-system.esys-id tt-ext-system.esys-des tt-ext-system.esys-type 
          tt-ext-system.esys-name f-ftp-ip f-login FI-delivery-method 
          tt-ext-system.delivery-method f-password f-ftp-path f-ftp-path-in 
@@ -944,7 +994,8 @@ PROCEDURE enable_UI :
          T-exp-conf-wait tt-ext-system.esys-have-import 
          tt-ext-system.esys-num-days-keep-exp tt-ext-system.esys-max-p-size 
          b-db-import f-imp-db-name tt-ext-system.max-p-queue T-imp-conf-send 
-         tt-ext-system.max-p-time l-save-oxml-pck FILL-IN-4 
+         tt-ext-system.max-p-time tg-cert-sign fi-cert-sign-subject 
+         fi-cert-sign-issuer cb-cert-file-ext l-save-oxml-pck FILL-IN-4 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1143,21 +1194,24 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
+define variable v-list-item-pairs as character no-undo .
 DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-ii AS integer NO-UNDO.
 define buffer buf_db for ub.db.
+
+  v-list-item-pairs = "" .
 do v-ii = 1 to num-entries({&openxml-special-type-list}):
 &scop openxml-type-code string(v-ii)
-  assign
-  tt-ext-system.esys-type:list-item-pairs in frame {&frame-name} =
+  v-list-item-pairs = 
   (if v-ii = 1
   then ({&openxml-type-name}  + {&comma-char} +  entry(v-ii, {&openxml-special-type-list}))
-  else (tt-ext-system.esys-type:list-item-pairs + {&comma-char} +
+  else (v-list-item-pairs + {&comma-char} +
          {&openxml-type-name}  + {&comma-char} +  entry(v-ii, {&openxml-special-type-list}))
 
   )
   .
 end.
+  tt-ext-system.esys-type:list-item-pairs in frame {&frame-name} = v-list-item-pairs .
 ASSIGN
  fi-screen-pass:WIDTH-CHARS IN FRAME {&frame-name} = f-password:WIDTH-CHARS IN FRAME {&frame-name} - 0.5
  fi-screen-pass:HEIGHT-CHARS IN FRAME {&frame-name} = f-password:HEIGHT-CHARS IN FRAME {&frame-name} - 0.6
@@ -1166,30 +1220,16 @@ ASSIGN
  .
 for each tt-ext-system-attr:
   case tt-ext-system-attr.esya-attr-code:
-     when {&attr-esys-ftp-ip} then do:
-        assign
-        f-ftp-ip = tt-ext-system-attr.esya-attr-value.
-     end.
-     when {&attr-esys-ftp-login} then do:
-        assign
-        f-login = tt-ext-system-attr.esya-attr-value.
-     end.
-     when {&attr-esys-ftp-password} then do:
-        assign
-        f-password = tt-ext-system-attr.esya-attr-value.
-     end.
-     when {&attr-esys-ftp-path} then do:
-        assign
-        f-ftp-path = tt-ext-system-attr.esya-attr-value.
-     end.
-     when {&attr-esys-ftp-path-in} then do:
-        assign
-        f-ftp-path-in = tt-ext-system-attr.esya-attr-value.
-     end.
-     when {&attr-esys-ftp-path-out} then do:
-        assign
-        f-ftp-path-out = tt-ext-system-attr.esya-attr-value.
-     end.
+     when {&attr-esys-ftp-ip}       then f-ftp-ip       = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-ftp-login}    then f-login        = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-ftp-password} then f-password     = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-ftp-path}     then f-ftp-path     = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-ftp-path-in}  then f-ftp-path-in  = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-ftp-path-out} then f-ftp-path-out = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-cert-sign}         then tg-cert-sign = logical(tt-ext-system-attr.esya-attr-value) .
+     when {&attr-esys-cert-sign-subject} then fi-cert-sign-subject = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-cert-sign-issuer}  then fi-cert-sign-issuer  = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-cert-file-ext}     then cb-cert-file-ext     = tt-ext-system-attr.esya-attr-value.
   end case.
 end.
 &SCOPED-DEFINE esys-dm-code ENTRY(v-ii, {&esys-dm-list})
@@ -1255,6 +1295,7 @@ t-exp-conf-wait
 t-imp-conf-send
 tt-ext-system.delivery-method
 t-delete-pck-on
+tg-cert-sign
 WITH FRAME {&frame-name}.
 ENABLE
 b-exit when p-mode <> {&lookup}
@@ -1270,6 +1311,7 @@ b-links when p-mode <> {&add-def}
 t-delete-pck-on when p-mode <> {&lookup}
 t-exp-conf-wait
 t-imp-conf-send
+tg-cert-sign when p-mode <> {&lookup}
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
 
@@ -1288,6 +1330,7 @@ else do:
   run manage-t-delete-pck-on in this-procedure ( input t-delete-pck-on).
 end.
 run proc-value-change-method in this-procedure (input tt-ext-system.delivery-method) no-error.
+run proc-value-changed-cert-sign in this-procedure (input tg-cert-sign) no-error .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1344,6 +1387,7 @@ END PROCEDURE.
 PROCEDURE proc-save :
 define variable v-rec as recid no-undo .
 define variable psw-buf as character no-undo .
+define variable v-attr-code as character no-undo .
 define buffer buf_ext-system for ub.ext-system.
 if p-mode = {&lookup} then return.
 
@@ -1368,7 +1412,36 @@ t-delete-pck-on
 tt-ext-system.delete-pck-on = (IF t-delete-pck-on THEN 1 ELSE 0)
 tt-ext-system.save-days-pck-num
 tt-ext-system.esys-type
+tg-cert-sign
 .
+if tt-ext-system.delivery-method = integer({&esys-dm-nn})
+or tt-ext-system.delivery-method = integer({&esys-dm-nnold})
+or tt-ext-system.delivery-method = integer({&esys-dm-exite-edi})
+or tt-ext-system.delivery-method = integer({&esys-dm-contour-edi})
+then do:
+   assign
+   f-ftp-ip
+   f-ftp-path
+   f-login.
+end.
+if tt-ext-system.delivery-method = integer({&esys-dm-exite-edi})
+or tt-ext-system.delivery-method = integer({&esys-dm-contour-edi})
+then do:
+   assign
+   f-ftp-path-in
+   f-ftp-path-out
+   .
+end.
+if tg-cert-sign then assign
+  fi-cert-sign-subject
+  fi-cert-sign-issuer
+  cb-cert-file-ext
+.
+else assign
+  fi-cert-sign-subject = ""
+  fi-cert-sign-issuer  = ""
+  cb-cert-file-ext     = ""
+.  
 
 if p-mode = {&update} then do:
    v-rec = recid(locked_ext-system).
@@ -1388,24 +1461,7 @@ IF f-password:VISIBLE IN FRAME {&FRAME-NAME} THEN DO:
       end.
    end.
 END.
-if tt-ext-system.delivery-method = integer({&esys-dm-nn})
-or tt-ext-system.delivery-method = integer({&esys-dm-nnold})
-or tt-ext-system.delivery-method = integer({&esys-dm-exite-edi})
-or tt-ext-system.delivery-method = integer({&esys-dm-contour-edi})
-then do:
-   assign
-   f-ftp-ip
-   f-ftp-path
-   f-login.
-end.
-if tt-ext-system.delivery-method = integer({&esys-dm-exite-edi})
-or tt-ext-system.delivery-method = integer({&esys-dm-contour-edi})
-then do:
-   assign
-   f-ftp-path-in
-   f-ftp-path-out
-   .
-end.
+
 if p-mode = {&add-def} then do:
   if tt-ext-system.esys-type = integer({&openxml-type-mercury})
   then do :
@@ -1419,14 +1475,15 @@ if p-mode = {&add-def} then do:
     end.  
   end.
   do v-ii = 1 to num-entries({&form-esys-attr}):
+    v-attr-code = entry(v-ii, {&form-esys-attr}) .
     find first tt-ext-system-attr where
-            tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr}) no-error.
+            tt-ext-system-attr.esya-attr-code = v-attr-code no-error.
     if not available tt-ext-system-attr then do:
       create tt-ext-system-attr.
       assign
       tt-ext-system-attr.esys-id = 0
       tt-ext-system-attr.db-num = 0
-      tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr})
+      tt-ext-system-attr.esya-attr-code = v-attr-code
       .
       release tt-ext-system-attr.
     end.
@@ -1435,33 +1492,18 @@ end.
 
 for each tt-ext-system-attr:
   case tt-ext-system-attr.esya-attr-code:
-     when {&attr-esys-ftp-ip} then do:
-        assign
-        tt-ext-system-attr.esya-attr-value = f-ftp-ip.
-     end.
-     when {&attr-esys-ftp-login} then do:
-        assign
-        tt-ext-system-attr.esya-attr-value =  f-login.
-     end.
-     when {&attr-esys-ftp-password} then do:
-        assign
-        tt-ext-system-attr.esya-attr-value = f-password.
-     end.
-     when {&attr-esys-ftp-path} then do:
-        assign
-        tt-ext-system-attr.esya-attr-value = f-ftp-path.
-     end.
-     when {&attr-esys-ftp-path-in} then do:
-        assign
-        tt-ext-system-attr.esya-attr-value = f-ftp-path-in.
-     end.
-     when {&attr-esys-ftp-path-out} then do:
-        assign
-        tt-ext-system-attr.esya-attr-value = f-ftp-path-out.
-     end.
+     when {&attr-esys-ftp-ip}       then tt-ext-system-attr.esya-attr-value = f-ftp-ip.
+     when {&attr-esys-ftp-login}    then tt-ext-system-attr.esya-attr-value = f-login.
+     when {&attr-esys-ftp-password} then tt-ext-system-attr.esya-attr-value = f-password.
+     when {&attr-esys-ftp-path}     then tt-ext-system-attr.esya-attr-value = f-ftp-path.
+     when {&attr-esys-ftp-path-in}  then tt-ext-system-attr.esya-attr-value = f-ftp-path-in.
+     when {&attr-esys-ftp-path-out} then tt-ext-system-attr.esya-attr-value = f-ftp-path-out.
+     when {&attr-esys-cert-sign}         then tt-ext-system-attr.esya-attr-value = string(tg-cert-sign).
+     when {&attr-esys-cert-sign-subject} then tt-ext-system-attr.esya-attr-value = fi-cert-sign-subject.
+     when {&attr-esys-cert-sign-issuer}  then tt-ext-system-attr.esya-attr-value = fi-cert-sign-issuer.
+     when {&attr-esys-cert-file-ext}     then tt-ext-system-attr.esya-attr-value = cb-cert-file-ext.
   end case.
 end.
-
 
 
 run bge/extsyss1.p ( input p-mode
@@ -1587,6 +1629,41 @@ case p-delivery-method:
   otherwise do:
   end.   
  END CASE.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-value-changed-cert-sign Dialog-Frame 
+PROCEDURE proc-value-changed-cert-sign PRIVATE :
+/*------------------------------------------------------------------------------
+ Purpose: включаеи-выключает блок параметров использования цифровой подписи
+ Notes:
+------------------------------------------------------------------------------*/
+define input parameter p-is-sign-checked as logical no-undo .
+
+  if p-is-sign-checked then do :
+    display
+      fi-cert-sign-subject
+      fi-cert-sign-issuer
+      cb-cert-file-ext
+    with frame {&frame-name} .
+    if p-mode <> {&lookup} then do:
+        enable
+      fi-cert-sign-subject
+      fi-cert-sign-issuer
+      cb-cert-file-ext
+        with frame {&frame-name}.
+    end .
+  end .
+  else do :
+    hide
+      fi-cert-sign-subject in frame {&frame-name}
+      fi-cert-sign-issuer  in frame {&frame-name}
+      cb-cert-file-ext     in frame {&frame-name}
+    .
+  end .
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

@@ -34,8 +34,11 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,{&bef-attr-esys-ftp-path}~
 ,{&bef-attr-esys-ftp-path-in}~
 ,{&bef-attr-esys-ftp-path-out}~
+,{&bef-attr-esys-cert-sign}~
+,{&bef-attr-esys-cert-sign-subject}~
+,{&bef-attr-esys-cert-sign-issuer}~
+,{&bef-attr-esys-cert-file-ext}~
 ':U
-
 
 procedure ext-system-attr-code :
 

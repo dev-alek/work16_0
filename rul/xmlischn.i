@@ -41,7 +41,7 @@ call_id
 procedure xmlischn_fill :
 define input  parameter p-codex-id  as integer   no-undo .
 define input  parameter p-ruleset-id as integer   no-undo .
-define buffer buf_rule-call-param for ub.rule-call-param.
+define buffer buf_rule-call-param  for ub.rule-call-param.
 define buffer buf2_rule-call-param for ub.rule-call-param.
 define buffer buf_temp-param-name for temp-param-name.
 
@@ -61,19 +61,18 @@ define variable v-ii as integer no-undo .
     :
       if first-of(buf_rule-call-param.once-more) then do:
         v-esys-id-list = ''.
-        for each buf2_rule-call-param where
-                  buf2_rule-call-param.call_id = buf_rule-call-param.call_id
-              and buf2_rule-call-param.codex_id = buf_rule-call-param.codex_id
-              and buf2_rule-call-param.ruleset_id = buf_rule-call-param.ruleset_id
-              and buf2_rule-call-param.profile_id = buf_rule-call-param.profile_id
-              and buf2_rule-call-param.once-more = buf_rule-call-param.once-more:
-          if buf2_rule-call-param.param-2-data-type = {&table_ext-system}
-          and (buf2_rule-call-param.param-name = "p-esys-id"
+        for each buf2_rule-call-param no-lock
+           where buf2_rule-call-param.call_id    = buf_rule-call-param.call_id
+             and buf2_rule-call-param.codex_id   = buf_rule-call-param.codex_id
+             and buf2_rule-call-param.ruleset_id = buf_rule-call-param.ruleset_id
+             and buf2_rule-call-param.profile_id = buf_rule-call-param.profile_id
+             and buf2_rule-call-param.once-more  = buf_rule-call-param.once-more
+             and buf2_rule-call-param.param-2-data-type = {&table_ext-system} :
+          if buf2_rule-call-param.param-name = "p-esys-id"
                or
                (buf2_rule-call-param.param-name = "p-esys-id-list"
                and
                buf2_rule-call-param.p-index > 0)
-              )
           then do:
             assign
             v-esys-id-list = v-esys-id-list + (if v-esys-id-list = '' then '' else {&comma-char}) +

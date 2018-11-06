@@ -21,7 +21,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 { bge/tmpcxmlh.i }
 
 procedure getoxmlh :
-define input  parameter p-xml-file-name as character no-undo .
+define input parameter p-xml-file-name as character no-undo .
+define input parameter p-pack-data     as memptr no-undo . 
 define input parameter p-headerh as handle no-undo .
 define input parameter p-delivery-method as integer no-undo .
 define variable v-parse-status as integer no-undo .
@@ -98,8 +99,9 @@ on error undo, return error return-value
 
     end.
   end case.
-
+    
   run xmllib-parse-progressive ( input p-xml-file-name
+                                ,input p-pack-data
                                 ,input yes /*p-parse-first*/
                                 ,input no /*p-first-error*/
                                 ,output v-parse-status) no-error .
@@ -119,6 +121,7 @@ on error undo, return error return-value
     end.
     error-status:error = no .
     run xmllib-parse-progressive ( input p-xml-file-name
+                                  ,input p-pack-data
                                   ,input no /*p-parse-first*/
                                   ,input no /*p-first-error*/
                                   ,output v-parse-status) no-error .

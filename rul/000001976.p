@@ -716,6 +716,7 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
                       ,input temp-esys.delivery-method
                       ,input v-oxml-exch-dir
                       ,input v-oxml-heap-dir
+                      ,input ""
                       ,input-output v-pack-num
                       ,input-output v-custom-pack-name
                       ,output v-loc-file-name

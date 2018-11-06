@@ -19,50 +19,107 @@ Creation date: 14/02/18
                 Когда их здесь наберётся достаточно много - подумаем, куда их вынести.
 */   
 block-level on error undo, throw.
+&scoped-define txt-sec секция
+&scoped-define txt-key параметр
+&scoped-define txt-ini в .ini файле
 
 class ibs.th.gbl.gbl-inipar: 
 
+  /* REP-SETS */
   define static property conPar as character no-undo
     get.
     private set.
   define static property conParKeyName as character no-undo
-    initial "секция REP-SETS ключ ConPar в .ini файле"
+    initial "{&txt-sec} REP-SETS {&txt-key} ConPar {&txt-ini}"
     get.
     
   define static property conParFlt as character no-undo
     get.
     private set.
   define static property conParFltKeyName as character no-undo
-    initial "секция REP-SETS ключ ConParFlt в .ini файле"
+    initial "{&txt-sec} REP-SETS {&txt-key} ConParFlt {&txt-ini}"
     get.
     
   define static property logDir as character no-undo
     get.
     private set.
   define static property logDirKeyName as character no-undo
-    initial "секция REP-SETS ключ logDir в .ini файле"
+    initial "{&txt-sec} REP-SETS {&txt-key} logDir {&txt-ini}"
     get.
     
+  /* revision */
   define static property comstr as character no-undo
     get.
     private set.
   define static property comstrKeyName as character no-undo
-    initial "секция revision ключ comstr в .ini файле"
+    initial "{&txt-sec} revision {&txt-key} comstr {&txt-ini}"
     get.
 
   define static property dirflrvs as character no-undo
     get.
     private set.
   define static property dirflrvsKeyName as character no-undo
-    initial "секция revision ключ dirflrvs в .ini файле"
+    initial "{&txt-sec} revision {&txt-key} dirflrvs {&txt-ini}"
     get.
 
   define static property dirflpmp as character no-undo
     get.
     private set.
   define static property dirflpmpKeyName as character no-undo
-    initial "секция revision ключ dirflpmp в .ini файле"
+    initial "{&txt-sec} revision {&txt-key} dirflpmp {&txt-ini}"
     get.
+
+  /* BGE */
+  define static property dirfrgAcc as character no-undo
+    get.
+    private set.
+  define static property dirfrgAccKeyName as character no-undo
+    initial "{&txt-sec} BGE {&txt-key} Dirfrg-acc {&txt-ini}"
+    get.
+
+  /* OXML */
+  define static property oxmlDir as character no-undo // значение для переменной oxml-heap-dir
+    get.
+    private set.
+  define static property oxmlDirKeyName as character no-undo
+    initial "{&txt-sec} OXML {&txt-key} oxml-dir {&txt-ini}"
+    get.
+
+  define static property oxmlExchDir as character no-undo // значение для переменной oxml-exch-dir
+    get.
+    private set.
+  define static property oxmlExchDirKeyName as character no-undo
+    initial "{&txt-sec} OXML {&txt-key} oxml-exch-dir {&txt-ini}"
+    get.
+/* 29/VIII-2018  параметры настройки ЭЦП перенесены из ini-файла в настройки внешней системы
+  define static property certSign as logical no-undo
+    get.
+    private set.
+  define static property certSignKeyName as character no-undo
+    initial "{&txt-sec} OXML {&txt-key} cert-sign {&txt-ini}"
+    get.
+
+  define static property certSignSubject as character no-undo
+    get.
+    private set.
+  define static property certSignSubjectKeyName as character no-undo
+    initial "{&txt-sec} OXML {&txt-key} cert-sign-subject {&txt-ini}"
+    get.
+
+  define static property certSignIssuer as character no-undo
+    get.
+    private set.
+  define static property certSignIssuerKeyName as character no-undo
+    initial "{&txt-sec} OXML {&txt-key} cert-sign-issuer {&txt-ini}"
+    get.
+
+  define static property certFileExt as character no-undo // расширение для файлов с цифровой подписью
+    get.
+    private set.
+  define static property certFileExtKeyName as character no-undo
+    initial "{&txt-sec} OXML {&txt-key} cert-file-ext {&txt-ini}"
+    get.
+*/
 
   /* ----- переменные для печати ----- */
   define private static variable cntxt-report-num as integer no-undo initial 0 .
@@ -78,9 +135,6 @@ class ibs.th.gbl.gbl-inipar:
     get-key-value section "rep-sets" key "ConPar"    value conPar .
     get-key-value section "rep-sets" key "ConParFlt" value conParFlt .
     get-key-value section "rep-sets" key "logDir"    value logDir .
-    get-key-value section "revision" key "comstr"    value comstr .
-    get-key-value section "revision" key "dirflrvs"  value dirflrvs .
-    get-key-value section "revision" key "dirflpmp"  value dirflpmp .
     if logDir = ?
     then do :
       logDir = ".\" .
@@ -89,7 +143,25 @@ class ibs.th.gbl.gbl-inipar:
       logDir = right-trim(logDir, "\") .
       logDir = right-trim(logDir, "/") .
       logDir = logDir + "\" .
-    end. 
+    end.
+    get-key-value section "revision" key "comstr"    value comstr .
+    get-key-value section "revision" key "dirflrvs"  value dirflrvs .
+    get-key-value section "revision" key "dirflpmp"  value dirflpmp .
+    get-key-value section "bge" key "dirfrg-acc"     value dirfrgAcc .
+    get-key-value section "oxml" key "oxml-dir"      value oxmlDir .
+    get-key-value section "oxml" key "oxml-exch-dir" value oxmlExchDir .
+/* 29/VIII-2018  параметры настройки ЭЦП перенесены из ini-файла в настройки внешней системы
+    define variable v-cert-sign as character no-undo .
+    get-key-value section "oxml" key "cert-sign"         value v-cert-sign .
+    certSign = logical (v-cert-sign) no-error .
+    get-key-value section "oxml" key "cert-sign-subject" value certSignSubject .
+    get-key-value section "oxml" key "cert-sign-issuer"  value certSignIssuer .
+    get-key-value section "oxml" key "cert-file-ext"     value certFileExt .
+    if certFileExt = ?
+    then do :
+      certFileExt = "p7s" .
+    end .
+*/    
   end method. // end_of InitPar
 
   /* ----- переменные для печати ----- */
@@ -111,11 +183,14 @@ class ibs.th.gbl.gbl-inipar:
   define variable v-full-path-RepView as character no-undo.
   define variable ii                  as integer no-undo .
   define variable v-report-name       as character no-undo .
+  
+    /* Получение полного пути к исполняемому файлу просмотровщика отчётов RV.exe */
     v-full-path-RepView = search("exe\ReportViewer\reportviewer.exe").
     if v-full-path-RepView = ? then do :
       message "Отсутствует программа просмотра отчёта." view-as alert-box error.
       return .
     end .
+
     do ii = 1 to NUM-ENTRIES (p-report-name-html).
       v-report-name = ENTRY (ii,p-report-name-html).
       if search(v-report-name) = ? then do:

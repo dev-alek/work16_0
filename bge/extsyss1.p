@@ -79,20 +79,103 @@ define buffer buf_ext-system for ub.ext-system.
 define buffer buf2_ext-system for ub.ext-system.
 define buffer buf_ext-classif for ub.ext-classif.
 
-if p-mode <> {&add-def}
-AND p-mode <> {&update} then do:
-  message vss-workfile vss-revision vss-description skip
-          "Неверный параметр p-mode - " p-mode
-  view-as alert-box error .
-  return error '':u.
-end.
 
-if g#db-num <> 0 then do:
-  message vss-workfile vss-revision vss-description skip
-          "Запрещено вызывать процедуру в УБД"
-  view-as alert-box error .
-  return error '':u.
-end.
+do : // проверки
+  if ibs.th.gbl.gbl-var:g#db-num <> 0 then do:
+    v-mess = "Запрещено вызывать процедуру в УБД" .
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent then v-mess else '':U).
+  end.
+
+  if p-esys-name = '':U then do:
+      v-mess = substitute("Не задано Название внешней системы").
+      run err-mess in this-procedure ( input-output v-mess).
+      return error (if p-silent then v-mess else 'esys-name':U).
+  end.
+
+  if lookup(string(p-delivery-method), {&esys-dm-list}) = 0 then do:
+    v-mess = substitute("Неверный метод доставки").
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent then v-mess else 'delivery-method':U).
+  end.
+  if p-delivery-method = integer({&esys-dm-oracle-retail})
+   and p-imp-conf-send = INTEGER({&openxml-imp-conf-send}) then do:
+    v-mess = substitute("Нельзя установить опцию &1&2и метод доставки &3 одновременно"
+                        , {&openxml-imp-conf-send-full}
+                        , {&new-line}
+                        , {&esys-dm-oracle-retail-full}
+                        ).
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent then v-mess else 'T-imp-conf-send':U).
+  end.
+  if p-delivery-method = integer({&esys-dm-oracle-retail})
+   and p-exp-conf-wait = INTEGER({&openxml-exp-conf-wait}) then do:
+    v-mess = substitute("Нельзя установить опцию &1&2и метод доставки &3 одновременно"
+                        , {&openxml-exp-conf-wait-full}
+                        , {&new-line}
+                        , {&esys-dm-oracle-retail-full}
+                        ).
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent then v-mess else 'T-exp-conf-wait':U).
+  end.
+
+  if lookup(string(p-esys-type), {&openxml-type-list}) = 0 then do:
+    v-mess = substitute("Неверный тип ВС").
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent then v-mess else 'esys-type':U).
+  end.
+  if p-esys-type = integer({&openxml-type-exite-edi})
+  and (p-delivery-method <> integer({&esys-dm-exite-edi}) or p-delivery-method <> integer({&esys-dm-contour-edi})) then do:
+    &scop openxml-type-code string(p-esys-type)
+    &scop esys-dm-code {&esys-dm-exite-edi}
+    v-mess = substitute("Для ВС типа &2 (&1)&3 метод доставки должен быть &4"
+                        , p-esys-type
+                        , {&openxml-type-name}
+                        , {&new-line}
+                        ,{&esys-dm-name}
+                        ).
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent then v-mess else '':U).
+  end.
+
+  if p-delete-pck-on <> 0 and p-delete-pck-on <> 1 then do:
+    v-mess = substitute("Неверное значение поля Удалять файлы из HEAP = &1", p-delete-pck-on).
+    run err-mess in this-procedure ( input-output v-mess).
+    return error (if p-silent then v-mess else 'delete-pck-on':U).
+  end.
+
+  if p-esys-have-export and p-esys-db-num-exp > 0 then do:
+    if not can-find (first buf_db where buf_db.db-num = p-esys-db-num-exp) then do:
+      v-mess = substitute("Неверно задан номер БД для экспорта &1", p-esys-db-num-exp).
+      run err-mess in this-procedure ( input-output v-mess).
+      return error (if p-silent then v-mess else '':U).
+    end.
+  end.
+
+  if p-esys-have-import and p-esys-db-num-imp > 0 then do:
+    if not can-find (first buf_db where buf_db.db-num = p-esys-db-num-imp) then do:
+      v-mess = substitute("Неверно задан номер БД для импорта &1", p-esys-db-num-imp).
+      run err-mess in this-procedure ( input-output v-mess).
+      return error (if p-silent then v-mess else '':U).
+    end.
+  end.
+
+  if p-mode = {&add-def} then do:
+    if can-find (first ext-system where ext-system.esys-id = p-esys-id) then do :
+      v-mess = substitute("ВС с кодом &1 уже существует. Повторное добавление запрещено.", p-esys-id) .
+      run err-mess in this-procedure ( input-output v-mess).
+      return error (if p-silent then v-mess else '':U).
+    end.
+  end .
+  else if p-mode <> {&update} then do:
+    message vss-workfile vss-revision vss-description skip
+          "Неверный параметр p-mode - " p-mode
+    view-as alert-box error .
+    return error '':u.
+  end.
+end . // end_of проверки
+
+  
 
 _main:
 do for buf_ext-system
@@ -101,17 +184,9 @@ on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
 on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
 :
   if p-mode = {&add-def} then do:
-    find first buf_ext-system no-lock where
-             buf_ext-system.esys-id = p-esys-id no-error.
-    if available buf_ext-system then do:
-      assign
-      v-mess = "Уже существует ВС c таким кодом".
-      run err-mess in this-procedure ( input-output v-mess).
-      undo _main, return error (if p-silent = yes then v-mess else '':U).
-    end.
-    run oxmlext-esys-id in this-procedure (
-        output p-esys-id
-    ).
+    /* 29/VIII-2018 - заинлайнена run oxmlext-esys-id in this-procedure ( output p-esys-id ). */
+    p-esys-id = next-value( s-ext-system, {&db-name_schema} ) . // @NOTE !! p-esys-id - INPUT parameter, не OUTPUT !!
+    
     create buf_ext-system.
     assign
     buf_ext-system.esys-id = p-esys-id
@@ -157,91 +232,6 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
         undo _main, return error (if p-silent = yes then v-mess else '':U).
       end.
     end.
-  end.
-  if p-esys-have-export
-  and p-esys-db-num-exp > 0 then do:
-    find first buf_db no-lock where
-              buf_db.db-num = p-esys-db-num-exp no-error.
-    if not available buf_db then do:
-      assign
-      v-mess = substitute("Неверно задан номер БД для экспорта &1", p-esys-db-num-exp).
-      run err-mess in this-procedure ( input-output v-mess).
-      undo _main, return error (if p-silent = yes then v-mess else '':U).
-
-    end.
-  end.
-  if p-esys-have-import
-  and p-esys-db-num-imp > 0 then do:
-    find first buf_db no-lock where
-              buf_db.db-num = p-esys-db-num-imp no-error.
-    if not available buf_db then do:
-      assign
-      v-mess = substitute("Неверно задан номер БД для импорта &1", p-esys-db-num-imp).
-      run err-mess in this-procedure ( input-output v-mess).
-      undo _main, return error (if p-silent = yes then v-mess else '':U).
-    end.
-  end.
-  if p-esys-name = '':U then do:
-      assign
-      v-mess = substitute("Не задано Название внешней системы").
-      run err-mess in this-procedure ( input-output v-mess).
-      undo _main, return error (if p-silent = yes then v-mess else 'esys-name':U).
-  end.
-  if lookup(string(p-delivery-method), {&esys-dm-list}) = 0 then do:
-    assign
-    v-mess = substitute("Неверный метод доставки").
-    run err-mess in this-procedure ( input-output v-mess).
-    undo _main, return error (if p-silent = yes then v-mess else 'delivery-method':U).
-  end.
-  if p-delete-pck-on <> 0
-  and p-delete-pck-on <> 1 then do:
-    assign
-    v-mess = substitute("Неверное значение поля Удалять файлы из HEAP = &1", p-delete-pck-on).
-    run err-mess in this-procedure ( input-output v-mess).
-    undo _main, return error (if p-silent = yes then v-mess else 'delete-pck-on':U).
-  end.
-  if p-delivery-method = integer({&esys-dm-oracle-retail})
-  and p-imp-conf-send = INTEGER({&openxml-imp-conf-send}) then do:
-    assign
-    v-mess = substitute("Нельзя установить опцию &1&2" +
-                        "и метод доставки &3 одновременно"
-                        , {&openxml-imp-conf-send-full}
-                        , {&new-line}
-                        , {&esys-dm-oracle-retail-full}
-                        ).
-    run err-mess in this-procedure ( input-output v-mess).
-    undo _main, return error (if p-silent = yes then v-mess else 'T-imp-conf-send':U).
-  end.
-  if p-delivery-method = integer({&esys-dm-oracle-retail})
-  and p-exp-conf-wait = INTEGER({&openxml-exp-conf-wait}) then do:
-    assign
-    v-mess = substitute("Нельзя установить опцию &1&2" +
-                        "и метод доставки &3 одновременно"
-                        , {&openxml-exp-conf-wait-full}
-                        , {&new-line}
-                        , {&esys-dm-oracle-retail-full}
-                        ).
-    run err-mess in this-procedure ( input-output v-mess).
-    undo _main, return error (if p-silent = yes then v-mess else 'T-exp-conf-wait':U).
-  end.
-if lookup(string(p-esys-type), {&openxml-type-list}) = 0 then do:
-    assign
-    v-mess = substitute("Неверный тип ВС").
-    run err-mess in this-procedure ( input-output v-mess).
-    undo _main, return error (if p-silent = yes then v-mess else 'esys-type':U).
-  end.
- if p-esys-type = integer({&openxml-type-exite-edi})
-    and (p-delivery-method <> integer({&esys-dm-exite-edi}) or p-delivery-method <> integer({&esys-dm-contour-edi})) then do:
-    &scop openxml-type-code string(p-esys-type)
-    &scop esys-dm-code {&esys-dm-exite-edi}
-    v-mess = substitute("Для ВС типа &2 (&1)&3 метод доставки должен быть &4"
-                        , p-esys-type
-                        , {&openxml-type-name}
-                        , {&new-line}
-                        ,{&esys-dm-name}
-                        ).
-    run err-mess in this-procedure ( input-output v-mess).
-    undo _main, return error (if p-silent = yes then v-mess else '':U).
   end.
   if lookup(string(p-esys-type), {&openxml-licensed-type-list}) > 0 then do:
     if p-esys-have-export then do:
@@ -371,31 +361,17 @@ if lookup(string(p-esys-type), {&openxml-type-list}) = 0 then do:
   buf_ext-system.esys-name                = p-esys-name
   buf_ext-system.esys-des                 = p-esys-des
   buf_ext-system.esys-have-export         = p-esys-have-export
-  buf_ext-system.esys-db-num-exp          = (if p-esys-have-export
-                                            then p-esys-db-num-exp
-                                            else 0)
-  buf_ext-system.esys-send-news-exp       = (if p-esys-have-export
-                                             then p-esys-send-news-exp
-                                             else no)
-  buf_ext-system.esys-num-days-keep-exp   = (if p-esys-have-export
-                                            then p-esys-num-days-keep-exp
-                                            else 0)
-  buf_ext-system.esys-max-p-size          = (if p-esys-have-export
-                                            then p-esys-max-p-size
-                                            else 0)
+  buf_ext-system.esys-db-num-exp          = (if p-esys-have-export then p-esys-db-num-exp        else 0)
+  buf_ext-system.esys-send-news-exp       = (if p-esys-have-export then p-esys-send-news-exp     else no)
+  buf_ext-system.esys-num-days-keep-exp   = (if p-esys-have-export then p-esys-num-days-keep-exp else 0)
+  buf_ext-system.esys-max-p-size          = (if p-esys-have-export then p-esys-max-p-size        else 0)
   buf_ext-system.exp-conf-wait            = p-exp-conf-wait
   buf_ext-system.max-p-queue              = p-max-p-queue
   buf_ext-system.max-p-time               = p-max-p-time
   buf_ext-system.esys-have-import         = p-esys-have-import
-  buf_ext-system.esys-db-num-imp          = (if p-esys-have-import
-                                             then p-esys-db-num-imp
-                                             else 0)
-  buf_ext-system.esys-send-news-imp       = (if p-esys-have-import
-                                             then p-esys-send-news-imp
-                                             else no)
-  buf_ext-system.esys-num-days-keep-imp   = (if p-esys-have-import
-                                             then p-esys-num-days-keep-imp
-                                             else 0)
+  buf_ext-system.esys-db-num-imp          = (if p-esys-have-import then p-esys-db-num-imp        else 0)
+  buf_ext-system.esys-send-news-imp       = (if p-esys-have-import then p-esys-send-news-imp     else no)
+  buf_ext-system.esys-num-days-keep-imp   = (if p-esys-have-import then p-esys-num-days-keep-imp else 0)
   buf_ext-system.imp-conf-send            = p-imp-conf-send
   buf_ext-system.esys-date-change         = v-today
   buf_ext-system.esys-chk-ingr-imp                = yes
@@ -405,13 +381,13 @@ if lookup(string(p-esys-type), {&openxml-type-list}) = 0 then do:
   buf_ext-system.esys-date-change-imp             = v-today
   buf_ext-system.esys-status                      = integer( {&openxml-status-working} )
   buf_ext-system.esys-work-update                 = no
-  buf_ext-system.esys-creid                       = g#userid
+  buf_ext-system.esys-creid                       = ibs.th.gbl.gbl-var:g#userid
   buf_ext-system.delivery-method                  = p-delivery-method
   buf_ext-system.delete-pck-on                    = p-delete-pck-on
   buf_ext-system.save-days-pck-num                = p-save-days-pck-num
   buf_ext-system.esys-type                        = p-esys-type
-  p-rec = recid(buf_ext-system).
   .
+  p-rec = recid(buf_ext-system).
   release  buf_ext-system no-error.
   if error-status:error then do:
       assign

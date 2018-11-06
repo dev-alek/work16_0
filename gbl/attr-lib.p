@@ -13422,6 +13422,49 @@ end procedure.
 &scop manual-edit-attr-esys-ftp-path-out 0
 &scop batch-edit-attr-esys-ftp-path-out 0
 
+&scop           type-attr-esys-cert-sign {&type-log}
+&scop         format-attr-esys-cert-sign "+/-"
+&scop          label-attr-esys-cert-sign "Использовать цифровую подпись"
+&scop        tooltip-attr-esys-cert-sign "Использовать цифровую подпись при обмене с внешней системой"
+&scop  user-can-edit-attr-esys-cert-sign true
+&scop output-display-attr-esys-cert-sign false
+&scop          other-attr-esys-cert-sign '':u
+&scop           news-attr-esys-cert-sign yes
+&scop    manual-edit-attr-esys-cert-sign 0
+&scop     batch-edit-attr-esys-cert-sign 0
+
+&scop           type-attr-esys-cert-sign-subject {&type-char}
+&scop         format-attr-esys-cert-sign-subject "X(256)"
+&scop          label-attr-esys-cert-sign-subject "Владелец подписи (Субъект)"
+&scop        tooltip-attr-esys-cert-sign-subject "Владелец подписи (Субъект)"
+&scop  user-can-edit-attr-esys-cert-sign-subject true
+&scop output-display-attr-esys-cert-sign-subject false
+&scop          other-attr-esys-cert-sign-subject '':u
+&scop           news-attr-esys-cert-sign-subject yes
+&scop    manual-edit-attr-esys-cert-sign-subject 0
+&scop     batch-edit-attr-esys-cert-sign-subject 0
+
+&scop           type-attr-esys-cert-sign-issuer {&type-char}
+&scop         format-attr-esys-cert-sign-issuer "X(256)"
+&scop          label-attr-esys-cert-sign-issuer "Издатель подписи"
+&scop        tooltip-attr-esys-cert-sign-issuer "Издатель подписи"
+&scop  user-can-edit-attr-esys-cert-sign-issuer true
+&scop output-display-attr-esys-cert-sign-issuer false
+&scop          other-attr-esys-cert-sign-issuer '':u
+&scop           news-attr-esys-cert-sign-issuer yes
+&scop    manual-edit-attr-esys-cert-sign-issuer 0
+&scop     batch-edit-attr-esys-cert-sign-issuer 0
+
+&scop           type-attr-esys-cert-file-ext {&type-char}
+&scop         format-attr-esys-cert-file-ext "X(6)"
+&scop          label-attr-esys-cert-file-ext "Расширение имени файла"
+&scop        tooltip-attr-esys-cert-file-ext "Расширение имени файла с цифровой подписью"
+&scop  user-can-edit-attr-esys-cert-file-ext true
+&scop output-display-attr-esys-cert-file-ext false
+&scop          other-attr-esys-cert-file-ext '':u
+&scop           news-attr-esys-cert-file-ext yes
+&scop    manual-edit-attr-esys-cert-file-ext 0
+&scop     batch-edit-attr-esys-cert-file-ext 0
 
 /* сюда добавлять новые параметры атрибутов ВС */
 
@@ -13493,7 +13536,14 @@ procedure ext-system-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-esys-ftp-path-out
       {&attr-temp-full-code}
-
+      &scop attr-code attr-esys-cert-sign
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-sign-subject
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-sign-issuer
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-file-ext
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов ВС */
       otherwise do:
@@ -13527,7 +13577,14 @@ procedure ext-system-attr-tooltip :
       {&attr-temp-code}
       &scop attr-code attr-esys-ftp-path-out
       {&attr-temp-code}
-
+      &scop attr-code attr-esys-cert-sign
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-sign-subject
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-sign-issuer
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-file-ext
+      {&attr-temp-code}
 
 
       /* сюда добавлять новые параметры атрибутов ВС */
@@ -13757,7 +13814,14 @@ procedure ext-system-attr-news :
       {&attr-news-code}
       &scop attr-code attr-esys-ftp-path-out
       {&attr-news-code}
-
+      &scop attr-code attr-esys-cert-sign
+      {&attr-news-code}
+      &scop attr-code attr-esys-cert-sign-subject
+      {&attr-news-code}
+      &scop attr-code attr-esys-cert-sign-issuer
+      {&attr-news-code}
+      &scop attr-code attr-esys-cert-file-ext
+      {&attr-news-code}
 
 
       /* сюда добавлять новые параметры атрибутов ВС */

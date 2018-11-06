@@ -86,6 +86,8 @@ end procedure. /* oxmlext-create */
 
 
 /*==========================================================================*/
+/* 29/VIII-2018 - не используется. Вызывалась в единственном месте - bge/extsyss1.p
+                  Перенесена в место вызова.
 procedure oxmlext-esys-id :
 define output parameter p-esys-id   as integer          no-undo.
 
@@ -97,7 +99,7 @@ on error undo, return error
     .
 end.
 end procedure. /* oxmlext-esys-id */
-
+*/
 /*==========================================================================*/
 procedure oxmlext-start-subsystem :
 define input parameter p-esys-id    as integer          no-undo.

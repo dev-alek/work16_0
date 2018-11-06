@@ -40,7 +40,11 @@ define variable vss-description as character no-undo init "«агрузка товара из ER
 { gbl/gate-clb.i }
 { ref/grplib.i }
 { bge/tmpcxmlh.i }
-{ bge/getoxmlh.i }
+
+// { bge/getoxmlh.i } 23/VIII-2018 xmllib.i и tmpcxmlh.i вставлены напр€мую
+{ str/xmllib.i }
+{ bge/tmpcxmlh.i }
+
 { gbl/xmlchar.i }
 { gbl/tmpreldf.i }
 { gbl/tmpreld2.i }
