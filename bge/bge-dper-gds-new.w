@@ -551,6 +551,7 @@ DO:
         run ref/cashpays.w (
             INPUT parparentproc
             ,INPUT "b-sel,b-mark":U
+            ,input {&all} 
             ,input v-bge-dper-host-code
             ,input v-bge-dper-store-type
             ,input v-bge-dper-store-code
