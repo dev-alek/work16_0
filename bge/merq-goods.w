@@ -822,6 +822,7 @@ define variable v-ret-unit-coeff as decimal no-undo .
   run ref\alt-units.w (input parparentproc,
                        input (if v-cntxt-db-num = 0 then {&update} else {&lookup}),
                        input tt-gds.gds-code,
+                       input "", /* ограничение списка выбора */
                        output v-ret-unit-name,
                        output v-ret-unit-coeff) . 
 end.

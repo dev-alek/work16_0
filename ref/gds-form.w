@@ -4804,6 +4804,7 @@ PROCEDURE proc-b-add-inf:
       run ref/alt-units.w (input parParentProc,
                            input mode,
                            input goods.gds-code,
+                       input "", /* ограничение списка выбора */
                        output v-ret-unit-name,
                        output v-ret-unit-coeff) no-error . 
       if error-status :error

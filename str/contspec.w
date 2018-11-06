@@ -2496,8 +2496,8 @@ run read-bonus in this-procedure (
       run str/contspc1.w
                          ( input parParentProc
                          , input {&update}
-                         , input b_goods.artic
                          , input b_goods.gds-code
+                         , input b_goods.artic
                          , input ( b_goods.prod-type + string(b_goods.prod-code))
                          , input b_goods.gds-name
                          , input b_goods.unit-base

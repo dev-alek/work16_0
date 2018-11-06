@@ -42,6 +42,7 @@ define variable vss-description as character no-undo initial "–едактирование стр
 
 define buffer t-doc     for ub.trn-doc.
 define buffer buf_goods for ub.goods .
+define buffer buf_contract-specif for ub.contract-specif .
 
 /* ¬ременна€ таблица дл€ организации интерфейса */
 define temp-table tt-fr-doc-line no-undo like ub.doc-line
@@ -264,6 +265,7 @@ define variable v-vid-action                as integer                       no-
 define variable v-vid-param                 as longchar                      no-undo .
 define variable v-gds-null-price            as logical                       no-undo .
 define variable is-fuel                     as logical                      no-undo .
+define variable v-specif-unit-list          as character                    no-undo . /* ед.изм. из спецификации договора */
 
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
@@ -994,10 +996,12 @@ end.
 on leave of tt-fr-doc-line.unit-cli in frame {&frame-name} do:
 if keyfunction(lastkey) <> "end-error" and
    not (last-event:event-type   = "progress":u and last-event:widget-enter = b-quit:handle) then do:
-  run chg-unit in this-procedure no-error.
-  if error-status :error then do:
-    return no-apply.
-  end.
+  if input frame {&frame-name} tt-fr-doc-line.unit-cli <> tt-fr-doc-line.unit-cli then do:
+    run chg-unit in this-procedure no-error.
+    if error-status :error then do:
+      return no-apply.
+    end.
+  end .
 end.
 end.
 
@@ -1005,7 +1009,11 @@ on choose of r-units in frame {&frame-name}
 do:
   { gbl/stdbtn.i }
   run proc-units in this-procedure .
-  apply "entry":U to tt-fr-doc-line.cli-base-rate .
+  run chg-unit in this-procedure no-error.
+  if error-status :error then do:
+    return no-apply.
+  end.
+  else apply "entry":U to tt-fr-doc-line.cli-base-rate .
 end.
 
 on return of tt-fr-doc-line.cli-base-rate in frame {&frame-name} do:
@@ -2068,6 +2076,15 @@ empty temp-table thbjattr_thbj-attr.
      end.
    end.
    assign frame {&frame-name}:title = "—трока накладной є " + t-doc.doc-code + "    - " + parline-mode.
+
+  /* дл€ возможной проверки допустимости ед.изм поставщика */
+  if t-doc.contract-code > 0 then do :
+    find first buf_contract-specif no-lock
+         where buf_contract-specif.host-code    = t-doc.host-code 
+           and buf_contract-specif.contract-num = t-doc.contract-code
+           and buf_contract-specif.gds-code     = buf_goods.gds-code no-error .
+    v-specif-unit-list = if available buf_contract-specif then buf_contract-specif.unit-cli else "" .
+  end .
 
    run ui-on in this-procedure no-error.
    if error-status :error then do:
@@ -3892,9 +3909,10 @@ procedure cr-tt-fr-doc-line:
     tt-fr-doc-line.prt-root      = buf_goods.prt-root
     tt-fr-doc-line.type-inp-sum  = (if parinplnsum = yes then yes else no)
   .
+
   if parmode = "create" then do:
     assign
-      tt-fr-doc-line.unit-cli      = buf_goods.unit-cli
+      tt-fr-doc-line.unit-cli      = if v-specif-unit-list > "":U then v-specif-unit-list else  buf_goods.unit-cli
       tt-fr-doc-line.cli-base-rate = buf_goods.cli-base-rate
       tt-fr-doc-line.doc-density   = ?
       tt-fr-doc-line.fact-density  = ?
@@ -4543,6 +4561,7 @@ define variable v-ret-unit-coeff as decimal no-undo .
   run ref/alt-units.w (input parparentproc,
                        input {&select},
                        input buf_goods.gds-code,
+                       input v-specif-unit-list, /* ограничение списка выбора */
                       output v-ret-unit-name,
                       output v-ret-unit-coeff) .
   if v-ret-unit-name > "" then do :
@@ -4601,8 +4620,8 @@ define variable v-unit-name as character no-undo .
 define buffer buf_units    for ub.units .
 define buffer buf_contract for ub.contract .
 define buffer buf_contract-specif for ub.contract-specif .
-v-unit-name = input frame {&frame-name} tt-fr-doc-line.unit-cli .
-if v-unit-name <> tt-fr-doc-line.unit-cli then do:
+
+  v-unit-name = input frame {&frame-name} tt-fr-doc-line.unit-cli .
   if not can-find (first buf_units where buf_units.unit-name = v-unit-name) then do:
     message
       substitute("≈диница измерени€ поставщика [&1] отсутствует в справочнике единиц измерени€", v-unit-name)
@@ -4612,35 +4631,21 @@ if v-unit-name <> tt-fr-doc-line.unit-cli then do:
     return no-apply.
   end.
   // 28/IX-2018 при создании ѕЌ с договором можно указывать только базовую или ед. измерени€ по договору
-  /* т.к. по исходным текстам не видно, где мы знаем номер договора, то пытаемс€ найти договор заново */
   if t-doc.contract-code > 0 then do :
-    find first buf_contract no-lock
-         where buf_contract.host-code     = t-doc.host-code
-           and buf_contract.contract-code = t-doc.contract-code no-error .
-    if available buf_contract then do : // договор есть, значит ≈» надо проверить
-      if
-      (buf_goods.unit-base = v-unit-name)
-      or
-      can-find (first buf_contract-specif
-                where buf_contract-specif.host-code    = buf_contract.host-code 
-                  and buf_contract-specif.contract-num = buf_contract.contract-code
-                  and buf_contract-specif.gds-code     = buf_goods.gds-code
-                  and buf_contract-specif.unit-cli     = v-unit-name)
-      then .
-      else do :
-    message
-      substitute("≈диницей измерени€ поставщика [&1] может быть или базова€ дл€ товара, или указанна€ в договоре [&2]"
-                , v-unit-name, buf_contract.contract-prn-code)
+    if (buf_goods.unit-base = v-unit-name) or (v-specif-unit-list  = v-unit-name) then .
+    else do :
+      message
+      substitute("≈диницей измерени€ поставщика [&1] может быть или [&2] - базова€ дл€ товара, или [&3] - указанна€ в договоре",
+                 v-unit-name, buf_goods.unit-base, v-specif-unit-list)
       view-as alert-box.
     display tt-fr-doc-line.unit-cli with frame {&frame-name}.
     apply "choose" to r-units.
     return no-apply.
-      end .
     end .
   end .
     
   assign frame {&frame-name} tt-fr-doc-line.unit-cli.
-end.
+
 end procedure.
 
 procedure chs-dog :

@@ -35,6 +35,7 @@ using ibs.th.gbl.storage.*.
 define input parameter parparentproc as handle no-undo .
 define input parameter p-mode        as character no-undo .
 define input parameter p-gds-code    as integer no-undo .
+define input parameter p-unit-list   as character no-undo . /* список ограничения отображаемых ЕИ через запятую */
 define output parameter p-unit-name  as character no-undo .
 define output parameter p-coeff      as decimal no-undo .
 
@@ -412,8 +413,12 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
   unitsObj = unitsStr:getunitmercs(p-gds-code) .
   
   do ii = 1 to unitsObj:GetItem(ii) :
+    v-unit-name = unitsObj:UnitObjCurr:UnitName .
+    if p-unit-list > "" then do :
+      if not can-do (p-unit-list, v-unit-name) then next .
+    end .
     create tt-units .
-    tt-units.unit-name  = unitsObj:UnitObjCurr:UnitName .
+    tt-units.unit-name  = v-unit-name .
     tt-units.long-name  = unitsObj:UnitObjCurr:UnitFullName .
     tt-units.guid_      = unitsObj:UnitObjCurr:UnitGuid .
     tt-units.coeff      = unitsObj:UnitObjCurr:UnitCoef .

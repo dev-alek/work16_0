@@ -426,13 +426,9 @@ do:
   run ref/alt-units.w (input parparentproc,
                        input {&select},
                        input p-gds,
+                       input "", /* ограничение списка выбора */
                        output v-ret-unit-name,
                        output v-ret-unit-coeff) . 
-//  define variable ref-rec as recid no-undo.
-//  run ref/units.w (input parparentproc, input yes, output ref-rec).
-//  if ref-rec = ? then return no-apply.
-//  find buf_units where recid (buf_units) = ref-rec no-lock.
-//  assign fi-unit-cli  = buf_units.unit-name.
   if v-ret-unit-name > "" then do :
     if can-find (first buf_units where buf_units.unit-name = v-ret-unit-name) then do :
       fi-unit-cli = v-ret-unit-name .
