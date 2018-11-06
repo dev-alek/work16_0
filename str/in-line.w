@@ -267,6 +267,7 @@ define variable v-gds-null-price            as logical                       no-
 define variable is-fuel                     as logical                      no-undo .
 define variable v-specif-unit-list          as character no-undo . /* ед.изм. из спецификации договора */
 define variable v-specif-cli-base-rate      as decimal no-undo .   /* коэф. к базовой ЕИ для ЕИ из договора */ 
+define variable l-repeat-asi                as logical                       no-undo .
 
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
@@ -515,6 +516,31 @@ function f-chekval RETURNS logical (input p-canval as char, input p-chkval as de
   end.
   return no.
 end function.
+
+FUNCTION chk-asi-polling RETURNS logical
+  ( is-bef as log ) :
+    
+  def buffer bf_rsv for ub.rvs-doc .
+  
+  find first bf_rsv 
+    no-lock where bf_rsv.rvs-type = (if is-bef then {&rvs-before-doc} else {&rvs-after-doc}) 
+    and bf_rsv.out-code = t-doc.doc-code
+    and bf_rsv.state-measure-qnty <> ?
+    no-error .
+            
+  if available (bf_rsv) and not l-repeat-asi
+    then 
+  do:
+    message
+      "Недостаточно прав для повторного опроса уровнемеров."
+      view-as alert-box information title "".              
+    return no .
+  end.
+  else return yes.
+
+    
+    
+end.
 
 /* ************************  control triggers  ************************ */
 
@@ -1603,6 +1629,10 @@ on choose of menu-item m-rvs-bf-1 in menu m-rvs-bf
         end.
         else 
         do:
+            
+            if not chk-asi-polling (yes)
+              then return no-apply .
+            
             message
                 "Сверка до уже выполнена. Вы уверены, что хотите ее изменить?"  skip
   
@@ -1640,6 +1670,9 @@ end.
 on choose of menu-item m-rvs-af-1 in menu m-rvs-af
 do:
   { gbl/stdbtn.i b-rvs-af }
+
+  if not chk-asi-polling (no)
+    then return no-apply .
 
   run action-rvs-line in this-procedure
     ( input {&update}
@@ -1698,6 +1731,9 @@ on choose of menu-item m-rvs-bf-3 in menu m-rvs-bf
 do:
   { gbl/stdbtn.i b-rvs-bf }
 
+  if not chk-asi-polling (yes)
+    then return no-apply .
+
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "edit":U
@@ -1716,6 +1752,9 @@ on choose of menu-item m-rvs-af-3 in menu m-rvs-af
 do:
   { gbl/stdbtn.i b-rvs-af }
 
+  if not chk-asi-polling (no)
+    then return no-apply .
+    
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "edit":U
@@ -1956,6 +1995,22 @@ do on error   undo main-block, leave main-block
    { gbl/conf-rd.i "'is-prt'"   0 "''" 0 "''" "''" "''" yes prtvalue      prttype      no-error }
    { gbl/conf-rd.i "'stfactpl'" 0 "''" 0 "''" "''" "''" no  stfactplvalue stfactpltype no-error }
    { gbl/conf-rd.i "'ptoldfil'" t-doc.host-code t-doc.obj-type t-doc.obj-code "''" "''" "''" no ptoldfilvalue ptoldfiltype no-error }
+
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_rvs-on-doc_repeat-asi':U
+    {&cntxt-object}
+    t-doc.host-code
+    t-doc.obj-type
+    t-doc.obj-code
+    0
+    0
+    0
+    false
+    l-repeat-asi
+  }
 
 define variable par-1 as character no-undo .
 define variable par-0 as logical   no-undo .
@@ -5894,6 +5949,5 @@ procedure p-chk-vat:
       end.
 
 end procedure.
-
 
 /* _UIB-CODE-BLOCK-END */
