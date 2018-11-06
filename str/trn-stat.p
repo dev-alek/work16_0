@@ -206,6 +206,8 @@ define variable vsdSts as class vsdstatustype no-undo.
 define variable vsdStr as class vsdtostorage no-undo.
 define variable keyrecObj as class keyrec no-undo.
 define variable v-error-attr  as character no-undo .
+define variable is-fuel          as   character            no-undo.
+define variable parisfueltype    as   character            no-undo.
 
 define stream str-err.
 
@@ -732,22 +734,30 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end.  
   end.
   v-error-attr = "".
-  do ii = 1 to num-entries (v-attr-dop-info):
-    find first buf_doc-attr no-lock 
-      where buf_doc-attr.doc-code = pardoc-code 
-        and buf_doc-attr.attr-code = entry (ii, v-attr-dop-info) no-error. 
-    
-    if not available (buf_doc-attr) or (available (buf_doc-attr) and 
-      (buf_doc-attr.attr-value = "" 
-      or buf_doc-attr.attr-value = "" or buf_doc-attr.attr-value = ? or buf_doc-attr.attr-value = "?")
-      )
-    then do:
-      v-error-attr = v-error-attr + ", " + entry (ii, v-attr-dop-info).
+  { str/tdat-val.i                                    
+   bf_trn-doc.doc-code
+   {&trdcattr-is-fuel}
+   is-fuel 
+   parisfueltype no-error}
+  if is-fuel = "yes" and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  then do:
+    do ii = 1 to num-entries (v-attr-dop-info):
+      find first buf_doc-attr no-lock 
+        where buf_doc-attr.doc-code = pardoc-code 
+          and buf_doc-attr.attr-code = entry (ii, v-attr-dop-info) no-error. 
+      
+      if not available (buf_doc-attr) or (available (buf_doc-attr) and 
+        (buf_doc-attr.attr-value = "" 
+        or buf_doc-attr.attr-value = "" or buf_doc-attr.attr-value = ? or buf_doc-attr.attr-value = "?")
+        )
+      then do:
+        v-error-attr = v-error-attr + ", " + entry (ii, v-attr-dop-info).
+      end.
     end.
-  end.
-  if v-error-attr <> "" then do:
-    run waitfram-hide in this-procedure no-error.
-    undo, return error "Не все обязательные поля по доп. информации накладной заполнены".
+    if v-error-attr <> "" then do:
+      run waitfram-hide in this-procedure no-error.
+      undo, return error "Не все обязательные поля по доп. информации накладной заполнены".
+    end.
   end.
     
       if bf_trn-doc.status_ <> {&inquiry}  then do:

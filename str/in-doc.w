@@ -2737,10 +2737,10 @@ do on stop undo, return error return-value :
        input parparentproc
       ,input "b-sel,b-add"
       ,input ?             /*p-stat */
-      ,input ?             /*p-list  */
+      ,input {&group}             /*p-list  */
       ,input ?             /*p-cond  */
       ,input ?             /*p-rec   */
-      ,input ?             /*p-grp   */
+      ,input "Топливное предложение"             /*p-grp   */
       ,input t-doc.cli-type             /*p-cli-type */
       ,input t-doc.cli-code             /*p-cli-code  */
       ,input v-cntxt-obj-type    /*p-obj-type  */

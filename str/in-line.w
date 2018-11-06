@@ -320,10 +320,10 @@ define button b-exit-cycl
 
 define button b-rvs-bf
     label "Св.до"
-    size 6 by 1.
+    size 12 by 1.2.
 define button b-rvs-af
     label "Св.после"
-    size 9 by 1.
+    size 12 by 1.2.
 
 define menu m-rvs-bf
     menu-item m-rvs-bf-1 label "Сверка резервуара"  accelerator "alt-1"
@@ -332,7 +332,7 @@ define menu m-rvs-bf
 
 define button b-addinf
     label "Доп.инф."
-    size 9 by 1.
+    size 10 by 1.
 
 define button b-docsec
     label "По сек."
@@ -434,12 +434,12 @@ define frame d-in-line
   tt-fr-doc-line.num-place              at row 16.2 col 1.5                 label "Кол-во мест"
   tt-fr-doc-line.wt-brutto              at row 16.2 col 68
 
-  tt-fr-doc-line.road-tax               at row 18   col 2 fgcolor 4
-  tt-fr-doc-line.excise                 at row 19   col 3 label "Акциз"                                               fgcolor 4
-  tt-fr-doc-line.transport-base         at row 18   col 50    colon-aligned label "Тр.расх."                                    fgcolor 4
-  tt-fr-doc-line.other-base             at row 19   col 50    colon-aligned label "Пр.расх."                                    fgcolor 4
-  tt-fr-doc-line.transport-rubl         at row 18   col 80    colon-aligned label "Тр.расх."                                    fgcolor 4
-  tt-fr-doc-line.other-rubl             at row 19   col 80    colon-aligned label "Пр.расх."                                    fgcolor 4
+  tt-fr-doc-line.road-tax               at row 16   col 2 fgcolor 4
+  tt-fr-doc-line.excise                 at row 17   col 3 label "Акциз"                                               fgcolor 4
+  tt-fr-doc-line.transport-base         at row 16   col 50    colon-aligned label "Тр.расх."                                    fgcolor 4
+  tt-fr-doc-line.other-base             at row 17   col 50    colon-aligned label "Пр.расх."                                    fgcolor 4
+  tt-fr-doc-line.transport-rubl         at row 16   col 80    colon-aligned label "Тр.расх."                                    fgcolor 4
+  tt-fr-doc-line.other-rubl             at row 17   col 80    colon-aligned label "Пр.расх."                                    fgcolor 4
   prt-doc                               at row 9    col 10.5  colon-aligned
   prt-fact                              at row 10   col 10.5  colon-aligned
   "Сумма НДС(вал.постав.)"              at row 7    col 60                                             view-as text                     bgcolor 3 fgcolor 15
@@ -450,7 +450,7 @@ define frame d-in-line
   b-parts                               at row 10.5 col 90
   b-exit-cycl                           at row 12   col 90
   b-help                                at row 1    col 90
-  b-addinf                              at row 15   col 90
+  b-addinf                              at row 12   col 90
   b-alc-attr                            at row 15   col 90
   "Сумма"                               at row 11   col 37  view-as text    size 23    by 1  bgcolor 3 fgcolor 15
   tt-fr-doc-line.tot-cli                at row 12   col 35.5  colon-aligned  no-label format "->>>,>>>,>>>,>>>,>>>,>>>,>>>,>>9.99" VIEW-AS FILL-IN SIZE 30 BY 1
@@ -459,17 +459,17 @@ define frame d-in-line
   road-tax-cli                          at row 15   col 17 colon-aligned  view-as fill-in size 20 by 1 fgcolor 4
   rect-tot                              at row 16   col 1
   tt-fr-doc-line.wt-place               at row 16.2 col 40  label "Вес 1 места"
-  rect-tax1                             at row 17.5 col 1
-  rect-tax2                             at row 17.5 col 38
-  "Вал"                                 at row 17.3 col 55                                    view-as text                     bgcolor 3 fgcolor 15
-  "{&abbr_rub_firstshift}"              at row 17.3 col 85                                    view-as text                     bgcolor 3 fgcolor 15
+  rect-tax1                             at row 15.5 col 1
+  rect-tax2                             at row 15.5 col 38
+  "Вал"                                 at row 15.3 col 55                                    view-as text                     bgcolor 3 fgcolor 15
+  "{&abbr_rub_firstshift}"              at row 15.3 col 85                                    view-as text                     bgcolor 3 fgcolor 15
   b-place                               at row 20.5 col 2
   tt-fr-doc-line.pl-code                at row 20.5 col 2                   label "Место хр."
   tt-fr-doc-line.measure-qnty           at row 20.5 col 27.5  colon-aligned label "Изм."
   tt-fr-doc-line.state-measure-qnty     at row 20.5 col 49    colon-aligned label "Кол-во"
   tt-fr-doc-line.state-measure-cli-qnty at row 20.5 col 67.5  colon-aligned label "Вес"
-  b-rvs-bf                              at row 20.5 col 83
-  b-rvs-af                              at row 20.5 col 89.5
+  b-rvs-bf                              at row 18.6 col 87
+  b-rvs-af                              at row 20.1 col 87
   vargds-obj-fact-qnty                  at row 21.5 col 2
   vargds-obj-price-sale                 at row 21.5 col 24.5
   vargds-obj-pc-ov                      at row 21.5 col 51

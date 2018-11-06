@@ -1106,6 +1106,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             else do:
                rvsinvsubObj:Diff = - absolute (rvsinvsubObj:Diff).
             end.
+                        
             rvsinvsubObj:MeteringErr = dMMBd.
             if rvsinvsubObj:Diff < 0
             then do:
@@ -1145,6 +1146,20 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   .
             
             
+          end.
+          
+          def var v-infom-mess as char no-undo. 
+          if absolute (rvsinvsubObj:Diff) > rvsinvsubObj:MeterErrWast
+          then do:
+            v-infom-mess = v-infom-mess + substitute ("Назв. товара - &2&1Скл.место - &3, РКО,кг - &4, Факт., кг - &5&1&6, кг - &7&1"
+                , {&new-line}
+                ,buf_goods.gds-name
+                ,string(rvsinvsubObj:PlCode)
+                ,string(round (MKN, 3))
+                ,string(round (MFO, 3))
+                ,(if rvsinvsubObj:Diff < 0 then "Недостача" else "Излишки")
+                ,string (round (rvsinvsubObj:DeficitOver, 3))
+                ).
           end.
           
           if ptrlprop-expptrl = {&calc-petrol-weight} then do:
@@ -1613,6 +1628,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       .
     end.
   end. /* block_cre-inv transaction */
+  if v-infom-mess <> ""
+  then do:
+    message "В результате произведенных замеров были выявлены следующие расхождения, превышающие погрешность измерения:" skip v-infom-mess view-as alert-box information title "Сообщение".
+  end.
+
   for each tt-line-for-doc
   on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
   :
