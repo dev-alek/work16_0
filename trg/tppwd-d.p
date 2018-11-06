@@ -15,4 +15,4 @@ Creation date: 20.10.2018
 
 */
 
-TRIGGER PROCEDURE FOR DELETE OF ub.tech-prol-pwd..
+TRIGGER PROCEDURE FOR DELETE OF ub.tech-prol-pwd.

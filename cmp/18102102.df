@@ -1,6 +1,5 @@
 ADD FIELD "sec-vol1" OF "c-norm-loss" AS decimal
   FORMAT "->>,>>9.99"
-  POSITION 10
   INITIAL "0"
   LABEL "Минимальный предел объема АЦ/секции"
   DECIMALS 2
@@ -9,7 +8,6 @@ ADD FIELD "sec-vol1" OF "c-norm-loss" AS decimal
 
 ADD FIELD "sec-vol2" OF "c-norm-loss" AS decimal
   FORMAT "->>,>>9.99"
-  POSITION 11
   INITIAL "0"
   LABEL "Максимальный предел объема АЦ/секции"
   DECIMALS 2

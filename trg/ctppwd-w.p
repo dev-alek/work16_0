@@ -15,4 +15,4 @@ Creation date: 20.10.2018
 
 */
 
-TRIGGER PROCEDURE FOR WRITE OF ub.ñ-tech-prol-pwd NEW BUFFER Buf_New OLD BUFFER Buf_Old.
+TRIGGER PROCEDURE FOR WRITE OF ub.c-tech-prol-pwd NEW BUFFER Buf_New OLD BUFFER Buf_Old.
