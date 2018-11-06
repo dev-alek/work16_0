@@ -797,11 +797,15 @@ on choose of b-prod in frame Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-alt-units Dialog-Frame
 on choose of b-alt-units in frame Dialog-Frame
 do:
+define variable v-ret-unit-name  as character no-undo .
+define variable v-ret-unit-coeff as decimal no-undo .  
   if not available tt-gds then return no-apply .
   
   run ref\alt-units.w (input parparentproc,
                        input (if v-cntxt-db-num = 0 then {&update} else {&lookup}),
-                       input tt-gds.gds-code) . 
+                       input tt-gds.gds-code,
+                       output v-ret-unit-name,
+                       output v-ret-unit-coeff) . 
 end.
 
 /* _UIB-CODE-BLOCK-END */

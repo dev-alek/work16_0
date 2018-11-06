@@ -32,9 +32,11 @@ using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 
 /* Parameters Definitions ---                                           */
-define input parameter parparentproc as widget-handle no-undo .
-define input parameter p-mode as character no-undo.
-define input parameter p-gds-code   as integer no-undo .
+define input parameter parparentproc as handle no-undo .
+define input parameter p-mode        as character no-undo .
+define input parameter p-gds-code    as integer no-undo .
+define output parameter p-unit-name  as character no-undo .
+define output parameter p-coeff      as decimal no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":u .
 define variable vss-author      as character no-undo init "$Author$":u .
@@ -65,6 +67,7 @@ define variable unitsStr as class unitmercstr .
 
 define buffer buf_units for ub.units .
 define buffer buf_units-attr for ub.units-attr .
+define buffer buf_goods for ub.goods .
 
 define temp-table tt-units like ub.units
   field guid_ as character format "X(40)"
@@ -107,6 +110,10 @@ DEFINE BUTTON b-exit AUTO-END-KEY
      LABEL "&Выход ":L
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-select
+     LABEL "Вы&брать":L
+     SIZE 10 BY 1.
+
 DEFINE BUTTON b-del
      LABEL "Удалить":L
      SIZE 10 BY 1.
@@ -133,9 +140,10 @@ DEFINE BROWSE br-units QUERY br-units NO-LOCK DISPLAY
 DEFINE FRAME d-units
      br-units at row 2.5 col 3
      b-exit at row 1 col 1
-     b-add-unit at row 1 col 11
-     b-change at row 1 col 21
-     b-del at row 1 col 31
+     b-select at row 1 col 11
+     b-add-unit at row 1 col 21
+     b-change at row 1 col 31
+     b-del at row 1 col 41
     WITH VIEW-AS DIALOG-BOX
          SIDE-LABELS THREE-D
          SCROLLABLE size 93.5 by 16.25
@@ -189,6 +197,7 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add-unit d-units
 ON CHOOSE OF b-add-unit IN FRAME d-units /* Добавить */
 DO:
+  
   run bge\units-merc.w (input parparentproc,
                         input yes,
                         output v-unit-name) .
@@ -250,6 +259,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-change d-units
 ON CHOOSE OF b-change IN FRAME d-units /* Изменить */
 DO:
+  
   if not available tt-units then return no-apply .
   
   run gbl/d-prompt.w (
@@ -298,10 +308,54 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&Scoped-define SELF-NAME b-select
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-select d-units
+ON CHOOSE OF b-select IN FRAME d-units /* Выбрать */
+DO:
+    // @FUTU вместо идент.ЕИ можно возвращать класс, содержащий выбранную единицу измерения
+    if available tt-units then do:
+      assign
+        p-unit-name = tt-units.unit-name
+        p-coeff     = tt-units.coeff
+      .
+      apply  "GO" to FRAME {&FRAME-NAME}.
+    end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define BROWSE-NAME br-units
+&Scoped-define SELF-NAME br-units
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-units d-units
+ON DEFAULT-ACTION OF br-units IN FRAME d-units
+DO:
+    if p-mode = {&select} then
+      apply "CHOOSE":U to b-select.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-units d-units
+ON RETURN OF br-units IN FRAME d-units
+DO:
+    if p-mode = {&select} then
+      apply "CHOOSE":U to b-select.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-units
 ON CHOOSE OF b-exit IN FRAME d-units /* Выбрать */
 DO:
+  if (p-mode <> {&select}) then do :
+
   find first tt-units no-lock no-error.
   if available tt-units
   then do :
@@ -327,6 +381,8 @@ DO:
   delete object unitsObj no-error .
   delete object unitsStr no-error .
   delete object unitObj no-error .
+  
+  end . // end_of not_mode_select    
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -362,7 +418,28 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
     tt-units.guid_      = unitsObj:UnitObjCurr:UnitGuid .
     tt-units.coeff      = unitsObj:UnitObjCurr:UnitCoef .
   end.
- 
+  
+  /* в режиме редактирования и просмотра отображаются только связанные ЕИ,
+     в режиме выбора отображаются связанные ЕИ вместе с основной ЕИ товара */
+  if (p-mode = {&select}) then do :
+    assign
+      p-unit-name = ""
+      p-coeff     = 0.0
+    .
+    find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+    if available buf_goods then do :
+      if not can-find (first tt-units where tt-units.unit-name = buf_goods.unit-base) then do :
+        create tt-units .
+        assign
+          tt-units.unit-name  = buf_goods.unit-base
+          tt-units.long-name  = " БАЗОВАЯ "
+          tt-units.guid_      = ""
+          tt-units.coeff      = 1
+        .
+      end .
+    end .
+  end .
+    
   RUN enable_UI.
 
   if available tt-units then
@@ -409,10 +486,16 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
    -------------------------------------------------------------------- */
+define variable v-is-editable as logical no-undo .
+    v-is-editable = (ibs.th.gbl.gbl-var:g#db-num = 0) and
+                    (p-mode <> {&lookup}) and
+                    (p-mode <> {&select}) .   
+    b-select:visible   IN FRAME {&frame-name} = (p-mode = {&select}) .
     ENABLE  br-units b-exit
-                    b-add-unit when v-cntxt-db-num = 0 and p-mode <> {&lookup}
-                    b-change when v-cntxt-db-num = 0 and p-mode <> {&lookup}
-                    b-del when v-cntxt-db-num = 0 and p-mode <> {&lookup}
+                    b-select    WHEN b-select:visible
+                    b-add-unit  when v-is-editable
+                    b-change    when v-is-editable
+                    b-del       when v-is-editable
         WITH FRAME d-units.
         
     OPEN QUERY br-units FOR EACH tt-units exclusive-LOCK  .

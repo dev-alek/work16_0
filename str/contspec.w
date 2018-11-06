@@ -755,10 +755,6 @@ DO:
   END.
 
   if mark-num > 1 then do: /* выделено много */
-  /*  if b-prc then assign v-prc = FILL-prc .
-    else          assign v-prc = ? .
-    if b-prc-2 then assign v-prc-2 = FILL-prc-2 .
-    else          assign v-prc-2 = ? .  */
     assign
       v-price    = ?
       v-vat-type = ?
@@ -776,6 +772,7 @@ DO:
     run str/contspc1.w
                        ( input parParentProc
                        , input {&update}
+                       , input 0 // gds-code для выбора v-unit-cli
                        , input ""
                        , input ""
                        , input "?????? ???????"
@@ -935,6 +932,7 @@ DO:
     run str/contspc1.w
                        ( input parParentProc
                        , input {&update}
+                       , input buf_contract-specif.gds-code
                        , input buf_contract-specif.artic
                        , input (buf_contract-specif.prod-type + string(buf_contract-specif.prod-code))
                        , input buf_contract-specif.gds-name
@@ -2273,6 +2271,7 @@ PROCEDURE proc-add :
   define buffer b_contract-specif for ub.contract-specif .
   define variable is-con as logical   no-undo .
   define variable is-create as logical   no-undo .
+  define variable v-gds-recid as recid no-undo .
 
   if buf_contract.contract-type =  {&contr-addch} then do:
       run ref/addchls.w (
@@ -2323,18 +2322,18 @@ if ref-list = "" then  return .
 
 /* MATRIX */
 define variable v-ass-m as logical   no-undo init false .
-if v-cntxt-db-num <> 0 then do :
-   if can-find ( first ub.assortment-matrix no-lock where  ub.assortment-matrix.asmt-status = integer ({&current-status-int}) and
-                                                        ub.assortment-matrix.db-num = v-cntxt-db-num )  then v-ass-m = true  .
+if ibs.th.gbl.gbl-var:g#db-num <> 0 then do :
+   if can-find ( first ub.assortment-matrix where  ub.assortment-matrix.asmt-status = integer ({&current-status-int}) and
+                                                   ub.assortment-matrix.db-num = ibs.th.gbl.gbl-var:g#db-num )  then v-ass-m = true  .
 end.
 else do:
-   if can-find ( first ub.assortment-matrix no-lock where  ub.assortment-matrix.asmt-status = integer ({&current-status-int}))  then v-ass-m = true  .
+   if can-find ( first ub.assortment-matrix where  ub.assortment-matrix.asmt-status = integer ({&current-status-int}))  then v-ass-m = true  .
 end.
 define variable v-log as logical   no-undo .
 /* Проверка прав */
   { gbl/chk-actg.i
-    v-cntxt-db-num
-    v-cntxt-userid
+    ibs.th.gbl.gbl-var:g#db-num
+    ibs.th.gbl.gbl-var:g#userid
     {&action-head-code-main}
     'actn_assort-matr-gds_add-def':U
     {&cntxt-global}
@@ -2379,7 +2378,10 @@ end.
 
 
   do while lns-cnt <= num-entries (ref-list):
-    find b_goods no-lock where recid(b_goods) = integer (entry (lns-cnt, ref-list)).
+    v-gds-recid = integer (entry (lns-cnt, ref-list)) no-error .
+    find b_goods no-lock where recid(b_goods) = v-gds-recid no-error .
+    if not available b_goods then next .
+    
       run  SpecGr-gds-code-yes in this-procedure (
           input  b_goods.gds-code ,
           input  b_goods.grp-code ,
@@ -2495,6 +2497,7 @@ run read-bonus in this-procedure (
                          ( input parParentProc
                          , input {&update}
                          , input b_goods.artic
+                         , input b_goods.gds-code
                          , input ( b_goods.prod-type + string(b_goods.prod-code))
                          , input b_goods.gds-name
                          , input b_goods.unit-base

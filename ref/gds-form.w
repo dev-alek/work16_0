@@ -4799,9 +4799,13 @@ PROCEDURE proc-b-add-inf:
       .
     END.
     WHEN "alt-units":U then do:
+  define variable v-ret-unit-name  as character no-undo .
+  define variable v-ret-unit-coeff as decimal no-undo .  
       run ref/alt-units.w (input parParentProc,
                            input mode,
-                           input goods.gds-code) no-error.
+                           input goods.gds-code,
+                       output v-ret-unit-name,
+                       output v-ret-unit-coeff) no-error . 
       if error-status :error
       then do:
         assign

@@ -264,7 +264,7 @@ define variable v-vid-action                as integer                       no-
 define variable v-vid-param                 as longchar                      no-undo .
 define variable v-gds-null-price            as logical                       no-undo .
 
-define rectangle rect-tot  edge-pixels 2 graphic-edge size 98 by 1.5 bgcolor 8 dcolor 5.
+define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
 define rectangle rect-tax2 edge-pixels 2 graphic-edge size 61 by 2.9 bgcolor 8 dcolor 5.
 
@@ -388,13 +388,13 @@ define frame d-in-line
   tt-fr-doc-line.artic                 at row 1    col 15    colon-aligned label "&Артикул"           view-as fill-in size 18    by 1
   tt-fr-doc-line.gds-name              at row 1    col 35    colon-aligned no-label                   view-as text    size 48    by 1 fgcolor 4
   varalc-prod                          at row 1    col 86                  no-label                   view-as text    size 2     by 1 fgcolor 4
-  tt-fr-doc-line.prod-code             at row 2    col 15    colon-aligned label "&Производитель"     view-as fill-in size 7     by 1
+  tt-fr-doc-line.prod-code             at row 2    col 16    colon-aligned label "&Производитель"     view-as fill-in size 7     by 1
   tt-fr-doc-line.prod-type             at row 2    col 22    colon-aligned no-label                   view-as fill-in size 11.63 by 1
   tt-fr-doc-line.obj-name              at row 2    col 30    colon-aligned format "x(30)" no-label                   view-as text    size 35    by 1 fgcolor 4
   tt-fr-doc-line.last-date             at row 2    col 70    colon-aligned format "99/99/9999" label "Годен до"
   b-choose-last-date                   AT ROW 2    COL 83
   tt-fr-doc-line.last-num-day          at row 2    col 86    format "->>>>9" no-label
-  tt-fr-doc-line.cli-art               at row 3    col 20    colon-aligned label "Артикул поставщика"   format "x(16)"
+  tt-fr-doc-line.cli-art               at row 3    col 21    colon-aligned label "Артикул поставщика"   format "x(16)"
   b-docsec                             at row 7    col 32  
   v-goods-ms-base                      at row 3    col 42    label "Объем штуки"                                               fgcolor 4  
 
@@ -419,11 +419,12 @@ define frame d-in-line
   tt-fr-doc-line.price-base             at row 13   col 15    colon-aligned label "Учет"    format ">>,>>>,>>>,>>9.999"           view-as fill-in size 20    by 1
   tt-fr-doc-line.price-rubl             at row 14   col 15    colon-aligned label "Учет"               view-as fill-in size 20    by 1
   tt-fr-doc-line.new-price-sale         at row 15   col 50    colon-aligned label "Новая цена продажи" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 15    by 1  fgcolor 4
-  tt-fr-doc-line.price-prod             at row 16   col 20    colon-aligned label "Цена Производителя" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 18    by 1  fgcolor 4
+  tt-fr-doc-line.price-prod             at row 16   col 21    colon-aligned label "Цена Производителя" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 18    by 1  fgcolor 4
   tt-fr-doc-line.price-prod-vat         at row 16   col 52    colon-aligned label "Цена с НДС" format ">>>,>>>,>>>,>>9.99" view-as fill-in size 18    by 1  fgcolor 4
   tt-fr-doc-line.num-place              at row 16.2 col 1.5                 label "Кол-во мест"
   tt-fr-doc-line.wt-brutto              at row 16.2 col 68
-  tt-fr-doc-line.road-tax               at row 18   col 1 fgcolor 4
+
+  tt-fr-doc-line.road-tax               at row 18   col 2 fgcolor 4
   tt-fr-doc-line.excise                 at row 19   col 3 label "Акциз"                                               fgcolor 4
   tt-fr-doc-line.transport-base         at row 18   col 50    colon-aligned label "Тр.расх."                                    fgcolor 4
   tt-fr-doc-line.other-base             at row 19   col 50    colon-aligned label "Пр.расх."                                    fgcolor 4
@@ -445,7 +446,7 @@ define frame d-in-line
   tt-fr-doc-line.tot-cli                at row 12   col 35.5  colon-aligned  no-label format "->>>,>>>,>>>,>>>,>>>,>>>,>>>,>>9.99" VIEW-AS FILL-IN SIZE 30 BY 1
   tot-base                              at row 13   col 35.5  colon-aligned no-label
   tot-rubl                              at row 14   col 35.5  colon-aligned no-label
-  road-tax-cli                          at row 15   col 15 colon-aligned  view-as fill-in size 20 by 1 fgcolor 4
+  road-tax-cli                          at row 15   col 17 colon-aligned  view-as fill-in size 20 by 1 fgcolor 4
   rect-tot                              at row 16   col 1
   tt-fr-doc-line.wt-place               at row 16.2 col 40  label "Вес 1 места"
   rect-tax1                             at row 17.5 col 1
@@ -586,6 +587,7 @@ do:
                   or last-event :widget-enter = b-docsec :handle)
             )
   then do:
+    /* 20/IX-2018 - проверка перенесена в check-frame() 
     if input frame {&frame-name} tt-fr-doc-line.cli-qnty = 0
       or input frame {&frame-name} tt-fr-doc-line.cli-qnty = ?
     then do:
@@ -598,6 +600,7 @@ do:
       apply "entry" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .
       return no-apply .
     end.
+    */
     if input frame {&frame-name} tt-fr-doc-line.cli-qnty <> tt-fr-doc-line.cli-qnty then do:
       assign
         frame {&frame-name} tt-fr-doc-line.cli-qnty
@@ -615,7 +618,6 @@ do:
         and not ( last-event :event-type = "progress":u
                   and last-event :widget-enter = b-place :handle
                 )
-/*        and last-event :widget-enter <> tt-fr-doc-line.cli-base-rate :handle*/
 /*        and last-event :widget-enter <> tt-fr-doc-line.doc-density :handle*/
         and tt-fr-doc-line.cli-base-rate <> ?
         and tt-fr-doc-line.cli-base-rate <> 0
@@ -3263,7 +3265,20 @@ define input parameter kind-check as character no-undo. /*В случае серийного тов
 if tt-fr-doc-line.cli-art          :sensitive in frame {&frame-name} and input frame {&frame-name} tt-fr-doc-line.cli-art         <> tt-fr-doc-line.cli-art        then apply "leave" to tt-fr-doc-line.cli-art        in frame {&frame-name}.
 if tt-fr-doc-line.cst-code         :sensitive in frame {&frame-name} and input frame {&frame-name} tt-fr-doc-line.cst-code        <> tt-fr-doc-line.cst-code       then apply "leave" to tt-fr-doc-line.cst-code       in frame {&frame-name}.
 /*if tt-fr-doc-line.contract-prn-code:sensitive in frame {&frame-name} and input frame {&frame-name} tt-fr-doc-line.contract-prn-code <> tt-fr-doc-line.contract-prn-code       then apply "leave" to tt-fr-doc-line.contract-prn-code in frame {&frame-name}.*/
-if tt-fr-doc-line.cli-qnty         :sensitive in frame {&frame-name} and input frame {&frame-name} tt-fr-doc-line.cli-qnty        <> tt-fr-doc-line.cli-qnty       then apply "leave" to tt-fr-doc-line.cli-qnty       in frame {&frame-name}.
+
+if tt-fr-doc-line.cli-qnty         :sensitive in frame {&frame-name} then do :
+  if input frame {&frame-name} tt-fr-doc-line.cli-qnty = 0
+  or input frame {&frame-name} tt-fr-doc-line.cli-qnty = ?
+  then do:
+    message "Не указано количество в единицах измерения поставщика." view-as alert-box error .
+    display tt-fr-doc-line.type-inp-vat with frame {&frame-name} .
+    apply "entry" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .
+    return error .
+  end.
+  if input frame {&frame-name} tt-fr-doc-line.cli-qnty <> tt-fr-doc-line.cli-qnty then
+    apply "leave" to tt-fr-doc-line.cli-qnty       in frame {&frame-name}.
+end .
+
 if tt-fr-doc-line.unit-cli         :sensitive in frame {&frame-name} and input frame {&frame-name} tt-fr-doc-line.unit-cli        <> tt-fr-doc-line.unit-cli       then apply "leave" to tt-fr-doc-line.unit-cli       in frame {&frame-name}.
 if tt-fr-doc-line.doc-density      :sensitive in frame {&frame-name} and input frame {&frame-name} tt-fr-doc-line.doc-density     <> tt-fr-doc-line.doc-density    then apply "leave" to tt-fr-doc-line.doc-density    in frame {&frame-name}.
 if tt-fr-doc-line.temperature      :sensitive in frame {&frame-name} and input frame {&frame-name} tt-fr-doc-line.temperature     <> tt-fr-doc-line.temperature    then apply "leave" to tt-fr-doc-line.temperature    in frame {&frame-name}.
@@ -3695,7 +3710,6 @@ procedure save-action:
           if error-status :error then do:
             undo zap, return error return-value.
           end.
-
 
 
           run init-tt-doc-pl in this-procedure
@@ -4492,14 +4506,33 @@ procedure calc-all :
 end procedure. /* calc-all */
 
 procedure proc-units:
+// 20/IX-2018 в приходе и в спецификации можно указывать любую ЕИ, для которой на товаре задан коэфф.пересчёта к базовой ЕИ
+// 28/IX-2018 в приходе по договору можно указать либо базовую ЕИ, либо ЕИ из спецификации договора
 define buffer bf-r-units for ub.units.
-define variable ref-rec as recid no-undo.
-run ref/units.w (input parparentproc, input yes, output ref-rec).
-if ref-rec = ? then return no-apply.
-find bf-r-units where recid (bf-r-units) = ref-rec no-lock.
-assign tt-fr-doc-line.unit-cli  = bf-r-units.unit-name.
-release bf-r-units.
-display tt-fr-doc-line.unit-cli with frame {&frame-name}.
+define variable v-ret-unit-name  as character no-undo .
+define variable v-ret-unit-coeff as decimal no-undo .
+  
+  run ref/alt-units.w (input parparentproc,
+                       input {&select},
+                       input buf_goods.gds-code,
+                      output v-ret-unit-name,
+                      output v-ret-unit-coeff) .
+  if v-ret-unit-name > "" then do :
+    if can-find (first bf-r-units where bf-r-units.unit-name = v-ret-unit-name) then do :
+      tt-fr-doc-line.unit-cli      = v-ret-unit-name .
+      tt-fr-doc-line.cli-base-rate = v-ret-unit-coeff .      
+      display
+        tt-fr-doc-line.unit-cli
+        tt-fr-doc-line.cli-base-rate
+      with frame {&frame-name}.
+      /* Здесь мы имеем:
+        - единицу измерения, в которой ввели количество, и за единицу которой указана цена;
+        - коэффициент пересчёта к базовой единице измерения товара;
+        - цену закупки можно сравнить с ценой спецификации, если такая проверка выполняется. 
+      */
+    end .
+  end .
+  else return error .
 end procedure.
 
 procedure v-c-type-inp-vat:
@@ -4536,16 +4569,49 @@ end.
 end procedure.
 
 procedure chg-unit:
-if input frame {&frame-name} tt-fr-doc-line.unit-cli <> tt-fr-doc-line.unit-cli then do:
-  find ub.units where ub.units.unit-name = input frame {&frame-name} tt-fr-doc-line.unit-cli no-lock no-error.
-  if not available ub.units then do:
-    message "Неправильная единица измерения поставщика." view-as alert-box.
+define variable v-unit-name as character no-undo .
+define buffer buf_units    for ub.units .
+define buffer buf_contract for ub.contract .
+define buffer buf_contract-specif for ub.contract-specif .
+v-unit-name = input frame {&frame-name} tt-fr-doc-line.unit-cli .
+if v-unit-name <> tt-fr-doc-line.unit-cli then do:
+  if not can-find (first buf_units where buf_units.unit-name = v-unit-name) then do:
+    message
+      substitute("Единица измерения поставщика [&1] отсутствует в справочнике единиц измерения", v-unit-name)
+      view-as alert-box.
     display tt-fr-doc-line.unit-cli with frame {&frame-name}.
     apply "choose" to r-units.
     return no-apply.
   end.
+  // 28/IX-2018 при создании ПН с договором можно указывать только базовую или ед. измерения по договору
+  /* т.к. по исходным текстам не видно, где мы знаем номер договора, то пытаемся найти договор заново */
+  if t-doc.contract-code > 0 then do :
+    find first buf_contract no-lock
+         where buf_contract.host-code     = t-doc.host-code
+           and buf_contract.contract-code = t-doc.contract-code no-error .
+    if available buf_contract then do : // договор есть, значит ЕИ надо проверить
+      if
+      (buf_goods.unit-base = v-unit-name)
+      or
+      can-find (first buf_contract-specif
+                where buf_contract-specif.host-code    = buf_contract.host-code 
+                  and buf_contract-specif.contract-num = buf_contract.contract-code
+                  and buf_contract-specif.gds-code     = buf_goods.gds-code
+                  and buf_contract-specif.unit-cli     = v-unit-name)
+      then .
+      else do :
+    message
+      substitute("Единицей измерения поставщика [&1] может быть или базовая для товара, или указанная в договоре [&2]"
+                , v-unit-name, buf_contract.contract-prn-code)
+      view-as alert-box.
+    display tt-fr-doc-line.unit-cli with frame {&frame-name}.
+    apply "choose" to r-units.
+    return no-apply.
+      end .
+    end .
+  end .
+    
   assign frame {&frame-name} tt-fr-doc-line.unit-cli.
-  release ub.units.
 end.
 end procedure.
 
@@ -4766,9 +4832,7 @@ procedure edit-doc-pl :
             message
               "Не указан коэффициент единиц измерения поставщика."
               view-as alert-box information.
-            if tt-fr-doc-line.cli-base-rate :sensitive in frame {&frame-name} then do:
               apply "entry" to tt-fr-doc-line.cli-base-rate in frame {&frame-name} .
-            end.
             return error .
           end.
         end.
@@ -5462,7 +5526,7 @@ PROCEDURE chg-attr :
 /*------------------------------------------------------------------------------
   Purpose:
   Parameters:  <none>
-  Notes:
+  Notes:       20/IX-2018 уже было до этого закомментарено
 ------------------------------------------------------------------------------*/
 define buffer old_goods          for ub.goods .
 define buffer old_doc-line       for ub.doc-line .

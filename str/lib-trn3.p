@@ -1235,21 +1235,56 @@ do on error undo, return error return-value :
     end.
 
     /* Проверка отклонение цены накладной от спецификации в меньшую и большую стороны */
-    IF bf_contract-specif.prc <> ?
-      and bf_contract-specif.prc > 0
-      and bf_contract-specif.price-cli * (1 + 1 / 100 * bf_contract-specif.prc) < parprice-check
-    THEN DO:
-      return error substitute ("В спецификации к договору &1 по фирме &2 по товару &3 &4 &5 указана цена &6 и отклонение в большую сторону &7%. Максимально допустимая цена = &8. В документе указана цена &9.",
+    define variable v-unitstore as class ibs.th.gbl.storage.unitmercstr no-undo .
+    define variable v-unitsubs  as class ibs.th.str.mercury.unitsubs no-undo .
+    define variable v-unitsub   as class ibs.th.str.mercury.unitsub no-undo .
+    define variable v-i-counter as integer no-undo .
+    define variable v-i-num     as integer no-undo .
+    define variable v-stub      as integer no-undo .
+    define variable v-unit-k    as decimal no-undo .
+    define variable v-contr-price-cli as decimal no-undo .
+    
+    if bf_goods.unit-base = bf_contract-specif.unit-cli then do :
+        v-contr-price-cli  = bf_contract-specif.price-cli .
+    end .
+    else do :
+        v-unit-k = 1.
+        v-unitstore = new ibs.th.gbl.storage.unitmercstr () .
+        v-unitsubs = v-unitstore:getunitmercs(bf_goods.gds-code) .
+        
+        v-i-counter = v-unitsubs:iCounter .
+        do v-i-num = 1 to v-i-counter :
+          v-stub = v-unitsubs:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
+          v-unitsub = cast(v-unitsubs:SubjectObjCurr, ibs.th.str.mercury.unitsub) .
+          if v-unitsub:UnitName = bf_contract-specif.unit-cli then do :
+            v-unit-k = v-unitsub:UnitCoef .
+            leave .
+          end .
+        end .
+        /* Строку из накладной уже не видим: видим только товар и спецификацию.
+           Но мы знаем, что в накладной может использоваться или базовая ЕИ, или ЕИ из спецификации.
+           Т.к. проверяемая цена уже пришла в пересчёте на 1 ед. товара - то
+           мы всегда приводим цену спецификации к базовой ЕИ 
+        */
+        v-contr-price-cli = bf_contract-specif.price-cli / v-unit-k .
+        if valid-object (v-unitsubs) then delete object v-unitsubs .
+        if valid-object (v-unitstore) then delete object v-unitstore . 
+    end .
+      
+    if bf_contract-specif.prc > 0 then do :
+      if v-contr-price-cli * (1 + 1 / 100 * bf_contract-specif.prc) < parprice-check THEN DO:
+      return error substitute ("В спецификации к договору &1 по фирме &2 по товару &3 &4 &5 указана цена &6 за 1 единицу товара в базовых единицах измерения товара и отклонение в большую сторону &7%. Максимально допустимая цена = &8. В документе указана цена &9.",
                                bf_contract.contract-prn-code,                                                 /* 1 */
                                bf_contract.host-code,                                                         /* 2 */
                                bf_goods.artic,                                                                /* 3 */
                                bf_goods.prod-type,                                                            /* 4 */
                                bf_goods.prod-code,                                                            /* 5 */
-                               bf_contract-specif.price-cli,                                                  /* 6 */
+                               v-contr-price-cli,                                                  /* 6 */
                                bf_contract-specif.prc,                                                        /* 7 */
-                               bf_contract-specif.price-cli * (1 + 1 / 100 * bf_contract-specif.prc),         /* 8 */
+                               v-contr-price-cli * (1 + 1 / 100 * bf_contract-specif.prc),         /* 8 */
                                parprice-check).                                                               /* 9 */
-    END.
+      END.
+    end .
 
       for first bf_contract-specif-attr no-lock
          where bf_contract-specif-attr.contract-num = bf_contract-specif.contract-num
@@ -1259,7 +1294,7 @@ do on error undo, return error return-value :
            and bf_contract-specif-attr.attr-value <> ?
             and decimal(bf_contract-specif-attr.attr-value) > 0 :
 
-       if bf_contract-specif.price-cli * (1 - 1 / 100 * decimal(bf_contract-specif-attr.attr-value)) > parprice-check
+       if v-contr-price-cli * (1 - 1 / 100 * decimal(bf_contract-specif-attr.attr-value)) > parprice-check
        then do :
         return error substitute ("В спецификации к договору &1 по фирме &2 по товару &3 &4 &5 указана цена &6 и отклонение &7%. Минимально допустимая цена = &8. В документе указана цена &9.",
                                bf_contract.contract-prn-code,                                                                      /* 1 */
@@ -1267,9 +1302,9 @@ do on error undo, return error return-value :
                                bf_goods.artic,                                                                                     /* 3 */
                                bf_goods.prod-type,                                                                                 /* 4 */
                                bf_goods.prod-code,                                                                                 /* 5 */
-                               bf_contract-specif.price-cli,                                                                       /* 6 */
+                               v-contr-price-cli,                                                                       /* 6 */
                                decimal(bf_contract-specif-attr.attr-value),                                                        /* 7 */
-                               bf_contract-specif.price-cli * (1 - 1 / 100 * decimal(bf_contract-specif-attr.attr-value)),         /* 8 */
+                               v-contr-price-cli * (1 - 1 / 100 * decimal(bf_contract-specif-attr.attr-value)),         /* 8 */
                                parprice-check).                                                                                    /* 9 */
       end.
     END.

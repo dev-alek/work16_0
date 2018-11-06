@@ -547,6 +547,15 @@ define variable v-ischg-ext-type as logical no-undo .
     find first buf_trn-doc exclusive-lock
       where buf_trn-doc.doc-code = p-doc-code
       no-error .
+    if not available buf_trn-doc then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка задания входных параметров" skip
+        "Не найден документ" skip
+        "Номер документа" p-doc-code skip
+        view-as alert-box error .
+      undo, return error return-value .
+    end.
     
     if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
     then do:
@@ -558,16 +567,6 @@ define variable v-ischg-ext-type as logical no-undo .
       buf_trn-doc.fact-date = today.
     end.
     
-    if not available buf_trn-doc
-    then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка задания входных параметров" skip
-        "Не найден документ" skip
-        "Номер документа" p-doc-code skip
-        view-as alert-box error .
-      undo, return error return-value .
-    end.
 
     v-file-n = replace( buf_trn-doc.doc-code, "*", "$" ) .
     v-file-n = replace( v-file-n , ".", "$" ) .
@@ -613,7 +612,8 @@ define variable v-ischg-ext-type as logical no-undo .
        buf_trn-doc.internal = yes       and
        buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Object} then do:
       find first exp_trn-doc where exp_trn-doc.doc-code = buf_trn-doc.doc-code no-lock no-error.
-      { gbl/curobjdt.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error}
+      { gbl/objdtget.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error }
+/* 28/IX-2018 заменено на objdtget.i     { gbl/curobjdt.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error}*/
       if error-status:error then do:
         message
           vss-workfile vss-revision vss-description skip

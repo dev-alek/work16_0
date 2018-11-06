@@ -30,6 +30,7 @@ Creation date: 03/23/06
 /* Parameters Definitions ---                                           */
 define input  parameter parParentProc  AS WIDGET-HANDLE NO-UNDO.
 define input  parameter p-mode  as character no-undo .  /* {&update}, {&lookup} */
+define input  parameter p-gds   as integer no-undo .
 define input  parameter p-artic as character no-undo .
 define input  parameter p-prod  as character no-undo .
 define input  parameter p-NAME  as character no-undo .
@@ -63,7 +64,7 @@ define variable vss-description as character no-undo init "Изменение Товарной сп
 { gbl/getcntxt.i def }
 { cmp/library.i  }
 
-define variable g-log     as logical   no-undo .
+define variable g-log      as logical   no-undo .
 define buffer buf_goods for ub.goods  .
 assign p-res = no .
 
@@ -420,13 +421,26 @@ do:
   { gbl/stdbtn.i }
 
   define buffer buf_units for ub.units.
-  define variable ref-rec as recid no-undo.
-  run ref/units.w (input parparentproc, input yes, output ref-rec).
-  if ref-rec = ? then return no-apply.
-  find buf_units where recid (buf_units) = ref-rec no-lock.
-  assign fi-unit-cli  = buf_units.unit-name.
-  display fi-unit-cli with FRAME Dialog-Frame.
-  apply "entry":U to FILL-cli-base-rate .
+  define variable v-ret-unit-name  as character no-undo .
+  define variable v-ret-unit-coeff as decimal no-undo .  
+  run ref/alt-units.w (input parparentproc,
+                       input {&select},
+                       input p-gds,
+                       output v-ret-unit-name,
+                       output v-ret-unit-coeff) . 
+//  define variable ref-rec as recid no-undo.
+//  run ref/units.w (input parparentproc, input yes, output ref-rec).
+//  if ref-rec = ? then return no-apply.
+//  find buf_units where recid (buf_units) = ref-rec no-lock.
+//  assign fi-unit-cli  = buf_units.unit-name.
+  if v-ret-unit-name > "" then do :
+    if can-find (first buf_units where buf_units.unit-name = v-ret-unit-name) then do :
+      fi-unit-cli = v-ret-unit-name .
+      display fi-unit-cli with FRAME Dialog-Frame.
+      apply "entry":U to FILL-cli-base-rate .
+    end .
+  end .
+  else return no-apply .
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -695,6 +709,8 @@ PROCEDURE my_enable_UI :
   if g-log then enable b-bonus WITH FRAME Dialog-Frame.
   else hide b-bonus in FRAME Dialog-Frame.
 
+  b-units:visible = (p-gds > 0) .
+
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
   DISPLAY FILL-prc FILL-prc-2 FILL-bonus vat-type FILL-VAT-pc fi-unit-cli
@@ -704,8 +720,11 @@ PROCEDURE my_enable_UI :
           v-price-cli-rcv
       WITH FRAME Dialog-Frame.
   ENABLE b-exit b-quit b-help FILL-prc FILL-prc-2 FILL-bonus vat-type
-         FILL-VAT-pc fi-unit-cli b-units FILL-cli-base-rate FILL-price
-         FILL-qnty fi-unit-cli-ord b-units-ord fi-cli-base-rate-ord
+         FILL-VAT-pc FILL-cli-base-rate FILL-price
+         FILL-qnty
+         fi-unit-cli when b-units:visible
+         b-units     when b-units:visible
+         fi-unit-cli-ord b-units-ord fi-cli-base-rate-ord
          fi-unit-cli-rcv b-units-rcv fi-cli-base-rate-rcv FILL-1 FILL-2 FILL-3
          FILL-unit-base
       WITH FRAME Dialog-Frame.
