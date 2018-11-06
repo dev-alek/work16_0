@@ -160,8 +160,8 @@ temp_filter-fields
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit cb-db b-filter fi-filter-comment ~
 tb-filter b-print b-help rs-scope b-add b-chg b-dup b-del b-userhist ~
-b-hist-user b-add-2 b-chg-2 b-del-2 bt-password br-user br-login bt-object ~
-bt-firm bt-role bt-menu ed-login-object ed-user-info 
+b-hist-user b-add-2 b-copy b-chg-2 b-del-2 bt-password br-user br-login ~
+bt-object bt-firm bt-role bt-menu ed-login-object ed-user-info 
 &Scoped-Define DISPLAYED-OBJECTS cb-db fi-filter-comment tb-filter rs-scope ~
 ed-login-object ed-user-info 
 
@@ -223,6 +223,10 @@ DEFINE BUTTON b-chg
 DEFINE BUTTON b-chg-2 
      LABEL "&Изменить" 
      SIZE 10 BY 1.
+
+DEFINE BUTTON b-copy 
+     LABEL "&Копировать" 
+     SIZE 10.5 BY 1.
 
 DEFINE BUTTON b-del 
      LABEL "&Удалить" 
@@ -291,7 +295,7 @@ DEFINE VARIABLE cb-db AS INTEGER FORMAT "->>>>9":U INITIAL -1
 
 DEFINE VARIABLE ed-login-object AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-VERTICAL
-     SIZE 40 BY 12.25
+     SIZE 50 BY 12.25
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE ed-user-info AS CHARACTER 
@@ -337,7 +341,7 @@ DEFINE BROWSE br-login
       buf_init_user-login.max-discnt FORMAT ">>9.99":U WIDTH 20.75 column-label "Макс.скидка"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 40 BY 6.75 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 50 BY 6.75 FIT-LAST-COLUMN.
 
 DEFINE BROWSE br-user
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-user Dialog-Frame _FREEFORM
@@ -372,9 +376,10 @@ DEFINE FRAME Dialog-Frame
      b-userhist AT ROW 2.25 COL 41.5 WIDGET-ID 62
      b-hist-user AT ROW 2.25 COL 51.5 WIDGET-ID 64
      b-add-2 AT ROW 2.25 COL 58.5 WIDGET-ID 28
-     b-chg-2 AT ROW 2.25 COL 68.5 WIDGET-ID 30
-     b-del-2 AT ROW 2.25 COL 78.5 WIDGET-ID 32
-     bt-password AT ROW 2.25 COL 88.5 WIDGET-ID 56
+     b-copy AT ROW 2.25 COL 68.38 WIDGET-ID 66
+     b-chg-2 AT ROW 2.25 COL 78.75 WIDGET-ID 30
+     b-del-2 AT ROW 2.25 COL 88.63 WIDGET-ID 32
+     bt-password AT ROW 2.25 COL 98.5 WIDGET-ID 56
      br-user AT ROW 3.25 COL 1.5 WIDGET-ID 200
      br-login AT ROW 3.25 COL 58.5 WIDGET-ID 300
      bt-object AT ROW 10 COL 58.5 WIDGET-ID 48
@@ -383,7 +388,7 @@ DEFINE FRAME Dialog-Frame
      bt-menu AT ROW 10 COL 88.5 WIDGET-ID 54
      ed-login-object AT ROW 11.25 COL 58.5 NO-LABEL WIDGET-ID 36
      ed-user-info AT ROW 20 COL 1.5 NO-LABEL WIDGET-ID 34
-     SPACE(41.87) SKIP(0.12)
+     SPACE(50.99) SKIP(0.12)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Пользователи"
@@ -829,6 +834,36 @@ DO:
         br-login :refresh().
         run manage-fields-login in this-procedure .
     end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-copy
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-copy Dialog-Frame
+ON CHOOSE OF b-copy IN FRAME Dialog-Frame /* Копировать */
+DO:
+    if available buf_init_user-login
+    then do:
+        run procedure-user-login-copy in this-procedure (
+              input buf_init_user-login.db-num
+            , input buf_init_user-login.user-id
+        ) no-error .
+        if error-status :error
+        then do:
+            message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при вызове процедуры копирования логина пользователя" skip
+                error-status :get-message(1) skip
+                return-value skip
+            view-as alert-box error .
+            undo, return no-apply .
+        end.
+        br-login :refresh().
+        run manage-fields-login in this-procedure .
+    end.
+    {&OPEN-QUERY-br-login}
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2009,7 +2044,7 @@ PROCEDURE enable_UI :
           ed-user-info 
       WITH FRAME Dialog-Frame.
   ENABLE b-exit cb-db b-filter fi-filter-comment tb-filter b-print b-help 
-         rs-scope b-add b-chg b-dup b-del b-userhist b-hist-user b-add-2 
+         rs-scope b-add b-chg b-dup b-del b-userhist b-hist-user b-add-2 b-copy 
          b-chg-2 b-del-2 bt-password br-user br-login bt-object bt-firm bt-role 
          bt-menu ed-login-object ed-user-info 
       WITH FRAME Dialog-Frame.
@@ -2658,11 +2693,13 @@ on error undo, return error
         then do:
             disable
                 b-add-2
+                b-copy
             .
         end.
         else do:
             enable
                 b-add-2
+                b-copy
             .
         end.
         if buf_init_user-login.db-num = v-cntxt-db-num or v-cntxt-db-num = 0
@@ -2692,6 +2729,7 @@ on error undo, return error
     else do:
         enable
             b-add-2
+            b-copy
         .
         disable
             b-chg-2
@@ -2725,6 +2763,7 @@ on error undo, return error
             b-chg
             b-del
             b-add-2
+            b-copy
             b-chg-2
             b-del-2
             bt-password
@@ -4130,6 +4169,133 @@ END PROCEDURE. /* procedure-user-login-edit */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-edit Dialog-Frame 
+PROCEDURE procedure-user-login-copy :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define input parameter p-db-num         as integer          no-undo.
+define input parameter p-user-id        as character        no-undo.
+
+  define variable v-can-edit as logical   no-undo .
+
+  define buffer buf_user-account    for user-account.
+  define buffer buf_user-login      for ub.user-login .
+do
+for buf_user-account
+  , buf_user-login
+on error undo, return error return-value
+:
+
+    do transaction
+    on error undo, return error return-value
+    :       /* блокируем логин пользователя */
+        find first buf_user-login exclusive-lock
+             where buf_user-login.db-num  = p-db-num
+               and buf_user-login.user-id = p-user-id
+        no-error no-wait.
+        if not available buf_user-login
+        then do:
+            if locked( buf_user-login )
+            then do:
+                find first buf_user-login no-lock
+                     where buf_user-login.db-num  = p-db-num
+                       and buf_user-login.user-id = p-user-id
+                .
+                find first buf_user-account no-lock
+                     where buf_user-account.user-id = p-user-id
+                .
+                message
+                    "Редактирование логина невозможно" skip
+                    "Пользователь в данный момент работает в системе" skip
+                    "БД" p-db-num skip
+                    "Идентификатор" p-user-id skip
+                    "Псевдоним"                    buf_user-account.nik skip
+                    "Имя пользователя"             buf_user-account.last-name buf_user-account.first-name buf_user-account.second-name skip
+                    "Компьютер"                    buf_user-login.last-login-computer-name skip
+                    "Пользователь компьютера"      buf_user-login.last-login-computer-user skip
+                    "TCP имя компьютера"           buf_user-login.last-login-computer-tcp-name skip
+                    "IP адрес компьютера"          buf_user-login.last-login-computer-ip-addr skip
+                    "Идентификатор процесса"       buf_user-login.last-login-process-id skip
+                    "Номер подключения к БД"       buf_user-login.last-login-connection-id skip
+                    "Дата и время входа в систему" sys-time_mjd-to-loc-str-func(buf_user-login.last-login-mjd) skip
+                view-as alert-box error .
+            end.
+            else do:
+                message
+                    "Редактирование логина невозможно" skip
+                    "У пользователя нет логина" skip
+                    "БД" p-db-num skip
+                    "Идентификатор" buf_init_user-account.user-id skip
+                view-as alert-box error .
+            end.
+            undo, return error return-value .
+        end.
+    end.
+
+    define variable v-update-data        as logical   no-undo .
+    define variable v-user-login         as character no-undo .
+    define variable v-user-administrator as logical   no-undo .
+    define variable v-max-discnt         as decimal   no-undo .
+    define variable v-quest-print        as logical   no-undo .
+    define variable v-tmp-dbnum          as integer   no-undo .
+    define variable v-list-db            as character no-undo .
+    define variable v-success            as logical   no-undo .
+    
+    /* редактирование логина пользователя */
+    /* запись захвачена и не может быть изменена */
+    v-tmp-dbnum = buf_user-login.db-num.
+    run str/usrloged2.w (
+          input parparentproc
+        , input {&update}
+        , input-output v-tmp-dbnum
+        , input buf_user-login.user-id
+        , input buf_user-login.user-login
+        , input buf_user-login.user-administrator
+        , input buf_user-login.max-discnt
+        , input buf_user-login.quest-print
+        , output v-list-db
+        , output v-update-data
+        , output v-user-login
+        , output v-user-administrator
+        , output v-max-discnt
+        , output v-quest-print
+    ) .
+    if v-list-db = "" then
+       return.
+
+            /* запись была найдена и захвачена чуть выше */
+
+/*копируем логин в выбранные базы*/            
+           run str/copy-login.p (
+              input buf_user-login.user-id
+            , input p-db-num
+            , input v-list-db
+            , output v-success
+        ) no-error.
+        if error-status :error
+        then do:
+            message
+                        vss-workfile vss-revision vss-description
+                skip(1)
+                skip "Ошибка копирования логина."
+                skip return-value
+                skip trim( error-status :get-message( 1 ) )
+                        trim( error-status :get-message( 2 ) )
+                        trim( error-status :get-message( 3 ) )
+            view-as alert-box error.
+            undo, return no-apply.
+        end.
+end.
+END PROCEDURE. /* procedure-user-login-copy */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-menu-group Dialog-Frame 
 PROCEDURE procedure-user-login-menu-group :
