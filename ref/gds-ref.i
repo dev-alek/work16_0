@@ -402,6 +402,8 @@ DEFINE MENU m-dopinf
        MENU-ITEM m-dopinf-CONTR  LABEL "Вхождение в Спецификации"
        RULE
        MENU-ITEM m-dopinf-msf    LABEL "Классификация мясных полуфабрикатов"
+       RULE
+       MENU-ITEM m-dopinf-alt-unit    LABEL "Дополнительные единицы измерения"
 .
 
 def MENU m-price
@@ -1246,6 +1248,13 @@ on choose of MENU-ITEM m-dopinf-cprop-ordf in menu m-dopinf DO:
   .
   run proc-b-add-inf  in this-procedure  (input-output dopinf-option, {&update}) no-error.
   if error-status:error then return no-apply.
+end.
+on choose of MENU-ITEM m-dopinf-alt-unit in menu m-dopinf DO:
+  assign
+    dopinf-option = "alt-unit":U
+  .
+  run proc-b-add-inf in this-procedure ( input-output dopinf-option, {&update} ) no-error.
+  if error-status :error then do: return no-apply. end.
 end.
 
 
@@ -3065,6 +3074,23 @@ PROCEDURE proc-b-add-inf:
           undo, return error.
         end.
       END.
+      when "alt-unit" then do:       
+        define variable v-ret-unit-name  as character no-undo .
+        define variable v-ret-unit-coeff as decimal no-undo .
+        run ref/alt-units.w (input parParentProc,
+                             input {&update},
+                             input goo-doc.gds-code,
+                             input "", /* ограничение списка выбора */
+                             output v-ret-unit-name,
+                             output v-ret-unit-coeff) .
+        if error-status :error
+        then do:
+          assign
+            loc-DOPINF-option = "":U
+          .
+          undo, return error.
+        end.
+      end.
     end case.
   assign
   loc-DOPINF-option = "":U
