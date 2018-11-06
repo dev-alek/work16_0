@@ -318,6 +318,7 @@ define variable v-date as date no-undo .
 define variable v-decimal as decimal no-undo .
 define variable v-integer as integer no-undo .
 define variable v-logical as logical no-undo .
+define variable v-err-message as character no-undo .
 
 do
 on error undo, return error
@@ -414,6 +415,16 @@ on error undo, return error
                                                   ,input 0 /*p-integer*/
                                                   ,input no /*p-logical*/
                                                   ) no-error.
+            if error-status:error then do :
+              v-err-message = return-value . // чтобы видеть текст сообщени€ в деббагере
+              run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input v-err-message
+                                          ).
+              p-view-log = yes .
+            end .                                      
           end. /*  do transaction :*/
         end. /*if v-old-fo-version <> v-fo-version then do:*/
       end. /*if v-from begins ({&shop} + string(p-obj-code) + "_" + "касса") then do:*/
@@ -431,7 +442,6 @@ on error undo, return error
       assign
       p-view-log = yes
       v-exit-processing = yes
-      .
       .
     end.
   end.
