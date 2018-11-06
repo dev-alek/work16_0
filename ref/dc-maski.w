@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,17 +8,17 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER LOCKED_dis-card-mask FOR ub.dis-card-mask.
-DEFINE BUFFER locked_dis-card-type FOR ub.dis-card-type.
-DEFINE TEMP-TABLE tt-dis-card-mask NO-UNDO LIKE ub.dis-card-mask.
-DEFINE BUFFER X_clients FOR ub.clients.
-DEFINE BUFFER X_clients_dctype FOR ub.clients.
-DEFINE BUFFER X_curr_clients FOR ub.clients.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER LOCKED_dis-card-mask FOR dis-card-mask.
+DEFINE BUFFER locked_dis-card-type FOR dis-card-type.
+DEFINE TEMP-TABLE tt-dis-card-mask NO-UNDO LIKE dis-card-mask.
+DEFINE BUFFER X_clients FOR clients.
+DEFINE BUFFER X_clients_dctype FOR clients.
+DEFINE BUFFER X_curr_clients FOR clients.
+DEFINE BUFFER X_sysconf FOR sysconf.
+define buffer buf_dis-card-mask-attr  for ub.dis-card-mask-attr .
 
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -74,7 +74,7 @@ DEFINE VARIABLE v-last-code LIKE ub.dis-card-mask.mask-num NO-UNDO.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -88,13 +88,13 @@ DEFINE VARIABLE v-last-code LIKE ub.dis-card-mask.mask-num NO-UNDO.
 &Scoped-define INTERNAL-TABLES tt-dis-card-mask
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
-&Scoped-define FIELDS-IN-QUERY-Dialog-Frame tt-dis-card-mask.use-on ~
-tt-dis-card-mask.type tt-dis-card-mask.mask-num ~
+&Scoped-define FIELDS-IN-QUERY-Dialog-Frame tt-dis-card-mask.type ~
+tt-dis-card-mask.mask-num tt-dis-card-mask.use-on ~
 tt-dis-card-mask.emitent-host-code tt-dis-card-mask.mask ~
 tt-dis-card-mask.rank tt-dis-card-mask.cli-type tt-dis-card-mask.cli-code ~
-tt-dis-card-mask.cli-mask
+tt-dis-card-mask.cli-mask 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame tt-dis-card-mask.use-on ~
-tt-dis-card-mask.rank
+tt-dis-card-mask.rank 
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame tt-dis-card-mask
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame tt-dis-card-mask
 &Scoped-define QUERY-STRING-Dialog-Frame FOR EACH tt-dis-card-mask SHARE-LOCK
@@ -104,21 +104,21 @@ tt-dis-card-mask.rank
 
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-FIELDS tt-dis-card-mask.use-on tt-dis-card-mask.rank
+&Scoped-Define ENABLED-FIELDS tt-dis-card-mask.use-on tt-dis-card-mask.rank 
 &Scoped-define ENABLED-TABLES tt-dis-card-mask
 &Scoped-define FIRST-ENABLED-TABLE tt-dis-card-mask
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-hist B-Help B-card-type ~
-RS-region B-mask B-rank RS-cli-mask B-cli-mask CB-CC-run f-emitent-name ~
-l-rs-cli-mask f-cli-name
-&Scoped-Define DISPLAYED-FIELDS tt-dis-card-mask.use-on ~
-tt-dis-card-mask.type tt-dis-card-mask.mask-num ~
+reg-cash RS-region B-mask B-rank RS-cli-mask B-cli-mask CB-CC-run ~
+f-emitent-name l-rs-cli-mask f-cli-name 
+&Scoped-Define DISPLAYED-FIELDS tt-dis-card-mask.type ~
+tt-dis-card-mask.mask-num tt-dis-card-mask.use-on ~
 tt-dis-card-mask.emitent-host-code tt-dis-card-mask.mask ~
 tt-dis-card-mask.rank tt-dis-card-mask.cli-type tt-dis-card-mask.cli-code ~
-tt-dis-card-mask.cli-mask
+tt-dis-card-mask.cli-mask 
 &Scoped-define DISPLAYED-TABLES tt-dis-card-mask
 &Scoped-define FIRST-DISPLAYED-TABLE tt-dis-card-mask
-&Scoped-Define DISPLAYED-OBJECTS RS-region RS-cli-mask CB-CC-run ~
-f-emitent-name l-rs-cli-mask f-cli-name
+&Scoped-Define DISPLAYED-OBJECTS reg-cash RS-region RS-cli-mask CB-CC-run ~
+f-emitent-name l-rs-cli-mask f-cli-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -133,92 +133,97 @@ f-emitent-name l-rs-cli-mask f-cli-name
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-card-type
+DEFINE BUTTON B-card-type 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-cli
+DEFINE BUTTON B-cli 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-cli-mask
-     LABEL "&Изменить"
+DEFINE BUTTON B-cli-mask 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-hist
-     LABEL "Ис&тория"
+DEFINE BUTTON B-hist 
+     LABEL "Ис&тория" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-mask
-     LABEL "&Изменить"
+DEFINE BUTTON B-mask 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-GO
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-GO 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-rank
+DEFINE BUTTON B-rank 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE VARIABLE CB-CC-run AS CHARACTER FORMAT "X(256)":U
-     LABEL "Алгоритм КЦ"
+DEFINE VARIABLE CB-CC-run AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Алгоритм КЦ" 
      VIEW-AS COMBO-BOX INNER-LINES 5
      LIST-ITEM-PAIRS "item 1","Item 1"
      DROP-DOWN-LIST
      SIZE 30 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-cli-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 46.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-cli-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 46 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-emitent-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 50.5 BY .67 NO-UNDO.
+DEFINE VARIABLE f-emitent-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 63.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE l-rs-cli-mask AS CHARACTER FORMAT "X(256)":U INITIAL "Метод поиска ДК по маске карты"
-      VIEW-AS TEXT
-     SIZE 31 BY .67 NO-UNDO.
+DEFINE VARIABLE l-rs-cli-mask AS CHARACTER FORMAT "X(256)":U INITIAL "Метод поиска ДК по маске карты" 
+      VIEW-AS TEXT 
+     SIZE 31 BY 1 NO-UNDO.
 
-DEFINE VARIABLE RS-cli-mask AS CHARACTER
+DEFINE VARIABLE RS-cli-mask AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Правило из маски", "cli-mask",
 "Определенный контрагент", "cli-code",
 "Маска и контрагент", "cli-mask-cli-code"
-     SIZE 66.5 BY 1 NO-UNDO.
+     SIZE 64.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE RS-region AS INTEGER
+DEFINE VARIABLE RS-region AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Глобально", 0,
 "Фирма", 1,
 "Объект", 2
      SIZE 63 BY 1 NO-UNDO.
 
+DEFINE VARIABLE reg-cash AS LOGICAL INITIAL no 
+     LABEL "Разрешена регистрация на кассе" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 34.5 BY .83 NO-UNDO.
+
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY Dialog-Frame FOR
+DEFINE QUERY Dialog-Frame FOR 
       tt-dis-card-mask SCROLLING.
 &ANALYZE-RESUME
 
@@ -228,66 +233,66 @@ DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      B-hist AT ROW 1 COL 31
-     B-Help AT ROW 1 COL 54.9
-     tt-dis-card-mask.use-on AT ROW 3.27 COL 67.5 NO-LABEL
+     B-Help AT ROW 1 COL 54.88
+     tt-dis-card-mask.type AT ROW 2.58 COL 12 COLON-ALIGNED
+          LABEL "Тип карты"
+          VIEW-AS FILL-IN 
+          SIZE 12 BY 1
+     B-card-type AT ROW 2.58 COL 26.5
+     tt-dis-card-mask.mask-num AT ROW 2.58 COL 47.5 COLON-ALIGNED
+          LABEL "Номер маски"
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+     tt-dis-card-mask.use-on AT ROW 2.58 COL 67.5 NO-LABEL
           VIEW-AS RADIO-SET VERTICAL
-          RADIO-BUTTONS
+          RADIO-BUTTONS 
                     "Использовать на кассе и в TH", 0,
 "Использовать ТОЛЬКО на кассе", 1,
 "Использовать ТОЛЬКО в TH", 2
-          SIZE 31.5 BY 2.27
-     tt-dis-card-mask.type AT ROW 3.77 COL 18 COLON-ALIGNED
-          LABEL "Тип карты"
-          VIEW-AS FILL-IN
-          SIZE 12 BY 1
-     B-card-type AT ROW 3.77 COL 32.5
-     tt-dis-card-mask.mask-num AT ROW 3.77 COL 47.5 COLON-ALIGNED
-          LABEL "Номер маски"
-          VIEW-AS FILL-IN
-          SIZE 10 BY 1
-     tt-dis-card-mask.emitent-host-code AT ROW 5 COL 18 COLON-ALIGNED
-	 FORMAT ">>>>>>>>99"
+          SIZE 31.5 BY 2.25
+     reg-cash AT ROW 4 COL 3 WIDGET-ID 2
+     tt-dis-card-mask.emitent-host-code AT ROW 5.25 COL 3
           LABEL "Эмитент карты"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 7 BY 1
-     RS-region AT ROW 6.5 COL 20.5 NO-LABEL
-     tt-dis-card-mask.mask AT ROW 8 COL 16 COLON-ALIGNED
+     RS-region AT ROW 6.5 COL 24.88 NO-LABEL
+     tt-dis-card-mask.mask AT ROW 8 COL 3
           LABEL "Маска карты"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 21.5 BY 1
-     B-mask AT ROW 8 COL 40
+     B-mask AT ROW 8 COL 38.13
      tt-dis-card-mask.rank AT ROW 8 COL 79 COLON-ALIGNED
           LABEL "Ранг(приоритет при поиске)"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 7 BY 1
      B-rank AT ROW 8 COL 89
-     RS-cli-mask AT ROW 10.27 COL 32.5 NO-LABEL
-     tt-dis-card-mask.cli-type AT ROW 12.27 COL 16.5 NO-LABEL
+     RS-cli-mask AT ROW 9.71 COL 34.5 NO-LABEL
+     tt-dis-card-mask.cli-type AT ROW 12 COL 16.5 NO-LABEL
           VIEW-AS RADIO-SET HORIZONTAL
-          RADIO-BUTTONS
+          RADIO-BUTTONS 
                     "Item 1", "1":U,
 "Item 2", "2":U
           SIZE 14 BY 1
-     tt-dis-card-mask.cli-code AT ROW 12.27 COL 29.5 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+     tt-dis-card-mask.cli-code AT ROW 12 COL 29.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
-     B-cli AT ROW 12.27 COL 48.5
-     tt-dis-card-mask.cli-mask AT ROW 14.27 COL 19 COLON-ALIGNED
+     B-cli AT ROW 12 COL 48.5
+     tt-dis-card-mask.cli-mask AT ROW 14.25 COL 3
           LABEL "Маска КОРОТКОГО №" FORMAT "X(19)"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 21.5 BY 1
-     B-cli-mask AT ROW 14.27 COL 44
-     CB-CC-run AT ROW 14.27 COL 67 COLON-ALIGNED
-     f-emitent-name AT ROW 5.27 COL 37 COLON-ALIGNED NO-LABEL
-     l-rs-cli-mask AT ROW 10.5 COL 1.5 NO-LABEL
-     f-cli-name AT ROW 12.5 COL 50.5 COLON-ALIGNED NO-LABEL
-     "Контрагент" VIEW-AS TEXT
-          SIZE 13.5 BY 1.27 AT ROW 12 COL 2
+     B-cli-mask AT ROW 14.25 COL 44
+     CB-CC-run AT ROW 14.25 COL 67 COLON-ALIGNED
+     f-emitent-name AT ROW 5.25 COL 24 COLON-ALIGNED NO-LABEL
+     l-rs-cli-mask AT ROW 9.71 COL 3 NO-LABEL
+     f-cli-name AT ROW 12 COL 50.5 COLON-ALIGNED NO-LABEL
      "Область действия" VIEW-AS TEXT
-          SIZE 17.5 BY 1 AT ROW 6.5 COL 2.5
-     SPACE(79.24) SKIP(8.28)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 17.5 BY 1 AT ROW 6.5 COL 3
+     "Контрагент" VIEW-AS TEXT
+          SIZE 13.5 BY 1 AT ROW 12 COL 3
+     SPACE(82.74) SKIP(2.78)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Маска дисконтной карты"
          DEFAULT-BUTTON B-exit.
 
@@ -317,7 +322,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -326,15 +331,15 @@ ASSIGN
 /* SETTINGS FOR FILL-IN tt-dis-card-mask.cli-code IN FRAME Dialog-Frame
    NO-ENABLE EXP-LABEL                                                  */
 /* SETTINGS FOR FILL-IN tt-dis-card-mask.cli-mask IN FRAME Dialog-Frame
-   NO-ENABLE EXP-LABEL EXP-FORMAT                                       */
+   NO-ENABLE ALIGN-L EXP-LABEL EXP-FORMAT                               */
 /* SETTINGS FOR RADIO-SET tt-dis-card-mask.cli-type IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN tt-dis-card-mask.emitent-host-code IN FRAME Dialog-Frame
-   NO-ENABLE EXP-LABEL                                                  */
+   NO-ENABLE ALIGN-L EXP-LABEL                                          */
 /* SETTINGS FOR FILL-IN l-rs-cli-mask IN FRAME Dialog-Frame
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN tt-dis-card-mask.mask IN FRAME Dialog-Frame
-   NO-ENABLE EXP-LABEL                                                  */
+   NO-ENABLE ALIGN-L EXP-LABEL                                          */
 /* SETTINGS FOR FILL-IN tt-dis-card-mask.mask-num IN FRAME Dialog-Frame
    NO-ENABLE EXP-LABEL                                                  */
 /* SETTINGS FOR FILL-IN tt-dis-card-mask.rank IN FRAME Dialog-Frame
@@ -355,7 +360,7 @@ ASSIGN
 */  /* DIALOG-BOX Dialog-Frame */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -599,6 +604,19 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME reg-cash
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL reg-cash Dialog-Frame
+ON VALUE-CHANGED OF reg-cash IN FRAME Dialog-Frame /* Разрешена регистрация на кассе */
+DO:
+  assign
+  reg-cash
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME RS-cli-mask
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RS-cli-mask Dialog-Frame
 ON VALUE-CHANGED OF RS-cli-mask IN FRAME Dialog-Frame
@@ -615,7 +633,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -792,6 +810,12 @@ END.
   tt-dis-card-mask.mask = entry(1, tt-dis-card-mask.mask)
   tt-dis-card-mask.cli-mask = entry(1, tt-dis-card-mask.cli-mask)
   .
+  find first buf_dis-card-mask-attr no-lock where buf_dis-card-mask-attr.mask-num = tt-dis-card-mask.mask-num and buf_dis-card-mask-attr.attr-code = "reg-cash" no-error .
+  if available (buf_dis-card-mask-attr) then do:
+    if buf_dis-card-mask-attr.attr-value = "yes" then reg-cash:checked = yes .
+    else reg-cash:checked = no .
+  end.  
+  else reg-cash:checked = no .
   RUN Myenable in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -803,7 +827,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-cli Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-cli Dialog-Frame 
 PROCEDURE check-cli :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -844,7 +868,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -863,24 +887,24 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY RS-region RS-cli-mask CB-CC-run f-emitent-name l-rs-cli-mask
-          f-cli-name
+  DISPLAY reg-cash RS-region RS-cli-mask CB-CC-run f-emitent-name l-rs-cli-mask 
+          f-cli-name 
       WITH FRAME Dialog-Frame.
-  IF AVAILABLE tt-dis-card-mask THEN
-    DISPLAY tt-dis-card-mask.use-on tt-dis-card-mask.type
-          tt-dis-card-mask.mask-num tt-dis-card-mask.emitent-host-code
-          tt-dis-card-mask.mask tt-dis-card-mask.rank tt-dis-card-mask.cli-type
-          tt-dis-card-mask.cli-code tt-dis-card-mask.cli-mask
+  IF AVAILABLE tt-dis-card-mask THEN 
+    DISPLAY tt-dis-card-mask.type tt-dis-card-mask.mask-num 
+          tt-dis-card-mask.use-on tt-dis-card-mask.emitent-host-code 
+          tt-dis-card-mask.mask tt-dis-card-mask.rank tt-dis-card-mask.cli-type 
+          tt-dis-card-mask.cli-code tt-dis-card-mask.cli-mask 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-hist B-Help tt-dis-card-mask.use-on B-card-type
-         RS-region B-mask tt-dis-card-mask.rank B-rank RS-cli-mask B-cli-mask
-         CB-CC-run f-emitent-name l-rs-cli-mask f-cli-name
+  ENABLE B-exit b-quit B-hist B-Help B-card-type tt-dis-card-mask.use-on 
+         reg-cash RS-region B-mask tt-dis-card-mask.rank B-rank RS-cli-mask 
+         B-cli-mask CB-CC-run f-emitent-name l-rs-cli-mask f-cli-name 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -889,7 +913,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 IF p-mode <> {&add-def} THEN do:
    IF tt-dis-card-mask.cli-code <> 0 THEN DO:
@@ -991,6 +1015,7 @@ tt-dis-card-mask.rank WHEN p-mode <> {&LOOKUP}
 /*tt-dis-card-mask.mask WHEN p-mode <> {&LOOKUP}*/
 tt-dis-card-mask.use-on WHEN p-mode <> {&LOOKUP}
 RS-cli-mask WHEN p-mode <> {&LOOKUP}
+reg-cash when p-mode <> {&LOOKUP}
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
 if p-mode = {&lookup} then do:
@@ -1010,7 +1035,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-card-type Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-card-type Dialog-Frame 
 PROCEDURE proc-b-card-type :
 define variable var-rid-str as character no-undo.
 define buffer b_clients for ub.clients.
@@ -1065,7 +1090,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-cli-or-mask Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-cli-or-mask Dialog-Frame 
 PROCEDURE proc-cli-or-mask :
 DEFINE INPUT PARAMETER p-cli-or-mask AS character NO-UNDO.
 CASE p-cli-or-mask:
@@ -1130,7 +1155,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1199,6 +1224,7 @@ input-output p-doc-rec
 ,input tt-dis-card-mask.rank
 ,input tt-dis-card-mask.type
 ,input tt-dis-card-mask.cc-run
+,input reg-cash
 )
 no-error.
 
@@ -1206,8 +1232,8 @@ if error-status:error then do:
  { gbl/reterhnd.i error }
   undo, return error.
 end.
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

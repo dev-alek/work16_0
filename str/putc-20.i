@@ -25,8 +25,10 @@ define input parameter p-version as character no-undo .
 
 define variable v-host-code like ub.sysconf.host-code no-undo .
 define variable v-version-dec as decimal no-undo .
+define variable v-reg-cahs  as integer  no-undo .
 
 define buffer buf_dis-card-mask for ub.dis-card-mask.
+define buffer buf_dis-card-mask-attr  for ub.dis-card-mask-attr.
 define buffer buf_dis-card-type for ub.dis-card-type.
 define buffer bf_dis-card-type for ub.dis-card-type.
 
@@ -52,7 +54,13 @@ for each buf_dis-card-mask no-lock where
     if not available temp-dis-card-mask then next _mask.
   end.
  if buf_dis-card-mask.use-on = integer({&dcm-only-th}) then next.
-
+  find first buf_dis-card-mask-attr no-lock where buf_dis-card-mask-attr.attr-code = "reg-cash" and buf_dis-card-mask-attr.mask-num = buf_dis-card-mask.mask-num no-error .
+  if available (buf_dis-card-mask-attr) then do:
+   if buf_dis-card-mask-attr.attr-value = "yes" then v-reg-cahs = 1 .
+   else v-reg-cahs = 0 .
+  end.
+  else v-reg-cahs = 0 .
+    
   find first ub.dis-card no-lock where
             ub.dis-card.d-card = buf_dis-card-mask.mask no-error .
   if available ub.dis-card and
@@ -270,7 +278,9 @@ for each buf_dis-card-mask no-lock where
 
       run bgelib-tag-put in this-procedure ( input 3, input "MCLock"
                                           , input string(0), input 1 ).
+      run bgelib-tag-put in this-procedure ( input 3, input "MCBarRead", input string(v-reg-cahs), input 1 ).                                          
       run bgelib-tag-close in this-procedure ( input 2, input "MaskCard").
+      
     end.
 
   END CASE .

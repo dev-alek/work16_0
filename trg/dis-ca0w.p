@@ -38,8 +38,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
   if not g#news then do:
       run str/callnews.p
-        (input {&table_dis-gds-rule-attr}
-        ,input (buffer ub.dis-gds-rule-attr:handle)
+        (input {&table_dis-card-mask-attr}
+        ,input (buffer ub.dis-card-mask-attr:handle)
         ) no-error .
       if error-status:error then do:
         undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) ).

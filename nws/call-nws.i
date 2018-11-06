@@ -34,6 +34,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,prop-ruleset~
 ,prop-map~
 ,dis-card-mask~
+,dis-card-mask-attr~
 ,curr-accnt~
 ,curr-bank~
 ,c-curr-bank~
