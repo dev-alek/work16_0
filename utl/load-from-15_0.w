@@ -436,6 +436,32 @@ define temp-table tt-gds-mapping
   index pi as primary 
     gds-code15
 .
+
+define temp-table tt-imp-parts no-undo // скопировано из utl/imp-doc4.p
+  /* 01 */ field artic         as character
+           field f02           as character
+  /* 03 */ field part-code     as character
+  /* 04 */ field in-code       like ub.parts.in-code
+  /* 05 */ field gds-code      as integer
+  /* 06 */ field price-rubl    like ub.parts.price-rubl
+  /* 07 */ field fact-qnty     like ub.parts.fact-qnty
+           field f08           as character
+           field f09           as character
+           field f10           as character
+  /* 11 */ field vat-tax-value as decimal
+           field f12           as character
+           field f13           as character
+  /* 14 */ field name-gtd      as character
+           field f15           as character
+           field f16           as character
+  /* 17 */ field srok-god      as character
+           field f18           as character
+           field f19           as character
+  /* 20 */ field supp-code     as integer
+  /* 21 */ field supp-type     as character
+  /* 22 */ field cont-prn-code like ub.contract.contract-prn-code
+           field imp-row       as character // исходая строка из файла импорта
+.
   
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -516,6 +542,46 @@ define button b-file  DEFAULT
      label ""
      SIZE 2.5 BY 1.08.     
 
+DEFINE VARIABLE v-rest AS LOGICAL INITIAL no 
+     LABEL "Остатки" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60 BY 1 NO-UNDO.
+
+define variable v-osn-fname as character FORMAT "X(256)":U 
+     LABEL "Файл соответствия поставщиков" 
+     VIEW-AS FILL-IN 
+     SIZE 38 BY 1 no-undo.     
+     
+define button b-osn-file  DEFAULT
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     label ""
+     SIZE 2.5 BY 1.08.     
+
+define variable v-art-fname as character FORMAT "X(256)":U 
+     LABEL "Файл соответствия товаров" 
+     VIEW-AS FILL-IN 
+     SIZE 38 BY 1 no-undo.     
+     
+define button b-art-file  DEFAULT
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     label ""
+     SIZE 2.5 BY 1.08.     
+
+define variable v-retry-fname as character FORMAT "X(256)":U 
+     LABEL "Файл повторной загрузки" 
+     VIEW-AS FILL-IN 
+     SIZE 38 BY 1 no-undo.     
+     
+define button b-retry-file  DEFAULT
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     label ""
+     SIZE 2.5 BY 1.08.     
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -529,6 +595,13 @@ DEFINE FRAME Dialog-Frame
      v-price AT ROW 7.2 COL 3 WIDGET-ID 10
      v-file-path at row 8.4 col 2 WIDGET-ID 12
      b-file at row 8.4 col 60
+     v-rest AT ROW 9.6 COL 3 WIDGET-ID 14
+     v-osn-fname at row 10.8 col 34 colon-aligned WIDGET-ID 16
+     b-osn-file at row 10.8 col 75
+     v-art-fname at row 12 col 34 colon-aligned WIDGET-ID 18
+     b-art-file at row 12 col 75
+     v-retry-fname at row 13.2 col 34 colon-aligned WIDGET-ID 20
+     b-retry-file at row 13.2 col 75
      SPACE(2) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -595,6 +668,26 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
+ON value-changed of v-rest in FRAME Dialog-Frame /* Загрузка данных из TH v15.0 */
+DO:
+  assign v-rest.
+  if v-rest then enable
+    v-osn-fname b-osn-file
+    v-art-fname b-art-file
+    v-retry-fname b-retry-file
+  with frame Dialog-Frame.
+  else disable
+    v-osn-fname b-osn-file
+    v-art-fname b-art-file
+    v-retry-fname b-retry-file
+  with frame Dialog-Frame.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME B-OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-OK Dialog-Frame
 ON CHOOSE OF B-file IN FRAME Dialog-Frame /* ВВОД */
@@ -615,6 +708,54 @@ END.
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME B-OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-osn-file Dialog-Frame
+ON CHOOSE OF B-osn-file IN FRAME Dialog-Frame /* ВВОД */
+DO:
+  system-dialog get-file v-osn-fname
+    filters "Текстовые файлы (*.txt)" "*.txt",
+            "Все файлы (*.*)" "*.*"
+    title "Выберите файл соответствия кодов поставщиков"
+    update glog
+  .
+  if glog then v-osn-fname:screen-value = v-osn-fname .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-art-file Dialog-Frame
+ON CHOOSE OF B-art-file IN FRAME Dialog-Frame /* ВВОД */
+DO:
+  system-dialog get-file v-art-fname
+    filters "Текстовые файлы (*.txt)" "*.txt",
+            "Все файлы (*.*)" "*.*"
+    title "Выберите файл соответствия кодов товаров"
+    update glog
+  .
+  if glog then v-art-fname:screen-value = v-art-fname .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-retry-file Dialog-Frame
+ON CHOOSE OF B-retry-file IN FRAME Dialog-Frame /* ВВОД */
+DO:
+  system-dialog get-file v-retry-fname
+    filters "Текстовые файлы (*.txt)" "*.txt",
+            "Все файлы (*.*)" "*.*"
+    title "Имя файла для повторной загрузки ошибочных строк"
+    update glog
+  .
+  if glog then v-retry-fname:screen-value = v-retry-fname .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-OK Dialog-Frame
 ON CHOOSE OF B-OK IN FRAME Dialog-Frame /* ВВОД */
 DO:
@@ -626,12 +767,38 @@ DO:
     v-schem
     v-price
     v-file-path
+    v-rest
+    v-osn-fname
+    v-art-fname
+    v-retry-fname
   .
   if v-price and trim(v-file-path) = ""
   then do :
-    message "Для загрузки цен необходимо выбрать файл с соответствиями кодов товаров!" view-as alert-box.
+    message "Для загрузки цен необходимо выбрать файл с соответствиями кодов товаров." view-as alert-box.
+    apply "entry" to v-file-path .
     return no-apply .
   end.
+  if v-rest and trim(v-osn-fname) = ""
+  then do :
+    message "Для загрузки остатков необходимо выбрать файл с соответствиями кодов поставщиков." view-as alert-box.
+    apply "entry" to v-osn-fname . 
+    return no-apply .
+  end.
+  if v-rest and trim(v-art-fname) = ""
+  then do :
+    message "Для загрузки остатков необходимо выбрать файл с соответствиями кодов товаров." view-as alert-box.
+    apply "entry" to v-art-fname . 
+    return no-apply .
+  end.
+  if v-rest and trim(v-retry-fname) = ""
+  then do :
+    message "Для загрузки остатков необходимо указать имя файла для выгрузки строк с ошибками, пригодного для повторной загрузки." view-as alert-box.
+    apply "entry" to v-retry-fname . 
+    return no-apply .
+  end.
+
+
+
   if trim(v-file-path) <> ""
   then do :
     if search(v-file-path) = ?
@@ -750,6 +917,18 @@ DO:
       return no-apply .
     end.                                 
   end.
+  if v-rest then do :
+    // 1. ?? запрещать повторную загрузку документов ??
+    if can-find (first ub.trn-doc where ub.trn-doc.obj-type = v-cntxt-obj-type
+                                    and ub.trn-doc.obj-code = v-cntxt-obj-code) then do :
+      v-has-records = true .
+    end.
+    if v-has-records
+    then do :
+      message "На объекте есть остатки!" view-as alert-box.
+      return no-apply .
+    end.                                 
+  end .
   
   output stream log-stream to value("load-from-15_0.log") append .
   output stream err-stream to value("load-from-15_0.err") append .
@@ -830,6 +1009,23 @@ DO:
   output stream log-stream close .
   output stream err-stream close .
   
+  output stream log-stream to value("load-from-15_0.log") append .
+  output stream err-stream to value("load-from-15_0.err") append .
+  if v-rest
+  then do trans:
+    run waitfram-show in this-procedure ( INPUT "Обработка: Остатки" ).
+    run load_rest no-error .
+    if error-status:error
+    then do :
+      run waitfram-hide in this-procedure .
+      message ("Ошибка при загрузке остатков: " + return-value + {&new-line} + "Продолжить работу?") view-as alert-box question buttons yes-no update glog .
+      if not glog then undo, return no-apply .
+      undo .
+    end.
+  end.
+  output stream log-stream close .
+  output stream err-stream close .
+  
   run waitfram-hide in this-procedure .
   message "ГОТОВО!" view-as alert-box.
 END.
@@ -898,15 +1094,18 @@ PROCEDURE enable_UI :
   DISPLAY v-addr v-cashdesk v-schem v-pumpdoc 
       WITH FRAME Dialog-Frame.
   ENABLE B-OK B-Cancel v-addr v-cashdesk v-schem v-pumpdoc v-price v-file-path b-file
+    v-rest v-osn-fname b-osn-file v-art-fname b-art-file v-retry-fname b-retry-file
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
   apply "value-changed" to v-price in frame Dialog-Frame .
+  apply "value-changed" to v-rest in frame Dialog-Frame .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE load_price Dialog-Frame
 procedure load_price :
   
   cmd = substitute ("&1 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), v-addr, "price-temp.json").
@@ -985,7 +1184,58 @@ procedure load_price :
   put stream log-stream unformatted now "   Цены загружены!" skip .
   
 end procedure .
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE load_rest Dialog-Frame
+procedure load_rest :
+  
+  cmd = substitute ("&1 &2/THGetInfo?GetRest >&3", search ("exe/curl.exe"), v-addr, "rest-temp.json").
+  os-command silent value (cmd).
+  run fix-codepage_ (input "rest-temp.json") .
+  
+  myParser = NEW ObjectModelParser().
+  myJsonObj = CAST(myParser:ParseFile(search("rest.json")), JsonObject).
+  
+  run parse-json(input temp-table tt-imp-parts:default-buffer-handle, input "tt-imp-parts") .
+  
+  /* Delete all objects created by this procedure to avoid memory leaks */
+  DELETE OBJECT myResultObj NO-ERROR.
+  DELETE OBJECT results-array NO-ERROR.
+  DELETE OBJECT myJsonObj NO-ERROR.
+  DELETE OBJECT myParser    NO-ERROR.
+
+  put stream log-stream unformatted now "   Начинаем загрузку остатков..." skip .
+  
+  define variable v-count-err as integer no-undo .
+  run utl/imp-doc4cr.p ( parparentproc
+                       , this-procedure // хронометраж через write-log-and-file()
+                       , ""             // имя лог-файла, в который выводится хронометраж
+                       , v-cntxt-obj-code
+                       , v-cntxt-obj-type
+                       , false          // true - закрывать созданные документы (не реализовано)
+                       , v-osn-fname // список соответствия поставщиков
+                       , v-art-fname // список соответствия товаров
+                       , v-retry-fname // файл для повторного импорта
+                       , input table tt-imp-parts
+                     , output v-count-err  
+                       ) .
+
+// ?? Журналировать каждую загруженную строку ??
+//        put stream log-stream unformatted
+//          "Код в 15.0 " string(tt-gds-price.gds-code) " .Код в 16.0 " string(tt-gds-mapping.gds-code16)
+//          " . Цена: " string(tt-gds-price.price) skip .
+                         
+//  &scop my-message substitute("Всего прочитано &1 записей. Из них отвергнуто &2", v-count-all, v-count-err )
+//  {&display-message}.
+
+  put stream log-stream unformatted now "   Остатки загружены!" skip .
+  
+end procedure .
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE load_cashdesk Dialog-Frame
 procedure load_cashdesk :
   define variable v-rid as recid no-undo .
   
@@ -1498,6 +1748,7 @@ procedure fix-codepage_ :
     when "pumpdoc-temp.json" then v-out-file = "pumpdoc.json" .
     when "cashdesk-temp.json" then v-out-file = "cashdesk.json" .
     when "price-temp.json" then v-out-file = "price.json" .
+    when "rest-temp.json" then v-out-file = "rest.json" .
   end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
@@ -1523,3 +1774,14 @@ define input  parameter p-message as character no-undo .
   end.
 
 end procedure. /* pcall-log-file */
+
+procedure write-log-and-file :
+define input parameter p1 as integer no-undo .
+define input parameter p2 as character no-undo .
+define input parameter p3 as integer no-undo .
+define input parameter p-message as character no-undo .
+  run pcall-log-file in this-procedure (p-message) .  
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
