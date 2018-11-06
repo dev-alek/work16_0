@@ -71,11 +71,12 @@ v-tthg = buffer thbjattr_thbj-attr-g:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 B-quit B-Help v-apikey v-login ~
-v-password v-login-is v-manual-vcd v-close r-type-connect v-qrcode ~
-cb-section 
+&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 RECT-2 B-quit B-Help v-apikey ~
+v-login v-password v-login-is v-manual-vcd v-close r-type-connect v-qrcode ~
+cb-section v-proxy-addres v-proxy-login v-proxy-pswd 
 &Scoped-Define DISPLAYED-OBJECTS v-apikey v-login v-password v-login-is ~
-v-manual-vcd v-close r-type-connect v-qrcode cb-section 
+v-manual-vcd v-close r-type-connect v-qrcode cb-section v-proxy-addres ~
+v-proxy-login v-proxy-pswd 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -105,7 +106,7 @@ DEFINE BUTTON B-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE cb-section AS CHARACTER FORMAT "X(256)":U initial "1"
+DEFINE VARIABLE cb-section AS CHARACTER FORMAT "X(256)":U INITIAL "1" 
      LABEL "Сервер" 
      VIEW-AS COMBO-BOX INNER-LINES 2
      LIST-ITEM-PAIRS "тестовый","1",
@@ -133,6 +134,21 @@ DEFINE VARIABLE v-password AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 42 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-proxy-addres AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Адрес прокси-сервера" 
+     VIEW-AS FILL-IN 
+     SIZE 52 BY 1 TOOLTIP "Адрес прокси-сервера в формате <IP>:<Port>" NO-UNDO.
+
+DEFINE VARIABLE v-proxy-login AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Логин" 
+     VIEW-AS FILL-IN 
+     SIZE 21.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-proxy-pswd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Пароль" 
+     VIEW-AS FILL-IN 
+     SIZE 20.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE v-qrcode AS CHARACTER FORMAT "X(256)":U 
      LABEL "Настройки для печати QR-кода" 
      VIEW-AS FILL-IN 
@@ -148,6 +164,10 @@ DEFINE VARIABLE r-type-connect AS INTEGER
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 106.5 BY 3.75.
+
+DEFINE RECTANGLE RECT-2
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 106.5 BY 3.25.
 
 DEFINE VARIABLE v-close AS LOGICAL INITIAL no 
      LABEL "" 
@@ -175,16 +195,22 @@ DEFINE FRAME Dialog-Frame
      r-type-connect AT ROW 9.92 COL 57 NO-LABEL WIDGET-ID 24
      v-qrcode AT ROW 11.17 COL 54.88 COLON-ALIGNED WIDGET-ID 8
      cb-section AT ROW 12.5 COL 54.88 COLON-ALIGNED WIDGET-ID 34
+     v-proxy-addres AT ROW 15.25 COL 22.5 COLON-ALIGNED WIDGET-ID 42
+     v-proxy-login AT ROW 16.5 COL 22.5 COLON-ALIGNED WIDGET-ID 44 PASSWORD-FIELD 
+     v-proxy-pswd AT ROW 16.5 COL 54 COLON-ALIGNED WIDGET-ID 46 PASSWORD-FIELD 
      "Разрешено закрывать документ без указ. ВСД:" VIEW-AS TEXT
           SIZE 44.63 BY .92 AT ROW 9.08 COL 54.51 RIGHT-ALIGNED WIDGET-ID 18
-     "  Параметры коннекта к ВЕТИС.API" VIEW-AS TEXT
-          SIZE 32.5 BY .67 AT ROW 2 COL 37.5 WIDGET-ID 30
-     "Тип взаимодействия:" VIEW-AS TEXT
-          SIZE 44.63 BY .92 AT ROW 10.04 COL 54.51 RIGHT-ALIGNED WIDGET-ID 28
+     "Параметры подключения через Прокси-сервер:" VIEW-AS TEXT
+          SIZE 43 BY .67 AT ROW 14.25 COL 35 WIDGET-ID 38
      "Разрешено вводить код ВСД вручную:" VIEW-AS TEXT
           SIZE 44.63 BY .92 AT ROW 8.08 COL 54.51 RIGHT-ALIGNED WIDGET-ID 12
+     "Тип взаимодействия:" VIEW-AS TEXT
+          SIZE 44.63 BY .92 AT ROW 10.04 COL 54.51 RIGHT-ALIGNED WIDGET-ID 28
+     "  Параметры коннекта к ВЕТИС.API" VIEW-AS TEXT
+          SIZE 32.5 BY .67 AT ROW 2 COL 37.5 WIDGET-ID 30
      RECT-1 AT ROW 2.25 COL 1.5 WIDGET-ID 36
-     SPACE(0.99) SKIP(8.24)
+     RECT-2 AT ROW 14.5 COL 1.5 WIDGET-ID 40
+     SPACE(0.24) SKIP(0.49)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры для работы с ФГИС Меркурий"
@@ -327,10 +353,12 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY v-apikey v-login v-password v-login-is v-manual-vcd v-close 
-          r-type-connect v-qrcode cb-section 
+          r-type-connect v-qrcode cb-section v-proxy-addres v-proxy-login 
+          v-proxy-pswd 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit RECT-1 B-quit B-Help v-apikey v-login v-password v-login-is 
-         v-manual-vcd v-close r-type-connect v-qrcode cb-section 
+  ENABLE B-exit RECT-1 RECT-2 B-quit B-Help v-apikey v-login v-password 
+         v-login-is v-manual-vcd v-close r-type-connect v-qrcode cb-section 
+         v-proxy-addres v-proxy-login v-proxy-pswd 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -418,7 +446,21 @@ FOR EACH temp-thbj-attr
        cb-section = string(temp-thbj-attr.property-value-integer) .
 /*       if r-type-connect = ? then r-type-connect = 1 .*/
        display cb-section with frame {&frame-name} .
-    END.    
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-mercur_proxy-addres} THEN DO:
+       v-proxy-addres = temp-thbj-attr.property-value-character.
+       display v-proxy-addres with frame {&frame-name} .
+    END.
+     IF temp-thbj-attr.prop-code = {&attr-mercur_proxy-login} and temp-thbj-attr.property-value-character > '' THEN DO:
+        {gbl/pdecrypt.i temp-thbj-attr.property-value-character v-proxy-login no-error}
+        display v-proxy-login with frame {&frame-name} .            
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-mercur_proxy-pswd} and temp-thbj-attr.property-value-character > '' THEN DO:
+        {gbl/pdecrypt.i temp-thbj-attr.property-value-character v-proxy-pswd no-error}
+       display v-proxy-pswd with frame {&frame-name} .       
+    END.  
+
+
 END.
 END PROCEDURE.
 
@@ -486,6 +528,9 @@ ASSIGN FRAME {&FRAME-NAME}
     v-login-is
     r-type-connect
     cb-section
+    v-proxy-addres
+    v-proxy-login
+    v-proxy-pswd
     .
 
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_apikey} .
@@ -514,6 +559,18 @@ ASSIGN FRAME {&FRAME-NAME}
 
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_server} .
     temp-thbj-attr.property-value-integer = integer(cb-section).
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_proxy-addres} .
+    temp-thbj-attr.property-value-character = v-proxy-addres.
+    def var v-proxy-enc as char no-undo. 
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_proxy-login} .
+     {gbl/pencrypt.i v-proxy-login v-proxy-enc no-error}
+    temp-thbj-attr.property-value-character = if v-proxy-addres > '' then v-proxy-enc else "":U.
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_proxy-pswd} .
+      {gbl/pencrypt.i v-proxy-pswd v-proxy-enc no-error }
+    temp-thbj-attr.property-value-character = if v-proxy-addres > '' then v-proxy-enc else "":U.
+    
         
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (

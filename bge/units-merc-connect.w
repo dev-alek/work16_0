@@ -56,6 +56,10 @@ define variable v-password     as character no-undo .
 define variable v-server       as character no-undo .
 define variable cmd            as character no-undo .
 
+define variable v-proxy-login     as character no-undo .
+define variable v-proxy-pswd      as character no-undo .
+define variable v-proxy-addres    as character no-undo .
+
 define variable v-value-character as character no-undo .
 define variable v-value-decimal   as decimal   no-undo .
 define variable v-value-integer   as integer   no-undo .
@@ -245,7 +249,23 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
                 v-server = "https://api.vetrf.ru" .
               end.    
           end case .  
-        end.          
+        end.  
+      when "proxy-addres" then 
+          v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+      when "proxy-login" then
+        do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+          end.
+        end. 
+      when "proxy-pswd" then
+        do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+          end.  
+        end.            
     end case.
   end.
   
@@ -340,8 +360,14 @@ PROCEDURE fill-tt :
   sw:end-document () .
 
 
-  cmd = substitute ("&1 -x 10.205.71.196:8080 -U MNP\Vetis_edi01:123456789123456789123456789Qwerty -u &4:&5 -d @&2 &6/platform/services/2.0/DictionaryService >&3",
-                    search ("exe/curl.exe"), search (v-get-units), "UnitList_.xml", v-login, v-password, v-server).
+  if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
+  then do :
+    cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/DictionaryService >&3",
+                    search ("exe/curl.exe"), search (v-get-units), "UnitList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+  end.
+  else do :
+    cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/DictionaryService >&3", search ("exe/curl.exe"), search (v-get-units), "UnitList_.xml", v-login, v-password, v-server).
+  end.                  
   os-command silent value (cmd). /*закрытие окна*/
   
   parser = new parserXmlUnits().

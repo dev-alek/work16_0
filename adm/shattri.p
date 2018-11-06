@@ -2614,7 +2614,28 @@ end.
 &scop prop-value ?
 &scop prop-code entry(v-ii, v-prop-code)
         {&create-thbj-attr}.
-      end.      
+      end. 
+            v-prop-code = "{&bef-attr-mercur_proxy-addres}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_proxy-login}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_proxy-pswd}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.     
     end.
 
     when {&attr-fbrattr} then do:

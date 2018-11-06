@@ -4503,9 +4503,9 @@ character~
 &scop user-can-edit-attr-mercur   true
 &scop output-display-attr-mercur  true
 &scop other-attr-mercur           'spr-ext=gbl\mercur.w':U
-&scop prop-type-list-attr-mercur  'character,character,character,character,logical,logical,integer,character,integer':U
-&scop prop-label-list-attr-mercur 'APIKey,Логин входа в ИС,Логин,Пароль,Разрешено вводить код ВСД вручную,Разрешено закрывать документ без указ. ВСД,Тип взаимодействия,Настройки для печати QR-кода,Сервер'
-&scop prop-list-attr-mercur       'apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server'
+&scop prop-type-list-attr-mercur  'character,character,character,character,logical,logical,integer,character,integer,character,character,character':U
+&scop prop-label-list-attr-mercur 'APIKey,Логин входа в ИС,Логин,Пароль,Разрешено вводить код ВСД вручную,Разрешено закрывать документ без указ. ВСД,Тип взаимодействия,Настройки для печати QR-кода,Сервер,Адрес прокси-сервера,логин,пароль'
+&scop prop-list-attr-mercur       'apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server,proxy-addres,proxy-login,proxy-pswd'
 &scop global-attr-mercur true
 &scop host-attr-mercur true
 &scop shop-attr-mercur true

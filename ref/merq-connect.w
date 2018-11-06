@@ -467,13 +467,17 @@ define variable gdsMercsubsObj  as class   gdsmercsubs.
     GuidMercsubsObj = gdsmercstrObj:getguidmercs(tt-gds-answer.GUID_). /*исправить на GUID*/
     if VALID-OBJECT (GuidMercsubsObj:GdsMercsubsCurr) then 
     do:
+/*      message                                                   */
+/*        "Уже есть товар с таким GUID, продолжить?"              */
+/*        view-as alert-box QUestion buttons yes-no update choice.*/
+/*      if not choice then                                        */
+/*      do:                                                       */
+/*        RETURN NO-APPLY .                                       */
+/*      end.                                                      */
       message
-        "Уже есть товар с таким GUID, продолжить?"
-        view-as alert-box QUestion buttons yes-no update choice.
-      if not choice then 
-      do:
+        "Товар с таким GUID уже есть"
+        view-as alert-box.
         RETURN NO-APPLY .
-      end.
     end.  
     assign
       gdsMercObj:MercName    = tt-gds-answer.merc-name
@@ -493,13 +497,17 @@ define variable gdsMercsubsObj  as class   gdsmercsubs.
     GuidMercsubsObj = gdsmercstrObj:getguidmercs(tt-gds-answer.GUID_). /*исправить на GUID*/
     if VALID-OBJECT (GuidMercsubsObj:GdsMercsubsCurr) then 
     do:
+/*      message                                                   */
+/*        "Уже есть товар с таким GUID, продолжить?"              */
+/*        view-as alert-box QUestion buttons yes-no update choice.*/
+/*      if not choice then                                        */
+/*      do:                                                       */
+/*        RETURN NO-APPLY .                                       */
+/*      end.                                                      */
       message
-        "Уже есть товар с таким GUID, продолжить?"
-        view-as alert-box QUestion buttons yes-no update choice.
-      if not choice then 
-      do:
+        "Товар с таким GUID уже есть"
+        view-as alert-box.
         RETURN NO-APPLY .
-      end.  
     end.
 
     gdsMercObj = new gdsmercsub().
@@ -530,7 +538,7 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE tt-fill Dialog-Frame 
 PROCEDURE tt-fill :
 parser:ParseResponse
-    (search("ProductItemList_.xml")
+    (search("ItemList_.xml")
     ,input-output TABLE tt-gds-answer
     ,output Msg) no-error.
   if msg <> "" then 

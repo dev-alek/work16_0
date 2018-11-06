@@ -130,6 +130,11 @@ define variable v-login        as character no-undo .
 define variable v-password     as character no-undo .
 define variable v-server       as character no-undo .
 
+define variable v-proxy-login     as character no-undo .
+define variable v-proxy-pswd      as character no-undo .
+define variable v-proxy-addres    as character no-undo .
+
+
 define variable par-type       as character no-undo.
 
 define buffer buf_tt-gds       for tt-gds .
@@ -653,7 +658,14 @@ on choose of b-load in frame Dialog-Frame /* Запрос */
               sw:end-document () .
     
 
-              cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+              if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
+              then do :
+                cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                                search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+              end.
+              else do :
+                cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+              end.
               os-command silent value (cmd). /*закрытие окна*/
           
               parser = new parserXmlGDS().
@@ -751,8 +763,14 @@ on choose of b-load in frame Dialog-Frame /* Запрос */
       sw:end-element ("se:Envelope") .
       sw:end-document () .
     
-      /*      cmd = substitute ("&1 -u expertek-180403:9dVHt6B6 -d @&2 https://api2.vetrf.ru:8002/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file), "productItemList_.xml").*/
-      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file), "productItemList_.xml", v-login, v-password, v-server).
+      if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
+      then do :
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                        search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+      end.
+      else do :
+        cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+      end.
       os-command silent value (cmd).
     end.
     
@@ -782,7 +800,7 @@ on choose of b-mark in frame Dialog-Frame /* * */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-prod Dialog-Frame
 on choose of b-prod in frame Dialog-Frame
   do:
-    os-delete value( search("ProductItemList_.xml")) no-error .
+    os-delete value( search("ItemList_.xml")) no-error .
     run sel-prod in this-procedure .
     assign
       rs-sort
@@ -1412,7 +1430,23 @@ procedure ini_enable :
                   v-server = "https://api.vetrf.ru" .
                 end.    
             end case .  
-          end.          
+          end.
+        when "proxy-addres" then 
+          v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+        when "proxy-login" then
+          do:
+            if thbjattr_thbj-attr.property-value-character <> ""
+            then do :
+              {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+            end.
+          end. 
+        when "proxy-pswd" then
+          do:
+            if thbjattr_thbj-attr.property-value-character <> ""
+            then do :
+              {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+            end.  
+          end.            
       end case.
     end.
     

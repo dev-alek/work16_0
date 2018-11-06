@@ -65,6 +65,9 @@ define variable v-password            as character no-undo .
 define variable v-initiator           as character no-undo .
 define variable v-type-connect        as integer   no-undo .
 define variable v-server              as integer   no-undo .
+define variable v-proxy-login         as character no-undo .
+define variable v-proxy-pswd          as character no-undo .
+define variable v-proxy-addres        as character no-undo .
 
 define variable v-appId           as character no-undo .
 define variable v-status_         as character no-undo .
@@ -289,6 +292,19 @@ DO:
         when "password" then v-password = thbjattr_thbj-attr.property-value-character .
         when "type-connect" then v-type-connect = thbjattr_thbj-attr.property-value-integer .
         when "server" then v-server = thbjattr_thbj-attr.property-value-integer .
+        when "proxy-addres" then v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+        when "proxy-login" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+          end.
+        end. 
+        when "proxy-pswd" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+          end.
+        end. 
       end case.
     end.
     
@@ -320,7 +336,7 @@ DO:
       next clients_.
     end.        
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
     
     objThObj:ObjType = clients.obj-type.
     objThObj:ObjCode = clients.obj-code.
@@ -520,6 +536,19 @@ DO:
         when "password" then v-password = thbjattr_thbj-attr.property-value-character .
         when "type-connect" then v-type-connect = thbjattr_thbj-attr.property-value-integer .
         when "server" then v-server = thbjattr_thbj-attr.property-value-integer .
+        when "proxy-addres" then v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+        when "proxy-login" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+          end.
+        end. 
+        when "proxy-pswd" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+          end.
+        end. 
       end case.
     end.
     
@@ -554,7 +583,7 @@ DO:
     end. 
       
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
     mercury:vsdId = ub.esys-all-attr.key1.  
   
     case ub.esys-all-attr.key2 :  

@@ -55,6 +55,18 @@ class ibs.th.bge.mercury.mercury:
   define property password as character no-undo init ?
     get.
     private set.
+  
+  define property proxy-addr as character no-undo init ?
+    get.
+    private set.
+      
+  define property proxy-login as character no-undo init ?
+    get.
+    private set.
+    
+  define property proxy-pswd as character no-undo init ?
+    get.
+    private set.
     
   define property esysId as integer no-undo init ?
     get.
@@ -99,7 +111,16 @@ class ibs.th.bge.mercury.mercury:
    Notes:
   ------------------------------------------------------------------------------*/
 		
-  constructor public mercury (inApiKey as char, inIssuerId as char, inLogin as char, inPassword as char, inLogin_is as char, inEsysId as int, inServer as int):
+  constructor public mercury (inApiKey as char,
+                              inIssuerId as char,
+                              inLogin as char,
+                              inPassword as char,
+                              inLogin_is as char,
+                              inEsysId as int,
+                              inServer as int,
+                              inProxyAddr as char,
+                              inProxyLogin as char,
+                              inProxyPswd as char):
     
     assign
       apiKey   = inApiKey
@@ -108,6 +129,9 @@ class ibs.th.bge.mercury.mercury:
       password = inPassword
       login_is = inLogin_is
       esysId   = inEsysId
+      proxy-addr = inProxyAddr
+      proxy-login = inProxyLogin
+      proxy-pswd = inProxyPswd
     .
     if inServer = 1 then server_ = "https://api2.vetrf.ru:8002" .
     if inServer = 2 then server_ = "https://api.vetrf.ru" .
@@ -172,9 +196,16 @@ class ibs.th.bge.mercury.mercury:
     
     delete object sw.
     
-    cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_ ).
 
+    if trim(proxy-addr) <> "" and proxy-addr <> ?
+    then do :
+      cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+    end.
+    else do :
+      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_).
+    end. 
     os-command silent value (cmd).
     
     ParseXML(input search("ApplicationResponse_.xml")) .
@@ -693,9 +724,15 @@ class ibs.th.bge.mercury.mercury:
     
     delete object sw.
     
-    cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_ ).
-
+    if trim(proxy-addr) <> "" and proxy-addr <> ?
+    then do :
+      cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+    end.
+    else do :
+      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_).
+    end.
     os-command silent value (cmd).
     
     ParseXML(input search("ApplicationResponse_.xml")) .
@@ -986,9 +1023,16 @@ class ibs.th.bge.mercury.mercury:
     
     delete object sw.
     
-    cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_ ).
 
+    if trim(proxy-addr) <> "" and proxy-addr <> ?
+    then do :
+      cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+    end.
+    else do :
+      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                      search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_).
+    end.
     os-command silent value (cmd).
     
     ParseXML(input search(v-result-file)) .
