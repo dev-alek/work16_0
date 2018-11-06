@@ -19,7 +19,7 @@ Creation date: 03/24/06
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 &if "{1}" = "defalgo" &then
-&global-define current-algo-1 "1.7"
+&global-define current-algo-1 "1.8"
 
 &else
 
@@ -62,28 +62,10 @@ define buffer buf_bar-code for ub.bar-code.
 
 &else
 if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
-  find first buf_chk-gds-pay no-lock where
-            buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code
-        and buf_chk-gds-pay.algo-num = {&current-algo-1} no-error.
-  if not available buf_chk-gds-pay then do:
-    pychk_create = yes.
-  end.
-  else do:
-    pychk_create = no.
-  end.
-end.
-if pychk_create then do:
-/* run gbl\inidebug.p. */  
-create-block:
-do transaction
-on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-on stop   undo create-block, return error substitute( "&1. stop", vss-workfile )
-on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile )
-:
-  find first buf2_chk-doc exclusive-lock where
-         recid(buf2_chk-doc) = recid(ub.chk-doc).
-
-  if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
+  pychk_create = not can-find (first buf_chk-gds-pay
+                               where buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code
+                                 and buf_chk-gds-pay.algo-num = {&current-algo-1}) .
+  if pychk_create then do:
     for each temp-chk-pay:
       delete temp-chk-pay.
     end.
@@ -102,11 +84,24 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
     pychk_dop-sumg = 0
     pychk_pays_count = 0
     .
+  end .
+end.
+if pychk_create then do:
+  
+create-block:
+do transaction
+on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+on stop   undo create-block, return error substitute( "&1. stop", vss-workfile )
+on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile )
+:
+  find first buf2_chk-doc exclusive-lock where
+         recid(buf2_chk-doc) = recid(ub.chk-doc).
+
+  if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
     FOR EACH ub.chk-gds No-LOCK WHERE
             ub.chk-gds.doc-code = ub.chk-pay.doc-code
     BY ub.chk-gds.line-num:
-      if ub.chk-gds.write-off-code <> ?
-      and ub.chk-gds.write-off-code > 0 then NEXT.
+      if ub.chk-gds.write-off-code > 0 then NEXT.
       find first buf_bar-code no-lock where
                 buf_bar-code.b-code = ub.chk-gds.b-code no-error.
       if not available buf_bar-code then do:
@@ -137,16 +132,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           temp-ptrl-goods.ptrl-good = (not logical(pychk_value))
           .
         end.
-        if temp-ptrl-goods.ptrl-good then do:
-        assign
-          pychk_line-type = 1
-        .
-      end.
-      else do:
-        assign
-          pychk_line-type = 0
-          .
-        end.
+        pychk_line-type = if temp-ptrl-goods.ptrl-good then 1 else 0 .
         release temp-ptrl-goods.
       end.
       else do:
@@ -209,6 +195,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                                 else '')
         temp-chk-gds.line-num = 0
         temp-chk-gds.num-lines = 0
+        temp-chk-gds.density   = ub.chk-gds.density
         pychk_jj = pychk_jj + 1
         .
         if pychk_rec-type = 1 then do:
@@ -278,9 +265,13 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
       temp-chk-gds.rec-type = pychk_rec-type
       temp-chk-gds.line-num = ub.chk-gds.line-num
       temp-chk-gds.num-lines = 1
+      temp-chk-gds.density   = ub.chk-gds.density
       .
     END. /* FOR EACH ub.chk-gds No-LOCK WHERE */
-    for each chk-discnt where chk-discnt.doc-code = ub.chk-doc.doc-code and record-type = 10 and chk-discnt.discnt-value-abs <> 0 no-lock,
+    for each chk-discnt no-lock
+       where chk-discnt.doc-code = ub.chk-doc.doc-code
+         and record-type = 10
+         and chk-discnt.discnt-value-abs <> 0,
         first ub.chk-gds of ub.chk-doc where ub.chk-gds.line-num =  chk-discnt.object-line-num :
             if ub.chk-doc.chk-type = 1 and chk-discnt.object-qnty < 0 then do:  /*Если есть */
                 for first temp-chk-dp where temp-chk-dp.doc-code = ub.chk-doc.doc-code
@@ -300,7 +291,6 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
         .
            end.
     end. 
-    
     
   end. /*if first-of ub.chk-pay.DOC-CODE*/
 
@@ -417,15 +407,18 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
     by temp-chk-pay.curr-code*/
     by temp-chk-pay.line-num:
         /* Сначала распределяем принудительные платежи. */
-       dp: for each temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code and temp-chk-dp.sum <> 0 :        
+       dp:
+       for each temp-chk-dp no-lock
+          where temp-chk-dp.pay-code = temp-chk-pay.pay-code
+            and temp-chk-dp.doc-code = temp-chk-pay.doc-code
+            and temp-chk-dp.sum <> 0 :        
             for each buf_temp-chk-gds where
                 buf_temp-chk-gds.doc-code = ub.chk-doc.doc-code            
             and buf_temp-chk-gds.line-num  =  temp-chk-dp.line-num:
-                find first  temp-chk-gds where
-                    temp-chk-gds.doc-code = ub.chk-doc.doc-code     
-                    and buf_temp-chk-gds.b-code = temp-chk-gds.b-code          
-                  and temp-chk-gds.line-num = 0
-                no-error .
+                find first temp-chk-gds
+                     where temp-chk-gds.doc-code = ub.chk-doc.doc-code     
+                       and temp-chk-gds.b-code   = buf_temp-chk-gds.b-code           
+                       and temp-chk-gds.line-num = 0 no-error .
                 if not available temp-chk-gds then next dp.
                 case num-entries(buf_temp-chk-gds.line-type, {&delim-par}):
                     when 1 then do:
@@ -465,6 +458,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                   buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
                   buf_chk-gds-pay.line-type = pychk_line-type-chr
                   buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+                  buf_chk-gds-pay.density  = buf_temp-chk-gds.density
                   buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
                   buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
                   buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
@@ -598,6 +592,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
           buf_chk-gds-pay.line-type = pychk_line-type-chr
           buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+          buf_chk-gds-pay.density  = buf_temp-chk-gds.density
           buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
           buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
           buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
@@ -691,6 +686,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
         buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
         buf_chk-gds-pay.line-type = pychk_line-type-chr
         buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+        buf_chk-gds-pay.density  = buf_temp-chk-gds.density
         buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
         buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
         buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type

@@ -64,16 +64,24 @@ define variable v-value      as character no-undo .
 define variable v-type       as character no-undo .
 define variable v-upper-code as integer   no-undo .
 define variable v-p-accsup   as character no-undo .
+define variable v-cdens      as integer no-undo . /* параметр из reportpa.w:  "По средней"=0, "По чекам"=1 */
+
+/* для получения параметров из shattri.p: */
+define variable v-tth           as handle no-undo .
+define variable v-value-char    as character no-undo .
+define variable v-value-date    as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
+define variable v-param-type as character no-undo .
 
 define buffer buf_dis-card    for ub.dis-card.
-define buffer buf_doc-line    for ub.doc-line.
 define buffer buf_goods       for ub.goods.
 define buffer buf_gds-grp     for ub.gds-grp.
 define buffer buf_bar-code    for ub.bar-code.
 define buffer buf_cash-pay    for ub.cash-pay.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
 define buffer ras-doc         for ub.trn-doc.
-define buffer ret-doc         for ub.trn-doc.
 define buffer buf_chk-discnt  for ub.chk-discnt.
 define buffer buf_chk-gds     for ub.chk-gds.
 
@@ -91,6 +99,49 @@ define buffer cli-treal-8     for treal-8.
 define TEMP-TABLE treal-2_1 LIKE treal-2 .
 define TEMP-TABLE treal-3_1 LIKE treal-3 .
 define TEMP-TABLE treal-4_1 LIKE treal-4 .
+
+/* функция взятия плотности: "По средней"=0; вариант "По чекам"=1 читается снаружи, напрямую из chk-gds-pay */
+function calcDensity returns decimal private
+(input p-str-chk-type as character // string(ub.chk-doc.chk-type)
+,input p-doc-code     as character //        v-doc-code
+,input p-out-code     as character //        ub.chk-doc.out-code
+,input p-artic        as character //        buf_goods.artic
+,input p-prod-type    as character //        buf_goods.prod-type
+,input p-prod-code    as integer   //        buf_goods.prod-code
+
+) :
+define variable v-density as decimal no-undo .
+define buffer ret-doc         for ub.trn-doc.
+define buffer buf_doc-line    for ub.doc-line.
+
+  v-density = 0 .
+  
+      /* если чек возврата, то ищем хитро его документ */
+      if lookup(p-str-chk-type, {&sale-in-receipt-codes}) > 0 then do: 
+        for each ret-doc fields( ret-doc.doc-code ret-doc.out-code ) no-lock
+           where ret-doc.out-code = p-out-code,
+           first buf_doc-line no-lock
+           where buf_doc-line.doc-code  = ret-doc.doc-code
+             AND buf_doc-line.artic     = p-artic
+             AND buf_doc-line.prod-type = p-prod-type
+             AND buf_doc-line.prod-code = p-prod-code :
+          v-density = buf_doc-line.fact-density .
+          leave.           
+        end.
+      end .   
+      else do:
+        find first buf_doc-line no-lock
+             where buf_doc-line.doc-code  = p-doc-code
+               and buf_doc-line.artic     = p-artic
+               and buf_doc-line.prod-type = p-prod-type
+               and buf_doc-line.prod-code = p-prod-code  no-error.
+        if available buf_doc-line then v-density = buf_doc-line.fact-density .
+      end.  
+           
+  return v-density .
+end function . /* end_of calcDensity */
+
+
 /* Учет расходных материалов */
 { gbl/conf-rd.i
   "'accsup'"
@@ -112,6 +163,25 @@ define TEMP-TABLE treal-4_1 LIKE treal-4 .
 
 { gbl/hostcode.i pobj-type pobj-code v-host-code }
 { gbl/basecode.i v-host-code v-base-code }
+
+/* cdens - параметр глобальных настроек отчётов для взятия плотности */
+run adm/shattri.p (
+    input "get":U
+    ,input  '' /*p-obj-type*/
+    ,input  0 /*p-obj-code*/
+    ,input  {&attr-report-glob}
+    ,input  {&attr-report-glob_cdens} /*p-param-code*/
+    ,output v-value-char
+    ,output v-value-date
+    ,output v-value-decimal
+    ,output v-value-integer
+    ,output v-value-logical
+    ,output v-param-type
+    ,INPUT-OUTPUT table-handle v-tth
+    ) no-error .
+v-cdens = v-value-integer .
+delete object v-tth.
+
 
 if pclassify then 
 do:
@@ -141,21 +211,14 @@ FOR EACH ub.chk-doc No-LOCK WHERE
     if ub.chk-doc.shift-date = pshift-date  and ub.chk-doc.shift-num < pshift-num  then next _chk-doc.
     if ub.chk-doc.shift-date = pshift-date1 and ub.chk-doc.shift-num > pshift-num1 then next _chk-doc.
     if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next _chk-doc.
-    if sheet2 then 
-    do:
-
-        if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0
-            then 
-        do:
-            if v-doc-code-r <> ub.chk-doc.out-code
-                then 
-            do:
-          
-                find first ras-doc no-lock
-                    where ras-doc.doc-code = ub.chk-doc.out-code
-                    no-error .
-                if not available ras-doc then 
-                do:
+    if sheet2 then do:
+        if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0 then do:
+            if v-doc-code-r <> ub.chk-doc.out-code then do:
+                if can-find (first ras-doc where ras-doc.doc-code = ub.chk-doc.out-code) then assign
+                    v-doc-code-r = ub.chk-doc.out-code
+                 // v-doc-code-v = ret-doc.doc-code
+                .
+                else do:
                     message
                         substitute("Отсутствует документ расхода по чеку &1"
                         , ub.chk-doc.doc-code
@@ -164,67 +227,18 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                         view-as alert-box error .
                     return error .
                 end.
-                assign 
-                    v-doc-code-r = ras-doc.doc-code.
-          
-            /*
-            first ret-doc no-lock where
-                          ret-doc.doc-code = replace(ras-doc.out-code,"у","") no-error .
-            
-            
-            if not available(ret-doc) then do:
-               find first ret-doc no-lock where
-                       ret-doc.doc-code = ras-doc.out-code no-error.
             end.
-            
-            if not available ret-doc then do:
-              message
-              substitute("Отсутствует документ возврата &1 по чеку &2"
-                        , ras-doc.out-code
-                        , ub.chk-doc.doc-code
-                        )   skip
-              "ЭКСПОРТ НЕ МОЖЕТ БЫТЬ ОСУЩЕСТВЛЕН" SKIP
-              view-as alert-box error .
-              return error .
-              
-            end.
-            assign v-doc-code-v = ret-doc.doc-code.
-            */
-        
-        /*
-        first ret-doc no-lock where
-                      ret-doc.doc-code = replace(ras-doc.out-code,"у","") no-error .
-        
-        
-        if not available(ret-doc) then do:
-            find first ret-doc no-lock where
-                   ret-doc.doc-code = ras-doc.out-code no-error.
-        end.
-        
-        if not available ret-doc then do:
-          message
-          substitute("Отсутствует документ возврата &1 по чеку &2"
-                    , ras-doc.out-code
-                    , ub.chk-doc.doc-code
-                    )   skip
-          "ЭКСПОРТ НЕ МОЖЕТ БЫТЬ ОСУЩЕСТВЛЕН" SKIP
-          view-as alert-box error .
-          return error .
-        end.
-        assign v-doc-code-v = ret-doc.doc-code.
-        */
-        
-      end.
-      assign
+            assign
       v-doc-code = v-doc-code-v
-      .
-    end. /*if ub.chk-doc.netto < 0 then do:*/
-    else do:
+            .
+        end. /*if ub.chk-doc.netto < 0 then do:*/
+        else do:
       assign
       v-doc-code = ub.chk-doc.out-code
       .
+        end.
     end.
-  end.
+    
   _chk-doc:
   for each buf_chk-gds-pay where
           buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code
@@ -273,6 +287,17 @@ FOR EACH ub.chk-doc No-LOCK WHERE
 
                         find first buf_goods    no-lock where buf_goods.gds-code  =
                             buf_bar-code.gds-code no-error.
+                        if v-cdens = 1 then v-density = buf_chk-gds-pay.density . // по чекам
+                                       else v-density = calcDensity // по средней
+                                                        (input string(ub.chk-doc.chk-type)
+                                                        ,input v-doc-code
+                                                        ,input ub.chk-doc.out-code
+                                                        ,input buf_goods.artic
+                                                        ,input buf_goods.prod-type
+                                                        ,input buf_goods.prod-code
+                                                        ).
+/*  -------------------------  calcDensity returns decimal private (input p-cdens as integer) : */
+/* 30/VIII-2018 - добавлен вариант взятия плотности "по чекам". Вариант "по средней" вынесен в функцию.
                         v-density = 0.       
                         if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0 then 
                         do: /* если чек возврата,то ищем хитро его документ */
@@ -301,7 +326,9 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                 v-density = ( if available buf_doc-line
                                 then buf_doc-line.fact-density
                                 else 0 ).
-                        end.  
+                        end.
+*/                          
+/*  -------------------------  calcDensity returns decimal private (input p-cdens as integer) : */
                         assign
                             treal-2.netto    = treal-2.netto +
                                           (if v-curr-r-b = {&r-b-base}
