@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Наблюдатель за обновлениями TH и схемы БД
+Наблюдатель за обновлениями TH и схемы БД`
 
 Автор: Морозов Александр Сергеевич
 Дата создания: 04/23/18
@@ -54,24 +54,42 @@ class ibs.th.adm.upd.observupd:
   define property Msg as character no-undo
     get.
     private set.
-  define private variable  m-upd-list-df      as character extent 2 no-undo
-    initial ["cmp/18051601.df", 
-             "cmp/18062801.df"] .
-  define private variable  m-upd-list-chk      as character extent 2 no-undo
-    initial ["TABLE:gds-mercury", 
-             "TABLE:PromoAction"] .
-             
+  &scop NumWorkBase 8
+  define private variable  m-upd-list-df      as character extent {&NumWorkBase} no-undo
+    initial ["cmp/18051601.df"  
+            ,"cmp/18062801.df"
+            ,"cmp/18091701.df"
+            ,"cmp/18091901.df"
+            ,"cmp/18091902.df"
+      			,"cmp/18101701_1.df"
+      			,"cmp/18102101.df"
+				    ,"cmp/18102102.df"
+            ] .
+  define private variable  m-upd-list-chk      as character extent {&NumWorkBase} no-undo
+    initial ["TABLE:gds-mercury"
+            ,"TABLE:PromoAction"
+            ,"FIELD:chk-gds-pay.density"
+            ,"FIELD:chk-gds.VAT-pc"
+            ,"TABLE:norm-loss"
+            ,"FIELD:norm-loss.sec-vol1"
+            ,"TABLE:tech-prol-pwd" 
+			      ,"FIELD:c-norm-loss.sec-vol1"
+            ] .
+  define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
+    initial ""  
+    get.
+               
   define property upd-df as character no-undo
   get():
     return if extent (m-upd-list-df) > CurrDBShm
-           then m-upd-list-df[CurrDBShm + 1]
+           then m-upd-list-df[CurrDBShm + 1] 
            else "".
   end.
   
   define property upd-list-chk as character no-undo
   get():
     return if extent (m-upd-list-chk) > CurrDBShm
-           then m-upd-list-chk[CurrDBShm + 1]
+           then m-upd-list-chk[CurrDBShm + 1] // + ",Initial:db.reserve1-char=" + string(CurrDBShm + 1)
            else "".
   end.
   
@@ -251,7 +269,7 @@ class ibs.th.adm.upd.observupd:
   method public logical isneedupg ():
     
     define variable updschmObj as class updschm no-undo.
-  
+    if upd-all-list-df ne "" then return true.
     if CurrDBShm < TargetDBShm
       then 
     do:

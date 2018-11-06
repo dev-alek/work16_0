@@ -338,6 +338,7 @@ Creation date: 04/05/06
 &glob table_c-layout-elem-attr 'c-layout-elem-attr':U
 &glob table_c-layout-elem-rule 'c-layout-elem-rule':U
 &glob table_c-layout-elem-rule-attr 'c-layout-elem-rule-attr':U
+&glob table_c-norm-loss 'c-norm-loss':U
 &glob table_c-nozzle 'c-nozzle':U
 &glob table_c-nozzle-attr 'c-nozzle-attr':U
 &glob table_c-nzl-hist 'c-nzl-hist':U
@@ -465,6 +466,7 @@ Creation date: 04/05/06
 &glob table_c-tax-rate 'c-tax-rate':U
 &glob table_c-tax-rate-gds-grp 'c-tax-rate-gds-grp':U
 &glob table_c-tax-units 'c-tax-units':U
+&glob table_c-tech-prol-pwd 'c-tech-prol-pwd':U
 &glob table_c-thbj-attr 'c-thbj-attr':U
 &glob table_c-tnv-in-turnover-group 'c-tnv-in-turnover-group':U
 &glob table_c-trn-doc 'c-trn-doc':U
@@ -854,6 +856,7 @@ Creation date: 04/05/06
 &glob table_menu-user-attr 'menu-user-attr':U
 &glob table_menu-user-call 'menu-user-call':U
 &glob table_menu-user-call-attr 'menu-user-call-attr':U
+&glob table_norm-loss 'norm-loss':U
 &glob table_nozzle 'nozzle':U
 &glob table_nozzle-attr 'nozzle-attr':U
 &glob table_nws-doc-hist 'nws-doc-hist':U
@@ -1154,6 +1157,7 @@ Creation date: 04/05/06
 &glob table_tax-rate-value-attr 'tax-rate-value-attr':U
 &glob table_tax-units 'tax-units':U
 &glob table_tax-units-attr 'tax-units-attr':U
+&glob table_tech-prol-pwd 'tech-prol-pwd':U
 &glob table_thbj-attr 'thbj-attr':U
 &glob table_tmp-sale 'tmp-sale':U
 &glob table_tmp-sale-attr 'tmp-sale-attr':U

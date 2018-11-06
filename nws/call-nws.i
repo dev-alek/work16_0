@@ -861,6 +861,7 @@ v-custom-except-list-erprn =
 ,c-recipe-gds~
 ,c-recipe-hist~
 ,c-regions~
+,c-norm-loss~
 ,c-rvs-doc~
 ,c-rvs-line~
 ,c-rvs-line-pump~
@@ -1076,6 +1077,7 @@ v-custom-except-list-erprn =
 ,recipe-gds~
 ,regions~
 ,regions-attr~
+,norm-loss~
 ,rvs-doc~
 ,rvs-doc-attr~
 ,rvs-line~
@@ -1199,6 +1201,8 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,regions~
 ,regions-attr~
 ,c-regions~
+,norm-loss~
+,c-norm-loss~
 ,c-pay-type~
 ,c-pay-type-attr~
 ,pay-type~

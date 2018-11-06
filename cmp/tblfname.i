@@ -659,6 +659,8 @@ Creation date: 01/29/07
 &glob table_c-layout-elem-rule-full '{&bef-table_c-layout-elem-rule-full}':U
 &glob bef-table_c-layout-elem-rule-attr-full Ист атр линий раскладок
 &glob table_c-layout-elem-rule-attr-full '{&bef-table_c-layout-elem-rule-attr-full}':U
+&glob bef-table_c-norm-loss-full c-norm-loss
+&glob table_c-norm-loss-full '{&bef-table_c-norm-loss-full}':U
 &glob bef-table_c-nozzle-full Пистолеты ТРК
 &glob table_c-nozzle-full '{&bef-table_c-nozzle-full}':U
 &glob bef-table_c-nozzle-attr-full История атрибутов пистолета
@@ -913,6 +915,8 @@ Creation date: 01/29/07
 &glob table_c-tax-rate-gds-grp-full '{&bef-table_c-tax-rate-gds-grp-full}':U
 &glob bef-table_c-tax-units-full c-tax-units
 &glob table_c-tax-units-full '{&bef-table_c-tax-units-full}':U
+&glob bef-table_c-tech-prol-pwd-full c-tech-prol-pwd
+&glob table_c-tech-prol-pwd-full '{&bef-table_c-tech-prol-pwd-full}':U
 &glob bef-table_c-thbj-attr-full История пар-ров объекта TH
 &glob table_c-thbj-attr-full '{&bef-table_c-thbj-attr-full}':U
 &glob bef-table_c-tnv-in-turnover-group-full Сумма в суммовой группе
@@ -1691,6 +1695,8 @@ Creation date: 01/29/07
 &glob table_menu-user-call-full '{&bef-table_menu-user-call-full}':U
 &glob bef-table_menu-user-call-attr-full Атрибуты для menu-user-call
 &glob table_menu-user-call-attr-full '{&bef-table_menu-user-call-attr-full}':U
+&glob bef-table_norm-loss-full Норма технологических потерь
+&glob table_norm-loss-full '{&bef-table_norm-loss-full}':U
 &glob bef-table_nozzle-full Пистолет
 &glob table_nozzle-full '{&bef-table_nozzle-full}':U
 &glob bef-table_nozzle-attr-full Атрибут Пистолета
@@ -2291,6 +2297,8 @@ Creation date: 01/29/07
 &glob table_tax-units-full '{&bef-table_tax-units-full}':U
 &glob bef-table_tax-units-attr-full Атрибуты для tax-units
 &glob table_tax-units-attr-full '{&bef-table_tax-units-attr-full}':U
+&glob bef-table_tech-prol-pwd-full tech-prol-pwd
+&glob table_tech-prol-pwd-full '{&bef-table_tech-prol-pwd-full}':U
 &glob bef-table_thbj-attr-full Параметры объекта TH
 &glob table_thbj-attr-full '{&bef-table_thbj-attr-full}':U
 &glob bef-table_tmp-sale-full Типы темпов продаж

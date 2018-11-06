@@ -629,6 +629,8 @@ abc-analysis~
 ,c-recipe-gds~
 ,regions~
 ,c-regions~
+,norm-loss~
+,c-norm-loss~
 ,rp-by-call~
 ,c-rp-by-call~
 ,rp-rule-param~
@@ -769,6 +771,8 @@ abc-analysis~
 ,PromoGift~
 ,PromoGoods~
 ,PromoObject~
+,tech-prol-pwd~
+,c-tech-prol-pwd~
 ':U .
 
 
