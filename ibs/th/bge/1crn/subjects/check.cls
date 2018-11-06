@@ -474,16 +474,19 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     for each buf_chk-discnt no-lock
        where buf_chk-discnt.doc-code = p-buf_chk-doc.doc-code
         /* скидки обычные (record-type = 0) и скидки, которыми выравниваются погрешности (record-type = 2) */
-         and ( buf_chk-discnt.record-type = 0 or
-               buf_chk-discnt.record-type = 2 )
+         and ( buf_chk-discnt.record-type = 1 or
+               buf_chk-discnt.record-type = 2 
+               or buf_chk-discnt.value-type = 14)
     break by buf_chk-discnt.doc-code :
       if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section3}) .
       
       /*если промоакции и скидка на подитог, необходимо размазать скидку на все товары*/
-      if buf_chk-discnt.promo-id > "" and buf_chk-discnt.line-type = integer({&discnt-sub-total}) then 
+      if /* buf_chk-discnt.promo-id > "" and */  buf_chk-discnt.line-type = integer({&discnt-sub-total})
+      and can-find(first  bf_chk-discnt no-lock
+          where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and bf_chk-discnt.record-type = 1 and bf_chk-discnt.discnt-id = buf_chk-discnt.discnt-id ) then 
       do:
         for each bf_chk-discnt no-lock
-          where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and bf_chk-discnt.record-type = 1 break by bf_chk-discnt.object-line-num:
+          where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and bf_chk-discnt.record-type = 1  and bf_chk-discnt.discnt-id = buf_chk-discnt.discnt-id  break by bf_chk-discnt.object-line-num:
           insw:start-element ({&tag-item3}) .
           insw:write-data-element (  "discnt-num",       string(bf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
           insw:write-data-element (  "line-num",         string(bf_chk-discnt.object-line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
