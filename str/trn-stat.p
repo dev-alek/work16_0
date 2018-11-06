@@ -93,6 +93,7 @@ define buffer c-in            for ub.trn-doc.
 define buffer bf-cnt_parts    for ub.parts.
 define buffer bf_fin-ob-trn   for ub.fin-ob-trn.
 define buffer bf_doc-line-attr for ub.doc-line-attr.
+define buffer buf_doc-attr    for ub.doc-attr.
 
 define variable inv-shipvalue                as   logical                     no-undo.
 define variable par-gen-mrgn-ie              as   character                   no-undo.
@@ -174,6 +175,7 @@ define variable v-kol-doc as integer   no-undo .
 define variable v-is-add-doc as logical   no-undo init false  .
 define variable v-reasonm as logical   no-undo init false .
 define variable v-reasonme as character no-undo .
+define variable v-attr-PN  as character no-undo .
 define variable v-is-ord-doc as logical   no-undo init false .
 define variable v-event-code as character no-undo .
 define variable v-is-hold as logical   no-undo .
@@ -202,7 +204,7 @@ define variable vsdSubCurr as class vsdsub no-undo.
 define variable vsdSts as class vsdstatustype no-undo.
 define variable vsdStr as class vsdtostorage no-undo.
 define variable keyrecObj as class keyrec no-undo.
-
+define variable v-error-attr  as character no-undo .
 
 define stream str-err.
 
@@ -211,7 +213,6 @@ define stream str-err.
 do transaction
 on error undo, return error return-value
 :
-
 { gbl/curr-r-b.i varr-b }
 
 if valid-handle(parparentproc)
@@ -309,12 +310,14 @@ for each thbjattr_thbj-attr :
 end.
 
 v-reasonme      = "".
+v-attr-PN       = "".
 { gbl/getsect.i run bf_trn-doc.obj-type bf_trn-doc.obj-Code {&attr-nakl_par} }
 for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_minusprt}  then varminus-parts = thbjattr_thbj-attr.property-value-logical .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonm}   then v-reasonm      = thbjattr_thbj-attr.property-value-logical .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonme}  then v-reasonme     = thbjattr_thbj-attr.property-value-character .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_inv-ship}  then inv-shipvalue  = thbjattr_thbj-attr.property-value-logical .
+    if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_attr-PN}   then v-attr-PN      = thbjattr_thbj-attr.property-value-character .
 end.
 
 
@@ -712,7 +715,18 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                             , replace( bf_trn-doc.doc-code, "*", "$" ) ).
   end.
   end.
-
+  
+  /*проверка на заполнение обязательных атрибутов в накладной*/
+  if v-attr-PN <> "" then do:
+      v-error-attr = "" .
+      for each buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code and buf_doc-attr.attr-value = "" and lookup (buf_doc-attr.attr-code, v-attr-PN) > 0:
+        v-error-attr = v-error-attr + ", " + buf_doc-attr.attr-code .
+      end.
+      if v-error-attr <> "" then do:
+        run waitfram-hide in this-procedure no-error.
+        undo, return error "Не все атрибуты накладной заполнены.".
+      end.  
+  end.  
       if bf_trn-doc.status_ <> {&inquiry}  then do:
   /* */
   define variable v-reasonm-type-n as character no-undo.

@@ -1210,7 +1210,15 @@ on error undo, return error
         {&create-thbj-attr}.
       end.
 
-    end.
+          v-prop-code = "{&bef-attr-nakl_par_attr-PN}" .
+&scop ptype character
+&scop prop-value '':U
+&scop prop-code  entry(v-ii,v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+     end.
 
     when {&attr-nakl-glob} then do:
       v-prop-code = "{&bef-attr-nakl-glob_rnd-znk}" .
@@ -2735,7 +2743,16 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-    
+
+       v-prop-code = "{&bef-attr-petrol_dop-info}" .
+&scop ptype character
+&scop prop-value '':U
+&scop prop-code  entry(v-ii,v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+          
         v-prop-code = "{&bef-attr-petrol_Delta-mass-horiz}".
             &scop ptype character
             &scop prop-value ""

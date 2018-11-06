@@ -1238,8 +1238,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob fillin_height-trdcattr-seals-condition 1
 &glob type-trdcattr-seals-condition {&type-char}
 &glob format-trdcattr-seals-condition "X(20)"
-&glob label-trdcattr-seals-condition "Пломбы, их состояние"
-&glob tooltip-trdcattr-seals-condition "Пломбы, их состояние"
+&glob label-trdcattr-seals-condition "Пломбы и их состояние"
+&glob tooltip-trdcattr-seals-condition "Пломбы и их состояние"
 &glob user-can-edit-trdcattr-seals-condition true
 &glob output-display-trdcattr-seals-condition true
 &glob other-trdcattr-seals-condition '':u
