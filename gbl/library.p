@@ -2926,7 +2926,10 @@ procedure confrddb :
       p-value            = ?
       l-object-specified = false
     .
-
+        run cur-time in this-procedure
+          ( output v-today
+           ,output v-time
+          ) no-error .
     if length(p-code) > 8
     then do:
       message
@@ -2958,10 +2961,7 @@ procedure confrddb :
             or buf_config.param-type = {&type-int}
           )
       then do:
-        run cur-time in this-procedure
-          ( output v-today
-           ,output v-time
-          ) no-error .
+
         if error-status :error
         then do:
           if msg-on = TRUE
@@ -3202,7 +3202,17 @@ procedure confrddb :
             and buf_config.obj-type   = o-type
             and buf_config.obj-code   = o-code
             and buf_config.db-num     = p-db-num
-          no-error .
+            and buf_config.beg-date   <= v-today
+            and buf_config.end-date   >= v-today  
+        no-error .
+        if not available buf_config then
+        find first buf_config no-lock
+          where buf_config.param-code = p-code
+            and buf_config.host-code  = h-code
+            and buf_config.obj-type   = o-type
+            and buf_config.obj-code   = o-code
+            and buf_config.db-num     = p-db-num
+        no-error .
         if not available buf_config
         then do:
           if h-code <> 0
