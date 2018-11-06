@@ -1212,7 +1212,7 @@ on error undo, return error
 
           v-prop-code = "{&bef-attr-nakl_par_attr-PN}" .
 &scop ptype character
-&scop prop-value '':U
+&scop prop-value 'dids,nids':U
 &scop prop-code  entry(v-ii,v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):
@@ -2804,7 +2804,7 @@ end.
 
        v-prop-code = "{&bef-attr-petrol_dop-info}" .
 &scop ptype character
-&scop prop-value '':U
+&scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj':U
 &scop prop-code  entry(v-ii,v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):

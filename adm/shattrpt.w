@@ -79,7 +79,6 @@ define temp-table temp_twowin_itemsSelected_col no-undo
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
@@ -151,7 +150,7 @@ DEFINE VARIABLE delta-vert AS CHARACTER
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
      SIZE 20 BY 5 NO-UNDO.
 
-DEFINE VARIABLE dop-info AS CHARACTER initial "autoent,car-num,time-income,fio-driver,ptbobj"
+DEFINE VARIABLE dop-info AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 28.5 BY 4.5 NO-UNDO.
 
@@ -1058,7 +1057,8 @@ define variable v-same            as logical        no-undo .
 do
 on error undo, return error return-value
 :
-
+display dop-info with frame {&frame-name} .
+hide dop-info in frame {&frame-name} .
 
   if p-mode = {&lookup} then do:
     return error.
