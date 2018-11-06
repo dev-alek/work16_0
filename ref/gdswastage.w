@@ -69,8 +69,9 @@ define variable vss-description as character no-undo init "Нормы естественной уб
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-exit B-Help f-norm-summer ~
-f-norm-winter 
-&Scoped-Define DISPLAYED-OBJECTS f-norm-summer f-norm-winter 
+f-norm-winter f-norm-summer-2 f-norm-winter-2 
+&Scoped-Define DISPLAYED-OBJECTS f-norm-summer f-norm-winter ~
+f-norm-summer-2 f-norm-winter-2 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -105,7 +106,17 @@ DEFINE VARIABLE f-norm-summer AS DECIMAL FORMAT "->>,>>9.999" INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 10.63 BY 1.
 
+DEFINE VARIABLE f-norm-summer-2 AS DECIMAL FORMAT "->>,>>9.999" INITIAL 0 
+     LABEL "Норма убыли для лета" 
+     VIEW-AS FILL-IN 
+     SIZE 10.63 BY 1.
+
 DEFINE VARIABLE f-norm-winter AS DECIMAL FORMAT "->>,>>9.999" INITIAL 0 
+     LABEL "Норма убыли для зимы" 
+     VIEW-AS FILL-IN 
+     SIZE 10.63 BY 1.
+
+DEFINE VARIABLE f-norm-winter-2 AS DECIMAL FORMAT "->>,>>9.999" INITIAL 0 
      LABEL "Норма убыли для зимы" 
      VIEW-AS FILL-IN 
      SIZE 10.63 BY 1.
@@ -117,9 +128,19 @@ DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 1
      B-exit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 54.88
-     f-norm-summer AT ROW 3.29 COL 50.01 RIGHT-ALIGNED
-     f-norm-winter AT ROW 4.46 COL 50.01 RIGHT-ALIGNED
-     SPACE(15.11) SKIP(0.86)
+     f-norm-summer AT ROW 3.04 COL 51.38 RIGHT-ALIGNED
+     f-norm-winter AT ROW 4.21 COL 51.38 RIGHT-ALIGNED
+     f-norm-summer-2 AT ROW 6.58 COL 51.38 RIGHT-ALIGNED WIDGET-ID 2
+     f-norm-winter-2 AT ROW 7.75 COL 51.38 RIGHT-ALIGNED WIDGET-ID 4
+     "Транспортировка:" VIEW-AS TEXT
+          SIZE 16.5 BY 1 AT ROW 3.04 COL 1.75 WIDGET-ID 6
+     "Хранение:" VIEW-AS TEXT
+          SIZE 9.5 BY 1 AT ROW 6.58 COL 17.25 RIGHT-ALIGNED WIDGET-ID 8
+     "в месяц" VIEW-AS TEXT
+          SIZE 8 BY 1 AT ROW 6.58 COL 53 WIDGET-ID 10
+     "в месяц" VIEW-AS TEXT
+          SIZE 8 BY 1 AT ROW 7.75 COL 53 WIDGET-ID 12
+     SPACE(5.12) SKIP(0.78)
     WITH VIEW-AS DIALOG-BOX 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Норма естественной убыли"
@@ -151,8 +172,15 @@ ASSIGN
 
 /* SETTINGS FOR FILL-IN f-norm-summer IN FRAME Dialog-Frame
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-norm-summer-2 IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN f-norm-winter IN FRAME Dialog-Frame
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-norm-winter-2 IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
+/* SETTINGS FOR TEXT-LITERAL "Хранение:"
+          SIZE 9.5 BY 1 AT ROW 6.58 COL 17.25 RIGHT-ALIGNED             */
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -181,8 +209,10 @@ DO:
   assign
      f-norm-summer 
      f-norm-winter
+     f-norm-summer-2 
+     f-norm-winter-2
   .   
-  run proc-go in this-procedure (f-norm-summer, f-norm-winter) no-error.
+  run proc-go in this-procedure (f-norm-summer, f-norm-winter, f-norm-summer-2, f-norm-winter-2) no-error.
   if error-status:error then return no-apply.
 
 END.
@@ -249,9 +279,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-norm-summer f-norm-winter 
+  DISPLAY f-norm-summer f-norm-winter f-norm-summer-2 f-norm-winter-2 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-exit B-Help f-norm-summer f-norm-winter 
+  ENABLE b-quit B-exit B-Help f-norm-summer f-norm-winter f-norm-summer-2 
+         f-norm-winter-2 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -274,10 +305,12 @@ end.
   assign
   f-norm-summer = decimal(entry(1, p-value, ";":U ))
   f-norm-winter = decimal(entry(2, p-value, ";":U ))
+  f-norm-summer-2 = decimal(entry(3, p-value, ";":U ))
+  f-norm-winter-2 = decimal(entry(4, p-value, ";":U ))
   no-error .
-  DISPLAY f-norm-summer f-norm-winter
+  DISPLAY f-norm-summer f-norm-winter f-norm-summer-2 f-norm-winter-2
       WITH FRAME {&FRAME-NAME}.
-  ENABLE b-quit B-exit B-Help f-norm-summer f-norm-winter
+  ENABLE b-quit B-exit B-Help f-norm-summer f-norm-winter f-norm-summer-2 f-norm-winter-2
       WITH FRAME {&FRAME-NAME}.
   VIEW FRAME {&FRAME-NAME}.
 
@@ -295,9 +328,10 @@ PROCEDURE proc-go :
 ------------------------------------------------------------------------------*/
 define input parameter v-norm-summer as decimal no-undo.
 define input parameter v-norm-winter as decimal no-undo.
-
+define input parameter v-norm-summer-2 as decimal no-undo.
+define input parameter v-norm-winter-2 as decimal no-undo.
 assign
-p-value = string(v-norm-summer, "->>>>9.999") + ";" + string(v-norm-winter, "->>>>9.999")
+p-value = string(v-norm-summer, "->>>>9.999") + ";" + string(v-norm-winter, "->>>>9.999") + ";" + string(v-norm-summer-2, "->>>>9.999") + ";" + string(v-norm-winter-2, "->>>>9.999")
 .
 END PROCEDURE.
 

@@ -95,13 +95,16 @@ define variable ii as integer no-undo .
 define variable par-recid-fbr as recid no-undo .
 define buffer buf-clients for clients.
 
-define variable v-fuel-type as character no-undo .
-define variable v-srvc-type as character no-undo .
-define variable v-neu-l     as decimal no-undo .
-define variable v-neu-z     as decimal no-undo .
+define variable v-fuel-type     as character no-undo .
+define variable v-oil-grp       as character no-undo .
+define variable v-srvc-type     as character no-undo .
+define variable v-neu-l         as decimal   no-undo .
+define variable v-neu-z         as decimal   no-undo .
+define variable v-neu-storage-l as decimal   no-undo .
+define variable v-neu-storage-z as decimal   no-undo .
 define variable v-unit-spl-code as character no-undo .
-define variable v-is-petrl as logical no-undo .
-define variable v-barcode-list as longchar no-undo .
+define variable v-is-petrl      as logical   no-undo .
+define variable v-barcode-list  as longchar  no-undo .
 
   define variable v-cntxt-db-num        as integer   no-undo . /* текущая БД            */
   define variable v-cntxt-userid        as character no-undo . /* текущий пользователь  */
@@ -351,6 +354,15 @@ define variable v-barcode-list as longchar no-undo .
     when 3 then v-srvc-type = {&attr-office-type_tso-ret} . 
     otherwise v-srvc-type = ? .
   end case.
+  
+  
+  if p-GdsObj:oil-grp <> ?
+  then do:
+    RUN gds-attr-write (v-nbc, {&attr-group-np}, p-GdsObj:oil-grp).
+  end.  
+  else do:
+    RUN gds-attr-delete (v-nbc, {&attr-group-np}, output v-attr-del).
+  end.  
   
   if v-srvc-type <> ?
   then do :
@@ -645,14 +657,18 @@ define variable v-barcode-list as longchar no-undo .
   
   if p-GdsObj:neu-l <> ?
   or p-GdsObj:neu-z <> ?
+  or p-GdsObj:neu-storage-l <> ?
+  or p-GdsObj:neu-storage-z <> ?
   then do :
     if p-GdsObj:neu-l = ? then v-neu-l = 0 . else v-neu-l = p-GdsObj:neu-l .
     if p-GdsObj:neu-z = ? then v-neu-z = 0 . else v-neu-z = p-GdsObj:neu-z .
+    if p-GdsObj:neu-storage-l = ? then v-neu-storage-l = 0 . else v-neu-storage-l = p-GdsObj:neu-storage-l .
+    if p-GdsObj:neu-storage-z = ? then v-neu-storage-z = 0 . else v-neu-storage-z = p-GdsObj:neu-storage-z .
     RUN gdsoattr-write (v-nbc,
                         {&shop},
                         ub.clients.obj-code,
                         {&attr-normal-wastage-o},
-                        (string(v-neu-l, "->>>>9.999") + ";" + string(v-neu-z, "->>>>9.999"))
+                        (string(v-neu-l, "->>>>9.999") + ";" + string(v-neu-z, "->>>>9.999") + ";" + string(v-neu-storage-l, "->>>>9.999") + ";" + string(v-neu-storage-z, "->>>>9.999"))
                         ).  
   end.
   else do :

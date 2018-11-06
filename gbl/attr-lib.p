@@ -2849,7 +2849,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-nakl_par   true
 &scop output-display-attr-nakl_par  true
 &scop other-attr-nakl_par           'spr-ext=gbl\naklpa1.w':U
-&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical':U
+&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character':U
 &scop prop-label-list-attr-nakl_par 'Дата закрытия периода~
 ,Дата факт = Дате документа (для внешних ПН РН и МФ )~
 ,Тип заведения НДС по умолчанию~
@@ -2871,8 +2871,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 ,В ПН Обязательно указывать ГТД для товаров с испортным производителем~
 ,Запрещен приход при превышении максимальных остатков~
 ,Помарочный учет движения алкогольной продукции~
+,Обязательные атрибуты ПН~
 '
-&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol'
+&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN'
 &scop global-attr-nakl_par true
 &scop host-attr-nakl_par   true
 &scop shop-attr-nakl_par   true
@@ -2900,6 +2901,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-nakl_par_gtd-to-imp-prod_tooltip   (gtd-to-imp-prod) Запрещено закрытие на факт ПН` если не указана ГТД для товара` у производителя которого стоит атрибут - Импортный производитель
 &scop attr-nakl_par_exc-max-qnty_tooltip   (exc-max-qnty) Запрещено закрытие на факт ПН` если после закрытия остатки товара будут больше` чем установленные максимальные остатки на объекте
 &scop attr-nakl_par_mark-alchol_tooltip   (mark-alchol) Помарочный учет движения алкогольной продукции
+&scop attr-nakl_par_attr-PN_tooltip  (attr-PN) Обязательные атрибуты ПН
 &scop prop-tooltip-list-attr-nakl_par {&attr-nakl_par_date-close-period_tooltip},~
 {&attr-nakl_par_stfactdt_tooltip},~
 {&attr-nakl_par_type-vat_tooltip},~
@@ -2920,7 +2922,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 {&attr-nakl_par_round-vat-sum_tooltip},~
 {&attr-nakl_par_gtd-to-imp-prod_tooltip},~
 {&attr-nakl_par_exc-max-qnty_tooltip},~
-{&attr-nakl_par_mark-alchol_tooltip}
+{&attr-nakl_par_mark-alchol_tooltip},~
+{&attr-nakl_par_attr-PN_tooltip}
 &scop level-way-attr-nakl_par "obj,host,global"
 &scop up-way-attr-nakl_par "nakl_par,nakl_par,nakl_par"
 
@@ -5751,6 +5754,18 @@ end procedure.
 &scop manual-edit-attr-ptrl-without-rvs 6
 &scop batch-edit-attr-ptrl-without-rvs  6
 
+&scop type-attr-group-np {&type-char}
+&scop format-attr-group-np  "X(50)"
+&scop label-attr-group-np   "Группа НП"
+&scop tooltip-attr-group-np   "Группа НП"
+&scop user-can-edit-attr-group-np  true
+&scop output-display-attr-group-np  true
+&scop other-attr-group-np  "spr-ext=ref\group-np.w/spr-param=group-np/check=gds-attr_check-group-np"
+&scop news-attr-group-np true
+&scop copy-attr-group-np  true
+&scop manual-edit-attr-group-np 6
+&scop batch-edit-attr-group-np  6
+
 &scop type-attr-office-type {&type-char}
 &scop format-attr-office-type  "X(50)"
 &scop label-attr-office-type   "Тип услуги"
@@ -6204,6 +6219,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-office-type
       {&attr-temp-full-code}
+      &scop attr-code attr-group-np
+      {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-full-code}
       &scop attr-code attr-ban-bonus
@@ -6293,6 +6310,8 @@ do
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-code}
       &scop attr-code attr-office-type
+      {&attr-temp-code}
+      &scop attr-code attr-group-np
       {&attr-temp-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-code}
@@ -6617,6 +6636,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-office-type
       {&attr-news-code}
+      &scop attr-code attr-group-np
+      {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-news-code}
       &scop attr-code attr-ban-bonus
@@ -6700,6 +6721,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-ptrl-without-rvs
       {&attr-copy-code}
       &scop attr-code attr-office-type
+      {&attr-copy-code}
+      &scop attr-code attr-group-np
       {&attr-copy-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-copy-code}
@@ -6944,6 +6967,60 @@ assign
 p-correct = yes.
 end procedure.
 
+procedure gds-attr_check-group-np :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+define buffer buf_goods for ub.goods.
+define buffer buf_gds-host-attr for ub.gds-host-attr.
+
+  define variable v-is-petrolium as logical no-undo .
+  define variable v-is-pieces    as logical no-undo .
+
+do
+on error undo, return error return-value
+:
+  CASE p-mode:
+    when {&add-def} then do:
+     find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+      if not available buf_goods then do:
+        return error substitute("(Еще) Нет товара с кодом &1, невозможно выполнить проверку корректности установки атрибута"
+                                , p-gds-code).
+      end.
+{ str/is-petrl.i buf_goods.artic buf_goods.prod-type buf_goods.prod-code v-is-petrolium v-is-pieces no-error }
+    if error-status:error then do:
+      message
+        substitute("&1 &2", error-status:get-message(1) , return-value )
+      view-as alert-box error.
+      return.
+    end.
+    if not v-is-petrolium then do:
+      message
+        substitute("Товар-топливо должен иметь топливную единицу измерения для задания диапазона плотности")
+      view-as alert-box error.
+      return.
+    end.
+    if v-is-pieces then do:
+      message
+        substitute("Товар-топливо должен иметь дробную единицу измерения для задания диапазона плотности")
+      view-as alert-box error.
+      return.
+    end.
+     
+     if p-error-code <> "" then
+        return p-error-code.
+    end.
+  END CASE.
+end.
+assign
+p-correct = yes.
+end procedure.
+
 procedure gds-attr_check-is-loyalty-payment :
 define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
 define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
@@ -7175,6 +7252,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-office-type
       {&attr-manual-edit-code}
+      &scop attr-code attr-group-np
+      {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-manual-edit-code}
       &scop attr-code attr-ban-bonus
@@ -7259,6 +7338,8 @@ do
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}
       &scop attr-code attr-office-type
+      {&attr-batch-edit-code}
+      &scop attr-code attr-group-np
       {&attr-batch-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-batch-edit-code}

@@ -36,11 +36,14 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property enbl-exc      as integer      no-undo get. private set.
   define property srvc-type     as integer      no-undo get. private set.
   define property fuel-type     as character    no-undo get. private set.
+  define property oil-grp       as character    no-undo get. private set.
   define property max-dnsty     as decimal      no-undo get. private set.
   define property min-dnsty     as decimal      no-undo get. private set.
   define property pay-trk       as integer      no-undo get. private set.
   define property neu-z         as decimal      no-undo get. private set.
   define property neu-l         as decimal      no-undo get. private set.
+  define property neu-storage-l as decimal      no-undo get. private set.
+  define property neu-storage-z as decimal      no-undo get. private set.
   define property proteins      as decimal      no-undo get. private set.
   define property fats          as decimal      no-undo get. private set.
   define property carbohydrates as decimal      no-undo get. private set.
@@ -168,6 +171,11 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
           assign 
             fuel-type = inValue.
         end.
+      when "oil-grp" then 
+        do:
+          assign 
+            oil-grp = inValue.
+        end.
       when "max-dnsty" then 
         do:
           assign 
@@ -192,6 +200,16 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         do:
           assign 
             neu-l = decimal(inValue).
+        end.
+      when "neu-storage-l" then 
+        do:
+          assign 
+            neu-storage-l = decimal(inValue).
+        end.
+      when "neu-storage-z" then 
+        do:
+          assign 
+            neu-storage-z = decimal(inValue).
         end.
       when "proteins" then 
         do:
@@ -274,11 +292,14 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         enbl-exc      = ?
         srvc-type     = ?
         fuel-type     = ?
+        oil-grp       = ?
         max-dnsty     = ?
         min-dnsty     = ?
         pay-trk       = ?
         neu-z         = ?
         neu-l         = ? 
+        neu-storage-l = ?
+        neu-storage-z = ?
         proteins      = ?
         fats          = ?
         carbohydrates = ?
