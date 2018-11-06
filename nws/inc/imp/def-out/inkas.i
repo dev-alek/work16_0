@@ -27,6 +27,7 @@ define temp-table locb-chk-pay-attr     no-undo like ub.chk-pay-attr .
 define temp-table locb-chk-discnt     no-undo like ub.chk-discnt.
 define temp-table locb-chk-doc-attr   no-undo like ub.chk-doc-attr.
 define temp-table locb-chk-gds-pay    no-undo like ub.chk-gds-pay.
+define temp-table locb-chk-discnt-attr  no-undo like ub.chk-discnt-attr.
 define temp-table locb-c-chk-doc        no-undo like ub.c-chk-doc.
 define temp-table locb-c-chk-gds        no-undo like ub.c-chk-gds.
 define temp-table locb-c-chk-pay        no-undo like ub.c-chk-pay.

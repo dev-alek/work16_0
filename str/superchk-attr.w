@@ -240,7 +240,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 
         end.
   
-    
+    for each chk-discnt-attr where chk-discnt-attr.doc-code = p-code no-lock:
+                create tt-chk-attr.
+                assign
+                tt-chk-attr.attr-value = chk-discnt-attr.attr-value
+                tt-chk-attr.attr-code = chk-discnt-attr.attr-code    
+                tt-chk-attr.attr-num = chk-discnt-attr.line-num   
+                tt-chk-attr.attr-type = "Скидка".
+
+      end.
     
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.

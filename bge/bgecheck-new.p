@@ -266,7 +266,17 @@ end .
             and buf_chk-doc.obj-code = temp-obj.obj-code
             and buf_chk-doc.chk-date >= v-date-from
             and buf_chk-doc.chk-date <= v-date-to :
-        do: /* фильтруем chk-doc */   
+        do: /* фильтруем chk-doc */
+          /* Пропускаем ошибочные чеки
+             if replace(replace(replace(buf_chk-doc.office
+                               , {&gds-goods}
+                               , '':U)
+                       , {&gds-office}
+                       , '':U)
+               , {&comma-char}
+               , '':U) <> '':U
+            then next.
+          */
           if p-chk-type > "" then do: 
             if lookup(string(buf_chk-doc.chk-type),p-chk-type) = 0 then next.
           end.
@@ -733,12 +743,19 @@ DEFINE BUFFER buf_chk-discnt   for ub.chk-discnt .
                       )
         ).
       end.
-    
-      find first buf_chk-pay-attr no-lock
-           where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
-             and buf_chk-pay-attr.attr-code = "cpdoc"
-             and buf_chk-pay.line-num       = buf_chk-pay-attr.line-num no-error.
-      v-rrn = if available buf_chk-pay-attr then buf_chk-pay-attr.attr-value else "" .
+                  v-rrn = "".   
+              for first buf_chk-pay-attr no-lock
+                 where  buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code 
+                    and buf_chk-pay-attr.attr-code = "RRN"
+                    and buf_chk-pay.line-num =  buf_chk-pay-attr.line-num :
+                  v-rrn = buf_chk-pay-attr.attr-value.
+              end.       
+              if v-rrn = '' then for first buf_chk-pay-attr no-lock
+                 where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code 
+                    and buf_chk-pay-attr.attr-code = "cpdoc"
+                    and buf_chk-pay.line-num =  buf_chk-pay-attr.line-num :
+                  v-rrn = buf_chk-pay-attr.attr-value.
+              end.
        
       run wp-xmltagopen in this-procedure ( input 2, input "checkPays", input "" ).
       run wp-xmltagput  in this-procedure ( input 3, input "ID"       , input string( buf_chk-pay.doc-code  ), input 0 ).
@@ -760,7 +777,7 @@ DEFINE BUFFER buf_chk-discnt   for ub.chk-discnt .
       for each chk-discnt no-lock
          where chk-discnt.doc-code    = p-doc-code
            and chk-discnt.record-type = 4
-           and chk-discnt.discnt-value-abs <> 0:
+           /*and chk-discnt.discnt-value-abs <> 0*/:
         bonus-relation = ''.
         for first chk-discnt-attr no-lock
             where chk-discnt-attr.attr-code = "RRN-bonus"
@@ -770,6 +787,7 @@ DEFINE BUFFER buf_chk-discnt   for ub.chk-discnt .
               and chk-discnt-attr.object-line-num = chk-discnt.object-line-num :
           bonus-relation = chk-discnt-attr.attr-value .
         end. 
+          if chk-discnt.discnt-value-abs =  0  and bonus-relation = '' then next.            
         run wp-xmltagopen in this-procedure ( input 2, input "checkBonus", input "" ).
         run wp-xmltagput  in this-procedure ( input 3, input "ID"           , input p-doc-code, input 0 ).
         run wp-xmltagput  in this-procedure ( input 3, input "SrcCardNum"   , input chk-discnt.src-d-card , input 0 ).
@@ -986,12 +1004,12 @@ run wp-XMLTagclose( 3, "document" ).
 run wp-XMLTagclose( 2, "manifest" ).
 run wp-XMLTagclose( 1, "header" ).
 run wp-XMLTagOpen(1, "options","").
-run wp-XMLTagput( 2, "exportDate",      string( today,              "99/99/9999" ), 0).
-run wp-XMLTagput( 2, "exportDateXml",   bge-xml-date( today )                     , 0).
+run wp-XMLTagput( 2, "exportDate",      string( today,              "99/99/9999" ), 1).
+run wp-XMLTagput( 2, "exportDateXml",   bge-xml-date( today )                     , 1).
 run wp-XMLTagput( 2, "exportTime",      string( time,               "HH:MM:SS"   ), 0).
 run wp-XMLTagput( 2, "baseNum",         string( p-db-num                         ), 0).
-run wp-XMLTagput( 2, "dateFrom",        string( p-date-from,        "99/99/9999" ), 0).
-run wp-XMLTagput( 2, "dateFromXml",     bge-xml-date( p-date-from )               , 0).
+run wp-XMLTagput( 2, "dateFrom",        string( p-date-from,        "99/99/9999" ), 1).
+run wp-XMLTagput( 2, "dateFromXml",     bge-xml-date( p-date-from )               , 1).
 run wp-XMLTagput( 2, "shiftNumFrom",    string( p-shift-num-from                 ), 2).
 run wp-XMLTagput( 2, "dateTo",          string( p-date-to,          "99/99/9999" ), 0).
 run wp-XMLTagput( 2, "dateToXml",       bge-xml-date( p-date-to )                 , 0).

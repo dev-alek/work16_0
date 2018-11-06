@@ -75,6 +75,10 @@ on endkey undo, return error :
       create locb-chk-discnt.
       { nws/impl-nws.i "chk-discnt" "locb-" }
     end.
+     when "chk-discnt-attr" then do:
+      create locb-chk-discnt-attr.
+      { nws/impl-nws.i "chk-discnt-attr" "locb-" }
+    end.
     when "chk-doc-attr" then do:
       create locb-chk-doc-attr.
       { nws/impl-nws.i "chk-doc-attr" "locb-" }
@@ -392,6 +396,11 @@ end.
 for each buf_chk-discnt where buf_chk-discnt.out-code = wt-inkas.inkas-code
 on error  undo, return error
 :
+  for each buf_chk-discnt-attr where buf_chk-discnt-attr.doc-code = buf_chk-discnt.doc-code and
+    buf_chk-discnt-attr.line-num = buf_chk-discnt.line-num:
+    
+    delete buf_chk-discnt-attr.
+  end. 
   delete buf_chk-discnt.
 end.
 for each locb-chk-discnt where locb-chk-discnt.out-code = wt-inkas.inkas-code
@@ -400,6 +409,12 @@ on error  undo, return error
 :
   create buf_chk-discnt.
   buffer-copy locb-chk-discnt to buf_chk-discnt.
+   for each locb-chk-discnt-attr where locb-chk-discnt-attr.doc-code = locb-chk-discnt.doc-code and
+    locb-chk-discnt-attr.line-num = locb-chk-discnt.line-num:
+    
+    create buf_chk-discnt-attr.
+    buffer-copy locb-chk-discnt-attr to buf_chk-discnt-attr.
+  end.
 end.
 /* ------------------------------- c-chk-doc-attr --------------------------------------------- */
 for each buf_c-chk-doc-attr where buf_c-chk-doc-attr.out-code = wt-inkas.inkas-code

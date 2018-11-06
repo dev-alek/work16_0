@@ -44,11 +44,13 @@ abc-analysis-attr~
 ,cd-doc-line~
 ,c-cd-doc-line~
 ,chk-discnt~
+,chk-discnt-attr~
 ,c-chk-discnt~
 ,chk-doc~
 ,chk-doc-attr~
 ,c-chk-doc-attr~
 ,chk-gds~
+,chk-gds-attr~
 ,c-chk-gds~
 ,chk-pay~
 ,chk-gds-attr~
@@ -1025,7 +1027,7 @@ abc-analysis-doc-attr~
 ,cd-grp-attr~
 ,cd-plu-attr~
 ,cd-trans-attr~
-,chk-discnt-attr~
+
 ,cli-art-attr~
 ,cli-gds-attr~
 ,cli-grp-attr~

@@ -53,6 +53,7 @@ define stream stmXMLOut.
 { str/magiachk.i }
 { str/magiachk.i -line " extent 2 "}
 { str/magiachk.i proc }
+{ gbl/thbj-def.i }
 
 DEFINE VARIABLE n-entry                    as   char no-undo extent 20.
 DEFINE VARIABLE accept-types               as   character no-undo .
@@ -2269,6 +2270,7 @@ define variable  bonus-type-chr_    as character no-undo .
 define variable  bonus-string       as integer no-undo .
 define variable  bonus-src-code_    as decimal no-undo .
 define variable  bonus-src-code-chr as character no-undo .
+define variable  bonus-relation     as character no-undo . 
 define buffer buf_temp-temp for temp-temp .
 define buffer buf_chk-gds for ub.chk-gds.
 define variable local-netto-for-sub-d as decimal no-undo .
@@ -2320,6 +2322,11 @@ define variable local-netto-for-sub-d as decimal no-undo .
             bonus-card-no = buf_temp-temp.field-value
             no-error .
           end.
+          when "BARelation":U then do:
+            assign
+            bonus-relation = buf_temp-temp.field-value
+            no-error .
+          end.          
           otherwise do:
             error-status:error = no.
           end.
@@ -2367,6 +2374,28 @@ define variable local-netto-for-sub-d as decimal no-undo .
       chk-discnt.chk-date = chk-doc.chk-date
       chk-discnt.chk-time = chk-doc.chk-time
       .
+      if bonus-relation <> "" then do:
+          find first chk-discnt-attr EXCLUSIVE-LOCK where chk-discnt-attr.attr-code = "RRN-bonus"
+                                       and chk-discnt-attr.line-num = chk-discnt.line-num
+                                       and chk-discnt-attr.doc-code = chk-discnt.doc-code
+                                       and chk-discnt-attr.discnt-id = chk-discnt.discnt-id 
+                                       and chk-discnt-attr.object-line-num = chk-discnt.object-line-num no-error .
+          if AVAILABLE chk-discnt-attr then do:
+            chk-discnt-attr.attr-value = bonus-relation .
+          end. 
+          
+          else do:
+            create chk-discnt-attr .
+            assign
+            chk-discnt-attr.attr-code = "RRN-bonus"
+            chk-discnt-attr.line-num = chk-discnt.line-num
+            chk-discnt-attr.doc-code = chk-discnt.doc-code
+            chk-discnt-attr.discnt-id = chk-discnt.discnt-id
+            chk-discnt-attr.object-line-num = chk-discnt.object-line-num
+            chk-discnt-attr.attr-value = bonus-relation
+            .
+          end.  
+      end.                                   
       if chk-discnt.line-type = integer({&discnt-gds}) then do:
         if available chk-gds
         and (bonus-src-code-chr = chk-gds.src-code

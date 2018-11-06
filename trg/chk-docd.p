@@ -32,6 +32,7 @@ define buffer buf_chk-gds-attr for ub.chk-gds-attr.
 define buffer buf_chk-pay for ub.chk-pay.
 define buffer buf_chk-pay-attr for ub.chk-pay-attr .
 define buffer buf_chk-discnt for ub.chk-discnt.
+define buffer buf_chk-discnt-attr for ub.chk-discnt-attr.
 define buffer buf_chk-doc-attr for ub.chk-doc-attr.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
 
@@ -81,6 +82,10 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile ):
     for each buf_chk-discnt where
             buf_chk-discnt.doc-code = ub.chk-doc.doc-code :
         delete buf_chk-discnt.
+    end.
+    for each buf_chk-discnt-attr where
+            buf_chk-discnt-attr.doc-code = ub.chk-doc.doc-code :
+        delete buf_chk-discnt-attr.
     end.
     for each buf_chk-doc-attr where
             buf_chk-doc-attr.doc-code = ub.chk-doc.doc-code :
