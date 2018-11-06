@@ -151,7 +151,9 @@ class ibs.th.adm.upd.updschm:
     end.
     m-FileDf = obsrvdbObj:upd-df.
     delete object obsrvdbObj no-error.
-    disconnect value ("ub").
+    if NewCurrDBShm eq TargetDBShm
+    then
+       disconnect value ("ub").
     CurrDBShm = NewCurrDBShm.
     isUpdShm = true.
   end method.

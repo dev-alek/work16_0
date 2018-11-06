@@ -177,37 +177,64 @@ class ibs.th.adm.upd.observupd:
     
     define variable vI as integer no-undo.
     define variable vStrChk as character no-undo.
+    define variable vAttr   as character no-undo.
+    define variable vSearch as character no-undo.
+    define variable vValue  as character no-undo.
     define buffer buf_db for ub.db.
     define buffer buf_sys-ctrl for ub.sys-ctrl.
     on write of ub.db override do: end.
     
     if inShm > 0
     then do vi = 1 to num-entries(upd-list-chk):
-      vStrChk = entry(vi,upd-list-chk).
-      if vStrChk begins "TABLE:"
+      assign
+        vStrChk = entry(vi,upd-list-chk)
+        vattr   = ""
+        vValue  = ""
+        vSearch = entry(1,vStrChk,":")
+        vStrChk = substring(vStrChk,length(vSearch) + 2)
+        vValue  = entry (2,vStrChk,"=")
+        vStrChk = entry (1,vStrChk,"=")
+      no-error.
+      if    can-do("Desc,Help,Valmsg,Valexp,Order,Column-label,Decimals,Extent,Data-Type,Initial,Mandatory",vSearch)
+      then assign
+         vattr = "_" + vSearch 
+         vSearch = "FIELD".
+       .  
+      if vSearch eq "TABLE"
       then do:
-        vStrChk = substring(vStrChk,7). 
+         
         find first _file no-lock where _file._file-name = vStrChk  no-error.
         if not available (_file)
         then do:
-          Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Работа с ней запрещена!",inShm ).
+          Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Отсутствует таблица &2. Работа с ней запрещена!",inShm,vStrChk ).
           IsErr = true.
           return. 
         end.
       end.  
-      else if vStrChk begins "Field:"
+      else if vSearch eq "FIELD"
       then do:
-        vStrChk = substring(vStrChk,7).
         find first _file no-lock where _file._file-name = entry(1,vStrChk,".")  no-error.
         if available _file
         then
-           FIND FIRST _field OF _file WHERE _field._Field-Name =  entry(2,vStrChk,".") NO-LOCK NO-ERROR.
+           find first _field of _file where _field._Field-Name =  entry(2,vStrChk,".") no-lock no-error.
         if not available (_field)
         then do:
-          Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Работа с ней запрещена!", inShm ).
+          Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Отсутствует поле &2. Работа с ней запрещена!", inShm,vStrChk ).
           IsErr = true.
           return.
         end.
+        else do:
+          define variable vBuffHandle as handle no-undo.
+          vBuffHandle = buffer _field:handle.
+          if     vattr ne ""
+             and vBuffHandle:buffer-field(vattr):buffer-value ne vvalue  
+          then do:
+            Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. У поля &2 реквизит &3 не равен &4. Работа с ней запрещена!", inShm,vStrChk,vAttr,vValue ).
+            IsErr = true.
+            return.
+          end.
+        end.   
+        
       end.
     end.
     
