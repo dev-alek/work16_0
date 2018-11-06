@@ -127,7 +127,24 @@ on error undo, return error
          no-error.      
         return.
     end.
-    
+    if p-action = 'tech-prol-pwd':U then do:      
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid 
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = 'tech-prol-pwd':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key})
+            buf_c-user-log.head-table       = 'tech-prol-pwd':U
+            buf_c-user-log.uniq-key-rec     = 'tech-prol-pwd':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key})
+         no-error.      
+        return.
+    end.
     case p-action :
         when {&nwsdochs_action_delete}      then v-action-type = "Удаление" .
         when {&nwsdochs_action_create}      then v-action-type = "Создание" .
@@ -358,10 +375,11 @@ on error undo, return error
         if not valid-handle( p-table-handle :buffer-field( "subject":U ) )
             then
         do:
-            undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля subject", vss-description, p-tbl-name ).
-              assign
+            assign
                 v-value-list = string(p-tbl-name)
             .
+            undo, return error substitute( "&1. Ошибка структуры c-таблицы. В таблице &2 нет поля subject", vss-description, p-tbl-name ).
+
         end.
         else do:  
             assign

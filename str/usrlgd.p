@@ -33,7 +33,6 @@ define variable vss-description as character no-undo init "Вызов истории по доку
 { cmp/library.i  }
 { gbl/key-rec.i  }
 { adm/cnf-inc.i &new="new"}
-
 define variable v-list             as character no-undo.
 define variable v-field-list       as character no-undo.
 define variable v-field-value-list as character no-undo.
@@ -45,7 +44,7 @@ do
         , output v-field-list
         , output v-field-value-list
         ).
-  
+        
     case p-table-name
         :
         when "c-fbr-doc":U or when "fbr-doc"
@@ -549,6 +548,26 @@ do
                             ) no-error .
                     end.    
                 end.    
+            end.    
+        when "tech-prol-pwd" then 
+            do:
+               
+               def var vEntity as utl.tech-prol-pwd no-undo.
+               def var vRepo   as utl.repoPwd no-undo.
+               def var vFrm    as utl.gpwdfrm no-undo.
+               
+               assign 
+                  vEntity = new utl.tech-prol-pwd()
+                  vEntity:id = int64(v-field-value-list)
+                  vRepo = new utl.repoPwd(vEntity)
+               .
+               
+               vRepo:Refresh().
+               
+               vFrm = utl.gpwdfrm:GetObject("view",vEntity).
+               
+               wait-for vFrm:ShowDialog().
+      
             end.    
 
     end case.       /* case p-table-name */
