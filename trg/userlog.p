@@ -39,7 +39,7 @@ define variable vss-description as character no-undo init "Процедура заполнения 
 { gbl/cur-time.i }
 { gbl/usrnickf.i }
 { gbl/db-attr.i  }
-
+ 
     define variable v-field-handle          as handle       no-undo.
     define variable v-corr-user-db-num      as integer      no-undo.
     define variable v-parent-name           as character    no-undo.

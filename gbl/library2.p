@@ -1345,10 +1345,17 @@ procedure chk-actg :
   define variable v-action-item-id      as character no-undo .
   define variable v-action-item-description as character no-undo .
   define variable v-context             as character    no-undo.
+  define variable v-chk-news            as logical   no-undo initial no .
 
   do
   on error undo, return error return-value
   :
+    if num-entries(p-user-id, {&delim-par}) = 2
+    then do :
+      v-chk-news = logical(entry(2, p-user-id, {&delim-par})) no-error.
+      p-user-id = entry(1, p-user-id, {&delim-par}).
+    end.
+    
     case p-action-context:
       when {&cntxt-firm} then do:
          assign
@@ -1378,8 +1385,11 @@ procedure chk-actg :
     :
 /*       проверка прав при приеме новостей бессмысленна */
 
-run gbl\get-gbl2.p (output p-ok ) no-error.
-if p-ok then leave check_block .
+if not v-chk-news
+then do :
+  run gbl\get-gbl2.p (output p-ok ) no-error.
+  if p-ok then leave check_block .
+end.
 /*
       if ibs.th.gbl.gbl-var:g#news = YES  or ibs.th.gbl.gbl-var:g#auto or ibs.th.gbl.gbl-var:g#esys then do:
          assign

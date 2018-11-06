@@ -11990,6 +11990,12 @@ procedure tblnmusr :
           p-user-name = 'Тип кассовых платежей'
         .
       end.
+      when {&table_pay-type}
+      then do:
+        assign
+          p-user-name = 'Вид оплаты'
+        .
+      end.
       when {&table_cli-grp}
       then do:
         assign
@@ -12138,6 +12144,12 @@ procedure tblnmusr :
       THEN do:
           assign
           p-user-name = "Отчеты"
+          .
+      end.
+      when "sync"
+      THEN do:
+          assign
+          p-user-name = "Синхронизация новостей"
           .
       end.    
       otherwise do:
