@@ -1,5 +1,5 @@
 /*
-
+  
 $Revision$
 $Author$
 $Date$
@@ -5876,6 +5876,18 @@ end procedure.
 &scop manual-edit-attr-office-type 1
 &scop batch-edit-attr-office-type  1
 
+&scop type-attr-item-matter-mark {&type-int}
+&scop format-attr-item-matter-mark  ">9"
+&scop label-attr-item-matter-mark   "Признак предмета расчета"
+&scop tooltip-attr-item-matter-mark   "Признак предмета расчета"
+&scop user-can-edit-attr-item-matter-mark  true
+&scop output-display-attr-item-matter-mark  true
+&scop other-attr-item-matter-mark  "spr-ext=ref\gds-imm.w/spr-param=item-matter-mark/check=gds-attr_check-item-matter-mark"
+&scop news-attr-item-matter-mark true
+&scop copy-attr-item-matter-mark  true
+&scop manual-edit-attr-item-matter-mark 1
+&scop batch-edit-attr-item-matter-mark  1
+
 &scop type-attr-is-oss-payment {&type-log}
 &scop format-attr-is-oss-payment  "+/ "
 &scop label-attr-is-oss-payment   "Платеж ОСС"
@@ -6329,6 +6341,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-office-type
       {&attr-temp-full-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-temp-full-code}
       &scop attr-code attr-group-np
       {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
@@ -6422,6 +6436,8 @@ do
       &scop attr-code attr-ptrl-without-rvs
       {&attr-temp-code}
       &scop attr-code attr-office-type
+      {&attr-temp-code}
+      &scop attr-code attr-item-matter-mark
       {&attr-temp-code}
       &scop attr-code attr-group-np
       {&attr-temp-code}
@@ -6750,6 +6766,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-office-type
       {&attr-news-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-news-code}
       &scop attr-code attr-group-np
       {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
@@ -6837,6 +6855,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-ptrl-without-rvs
       {&attr-copy-code}
       &scop attr-code attr-office-type
+      {&attr-copy-code}
+      &scop attr-code attr-item-matter-mark
       {&attr-copy-code}
       &scop attr-code attr-group-np
       {&attr-copy-code}
@@ -7074,6 +7094,35 @@ on error undo, return error return-value
       end.
       if lookup(p-value, {&prop-list-attr-office-type}) = 0 then do:
         p-error-code = "Значение атрибута должно быть одним из списка {&prop-list-attr-office-type}".
+      end.
+     
+     if p-error-code <> "" then
+        return p-error-code.
+    end.
+  END CASE.
+end.
+assign
+p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-item-matter-mark :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+do
+on error undo, return error return-value
+:
+  CASE p-mode:
+    when {&add-def} then do:
+      
+      if    lookup(p-value, {&prop-list-attr-item-matter-mark}) = 0  
+      then do:
+         p-error-code =  "Значение атрибута должно быть одним из списка {&prop-list-attr-item-matter-mark}" .
       end.
      
      if p-error-code <> "" then
@@ -7370,6 +7419,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-office-type
       {&attr-manual-edit-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-manual-edit-code}
       &scop attr-code attr-group-np
       {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
@@ -7458,6 +7509,8 @@ do
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}
       &scop attr-code attr-office-type
+      {&attr-batch-edit-code}
+      &scop attr-code attr-item-matter-mark
       {&attr-batch-edit-code}
       &scop attr-code attr-group-np
       {&attr-batch-edit-code}

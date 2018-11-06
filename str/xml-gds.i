@@ -44,7 +44,9 @@ end.
     run bgelib-tag-open in this-procedure ( input 2, input "Item", input substitute("ctrl='&1' tms='&2' code='&3'", 'ADD':u, OS2-time, cash-gds.main-prt-b-code)).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemLock"  , input string(1), input 1 ).
   end.
+
 &else
+
 
 /*если удаляется prod-bc то Item удалять не надо
 если удаляется bar-code то  Item удалять надо!!
@@ -61,6 +63,7 @@ end.
                                         else "DEL":U), OS2-time, cash-gds.main-prt-b-code)).
   &endif
 &endif
+
 &if "{1}" <> "7" &then
 if action = "U":U then do:
   run bgelib-tag-put in this-procedure ( input 3, input "ItemName"       , input trim(chk_name, {&space-char}), input 1 ).
@@ -73,7 +76,9 @@ if action = "U":U then do:
     run bgelib-tag-put in this-procedure ( input 3, input "ItemOKEI"          , input string( cash-gds.okei), input 1 ).
   end.
   run bgelib-tag-put in this-procedure ( input 3, input "ItemMeasure"      , input string( cash-gds.unit-cli), input 1 ).
-
+  find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
+                              and buf_goods-attr.attr-code = "item-matter-mark" no-error.
+  run bgelib-tag-put in this-procedure ( input 3, input "ItemMatterMark"  , if available buf_goods-attr then buf_goods-attr.attr-value else "" , input 1 ).
 
   define buffer bb_goods for ub.goods.
   define variable vVal as character no-undo .
@@ -430,9 +435,10 @@ run bgelib-tag-close in this-procedure ( input 2, input "Item").
     run bgelib-tag-put in this-procedure ( input 3, input "ItemLock"  , input string(0), input 1 ).
     run bgelib-tag-close in this-procedure ( input 2, input "Item").
   end.
+ 
   if action = "D":U then return.
 &endif
-
+ 
 &if "{1}" <> "7" &then
 
 &scop output-phrase  ~
