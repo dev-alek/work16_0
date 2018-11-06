@@ -305,10 +305,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
       sw:start-element ("gd").
         write-data-element ("line-num", string-mth (buf_doc-line.line-num)).
         write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
-        write-data-element ("unit-code", string (buf_gds.unit-base)).
-        write-data-element ("koef", string (buf_gds.cli-base-rate)).
-        write-data-element ("qnty-ttn", string-mth (buf_doc-line.doc-qnty)).
-        write-data-element ("qnty-fact", string-mth (buf_doc-line.fact-qnty)).
+        write-data-element ("unit-code", string (buf_doc-line.unit-cli)).
+        write-data-element ("koef", string (buf_doc-line.cli-base-rate)).
+        write-data-element ("qnty-ttn", string-mth (buf_doc-line.cli-qnty)).
+        write-data-element ("qnty-fact", string-mth (buf_doc-line.fact-qnty / buf_doc-line.cli-base-rate)).
         
         if v-doc-type-ERPRN = "8"
         then do:
