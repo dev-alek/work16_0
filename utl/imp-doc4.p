@@ -138,7 +138,7 @@ run import_file in this-procedure (p-in-file, output v-count-all) .
 define variable v-osn-fname as character no-undo .
 define variable v-art-fname as character no-undo .
 v-osn-fname = substitute("&1_supp.txt", p-obj-code) .
-v-art-fname = substitute("&1_gds.txt", new_obj-code) .
+v-art-fname = substitute("&1_gds.txt",  p-obj-code) .
 
 define variable v-err-file-name as character no-undo .
 define variable v-str           as character no-undo .
