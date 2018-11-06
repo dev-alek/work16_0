@@ -111,6 +111,11 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
     define variable v-pharm          as logical no-undo . /* {&attr-pharm} */
     define variable v-pharm-str      as character no-undo . /* для чтения v-pharm */
     define variable v-KPP            as character no-undo . /* {&attr-kpp} */
+    define variable v-clim-grp       as character no-undo . /* {&attr-cli-clim-grp} */
+    define variable v-decommissioned as logical no-undo . /* {&attr-cli-decommissioned} */
+    define variable v-decommiss-str  as character no-undo . /* для чтения v-decommissioned */
+    define variable v-begin-summer   as character no-undo . /* {&attr-cli-clim-grp}[2] = begin-summer */
+    define variable v-begin-winter   as character no-undo . /* {&attr-cli-clim-grp}[3] = begin-winter */
     
     define variable objImp as class shops no-undo.
     
@@ -126,6 +131,17 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       v-obj-code  = integer(objImp:code_)
     .
     if v-obj-code > 0 then . else undo, throw new Progress.Lang.AppError("Не задан код АЗК/АЗС") .
+
+    /* 10/IX-2018 В интерфейс передачи из 1С:ERP в GC секции «azks» будут добавлены поля
+                «clim-grp», «begin-summer», «begin-winter» и «decommissioned».
+                Значения, которые могут быть назначены полю «clim-grp», соответствуют
+                обозначению климатической группы (подгруппы) для применения норм технологических потерь нефтепродуктов,
+                указанному в ЛНД компании заказчика. */
+    if (objImp:clim-grp > "") and (not can-do("1 (1),1 (2),2 (1),2 (2),2 (3),3 (1),3 (2)", objImp:clim-grp)) then do :
+      undo, throw new Progress.Lang.AppError(
+        substitute("значение clim-grp = [&1] отсутствует в обозначении климатических групп", objImp:clim-grp)
+      ) .
+    end . 
     
     /* чтобы при изменении записи не перезатирать поля, которые не приходят из 1С, значениями по умолчанию -
        читаем их значения из исходной записи;
@@ -232,7 +248,25 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       ,output v-KPP
       ,output v-par-type
       ) .
-    
+
+        &scop proc-name clntattr-value
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input  v-obj-code
+      ,input  {&attr-cli-clim-grp}
+      ,output v-clim-grp
+      ,output v-par-type
+      ) .
+
+        &scop proc-name clntattr-value
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input  v-obj-code
+      ,input  {&attr-cli-decommissioned}
+      ,output v-decommiss-str
+      ,output v-par-type
+      ) .
+
       sliceAddress
          ( input  objImp:address
          , input  buf_shop.addres1
@@ -301,6 +335,18 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         v-purch-code      = buf_shop.purch-code
         v-envd            = (v-envd-str = "yes":u)
         v-pharm           = (v-pharm-str = "yes":u)
+        v-decommissioned  = (v-decommiss-str = "yes":u)
+      .
+      if num-entries(v-clim-grp) = 3 then assign
+        v-begin-summer = entry(2, v-clim-grp)
+        v-begin-winter = entry(3, v-clim-grp)
+        v-clim-grp     = entry(1, v-clim-grp)
+      .
+      assign
+        v-clim-grp       = objImp:clim-grp     when objImp:clim-grp > ""
+        v-begin-summer   = objImp:begin-summer when objImp:begin-summer > ""
+        v-begin-winter   = objImp:begin-winter when objImp:begin-winter > ""
+        v-decommissioned = (objImp:decommissioned > 0) when (objImp:decommissioned <> ?)
       .
     end .
     else do :
@@ -354,6 +400,10 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       
       assign
         v-tel = if objImp:tel >= "" then objImp:tel else ""
+        v-clim-grp       = objImp:clim-grp
+        v-begin-summer   = objImp:begin-summer
+        v-begin-winter   = objImp:begin-winter
+        v-decommissioned = if objImp:decommissioned > 0 then true else ?
       .
       
       assign
@@ -493,6 +543,23 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       .
     end.
 
+        &scop proc-name clntattr-write
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input v-obj-code
+      ,input {&attr-cli-clim-grp}
+      ,input substitute("&1,&2,&3", v-clim-grp, v-begin-summer, v-begin-winter)
+      ) .
+
+      if v-decommissioned <> ? then do :
+        &scop proc-name clntattr-write
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input v-obj-code
+      ,input {&attr-cli-decommissioned}
+      ,input string(v-decommissioned)
+      ) .
+      end .
 
     /* 28/VIII-2018 Если номер БД для начальных настроек больше нуля,
                     то после создания нового объекта и новой БД копируем с заданной БД расписание и права. */

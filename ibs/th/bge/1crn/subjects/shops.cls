@@ -62,22 +62,39 @@ class ibs.th.bge.1crn.subjects.shops inherits ibs.th.bge.1crn.subjects.asubject:
     get.
     private set.
   
+  define property clim-grp as character no-undo
+    get.
+    private set.
+  define property begin-summer as character no-undo
+    get.
+    private set.
+  define property begin-winter as character no-undo
+    get.
+    private set.
+  define property decommissioned as integer no-undo 
+    get. 
+    private set.
+  
   define override property InitTag as character no-undo init "azk"
     get. 
     
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "code"       then code_      = if inValue >= "" then inValue else "" .
-      when "del-l"      then del-l      = if inValue >= "" then integer (inValue) else 0 .
-      when "del-f"      then del-f      = if inValue >= "" then integer (inValue) else 0 .
-      when "name"       then name_      = if inValue >= "" then inValue else "" .
-      when "frm-code"   then frm-code   = if inValue >= "" then inValue else "" .
-      when "grp-code"   then grp-code   = if inValue >= "" then inValue else "" .
-      when "address"    then address    = if inValue >= "" then inValue else "" .
-      when "tel"        then tel        = if inValue >= "" then inValue else "" .
-      when "director"   then director   = if inValue >= "" then inValue else "" .
-      when "accr"       then accr       = if inValue >= "" then inValue else "" .
-      when "cafe_exist" then cafe_exist = if inValue >= "" then integer (inValue) else 0 .
+      when "code"           then code_          = if inValue >= "" then inValue else "" .
+      when "del-l"          then del-l          = if inValue >= "" then integer (inValue) else 0 .
+      when "del-f"          then del-f          = if inValue >= "" then integer (inValue) else 0 .
+      when "name"           then name_          = if inValue >= "" then inValue else "" .
+      when "frm-code"       then frm-code       = if inValue >= "" then inValue else "" .
+      when "grp-code"       then grp-code       = if inValue >= "" then inValue else "" .
+      when "address"        then address        = if inValue >= "" then inValue else "" .
+      when "tel"            then tel            = if inValue >= "" then inValue else "" .
+      when "director"       then director       = if inValue >= "" then inValue else "" .
+      when "accr"           then accr           = if inValue >= "" then inValue else "" .
+      when "cafe_exist"     then cafe_exist     = if inValue >= "" then integer (inValue) else 0 .
+      when "clim-grp"       then clim-grp       = if inValue >= "" then inValue else "" .
+      when "begin-summer"   then begin-summer   = if inValue >= "" then inValue else "" .
+      when "begin-winter"   then begin-winter   = if inValue >= "" then inValue else "" .
+      when "decommissioned" then decommissioned = if inValue >= "" then integer (inValue) else 0 .
     end case.
   end method.
 
@@ -97,6 +114,10 @@ class ibs.th.bge.1crn.subjects.shops inherits ibs.th.bge.1crn.subjects.asubject:
       v-str = v-str + ",accr" when accr = ?
       v-str = v-str + ",cafe_exist" when cafe_exist = ?
       */
+      
+      v-str = v-str + ",clim-grp" when clim-grp = ?
+      v-str = v-str + ",begin-summer" when begin-summer = ?
+      v-str = v-str + ",begin-winter" when begin-winter = ?
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
@@ -118,6 +139,10 @@ class ibs.th.bge.1crn.subjects.shops inherits ibs.th.bge.1crn.subjects.asubject:
       director   = ?
       accr       = ?
       cafe_exist = ?
+      clim-grp       = ?
+      begin-summer   = ?
+      begin-winter   = ?
+      decommissioned = ?
     .
   end method.
 

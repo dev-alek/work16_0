@@ -906,6 +906,29 @@ end.
 &scop manual-edit-attr-cli-for-close-fo  1
 &scop batch-edit-attr-cli-for-close-fo  1
 
+/* Атрибут клиента - Климатическая группа:*/
+&scop type-attr-cli-clim-grp {&type-char}
+&scop format-attr-cli-clim-grp "X(21)"
+&scop label-attr-cli-clim-grp "Климатическая группа:"
+&scop tooltip-attr-cli-clim-grp "Климатическая группа:"
+&scop user-can-edit-attr-cli-clim-grp  true
+&scop output-display-attr-cli-clim-grp  true
+&scop other-attr-cli-clim-grp 'spr=clntattr-cli-clim-grp':u
+&scop news-attr-cli-clim-grp true
+&scop manual-edit-attr-cli-clim-grp  1
+&scop batch-edit-attr-cli-clim-grp  1
+
+/* Атрибут клиента - Выведен из эксплуатации:*/
+&scop type-attr-cli-decommissioned {&type-log}
+&scop format-attr-cli-decommissioned "+/"
+&scop label-attr-cli-decommissioned "Выведен из эксплуатации"
+&scop tooltip-attr-cli-decommissioned "Выведен из эксплуатации"
+&scop user-can-edit-attr-cli-decommissioned  true
+&scop output-display-attr-cli-decommissioned  true
+&scop other-attr-cli-decommissioned '':u
+&scop news-attr-cli-decommissioned true
+&scop manual-edit-attr-cli-decommissioned  1
+&scop batch-edit-attr-cli-decommissioned  1
 
 /* сюда добавлять новые атрибуты клиентов */
 
@@ -1089,6 +1112,10 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-temp-full-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-temp-full-code}
+      &scop attr-code attr-cli-decommissioned
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1233,6 +1260,10 @@ procedure clntattr-tooltip :
       &scop attr-code attr-auto-tank-for
       {&attr-temp-code}
       &scop attr-code attr-cli-for-close-fo
+      {&attr-temp-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-temp-code}
+      &scop attr-code attr-cli-decommissioned
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1586,6 +1617,10 @@ procedure clntattr-news :
       {&attr-news-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-news-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-news-code}
+      &scop attr-code attr-cli-decommissioned
+      {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -1909,6 +1944,60 @@ procedure clntattr-cli-for-close-fo :
 end procedure.  /* clntattr-auto-tank-for */
 
 
+procedure clntattr-cli-clim-grp :
+  define input parameter parparentproc as handle no-undo .
+  define input parameter p-obj-type like ub.clients.obj-type no-undo .
+  define input parameter p-obj-code like ub.clients.obj-code no-undo .
+  define input-output parameter p-value as character no-undo .
+  define output parameter p-setted as logical no-undo .
+
+  define variable v-code  as character no-undo.
+  define variable v-value as character no-undo .
+
+  define variable v-dlg as class ibs.th.ref.dclimgrp no-undo .
+  define variable v-err-msg as character no-undo .  
+
+  do on error undo, throw :
+    v-dlg = new ibs.th.ref.dclimgrp().
+    if num-entries (p-value) = 3 then do :
+      assign
+      v-dlg:climGrp     = entry(1, p-value)
+      v-dlg:beginSummer = entry(2, p-value)
+      v-dlg:beginWinter = entry(3, p-value)
+      .
+    end .
+    v-dlg:ShowModalDialog().
+    if v-dlg:DialogResult = System.Windows.Forms.DialogResult:Ok then do:
+      assign
+        p-value  = substitute("&1,&2,&3", v-dlg:climGrp, v-dlg:beginSummer, v-dlg:beginWinter)
+        p-setted = yes
+      .
+    end .
+  
+    v-err-msg = "" .  
+    catch exAppErrors as class Progress.Lang.AppError :
+      v-err-msg = exAppErrors:ReturnValue .
+      if v-err-msg > "" then . else do :
+        v-err-msg = exAppErrors:GetMessage(1) .
+        if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+      end .
+    end catch .
+    catch exProErrors as class Progress.Lang.ProError :
+      v-err-msg = exProErrors:GetMessage(1) . 
+      if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+    end catch .
+    catch exAnyErrors as class Progress.Lang.Error:
+      v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+    end catch .
+    finally :
+      if valid-object (v-dlg) then delete object v-dlg .
+      if v-err-msg <> "" then undo, throw new Progress.Lang.AppError(
+        substitute("&1 {&FILE-NAME} &2", v-err-msg, "clntattr-cli-clim-grp")
+      ) .
+    end finally .
+  end.
+end procedure.  /* clntattr-cli-clim-grp */
+
 
 procedure clntattr-vat-register :
 
@@ -2082,6 +2171,10 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-manual-edit-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-manual-edit-code}
+      &scop attr-code attr-cli-decommissioned
+      {&attr-manual-edit-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -2140,6 +2233,10 @@ procedure clntattr-batch-edit :
       &scop attr-code attr-auto-tank-for
       {&attr-batch-edit-code}
       &scop attr-code attr-cli-for-close-fo
+      {&attr-batch-edit-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-batch-edit-code}
+      &scop attr-code attr-cli-decommissioned
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутво клиентов */

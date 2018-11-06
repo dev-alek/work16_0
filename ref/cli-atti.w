@@ -406,21 +406,6 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit Dialog-Frame
 ON CHOOSE OF b-quit IN FRAME Dialog-Frame /* Отмена */
 DO:
-  /*уже записано все - чего ещето-!!!!*/
-  /*
-  for each temp-hattr no-lock:
-
-    run clntattr-write in this-procedure (
-                                    input pobj-type
-                                    ,input pobj-code
-                                    ,input temp-hattr.code
-                                    ,input temp-hattr.attr-value)  no-error.
-    if error-status:error then do:
-       {&cliattr-write-error}
-    end.
-    updated = yes.
-  End.
-  */
 END.
 
 /* _UIB-CODE-BLOCK-END */
