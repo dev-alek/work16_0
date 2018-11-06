@@ -222,12 +222,7 @@ end function.
 function bge-xml-normalize-dec returns decimal
 ( input p-val as decimal )
 :
-  define variable v-out-val as decimal   no-undo .
-
-  run bge-xml-proc-normalize-dec in this-procedure ( input   p-val
-                                                   , output  v-out-val
-                                                   ) .
-  return v-out-val.
+  return (if p-val = ? then 0 else p-val) .
 end function.
 
 
@@ -833,7 +828,99 @@ Output:
     p-log-file-name - полное имя log-файла
     p-locked        - yes если идет выгрузка в этот файл
 */
-
+procedure xml-bge-filename0:
+define input parameter p-prefix   as character no-undo .
+define input parameter p-name     as character no-undo .
+define input parameter p-shared-process as logical no-undo .
+define input parameter p-home-dir as character no-undo . // из ini-параметра [BGE] Dirfrg-acc
+define output parameter p-xml-file-name  as character no-undo .
+// define output parameter p-fullfnamenoext as character no-undo .
+define output parameter p-locked         as logical      no-undo.
+define variable v-fullfnamenoext as character no-undo .
+define variable v-fileext        as character no-undo .
+define variable v-fullfname      as character no-undo .
+define variable v-error-num      as integer   no-undo .
+do
+on error undo, return error
+:
+  
+  case v-bge-xml-bgeflold :
+    when "old" then do:
+      v-fullfnamenoext = substitute ("&1&2&3&4", p-home-dir, {&slash-char}, p-name, v-bge-xml-db-num-str) .
+      v-fileext       = ".xml":U .
+      v-fullfname     = v-fullfnamenoext + v-fileext .
+      p-xml-file-name = v-fullfname .
+      run bge/os_copy.p ("D", p-xml-file-name, "", output v-error-num ).
+      if v-error-num > 0 then do:
+        return error.
+      end.
+    end.
+    when "var" then do:
+      case p-prefix :
+        when "doc" then do:
+          v-fullfnamenoext = substitute ("&1&2&3&4", p-home-dir, {&slash-char}, p-name, v-bge-xml-bgeflnm-doc) .
+          v-fileext       = ".xml":U .
+          v-fullfname     = v-fullfnamenoext + v-fileext .
+          p-xml-file-name = v-fullfname .
+        end.
+        when "day" then do:
+          v-fullfnamenoext = substitute ("&1&2&3&4", p-home-dir, {&slash-char}, p-name, v-bge-xml-bgeflnm-day) .
+          v-fileext       = ".xml":U .
+          v-fullfname     = v-fullfnamenoext + v-fileext .
+          p-xml-file-name = v-fullfname .
+        end.
+        otherwise do:
+          v-fullfnamenoext = substitute ("&1&2&3", p-home-dir, {&slash-char}, p-name) .
+          v-fileext       = ".xml":U .
+          v-fullfname     = v-fullfnamenoext + v-fileext .
+          p-xml-file-name = v-fullfname .
+        end.
+      end case.
+      run bge/os_copy.p ("D", p-xml-file-name, "", output v-error-num ).
+      if v-error-num > 0 then do:
+        return error.
+      end.
+    end.
+    when "new" then do:
+                run bge/genfname.p (
+                    input p-home-dir
+                    , input p-prefix
+                    , input ""
+                    , input "xml"
+                    , input ""
+                    , output p-xml-file-name
+                ).
+    end.
+    when "no-parameter" then do:
+      if p-shared-process then do:
+                    run bge/genfname.p (
+                        input p-home-dir
+                        , input "d"
+                        , input ""
+                        , input "xml"
+                        , input ""
+                        , output p-xml-file-name
+                    ).
+      end.        /* if p-name = "document"  */
+      else do:
+        v-fullfnamenoext = substitute ("&1&2&3", p-home-dir, {&slash-char}, p-name) .
+        v-fileext       = ".xml":U .
+        v-fullfname     = v-fullfnamenoext + v-fileext .
+        p-xml-file-name = v-fullfname .
+        run bge/os_copy.p ("D", p-xml-file-name, "", output v-error-num ).
+        if v-error-num > 0 then do:
+          return error.
+        end.
+      end.        /* NOT ( if p-name = "document"  ) */
+    end.        /* when "no-parameter" */
+  end case.
+  assign
+    p-xml-file-name = substring( p-xml-file-name, 1, length( p-xml-file-name ) - 3 )
+    p-locked = ( search ( p-xml-file-name + "lk" ) <> ? )
+  .
+  
+end .  
+end procedure .
 procedure xml-bge-filename :
 do
 on error undo, return error
@@ -884,6 +971,10 @@ define variable v-bge-xml-heap-dir  as character no-undo . /* heap директория */
         .
     end.        /* if v-bge-xml-bgefmt = "dbf":U */
     else do:
+        run xml-bge-filename0 in this-procedure (p-prefix, p-name, p-shared-process, v-home-dir,
+          output p-xml-file-name, output p-locked) .
+        /* 06/IX-2018 - вынесено в процедуру, т.к. изначально была потребность получить имя файла, без пути,
+                        а не создавать повторно директорию выгрузки
         case v-bge-xml-bgeflold
         :
             when "old"
@@ -965,6 +1056,7 @@ define variable v-bge-xml-heap-dir  as character no-undo . /* heap директория */
             p-xml-file-name = substring( p-xml-file-name, 1, length( p-xml-file-name ) - 3 )
             p-locked = ( search ( p-xml-file-name + "lk" ) <> ? )
         .
+        */
     end.        /* NOT ( if v-bge-xml-bgefmt = "dbf":U ) */
 
     if v-bge-xml-bgeflold = "oracle"
@@ -1034,9 +1126,9 @@ define input  parameter p-db-num    as integer   no-undo .
     define variable v-par-type      as character     no-undo.
     define variable v-bgeflnm       as character     no-undo.
     define variable v-bgecliiv      as character     no-undo .
-    define variable v-date-chars    as character case-sensitive  init "DD"   no-undo.
-    define variable v-month-chars   as character case-sensitive  init "MM"   no-undo.
-    define variable v-year-chars    as character case-sensitive  init "YY"   no-undo.
+    define variable v-date-chars    as character case-sensitive  init "DD"      no-undo.
+    define variable v-month-chars   as character case-sensitive  init "MM"      no-undo.
+    define variable v-year-chars    as character case-sensitive  init "YY"      no-undo.
     define variable v-db-num-chars  as character case-sensitive  init "BBBBB"   no-undo.
     define variable v-db-num-str    as character     no-undo .
     define variable v-param-type      as character  no-undo .
@@ -1427,25 +1519,22 @@ define output parameter p-log-file-name as character    no-undo.
 do
 on error undo, return error
 :
-    get-key-value section "BGE" key "Dirfrg-acc" value p-out-dir.
+    p-out-dir = ibs.th.gbl.gbl-inipar:dirfrgAcc .
     if p-out-dir = ?
     then do:            /* нет ключа */
         message
-          skip "Не найден параметр ini-файла, определяющий каталог экспорта."
+          skip substitute("Не найден параметр ini-файла, определяющий каталог экспорта (&1)."
+                        , ibs.th.gbl.gbl-inipar:dirfrgAccKeyName)
           skip(1)
           skip "Обратитесь к администратору."
         view-as alert-box error.
         undo, return error .
     end.
-    if v-bge-xml-bgeflold <> "oracle"
-    then do:
-      assign
-          p-out-dir = substitute( "&1/exp-acc":U, p-out-dir )
-      .
-    end.
+    if v-bge-xml-bgeflold <> "oracle" then assign
+      p-out-dir = substitute( "&1&2exp-acc":U, p-out-dir, {&slash-char} )
+    .
     run gbl/dir-cre.p ( input p-out-dir ) no-error.
-    if error-status :error
-    then do:
+    if error-status :error  then do:
         run wp-XMLWriteLog in this-procedure (
               input p-log-file-name
             , input 0
@@ -1458,11 +1547,70 @@ on error undo, return error
         undo, return error.
     end.
     assign
-        v-bge-xml-static-log-file-name = substitute( "&1/actions.log":U, p-out-dir )
-        p-log-file-name = substitute( "&1/actions.log":U, p-out-dir )
+        v-bge-xml-static-log-file-name = substitute( "&1&2actions.log":U, p-out-dir, {&slash-char} )
+        p-log-file-name                = substitute( "&1&2actions.log":U, p-out-dir, {&slash-char} )
     .
 end.
 end procedure. /* bge-xml-out-dir */
+procedure bge-xml-out-dir2 :
+/* тоже самое, плюс дополнительно директория для выгрузки реестра */
+define output parameter p-out-dir       as character    no-undo.
+define output parameter p-out-dirR      as character    no-undo.
+define output parameter p-log-file-name as character    no-undo.
+
+do
+on error undo, return error
+:
+    p-out-dir = ibs.th.gbl.gbl-inipar:dirfrgAcc .
+    if p-out-dir = ?
+    then do:            /* нет ключа */
+        message
+          skip substitute("Не найден параметр ini-файла, определяющий каталог экспорта (&1)."
+                        , ibs.th.gbl.gbl-inipar:dirfrgAccKeyName)
+          skip(1)
+          skip "Обратитесь к администратору."
+        view-as alert-box error.
+        undo, return error .
+    end.
+    if v-bge-xml-bgeflold <> "oracle" then assign
+          p-out-dirR = substitute( "&1&2exp-reestr":U, p-out-dir, {&slash-char} )
+          p-out-dir  = substitute( "&1&2exp-acc":U,    p-out-dir, {&slash-char} )
+      .
+    else p-out-dirR = p-out-dir .
+    run gbl/dir-cre.p ( input p-out-dir ) no-error.
+    if error-status :error  then do:
+        run wp-XMLWriteLog in this-procedure (
+              input p-log-file-name
+            , input 0
+            , input substitute( "Ошибка проверки или создания каталога &1. &2. &3."
+                                , p-out-dir
+                                , return-value
+                                , error-status :get-message( 1 )
+                                )
+        ).
+        undo, return error.
+    end.
+    if p-out-dirR <> p-out-dir then do:
+      run gbl/dir-cre.p ( input p-out-dirR ) no-error.
+      if error-status :error then do:
+        run wp-XMLWriteLog in this-procedure (
+              input p-log-file-name
+            , input 0
+            , input substitute( "Ошибка проверки или создания каталога &1. &2. &3."
+                                , p-out-dirR
+                                , return-value
+                                , error-status :get-message( 1 )
+                                )
+        ).
+        p-out-dirR = p-out-dir .
+      end.
+    end .
+    assign
+      v-bge-xml-static-log-file-name = substitute( "&1&2actions.log":U, p-out-dir, {&slash-char} )
+      p-log-file-name                = substitute( "&1&2actions.log":U, p-out-dir, {&slash-char} )
+    .
+end.
+end procedure. /* bge-xml-out-dir2 */
 
 
 procedure bge-xml-out-file :
@@ -1710,6 +1858,7 @@ end.
 end procedure. /* bge-xml-date-str-to-str */
 
 /*==========================================================================*/
+/* 03/IX-2018 встроена внутрь функции bge-xml-normalize-dec()
 procedure bge-xml-proc-normalize-dec :
   define input  parameter p-val-in  as decimal   no-undo .
   define output parameter p-val-out as decimal   no-undo .
@@ -1722,6 +1871,7 @@ on error undo, return error return-value
 end.
 
 end procedure. /* bge-xml-proc-normalize-dec */
+*/
 /*==========================================================================*/
 procedure bge-xml-fill-tt-bgecliiv :
   define input  parameter p-str as character no-undo . /*строка в формате "тип,код;тип,код" */
@@ -1853,6 +2003,7 @@ end procedure. /* resolve-ext-doc-type */
 /*
   Процедура открытия тега не влияющая на схему ORA
 */
+/* 03/IX-2018 - не используется
 procedure safe-wp-xmltagopen :
   define input  parameter pTagLevel as integer   no-undo .
   define input  parameter pTagName  as character no-undo .
@@ -1871,6 +2022,7 @@ on error undo, return error return-value
                                       ) .
 end.
 end procedure. /* safe-wp-xmltagopen */
+*/
 
 /*
   Процедура вывода тега не влияющая на схему ORA
@@ -1900,6 +2052,7 @@ end procedure. /* safe-wp-xmltagput */
 /*
   Процедура закрытия тега не влияющая на схему ORA
 */
+/* 03/IX-2018 - не используется
 procedure safe-wp-xmltagclose :
   define input  parameter pTagLevel as integer   no-undo .
   define input  parameter pTagName  as character no-undo .
@@ -1917,6 +2070,6 @@ on error undo, return error return-value
 end.
 
 end procedure. /* safe-wp-xmltagclose */
-
+*/
 
 /* $Workfile$ e n d */
