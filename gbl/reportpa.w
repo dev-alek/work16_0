@@ -64,7 +64,6 @@ define variable v-obj-code as integer   no-undo .
 define variable v-host-code as integer   no-undo .
 define variable fl as character no-undo .
 define variable v-onewin-point as character no-undo .
-
 /* Поля для assign НЕЗАБЫТЬ ДОБАВИТЬ СУДА НОВЫЕ !!! */
 
 &Scoped-define page-1p  prt-z-no actuate sum-from sum-step sum-to sumvals ~
@@ -1101,6 +1100,7 @@ if p-type = 'firm' then do:
       undo, return error .
     end.
 end.
+
 if p-type = 'obj' then do:    
     run adm/shattri.p (
         input "init":U
@@ -1499,8 +1499,7 @@ define variable v-found as decimal   no-undo .
      B-exit:label = "Вы&ход"  .
      hide B-quit in frame {&frame-name} .
   END.
-  /* глобальные */
-  if not ( p-obj-type = "" and p-obj-code = 0 ) then do:
+  /* глобальные */  if not ( p-obj-type = "" and p-obj-code = 0 ) then do:
      disable
      actuate
      alcgrpgd
@@ -1522,6 +1521,7 @@ define variable v-found as decimal   no-undo .
      with frame {&frame-name}.
   end.
   /*это редактор и он read-only*/
+  if p-type = 'glob' then
   enable
   rep-sort
   cplot
@@ -1720,7 +1720,7 @@ PROCEDURE onewin_get-bttns :
 не менять название! это callback
   ----------------------------------------------------------------------------*/
 DEFINE OUTPUT PARAMETER p-bttns as character no-undo .
-if p-mode = {&lookup} then do:
+if p-mode = {&lookup} or not p-type = 'glob'  then do:  /* Если у вас будут списки не для глобальных параметров, то увы... придется как-то разделить этот механизм */
   p-bttns = "".
 end.
 else do:
