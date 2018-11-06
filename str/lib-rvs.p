@@ -1724,6 +1724,15 @@ define variable      v-water-qnty as decimal no-undo.
         do:
           if tt-meas-file.log-brutto = yes then 
           do:
+              if place-asi-sertif
+              then do :
+                assign
+                  tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density
+                  tt-meas-file.water-qnty =  tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty 
+                .
+                if tt-meas-file.water-qnty < 0 then tt-meas-file.water-qnty = 0 .
+              end.
+              else
               if tt-meas-file.brutto-qnty <> 0 or tt-meas-file.brutto-qnty <> ? then 
               do:
                 assign
@@ -2383,6 +2392,14 @@ assign
                         bf_rvs-line.temperature  = prev_rvs-line.temperature.
                         p-prev-rvs-date = YES.  
                     end.    
+                    if bf_rvs-line.temperature  = 0 or bf_rvs-line.temperature = ? then 
+                    do:
+                        bf_rvs-line.temperature  = prev_rvs-line.temperature. 
+                    end. 
+                    if bf_rvs-line.temperature  = 0 or bf_rvs-line.temperature = ? then 
+                    do:
+                        bf_rvs-line.temperature  = bf_rvs-line.state-temperature. 
+                    end.
                     LEAVE prev .
                 END.
             END.

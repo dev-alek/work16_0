@@ -244,19 +244,19 @@ sw = insw .
     /*    sw:start-element ("check-fuel-docs") .*/
 
     sw:start-element ("check-fuel-doc") .
-    sw:write-data-element ("doc-code", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)).
-    sw:write-data-element ("doc-num", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)).
+    sw:write-data-element ("doc-code", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)) no-error .
+    sw:write-data-element ("doc-num", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)) no-error .
     sw:write-data-element ("doc-date", if tt-rvs-doc.doc-date = ? then "" else iso-date(datetime(tt-rvs-doc.doc-date, (tt-rvs-doc.fact-time * 1000 )))).
     sw:write-data-element ("doc-date-f", if tt-rvs-doc.fact-date = ? then "" else iso-date(datetime(tt-rvs-doc.fact-date, (tt-rvs-doc.sys-time-int * 1000 )))).
-    sw:write-data-element ("del-f", if tt-rvs-doc.del-f = ? then "" else string(tt-rvs-doc.del-f)).
-    sw:write-data-element ("doc-type", string(v-type)).
+    sw:write-data-element ("del-f", if tt-rvs-doc.del-f = ? then "" else string(tt-rvs-doc.del-f)) no-error .
+    sw:write-data-element ("doc-type", string(v-type)) no-error .
     sw:write-data-element ("inp-type", v-doc-input-type).
-    sw:write-data-element ("shift-date", if tt-rvs-doc.shift-date = ? then "" else iso-date(tt-rvs-doc.shift-date)).
-    sw:write-data-element ("shift-num", if tt-rvs-doc.shift-num = ? then "" else string(tt-rvs-doc.shift-num)).
-    sw:write-data-element ("auto-cr", string(v-autorvs)).
+    sw:write-data-element ("shift-date", if tt-rvs-doc.shift-date = ? then "" else iso-date(tt-rvs-doc.shift-date)) no-error .
+    sw:write-data-element ("shift-num", if tt-rvs-doc.shift-num = ? then "" else string(tt-rvs-doc.shift-num)) no-error .
+    sw:write-data-element ("auto-cr", string(v-autorvs)) no-error .
     if tt-rvs-doc.out-code > "" then sw:write-data-element ("out-code", tt-rvs-doc.out-code). 
     else sw:WRITE-EMPTY-ELEMENT ("out-code").
-    sw:write-data-element ("operator", if v-user-name = ? then "" else string(v-user-name)).
+    sw:write-data-element ("operator", if v-user-name = ? then "" else string(v-user-name)) no-error .
     sw:start-element ("tanks") .
     for each tt-rvs-line no-lock:
       for each buf_rvs-line-attr no-lock
@@ -294,52 +294,52 @@ sw = insw .
       end.
       else er-wght-pipeline = ? .                                
       sw:start-element ("tank") .
-      sw:write-data-element ("tank-num"  , if tt-rvs-line.pl-code = ? then "0" else string(tt-rvs-line.pl-code)).
+      sw:write-data-element ("tank-num"  , if tt-rvs-line.pl-code = ? then "0" else string(tt-rvs-line.pl-code)) no-error .
       sw:write-data-element ("inp-type"  , v-line-input-type).
-      sw:write-data-element ("gd-code"  , if tt-rvs-line.gds-code = ? then "0" else string(tt-rvs-line.gds-code)).
-      sw:write-data-element ("tank-ost" , if tt-rvs-line.measure-qnty = ? then "0" else string(tt-rvs-line.measure-qnty)).
-      sw:write-data-element ("tank-ost-tc" , if tt-rvs-line.measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.measure-tc-qnty)).
-      sw:write-data-element ("tank-dnst" , if tt-rvs-line.density = ? then "0" else string-mth(tt-rvs-line.density)).
-      sw:write-data-element ("pipeline-qnty" , if tt-rvs-line.add-qnty = ? then "0" else string-mth(tt-rvs-line.add-qnty)).
-      sw:write-data-element ("tank-ost-br" , if tt-rvs-line.brutto-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-qnty)).
-      sw:write-data-element ("tank-ost-br-tc" , if tt-rvs-line.brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-tc-qnty)).
-      sw:write-data-element ("tank-wtr" , if (tt-rvs-line.brutto-qnty - tt-rvs-line.measure-qnty) = ? then "0" else string-mth(tt-rvs-line.brutto-qnty - tt-rvs-line.measure-qnty)).
-      sw:write-data-element ("tank-wght" , if tt-rvs-line.measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.measure-cli-qnty)).
-      sw:write-data-element ("tank-wght-br" , if tt-rvs-line.brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty)).
-      sw:write-data-element ("tank-wtr-wght" , if (tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty)).
-      sw:write-data-element ("tank-lvl" , if tt-rvs-line.level-petrol = ? then "0" else string-mth(tt-rvs-line.level-petrol)).
-      sw:write-data-element ("tank-cmn-lvl" , if tt-rvs-line.level-total = ? then "0" else string-mth(tt-rvs-line.level-total)).
-      sw:write-data-element ("tnk-wtr-lvl" , if tt-rvs-line.level-water = ? then "0" else string-mth(tt-rvs-line.level-water)).
-      sw:write-data-element ("tnk-t" , if tt-rvs-line.temperature = ? then "0" else string-mth(tt-rvs-line.temperature)).
-      sw:write-data-element ("tnk-t1" , if tt-rvs-line.temp-layer1 = ? then "0" else string-mth(tt-rvs-line.temp-layer1)).
-      sw:write-data-element ("tnk-t2" , if tt-rvs-line.temp-layer2 = ? then "0" else string-mth(tt-rvs-line.temp-layer2)).
-      sw:write-data-element ("tnk-t3" , if tt-rvs-line.temp-layer3 = ? then "0" else string-mth(tt-rvs-line.temp-layer3)).
-      sw:write-data-element ("tnk-flng" , if tt-rvs-line.meas-cf-qnty = ? then "0" else string-mth(tt-rvs-line.meas-cf-qnty)).
-      sw:write-data-element ("tank-ost-fact" , if tt-rvs-line.state-measure-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-qnty)).
-      sw:write-data-element ("tank-ost-tc-fact" , if tt-rvs-line.state-measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-tc-qnty)).
-      sw:write-data-element ("tank-dnst-fact" , if tt-rvs-line.state-density = ? then "0" else string-mth(tt-rvs-line.state-density)).
-      sw:write-data-element ("pipeline-qnty-fact" , if tt-rvs-line.state-add-qnty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty)).
-      sw:write-data-element ("pipeline-wght-fact" , if tt-rvs-line.state-add-qnty * v-dnsty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty * v-dnsty)).
-      sw:write-data-element ("er-wght-pipeline" , if er-wght-pipeline = ? then "0" else string-mth(er-wght-pipeline)).
-      sw:write-data-element ("tank-ost-br-fact" , if tt-rvs-line.state-brutto-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty)).
-      sw:write-data-element ("tank-ost-br-tc-fact" , if tt-rvs-line.state-brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-tc-qnty)).
-      sw:write-data-element ("tank-wtr-fact" , if (tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty)).
-      sw:write-data-element ("tank-wght-fact" , if tt-rvs-line.state-measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty)).
-      sw:write-data-element ("tank-wght-br-fact" , if tt-rvs-line.state-brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty)).
-      sw:write-data-element ("tank-wtr-wght-fact" , if (tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty)).
-      sw:write-data-element ("tank-lvl-fact" , if tt-rvs-line.state-level-petrol = ? then "0" else string-mth(tt-rvs-line.state-level-petrol)).
-      sw:write-data-element ("tank-cmn-lvl-fact" , if tt-rvs-line.state-level-total = ? then "0" else string-mth(tt-rvs-line.state-level-total)).
-      sw:write-data-element ("tnk-wtr-lvl-fact" , if tt-rvs-line.state-level-water = ? then "0" else string-mth(tt-rvs-line.state-level-water)).
-      sw:write-data-element ("tnk-t-fact" , if tt-rvs-line.state-temperature = ? then "0" else string-mth(tt-rvs-line.state-temperature)).
-      sw:write-data-element ("tnk-t1-fact" , if tt-rvs-line.state-temp-layer1 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer1)).
-      sw:write-data-element ("tnk-t2-fact" , if tt-rvs-line.state-temp-layer2 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer2)).
-      sw:write-data-element ("tnk-t3-fact" , if tt-rvs-line.state-temp-layer3 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer3)).
-      sw:write-data-element ("tnk-flng-fact" , if tt-rvs-line.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line.state-cf-qnty)).
+      sw:write-data-element ("gd-code"  , if tt-rvs-line.gds-code = ? then "0" else string(tt-rvs-line.gds-code)) no-error .
+      sw:write-data-element ("tank-ost" , if tt-rvs-line.measure-qnty = ? then "0" else string(tt-rvs-line.measure-qnty)) no-error .
+      sw:write-data-element ("tank-ost-tc" , if tt-rvs-line.measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.measure-tc-qnty)) no-error .
+      sw:write-data-element ("tank-dnst" , if tt-rvs-line.density = ? then "0" else string-mth(tt-rvs-line.density)) no-error .
+      sw:write-data-element ("pipeline-qnty" , if tt-rvs-line.add-qnty = ? then "0" else string-mth(tt-rvs-line.add-qnty)) no-error .
+      sw:write-data-element ("tank-ost-br" , if tt-rvs-line.brutto-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-qnty)) no-error .
+      sw:write-data-element ("tank-ost-br-tc" , if tt-rvs-line.brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-tc-qnty)) no-error .
+      sw:write-data-element ("tank-wtr" , if (tt-rvs-line.brutto-qnty - tt-rvs-line.measure-qnty) = ? then "0" else string-mth(tt-rvs-line.brutto-qnty - tt-rvs-line.measure-qnty)) no-error .
+      sw:write-data-element ("tank-wght" , if tt-rvs-line.measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.measure-cli-qnty)) no-error .
+      sw:write-data-element ("tank-wght-br" , if tt-rvs-line.brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty)) no-error .
+      sw:write-data-element ("tank-wtr-wght" , if (tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty)) no-error .
+      sw:write-data-element ("tank-lvl" , if tt-rvs-line.level-petrol = ? then "0" else string-mth(tt-rvs-line.level-petrol)) no-error .
+      sw:write-data-element ("tank-cmn-lvl" , if tt-rvs-line.level-total = ? then "0" else string-mth(tt-rvs-line.level-total)) no-error .
+      sw:write-data-element ("tnk-wtr-lvl" , if tt-rvs-line.level-water = ? then "0" else string-mth(tt-rvs-line.level-water)) no-error .
+      sw:write-data-element ("tnk-t" , if tt-rvs-line.temperature = ? then "0" else string-mth(tt-rvs-line.temperature)) no-error .
+      sw:write-data-element ("tnk-t1" , if tt-rvs-line.temp-layer1 = ? then "0" else string-mth(tt-rvs-line.temp-layer1)) no-error .
+      sw:write-data-element ("tnk-t2" , if tt-rvs-line.temp-layer2 = ? then "0" else string-mth(tt-rvs-line.temp-layer2)) no-error .
+      sw:write-data-element ("tnk-t3" , if tt-rvs-line.temp-layer3 = ? then "0" else string-mth(tt-rvs-line.temp-layer3)) no-error .
+      sw:write-data-element ("tnk-flng" , if tt-rvs-line.meas-cf-qnty = ? then "0" else string-mth(tt-rvs-line.meas-cf-qnty)) no-error .
+      sw:write-data-element ("tank-ost-fact" , if tt-rvs-line.state-measure-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-qnty)) no-error .
+      sw:write-data-element ("tank-ost-tc-fact" , if tt-rvs-line.state-measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-tc-qnty)) no-error .
+      sw:write-data-element ("tank-dnst-fact" , if tt-rvs-line.state-density = ? then "0" else string-mth(tt-rvs-line.state-density)) no-error .
+      sw:write-data-element ("pipeline-qnty-fact" , if tt-rvs-line.state-add-qnty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty)) no-error .
+      sw:write-data-element ("pipeline-wght-fact" , if tt-rvs-line.state-add-qnty * v-dnsty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty * v-dnsty)) no-error .
+      sw:write-data-element ("er-wght-pipeline" , if er-wght-pipeline = ? then "0" else string-mth(er-wght-pipeline)) no-error .
+      sw:write-data-element ("tank-ost-br-fact" , if tt-rvs-line.state-brutto-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty)) no-error .
+      sw:write-data-element ("tank-ost-br-tc-fact" , if tt-rvs-line.state-brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-tc-qnty)) no-error .
+      sw:write-data-element ("tank-wtr-fact" , if (tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty)) no-error .
+      sw:write-data-element ("tank-wght-fact" , if tt-rvs-line.state-measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty)) no-error .
+      sw:write-data-element ("tank-wght-br-fact" , if tt-rvs-line.state-brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty)) no-error .
+      sw:write-data-element ("tank-wtr-wght-fact" , if (tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty)) no-error .
+      sw:write-data-element ("tank-lvl-fact" , if tt-rvs-line.state-level-petrol = ? then "0" else string-mth(tt-rvs-line.state-level-petrol)) no-error .
+      sw:write-data-element ("tank-cmn-lvl-fact" , if tt-rvs-line.state-level-total = ? then "0" else string-mth(tt-rvs-line.state-level-total)) no-error .
+      sw:write-data-element ("tnk-wtr-lvl-fact" , if tt-rvs-line.state-level-water = ? then "0" else string-mth(tt-rvs-line.state-level-water)) no-error .
+      sw:write-data-element ("tnk-t-fact" , if tt-rvs-line.state-temperature = ? then "0" else string-mth(tt-rvs-line.state-temperature)) no-error .
+      sw:write-data-element ("tnk-t1-fact" , if tt-rvs-line.state-temp-layer1 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer1)) no-error .
+      sw:write-data-element ("tnk-t2-fact" , if tt-rvs-line.state-temp-layer2 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer2)) no-error .
+      sw:write-data-element ("tnk-t3-fact" , if tt-rvs-line.state-temp-layer3 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer3)) no-error .
+      sw:write-data-element ("tnk-flng-fact" , if tt-rvs-line.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line.state-cf-qnty)) no-error .
       
-      sw:write-data-element ("ms-dnsty" , string-mth(v-dnsty)).
-      sw:write-data-element ("er-wght" , string-mth(v-wght)).
-      sw:write-data-element ("abs-er-wght" , if (tt-rvs-line.state-measure-cli-qnty * v-wght / 100) = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty * v-wght / 100)).
-      sw:write-data-element ("ex-df" , string-mth(v-ex-df)).
+      sw:write-data-element ("ms-dnsty" , string-mth(v-dnsty)) no-error .
+      sw:write-data-element ("er-wght" , string-mth(v-wght)) no-error .
+      sw:write-data-element ("abs-er-wght" , if (tt-rvs-line.state-measure-cli-qnty * v-wght / 100) = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty * v-wght / 100)) no-error .
+      sw:write-data-element ("ex-df" , string-mth(v-ex-df)) no-error .
       sw:end-element ("tank")  .
     end.
     sw:end-element ("tanks")  .
@@ -348,23 +348,23 @@ sw = insw .
     sw:start-element ("trk-ps") .
     for each tt-rvs-line-pump :
       sw:start-element ("trk-p") .
-      sw:write-data-element ("tank-num" , if tt-rvs-line-pump.pl-code = ? then "0" else string-mth(tt-rvs-line-pump.pl-code)).
-      sw:write-data-element ("trk-num" , if tt-rvs-line-pump.pump-code = ? then "0" else string-mth(tt-rvs-line-pump.pump-code)).
-      sw:write-data-element ("trk-p-num" , if tt-rvs-line-pump.nozzle-code = ? then "0" else string-mth(tt-rvs-line-pump.nozzle-code)).
-      sw:write-data-element ("cnt-el" , if tt-rvs-line-pump.meas-el-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-el-cnt)).
-      sw:write-data-element ("sum-cnt-el" , if tt-rvs-line-pump.meas-am-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-am-cnt)).
-      sw:write-data-element ("qnty" , if tt-rvs-line-pump.meas-cf-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-cf-cnt)).
-      sw:write-data-element ("cnt-meh" , if tt-rvs-line-pump.meas-mh-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-mh-cnt)).
-      sw:write-data-element ("cnt-ob" , if tt-rvs-line-pump.meas-mh-qnty = ? then "0" else string-mth(tt-rvs-line-pump.meas-mh-qnty)).
-      sw:write-data-element ("sum-cnt-ob" , if tt-rvs-line-pump.meas-am-qnty = ? then "0" else string-mth(tt-rvs-line-pump.meas-am-qnty)).
-      sw:write-data-element ("qnty-nal" , if tt-rvs-line-pump.meas-cf-qnty = ? then "0" else string-mth(tt-rvs-line-pump.meas-cf-qnty)).
-      sw:write-data-element ("cnt-el-fact" , if tt-rvs-line-pump.state-el-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-el-cnt)).
-      sw:write-data-element ("sum-fact" , if tt-rvs-line-pump.state-am-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-am-cnt)).
-      sw:write-data-element ("qnty-fact" , if tt-rvs-line-pump.state-cf-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-cf-cnt)).
-      sw:write-data-element ("cnt-meh-fact" , if tt-rvs-line-pump.state-mh-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-mh-cnt)).
-      sw:write-data-element ("cnt-meh-ob" , if tt-rvs-line-pump.state-mh-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-mh-qnty)).
-      sw:write-data-element ("sum-meh-ob" , if tt-rvs-line-pump.state-am-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-am-qnty)).
-      sw:write-data-element ("qnty-nal-fact" , if tt-rvs-line-pump.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-cf-qnty)).
+      sw:write-data-element ("tank-num" , if tt-rvs-line-pump.pl-code = ? then "0" else string-mth(tt-rvs-line-pump.pl-code)) no-error .
+      sw:write-data-element ("trk-num" , if tt-rvs-line-pump.pump-code = ? then "0" else string-mth(tt-rvs-line-pump.pump-code)) no-error .
+      sw:write-data-element ("trk-p-num" , if tt-rvs-line-pump.nozzle-code = ? then "0" else string-mth(tt-rvs-line-pump.nozzle-code)) no-error .
+      sw:write-data-element ("cnt-el" , if tt-rvs-line-pump.meas-el-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-el-cnt)) no-error .
+      sw:write-data-element ("sum-cnt-el" , if tt-rvs-line-pump.meas-am-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-am-cnt)) no-error .
+      sw:write-data-element ("qnty" , if tt-rvs-line-pump.meas-cf-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-cf-cnt)) no-error .
+      sw:write-data-element ("cnt-meh" , if tt-rvs-line-pump.meas-mh-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-mh-cnt)) no-error .
+      sw:write-data-element ("cnt-ob" , if tt-rvs-line-pump.meas-mh-qnty = ? then "0" else string-mth(tt-rvs-line-pump.meas-mh-qnty)) no-error .
+      sw:write-data-element ("sum-cnt-ob" , if tt-rvs-line-pump.meas-am-qnty = ? then "0" else string-mth(tt-rvs-line-pump.meas-am-qnty)) no-error .
+      sw:write-data-element ("qnty-nal" , if tt-rvs-line-pump.meas-cf-qnty = ? then "0" else string-mth(tt-rvs-line-pump.meas-cf-qnty)) no-error .
+      sw:write-data-element ("cnt-el-fact" , if tt-rvs-line-pump.state-el-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-el-cnt)) no-error .
+      sw:write-data-element ("sum-fact" , if tt-rvs-line-pump.state-am-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-am-cnt)) no-error .
+      sw:write-data-element ("qnty-fact" , if tt-rvs-line-pump.state-cf-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-cf-cnt)) no-error .
+      sw:write-data-element ("cnt-meh-fact" , if tt-rvs-line-pump.state-mh-cnt = ? then "0" else string-mth(tt-rvs-line-pump.state-mh-cnt)) no-error .
+      sw:write-data-element ("cnt-meh-ob" , if tt-rvs-line-pump.state-mh-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-mh-qnty)) no-error .
+      sw:write-data-element ("sum-meh-ob" , if tt-rvs-line-pump.state-am-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-am-qnty)) no-error .
+      sw:write-data-element ("qnty-nal-fact" , if tt-rvs-line-pump.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-cf-qnty)) no-error .
       sw:end-element ("trk-p")  .
     end.
     sw:end-element ("trk-ps")  .

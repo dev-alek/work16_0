@@ -352,9 +352,9 @@ on error undo stop-shift, return error return-value
   release buf_shift-obj no-error.
   if error-status:error then do:
     if not p-silent then do:
-      message
-      error-status:error skip
-      return-value view-as alert-box error .
+/*      message                               */
+/*      error-status:error skip               */
+/*      return-value view-as alert-box error .*/
       undo stop-shift, return error.
     end.
     else do:

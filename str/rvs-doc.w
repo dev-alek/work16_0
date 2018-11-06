@@ -857,6 +857,21 @@ disp r-doc.obj-code
 /*     r-doc.state-brutto-tc-qnty*/
 /*     r-doc.brutto-tc-qnty*/
      with frame {&frame-name}.
+     
+find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid.
+if ub.user-account.psn-code <> 0 and ub.user-account.psn-code <> ?
+then do:
+  if pardoc-mode = {&add-def}
+  then do :
+    r-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+    r-doc.wrkr:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+    r-doc.boss:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+  end.
+  if pardoc-mode = {&update}
+  then do :
+    r-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+  end.
+end.
 
 { str/psn-chk.i wrkr on r-doc v-ref-rec }
 { str/psn-chk.i agnt on r-doc v-ref-rec }

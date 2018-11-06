@@ -671,7 +671,11 @@ on error undo, return error return-value
           /* проверяем, что в закрывающей сверке все топливные места хранения */
           for each buf_pl-gds
             where buf_pl-gds.obj-type = ub.shift-obj.obj-type
-              and buf_pl-gds.obj-code = ub.shift-obj.obj-code
+              and buf_pl-gds.obj-code = ub.shift-obj.obj-code,
+          first ub.place no-lock where ub.place.obj-type = buf_pl-gds.obj-type  
+                                   and ub.place.obj-code = buf_pl-gds.obj-code 
+                                   and ub.place.pl-code = buf_pl-gds.pl-code
+                                   and ub.place.status_ = ''
           on error undo main-block, return error
           :
             find first buf_goods no-lock
