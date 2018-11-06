@@ -311,20 +311,7 @@ assign
 v-InfoSectionsTotal = new InfoSectionsTotal().
 v-InfoSection = new InfoSection().
 
-/*»щем последнюю инвентаризацию, дл€ того чтобы посчитать технологические потери */
 define buffer buf_trn-doc for ub.trn-doc .
-
-  for each buf_rvs-doc where 
-  buf_rvs-doc.shift-date <= x-Date-End
-  and buf_rvs-doc.obj-type = p-obj-type
-  and buf_rvs-doc.obj-code  = p-obj-code
-  and buf_rvs-doc.status_ = {&fact},
-  last buf_trn-doc where buf_trn-doc.ext-doc-type = {&TDEDT_Inv} 
-  and buf_trn-doc.out-code = buf_rvs-doc.rvs-code: 
-    if v-fact-order-inv = 0 then do:
-      v-fact-order-inv  = buf_trn-doc.fact-order .
-    end.
-  end.  
 
 /* сверка данной смены*/
 find first last-rvs-doc no-lock
@@ -460,6 +447,21 @@ for each temp-rvs-line
     break by temp-rvs-line.gds-code by temp-rvs-line.pl-code
     on error undo, return error return-value
     :
+      
+/*»щем последнюю инвентаризацию дл€ каждого товара*/
+
+v-fact-order-inv = 0 . 
+find last ub.doc-line no-lock where 
+ub.doc-line.fact-order <= fo
+and ub.doc-line.obj-code = temp-rvs-line.obj-code
+and ub.doc-line.obj-type = temp-rvs-line.obj-type
+and ub.doc-line.prod-code = temp-rvs-line.prod-code
+and ub.doc-line.prod-type = temp-rvs-line.prod-type 
+and ub.doc-line.artic = temp-rvs-line.artic
+and ub.doc-line.status_ = {&fact}
+and ub.doc-line.ext-doc-type = {&TDEDT_Inv} no-error .
+if available (ub.doc-line) then v-fact-order-inv = ub.doc-line.fact-order .
+        
     assign
         temp-rvs-line.pol5-l  = 0
         temp-rvs-line.pol5-kg = 0
