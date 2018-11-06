@@ -61,6 +61,8 @@ define buffer grptreal-2 for treal-2.
 { rep/real-2cr.i grptreal-2     }
 { rep/rshiftd1.i t "shared"}
 { str/trdcalib.i }
+{ gbl/prn-lib.i     }
+{ rep/html-conv.i }
 
 
 define shared stream PrnLibstream.
@@ -74,6 +76,7 @@ define variable pol6  as character no-undo.
 define variable pol7  as integer   no-undo.
 define variable pol8  as character no-undo.
 define variable pol9  as decimal   no-undo.
+define variable pol9_1 as decimal   no-undo. /*Масса ЕУ*/
 define variable pol10 as decimal   no-undo.
 define variable pol11 as decimal   no-undo.
 define variable pol12 as decimal   no-undo.
@@ -202,36 +205,32 @@ end.
         put stream OutStr-html unformatted                                                              
             substitute (                                                                                
           '<tbody> <!-- Здесь начинается таблица отчета -->                                             
-                <tr> <!-- Первые строки – шапка таблицы с тэгами tr -->                                 
-                <th text_wrap="true" colspan="5" style="text-align: center;">Информация о продукте</th>                  
+            <tr> <!-- Первые строки – шапка таблицы с тэгами tr -->                                 
+                <th text_wrap="true" colspan="4" style="text-align: center;">Информация о продукте</th>                  
                 <th text_wrap="true" colspan="7" style="text-align: center;">Расшифровка поступления</th>                
                 <th text_wrap="true" colspan="4" style="text-align: center;">Расшифровка реализации</th>                 
-                <th text_wrap="true" colspan="2" style="text-align: center;">Остаток на конец</th>                       
+                <th text_wrap="true" rowspan="3" style="text-align: center;">Остаток на конец кг, л</th>                       
             </tr>                                                                                       
             <tr>                                                                                        
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Наименование продукта</th>                  
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Код товара</th>                             
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Цена розничная на конец смены</th>          
-                <th text_wrap="true" colspan="2" style="text-align: center;">Остаток на начало</th>                      
+                <th text_wrap="true" rowspan="2" style="text-align: center;">Остаток на начало кг, л</th>                      
                 <th text_wrap="true" colspan="2" style="text-align: center;">Поставщик</th>                              
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Номер документа прихода (ТТН)</th>          
-                <th text_wrap="true" colspan="3" style="text-align: center;">Количество</th>                             
+                <th text_wrap="true" rowspan="2" style="text-align: center;">Количество кг, л</th>
+                <th text_wrap="true" rowspan="2" style="text-align: center;">Плотность кг/м3</th>
+                <th text_wrap="true" rowspan="2" style="text-align: center;">ЕУ кг</th>                                              
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Т в гр.°С</th>         
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Тип расхода (тип платежа)</th>              
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Кол-во в литрах</th>                        
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Кол-во в кг</th>                    
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Сумма</th>                                  
-                <th text_wrap="true" rowspan="2" style="text-align: center;">Кол-во в литрах</th>                        
-                <th text_wrap="true" rowspan="2" style="text-align: center;">Кол-во в кг</th>                   
+
             </tr>                                                                                       
             <tr>                                                                                        
-                <th style="text-align: center;">Объем л.</th>                                           
-                <th style="text-align: center;">Масса кг.</th>                                          
                 <th text_wrap="true" style="text-align: center;">Наименование</th>                                       
                 <th style="text-align: center;">Код</th>                                                
-                <th style="text-align: center;">Объем л.</th>                                           
-                <th text_wrap="true" style="text-align: center;">Плотность кг/м3</th>                                    
-                <th style="text-align: center;">Масса кг</th>                                           
             </tr>                                                                                       
             <tr>                                                                                        
                 <th style="text-align: center;">2.1</th>                                                  
@@ -250,8 +249,6 @@ end.
                 <th style="text-align: center;">2.14</th>                                                 
                 <th style="text-align: center;">2.15</th>                                                 
                 <th style="text-align: center;">2.16</th>                                                 
-                <th style="text-align: center;">2.17</th>                                                 
-                <th style="text-align: center;">2.18</th>                                                 
             </tr>'                                                                                      
                                                                                                         
             , chr(123), chr(125)                                                                        
@@ -516,26 +513,29 @@ FOR EACH t-2 NO-LOCK
                tincome-2.gds-code = t-2.gds-code AND
                tincome-2.ii       = jj           NO-ERROR.
     IF AVAIlABLE tincome-2 THEN DO:
-      /* номер документа из атрибутов */
-      { str/tdat-val.i
-        tincome-2.doc-code
-        {&trdcattr-nids}
-        v-attr-value
-        v-attr-type
-        }
+/*      /* номер документа из атрибутов */*/
+/*      { str/tdat-val.i                  */
+/*        tincome-2.doc-code              */
+/*        {&trdcattr-nids}                */
+/*        v-attr-value                    */
+/*        v-attr-type                     */
+/*        }                               */
       assign
-        pol8 = if v-attr-value = "" or v-attr-value = ?
-               then tincome-2.doc-code
-               else v-attr-value
-        pol8-excel = if v-attr-value = "" or v-attr-value = ?
-               then tincome-2.doc-code
-               else '="' + v-attr-value + '"'
+          pol8 = tincome-2.doc-code
+
+/*        pol8 = if v-attr-value = "" or v-attr-value = ?      */
+/*               then tincome-2.doc-code                       */
+/*               else v-attr-value                             */
+/*        pol8-excel = if v-attr-value = "" or v-attr-value = ?*/
+/*               then tincome-2.doc-code                       */
+/*               else '="' + v-attr-value + '"'                */
       .
 
       ASSIGN pol6      = tincome-2.supp-name
              pol7      = tincome-2.supp-code
              pol9      = tincome-2.qnty1
              pol10     = tincome-2.density
+             pol9_1    = tincome-2.naturalloss
              pol11     = tincome-2.qnty2
              pol12     = tincome-2.temperature
              supp-line = yes.
@@ -576,52 +576,30 @@ FOR EACH t-2 NO-LOCK
                 treal-2.ii       = jj + v-delta          NO-ERROR.
       if not available treal-2 then do:
         put stream OutStr-html unformatted
-            substitute (
-            '  <tr>
-                    <td>&1</td>
-                    <td style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
-                    <td style="text-align: right;">&4</td>
-                    <td style="text-align: right;">&5</td>
-                    <td>&6</td>
-                    <td style="text-align: right;">&7</td>
-                    <td>&8</td>
-                    <td style="text-align: right;">&9</td>'
-            ,
-            pol1,
-            if main-line = no then "" else string(pol2),
-            if main-line = no then "" else string(pol3,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol4,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol5,"->>>>>>>>>>>9.99"),
-            if supp-line = no then "" else pol6,
-            if pol7 = 0 then "" else string(pol7),
-            if pol8 = "" then "" else string(pol8),
-            if supp-line = no then "" else string(pol9,">>>>>>>>>>>9.99")
-            ).
-         put stream OutStr-html unformatted
-            substitute (
-            '
-                    <td style="text-align: right;">&1</td>
-                    <td style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
-                    <td>&4</td>
-                    <td style="text-align: right;">&5</td>
-                    <td style="text-align: right;">&6</td>
-                    <td style="text-align: right;">&7</td>
-                    <td style="text-align: right;">&8</td>
-                    <td style="text-align: right;">&9</td>
-                </tr>'
-            ,
-            if supp-line = no or pol10 = ? then "" else string(pol10,">>>>>>>>>>>9.9999"),
-            if supp-line = no then "" else string(pol11,"->>>>>>>>>>>9.99"),
-            if pol7 = 0 or pol12 = ? then "" else string(pol12,"->>>>>>>>>>>9"),
-            if pay-line = no then "" else pol13,
-            if pay-line = no then "" else string(pol14,"->>>>>>>>>>>9.99"),
-            if pay-line = no then "" else string(pol15,"->>>>>>>>>>>9.99"),
-            if pay-line = no then "" else string(pol16,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol17,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol18,"->>>>>>>>>>>9.99")
-            ).
+            '<tr>' skip
+                    '<td rowspan="2">' + pol1 + '</td>' skip
+                    '<td rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol2) <> ? then string(pol2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol3) <> ? then fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol4) <> ? then fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2">' + if supp-line <> no or pol6 <> ? then pol6 + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2" style="text-align: right;">' + if pol7 <> 0 then string(pol7) + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2">' + if pol8 <> "" then string(pol8) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol9) <> ? then fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.0000" val="' + fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol10) <> ? then fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
+                    '<td num="0.000" val="' + fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol9_1) <> ? then fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
+                    '<td num="0" val="' + fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol12) <> ? then fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2">' + if pay-line <> no or pol13 <> "" then pol13 + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol14) <> ? then fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol15) <> ? then fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol16) <> ? then fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol17) <> ? then fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+             '</tr>'
+            '<tr>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol5) <> ? then fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol11) <> ? then fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol18) <> ? then fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+             '</tr>' skip  
+             .         
           leave _not-empty-group.
       end.
       if available treal-2 then do:
@@ -711,53 +689,32 @@ FOR EACH t-2 NO-LOCK
             end. /*if not available buf_shift-pgds-out then do:*/
 
           end. /*if p-batch > 0 */
+
         put stream OutStr-html unformatted
-            substitute (
-            '  <tr>
-                    <td>&1</td>
-                    <td style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
-                    <td style="text-align: right;">&4</td>
-                    <td style="text-align: right;">&5</td>
-                    <td>&6</td>
-                    <td style="text-align: right;">&7</td>
-                    <td>&8</td>
-                    <td style="text-align: right;">&9</td>'
-            ,
-            pol1,
-            if main-line = no then "" else string(pol2),
-            if main-line = no then "" else string(pol3,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol4,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol5,"->>>>>>>>>>>9.99"),
-            if supp-line = no then "" else pol6,
-            if pol7 = 0 then "" else string(pol7),
-            if pol8 = "" then "" else string(pol8),
-            if supp-line = no then "" else string(pol9,">>>>>>>>>>>9.99")
-            ).
-         put stream OutStr-html unformatted
-            substitute (
-            '
-                    <td style="text-align: right;">&1</td>
-                    <td style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
-                    <td>&4</td>
-                    <td style="text-align: right;">&5</td>
-                    <td style="text-align: right;">&6</td>
-                    <td style="text-align: right;">&7</td>
-                    <td style="text-align: right;">&8</td>
-                    <td style="text-align: right;">&9</td>
-                </tr>'
-            ,
-            if supp-line = no or pol10 = ? then "" else string(pol10,">>>>>>>>>>>9.9999"),
-            if supp-line = no then "" else string(pol11,"->>>>>>>>>>>9.99"),
-            if pol7 = 0 or pol12 = ? then "" else string(pol12,"->>>>>>>>>>>9"),
-            if pay-line = no then "" else pol13,
-            if pay-line = no then "" else string(pol14,"->>>>>>>>>>>9.99"),
-            if pay-line = no then "" else string(pol15,"->>>>>>>>>>>9.99"),
-            if pay-line = no then "" else string(pol16,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol17,"->>>>>>>>>>>9.99"),
-            if main-line = no then "" else string(pol18,"->>>>>>>>>>>9.99")
-            ).
+             '<tr>' skip
+                    '<td rowspan="2">' + pol1 + '</td>' skip
+                    '<td rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol2) <> ? then string(pol2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol3) <> ? then fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol4) <> ? then fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2">' + if supp-line <> no or pol6 <> ? then pol6 + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2" style="text-align: right;">' + if pol7 <> 0 then string(pol7) + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2">' + if pol8 <> "" then string(pol8) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol9) <> ? then fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.0000" val="' + fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol10) <> ? then fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
+                    '<td num="0.000" val="' + fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol9_1) <> ? then fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
+                    '<td num="0" val="' + fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol12) <> ? then fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '</td>' else "" + '</td>' skip
+                    '<td rowspan="2">' + if pay-line <> no or pol13 <> "" then pol13 + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol14) <> ? then fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol15) <> ? then fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol16) <> ? then fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol17) <> ? then fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+             '</tr>'
+            '<tr>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol5) <> ? then fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol11) <> ? then fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol18) <> ? then fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+             '</tr>' skip  
+             .
           leave _not-empty-group.
         end.
       end.
@@ -802,46 +759,31 @@ FOR EACH t-2 NO-LOCK
            pol17 = accum-17
            pol18 = accum-18.
 
+        put stream OutStr-html unformatted
+            '<tr>' skip
+                    '<td rowspan="2">' + pol1 + '</td>' skip
+                    '<td rowspan="2" style="text-align: right;"></td>' skip
+                    '<td rowspan="2" style="text-align: right;"></td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td rowspan="2"></td>' skip
+                    '<td rowspan="2" style="text-align: right;"></td>' skip
+                    '<td rowspan="2"></td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td rowspan="2"></td>' skip
+                    '<td rowspan="2"></td>' skip
+                    '<td rowspan="2"></td>' skip
+                    '<td rowspan="2">' + pol13 + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td rowspan="2"></td>' skip
+             '</tr>'
+            '<tr>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' skip
+             '</tr>' skip  
+             .  
 
-        put stream OutStr-html unformatted
-            substitute (
-            '  <tr>
-                    <th style="text-align: left;">&1</th>
-                    <th></th>
-                    <th></th>
-                    <th style="text-align: right;">&2</th>
-                    <th style="text-align: right;">&3</th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th style="text-align: right;">&4</th>
-                    <th></th>
-                    <th style="text-align: right;">&5</th>
-                    <th></th>
-                    <th style="text-align: left;">&6</th>
-                    <th style="text-align: right;">&7</th>
-                    <th style="text-align: right;">&8</th>
-                    <th style="text-align: right;">&9</th>'
-            ,
-            pol1,
-            string(pol4,"->>>>>>>>>>>9.99"),
-            string(pol5,"->>>>>>>>>>>9.99"),
-            string(pol9,"->>>>>>>>>>>9.99"),
-            string(pol11,"->>>>>>>>>>>9.99"),
-            pol13,
-            string(pol14,"->>>>>>>>>>>9.99"),
-            string(pol15,"->>>>>>>>>>>9.99"),
-            string(pol16,"->>>>>>>>>>>9.99")
-            ).
-        put stream OutStr-html unformatted
-            substitute (
-            '       <th style="text-align: right;">&1</th>
-                    <th style="text-align: right;">&2</th>
-               </tr>'
-            ,
-            string(pol17,"->>>>>>>>>>>9.99"),
-            string(pol18,"->>>>>>>>>>>9.99")
-            ).
     /* печатаем подитоги по всем расходам по всем топливам */
     if can-find( first actreal-2 no-lock ) then do:
       assign pol13 = "     в том числе:".
@@ -859,9 +801,7 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th></th>
                     <th style="text-align: left;">&1</th>
-                    <th></th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -914,13 +854,11 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th></th>
                     <th style="text-align: left;">&1</th>
                     <th style="text-align: right;">&2</th>
                     <th style="text-align: right;">&3</th>
                     <th style="text-align: right;">&4</th>
                     <th style="text-align: right;"></th>
-                    <th></th>
                </tr>'
             ,
             pol13,
@@ -957,12 +895,10 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th></th>
                     <th style="text-align: left;">&1</th>
                     <th style="text-align: right;">&2</th>
                     <th style="text-align: right;">&3</th>
                     <th style="text-align: right;">&4</th>
-                    <th></th>
                     <th></th>
                </tr>'
             ,
