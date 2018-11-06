@@ -54,6 +54,10 @@ class ibs.th.str.InfoSectionsTotal:
   define property InfoSectionProp as class InfoSection no-undo
     get.
     set.
+
+  define property InfoSectionCurr as class InfoSection no-undo
+    get.
+    set.
    
   define property TankWeightTotal as decimal no-undo
     get.
@@ -292,7 +296,8 @@ class ibs.th.str.InfoSectionsTotal:
     define variable objInfoSec as class InfoSection.
     
     for first ttObjInfoSecProp where ttObjInfoSecProp.iSecNum = inSecNum:
-      objInfoSec = cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ). 
+      objInfoSec = cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ).
+      InfoSectionCurr = objInfoSec.  
       return objInfoSec.
     end.
 
