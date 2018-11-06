@@ -45,7 +45,6 @@ define variable vss-description as character no-undo init "Синхронизация новосте
 { gbl/clntattr.i }
 { bge/esysattr.i }
 { gbl/waitfram.i }
-{ gbl/cur-time.i }
 
 define variable p-news as logical no-undo.
 define variable v-real-last-sent-pck as integer no-undo .
@@ -231,21 +230,17 @@ DO:
   end.
   run waitfram-hide in this-procedure .
   
-  run cur-time in this-procedure(output v-corr-date, output v-corr-time).
-  create buf_c-user-log.
-  assign
-      buf_c-user-log.corr-user-db-num = g#db-num
-      buf_c-user-log.cusr-id          = next-value( s-user-history )
-      buf_c-user-log.chip-num         = 0
-      buf_c-user-log.corr-date        = v-corr-date
-      buf_c-user-log.corr-time        = v-corr-time
-      buf_c-user-log.corr-user-name   = g#auto-user-id
-      buf_c-user-log.des              = ("Синхронизация новостей с УБД " + string(p-dbnum) + substitute("; old-last-rcv-pack: &1; new-last-rcv-pack: &2; old-last-sent-pack: &3; new-last-sent-pack: 4", v-real-last-sent-pck, v-last-rcv-pack, v-real-last-rcv-pck, v-last-sent-pack) )
-      buf_c-user-log.have-screen      = yes
-      buf_c-user-log.head-table-key   = 'sync:':U + {&delim-key} + "nws/sync.w" 
-      buf_c-user-log.head-table       = 'sync':U
-      buf_c-user-log.uniq-key-rec     = 'sync:':U + {&delim-key} + "nws/sync.w"
-  no-error.
+  run trg/userlog.p (
+        input 'utl'
+        , input ( ("Синхронизация новостей с УБД " + 
+                string(p-dbnum) + 
+                substitute("; получ_до: &1; получ_после: &2; отпр_до: &3; отпр_после: 4", v-real-last-sent-pck, v-last-rcv-pack, v-real-last-rcv-pck, v-last-sent-pack) ) +
+                {&delim-key} + 
+                "nws/sync.w")
+        , input ?
+        , input ?
+        , input ""
+        ) no-error.
   if error-status :error
   then do:
       message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".

@@ -196,7 +196,7 @@ DEFINE BROWSE br-head
     QUERY br-head NO-LOCK DISPLAY
     buf_head_c-user-log.corr-date FORMAT "99.99.9999":U
     string( buf_head_c-user-log.corr-time, "hh:mm:ss" ) FORMAT "X(9)":U column-label "Время"
-    buf_head_c-user-log.des FORMAT "x(40)":U
+    buf_head_c-user-log.des FORMAT "x(256)":U width 40
     buf_head_c-user-log.head-table FORMAT "x(15)":U      
     get-unique-key( buf_head_c-user-log.uniq-key-rec ) FORMAT "x(40)":U
 /* _UIB-CODE-BLOCK-END */

@@ -12146,12 +12146,18 @@ procedure tblnmusr :
           p-user-name = "Отчеты"
           .
       end.
-      when "sync"
+      when "utl"
       THEN do:
           assign
-          p-user-name = "Синхронизация новостей"
+          p-user-name = "Утилиты"
           .
       end.    
+      when "printdoc"
+      THEN do:
+          assign
+          p-user-name = "Печать"
+          .
+      end.
       otherwise do:
         assign
           p-user-name = p-table-name
