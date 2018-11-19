@@ -709,6 +709,102 @@ Action-role-item
       END.
       thbjattr_set-section ({&shop}, v-obj-code, {&attr-autosale}, input table thbjattr_thbj-attr) .
 
+      /* Опции передачи данных на кассу:
+         - 06/XI-2018 установить флаг "Передача налогов на кассу"
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p (
+              input "init":U
+            , input {&shop}
+            , input v-obj-code
+            , input {&attr-cd-inf-send}
+            , input "":U
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек передачи налогов на кассу в контексте объекта [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      FOR EACH thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code :
+          when {&attr-cd-inf-send_tax-cass} then // Передача налогов на кассу
+            thbjattr_thbj-attr.property-value-logical = true .
+        end case .
+      END .
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-cd-inf-send}, input table thbjattr_thbj-attr) .
+      
+      /* Общие опции коммуникации с кассами:
+         - 08/XI-2018 "Тип касс, используемых на объекте по умолчанию" установить в IBM-XML
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p (
+              input "init":U
+            , input {&shop}
+            , input v-obj-code
+            , input {&attr-cd-sending}
+            , input "":U
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек опций коммуникации с кассами в контексте объекта [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      FOR EACH thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code :
+          when {&attr-cd-sending_dflt-cd} then // Тип касс, используемых на объекте ПО УМОЛЧАНИЮ
+            thbjattr_thbj-attr.property-value-character = {&cd-type-IBM-XML} .
+        end case .
+      END .
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-cd-sending}, input table thbjattr_thbj-attr) .
+      
+      /* Опции работы со справочниками в контексте объекта:
+         - Установить запрет на ввод доп. баркодов
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p (
+              input "init":U
+            , input {&shop}
+            , input v-obj-code
+            , input {&attr-gds-ref_obj}
+            , input "":U
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек работы со справочниками товаров в контексте объекта [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      FOR EACH thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code :
+          when {&attr-gds-ref_obj_chg-bcod} then // Запрещена работа с Доп-БК
+            thbjattr_thbj-attr.property-value-logical = true .
+        end case .
+      END .
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-gds-ref_obj}, input table thbjattr_thbj-attr) .
+      
       /* Опции работы с топливными товарами:
          - алгоритм расчета плотности avrg-chk,
          - ввод в ПН литров и кг;
@@ -743,38 +839,6 @@ Action-role-item
         end case .
       end .
       thbjattr_set-section ({&shop}, v-obj-code, {&attr-petrol}, input table thbjattr_thbj-attr) .
-      
-      /* Опции работы со справочниками в контексте объекта:
-         - Установить запрет на ввод доп. баркодов
-      */
-      empty temp-table thbjattr_thbj-attr .
-      run adm/shattri.p (
-              input "init":U
-            , input {&shop}
-            , input v-obj-code
-            , input {&attr-gds-ref_obj}
-            , input "":U
-            , output v-value-character
-            , output v-value-date
-            , output v-value-decimal
-            , output v-value-integer
-            , output v-value-logical
-            , output v-param-type
-            , INPUT-OUTPUT table-handle v-tth
-            ) no-error .
-      if error-status:error then do:
-        undo, throw new Progress.Lang.AppError(
-          substitute(  "Ошибка чтения начальных значений настроек работы со справочниками товаров в контексте объекта [&1 &2]",
-                       error-status:get-message(1), return-value  )
-        ) .
-      end .
-      FOR EACH thbjattr_thbj-attr:
-        case thbjattr_thbj-attr.prop-code :
-          when {&attr-gds-ref_obj_chg-bcod} then // Запрещена работа с Доп-БК
-            thbjattr_thbj-attr.property-value-logical = true .
-        end case .
-      END .
-      thbjattr_set-section ({&shop}, v-obj-code, {&attr-gds-ref_obj}, input table thbjattr_thbj-attr) .
       
       empty temp-table thbjattr_thbj-attr .
     end . // end_of опции при создании объекта
@@ -940,6 +1004,13 @@ sys-time-chr;character;X(20);Физическое время последнего изменения(строка);;;Физ
     .
   end method .
 
+  method private void thbjattr_get-section (input p-obj-type   as character,
+                                            input p-obj-code   as integer,
+                                            input p-upper-code as character,
+                                            output table-handle p-tth) :
+    /* @FUTU перенести сюда вызов adm/shattri.p */                                          
+  end method .
+  
   method private void thbjattr_set-section (input p-obj-type   as character,
                                             input p-obj-code   as integer,
                                             input p-upper-code as character,
