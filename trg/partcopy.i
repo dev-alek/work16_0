@@ -234,9 +234,10 @@ procedure partcopy-update-parts :
           ) no-error .
           delete object v-tth no-error.      
         if error-status:error then do:
-          message "Ошибка при получение параметра izlcstpr"
-          view-as alert-box.
-          return error.
+          v-izlcstpr = false .
+/*          message "Ошибка при получение параметра izlcstpr"*/
+/*          view-as alert-box.                               */
+/*          return error.                                    */
         end. 
     end.
     else do :
@@ -1042,9 +1043,10 @@ procedure partcopy-update-parts-delete :
           ) no-error .
           delete object v-tth no-error.      
         if error-status:error then do:
-          message "Ошибка при получение параметра izlcstpr"
-          view-as alert-box.
-          return error.
+          v-izlcstpr = false .
+/*          message "Ошибка при получение параметра izlcstpr"*/
+/*          view-as alert-box.                               */
+/*          return error.                                    */
         end. 
     end.
     else do :
