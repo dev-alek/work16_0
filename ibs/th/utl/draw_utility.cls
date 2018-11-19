@@ -264,8 +264,11 @@ class ibs.th.utl.draw_utility inherits Form:
     if not checkBox21:checked
     then
        checkBox21:checked = mutil:load_rvs(textbox2:text).
-    checkBox22:checked =  mutil:chek_rvs-close().
-    if not checkBox22:checked
+    if    checkBox21:checked
+    then
+       checkBox22:checked =  mutil:chek_rvs-close().
+    if        checkBox21:checked 
+      and not checkBox22:checked
     then
         checkBox22:checked = mutil:close-rvs-all ().
     return.

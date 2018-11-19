@@ -1513,8 +1513,17 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
           find first tt-gds-mapping where tt-gds-mapping.gds-code15 eq tt-rvs-line.gds-code
           no-lock no-error.
           if available tt-gds-mapping
-          then
-             tt-rvs-line.gds-code = tt-gds-mapping.gds-code16.
+          then do:
+               find first goods where goods.gds-code eq tt-gds-mapping.gds-code16 no-lock no-error.
+               if not available goods
+               then 
+               do:
+                  put-log(substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16)).
+                  return error substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16). 
+               end.
+               else
+                  tt-rvs-line.gds-code = tt-gds-mapping.gds-code16.
+          end.        
           else 
           do:
              put-log(substitute ("В файле соответствия отсутствует товар с кодом &1",tt-rvs-line.gds-code)).
@@ -1536,8 +1545,17 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
           find first tt-gds-mapping where tt-gds-mapping.gds-code15 eq tt-rvs-line-attr.gds-code
           no-lock no-error.
           if available tt-gds-mapping
-              then
-              tt-rvs-line-attr.gds-code = tt-gds-mapping.gds-code16.
+          then do:
+              find first goods where goods.gds-code eq tt-gds-mapping.gds-code16 no-lock no-error.
+              if not available goods
+              then do:
+                  put-log(substitute ("Отсутствует товар с кодом  &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16)).
+                  return error substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16). 
+              end.
+              else
+                 tt-rvs-line-attr.gds-code = tt-gds-mapping.gds-code16.
+                 
+          end.
           else 
           do:
               put-log(substitute ("В файле соответствия отсутствует товар с кодом &1",tt-rvs-line-attr.gds-code)).
@@ -1559,8 +1577,18 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
           find first tt-gds-mapping where tt-gds-mapping.gds-code15 eq tt-rvs-pump.gds-code
           no-lock no-error.
           if available tt-gds-mapping
-          then
+          then  
+          do:
+              find first goods where goods.gds-code eq tt-gds-mapping.gds-code16 no-lock no-error.
+              if not available goods
+                  then 
+              do:
+                  put-log(substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16)).
+                  return error substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16). 
+              end.
+              else
              tt-rvs-pump.gds-code = tt-gds-mapping.gds-code16.
+           end.  
           else 
           do:
               put-log(substitute ("В файле соответствия отсутствует товар с кодом &1",tt-rvs-pump.gds-code)).
@@ -1587,8 +1615,18 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
           find first tt-gds-mapping where tt-gds-mapping.gds-code15 eq tt-rvs-line-pump.gds-code
           no-lock no-error.
           if available tt-gds-mapping
-          then
+          then 
+          do:
+              find first goods where goods.gds-code eq tt-gds-mapping.gds-code16 no-lock no-error.
+              if not available goods
+                  then 
+              do:
+                  put-log(substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16)).
+                  return error substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16). 
+              end.
+              else
              tt-rvs-line-pump.gds-code = tt-gds-mapping.gds-code16.
+          end.   
           else 
           do:
               put-log(substitute ("В файле соответствия отсутствует товар с кодом &1",tt-rvs-line-pump.gds-code)).
@@ -1611,8 +1649,18 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
           find first tt-gds-mapping where tt-gds-mapping.gds-code15 eq tt-rvs-line-pump-attr.gds-code
           no-lock no-error.
           if available tt-gds-mapping
-          then
+          then  
+          do:
+              find first goods where goods.gds-code eq tt-gds-mapping.gds-code16 no-lock no-error.
+              if not available goods
+                  then 
+              do:
+                  put-log(substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16)).
+                  return error substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16",tt-gds-mapping.gds-code16). 
+              end.
+              else
              tt-rvs-line-pump-attr.gds-code = tt-gds-mapping.gds-code16.
+          end.   
           else 
           do:
               put-log(substitute ("В файле соответствия отсутствует товар с кодом &1",tt-rvs-line-pump-attr.gds-code)).
