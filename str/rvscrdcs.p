@@ -1097,8 +1097,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               
             end.
 
-            
-
             if v-rsrv-qnty >= 0 /*не баланс всегда отрицательное число, но для удобства сделаем ему знак плюч если излишки*/ 
             then do: 
                rvsinvsubObj:Diff = absolute (rvsinvsubObj:Diff).
@@ -1162,39 +1160,48 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 ).
           end.
           
-          if ptrlprop-expptrl = {&calc-petrol-weight} then do:
-            /* работаем относительно килограммов */
-            assign
-              v-reserv-qnty-cli = v-rsrv-qnty
-            .
-            if varinv-set = true then do: /* установлен параметр, выставляем кол-ва по плотности */
+          if not ptrlprop-algrvspt = 2
+            then
+            
+            if ptrlprop-expptrl = {&calc-petrol-weight} then do:
+              /* работаем относительно килограммов */
               assign
-                v-reserv-qnty-base = ( v-fact-cli-qnty + v-reserv-qnty-cli - (if v-cre-add-docs = true then v-normal-wastage-cli else 0.0)
-                                      ) / buf_rvs-line.state-density - ( v-fact-qnty - (if v-cre-add-docs = true then v-normal-wastage-base else 0.0) )
+                v-reserv-qnty-cli = v-rsrv-qnty
               .
+              if varinv-set = true then do: /* установлен параметр, выставляем кол-ва по плотности */
+                assign
+                  v-reserv-qnty-base = ( v-fact-cli-qnty + v-reserv-qnty-cli - (if v-cre-add-docs = true then v-normal-wastage-cli else 0.0)
+                                        ) / buf_rvs-line.state-density - ( v-fact-qnty - (if v-cre-add-docs = true then v-normal-wastage-base else 0.0) )
+                .
+              end.
+              else do:
+                assign
+                  v-reserv-qnty-base = v-reserv-qnty-cli / buf_rvs-line.state-density
+                .
+              end.
             end.
             else do:
               assign
-                v-reserv-qnty-base = v-reserv-qnty-cli / buf_rvs-line.state-density
+                v-reserv-qnty-base = v-rsrv-qnty
               .
-            end.
-          end.
-          else do:
-            assign
-              v-reserv-qnty-base = v-rsrv-qnty
-            .
-            if varinv-set = true then do: /* установлен параметр, выставляем кол-ва по плотности */
-              assign
-                v-reserv-qnty-cli = ( v-fact-qnty + v-reserv-qnty-base - (if v-cre-add-docs = true then v-normal-wastage-base else 0.0)
-                                    ) * buf_rvs-line.state-density - ( v-fact-cli-qnty - (if v-cre-add-docs = true then v-normal-wastage-cli else 0.0) )
-              .
+              if varinv-set = true then do: /* установлен параметр, выставляем кол-ва по плотности */
+                assign
+                  v-reserv-qnty-cli = ( v-fact-qnty + v-reserv-qnty-base - (if v-cre-add-docs = true then v-normal-wastage-base else 0.0)
+                                      ) * buf_rvs-line.state-density - ( v-fact-cli-qnty - (if v-cre-add-docs = true then v-normal-wastage-cli else 0.0) )
+                .
+              end.
+              else do:
+                assign
+                  v-reserv-qnty-cli = v-reserv-qnty-base * buf_rvs-line.state-density
+                .
+              end.
             end.
             else do:
+              v-reserv-qnty-base = v-rsrv-qnty.
               assign
                 v-reserv-qnty-cli = v-reserv-qnty-base * buf_rvs-line.state-density
               .
             end.
-          end.
 
           if v-reserv-qnty-base <> 0 then do:
             assign

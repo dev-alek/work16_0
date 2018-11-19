@@ -245,12 +245,16 @@ class ibs.th.gbl.storage.rvsinvstr:
           end.
         end case.
         
-       
+
       end.
+      v-tp-norm = round (v-tp-norm, 0).
+       
       SetWast(decimal (bf_rvs-l-attr.attr-value), v-metererrnorm, v-natur-norm, v-tp-norm ).
       rvsinvsubsObj:NaturWastageSum = rvsinvsubsObj:NaturWastageSum + v-natur-wast.
       rvsinvsubsObj:MeteringErrWastSum = rvsinvsubsObj:MeteringErrWastSum + v-metererrwast.
       rvsinvsubsObj:TPWastSum = rvsinvsubsObj:TPWastSum  + v-tp-wast.
+      
+      v-tp-norm = 0.
       
     end.
     
@@ -262,7 +266,7 @@ class ibs.th.gbl.storage.rvsinvstr:
     assign
       rvsinvObj:MeterErrWast = v-metererrwast
       rvsinvObj:NaturWast = v-natur-wast
-      rvsinvObj:TPWast = v-tp-wast
+      rvsinvObj:TPWast = round (v-tp-wast, 0).
     .
   end.
   
