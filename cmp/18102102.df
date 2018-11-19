@@ -28,7 +28,6 @@ ADD INDEX "auto_corr-user-db" ON "c-norm-loss"
 ADD INDEX "pi" ON "c-norm-loss"
   AREA "History_Index"
   UNIQUE
-  INACTIVE
   INDEX-FIELD "id" ASCENDING
   INDEX-FIELD "corr-user-db-num" ASCENDING
   INDEX-FIELD "chip-num" ASCENDING
