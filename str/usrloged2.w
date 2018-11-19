@@ -555,7 +555,7 @@ PROCEDURE init-fields :
     on error undo, return error
     :
       v-db-list = "бяе" .
-      For each buf_db no-LOCK:
+      For each buf_db where buf_db.db-num <> 0 no-LOCK:
         assign
           v-db-list = substitute( "&1&2&3", v-db-list, {&comma-char}, buf_db.db-num )
           .

@@ -91,13 +91,14 @@ do
   do:
     p-db-list = "" .
     For each buf_db no-LOCK:
-      if buf_db.db-num <> 0 then 
+      if buf_db.db-num <> 0 and buf_db.db-num <> p-db-num then 
       do:
         assign
           p-db-list = substitute( "&1&2&3", p-db-list, {&comma-char}, buf_db.db-num )
           .
       end.  
     end.
+    p-db-list = trim (p-db-list,{&comma-char}) .
   end.          
   _next :
   do ii = 1 to num-entries (p-db-list, {&comma-char}):
