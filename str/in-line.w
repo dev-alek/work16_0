@@ -3370,6 +3370,7 @@ if is-petrolium = yes and is-pieces = no then do:
     tt-fr-doc-line.cli-qnty
     tt-fr-doc-line.temperature
     tt-fr-doc-line.doc-density with frame {&frame-name}.
+  hide tt-fr-doc-line.temperature tt-fr-doc-line.doc-density in frame {&frame-name}.
 end.
 end procedure. /* ui-on */
 
