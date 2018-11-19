@@ -489,9 +489,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
             write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
             /*время отбора пробы часы/минут HourProb MinProb*/
             write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
-            write-data-element ("acc-ship", string (infoSecObj:AccShip)).
+            write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
             write-data-element ("tp-norm", string (infoSecObj:TPNorm)).
-            
+            write-data-element ("tp-tank-norm", string-mth (infoSecObj:TPNormPL)).
+            write-data-element ("tp-nsn-norm", string-mth (infoSecObj:TPNormAuto)).
           sw:end-element ("sc").
         end.
       end.

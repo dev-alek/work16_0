@@ -423,24 +423,21 @@ class ibs.th.str.InfoSectionsTotal:
 
   end method.
   
-  method public class InfoSection GetInfoSectionProp (inTankCord1 as char):
-    
-    define variable objInfoSec as class InfoSection.
-    
-    for first ttObjInfoSecProp :
+  method public character GetInfoSectionProp (inTankCord1 as char):
+    define variable objInfoSec as class InfoSection no-undo.
+    define variable listIdSec as character no-undo.
+    listIdSec = "".
+    for each ttObjInfoSecProp :
       objInfoSec = cast ( ttObjInfoSecProp.objInfoSecProp, InfoSection ).
       InfoSectionCurr = objInfoSec.
       if InfoSectionCurr:ListTank = inTankCord1
       then do:
-        idSecCurr = ttObjInfoSecProp.iSecNum.
-        return objInfoSec.        
+        listIdSec = listIdSec + {&delim-par} + string (ttObjInfoSecProp.iSecNum).
+/*        idSecCurr = ttObjInfoSecProp.iSecNum.*/
       end.  
-      else do:
-        InfoSectionCurr = ?.
-        return ?.
-      end.
     end.
-
+    listIdSec = trim (listIdSec, {&delim-par}).
+    return listIdSec.
   end method.  
   
   

@@ -44,7 +44,7 @@ define variable vss-description as character no-undo initial "Редактирование стр
 define buffer t-doc     for ub.trn-doc.
 define buffer buf_goods for ub.goods .
 define buffer buf_contract-specif for ub.contract-specif .
-
+  
 /* Временная таблица для организации интерфейса */
 define temp-table tt-fr-doc-line no-undo like ub.doc-line
   field price-prod              like ub.doc-line.price-cli
@@ -3371,7 +3371,7 @@ if is-petrolium = yes and is-pieces = no then do:
     tt-fr-doc-line.cli-qnty
     tt-fr-doc-line.temperature
     tt-fr-doc-line.doc-density with frame {&frame-name}.
-  hide tt-fr-doc-line.temperature tt-fr-doc-line.doc-density in frame {&frame-name}.
+  hide tt-fr-doc-line.cli-base-rate tt-fr-doc-line.temperature tt-fr-doc-line.doc-density in frame {&frame-name}.
 end.
 end procedure. /* ui-on */
 

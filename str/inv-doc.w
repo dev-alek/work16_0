@@ -173,7 +173,6 @@ first ub.goods no-lock where ~
  {&clmn_2-br-list}   @ prt-mark              column-label {&label-clmn_2-br-list} format "x(1)":U ~
  {&clmn_3-br-list}                           column-label {&label-clmn_3-br-list} ~
  {&clmn_4-br-list}                           column-label {&label-clmn_4-br-list} format "x(37)":U ~
- {&clmn_5-br-list}   @ scl-name              column-label {&label-clmn_5-br-list} format "x(10)":U ~
  {&clmn_29-br-list}  @ varwas-qnty-kg        column-label {&label-clmn_29-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_30-br-list}  @ varare-qnty-kg        column-label {&label-clmn_30-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
@@ -200,7 +199,8 @@ first ub.goods no-lock where ~
  {&clmn_26-br-list}  @ varwast-rb            column-label {&label-clmn_26-br-list} ~
  {&clmn_27-br-list}  @ varunus-wast-rb       column-label {&label-clmn_27-br-list} ~
  {&clmn_28-br-list}                          column-label {&label-clmn_28-br-list} ~
- {&clmn_32-br-list}                          column-label {&label-clmn_32-br-list} format "->>>,>>>,>>9.999":U
+ {&clmn_32-br-list}                          column-label {&label-clmn_32-br-list} format "->>>,>>>,>>9.999":U ~
+ {&clmn_5-br-list}   @ scl-name              column-label {&label-clmn_5-br-list} format "x(10)":U
 
 /* ***************************  Definitions  ************************** */
 define buffer t-doc      for ub.trn-doc.

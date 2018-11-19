@@ -713,11 +713,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
           end.
        end case.
+         
+        def var ii as int no-undo. 
           
-          if infoSectionsTotal:GetInfoSectionProp(1):DateStart = ? then infoSectionsTotal:GetInfoSectionProp(1):DateStart = v-prt-start-real-date . 
-          if infoSectionsTotal:GetInfoSectionProp(1):DateEnd = ? then infoSectionsTotal:GetInfoSectionProp(1):DateEnd   = v-prt-end-real-date . 
-          if infoSectionsTotal:GetInfoSectionProp(1):TimeStart = ? or infoSectionsTotal:GetInfoSectionProp(1):TimeStart = 0 then infoSectionsTotal:GetInfoSectionProp(1):TimeStart = v-prt-start-real-time . 
-          if infoSectionsTotal:GetInfoSectionProp(1):TimeEnd = ? or infoSectionsTotal:GetInfoSectionProp(1):TimeEnd = 0 then infoSectionsTotal:GetInfoSectionProp(1):TimeEnd   = v-prt-end-real-time .
+        do ii = 1 to infoSectionsTotal:SectionNum :
+          infoSectionsTotal:GetInfoSectionProp(ii).
+          if infoSectionsTotal:InfoSectionCurr:DateStart = ? then infoSectionsTotal:InfoSectionCurr:DateStart = v-prt-start-real-date . 
+          if infoSectionsTotal:InfoSectionCurr:DateEnd = ? then infoSectionsTotal:InfoSectionCurr:DateEnd   = v-prt-end-real-date . 
+          if infoSectionsTotal:InfoSectionCurr:TimeStart = ? or infoSectionsTotal:InfoSectionCurr:TimeStart = 0 then infoSectionsTotal:InfoSectionCurr:TimeStart = v-prt-start-real-time . 
+          if infoSectionsTotal:InfoSectionCurr:TimeEnd = ? or infoSectionsTotal:InfoSectionCurr:TimeEnd = 0 then infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
+        end.
         
         run placelib_get-attr(input {&place-virtual}
                                  ,input buf_rvs-line.obj-code
@@ -1099,13 +1104,13 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   message
                     substitute( "По результатам измерения автоцистерны фактическое кол-во необходимо изменить." ) skip
                     substitute( "Будем менять фактические" ) skip
-                    substitute( "количество на &1 (&2),", v-new-fact-qnty, buf_goods.unit-base ) skip
+                    substitute( "количество на &1 (&2),", infoSectionsTotal:FactKgQntyTotal, buf_goods.unit-cli ) skip
                     substitute( "плотность на &1 ?", v-new-density ) skip
                     view-as alert-box question buttons yes-no update v-log .
                 end.
                 else do:
                   message
-                    substitute( "По результатам измерения фактическое кол-во товара изменяется на &1 (&2),", v-new-fact-qnty, buf_goods.unit-base ) skip
+                    substitute( "По результатам измерения фактическое кол-во товара изменяется на &1 (&2),", infoSectionsTotal:FactKgQntyTotal, buf_goods.unit-cli ) skip
                     substitute( "фактическая плотность на &1.", v-new-density ) skip
                     view-as alert-box information .
                 end.

@@ -670,7 +670,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               case ptrlprop-algrvspt :
                 when 1 then do:
                 end.
-                when 3 then do:
+                when 2 then do:
                   if v-metering-error > (O_FACT - O_PKH) then do:
                     /* уменьшим погрешность измерения, чтобы она была не больше дельты РКН и ФАКТ */
                     if ptrlprop-expptrl = {&calc-petrol-weight} then do:
@@ -815,28 +815,33 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   
                   InfoSecsObj = new InfoSectionsTotal ().
                   
-                  find first ub.place where ub.place.pl-code = buf_rvs-line.pl-code 
+                  find first ub.place no-lock where ub.place.pl-code = buf_rvs-line.pl-code 
                     and ub.place.obj-code = buf_rvs-line.obj-code and ub.place.obj-type = buf_rvs-line.obj-type no-error.
                   
+                  def var listSecLoc as char no-undo.
+                   
                   if available (ub.place)
                   then do:
                     
                     InfoSecsObj:Initialization(bf-wst_doc-line.doc-code, buf_goods.gds-code).
                     InfoSecsObj:GetDBAllAttr().
                     InfoSecsObj:CalculateTotal().
-                    InfoSecsObj:GetInfoSectionProp(ub.place.loc1).
-                    if valid-object (InfoSecsObj:InfoSectionCurr)
+                    listSecLoc = InfoSecsObj:GetInfoSectionProp(ub.place.loc1).
+                    if listSecLoc <> ""
                     then do:
-                      v-normal-tp = v-normal-tp + InfoSecsObj:InfoSectionCurr:TPNorm.
-                      v-normal-tp-auto = v-normal-tp-auto + InfoSecsObj:InfoSectionCurr:TPNormAuto.
-                      v-normal-tp-pl = v-normal-tp-pl + InfoSecsObj:InfoSectionCurr:TPNormPL.
-                      logger:StrLogPut =
-                            "Номер ПН: " + bf-wst_doc-line.doc-code + {&new-line} +
-                            "Место хранения:" + string (ub.place.pl-code) + " - " + ub.place.pl-name + {&new-line} +
-                            "Потери при сливе в резервуар: " + string (InfoSecsObj:InfoSectionCurr:TPNormPL) + {&new-line} +
-                            "Потери при сливе из АЦ: " + string (InfoSecsObj:InfoSectionCurr:TPNormAuto) + {&new-line} +
-                            "Сумма технолог. потерь: " + string (InfoSecsObj:InfoSectionCurr:TPNorm) + {&new-line}
-                            .
+                      do ii = 1 to num-entries (listSecLoc, {&delim-par}):
+                        InfoSecsObj:GetInfoSectionProp(integer (entry (ii, listSecLoc, {&delim-par} ))).
+                        logger:StrLogPut =
+                              "Номер ПН: " + bf-wst_doc-line.doc-code + {&new-line} +
+                              "Место хранения:" + string (ub.place.pl-code) + " - " + ub.place.pl-name + {&new-line} +
+                              "Потери при сливе в резервуар: " + string (InfoSecsObj:InfoSectionCurr:TPNormPL) + {&new-line} +
+                              "Потери при сливе из АЦ: " + string (InfoSecsObj:InfoSectionCurr:TPNormAuto) + {&new-line} +
+                              "Сумма технолог. потерь: " + string (InfoSecsObj:InfoSectionCurr:TPNorm) + {&new-line}
+                              .
+                        v-normal-tp = v-normal-tp + InfoSecsObj:InfoSectionCurr:TPNorm.
+                        v-normal-tp-auto = v-normal-tp-auto + round (InfoSecsObj:InfoSectionCurr:TPNormAuto, 0).
+                        v-normal-tp-pl = v-normal-tp-pl + round (InfoSecsObj:InfoSectionCurr:TPNormPL, 0).
+                      end.
                     end.
                     
                   end.
@@ -975,7 +980,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   .
                 end.
               end.
-              when 3 then do:
+              when 2 then do:
                 if v-normal-wastage = (O_PKH - O_FACT) then do:
                   /* естественная убыль покрыла разницу */
                   assign
@@ -1047,7 +1052,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               .
             end.
           end. /* недостача */
-          if ptrlprop-algrvspt = 2
+          if ptrlprop-algrvspt = 3
           then do:
           
             rvsinvsubObj = new rvsinvsub ().
@@ -1144,23 +1149,25 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   .
             
             
+          
+          
+            def var v-infom-mess as char no-undo. 
+            if absolute (rvsinvsubObj:Diff) > rvsinvsubObj:MeterErrWast
+            then do:
+              v-infom-mess = v-infom-mess + substitute ("Назв. товара - &2&1Скл.место - &3, РКО,кг - &4, Факт., кг - &5&1&6, кг - &7&1"
+                  , {&new-line}
+                  ,buf_goods.gds-name
+                  ,string(rvsinvsubObj:PlCode)
+                  ,string(round (MKN, 3))
+                  ,string(round (MFO, 3))
+                  ,(if rvsinvsubObj:Diff < 0 then "Недостача" else "Излишки")
+                  ,string (round (rvsinvsubObj:DeficitOver, 3))
+                  ).
+            end.
+          
           end.
           
-          def var v-infom-mess as char no-undo. 
-          if absolute (rvsinvsubObj:Diff) > rvsinvsubObj:MeterErrWast
-          then do:
-            v-infom-mess = v-infom-mess + substitute ("Назв. товара - &2&1Скл.место - &3, РКО,кг - &4, Факт., кг - &5&1&6, кг - &7&1"
-                , {&new-line}
-                ,buf_goods.gds-name
-                ,string(rvsinvsubObj:PlCode)
-                ,string(round (MKN, 3))
-                ,string(round (MFO, 3))
-                ,(if rvsinvsubObj:Diff < 0 then "Недостача" else "Излишки")
-                ,string (round (rvsinvsubObj:DeficitOver, 3))
-                ).
-          end.
-          
-          if not ptrlprop-algrvspt = 2
+          if not ptrlprop-algrvspt = 3
             then
             
             if ptrlprop-expptrl = {&calc-petrol-weight} then do:

@@ -1448,7 +1448,7 @@ define variable v-ischg-ext-type as logical no-undo .
         else do :
             message "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
                     "Вы уверены ?"
-                    view-as alert-box question buttons OK-Cancel update varlog.
+                    view-as alert-box question buttons OK-Cancel title "Вопрос" update varlog.
         end.
         if not varlog then  return error.
         case buf_trn-doc.doc-type
@@ -2044,7 +2044,7 @@ define variable v-ischg-ext-type as logical no-undo .
               if v-is-petrl = true
                 and v-is-pieces = false 
               then do:
-                run gbl/d-askw.w(
+                /*run gbl/d-askw.w(
                     input "Накладная"
                     ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
                                   "Количество по строке накладной: " + string(buf_doc-line.cli-qnty) + " " + string(buf_goods.unit-cli) + {&new-line} +
@@ -2056,7 +2056,8 @@ define variable v-ischg-ext-type as logical no-undo .
                   ,input 1
                   ,input 3
                   ,output v-not-eq-count
-                  ).
+                  ).*/
+                  v-not-eq-count = 2.
                 end.
                 else do:
                   run gbl/d-askw.w(

@@ -207,7 +207,8 @@ DEFINE VARIABLE r-algrvspt AS INTEGER
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS 
           "Алгоритм N1", 1,
-"Алгоритм N2", 2
+          "Алгоритм N2", 2,
+          "Алгоритм N3", 3
      SIZE 16 BY 1.75 NO-UNDO.
 
 DEFINE VARIABLE r-denstclc AS CHARACTER 
