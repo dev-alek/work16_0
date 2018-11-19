@@ -603,6 +603,7 @@ action-post~
 ,c-cash-desk-attr~
 ,cd-event-log~
 ,cd-event-log-attr~
+,config~
 ,fbr-prn~
 ,c-fbr-prn~
 ,fbr-prn-gds~
