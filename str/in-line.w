@@ -2808,6 +2808,7 @@ if varrvs-place = yes then do:
       infoSectionsTotal:AccShip = varrn-acc-ship
       infoSectionsTotal:CarNum = varcar-num
       infoSectionsTotal:FlagTrn = t-doc.flag_
+      infoSectionsTotal:Sts = t-doc.status_
       infoSectionsTotal:Parentproc = parparentproc
     .
 

@@ -171,7 +171,8 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabControl:SelectedIndex = 0.
     this-object:tabControl:Size = new System.Drawing.Size(710, 745).
 /*    this-object:tabControl:TabIndex = 0.*/
-    this-object:tabControl:Click:Subscribe(this-object:tabControl_Click).
+    this-object:tabControl:Click:Subscribe(this-object:tabControl_SelIndChg).
+
     /*  */
     /* imageList */
     /*  */
@@ -364,9 +365,25 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
-  method private void tabControl_Click( input sender as System.Object, input e as System.EventArgs ):
-
+  method private void tabControl_SelIndChg( input sender as System.Object, input e as System.EventArgs ):
     def var ii as int no-undo.
+
+    def var v-idSel as int no-undo.
+    def var tabsel as TabPage no-undo.
+    
+    tabsel = tabControl:TabPages [prevTabIndex].
+
+    if infoSecsObj:Mode = "опнялнрп"
+      then return.
+    
+    int (tabsel:Name) no-error.
+        
+    if not error-status:error and not tankSectionControl[integer (tabsel:Name)]:CheckSec() 
+    then do:
+      tabControl:SelectedIndex = prevTabIndex.
+      tankSectionControl[integer (tabsel:Name)]:SetForcus ().
+      return.
+    end. 
 
     do ii = 1 to infoSecsObj:SectionNum:
       tankSectionControl[ii]:SetInfoSec().  
@@ -439,6 +456,9 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     v-idSel = integer (tabsel:Name).
     
 /*    this-object:tabControl:Controls:Remove(tabPageSum).*/
+
+/*    infoSecsObj:DeleteSection(v-idSel).*/
+
     this-object:tabControl:Controls:Remove(tabPageAdd).
     
     do ii = 1 to infoSecsObj:SectionNum:
@@ -451,7 +471,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     infoSecsObj:DeleteSection(infoSecsObj:InfoSectionCurr:idSec).
     
     SetDataControls().
-    tabControl:SelectedIndex = prevTabIndex.
+/*    tabControl:SelectedIndex = prevTabIndex.*/
     return.
     
     
@@ -463,6 +483,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     tabControl:SelectedTab:Text = arg.
     
   end. 
+
 
   /*------------------------------------------------------------------------------
    Purpose:

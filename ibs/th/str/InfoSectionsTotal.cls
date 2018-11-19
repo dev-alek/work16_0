@@ -65,6 +65,10 @@ class ibs.th.str.InfoSectionsTotal:
     get.
     set.
 
+  define property Sts as character no-undo
+    get.
+    set.
+
   define property SectionNum as integer no-undo
     get.
     private set.

@@ -2580,7 +2580,17 @@ do on error undo main-block, leave main-block :
                                                 and ub.clients-attr.attr-value = "yes")
    then do:*/
    b-in-attr-fuel:sensitive = true.
-   /*end.*/
+  /*end.*/
+   
+  if not is-fuel
+    then 
+  do:
+    if not is-fuel
+      then 
+    do:
+      hide b-in-attr-fuel in frame {&frame-name}.
+    end.
+  end.
    
    if pardoc-mode = {&update}
      then run fill-mol in this-procedure. 
