@@ -628,7 +628,28 @@ method public void load_schem (iAddt as character ):
       do:
         undo, return error return-value.
       end.
-    end.                                   
+    end.         
+    
+    find first ub.place-attr no-lock where ub.place-attr.obj-type = v-cntxt-obj-type
+                                       and ub.place-attr.obj-code = v-cntxt-obj-code
+                                       and ub.place-attr.pl-code  = ub.place.pl-code
+                                       and ub.place-attr.attr-code = "place-local"
+                                       no-error .
+    if not available ub.place-attr
+    then do :
+      mplacelib:placelib_write-attr  
+        (input "place-local"
+        ,input v-cntxt-obj-code
+        ,input v-cntxt-obj-type
+        ,input ub.place.pl-code
+        ,input string(2)
+        ,output v-ok      )
+      no-error.   
+      if error-status:error then 
+      do:
+        undo, return error return-value.
+      end.
+    end.                           
     
     for each tt-pl-level no-lock where tt-pl-level.obj-type = tt-place.obj-type
                                    and tt-pl-level.obj-code = tt-place.obj-code
