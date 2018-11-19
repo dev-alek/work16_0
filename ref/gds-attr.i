@@ -312,6 +312,35 @@ procedure gds-attr_gds-ptrl-densities :
 
 end procedure.
 
+procedure gds-attr_check-group-np :
+
+  define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .
+  define input  parameter p-code        like ub.goods-attr.attr-code  no-undo .
+  define input  parameter p-value       as character no-undo .
+  define input  parameter p-mode        as character no-undo .
+  /*может быть {&add-def} {&update} {&deletion}*/
+  define output parameter p-correct     as logical no-undo .
+  define output parameter p-error-code  as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    &scop proc-name gds-attr_check-group-np
+    {&run_proc_attr-lib}
+      (input  p-gds-code
+      ,input  p-code
+      ,input  p-value
+      ,input  p-mode
+      ,output p-correct
+      ,output p-error-code
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+end procedure.
+
 procedure gds-attr_check-office-type :
 
   define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .
@@ -326,6 +355,35 @@ procedure gds-attr_check-office-type :
   on error undo, return error return-value
   :
     &scop proc-name gds-attr_check-office-type
+    {&run_proc_attr-lib}
+      (input  p-gds-code
+      ,input  p-code
+      ,input  p-value
+      ,input  p-mode
+      ,output p-correct
+      ,output p-error-code
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+end procedure.
+
+procedure gds-attr_check-item-matter-mark :
+
+  define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .
+  define input  parameter p-code        like ub.goods-attr.attr-code  no-undo .
+  define input  parameter p-value       as character no-undo .
+  define input  parameter p-mode        as character no-undo .
+  /*может быть {&add-def} {&update} {&deletion}*/
+  define output parameter p-correct     as logical no-undo .
+  define output parameter p-error-code  as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    &scop proc-name gds-attr_check-item-matter-mark
     {&run_proc_attr-lib}
       (input  p-gds-code
       ,input  p-code

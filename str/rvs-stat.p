@@ -52,12 +52,20 @@ do transaction
     define buffer buf_doc-pl   for ub.doc-pl .
     define buffer buf_pl-gds   for ub.pl-gds .
     define buffer buf_place    for ub.place .
+    define buffer last-rvs-doc for ub.rvs-doc . 
+    define buffer last-rvs-line for ub.rvs-line .
 
     define variable v-cardif        as integer   no-undo.
     define variable v-abs-critdif   as decimal   no-undo.
     define variable v-dif-res-count as integer   no-undo.
     define variable v-dif-res       as character no-undo.
-
+    
+    define variable v-first-volue as decimal  no-undo .
+    define variable v-first-density    as decimal  no-undo .
+    define variable v-first-temp       as decimal  no-undo .
+    define variable v-first-water      as decimal  no-undo .
+    
+    
     find first buf_rvs-doc exclusive-lock
         where recid(buf_rvs-doc) = parrecid
         .
@@ -73,7 +81,7 @@ do transaction
     for each thbjattr_thbj-attr :    
         if thbjattr_thbj-attr.prop-code = {&attr-petrol_CriticalDif} then assign v-cardif = integer( thbjattr_thbj-attr.property-value-character) .
     end.
-
+                
     if buf_rvs-doc.rvs-type <> {&rvs-shift}
         and buf_rvs-doc.rvs-type <> {&rvs-control}
         and buf_rvs-doc.rvs-type <> {&rvs-before-doc}
@@ -83,6 +91,18 @@ do transaction
         undo tr, return error substitute("Смена статуса документа сверки. Неизвестный тип документа сверки &1.", buf_rvs-doc.rvs-type).
     end.
 
+
+    /*Поиск последней сменной сверки*/
+    for last last-rvs-doc no-lock
+    where last-rvs-doc.obj-type   = buf_rvs-doc.obj-type
+      and last-rvs-doc.obj-code   = buf_rvs-doc.obj-code
+      and last-rvs-doc.status_    = {&fact}
+      and last-rvs-doc.rvs-type   = {&rvs-shift},
+      each last-rvs-line  exclusive-lock where last-rvs-line.rvs-code = last-rvs-doc.rvs-code:
+      
+    
+    
+    end.  
 
     case paraction:
         when "open":U then 
@@ -217,8 +237,6 @@ do transaction
                                         end.
                                     end.
                                 end.  
-            
-            
                             end.
                             { str/rvsclchd.i
             recid(buf_rvs-doc)
@@ -304,10 +322,30 @@ do transaction
                             assign
                                 buf_rvs-doc.status_ = {&fact}
                                 .
+                                                              /*Допустимые значения*/    
+                              run rep/r-otkl-total.p ( input buf_rvs-doc.rvs-code
+                                ,input buf_rvs-doc.rvs-type
+                                ,input buf_rvs-doc.obj-code
+                                ,input buf_rvs-doc.obj-type
+                                ,input buf_rvs-doc.shift-date
+                                ,input buf_rvs-doc.shift-num
+                                
+                                ) .
+                              if error-status:error then 
+                              do:
+/*                                return error substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6"*/
+/*                                  ,vss-workfile                                                  */
+/*                                  ,vss-revision                                                  */
+/*                                  ,vss-description                                               */
+/*                                  ,{&new-line}                                                   */
+/*                                  , error-status:get-message(1)                                  */
+/*                                  , return-value ).                                              */
+                              end.
                             for each buf_rvs-line exclusive-lock
                                 where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
                                 on error undo, return error return-value
                                 :   
+
                                 if  v-cardif > 0 and abs( buf_rvs-line.system-cli-qnty  - buf_rvs-line.state-measure-cli-qnty ) > ( buf_rvs-line.state-measure-cli-qnty * v-cardif / 100 ) then 
                                 do: 
                 
@@ -340,6 +378,7 @@ do transaction
                                         end.
                                     end.
                                 end.  
+                                
                             end.
                             if buf_rvs-doc.rvs-type =  {&rvs-shift} then 
                             do: 

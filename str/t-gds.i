@@ -29,6 +29,7 @@ def var cr as integer no-undo.
 DEFINE {3} TEMP-TABLE t-gds No-UNDO
 FIELD b-code like ub.chk-gds.b-code
 FIELD gds-code like ub.goods.gds-code
+FIELD VAT-sum-rubl like ub.chk-gds.VAT-sum-rubl
 FIELD pump like ub.chk-gds.pump
 FIELD nozzle-code like ub.chk-gds.nozzle-code
 FIELD loc1 like ub.chk-gds.loc1
@@ -124,6 +125,7 @@ index ifbr b-code fbr-obj-type fbr-obj-code
 DEFINE {3} TEMP-TABLE t-gds No-UNDO
 FIELD b-code like ub.chk-gds.b-code
 FIELD doc-qnty like ub.chk-gds.doc-qnty
+FIELD VAT-pc like ub.chk-gds.VAT-pc
 FIELD price-base like ub.chk-gds.price-base
 FIELD price-sum like ub.chk-gds.price-base
 FIELD discnt-sum like ub.chk-gds.discnt

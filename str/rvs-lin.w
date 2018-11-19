@@ -13,6 +13,14 @@ field meas-calc-qnty     AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
 field meas-calc-dens     AS DECIMAL FORMAT "9.9999999999":U INITIAL 0
 field meas-cli-calc-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
 field izmer-density      AS DECIMAL FORMAT "9.9999999999":U INITIAL 0
+field calc-add-mass      AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
+field calc-vol           AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
+field sum-mass           AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
+field sum-vol            AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
+field fact-calc-add-mass AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
+field fact-calc-vol      AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
+field fact-sum-mass      AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0
+field fact-sum-vol       AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
 .
 
 
@@ -77,6 +85,14 @@ define variable v-attr-type  as character no-undo.
 define variable v-gds-ptrl-densities as character no-undo.
 define variable rdc-value as character no-undo .
 define variable rdc-type  as character no-undo.
+define variable tarir-value as character no-undo .
+define variable tarir-type  as character no-undo.
+define variable pl-asi-sertif as logical no-undo .
+define variable pl-rvd-dens as logical no-undo .
+define variable pl-rvd-lvl as logical no-undo .
+define variable pl-rvd-temp as logical no-undo .
+define variable pl-error-mass as decimal no-undo .
+define variable v-hand-input as logical no-undo initial no .
 
 define variable v-value           as character no-undo.
 define variable v-ok              as logical   no-undo.
@@ -187,7 +203,8 @@ tt-rvs-line.state-cf-qnty
 &Scoped-define DISPLAYED-TABLES tt-rvs-line
 &Scoped-define FIRST-DISPLAYED-TABLE tt-rvs-line
 &Scoped-Define DISPLAYED-OBJECTS varmeasure-water-qnty varstate-water-qnty ~
-varmeasure-water-cli-qnty varstate-water-cli-qnty CriticalDif
+varmeasure-water-cli-qnty varstate-water-cli-qnty CriticalDif ~
+varstate-sum-vol varsum-vol
 /*mass-float-cov*/
 
 /* Custom List Definitions                                              */
@@ -245,7 +262,17 @@ DEFINE BUTTON b-save AUTO-GO
      BGCOLOR 8 .
 
 DEFINE VARIABLE delta-mass-qnty AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
-     LABEL "Погр. массы" 
+     LABEL "Отн. погр. изм. массы НП (ПО к МИ)" 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE abs-delta-mass-qnty AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
+     LABEL "Абс. погр. изм. массы НП (ПО к МИ)" 
+     VIEW-AS FILL-IN 
+     SIZE 10 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE abs-delta-mass-add-qnty AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
+     LABEL "Абс. погр. изм. массы в трубопр." 
      VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
 
@@ -265,7 +292,7 @@ DEFINE VARIABLE varmeasure-water-cli-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varmeasure-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Измер. вода" 
+     LABEL "Объем воды" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
@@ -273,9 +300,19 @@ DEFINE VARIABLE varstate-water-cli-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U IN
      LABEL "Факт вес воды" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
+     
+DEFINE VARIABLE varsum-vol AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
+     LABEL "Объем наполнения" 
+     VIEW-AS FILL-IN 
+     SIZE 13 BY .88 NO-UNDO.
+
+DEFINE VARIABLE varstate-sum-vol AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
+     LABEL "Объем наполнения" 
+     VIEW-AS FILL-IN 
+     SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varstate-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Факт вода" 
+     LABEL "Объем воды" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
@@ -333,25 +370,38 @@ DEFINE FRAME Dialog-Frame
      tt-rvs-line.state-measure-tc-qnty AT ROW 7.75 COL 73.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.density AT ROW 8.75 COL 28.25 COLON-ALIGNED FORMAT "9.9999999999"
+     tt-rvs-line.density AT ROW 17.75 COL 28.25 COLON-ALIGNED FORMAT "9.9999999999"
+          LABEL "Измер. Плотность НП"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-density AT ROW 8.75 COL 73.25 COLON-ALIGNED FORMAT "9.9999999999"
+     tt-rvs-line.state-density AT ROW 17.75 COL 85 COLON-ALIGNED FORMAT "9.9999999999"
+          LABEL "Плотность НП"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     b-calc AT ROW 8.75 COL 89 WIDGET-ID 6
+     b-calc AT ROW 9.75 COL 65 WIDGET-ID 6
      tt-rvs-line.meas-calc-dens AT ROW 9.75 COL 34 COLON-ALIGNED WIDGET-ID 8
           LABEL "Плотность расчит. по измер."
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.izmer-density AT ROW 9.75 COL 79 COLON-ALIGNED WIDGET-ID 4
-          LABEL "Плотность измер.для ПО МИ"
+     tt-rvs-line.izmer-density AT ROW 8.75 COL 79 COLON-ALIGNED WIDGET-ID 4
+          LABEL "Плотность измер. для ПО к МИ"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.add-qnty AT ROW 10.75 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.add-qnty AT ROW 11.75 COL 30.13 COLON-ALIGNED
+          LABEL "Объем в трубопроводе"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-add-qnty AT ROW 10.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.calc-add-mass AT ROW 12.75 COL 30.13 COLON-ALIGNED
+          LABEL "Рассч. Масса в трубопроводе"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     tt-rvs-line.fact-calc-add-mass AT ROW 12.75 COL 85 COLON-ALIGNED
+          LABEL "Рассч. Масса в трубопроводе"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     abs-delta-mass-add-qnty AT ROW 13.75 COL 85 COLON-ALIGNED
+     tt-rvs-line.state-add-qnty AT ROW 11.75 COL 85 COLON-ALIGNED
+          LABEL "Объем в трубопроводе"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.brutto-qnty AT ROW 11.75 COL 28.13 COLON-ALIGNED
@@ -366,14 +416,24 @@ DEFINE FRAME Dialog-Frame
      tt-rvs-line.state-brutto-tc-qnty AT ROW 12.75 COL 73.5 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     varmeasure-water-qnty AT ROW 13.75 COL 28.13 COLON-ALIGNED
-     varstate-water-qnty AT ROW 13.75 COL 73.5 COLON-ALIGNED
-     tt-rvs-line.measure-cli-qnty AT ROW 14.75 COL 28.13 COLON-ALIGNED
-          LABEL "Измер. вес"
+     varmeasure-water-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
+     varstate-water-qnty AT ROW 24.75 COL 85 COLON-ALIGNED
+     varsum-vol AT ROW 25.75 COL 28.13 COLON-ALIGNED
+     varstate-sum-vol AT ROW 25.75 COL 85 COLON-ALIGNED
+     tt-rvs-line.calc-vol AT ROW 15.75 COL 28.13 COLON-ALIGNED
+          LABEL "Рассч. Объем НП"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-cli-qnty AT ROW 14.75 COL 73.5 COLON-ALIGNED
-          LABEL "Факт вес"
+     tt-rvs-line.fact-calc-vol AT ROW 15.75 COL 85 COLON-ALIGNED
+          LABEL "Объем НП"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     tt-rvs-line.measure-cli-qnty AT ROW 16.75 COL 28.13 COLON-ALIGNED
+          LABEL "Измер. Масса НП"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     tt-rvs-line.state-measure-cli-qnty AT ROW 16.75 COL 85 COLON-ALIGNED
+          LABEL "Масса НП"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -394,8 +454,24 @@ DEFINE FRAME Dialog-Frame
           LABEL "Факт брутто вес"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     varmeasure-water-cli-qnty AT ROW 17.75 COL 28.13 COLON-ALIGNED
-     varstate-water-cli-qnty AT ROW 17.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.sum-vol AT ROW 21.75 COL 28.13 COLON-ALIGNED
+          LABEL "Общий Объем НП"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     tt-rvs-line.sum-mass AT ROW 22.75 COL 28.13 COLON-ALIGNED
+          LABEL "Общая Масса НП"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     tt-rvs-line.fact-sum-vol AT ROW 21.75 COL 85 COLON-ALIGNED
+          LABEL "Общий Объем НП"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     tt-rvs-line.fact-sum-mass AT ROW 22.75 COL 85 COLON-ALIGNED
+          LABEL "Общая Масса НП"
+          VIEW-AS FILL-IN 
+          SIZE 13 BY .88
+     varmeasure-water-cli-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
+     varstate-water-cli-qnty AT ROW 24.75 COL 85 COLON-ALIGNED
      tt-rvs-line.level-petrol AT ROW 18.75 COL 28.13 COLON-ALIGNED
           LABEL "Измер. уровень топлива"
           VIEW-AS FILL-IN 
@@ -404,60 +480,62 @@ DEFINE FRAME Dialog-Frame
           LABEL "Факт уровень топлива"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.level-total AT ROW 19.75 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.level-total AT ROW 5.75 COL 23.13 COLON-ALIGNED
           LABEL "Измер. общий уровень"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-total AT ROW 19.75 COL 73.5 COLON-ALIGNED format ">>,>>9.999"
+     tt-rvs-line.state-level-total AT ROW 5.75 COL 69.5 COLON-ALIGNED format ">>,>>9.999"
           LABEL "Факт общий уровень"
           VIEW-AS FILL-IN 
-          SIZE 13 BY .88
-     tt-rvs-line.level-water AT ROW 20.75 COL 28.13 COLON-ALIGNED
+          SIZE 13 BY .88 
+     tt-rvs-line.level-water AT ROW 6.75 COL 23.13 COLON-ALIGNED
           LABEL "Измер. уровень воды"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-water AT ROW 20.75 COL 73.5 COLON-ALIGNED format ">>,>>9.999"
+     tt-rvs-line.state-level-water AT ROW 6.75 COL 69.5 COLON-ALIGNED format ">>,>>9.999"
           LABEL "Факт уровень воды"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temperature AT ROW 21.75 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.temperature AT ROW 7.75 COL 23.13 COLON-ALIGNED
+          LABEL "Измер. Температура"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-temperature AT ROW 21.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-temperature AT ROW 7.75 COL 69.5 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temp-layer1 AT ROW 22.75 COL 8.5 COLON-ALIGNED
-          LABEL "ИзмT1"
+     tt-rvs-line.temp-layer1 AT ROW 5.75 COL 41 COLON-ALIGNED
+          LABEL "T1"
+          VIEW-AS FILL-IN 
+          SIZE 6 BY .88
+     tt-rvs-line.temp-layer2 AT ROW 6.75 COL 41 COLON-ALIGNED
+          LABEL "T2"
+          VIEW-AS FILL-IN 
+          SIZE 6 BY .88
+     tt-rvs-line.temp-layer3 AT ROW 7.75 COL 41 COLON-ALIGNED
+          LABEL "T3"
+          VIEW-AS FILL-IN 
+          SIZE 6 BY .88
+     tt-rvs-line.state-temp-layer1 AT ROW 5.75 COL 91 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.temp-layer2 AT ROW 22.75 COL 23.88 COLON-ALIGNED
-          LABEL "ИзмT2"
+     tt-rvs-line.state-temp-layer2 AT ROW 6.75 COL 91 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.temp-layer3 AT ROW 22.75 COL 39.25 COLON-ALIGNED
-          LABEL "ИзмT3"
-          VIEW-AS FILL-IN 
-          SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer1 AT ROW 22.75 COL 54.5 COLON-ALIGNED
-          VIEW-AS FILL-IN 
-          SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer2 AT ROW 22.75 COL 71.63 COLON-ALIGNED
-          VIEW-AS FILL-IN 
-          SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer3 AT ROW 22.75 COL 87.13 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer3 AT ROW 7.75 COL 91 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
      tt-rvs-line.meas-mh-qnty AT ROW 23.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
-     tt-rvs-line.state-mh-qnty AT ROW 23.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-mh-qnty AT ROW 28.25 COL 15.5 COLON-ALIGNED
+          LABEL "Оборот по ТРК"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
      tt-rvs-line.meas-am-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
-     tt-rvs-line.state-am-qnty AT ROW 24.75 COL 73.5 COLON-ALIGNED
-          LABEL "Факт сумма оборота"
+     tt-rvs-line.state-am-qnty AT ROW 28.25 COL 55.5 COLON-ALIGNED
+          LABEL "Сумма оборота по ТРК"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
      tt-rvs-line.meas-cf-qnty AT ROW 25.75 COL 29.13 COLON-ALIGNED
@@ -470,15 +548,16 @@ DEFINE FRAME Dialog-Frame
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-rvs-line.state-cf-qnty AT ROW 25.75 COL 74.5 COLON-ALIGNED
-          LABEL "Факт кол-во наливов"
+     tt-rvs-line.state-cf-qnty AT ROW 28.25 COL 95.5 COLON-ALIGNED
+          LABEL "Количество наливов"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
-     delta-mass-qnty AT ROW 25.75 COL 87.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
+     delta-mass-qnty AT ROW 18.75 COL 85 COLON-ALIGNED  WIDGET-ID 22
+     abs-delta-mass-qnty AT ROW 19.75 COL 85 COLON-ALIGNED  WIDGET-ID 22
      CriticalDif AT ROW 4.25 COL 34 COLON-ALIGNED WIDGET-ID 2
 /*     mass-float-cov AT ROW 26.5 COL 54 COLON-ALIGNED WIDGET-ID 2*/
-       "Погр. изм." VIEW-AS TEXT
-          SIZE 12.5 BY .75 AT ROW 24.75 COL 88.5 WIDGET-ID 24
+/*       "Погр. изм." VIEW-AS TEXT                             */
+/*          SIZE 12.5 BY .75 AT ROW 24.75 COL 88.5 WIDGET-ID 24*/
      
      RECT-2 AT ROW 5.54 COL 50.25
      RECT-3 AT ROW 5.5 COL 2
@@ -690,7 +769,7 @@ define variable v-mm-density            as decimal no-undo.
 define buffer buf_sr-izmerenia for ub.sr-izmerenia .
 define buffer buf_place     for ub.place.
 
-
+/*run gbl/inidebug.p .*/
 
   assign frame {&frame-name} tt-rvs-line.state-level-total   .
   assign frame {&frame-name} tt-rvs-line.state-level-water   .
@@ -844,7 +923,7 @@ define buffer buf_place     for ub.place.
         "для работы библиотеки ПО МИ"        skip
         "Введите факт. уровень топлива"
       view-as alert-box error.
-      apply "entry" to tt-rvs-line.state-level-petrol in frame {&frame-name}.
+      apply "entry" to tt-rvs-line.state-level-water in frame {&frame-name}.
       undo _trpomi, return .
     end.
     if tt-rvs-line.state-temp-layer1 = ? then do :
@@ -897,7 +976,7 @@ define buffer buf_place     for ub.place.
       view-as alert-box error.
       enable
         tt-rvs-line.state-density
-        tt-rvs-line.state-measure-qnty
+/*        tt-rvs-line.state-measure-qnty*/
       with frame Dialog-Frame.
       RELEASE OBJECT v-mm NO-ERROR.
       v-mm = ?.
@@ -921,6 +1000,7 @@ define buffer buf_place     for ub.place.
         v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
         v-mm:DeltaOtn_N             = DeltaOtn_N
       .
+      assign varstate-water-qnty .
           OUTPUT stream outstream to value ("pomi.log") append.
                     PUT STREAM outstream
                     "    " SKIP
@@ -1006,18 +1086,39 @@ define buffer buf_place     for ub.place.
         tt-rvs-line.state-brutto-qnty      = tt-rvs-line.state-measure-qnty + varstate-water-qnty
         tt-rvs-line.state-density          = v-mm-density
         .
-        if density = ? then density = tt-rvs-line.state-density .
-        tt-rvs-line.state-brutto-cli-qnty  = tt-rvs-line.state-brutto-qnty * density
+        
+        assign
+          tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty * tt-rvs-line.state-density  
+          tt-rvs-line.fact-calc-vol = tt-rvs-line.state-measure-qnty 
+          tt-rvs-line.fact-sum-vol = tt-rvs-line.fact-calc-vol + tt-rvs-line.state-add-qnty 
+          tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty 
+          varstate-sum-vol = input frame {&frame-name} varstate-water-qnty + tt-rvs-line.fact-calc-vol 
         .
-              if v-mm:DeltaOtn_M > "0.65" then delta-mass-qnty = 0.65. else delta-mass-qnty = v-mm:DeltaOtn_M  .
+        
+        abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 .
+        
+/*        if density = ? then density = tt-rvs-line.state-density .                   */
+/*        tt-rvs-line.state-brutto-cli-qnty  = tt-rvs-line.state-brutto-qnty * density*/
+        tt-rvs-line.state-brutto-cli-qnty  = tt-rvs-line.state-brutto-qnty * tt-rvs-line.state-density .
+        
+        if v-mm:DeltaOtn_M > "0.65" then delta-mass-qnty = 0.65. else delta-mass-qnty = v-mm:DeltaOtn_M  .
+        
+        abs-delta-mass-qnty = tt-rvs-line.state-measure-cli-qnty * delta-mass-qnty / 100 .
         
         display
         delta-mass-qnty 
-        tt-rvs-line.state-brutto-qnty
-        tt-rvs-line.state-brutto-cli-qnty
-        tt-rvs-line.state-measure-qnty
+/*        tt-rvs-line.state-brutto-qnty    */
+/*        tt-rvs-line.state-brutto-cli-qnty*/
+/*        tt-rvs-line.state-measure-qnty*/
         tt-rvs-line.state-density
-        tt-rvs-line.state-measure-cli-qnty
+/*        tt-rvs-line.state-measure-cli-qnty*/
+        tt-rvs-line.fact-calc-vol
+        tt-rvs-line.fact-sum-vol
+        tt-rvs-line.fact-sum-mass
+        tt-rvs-line.fact-calc-add-mass
+        abs-delta-mass-add-qnty
+        abs-delta-mass-qnty
+        varstate-sum-vol
          with frame {&frame-name} .
         output stream outstream to value ("pomi.log")  append.
         put stream outstream
@@ -1043,47 +1144,67 @@ define buffer buf_place     for ub.place.
         output stream outstream close.
         run volume-water no-error.
         if error-status :error then do :
-                                 enable
-                                   tt-rvs-line.state-density
-                                   tt-rvs-line.state-measure-qnty
-                                   tt-rvs-line.state-add-qnty
-                                  tt-rvs-line.state-brutto-qnty
-                                   tt-rvs-line.state-brutto-cli-qnty
-                                 with frame Dialog-Frame.
+/*                                 enable                             */
+/*                                   tt-rvs-line.state-density        */
+/*                                   tt-rvs-line.state-measure-qnty   */
+/*                                   tt-rvs-line.state-add-qnty       */
+/*                                  tt-rvs-line.state-brutto-qnty     */
+/*                                   tt-rvs-line.state-brutto-cli-qnty*/
+/*                                 with frame Dialog-Frame.           */
                                  undo _trpomi, return .
                                end.
         run chg-density no-error.
         if error-status :error then do :
-                                 enable
-                                   tt-rvs-line.state-density
-                                   tt-rvs-line.state-measure-qnty
-                                   tt-rvs-line.state-add-qnty
-                                  tt-rvs-line.state-brutto-qnty
-                                   tt-rvs-line.state-brutto-cli-qnty
-                                 with frame Dialog-Frame.
+/*                                 enable                             */
+/*                                   tt-rvs-line.state-density        */
+/*                                   tt-rvs-line.state-measure-qnty   */
+/*                                   tt-rvs-line.state-add-qnty       */
+/*                                  tt-rvs-line.state-brutto-qnty     */
+/*                                   tt-rvs-line.state-brutto-cli-qnty*/
+/*                                 with frame Dialog-Frame.           */
                                  undo _trpomi, return .
                                end.
         run weath-water no-error.
         if error-status:error then do :
-                                enable
-                                  tt-rvs-line.state-density
-                                  tt-rvs-line.state-measure-qnty
-                                  tt-rvs-line.state-add-qnty
-                                 tt-rvs-line.state-brutto-qnty
-                                  tt-rvs-line.state-brutto-cli-qnty
-                                with frame Dialog-Frame.
+/*                                enable                             */
+/*                                  tt-rvs-line.state-density        */
+/*                                  tt-rvs-line.state-measure-qnty   */
+/*                                  tt-rvs-line.state-add-qnty       */
+/*                                 tt-rvs-line.state-brutto-qnty     */
+/*                                  tt-rvs-line.state-brutto-cli-qnty*/
+/*                                with frame Dialog-Frame.           */
                                 undo _trpomi, return .
                               end.
       end.
     END.
   end.
-  enable
-    tt-rvs-line.state-density
-    tt-rvs-line.state-measure-qnty
-    tt-rvs-line.state-add-qnty
-    tt-rvs-line.state-brutto-qnty
-    tt-rvs-line.state-brutto-cli-qnty
-  with frame Dialog-Frame.
+/*  enable                             */
+/*    tt-rvs-line.state-density        */
+/*    tt-rvs-line.state-measure-qnty   */
+/*    tt-rvs-line.state-add-qnty       */
+/*    tt-rvs-line.state-brutto-qnty    */
+/*    tt-rvs-line.state-brutto-cli-qnty*/
+/*  with frame Dialog-Frame.           */
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+         and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+         and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+         and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+         and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+         and rvs-line-attr.attr-code = "is-calc" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+      rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+      rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+      rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+      rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+      rvs-line-attr.attr-code = "is-calc"
+    .
+  end.
+  rvs-line-attr.attr-value = "yes" .
+  release rvs-line-attr no-error .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1102,6 +1223,9 @@ define variable v-vid-param         as longchar no-undo .
 define variable v-shift-date like ub.shift-obj.shift-date no-undo .
 define variable v-shift-num  like ub.shift-obj.shift-num no-undo .
 define variable v-shift-name like ub.shift-obj.shift-name no-undo.
+
+define buffer olddens-rvs-line-attr for ub.rvs-line-attr .
+define variable v-is-olddens as logical no-undo initial no .
     
 { gbl/curshift.i
         buf_rvs-doc.obj-type
@@ -1119,31 +1243,62 @@ define variable v-shift-name like ub.shift-obj.shift-name no-undo.
      apply "entry" to tt-rvs-line.state-measure-qnty in frame {&frame-name}.
      return no-apply.
   end.
+  
+  
+  if rdc-value = "pomi-rn" then do :
+    if tt-rvs-line.izmer-density = ? or tt-rvs-line.izmer-density = 0
+    then do :
+      message "Сохранение введенных параметров НП невозможно." skip (1)
+              "Плотность НП унаследована у предыдущего документа сверки." skip
+              'Введите измеренную плотность и нажмите кнопку "Рассчитать".'
+      view-as alert-box information.
+      apply "entry" to tt-rvs-line.izmer-density in frame {&frame-name}.
+      return no-apply.
+    end.
+    
+    find first rvs-line-attr exclusive-lock
+         where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+           and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+           and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+           and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+           and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+           and rvs-line-attr.attr-code = "is-calc" no-error.
+    if not available rvs-line-attr
+    or (available rvs-line-attr and rvs-line-attr.attr-value <> "yes") 
+    then do :
+      message "Сохранение введенных параметров НП невозможно." skip (1)
+              "Не выполнено приведение параметров НП к стандартной температуре." skip
+              'Нажмите кнопку "Рассчитать" и повторите попытку.'
+      view-as alert-box information.
+      apply "entry" to b-calc in frame {&frame-name}.
+      return no-apply.
+    end.  
+  end.    
 
-  assign
-    v-water     = input frame {&frame-name} tt-rvs-line.state-brutto-qnty - input frame {&frame-name} tt-rvs-line.state-measure-qnty
-    v-water-cli = input frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty - input frame {&frame-name} tt-rvs-line.state-measure-cli-qnty
-  .
-
-  if ( v-water <> ?
-       and v-water <> 0
-       and ( v-water-cli = ?
-             or v-water-cli = 0
-           )
-     )
-     or
-     ( v-water-cli <> ?
-       and v-water-cli <> 0
-       and ( v-water = ?
-             or v-water = 0
-           )
-     )
-  then do:
-     message
-       substitute( "Объем воды (&1) не соответствует его весу (&2)!", v-water, v-water-cli )
-       view-as alert-box error.
-     return no-apply.
-  end.
+/*  assign                                                                                                                                    */
+/*    v-water     = input frame {&frame-name} tt-rvs-line.state-brutto-qnty - input frame {&frame-name} tt-rvs-line.state-measure-qnty        */
+/*    v-water-cli = input frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty - input frame {&frame-name} tt-rvs-line.state-measure-cli-qnty*/
+/*  .                                                                                                                                         */
+/*                                                                                                                                            */
+/*  if ( v-water <> ?                                                                                                                         */
+/*       and v-water <> 0                                                                                                                     */
+/*       and ( v-water-cli = ?                                                                                                                */
+/*             or v-water-cli = 0                                                                                                             */
+/*           )                                                                                                                                */
+/*     )                                                                                                                                      */
+/*     or                                                                                                                                     */
+/*     ( v-water-cli <> ?                                                                                                                     */
+/*       and v-water-cli <> 0                                                                                                                 */
+/*       and ( v-water = ?                                                                                                                    */
+/*             or v-water = 0                                                                                                                 */
+/*           )                                                                                                                                */
+/*     )                                                                                                                                      */
+/*  then do:                                                                                                                                  */
+/*     message                                                                                                                                */
+/*       substitute( "Объем воды (&1) не соответствует его весу (&2)!", v-water, v-water-cli )                                                */
+/*       view-as alert-box error.                                                                                                             */
+/*     return no-apply.                                                                                                                       */
+/*  end.                                                                                                                                      */
 
   find first buf_rvs-line
     where recid(buf_rvs-line) =  parrec-rvs-line
@@ -1153,7 +1308,7 @@ define variable v-shift-name like ub.shift-obj.shift-name no-undo.
     ( input yes
     ) no-error.
   if error-status :error then do:
-    apply "ENTRY":U to tt-rvs-line.state-level-petrol in frame {&frame-name}.
+    apply "ENTRY":U to tt-rvs-line.state-level-total in frame {&frame-name}.
     return no-apply.
   end.
   run volume-water in this-procedure               no-error.
@@ -1186,6 +1341,55 @@ define variable v-shift-name like ub.shift-obj.shift-name no-undo.
   end.
   else do :
     rvs-line-attr.attr-value = string(tt-rvs-line.izmer-density) .
+  end.
+  
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+         and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+         and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+         and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+         and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+         and rvs-line-attr.attr-code = "input-type" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+      rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+      rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+      rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+      rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+      rvs-line-attr.attr-code = "input-type"
+    .
+  end.
+  if buf_rvs-line.density = ? or buf_rvs-line.density = 0
+  then do :
+    rvs-line-attr.attr-value = "р" .
+  end.
+  else do :
+    if v-hand-input /* Плотность редактировалась */
+    then do :
+      if rvs-line-attr.attr-value = "а" or rvs-line-attr.attr-value = "ф" then rvs-line-attr.attr-value = "к" .
+    end.
+    else do :
+      find first olddens-rvs-line-attr no-lock
+           where olddens-rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and olddens-rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and olddens-rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and olddens-rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and olddens-rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and olddens-rvs-line-attr.attr-code = "is-olddens" no-error.
+      if available olddens-rvs-line-attr
+      then do :
+        v-is-olddens = logical(olddens-rvs-line-attr.attr-value) no-error.
+        if error-status:error then v-is-olddens = no .
+      end.
+      else do :
+        v-is-olddens = no .
+      end.
+      if v-is-olddens and 
+      (rvs-line-attr.attr-value = "а" or rvs-line-attr.attr-value = "ф")
+      then rvs-line-attr.attr-value = "п" .
+    end.
   end.
 /*  find first rvs-line-attr exclusive-lock                        */
 /*       where rvs-line-attr.obj-code  = tt-rvs-line.obj-code      */
@@ -1234,6 +1438,8 @@ do :
         rvs-line-attr.attr-value = string( delta-mass-qnty)
         .
 end.
+
+release rvs-line-attr no-error .
 /*  find first rvs-doc where rvs-doc.rvs-code = tt-rvs-line.rvs-code no-lock no-error.*/
       v-vid-action = 56 .
     v-vid-param = 
@@ -1380,15 +1586,15 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-brutto-tc-qnty Dialog-Frame
-ON return OF tt-rvs-line.state-brutto-tc-qnty IN FRAME Dialog-Frame /* Факт брутто(tc) */
-DO:
-  apply "entry" to tt-rvs-line.state-brutto-cli-qnty in frame {&frame-name}.
-  return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-brutto-tc-qnty Dialog-Frame  */
+/*ON return OF tt-rvs-line.state-brutto-tc-qnty IN FRAME Dialog-Frame /* Факт брутто(tc) */*/
+/*DO:                                                                                      */
+/*  apply "entry" to tt-rvs-line.state-brutto-cli-qnty in frame {&frame-name}.             */
+/*  return no-apply.                                                                       */
+/*END.                                                                                     */
+/*                                                                                         */
+/*/* _UIB-CODE-BLOCK-END */                                                                */
+/*&ANALYZE-RESUME                                                                          */
 
 
 &Scoped-define SELF-NAME tt-rvs-line.state-density
@@ -1400,6 +1606,53 @@ DO:
      if error-status:error then return no-apply.
      run weath-water no-error.
      if error-status:error then return no-apply.
+     if tarir-value = 'yes'
+     then do :
+       run local-tarir("state-level-total") .
+     end.
+  end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME varstate-water-qnty
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL varstate-water-qnty Dialog-Frame
+ON LEAVE OF varstate-water-qnty IN FRAME Dialog-Frame /* Плотность */
+DO:
+  if input frame {&frame-name} {&self-name} <> {&self-name} then do:
+     assign varstate-sum-vol = input frame {&frame-name} tt-rvs-line.fact-calc-vol + input frame {&frame-name} {&self-name} .
+     display varstate-sum-vol with frame {&frame-name}.
+  end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME tt-rvs-line.fact-calc-vol
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.fact-calc-vol Dialog-Frame
+ON LEAVE OF tt-rvs-line.fact-calc-vol IN FRAME Dialog-Frame /* Плотность */
+DO:
+  if input frame {&frame-name} {&self-name} <> {&self-name} then do:
+     tt-rvs-line.state-measure-qnty = input frame {&frame-name} {&self-name} .
+     tt-rvs-line.fact-sum-vol = input frame {&frame-name} {&self-name} + input frame {&frame-name} tt-rvs-line.state-add-qnty .
+     varstate-sum-vol = input frame {&frame-name} {&self-name} + (if input frame {&frame-name} varstate-water-qnty = ? then 0 else input frame {&frame-name} varstate-water-qnty) .
+     display tt-rvs-line.fact-sum-vol varstate-sum-vol with frame {&frame-name}.
+     run volume-water no-error.
+     if error-status:error then return no-apply.
+     if tt-rvs-line.state-density <> 0 and
+        tt-rvs-line.state-density <> ? then do:
+        run chg-density no-error.
+        if error-status:error then return no-apply.
+        run weath-water no-error.
+        if error-status:error then return no-apply.
+     end.
+     tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty .
+     abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
+     display tt-rvs-line.fact-sum-mass abs-delta-mass-add-qnty with frame {&frame-name}.
+     assign tt-rvs-line.fact-calc-vol .
   end.
 
 END.
@@ -1425,7 +1678,7 @@ DO:
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
     if input frame {&frame-name} tt-rvs-line.izmer-density = ?
       or ( buf_goods.unit-base <> buf_goods.unit-cli
-          and ( input frame {&frame-name} tt-rvs-line.izmer-density <= 0
+          and ( input frame {&frame-name} tt-rvs-line.izmer-density < 0
                 or input frame {&frame-name} tt-rvs-line.izmer-density >= 1
               )
         )
@@ -1439,6 +1692,8 @@ DO:
     end.
 
     assign frame {&frame-name} tt-rvs-line.izmer-density.
+    
+    assign v-hand-input = true .
   end.
 
 END.
@@ -1446,28 +1701,28 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME tt-rvs-line.izmer-density
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.izmer-density Dialog-Frame
-ON RETURN OF tt-rvs-line.izmer-density IN FRAME Dialog-Frame /* Плотность */
-DO:
-  apply "entry" to tt-rvs-line.state-level-petrol in frame {&frame-name}.
-  return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
+/*&Scoped-define SELF-NAME tt-rvs-line.izmer-density                              */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.izmer-density Dialog-Frame*/
+/*ON RETURN OF tt-rvs-line.izmer-density IN FRAME Dialog-Frame /* Плотность */    */
+/*DO:                                                                             */
+/*  apply "entry" to tt-rvs-line.state-level-petrol in frame {&frame-name}.       */
+/*  return no-apply.                                                              */
+/*END.                                                                            */
+/*                                                                                */
+/*/* _UIB-CODE-BLOCK-END */                                                       */
+/*&ANALYZE-RESUME                                                                 */
 
 
-&Scoped-define SELF-NAME tt-rvs-line.state-level-petrol
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-level-petrol Dialog-Frame
-ON LEAVE OF tt-rvs-line.state-level-petrol IN FRAME Dialog-Frame /* Факт уровень топлива */
+
+
+&Scoped-define SELF-NAME tt-rvs-line.state-level-water
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-level-water Dialog-Frame
+ON LEAVE OF tt-rvs-line.state-level-water IN FRAME Dialog-Frame /* Факт уровень топлива */
 DO:
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
           run level-water in this-procedure ( input no ) /* no-error */ .
       
-    RUN local-tarir ("state-level-petrol").
+    RUN local-tarir ("state-level-total").
     /* if error-status :error then do: return no-apply. end. */
   end.
 END.
@@ -1514,16 +1769,16 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME tt-rvs-line.state-measure-cli-qnty
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-measure-cli-qnty Dialog-Frame
-ON return OF tt-rvs-line.state-measure-cli-qnty IN FRAME Dialog-Frame /* Факт вес */
-DO:
-  apply "entry" to tt-rvs-line.state-brutto-cli-qnty in frame {&frame-name}.
-  return no-apply.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME tt-rvs-line.state-measure-cli-qnty                              */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-measure-cli-qnty Dialog-Frame*/
+/*ON return OF tt-rvs-line.state-measure-cli-qnty IN FRAME Dialog-Frame /* Факт вес */     */
+/*DO:                                                                                      */
+/*  apply "entry" to tt-rvs-line.state-brutto-cli-qnty in frame {&frame-name}.             */
+/*  return no-apply.                                                                       */
+/*END.                                                                                     */
+/*                                                                                         */
+/*/* _UIB-CODE-BLOCK-END */                                                                */
+/*&ANALYZE-RESUME                                                                          */
 
 
 &Scoped-define SELF-NAME tt-rvs-line.state-measure-qnty
@@ -1923,11 +2178,36 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if error-status:error or
   */
       RUN gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", NO, OUTPUT rdc-value, OUTPUT rdc-type) NO-ERROR.
+      
+      run gbl/conf-rd.p ("tarir", "", "", 0, "", "", "", no, output tarir-value, output tarir-type) no-error.
   hide
       tt-rvs-line.meas-calc-qnty
       tt-rvs-line.meas-calc-dens
       tt-rvs-line.meas-cli-calc-qnty
+      /* ДОРАБОТКИ ПО ЛНД */
+      tt-rvs-line.meas-am-qnty
+      tt-rvs-line.meas-cf-qnty
+      tt-rvs-line.meas-mh-qnty
+      tt-rvs-line.level-petrol
+      tt-rvs-line.state-level-petrol
+      tt-rvs-line.brutto-cli-qnty
+      tt-rvs-line.state-brutto-cli-qnty
+      tt-rvs-line.meas-cli-calc-qnty
+      varmeasure-water-cli-qnty
+      varstate-water-cli-qnty
+      tt-rvs-line.brutto-tc-qnty
+      tt-rvs-line.state-brutto-tc-qnty
+      tt-rvs-line.brutto-qnty
+      tt-rvs-line.state-brutto-qnty
+      tt-rvs-line.meas-calc-dens
+      tt-rvs-line.measure-tc-qnty
+      tt-rvs-line.state-measure-tc-qnty
+      tt-rvs-line.measure-qnty
+      tt-rvs-line.state-measure-qnty
+      tt-rvs-line.meas-calc-qnty
+      
       in frame Dialog-Frame.
+/*    rdc-value =  "pomi-rn"  .*/
   if rdc-value <>  "pomi-rn" then do :
     hide
 /*      tt-rvs-line.meas-calc-qnty    */
@@ -1936,6 +2216,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.izmer-density
 /*      mass-float-cov*/
       delta-mass-qnty
+      abs-delta-mass-qnty
       b-calc
       in frame Dialog-Frame.
 /*                                                               */
@@ -2003,6 +2284,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               CriticalDif = decimal(rvs-line-attr.attr-value) .
             end.
           end case.
+    end.
+    release rvs-line-attr no-error .
     if rdc-value =  "pomi-rn" then do :
     display
       tt-rvs-line.izmer-density
@@ -2025,11 +2308,127 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 /*        mass-float-cov             */
 /*      in frame {&frame-name}.      */
 /*    end.                           */
+  
+  run placelib_get-attr  ( input {&place-asi-sertif}
+                            ,input tt-rvs-line.obj-code
+                            ,input tt-rvs-line.obj-type
+                            ,input tt-rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-asi-sertif = no.
+  else pl-asi-sertif = logical(v-value) .
+  
+  run placelib_get-attr  ( input {&place-rvd-dnsty}
+                            ,input tt-rvs-line.obj-code
+                            ,input tt-rvs-line.obj-type
+                            ,input tt-rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-rvd-dens = no.
+  else pl-rvd-dens = logical(v-value) .
+  
+  run placelib_get-attr  ( input {&place-rvd-lvl}
+                            ,input tt-rvs-line.obj-code
+                            ,input tt-rvs-line.obj-type
+                            ,input tt-rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-rvd-lvl = no.
+  else pl-rvd-lvl = logical(v-value) .
+  
+  run placelib_get-attr  ( input {&place-rvd-tmp}
+                            ,input tt-rvs-line.obj-code
+                            ,input tt-rvs-line.obj-type
+                            ,input tt-rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-rvd-temp = no.
+  else pl-rvd-temp = logical(v-value) .
+  
+  run placelib_get-attr  ( input {&place-error-mass}
+                            ,input tt-rvs-line.obj-code
+                            ,input tt-rvs-line.obj-type
+                            ,input tt-rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-error-mass = ?.
+  else pl-error-mass = decimal(v-value) .
+  
+  assign tt-rvs-line.calc-add-mass = tt-rvs-line.add-qnty * input frame {&frame-name} tt-rvs-line.density .
+  assign tt-rvs-line.calc-vol = tt-rvs-line.measure-qnty .
+  assign tt-rvs-line.sum-vol = tt-rvs-line.calc-vol + tt-rvs-line.add-qnty .
+  assign tt-rvs-line.sum-mass = tt-rvs-line.calc-add-mass + tt-rvs-line.measure-cli-qnty .
+  assign varsum-vol = input frame {&frame-name} varmeasure-water-qnty + tt-rvs-line.calc-vol .
+  
+  assign
+    tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty * input frame {&frame-name} tt-rvs-line.state-density 
+    tt-rvs-line.fact-calc-vol = tt-rvs-line.state-measure-qnty 
+    tt-rvs-line.fact-sum-vol = tt-rvs-line.fact-calc-vol + tt-rvs-line.state-add-qnty 
+    tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty 
+    varstate-sum-vol = input frame {&frame-name} varstate-water-qnty + tt-rvs-line.fact-calc-vol 
+  .
+  
+  abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 .
+  abs-delta-mass-qnty = tt-rvs-line.state-measure-cli-qnty * input frame {&frame-name} delta-mass-qnty / 100 .
+  
+  display
+    tt-rvs-line.calc-add-mass
+    tt-rvs-line.calc-vol
+    tt-rvs-line.sum-vol
+    tt-rvs-line.sum-mass
+    varsum-vol
+    
+    tt-rvs-line.fact-calc-add-mass
+    tt-rvs-line.fact-calc-vol
+    tt-rvs-line.fact-sum-vol
+    tt-rvs-line.fact-sum-mass
+    varstate-sum-vol
+    
+    abs-delta-mass-add-qnty
+  with frame {&frame-name}.
+  
+  if rdc-value = 'pomi-rn'
+  then do :
+    display
+      abs-delta-mass-qnty
+    with frame {&frame-name}.
   end.
+  else
+  if tt-rvs-line.density = ? and parmode = {&update} and tarir-value <> "yes"
+  then do :
+    enable
+      tt-rvs-line.fact-calc-vol
+      varstate-water-qnty
+    with frame Dialog-Frame.
+  end.
+                           
   if parmode <> {&update} then do:
      disable tt-rvs-line.izmer-density with frame {&frame-name}.
 /*     disable mass-float-cov with frame {&frame-name}.*/
      disable b-calc with frame {&frame-name}.
+  end.
+  else do :
+    if (pl-rvd-dens or tt-rvs-line.density = ?) and rdc-value = 'pomi-rn'
+    then do :
+      enable tt-rvs-line.izmer-density with frame {&frame-name}.
+    end.
+    else do :
+      disable tt-rvs-line.izmer-density with frame {&frame-name}.
+    end.
+    if pl-rvd-lvl or tt-rvs-line.density = ?
+    then do :
+      enable tt-rvs-line.state-level-total tt-rvs-line.state-level-water with frame {&frame-name}.
+    end.
+    else do :
+      disable tt-rvs-line.state-level-total tt-rvs-line.state-level-water with frame {&frame-name}.
+    end.
+    if pl-rvd-temp or tt-rvs-line.density = ?
+    then do :
+      enable tt-rvs-line.state-temperature tt-rvs-line.state-temp-layer1 tt-rvs-line.state-temp-layer2 tt-rvs-line.state-temp-layer3 with frame {&frame-name}.
+    end.
+    else do :
+      disable tt-rvs-line.state-temperature tt-rvs-line.state-temp-layer1 tt-rvs-line.state-temp-layer2 tt-rvs-line.state-temp-layer3 with frame {&frame-name}.
+    end.
   end.
   assign frame {&frame-name} :title = frame {&frame-name} :title + " - " + parmode
                                     + " - " +  partitle.
@@ -2061,7 +2460,7 @@ if input frame {&frame-name} tt-rvs-line.state-density = ?
        and input frame {&frame-name} tt-rvs-line.state-density <> 1
      )
 then do:
-   message "Неверно определена плотность топлива." view-as alert-box error.
+   message "Неверно определена плотность топлива." skip buf_goods.unit-base skip buf_goods.unit-cli skip tt-rvs-line.state-density view-as alert-box error.
    return error.
 end.
 
@@ -2091,18 +2490,20 @@ assign frame {&frame-name} tt-rvs-line.state-density.
 assign
   tt-rvs-line.state-measure-cli-qnty = tt-rvs-line.state-measure-qnty * tt-rvs-line.state-density
   tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty
+  tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty  * tt-rvs-line.state-density
 .
-display tt-rvs-line.state-measure-cli-qnty with frame {&frame-name}.
-display tt-rvs-line.state-brutto-cli-qnty with frame {&frame-name}.
-if tt-rvs-line.state-measure-cli-qnty > tt-rvs-line.state-brutto-cli-qnty then do:
-  message "Измеренный вес больше веса брутто. Подставить измеренный вес в вес брутто?"
-  view-as alert-box question buttons yes-no update varlog.
-  if varlog = yes then do:
-    assign
-      tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty.
-    display tt-rvs-line.state-brutto-cli-qnty with frame {&frame-name}.
-  end.
-end.
+abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
+display tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-calc-add-mass with frame {&frame-name}.
+/*display tt-rvs-line.state-brutto-cli-qnty with frame {&frame-name}.*/
+/*if tt-rvs-line.state-measure-cli-qnty > tt-rvs-line.state-brutto-cli-qnty then do:    */
+/*  message "Измеренный вес больше веса брутто. Подставить измеренный вес в вес брутто?"*/
+/*  view-as alert-box question buttons yes-no update varlog.                            */
+/*  if varlog = yes then do:                                                            */
+/*    assign                                                                            */
+/*      tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty.         */
+/*    display tt-rvs-line.state-brutto-cli-qnty with frame {&frame-name}.               */
+/*  end.                                                                                */
+/*end.                                                                                  */
 
 END PROCEDURE.
 
@@ -2141,7 +2542,7 @@ PROCEDURE enable_UI :
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
   DISPLAY varmeasure-water-qnty varstate-water-qnty varmeasure-water-cli-qnty 
-          varstate-water-cli-qnty delta-mass-qnty /*mass-float-cov */
+          varstate-water-cli-qnty delta-mass-qnty varstate-sum-vol varsum-vol /*mass-float-cov */
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-rvs-line THEN
     DISPLAY tt-rvs-line.system-qnty tt-rvs-line.system-cli-qnty
@@ -2216,10 +2617,11 @@ PROCEDURE level-water :
       return error.
     end.
   end.
-  display input frame {&frame-name} tt-rvs-line.state-level-total  -
-          input frame {&frame-name} tt-rvs-line.state-level-petrol @
-                                    tt-rvs-line.state-level-water
-  with frame {&frame-name}.
+  tt-rvs-line.state-level-petrol = input frame {&frame-name} tt-rvs-line.state-level-total - input frame {&frame-name} tt-rvs-line.state-level-water .
+/*  display input frame {&frame-name} tt-rvs-line.state-level-total  -*/
+/*          input frame {&frame-name} tt-rvs-line.state-level-petrol @*/
+/*                                    tt-rvs-line.state-level-water   */
+/*  with frame {&frame-name}.                                         */
   if is_OK = yes then do:
     assign frame {&frame-name} tt-rvs-line.state-level-water
                                tt-rvs-line.state-level-petrol
@@ -2284,8 +2686,10 @@ if vartarirvalue = "yes" then do:
     if varlevel-sm = varlevel-sm-q then do:
       if error-status:error then return no-apply.
       display
-        bf_pl-level.pl-qnty @ tt-rvs-line.state-brutto-qnty
-        bf_pl-level.pl-qnty @ tt-rvs-line.state-measure-qnty
+/*        bf_pl-level.pl-qnty @ tt-rvs-line.state-brutto-qnty */
+/*        bf_pl-level.pl-qnty @ tt-rvs-line.state-measure-qnty*/
+        bf_pl-level.pl-qnty @ tt-rvs-line.fact-calc-vol
+        bf_pl-level.pl-qnty + tt-rvs-line.state-add-qnty @ tt-rvs-line.fact-sum-vol
         with frame {&frame-name}.
     end.
     else do:
@@ -2303,8 +2707,10 @@ if vartarirvalue = "yes" then do:
       end.
       else do:
         display
-          bf_pl-level.pl-qnty + (buf-nxt_pl-level.pl-qnty - bf_pl-level.pl-qnty) * (varlevel-sm-q - trunc(varlevel-sm-q, 0)) @ tt-rvs-line.state-brutto-qnty
-          bf_pl-level.pl-qnty + (buf-nxt_pl-level.pl-qnty - bf_pl-level.pl-qnty) * (varlevel-sm-q - trunc(varlevel-sm-q, 0)) @ tt-rvs-line.state-measure-qnty
+/*          bf_pl-level.pl-qnty + (buf-nxt_pl-level.pl-qnty - bf_pl-level.pl-qnty) * (varlevel-sm-q - trunc(varlevel-sm-q, 0)) @ tt-rvs-line.state-brutto-qnty */
+/*          bf_pl-level.pl-qnty + (buf-nxt_pl-level.pl-qnty - bf_pl-level.pl-qnty) * (varlevel-sm-q - trunc(varlevel-sm-q, 0)) @ tt-rvs-line.state-measure-qnty*/
+          bf_pl-level.pl-qnty + (buf-nxt_pl-level.pl-qnty - bf_pl-level.pl-qnty) * (varlevel-sm-q - trunc(varlevel-sm-q, 0)) @ tt-rvs-line.fact-calc-vol
+          bf_pl-level.pl-qnty + (buf-nxt_pl-level.pl-qnty - bf_pl-level.pl-qnty) * (varlevel-sm-q - trunc(varlevel-sm-q, 0)) + tt-rvs-line.state-add-qnty @ tt-rvs-line.fact-sum-vol
           with frame {&frame-name}.
       end.
     end.
@@ -2334,7 +2740,9 @@ if vartarirvalue = "yes" then do:
                   end. 
                   varstate-water-qnty =  tt-level-water +  tt-level-water-dec *  v-water-qnty * 10  . 
                   display  varstate-water-qnty with frame {&frame-name}.
-                  display tt-rvs-line.state-brutto-qnty +  varstate-water-qnty  @ tt-rvs-line.state-brutto-qnty
+/*                  display tt-rvs-line.state-brutto-qnty +  varstate-water-qnty  @ tt-rvs-line.state-brutto-qnty*/
+/*                      with frame {&frame-name}.                                                                */
+                  display tt-rvs-line.fact-calc-vol + tt-rvs-line.state-add-qnty + varstate-water-qnty  @ varstate-sum-vol
                       with frame {&frame-name}.
           end.
           else
@@ -2343,9 +2751,11 @@ if vartarirvalue = "yes" then do:
               assign
                   varstate-water-qnty = bf_pl-level.pl-qnty  .
               display  varstate-water-qnty with frame {&frame-name}.
-              display tt-rvs-line.state-brutto-qnty +  varstate-water-qnty  @ tt-rvs-line.state-brutto-qnty
-              with frame {&frame-name}.
-              DISPLAY tt-rvs-line.state-measure-qnty with frame {&frame-name} .
+/*              display tt-rvs-line.state-brutto-qnty +  varstate-water-qnty  @ tt-rvs-line.state-brutto-qnty*/
+/*              with frame {&frame-name}.                                                                    */
+              display tt-rvs-line.fact-calc-vol + tt-rvs-line.state-add-qnty + varstate-water-qnty  @ varstate-sum-vol
+                      with frame {&frame-name}.
+/*              DISPLAY tt-rvs-line.state-measure-qnty with frame {&frame-name} .*/
           end.
       end.  
           else do:
@@ -2353,15 +2763,15 @@ if vartarirvalue = "yes" then do:
                   varstate-water-qnty = 0  .
               display  varstate-water-qnty with frame {&frame-name}.
                 
-              display tt-rvs-line.state-brutto-qnty @ tt-rvs-line.state-brutto-qnty
+              display tt-rvs-line.fact-calc-vol + tt-rvs-line.state-add-qnty @ varstate-sum-vol
               with frame {&frame-name}.
-              DISPLAY tt-rvs-line.state-measure-qnty with frame {&frame-name} .
+/*              DISPLAY tt-rvs-line.state-measure-qnty with frame {&frame-name} .*/
 
           end.    
 
       assign
         tt-rvs-line.state-brutto-qnty = input frame {&frame-name} tt-rvs-line.state-measure-qnty + varstate-water-qnty.
-        display tt-rvs-line.state-brutto-qnty with frame {&frame-name}.
+/*        display tt-rvs-line.state-brutto-qnty with frame {&frame-name}.*/
         if tt-rvs-line.state-density <> 0 and
             tt-rvs-line.state-density <> ? then 
         do:
@@ -2413,10 +2823,22 @@ if vartarirvalue = "yes" then do:
                 end.
             end.
         end.
-        end.
         if v-delta-mas-qnty > 0.65 then v-delta-mas-qnty = 0.65 .
         delta-mass-qnty = v-delta-mas-qnty.
         display  delta-mass-qnty with frame {&frame-name}.
+        end.
+        
+    abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
+    
+    if tt-rvs-line.state-measure-cli-qnty = ?
+    then do :
+       tt-rvs-line.state-measure-cli-qnty = input frame {&frame-name} tt-rvs-line.fact-calc-vol * tt-rvs-line.state-density .
+       tt-rvs-line.fact-sum-mass = tt-rvs-line.state-measure-cli-qnty + tt-rvs-line.fact-calc-add-mass .
+    end.
+    
+    varstate-sum-vol = input frame {&frame-name} tt-rvs-line.fact-calc-vol + varstate-water-qnty .
+    
+    display  abs-delta-mass-add-qnty tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-sum-mass varstate-sum-vol with frame {&frame-name}.
 
     run volume-water.
 
@@ -2451,11 +2873,20 @@ PROCEDURE volume-water :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+if input frame {&frame-name} tt-rvs-line.state-brutto-qnty -
+   input frame {&frame-name} tt-rvs-line.state-measure-qnty <> ?
+then
 display input frame {&frame-name} tt-rvs-line.state-brutto-qnty -
         input frame {&frame-name} tt-rvs-line.state-measure-qnty @
         varstate-water-qnty with frame {&frame-name}.
-        assign frame {&frame-name} tt-rvs-line.state-brutto-qnty
-                                   tt-rvs-line.state-measure-qnty.
+else
+if tt-rvs-line.state-brutto-qnty -
+   tt-rvs-line.state-measure-qnty <> ?
+then
+display tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty @
+        varstate-water-qnty with frame {&frame-name}.        
+/*        assign frame {&frame-name} tt-rvs-line.state-brutto-qnty  */
+/*                                   tt-rvs-line.state-measure-qnty.*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2483,17 +2914,17 @@ PROCEDURE weath-water :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-if input frame {&frame-name} tt-rvs-line.state-measure-cli-qnty >
-   input frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty then do:
-   message "Вес топлива больше общего веса."
-   view-as alert-box error.
-   return error.
-end.
-display input frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty -
-        input frame {&frame-name} tt-rvs-line.state-measure-cli-qnty @
-        varstate-water-cli-qnty with frame {&frame-name}.
-assign frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty
-                           tt-rvs-line.state-measure-cli-qnty.
+/*if input frame {&frame-name} tt-rvs-line.state-measure-cli-qnty >      */
+/*   input frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty then do:*/
+/*   message "Вес топлива больше общего веса."                           */
+/*   view-as alert-box error.                                            */
+/*   return error.                                                       */
+/*end.                                                                   */
+/*display input frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty -  */
+/*        input frame {&frame-name} tt-rvs-line.state-measure-cli-qnty @ */
+/*        varstate-water-cli-qnty with frame {&frame-name}.              */
+/*assign frame {&frame-name} tt-rvs-line.state-brutto-cli-qnty           */
+/*                           tt-rvs-line.state-measure-cli-qnty.         */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

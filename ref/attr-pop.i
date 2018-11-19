@@ -61,6 +61,7 @@ define variable ii as integer no-undo .
 define variable V-CREATED as logical no-undo .
 define variable v-tool-tip as character no-undo .
 define variable v-dop as character no-undo .
+define variable v-attr-item as character no-undo .
 &if "{1}" = "proc" &then
 define variable p-upper-attr-code as character no-undo .
 &endif
@@ -71,16 +72,17 @@ define buffer buf_tt-attr-property for tt-attr-property.
   on error undo, return error return-value
   :
      do ii = 1 to num-entries (p-attr-list):
+       v-attr-item = entry(ii, p-attr-list) .
        find first tt-attr-property where
                  tt-attr-property.table-name = p-table-name
-             and tt-attr-property.attr-code = entry(ii, p-attr-list)
+             and tt-attr-property.attr-code = v-attr-item
              and tt-attr-property.upper-attr-code = p-upper-attr-code
              and tt-attr-property.menu-name = p-menu-handle:name  no-error .
        if not available tt-attr-property then do:
          create tt-attr-property.
          assign
          tt-attr-property.table-name = p-table-name
-         tt-attr-property.attr-code = entry(ii, p-attr-list)
+         tt-attr-property.attr-code = v-attr-item
          tt-attr-property.upper-attr-code = p-upper-attr-code
          tt-attr-property.menu-name = p-menu-handle:name
          .

@@ -130,6 +130,11 @@ define variable v-login        as character no-undo .
 define variable v-password     as character no-undo .
 define variable v-server       as character no-undo .
 
+define variable v-proxy-login     as character no-undo .
+define variable v-proxy-pswd      as character no-undo .
+define variable v-proxy-addres    as character no-undo .
+
+
 define variable par-type       as character no-undo.
 
 define buffer buf_tt-gds       for tt-gds .
@@ -230,37 +235,42 @@ define menu POPUP-MENU-b-import
 /* Definitions of the field level widgets                               */
 define button b-cancel auto-end-key 
   label "Выход" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-connect 
   label "Связать" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-del 
   label "Удалить" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-import 
   label "Сервис" 
-  size 15 by 1.13 tooltip "Импорт"
+  size 13 by 1.13 tooltip "Импорт"
   bgcolor 8 .
 
 define button b-lkp 
   label "Просмотр" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define button b-load 
   label "Запрос" 
-  size 15 by 1.13 tooltip "Отправить запрос в Меркурий"
+  size 13 by 1.13 tooltip "Отправить запрос в Меркурий"
   bgcolor 8 .
 
 define button b-mark 
   label "&*" 
   size 3 by 1.13.
+  
+define button b-alt-units 
+  label "Доп. ед. изм." 
+  size 14 by 1.13
+  bgcolor 8 .
 
 define button b-prod 
   image-up file "btn-down-arrow":U
@@ -286,7 +296,7 @@ define button b-unmark
 
 define button b-update 
   label "Изменить" 
-  size 15 by 1.13
+  size 13 by 1.13
   bgcolor 8 .
 
 define variable v-prod      as character format "X(11)" 
@@ -343,12 +353,13 @@ define browse br-goods
 
 define frame Dialog-Frame
   b-cancel at row 1.25 col 2
-  b-load at row 1.25 col 17
-  b-lkp at row 1.25 col 32
-  b-update at row 1.25 col 47
-  b-del at row 1.25 col 62
-  b-connect at row 1.25 col 77
-  b-import at row 1.25 col 92
+  b-load at row 1.25 col 15
+  b-lkp at row 1.25 col 28
+  b-update at row 1.25 col 41
+  b-del at row 1.25 col 54
+  b-connect at row 1.25 col 67
+  b-alt-units at row 1.25 col 80
+  b-import at row 1.25 col 94
   r-type at row 2.5 col 2.25 no-label widget-id 20
   b-prod at row 2.5 col 71.5
   b-spisok at row 3.25 col 22.25 widget-id 26
@@ -647,7 +658,14 @@ on choose of b-load in frame Dialog-Frame /* Запрос */
               sw:end-document () .
     
 
-              cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+              if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
+              then do :
+                cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                                search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+              end.
+              else do :
+                cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+              end.
               os-command silent value (cmd). /*закрытие окна*/
           
               parser = new parserXmlGDS().
@@ -745,8 +763,14 @@ on choose of b-load in frame Dialog-Frame /* Запрос */
       sw:end-element ("se:Envelope") .
       sw:end-document () .
     
-      /*      cmd = substitute ("&1 -u expertek-180403:9dVHt6B6 -d @&2 https://api2.vetrf.ru:8002/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file), "productItemList_.xml").*/
-      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file), "productItemList_.xml", v-login, v-password, v-server).
+      if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
+      then do :
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                        search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+      end.
+      else do :
+        cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+      end.
       os-command silent value (cmd).
     end.
     
@@ -776,13 +800,32 @@ on choose of b-mark in frame Dialog-Frame /* * */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-prod Dialog-Frame
 on choose of b-prod in frame Dialog-Frame
   do:
-    os-delete value( search("ProductItemList_.xml")) no-error .
+    os-delete value( search("ItemList_.xml")) no-error .
     run sel-prod in this-procedure .
     assign
       rs-sort
       .
     run refresh-query in this-procedure.   
   end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-alt-units
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-alt-units Dialog-Frame
+on choose of b-alt-units in frame Dialog-Frame
+do:
+define variable v-ret-unit-name  as character no-undo .
+define variable v-ret-unit-coeff as decimal no-undo .  
+  if not available tt-gds then return no-apply .
+  
+  run ref\alt-units.w (input parparentproc,
+                       input (if v-cntxt-db-num = 0 then {&update} else {&lookup}),
+                       input tt-gds.gds-code,
+                       input "", /* ограничение списка выбора */
+                       output v-ret-unit-name,
+                       output v-ret-unit-coeff) . 
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1011,7 +1054,7 @@ procedure enable_UI :
   display r-type rs-sort 
     with frame Dialog-Frame.
   enable b-cancel b-load b-lkp b-update b-del b-connect b-import r-type b-mark 
-    b-sel-all b-unmark rs-sort br-goods 
+    b-sel-all b-unmark rs-sort br-goods b-alt-units
     with frame Dialog-Frame.
   view frame Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1388,7 +1431,23 @@ procedure ini_enable :
                   v-server = "https://api.vetrf.ru" .
                 end.    
             end case .  
-          end.          
+          end.
+        when "proxy-addres" then 
+          v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+        when "proxy-login" then
+          do:
+            if thbjattr_thbj-attr.property-value-character <> ""
+            then do :
+              {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+            end.
+          end. 
+        when "proxy-pswd" then
+          do:
+            if thbjattr_thbj-attr.property-value-character <> ""
+            then do :
+              {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+            end.  
+          end.            
       end case.
     end.
     

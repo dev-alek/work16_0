@@ -179,12 +179,12 @@ procedure check-action-item :
             (input v-action-file-name
             ) .
 
-          run filter-configuration-action-group in this-procedure
+/*          run filter-configuration-action-group in this-procedure
             .
 
           run filter-configuration-action-item in this-procedure
             .
-
+*/
           run validate-action-item in this-procedure
             no-error .
           if  error-status :error

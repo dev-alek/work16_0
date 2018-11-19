@@ -76,6 +76,8 @@ define variable vss-description as character no-undo init "Библиотека процедур д
 { rul/tempcxml.i "shared" }
 { gbl/gate-clb.i }
 { rul/ruleset_.i }
+{ gbl/db-attr.i  }
+{ bge/esysattr.i } // ext-system-attr-value для проверки сертификатов
 
 define temp-table temp-asmg no-undo
 field gds-code as integer
@@ -178,6 +180,14 @@ end.
   define variable p-sender-id   as character no-undo.
 
 /*---------------------------&end-rule-call-param&-------------------------------*/
+define variable v-attr-type        as character no-undo . // для чтения значений из ext-system-attr
+define variable v-cert-enstr       as character no-undo . // чтение v-cert-enabled строкой
+define variable v-cert-enabled     as logical no-undo . // true - добавить цифровую подпись
+define variable v-cert-issuer-name as character no-undo .
+define variable v-cert-subj-name   as character no-undo .
+define variable v-sign-fileext     as character no-undo .
+define variable v-pkcs             as class ibs.th.gbl.pkcs no-undo .
+
 /* ------------------------- &start-i-script& -----------------------------------*/
 /* ------------------------- &end-i-script& -----------------------------------*/
 
@@ -211,6 +221,9 @@ define variable v-ii as integer   no-undo .
 define variable v-current-b-code as integer no-undo .
 define buffer buf_ext-system for ub.ext-system.
 
+define variable v-sender-id as character no-undo .
+define variable v-type as character no-undo .
+
 _main:
 do
 on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -238,6 +251,14 @@ run write-log  in p-log-handle (
        {&display-message}.
        undo _main, return error ''.
     end.
+    
+    run db-attr-value in this-procedure 
+           (input ibs.th.gbl.gbl-var:g#db-num
+           ,input {&attr-int-point}
+           ,output v-sender-id
+           ,output v-type
+           ) no-error .
+    
   do transaction:
     v-err-message = "" .
     parseSubObj = new parsesub ().
@@ -245,6 +266,24 @@ run write-log  in p-log-handle (
 
     impSubObj = new impsubject (parseSubObj).
     parseSubObj:Parse1CRNSub(file-name).
+
+    &scop my-message substitute("пакет из файла &1 обработан без ошибок", file-name)
+    {&display-message}.
+  
+    // ack_ со статусом Ok отправится только если всё выполнилось без ошибок 
+    run rul/send-ack_1c.p ( input v-sender-id
+                          , input v-pack-num
+                           ,input 0
+                           ,input "" 
+                           ,input buf_ext-system.esys-id
+                           ,input v-cert-subj-name
+                           ,input v-cert-issuer-name
+                           ,input v-sign-fileext
+                           ,input v-pkcs
+                          ) .
+    &scop my-message substitute("создан ack_ со статусом Ok в exch &1 - ES &2 по пакету N&3", g#db-num, buf_ext-system.esys-id, v-pack-num)
+    {&display-message}.
+
     catch exAppErrors as class Progress.Lang.AppError :
       &scop my-message substitute("Ошибка при сохранении данных по пакету 1С (РОСНФЕТЬ) из ВС:&1&2&1&3", {&new-line}, parseSubObj:Msg , error-status :get-message(1)  )
       v-err-message = {&my-message} .
@@ -253,11 +292,21 @@ run write-log  in p-log-handle (
       v-err-message = trim(v-err-message) .
       v-err-message = trim(v-err-message, ";") .
       
-      run rul/send-ack_1c.p (input v-pack-num
+      run rul/send-ack_1c.p ( input v-sender-id
+                            , input v-pack-num
                               ,input 4
                               ,input v-err-message 
                               ,input buf_ext-system.esys-id
-                              ) .
+                                          ,input v-cert-subj-name
+                                          ,input v-cert-issuer-name
+                                          ,input v-sign-fileext
+                                          ,input v-pkcs
+                              ) no-error .
+      if error-status:error then do :
+      &scop my-message substitute("Ошибка при отправке ack_ на ошибку сохранения данных по пакету 1С (РОСНФЕТЬ) из ВС")
+      v-err-message = {&my-message} .
+      {&display-message}.
+      end .
       undo, throw exAppErrors .
     end catch .
     catch exProErrors as class Progress.Lang.ProError :
@@ -268,15 +317,9 @@ run write-log  in p-log-handle (
       undo, throw exAnyErrors .
     end catch .
     finally :
-      if v-err-message = ""
-      then
-      run rul/send-ack_1c.p (input v-pack-num
-                              ,input 0
-                              ,input "" 
-                              ,input buf_ext-system.esys-id
-                              ) .
       delete object parseSubObj no-error.
       delete object impSubObj no-error.
+      if valid-object(v-pkcs) then delete object v-pkcs .
     end finally .
   end.
 
@@ -289,6 +332,7 @@ define buffer buf_rule-call-param for ub.rule-call-param.
 define variable v-itop as integer   no-undo .
 define variable v-ichild as integer   no-undo .
 define variable v-pck-num as integer no-undo .
+define variable v-my-message as character no-undo .
 define buffer buf_esys-pck-keys for ub.esys-pck-keys.
 define buffer buf_ext-system for ub.ext-system.
 
@@ -377,8 +421,79 @@ end.
           undo, return error {&my-message}.
         end.
 
-        
-      end.
+        /* параметры настройки ЭЦП для подписания ack_'ов */
+        run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-sign}
+                                     ,output v-cert-enstr
+                                     ,output v-attr-type) no-error .
+        if not error-status:error then v-cert-enabled = logical (v-cert-enstr) no-error .
+        if error-status:error then do:
+          v-my-message = substitute("Ошибка чтения параметра &1 настроек ВС &2&3&4&3&5&3пропускаем ..."
+                                        , {&attr-esys-cert-sign}
+                                        , v-esys-id
+                                        , {&new-line}
+                                        ,error-status:get-message(error-status:num-messages)
+                                        ,return-value
+                                   ) .
+          &scop my-message v-my-message
+          {&display-message}.
+          undo, return error {&my-message}.
+        end.
+        if v-cert-enabled then do :
+        run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-sign-issuer}
+                                     ,output v-cert-issuer-name
+                                     ,output v-attr-type) no-error .
+        if not error-status:error then
+        run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-sign-subject}
+                                     ,output v-cert-subj-name
+                                     ,output v-attr-type) no-error .
+        if not error-status:error then
+        run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-file-ext}
+                                     ,output v-sign-fileext
+                                     ,output v-attr-type) no-error .
+        if error-status:error then do:
+          &scop my-message substitute("Ошибка чтения настроек ЭЦП для ВС &1&2пропускаем ..." ~
+                                        , v-esys-id ~
+                                        , ~{&new-line~} ~
+                                        )
+          {&display-message}.
+          undo, return error {&my-message}.
+        end.
+        if v-cert-subj-name > "" then . else do :
+          &scop my-message substitute("Отсутствует имя Владельца сертификата в параметрах настройки внешней системы ВС &1&2пропускаем ..." ~
+                                        , v-esys-id ~
+                                        , ~{&new-line~} ~
+                                        )
+          {&display-message}.
+          undo, return error {&my-message}.
+        end .
+        if v-cert-issuer-name > "" then . else do :
+          &scop my-message substitute("Отсутствует имя Издателя сертификата в параметрах настройки внешней системы ВС &1&2пропускаем ..." ~
+                                        , v-esys-id ~
+                                        , ~{&new-line~} ~
+                                        )
+          {&display-message}.
+          undo, return error {&my-message}.
+        end .
+        v-pkcs = new ibs.th.gbl.pkcs().
+      end .
+      else assign
+        v-cert-issuer-name = ""
+        v-cert-subj-name   = ""
+        v-sign-fileext     = ""
+      .
+      end. // end_of &thref-proc_20_xml-esys-import
       otherwise do:
         undo, return error "Неправильный вызов".
       end.

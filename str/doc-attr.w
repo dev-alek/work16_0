@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -37,6 +37,9 @@ define variable vss-description as character no-undo initial "Редактирование атр
 { cmp/showinf.i  }
 { str/attrlist.i }
 { str/funcgrzp.i }
+{ gbl/getsect.i def }
+{ gbl/color.i    }
+
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
@@ -48,12 +51,19 @@ define input parameter table for tt-upd-attr .
 /* Local Variable Definitions ---                                       */
 define variable varrec-id as recid no-undo.
 define variable v-no-news as logical   no-undo init false .
+define variable v-attr-PN as character  no-undo .
+
+define variable ii  as integer  no-undo .
+define variable bcol as handle extent no-undo.
+define variable hBrowse as handle no-undo.
+
+define buffer buf_trn-doc for ub.trn-doc .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -68,8 +78,8 @@ define variable v-no-news as logical   no-undo init false .
 &Scoped-define INTERNAL-TABLES doc-attr tt-upd-attr
 
 /* Definitions for BROWSE b-doc-attr                                    */
-&Scoped-define FIELDS-IN-QUERY-b-doc-attr tt-upd-attr.label-attr trim(ub.doc-attr.attr-value) + " " + tt-upd-attr.full-screen-val
-&Scoped-define ENABLED-FIELDS-IN-QUERY-b-doc-attr
+&Scoped-define FIELDS-IN-QUERY-b-doc-attr tt-upd-attr.label-attr trim(ub.doc-attr.attr-value) + " " + tt-upd-attr.full-screen-val   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-b-doc-attr   
 &Scoped-define SELF-NAME b-doc-attr
 &Scoped-define QUERY-STRING-b-doc-attr FOR EACH ub.doc-attr NO-LOCK       WHERE ub.doc-attr.doc-code = pardoc-code, ~
              first tt-upd-attr where tt-upd-attr.code = ub.doc-attr.attr-code and                                        tt-upd-attr.output-display = yes  by tt-upd-attr.sort
@@ -85,7 +95,7 @@ define variable v-no-news as logical   no-undo init false .
     ~{&OPEN-QUERY-b-doc-attr}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-help b-doc-attr
+&Scoped-Define ENABLED-OBJECTS b-exit b-help b-doc-attr 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -100,40 +110,40 @@ define variable v-no-news as logical   no-undo init false .
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить"
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-exit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-exit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "&Помощь"
+DEFINE BUTTON b-help 
+     LABEL "&Помощь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON b-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY b-doc-attr FOR
-      doc-attr,
+DEFINE QUERY b-doc-attr FOR 
+      doc-attr, 
       tt-upd-attr SCROLLING.
 &ANALYZE-RESUME
 
@@ -159,8 +169,8 @@ DEFINE FRAME Dialog-Frame
      b-help AT ROW 1 COL 51
      b-doc-attr AT ROW 2.46 COL 1.75
      SPACE(0.00) SKIP(0.07)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Атрибуты документа"
          DEFAULT-BUTTON b-exit.
 
@@ -182,7 +192,7 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB b-doc-attr b-help Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -215,7 +225,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.doc-attr NO-LOCK
 */  /* BROWSE b-doc-attr */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -240,6 +250,7 @@ DO:
     varrec-id = recid(ub.doc-attr).
   run st-attr in this-procedure no-error.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  run open-browse .
   if varrec-id <> ? then reposition {&browse-name} to recid varrec-id.
 end.
 
@@ -285,7 +296,7 @@ if available tt-upd-attr then do:
         if return-value = 'false':u then do:
           return no-apply.
         end.
-		if tt-upd-attr.code = "delivery-time" then do:
+                if tt-upd-attr.code = "delivery-time" then do:
             p-start-h = integer(entry(1,entry(1,vartemp-char,"-"),":")).
             p-start-m = integer(entry(2,entry(1,vartemp-char,"-"),":")).
             p-end-h = integer(entry(1,entry(2,vartemp-char,"-"),":")).
@@ -383,11 +394,21 @@ END.
 &Scoped-define BROWSE-NAME b-doc-attr
 &Scoped-define SELF-NAME b-doc-attr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-doc-attr Dialog-Frame
-ON return  OF b-doc-attr IN FRAME Dialog-Frame
+ON return OF b-doc-attr IN FRAME Dialog-Frame
 DO:
       if  b-chg:sensitive THEN apply "CHOOSE":U to b-chg.
       else apply "choose":U to b-lkp.
       return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-doc-attr Dialog-Frame
+ON ROW-DISPLAY OF b-doc-attr IN FRAME Dialog-Frame
+DO:
+  run rowdisp .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -425,7 +446,7 @@ end.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -464,7 +485,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if lookup ("no-news", parbtn) > 0 then do:
      v-no-news = true .
   end.
+  /* Получим из секции Складские документы   нужные переменные */
+  find first buf_trn-doc no-lock where buf_trn-doc.doc-code = pardoc-code .
+  
+        v-attr-PN = "".
+        { gbl/getsect.i run buf_trn-doc.obj-type buf_trn-doc.obj-code {&attr-nakl_par} }
+        for each thbjattr_thbj-attr :
+            if thbjattr_thbj-attr.prop-code = 'attr-PN' then v-attr-PN =  thbjattr_thbj-attr.property-value-character .
+        end.
+        
   run init-proc in this-procedure .
+  hbrowse = browse b-doc-attr:handle.
+  extent (bcol) = hbrowse:num-columns.
+  bcol[1] = hbrowse:first-column.
+  do ii = 1 to extent (bcol).  
+  bcol[ii] = hbrowse:get-browse-column (ii).
+end.
   RUN enable_UI.
   apply 'entry':u to browse {&browse-name} .
   wait-for go of frame {&frame-name}.
@@ -483,7 +519,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -502,10 +538,10 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-exit b-help b-doc-attr
+  ENABLE b-exit b-help b-doc-attr 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -514,7 +550,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame 
 PROCEDURE init-proc :
 /* -----------------------------------------------------------
   Purpose:
@@ -550,7 +586,6 @@ define variable i as integer   no-undo .
       if v-func-name <> "" then tt-upd-attr.full-screen-val  = dynamic-function ( tt-upd-attr.proc-func , ub.doc-attr.attr-code , ub.doc-attr.attr-value ) .
                            else tt-upd-attr.full-screen-val  = "" .
 
-
   end.
 
 END PROCEDURE.
@@ -558,7 +593,23 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE st-attr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rowdisp Dialog-Frame 
+PROCEDURE rowdisp :
+  
+do ii = 1 to extent (bcol).  
+    if valid-handle (bcol[ii]) 
+    then do:
+      assign
+        bcol[ii]:fgcolor = RED_COLOR when lookup (ub.doc-attr.attr-code, v-attr-PN) > 0.
+    end.
+  end.  
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE st-attr Dialog-Frame 
 PROCEDURE st-attr :
 /* -----------------------------------------------------------
   Purpose:
@@ -686,3 +737,6 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+

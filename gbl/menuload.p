@@ -326,6 +326,18 @@ define variable vss-description as character no-undo init "Информация об объекте
   "'Включение выключенных доп. БК'"
   "'utl/bc-on.p'"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Генерация пароля для технологического пролива'"
+  "'utl/gen-pwd.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+} 
+
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Имена контрагентов в накладных'"
@@ -512,6 +524,16 @@ define variable vss-description as character no-undo init "Информация об объекте
   {&bef-menuload_adm_function}
   "'Загрузка данных из ТН v15.0'"
   "'utl/load-from-15_0.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Тиражная утилита'"
+  "'utl/draw-util.p'"
   " "
   " "
   " "

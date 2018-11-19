@@ -36,198 +36,89 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property enbl-exc      as integer      no-undo get. private set.
   define property srvc-type     as integer      no-undo get. private set.
   define property fuel-type     as character    no-undo get. private set.
+  define property oil-grp       as character    no-undo get. private set.
   define property max-dnsty     as decimal      no-undo get. private set.
   define property min-dnsty     as decimal      no-undo get. private set.
   define property pay-trk       as integer      no-undo get. private set.
   define property neu-z         as decimal      no-undo get. private set.
   define property neu-l         as decimal      no-undo get. private set.
+  define property neu-storage-l as decimal      no-undo get. private set.
+  define property neu-storage-z as decimal      no-undo get. private set.
   define property proteins      as decimal      no-undo get. private set.
   define property fats          as decimal      no-undo get. private set.
   define property carbohydrates as decimal      no-undo get. private set.
   define property calories      as decimal      no-undo get. private set.
   define property vad-gds       as integer      no-undo get. private set.
-  define property barcode       as subjects     no-undo get. private set.
+  define property barcode        as subjects     no-undo get. private set.
+  define property unit-add-codes as subjects     no-undo get. private set.
   
   
   define override property InitTag as character no-undo init "good"
     get. 
     
   constructor public goods ():
-    InitListTag = "barcode".
+    InitListTag = "barcode,unit-add-codes".
   end constructor.
   
+  &scoped-define attr-str      if inValue >= "" then inValue else ""
+  &scoped-define attr-integer  if inValue >= "" then integer (inValue) else 0
+  &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
+  &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char) :
      case inTag:      
-      when "code" then 
-        do:
-          assign 
-            code_ = inValue .
-        end.
-      when "del-l" then 
-        do:
-          assign 
-            del-l = integer (inValue).
-        end.
-      when "del-f" then 
-        do:
-          assign 
-            del-f = integer (inValue).
-        end.
-      when "grp-code" then 
-        do:
-          assign 
-            grp-code = inValue.
-        end.
-      when "name" then 
-        do:
-          assign 
-            name_ = inValue.
-        end.
-      when "label-name" then 
-        do:
-          assign 
-            label-name = inValue.
-        end.
-      when "chk-name" then 
-        do:
-          assign 
-            chk-name = inValue.
-        end.
-      when "artic" then 
-        do:
-          assign 
-            artic = inValue.
-        end.
-      when "unit-code" then 
-        do:
-          assign 
-            unit-code = inValue.
-        end.
-      when "prod-code" then 
-        do:
-          assign 
-            prod-code = inValue.
-        end.
-      when "wt" then 
-        do:
-          assign 
-            wt = decimal(inValue).
-        end.
-      when "ms" then 
-        do:
-          assign 
-            ms = decimal(inValue).
-        end.
-      when "gds-type" then 
-        do:
-          assign 
-            gds-type = inValue.
-        end.
-      when "img" then 
-        do:
-          assign 
-            img = inValue.
-        end.
-      when "unit-spl-code" then 
-        do:
-          assign 
-            unit-spl-code = inValue.
-        end.
-      when "unit-k" then 
-        do:
-          assign 
-            unit-k = decimal(inValue).
-        end.
-      when "nds-code" then 
-        do:
-          assign 
-            nds-code = integer(inValue).
-        end.
-      when "enbl-ne" then 
-        do:
-          assign 
-            enbl-ne = integer(inValue).
-        end.
-      when "enbl-zc" then 
-        do:
-          assign 
-            enbl-zc = integer(inValue).
-        end.
-      when "enbl-exc" then 
-        do:
-          assign 
-            enbl-exc = integer(inValue).
-        end.
-      when "srvc-type" then 
-        do:
-          assign 
-            srvc-type = integer(inValue).
-        end.
-      when "fuel-type" then 
-        do:
-          assign 
-            fuel-type = inValue.
-        end.
-      when "max-dnsty" then 
-        do:
-          assign 
-            max-dnsty = decimal(inValue).
-        end.
-      when "min-dnsty" then 
-        do:
-          assign 
-            min-dnsty = decimal(inValue).
-        end.
-      when "pay-trk" then 
-        do:
-          assign 
-            pay-trk = integer(inValue).
-        end.
-      when "neu-z" then 
-        do:
-          assign 
-            neu-z = decimal(inValue).
-        end.
-      when "neu-l" then 
-        do:
-          assign 
-            neu-l = decimal(inValue).
-        end.
-      when "proteins" then 
-        do:
-          assign 
-            proteins = decimal(inValue).
-        end.
-      when "fats" then 
-        do:
-          assign 
-            fats = decimal(inValue).
-        end.
-      when "carbohydrates" then 
-        do:
-          assign 
-            carbohydrates = decimal(inValue).
-        end.
-      when "calories" then 
-        do:
-          assign 
-            calories = decimal(inValue).
-        end.
-      when "vad-gds" then 
-        do:
-          assign 
-            vad-gds = integer(inValue).
-        end.
+      when "code"          then code_         = {&attr-str} .
+      when "del-l"         then del-l         = {&attr-integer} .
+      when "del-f"         then del-f         = {&attr-integer} .
+      when "grp-code"      then grp-code      = {&attr-str} .
+      when "name"          then name_         = {&attr-str} .
+      when "label-name"    then label-name    = {&attr-str} .
+      when "chk-name"      then chk-name      = {&attr-str} .
+      when "artic"         then artic         = {&attr-str} .
+      when "unit-code"     then unit-code     = {&attr-str} .
+      when "prod-code"     then prod-code     = {&attr-str} .
+      when "wt"            then wt            = {&attr-dec} .
+      when "ms"            then ms            = {&attr-dec} .
+      when "gds-type"      then gds-type      = {&attr-str} .
+      when "img"           then img           = {&attr-str} .
+      when "unit-spl-code" then unit-spl-code = {&attr-str} .
+      when "unit-k"        then unit-k        = {&attr-dec} .
+      when "nds-code"      then nds-code      = {&attr-integer} .
+      when "enbl-ne"       then enbl-ne       = {&attr-integer} .
+      when "enbl-zc"       then enbl-zc       = {&attr-integer} .
+      when "enbl-exc"      then enbl-exc      = {&attr-integer} .
+      when "srvc-type"     then srvc-type     = {&attr-integer} .
+      when "fuel-type"     then fuel-type     = {&attr-str} .
+      when "oil-grp"       then oil-grp       = {&attr-str} .
+      when "max-dnsty"     then max-dnsty     = {&attr-dec} .
+      when "min-dnsty"     then min-dnsty     = {&attr-dec} .
+      when "pay-trk"       then pay-trk       = {&attr-integer} .
+      when "neu-z"         then neu-z         = {&attr-dec} .
+      when "neu-l"         then neu-l         = {&attr-dec} .
+      when "neu-storage-l" then neu-storage-l = {&attr-dec} .
+      when "neu-storage-z" then neu-storage-z = {&attr-dec} .
+      when "proteins"      then proteins      = {&attr-dec} .
+      when "fats"          then fats          = {&attr-dec} .
+      when "carbohydrates" then carbohydrates = {&attr-dec} .
+      when "calories"      then calories      = {&attr-dec} .
+      when "vad-gds"       then vad-gds       = {&attr-integer} .
     end case.
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
   end method.
   
   method override protected void SetPropProtected(SubsObj as subjects):
 
     case SubsObj:InitTag:   
-      when "barcode" then
-        do:
-          barcode = SubsObj.            
-        end.
+      when "barcode"        then barcode        = SubsObj.
+      when "unit-add-codes" then unit-add-codes = SubsObj.          
     end case.
 
   end.
@@ -236,18 +127,16 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
     def var v-str as char no-undo.
     
     assign
-      v-str = "code" when code_ = ?
+      v-str = ",code" when code_ = ?
       v-str = v-str + ",grp-code" when grp-code = ?
       v-str = v-str + ",name" when name_ = ?
       v-str = v-str + ",label-name" when label-name = ?
       v-str = v-str + ",chk-name" when label-name = ?
     .
-    v-str = trim (v-str, ",").
-    
-    if v-str > ''
-    then 
-      undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-        
+    v-str = substring(v-str, 2).
+    if v-str > "" then undo, throw new Progress.Lang.AppError(
+      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+    ) .
   end method .
       
   method override protected void ClearSub():
@@ -274,18 +163,22 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         enbl-exc      = ?
         srvc-type     = ?
         fuel-type     = ?
+        oil-grp       = ?
         max-dnsty     = ?
         min-dnsty     = ?
         pay-trk       = ?
         neu-z         = ?
         neu-l         = ? 
+        neu-storage-l = ?
+        neu-storage-z = ?
         proteins      = ?
         fats          = ?
         carbohydrates = ?
         calories      = ?
         vad-gds       = ?
     .   
-    delete object barcode no-error . 
+    if valid-object(barcode) then delete object barcode .
+    if valid-object(unit-add-codes) then delete object unit-add-codes . 
   end method .    
       
 end class.

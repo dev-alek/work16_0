@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "Экспорт в файл OpenXM
 { gbl/filelist.i }
 { bge/oxml-def.i }
 { gbl/db-attr.i  }
+{ bge/esysattr.i } // ext-system-attr-value для проверки сертификатов
 
 define stream out-stream.
 define variable v-action as character no-undo .
@@ -79,6 +80,7 @@ define temp-table temp_esys-route no-undo
     define variable v-esps-cr-db-num    as integer      no-undo.
     define variable v-esps-pack-num     as integer      no-undo .
     define variable v-esps-pack-name    as character no-undo .
+    define variable v-pack-file-name    as character no-undo .
     define variable v-custom-pack-name  as character no-undo .
     define variable v-custom-pack-flag  as logical   no-undo .
     define variable v-source-dir        as character no-undo .
@@ -91,6 +93,12 @@ define temp-table temp_esys-route no-undo
     define variable v-max-p-queue       as integer   no-undo .
     define variable v-max-p-time        as integer   no-undo .
 
+define variable v-attr-type        as character no-undo . // для чтения значений из ext-system-attr
+define variable v-cert-enstr       as character no-undo . // чтение v-cert-enabled строкой
+define variable v-cert-enabled     as logical no-undo . // true - добавить цифровую подпись
+define variable v-cert-subj-name   as character no-undo . // поле SubjectName (моё имя) в сертификате
+define variable v-cert-issuer-name as character no-undo . // поле IssuerName (кем выдан) в сертификате
+define variable v-sign-fileext     as character no-undo . // расширение файла с электронной подписью
 
     define buffer buf_ext-system         for ub.ext-system.
     define buffer buf_esys-pck-sent      for ub.esys-pck-sent.
@@ -242,12 +250,93 @@ on error undo, return error
         return error.
       end.
     end case.
-    for each buf_temp_esys-route
-    on error undo, return error:
-      delete buf_temp_esys-route.
+    
+    /* 29/VIII-2018  параметры настройки ЭЦП перенесены из ini-файла в настройки внешней системы */
+    run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-sign}
+                                     ,output v-cert-enstr
+                                     ,output v-attr-type) no-error .
+    if not error-status:error then v-cert-enabled = logical (v-cert-enstr) no-error .
+    if error-status:error then do:
+      run write-log in p-log-handle (
+                                        input 2
+                                      , substitute("&1 Ошибка чтения настроек ВС.&2&3&2&4&2&5"
+                                                  ,vss-workfile
+                                                  ,{&new-line}
+                                                  ,substitute( "Параметр &1", {&attr-esys-cert-sign} ) 
+                                                  ,substitute( "&1", error-status:get-message(error-status:num-messages) )
+                                                  ,substitute( "&1", return-value )
+                                                  )
+                        ) .
+      return error.
     end.
-    v-success = no.
+    if v-cert-enabled then do :
+      run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-sign-issuer}
+                                     ,output v-cert-issuer-name
+                                     ,output v-attr-type) no-error .
+      if not error-status:error then
+      run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-sign-subject}
+                                     ,output v-cert-subj-name
+                                     ,output v-attr-type) no-error .
+      if not error-status:error then
+      run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-file-ext}
+                                     ,output v-sign-fileext
+                                     ,output v-attr-type) no-error .
+      if error-status:error then do:
+        run write-log in p-log-handle (
+                                        input 2
+                                      , substitute("&1 Ошибка чтения настроек ВС.&2&3&2&4"
+                                                  ,vss-workfile
+                                                  ,{&new-line}
+                                                  ,substitute( "&1", error-status:get-message(error-status:num-messages) )
+                                                  ,substitute( "&1", return-value )
+                                                  )
+                        ) .
+        return error.
+      end.
+      if v-cert-subj-name > "" then . else do :
+        run write-log in p-log-handle (
+                                        input 2
+                                      , substitute("&1 Ошибка чтения настроек ВС.&2&3"
+                                                  ,vss-workfile
+                                                  ,{&new-line}
+                                                  ,"Отсутствует имя Владельца сертификата (~"Субъект~") в параметрах настройки внешней системы"
+                                                  )
+                        ) .
+        return error.
+      end .
+      if v-cert-issuer-name > "" then . else do :
+        run write-log in p-log-handle (
+                                        input 2
+                                      , substitute("&1 Ошибка чтения настроек ВС.&2&3"
+                                                  ,vss-workfile
+                                                  ,{&new-line}
+                                                  ,"Отсутствует имя Издателя сертификата в параметрах настройки внешней системы"
+                                                  )
+                        ) .
+        return error.
+      end .
+    end .
+    else assign
+      v-cert-issuer-name = ""
+      v-cert-subj-name   = ""
+      v-sign-fileext     = ""
+    .
+    
+    empty temp-table temp_esys-route .
     assign
+    v-success = no
     g#esys-source-esys = -1
     .
     run bge/lockesys.p (
@@ -271,9 +360,6 @@ on error undo, return error
                        then buf_ext-system.max-p-queue
                        else 1000)
       v-max-p-time  = buf_ext-system.max-p-time
-    .
-
-    assign
       v-err-gen-pack = 0
     .
     for each t-list-pack
@@ -427,6 +513,7 @@ on error undo, return error
         end.
       end.
     end.
+    
     output stream 1c-log to value ("1c-tech.log") append.
     gen-pack:
     for each t-list-pack
@@ -444,6 +531,7 @@ on error undo, return error
                     ,input buf_ext-system.delivery-method
                     ,input oxml-exch-dir
                     ,input oxml-heap-dir
+                    ,input ""
                     ,input-output v-esps-pack-num
                     ,input-output v-custom-pack-name
                     ,output v-esps-pack-name
@@ -466,17 +554,22 @@ on error undo, return error
                         ) .
         return error.
       end.
-      run start-exp-pack in this-procedure  (
+
+      if buf_ext-system.esys-have-export = yes
+     and buf_ext-system.esys-db-num-exp = v-cur-db-num then do :
+        v-pack-file-name = substitute("&1&2&3", v-source-dir, {&back-slash-char}, v-esps-pack-name) .
+        run start-exp-pack in this-procedure  (
                       buffer buf_ext-system
                     ,input v-esps-pack-num
-                    ,input (v-source-dir + {&back-slash-char} + v-esps-pack-name +
-                           (if v-custom-pack-flag
-                            then ''
-                            else 'xml'))
+                    ,input (  v-pack-file-name  +  (if v-custom-pack-flag then '' else 'xml')  )
+                    ,input v-cert-enabled
+                    ,input v-cert-subj-name
+                    ,input v-cert-issuer-name
+                    ,input v-sign-fileext
                     ,output v-err-gen-pack
                   ) no-error.
-      if error-status:error then do:
-        run write-log in p-log-handle (
+        if error-status:error then do:
+          run write-log in p-log-handle (
                                         input 2
                                         , substitute("&1 Ошибка при формировании пакета.&2&3&2&4"
                                                     ,vss-workfile
@@ -484,8 +577,9 @@ on error undo, return error
                                                     ,substitute( "&1", error-status:get-message(error-status:num-messages) )
                                                     , substitute( "&1", return-value ))
                         ) .
-        leave gen-pack.
-      end.
+          leave gen-pack.
+        end.
+      end .
       if v-err-gen-pack <> 2 then do:
         run bge/sxg-pack.p (
                        input parparentproc
@@ -666,12 +760,15 @@ on error undo, return error
 end.
 end procedure. /* expand-dump-and-export */
 
-
 procedure start-exp-pack :
 define parameter buffer buf_ext-system for ub.ext-system.
 define input  parameter p-pack-num as integer   no-undo .
 define input  parameter p-pack-file as character no-undo .
-define output parameter p-err-gen-pack as integer   no-undo .
+define input  parameter p-cert-enabled     as logical no-undo .
+define input  parameter p-cert-subj-name   as character no-undo .
+define input  parameter p-cert-issuer-name as character no-undo .
+define input  parameter p-sign-fileext     as character no-undo .
+define output parameter p-err-gen-pack as integer   no-undo . // 20/VIII-2018 - не используется, снаружи не проверяется
 
 define variable v-buffer-handle        as handle       no-undo.
 define variable v-parameter-list       as character    no-undo.
@@ -688,29 +785,27 @@ define variable sw as handle no-undo.
 define variable sender-id as character no-undo.
 define variable v-longdata as longchar no-undo.
 define variable v-type as character no-undo .
+define variable v-packdata as memptr no-undo .
 
 define buffer buf_esys-route         for ub.esys-route.
 define buffer buf_esys-route-dump    for ub.esys-route-dump.
 define buffer buf_temp_esys-route    for temp_esys-route.
 define buffer buf_esys-pck-sent      for ub.esys-pck-sent.
 
+define variable v-pkcs             as class ibs.th.gbl.pkcs no-undo .
+define variable v-signdata         as memptr no-undo .
+define variable v-sign-file        as character no-undo . // имя файла с электронной подписью
+define variable v-position         as integer no-undo . // позиция точки в имени файла
+
 
 do
 on error undo, return error return-value
 :
-  if buf_ext-system.esys-have-export = yes
-  and buf_ext-system.esys-db-num-exp = v-cur-db-num
-  then do:
-      assign
-          v-start-regular-pack = yes
-          v-end-regular-pack = no
-          v-found-route = no
-      .
       if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
       then do :
         
         run db-attr-value in this-procedure 
-           (input g#db-num
+           (input ibs.th.gbl.gbl-var:g#db-num
            ,input {&attr-int-point}
            ,output sender-id
            ,output v-type
@@ -720,7 +815,8 @@ on error undo, return error return-value
         
         create sax-writer sw.
         sw:formatted = true.
-        sw:set-output-destination ("file", p-pack-file).
+        sw:set-output-destination ("memptr", v-packdata).
+        
         sw:encoding = "UTF-8".
         sw:start-document () .
         
@@ -729,6 +825,7 @@ on error undo, return error return-value
         sw:insert-attribute ("xmlns", "http://www.rosneft.ru/GasComplex/Retail") .
         sw:insert-attribute ("xmlns:xs", "http://www.w3.org/2001/XMLSchema") .
         sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
+
         put stream 1c-log unformatted string(now) "  Заполнение шапки" skip .
           sw:start-element ("header") .
             sw:write-data-element ("num", string(p-pack-num)) .
@@ -740,6 +837,11 @@ on error undo, return error return-value
 
       end.
       
+      assign
+          v-start-regular-pack = yes
+          v-end-regular-pack = no
+          v-found-route = no
+      .
       _buf_esys-route:
       for each buf_esys-route no-lock
           where buf_esys-route.esys-id     = buf_ext-system.esys-id
@@ -915,21 +1017,15 @@ on error undo, return error return-value
                       ).
                       run write-log in p-log-handle (
                           input 0
-                          , input substitute( "&1."
-                                              , return-value
-                                          )
+                          , input substitute( "&1.", return-value )
                       ).
                       run write-log in p-log-handle (
                           input 0
-                          , input substitute( "&1."
-                                              , trim( error-status :get-message( 1 ) )
-                                          )
+                          , input substitute( "&1.", trim( error-status :get-message( 1 ) ) )
                       ).
                       run write-log in p-log-handle (
                           input 0
-                          , input substitute( "&1."
-                                              , trim( error-status :get-message( 2 ) )
-                                          )
+                          , input substitute( "&1.", trim( error-status :get-message( 2 ) ) )
                       ).
                       undo, return error .
                   end.
@@ -946,13 +1042,56 @@ on error undo, return error return-value
             end.        /* when {&nwsdochs_action_update} */
         end case.       /* case buf_temp_esys-route.esr-action */
       end.        /* for each buf_esys-route */
+
       if buf_Ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
       then do :
           sw:end-element ("GC-ERPRN") .
+          sw:end-document () .
           
         put stream 1c-log unformatted string(now) "  Окончание формирования пакета" skip .
 
-        sw:end-document () .
+        COPY-LOB FROM OBJECT v-packdata TO FILE p-pack-file NO-CONVERT NO-ERROR .
+        
+        if p-cert-enabled then do on error undo, throw :
+          define variable v-err-msg as character no-undo .
+          v-err-msg = "" .
+            
+          // p-cert-subj-name > "" и p-cert-issuer-name > "" были проверены при чтении параметров
+            v-pkcs = new ibs.th.gbl.pkcs().
+            v-signdata = v-pkcs:computeSign(v-packdata, p-cert-subj-name, p-cert-issuer-name) .
+            // взять имя файла p-pack-file без расширения
+            v-position = r-index(p-pack-file, ".") .
+            v-sign-file = if v-position > 0 then substring(p-pack-file, 1, v-position - 1) else p-pack-file .
+            v-sign-file = substitute("&1.&2", v-sign-file, p-sign-fileext) .
+            COPY-LOB FROM OBJECT v-signdata TO FILE v-sign-file NO-CONVERT .
+          
+          // ошибки - в лог, и ... 
+          catch exAppErrors as class Progress.Lang.AppError :
+            v-err-msg = exAppErrors:ReturnValue .
+            if v-err-msg > "" then . else do :
+              v-err-msg = exAppErrors:GetMessage(1) . 
+              if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+            end .
+          end catch .
+          catch exProErrors as class Progress.Lang.ProError :
+            v-err-msg = exProErrors:GetMessage(1) . 
+            if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+          end catch .
+          catch exAnyErrors as class Progress.Lang.Error:
+            v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+          end catch .
+          finally: 
+            set-size(v-signdata) = 0 .
+            if valid-object(v-pkcs) then delete object v-pkcs .
+            if v-err-msg > "" then do :
+              run write-log in p-log-handle ( input 0, input v-err-msg ).
+              undo, return error . // ... - и прекращаем выгрузку
+            end .
+          end finally.
+        end . // end_of if_cert
+        
+        set-size(v-packdata) = 0 .
+        
         put stream 1c-log unformatted string(now) "  Пакет " string(p-pack-num) "  " p-pack-file "   СФОРМИРОВАН" skip .
         
         file-info:file-name = p-pack-file .
@@ -1014,6 +1153,10 @@ on error undo, return error return-value
        v-end-regular-pack = no.
     end.
 
+    run cur-time in this-procedure (
+              output v-today
+            , output v-time
+    ).
     for each buf_temp_esys-route
     on error undo, return error
     :
@@ -1024,10 +1167,6 @@ on error undo, return error return-value
               and buf_esys-route.esr-last-pack  = buf_temp_esys-route.esr-last-pack
               and buf_esys-route.esr-tbl-ord    = buf_temp_esys-route.esr-tbl-ord
         .
-        run cur-time in this-procedure (
-              output v-today
-            , output v-time
-        ).
         assign
             buf_esys-route.esr-status            = 1
             buf_esys-route.esr-sys-date          = v-today
@@ -1051,7 +1190,6 @@ on error undo, return error return-value
       buf_esys-pck-sent.esps-SendTxtTimeInt = v-time
       buf_esys-pck-sent.esps-SendTxtTime    = string( v-time, "HH:MM:SS" )
       .
-  end.
 end. /*doe*/
 
 end procedure. /* start-exp-pack */

@@ -60,9 +60,10 @@ DEFINE VARIABLE v-shift-num as integer no-undo.
 define variable v-shift-name as character no-undo .
 define variable v-is-petrol-place as logical no-undo .
 
-
 define buffer buf_clients for ub.clients.
 define buffer main_place for ub.place.
+
+define variable v-dopi  as integer  no-undo .
 
 if p-mode <> {&add-def}
 AND p-mode <> {&update} then do:
@@ -79,6 +80,24 @@ or p-pl-name = ? then do:
   run err-mes in this-procedure ( input-output v-mess).
   undo, return error (if p-silent then v-mess else 'pl-name':U).
 end.
+if p-loc1 = '':U then do:
+v-mess = " оорд1 не может быть пустой".
+  run err-mes in this-procedure ( input-output v-mess).
+  undo, return error (if p-silent then v-mess else 'loc1':U).
+end.  
+
+assign
+v-dopi = integer(p-loc1)
+no-error .
+if error-status:error
+or v-dopi <= 0
+or v-dopi > 999
+or p-loc1 <> trim(string(v-dopi, ">>9")) then do:
+  v-mess = "коорд1 дл€ топливного резервуара должна быть ѕќЋќ∆»“≈Ћ№Ќџћ “–≈’«Ќј„Ќџћ „»—Ћќћ Ѕ≈« Ћ»ƒ»–”ёў»’ Ќ”Ћ≈…".
+  run err-mes in this-procedure ( input-output v-mess).
+  undo, return error (if p-silent then v-mess else 'loc1':U).
+end.  
+
 if p-obj-type <> {&shop}
 and p-obj-type <> {&stock} then do:
   v-mess = substitute("—кладские места могут быть только дл€ &1 и &2", {&shop}, {&stock}).

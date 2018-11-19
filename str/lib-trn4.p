@@ -547,6 +547,15 @@ define variable v-ischg-ext-type as logical no-undo .
     find first buf_trn-doc exclusive-lock
       where buf_trn-doc.doc-code = p-doc-code
       no-error .
+    if not available buf_trn-doc then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка задания входных параметров" skip
+        "Не найден документ" skip
+        "Номер документа" p-doc-code skip
+        view-as alert-box error .
+      undo, return error return-value .
+    end.
     
     if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
     then do:
@@ -558,16 +567,6 @@ define variable v-ischg-ext-type as logical no-undo .
       buf_trn-doc.fact-date = today.
     end.
     
-    if not available buf_trn-doc
-    then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка задания входных параметров" skip
-        "Не найден документ" skip
-        "Номер документа" p-doc-code skip
-        view-as alert-box error .
-      undo, return error return-value .
-    end.
 
     v-file-n = replace( buf_trn-doc.doc-code, "*", "$" ) .
     v-file-n = replace( v-file-n , ".", "$" ) .
@@ -613,7 +612,8 @@ define variable v-ischg-ext-type as logical no-undo .
        buf_trn-doc.internal = yes       and
        buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Object} then do:
       find first exp_trn-doc where exp_trn-doc.doc-code = buf_trn-doc.doc-code no-lock no-error.
-      { gbl/curobjdt.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error}
+      { gbl/objdtget.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error }
+/* 28/IX-2018 заменено на objdtget.i     { gbl/curobjdt.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error}*/
       if error-status:error then do:
         message
           vss-workfile vss-revision vss-description skip
@@ -1448,7 +1448,7 @@ define variable v-ischg-ext-type as logical no-undo .
         else do :
             message "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
                     "Вы уверены ?"
-                    view-as alert-box question buttons OK-Cancel update varlog.
+                    view-as alert-box question buttons OK-Cancel title "Вопрос" update varlog.
         end.
         if not varlog then  return error.
         case buf_trn-doc.doc-type
@@ -2015,6 +2015,7 @@ define variable v-ischg-ext-type as logical no-undo .
         end.
       end.
     end.
+
     if buf_trn-doc.doc-type <> {&inventory} then do:
       for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code:
         find first buf_goods where buf_goods.artic     = buf_doc-line.artic     and
@@ -2031,26 +2032,55 @@ define variable v-ischg-ext-type as logical no-undo .
              return error.
           end.
           if (v-not-eq-count <> 2) then do: /* <> Да для всех */
-              run gbl/d-askw.w(
-                  input "Накладная"
-                  ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
-                                "Количество по строке накладной: " + string(buf_doc-line.doc-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
-                                "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
-                                "Подтвердить количество в накладной?"
-                ,input "|^"
-                ,input "Да|Да (для всех)|Нет"
-                ,input "подтвердить для текущей позиции|подтвердить для всех позиций|отменить переход документа в статус факт"
-                ,input 1
-                ,input 3
-                ,output v-not-eq-count
-                ).
-                
+              
+              { str/is-petrl.i
+                buf_doc-line.artic
+                buf_doc-line.prod-type
+                buf_doc-line.prod-code
+                v-is-petrl
+                v-is-pieces
+              }
+              
+              if v-is-petrl = true
+                and v-is-pieces = false 
+              then do:
+                /*run gbl/d-askw.w(
+                    input "Накладная"
+                    ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
+                                  "Количество по строке накладной: " + string(buf_doc-line.cli-qnty) + " " + string(buf_goods.unit-cli) + {&new-line} +
+                                  "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty * buf_doc-line.fact-density) + " " + string(buf_goods.unit-cli) + {&new-line} +
+                                  "Подтвердить количество в накладной?"
+                  ,input "|^"
+                  ,input "Да|Да (для всех)|Нет"
+                  ,input "подтвердить для текущей позиции|подтвердить для всех позиций|отменить переход документа в статус факт"
+                  ,input 1
+                  ,input 3
+                  ,output v-not-eq-count
+                  ).*/
+                  v-not-eq-count = 2.
+                end.
+                else do:
+                  run gbl/d-askw.w(
+                      input "Накладная"
+                      ,"Артикул: " + string(buf_doc-line.artic) + " " + buf_goods.gds-name + {&new-line} +
+                                    "Количество по строке накладной: " + string(buf_doc-line.doc-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
+                                    "Фактическое количество по строке: " + string(buf_doc-line.fact-qnty) + " " + string(buf_goods.unit-base) + {&new-line} +
+                                    "Подтвердить количество в накладной?"
+                    ,input "|^"
+                    ,input "Да|Да (для всех)|Нет"
+                    ,input "подтвердить для текущей позиции|подтвердить для всех позиций|отменить переход документа в статус факт"
+                    ,input 1
+                    ,input 3
+                    ,output v-not-eq-count
+                    ).
+                end.
                 if (v-not-eq-count = 3) then return error.
             end.
           /*if not varlog then  return error.*/
         end.
       end.
     end.
+    
     if buf_trn-doc.doc-type = {&income} and
       buf_trn-doc.internal = no        then do: /*Выделеные проверки внешнего прихода*/
       for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code:
@@ -2341,12 +2371,7 @@ define variable v-ischg-ext-type as logical no-undo .
         v-mess = 
           vss-workfile + vss-revision + vss-description + {&new-line} +
           "Ошибка при закрытии документа " + buf_trn-doc.doc-code + {&new-line} +
-          return-value + {&new-line} +
-          trim( error-status :get-message( 1 ) ) +
-          trim( error-status :get-message( 2 ) ) + 
-          trim( error-status :get-message( 3 ) ) +
-          trim( error-status :get-message( 4 ) ) +
-          trim( error-status :get-message( 5 ) ) + {&new-line}.
+          return-value + {&new-line} .
         run userlogingerr in this-procedure ( buffer buf_trn-doc, 57, v-mess, v-cntxt-db-num) no-error.
         message
           v-mess

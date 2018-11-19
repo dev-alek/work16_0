@@ -106,6 +106,8 @@ on end-key undo main-block, return error substitute('actnrlw end-key main-block,
         undo main-block,  return error return-value .
       end.
   end.
+  if g#oxml = yes
+    then do:
     run str/calloxml.p (
           input {&nwsdochs_action_update}
         , input {&table_action-role}
@@ -119,5 +121,5 @@ on end-key undo main-block, return error substitute('actnrlw end-key main-block,
                              , return-value
                              , error-status :get-message ( 1 ) ).
     end.
-
+  end.
 end.

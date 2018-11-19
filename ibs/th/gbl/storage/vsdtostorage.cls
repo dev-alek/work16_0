@@ -202,6 +202,14 @@ class ibs.th.gbl.storage.vsdtostorage:
     return vsdsubsObj.
   end method.
   
+    method public class vsdsubs getVSDsubsForVsdSub (INPUT inVsdSub    AS CLASS vsdsub ):
+        define variable vsdsubsObj as class vsdsubs.
+        vsdsubsObj = new vsdsubs ().
+        vsdsubsObj:AddItem(inVsdSub).
+         
+        return vsdsubsObj.
+  end method.
+    
   method private void setDataStorage (input invsdObj as class vsdsub, buffer inbf_vsd for ub.vsd ):
     
     define buffer buf_vsd-attr for ub.vsd-attr .
@@ -600,6 +608,70 @@ class ibs.th.gbl.storage.vsdtostorage:
     assign buf_vsd-attr.attr-value = invsdObj:LocationProsperity .   
     
     
+    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
+                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
+                                             and buf_vsd-attr.attr-code = "BrokerGuid"
+                                             no-error .
+    if not available buf_vsd-attr  
+    then do :
+      create buf_vsd-attr.
+      assign
+        buf_vsd-attr.ID        = inbf_vsd.ID
+        buf_vsd-attr.db-num    = inbf_vsd.db-num
+        buf_vsd-attr.attr-code = "BrokerGuid"
+      .
+    end.
+    assign buf_vsd-attr.attr-value = invsdObj:BrokerGuid .  
+    
+    
+    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
+                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
+                                             and buf_vsd-attr.attr-code = "PackageLevel"
+                                             no-error .
+    if not available buf_vsd-attr  
+    then do :
+      create buf_vsd-attr.
+      assign
+        buf_vsd-attr.ID        = inbf_vsd.ID
+        buf_vsd-attr.db-num    = inbf_vsd.db-num
+        buf_vsd-attr.attr-code = "PackageLevel"
+      .
+    end.
+    assign buf_vsd-attr.attr-value = invsdObj:PackageLevel .  
+    
+    
+    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
+                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
+                                             and buf_vsd-attr.attr-code = "PackageGuid"
+                                             no-error .
+    if not available buf_vsd-attr  
+    then do :
+      create buf_vsd-attr.
+      assign
+        buf_vsd-attr.ID        = inbf_vsd.ID
+        buf_vsd-attr.db-num    = inbf_vsd.db-num
+        buf_vsd-attr.attr-code = "PackageGuid"
+      .
+    end.
+    assign buf_vsd-attr.attr-value = invsdObj:PackageGuid .   
+    
+    
+    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
+                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
+                                             and buf_vsd-attr.attr-code = "PackageQnty"
+                                             no-error .
+    if not available buf_vsd-attr  
+    then do :
+      create buf_vsd-attr.
+      assign
+        buf_vsd-attr.ID        = inbf_vsd.ID
+        buf_vsd-attr.db-num    = inbf_vsd.db-num
+        buf_vsd-attr.attr-code = "PackageQnty"
+      .
+    end.
+    assign buf_vsd-attr.attr-value = invsdObj:PackageQnty . 
+    
+    
     release inbf_vsd.
     release buf_vsd-attr.
     
@@ -668,6 +740,10 @@ class ibs.th.gbl.storage.vsdtostorage:
         when "CargoInspected"   then vsdsubObj:CargoInspected   = buf_vsd-attr.attr-value .
         when "CargoExpertized"  then vsdsubObj:CargoExpertized  = buf_vsd-attr.attr-value .
         when "LocationProsperity"  then vsdsubObj:LocationProsperity  = buf_vsd-attr.attr-value .
+        when "BrokerGuid"       then vsdsubObj:BrokerGuid       = buf_vsd-attr.attr-value .
+        when "PackageLevel"     then vsdsubObj:PackageLevel     = buf_vsd-attr.attr-value .
+        when "PackageGuid"      then vsdsubObj:PackageGuid      = buf_vsd-attr.attr-value .
+        when "PackageQnty"      then vsdsubObj:PackageQnty      = buf_vsd-attr.attr-value .
       end case.
     end.
            
@@ -695,12 +771,30 @@ class ibs.th.gbl.storage.vsdtostorage:
   end.
 
   method public logical exsistuuid (inVsdSubObj as class vsdsub):
+    define variable trnDoc as character no-undo.
+    define variable isExsistTRN as logical no-undo. 
+    return exsistuuid(inVsdSubObj, output isExsistTRN ).
+  end.
+  
+  method public logical exsistuuidwithtrn (inVsdSubObj as class vsdsub):
+    define variable trnDoc as character no-undo.
+    define variable isExsistTRN as logical no-undo.
+    if exsistuuid(inVsdSubObj, output isExsistTRN )
+    then 
+      if isExsistTRN 
+        then return true.
+    return false.
+  end.
+
+  method private logical exsistuuid (inVsdSubObj as class vsdsub, output isExsistTRN as log): /* uuid проверка наличия uuid в связке с документом*/
     
     define variable trnDoc as character no-undo. 
-    
     find first buf_vsd no-lock where recid (buf_vsd) <> inVsdSubObj:VsdRecid and buf_vsd.UUID = inVsdSubObj:UUID no-error.
     if available (buf_vsd)
     then do:
+      if can-find (first ub.trn-doc no-lock where ub.trn-doc.doc-code = trnDoc)
+        then isExsistTRN = true.
+        else isExsistTRN = false.
       trnDoc = entry (7,buf_vsd.part-key, {&delim-key}) no-error.
       Msg = substitute ("ВСД UUID &1 уже заведен в системе. Документ - &2. Товар - &3.", buf_vsd.UUID, trnDoc, buf_vsd.gds-code ).
       inVsdSubObj:setStatusErr(true).

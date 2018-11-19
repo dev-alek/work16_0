@@ -67,6 +67,36 @@ define variable vss-description as character no-undo init "".
 }
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
+  "'Выгрузка остатков в формате импорта ПН'"
+  "'utl/exp-doc2.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Выгрузка текущих остатков в формате импорта ПН'"
+  "'utl/exp-doc3.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Экспорт остатков по партиям'"
+  "'utl/exp-doc4.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
   "'Импорт накладных по партиям'"
   "'utl/impdoc4run.p'"
   " "

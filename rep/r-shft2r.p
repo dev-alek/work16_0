@@ -14,6 +14,7 @@ Author: Dmitry Ukhanov
 Creation date: 09/14/05
 
 */
+using ibs.th.str.*.
 
 DEFINE INPUT PARAMETER pobj-type             LIKE ub.shift-obj.obj-type   NO-UNDO.
 DEFINE INPUT PARAMETER pobj-code             LIKE ub.shift-obj.obj-code   NO-UNDO.
@@ -74,6 +75,11 @@ DEFINE VARIABLE v-sum-base        LIKE ub.ot-line.sum-base      NO-UNDO.
 DEFINE VARIABLE p-base-code       AS   INTEGER                  NO-UNDO.
 DEFINE VARIABLE v-qnty1           AS   DECIMAL                  NO-UNDO.
 DEFINE VARIABLE v-qnty2           AS   DECIMAL                  NO-UNDO.
+
+define variable v-InfoSectionsTotal  as class     InfoSectionsTotal no-undo .
+define variable v-InfoSection        as class     InfoSection       no-undo .
+define variable iNum                 as integer   no-undo .
+
 define variable v-value as character no-undo .
 define variable v-type as character no-undo .
 define temp-table temp-ptrl-goods no-undo
@@ -86,6 +92,9 @@ gds-code
 /* находим fact-order */
 { rep/r-shftfo.i attr-arh-detail-date }
 
+    v-InfoSectionsTotal = new InfoSectionsTotal().
+    v-InfoSection = new InfoSection().
+    
 DEFINE BUFFER previous-rvs-doc    FOR ub.rvs-doc.
 DEFINE BUFFER previous-rvs-line   FOR ub.rvs-line.
 DEFINE BUFFER this-shift-rvs-doc  FOR ub.rvs-doc.
@@ -287,23 +296,30 @@ define temp-table temp-rvs no-undo
              ub.inv-line.artic     = ub.doc-line.artic     AND
              ub.inv-line.prod-type = ub.doc-line.prod-type AND
              ub.inv-line.prod-code = ub.doc-line.prod-code NO-ERROR.
+
+    v-InfoSectionsTotal:Initialization(ub.trn-doc.doc-code, t-2.gds-code).
+    v-InfoSectionsTotal:GetDBAllAttr().
+    do iNum = 1 to v-InfoSectionsTotal:SectionNum:  
+    v-InfoSectionsTotal:GetInfoSectionProp(iNum).
     CREATE tincome-2.
-    ASSIGN
+    assign
       tincome-2.gds-code    = t-2.gds-code
-      tincome-2.supp-name   = for-supp-name
+      tincome-2.supp-name   = if iNum = 1 then for-supp-name else ""
       tincome-2.supp-type   = ub.trn-doc.cli-type
       tincome-2.supp-code   = ub.trn-doc.cli-code
-      tincome-2.doc-code    = ub.trn-doc.doc-code
-      tincome-2.qnty1       = ub.doc-line.fact-qnty
-      tincome-2.qnty2       = ( IF AVAILABLE ub.inv-line THEN ub.inv-line.wast-cli-qnty ELSE 0 )
-      tincome-2.temperature = ub.doc-line.temperature
+      tincome-2.doc-code    = ub.trn-doc.doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName
+      tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:FactQnty
+      tincome-2.qnty2       = ( IF AVAILABLE ub.inv-line THEN v-InfoSectionsTotal:InfoSectionCurr:FactKgQnty ELSE 0 )
+      tincome-2.temperature = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DensTemp
       tincome-2.density     = ( IF tincome-2.qnty2 / tincome-2.qnty1 = ? THEN 0 ELSE tincome-2.qnty2 / tincome-2.qnty1 )
+      tincome-2.naturalloss = v-InfoSectionsTotal:InfoSectionCurr:NaturalLoss
       tincome-2.is-fact     = YES
       tincome-2.ii          = loc-ii
       loc-ii                = loc-ii + 1
       v-qnty1               = v-qnty1 + tincome-2.qnty1
       v-qnty2               = v-qnty2 + tincome-2.qnty2
     .
+    end.
     if last-of(ub.trn-doc.cli-code) then do:
       if pshift-date <> pshift-date1 or (pshift-date = pshift-date1 and pshift-num <> pshift-num1) then do:
         CREATE tincome-2.

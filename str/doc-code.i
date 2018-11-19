@@ -64,13 +64,24 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 /*Господа $ использовать нельзя*/
 &scop modes-delimiters   ("-,-,=,#,*,^,+,`,":U + chr(126) + ",{&bef-gds-office}-,{&bef-gds-office}-,{&bef-gds-office}=,{&bef-gds-office}*,{&bef-gds-office}^,{&bef-gds-office}+,{&bef-gds-office}`,{&bef-gds-office}" + chr(126))
+&if "{1}" eq "class"
+&then
+method private void doc-code (
+                              parmode          as   character, 
+                              parobj-type      like ub.clients.obj-type,
+                              parobj-code      like ub.clients.obj-code,
+                              parroot-doc-code like ub.trn-doc.doc-code,
+                   output     pardoc-code      like ub.trn-doc.doc-code
+):
 
+&else
 procedure doc-code:
 define input  parameter parmode          as   character           no-undo.
 define input  parameter parobj-type      like ub.clients.obj-type no-undo.
 define input  parameter parobj-code      like ub.clients.obj-code no-undo.
 define input  parameter parroot-doc-code like ub.trn-doc.doc-code no-undo.
 define output parameter pardoc-code      like ub.trn-doc.doc-code no-undo.
+&endif
 define buffer buf_sys-ctrl for ub.sys-ctrl  .
 define variable vardb-remote     as   logical             no-undo.
 define variable vartemp-doc-code like ub.trn-doc.doc-code no-undo.
@@ -80,7 +91,10 @@ define variable v-delimiter as character no-undo .
 &scop second-part + trim (string (parobj-code, ">>>>9")) + substring (parobj-type, (if g#language = "RUS" then 1 else 2), 1)
 
 do
+&if "{1}" ne "class"
+&then
 on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+&endif
 :
 find first buf_sys-ctrl no-lock .
 vardb-remote = buf_sys-ctrl.db-num <> 0 .
@@ -149,9 +163,13 @@ vardb-remote = buf_sys-ctrl.db-num <> 0 .
                                   ,{&new-line}).
   end.
 end. /*doe*/
-end procedure.
-
+end. // procedure/method
+&if "{1}" eq "class"
+&then
+method private int64 get-doc-code-int64
+&else
 function get-doc-code-int64 returns int64
+&endif
   ( input p-doc-code as character ) :
 
   define variable v-ind              as integer   no-undo .
@@ -175,7 +193,7 @@ function get-doc-code-int64 returns int64
 
   return v-doc-code-int64 .
 
-end function.
+end. // function/method
 
 
 

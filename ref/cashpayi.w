@@ -94,8 +94,8 @@ tt-cash-pay.pay-card-view
 &Scoped-define ENABLED-TABLES tt-cash-pay
 &Scoped-define FIRST-ENABLED-TABLE tt-cash-pay
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-attr B-hist B-Help RECT-3 ~
-b-curr b-pay b-wealth cb-prop T-register T-kbo T-can-mix T-lnr T-has-return ~
-T-has-overpay for-curr-name for-pay-name for-wth-name 
+b-curr cb-type-pay-fr b-pay b-wealth cb-prop T-register T-kbo T-can-mix ~
+T-lnr T-has-return T-has-overpay for-curr-name for-pay-name for-wth-name 
 &Scoped-Define DISPLAYED-FIELDS tt-cash-pay.cdpay-code tt-cash-pay.obj-name ~
 tt-cash-pay.curr-code tt-cash-pay.pay-code tt-cash-pay.wth-code ~
 tt-cash-pay.pay-limit tt-cash-pay.slip-file-name tt-cash-pay.rule-file-name ~
@@ -108,8 +108,9 @@ tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance ~
 tt-cash-pay.pay-card-view 
 &Scoped-define DISPLAYED-TABLES tt-cash-pay
 &Scoped-define FIRST-DISPLAYED-TABLE tt-cash-pay
-&Scoped-Define DISPLAYED-OBJECTS cb-prop T-register T-kbo T-can-mix T-lnr ~
-T-has-return T-has-overpay for-curr-name for-pay-name for-wth-name 
+&Scoped-Define DISPLAYED-OBJECTS cb-type-pay-fr cb-prop T-register T-kbo ~
+T-can-mix T-lnr T-has-return T-has-overpay for-curr-name for-pay-name ~
+for-wth-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -196,6 +197,18 @@ DEFINE VARIABLE cb-prop AS CHARACTER FORMAT "X(256)":U INITIAL "0"
      SIZE 44.88 BY 1
      BGCOLOR 15  NO-UNDO.
 
+DEFINE VARIABLE cb-type-pay-fr AS CHARACTER FORMAT "x(200)" 
+     LABEL "Тип платежа ФР" 
+     VIEW-AS COMBO-BOX INNER-LINES 7
+     LIST-ITEM-PAIRS "Наличные","1",
+                     "Электронные","2",
+                     "Авансом","3",
+                     "Кредитом","4",
+                     "Встречным представление","5",
+                     "Нефискальный платеж","-1"
+     DROP-DOWN-LIST
+     SIZE 24.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE for-curr-name AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 25.75 BY .67
@@ -267,6 +280,7 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 3.75 BY .96
      b-curr AT ROW 3.75 COL 26
+     cb-type-pay-fr AT ROW 3.75 COL 72.5 COLON-ALIGNED
      tt-cash-pay.pay-code AT ROW 5 COL 9 COLON-ALIGNED
           LABEL "Оплата"
           VIEW-AS FILL-IN 
@@ -335,16 +349,16 @@ DEFINE FRAME Dialog-Frame
           LABEL "Необходима on-line авторизация"
           VIEW-AS TOGGLE-BOX
           SIZE 45 BY 1
-     tt-cash-pay.is-all-pay AT ROW 16.5 COL 49.13
-          LABEL "'Общий' платеж"
-          VIEW-AS TOGGLE-BOX
-          SIZE 45.38 BY .92
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
+     tt-cash-pay.is-all-pay AT ROW 16.5 COL 49.13
+          LABEL "'Общий' платеж"
+          VIEW-AS TOGGLE-BOX
+          SIZE 45.38 BY .92
      tt-cash-pay.atr32 AT ROW 17.5 COL 2.5
           LABEL "Обязателен ввод PIN-кода"
           VIEW-AS TOGGLE-BOX
@@ -379,7 +393,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Префиксы N плат.карт для просмотра"
           VIEW-AS FILL-IN 
           SIZE 52.25 BY 1 TOOLTIP "Список префикс номеров платежных карт, которые будут видны в BO"
-     for-curr-name AT ROW 3.75 COL 34.5 COLON-ALIGNED NO-LABEL
+     for-curr-name AT ROW 3.75 COL 28.5 COLON-ALIGNED NO-LABEL
      for-pay-name AT ROW 5 COL 21 COLON-ALIGNED NO-LABEL
      for-wth-name AT ROW 5 COL 70 COLON-ALIGNED NO-LABEL
      "Свойства платежа :" VIEW-AS TEXT
@@ -665,6 +679,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME cb-type-pay-fr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-type-pay-fr Dialog-Frame
+ON VALUE-CHANGED OF cb-type-pay-fr IN FRAME Dialog-Frame /* Тип карты */
+DO:
+  assign  
+  cb-type-pay-fr.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME tt-cash-pay.cdpay-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-cash-pay.cdpay-code Dialog-Frame
 ON LEAVE OF tt-cash-pay.cdpay-code IN FRAME Dialog-Frame /* Код типа платежа */
@@ -813,8 +839,8 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY cb-prop T-register T-kbo T-can-mix T-lnr T-has-return T-has-overpay 
-          for-curr-name for-pay-name for-wth-name 
+  DISPLAY cb-type-pay-fr cb-prop T-register T-kbo T-can-mix T-lnr T-has-return 
+          T-has-overpay for-curr-name for-pay-name for-wth-name 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-cash-pay THEN 
     DISPLAY tt-cash-pay.cdpay-code tt-cash-pay.obj-name tt-cash-pay.curr-code 
@@ -829,17 +855,18 @@ PROCEDURE enable_UI :
           tt-cash-pay.pay-card-view 
       WITH FRAME Dialog-Frame.
   ENABLE B-exit b-quit B-attr B-hist B-Help RECT-3 tt-cash-pay.cdpay-code 
-         tt-cash-pay.obj-name tt-cash-pay.curr-code b-curr tt-cash-pay.pay-code 
-         b-pay tt-cash-pay.wth-code b-wealth tt-cash-pay.pay-limit cb-prop 
-         tt-cash-pay.slip-file-name tt-cash-pay.rule-file-name 
-         tt-cash-pay.is-cash tt-cash-pay.atr128 tt-cash-pay.atr1 
-         tt-cash-pay.is-credit-card tt-cash-pay.atr2 tt-cash-pay.is-debet-card 
-         tt-cash-pay.atr4 tt-cash-pay.is-goods-pay tt-cash-pay.atr8 
-         tt-cash-pay.is-service-pay tt-cash-pay.atr16 tt-cash-pay.is-all-pay 
-         tt-cash-pay.atr32 tt-cash-pay.is-card-swap tt-cash-pay.atr64 
-         tt-cash-pay.is-bar-read tt-cash-pay.is-credit tt-cash-pay.is-advance 
-         T-register T-kbo T-can-mix T-lnr T-has-return T-has-overpay 
-         tt-cash-pay.pay-card-view for-curr-name for-pay-name for-wth-name 
+         tt-cash-pay.obj-name tt-cash-pay.curr-code b-curr cb-type-pay-fr 
+         tt-cash-pay.pay-code b-pay tt-cash-pay.wth-code b-wealth 
+         tt-cash-pay.pay-limit cb-prop tt-cash-pay.slip-file-name 
+         tt-cash-pay.rule-file-name tt-cash-pay.is-cash tt-cash-pay.atr128 
+         tt-cash-pay.atr1 tt-cash-pay.is-credit-card tt-cash-pay.atr2 
+         tt-cash-pay.is-debet-card tt-cash-pay.atr4 tt-cash-pay.is-goods-pay 
+         tt-cash-pay.atr8 tt-cash-pay.is-service-pay tt-cash-pay.atr16 
+         tt-cash-pay.is-all-pay tt-cash-pay.atr32 tt-cash-pay.is-card-swap 
+         tt-cash-pay.atr64 tt-cash-pay.is-bar-read tt-cash-pay.is-credit 
+         tt-cash-pay.is-advance T-register T-kbo T-can-mix T-lnr T-has-return 
+         T-has-overpay tt-cash-pay.pay-card-view for-curr-name for-pay-name 
+         for-wth-name 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -931,6 +958,12 @@ end.
     cb-card-type = buf_cash-pay-attr.attr-value .                                 
     end.
 
+    find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+                                 and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+                                 and buf_cash-pay-attr.attr-code = "cash-type-pay-fr" no-error .
+    if AVAILABLE buf_cash-pay-attr then do:
+    cb-type-pay-fr = buf_cash-pay-attr.attr-value .                                 
+    end.
 
 
 END PROCEDURE.
@@ -989,6 +1022,7 @@ t-lnr
 t-can-mix
 t-has-return
 t-has-overpay
+cb-type-pay-fr
 WITH FRAME {&FRAME-NAME}.
 END.
 if cb-prop = "4" then do:
@@ -1048,6 +1082,7 @@ when {&add-def} then do:
       t-can-mix
       t-has-return
       t-has-overpay
+      cb-type-pay-fr
       WITH FRAME {&frame-name}.
       if cb-prop = "4" then do:
         enable cb-card-type with frame {&frame-name} .
@@ -1099,6 +1134,7 @@ when {&update} then do:
       t-can-mix
       t-has-return
       t-has-overpay
+      cb-type-pay-fr
       WITH FRAME {&frame-name}.
             if cb-prop = "4" then do:
         enable cb-card-type with frame {&frame-name} .
@@ -1163,6 +1199,7 @@ t-register
 tt-cash-pay.register = (IF t-register THEN 1 ELSE 0)
 cb-prop
 cb-card-type
+cb-type-pay-fr
 t-kbo
 tt-cash-pay.is-kbo = (IF t-kbo THEN 1 ELSE 0)
 t-lnr
@@ -1238,6 +1275,25 @@ tt-cash-pay.can-mix = (IF t-can-mix THEN 1 ELSE 0)
   else 
   do:
     buf_cash-pay-attr.attr-value = cb-prop .
+  end.
+  
+  find first buf_cash-pay-attr where 
+        buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+    and buf_cash-pay-attr.curr-code = tt-cash-pay.curr-code
+    and buf_cash-pay-attr.attr-code = "cash-type-pay-fr" no-error .
+  if not AVAILABLE buf_cash-pay-attr then 
+  do:
+    create buf_cash-pay-attr .
+    assign
+      buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code
+      buf_cash-pay-attr.curr-code  = tt-cash-pay.curr-code
+      buf_cash-pay-attr.attr-code  = "cash-type-pay-fr"
+      buf_cash-pay-attr.attr-value = cb-type-pay-fr 
+      .
+  end.
+  else 
+  do:
+    buf_cash-pay-attr.attr-value = cb-type-pay-fr .
   end.  
 
   find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = tt-cash-pay.cdpay-code

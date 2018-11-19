@@ -225,30 +225,63 @@ on error undo, return error return-value
         v-fact-qnty = v-fact-qnty + buf_gds-dtl.fact-qnty .
         v-doc-qnty  = v-doc-qnty + buf_gds-dtl.doc-qnty .
     end.
-
-    if v-fact-qnty-p <> v-fact-qnty  and v-fact-qnty-p <> 0 then do:
-        p-mess = "В документе не соответствует количество по партиям и признакам (fact) !!!"   .
-        p-err = true .
-        return.
-    end.
-    if v-doc-qnty-p <> v-doc-qnty and v-doc-qnty-p <> 0 then do:
-        p-mess = "В документе не соответствует количество по партиям и признакам (doc) !!!" .
-        p-err = true .
-        return.
-
-    end.
-
-    if v-fact-qnty <> buf_doc-line.fact-qnty and v-fact-qnty-p <> 0 then do:
-        p-mess = "В документе не соответствует количество по партиям и строкам (fact)!!!" .
-        p-err = true .
-        return.
-
-    end.
-
-    if v-doc-qnty <> buf_doc-line.doc-qnty and v-doc-qnty-p <> 0 then do:
-        p-mess = "В документе не соответствует количество по признакам и строкам (doc)!!!" .
-        p-err = true .
-        return.
+    
+    find first goods no-lock where goods.artic = buf_doc-line.artic
+                               and goods.prod-type = buf_doc-line.prod-type
+                               and goods.prod-code = buf_doc-line.prod-code
+                               .
+    find first doc-fbr-gds no-lock where (doc-fbr-gds.out-code = buf_doc-line.doc-code or
+                                          doc-fbr-gds.out-code = replace(buf_doc-line.doc-code, "=", "-") ) 
+                                     and doc-fbr-gds.gds-code = goods.gds-code
+                                     no-error .
+    if available doc-fbr-gds
+    then do :
+      if v-fact-qnty-p <> v-doc-qnty  and v-fact-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по партиям и признакам для производства (fact) !!!"   .
+          p-err = true .
+          return.
+      end.
+      if v-doc-qnty-p <> v-doc-qnty and v-doc-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по партиям и признакам для производства (doc) !!!" .
+          p-err = true .
+          return.
+  
+      end.
+      if v-fact-qnty <> buf_doc-line.fact-qnty and v-fact-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по партиям и строкам для производства (fact)!!!" .
+          p-err = true .
+          return.
+  
+      end.
+      if v-doc-qnty <> buf_doc-line.doc-qnty and v-doc-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по признакам и строкам для производства (doc)!!!" .
+          p-err = true .
+          return.
+      end.
+    end.                                         
+    else do :
+      if v-fact-qnty-p <> v-fact-qnty  and v-fact-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по партиям и признакам (fact) !!!"   .
+          p-err = true .
+          return.
+      end.
+      if v-doc-qnty-p <> v-doc-qnty and v-doc-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по партиям и признакам (doc) !!!" .
+          p-err = true .
+          return.
+  
+      end.
+      if v-fact-qnty <> buf_doc-line.fact-qnty and v-fact-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по партиям и строкам (fact)!!!" .
+          p-err = true .
+          return.
+  
+      end.
+      if v-doc-qnty <> buf_doc-line.doc-qnty and v-doc-qnty-p <> 0 then do:
+          p-mess = "В документе не соответствует количество по признакам и строкам (doc)!!!" .
+          p-err = true .
+          return.
+      end.
     end.
   end.
 end.

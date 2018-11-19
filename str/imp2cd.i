@@ -31,7 +31,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 procedure send-to-cash:
   if not can-find(first ub.cash-desk where
-                  ub.cash-desk.db-num = g#db-num AND
+                  ub.cash-desk.db-num = ibs.th.gbl.gbl-var:g#db-num AND
                   ub.cash-desk.cash-on = yes) then return.
 
 
@@ -58,7 +58,7 @@ procedure send-to-cash:
                          &endif
                         ,input ?
                         ,input 'str/sendnall.p':U
-                        ,input string(g#db-num)
+                        ,input string(ibs.th.gbl.gbl-var:g#db-num)
                         ,input yes /*p-auto-go*/
                         ,input '':U
                         ,input 'Отправка информации на кассу') no-error .

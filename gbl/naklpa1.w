@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "Настроечные параметры
 { gbl/getcntxt.i get }
 { gbl/onewin.i   }
 { gbl/twowin.i   }
+{ str/trdcalib.i }
 
 define buffer obj_thbj-attr for ub.thbj-attr.
 define buffer glb_thbj-attr for ub.thbj-attr.
@@ -68,6 +69,10 @@ define temp-table temp_twowin_itemsSelected_col no-undo
 .
 define variable v-list-edt-full as character    no-undo.
 define variable v-list-edt      as character    no-undo.
+
+define variable v-list-attr-PN-full as character    no-undo.
+define variable v-list-attr-PN      as character    no-undo.
+
 
 assign
 v-tth  = buffer thbjattr_thbj-attr:table-handle .
@@ -160,11 +165,6 @@ DEFINE BUTTON B-10
      SIZE 3 BY 1.
 
 DEFINE BUTTON B-2 
-     IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL "" 
-     SIZE 3 BY 1.
-
-DEFINE BUTTON B-21 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
@@ -264,10 +264,6 @@ DEFINE VARIABLE v-is-ov AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT 
      SIZE 44.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-mark-alchol AS CHARACTER FORMAT "X(256)":U 
-      VIEW-AS TEXT 
-     SIZE 77 BY 1 NO-UNDO.
-
 DEFINE VARIABLE v-minusprt AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 56.63 BY 1 NO-UNDO.
@@ -365,10 +361,6 @@ DEFINE IMAGE I-is-bcdoc
      SIZE 3 BY 1.
 
 DEFINE IMAGE I-is-ov
-     FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.
-
-DEFINE IMAGE I-mark-alchol
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
@@ -495,11 +487,6 @@ DEFINE VARIABLE is-ov AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 2.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE mark-alchol AS LOGICAL INITIAL no 
-     LABEL "" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 81 BY 1 NO-UNDO.
-
 DEFINE VARIABLE minusprt AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
@@ -585,15 +572,33 @@ DEFINE BUTTON B-20
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-22 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
 DEFINE BUTTON B-ex 
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-set_attr-PN 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.
+
+DEFINE VARIABLE attr-PN AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 35.5 BY 6 NO-UNDO.
+
 DEFINE VARIABLE reasonme AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 41.25 BY 1
      FGCOLOR 1  NO-UNDO.
+
+DEFINE VARIABLE v-attr-PN AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 25.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-back-date AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
@@ -634,6 +639,10 @@ DEFINE VARIABLE v-round-vat-sum AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE v-vat-goods AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 66.13 BY 1 NO-UNDO.
+
+DEFINE IMAGE I-attr-PN
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
 
 DEFINE IMAGE I-back-date
      FILENAME "cmp/info.bmp":U
@@ -678,7 +687,7 @@ DEFINE IMAGE I-vat-goods
 DEFINE VARIABLE back-date AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 2.5 BY 1 NO-UNDO.
+     SIZE 2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE exc-max-qnty AS LOGICAL INITIAL no 
      LABEL "" 
@@ -732,7 +741,7 @@ DEFINE FRAME Dialog-Frame
      F-button-1 AT ROW 1.33 COL 20.38 COLON-ALIGNED NO-LABEL WIDGET-ID 350
      F-button-2 AT ROW 1.33 COL 33.63 COLON-ALIGNED NO-LABEL WIDGET-ID 348
      RECT-3 AT ROW 2 COL 1 WIDGET-ID 248
-     SPACE(0.49) SKIP(1.12)
+     SPACE(0.49) SKIP(0.91)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для накладных"
@@ -762,19 +771,17 @@ DEFINE FRAME page-1
      proxycrd AT ROW 12.58 COL 6.63 WIDGET-ID 112
      vat-sum AT ROW 13.54 COL 3.13 WIDGET-ID 232
      B-5 AT ROW 14.33 COL 3.13 WIDGET-ID 88
-     type-vat AT ROW 14.33 COL 24.88 NO-LABEL WIDGET-ID 68
-     vat-ext AT ROW 14.33 COL 46.5 COLON-ALIGNED NO-LABEL WIDGET-ID 226
+     type-vat AT ROW 14.33 COL 37.88 NO-LABEL WIDGET-ID 68
+     vat-ext AT ROW 14.33 COL 60.5 COLON-ALIGNED NO-LABEL WIDGET-ID 226
      B-6 AT ROW 15.38 COL 3.13 WIDGET-ID 90
-     type-slt AT ROW 15.38 COL 24.88 NO-LABEL WIDGET-ID 74
-     slt-ext AT ROW 15.38 COL 46.5 COLON-ALIGNED NO-LABEL WIDGET-ID 220
+     type-slt AT ROW 15.38 COL 37.88 NO-LABEL WIDGET-ID 74
+     slt-ext AT ROW 15.38 COL 60.5 COLON-ALIGNED NO-LABEL WIDGET-ID 220
      multdtyp AT ROW 16.33 COL 3.13 WIDGET-ID 170
      prc-exp AT ROW 17.21 COL 1.13 COLON-ALIGNED NO-LABEL WIDGET-ID 210
      B-8 AT ROW 18.29 COL 3.13 WIDGET-ID 100
      factorrt AT ROW 18.29 COL 5 COLON-ALIGNED NO-LABEL WIDGET-ID 102
      B-10 AT ROW 19.38 COL 3.13 WIDGET-ID 238
      inp_sum AT ROW 19.38 COL 6.63 WIDGET-ID 236
-     B-21 AT ROW 20.46 COL 3.13 WIDGET-ID 244
-     mark-alchol AT ROW 20.46 COL 6.75 WIDGET-ID 186
      v-date-close-period AT ROW 1.08 COL 19.13 NO-LABEL WIDGET-ID 6
      v-stfactdt AT ROW 2.13 COL 9.38 NO-LABEL WIDGET-ID 18
      v-intprmvq AT ROW 3.17 COL 9.38 NO-LABEL WIDGET-ID 54
@@ -792,21 +799,20 @@ DEFINE FRAME page-1
      v-proxycrd AT ROW 12.58 COL 8.63 NO-LABEL WIDGET-ID 114
      v-vat-sum AT ROW 13.54 COL 6.63 NO-LABEL WIDGET-ID 234
      v-type-vat AT ROW 14.33 COL 6.5 NO-LABEL WIDGET-ID 66
-     v-vat-ext AT ROW 14.33 COL 63.25 NO-LABEL WIDGET-ID 228
+     v-vat-ext AT ROW 14.33 COL 70.63 NO-LABEL WIDGET-ID 228
      v-type-slt AT ROW 15.38 COL 6.5 NO-LABEL WIDGET-ID 78
-     v-slt-ext AT ROW 15.38 COL 56.13 NO-LABEL WIDGET-ID 222
+     v-slt-ext AT ROW 15.38 COL 63.5 NO-LABEL WIDGET-ID 222
      v-multdtyp AT ROW 16.33 COL 6.63 NO-LABEL WIDGET-ID 172
      v-prc-exp AT ROW 17.21 COL 10.88 NO-LABEL WIDGET-ID 208
      v-factorrt AT ROW 18.29 COL 13.13 NO-LABEL WIDGET-ID 106
+     v-inp_sum AT ROW 19.38 COL 9.38 NO-LABEL WIDGET-ID 242
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.5 ROW 2.25
-         SIZE 99 BY 21 WIDGET-ID 200.
+         SIZE 99 BY 20 WIDGET-ID 200.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME page-1
-     v-inp_sum AT ROW 19.38 COL 9.38 NO-LABEL WIDGET-ID 242
-     v-mark-alchol AT ROW 20.46 COL 9 NO-LABEL WIDGET-ID 190
      I-date-close-period AT ROW 1.08 COL 1.25 WIDGET-ID 10
      I-stfactdt AT ROW 2.13 COL 1 WIDGET-ID 34
      I-intprmvq AT ROW 3.17 COL 1 WIDGET-ID 50
@@ -824,18 +830,17 @@ DEFINE FRAME page-1
      I-proxycrd AT ROW 12.58 COL 1 WIDGET-ID 110
      I-vat-sum AT ROW 13.46 COL 1 WIDGET-ID 230
      I-type-vat AT ROW 14.33 COL 1 WIDGET-ID 64
-     I-vat-ext AT ROW 14.33 COL 46 WIDGET-ID 224
+     I-vat-ext AT ROW 14.33 COL 60 WIDGET-ID 224
      I-type-slt AT ROW 15.33 COL 1 WIDGET-ID 72
-     I-slt-ext AT ROW 15.38 COL 46 WIDGET-ID 218
+     I-slt-ext AT ROW 15.38 COL 60 WIDGET-ID 218
      I-multdtyp AT ROW 16.38 COL 1 WIDGET-ID 168
      I-prc-exp AT ROW 17.21 COL 1 WIDGET-ID 204
      I-factorrt AT ROW 18.25 COL 1 WIDGET-ID 104
      I-inp_sum AT ROW 19.38 COL 1 WIDGET-ID 240
-     I-mark-alchol AT ROW 20.54 COL 1.13 WIDGET-ID 188
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.5 ROW 2.25
-         SIZE 99 BY 21 WIDGET-ID 200.
+         SIZE 99 BY 20 WIDGET-ID 200.
 
 DEFINE FRAME page-2
      B-11 AT ROW 1.13 COL 2.88 WIDGET-ID 238
@@ -889,7 +894,7 @@ DEFINE FRAME page-2
      reasonm AT ROW 1.13 COL 6 WIDGET-ID 236
      B-14 AT ROW 2.17 COL 5.75 WIDGET-ID 260
      B-ex AT ROW 2.17 COL 31.13 WIDGET-ID 268
-     back-date AT ROW 3.25 COL 5.5 WIDGET-ID 248
+     back-date AT ROW 3.25 COL 6 WIDGET-ID 248
      B-12 AT ROW 3.29 COL 2.88 WIDGET-ID 244
      B-13 AT ROW 4.42 COL 2.88 WIDGET-ID 252
      not-ord AT ROW 4.42 COL 6 WIDGET-ID 254
@@ -905,6 +910,9 @@ DEFINE FRAME page-2
      gtd-to-imp-prod AT ROW 10.25 COL 6 WIDGET-ID 306
      B-20 AT ROW 11.5 COL 2.88 WIDGET-ID 310
      exc-max-qnty AT ROW 11.5 COL 6 WIDGET-ID 314
+     B-22 AT ROW 12.75 COL 2.88 WIDGET-ID 484
+     B-set_attr-PN AT ROW 12.75 COL 32 WIDGET-ID 480
+     attr-PN AT ROW 14 COL 6 NO-LABEL WIDGET-ID 492
      v-reasonm AT ROW 1.13 COL 8.75 NO-LABEL WIDGET-ID 242
      v-reasonme AT ROW 2.17 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 264
      reasonme AT ROW 2.25 COL 32.75 COLON-ALIGNED NO-LABEL WIDGET-ID 266
@@ -916,6 +924,7 @@ DEFINE FRAME page-2
      v-round-vat-sum AT ROW 9 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 300
      v-gtd-to-imp-prod AT ROW 10.25 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 308
      v-exc-max-qnty AT ROW 11.5 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 316
+     v-attr-PN AT ROW 12.75 COL 4.5 COLON-ALIGNED NO-LABEL WIDGET-ID 494
      I-reasonm AT ROW 1.13 COL 1 WIDGET-ID 240
      I-back-date AT ROW 3.29 COL 1.5 WIDGET-ID 246
      I-not-ord AT ROW 4.42 COL 1 WIDGET-ID 256
@@ -926,6 +935,7 @@ DEFINE FRAME page-2
      I-round-vat-sum AT ROW 9 COL 1 WIDGET-ID 296
      I-gtd-to-imp-prod AT ROW 10.25 COL 1 WIDGET-ID 304
      I-exc-max-qnty AT ROW 11.5 COL 1 WIDGET-ID 312
+     I-attr-PN AT ROW 12.75 COL 1 WIDGET-ID 486
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.63 ROW 2.33
@@ -983,13 +993,12 @@ DEFINE FRAME page-1
      v-proxycrd AT ROW 12.58 COL 8.63 NO-LABEL WIDGET-ID 114
      v-vat-sum AT ROW 13.54 COL 6.63 NO-LABEL WIDGET-ID 234
      v-type-vat AT ROW 14.33 COL 6.5 NO-LABEL WIDGET-ID 66
-     v-vat-ext AT ROW 14.33 COL 77.25 NO-LABEL WIDGET-ID 228
+     v-vat-ext AT ROW 14.33 COL 76.50 NO-LABEL WIDGET-ID 228
      v-type-slt AT ROW 15.38 COL 6.5 NO-LABEL WIDGET-ID 78
-     v-slt-ext AT ROW 15.38 COL 70.13 NO-LABEL WIDGET-ID 222
+     v-slt-ext AT ROW 15.38 COL 76.5 NO-LABEL WIDGET-ID 222
      v-multdtyp AT ROW 16.33 COL 6.63 NO-LABEL WIDGET-ID 172
      v-prc-exp AT ROW 17.21 COL 10.88 NO-LABEL WIDGET-ID 208
      v-factorrt AT ROW 18.29 COL 13.13 NO-LABEL WIDGET-ID 106
-     v-inp_sum AT ROW 19.38 COL 9.38 NO-LABEL WIDGET-ID 242
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.5 ROW 2.25
@@ -997,6 +1006,7 @@ DEFINE FRAME page-1
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME page-1
+     v-inp_sum AT ROW 19.38 COL 9.38 NO-LABEL WIDGET-ID 242
      I-date-close-period AT ROW 1.08 COL 1.25 WIDGET-ID 10
      I-stfactdt AT ROW 2.13 COL 1 WIDGET-ID 34
      I-intprmvq AT ROW 3.17 COL 1 WIDGET-ID 50
@@ -1103,11 +1113,6 @@ ASSIGN
 ASSIGN 
        v-is-ov:READ-ONLY IN FRAME page-1        = TRUE.
 
-/* SETTINGS FOR FILL-IN v-mark-alchol IN FRAME page-1
-   ALIGN-L                                                              */
-ASSIGN 
-       v-mark-alchol:READ-ONLY IN FRAME page-1        = TRUE.
-
 /* SETTINGS FOR FILL-IN v-minusprt IN FRAME page-1
    ALIGN-L                                                              */
 ASSIGN 
@@ -1180,6 +1185,12 @@ ASSIGN
 
 /* SETTINGS FOR FRAME page-2
                                                                         */
+ASSIGN 
+       attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       v-attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
+
 ASSIGN 
        v-back-date:READ-ONLY IN FRAME page-2        = TRUE.
 
@@ -1429,14 +1440,13 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define FRAME-NAME page-1
-&Scoped-define SELF-NAME B-21
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-21 Dialog-Frame
-ON CHOOSE OF B-21 IN FRAME page-1
+&Scoped-define SELF-NAME B-22
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-22 Dialog-Frame
+ON CHOOSE OF B-22 IN FRAME page-2
 DO:
   run gbl/v-taobj.w
       ({&attr-nakl_par},
-       "mark-alchol"
+       "attr-PN"
        ).
 END.
 
@@ -1444,6 +1454,7 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define FRAME-NAME page-1
 &Scoped-define SELF-NAME B-3
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-3 Dialog-Frame
 ON CHOOSE OF B-3 IN FRAME page-1
@@ -1556,6 +1567,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-set_attr-PN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_attr-PN Dialog-Frame
+ON CHOOSE OF B-set_attr-PN IN FRAME page-2
+DO:
+  run select-attr-PN in this-procedure.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define FRAME-NAME Dialog-Frame
 &Scoped-define SELF-NAME button-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL button-1 Dialog-Frame
@@ -1586,6 +1608,18 @@ DO:
     f-button-1:fgcolor = ? .
 
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define FRAME-NAME page-2
+&Scoped-define SELF-NAME I-attr-PN
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-attr-PN Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-attr-PN IN FRAME page-2
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1747,17 +1781,6 @@ END.
 &Scoped-define SELF-NAME I-is-ov
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-is-ov Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-is-ov IN FRAME page-1
-DO:
-  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME I-mark-alchol
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-mark-alchol Dialog-Frame
-ON MOUSE-SELECT-CLICK OF I-mark-alchol IN FRAME page-1
 DO:
   MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
 END.
@@ -2015,6 +2038,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+
 if p-obj-type <> "" then
    frame {&frame-name}:title = frame {&frame-name}:title + (if p-obj-type = {&cmp} then " фирма" else " маг") + string(p-obj-code) .
 
@@ -2038,6 +2062,7 @@ define variable loc#log as logical   no-undo .
    if loc#log <> yes then do: return error. end.
     run init-tt.
     RUN proc-init-EX.
+    RUN proc-init-attr-PN.
     run enable_UI.
     run init-proc.
     apply "choose" to button-1 .
@@ -2091,39 +2116,38 @@ PROCEDURE enable_UI :
   DISPLAY date-close-period stfactdt intprmvq minusprt part-prc curcli 
           avail-on-date nocurbas rnd-znk chk-prs convimp noapndsc is-bcdoc is-ov 
           proxycrd vat-sum type-vat vat-ext type-slt slt-ext multdtyp prc-exp 
-          factorrt inp_sum mark-alchol v-date-close-period v-stfactdt v-intprmvq 
-          v-minusprt v-part-prc v-curcli v-avail-on-date v-nocurbas v-rnd-znk 
-          v-chk-prs v-convimp v-noapndsc v-is-bcdoc v-is-ov v-proxycrd v-vat-sum 
+          factorrt inp_sum v-date-close-period v-stfactdt v-intprmvq v-minusprt 
+          v-part-prc v-curcli v-avail-on-date v-nocurbas v-rnd-znk v-chk-prs 
+          v-convimp v-noapndsc v-is-bcdoc v-is-ov v-proxycrd v-vat-sum 
           v-type-vat v-vat-ext v-type-slt v-slt-ext v-multdtyp v-prc-exp 
-          v-factorrt v-inp_sum v-mark-alchol 
+          v-factorrt v-inp_sum 
       WITH FRAME page-1.
   ENABLE B-1 date-close-period I-date-close-period I-stfactdt I-intprmvq 
          I-minusprt I-part-prc I-curcli I-avail-on-date I-nocurbas I-chk-prs 
          I-rnd-znk I-convimp I-noapndsc I-is-bcdoc I-is-ov I-proxycrd I-vat-sum 
          I-type-vat I-vat-ext I-type-slt I-slt-ext I-multdtyp I-prc-exp 
-         I-factorrt I-inp_sum I-mark-alchol B-2 stfactdt B-3 intprmvq B-4 
-         minusprt part-prc curcli B-7 avail-on-date nocurbas rnd-znk chk-prs 
-         convimp noapndsc is-bcdoc is-ov B-9 proxycrd vat-sum B-5 type-vat 
-         vat-ext B-6 type-slt slt-ext multdtyp prc-exp B-8 factorrt B-10 
-         inp_sum B-21 mark-alchol v-date-close-period v-stfactdt v-intprmvq 
-         v-minusprt v-part-prc v-curcli v-avail-on-date v-nocurbas v-rnd-znk 
-         v-chk-prs v-convimp v-noapndsc v-is-bcdoc v-is-ov v-proxycrd v-vat-sum 
-         v-type-vat v-vat-ext v-type-slt v-slt-ext v-multdtyp v-prc-exp 
-         v-factorrt v-inp_sum v-mark-alchol 
+         I-factorrt I-inp_sum B-2 stfactdt B-3 intprmvq B-4 minusprt part-prc 
+         curcli B-7 avail-on-date nocurbas rnd-znk chk-prs convimp noapndsc 
+         is-bcdoc is-ov B-9 proxycrd vat-sum B-5 type-vat vat-ext B-6 type-slt 
+         slt-ext multdtyp prc-exp B-8 factorrt B-10 inp_sum v-date-close-period 
+         v-stfactdt v-intprmvq v-minusprt v-part-prc v-curcli v-avail-on-date 
+         v-nocurbas v-rnd-znk v-chk-prs v-convimp v-noapndsc v-is-bcdoc v-is-ov 
+         v-proxycrd v-vat-sum v-type-vat v-vat-ext v-type-slt v-slt-ext 
+         v-multdtyp v-prc-exp v-factorrt v-inp_sum 
       WITH FRAME page-1.
   {&OPEN-BROWSERS-IN-QUERY-page-1}
   DISPLAY reasonm back-date not-ord neg-ask vat-goods inv-ship round-vat-sum 
-          gtd-to-imp-prod exc-max-qnty v-reasonm v-reasonme reasonme v-back-date 
-          v-not-ord v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum 
-          v-gtd-to-imp-prod v-exc-max-qnty 
+          gtd-to-imp-prod exc-max-qnty attr-PN v-reasonm v-reasonme reasonme 
+          v-back-date v-not-ord v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum 
+          v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN 
       WITH FRAME page-2.
   ENABLE I-reasonm I-back-date I-not-ord I-reasonme I-neg-ask I-vat-goods 
-         I-inv-ship I-round-vat-sum I-gtd-to-imp-prod I-exc-max-qnty B-11 
-         reasonm B-14 B-ex back-date B-12 B-13 not-ord B-15 neg-ask B-16 
+         I-inv-ship I-round-vat-sum I-gtd-to-imp-prod I-exc-max-qnty I-attr-PN 
+         B-11 reasonm B-14 B-ex back-date B-12 B-13 not-ord B-15 neg-ask B-16 
          vat-goods B-17 inv-ship B-18 round-vat-sum B-19 gtd-to-imp-prod B-20 
-         exc-max-qnty v-reasonm v-reasonme reasonme v-back-date v-not-ord 
-         v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum v-gtd-to-imp-prod 
-         v-exc-max-qnty 
+         exc-max-qnty B-22 B-set_attr-PN attr-PN v-reasonm v-reasonme reasonme 
+         v-back-date v-not-ord v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum 
+         v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN 
       WITH FRAME page-2.
   {&OPEN-BROWSERS-IN-QUERY-page-2}
 END PROCEDURE.
@@ -2343,11 +2367,6 @@ FOR EACH thbjattr_thbj-attr
 &scop type logical
 {&telo1}
 
-&scop n-page 1
-&scop pole mark-alchol
-&scop type logical
-{&telo1}
-
 &scop n-page 2
 &scop pole reasonm
 &scop type logical
@@ -2398,6 +2417,10 @@ FOR EACH thbjattr_thbj-attr
 &scop type logical
 {&telo1}
 
+&scop n-page 2
+&scop pole attr-PN
+&scop type character
+{&telo1}
 
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
@@ -2453,10 +2476,6 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 
 &scop pole inp_sum
 {&telo2}
-
-&scop pole mark-alchol
-{&telo2}
-
 
 &scop pole factorrt
 {&telo2}
@@ -2535,6 +2554,9 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 {&telo2}
 
 &scop pole exc-max-qnty
+{&telo2}
+
+&scop pole attr-PN
 {&telo2}
 
 END PROCEDURE.
@@ -2645,7 +2667,6 @@ define variable v-found as decimal   no-undo .
      slt-ext
      vat-ext
      vat-sum
-     mark-alchol
      with frame page-1 .
      disable
      reasonm
@@ -2658,6 +2679,7 @@ define variable v-found as decimal   no-undo .
      round-vat-sum
      gtd-to-imp-prod
      exc-max-qnty
+     attr-PN
      with frame page-2 .
 
      B-exit:label in frame {&frame-name}  = "Вы&ход"  .
@@ -2681,6 +2703,7 @@ define variable v-found as decimal   no-undo .
        vat-sum
      with frame page-1.
   end.
+  hide attr-PN in frame page-2 .
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2693,6 +2716,32 @@ PROCEDURE init-tt :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-init-attr-PN Dialog-Frame 
+PROCEDURE proc-init-attr-PN :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+
+
+
+   assign
+      v-list-attr-PN      = {&trdcattr-nids} + "," + {&trdcattr-dids} + "," + {&trdcattr-nsf} + "," + {&trdcattr-dsf} + "," + {&trdcattr-expense_own} + "," + {&trdcattr-ndog} + ","
+      + {&trdcattr-ddog} + "," + {&trdcattr-ndov} + "," + {&trdcattr-ddov} + "," + {&trdcattr-print-num} + "," + {&trdcattr-idCountryContr} + "," + {&trdcattr-car-time} +
+      "," + {&trdcattr-t_pass-fname} + "," + {&trdcattr-t_pass-position} + "," + {&trdcattr-t_accept-fname} + "," + {&trdcattr-t_accept-position} + "," +
+      {&trdcattr-ndovwho} + "," + {&trdcattr-nosn} + "," + {&trdcattr-shipper}.
+      v-list-attr-PN-full = {&label-trdcattr-nids} + "," + {&label-trdcattr-dids} + "," + {&label-trdcattr-nsf} + "," + {&label-trdcattr-dsf} + "," + {&label-trdcattr-expense_own} + "," + {&label-trdcattr-ndog} + ","
+      + {&label-trdcattr-ddog} + "," + {&label-trdcattr-ndov} + "," + {&label-trdcattr-ddov} + "," + {&label-trdcattr-print-num} + "," + {&label-trdcattr-idCountryContr} + "," + {&label-trdcattr-car-time} +
+      "," + {&label-trdcattr-t_pass-fname} + "," + {&label-trdcattr-t_pass-position} + "," + {&label-trdcattr-t_accept-fname} + "," + {&label-trdcattr-t_accept-position} + "," +
+      {&label-trdcattr-ndovwho} + "," + {&label-trdcattr-nosn} + "," + {&label-trdcattr-shipper}.
+
 
 END PROCEDURE.
 
@@ -2784,7 +2833,6 @@ ASSIGN
     slt-ext
     vat-ext
     vat-sum
-    mark-alchol
  .
 
  assign frame page-2
@@ -2794,6 +2842,7 @@ ASSIGN
     not-ord
     neg-ask
     vat-goods
+    attr-PN
     .
 
 
@@ -2903,6 +2952,76 @@ on error undo, return error return-value
       end.
   end.
 
+end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-attr-PN Dialog-Frame 
+PROCEDURE select-attr-PN :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+
+define variable v-counter       as integer      no-undo.
+define variable v-label         as character    no-undo.
+define variable v-value         as character    no-undo.
+define variable v-list          as character    no-undo.
+define variable v-changed       as logical    no-undo.
+define variable v-accepted      as logical    no-undo.
+define variable V-EX as logical   no-undo .
+define variable v-mode          as integer      no-undo .
+
+do
+with frame {&frame-name}
+on error undo, return error
+:
+if p-mode = {&lookup} then v-mode = 0 .
+else v-mode = 1 .
+
+    run twowin_clear in this-procedure.
+
+    do v-counter = 1 to num-entries( v-list-attr-PN-full )
+    on error undo, return error
+    :
+        assign
+            v-label = entry( v-counter, v-list-attr-PN-full )
+            v-value = entry( v-counter, v-list-attr-PN )
+            v-ex = false
+        .
+           if  lookup (v-value , attr-PN ) > 0 then  v-ex = true .
+           else v-ex = false .
+        run twowin_add-item in this-procedure (
+              input v-value
+            , input v-label
+            , input substitute( "Атрибуты: &1", v-VALUE)
+            , input  V-EX
+        ).
+    end.        /* do */
+    run gbl/twowin.w (
+          input ?
+        , input v-mode
+        , input "Выбор атрибутов ПН":U
+        , input "":U
+        , input "&Тест"
+        , input table temp_twowin_items
+        , output table temp_twowin_itemsSelected_col
+        , output v-changed
+        , output v-accepted
+    ).
+    if v-changed then do:
+        attr-PN = "" .
+        for each temp_twowin_itemsSelected_col :
+        attr-PN = attr-PN +  temp_twowin_itemsSelected_col.itmExtKey + "," .
+        end.
+        attr-PN = trim(attr-PN, ",") .
+        display attr-PN with frame page-2 .
+        hide attr-PN in frame page-2 .
+    end.
 end.
 
 END PROCEDURE.

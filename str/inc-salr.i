@@ -103,6 +103,8 @@ define variable par-alcohol as character no-undo .
 define variable par-type    as character no-undo .
 define variable mark-ii     as integer no-undo .
 
+define variable v-doc-code_fbr as character no-undo .
+
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_fbr-gds-obj for ub.fbr-gds-obj.
 define buffer buf_c-chk-doc for ub.c-chk-doc.
@@ -1199,9 +1201,16 @@ find first t-gds
           end.
           if Not (t-gds.fbr-obj-type = "":U and t-gds.fbr-obj-code = 0)
           and Not (t-gds.fbr-obj-type = ? and t-gds.fbr-obj-code = ?)
-          and t-gds.doc-qnty >= 0
+/*          and t-gds.doc-qnty >= 0*/
           then do:
-            FIND FIRST ub.doc-fbr-gds WHERE ub.doc-fbr-gds.out-code = t-gds.doc-code AND
+            if t-gds.doc-qnty < 0
+            then do :
+              v-doc-code_fbr = replace(t-gds.doc-code, "=", "-") .
+            end.
+            else do :
+              v-doc-code_fbr = t-gds.doc-code .
+            end.  
+            FIND FIRST ub.doc-fbr-gds WHERE ub.doc-fbr-gds.out-code = v-doc-code_fbr AND
                                     ub.doc-fbr-gds.gds-code = t-gds.gds-code AND
                                     ub.doc-fbr-gds.fbr-obj-type = t-gds.fbr-obj-type AND
                                     ub.doc-fbr-gds.fbr-obj-code = t-gds.fbr-obj-code AND
@@ -1213,7 +1222,7 @@ find first t-gds
               assign
               ub.doc-fbr-gds.obj-type = p-obj-type
               ub.doc-fbr-gds.obj-code = p-obj-code
-              ub.doc-fbr-gds.out-code = t-gds.doc-code
+              ub.doc-fbr-gds.out-code = v-doc-code_fbr
               ub.doc-fbr-gds.gds-code = t-gds.gds-code
               ub.doc-fbr-gds.fbr-obj-type = t-gds.fbr-obj-type
               ub.doc-fbr-gds.fbr-obj-code = t-gds.fbr-obj-code
@@ -1222,7 +1231,7 @@ find first t-gds
               .
             end. /*IF not avail doc-fbr-gds THEN do:*/
             assign
-            ub.doc-fbr-gds.fact-qnty = ub.doc-fbr-gds.fact-qnty + abs( t-gds.doc-qnty ).
+            ub.doc-fbr-gds.fact-qnty = ub.doc-fbr-gds.fact-qnty +  t-gds.doc-qnty .
           end.
   &scop discnt-r-b (if v-curr-r-b = {&r-b-base} then buf_gds-dtl.discnt-base else buf_gds-dtl.discnt-rubl)
   &scop price-r-b  (if v-curr-r-b = {&r-b-base} then buf_gds-dtl.price-base else buf_gds-dtl.price-rubl)

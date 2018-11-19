@@ -869,6 +869,7 @@ DO:
     run str/contspc1.w
        ( input Parparentproc,
          input {&update},
+         input 0, // gds-code для выбора v-unit-cli
          input "",
          input "",
          "Список товаров",
@@ -1027,6 +1028,7 @@ output v-res ) .
     run str/contspc1.w
                        ( input parParentProc
                        , input {&update}
+                       , input buf_contract-specif.gds-code
                        , input buf_contract-specif.artic
                        , input (buf_contract-specif.prod-type + string(buf_contract-specif.prod-code))
                        , input buf_contract-specif.gds-name
@@ -4768,6 +4770,7 @@ end.
 
       run str/contspc1.w ( input parParentProc
                          , input {&update}
+                         , input b_goods.gds-code
                          , input b_goods.artic
                          , input ( b_goods.prod-type + string(b_goods.prod-code))
                          , input b_goods.gds-name

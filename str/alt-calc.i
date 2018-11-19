@@ -380,6 +380,8 @@ define variable cur-rt-rubl as decimal no-undo .
 define variable p-hostcode as int no-undo .
 define variable v-line-num as integer no-undo .
 
+define variable v-skip-del-gds as logical no-undo initial no .
+
 cre-pr:
 do on error undo cre-pr, return error:
   find  buf-bar-code no-lock where
@@ -409,13 +411,17 @@ do on error undo cre-pr, return error:
   end.
   find  buf-gds-prt no-lock where
         buf-gds-prt.node-code = buf-bar-code.node-code.
-  if buf-goods.stts <> 0 then do:
+  &if "{4}" = "p-auto" &then
+    v-skip-del-gds = {4} .
+  &endif     
+  if buf-goods.stts <> 0 and not v-skip-del-gds then do:
     message
       "Не допускается создавать цены на удаленные товары!" skip (2)
       "Артикул:" buf-goods.artic "Код:" buf-goods.gds-code buf-goods.gds-name
       view-as alert-box error.
     undo cre-pr, return.         /* запись не видна в справочнике - ошибку не возвращаем */
   end.
+  
   find  buf-price-doc where
         buf-price-doc.doc-num = new-num.
 

@@ -238,6 +238,7 @@ if v-ok = true then do:
                        , input-output v-context
                        , output v-action-role-code
                        , input-output ri-list
+                       , input 0
                        ) .
 end.
 

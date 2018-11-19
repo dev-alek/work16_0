@@ -69,11 +69,6 @@ define buffer buf_currency          for DICTDB.currency .
 define buffer buf_curr-accnt        for DICTDB.curr-accnt .
 define buffer buf_curr-bank         for DICTDB.curr-bank .
 define buffer buf_units             for DICTDB.units .
-define buffer buf_tax               for DICTDB.tax .
-define buffer buf_tax-rate          for DICTDB.tax-rate .
-define buffer buf_tax-rate-value    for DICTDB.tax-rate-value .
-define buffer buf_tax-units         for DICTDB.tax-units .
-define buffer buf_tax-rate-gds-grp  for DICTDB.tax-rate-gds-grp .
 define buffer buf_cli-grp           for DICTDB.cli-grp .
 define buffer buf_clients           for DICTDB.clients .
 define buffer buf_clients-attr      for DICTDB.clients-attr .
@@ -82,6 +77,7 @@ define buffer buf_cash-pay          for DICTDB.cash-pay .
 define buffer buf_wealth            for DICTDB.wealth .
 define buffer buf_pay-type          for DICTDB.pay-type .
 define buffer buf_global-state      for DICTDB.global-state .
+define buffer buf_trn-reason        for DICTDB.trn-reason .
 
 disable triggers for load of DICTDB.country .
 disable triggers for load of DICTDB.currency .
@@ -104,6 +100,7 @@ disable triggers for load of DICTDB.wealth .
 disable triggers for load of DICTDB.pay-type .
 disable triggers for load of DICTDB.criterion-analysis .
 disable triggers for load of DICTDB.global-state .
+disable triggers for load of DICTDB.trn-reason .
 
 define stream errstream.
 find first buf_sys-ctrl.
@@ -218,7 +215,8 @@ end.
 
 run waitfram-show in this-procedure ("Инициализация категорий налогов").
 
-run cre-tax in this-procedure (1, "НДС", {&percentive}, no, ({&pieces} + {&comma-char} + {&weight} + {&comma-char} + {&serial} + {&comma-char} + {&divisional} + {&comma-char} + {&petrolium}), no).
+/* 01/XI-2018 для налога НДС проставлять флаг, что налог отправляется на кассы */
+run cre-tax in this-procedure (1, "НДС", {&percentive}, yes, ({&pieces} + {&comma-char} + {&weight} + {&comma-char} + {&serial} + {&comma-char} + {&divisional} + {&comma-char} + {&petrolium}), no).
 run cre-tax in this-procedure (2, "НП", {&percentive}, no, ({&pieces} + {&comma-char} + {&weight} + {&comma-char} + {&serial} + {&comma-char} + {&divisional} + {&comma-char} + {&petrolium}), no).
 run cre-tax in this-procedure (3, "Доп.компонента", {&absolute}, no, {&bottle}, yes).
 run cre-tax in this-procedure (4, "Акциз", {&absolute}, no, {&petrolium}, yes).
@@ -253,7 +251,6 @@ if p-sys-key <> "raimbek":U then do:
   end.
 
   run waitfram-show in this-procedure ("Инициализация клиентов").
-  
   if v-is-1c-erp then do:
     /* контрагент создаётся после установки calc-range для gbl-fm-code */
     run cre-cli2 in this-procedure .
@@ -262,7 +259,30 @@ if p-sys-key <> "raimbek":U then do:
     run cre-cli in this-procedure ( "Реализация в магазине", "Покупатели" ) .
   end.
 
+end.
+else do:
   if not v-is-1c-erp then do:
+  run waitfram-show in this-procedure ("Инициализация групп клиентов" ) .
+  run cre-cli-grp in this-procedure ( "Группа по умолчанию" ) .
+  end.
+end.
+
+  /* 23/X-2018 для 1с
+При раскрутке БД создавать следующие виды оплаты:
+1 - Наличные (они сейчас вроде создаются)
+2 - Безналичные
+3 - Возврат поставщику
+4 - Оплата по консигнации  
+  */
+if v-is-1c-erp then do:
+  run waitfram-show in this-procedure ("Инициализация видов оплаты").
+  run cre-pay-type in this-procedure ( 1, "Наличные" ) .
+  run cre-pay-type in this-procedure ( 2, "Безналичные" ) .
+  run cre-pay-type in this-procedure ( 3, "Возврат поставщику" ) .
+  run cre-pay-type in this-procedure ( 4, "Оплата по консигнации" ) .
+end .
+else do :
+  if p-sys-key <> "raimbek":U then do:
   /* для типов кассовых платежей должны быть созданы: валюта, вид оплаты, МЦ */
   run waitfram-show in this-procedure ("Инициализация видов оплаты").
   run cre-pay-type in this-procedure ( 1, "Наличные" ) .
@@ -277,17 +297,32 @@ if p-sys-key <> "raimbek":U then do:
   run cre-cash-pay in this-procedure (  1, 0, 1, 1, "Наличные",          TRUE, FALSE ) .
   run cre-cash-pay in this-procedure ( 20, 0, 1, 0, "Оплата по кредиту", FALSE, TRUE ).
   end.
-end.
-else do:
-  if not v-is-1c-erp then do:
-  run waitfram-show in this-procedure ("Инициализация групп клиентов" ) .
-  run cre-cli-grp in this-procedure ( "Группа по умолчанию" ) .
-
+  else do:
   run waitfram-show in this-procedure ("Инициализация видов оплаты").
   run cre-pay-type in this-procedure ( 4, "Наличные" ) .
   run cre-pay-type in this-procedure ( 5, "Безналичные" ) .
   end.
-end.
+end .
+  
+
+  /* 23/X-2018 для 1с
+Следующие причины создания документов:
+19 - Истечение срока годности (кафе)
+20 - Потеря товарного вида актуальности (товары)
+22 - Зачистка резервуара (топлива)
+23 - Возврат товара поставщику
+24- Ввод первоначальных остатков
+  */
+if v-is-1c-erp then do:
+  run waitfram-show in this-procedure ("Причины создания документов").
+  run cre-trn-reason in this-procedure (19, "Истечение срока годности (кафе)") .  
+  run cre-trn-reason in this-procedure (20, "Потеря товарного вида актуальности (товары)") .  
+  run cre-trn-reason in this-procedure (22, "Зачистка резервуара (топлива)") .  
+  run cre-trn-reason in this-procedure (23, "Возврат товара поставщику") .  
+  run cre-trn-reason in this-procedure (24, "Ввод первоначальных остатков") .  
+  dynamic-current-value( "s-trn-reason":U, LDBNAME("DICTDB":U) ) = 24 .
+end .
+
 
 run waitfram-show in this-procedure ("Инициализация критериев анализа ABC и XYZ").
   run utl/abc-utl.p  .
@@ -398,7 +433,6 @@ def input param tp as char no-undo.
       buf_units.type = tp.
     end.
     if buf_units.type <> tp then do:
-      glog = yes.
       message
       "Для единицы измерения:" buf_units.unit-name "тип:" buf_units.type "не совпадает с рекомендуемым:" tp skip (2)
       "Это может привести к серьезным ошибкам в работе системы! Тип заменяется на рекомендуемый"
@@ -466,6 +500,7 @@ DEFINE VARIABLE vunit-type like DICTDB.units.type no-undo .
 DEFINE VARIABLE p1         as logical no-undo .
 DEFINE VARIABLE p2         as logical no-undo .
 
+define buffer buf_tax               for DICTDB.tax .
 define buffer b_tax-unit for DICTDB.tax-units.
 
   find buf_tax where buf_tax.tax-code = taxcode no-error.
@@ -476,13 +511,20 @@ define buffer b_tax-unit for DICTDB.tax-units.
       buf_tax.tax-type = tp.
     end.
     if buf_tax.tax-type <> tp then do:
-      glog = yes.
       message
       "Для налога:" buf_tax.tax-name "тип:" buf_tax.tax-type "не совпадает с рекомендуемым:" tp skip (2)
       "Это может привести к серьезным ошибкам в работе системы! Тип заменяется на рекомендуемый"
       view-as alert-box WARNING.
       buf_tax.tax-type = tp.
     end.
+    if buf_tax.to-cashdesk <> tocashdesk then do:
+      message
+      "Для налога:" buf_tax.tax-name "флаг ~"отправлять на кассу~":" buf_tax.to-cashdesk "не совпадает с рекомендуемым:" tocashdesk skip (2)
+      "Значение флага ~"отправлять на кассу~" заменено на:" tocashdesk
+      view-as alert-box WARNING.
+      buf_tax.to-cashdesk = tocashdesk .
+    end.
+    
     do jj = 1 to num-entries(unittypes):
       assign
       vunit-type =entry(jj, unittypes)
@@ -555,6 +597,7 @@ procedure cre-tax-rate:
 def input param taxcode  like DICTDB.tax.tax-code       no-undo.
 def input param ratecode like DICTDB.tax-rate.rate-code no-undo.
 def input param ratename like DICTDB.tax-rate.rate-name no-undo.
+define buffer buf_tax-rate          for DICTDB.tax-rate .
 
   find buf_tax-rate where buf_tax-rate.rate-code = ratecode no-error.
   if available buf_tax-rate then do:
@@ -585,6 +628,7 @@ def input param ratecode  like DICTDB.tax-rate.rate-code        no-undo.
 def input param ratevalue like DICTDB.tax-rate-value.rate-value no-undo.
 DEFINE VARIABLE var-day-end-fact-order as decimal no-undo .
 define variable v-time  as integer   no-undo.
+define buffer buf_tax-rate-value    for DICTDB.tax-rate-value .
 
   run cur-time in this-procedure ( output v-today
                                  , output v-time
@@ -625,6 +669,7 @@ end procedure.
 PROCEDURE add-tax-units:
 define input parameter partax-code  like DICTDB.tax.tax-code no-undo .
 define input parameter parunit-type like DICTDB.units.type   no-undo .
+define buffer buf_tax-units         for DICTDB.tax-units .
 
   if not can-find(first buf_tax-units No-LOCK WHERE
                         buf_tax-units.tax-code = partax-code AND
@@ -656,6 +701,7 @@ DEFINE VARIABLE vattr-codes as character no-undo .
 DEFINE VARIABLE vartax-value like DICTDB.tax-rate-value.rate-value no-undo . /* dec-10 */
 define variable VATtaxcd as integer no-undo.
 define variable SLTtaxcd as integer no-undo.
+define buffer buf_tax-rate-gds-grp  for DICTDB.tax-rate-gds-grp .
 
 
 /*вспомогат*/
@@ -1268,3 +1314,21 @@ on error undo, return error
 
 end. /* do on error */
 end procedure. /* cre-cash-pay */
+
+procedure cre-trn-reason private :
+/* скопировано из str/trn-rsna.w - Карточка основания (причины) создания документа */
+define input parameter p-reason-code as integer no-undo .
+define input parameter p-reason-name as character no-undo .
+define variable v-rid as recid initial ? no-undo .
+
+  run ref/trn-rsn1.p
+    ( input-output v-rid
+    , input {&add-def}
+    , input true /* p-silent */
+    , input p-reason-code
+    , input p-reason-name
+    , input ""
+  ) .
+  
+  return .
+end procedure . /* end _of cre-trn-reason */

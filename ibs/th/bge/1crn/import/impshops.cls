@@ -24,6 +24,7 @@ class ibs.th.bge.1crn.import.impshops implements ibs.th.bge.1crn.import.iimpsubj
   
   { cmp/str-glbl.i class }
   { gbl/attr-lib.i class }  
+  { gbl/thbj-def.i } // thbjattr_thbj-attr
   
   
   define property Msg as character no-undo
@@ -111,6 +112,11 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
     define variable v-pharm          as logical no-undo . /* {&attr-pharm} */
     define variable v-pharm-str      as character no-undo . /* для чтения v-pharm */
     define variable v-KPP            as character no-undo . /* {&attr-kpp} */
+    define variable v-clim-grp       as character no-undo . /* {&attr-cli-clim-grp} */
+    define variable v-decommissioned as logical no-undo . /* {&attr-cli-decommissioned} */
+    define variable v-decommiss-str  as character no-undo . /* для чтения v-decommissioned */
+    define variable v-begin-summer   as character no-undo . /* {&attr-cli-clim-grp}[2] = begin-summer */
+    define variable v-begin-winter   as character no-undo . /* {&attr-cli-clim-grp}[3] = begin-winter */
     
     define variable objImp as class shops no-undo.
     
@@ -126,6 +132,17 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       v-obj-code  = integer(objImp:code_)
     .
     if v-obj-code > 0 then . else undo, throw new Progress.Lang.AppError("Не задан код АЗК/АЗС") .
+
+    /* 10/IX-2018 В интерфейс передачи из 1С:ERP в GC секции «azks» будут добавлены поля
+                «clim-grp», «begin-summer», «begin-winter» и «decommissioned».
+                Значения, которые могут быть назначены полю «clim-grp», соответствуют
+                обозначению климатической группы (подгруппы) для применения норм технологических потерь нефтепродуктов,
+                указанному в ЛНД компании заказчика. */
+    if (objImp:clim-grp > "") and (not can-do("1 (1),1 (2),2 (1),2 (2),2 (3),3 (1),3 (2)", objImp:clim-grp)) then do :
+      undo, throw new Progress.Lang.AppError(
+        substitute("значение clim-grp = [&1] отсутствует в обозначении климатических групп", objImp:clim-grp)
+      ) .
+    end . 
     
     /* чтобы при изменении записи не перезатирать поля, которые не приходят из 1С, значениями по умолчанию -
        читаем их значения из исходной записи;
@@ -232,7 +249,25 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       ,output v-KPP
       ,output v-par-type
       ) .
-    
+
+        &scop proc-name clntattr-value
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input  v-obj-code
+      ,input  {&attr-cli-clim-grp}
+      ,output v-clim-grp
+      ,output v-par-type
+      ) .
+
+        &scop proc-name clntattr-value
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input  v-obj-code
+      ,input  {&attr-cli-decommissioned}
+      ,output v-decommiss-str
+      ,output v-par-type
+      ) .
+
       sliceAddress
          ( input  objImp:address
          , input  buf_shop.addres1
@@ -301,6 +336,18 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         v-purch-code      = buf_shop.purch-code
         v-envd            = (v-envd-str = "yes":u)
         v-pharm           = (v-pharm-str = "yes":u)
+        v-decommissioned  = (v-decommiss-str = "yes":u)
+      .
+      if num-entries(v-clim-grp) = 3 then assign
+        v-begin-summer = entry(2, v-clim-grp)
+        v-begin-winter = entry(3, v-clim-grp)
+        v-clim-grp     = entry(1, v-clim-grp)
+      .
+      assign
+        v-clim-grp       = objImp:clim-grp     when objImp:clim-grp > ""
+        v-begin-summer   = objImp:begin-summer when objImp:begin-summer > ""
+        v-begin-winter   = objImp:begin-winter when objImp:begin-winter > ""
+        v-decommissioned = (objImp:decommissioned > 0) when (objImp:decommissioned <> ?)
       .
     end .
     else do :
@@ -341,19 +388,23 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
          ) .
 
       /* 22/XI-2017 все pay-type выставляем в 0, т.к. в начальной раскрутке их нет и в импорте они могут не придти */
+      /* 22/X-2018  Настройки типов платежей в карточке объекта выставить согласно картинке в файл Настроки Объектов */
       assign
-        v-chk-pay        = 0
-        v-down-pay       = 0
-        v-in-pay         = 0
-        v-inv-pay        = 0
-        v-out-pay        = 0
-        v-ret-pay        = 0
-        v-ret-sup-pay    = 0
-        v-fbr-pay        = 0
+        v-in-pay         = 2 /* tt-shop.in-pay      AT ROW  8.19 COL 18.8 COLON-ALIGNED LABEL "Оплата п&рихода" */
+        v-out-pay        = 2 /* tt-shop.out-pay     AT ROW  9.19 COL 18.8 COLON-ALIGNED LABEL "рас&хода" */
+        v-ret-pay        = 2 /* tt-shop.ret-pay     AT ROW 10.19 COL 18.8 COLON-ALIGNED LABEL "во&зврата" */
+        v-ret-sup-pay    = 3 /* tt-shop.ret-sup-pay AT ROW 11.19 COL 18.8 COLON-ALIGNED LABEL "возвра&та пост." */
+        v-down-pay       = 2 /* tt-shop.down-pay    AT ROW 12.19 COL 18.8 COLON-ALIGNED LABEL "списани&я" */
+        v-inv-pay        = 2 /* tt-shop.inv-pay     AT ROW 13.19 COL 18.8 COLON-ALIGNED LABEL "и&нвентаризации" */
+        v-chk-pay        = 1 /* tt-shop.chk-pay     AT ROW 14.19 COL 18.8 COLON-ALIGNED LABEL "прода&жи" */
+        v-fbr-pay        = 2 /* tt-shop.fbr-pay     AT ROW 15.19 COL 18.8 COLON-ALIGNED LABEL "производства" */
       .
-      
       assign
         v-tel = if objImp:tel >= "" then objImp:tel else ""
+        v-clim-grp       = objImp:clim-grp
+        v-begin-summer   = objImp:begin-summer
+        v-begin-winter   = objImp:begin-winter
+        v-decommissioned = if objImp:decommissioned > 0 then true else ?
       .
       
       assign
@@ -405,7 +456,6 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         v-KPP            = ""
       .
     end.
-    
     run adm/shop01.p
     (input-output v-rid2 /* p-rid as recid, only for output */
     ,input v-mode        /* p-mode as character */
@@ -468,6 +518,7 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
     ,input v-ret-pay        /* p-ret-pay like ub.shop.ret-pay Код оплаты возврата по умолчанию */
     ,input v-ret-sup-pay    /* p-ret-sup-pay like ub.shop.ret-sup-pay Код типа оплаты для операции "возврат поставщику" */
     ,input v-fbr-pay        /* p-fbr-pay like ub.shop.fbr-pay Код оплаты производства по умолчанию */
+    
     ,input v-rsrv-time      /* p-rsrv-time like ub.shop.rsrv-time период в днях, подставляемый по умолчанию для резерва при создании нового счета */
     ,input v-shift-on       /* p-shift-on like ub.shop.shift-on На объекте включены смены */
     ,input v-store-boss     /* p-store-boss like ub.shop.store-boss Зав. складом */
@@ -493,6 +544,23 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
       .
     end.
 
+        &scop proc-name clntattr-write
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input v-obj-code
+      ,input {&attr-cli-clim-grp}
+      ,input substitute("&1,&2,&3", v-clim-grp, v-begin-summer, v-begin-winter)
+      ) .
+
+      if v-decommissioned <> ? then do :
+        &scop proc-name clntattr-write
+        {&run_proc_attr-lib}
+      (input {&shop}
+      ,input v-obj-code
+      ,input {&attr-cli-decommissioned}
+      ,input string(v-decommissioned)
+      ) .
+      end .
 
     /* 28/VIII-2018 Если номер БД для начальных настроек больше нуля,
                     то после создания нового объекта и новой БД копируем с заданной БД расписание и права. */
@@ -588,6 +656,192 @@ Action-role-item
       end .
     end . // end_of копирование прав для v-mode = &add-def
     
+    /* 19/X-2018 При создании объекта выставлять следующие настройки: */
+    define variable v-param-type as character no-undo .
+    define variable v-value-character as character no-undo .
+    define variable v-value-date as date no-undo .
+    define variable v-value-decimal as decimal no-undo .
+    define variable v-value-integer as INTEGER no-undo .
+    define variable v-value-logical AS LOGICAL no-undo .
+    define variable v-tth as handle no-undo .
+    
+    if v-mode = {&add-def} then do :
+      v-tth = buffer thbjattr_thbj-attr:table-handle .
+      /* Опции для работы с продажей 3 галочки для автопроизводства:
+         - автоматич.производство необходимых блюд,
+         - учет остатков блюд при резервировании,
+         - учет остатков ингредиентов при резервировании;
+         Т.к. самостоятельное заполнение таблицы с настройками очень сложное, то делаем как в форме ввода:
+         как-будто читаем текущие параметры, и потом вносим свои изменения.
+         Изменённую таблицу отправляем в сохранение. 
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p (
+              input "init":U
+            , input {&shop}
+            , input v-obj-code
+            , input {&attr-autosale}
+            , input "":U
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+      ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек автопроизводства [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      FOR EACH thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code :
+          when {&attr-autosale_autofbr}  then // автом. пр-во необходимых блюд (для РЕСТОРАНА)
+            thbjattr_thbj-attr.property-value-logical = true .
+          when {&attr-autosale_restdish} then // учет остатков блюд при резервировании (для автом. пр-ва)
+            thbjattr_thbj-attr.property-value-logical = true .
+          when {&attr-autosale_restingr} then // учет остатков ингридиентов при резервировании (для автом. пр-ва)
+            thbjattr_thbj-attr.property-value-logical = true .
+          otherwise .
+        end case .
+      END.
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-autosale}, input table thbjattr_thbj-attr) .
+
+      /* Опции передачи данных на кассу:
+         - 06/XI-2018 установить флаг "Передача налогов на кассу"
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p (
+              input "init":U
+            , input {&shop}
+            , input v-obj-code
+            , input {&attr-cd-inf-send}
+            , input "":U
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек передачи налогов на кассу в контексте объекта [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      FOR EACH thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code :
+          when {&attr-cd-inf-send_tax-cass} then // Передача налогов на кассу
+            thbjattr_thbj-attr.property-value-logical = true .
+        end case .
+      END .
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-cd-inf-send}, input table thbjattr_thbj-attr) .
+      
+      /* Общие опции коммуникации с кассами:
+         - 08/XI-2018 "Тип касс, используемых на объекте по умолчанию" установить в IBM-XML
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p (
+              input "init":U
+            , input {&shop}
+            , input v-obj-code
+            , input {&attr-cd-sending}
+            , input "":U
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек опций коммуникации с кассами в контексте объекта [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      FOR EACH thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code :
+          when {&attr-cd-sending_dflt-cd} then // Тип касс, используемых на объекте ПО УМОЛЧАНИЮ
+            thbjattr_thbj-attr.property-value-character = {&cd-type-IBM-XML} .
+        end case .
+      END .
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-cd-sending}, input table thbjattr_thbj-attr) .
+      
+      /* Опции работы со справочниками в контексте объекта:
+         - Установить запрет на ввод доп. баркодов
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p (
+              input "init":U
+            , input {&shop}
+            , input v-obj-code
+            , input {&attr-gds-ref_obj}
+            , input "":U
+            , output v-value-character
+            , output v-value-date
+            , output v-value-decimal
+            , output v-value-integer
+            , output v-value-logical
+            , output v-param-type
+            , INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек работы со справочниками товаров в контексте объекта [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      FOR EACH thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code :
+          when {&attr-gds-ref_obj_chg-bcod} then // Запрещена работа с Доп-БК
+            thbjattr_thbj-attr.property-value-logical = true .
+        end case .
+      END .
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-gds-ref_obj}, input table thbjattr_thbj-attr) .
+      
+      /* Опции работы с топливными товарами:
+         - алгоритм расчета плотности avrg-chk,
+         - ввод в ПН литров и кг;
+      */
+      empty temp-table thbjattr_thbj-attr .
+      run adm/shattri.p
+    ( input "init":U
+    , input {&shop}
+    , input v-obj-code
+    , input {&attr-petrol}
+    , input "":U
+    , output v-value-character
+    , output v-value-date
+    , output v-value-decimal
+    , output v-value-integer
+    , output v-value-logical
+    , output v-param-type
+    , input-output table-handle v-tth
+    ) no-error .
+      if error-status:error then do:
+        undo, throw new Progress.Lang.AppError(
+          substitute(  "Ошибка чтения начальных значений настроек работы с топливными товарами [&1 &2]",
+                       error-status:get-message(1), return-value  )
+        ) .
+      end .
+      for each thbjattr_thbj-attr:
+        case thbjattr_thbj-attr.prop-code:
+          when {&attr-petrol_denstclc} then // Алгоритм вычисления плотности топлива для продаж
+            thbjattr_thbj-attr.property-value-character = "avrg-chk" .
+          when {&attr-petrol_inpptrl}  then // Тип ввода топлива в документах прихода внешнего
+            thbjattr_thbj-attr.property-value-character = "volume+" .
+        end case .
+      end .
+      thbjattr_set-section ({&shop}, v-obj-code, {&attr-petrol}, input table thbjattr_thbj-attr) .
+      
+      empty temp-table thbjattr_thbj-attr .
+    end . // end_of опции при создании объекта
 
     /* При создании объекта магазин в системе автоматически создавать группу ценообразования для него и ГТПЛ. */
     define variable proc-typl-ad as class typl-ad no-undo .
@@ -748,6 +1002,26 @@ sys-time-chr;character;X(20);Физическое время последнего изменения(строка);;;Физ
       p-addr1 = p-curraddr1
       p-addr2 = p-curraddr2
     .
+  end method .
+
+  method private void thbjattr_get-section (input p-obj-type   as character,
+                                            input p-obj-code   as integer,
+                                            input p-upper-code as character,
+                                            output table-handle p-tth) :
+    /* @FUTU перенести сюда вызов adm/shattri.p */                                          
+  end method .
+  
+  method private void thbjattr_set-section (input p-obj-type   as character,
+                                            input p-obj-code   as integer,
+                                            input p-upper-code as character,
+                                            input table-handle p-tth) :
+  &scop proc-name thbjattr_set-section
+  {&run_proc_attr-lib}
+    (input  p-obj-type
+    ,input  p-obj-code
+    ,input  p-upper-code
+    ,input  table-handle p-tth
+    ) .
   end method .
 
 

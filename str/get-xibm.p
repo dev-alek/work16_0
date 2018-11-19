@@ -53,6 +53,7 @@ define stream stmXMLOut.
 { str/magiachk.i }
 { str/magiachk.i -line " extent 2 "}
 { str/magiachk.i proc }
+{ gbl/thbj-def.i }
 
 DEFINE VARIABLE n-entry                    as   char no-undo extent 20.
 DEFINE VARIABLE accept-types               as   character no-undo .
@@ -575,7 +576,7 @@ define variable v-old as character no-undo .
 define variable v-step as integer   no-undo .
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_chk-doc for ub.chk-doc.
-
+define variable vCHNumberKKT as character no-undo.
 do
 on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
 :
@@ -770,7 +771,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           doc-num2_ = (if buf_temp-temp.field-value = "0" then "":u else buf_temp-temp.field-value)
           no-error .
         end.
-        
+        when "CHNumberKKT":U then do:
+          
+          assign
+          vCHNumberKKT = buf_temp-temp.field-value
+          no-error .
+        end.
         /*    todo
         when "CHSEnd":U then do:
         end.
@@ -958,6 +964,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         ub.chk-doc.correct = no
         .
       end.
+      if vCHNumberKKT ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberKKT"
+           chk-doc-attr.attr-value = vCHNumberKKT
+        .
+      end.  
       mc-prev-code = ub.chk-doc.doc-code.
     end. /* not(can-find) */
     else
@@ -1126,6 +1141,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       if error-status:error then do:
         ub.chk-doc.correct = no.
       end.
+      if vCHNumberKKT ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberKKT"
+           chk-doc-attr.attr-value = vCHNumberKKT
+        .
+      end. 
       if ub.chk-doc.chk-type = integer({&income-corr}) or ub.chk-doc.chk-type = integer({&expense-corr})
       then do :
         assign
@@ -1236,10 +1260,41 @@ define variable v-type  as character no-undo .
 
   
 end procedure. /* proc-00 */
-
-
+/*procedure proc-01-tax :
+  define output parameter oCSTTaxValue as decimal no-undo.
+  define output parameter oCSTValue    as decimal no-undo.
+  
+define buffer buf_temp-temp for temp-temp.
+   do
+   on error undo, return error
+   :
+         for each buf_temp-temp where
+                  buf_temp-temp.record-name = "CSTax":U
+              AND buf_temp-temp.id = v-id:
+            CASE buf_temp-temp.field-name:
+               when "CSTValue":U then do:
+                  assign
+                      oCSTValue = decimal (buf_temp-temp.field-value)
+                  no-error .
+               end.
+               when "CSTTaxValue":U then do:
+                  assign
+                      oCSTTaxValue = decimal (buf_temp-temp.field-value)
+                  no-error .
+               end.
+               otherwise do:
+                  error-status:error = no.
+               end.
+            end case.
+            delete buf_temp-temp.
+         end.
+             
+   end.
+end procedure .*/
 procedure proc-01-gds :
 DEFINE VARIABLE no-add-price as logical no-undo .
+define variable vCSTValue as decimal no-undo.
+define variable vCSTaxValue as decimal no-undo.
 define variable lng-spl as integer no-undo .
 define variable depart-id_ as integer no-undo .
 define variable v-d-pcnt-categ as decimal no-undo .
@@ -1273,12 +1328,13 @@ on error undo, return error
    
     pump_ = 0
     .
+    
     if not exist
     or (v-to-delete[1] = yes
         and
         v-to-delete[2] = no)
-    then do:
-    for each buf_temp-temp where
+    then  do:
+      for each buf_temp-temp where
             buf_temp-temp.record-name = "CSale":U
        AND buf_temp-temp.id = v-id:
       CASE buf_temp-temp.field-name:
@@ -1363,6 +1419,7 @@ on error undo, return error
         when "CSTValue":U then do:
           assign
           cstValue = fdecimal(buf_temp-temp.field-value)
+          vCSTValue = fdecimal (buf_temp-temp.field-value)
           no-error .
         end.
         when "CSTCode":U then do:
@@ -1384,6 +1441,17 @@ on error undo, return error
             error-status:error = no.
           end.
         end.
+        when "CSTValue":U then do:
+                  assign
+                      vCSTValue = decimal (buf_temp-temp.field-value)
+                  no-error .
+               end.
+               when "CSTTaxValue":U then do:
+                  assign
+                      vCSTaxValue = decimal (buf_temp-temp.field-value)
+                  no-error .
+               end.
+               
         when "CSSHandCode":u then do:
           assign
           pass-gds_ =   (if integer(buf_temp-temp.field-value) = 1
@@ -1506,6 +1574,9 @@ on error undo, return error
           v-src-tot-doc = decimal(buf_temp-temp.field-value)
           no-error .
         end.
+        /*when "cstax":U then do:
+          
+        end.*/
         otherwise do:
           error-status:error = no.
         end.
@@ -1799,7 +1870,13 @@ on error undo, return error
                          then yes
                          else v-flag-salesman)
     ub.chk-doc.src-tot-doc = v-src-tot-doc
+    ub.chk-gds.VAT-pc = vCSTaxValue
+    ub.chk-gds.VAT-sum-rubl = vCSTValue
     .
+    /*define variable vCSTValue as decimal no-undo.
+    define variable vCSTaxValue as decimal no-undo.*/
+   // run proc-01-tax in this-procedure (output ub.chk-gds.VAT-pc, output ub.chk-gds.VAT-sum-rubl).
+    
     if v-oss-code <> ""then do:
       case p-pos-type:
         when {&cd-type-autotank} then do:
@@ -2269,6 +2346,7 @@ define variable  bonus-type-chr_    as character no-undo .
 define variable  bonus-string       as integer no-undo .
 define variable  bonus-src-code_    as decimal no-undo .
 define variable  bonus-src-code-chr as character no-undo .
+define variable  bonus-relation     as character no-undo . 
 define buffer buf_temp-temp for temp-temp .
 define buffer buf_chk-gds for ub.chk-gds.
 define variable local-netto-for-sub-d as decimal no-undo .
@@ -2320,6 +2398,11 @@ define variable local-netto-for-sub-d as decimal no-undo .
             bonus-card-no = buf_temp-temp.field-value
             no-error .
           end.
+          when "BARelation":U then do:
+            assign
+            bonus-relation = buf_temp-temp.field-value
+            no-error .
+          end.          
           otherwise do:
             error-status:error = no.
           end.
@@ -2367,6 +2450,28 @@ define variable local-netto-for-sub-d as decimal no-undo .
       chk-discnt.chk-date = chk-doc.chk-date
       chk-discnt.chk-time = chk-doc.chk-time
       .
+      if bonus-relation <> "" then do:
+          find first chk-discnt-attr EXCLUSIVE-LOCK where chk-discnt-attr.attr-code = "RRN-bonus"
+                                       and chk-discnt-attr.line-num = chk-discnt.line-num
+                                       and chk-discnt-attr.doc-code = chk-discnt.doc-code
+                                       and chk-discnt-attr.discnt-id = chk-discnt.discnt-id 
+                                       and chk-discnt-attr.object-line-num = chk-discnt.object-line-num no-error .
+          if AVAILABLE chk-discnt-attr then do:
+            chk-discnt-attr.attr-value = bonus-relation .
+          end. 
+          
+          else do:
+            create chk-discnt-attr .
+            assign
+            chk-discnt-attr.attr-code = "RRN-bonus"
+            chk-discnt-attr.line-num = chk-discnt.line-num
+            chk-discnt-attr.doc-code = chk-discnt.doc-code
+            chk-discnt-attr.discnt-id = chk-discnt.discnt-id
+            chk-discnt-attr.object-line-num = chk-discnt.object-line-num
+            chk-discnt-attr.attr-value = bonus-relation
+            .
+          end.  
+      end.                                   
       if chk-discnt.line-type = integer({&discnt-gds}) then do:
         if available chk-gds
         and (bonus-src-code-chr = chk-gds.src-code
@@ -2736,9 +2841,11 @@ define variable disc-gds-reason as int no-undo .
       chk-discnt.shift-date = chk-doc.shift-date
       chk-discnt.shift-num = chk-doc.shift-num
       chk-discnt.object-qnty = (if chk-discnt.line-type = integer({&discnt-sub-total})
+                                   or not available buf_chk-gds
                                 then accum-src-for-sub-d
                                 else buf_chk-gds.src-qnty)
       ub.chk-discnt.object-sum = (if ub.chk-discnt.line-type = integer({&discnt-sub-total})
+                                     or not available buf_chk-gds
                                then  local-netto-for-sub-d
                                else buf_chk-gds.src-sum)
       var-discnt-id = var-discnt-id + 1
@@ -2927,6 +3034,12 @@ define variable v-time-loc-char as character no-undo .
            run proc-get-error in this-procedure no-error .
         end.
         */
+    /*    when "CSTax":U then do:
+          /*session:debug-alert = yes.
+          message "CSTax"
+          view-as alert-box.
+          run proc-01-tax in this-procedure .*/. 
+        end.*/
         when "CHead":U then do:
           if v-start-check = 1 then
           run proc-00 in this-procedure no-error .
@@ -3130,6 +3243,8 @@ define variable v-time-loc-char as character no-undo .
         when "CFReg"
         or
         when "CFiscal"
+        /*or
+        when "Cstax" */
         then do:
           if p-value = "CACHistory" then do:
             define buffer buf_achd for achd.
@@ -3150,6 +3265,8 @@ define variable v-time-loc-char as character no-undo .
                      p-value = "ACHExp"
                      or
                      p-value = "CFReg"
+                    /* or
+                     p-value = "CSTax"*/
                     ) then do:
              assign
              CRI = 0
@@ -3178,7 +3295,7 @@ define variable v-time-loc-char as character no-undo .
             if (p-value <> "CHead":U
                 and
                 v-id-loc <> v-id
-                and p-value <> "ACHData" and p-value <> "ACHExp" and p-value <> "CFReg"
+                and p-value <> "ACHData" and p-value <> "ACHExp" and p-value <> "CFReg" /* and p-value <> "Cstax" */
                 ) then do:
               assign
               v-start-check = v-start-check - 1
@@ -3206,11 +3323,15 @@ define variable v-time-loc-char as character no-undo .
                      p-value = "ACHExp"
                      or
                      p-value = "CFReg"
+                    /* or
+                     p-value = "CSTax"*/
                     )
                )
             or (v-time-loc-char = ?
             and p-value = "CHead":U)
             then do:
+              message p-value
+              view-as alert-box.
               assign
               v-start-check = v-start-check - 1
               .
@@ -3237,6 +3358,8 @@ define variable v-time-loc-char as character no-undo .
                      p-value = "ACHExp"
                      or
                      p-value = "CFReg"
+                   /*  or
+                     p-value = "CSTax" */
                     )
               then
               assign
@@ -3247,6 +3370,8 @@ define variable v-time-loc-char as character no-undo .
             end.
           end. /*if v-start-check*/
         end.
+        
+         
         otherwise do:
           error-status:error = no.
         end.

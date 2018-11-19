@@ -115,22 +115,24 @@ define buffer buf_doc-pl for ub.doc-pl.
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-save b-quit b-del-sec b-help Rect-Main ~
-Rect-Bottom Rect-Left Rect-Right Rect-Top RECT-3 RECT-1 RECT-4 RECT-5 ~
-RECT-6 RECT-8 RECT-7 f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-cli-qnty ~
-f-size f-car-vol f-num-passport f-norm-doc f-certif-fuel f-validity-certif ~
-f-a-b-tarir f-mouth f-tank-water f-tank-temp f-tank-density f-dens-temp ~
-f-list-tank r-list-tank f-num-plotn f-date-pov-plotn f-date-start ~
-f-hour-start f-min-start f-date-end f-hour-end f-min-end f-tests ~
-f-num-print-prob f-kol-prob f-hour-prob f-min-prob f-date-prob 
+&Scoped-Define ENABLED-OBJECTS Rect-Main Rect-Bottom Rect-Left Rect-Right ~
+Rect-Top RECT-3 RECT-1 RECT-4 RECT-5 RECT-6 RECT-8 RECT-7 b-save b-quit ~
+b-del-sec b-help f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-acc-ship ~
+f-cli-qnty f-size f-car-vol f-num-passport f-norm-doc f-certif-fuel ~
+f-validity-certif f-a-b-tarir f-mouth f-tank-water f-tank-temp ~
+f-tank-density f-dens-temp f-EU-weight f-list-tank r-list-tank f-loss-norm ~
+f-num-plotn f-date-pov-plotn f-date-start f-hour-start f-min-start ~
+f-date-end f-hour-end f-min-end f-tests f-num-print-prob f-kol-prob ~
+f-hour-prob f-min-prob f-date-prob 
 &Scoped-Define DISPLAYED-OBJECTS f-sec-num f-ttn-temp f-doc-qnty f-doc-dens ~
-f-cli-qnty f-size f-car-vol f-num-passport f-text1 f-norm-doc f-text2 ~
-f-certif-fuel f-text3 f-validity-certif f-a-b-tarir f-mouth f-tank-water ~
-f-tank-vol f-tank-temp f-tank-density f-dens-temp f-tank-weight f-list-tank ~
-f-acc-weight f-place-si f-num-plotn f-date-pov-plotn f-tank-density-pomi ~
-f-tank-vol-pomi f-date-start f-hour-start f-min-start f-date-end f-hour-end ~
-f-min-end f-tests f-num-print-prob f-kol-prob f-hour-prob f-min-prob ~
-f-date-prob f-place-si-name 
+f-acc-ship f-cli-qnty f-size f-car-vol f-num-passport f-text1 f-norm-doc ~
+f-text2 f-certif-fuel f-text3 f-validity-certif f-a-b-tarir f-mouth ~
+f-tank-water f-tank-vol f-tank-temp f-tank-density f-dens-temp f-EU-weight ~
+f-list-tank f-loss-norm f-place-si f-num-plotn f-date-pov-plotn ~
+f-tank-weight f-tank-density-pomi f-acc-weight f-tank-vol-pomi f-date-start ~
+f-hour-start f-min-start f-date-end f-hour-end f-min-end f-tests ~
+f-num-print-prob f-kol-prob f-hour-prob f-min-prob f-date-prob ~
+f-place-si-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -138,12 +140,12 @@ f-date-prob f-place-si-name
 f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-cli-qnty f-size f-car-vol ~
 f-num-passport f-text1 f-norm-doc f-text2 f-certif-fuel f-text3 ~
 f-validity-certif b-copy-pass f-a-b-tarir f-mouth f-tank-water f-tank-vol ~
-f-tank-temp f-tank-density f-dens-temp f-tank-weight f-list-tank ~
-r-list-tank f-acc-weight f-place-si r-sr-izm f-num-plotn f-date-pov-plotn ~
-b-copy-iz b-choose-date-pov-plotn f-passport-plotn f-tank-density-pomi ~
-b-calc f-tank-vol-pomi f-date-start f-hour-start f-min-start f-date-end ~
-f-hour-end f-min-end f-tests f-num-print-prob f-kol-prob f-hour-prob ~
-f-min-prob f-date-prob f-place-si-name 
+f-tank-temp f-tank-density f-dens-temp f-list-tank r-list-tank f-place-si ~
+r-sr-izm f-num-plotn f-date-pov-plotn b-copy-iz b-choose-date-pov-plotn ~
+f-passport-plotn f-tank-weight f-tank-density-pomi b-calc f-acc-weight ~
+f-tank-vol-pomi f-date-start f-hour-start f-min-start f-date-end f-hour-end ~
+f-min-end f-tests f-num-print-prob f-kol-prob f-hour-prob f-min-prob ~
+f-date-prob f-place-si-name f-EU-weight f-acc-ship f-loss-norm
 &Scoped-define List-2 f-car-vol-total f-tank-weight-total f-tank-vol-total ~
 f-doc-qnty-total 
 
@@ -217,17 +219,22 @@ DEFINE VARIABLE f-a-b-tarir AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-acc-ship AS DECIMAL FORMAT "->>>,>>9.99":U INITIAL 0 
+     LABEL "Погр.изм.пост." 
+     VIEW-AS FILL-IN 
+     SIZE 8.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-acc-weight AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL ? 
-     LABEL "  Погр. изм. массы" 
+     LABEL "Погр. изм. массы" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-car-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-car-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Объем по паспорту в литрах" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-car-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-car-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Объем по паспорту в литрах" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -237,7 +244,7 @@ DEFINE VARIABLE f-certif-fuel AS CHARACTER FORMAT "X(256)":U
      SIZE 92.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-cli-qnty AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
-     LABEL "     Вес по док." 
+     LABEL "   Масса по док." 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
@@ -271,13 +278,18 @@ DEFINE VARIABLE f-doc-dens AS DECIMAL FORMAT ">>9.9999999999":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-qnty AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-doc-qnty AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "  Кол-во по док." 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-doc-qnty-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Количество по документу" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-EU-weight AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "          Масса ЕУ" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
@@ -305,6 +317,11 @@ DEFINE VARIABLE f-list-tank AS CHARACTER FORMAT "X(256)":U
      LABEL "Резервуары" 
      VIEW-AS FILL-IN 
      SIZE 42.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-loss-norm AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Тех. потери по нормам, кг" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-min-end AS INTEGER FORMAT "99":U INITIAL ? 
      VIEW-AS FILL-IN 
@@ -382,17 +399,17 @@ DEFINE VARIABLE f-tank-temp AS DECIMAL FORMAT "->9":U INITIAL ?
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-tank-vol AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "     Объем топлива" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-vol-pomi AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL ? 
+DEFINE VARIABLE f-tank-vol-pomi AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL ? 
      LABEL "Объем топлива приведенный" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tank-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-tank-vol-total AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL 0 
      LABEL "Объем топлива" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -403,7 +420,7 @@ DEFINE VARIABLE f-tank-water AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.99":U INITIAL 0
      SIZE 14.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-tank-weight AS DECIMAL FORMAT "->>>,>>>,>>>,>>9.999":U INITIAL ? 
-     LABEL "       Вес топлива" 
+     LABEL "   Масса топлива" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1
      FGCOLOR 4  NO-UNDO.
@@ -510,10 +527,11 @@ DEFINE FRAME Dialog-Frame
      b-help AT ROW 1 COL 87.38
      f-sec-num AT ROW 3.75 COL 16.25 COLON-ALIGNED WIDGET-ID 84
      f-car-vol-total AT ROW 3.75 COL 31.13 COLON-ALIGNED WIDGET-ID 90
-     f-ttn-temp AT ROW 3.79 COL 52.63 COLON-ALIGNED WIDGET-ID 132
+     f-ttn-temp AT ROW 3.79 COL 53.5 COLON-ALIGNED WIDGET-ID 132
      f-doc-qnty AT ROW 3.79 COL 80.5 COLON-ALIGNED WIDGET-ID 86
      f-doc-dens AT ROW 4.96 COL 21.25 COLON-ALIGNED WIDGET-ID 106
      f-tank-weight-total AT ROW 4.96 COL 31.13 COLON-ALIGNED WIDGET-ID 92
+     f-acc-ship AT ROW 4.96 COL 53.5 COLON-ALIGNED WIDGET-ID 140
      f-cli-qnty AT ROW 4.96 COL 80.5 COLON-ALIGNED WIDGET-ID 108
      f-size AT ROW 6.13 COL 80.5 COLON-ALIGNED WIDGET-ID 20
      f-car-vol AT ROW 6.17 COL 30.25 COLON-ALIGNED
@@ -534,10 +552,10 @@ DEFINE FRAME Dialog-Frame
      f-tank-temp AT ROW 17 COL 80 COLON-ALIGNED
      f-tank-density AT ROW 18.08 COL 22 COLON-ALIGNED
      f-dens-temp AT ROW 18.08 COL 80 COLON-ALIGNED WIDGET-ID 26
-     f-tank-weight AT ROW 19.21 COL 22 COLON-ALIGNED
+     f-EU-weight AT ROW 19.17 COL 22 COLON-ALIGNED WIDGET-ID 136
      f-list-tank AT ROW 19.21 COL 48.5 COLON-ALIGNED WIDGET-ID 124
      r-list-tank AT ROW 19.21 COL 93.25 WIDGET-ID 126
-     f-acc-weight AT ROW 20.33 COL 22 COLON-ALIGNED WIDGET-ID 134
+     f-loss-norm AT ROW 20.25 COL 29 COLON-ALIGNED WIDGET-ID 138
      f-place-si AT ROW 21.92 COL 22 COLON-ALIGNED WIDGET-ID 16
      r-sr-izm AT ROW 21.92 COL 28.5 WIDGET-ID 18
      f-num-plotn AT ROW 23.04 COL 9 COLON-ALIGNED WIDGET-ID 76
@@ -545,8 +563,10 @@ DEFINE FRAME Dialog-Frame
      b-copy-iz AT ROW 24.13 COL 86 WIDGET-ID 22
      b-choose-date-pov-plotn AT ROW 24.17 COL 29.13 WIDGET-ID 72
      f-passport-plotn AT ROW 24.17 COL 52.63 COLON-ALIGNED WIDGET-ID 68
+     f-tank-weight AT ROW 25.5 COL 63.25 COLON-ALIGNED
      f-tank-density-pomi AT ROW 25.54 COL 29 COLON-ALIGNED WIDGET-ID 24
      b-calc AT ROW 26.17 COL 81.63 WIDGET-ID 80
+     f-acc-weight AT ROW 26.71 COL 63.25 COLON-ALIGNED WIDGET-ID 134
      f-tank-vol-pomi AT ROW 26.75 COL 30 COLON-ALIGNED WIDGET-ID 28
      f-date-start AT ROW 28.21 COL 21 COLON-ALIGNED
      f-hour-start AT ROW 28.21 COL 88 COLON-ALIGNED
@@ -555,15 +575,15 @@ DEFINE FRAME Dialog-Frame
      f-hour-end AT ROW 29.29 COL 88 COLON-ALIGNED
      f-min-end AT ROW 29.29 COL 91.63 COLON-ALIGNED NO-LABEL
      f-tests AT ROW 30.83 COL 20.88 COLON-ALIGNED WIDGET-ID 118
-     f-num-print-prob AT ROW 30.83 COL 80.5 COLON-ALIGNED WIDGET-ID 120
-     f-kol-prob AT ROW 31.83 COL 20.88 COLON-ALIGNED WIDGET-ID 122
-     f-hour-prob AT ROW 31.96 COL 87.75 COLON-ALIGNED WIDGET-ID 114
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON b-save CANCEL-BUTTON b-quit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
+     f-num-print-prob AT ROW 30.83 COL 80.5 COLON-ALIGNED WIDGET-ID 120
+     f-kol-prob AT ROW 31.83 COL 20.88 COLON-ALIGNED WIDGET-ID 122
+     f-hour-prob AT ROW 31.96 COL 87.75 COLON-ALIGNED WIDGET-ID 114
      f-min-prob AT ROW 31.96 COL 91.38 COLON-ALIGNED NO-LABEL WIDGET-ID 116
      f-date-prob AT ROW 32.83 COL 20.88 COLON-ALIGNED WIDGET-ID 112
      f-place-si-name AT ROW 21.92 COL 30.13 COLON-ALIGNED NO-LABEL WIDGET-ID 14
@@ -765,7 +785,7 @@ do:
     f-num-plotn f-date-pov-plotn f-date-start f-hour-start f-min-start
     f-date-end f-hour-end f-min-end 
     f-doc-qnty f-doc-dens f-cli-qnty
-    f-num-print-prob f-kol-prob f-date-prob f-hour-prob f-min-prob f-list-tank f-ttn-temp
+    f-num-print-prob f-kol-prob f-date-prob f-hour-prob f-min-prob f-list-tank f-ttn-temp f-acc-ship f-EU-weight
   .
   if v-page-current <= infoSectionTotal:SectionNum 
   then do:
@@ -813,7 +833,7 @@ do:
   define variable v-proc as character no-undo.
 /*  define buffer buf_clob-bind    for ub.clob-bind.*/
   define buffer buf_sr-izmerenia    for ub.sr-izmerenia .
-
+  run save-page.
   assign
   f-car-vol
   f-tank-vol
@@ -1078,6 +1098,17 @@ do:
   if rdc-dnstvalue = "pomi-rn" then do :
 
   end.
+  
+  if infoSectionTotal:IsRNAlgo
+  then do:
+    infoSectionTotal:InfoSectionCurr:TankWeight = f-tank-weight.
+    def var v-m as decimal no-undo.
+    infoSectionTotal:RNAlgo(v-page-current, output v-m, yes).
+    f-EU-weight:screen-value = string (infoSectionTotal:InfoSectionCurr:NaturalLoss).
+    f-loss-norm:screen-value = string (infoSectionTotal:InfoSectionCurr:TPNorm).
+  end.
+  
+  
   enable
   f-tank-density
   with frame {&frame-name}.
@@ -1239,7 +1270,7 @@ end.
 
 &Scoped-define SELF-NAME f-acc-weight
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-acc-weight Dialog-Frame
-ON return OF f-acc-weight IN FRAME Dialog-Frame /*   Погр. изм. массы */
+ON return OF f-acc-weight IN FRAME Dialog-Frame /* Погр. изм. массы */
 do:
       apply "entry" to b-save in frame {&frame-name}.
 return no-apply.
@@ -1344,7 +1375,7 @@ end.
 
 &Scoped-define SELF-NAME f-cli-qnty
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cli-qnty Dialog-Frame
-ON leave OF f-cli-qnty IN FRAME Dialog-Frame /*      Вес по док. */
+ON leave OF f-cli-qnty IN FRAME Dialog-Frame /*    Масса по док. */
 do:
 
     run calc-doc in this-procedure.
@@ -2017,7 +2048,7 @@ end.
 
 &Scoped-define SELF-NAME f-tank-weight
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-tank-weight Dialog-Frame
-ON return OF f-tank-weight IN FRAME Dialog-Frame /*        Вес топлива */
+ON return OF f-tank-weight IN FRAME Dialog-Frame /*    Масса топлива */
 do:
       apply "entry" to b-save in frame {&frame-name}.
 return no-apply.
@@ -2171,6 +2202,13 @@ MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
   
+  
+/*  def var tanksecs as class ibs.th.str.ptrl.tanksecsproc no-undo.*/
+/*                                                                 */
+/*                                                                 */
+/*  tanksecs = new ibs.th.str.ptrl.tanksecsproc (infoSectionTotal).*/
+/*                                                                 */
+/*  tanksecs:Show().                                               */
   
   run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
   run gds-attr-value in this-procedure
@@ -2357,17 +2395,17 @@ define variable ii as integer no-undo.
   
   infoSectionTotal:CalculateTotal().
   case false: 
-  when 0.001 > abs (infoSectionTotal:DocQntyTotal - infoSectionTotal:DocQntyLine) then 
+  when 0.01 > abs (infoSectionTotal:DocQntyTotal - infoSectionTotal:DocQntyLine) then 
   do:
     message substitute ("Количество по документу - &1 не совпадает с суммой количества по документу - &2 по секциям", infoSectionTotal:DocQntyLine, infoSectionTotal:DocQntyTotal) view-as alert-box error.
     return error.
   end.
-  when 0.001 > abs (infoSectionTotal:DocDensityAvg - infoSectionTotal:DocDensLine) then 
+  when 0.01 > abs (infoSectionTotal:DocDensityAvg - infoSectionTotal:DocDensLine) then 
   do:
     message substitute ("Плотность по документу - &1 не совпадает со средней плотностью по документу - &2 по секциям", infoSectionTotal:DocDensLine, infoSectionTotal:DocDensityAvg) view-as alert-box error.
     return error.
   end.
-  when 0.001 > abs (infoSectionTotal:DocDensityAvg * infoSectionTotal:DocQntyTotal - infoSectionTotal:DocCliLine) then 
+  when 0.01 > abs (infoSectionTotal:DocDensityAvg * infoSectionTotal:DocQntyTotal - infoSectionTotal:DocCliLine) then 
   do:
     message substitute ("Масса по документу - &1 не совпадает с суммой масс по документу - &2 по секциям", infoSectionTotal:DocCliLine, infoSectionTotal:DocDensityAvg * infoSectionTotal:DocQntyTotal) view-as alert-box error.
     return error.
@@ -2398,7 +2436,6 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-page Dialog-Frame 
 PROCEDURE check-page :
-
 define variable v-list-tank as character no-undo.
   
   
@@ -2714,23 +2751,25 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-cli-qnty f-size f-car-vol 
-          f-num-passport f-text1 f-norm-doc f-text2 f-certif-fuel f-text3 
-          f-validity-certif f-a-b-tarir f-mouth f-tank-water f-tank-vol 
-          f-tank-temp f-tank-density f-dens-temp f-tank-weight f-list-tank 
-          f-acc-weight f-place-si f-num-plotn f-date-pov-plotn 
-          f-tank-density-pomi f-tank-vol-pomi f-date-start f-hour-start 
-          f-min-start f-date-end f-hour-end f-min-end f-tests f-num-print-prob 
-          f-kol-prob f-hour-prob f-min-prob f-date-prob f-place-si-name 
+  DISPLAY f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-acc-ship f-cli-qnty 
+          f-size f-car-vol f-num-passport f-text1 f-norm-doc f-text2 
+          f-certif-fuel f-text3 f-validity-certif f-a-b-tarir f-mouth 
+          f-tank-water f-tank-vol f-tank-temp f-tank-density f-dens-temp 
+          f-EU-weight f-list-tank f-loss-norm f-place-si f-num-plotn 
+          f-date-pov-plotn f-tank-weight f-tank-density-pomi f-acc-weight 
+          f-tank-vol-pomi f-date-start f-hour-start f-min-start f-date-end 
+          f-hour-end f-min-end f-tests f-num-print-prob f-kol-prob f-hour-prob 
+          f-min-prob f-date-prob f-place-si-name 
       WITH FRAME Dialog-Frame.
-  ENABLE b-save b-quit b-del-sec b-help Rect-Main Rect-Bottom Rect-Left 
-         Rect-Right Rect-Top RECT-3 RECT-1 RECT-4 RECT-5 RECT-6 RECT-8 RECT-7 
+  ENABLE Rect-Main Rect-Bottom Rect-Left Rect-Right Rect-Top RECT-3 RECT-1 
+         RECT-4 RECT-5 RECT-6 RECT-8 RECT-7 b-save b-quit b-del-sec b-help 
          f-sec-num f-ttn-temp f-doc-qnty f-doc-dens f-cli-qnty f-size f-car-vol 
          f-num-passport f-norm-doc f-certif-fuel f-validity-certif f-a-b-tarir 
          f-mouth f-tank-water f-tank-temp f-tank-density f-dens-temp 
-         f-list-tank r-list-tank f-num-plotn f-date-pov-plotn f-date-start 
-         f-hour-start f-min-start f-date-end f-hour-end f-min-end f-tests 
-         f-num-print-prob f-kol-prob f-hour-prob f-min-prob f-date-prob 
+         f-list-tank r-list-tank f-acc-ship f-num-plotn 
+         f-date-pov-plotn f-date-start f-hour-start f-min-start f-date-end 
+         f-hour-end f-min-end f-tests f-num-print-prob f-kol-prob f-hour-prob 
+         f-min-prob f-date-prob
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -2743,11 +2782,11 @@ END PROCEDURE.
 PROCEDURE hide-disp-page :
 define buffer buf_sr-izmerenia for ub.sr-izmerenia .
 
-if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) then do:
+  if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) then do:
     enable {&list-1} with frame {&frame-name}.
     hide {&list-1} in frame {&frame-name}.
-    display f-doc-qnty f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
-    enable f-doc-qnty f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
+    display f-doc-qnty f-acc-ship f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
+    enable f-doc-qnty f-acc-ship f-doc-dens f-cli-qnty f-sec-num f-ttn-temp with frame {&frame-name}.
     if infoSectionTotal:CliQntyInput and (p-mode = {&update} or p-mode = {&add-def})
       then enable f-cli-qnty with frame {&frame-name}.
     else disable f-cli-qnty with frame {&frame-name}.
@@ -2824,7 +2863,7 @@ if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) 
     f-tank-vol-pomi f-dens-temp
     f-certif-fuel f-norm-doc 
     f-num-passport f-validity-certif f-list-tank r-list-tank
-    f-kol-prob f-num-print-prob f-date-prob f-hour-prob f-min-prob f-ttn-temp f-size
+    f-kol-prob f-num-print-prob f-date-prob f-hour-prob f-min-prob f-ttn-temp f-size f-acc-ship f-EU-weight f-loss-norm
     with frame {&frame-name}.
   if rdc-dnstvalue <> "not" and p-mode <> {&lookup}  then 
   do :
@@ -2879,7 +2918,7 @@ if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) 
       f-car-vol f-tests f-sec-num f-doc-qnty
       f-date-start f-hour-start f-min-start
       f-date-end f-hour-end f-min-end
-      f-kol-prob f-num-print-prob f-date-prob f-hour-prob f-min-prob f-ttn-temp
+      f-kol-prob f-num-print-prob f-date-prob f-hour-prob f-min-prob f-ttn-temp f-acc-ship
       with frame {&frame-name}.
     hide
       f-tank-vol-pomi
@@ -2942,6 +2981,9 @@ if not infoSectionTotal:FlagTrn and (p-mode = {&update} or p-mode = {&add-def}) 
       f-hour-prob
       f-min-prob
       f-ttn-temp
+      f-acc-ship
+      f-EU-weight
+      f-loss-norm
       with frame {&frame-name}.
   end.
   
@@ -2982,7 +3024,6 @@ end procedure.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE initialize-section Dialog-Frame 
 PROCEDURE initialize-section :
 define buffer buf_sr-izmerenia for ub.sr-izmerenia .
-
 display {&list-1} with frame {&frame-name}.
   hide {&list-2} in frame {&frame-name}.
   
@@ -3026,6 +3067,7 @@ display {&list-1} with frame {&frame-name}.
       f-date-prob = infoSectionTotal:GetInfoSectionProp(v-page-current):DateProb
       f-hour-prob = infoSectionTotal:GetInfoSectionProp(v-page-current):HourProb
       f-min-prob = infoSectionTotal:GetInfoSectionProp(v-page-current):MinProb
+      f-EU-weight = infoSectionTotal:GetInfoSectionProp(v-page-current):NaturalLoss
     .
     assign
       f-car-vol = decimal(infoSectionTotal:GetInfoSectionProp(v-page-current):CarVol) no-error
@@ -3040,7 +3082,10 @@ display {&list-1} with frame {&frame-name}.
       f-num-plotn = infoSectionTotal:GetInfoSectionProp(v-page-current):NumPlotn
       f-date-pov-plotn = infoSectionTotal:GetInfoSectionProp(v-page-current):DatePovPlotn
       f-passport-plotn = infoSectionTotal:GetInfoSectionProp(v-page-current):PassportPlotn
-      f-validity-certif = infoSectionTotal:GetInfoSectionProp(v-page-current):ValidityCertif .
+      f-validity-certif = infoSectionTotal:GetInfoSectionProp(v-page-current):ValidityCertif 
+      f-acc-ship = infoSectionTotal:GetInfoSectionProp(v-page-current):AccShip
+      f-loss-norm = infoSectionTotal:GetInfoSectionProp(v-page-current):TPNorm
+    .
 
   
     if error-status:error then
@@ -3195,7 +3240,7 @@ procedure save-page:
     f-date-end f-hour-end f-min-end 
     f-doc-qnty f-doc-dens f-cli-qnty
     f-passport-plotn f-num-plotn f-place-si 
-    f-num-print-prob f-kol-prob f-date-prob f-hour-prob f-min-prob f-ttn-temp
+    f-num-print-prob f-kol-prob f-date-prob f-hour-prob f-min-prob f-ttn-temp f-acc-ship f-EU-weight f-loss-norm
     
   .
  
@@ -3219,7 +3264,8 @@ procedure save-page:
     infoSectionTotal:GetInfoSectionProp(v-page-current):TankDensity = f-tank-density
     infoSectionTotal:GetInfoSectionProp(v-page-current):TankWeight =  f-tank-weight
     infoSectionTotal:GetInfoSectionProp(v-page-current):AccPomi =  f-acc-weight when rdc-dnstvalue = "pomi-rn"
-    infoSectionTotal:GetInfoSectionProp(v-page-current):ABTarir = f-a-b-tarir   
+    infoSectionTotal:GetInfoSectionProp(v-page-current):ABTarir = f-a-b-tarir
+    infoSectionTotal:GetInfoSectionProp(v-page-current):AccShip = f-acc-ship 
     infoSectionTotal:GetInfoSectionProp(v-page-current):Diameter =  f-size    
     infoSectionTotal:GetInfoSectionProp(v-page-current):PlaceSi = f-place-si  
     infoSectionTotal:GetInfoSectionProp(v-page-current):TankDensityPomi = f-tank-density-pomi
@@ -3237,6 +3283,7 @@ procedure save-page:
     infoSectionTotal:GetInfoSectionProp(v-page-current):HourProb = f-hour-prob
     infoSectionTotal:GetInfoSectionProp(v-page-current):MinProb = f-min-prob
     infoSectionTotal:GetInfoSectionProp(v-page-current):TTNTemp  = f-ttn-temp
+    
   no-error.
   if infoSectionTotal:GetInfoSectionProp(v-page-current):PlaceSi <> 0 then do:
     if v-sr-type = 1 or v-sr-type = 2 then do:

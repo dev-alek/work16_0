@@ -42,7 +42,7 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Связать товары с Меркурием".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }
-{ cmp/str-glbl.i }
+{ cmp/trg-def.i }
 { cmp/showinf.i }
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
@@ -56,6 +56,10 @@ DEFINE BUFFER buf_goods       for ub.goods .
 define variable v-login           as character no-undo .
 define variable v-password        as character no-undo .
 define variable v-server          as character no-undo .
+
+define variable v-proxy-login     as character no-undo .
+define variable v-proxy-pswd      as character no-undo .
+define variable v-proxy-addres    as character no-undo .
 
 define variable par-type          as character no-undo.
 
@@ -464,7 +468,23 @@ PROCEDURE MyEnable :
                   v-server = "https://api.vetrf.ru" .
                 end.    
             end case .  
-          end.          
+          end. 
+        when "proxy-addres" then 
+          v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+        when "proxy-login" then
+          do:
+            if thbjattr_thbj-attr.property-value-character <> ""
+            then do :
+              {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+            end.
+          end. 
+        when "proxy-pswd" then
+          do:
+            if thbjattr_thbj-attr.property-value-character <> ""
+            then do :
+              {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+            end.  
+          end.      
       end case.
     end.
   end.
@@ -540,8 +560,16 @@ PROCEDURE proc-save :
       sw:end-document () .
     
 
-      /*              cmd = substitute ("&1 -u expertek-180403:9dVHt6B6 -d @&2 https://api2.vetrf.ru:8002/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml").*/
-      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+      
+      if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
+      then do :
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                        search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+      end.
+      else do :
+        cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+      end.
+      
       os-command silent value (cmd). /*закрытие окна*/
           
       parser = new parserXmlGDS().

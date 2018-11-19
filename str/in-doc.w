@@ -10,6 +10,7 @@
 /* Temp-Table and Buffer definitions                                    */
 using ibs.th.gbl.storage.*.
 DEFINE BUFFER t-doc FOR ub.trn-doc.
+DEFINE BUFFER src-doc FOR ub.trn-doc.
 
 
 
@@ -220,6 +221,9 @@ define variable vsdstrObj as class vsdtostorage no-undo.
 define variable bcol as handle extent no-undo.
 define variable hBrowse as handle no-undo.
 define variable ii as integer no-undo.
+define variable is-copy as logical no-undo.
+define variable docrec-src as recid no-undo.
+define variable varattr as character no-undo.
 
 define variable d-kg-after-qnty like ub.doc-line.fact-qnty  no-undo.
 define variable d-kg-price-rubl like ub.doc-line.price-rubl no-undo.
@@ -2435,6 +2439,15 @@ n-p:
 do while parnext-prev :
 main-block:
 do on error undo main-block, leave main-block :
+   if pardoc-mode = {&add-copy}
+    then
+    assign
+      is-copy = true
+      pardoc-mode = {&add-def}
+      docrec-src = pardoc-rec
+      pardoc-rec = ?
+      .
+  
    { gbl/curr-r-b.i varr-b no-error }
    if error-status :error then do:
      assign
@@ -2525,7 +2538,7 @@ do on error undo main-block, leave main-block :
        parnext-prev = no.
      return error.
    end.
-   if can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.attr-code = {&attr-supp-np}
+   if not is-copy and can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.attr-code = {&attr-supp-np}
                                                 and ub.clients-attr.attr-value = "yes") and pardoc-mode = {&add-def}
    then do :
     run gbl/d-askw.w (
@@ -2542,14 +2555,46 @@ do on error undo main-block, leave main-block :
       when 2 then is-fuel = no.
       when 3 then return error.
     end.
+    if is-fuel
+    then do:
+      { str/tdat-wrt.i                                    
+         t-doc.doc-code
+         {&trdcattr-is-fuel}
+         "yes" 
+      no-error} 
+    end.
    end.
+
+    { str/tdat-val.i                                    
+       t-doc.doc-code
+       {&trdcattr-is-fuel}
+       varattr 
+       vartype no-error} 
+    
+    if varattr = "yes"
+      then is-fuel = true.
+   
    /*if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
                                                 and ub.clients-attr.obj-code = ub.clients.obj-code
                                                 and ub.clients-attr.attr-code = {&attr-supp-np}
                                                 and ub.clients-attr.attr-value = "yes")
    then do:*/
    b-in-attr-fuel:sensitive = true.
-   /*end.*/
+  /*end.*/
+   
+  if not is-fuel
+    then 
+  do:
+    if not is-fuel
+      then 
+    do:
+      hide b-in-attr-fuel in frame {&frame-name}.
+    end.
+  end.
+   
+   if pardoc-mode = {&update}
+     then run fill-mol in this-procedure. 
+   
    IF mImagePh THEN
 DO:
     DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
@@ -2572,6 +2617,70 @@ ELSE
         g-image:VISIBLE    = NO
         g-image:SENSITIVE  = NO
         .
+  if is-copy
+  then do:
+    for first src-doc where recid (src-doc) = docrec-src no-lock.
+      t-doc.cli-code = src-doc.cli-code.
+      t-doc.cli-type = src-doc.cli-type.
+      t-doc.cli-code:screen-value in frame {&frame-name} = string (src-doc.cli-code).
+      t-doc.cli-type:screen-value  in frame {&frame-name} = src-doc.cli-type.
+      find first ub.clients where ub.clients.obj-type = src-doc.cli-type and ub.clients.obj-code = src-doc.cli-code no-lock.
+      disp ub.clients.obj-code @ t-doc.cli-code
+              ub.clients.obj-name with frame {&frame-name}.
+      disp ub.clients.obj-type @ t-doc.cli-type with frame {&frame-name}.
+      run check-cli no-error.
+      if error-status :error then return no-apply.
+      { str/tdat-val.i                                    
+         src-doc.doc-code
+         {&trdcattr-ptbobj}
+         varattr 
+         vartype
+         no-error } 
+      { str/tdat-wrt.i                                    
+         t-doc.doc-code
+         {&trdcattr-ptbobj}
+         varattr
+         no-error 
+      } 
+      { str/tdat-val.i                                    
+         src-doc.doc-code
+         {&trdcattr-autoent}
+         varattr 
+         vartype 
+         no-error} 
+      { str/tdat-wrt.i                                    
+         t-doc.doc-code
+         {&trdcattr-autoent}
+         varattr
+         no-error 
+      } 
+      
+      assign
+        t-doc.contract-code = src-doc.contract-code
+        t-doc.exch-code     = src-doc.exch-code
+        t-doc.exch-rate     = src-doc.exch-rate
+        t-doc.exch-scale    = src-doc.exch-scale
+      .
+      
+      { str/tdat-val.i                                    
+         src-doc.doc-code
+         {&trdcattr-is-fuel}
+         varattr 
+         vartype
+         no-error } 
+      { str/tdat-wrt.i                                    
+         t-doc.doc-code
+         {&trdcattr-is-fuel}
+         varattr
+         no-error 
+      }  
+      
+      run fill-mol.
+      
+      
+    end.
+
+  end.
    if pardoc-mode = {&add-def} then do:
      wait-for go of frame {&frame-name} focus t-doc.cli-code.
    end.
@@ -2622,145 +2731,166 @@ define variable v-choice    as   integer                    no-undo.
 define variable v-rid       as   integer                    no-undo.
 define variable v-rid-list  as   char                       no-undo.
 define variable i           as   integer                    no-undo.
-
-
+define variable v-stat as character no-undo init ?.
+define variable v-list as character no-undo init ?.
 
 do on stop undo, return error return-value :
   run corr-t-doc in this-procedure no-error.
   if error-status:error then do:
     return error return-value.
   end.
-  v-choice = 0.
-  if t-doc.contract-code <> 0 then do:
-/*
-     find first bf_contract-specif where
-                bf_contract-specif.host-code    = t-doc.host-code
-            and bf_contract-specif.contract-num = t-doc.contract-code
-          no-lock no-error.
-*/
-     {str/cont-slave-inc.i
-          &FIND_FIRST = YES
-          &BUFFER_SPECIF   = bf_contract-specif
-          &P_HOST_CODE     = t-doc.host-code
-          &P_CONTRACT_NUM  = t-doc.contract-code
-          &NO_LOCK=YES
-          &NO_ERROR=YES
-     }
-
-    if available bf_contract-specif then do:
-      run gbl/d-askw.w
-        (input "Добавление товаров"
-        ,input "Выберите один из пунктов для добавления в накладную" + {&new-line}
-             + "товаров по спецификации к договору" + {&new-line}
-        ,input "|"
-        ,input "Все|Выборочно|По справочнику|Отказ"
-        ,input "Все недобавленные товары по спецификации|"
-             + "Выборочно товары по спецификации|"
-             + "Выбор товаров из справочника|"
-             + "Отказ от выполнения операции"
-        ,input 1 /* значение возвращаемое при нажатии enter */
-        ,input 4 /* значение возвращаемое при нажатии escape */
-        ,output v-choice
-        ).
-      if v-choice = 4 then do:
-        run UI-on in this-procedure ( input "line" ).
-        return.
-      end.
-    end.
+  
+  if is-fuel
+  then do:
+    run ref/gds-ref.p
+    ( 
+       input parparentproc
+      ,input "b-sel,b-add"
+      ,input ?             /*p-stat */
+      ,input {&group}             /*p-list  */
+      ,input ?             /*p-cond  */
+      ,input ?             /*p-rec   */
+      ,input "Топливное предложение"             /*p-grp   */
+      ,input t-doc.cli-type             /*p-cli-type */
+      ,input t-doc.cli-code             /*p-cli-code  */
+      ,input v-cntxt-obj-type    /*p-obj-type  */
+      ,input v-cntxt-obj-code    /*p-obj-code  */
+      ,input ?             /*p-other     */
+      ,output varnotes).
   end.
-  if v-choice = 0 then
-    v-choice = 3. /* Выбор из справочника */
-
-  assign
-    /*line-mode = {&add-def}*/
-    varnotes = '':u
-    varlns-cnt = 1.
-
-  case v-choice:
-    when 1 then do: /* Все товары по спецификации */
-
-/*
-      for each bf_contract-specif where
-               bf_contract-specif.host-code    = t-doc.host-code
-           AND bf_contract-specif.contract-num = t-doc.contract-code
-           no-lock
-*/
-      {str/cont-slave-inc.i
-           &FOR_ = YES
-           &EACH_ = YES
-           &BUFFER_SPECIF   =  bf_contract-specif
-           &P_HOST_CODE     =  t-doc.host-code
-           &P_CONTRACT_NUM  =  t-doc.contract-code
-           &NO_LOCK=YES
-           &NO_END=YES
-      }
-
-          on error undo, return error return-value :
-        find first bf_goods where bf_goods.gds-code = bf_contract-specif.gds-code no-lock.
-        find first bf-hv_doc-line where bf-hv_doc-line.doc-code  = t-doc.doc-code     and
-                                        bf-hv_doc-line.artic     = bf_goods.artic     and
-                                        bf-hv_doc-line.prod-type = bf_goods.prod-type and
-                                        bf-hv_doc-line.prod-code = bf_goods.prod-code no-lock no-error.
-        if not available bf-hv_doc-line then do:
-          assign
-            varnotes = varnotes + (if varnotes = '':u then '':u else ',':u) + string(recid(bf_goods)).
+  else do:
+    v-choice = 0.
+    if t-doc.contract-code <> 0 then do:
+  /*
+       find first bf_contract-specif where
+                  bf_contract-specif.host-code    = t-doc.host-code
+              and bf_contract-specif.contract-num = t-doc.contract-code
+            no-lock no-error.
+  */
+       {str/cont-slave-inc.i
+            &FIND_FIRST = YES
+            &BUFFER_SPECIF   = bf_contract-specif
+            &P_HOST_CODE     = t-doc.host-code
+            &P_CONTRACT_NUM  = t-doc.contract-code
+            &NO_LOCK=YES
+            &NO_ERROR=YES
+       }
+  
+      if available bf_contract-specif then do:
+        run gbl/d-askw.w
+          (input "Добавление товаров"
+          ,input "Выберите один из пунктов для добавления в накладную" + {&new-line}
+               + "товаров по спецификации к договору" + {&new-line}
+          ,input "|"
+          ,input "Все|Выборочно|По справочнику|Отказ"
+          ,input "Все недобавленные товары по спецификации|"
+               + "Выборочно товары по спецификации|"
+               + "Выбор товаров из справочника|"
+               + "Отказ от выполнения операции"
+          ,input 1 /* значение возвращаемое при нажатии enter */
+          ,input 4 /* значение возвращаемое при нажатии escape */
+          ,output v-choice
+          ).
+        if v-choice = 4 then do:
+          run UI-on in this-procedure ( input "line" ).
+          return.
         end.
       end.
-      if varnotes = '':u then do:
-        message "Вы добавили уже все товары по спецификации."
-        view-as alert-box.
-      end.
     end.
-
-    when 2 then do: /* Выборочно товары по спецификации */
-      run str/contspec.w (input parparentproc,
-                      input "b-sel,b-mark",
-                      input {&lookup},
-                      input t-doc.host-code,
-                      input t-doc.contract-code,
-                      output v-rid-list) .
-      if v-rid-list = '':u then do:
-        message "Нет выбранных товаров по спецификации."
-          view-as alert-box.
-      end.
-      /* Формируем список recid'ов товаров по выбранным строкам спецификации */
-      do i = 1 to num-entries(v-rid-list):
-        v-rid = integer(entry(i, v-rid-list)).
-        find bf_contract-specif where recid(bf_contract-specif) = v-rid no-lock no-error.
-        if available bf_contract-specif then do:
+    if v-choice = 0 then
+      v-choice = 3. /* Выбор из справочника */
+  
+    assign
+      /*line-mode = {&add-def}*/
+      varnotes = '':u
+      varlns-cnt = 1.
+  
+    case v-choice:
+      when 1 then do: /* Все товары по спецификации */
+  
+  /*
+        for each bf_contract-specif where
+                 bf_contract-specif.host-code    = t-doc.host-code
+             AND bf_contract-specif.contract-num = t-doc.contract-code
+             no-lock
+  */
+        {str/cont-slave-inc.i
+             &FOR_ = YES
+             &EACH_ = YES
+             &BUFFER_SPECIF   =  bf_contract-specif
+             &P_HOST_CODE     =  t-doc.host-code
+             &P_CONTRACT_NUM  =  t-doc.contract-code
+             &NO_LOCK=YES
+             &NO_END=YES
+        }
+  
+            on error undo, return error return-value :
           find first bf_goods where bf_goods.gds-code = bf_contract-specif.gds-code no-lock.
-          assign
-            varnotes = varnotes + (if varnotes = '':u then '':u else ',':u) + string(recid(bf_goods)).
+          find first bf-hv_doc-line where bf-hv_doc-line.doc-code  = t-doc.doc-code     and
+                                          bf-hv_doc-line.artic     = bf_goods.artic     and
+                                          bf-hv_doc-line.prod-type = bf_goods.prod-type and
+                                          bf-hv_doc-line.prod-code = bf_goods.prod-code no-lock no-error.
+          if not available bf-hv_doc-line then do:
+            assign
+              varnotes = varnotes + (if varnotes = '':u then '':u else ',':u) + string(recid(bf_goods)).
+          end.
+        end.
+        if varnotes = '':u then do:
+          message "Вы добавили уже все товары по спецификации."
+          view-as alert-box.
         end.
       end.
-    end.
-
-    when 3 then do: /* из справочника */
-    find first buf_assortment-matrix no-lock where
-               buf_assortment-matrix.obj-code = v-cntxt-obj-code and
-               buf_assortment-matrix.obj-type = v-cntxt-obj-type and
-               buf_assortment-matrix.asmt-status = integer ({&current-status-int}) no-error .
-                if available buf_assortment-matrix then do:
-                    v-type-mode-spr = {&g___object} .
-                end.
-                else do:
-                    v-type-mode-spr = {&all} .
-                end.
-      run str/chs-gds.w ( input parparentproc
-                    , input v-cntxt-obj-type
-                    , input v-cntxt-obj-code
-                    , input "":u
-                    , input t-doc.status_
-                    , input "Строка ПН № " + t-doc.doc-code + " " + t-doc.status_ + " " + string (t-doc.flag_, "+/-")
-                    , input v-type-mode-spr  /*режим вызова справочника товаров*/
-                    , input t-doc.cli-type
-                    , input t-doc.cli-code
-                    , input t-doc.host-code
-                    , input t-doc.ext-doc-type
-                    , input-output varschartic
-                    , output varnotes) no-error.
-    end.
-  end case.
+  
+      when 2 then do: /* Выборочно товары по спецификации */
+        run str/contspec.w (input parparentproc,
+                        input "b-sel,b-mark",
+                        input {&lookup},
+                        input t-doc.host-code,
+                        input t-doc.contract-code,
+                        output v-rid-list) .
+        if v-rid-list = '':u then do:
+          message "Нет выбранных товаров по спецификации."
+            view-as alert-box.
+        end.
+        /* Формируем список recid'ов товаров по выбранным строкам спецификации */
+        do i = 1 to num-entries(v-rid-list):
+          v-rid = integer(entry(i, v-rid-list)).
+          find bf_contract-specif where recid(bf_contract-specif) = v-rid no-lock no-error.
+          if available bf_contract-specif then do:
+            find first bf_goods where bf_goods.gds-code = bf_contract-specif.gds-code no-lock.
+            assign
+              varnotes = varnotes + (if varnotes = '':u then '':u else ',':u) + string(recid(bf_goods)).
+          end.
+        end.
+      end.
+  
+      when 3 then do: /* из справочника */
+      find first buf_assortment-matrix no-lock where
+                 buf_assortment-matrix.obj-code = v-cntxt-obj-code and
+                 buf_assortment-matrix.obj-type = v-cntxt-obj-type and
+                 buf_assortment-matrix.asmt-status = integer ({&current-status-int}) no-error .
+                  if available buf_assortment-matrix then do:
+                      v-type-mode-spr = {&g___object} .
+                  end.
+                  else do:
+                      v-type-mode-spr = {&all} .
+                  end.
+        run str/chs-gds.w ( input parparentproc
+                      , input v-cntxt-obj-type
+                      , input v-cntxt-obj-code
+                      , input "":u
+                      , input t-doc.status_
+                      , input "Строка ПН № " + t-doc.doc-code + " " + t-doc.status_ + " " + string (t-doc.flag_, "+/-")
+                      , input v-type-mode-spr  /*режим вызова справочника товаров*/
+                      , input t-doc.cli-type
+                      , input t-doc.cli-code
+                      , input t-doc.host-code
+                      , input t-doc.ext-doc-type
+                      , input-output varschartic
+                      , output varnotes) no-error.
+      end.
+    end case.
+  end.
   run cycle-add in this-procedure.
   run UI-on     in this-procedure ( input "line" ).
 end. /* on stop */

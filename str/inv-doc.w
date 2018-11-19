@@ -39,6 +39,10 @@ ________________________________________________________________________________
 |__________________________________________________|______________________________|__________________________|
 
 \* ************************************************************************************************************* */
+
+using ibs.th.str.ptrl.* from propath.
+using ibs.th.gbl.ptrl.par.* from propath.
+
 define input        parameter parparentproc   as   handle                  no-undo.
 define input-output parameter pardoc-rec      as   recid                   no-undo.
 define input        parameter pardoc-mode     as   character               no-undo.
@@ -170,7 +174,9 @@ first ub.goods no-lock where ~
  {&clmn_2-br-list}   @ prt-mark              column-label {&label-clmn_2-br-list} format "x(1)":U ~
  {&clmn_3-br-list}                           column-label {&label-clmn_3-br-list} ~
  {&clmn_4-br-list}                           column-label {&label-clmn_4-br-list} format "x(37)":U ~
- {&clmn_5-br-list}   @ scl-name              column-label {&label-clmn_5-br-list} format "x(10)":U ~
+ {&clmn_29-br-list}  @ varwas-qnty-kg        column-label {&label-clmn_29-br-list} format "->>>,>>>,>>9.999":U ~
+ {&clmn_30-br-list}  @ varare-qnty-kg        column-label {&label-clmn_30-br-list} format "->>>,>>>,>>9.999":U ~
+ {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_6-br-list}   @ varbefore-qnty        column-label {&label-clmn_6-br-list} ~
  {&clmn_7-br-list}                           column-label {&label-clmn_7-br-list} ~
  {&clmn_8-br-list}                           column-label {&label-clmn_8-br-list} ~
@@ -194,10 +200,8 @@ first ub.goods no-lock where ~
  {&clmn_26-br-list}  @ varwast-rb            column-label {&label-clmn_26-br-list} ~
  {&clmn_27-br-list}  @ varunus-wast-rb       column-label {&label-clmn_27-br-list} ~
  {&clmn_28-br-list}                          column-label {&label-clmn_28-br-list} ~
- {&clmn_29-br-list}  @ varwas-qnty-kg        column-label {&label-clmn_29-br-list} format "->>>,>>>,>>9.999":U ~
- {&clmn_30-br-list}  @ varare-qnty-kg        column-label {&label-clmn_30-br-list} format "->>>,>>>,>>9.999":U ~
- {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
- {&clmn_32-br-list}                          column-label {&label-clmn_32-br-list} format "->>>,>>>,>>9.999":U
+ {&clmn_32-br-list}                          column-label {&label-clmn_32-br-list} format "->>>,>>>,>>9.999":U ~
+ {&clmn_5-br-list}   @ scl-name              column-label {&label-clmn_5-br-list} format "x(10)":U
 
 /* ***************************  Definitions  ************************** */
 define buffer t-doc      for ub.trn-doc.
@@ -205,6 +209,9 @@ define buffer cli-buf    for ub.clients.  /* для gds-list.i */
 define buffer l-doc-line for ub.doc-line.
 define buffer bf_sysconf for ub.sysconf.
 define buffer clients for ub.clients  .
+define buffer bf_rvs for ub.rvs-doc  .
+define buffer bf_rvs-l-attr for ub.rvs-line-attr  .
+define buffer bf_rvs-line for ub.rvs-line  .
 define buffer db for ub.db  .
 
 define rectangle rect-trn-doc size 68.5 by 2.5 EDGE-PIXELS 2 GRAPHIC-EDGE bgcolor 8.
@@ -287,6 +294,74 @@ define variable parext-doc-mode                     as   character              
 define variable chk-doc-option                      as   character                     no-undo.
 define variable v-handl-tt                          as   handle                        no-undo.
 
+DEFINE VARIABLE f-acc as decimal format "->>>,>>>,>>9.999":U
+     LABEL "Погр. изм., кг " 
+     VIEW-AS FILL-IN 
+     SIZE 17 BY 1
+     fgcolor 4  
+     NO-UNDO.
+
+DEFINE VARIABLE f-acc-2 as decimal format "->>>,>>>,>>9.999":U
+     VIEW-AS FILL-IN 
+     SIZE 17 BY 1
+     fgcolor 4 
+     NO-UNDO.
+
+DEFINE VARIABLE f-izlnedos as decimal format "->>>,>>>,>>9.999":U
+     LABEL "Недостача, кг  " 
+     VIEW-AS FILL-IN 
+     SIZE 17 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+DEFINE VARIABLE f-izlnedos-2 as decimal format "->>>,>>>,>>9.999":U
+     VIEW-AS FILL-IN 
+     SIZE 18 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+DEFINE VARIABLE f-izlheader as character init "Излишек /     " format "x(20)"
+     VIEW-AS FILL-IN
+     SIZE 20 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-meu as character init "Масса ЕУ, кг :" format "x(20)"
+     VIEW-AS FILL-IN 
+     SIZE 20 BY 1 
+     NO-UNDO.
+
+DEFINE VARIABLE f-meu-2 as decimal format "->>>,>>>,>>9.999":U 
+     VIEW-AS FILL-IN 
+     SIZE 17 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+DEFINE VARIABLE f-mnorml as character init "Масса ТП, кг :" format "x(20)"
+     VIEW-AS FILL-IN
+     SIZE 20 BY 1 
+     NO-UNDO.
+
+DEFINE VARIABLE f-mnorml-2 as decimal format "->>>,>>>,>>9.999":U
+     VIEW-AS FILL-IN 
+     SIZE 17 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+DEFINE VARIABLE f-notbal as decimal format "->>>,>>>,>>9.999":U
+     LABEL "Небаланс, кг   " 
+     VIEW-AS FILL-IN 
+     SIZE 17 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+DEFINE VARIABLE f-notbal-2 as decimal format "->>>,>>>,>>9.999":U
+     VIEW-AS FILL-IN 
+     SIZE 17 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+
+
+
 /*----------------------------FUNCTIONS---------------------------------*/
 function fncgele returns character ( buffer local-doc-line for ub.doc-line ) :
   if local-doc-line.prt-OK = ? then do:
@@ -314,6 +389,10 @@ function fncextra-qnty returns decimal ( buffer local-doc-line for ub.doc-line )
   else do:
     return 0.00.
   end.
+end function.
+
+function deviation-fact    return decimal (buffer local-rvs-line for ub.rvs-line ).
+   return (local-rvs-line.state-measure-qnty   + local-rvs-line.state-add-qnty - local-rvs-line.system-qnty).
 end function.
 
 function fncmiss-qnty returns decimal ( buffer local-doc-line for ub.doc-line ) :
@@ -990,6 +1069,18 @@ define variable fi-rub-header as character format "x(5)":U initial " {&abbr_rub_
      size 5.9 by 0.60
      bgcolor cyan_color fgcolor white_color .
 
+define variable fi-plusbal-header as character format "x(15)":U initial " Положительный "
+     view-as fill-in
+     size 15.9 by 0.60
+     bgcolor cyan_color fgcolor white_color .
+
+define variable fi-minusbal-header as character format "x(15)":U initial " Отрицательный "
+     view-as fill-in
+     size 15.9 by 0.60
+     bgcolor cyan_color fgcolor white_color .
+
+
+
 define variable fi-izlishki-header as character format "x(9)":U initial " ИЗЛИШКИ "
      view-as fill-in
      size 9.9 by 0.60
@@ -1059,6 +1150,8 @@ define frame {&FRAME-NAME}
   rect-tog                     at row 6.7 col 48
   fi-val-header                at row 4   col 15                 no-label
   fi-rub-header                at row 4   col 33                 no-label
+  fi-plusbal-header            at row 4   col 18                 no-label
+  fi-minusbal-header           at row 4   col 37                 no-label
   t-doc.tot-doc                at row 4.6 col 7    colon-aligned    label "Прод."                 view-as fill-in    size 17 by 1.00 fgcolor 4
   t-doc.tot-rubl               at row 4.6 col 24   colon-aligned no-label                         view-as fill-in    size 17 by 1.00 fgcolor 4
   t-doc.fact-base              at row 5.5 col 7    colon-aligned    label "Учет."                 view-as fill-in    size 17 by 1.00 fgcolor 4
@@ -1100,6 +1193,19 @@ define frame {&FRAME-NAME}
   loc-name                     at row 11  col 76   colon-aligned    label "Начало названия"                                          format "x(40)":U
   loc-code                     at row 11  col 76   colon-aligned    label "Бар-код (весь)"                                           format "x(13)":U
   b-inv-prsrt                  at row 2   col 91
+  
+  f-notbal AT ROW 4.6 COL 16.63 COLON-ALIGNED WIDGET-ID 2
+  f-notbal-2 AT ROW 4.6 COL 34.5 COLON-ALIGNED NO-LABEL WIDGET-ID 18
+  f-acc AT ROW 5.6 COL 16.63 COLON-ALIGNED WIDGET-ID 4
+  f-acc-2 AT ROW 5.6 COL 34.5 COLON-ALIGNED NO-LABEL WIDGET-ID 16
+  f-meu AT ROW 6.6 COL 1.3 COLON-ALIGNED WIDGET-ID 6 no-labels
+  f-meu-2 AT ROW 6.6 COL 34.5 COLON-ALIGNED NO-LABEL WIDGET-ID 20
+  f-mnorml AT ROW 7.6 COL 1.3 COLON-ALIGNED WIDGET-ID 8 no-labels
+  f-mnorml-2 AT ROW 7.6 COL 34.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
+  f-izlnedos AT ROW 9.6 COL 16.63 COLON-ALIGNED WIDGET-ID 10
+  f-izlnedos-2 AT ROW 9.6 COL 34.5 COLON-ALIGNED NO-LABEL WIDGET-ID 24
+  f-izlheader AT ROW 8.6 COL 1.3 COLON-ALIGNED NO-LABEL WIDGET-ID 24
+  
   space( 0 ) skip( 0 )
 with view-as dialog-box keep-tab-order
      side-labels no-underline three-d scrollable
@@ -1680,6 +1786,7 @@ do while parnext-prev :
         parnext-prev = no.
       return error.
     end.
+    run fill-mol.
     WAIT-FOR GO OF FRAME {&FRAME-NAME} FOCUS {&BROWSE-NAME}.
   end. /* main-block */
 end. /* do while */
@@ -2016,6 +2123,159 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
       reposition {&BROWSE-NAME} to recid line-rec no-error.
     end.
   END.
+  find first bf_rvs where bf_rvs.rvs-code = t-doc.out-code no-lock no-error.
+  if available (bf_rvs)
+  then do:
+    def var v-dec as decimal no-undo.
+    def var rvsinvsubsDeficitObj as class rvsinvsubs no-undo.
+    def var rvsinvsubsOverObj as class rvsinvsubs no-undo.
+    def var v-IsRvsInvAlg3 as logical no-undo init false.
+    rvsinvsubsDeficitObj = new rvsinvsubs ().
+    rvsinvsubsOverObj = new rvsinvsubs ().
+    
+    rvsinvsubsOverObj:RvsCode = bf_rvs.rvs-code.
+    rvsinvsubsOverObj:ObjType = bf_rvs.obj-type.
+    rvsinvsubsOverObj:ObjCode = bf_rvs.obj-code.
+
+    rvsinvsubsDeficitObj:RvsCode = bf_rvs.rvs-code.
+    rvsinvsubsDeficitObj:ObjType = bf_rvs.obj-type.
+    rvsinvsubsDeficitObj:ObjCode = bf_rvs.obj-code.    
+    
+    rvsinvsubsDeficitObj:RvsInvStrObj:FillSumByDeficit(rvsinvsubsDeficitObj).
+    rvsinvsubsOverObj:RvsInvStrObj:FillSumByOver(rvsinvsubsOverObj).
+    if rvsinvsubsDeficitObj:IsRvsInvAlg3 or rvsinvsubsOverObj:IsRvsInvAlg3
+    then do:
+      v-IsRvsInvAlg3 = true.
+    end.
+  end.
+  
+  
+  if v-IsRvsInvAlg3  
+  then do with frame {&frame-name}:
+    hide 
+      t-doc.tot-doc 
+      t-doc.fact-base
+      vardocextra-qnty
+      vardocextra-base
+      vardocextra-rubl
+      vardocextra-rb
+      vardocmiss-qnty
+      vardocmiss-base
+      vardocmiss-rubl
+      vardocmiss-rb
+      fi-izlishki-header
+      fi-nedostacha-header
+      varinvclcwtol
+      varinvclcasol
+      fi-raschet-header
+      fi-nedostacha-header
+      t-doc.doc-qnty
+      t-doc.fact-qnty
+      t-doc.tot-rubl
+      t-doc.fact-rubl
+      fi-val-header
+      fi-rub-header
+      rect-inv-doc
+      rect-tog
+      rect-trn-doc
+    .
+    display 
+      fi-plusbal-header 
+      fi-minusbal-header 
+      f-izlheader
+      f-notbal
+      f-notbal-2
+      f-acc
+      f-acc-2
+      f-meu
+      f-meu-2
+      f-mnorml
+      f-mnorml-2
+      f-izlnedos
+      f-izlnedos-2
+      f-izlheader
+      fi-plusbal-header
+      fi-minusbal-header
+    .
+    
+    assign
+      f-notbal-2:screen-value = "0"
+      f-notbal:screen-value = "0"
+      f-izlnedos-2:screen-value = "0"
+      f-izlnedos:screen-value = "0"
+      f-acc-2:screen-value = "0"
+      f-acc:screen-value = "0"
+    .
+    assign
+      f-notbal-2
+      f-notbal
+      f-izlnedos-2
+      f-izlnedos
+      f-acc
+      f-acc-2
+    .
+    
+    f-notbal-2 = absolute ( rvsinvsubsDeficitObj:DiffSum ).
+    f-acc-2 = rvsinvsubsDeficitObj:MeteringErrWastSum.
+    f-mnorml-2 = rvsinvsubsDeficitObj:TPWastSum.
+    f-meu-2 = rvsinvsubsDeficitObj:NaturWastageSum.
+    f-izlnedos = rvsinvsubsOverObj:DeficitOverSum.
+    f-izlnedos-2 = absolut (rvsinvsubsDeficitObj:DeficitOverSum).
+
+    f-notbal = rvsinvsubsOverObj:DiffSum.
+    f-acc = rvsinvsubsOverObj:MeteringErrWastSum.
+    
+    assign
+      f-acc-2:screen-value = string (f-acc-2)
+      f-notbal-2:screen-value = string (f-notbal-2)
+      f-meu-2:screen-value = string (f-meu-2)
+      f-acc:screen-value = string (f-acc)
+      f-notbal:screen-value = string (f-notbal)
+      f-mnorml-2:screen-value = string (f-mnorml-2)
+    .
+    
+    assign
+      f-izlnedos-2:screen-value = string (f-izlnedos-2)
+      f-izlnedos:screen-value = string (f-izlnedos)
+    .
+/*                                                                             */
+/*    def var isNedos as logical no-undo.                                      */
+/*    for each ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code no-lock:*/
+/*      v-dec = fncdiffqntykg ( buffer ub.doc-line ).                          */
+/*      if v-dec < 0                                                           */
+/*      then                                                                   */
+/*        assign                                                               */
+/*          isNedos = true                                                     */
+/*          v-dec = abs (v-dec)                                                */
+/*        .                                                                    */
+/*      else isNedos = false.                                                  */
+/*      assign                                                                 */
+/*        f-izlnedos-2 = f-izlnedos-2 + v-dec when isNedos                     */
+/*        f-izlnedos = f-izlnedos + v-dec when not isNedos                     */
+/*      .                                                                      */
+/*    end.                                                                     */
+
+    
+  end.
+  
+  else do with frame {&frame-name}:
+    hide 
+      f-notbal
+      f-notbal-2
+      f-acc
+      f-acc-2
+      f-meu
+      f-meu-2
+      f-mnorml
+      f-mnorml-2
+      f-izlnedos
+      f-izlnedos-2
+      f-izlheader
+      fi-plusbal-header
+      fi-minusbal-header
+    .
+  end.
+  
   apply "entry":U to {&BROWSE-NAME}.
 end procedure. /* UI-On */
 

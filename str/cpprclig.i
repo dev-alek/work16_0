@@ -188,7 +188,7 @@ procedure cpprclig :
           /* Если нашли - берем цену из нее */
           if available bf_contract-specif then do:
             assign
-              parprice-cli   = bf_contract-specif.price-cli * parcli-base-rate
+              parprice-cli   = (bf_contract-specif.price-cli / bf_contract-specif.cli-base-rate)  * parcli-base-rate
               parvat-type    = bf_contract-specif.vat-type
               parvat-pc      = bf_contract-specif.vat-pc
               v-specif-found = yes

@@ -3258,6 +3258,7 @@ procedure m_action-role :
                        , input-output v-context
                        , output v-action-role-code
                        , input-output v-rid-list
+                       , input v-cntxt-db-num 
                        ) .
   end.
 
@@ -3488,6 +3489,22 @@ procedure m-units-exe :
     run ref/units.w
       (input  parparentproc
       ,input  v-cntxt-db-num <> 0
+      ,output rid#
+      ) .
+  end.
+
+end procedure. /* m-units-exe */
+
+procedure m-units-merc-exe :
+
+  define variable rid#          as recid     no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run bge/units-merc.w
+      (input  parparentproc
+      ,input  no
       ,output rid#
       ) .
   end.

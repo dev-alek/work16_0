@@ -142,6 +142,10 @@ define variable vss-description as character no-undo initial "Обработка РН (заве
 &scop sort-clmn_23-br-dtl   get-kg-after-qnty( buffer ub.gds-dtl )
 &scop label-clmn_24-br-dtl  'ВСД'
 &scop sort-clmn_24-br-dtl   get-vsdsts( buffer gds-dtl )
+&scop label-clmn_25-br-dtl  'НДС'
+&scop sort-clmn_25-br-dtl   ub.doc-line.vat-sum-rubl * ub.gds-dtl.fact-qnty / ub.doc-line.fact-qnty
+&scop label-clmn_26-br-dtl  'НДС %'
+&scop sort-clmn_26-br-dtl   ub.doc-line.vat-pc
 
 define variable bar-str like ub.prod-bc.b-str  no-undo. /* строка для чтения бар-кода из файла       */
 &undefine gds-list_i_def
@@ -361,7 +365,7 @@ define temp-table t-d-b-parts    no-undo like ub.parts.
 &Scoped-define INTERNAL-TABLES ub.doc-line ub.gds-dtl ub.gds-prt ub.goods ub.bar-code
 
 /* Definitions for BROWSE br-dtl                                        */
-&Scoped-define FIELDS-IN-QUERY-br-dtl {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} @ v-gds-name {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} @ d-kg-fact-qnty {&sort-clmn_21-br-dtl} @ d-kg-price-base {&sort-clmn_22-br-dtl} @ d-kg-price-rubl {&sort-clmn_23-br-dtl} @ d-kg-after-qnty {&sort-clmn_24-br-dtl} @ ch-vsd
+&Scoped-define FIELDS-IN-QUERY-br-dtl {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} @ v-gds-name {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} @ d-kg-fact-qnty {&sort-clmn_21-br-dtl} @ d-kg-price-base {&sort-clmn_22-br-dtl} @ d-kg-price-rubl {&sort-clmn_23-br-dtl} @ d-kg-after-qnty {&sort-clmn_24-br-dtl} @ ch-vsd {&sort-clmn_25-br-dtl} @ vat-sum
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-dtl ub.gds-dtl.doc-qnty ub.gds-dtl.fact-qnty
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-dtl ub.gds-dtl
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-dtl ub.doc-line
@@ -806,6 +810,8 @@ DEFINE BROWSE br-dtl
   {&sort-clmn_21-br-dtl}    @ d-kg-price-base column-label {&label-clmn_21-br-dtl} format "->>,>>>,>>>,>>9.999":U
   {&sort-clmn_22-br-dtl}    @ d-kg-price-rubl column-label {&label-clmn_22-br-dtl} format "->,>>>,>>>,>>>,>>9.999":U
   {&sort-clmn_23-br-dtl}    @ d-kg-after-qnty column-label {&label-clmn_23-br-dtl} format "->,>>>,>>>,>>>,>>9.999":U
+  {&sort-clmn_25-br-dtl}    @ Vat-sum         column-label {&label-clmn_25-br-dtl} format "->,>>>,>>>,>>>,>>9.999":U
+  {&sort-clmn_26-br-dtl}                      column-label {&label-clmn_25-br-dtl} format "->>>,>>9.99999999":U
   enable ub.gds-dtl.doc-qnty ub.gds-dtl.fact-qnty
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -2659,6 +2665,10 @@ assign
     &sort-clmn_22         = "{&sort-clmn_22-br-dtl}"
     &label-clmn_23        = "{&label-clmn_23-br-dtl}"
     &sort-clmn_23         = "{&sort-clmn_23-br-dtl}"
+    &label-clmn_24        = "{&label-clmn_25-br-dtl}"
+    &sort-clmn_24         = "{&sort-clmn_25-br-dtl}"
+    &label-clmn_25        = "{&label-clmn_26-br-dtl}"
+    &sort-clmn_25         = "{&sort-clmn_26-br-dtl}"
     &open-query           = "{&open-query-{&browse-name}}  by ~{&sort-clmn_~{&clmn_num~}~}  "
     &open-query-otherwise = "{&open-query-{&browse-name}} by {&sort-clmn_2-br-dtl} .  "
     &re-move-clmn         = "yes"

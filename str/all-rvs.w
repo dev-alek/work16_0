@@ -1,5 +1,8 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Procedure
+using ibs.th.gbl.storage.*.
+&ANALYZE-RESUME
 /* Connected Databases 
           ub               PROGRESS
 */
@@ -125,6 +128,7 @@ define variable varrecid         as recid     no-undo.
 define variable rvs-rec          as recid     no-undo.
 define variable varlog           as logical   no-undo.
 define variable p-auto           as char      no-undo.
+define variable rvsinvstrObj     as class rvsinvstr no-undo.
 /*define variable p-autorvs as logical no-undo.*/
 
 
@@ -142,6 +146,7 @@ define variable p-auto           as char      no-undo.
 &scop label-clmn_9-br-dtl     'Документ'
 &scop label-clmn_10-br-dtl     'Смена'
 &scop label-clmn_11-br-dtl    '№'
+&scop label-clmn_35-br-dtl    'тв'
 
 &scop sort-clmn_1-br-dtl        mark-string (recid( r-doc)) @ mark
 &scop dyn_sort-clmn_1-br-dtl    substitute('dynamic-function(&1mark-string&1, recid(r-doc)) ', ~{&double-quote~} )
@@ -180,6 +185,8 @@ define variable p-auto           as char      no-undo.
 &scop sort-clmn_32-br-dtl       r-doc.state-level-total
 &scop sort-clmn_33-br-dtl       r-doc.level-water
 &scop sort-clmn_34-br-dtl       r-doc.state-level-water
+&scop sort-clmn_35-br-dtl       get-input-type (recid( r-doc))
+&scop dyn_sort-clmn_35-br-dtl   substitute('dynamic-function(&1get-input-type&1, recid(r-doc)) ', ~{&double-quote~} )
 &scop enabled-clmn              {&sort-clmn_34-br-dtl}
 
 /* _UIB-CODE-BLOCK-END */
@@ -232,6 +239,13 @@ f-agnt-name f-wrkr-name f-cre-name
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD mark-string d-all-r-docs 
 FUNCTION mark-string RETURNS CHARACTER
+    ( p-rec as recid )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-input-type d-all-r-docs 
+FUNCTION get-input-type RETURNS CHARACTER
     ( p-rec as recid )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
@@ -352,7 +366,8 @@ DEFINE BROWSE br-r-docs
   QUERY br-r-docs DISPLAY
       {&sort-clmn_1-br-dtl}   COLUMN-LABEL {&label-clmn_1-br-dtl}  FORMAT "x(1)"
      {&sort-clmn_2-br-dtl}   COLUMN-LABEL {&label-clmn_2-br-dtl}  FORMAT "x(9)"
-     {&sort-clmn_3-br-dtl}    COLUMN-LABEL {&label-clmn_3-br-dtl}  format "x(1)" 
+     {&sort-clmn_3-br-dtl}    COLUMN-LABEL {&label-clmn_3-br-dtl}  format "x(1)"
+     {&sort-clmn_35-br-dtl}    COLUMN-LABEL {&label-clmn_35-br-dtl}  format "x(2)" 
      {&sort-clmn_4-br-dtl}   column-label {&label-clmn_4-br-dtl}  format "x(5)"
      {&sort-clmn_5-br-dtl}  column-label {&label-clmn_5-br-dtl}  format "x(12)"
      {&sort-clmn_6-br-dtl}  COLUMN-LABEL {&label-clmn_6-br-dtl}  format "x(5)"
@@ -397,15 +412,15 @@ DEFINE FRAME d-all-r-docs
      b-mark AT ROW 1 COL 11
      b-sel AT ROW 1 COL 14
      b-add AT ROW 1 COL 24
-     b-lkp AT ROW 1 COL 34
-     b-chg AT ROW 1 COL 44
-     b-del AT ROW 1 COL 54
-     b-close AT ROW 1 COL 64
-     b-open AT ROW 1 COL 74
+     b-lkp AT ROW 2 COL 24
+     b-chg AT ROW 2 COL 34
+     b-del AT ROW 2 COL 44
+     b-close AT ROW 1 COL 34
+     b-open AT ROW 1 COL 44
      b-hist AT ROW 1 COL 89.5 WIDGET-ID 64
      b-help AT ROW 1 COL 92.5
-     Btn_Copy AT ROW 2 COL 64
-     b-inv AT ROW 2 COL 74
+     Btn_Copy AT ROW 2 COL 54
+     b-inv AT ROW 1 COL 74
      b-sch AT ROW 2 COL 85.5
      b-print AT ROW 2 COL 92.5
      br-r-docs AT ROW 3 COL 1
@@ -1724,6 +1739,9 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
   &dyn_sort-clmn_1   = "{&dyn_sort-clmn_1-br-dtl}"
   &label-clmn_2  = "{&label-clmn_2-br-dtl}"
   &sort-clmn_2   = "{&sort-clmn_2-br-dtl}"
+  &label-clmn_35  = "{&label-clmn_35-br-dtl}"
+  &sort-clmn_35   = "{&sort-clmn_35-br-dtl}"
+  &dyn_sort-clmn_35   = "{&dyn_sort-clmn_35-br-dtl}"
   &label-clmn_3  = "{&label-clmn_3-br-dtl}"
   &sort-clmn_3   = "{&sort-clmn_3-br-dtl}"
     &dyn_sort-clmn_3   = "{&dyn_sort-clmn_3-br-dtl}"
@@ -2063,6 +2081,8 @@ define input parameter pardoc-rec as recid no-undo.
                 end.
                 undo, return error.
             end.
+            rvsinvstrObj = new rvsinvstr ().
+            rvsinvstrObj:DeleteDB(r-doc.rvs-code, r-doc.obj-type, r-doc.obj-code).
 
             run waitfram-hide in this-procedure .
         end.
@@ -2707,6 +2727,67 @@ FUNCTION mark-string RETURNS CHARACTER
 
     if can-do (del-list, string (recid (loc-rvs-doc))) then RETURN "*".
     else RETURN "".
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-input-type d-all-r-docs 
+FUNCTION get-input-type RETURNS CHARACTER
+    ( p-rec as recid ) :
+    def buffer loc-rvs-doc for ub.rvs-doc  .
+    define buffer loc-rvs-line for ub.rvs-line .
+    define buffer loc-rvs-line-attr for ub.rvs-line-attr .
+    define variable v-doc-input-type as character no-undo .
+    define variable v-input-type-list as character no-undo .
+    
+    find first loc-rvs-doc no-lock where  recid ( loc-rvs-doc ) = p-rec no-error  .
+    for each loc-rvs-line no-lock where loc-rvs-line.rvs-code = loc-rvs-doc.rvs-code :
+      find first loc-rvs-line-attr no-lock
+            where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+            and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+            and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+            and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+            and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+            and loc-rvs-line-attr.attr-code = 'input-type'
+            no-error.
+      if available loc-rvs-line-attr
+      then do :
+        v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
+      end.
+    end.
+    
+    if can-do(v-input-type-list, 'а')
+    and not can-do(v-input-type-list, 'ф')
+    and not can-do(v-input-type-list, 'к')
+    and not can-do(v-input-type-list, 'п') 
+    then v-doc-input-type = 'а'.
+    
+    if can-do(v-input-type-list, 'ф')
+    and not can-do(v-input-type-list, 'а')
+    and not can-do(v-input-type-list, 'к')
+    and not can-do(v-input-type-list, 'п') 
+    then v-doc-input-type = 'ф'.
+    
+    if can-do(v-input-type-list, 'а')
+    and can-do(v-input-type-list, 'ф')
+    and not can-do(v-input-type-list, 'к')
+    and not can-do(v-input-type-list, 'п') 
+    then v-doc-input-type = 'ак'.
+    
+    if can-do(v-input-type-list, 'к')
+    or can-do(v-input-type-list, 'п') 
+    then v-doc-input-type = 'фк'.
+    
+    if can-do(v-input-type-list, 'р')
+    and not can-do(v-input-type-list, 'а')
+    and not can-do(v-input-type-list, 'ф')
+    and not can-do(v-input-type-list, 'к')
+    and not can-do(v-input-type-list, 'п') 
+    then v-doc-input-type = 'р'.
+    
+    if v-doc-input-type = ? then v-doc-input-type = '' .
+    return v-doc-input-type .
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */

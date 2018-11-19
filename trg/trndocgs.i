@@ -409,12 +409,27 @@ procedure trndocgs :
 
         if buf_goods.gds-type = {&gds-goods}
         then do:
-          assign
-            buf_prt-obj.fact-qnty = buf_prt-obj.fact-qnty + v-gds-dtl-qnty
-                                                          * v-update-sign
-            buf_prt-obj.free-qnty = buf_prt-obj.free-qnty + v-gds-dtl-qnty
-                                                          * v-update-sign
-          .
+          find first doc-fbr-gds no-lock where (doc-fbr-gds.out-code = buf_doc-line.doc-code or
+                                                doc-fbr-gds.out-code = replace(buf_doc-line.doc-code, "=", "-") ) 
+                                           and doc-fbr-gds.gds-code = buf_goods.gds-code
+                                           no-error .
+          if available doc-fbr-gds
+          then do : 
+            assign
+              buf_prt-obj.fact-qnty = buf_prt-obj.fact-qnty + v-gds-dtl-rsrv-qnty
+                                                            * v-update-sign
+              buf_prt-obj.free-qnty = buf_prt-obj.free-qnty + v-gds-dtl-rsrv-qnty
+                                                            * v-update-sign
+            .                                                
+          end.
+          else do :                               
+            assign
+              buf_prt-obj.fact-qnty = buf_prt-obj.fact-qnty + v-gds-dtl-qnty
+                                                            * v-update-sign
+              buf_prt-obj.free-qnty = buf_prt-obj.free-qnty + v-gds-dtl-qnty
+                                                            * v-update-sign
+            .
+          end.
         end.
 
         assign

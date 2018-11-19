@@ -72,10 +72,12 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable impUnitsEventHndlrObj                    as class impunits                    no-undo.  
 
   define variable goodSubjectObj                           as class goods                       no-undo.
+  define variable barcodesSubjectsObj                      as class subjects                    no-undo.
   define variable good_barcodeSubjectObj                   as class goods_barcode               no-undo.
+  define variable unitaddsSubjectsObj                      as class subjects                    no-undo.
+  define variable good_unitaddSubjectObj                   as class unit-add-code               no-undo.
   define variable impGoodEventHndlrObj                     as class impgoods                    no-undo.
   
-  define variable barcodesSubjectsObj                      as class subjects                    no-undo.
   
   define variable cashiersSubjectObj                       as class cashiers                    no-undo.
   define variable impcashiersEventHndlrObj                 as class impcashiers                 no-undo.    
@@ -85,6 +87,7 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable impbank-accountsEventHndlrObj            as class impbank-accounts            no-undo.
 
   define variable contr-price-docsSubjectObj               as class contr-price-docs            no-undo.
+  define variable price-listSubjectsObj                    as class subjects                    no-undo.
   define variable contr-price-listSubjectObj               as class contr-price-docs_price-list no-undo.
   define variable impcontr-price-docsEventHndlrObj         as class impcontr-price-docs         no-undo.
 
@@ -92,7 +95,6 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable price-doc_gds-saleSubjectObj             as class price-doc_gds-sale          no-undo.
   define variable impprice-docEventHndlrObj                as class impprice-doc                no-undo.
 
-  define variable price-listSubjectsObj                    as class subjects                    no-undo.
   define variable price-doc-listSubjectsObj                as class subjects                    no-undo.
 
   define variable int-pointSubjectObj                      as class int-point                   no-undo.
@@ -127,6 +129,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable imptrn-gd-docEventHndlrObj               as class imptrn-gd-doc               no-undo.
   define variable trn-gd-doc-inlistSubjectsObj             as class subjects                    no-undo.
   define variable trn-prt-doc-inlistSubjectsObj             as class subjects                    no-undo.
+
+  define variable normlossSubjectObj                        as class normloss                  no-undo.
+  define variable impnormlossEventHndlrObj                as class impnormloss                no-undo.
 
   define variable trn-fuel-doc-inSubjectObj      as class trn-fuel-doc-in no-undo.
   define variable trn-gd-fuelSubjectObj          as class trn-gd-fuel     no-undo.
@@ -213,11 +218,11 @@ class ibs.th.bge.1crn.import.parsesub:
     contractsSubjectObj = new contracts ().
     impContractsEventHndlrObj = new impcontracts ().
 
+    normlossSubjectObj = new normloss ().
+    impnormlossEventHndlrObj = new impnormloss ().
+    
     currencySubjectObj = new currency ().
     impCurrencyEventHndlrObj = new impcurrency ().
-    
-    firmsSubjectObj = new firms ().
-    impFirmsEventHndlrObj = new impfirms ().
     
     goodGrpsSubjectObj = new good-grps ().
     impGoodGrpsEventHndlrObj = new impgood-grps ().
@@ -231,11 +236,6 @@ class ibs.th.bge.1crn.import.parsesub:
     unitsSubjectObj = new units ().
     impUnitsEventHndlrObj = new impunits ().
     
-    goodSubjectObj = new goods ().
-    impGoodEventHndlrObj = new impgoods () .
-    
-    barcodesSubjectsObj = new subjects ("barcode") .
-    
     cashiersSubjectObj = new cashiers ().
     impcashiersEventHndlrObj = new impcashiers (). 
 		
@@ -243,11 +243,7 @@ class ibs.th.bge.1crn.import.parsesub:
     impbank-accountsEventHndlrObj = new impbank-accounts ().
     
 
-    price-listSubjectsObj = new subjects("gds-sale").
     price-doc-listSubjectsObj = new subjects("gds-sale").
-
-    contr-price-docsSubjectObj = new contr-price-docs ().
-    impcontr-price-docsEventHndlrObj = new impcontr-price-docs ().
 
     price-doc-impSubjectObj = new price-doc-imp ().
     impprice-docEventHndlrObj = new impprice-doc ().
@@ -278,11 +274,14 @@ class ibs.th.bge.1crn.import.parsesub:
 /*    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().  */
 /*    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").*/
     
-    /* создание экземпляров объектов:
+    /* перенесено внутрь парсинга создание экземпляров объектов:
+       - фирм
+       - товаров
        - АЗК
        - промо-акций
-       перенесено внутрь парсинга */
-    
+       - срецификаций к договорам поставки
+    */
+
     trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().
     trn-gdSubjectObj = new trn-gd ().
     imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().
@@ -362,14 +361,34 @@ class ibs.th.bge.1crn.import.parsesub:
         nameChildrenCurr = hnoderef:name.
       end.
       case hNoderef:name:
+        // экземпляр xxxSubjectObj создаётся перед первым импортом
+        // экземпляр xxxSubjectObj очищается перед началом каждого нового объекта внутри GetChildrenSub()
+        when "org-unit" then do:
+          if not valid-object(firmsSubjectObj)       then firmsSubjectObj       = new firms (). // <org-unit>
+          if not valid-object(impFirmsEventHndlrObj) then impFirmsEventHndlrObj = new impfirms () .
+          v-iSubject = firmsSubjectObj .
+          v-iImpSub  = impFirmsEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "good" then do:
+          if not valid-object(goodSubjectObj)       then goodSubjectObj         = new goods (). // <good>
+          if not valid-object(impGoodEventHndlrObj) then do :
+            impGoodEventHndlrObj = new impgoods () .
+          end .
+          v-iSubject = goodSubjectObj .
+          v-iImpSub  = impGoodEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
         when "azk" then do:
-          // экземпляр shopsSubjectObj создаётся перед первым импортом
           if not valid-object(shopsSubjectObj)       then shopsSubjectObj       = new shops (). // <azk>
           if not valid-object(impShopsEventHndlrObj) then do :
             impShopsEventHndlrObj = new impshops ().
             // impShopsEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) . - пока не требуется
           end .
-          // экземпляр shopsSubjectObj очищается перед началом каждого нового объекта внутри GetChildrenSub()
           v-iSubject = shopsSubjectObj .
           v-iImpSub  = impShopsEventHndlrObj .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
@@ -377,15 +396,24 @@ class ibs.th.bge.1crn.import.parsesub:
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
         when "promotion" then do:
-          // экземпляр promotionSubjectObj создаётся перед первым импортом
           if not valid-object(promotionSubjectObj)       then promotionSubjectObj       = new promotion(). // <promotion>
           if not valid-object(imppromotionEventHndlrObj) then do :
             imppromotionEventHndlrObj = new imppromotion ().
             imppromotionEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) .
           end .
-          // экземпляр promotionSubjectObj очищается перед началом каждого нового объекта внутри GetChildrenSub()
           v-iSubject = promotionSubjectObj .
           v-iImpSub  = imppromotionEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "contr-price-doc" then do:
+          if not valid-object(contr-price-docsSubjectObj) then contr-price-docsSubjectObj = new contr-price-docs (). // <contr-price-doc>
+          if not valid-object(impcontr-price-docsEventHndlrObj) then do :
+            impcontr-price-docsEventHndlrObj = new impcontr-price-docs ().
+          end .
+          v-iSubject = contr-price-docsSubjectObj .
+          v-iImpSub  = impcontr-price-docsEventHndlrObj .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
@@ -407,6 +435,10 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), contractsSubjectObj).
           ReceivedSubjectPublish(contractsSubjectObj, impContractsEventHndlrObj).
         end.
+        when "norm-loss" then do:
+          GetChildrenSub (hNoderef, (level + 1), normlossSubjectObj).
+          ReceivedSubjectPublish(normlossSubjectObj, impnormlossEventHndlrObj).
+        end.
         when "country" then do:
           GetChildrenSub (hNoderef, (level + 1), countrySubjectObj).
           ReceivedSubjectPublish(countrySubjectObj, impcountryEventHndlrObj).
@@ -414,10 +446,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "currency" then do:
           GetChildrenSub (hNoderef, (level + 1), currencySubjectObj).
           ReceivedSubjectPublish(currencySubjectObj, impCurrencyEventHndlrObj).
-        end.
-        when "org-unit" then do:
-          GetChildrenSub (hNoderef, (level + 1), firmsSubjectObj).
-          ReceivedSubjectPublish(firmsSubjectObj, impFirmsEventHndlrObj).
         end.
         when "good-grp" then do:
           GetChildrenSub (hNoderef, (level + 1), goodGrpsSubjectObj).
@@ -435,10 +463,6 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), unitsSubjectObj).
           ReceivedSubjectPublish(unitsSubjectObj, impUnitsEventHndlrObj).
         end.
-        when "good" then do:
-          GetChildrenSub (hNoderef, (level + 1), goodSubjectObj).
-          ReceivedSubjectPublish(goodSubjectObj, impGoodEventHndlrObj).
-        end.
         when "cashier" then do:
           GetChildrenSub (hNoderef, (level + 1), cashiersSubjectObj).
           ReceivedSubjectPublish(cashiersSubjectObj, impcashiersEventHndlrObj).
@@ -446,10 +470,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "bank-account" then do:
           GetChildrenSub (hNoderef, (level + 1), bank-accountsSubjectObj).
           ReceivedSubjectPublish(bank-accountsSubjectObj, impbank-accountsEventHndlrObj).
-        end.
-        when "contr-price-doc" then do:
-          GetChildrenSub (hNoderef, (level + 1), contr-price-docsSubjectObj).
-          ReceivedSubjectPublish(contr-price-docsSubjectObj, impcontr-price-docsEventHndlrObj).
         end.
         when "price-doc" then do:
           GetChildrenSub (hNoderef, (level + 1), price-doc-impSubjectObj).
@@ -579,12 +599,12 @@ class ibs.th.bge.1crn.import.parsesub:
         then next.
       iNum = iNum + 1.
 
-      /*обработка зависимых объектов.*/
+      /* обработка элементов, вложенных в секции (классы, вложенные в коллекции или в родительские классы) */
       case hnoderef:name:
         /* ----- имена секций любого уровня вложенности ----- */
-        when "price-list" or when "recipe-gds" or
+        when "recipe-gds" or
         when "sections" or when "calibration-table" or
-        when "barcodes" or when "cal-tbl" or
+        when "cal-tbl" or
         when "nb-carriers" or when "nb-suppliers" or when "prts"
         then do:
           GetChildrenSub (hNoderef, (level + 1), ?).
@@ -595,6 +615,27 @@ class ibs.th.bge.1crn.import.parsesub:
                 или GetChildrenSub пройдёт насквозь без выполнения действий.
              Правило: на каждое имя секции в текущем when должен быть when c именем элемента секции.
           */
+        end.
+        when "barcodes" then do :
+          v-need-parse = true .
+          if v-need-parse and valid-object (goodSubjectObj) then do : // goods:good:barcodes
+            if goodSubjectObj:IsInitSubForWrite then do:
+              /* !! тег в файле называется barcodes, но InitTag коллекции в классе goods называется barcode !!
+                    и InitTag класса goods_barcode тоже называется "barcode" */
+              barcodesSubjectsObj = new subjects ("barcode") .
+                 GetChildrenSub (hNoderef, (level + 1), ?).
+              goodSubjectObj:SetProp (barcodesSubjectsObj).
+              v-need-parse = false . 
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
+        when "barcode" then do: // goods:good:barcodes:barcode
+            if not valid-object(barcodesSubjectsObj) then
+              undo, throw new Progress.Lang.AppError("отсутствует секция barcodes для перечня barcode") .
+            barcodesSubjectsObj:Add(  new goods_barcode()  ).
+            good_barcodeSubjectObj = cast (barcodesSubjectsObj:SubjectObjCurr, goods_barcode).
+            GetChildrenSub (hNoderef, (level + 1), good_barcodeSubjectObj).
         end.
         when "gds" then do :
           // _SubjectObj[]: валидный только для коллекций, чьи теги присутствуют в импортируемом сейчас пакете;
@@ -638,10 +679,29 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
           if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
         end.
-        
-        /* ----- обработка элементов, вложенных в секции
-                 (классы, вложенные в коллекции или в родительские классы) ----- */
+        when "price-list" then do :
+          v-need-parse = true .
+          if v-need-parse and valid-object (contr-price-docsSubjectObj) then do : // contr-price-docs:price-list
+            if contr-price-docsSubjectObj:IsInitSubForWrite then do:
+              price-listSubjectsObj = new subjects ("price-list") .
+                 GetChildrenSub (hNoderef, (level + 1), ?).
+              contr-price-docsSubjectObj:SetProp (price-listSubjectsObj).
+              v-need-parse = false . 
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
         when "gds-sale" then do: /*второй уровень с данными. обработка зависимой сущности gds-sale */
+          v-need-parse = true . 
+          if v-need-parse and valid-object (contr-price-docsSubjectObj) then do: // contr-price-doc:price-list:gds-sale
+            if contr-price-docsSubjectObj:IsInitSubForWrite then do: /*идет запись спецификации*/
+              price-listSubjectsObj:Add(  new contr-price-docs_price-list()  ).
+              contr-price-listSubjectObj = cast (price-listSubjectsObj:SubjectObjCurr, contr-price-docs_price-list).
+              GetChildrenSub (hNoderef, (level + 1), contr-price-listSubjectObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse then        
           case true : 
             when price-doc-impSubjectObj:IsInitSubForWrite then do: /*идет запись переоценки*/
               if not valid-object(price-doc-listSubjectsObj) then price-doc-listSubjectsObj = new subjects("gds-sale") .
@@ -649,19 +709,15 @@ class ibs.th.bge.1crn.import.parsesub:
               price-doc_gds-saleSubjectObj = cast (price-doc-listSubjectsObj:SubjectObjCurr, price-doc_gds-sale).
               GetChildrenSub (hNoderef, (level + 1), price-doc_gds-saleSubjectObj).
               price-doc-impSubjectObj:SetProp (price-doc-listSubjectsObj).
-            end.
-            when contr-price-docsSubjectObj:IsInitSubForWrite then do: /*идет запись спецификации*/
-              if not valid-object(price-listSubjectsObj) then price-listSubjectsObj = new subjects("gds-sale") .
-              price-listSubjectsObj:Add(new contr-price-docs_price-list()). /* а вот здесь уже создаем объект сущнности*/
-              contr-price-listSubjectObj = cast (price-listSubjectsObj:SubjectObjCurr, contr-price-docs_price-list).
-              GetChildrenSub (hNoderef, (level + 1), contr-price-listSubjectObj).
-              contr-price-docsSubjectObj:SetProp (price-listSubjectsObj).
+              v-need-parse = false .
             end.
             otherwise do:
               
             end.
           end case.
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
         end.
+        
         when "recipe-gd" then do: /* второй уровень с данными. обработка зависимой сущности recipe-gd  */
           case true : 
             when recipeSubjectObj:IsInitSubForWrite then do: /*идет запись рецепта*/  
@@ -684,20 +740,6 @@ class ibs.th.bge.1crn.import.parsesub:
               transport_sectionSubjectObj = cast (transport_section-listSubjectsObj:SubjectObjCurr, transport_section).
               GetChildrenSub (hNoderef, (level + 1), transport_sectionSubjectObj).
               transportSubjectObj:SetProp (transport_section-listSubjectsObj).
-            end.
-            otherwise do:
-              
-            end.
-          end case.
-        end.
-        when "barcode" then do: /* второй уровень с данными. обработка зависимой сущности goodsSubjectObj  */
-          case true : 
-            when goodSubjectObj:IsInitSubForWrite then do: /*идет запись goodsSubjectObj*/  
-              if not valid-object(barcodesSubjectsObj) then barcodesSubjectsObj = new subjects ("barcode") .      
-              barcodesSubjectsObj:Add(new goods_barcode()). /* а вот здесь уже создаем объект сущнности*/
-              good_barcodeSubjectObj = cast (barcodesSubjectsObj:SubjectObjCurr, goods_barcode).
-              GetChildrenSub (hNoderef, (level + 1), good_barcodeSubjectObj).
-              goodSubjectObj:SetProp (barcodesSubjectsObj).
             end.
             otherwise do:
               
@@ -919,6 +961,25 @@ class ibs.th.bge.1crn.import.parsesub:
               
             end.
           end case.
+        end.
+        when "unit-add-codes" then do :
+          v-need-parse = true .
+          if v-need-parse and valid-object (goodSubjectObj) then do : // goods:good:unit-add-codes
+            if goodSubjectObj:IsInitSubForWrite then do:
+              unitaddsSubjectsObj = new subjects ("unit-add-codes") .
+                 GetChildrenSub (hNoderef, (level + 1), ?).
+              goodSubjectObj:SetProp (unitaddsSubjectsObj).
+              v-need-parse = false . 
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
+        when "unit-add-code" then do: // goods:good:unit-add-codes:unit-add-code
+            if not valid-object(unitaddsSubjectsObj) then
+              undo, throw new Progress.Lang.AppError("отсутствует секция unit-add-codes для перечня unit-add-code") .
+            unitaddsSubjectsObj:Add(  new unit-add-code()  ).
+            good_unitaddSubjectObj = cast (unitaddsSubjectsObj:SubjectObjCurr, unit-add-code).
+            GetChildrenSub (hNoderef, (level + 1), good_unitaddSubjectObj).
         end.
         
         /* ----- конечный уровень

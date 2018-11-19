@@ -133,6 +133,10 @@ case p-action :
     then do :
         v-action-name = "Закрытие приложения" .
     end.
+    when 65
+    then do :
+        v-action-name = "Изменение уровня остатков сверх допустимого значения в отсутствие отпуска и штатной приемки" .
+    end.
     otherwise
     do :
         

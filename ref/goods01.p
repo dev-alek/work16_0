@@ -105,9 +105,6 @@ define variable vss-description as character no-undo init "Проверка и создание g
 { trg/bar-codh.i }
 { gbl/getcntxt.i def }
 
-run get-db-num in parparentproc ( output v-cntxt-db-num).
-run get-userid in parparentproc ( output v-cntxt-userid).
-
 DEFINE VARIABLE prev-value-base     as decimal no-undo .
 DEFINE VARIABLE prev-value-rubl     as decimal no-undo .
 DEFINE VARIABLE art-dec             as decimal no-undo .
@@ -324,8 +321,8 @@ on error undo, return error return-value
   if ( available base_units ) then do:
     if  can-do( base_units.type, {&petrolium}) then do:
       { gbl/chk-actg.i
-      v-cntxt-db-num
-      v-cntxt-userid
+      ibs.th.gbl.gbl-var:g#db-num
+      ibs.th.gbl.gbl-var:g#userid
       {&action-head-code-main}
       'actn_reference-petrolium_update':U
       {&cntxt-global}

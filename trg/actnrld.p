@@ -43,6 +43,7 @@ on end-key undo main-block, return error substitute('actnrld end-key main-block,
 :
   define buffer buf_user-login-action-role    for ub.user-login-action-role .
 
+ if ub.action-role.db-num = g#db-num and not g#news then do:
   FOR EACH  buf_user-login-action-role
       where buf_user-login-action-role.action-head-code = ub.action-role.action-head-code
         AND buf_user-login-action-role.db-num           = ub.action-role.db-num
@@ -51,6 +52,18 @@ on end-key undo main-block, return error substitute('actnrld end-key main-block,
       :
       DELETE buf_user-login-action-role .
   END.
+ end.
+
+  define VARIABLE v-db-list   as character no-undo .
+  
+  if ub.action-role.db-num = 0 then do:
+    v-db-list = "0" .
+  end.  
+  if g#db-num <> 0 then do:
+    v-db-list = "0" .
+  end.  
+  else v-db-list = STRING (ub.action-role.db-num) .
+
   if not g#news then do:
         run cur-time in this-procedure(output v-date, output v-time).
         create buf_c-action-role.
@@ -83,15 +96,19 @@ on end-key undo main-block, return error substitute('actnrld end-key main-block,
                 , error-status :get-message ( 1 ) ).
         end.
     
+  end.
+
+  if not g#news and ub.action-role.db-num <> 0 then do:
       run nws/cmd-del.p
         ( input {&table_action-role}
           ,input (buffer ub.action-role:handle)
-          ,input "":U
+          ,input v-db-list
         ) no-error .
       if error-status :error then do:
         undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
       end.
   end.
+    
     if g#oxml = yes
     then do:
     run str/calloxml.p (

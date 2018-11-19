@@ -20,6 +20,7 @@ define input  parameter h_current-procedure as handle    no-undo .
 define variable v-start-level as integer no-undo .
 define variable lok           as logical no-undo initial yes .
 define variable level         as integer no-undo .
+define variable vdebugalert   as logical no-undo .
 
 define variable vss-revision    as character no-undo .
 define variable vss-author      as character no-undo .
@@ -28,10 +29,12 @@ define variable vss-workfile    as character no-undo .
 define variable vss-archive     as character no-undo .
 define variable vss-description as character no-undo .
 
+
 assign
   v-start-level = 2
+  vdebugalert = session:debug-alert
+  session:debug-alert = yes
 .
-
 if valid-handle( h_current-procedure )
 and h_current-procedure :get-signature( 'vss-get-info':U ) <> ""
 then do:
@@ -75,3 +78,6 @@ repeat while program-name( level ) <> ? :
     level = level + 1
   .
 end.
+finally:
+   session:debug-alert = vdebugalert.
+end finally.    

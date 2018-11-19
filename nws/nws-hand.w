@@ -68,6 +68,7 @@ define variable v-db-list      as   character    no-undo .
 define variable v-db-num       like ub.db.db-num no-undo .
 define variable v-one-db       as   logical      no-undo .
 define variable v-cur-db-num as integer no-undo .
+define variable v-have-rights    as logical        no-undo.
 
 
 &scop test-db-one ~
@@ -203,7 +204,7 @@ X_pck-sent.rcvd X_pck-sent.total-recs
     ~{&OPEN-QUERY-br-db}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-3 b-exit b-get-pck b-create b-send-new ~
+&Scoped-Define ENABLED-OBJECTS RECT-3 b-exit b-get-pck b-create b-sync b-send-new ~
 b-info-all b-help b-mark b-get b-proc-pck b-send b-send-all b-unsend br-db ~
 br-pck-sent br-pck-rcvd news-log mark-num bt-not-sel-all bt-not-sel-desel-all
 &Scoped-Define DISPLAYED-OBJECTS news-log mark-num f-not-rcvd
@@ -233,6 +234,11 @@ FUNCTION get-turn-on RETURNS LOGICAL
 DEFINE BUTTON b-create DEFAULT
      LABEL "Под&готовить новые"
      SIZE 20 BY 1 TOOLTIP "Подготовка новых пакетов для всех БД"
+     BGCOLOR 8 .
+     
+DEFINE BUTTON b-sync DEFAULT
+     LABEL "&Синхронизация"
+     SIZE 20 BY 1 TOOLTIP "Синхронизация УБД, восстановленной из бэкапа, с ТБД"
      BGCOLOR 8 .
 
 DEFINE BUTTON b-exit AUTO-GO DEFAULT
@@ -373,6 +379,7 @@ DEFINE FRAME nws-hand
      b-mark AT ROW 2 COL 12 WIDGET-ID 4
      b-get AT ROW 2 COL 15
      b-proc-pck AT ROW 2 COL 25
+     b-sync at row 2 col 35
      b-send AT ROW 2 COL 55
      b-send-all AT ROW 2 COL 65
      b-unsend AT ROW 2 COL 75
@@ -549,6 +556,60 @@ DO:
     ( input yes
     ).
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-sync
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sync nws-hand
+ON CHOOSE OF b-sync IN FRAME nws-hand /* Синхронизация */
+DO:
+  define variable v-user-id as character no-undo .
+  v-user-id = g#auto-user-id + {&delim-par} + 'yes' .
+  if not available X_db then return no-apply .
+  { gbl/chk-actg.i
+    g#db-num
+    v-user-id
+    {&action-head-code-main}
+    'actn_news-sync':U
+    {&cntxt-global}
+    0
+    '':U
+    0
+    0
+    0
+    0
+    no
+    v-have-rights
+    }
+  if not v-have-rights
+  then do :
+    message "Недостаточно прав для выполнения Cинхронизации БД " string(x_db.db-num) " с ТБД" view-as alert-box error.
+    return no-apply .
+  end.
+  run nws/sync.w (input parparentproc,
+                  input X_db.db-num)
+                  no-error .
+  if error-status:error
+  then do :
+    run write-to-log( substitute( "&1. ERROR!!! Ошибка при синхронизации пакетов с БД &5&3&2&3&4"
+                                  ,vss-workfile
+                                  ,error-status:get-message(error-status:num-messages)
+                                  ,{&new-line}
+                                  ,return-value
+                                  ,string(X_db.db-num)
+                                )
+                    ) .
+  end.
+/*  else do :                                                    */
+/*    run write-to-log in this-procedure                         */
+/*      ("Завершена синхронизация с БД " + string(X_db.db-num) ).*/
+/*  end.                                                         */
+
+
+  {&OPEN-QUERY-br-pck-rcvd}
+  {&OPEN-QUERY-br-pck-sent}
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1077,12 +1138,12 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY news-log mark-num f-not-rcvd
       WITH FRAME nws-hand.
-  ENABLE RECT-3 b-exit b-get-pck b-create b-send-new b-info-all b-help b-mark
+  ENABLE RECT-3 b-exit b-get-pck b-create b-sync b-send-new b-info-all b-help b-mark
          b-get b-proc-pck b-send b-send-all b-unsend br-db br-pck-sent
          br-pck-rcvd news-log mark-num bt-not-sel-all bt-not-sel-desel-all
       WITH FRAME nws-hand.
   if v-cur-db-num <> 0 then do :
-    disable bt-not-sel-all bt-not-sel-desel-all
+    disable bt-not-sel-all bt-not-sel-desel-all b-sync
       WITH FRAME nws-hand.
   end.
   {&OPEN-BROWSERS-IN-QUERY-nws-hand}

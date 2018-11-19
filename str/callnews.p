@@ -53,7 +53,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
   define variable v-lob-type as character no-undo .
   define variable v-full-tbl-name as character no-undo .
   define variable v-routing-type as character no-undo .
-  
+  define variable v-on-gbl    as logical      no-undo.
   
   define variable conf-par as character no-undo.
   define variable mode-erprn as logical no-undo.
@@ -111,7 +111,7 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
   define variable list-remote-db     as character no-undo. /* все УБД, исключая УБД источник */
   define variable list-remote-stock  as character no-undo. /* УБД в которые отправляются чужие остатки */
 
-  define variable list-db-for-send   as character no-undo. /* список БД куда будет отправлено */
+  define variable  list-db-for-send  as character no-undo. /* список БД куда будет отправлено */
   define buffer buf_hist-nws-option for ub.hist-nws-option.
 
 
@@ -1406,6 +1406,180 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
         end.
         v-found = true.
       end.
+      when {&table_user-login} then do:
+        
+        find first ub.user-login no-lock where rowid (ub.user-login) = v-tbl-row.
+        find first ub.sys-ctrl no-lock .
+        if ub.sys-ctrl.db-num <> 0 and not g#news then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.user-login.db-num <> 0 and not g#news then do:
+          assign list-db-for-send = string (ub.user-login.db-num).
+          end.
+        end.
+        v-found = true.
+      end.  
+      when {&table_c-user-login} then do:
+        find first ub.c-user-login no-lock where rowid (ub.c-user-login) = v-tbl-row.
+        if g#db-num <> 0 and not g#news then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.c-user-login.db-num <> 0 and not g#news then do:
+          assign list-db-for-send = string (ub.c-user-login.db-num).
+          end.
+        end.
+        v-found = true.
+      end.
+      when {&table_user-menu-group} then do:
+        find first ub.user-menu-group no-lock where rowid (ub.user-menu-group) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.user-menu-group.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.user-menu-group.db-num).
+          end.
+        end.
+        v-found = true.
+      end.          
+      when {&table_user-login-action-item} then do:
+        find first ub.user-login-action-item no-lock where rowid (ub.user-login-action-item) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.user-login-action-item.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.user-login-action-item.db-num).
+          end.
+        end.
+        v-found = true.
+      end.  
+      when {&table_user-login-action-role} then do:
+        find first ub.user-login-action-role no-lock where rowid (ub.user-login-action-role) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.user-login-action-role.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.user-login-action-role.db-num).
+          end.
+        end.
+        v-found = true.
+      end.       
+      when {&table_user-login-attr} then do:
+        find first ub.user-login-attr no-lock where rowid (ub.user-login-attr) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.user-login-attr.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.user-login-attr.db-num).
+          end.
+        end.
+        v-found = true.
+      end.             
+      when {&table_user-obj} then do:
+        find first ub.user-obj no-lock where rowid (ub.user-obj) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.user-obj.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.user-obj.db-num).
+          end.
+        end.
+        v-found = true.
+      end. 
+      when {&table_user-host} then do:
+        find first ub.user-host no-lock where rowid (ub.user-host) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          if ub.user-host.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.user-host.db-num).
+          end.
+        end.
+        v-found = true.
+      end.
+      when {&table_action-role} then do:
+      { adm/actn-gbl.i
+        v-on-gbl
+        no-error
+      }
+        find first ub.action-role no-lock where rowid (ub.action-role) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else if v-on-gbl then do:
+            list-db-for-send = list-remote-db.
+        end.
+        else do:
+          if ub.action-role.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.action-role.db-num).
+          end.
+        end.
+        v-found = true.
+      end. 
+      when {&table_action-role-item} then do:
+        { adm/actn-gbl.i
+        v-on-gbl
+        no-error
+          }
+        find first ub.action-role-item no-lock where rowid (ub.action-role-item) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else if v-on-gbl then do:
+            list-db-for-send = list-remote-db.
+        end.
+        else do:
+          if ub.action-role-item.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.action-role-item.db-num).
+          end.
+        end.
+        v-found = true.
+      end. 
+      when {&table_action-role-item-gds} then do:
+        { adm/actn-gbl.i
+        v-on-gbl
+        no-error
+          }
+        find first ub.action-role-item-gds no-lock where rowid (ub.action-role-item-gds) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else if v-on-gbl then do:
+            list-db-for-send = list-remote-db.
+        end.
+        else do:
+          if ub.action-role-item-gds.db-num <> 0 then do:
+          assign list-db-for-send = string (ub.action-role-item-gds.db-num).
+          end.
+        end.
+        v-found = true.
+      end.    
+      when {&table_action-role-item-gds-grp} then do:
+        { adm/actn-gbl.i
+        v-on-gbl
+        no-error
+         }
+        find first ub.action-role-item-gds-grp no-lock where rowid (ub.action-role-item-gds-grp) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else if v-on-gbl then do:
+            list-db-for-send = list-remote-db.
+        end.
+        else do:
+          if ub.action-role-item-gds-grp.db-num <> 0  then do:
+          assign list-db-for-send = string (ub.action-role-item-gds-grp.db-num).
+          end.
+        end.
+        v-found = true.
+      end.          
       when {&table_season} then do:
         find first ub.season no-lock where rowid (ub.season) = v-tbl-row.
         find first ub.season-attr no-lock where ub.season-attr.sea-code = ub.season.sea-code

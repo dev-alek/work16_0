@@ -692,7 +692,7 @@ DEFINE VARIABLE p-last AS DECIMAL FORMAT "->>>>>>>>>>9.99" INITIAL 0
      SIZE 15 BY .67 TOOLTIP "Цена последней внешней ПН " NO-UNDO.
 
 DEFINE VARIABLE p-new AS DECIMAL FORMAT "->>>>>>>>>>9.99" INITIAL 0
-     LABEL "Цена новая"
+     LABEL "Цена нов."
       VIEW-AS TEXT
      SIZE 15 BY .67 TOOLTIP "Цена после закрытия ДНЦ"
      FGCOLOR 4  NO-UNDO.
@@ -943,7 +943,7 @@ DEFINE FRAME Dialog-Frame
      B-history AT ROW 1 COL 94 WIDGET-ID 2
      b-help AT ROW 1 COL 97.63
      doc-code AT ROW 1.96 COL 23 COLON-ALIGNED NO-LABEL
-     calc-method AT ROW 2 COL 8 COLON-ALIGNED
+     calc-method AT ROW 2 COL 10 COLON-ALIGNED
      common-price AT ROW 2 COL 23 COLON-ALIGNED NO-LABEL
      copy-type AT ROW 2 COL 23 COLON-ALIGNED NO-LABEL
      copy-code AT ROW 2 COL 30 COLON-ALIGNED NO-LABEL
@@ -984,9 +984,9 @@ DEFINE FRAME Dialog-Frame
      v-curr-abbr-vd AT ROW 3.88 COL 27 COLON-ALIGNED NO-LABEL
      p-calc-metod AT ROW 17.33 COL 77 COLON-ALIGNED NO-LABEL
      p-old AT ROW 18 COL 39.13 COLON-ALIGNED
-     p-new AT ROW 18 COL 65.5 COLON-ALIGNED
+     p-new AT ROW 18 COL 65 COLON-ALIGNED
      p-pc-prev AT ROW 18 COL 89 COLON-ALIGNED
-     p-pr-doc-old AT ROW 18.75 COL 12 COLON-ALIGNED
+     p-pr-doc-old AT ROW 18.75 COL 12.21 COLON-ALIGNED
      p-op-pr-doc-old AT ROW 18.79 COL 40.5 COLON-ALIGNED
      p-pc-pr-doc-old AT ROW 18.79 COL 66.63 COLON-ALIGNED
      p-pc-op-pr-doc-old AT ROW 18.79 COL 89 COLON-ALIGNED
@@ -1003,7 +1003,7 @@ DEFINE FRAME Dialog-Frame
      p-op-last AT ROW 20.17 COL 40.5 COLON-ALIGNED
      p-pc-last AT ROW 20.17 COL 66.63 COLON-ALIGNED
      p-pc-op-last AT ROW 20.17 COL 89 COLON-ALIGNED
-     prev-price_doc-num AT ROW 20.92 COL 11 COLON-ALIGNED
+     prev-price_doc-num AT ROW 20.92 COL 12 COLON-ALIGNED
      v-ost AT ROW 21.13 COL 44.25 COLON-ALIGNED WIDGET-ID 8
      obj-in-code AT ROW 21.67 COL 11 COLON-ALIGNED
      v-new-price-vat AT ROW 21.75 COL 44.25 COLON-ALIGNED WIDGET-ID 16

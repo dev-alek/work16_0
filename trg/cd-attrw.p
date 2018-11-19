@@ -129,8 +129,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       if g#db-num = ub.cash-desk-attr.db-num
       and g#db-num <> 0
       and not p-from-ubd then do:
-      undo main-block, return error substitute( "&1. &2&3&4Запись об атрибуте кассы &7, принадлежащей БД &8, можно менять только в ГБД&4" +
-                                              "&5, текущая БД &6"
+      undo main-block, return error substitute(
+        "&1. &2&3&4" +
+        "Запись об атрибуте кассы &7, принадлежащей БД &8, можно менять только в ГБД&4" +
+        "&5, текущая БД &6&4" +
+        "определение в from-ubd-cda-IBM-XML_operative"
                                               , vss-workfile
                                               , vss-revision
                                               , vss-description

@@ -23,7 +23,7 @@
 /*----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
-USING Progress.Json.ObjectModel.*. 
+using Progress.Json.ObjectModel.*. 
 
 define input parameter parparentproc as widget-handle no-undo .
 
@@ -33,6 +33,11 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Загрузка данных из TH 15.0 через сокет-сервер".
+define variable mUtil as class ibs.th.utl.method-for-draw-utility no-undo.
+mUtil = new ibs.th.utl.method-for-draw-utility().
+mutil:parparentproc = parparentproc.
+subscribe   to "write-log"     anywhere run-procedure "pcall-log-file".
+subscribe   to "write-log-err" anywhere run-procedure "pcall-log-file-err".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { cmp/library.i }
@@ -48,32 +53,8 @@ define variable vss-description as character no-undo init "Загрузка данных из TH
 
 &GLOBAL-DEFINE defined_parparentproc yes
 
-{ str/ptrlv.i "def"}
+/* { str/ptrlv.i "def"}
 
-procedure pumpav:
-  define input parameter parobj-type  like ub.clients.obj-type   no-undo.
-  define input parameter parobj-code  like ub.clients.obj-code   no-undo.
-  define input parameter parpump-code like ub.pump.pump-code no-undo.
-
-  define buffer bf_clients for ub.clients.
-  define buffer bf_pump    for ub.pump.
-  { str/ptrlv.i "ov+"}
-  /*Проверяем то, что нет еще такого ТРК*/
-  find first bf_pump no-lock
-    where bf_pump.obj-type  = parobj-type
-      and bf_pump.obj-code  = parobj-code
-      and bf_pump.pump-code = parpump-code
-    no-error.
-  if available bf_pump then do:
-    return error SUBSTITUTE("Уже есть ТРК с номером &1", parpump-code) {&str-obj}.
-  end.
-  create bf_pump.
-  assign
-    bf_pump.obj-type  = parobj-type
-    bf_pump.obj-code  = parobj-code
-    bf_pump.pump-code = parpump-code
-  .
-end procedure.
 
 procedure nozzleav:
 define input parameter parobj-type    like ub.clients.obj-type   no-undo.
@@ -94,271 +75,10 @@ assign bf_nozzle.obj-type    = parobj-type
        bf_nozzle.nozzle-code = parnozzle-code.
 end procedure.
 
-procedure pumpnzav:
-define input parameter parobj-type    like ub.clients.obj-type    no-undo.
-define input parameter parobj-code    like ub.clients.obj-code    no-undo.
-define input parameter parpump-code   like ub.pump.pump-code      no-undo.
-define input parameter parnozzle-code like ub.nozzle.nozzle-code  no-undo.
-define input parameter paris-meas     like ub.pump-nozzle.is-meas no-undo.
-define input parameter paref-nid      like ub.pump-nozzle.ef-nid no-undo.
-define buffer bf_clients     for ub.clients.
-define buffer bf_pump        for ub.pump.
-define buffer bf_nozzle      for ub.nozzle.
-define buffer bf_pump-nozzle for ub.pump-nozzle.
-define buffer bf_rvs-doc     for ub.rvs-doc.
-define buffer bf_icnt-doc    for ub.icnt-doc.
-{ str/ptrlv.i "ov+"       }
-{ str/ptrlv.i "ppv+"      }
-{ str/ptrlv.i "nv+"       }
-{ str/ptrlv.i "rvs-doc-"  }
-{ str/ptrlv.i "icnt-doc-" }
-/*Проверяем то, что нет еще такой записи ТРК-пистолет*/
-find first bf_pump-nozzle where bf_pump-nozzle.obj-type    = parobj-type    and
-                                bf_pump-nozzle.obj-code    = parobj-code    and
-                                bf_pump-nozzle.pump-code   = parpump-code   and
-                                bf_pump-nozzle.nozzle-code = parnozzle-code no-lock no-error.
-if available bf_pump-nozzle then
-             return error SUBSTITUTE ("Уже есть запись ТРК-пистолет с номером ТРК &1 и номером пистолета &2", parpump-code, parnozzle-code) {&str-obj}.
-create bf_pump-nozzle.
-assign bf_pump-nozzle.obj-type    = parobj-type
-       bf_pump-nozzle.obj-code    = parobj-code
-       bf_pump-nozzle.pump-code   = parpump-code
-       bf_pump-nozzle.nozzle-code = parnozzle-code
-       bf_pump-nozzle.is-meas     = paris-meas
-       bf_pump-nozzle.ef-nid      = paref-nid
-       .
-end procedure.
 
-procedure plpmnzav:
-  define input parameter parobj-type    like ub.clients.obj-type   no-undo.
-  define input parameter parobj-code    like ub.clients.obj-code   no-undo.
-  define input parameter parpl-code     like ub.place.pl-code      no-undo.
-  define input parameter parpump-code   like ub.pump.pump-code     no-undo.
-  define input parameter parnozzle-code like ub.nozzle.nozzle-code no-undo.
 
-  do
-  on error undo, return error return-value
-  :
-    define buffer bf_clients              for ub.clients.
-    define buffer bf_place                for ub.place.
-    define buffer bf_pump                 for ub.pump.
-    define buffer bf_nozzle               for ub.nozzle.
-    define buffer bf_pl-pump              for ub.pl-pump.
-    define buffer bf_pump-nozzle          for ub.pump-nozzle.
-    define buffer bf_pl-pump-nozzle       for ub.pl-pump-nozzle.
-    define buffer bf-other_pl-pump-nozzle for ub.pl-pump-nozzle.
-    define buffer bf_rvs-doc              for ub.rvs-doc.
-    define buffer bf_icnt-doc             for ub.icnt-doc.
-    define buffer bf_pl-gds-pump          for ub.pl-gds-pump.
-    define buffer bf-other_pl-gds-pump    for ub.pl-gds-pump.
-
-    { str/ptrlv.i "ov+"       }
-    { str/ptrlv.i "ppv+"      }
-    { str/ptrlv.i "plv+"      }
-    { str/ptrlv.i "nv+"       }
-    { str/ptrlv.i "plppv+"    }
-    { str/ptrlv.i "ppnv+"     }
-    { str/ptrlv.i "rvs-doc-"  }
-    { str/ptrlv.i "icnt-doc-" }
-    /*Проверяем то, что нет еще такой связки резервуар-ТРК в журнале резервуар-ТРК-пистолет*/
-/*    if nzpl-spl(parobj-type, parobj-code) <> yes then do:                                                                                                  */
-/*      find first bf_pl-pump-nozzle no-lock                                                                                                                 */
-/*        where bf_pl-pump-nozzle.obj-type   = parobj-type                                                                                                   */
-/*          and bf_pl-pump-nozzle.obj-code   = parobj-code                                                                                                   */
-/*          and bf_pl-pump-nozzle.pl-code    = parpl-code                                                                                                    */
-/*          and bf_pl-pump-nozzle.pump-code  = parpump-code                                                                                                  */
-/*        no-error.                                                                                                                                          */
-/*      if available bf_pl-pump-nozzle then do:                                                                                                              */
-/*        return error substitute("Резервуар &1 уже связан с ТРК &2, через пистолет &3", parpl-code, parpump-code, bf_pl-pump-nozzle.nozzle-code) {&str-obj}.*/
-/*      end.                                                                                                                                                 */
-/*    end.                                                                                                                                                   */
-    do /*transaction*/
-    on error undo, return error return-value
-    :
-      /*Если есть привязка к топливу*/
-/*      find first bf_pl-gds-pump no-lock                                                                                                                                                                                                                                   */
-/*        where bf_pl-gds-pump.obj-type  = parobj-type                                                                                                                                                                                                                      */
-/*          and bf_pl-gds-pump.obj-code  = parobj-code                                                                                                                                                                                                                      */
-/*          and bf_pl-gds-pump.pl-code   = parpl-code                                                                                                                                                                                                                       */
-/*          and bf_pl-gds-pump.pump-code = parpump-code                                                                                                                                                                                                                     */
-/*        no-error.                                                                                                                                                                                                                                                         */
-/*      if available bf_pl-gds-pump then do:                                                                                                                                                                                                                                */
-/*        /*Если есть еще резервуар который льет такое же топливо через эту же ТРК*/                                                                                                                                                                                        */
-/*        find first bf-other_pl-gds-pump no-lock                                                                                                                                                                                                                           */
-/*          where bf-other_pl-gds-pump.obj-type  = bf_pl-gds-pump.obj-type                                                                                                                                                                                                  */
-/*            and bf-other_pl-gds-pump.obj-code  = bf_pl-gds-pump.obj-code                                                                                                                                                                                                  */
-/*            and bf-other_pl-gds-pump.gds-code  = bf_pl-gds-pump.gds-code                                                                                                                                                                                                  */
-/*            and bf-other_pl-gds-pump.pump-code = bf_pl-gds-pump.pump-code                                                                                                                                                                                                 */
-/*            and bf-other_pl-gds-pump.pl-code  <> bf_pl-gds-pump.pl-code                                                                                                                                                                                                   */
-/*          no-error.                                                                                                                                                                                                                                                       */
-/*                                                                                                                                                                                                                                                                          */
-/*        if available bf-other_pl-gds-pump then do:                                                                                                                                                                                                                        */
-/*          if nzpl-spl(parobj-type, parobj-code) <> yes then do:                                                                                                                                                                                                           */
-/*            /*А из какого резервуара он льет*/                                                                                                                                                                                                                            */
-/*            find first bf-other_pl-pump-nozzle no-lock                                                                                                                                                                                                                    */
-/*              where bf-other_pl-pump-nozzle.obj-type  = bf-other_pl-gds-pump.obj-type                                                                                                                                                                                     */
-/*                and bf-other_pl-pump-nozzle.obj-code  = bf-other_pl-gds-pump.obj-code                                                                                                                                                                                     */
-/*                and bf-other_pl-pump-nozzle.pl-code   = bf-other_pl-gds-pump.pl-code                                                                                                                                                                                      */
-/*                and bf-other_pl-pump-nozzle.pump-code = bf-other_pl-gds-pump.pump-code                                                                                                                                                                                    */
-/*              no-error.                                                                                                                                                                                                                                                   */
-/*            if available bf-other_pl-pump-nozzle then do:                                                                                                                                                                                                                 */
-/*              /*Из разных пистолетов на одной ТРК нельзя торговать одним и тем же топливом*/                                                                                                                                                                              */
-/*              if bf-other_pl-pump-nozzle.nozzle-code <> parnozzle-code then do:                                                                                                                                                                                           */
-/*                return error substitute ("На объекте &1 &2 ТРК &3 через пистолет &4 торгует топливом с внутренним кодом &5 из резервуара &6.&7"                                                                                                                           */
-/*                                         + "КАСССА не возвращает номер пистолета в чеке, .&7"                                                                                                                                                                             */
-/*                                         + "поэтому нельзя торговать одним и тем же топливом на одной ТРК через разные пистолеты.&7"                                                                                                                                      */
-/*                                         , bf-other_pl-pump-nozzle.obj-type                                                                                                                                                                                               */
-/*                                         , bf-other_pl-pump-nozzle.obj-code                                                                                                                                                                                               */
-/*                                         , bf-other_pl-pump-nozzle.pump-code                                                                                                                                                                                              */
-/*                                         , bf-other_pl-pump-nozzle.nozzle-code                                                                                                                                                                                            */
-/*                                         , bf-other_pl-gds-pump.gds-code                                                                                                                                                                                                  */
-/*                                         , bf-other_pl-gds-pump.pl-code                                                                                                                                                                                                   */
-/*                                         , {&new-line}                                                                                                                                                                                                                    */
-/*                                        ).                                                                                                                                                                                                                                */
-/*              end.                                                                                                                                                                                                                                                        */
-/*            end.                                                                                                                                                                                                                                                          */
-/*          end.                                                                                                                                                                                                                                                            */
-/*          else do:                                                                                                                                                                                                                                                        */
-/*            find current bf_pl-gds-pump exclusive-lock.                                                                                                                                                                                                                   */
-/*            assign                                                                                                                                                                                                                                                        */
-/*              bf_pl-gds-pump.status_ = {&blocked-status}.                                                                                                                                                                                                                 */
-/*          end.                                                                                                                                                                                                                                                            */
-/*        end.                                                                                                                                                                                                                                                              */
-/*        /*Идем по остальным резервуарам льющим через данный пистолет на данной ТРК*/                                                                                                                                                                                      */
-/*        for each bf-other_pl-pump-nozzle where bf-other_pl-pump-nozzle.obj-type    = parobj-type                                                                                                                                                                          */
-/*                                            and bf-other_pl-pump-nozzle.obj-code    = parobj-code                                                                                                                                                                         */
-/*                                            and bf-other_pl-pump-nozzle.pump-code   = parpump-code                                                                                                                                                                        */
-/*                                            and bf-other_pl-pump-nozzle.nozzle-code = parnozzle-code                                                                                                                                                                      */
-/*                                            no-lock on error undo, return error return-value :                                                                                                                                                                            */
-/*          find first bf-other_pl-gds-pump where bf-other_pl-gds-pump.obj-type  = bf-other_pl-pump-nozzle.obj-type                                                                                                                                                         */
-/*                                            and bf-other_pl-gds-pump.obj-code  = bf-other_pl-pump-nozzle.obj-code                                                                                                                                                         */
-/*                                            and bf-other_pl-gds-pump.pl-code   = bf-other_pl-pump-nozzle.pl-code                                                                                                                                                          */
-/*                                            and bf-other_pl-gds-pump.pump-code = bf-other_pl-pump-nozzle.pump-code no-lock no-error.                                                                                                                                      */
-/*          if available bf-other_pl-gds-pump then do:                                                                                                                                                                                                                      */
-/*            if bf-other_pl-gds-pump.gds-code <> bf_pl-gds-pump.gds-code then do:                                                                                                                                                                                          */
-/*              return error substitute ("На объекте &1 &2 ТРК &3 через пистолет &4 торгует топливом с внутренним кодом &5 из резервуара &6. Вы хотите торговать топливом с внутренним кодом &7. Разными видами топлива через один пистолет на одной ТРК торговать нельзя.",*/
-/*                                        bf-other_pl-pump-nozzle.obj-type,                                                                                                                                                                                                 */
-/*                                        bf-other_pl-pump-nozzle.obj-code,                                                                                                                                                                                                 */
-/*                                        bf-other_pl-pump-nozzle.pump-code,                                                                                                                                                                                                */
-/*                                        bf-other_pl-pump-nozzle.nozzle-code,                                                                                                                                                                                              */
-/*                                        bf-other_pl-gds-pump.gds-code,                                                                                                                                                                                                    */
-/*                                        bf-other_pl-gds-pump.pl-code,                                                                                                                                                                                                     */
-/*                                        bf_pl-gds-pump.gds-code).                                                                                                                                                                                                         */
-/*            end.                                                                                                                                                                                                                                                          */
-/*          end.                                                                                                                                                                                                                                                            */
-/*        end.                                                                                                                                                                                                                                                              */
-/*      end.                                                                                                                                                                                                                                                                */
-
-      create bf_pl-pump-nozzle.
-      assign
-        bf_pl-pump-nozzle.obj-type    = parobj-type
-        bf_pl-pump-nozzle.obj-code    = parobj-code
-        bf_pl-pump-nozzle.pl-code     = parpl-code
-        bf_pl-pump-nozzle.pump-code   = parpump-code
-        bf_pl-pump-nozzle.nozzle-code = parnozzle-code
-      .
-    end. /*transaction*/
-  end.
-end procedure.
-
-procedure plpumpav:
-  define input parameter parobj-type  like ub.clients.obj-type no-undo.
-  define input parameter parobj-code  like ub.clients.obj-code no-undo.
-  define input parameter parpl-code   like ub.place.pl-code    no-undo.
-  define input parameter parpump-code like ub.pump.pump-code   no-undo.
-
-  define buffer bf_clients           for ub.clients.
-  define buffer bf_pump              for ub.pump.
-  define buffer bf_place             for ub.place.
-  define buffer bf_pl-pump           for ub.pl-pump.
-  define buffer bf_pl-gds            for ub.pl-gds.
-  define buffer bf_goods             for ub.goods.
-  define buffer bf_pl-gds-pump       for ub.pl-gds-pump.
-  define buffer bf-other_pl-gds-pump for ub.pl-gds-pump.
-
-  define variable varstatus as character no-undo.
-
-  { str/ptrlv.i "ov+"}
-  { str/ptrlv.i "ppv+"}
-  { str/ptrlv.i "plv+"}
-  /*Проверяем то, что нет еще такой записи резервуар-ТРК*/
-  find first bf_pl-pump no-lock
-    where bf_pl-pump.obj-type   = parobj-type
-      and bf_pl-pump.obj-code   = parobj-code
-      and bf_pl-pump.pl-code    = parpl-code
-      and bf_pl-pump.pump-code  = parpump-code
-    no-error.
-  if available bf_pl-pump then do:
-    return error SUBSTITUTE("Уже есть запись резервуар-ТРК с номером резервуара &1 и номером ТРК &2", parpl-code, parpump-code) {&str-obj}.
-  end.
-  /*Если есть в резервуаре бензин делаем проверку, что через данную ТРК не течет данный бензин
-    и создаем связку с топливом*/
-  find first bf_pl-gds no-lock
-    where bf_pl-gds.obj-type = parobj-type
-      and bf_pl-gds.obj-code = parobj-code
-      and bf_pl-gds.pl-code  = parpl-code
-    no-error.
-  tr:
-  do transaction
-  on error undo tr, return error return-value
-  :
-    if available bf_pl-gds then do:
-      find first bf_goods no-lock
-        where bf_goods.gds-code = bf_pl-gds.gds-code
-      .
-      assign
-        varstatus = {&current-status}
-      .
-      find first bf-other_pl-gds-pump no-lock
-        where bf-other_pl-gds-pump.obj-type  = parobj-type
-          and bf-other_pl-gds-pump.obj-code  = parobj-code
-          and bf-other_pl-gds-pump.gds-code  = bf_goods.gds-code
-          and bf-other_pl-gds-pump.pump-code = parpump-code
-          and bf-other_pl-gds-pump.status_   = {&current-status}
-        no-error.
-      if available bf-other_pl-gds-pump
-        and nzpl-spl(bf-other_pl-gds-pump.obj-type, bf-other_pl-gds-pump.obj-code) <> yes
-      then do:
-/*        message                                                                                                                                           */
-/*          "Через ТРК с номером " parpump-code " уже продается топливо " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name*/
-/*          " которое связано с резервуаром " bf-other_pl-gds-pump.pl-code "." skip                                                                         */
-/*          "Данная привязка Резервуар-ТРК-Товар получит статус блокированный."                                                                             */
-/*          view-as alert-box information.                                                                                                                  */
-        assign
-          varstatus = {&blocked-status}
-        .
-      end.
-      create bf_pl-gds-pump.
-      assign
-        bf_pl-gds-pump.obj-type  = parobj-type
-        bf_pl-gds-pump.obj-code  = parobj-code
-        bf_pl-gds-pump.pl-code   = parpl-code
-        bf_pl-gds-pump.gds-code  = bf_goods.gds-code
-        bf_pl-gds-pump.pump-code = parpump-code
-        bf_pl-gds-pump.status_   = varstatus
-      .
-      run cplgdspm in this-procedure
-        ( input bf_pl-gds-pump.obj-type
-         ,input bf_pl-gds-pump.obj-code
-         ,input bf_pl-gds-pump.pl-code
-         ,input bf_pl-gds-pump.gds-code
-         ,input bf_pl-gds-pump.pump-code
-         ,input bf_pl-gds-pump.status_
-        ) no-error.
-      if error-status:error then do:
-        undo tr, return error substitute ("Ошибка при смене статуса записи резервуар-ТРК-пистолет: &1 &2.", return-value, error-status:get-message(1)).
-      end.
-    end.
-    create bf_pl-pump.
-    assign
-      bf_pl-pump.obj-type   = parobj-type
-      bf_pl-pump.obj-code   = parobj-code
-      bf_pl-pump.pl-code    = parpl-code
-      bf_pl-pump.pump-code  = parpump-code
-    .
-  end. /*transaction*/
-end procedure.
 { str/ptrlv.i "undef"}
+*/
 /* Parameters Definitions ---                                           */
 
 /* Local Variable Definitions ---                                       */
@@ -395,8 +115,7 @@ define temp-table tt-cash-desk-attr like ub.cash-desk-attr
   field attr-value as character 
 .
   
-define temp-table tt-icnt-doc like ub.icnt-doc .
-define temp-table tt-icnt-line like ub.icnt-line .
+
 
 define temp-table tt-place like ub.place .
 define temp-table tt-place-attr like ub.place-attr .
@@ -416,26 +135,9 @@ define temp-table tt-gds-prod
     gds-code
 .
 
-define temp-table tt-place-loc
-  field pl-code as integer
-  field loc1 as character
-  index pi as primary unique
-    pl-code
-.
 
-define temp-table tt-gds-price
-  field gds-code as integer
-  field price as decimal
-  index pi as primary unique
-    gds-code
-.
 
-define temp-table tt-gds-mapping
-  field gds-code15 as integer
-  field gds-code16 as integer
-  index pi as primary 
-    gds-code15
-.
+
   
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -516,6 +218,46 @@ define button b-file  DEFAULT
      label ""
      SIZE 2.5 BY 1.08.     
 
+DEFINE VARIABLE v-rest AS LOGICAL INITIAL no 
+     LABEL "Остатки" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60 BY 1 NO-UNDO.
+
+define variable v-osn-fname as character FORMAT "X(256)":U 
+     LABEL "Файл соответствия поставщиков" 
+     VIEW-AS FILL-IN 
+     SIZE 38 BY 1 no-undo.     
+     
+define button b-osn-file  DEFAULT
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     label ""
+     SIZE 2.5 BY 1.08.     
+
+define variable v-art-fname as character FORMAT "X(256)":U 
+     LABEL "Файл соответствия товаров" 
+     VIEW-AS FILL-IN 
+     SIZE 38 BY 1 no-undo.     
+     
+define button b-art-file  DEFAULT
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     label ""
+     SIZE 2.5 BY 1.08.     
+
+define variable v-retry-fname as character FORMAT "X(256)":U 
+     LABEL "Файл повторной загрузки" 
+     VIEW-AS FILL-IN 
+     SIZE 38 BY 1 no-undo.     
+     
+define button b-retry-file  DEFAULT
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     label ""
+     SIZE 2.5 BY 1.08.     
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -529,6 +271,13 @@ DEFINE FRAME Dialog-Frame
      v-price AT ROW 7.2 COL 3 WIDGET-ID 10
      v-file-path at row 8.4 col 2 WIDGET-ID 12
      b-file at row 8.4 col 60
+     v-rest AT ROW 9.6 COL 3 WIDGET-ID 14
+     v-osn-fname at row 10.8 col 34 colon-aligned WIDGET-ID 16
+     b-osn-file at row 10.8 col 75
+     v-art-fname at row 12 col 34 colon-aligned WIDGET-ID 18
+     b-art-file at row 12 col 75
+     v-retry-fname at row 13.2 col 34 colon-aligned WIDGET-ID 20
+     b-retry-file at row 13.2 col 75
      SPACE(2) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -583,13 +332,52 @@ END.
 ON value-changed of v-price in FRAME Dialog-Frame /* Загрузка данных из TH v15.0 */
 DO:
   assign v-price.
-  if v-price
+  assign v-schem.
+  if v-price or v-schem
   then do :
     enable v-file-path b-file with frame Dialog-Frame.
   end.
   else do :
     disable v-file-path b-file with frame Dialog-Frame.
   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
+ON value-changed of v-schem in FRAME Dialog-Frame /* Загрузка данных из TH v15.0 */
+DO:
+  assign v-schem.
+  assign v-price.
+  if v-price or v-schem
+  then do :
+    enable v-file-path b-file with frame Dialog-Frame.
+  end.
+  else do :
+    disable v-file-path b-file with frame Dialog-Frame.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
+ON value-changed of v-rest in FRAME Dialog-Frame /* Загрузка данных из TH v15.0 */
+DO:
+  assign v-rest.
+  if v-rest then enable
+    v-osn-fname b-osn-file
+    v-art-fname b-art-file
+    v-retry-fname b-retry-file
+  with frame Dialog-Frame.
+  else disable
+    v-osn-fname b-osn-file
+    v-art-fname b-art-file
+    v-retry-fname b-retry-file
+  with frame Dialog-Frame.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -615,6 +403,54 @@ END.
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME B-OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-osn-file Dialog-Frame
+ON CHOOSE OF B-osn-file IN FRAME Dialog-Frame /* ВВОД */
+DO:
+  system-dialog get-file v-osn-fname
+    filters "Текстовые файлы (*.txt)" "*.txt",
+            "Все файлы (*.*)" "*.*"
+    title "Выберите файл соответствия кодов поставщиков"
+    update glog
+  .
+  if glog then v-osn-fname:screen-value = v-osn-fname .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-art-file Dialog-Frame
+ON CHOOSE OF B-art-file IN FRAME Dialog-Frame /* ВВОД */
+DO:
+  system-dialog get-file v-art-fname
+    filters "Текстовые файлы (*.txt)" "*.txt",
+            "Все файлы (*.*)" "*.*"
+    title "Выберите файл соответствия кодов товаров"
+    update glog
+  .
+  if glog then v-art-fname:screen-value = v-art-fname .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-retry-file Dialog-Frame
+ON CHOOSE OF B-retry-file IN FRAME Dialog-Frame /* ВВОД */
+DO:
+  system-dialog get-file v-retry-fname
+    filters "Текстовые файлы (*.txt)" "*.txt",
+            "Все файлы (*.*)" "*.*"
+    title "Имя файла для повторной загрузки ошибочных строк"
+    update glog
+  .
+  if glog then v-retry-fname:screen-value = v-retry-fname .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-OK Dialog-Frame
 ON CHOOSE OF B-OK IN FRAME Dialog-Frame /* ВВОД */
 DO:
@@ -626,12 +462,43 @@ DO:
     v-schem
     v-price
     v-file-path
+    v-rest
+    v-osn-fname
+    v-art-fname
+    v-retry-fname
   .
   if v-price and trim(v-file-path) = ""
   then do :
-    message "Для загрузки цен необходимо выбрать файл с соответствиями кодов товаров!" view-as alert-box.
+    message "Для загрузки цен необходимо выбрать файл с соответствиями кодов товаров." view-as alert-box.
+    apply "entry" to v-file-path .
     return no-apply .
   end.
+  if v-schem and trim(v-file-path) = ""
+  then do :
+    message "Для загрузки топологии необходимо выбрать файл с соответствиями кодов товаров!" view-as alert-box.
+    return no-apply .
+  end.
+  if v-rest and trim(v-osn-fname) = ""
+  then do :
+    message "Для загрузки остатков необходимо выбрать файл с соответствиями кодов поставщиков." view-as alert-box.
+    apply "entry" to v-osn-fname . 
+    return no-apply .
+  end.
+  if v-rest and trim(v-art-fname) = ""
+  then do :
+    message "Для загрузки остатков необходимо выбрать файл с соответствиями кодов товаров." view-as alert-box.
+    apply "entry" to v-art-fname . 
+    return no-apply .
+  end.
+  if v-rest and trim(v-retry-fname) = ""
+  then do :
+    message "Для загрузки остатков необходимо указать имя файла для выгрузки строк с ошибками, пригодного для повторной загрузки." view-as alert-box.
+    apply "entry" to v-retry-fname . 
+    return no-apply .
+  end.
+
+
+
   if trim(v-file-path) <> ""
   then do :
     if search(v-file-path) = ?
@@ -646,18 +513,11 @@ DO:
       return no-apply .
     end. 
   end. 
+  mutil:mAddr = v-addr.
+  
   v-has-records = false.
   if v-cashdesk then do :
-    for each ub.cash-desk no-lock where ub.cash-desk.db-num = v-cntxt-db-num-obj
-                                    and ub.cash-desk.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.cash-desk-attr no-lock where ub.cash-desk-attr.db-num = v-cntxt-db-num-obj
-                                         and ub.cash-desk-attr.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
+    v-has-records = mutil:chek_cash_desk().
     if v-has-records
     then do :
       message "Справочник касс и/или их атрибутов не пустой!" view-as alert-box.
@@ -665,51 +525,7 @@ DO:
     end.
   end.
   if v-schem then do :
-    for each ub.place no-lock where ub.place.obj-type = v-cntxt-obj-type
-                                and ub.place.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.place-attr no-lock where ub.place-attr.obj-type = v-cntxt-obj-type
-                                     and ub.place-attr.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.pump no-lock where ub.pump.obj-type = v-cntxt-obj-type
-                               and ub.pump.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.nozzle no-lock where ub.nozzle.obj-type = v-cntxt-obj-type
-                                 and ub.nozzle.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.pump-nozzle no-lock where ub.pump-nozzle.obj-type = v-cntxt-obj-type
-                                      and ub.pump-nozzle.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.pl-pump-nozzle no-lock where ub.pl-pump-nozzle.obj-type = v-cntxt-obj-type
-                                         and ub.pl-pump-nozzle.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.pl-pump no-lock where ub.pl-pump.obj-type = v-cntxt-obj-type
-                                  and ub.pl-pump.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.pl-gds no-lock where ub.pl-gds.obj-type = v-cntxt-obj-type
-                                 and ub.pl-gds.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.obj-type = v-cntxt-obj-type
-                                      and ub.pl-gds-pump.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
+    v-has-records = mUtil:Chek_Shem().
     if v-has-records
     then do :
       message "Топология не пустая!" view-as alert-box.
@@ -717,16 +533,7 @@ DO:
     end.
   end.
   if v-pumpdoc then do :
-    for each ub.icnt-doc no-lock where ub.icnt-doc.obj-type = v-cntxt-obj-type
-                                   and ub.icnt-doc.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
-    for each ub.icnt-line no-lock where ub.icnt-line.obj-type = v-cntxt-obj-type
-                                    and ub.icnt-line.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.    
-    end.
+    v-has-records = mutil:chek_pumpdoc().
     if v-has-records
     then do :
       message "На объекте есть инвентаризации счетчиков ТРК!" view-as alert-box.
@@ -734,29 +541,32 @@ DO:
     end.
   end.
   if v-price then do :
-    for each ub.price-doc no-lock where ub.price-doc.obj-type = v-cntxt-obj-type
-                                    and ub.price-doc.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.
-    end.
-    for each ub.price-list no-lock where ub.price-list.obj-type = v-cntxt-obj-type
-                                     and ub.price-list.obj-code = v-cntxt-obj-code :
-      v-has-records = true .
-      leave.
-    end.
+    v-has-records = mutil:chek_price(). 
     if v-has-records
     then do :
       message "На объекте есть переоценки!" view-as alert-box.
       return no-apply .
     end.                                 
   end.
+  if v-rest then do :
+    // 1. ?? запрещать повторную загрузку документов ??
+    if can-find (first ub.trn-doc where ub.trn-doc.obj-type = v-cntxt-obj-type
+                                    and ub.trn-doc.obj-code = v-cntxt-obj-code) then do :
+      v-has-records = true .
+    end.
+    if v-has-records
+    then do :
+      message "На объекте есть остатки!" view-as alert-box.
+      return no-apply .
+    end.                                 
+  end .
   
   output stream log-stream to value("load-from-15_0.log") append .
   output stream err-stream to value("load-from-15_0.err") append .
   if v-cashdesk
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Кассы..." ).
-    run load_cashdesk no-error .
+    mutil:load_cashdesk (). 
     if error-status:error
     then do :
       run waitfram-hide in this-procedure .
@@ -773,7 +583,7 @@ DO:
   if v-schem
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Топология..." ).
-    run load_schem no-error .
+    mUtil:load_schem() no-error .
     if error-status:error
     then do :
       run waitfram-hide in this-procedure .
@@ -790,7 +600,7 @@ DO:
   if v-pumpdoc
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Инвентаризация счетчиков ТРК" ).
-    run load_pumpdoc no-error .
+    mutil:load_pumpdoc () no-error .
     if error-status:error
     then do :
       run waitfram-hide in this-procedure .
@@ -808,21 +618,30 @@ DO:
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Цены" ).
     
-    empty temp-table tt-gds-mapping .
-    input from value(v-file-path) .
-    repeat:
-      import unformatted v-line.
-      create tt-gds-mapping .
-      tt-gds-mapping.gds-code15 = integer(trim(entry(1, v-line, ";"))) .
-      tt-gds-mapping.gds-code16 = integer(trim(entry(2, v-line, ";"))) no-error .
-      if error-status:error then leave .
-    end.
-    input close.
-    run load_price no-error .
+    mutil:load_price(v-file-path) no-error .
     if error-status:error
     then do :
       run waitfram-hide in this-procedure .
       message ("Ошибка при загрузке цен: " + return-value + {&new-line} + "Продолжить работу?") view-as alert-box question buttons yes-no update glog .
+      if not glog then undo, return no-apply .
+      undo .
+    end.
+  end.
+  output stream log-stream close .
+  output stream err-stream close .
+  
+  output stream log-stream to value("load-from-15_0.log") append .
+  output stream err-stream to value("load-from-15_0.err") append .
+  if v-rest
+  then do trans:
+    run waitfram-show in this-procedure ( INPUT "Обработка: Остатки" ).
+    mutil:load_rest ( v-osn-fname  ,  // список соответствия поставщиков
+                      v-art-fname  , // список соответствия товаров
+                      v-retry-fname).
+    if error-status:error
+    then do :
+      run waitfram-hide in this-procedure .
+      message ("Ошибка при загрузке остатков: " + return-value + {&new-line} + "Продолжить работу?") view-as alert-box question buttons yes-no update glog .
       if not glog then undo, return no-apply .
       undo .
     end.
@@ -898,620 +717,19 @@ PROCEDURE enable_UI :
   DISPLAY v-addr v-cashdesk v-schem v-pumpdoc 
       WITH FRAME Dialog-Frame.
   ENABLE B-OK B-Cancel v-addr v-cashdesk v-schem v-pumpdoc v-price v-file-path b-file
+    v-rest v-osn-fname b-osn-file v-art-fname b-art-file v-retry-fname b-retry-file
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
   apply "value-changed" to v-price in frame Dialog-Frame .
+  apply "value-changed" to v-rest in frame Dialog-Frame .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-procedure load_price :
-  
-  cmd = substitute ("&1 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), v-addr, "price-temp.json").
-  os-command silent value (cmd).
-  run fix-codepage_ (input "price-temp.json") .
-  
-  myParser = NEW ObjectModelParser().
-  myJsonObj = CAST(myParser:ParseFile(search("price.json")), JsonObject).
-  
-  run parse-json(input temp-table tt-gds-price:default-buffer-handle, input "tt-gds-price") .
-  
-  /* Delete all objects created by this procedure to avoid memory leaks */
-  DELETE OBJECT myResultObj NO-ERROR.
-  DELETE OBJECT results-array NO-ERROR.
-  DELETE OBJECT myJsonObj NO-ERROR.
-  DELETE OBJECT myParser    NO-ERROR.
-  
-  create temp-price-doc .
-  assign
-    temp-price-doc.doc-date = today
-    temp-price-doc.doc-num  = 1
-    temp-price-doc.line-num = 1
-    temp-price-doc.obj-code = v-cntxt-obj-code
-    temp-price-doc.obj-type = v-cntxt-obj-type
-    temp-price-doc.doc-id   = "_"
-  .
-  
-  put stream log-stream unformatted now "   Начинаем загрузку цен..." skip .
-  
-  for each tt-gds-price no-lock :
-    find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-gds-price.gds-code no-error .
-    if available tt-gds-mapping
-    then do :
-      if tt-gds-mapping.gds-code15 = 0 or tt-gds-mapping.gds-code15 = ?
-      or tt-gds-mapping.gds-code16 = 0 or tt-gds-mapping.gds-code16 = ?
-      then next .
-      find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
-      if available ub.goods
-      then do :
-        create temp-price-list.
-        assign
-          temp-price-list.doc-num = 1
-          temp-price-list.line-num = 1
-          temp-price-list.gds-code = tt-gds-mapping.gds-code16
-          temp-price-list.price-sale = tt-gds-price.price
-        .
-        put stream log-stream unformatted
-          "Код в 15.0 " string(tt-gds-price.gds-code) " .Код в 16.0 " string(tt-gds-mapping.gds-code16)
-          " . Цена: " string(tt-gds-price.price) skip .
-      end.
-      else do :
-        put stream err-stream unformatted
-          "Не найден товар с кодом " string(tt-gds-mapping.gds-code16) " .Код в 15.0 " string(tt-gds-price.gds-code)
-          " . Цена: " string(tt-gds-price.price) skip .
-      end.
-    end.
-    else do :
-      put stream err-stream unformatted
-        "В файле соответствия " v-file-path " нет данных по товару с кодом " string(tt-gds-price.gds-code)
-        " . Цена: " string(tt-gds-price.price) skip .
-    end.
-  end.
-  
-  run utl/ora-i301.p (
-    input this-procedure ,
-    input this-procedure ,
-    input table temp-price-doc ,
-    input table temp-price-list ,
-    output num-rec-ok2
-    ) no-error .
-  if error-status:error
-  then do :
-    undo, return error return-value.
-  end.
-  
-  put stream log-stream unformatted now "   Цены загружены!" skip .
-  
-end procedure .
 
-procedure load_cashdesk :
-  define variable v-rid as recid no-undo .
-  
-  cmd = substitute ("&1 &2/THGetInfo?GetCashDesk >&3", search ("exe/curl.exe"), v-addr, "cashdesk-temp.json").
-  os-command silent value (cmd).
-  run fix-codepage_ (input "cashdesk-temp.json") .
-  
-  myParser = NEW ObjectModelParser().
-  myJsonObj = CAST(myParser:ParseFile(search("cashdesk.json")), JsonObject).
-  
-  run parse-json(input temp-table tt-cash-desk:default-buffer-handle, input "cash-desk") .
-  run parse-json(input temp-table tt-cash-desk-attr:default-buffer-handle, input "cash-desk-attr") .
-  
-  /* Delete all objects created by this procedure to avoid memory leaks */
-  DELETE OBJECT myResultObj NO-ERROR.
-  DELETE OBJECT results-array NO-ERROR.
-  DELETE OBJECT myJsonObj NO-ERROR.
-  DELETE OBJECT myParser    NO-ERROR.
-  
-  put stream log-stream unformatted now "   Начинаем загрузку касс..." skip .
-  
-  for each tt-cash-desk where not tt-cash-desk.is-del exclusive-lock :
-    tt-cash-desk.addr-path = replace(tt-cash-desk.addr-path, "|", chr(4)) .
-    for first tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
-                                         and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
-                                         and tt-cash-desk-attr.pos-type = tt-cash-desk.pos-type
-                                         and tt-cash-desk-attr.cash-num = tt-cash-desk.cash-num
-                                         and tt-cash-desk-attr.attr-code = "fr-type" :
-      tt-cash-desk.fr-type = tt-cash-desk-attr.attr-value .                                    
-    end.          
-     
-    put stream log-stream unformatted "Касса " tt-cash-desk.pos-type " №" tt-cash-desk.cash-num " IP: " entry(2,tt-cash-desk.addr-path, chr(4)) skip.       
-                        
-    run ref/cashdsk1.p (
-     input-output v-rid
-    ,input {&add-def}
-    ,input v-cntxt-db-num-obj
-    ,input v-cntxt-obj-code
-    ,input tt-cash-desk.pos-type
-    ,input tt-cash-desk.cash-num
-    ,input tt-cash-desk.autonomy
-    ,input tt-cash-desk.addr-path
-    ,input tt-cash-desk.cash-on
-    ,input tt-cash-desk.cash-os
-    ,input tt-cash-desk.is-del
-    ,input tt-cash-desk.remote
-    ,input tt-cash-desk.version
-    ,input tt-cash-desk.registration-code
-    ,input tt-cash-desk.serial-code
-    ,input tt-cash-desk.fr-type
-    ) no-error .
-    if error-status:error then do:
-      undo, return error return-value.
-    end.
-    for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
-                                         and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
-                                         and tt-cash-desk-attr.pos-type = tt-cash-desk.pos-type
-                                         and tt-cash-desk-attr.cash-num = tt-cash-desk.cash-num :
-      case tt-cash-desk-attr.attr-code :
-        when "last-check-params"
-        then do :
-          run cd-attr-write in this-procedure (
-                                  input v-cntxt-db-num-obj
-                                ,input v-cntxt-obj-code
-                                ,input tt-cash-desk-attr.pos-type
-                                ,input tt-cash-desk-attr.cash-num
-                                ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}
-                                         then {&cda-IBM-XML_operative}
-                                         else {&cda-AUTOTANK_operative})
-                                ,input (if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML}
-                                        then {&cda-IBM-XML_operative_last-check-params}
-                                        else {&cda-AUTOTANK_operative_last-check-params})
-                                ,input tt-cash-desk-attr.attr-value
-                                ,input ? /*p-date*/
-                                ,input 0 /*p-decimal*/
-                                ,input 0 /*p-integer*/
-                                ,input no /*p-logical*/
-                                ) no-error.
-        end.
-        when "FO-version"
-        then do :
-/*          run cd-attr-write in this-procedure (                                            */
-/*                                  input v-cntxt-db-num-obj                                 */
-/*                                ,input v-cntxt-obj-code                                    */
-/*                                ,input tt-cash-desk-attr.pos-type                          */
-/*                                ,input tt-cash-desk-attr.cash-num                          */
-/*                                ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}*/
-/*                                         then {&cda-IBM-XML_operative}                     */
-/*                                         else {&cda-AUTOTANK_operative})                   */
-/*                                ,input (if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML} */
-/*                                        then {&cda-IBM-XML_operative_fo-version}           */
-/*                                        else {&cda-AUTOTANK_operative_fo-version})         */
-/*                                ,input tt-cash-desk-attr.attr-value                        */
-/*                                ,input ? /*p-date*/                                        */
-/*                                ,input 0 /*p-decimal*/                                     */
-/*                                ,input 0 /*p-integer*/                                     */
-/*                                ,input no /*p-logical*/                                    */
-/*                                ) no-error.                                                */
-        end.                        
-      end case.                                   
-    end.                                       
-  end.
-  
-  put stream log-stream unformatted now "   Кассы загружены!" skip .
-   
-end procedure.
 
-procedure load_schem :
-  define variable v-rep-rec as recid no-undo .
-  define variable v-ok        as logical   no-undo.
-  
-  empty temp-table tt-gds-prod .
-  
-  cmd = substitute ("&1 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), v-addr, "schem-temp.json").
-  os-command silent value (cmd).
-  run fix-codepage_ (input "schem-temp.json") .
-  
-  myParser = NEW ObjectModelParser().
-  myJsonObj = CAST(myParser:ParseFile(search("schem.json")), JsonObject).
-  
-  run parse-json(input temp-table tt-place:default-buffer-handle, input "place") .
-  run parse-json(input temp-table tt-place-attr:default-buffer-handle, input "place-attr") .
-  run parse-json(input temp-table tt-pump:default-buffer-handle, input "pump") .
-  run parse-json(input temp-table tt-nozzle:default-buffer-handle, input "nozzle") .
-  run parse-json(input temp-table tt-pl-pump:default-buffer-handle, input "pl-pump") .
-  run parse-json(input temp-table tt-pump-nozzle:default-buffer-handle, input "pump-nozzle") .
-  run parse-json(input temp-table tt-pl-pump-nozzle:default-buffer-handle, input "pl-pump-nozzle") .
-  run parse-json(input temp-table tt-pl-level:default-buffer-handle, input "pl-level") .
-  run parse-json(input temp-table tt-pl-gds:default-buffer-handle, input "pl-gds") .
-  run parse-json(input temp-table tt-pl-gds-pump:default-buffer-handle, input "pl-gds-pump") .
-  run parse-json(input temp-table tt-gds-prod:default-buffer-handle, input "tt-gds-prod") .
-  
-  /* Delete all objects created by this procedure to avoid memory leaks */
-  DELETE OBJECT myResultObj NO-ERROR.
-  DELETE OBJECT results-array NO-ERROR.
-  DELETE OBJECT myJsonObj NO-ERROR.
-  DELETE OBJECT myParser    NO-ERROR.
-  
-  for each tt-gds-prod no-lock :
-    find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-    if not available ub.prod-bc
-    then do :
-      undo, return error ("Нет короткого кода " + tt-gds-prod.b-str) .
-    end.
-    find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-    if not available ub.bar-code
-    then do :
-      undo, return error ("Нет бар-кода для короткого кода " + tt-gds-prod.b-str) .
-    end.
-    find first ub.goods no-lock where ub.goods.gds-code = ub.bar-code.gds-code no-error.
-    if not available ub.goods
-    then do :
-      undo, return error ("Нет товара с коротким кодом " + tt-gds-prod.b-str) .
-    end.
-  end. 
-  
-  put stream log-stream unformatted now "   Начинаем загрузку топологии..." skip .
-  
-  for each tt-pump no-lock :
-    put stream log-stream unformatted "ТРК №" string(tt-pump.pump-code) skip .
-    run pumpav in this-procedure
-      ( input v-cntxt-obj-type
-       ,input v-cntxt-obj-code
-       ,input tt-pump.pump-code
-      ) no-error.
-    if error-status:error then do:
-       undo, return error return-value.
-    end.
-  end.
-  
-  for each tt-nozzle no-lock :
-    put stream log-stream unformatted "Пистолет №" string(tt-nozzle.nozzle-code) skip .
-    run nozzleav (input v-cntxt-obj-type,
-                        v-cntxt-obj-code,
-                        tt-nozzle.nozzle-code) no-error.
-    if error-status:error then do:
-      undo, return error return-value.
-    end.
-  end.
-  
-  for each tt-pump-nozzle no-lock :
-    put stream log-stream unformatted "Связка ТРК-Пистолет №" string(tt-pump-nozzle.pump-code) "-" string(tt-pump-nozzle.nozzle-code) skip .
-    run pumpnzav in this-procedure ( input v-cntxt-obj-type
-                                     ,input v-cntxt-obj-code
-                                     ,input tt-pump-nozzle.pump-code
-                                     ,input tt-pump-nozzle.nozzle-code
-                                     ,input tt-pump-nozzle.is-meas
-                                     ,input ""
-                        ) no-error.
-    if error-status:error then do:
-       undo, return error return-value.
-    end.
-  end.
-  
-  for each tt-place no-lock :
-    if tt-place.status_ = "удал" then next . /* Удаленные не загружаем */
-    put stream log-stream unformatted "Резервуар координата1 " string(tt-place.loc1) skip .
-    run ref/place01.p
-      ( input-output v-rep-rec
-      , input {&add-def}
-      , input yes /*silent*/
-      , input v-cntxt-obj-type
-      , input v-cntxt-obj-code
-      , input 0
-      , input tt-place.loc1
-      , input tt-place.loc2
-      , input tt-place.loc3
-      , input tt-place.loc4
-      , input tt-place.pl-name
-      , input tt-place.ps
-      , input tt-place.add-qnty
-      , input tt-place.is-meas
-      , input tt-place.max-qnty
-      , input tt-place.issue-year
-      , input tt-place.start-date
-      , input yes
-      ) no-error.
-    if error-status:error then 
-    do:
-      undo, return error return-value.
-    end.
-    find first ub.place no-lock where recid(ub.place) = v-rep-rec .
-    
-    for each tt-place-attr no-lock where tt-place-attr.obj-type = tt-place.obj-type
-                                     and tt-place-attr.obj-code = tt-place.obj-code
-                                     and tt-place-attr.pl-code  = tt-place.pl-code :
-      run placelib_write-attr  
-        (input tt-place-attr.attr-code
-        ,input v-cntxt-obj-code
-        ,input v-cntxt-obj-type
-        ,input ub.place.pl-code
-        ,input tt-place-attr.attr-value
-        ,output v-ok      )
-      no-error.   
-      if error-status:error then 
-      do:
-        undo, return error return-value.
-      end.                              
-    end.
-    
-    for each tt-pl-level no-lock where tt-pl-level.obj-type = tt-place.obj-type
-                                   and tt-pl-level.obj-code = tt-place.obj-code
-                                   and tt-pl-level.pl-code  = tt-place.pl-code :
-      create ub.pl-level.
-      assign
-        ub.pl-level.obj-type  = v-cntxt-obj-type
-        ub.pl-level.obj-code  = v-cntxt-obj-code
-        ub.pl-level.pl-code   = ub.place.pl-code
-        ub.pl-level.pl-level  = tt-pl-level.pl-level
-        ub.pl-level.pl-qnty   = tt-pl-level.pl-qnty
-      .
-    end.
-     
-    for each tt-pl-gds no-lock where tt-pl-gds.obj-type = tt-place.obj-type
-                                 and tt-pl-gds.obj-code = tt-place.obj-code
-                                 and tt-pl-gds.pl-code  = tt-place.pl-code,
-    first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-pl-gds.gds-code : 
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
-      then do :
-        undo, return error "No short-code" .
-      end.
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
-      end.
-      run trg/plgdpmvc.p (
-          input  v-cntxt-obj-type,
-          input  v-cntxt-obj-code,
-          input  ub.place.pl-code,
-          input  ub.bar-code.gds-code,
-          output v-ok) no-error.
-      if error-status:error then 
-      do:
-/*          message                                            */
-/*              "Ошибка при привязке товара к резервуару." skip*/
-/*              return-value skip                              */
-/*              error-status:get-message(1)                    */
-/*              view-as alert-box error.                       */
-          undo, return error return-value.
-      end.
-      if not v-ok then 
-      do:
-/*          if return-value <> "" then                       */
-/*              message return-value view-as alert-box ERROR.*/
-/*          undo , next .                                    */
-      end.
-      
-    end. 
-    
-    for each tt-pl-pump no-lock where tt-pl-pump.obj-type   = tt-place.obj-type
-                                  and tt-pl-pump.obj-code   = tt-place.obj-code
-                                  and tt-pl-pump.pl-code    = tt-place.pl-code :
-      put stream log-stream unformatted "Связка Резервуар-ТРК №" string(ub.place.loc1) "-" string(tt-pl-pump.pump-code) skip .                              
-      run plpumpav in this-procedure
-               (input v-cntxt-obj-type,
-                input v-cntxt-obj-code,
-                input ub.place.pl-code,
-                input tt-pl-pump.pump-code) no-error.  
-      if error-status:error then do:
-         undo, return error return-value.
-      end.                                      
-    end.  
-    
-    for each tt-pl-pump-nozzle no-lock where  tt-pl-pump-nozzle.obj-type   = tt-place.obj-type
-                                          and tt-pl-pump-nozzle.obj-code   = tt-place.obj-code
-                                          and tt-pl-pump-nozzle.pl-code    = tt-place.pl-code :     
-/*      find first tt-pl-gds-pump where tt-pl-gds-pump.obj-type = tt-pl-pump-nozzle.obj-type and          */
-/*                                              tt-pl-gds-pump.obj-code = tt-pl-pump-nozzle.obj-code and  */
-/*                                              tt-pl-gds-pump.pl-code = tt-pl-pump-nozzle.pl-code and    */
-/*                                              tt-pl-gds-pump.pump-code = tt-pl-pump-nozzle.pump-code and*/
-/*                                              tt-pl-gds-pump.status_ = 'тек'                            */
-/*                                              no-lock no-error.                                         */
-/*      if not available tt-pl-gds-pump                                                                   */
-/*      then do:                                                                                          */
-/*        next. /* Переносим только текущие связки рез-трк-пистолет */                                    */
-/*      end.                                                                                              */
-      put stream log-stream unformatted "Связка Резервуар-ТРК-Пистолет №" string(ub.place.loc1) "-" string(tt-pl-pump-nozzle.pump-code) "-" string(tt-pl-pump-nozzle.nozzle-code) skip . 
-      run plpmnzav in this-procedure
-        ( input v-cntxt-obj-type
-         ,input v-cntxt-obj-code
-         ,input ub.place.pl-code
-         ,input tt-pl-pump-nozzle.pump-code
-         ,input tt-pl-pump-nozzle.nozzle-code
-        ) no-error.
-      if error-status:error then do:
-         undo, return error return-value.
-      end.
-    end.   
-    
-    for each tt-pl-gds-pump where tt-pl-gds-pump.obj-type = tt-place.obj-type and
-                                  tt-pl-gds-pump.obj-code = tt-place.obj-code and
-                                  tt-pl-gds-pump.pl-code = tt-place.pl-code,
-    first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-pl-gds-pump.gds-code :
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
-      then do :
-        undo, return error "No short-code" .
-      end.
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
-      end.
-      find first pl-gds-pump exclusive-lock where pl-gds-pump.obj-type = v-cntxt-obj-type
-                                              and pl-gds-pump.obj-code = v-cntxt-obj-code
-                                              and pl-gds-pump.pl-code  = ub.place.pl-code  
-                                              and pl-gds-pump.gds-code = ub.bar-code.gds-code   
-                                              and pl-gds-pump.pump-code = tt-pl-gds-pump.pump-code   
-                                              no-error.
-      if available pl-gds-pump
-      then do :
-        pl-gds-pump.status_ = tt-pl-gds-pump.status_ .
-      end.                                                          
-    end.
-                                                                                                              
-  end.
-  
-  put stream log-stream unformatted now "   Топология загружена!" skip .
-end procedure.
-
-procedure load_pumpdoc :
-  define variable v-doc-code as character no-undo .
-  define variable v-recid as recid no-undo .
-  
-  empty temp-table tt-gds-prod .
-  empty temp-table tt-place-loc .
-  
-  cmd = substitute ("&1 &2/THGetInfo?GetPumpDoc >&3", search ("exe/curl.exe"), v-addr, "pumpdoc-temp.json").
-  os-command silent value (cmd).
-  run fix-codepage_ (input "pumpdoc-temp.json") .
-  
-  myParser = NEW ObjectModelParser().
-  myJsonObj = CAST(myParser:ParseFile(search("pumpdoc.json")), JsonObject).
-  
-  run parse-json(input temp-table tt-icnt-doc:default-buffer-handle, input "icnt-doc") .
-  run parse-json(input temp-table tt-icnt-line:default-buffer-handle, input "icnt-line") .
-  run parse-json(input temp-table tt-gds-prod:default-buffer-handle, input "tt-gds-prod") .
-  run parse-json(input temp-table tt-place-loc:default-buffer-handle, input "tt-place-loc") .
-  
-  DELETE OBJECT myResultObj NO-ERROR.
-  DELETE OBJECT results-array NO-ERROR.
-  DELETE OBJECT myJsonObj NO-ERROR.
-  DELETE OBJECT myParser    NO-ERROR.
-  
-  put stream log-stream unformatted now "   Начинаем загрузку инвентаризации счётчиков ТРК..." skip .
-      
-  for each tt-icnt-doc no-lock :
-    put stream log-stream unformatted "Номер документа в 15.0   " tt-icnt-doc.doc-code skip .
-    for each tt-icnt-line exclusive-lock where tt-icnt-line.doc-code = tt-icnt-doc.doc-code :
-      find first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-icnt-line.gds-code no-error.
-      if not available tt-gds-prod
-      then do :
-        undo, return error "No gds-prod" .
-      end.
-       
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
-      then do :
-        undo, return error "No short-code" .
-      end.
-      
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
-      end.
-      
-      find first tt-place-loc no-lock where tt-place-loc.pl-code = tt-icnt-line.pl-code no-error.
-      if not available tt-place-loc
-      then do :
-        undo, return error "No place-loc" .
-      end.
-      
-      find first ub.place no-lock where ub.place.loc1 = tt-place-loc.loc1 no-error.
-      if not available ub.place
-      then do :
-        undo, return error "No place" .
-      end.
-      
-      assign
-        tt-icnt-line.obj-code = v-cntxt-obj-code
-        tt-icnt-line.obj-type = v-cntxt-obj-type
-        tt-icnt-line.gds-code = ub.bar-code.gds-code
-        tt-icnt-line.pl-code  = ub.place.pl-code
-      .
-    end.
-    run str/icntdoc1.p (
-                     INPUT {&add-def}
-                    ,input yes /*p-silent*/
-                    ,input-output v-recid
-                    ,INPUT ""
-                    ,input v-cntxt-obj-type
-                    ,input v-cntxt-obj-code
-                    ,input v-cntxt-host-code-obj
-                    ,input {&icnt-doc}
-                    ,input {&TDEICNT_Inv}
-                    ,INPUT tt-icnt-doc.wrkr
-                    ,INPUT tt-icnt-doc.agnt
-                    ,INPUT tt-icnt-doc.boss
-                    ,INPUT tt-icnt-doc.doc-date
-                    ,input tt-icnt-doc.meas-el-cnt
-                    ,input tt-icnt-doc.state-el-cnt
-                    ,input tt-icnt-doc.state-mh-cnt
-                    ,input tt-icnt-doc.PS
-                    ,input tt-icnt-doc.creid
-                    ,input '':U /*p-ptrlcheck*/
-                    ,input table tt-icnt-line
-                     ) NO-ERROR.
-    if error-status:error then do:
-      undo, return error return-value.
-    end.
-    run str/icntdoc2.p ( INPUT v-recid
-                 ,INPUT yes /*p-silent*/
-                 ) NO-ERROR.
-    if error-status:error then do:
-      undo, return error return-value.
-    end.             
-  end.
-  
-  put stream log-stream unformatted now "   Инвентаризация счётчиков ТРК загружена!" skip .
-
-end procedure.
-
-procedure parse-json :
-  define input parameter pBuff as handle.
-  define input parameter p-array-name as character.
-  define variable v-data-type as character no-undo .
-  
-  results-array = myJsonObj:GetJsonArray(p-array-name) no-error.
-  if error-status:error then return.
-  iLength = results-array:LENGTH.
-  DO iCount = 1 TO iLength:
-      myResultObj = results-array:GetJsonObject(iCount).
-
-      pBuff:buffer-create () .
-      do vI = 1 to pBuff:num-fields:
-        v-data-type = pBuff:buffer-field[vI]:data-type .
-        case v-data-type :
-          when "character" then do:
-            pBuff:buffer-field[vI]:buffer-value = myResultObj:GetCharacter(pBuff:buffer-field[vI]:name) no-error .
-          end.
-          when "integer" then do:
-            pBuff:buffer-field[vI]:buffer-value = integer(myResultObj:GetCharacter(pBuff:buffer-field[vI]:name)) no-error .
-          end.
-          when "decimal" then do:
-            pBuff:buffer-field[vI]:buffer-value = decimal(myResultObj:GetCharacter(pBuff:buffer-field[vI]:name)) no-error .
-          end.
-          when "logical" then do:
-            pBuff:buffer-field[vI]:buffer-value = logical(myResultObj:GetCharacter(pBuff:buffer-field[vI]:name)) no-error .
-          end.
-          when "date" then do:
-            pBuff:buffer-field[vI]:buffer-value = date(myResultObj:GetCharacter(pBuff:buffer-field[vI]:name)) no-error .
-          end.
-        end.
-      end.
-  END.
-  
-end procedure .
-
-procedure fix-codepage_ :
-  define input parameter p-file as character no-undo .
-  define variable vline as char no-undo .
-  define variable vline2 as char no-undo .
-  define variable v-out-file as character no-undo .
-  
-  case p-file :
-    when "schem-temp.json" then v-out-file = "schem.json" .
-    when "pumpdoc-temp.json" then v-out-file = "pumpdoc.json" .
-    when "cashdesk-temp.json" then v-out-file = "cashdesk.json" .
-    when "price-temp.json" then v-out-file = "price.json" .
-  end case.
-  
-  input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
-  output STREAM lsOUT to value(v-out-file).
-  repeat:
-    vline2 = vline.
-    import STREAM lsIN unformatted vline.
-    vLine = replace(vline, chr(4), "|") .
-    if vline2 = vline and length(vline2) < 3 then leave.
-    put STREAM lsOUT unformatted  vline skip .
-  end.
-  input STREAM lsIN close.
-  output STREAM lsOUT close.
-end procedure.  
 
 procedure pcall-log-file :
 define input  parameter p-message as character no-undo .
@@ -1523,3 +741,23 @@ define input  parameter p-message as character no-undo .
   end.
 
 end procedure. /* pcall-log-file */
+
+procedure pcall-log-file-err :
+define input  parameter p-message as character no-undo .
+  do
+  on error undo, return error return-value
+  :
+    put stream err-stream unformatted p-message skip .
+
+  end.
+
+end procedure. /* pcall-log-file */
+
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+finally:
+unsubscribe   to "write-log"     .
+unsubscribe   to "write-log-err" .
+delete object mutil no-error.
+end finally. 

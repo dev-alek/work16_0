@@ -14,7 +14,6 @@ Author: Bakhtadze Natalya
 Creation date: 12/08/03
 
 */
-
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
@@ -52,10 +51,11 @@ or
 {&cd-buffer}.pos-type = {&cd-type-magia-xml}
 or
   ({&cd-buffer}.pos-type = {&cd-type-ibm-xml}
+or ({&cd-buffer}.pos-type = {&cd-type-Autotank}
   and
   {&cd-buffer}.autonomy = integer({&cd-self}))
   /*ibm-xml тоже хочет нам слать ответы*/
-  ))
+  )))
 then do:
   if {&cd-buffer}.pos-type = {&cd-type-magia-xml} then do:
     &if "{&called}" = "in-ov"

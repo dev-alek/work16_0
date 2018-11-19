@@ -1705,32 +1705,30 @@ procedure first-line-tog2-html :
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:80px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>                        
                       </tr>
                     <tr>
-                      <td colspan="18" >&2</td>
+                      <td colspan="16" >&2</td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      <td colspan="16" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
+                      <td colspan="16" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
                     </tr>
                     <tr>
-                      <td colspan="18"> Смены  с &3  по &4 </td>
+                      <td colspan="16"> Смены  с &3  по &4 </td>
                     </tr>
                     <tr>
-                      <td colspan="18"> Закрыта &5 </td>
+                      <td colspan="16"> Закрыта &5 </td>
                     </tr>
                     <tr>
-                      <td colspan="18"> Старший смены: &6 </td>
+                      <td colspan="16"> Старший смены: &6 </td>
                     </tr>
                     <tr>
-                      <td colspan="18"> Операторы: &7 </td>
+                      <td colspan="16"> Операторы: &7 </td>
                     </tr>
                     <tr>
-                    <td colspan="18" style="height:30px;"></td>
+                    <td colspan="16" style="height:30px;"></td>
                     </tr>                    
                     </thead>'
             ,
@@ -1881,6 +1879,7 @@ procedure first-line-tog2-html :
             ).
         output stream OutStr-html close.    
     end.
+    
     if v-param-code = 3 then 
     do:
         if v-report-result = no then 

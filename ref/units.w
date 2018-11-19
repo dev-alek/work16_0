@@ -191,8 +191,8 @@ ASSIGN
 ON CHOOSE OF b-add-unit IN FRAME d-units /* Добавить */
 DO:
 { gbl/chk-actg.i
-v-cntxt-db-num
-v-cntxt-userid
+ibs.th.gbl.gbl-var:g#db-num  
+ibs.th.gbl.gbl-var:g#userid  
 {&action-head-code-main}
 'actn_unit_update':U
 {&cntxt-global}
@@ -228,8 +228,8 @@ END.
 ON CHOOSE OF b-change IN FRAME d-units /* Изменить */
 DO:
 { gbl/chk-actg.i
-v-cntxt-db-num
-v-cntxt-userid
+ibs.th.gbl.gbl-var:g#db-num  
+ibs.th.gbl.gbl-var:g#userid  
 {&action-head-code-main}
 'actn_unit_update':U
 {&cntxt-global}
@@ -389,9 +389,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
    -------------------------------------------------------------------- */
-    b-select:visible IN FRAME {&frame-name} = as-ref .
-    b-add-unit:visible IN FRAME {&frame-name} = ( not as-ref ) AND v-cntxt-db-num = 0 .
-    b-change:visible In FRAME {&frame-name} = ( v-cntxt-db-num = 0 ) AND not as-ref.
+    b-select:visible   IN FRAME {&frame-name} = as-ref .
+    b-add-unit:visible IN FRAME {&frame-name} = ( not as-ref ) AND ibs.th.gbl.gbl-var:g#db-num = 0 .
+    b-change:visible   In FRAME {&frame-name} = b-add-unit:visible IN FRAME {&frame-name} .
     ENABLE  br-units b-exit
                     b-select    WHEN b-select:visible
                     b-help     WHEN b-help:visible

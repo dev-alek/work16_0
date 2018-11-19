@@ -33,6 +33,7 @@ field doc-qnty as decimal
 field sign as integer
 field rec-type as integer /*топливо  = 1 нетопливо = 0*/
 field gds-type as integer /*топливо  = 1 товары = 2 услуги = 3*/
+field density as decimal
 field price-base as decimal
 field price-service as decimal
 field jjp_ as integer

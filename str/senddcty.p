@@ -294,6 +294,9 @@ if error-status:error then do:
 end.
 
   finally :
+      output to value(log-file-name) append. // если файла нет
+      put skip.
+      output close.
 { str/cdviewlg.i
 "'!!!При отсылке информации на кассы произошли ошибки!!!'"
 log-file-name not-delete }

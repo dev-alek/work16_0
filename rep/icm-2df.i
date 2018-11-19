@@ -54,6 +54,7 @@ FIELD qnty1 as decimal FORMAT "->>>>9.99"
 FIELD qnty2 as decimal FORMAT "->>>>9.99"
 FIELD density as decimal FORMAT "9.999"
 FIELD temperature as decimal FORMAT ">9.99"
+FIELD naturalloss as decimal FORMAT ">9.99"
 FIELD is-fact as logical
 FIELD ii as integer
 INDEX pi IS UNIQUE PRIMARY

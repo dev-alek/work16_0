@@ -44,6 +44,15 @@ on error   undo main-block, return error substitute('actnrtd error main-block,&1
 on end-key undo main-block, return error substitute('actnrtd end-key main-block,&1', return-value )
 :
 
+  define VARIABLE v-db-list   as character no-undo .
+  if ub.action-role-item.db-num = 0 then do:
+    v-db-list = "0" .
+  end. 
+  if g#db-num <> 0 then do:
+    v-db-list = "0" .
+  end.   
+  else v-db-list = STRING (ub.action-role-item.db-num) .
+
   FOR EACH  buf_action-role-item-gds-grp
       where buf_action-role-item-gds-grp.db-num                = ub.action-role-item.db-num
       and   buf_action-role-item-gds-grp.action-head-code      = ub.action-role-item.action-head-code
@@ -101,16 +110,45 @@ if not g#news then do:
                 , error-status :get-message ( 1 ) ).
         end.
     
-    
-  run nws/cmd-del.p
-    ( input {&table_action-role-item}
-      ,input (buffer ub.action-role-item:handle)
-      ,input "":U
-    ) no-error .
-  if error-status :error then do:
-    undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
-  end.
 end.  
+  find first ub.global-state-attr no-lock where ub.global-state-attr.attr-code = "action-gbl" and ub.global-state-attr.attr-value = "yes" and ub.global-state-attr.gls-id = ub.action-role-item.db-num no-error .
+  if available (ub.global-state-attr) then 
+  do:
+    if not g#news then 
+    do:
+      run nws/cmd-del.p
+        ( input {&table_action-role-item}
+        ,input (buffer ub.action-role-item:handle)
+        ,input v-db-list
+        ) no-error .
+      if error-status :error then 
+      do:
+        undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+      end.
+    end.
+  end.
+  else 
+  do:
+     
+    if not g#news and ub.action-role-item.db-num <> 0 then 
+    do:
+      run nws/cmd-del.p
+        ( input {&table_action-role-item}
+        ,input (buffer ub.action-role-item:handle)
+        ,input v-db-list
+        ) no-error .
+      if error-status :error then 
+      do:
+        undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+      end.
+    end.
+  end.
+
+
+
+
+
+    
     if g#oxml = yes
     then do:
     run str/calloxml.p (

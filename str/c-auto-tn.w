@@ -207,7 +207,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(78.52) SKIP(20.05)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "История средств измерения"
+         TITLE "История изменения автотранспорта"
          CANCEL-BUTTON b-quit.
 
 

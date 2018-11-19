@@ -32,8 +32,15 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
 &global-define place-dens-prov         "dens-prov"         /*плотность при поверке резервуара*/
 &global-define place-virtual     "place-virtual"     /*виртуальный резервуар*/
 &global-define place-twice-code   "place-twice-code" /*Код сдвоенного резервуара*/
-&global-define list-place-attr   'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code':u /*список атрибутов резервуара*/
-  
+&global-define place-local        "place-local"     /*Расположение резервуара*/
+&global-define place-error-mass   "place-error-mass" /*Погрешность измерения массы*/
+&global-define place-asi-sertif   "place-asi-sertif" /*АСИ сертифицированно*/
+&global-define place-rvd-dnsty    "place-rvd-dnsty" /*РВД плотности*/
+&global-define place-rvd-lvl      "place-rvd-lvl" /*РВД уровня*/
+&global-define place-rvd-tmp      "place-rvd-tmp" /*РВД температуры*/
+
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp':u /*список атрибутов резервуара*/
+
   define buffer buf_place      for ub.place .
   define buffer buf_c-place    for ub.c-place .
   define buffer buf_place-attr for ub.place-attr .
@@ -59,6 +66,12 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
     field place-rel-error as decimal
     field pl-twice-code   like place.loc1
     field place-dens-prov as decimal
+    field place-local     as integer
+    field place-asi-sertif  as integer
+    field place-error-mass  as decimal
+    field place-rvd-dnsty   as integer
+    field place-rvd-lvl     as integer
+    field place-rvd-tmp     as integer
     index pi as primary unique
     pl-code
     .
@@ -187,6 +200,45 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
               do:
                 if v-ok then tt-place-attr.pl-twice-code = v-value .
               end.
+            when {&place-error-mass} then 
+              do: 
+                  if v-ok then tt-place-attr.place-error-mass = decimal(v-value) .
+              end.
+          when {&place-local} then 
+              do: 
+                  if v-ok then do:
+                    if v-value = "1" then tt-place-attr.place-local = 0 .
+                    else tt-place-attr.place-local = 1 .
+                  end.
+              end.
+          when {&place-asi-sertif} then 
+              do: 
+                  if v-ok then do:
+                    if v-value = "yes" then tt-place-attr.place-asi-sertif = 1 .
+                    else tt-place-attr.place-asi-sertif = 0 .
+                  end.
+              end.                                        
+          when {&place-rvd-dnsty} then 
+              do: 
+                  if v-ok then do:
+                    if v-value = "yes" then tt-place-attr.place-rvd-dnsty = 1 .
+                    else tt-place-attr.place-rvd-dnsty = 0 .
+                  end.
+              end.                                        
+          when {&place-rvd-lvl} then 
+              do: 
+                  if v-ok then do:
+                    if v-value = "yes" then tt-place-attr.place-rvd-lvl = 1 .
+                    else tt-place-attr.place-rvd-lvl = 0 .
+                  end.
+              end.                                    
+          when {&place-rvd-tmp} then 
+              do: 
+                  if v-ok then do:
+                    if v-value = "yes" then tt-place-attr.place-rvd-tmp = 1 .
+                    else tt-place-attr.place-rvd-tmp = 0 .
+                  end.
+              end.                                                  
           end case.
         end.
       end.
@@ -207,6 +259,12 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("rel-er"   , string-mth (tt-place-attr.place-rel-error)).
         sw:write-data-element ("dnsty"    , string-mth (tt-place-attr.place-dens-prov)).
         sw:write-data-element ("mi-code"  , string(tt-place-attr.place-Si)).
+        sw:write-data-element ("position"  , string(tt-place-attr.place-local)).
+        sw:write-data-element ("certified"  , string(tt-place-attr.place-asi-sertif)).
+        sw:write-data-element ("pipe-er"  , string-mth(tt-place-attr.place-error-mass)).
+        sw:write-data-element ("rvd-dnsty"  , string(tt-place-attr.place-rvd-dnsty)).
+        sw:write-data-element ("rvd-lvl"  , string(tt-place-attr.place-rvd-lvl)).
+        sw:write-data-element ("rvd-tmp"  , string(tt-place-attr.place-rvd-tmp)).
       end.
       sw:write-data-element ("gd-code", string(tt-place.gds-code)).
       sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").

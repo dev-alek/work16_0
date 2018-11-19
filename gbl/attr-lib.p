@@ -1,5 +1,5 @@
 /*
-
+  
 $Revision$
 $Author$
 $Date$
@@ -906,6 +906,29 @@ end.
 &scop manual-edit-attr-cli-for-close-fo  1
 &scop batch-edit-attr-cli-for-close-fo  1
 
+/* Атрибут клиента - Климатическая группа:*/
+&scop type-attr-cli-clim-grp {&type-char}
+&scop format-attr-cli-clim-grp "X(21)"
+&scop label-attr-cli-clim-grp "Климатическая группа:"
+&scop tooltip-attr-cli-clim-grp "Климатическая группа:"
+&scop user-can-edit-attr-cli-clim-grp  true
+&scop output-display-attr-cli-clim-grp  true
+&scop other-attr-cli-clim-grp 'spr=clntattr-cli-clim-grp':u
+&scop news-attr-cli-clim-grp true
+&scop manual-edit-attr-cli-clim-grp  1
+&scop batch-edit-attr-cli-clim-grp  1
+
+/* Атрибут клиента - Выведен из эксплуатации:*/
+&scop type-attr-cli-decommissioned {&type-log}
+&scop format-attr-cli-decommissioned "+/"
+&scop label-attr-cli-decommissioned "Выведен из эксплуатации"
+&scop tooltip-attr-cli-decommissioned "Выведен из эксплуатации"
+&scop user-can-edit-attr-cli-decommissioned  true
+&scop output-display-attr-cli-decommissioned  true
+&scop other-attr-cli-decommissioned '':u
+&scop news-attr-cli-decommissioned true
+&scop manual-edit-attr-cli-decommissioned  1
+&scop batch-edit-attr-cli-decommissioned  1
 
 /* сюда добавлять новые атрибуты клиентов */
 
@@ -1089,6 +1112,10 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-temp-full-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-temp-full-code}
+      &scop attr-code attr-cli-decommissioned
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1233,6 +1260,10 @@ procedure clntattr-tooltip :
       &scop attr-code attr-auto-tank-for
       {&attr-temp-code}
       &scop attr-code attr-cli-for-close-fo
+      {&attr-temp-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-temp-code}
+      &scop attr-code attr-cli-decommissioned
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1586,6 +1617,10 @@ procedure clntattr-news :
       {&attr-news-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-news-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-news-code}
+      &scop attr-code attr-cli-decommissioned
+      {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -1909,6 +1944,60 @@ procedure clntattr-cli-for-close-fo :
 end procedure.  /* clntattr-auto-tank-for */
 
 
+procedure clntattr-cli-clim-grp :
+  define input parameter parparentproc as handle no-undo .
+  define input parameter p-obj-type like ub.clients.obj-type no-undo .
+  define input parameter p-obj-code like ub.clients.obj-code no-undo .
+  define input-output parameter p-value as character no-undo .
+  define output parameter p-setted as logical no-undo .
+
+  define variable v-code  as character no-undo.
+  define variable v-value as character no-undo .
+
+  define variable v-dlg as class ibs.th.ref.dclimgrp no-undo .
+  define variable v-err-msg as character no-undo .  
+
+  do on error undo, throw :
+    v-dlg = new ibs.th.ref.dclimgrp().
+    if num-entries (p-value) = 3 then do :
+      assign
+      v-dlg:climGrp     = entry(1, p-value)
+      v-dlg:beginSummer = entry(2, p-value)
+      v-dlg:beginWinter = entry(3, p-value)
+      .
+    end .
+    v-dlg:ShowModalDialog().
+    if v-dlg:DialogResult = System.Windows.Forms.DialogResult:Ok then do:
+      assign
+        p-value  = substitute("&1,&2,&3", v-dlg:climGrp, v-dlg:beginSummer, v-dlg:beginWinter)
+        p-setted = yes
+      .
+    end .
+  
+    v-err-msg = "" .  
+    catch exAppErrors as class Progress.Lang.AppError :
+      v-err-msg = exAppErrors:ReturnValue .
+      if v-err-msg > "" then . else do :
+        v-err-msg = exAppErrors:GetMessage(1) .
+        if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+      end .
+    end catch .
+    catch exProErrors as class Progress.Lang.ProError :
+      v-err-msg = exProErrors:GetMessage(1) . 
+      if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+    end catch .
+    catch exAnyErrors as class Progress.Lang.Error:
+      v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+    end catch .
+    finally :
+      if valid-object (v-dlg) then delete object v-dlg .
+      if v-err-msg <> "" then undo, throw new Progress.Lang.AppError(
+        substitute("&1 {&FILE-NAME} &2", v-err-msg, "clntattr-cli-clim-grp")
+      ) .
+    end finally .
+  end.
+end procedure.  /* clntattr-cli-clim-grp */
+
 
 procedure clntattr-vat-register :
 
@@ -2082,6 +2171,10 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-manual-edit-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-manual-edit-code}
+      &scop attr-code attr-cli-decommissioned
+      {&attr-manual-edit-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -2140,6 +2233,10 @@ procedure clntattr-batch-edit :
       &scop attr-code attr-auto-tank-for
       {&attr-batch-edit-code}
       &scop attr-code attr-cli-for-close-fo
+      {&attr-batch-edit-code}
+      &scop attr-code attr-cli-clim-grp
+      {&attr-batch-edit-code}
+      &scop attr-code attr-cli-decommissioned
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутво клиентов */
@@ -2849,7 +2946,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-nakl_par   true
 &scop output-display-attr-nakl_par  true
 &scop other-attr-nakl_par           'spr-ext=gbl\naklpa1.w':U
-&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical':U
+&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character':U
 &scop prop-label-list-attr-nakl_par 'Дата закрытия периода~
 ,Дата факт = Дате документа (для внешних ПН РН и МФ )~
 ,Тип заведения НДС по умолчанию~
@@ -2871,8 +2968,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 ,В ПН Обязательно указывать ГТД для товаров с испортным производителем~
 ,Запрещен приход при превышении максимальных остатков~
 ,Помарочный учет движения алкогольной продукции~
+,Обязательные атрибуты ПН~
 '
-&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol'
+&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN'
 &scop global-attr-nakl_par true
 &scop host-attr-nakl_par   true
 &scop shop-attr-nakl_par   true
@@ -2900,6 +2998,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-nakl_par_gtd-to-imp-prod_tooltip   (gtd-to-imp-prod) Запрещено закрытие на факт ПН` если не указана ГТД для товара` у производителя которого стоит атрибут - Импортный производитель
 &scop attr-nakl_par_exc-max-qnty_tooltip   (exc-max-qnty) Запрещено закрытие на факт ПН` если после закрытия остатки товара будут больше` чем установленные максимальные остатки на объекте
 &scop attr-nakl_par_mark-alchol_tooltip   (mark-alchol) Помарочный учет движения алкогольной продукции
+&scop attr-nakl_par_attr-PN_tooltip  (attr-PN) Обязательные атрибуты ПН
 &scop prop-tooltip-list-attr-nakl_par {&attr-nakl_par_date-close-period_tooltip},~
 {&attr-nakl_par_stfactdt_tooltip},~
 {&attr-nakl_par_type-vat_tooltip},~
@@ -2920,7 +3019,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 {&attr-nakl_par_round-vat-sum_tooltip},~
 {&attr-nakl_par_gtd-to-imp-prod_tooltip},~
 {&attr-nakl_par_exc-max-qnty_tooltip},~
-{&attr-nakl_par_mark-alchol_tooltip}
+{&attr-nakl_par_mark-alchol_tooltip},~
+{&attr-nakl_par_attr-PN_tooltip}
 &scop level-way-attr-nakl_par "obj,host,global"
 &scop up-way-attr-nakl_par "nakl_par,nakl_par,nakl_par"
 
@@ -4136,6 +4236,7 @@ logical~
 ,integer~
 ,character~
 ,integer~
+,integer~
 ':U
 &scop prop-label-list-attr-report-glob '~
 Есть отчеты Actuate~
@@ -4148,9 +4249,10 @@ logical~
 ,Код группы <Алкогольные товары>~
 ,Сортировка типов касс.пл-жей в отчете по АВТОКУШ~
 ,Формат сменного отчета~
+,Алгоритм расчета плотности в отчетах~
 '
 
-&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format'
+&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens'
 &scop global-attr-report-glob true
 &scop host-attr-report-glob false
 &scop shop-attr-report-glob false
@@ -4167,6 +4269,7 @@ logical~
 &scop attr-report-glob-alcgrpgd_tooltip   (alcgrpgd)  Глобальный. Для Отчета <Декларация об объемах розничной продажи алкогольной продукции (Калуга)> нужно выбрать из классификатора групп номер группы с АЛКОГОЛЕМ
 &scop attr-report-glob-cplot_tooltip      (cplot)     Глобальный. Перечень типов касс.платежей - билетов лотереи АВТОКУШ. Порядок вывода типов касс.платежа в отчетах <<Отчет по АВТОКУШ>> соответствует порядку перечисления кодов в этом параметре
 &scop attr-report-glob-shift-rep-format_tooltip  (rep-shift-format) Глобальный. Формат сменного отчета
+&scop attr-report-glob-cdens_tooltip      (cdens)     Глобальный. По средней - плотность чека брать из документа продажи. По чекам - в каждом чеке плотность считается по выставленному алгоритму.
 &scop prop-tooltip-list-attr-report-glob  {&attr-report-glob-actuate_tooltip}~
 ,{&attr-report-glob-ardecldt_tooltip}~
 ,{&attr-report-glob-rep-sort_tooltip}~
@@ -4176,7 +4279,8 @@ logical~
 ,{&attr-report-glob-sumvals_tooltip}~
 ,{&attr-report-glob-alcgrpgd_tooltip}~
 ,{&attr-report-glob-cplot_tooltip}~
-,{&attr-report-glob-rep-shift-format_tooltip}
+,{&attr-report-glob-rep-shift-format_tooltip}~
+,{&attr-report-glob-cdens_tooltip}
 
 &scop level-way-attr-report-glob ",,global"
 &scop up-way-attr-report-glob ",,report-glob"
@@ -4399,9 +4503,9 @@ character~
 &scop user-can-edit-attr-mercur   true
 &scop output-display-attr-mercur  true
 &scop other-attr-mercur           'spr-ext=gbl\mercur.w':U
-&scop prop-type-list-attr-mercur  'character,character,character,character,logical,logical,integer,character,integer':U
-&scop prop-label-list-attr-mercur 'APIKey,Логин входа в ИС,Логин,Пароль,Разрешено вводить код ВСД вручную,Разрешено закрывать документ без указ. ВСД,Тип взаимодействия,Настройки для печати QR-кода,Сервер'
-&scop prop-list-attr-mercur       'apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server'
+&scop prop-type-list-attr-mercur  'character,character,character,character,logical,logical,integer,character,integer,character,character,character':U
+&scop prop-label-list-attr-mercur 'APIKey,Логин входа в ИС,Логин,Пароль,Разрешено вводить код ВСД вручную,Разрешено закрывать документ без указ. ВСД,Тип взаимодействия,Настройки для печати QR-кода,Сервер,Адрес прокси-сервера,логин,пароль'
+&scop prop-list-attr-mercur       'apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server,proxy-addres,proxy-login,proxy-pswd'
 &scop global-attr-mercur true
 &scop host-attr-mercur true
 &scop shop-attr-mercur true
@@ -4444,7 +4548,7 @@ character~
 &scop user-can-edit-attr-petrol   true
 &scop output-display-attr-petrol  true
 &scop other-attr-petrol 'spr-ext=adm\shattrpt.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character':U
+&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character,character,decimal,decimal,decimal,decimal':U
 &scop prop-label-list-attr-petrol '~
 Расхождение в инвентаризации по сверке делать без учета погрешности измерения,~
 Алгоритм вычисления плотности для продаж,~
@@ -4461,7 +4565,12 @@ character~
 Алгоритм принятия топлива к учету,~
 Обязательный выбор автотранспорта из справочника,~
 Погрешность изм массы для горизонтальных резер,~
-Погрешность изм массы для вертикальных резер~
+Погрешность изм массы для вертикальных резер,~
+Обязательные поля доп.инфо ПН,~
+Отклонение объема,~
+Отклонение температуры,~
+Отклонение плотности,~
+Отклонение воды~
 '
 &scop global-attr-petrol true
 &scop host-attr-petrol true
@@ -5747,6 +5856,18 @@ end procedure.
 &scop manual-edit-attr-ptrl-without-rvs 6
 &scop batch-edit-attr-ptrl-without-rvs  6
 
+&scop type-attr-group-np {&type-char}
+&scop format-attr-group-np  "X(50)"
+&scop label-attr-group-np   "Группа НП"
+&scop tooltip-attr-group-np   "Группа НП"
+&scop user-can-edit-attr-group-np  true
+&scop output-display-attr-group-np  true
+&scop other-attr-group-np  "spr-ext=ref\group-np.w/spr-param=group-np/check=gds-attr_check-group-np"
+&scop news-attr-group-np true
+&scop copy-attr-group-np  true
+&scop manual-edit-attr-group-np 6
+&scop batch-edit-attr-group-np  6
+
 &scop type-attr-office-type {&type-char}
 &scop format-attr-office-type  "X(50)"
 &scop label-attr-office-type   "Тип услуги"
@@ -5758,6 +5879,18 @@ end procedure.
 &scop copy-attr-office-type  true
 &scop manual-edit-attr-office-type 1
 &scop batch-edit-attr-office-type  1
+
+&scop type-attr-item-matter-mark {&type-int}
+&scop format-attr-item-matter-mark  ">9"
+&scop label-attr-item-matter-mark   "Признак предмета расчета"
+&scop tooltip-attr-item-matter-mark   "Признак предмета расчета"
+&scop user-can-edit-attr-item-matter-mark  true
+&scop output-display-attr-item-matter-mark  true
+&scop other-attr-item-matter-mark  "spr-ext=ref\gds-imm.w/spr-param=item-matter-mark/check=gds-attr_check-item-matter-mark"
+&scop news-attr-item-matter-mark true
+&scop copy-attr-item-matter-mark  true
+&scop manual-edit-attr-item-matter-mark 1
+&scop batch-edit-attr-item-matter-mark  1
 
 &scop type-attr-is-oss-payment {&type-log}
 &scop format-attr-is-oss-payment  "+/ "
@@ -6125,6 +6258,18 @@ end procedure.
 &scop    manual-edit-attr-image-list 0
 &scop     batch-edit-attr-image-list 0
 
+/* Доп. ед. изм. */
+&scop type-attr-MercUnits {&type-char}
+&scop format-attr-MercUnits  "X(100)"
+&scop label-attr-MercUnits   "Дополнительные единицы измерения"
+&scop tooltip-attr-MercUnits   "Дополнительные единицы измерения"
+&scop user-can-edit-attr-MercUnits  false
+&scop output-display-attr-MercUnits  false
+&scop other-attr-MercUnits  ""
+&scop news-attr-MercUnits true
+&scop copy-attr-MercUnits  true
+&scop manual-edit-attr-MercUnits 0
+&scop batch-edit-attr-MercUnits  0
 
 
 /* сюда добавлять новые параметры атрибутов товаров */
@@ -6200,6 +6345,10 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-office-type
       {&attr-temp-full-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-temp-full-code}
+      &scop attr-code attr-group-np
+      {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-full-code}
       &scop attr-code attr-ban-bonus
@@ -6257,6 +6406,8 @@ procedure gds-attr-name :
       &scop attr-code attr-fuel-type
       {&attr-temp-full-code}
       &scop attr-code attr-image-list
+      {&attr-temp-full-code}
+      &scop attr-code attr-MercUnits
       {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -6290,6 +6441,10 @@ do
       {&attr-temp-code}
       &scop attr-code attr-office-type
       {&attr-temp-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-temp-code}
+      &scop attr-code attr-group-np
+      {&attr-temp-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-temp-code}
       &scop attr-code attr-ban-bonus
@@ -6347,6 +6502,8 @@ do
       &scop attr-code attr-fuel-type
       {&attr-temp-code}
       &scop attr-code attr-image-list
+      {&attr-temp-code}
+      &scop attr-code attr-MercUnits
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -6613,6 +6770,10 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-office-type
       {&attr-news-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-news-code}
+      &scop attr-code attr-group-np
+      {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-news-code}
       &scop attr-code attr-ban-bonus
@@ -6670,6 +6831,8 @@ procedure gds-attr-news :
       &scop attr-code attr-fuel-type
       {&attr-news-code}
       &scop attr-code attr-image-list
+      {&attr-news-code}
+      &scop attr-code attr-MercUnits
       {&attr-news-code}
       
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -6697,6 +6860,10 @@ procedure gds-attr-copy :
       {&attr-copy-code}
       &scop attr-code attr-office-type
       {&attr-copy-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-copy-code}
+      &scop attr-code attr-group-np
+      {&attr-copy-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-copy-code}
       &scop attr-code attr-ban-bonus
@@ -6754,6 +6921,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-fuel-type
       {&attr-copy-code}
       &scop attr-code attr-image-list
+      {&attr-copy-code}
+      &scop attr-code attr-MercUnits
       {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -6930,6 +7099,89 @@ on error undo, return error return-value
       if lookup(p-value, {&prop-list-attr-office-type}) = 0 then do:
         p-error-code = "Значение атрибута должно быть одним из списка {&prop-list-attr-office-type}".
       end.
+     
+     if p-error-code <> "" then
+        return p-error-code.
+    end.
+  END CASE.
+end.
+assign
+p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-item-matter-mark :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+do
+on error undo, return error return-value
+:
+  CASE p-mode:
+    when {&add-def} then do:
+      
+      if    lookup(p-value, {&prop-list-attr-item-matter-mark}) = 0  
+      then do:
+         p-error-code =  "Значение атрибута должно быть одним из списка {&prop-list-attr-item-matter-mark}" .
+      end.
+     
+     if p-error-code <> "" then
+        return p-error-code.
+    end.
+  END CASE.
+end.
+assign
+p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-group-np :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+define buffer buf_goods for ub.goods.
+define buffer buf_gds-host-attr for ub.gds-host-attr.
+
+  define variable v-is-petrolium as logical no-undo .
+  define variable v-is-pieces    as logical no-undo .
+
+do
+on error undo, return error return-value
+:
+  CASE p-mode:
+    when {&add-def} then do:
+     find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+      if not available buf_goods then do:
+        return error substitute("(Еще) Нет товара с кодом &1, невозможно выполнить проверку корректности установки атрибута"
+                                , p-gds-code).
+      end.
+{ str/is-petrl.i buf_goods.artic buf_goods.prod-type buf_goods.prod-code v-is-petrolium v-is-pieces no-error }
+    if error-status:error then do:
+      message
+        substitute("&1 &2", error-status:get-message(1) , return-value )
+      view-as alert-box error.
+      return.
+    end.
+    if not v-is-petrolium then do:
+      message
+        substitute("Товар-топливо должен иметь топливную единицу измерения для задания диапазона плотности")
+      view-as alert-box error.
+      return.
+    end.
+    if v-is-pieces then do:
+      message
+        substitute("Товар-топливо должен иметь дробную единицу измерения для задания диапазона плотности")
+      view-as alert-box error.
+      return.
+    end.
      
      if p-error-code <> "" then
         return p-error-code.
@@ -7171,6 +7423,10 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-office-type
       {&attr-manual-edit-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-manual-edit-code}
+      &scop attr-code attr-group-np
+      {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-manual-edit-code}
       &scop attr-code attr-ban-bonus
@@ -7229,6 +7485,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-image-list
       {&attr-manual-edit-code}
+      &scop attr-code attr-MercUnits
+      {&attr-manual-edit-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара &1", p-code ).
@@ -7255,6 +7513,10 @@ do
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}
       &scop attr-code attr-office-type
+      {&attr-batch-edit-code}
+      &scop attr-code attr-item-matter-mark
+      {&attr-batch-edit-code}
+      &scop attr-code attr-group-np
       {&attr-batch-edit-code}
       &scop attr-code attr-is-loyalty-payment
       {&attr-batch-edit-code}
@@ -7307,6 +7569,8 @@ do
       &scop attr-code attr-fuel-type
       {&attr-batch-edit-code}
       &scop attr-code attr-image-list
+      {&attr-batch-edit-code}
+      &scop attr-code attr-MercUnits
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -7925,7 +8189,7 @@ false~
 ,false'
 &scop from-ubd-cda-IBM-XML_operative '~
 true~
-,false'
+,true'
 &scop hist-cda-IBM-XML_operative '~
 false~
 ,true'
@@ -11691,58 +11955,82 @@ procedure gds-o-normal-wastage-value :
 do
 on error undo, return error
 :
-  define input parameter p-gds-code  as integer      no-undo.
-  define input parameter p-obj-type  as character    no-undo.
-  define input parameter p-obj-code  as integer      no-undo.
-  define input parameter p-date      as date      no-undo.
-  define output parameter p-normal-wastage-winter as decimal      no-undo init ?. /*ест. убыль зимой*/
-  define output parameter p-normal-wastage-summer as decimal      no-undo init ?. /*ест. убыль летом*/
-  define output parameter p-normal-wastage-date   as decimal      no-undo init ?. /*ест. убыль на указанную дату если p-date не ?*/
+  define input-output parameter objNormWast as class ibs.th.ref.normwastsub no-undo.
+
   define variable v-mes as character no-undo .
+  
+  if not valid-object (objNormWast)
+  then do:
+     message
+      skip "objNormWast is null reference"
+      view-as alert-box error .
+    undo, return error .
+  end.
+  
+  if not valid-object (objNormWast:ParGdsOAttr)
+  then do:
+     message
+      skip "objNormWast:ParGdsOAttrObj is null reference"
+      view-as alert-box error .
+    undo, return error .
+  end.
   
   define buffer buf_goods for ub.goods.
   define buffer buf_normal-wastage-gds-obj-attr      for ub.gds-obj-attr.
   
   find first buf_goods no-lock where
-             buf_goods.gds-code = p-gds-code no-error .
+             buf_goods.gds-code = objNormWast:ParGdsOAttr:GdsCode no-error .
   if not avail buf_goods then do:
     message
-      skip "Не удалось найти товар с кодом" p-gds-code
+      skip "Не удалось найти товар с кодом" objNormWast:ParGdsOAttr:GdsCode
       view-as alert-box error .
     undo, return error .
   end.
 
   find first buf_normal-wastage-gds-obj-attr no-lock
-      where buf_normal-wastage-gds-obj-attr.gds-code = p-gds-code
+      where buf_normal-wastage-gds-obj-attr.gds-code = objNormWast:ParGdsOAttr:GdsCode
         and buf_normal-wastage-gds-obj-attr.attr-code = {&attr-normal-wastage-o}
-        and buf_normal-wastage-gds-obj-attr.obj-type  = p-obj-type
-        and buf_normal-wastage-gds-obj-attr.obj-code  = p-obj-code
+        and buf_normal-wastage-gds-obj-attr.obj-type  = objNormWast:ParGdsOAttr:ObjType
+        and buf_normal-wastage-gds-obj-attr.obj-code  = objNormWast:ParGdsOAttr:ObjCode
   no-error .
   if available buf_normal-wastage-gds-obj-attr then do:
 
     define variable v-temp-str1 as character no-undo .
     v-temp-str1 = buf_normal-wastage-gds-obj-attr.attr-value.
     
-    if num-entries (v-temp-str1, ";") = 2 then do:
-      assign
-        p-normal-wastage-summer   =  decimal(trim(entry(1, v-temp-str1, ";":U)))
-        p-normal-wastage-winter   =  decimal(trim(entry(2, v-temp-str1, ";":U)))
-      .
-    end.
-    else do:
-      assign
-        p-normal-wastage-summer   =  decimal(trim(v-temp-str1))
-        p-normal-wastage-winter   =  decimal(trim(v-temp-str1))
-      .
-    end.
-    if p-date <> ?
+    case num-entries (v-temp-str1, ";"):
+      when 2 then do:
+        assign
+          objNormWast:NormalWastageSummer =  decimal(trim(entry(1, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageWinter =  decimal(trim(entry(2, v-temp-str1, ";":U)))
+        .        
+      end.
+      when 4 then do:
+        assign
+          objNormWast:NormalWastageTransSummer   =  decimal(trim(entry(1, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageTransWinter   =  decimal(trim(entry(2, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageSummer   =  decimal(trim(entry(3, v-temp-str1, ";":U)))
+          objNormWast:NormalWastageWinter   =  decimal(trim(entry(4, v-temp-str1, ";":U)))
+        .        
+      end.
+      when 0 then do:
+        assign
+          objNormWast:NormalWastageSummer   =  decimal(trim(v-temp-str1))
+          objNormWast:NormalWastageWinter   =  decimal(trim(v-temp-str1))
+        .       
+      end.
+    end case.
+
+    if objNormWast:ParGdsOAttr:OnDate <> ?
     then do:
-      if 3 < month (p-date) and month (p-date) < 10
+      if 3 < month (objNormWast:ParGdsOAttr:OnDate) and month (objNormWast:ParGdsOAttr:OnDate) < 10
       then do:
-        p-normal-wastage-date = p-normal-wastage-summer.
+        objNormWast:NormalWastageDate = objNormWast:NormalWastageSummer.
+        objNormWast:NormalWastageTransDate = objNormWast:NormalWastageTransSummer.
       end.
       else do:
-        p-normal-wastage-date = p-normal-wastage-winter.
+        objNormWast:NormalWastageDate = objNormWast:NormalWastageWinter.
+        objNormWast:NormalWastageTransDate = objNormWast:NormalWastageTransWinter.
       end.
        
     end.
@@ -13422,6 +13710,49 @@ end procedure.
 &scop manual-edit-attr-esys-ftp-path-out 0
 &scop batch-edit-attr-esys-ftp-path-out 0
 
+&scop           type-attr-esys-cert-sign {&type-log}
+&scop         format-attr-esys-cert-sign "+/-"
+&scop          label-attr-esys-cert-sign "Использовать цифровую подпись"
+&scop        tooltip-attr-esys-cert-sign "Использовать цифровую подпись при обмене с внешней системой"
+&scop  user-can-edit-attr-esys-cert-sign true
+&scop output-display-attr-esys-cert-sign false
+&scop          other-attr-esys-cert-sign '':u
+&scop           news-attr-esys-cert-sign yes
+&scop    manual-edit-attr-esys-cert-sign 0
+&scop     batch-edit-attr-esys-cert-sign 0
+
+&scop           type-attr-esys-cert-sign-subject {&type-char}
+&scop         format-attr-esys-cert-sign-subject "X(256)"
+&scop          label-attr-esys-cert-sign-subject "Владелец подписи (Субъект)"
+&scop        tooltip-attr-esys-cert-sign-subject "Владелец подписи (Субъект)"
+&scop  user-can-edit-attr-esys-cert-sign-subject true
+&scop output-display-attr-esys-cert-sign-subject false
+&scop          other-attr-esys-cert-sign-subject '':u
+&scop           news-attr-esys-cert-sign-subject yes
+&scop    manual-edit-attr-esys-cert-sign-subject 0
+&scop     batch-edit-attr-esys-cert-sign-subject 0
+
+&scop           type-attr-esys-cert-sign-issuer {&type-char}
+&scop         format-attr-esys-cert-sign-issuer "X(256)"
+&scop          label-attr-esys-cert-sign-issuer "Издатель подписи"
+&scop        tooltip-attr-esys-cert-sign-issuer "Издатель подписи"
+&scop  user-can-edit-attr-esys-cert-sign-issuer true
+&scop output-display-attr-esys-cert-sign-issuer false
+&scop          other-attr-esys-cert-sign-issuer '':u
+&scop           news-attr-esys-cert-sign-issuer yes
+&scop    manual-edit-attr-esys-cert-sign-issuer 0
+&scop     batch-edit-attr-esys-cert-sign-issuer 0
+
+&scop           type-attr-esys-cert-file-ext {&type-char}
+&scop         format-attr-esys-cert-file-ext "X(6)"
+&scop          label-attr-esys-cert-file-ext "Расширение имени файла"
+&scop        tooltip-attr-esys-cert-file-ext "Расширение имени файла с цифровой подписью"
+&scop  user-can-edit-attr-esys-cert-file-ext true
+&scop output-display-attr-esys-cert-file-ext false
+&scop          other-attr-esys-cert-file-ext '':u
+&scop           news-attr-esys-cert-file-ext yes
+&scop    manual-edit-attr-esys-cert-file-ext 0
+&scop     batch-edit-attr-esys-cert-file-ext 0
 
 /* сюда добавлять новые параметры атрибутов ВС */
 
@@ -13493,7 +13824,14 @@ procedure ext-system-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-esys-ftp-path-out
       {&attr-temp-full-code}
-
+      &scop attr-code attr-esys-cert-sign
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-sign-subject
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-sign-issuer
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-file-ext
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов ВС */
       otherwise do:
@@ -13527,7 +13865,14 @@ procedure ext-system-attr-tooltip :
       {&attr-temp-code}
       &scop attr-code attr-esys-ftp-path-out
       {&attr-temp-code}
-
+      &scop attr-code attr-esys-cert-sign
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-sign-subject
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-sign-issuer
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-file-ext
+      {&attr-temp-code}
 
 
       /* сюда добавлять новые параметры атрибутов ВС */
@@ -13757,7 +14102,14 @@ procedure ext-system-attr-news :
       {&attr-news-code}
       &scop attr-code attr-esys-ftp-path-out
       {&attr-news-code}
-
+      &scop attr-code attr-esys-cert-sign
+      {&attr-news-code}
+      &scop attr-code attr-esys-cert-sign-subject
+      {&attr-news-code}
+      &scop attr-code attr-esys-cert-sign-issuer
+      {&attr-news-code}
+      &scop attr-code attr-esys-cert-file-ext
+      {&attr-news-code}
 
 
       /* сюда добавлять новые параметры атрибутов ВС */

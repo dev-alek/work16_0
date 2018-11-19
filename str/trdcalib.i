@@ -1238,8 +1238,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob fillin_height-trdcattr-seals-condition 1
 &glob type-trdcattr-seals-condition {&type-char}
 &glob format-trdcattr-seals-condition "X(20)"
-&glob label-trdcattr-seals-condition "Пломбы, их состояние"
-&glob tooltip-trdcattr-seals-condition "Пломбы, их состояние"
+&glob label-trdcattr-seals-condition "Пломбы и их состояние"
+&glob tooltip-trdcattr-seals-condition "Пломбы и их состояние"
 &glob user-can-edit-trdcattr-seals-condition true
 &glob output-display-trdcattr-seals-condition true
 &glob other-trdcattr-seals-condition '':u
@@ -1298,6 +1298,20 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob other-trdcattr-time-pour '':u
 &glob news-trdcattr-time-pour true
 &glob sort-trdcattr-time-pour 190
+
+
+/* Топливная накладная */
+&glob fillin_width-trdcattr-is-fuel 3
+&glob fillin_height-trdcattr-is-fuel 1
+&glob type-trdcattr-is-fuel {&type-log}
+&glob format-trdcattr-is-fuel "yes/no"
+&glob label-trdcattr-is-fuel "Признак топливной накладной"
+&glob tooltip-trdcattr-is-fuel "Признак топливной накладной"
+&glob user-can-edit-trdcattr-is-fuel false
+&glob output-display-trdcattr-is-fuel false
+&glob other-trdcattr-is-fuel '':u
+&glob news-trdcattr-is-fuel true
+&glob sort-trdcattr-is-fuel 100
 
 &if "{1}" = "class" &then
 &else

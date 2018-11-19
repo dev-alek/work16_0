@@ -65,6 +65,9 @@ define variable v-password            as character no-undo .
 define variable v-initiator           as character no-undo .
 define variable v-type-connect        as integer   no-undo .
 define variable v-server              as integer   no-undo .
+define variable v-proxy-login         as character no-undo .
+define variable v-proxy-pswd          as character no-undo .
+define variable v-proxy-addres        as character no-undo .
 
 define variable v-appId           as character no-undo .
 define variable v-status_         as character no-undo .
@@ -77,6 +80,7 @@ define buffer buf_ext-system        for ub.ext-system .
 define buffer buf_parts             for ub.parts .
 define buffer buf_vsd               for ub.vsd .
 define buffer buf_clients           for ub.clients .
+define buffer buf_esys-all-attr     for ub.esys-all-attr .
 
 define variable vsdStorage as class vsdtostorage.
 define variable vsdsTHObj as class ibs.th.str.mercury.vsdsubs.
@@ -223,6 +227,17 @@ ASSIGN
 
 /* ************************  Control Triggers  ************************ */
 
+&Scoped-define SELF-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Журнал ВСД */
+DO:
+    APPLY "END-ERROR":U TO SELF.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME RADIO-SET-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-1 Dialog-Frame
 ON VALUE-CHANGED OF RADIO-SET-1 IN FRAME Dialog-Frame
@@ -277,6 +292,19 @@ DO:
         when "password" then v-password = thbjattr_thbj-attr.property-value-character .
         when "type-connect" then v-type-connect = thbjattr_thbj-attr.property-value-integer .
         when "server" then v-server = thbjattr_thbj-attr.property-value-integer .
+        when "proxy-addres" then v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+        when "proxy-login" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+          end.
+        end. 
+        when "proxy-pswd" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+          end.
+        end. 
       end case.
     end.
     
@@ -308,7 +336,7 @@ DO:
       next clients_.
     end.        
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
     
     objThObj:ObjType = clients.obj-type.
     objThObj:ObjCode = clients.obj-code.
@@ -362,11 +390,24 @@ DO:
             if entry(1, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
             or entry(2, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
             then do :
-              vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
-              vsdsTHObj:VsdObjCurr:MsgErr = "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." .
-              vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
-              message "UUID ВСД: " vsdsTHObj:VsdObjCurr:UUID skip "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." skip "Запрос не отправлен." view-as alert-box .
-              next vsd_.
+              if vsdsTHObj:VsdObjCurr:CliType = 'маг'
+              then do :
+                if entry(2, buf2_ext-classif.charKey_Two, {&delim-cmd}) = ""
+                then do :
+                  vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
+                  vsdsTHObj:VsdObjCurr:MsgErr = "Не заполнен GUID предприятия поставщика." .
+                  vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
+                  message "UUID ВСД: " vsdsTHObj:VsdObjCurr:UUID skip "Не заполнены GUID предприятия поставщика." skip "Запрос не отправлен." view-as alert-box .
+                  next vsd_.
+                end.
+              end.
+              else do :
+                vsdsTHObj:VsdObjCurr:Status_ = vsdStsType:IsErrCheck .
+                vsdsTHObj:VsdObjCurr:MsgErr = "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." .
+                vsdStorage:updateDB(vsdsTHObj:VsdObjCurr) .
+                message "UUID ВСД: " vsdsTHObj:VsdObjCurr:UUID skip "Не заполнены GUID'ы хоз. субъекта поставщика и/или предприятия поставщика." skip "Запрос не отправлен." view-as alert-box .
+                next vsd_.
+              end.
             end .
           end.
           else do :
@@ -383,7 +424,7 @@ DO:
                                               and ub.esys-all-attr.attr-value = vsdsTHObj:VsdObjCurr:UUID
                                               and ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID
                                               and ub.esys-all-attr.key2 = 1
-                                              and ub.esys-all-attr.key3 <> "Запрос отклонён"
+                                              and ub.esys-all-attr.key3 = "Запрос отправлен"
                                               no-error .
         if available ub.esys-all-attr then next vsd_ .
         
@@ -419,7 +460,7 @@ DO:
                                               and ub.esys-all-attr.attr-value = vsdsTHObj:VsdObjCurr:UUID
                                               and ub.esys-all-attr.key1 = vsdsTHObj:VsdObjCurr:ID
                                               and ub.esys-all-attr.key2 = 2
-                                              and ub.esys-all-attr.key3 <> "Запрос отклонён"
+                                              and ub.esys-all-attr.key3 = "Запрос отправлен"
                                               no-error .
         if available ub.esys-all-attr then next vsd_ .
         
@@ -432,7 +473,7 @@ DO:
           message "ВСД с UUID "  vsdsTHObj:VsdObjCurr:UUID  " не привязана к партии!!!" view-as alert-box.
           next vsd_.
         end. 
-        mercury:processIncomingConsignment(vsdsTHObj, buf_parts.cli-qnty, v-appId, v-status_, v-Msg) .
+        mercury:processIncomingConsignment(vsdsTHObj, buf_parts.qnty, buf_parts.fact-qnty, v-appId, v-status_, v-Msg) .
         if v-status_ <> "ACCEPTED"
         then do :
           v-Msg = trim(trim(v-Msg, chr(10))) .
@@ -495,6 +536,19 @@ DO:
         when "password" then v-password = thbjattr_thbj-attr.property-value-character .
         when "type-connect" then v-type-connect = thbjattr_thbj-attr.property-value-integer .
         when "server" then v-server = thbjattr_thbj-attr.property-value-integer .
+        when "proxy-addres" then v-proxy-addres = thbjattr_thbj-attr.property-value-character .
+        when "proxy-login" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
+          end.
+        end. 
+        when "proxy-pswd" then do:
+          if thbjattr_thbj-attr.property-value-character <> ""
+          then do :
+            {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
+          end.
+        end. 
       end case.
     end.
     
@@ -529,13 +583,14 @@ DO:
     end. 
       
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+    mercury:vsdId = ub.esys-all-attr.key1.  
   
     case ub.esys-all-attr.key2 :  
       when 1
       then do :  
         objKeyRec = new keyrec () .
-        find first buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value no-error.
+        find first buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value and buf_vsd.ID =  ub.esys-all-attr.key1 no-error.
         if not available buf_vsd then next .
         objKeyRec:GenRowKeyr(buf_vsd.part-key, ?, "ub", ?, ?, v-part-rowid, v-tbl-name) .
         delete object objKeyRec no-error .
@@ -544,7 +599,7 @@ DO:
         then do :
           objKeyRec = new keyrec () .
           true_vsd_:
-          for each buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value :
+          for each buf_vsd no-lock where buf_vsd.UUID = ub.esys-all-attr.attr-value and buf_vsd.ID =  ub.esys-all-attr.key1 :
             objKeyRec:GenRowKeyr(buf_vsd.part-key, ?, "ub", ?, ?, v-part-rowid, v-tbl-name) .
             find first buf_parts no-lock where rowid (buf_parts) = v-part-rowid no-error.
             if available buf_parts
@@ -558,8 +613,9 @@ DO:
         then do :
           message "ВСД с UUID "  ub.esys-all-attr.attr-value  " не привязана к партии!!!" view-as alert-box.
           next.
-        end.                                      
-        mercury:receiveVetDoc(input ub.esys-all-attr.key7, input LC(ub.esys-all-attr.attr-value), input buf_parts.cli-qnty, output v-Status_, output v-Msg) . 
+        end.   
+        if not valid-object(vsdStsType) then vsdStsType = new vsdstatustype () .      
+        mercury:receiveVetDoc(input ub.esys-all-attr.key7, input LC(ub.esys-all-attr.attr-value), input buf_parts.qnty, input buf_parts.fact-qnty, input (buf_vsd.status_ = vsdStsType:IsUtilized), output v-Status_, output v-Msg) . 
         if v-Status_ = "COMPLETED"
         then ub.esys-all-attr.key3 = "Ответ получен" .
         else do :
@@ -598,6 +654,8 @@ DO:
     delete object mercury no-error .
   
   end.
+  
+  delete object vsdStsType no-error .
   
   bh-journal-mercury = journal:GetHndlTable().
   RUN enable_UI.
@@ -648,6 +706,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 /*    glog                    */
 /*  }                         */
 /*  if not glog then  return .*/
+
+  { gbl/diasize.i &browse-name=BROWSE-Journal-mercury }
+  run diasize_init in this-procedure .
 
   
   find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-mercury}) no-error.

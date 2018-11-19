@@ -60,6 +60,8 @@ define variable dr-list as character no-undo .
 define variable drcprank as character no-undo .
 define variable v-record as character no-undo .
 define variable v-found-maria-discnt as logical no-undo .
+define temp-table tt-cash-pay no-undo like cash-pay 
+index cdpay-code cdpay-code.
 
 /*PROCEDURE putc-gds.*/
 /*разнящийся вывод для разных типов касс*/
@@ -111,16 +113,25 @@ define buffer buf_cash-pay-attr for ub.cash-pay-attr.
       END. /* FOR EACh cash-pay*/
     end.
     else do:
-      _selective:
-      DO ii = 1 to NUm-ENTRIES(rid-list):
-        FIND FIRST ub.cash-pay No-LOCK WHERE
-                  recid(ub.cash-pay) = integer(entry(ii, rid-list)) No-ERROR.
-        IF avail ub.cash-pay then do:
-&scop metka _selective
-        {&check-cp-is-use}.
-          { str/putc-5.i }
-        end.
-      END.
+      if rid-list eq "*"
+      then  do:
+        create tt-cash-pay.
+        tt-cash-pay.cdpay-code = ?.
+        { str/putc-5.i &prefix = "tt-"} 
+        delete tt-cash-pay.
+      end.
+       else
+        _selective:
+        DO ii = 1 to NUm-ENTRIES(rid-list):
+          FIND FIRST ub.cash-pay No-LOCK WHERE
+                    recid(ub.cash-pay) = integer(entry(ii, rid-list)) No-ERROR.
+          IF avail ub.cash-pay then do:
+  &scop metka _selective
+          {&check-cp-is-use}.
+            { str/putc-5.i }
+          end.
+        END.
+       
     end.
 
   end.
@@ -139,7 +150,9 @@ log-file-name = p-log-file-name
 .
 
 { gbl/hostcode.i {&shop} i-obj-code v-host-code }
-if action = "D" then do:
+if     action = "D" 
+   and rid-list ne "*"
+then do:
   message
   "Вы действительно хотите удалить с кассы записи от типах кассовых платежей?"
   view-as alert-box QUESTION buttons YES-NO update glog.

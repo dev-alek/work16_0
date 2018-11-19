@@ -81,7 +81,8 @@ define variable v-upd-units as character no-undo .
 
 define variable v-is-ptrl   as character no-undo .
 define variable tt-density  as decimal   no-undo .
-
+define variable pl-j        as integer   no-undo .
+ 
 define buffer buf_trn-doc for ub.trn-doc .
 define buffer buf_pl-gds for ub.pl-gds .
 define buffer buf_place  for ub.place .
@@ -860,6 +861,8 @@ DO:
           ) .
     end.
     else do :
+        if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and pl-j = 1 
+          then v-mode = {&lookup}.
         run str/doc-pl.w
           ( input parparentproc
           , input v-mode
@@ -1190,7 +1193,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     v-upd-units     = p-upd-units
     v-for-upd-units = p-upd-units
   .
-
+  
+  pl-j = 0.
+  for each tt-doc-pl no-lock:
+    pl-j = pl-j + 1.  
+  end.
+  
   find first buf_trn-doc no-lock
     where buf_trn-doc.doc-code = p-doc-code
     .
@@ -1285,6 +1293,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               .
             end.
           end case.
+          pl-j = 0.
           for each tt-doc-pl
             where tt-doc-pl.gds-code = p-gds-code
               and tt-doc-pl.obj-code = buf_trn-doc.obj-code
@@ -1295,6 +1304,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             if p-upd-field = "rest":U
               or p-upd-field = "rest-fact":U
             then do:
+              pl-j = pl-j + 1.
 /*              if v-single-place = true then do:*/
 /*                if v-for-upd-units = "base":U then do:*/
 /*                  assign*/

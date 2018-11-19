@@ -352,9 +352,9 @@ on error undo stop-shift, return error return-value
   release buf_shift-obj no-error.
   if error-status:error then do:
     if not p-silent then do:
-      message
-      error-status:error skip
-      return-value view-as alert-box error .
+/*      message                               */
+/*      error-status:error skip               */
+/*      return-value view-as alert-box error .*/
       undo stop-shift, return error.
     end.
     else do:
@@ -474,50 +474,53 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         leave _v-jj.
       end.
     end. /*do v-jj = 1 to num-entries(v-entry0):*/
-    run gen-key-rec in this-procedure (
-                                      input  {&table_thbj-attr}
-                                    ,input (buffer buf_thbj-attr:handle)
-                                    ,output v-uniq-key-rec).
-   case v-entry:
-     when {&attr-rum_fdoc} then do:
-      run str/fdocrum.p
-        (
-        input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input {&fdoc-proc_work_fin-doc}
-        ,input 0 /*p-profile-id*/
-        ,input {&fdoc-proc_24} /*p-codex-id*/
-        ,input {&fdoc-proc_24_work_fin-doc_1} /*p-ruleset-id*/
-        ,input g#db-num        /*current-db-num*/
-        ,input v-uniq-key-rec
-        ,input v-shift-uniq-key-rec
-        ,input yes /*p-save*/
-        ) no-error .
-      end.
-     when {&attr-rum_rep} then do:
-      run rep/reprum.p
-        (
-        input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input {&rep-proc_rep-close-shift}
-        ,input 0 /*p-profile-id*/
-        ,input {&rep-proc_22} /*p-codex-id*/
-        ,input {&rep-proc_22_close-shift_5} /*p-ruleset-id*/
-        ,input 0 /*p-once-more*/
-        ,input g#db-num        /*current-db-num*/
-        ,input v-uniq-key-rec
-        ,input v-shift-uniq-key-rec + {&delim-par} + "" /*директория определяется внутри*/
-        ,input yes /*p-save*/
-        ) no-error .
-      end.
-    end case.
-    if error-status:error then do:
-      assign
-      v-rum-err = yes.
-      undo main-block, return error .
-    end.
+    if available buf_thbj-attr
+    then do:
+        run gen-key-rec in this-procedure (
+                                          input  {&table_thbj-attr}
+                                        ,input (buffer buf_thbj-attr:handle)
+                                        ,output v-uniq-key-rec).
+       case v-entry:
+         when {&attr-rum_fdoc} then do:
+          run str/fdocrum.p
+            (
+            input parparentproc
+            ,input p-parent-handle
+            ,input p-log-handle
+            ,input {&fdoc-proc_work_fin-doc}
+            ,input 0 /*p-profile-id*/
+            ,input {&fdoc-proc_24} /*p-codex-id*/
+            ,input {&fdoc-proc_24_work_fin-doc_1} /*p-ruleset-id*/
+            ,input g#db-num        /*current-db-num*/
+            ,input v-uniq-key-rec
+            ,input v-shift-uniq-key-rec
+            ,input yes /*p-save*/
+            ) no-error .
+          end.
+         when {&attr-rum_rep} then do:
+          run rep/reprum.p
+            (
+            input parparentproc
+            ,input p-parent-handle
+            ,input p-log-handle
+            ,input {&rep-proc_rep-close-shift}
+            ,input 0 /*p-profile-id*/
+            ,input {&rep-proc_22} /*p-codex-id*/
+            ,input {&rep-proc_22_close-shift_5} /*p-ruleset-id*/
+            ,input 0 /*p-once-more*/
+            ,input g#db-num        /*current-db-num*/
+            ,input v-uniq-key-rec
+            ,input v-shift-uniq-key-rec + {&delim-par} + "" /*директория определяется внутри*/
+            ,input yes /*p-save*/
+            ) no-error .
+          end.
+        end case.
+        if error-status:error then do:
+          assign
+          v-rum-err = yes.
+          undo main-block, return error .
+        end.
+     end.   
   end.
 end.
 end procedure. /* local */

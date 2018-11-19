@@ -38,7 +38,7 @@ on stop   undo, return error substitute( "&1. stop", vss-workfile )
 on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 :
   define variable v-key-rec as character no-undo .
-
+  define variable v-global-action as logical  no-undo .
   define buffer buf_sys-ctrl for ub.sys-ctrl .
   define buffer buf_db       for ub.db .
 
@@ -64,8 +64,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
          and g#news <> true
         )
   then do:
+  find first ub.global-state-attr no-lock where ub.global-state-attr.attr-code = "action-gbl" and ub.global-state-attr.attr-value = "yes" and ub.global-state-attr.gls-id = buf_sys-ctrl.db-num no-error .
+  if available (ub.global-state-attr) then 
+  do:
+    v-global-action = yes .
+  end.  
     if trim( p-db-list ) = "":U
       or p-db-list = ?
+      or (p-db-list = "0" and v-global-action = yes)
     then do:
       assign
         p-db-list = "":U

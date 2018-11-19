@@ -13,7 +13,7 @@
   ----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
-define input parameter p-filename   as character no-undo .
+define input parameter p-pack-data  as memptr no-undo . // с 26/IX-2018 xml-файл читается из memptr, а не из файла 
 define input parameter p-esys-id    as integer no-undo .
 define output parameter p-status_   as integer no-undo .
 define output parameter p-error     as character no-undo .
@@ -45,7 +45,7 @@ p-status_ = ? .
 create x-document hDoc.
 create x-noderef hRoot.
 
-hDoc:load("file",p-filename,false).
+hDoc:load("MEMPTR", p-pack-data, false).
 
 hDoc:get-document-element(hRoot).
 
@@ -83,7 +83,6 @@ then do :
     end.                                     
 end.
 
-os-delete value(p-filename) .
 
 procedure GetChildren :
   define input parameter hParent as handle .

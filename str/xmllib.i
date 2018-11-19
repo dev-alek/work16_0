@@ -829,13 +829,15 @@ end procedure. /* xmllib-parse-file */
 
 /*==========================================================================*/
 procedure xmllib-parse-progressive :
-define input parameter p-full-filename      as character        no-undo.
+define input parameter p-full-filename      as character no-undo .
+define input parameter p-pack-data          as memptr no-undo .
 define input parameter p-parse-first        as logical no-undo .
 define input parameter p-first-err          as logical no-undo .
 define output parameter p-parse-status as integer no-undo .
 
-define variable v-num-dirs              as integer      no-undo.
-define variable glog as logical   no-undo .
+define variable v-num-dirs              as integer no-undo .
+define variable glog                    as logical no-undo .
+define variable v-pack-size             as int64 no-undo .  
 
 do
 on error undo, return error
@@ -862,8 +864,14 @@ on error undo, return error
         .
     end.
     create sax-reader v-xmllib-sax-reader-handle.
-    assign
-    glog = v-xmllib-sax-reader-handle :set-input-source( "FILE":U, p-full-filename ) no-error.
+    
+    /* 23/VIII-2018 - если файл уже загружен в mem-ptr - читаем из mem-ptr,
+                      иначе читаем как раньше - из файла */
+    v-pack-size = get-size (p-pack-data) .
+    if v-pack-size > 0 then
+      glog = v-xmllib-sax-reader-handle :set-input-source( "MEMPTR":U, p-pack-data ) no-error.
+    else
+      glog = v-xmllib-sax-reader-handle :set-input-source( "FILE":U, p-full-filename ) no-error.
     if error-status :error
     or not glog
     then do:
@@ -880,6 +888,7 @@ on error undo, return error
                                                 ).
       undo, return error .
     end.
+    
     v-xmllib-sax-reader-handle :sax-parse-first( ) no-error.
   end. /*if p-parse-first then do:*/
   else do:

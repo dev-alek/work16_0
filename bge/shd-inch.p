@@ -41,6 +41,7 @@ define variable vss-description as character no-undo init "Инкрементальный экспо
 &scop version-string "15.0 " + replace( vss-revision + vss-date, "$", " " )
 
     define variable v-out-dir           as character    no-undo.
+    define variable v-out-dirR          as character    no-undo.
     define variable v-log-file-name     as character    no-undo.
     define variable v-log-string        as character    no-undo.
     define variable v-oper-num          as integer      no-undo.
@@ -62,15 +63,34 @@ for buf_temp_doc-code
   , buf_temp_pr-doc-num
 on error undo, return error
 :
-    run cur-time in this-procedure (
-          output v-today
-        , output v-time
+
+    if p-range <> 3
+    then do:
+        run wp-XMLWriteLog in this-procedure (
+            input v-log-file-name
+            , input 1
+            , input "Неверно заданы объекты для выгрузки."
+        ).
+        undo, return error .
+    end.
+
+    /* 06/IX-2018 Отчет-реестр должен выгружаться только в ГБД */
+    if ibs.th.gbl.gbl-var:g#db-num = 0 then
+    run bge-xml-out-dir2 in this-procedure (
+          output v-out-dir
+        , output v-out-dirR
+        , output v-log-file-name
     ).
+    else
     run bge-xml-out-dir in this-procedure (
           output v-out-dir
         , output v-log-file-name
     ).
     run bge-xml-init-ext-doc-type in this-procedure .
+    run cur-time in this-procedure (
+          output v-today
+        , output v-time
+    ).
     run bge-xml-read-config in this-procedure ( input v-today
                                               , input p-db-num
                                               ) no-error.
@@ -104,19 +124,7 @@ on error undo, return error
         , input 1
         , input substitute( "................с параметрами: ... надо ли выгружать чеки: &1", p-need-checks )
     ).
-    RUN init-temphost.
-    assign
-        v-log-string = ", по всем фирмам"
-    .
-    if p-range <> 3
-    then do:
-        run wp-XMLWriteLog in this-procedure (
-            input v-log-file-name
-            , input 1
-            , input "Неверно заданы объекты для выгрузки."
-        ).
-        undo, return error .
-    end.
+    // RUN init-temphost. 07/IX-2018 - не используется; заполняет temp-host и temp-obj
     for each temp-obj
     :
         delete temp-obj.
@@ -148,9 +156,11 @@ on error undo, return error
             undo, return error .
         end.
     end.
-    assign
-        v-log-string = ", по объектам: " + p-obj-list
-    .
+    v-log-string = if can-find (first temp-obj) then (", по объектам: " + p-obj-list) else ", по всем фирмам" .
+
+define variable v-is-found as logical no-undo .
+    v-is-found = false .
+     
     object-of-list:
     for each temp-obj
     :
@@ -165,11 +175,17 @@ on error undo, return error
               next object-of-list. /* пойдём дальше по списку объектов */
           end.
           
+        run wp-XMLWriteLog in this-procedure (
+              input v-log-file-name
+            , input 1
+            , input substitute( " > Экспорт документов по объекту &1&2", temp-obj.obj-type, temp-obj.obj-code)
+        ).
         run export-docs-by-object in this-procedure (
               input temp-obj.host-code
             , input temp-obj.obj-type
             , input temp-obj.obj-code
             , input v-out-dir
+            , input v-out-dirR
             , input v-log-file-name
         ) no-error.
         if error-status :error
@@ -183,6 +199,7 @@ on error undo, return error
             next object-of-list.
         end.
         
+        v-is-found = true .
         find current buf_clients-attr no-lock. /* снять блокировку */
     end. /* object-of-list: */
 
@@ -199,15 +216,23 @@ on error undo, return error
         run cb-fill_bge-xml_clients in this-procedure ( input temp-obj.obj-type
                                                       , input temp-obj.obj-code
                                                       ).
+        v-is-found = true .
     end.
     run wp-XMLWriteLog in this-procedure ( input v-log-file-name
                                          , input 1
                                          , input "Объекты добавлены в список контрагентов"
                                          ).
+    if v-is-found then                                    
     run wp-XMLWriteLog in this-procedure (
           input v-log-file-name
         , input 1
         , input substitute( "Данные выгружены в каталог &1 " , v-out-dir )
+    ).
+    else
+    run wp-XMLWriteLog in this-procedure (
+          input v-log-file-name
+        , input 1
+        , input "Отсутствуют данные для выгрузки"
     ).
 end.
 
@@ -217,6 +242,7 @@ define input parameter p-host-code      as integer          no-undo.
 define input parameter p-obj-type       as character        no-undo.
 define input parameter p-obj-code       as integer          no-undo.
 define input parameter p-out-dir        as character        no-undo.
+define input parameter p-out-dirR       as character        no-undo.
 define input parameter p-log-file-name  as character        no-undo.
 
     define variable v-xml-file-name         as character    no-undo.
@@ -240,11 +266,6 @@ do
 for buf_shift-obj
 on error undo, return error
 :
-    run wp-XMLWriteLog in this-procedure (
-          input p-log-file-name
-        , input 1
-        , input " > Экспорт документов по объекту " + p-obj-type + string( p-obj-code )
-    ).
 /*---S-------- Расчет архивов на объекте ------------------*/
     run wp-XMLWriteLog in this-procedure (
           input p-log-file-name
@@ -331,25 +352,26 @@ on error undo, return error
                                          , input 2
                                          , input substitute( "Последняя выгруженная смена: N &1 за &2 ...", v-start-shift-num, v-start-shift-date  )
                                          ).
+    run bge-xml-get-decimal-shift-num in this-procedure (
+              input v-start-shift-date
+            , input v-start-shift-num
+            , output v-start-date-decimal
+    ).
+        
+define variable v-is-found as logical no-undo .
+    v-is-found = false .
+            
     export-shifts:
     for each buf_shift-obj no-lock
        where buf_shift-obj.obj-type     = p-obj-type
          and buf_shift-obj.obj-code     = p-obj-code
          and buf_shift-obj.shift-date   >= v-start-shift-date
+         and buf_shift-obj.status_      = {&sht-closed}
     use-index pi
     on error  undo export-shifts, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
     on stop   undo export-shifts, return error substitute( "&1. stop", vss-workfile )
     on endkey undo export-shifts, return error substitute( "&1. endkey", vss-workfile )
     :
-        if buf_shift-obj.status_ <> {&sht-closed}
-        then do:
-            undo export-shifts, leave export-shifts.
-        end.
-        run bge-xml-get-decimal-shift-num in this-procedure (
-              input v-start-shift-date
-            , input v-start-shift-num
-            , output v-start-date-decimal
-        ).
         run bge-xml-get-decimal-shift-num in this-procedure (
               input buf_shift-obj.shift-date
             , input buf_shift-obj.shift-num
@@ -426,6 +448,14 @@ on error undo, return error
                 , output v-fact-order-to
                 , output v-docs-exists
             ).
+            run wp-XMLWriteLog (
+                              input p-log-file-name
+                            , input 1
+                            , input substitute( " Последний fact-order(shd-inch) &1. &2&3"
+                                                 , v-fact-order-to 
+                                                ,p-obj-type
+                                                ,p-obj-code                                               
+                                                )  ).
             if v-docs-exists = yes
             then do:
                 for each temp_ext-doc-type
@@ -476,10 +506,12 @@ on error undo, return error
                         run wp-XMLWriteLog (
                               input p-log-file-name
                             , input 1
-                            , input substitute( "&1. &2. &3."
+                            , input substitute( "&5&6 &1. &2. &3."
                                                 , return-value
                                                 , trim(error-status :get-message(1))
                                                 , trim(error-status :get-message(2))
+                                                ,p-obj-type
+                                                ,p-obj-code
                                                 )  ).
                     end.
                 end.        /* do v-oper-num = 1 to 16 */
@@ -506,6 +538,8 @@ on error undo, return error
                                         )  ).
             end.
             run xml-bge-write-footer in this-procedure ( input v-xml-file-name ).
+            v-is-found = true .
+            
             assign
                 v-prefix = substitute( "s_&1&2&3&4&5&6_"
                                         , substring( string( year( buf_shift-obj.shift-date ), "9999":U ), 3, 2 )
@@ -581,6 +615,84 @@ on error undo, return error
                 undo, return error.
             end.
             run xml-bge-write-footer in this-procedure ( input v-xml-file-name ).
+
+          if ibs.th.gbl.gbl-var:g#db-num = 0 then do :
+            assign
+                v-prefix = substitute( "r_&1&2&3&4&5&6_"
+                                        , substring( string( year( buf_shift-obj.shift-date ), "9999":U ), 3, 2 )
+                                        , string( month( buf_shift-obj.shift-date ), "99":U )
+                                        , string( day( buf_shift-obj.shift-date ), "99":U )
+                                        , string( buf_shift-obj.shift-num, "99":U )
+                                        , string( trim( buf_shift-obj.obj-type ), "X(3)":U )
+                                        , string( buf_shift-obj.obj-code, "99999":U )
+                                        )
+            .
+            run bge-xml-out-file in this-procedure (
+                  input p-out-dirR
+                , input v-prefix
+                , input no
+                , output v-xml-file-name
+                , output v-locked
+            ).
+            if v-locked = yes
+            then do:
+                run wp-XMLWriteLog in this-procedure (
+                      input p-log-file-name
+                    , input 1
+                    , input substitute( "*** Ошибка выгрузки: Файл выгрузки &1 заблокирован другим процессом.", v-xml-file-name )
+                ).
+                undo, return error .
+            end.
+            run bge-xml-write-header in this-procedure (
+                  input v-xml-file-name
+                , input v-xml-file-name + "xml"
+                , input {&version-string}
+                , input p-db-num
+                , input buf_shift-obj.shift-date
+                , input buf_shift-obj.shift-num
+                , input buf_shift-obj.shift-date
+                , input buf_shift-obj.shift-num
+                , input p-obj-list
+                , input "":U
+                , input no
+                , input no
+                , input no
+                , input no
+                , input no
+                , input no
+                , input no
+                , input no
+            ).
+            run bge/sht-reestr.p (
+              input p-obj-type
+            , input p-obj-code
+            , input buf_shift-obj.shift-date
+            , input buf_shift-obj.shift-num
+            , input v-xml-file-name
+            , input p-log-file-name
+            , input ? /* hEDT */
+            , input ? /* hCNT */
+            ) no-error.
+            if error-status :error
+            then do:
+              run wp-XMLWriteLog in this-procedure (
+                  input p-log-file-name
+                , input 1
+                , input substitute( "*** Ошибка экспорта реестра документов &1 &2. Смена  &3 от &4. &5. &6. &7."
+                                        , p-obj-type
+                                        , p-obj-code
+                                        , buf_shift-obj.shift-date
+                                        , buf_shift-obj.shift-num
+                                        , return-value
+                                        , error-status :get-message(1)
+                                        , error-status :get-message(2)
+                                        )
+              ).
+                undo, return error.
+            end.
+            run xml-bge-write-footer in this-procedure ( input v-xml-file-name ).
+          end . // end_of r_file (только для g#db-num = 0)
+
             { str/shiftnam.i
               buf_shift-obj.obj-type
               buf_shift-obj.obj-code
@@ -640,10 +752,17 @@ on error undo, return error
                                            ).
       undo, return error.
     end.
+            if v-is-found then
             run wp-XMLWriteLog (
                   input p-log-file-name
                 , input 2
                 , input substitute( "Смена: N &1 за &2 выгружена.", v-shift-name-num, buf_shift-obj.shift-date  )
+            ).
+            else
+            run wp-XMLWriteLog (
+                  input p-log-file-name
+                , input 2
+                , input substitute( "В смене: N &1 за &2 отсутствуют файлы для выгрузки.", v-shift-name-num, buf_shift-obj.shift-date  )
             ).
         end.        /* if v-date-decimal > v-start-date-decimal */
     end.        /* for each buf_shift-obj no-lock */

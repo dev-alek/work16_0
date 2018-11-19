@@ -20,6 +20,16 @@ using ibs.th.str.*.
 
 class ibs.th.str.InfoSection:
   
+  define property infoSectionTotal as InfoSectionsTotal no-undo
+    get.
+    set.
+  
+  define property UserMode as logical init false no-undo
+    get.
+    set (arg as log):
+      UserMode = arg.
+    end.
+  
   define property CarVol as decimal no-undo
     get.
     set.
@@ -104,9 +114,25 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
+  define property PlSiName as character no-undo
+    get.
+    private set.
+
   define property PlaceSi as integer no-undo
     get.
-    set.
+    set (a as int):
+      def buffer buf_sr-izmerenia for ub.sr-izmerenia.
+      find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = a no-error.
+      if available buf_sr-izmerenia then do:
+        PlaceSi = a.
+        PlSiName = buf_sr-izmerenia.sr-model.
+      end.
+      else do:
+/*        if UserMode = true and infoSectionTotal:FlagTrn and infoSectionTotal:RdcDnstvalue = "pomi-rn"*/
+/*          then message "Введено неизвестное стредство измерения" view-as alert-box.                  */
+      end.
+      release buf_sr-izmerenia.
+    end.
 
   define property TankDensityPomi as decimal no-undo
     get.
@@ -122,7 +148,10 @@ class ibs.th.str.InfoSection:
 
   define property SectionName as character no-undo
     get.
-    set.
+    set (arg as char):
+      SectionName = arg.
+      SetCarVol (arg).
+    end.
 
   define property DocQnty as decimal no-undo
     get.
@@ -205,6 +234,27 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
+  define property AccShip as decimal no-undo
+    get.
+    set.
+
+  define property TPNormAuto as decimal no-undo
+    get.
+    set.
+
+  define property TPNormPL as decimal no-undo
+    get.
+    set.
+
+  define property TPNorm as decimal no-undo
+    get:
+      return round (TPNormAuto + TPNormPL, 0).
+    end.
+
+  define property idSec as integer no-undo
+    get.
+    set.
+
   /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -215,6 +265,21 @@ class ibs.th.str.InfoSection:
 		
   end constructor.
 
+
+  method private void SetCarVol (arg as char):
+    
+    find first ub.auto-tank no-lock where ub.auto-tank.auto-num = infoSectionTotal:CarNum + "#" + SectionName no-error.
+    if available (ub.auto-tank) and UserMode
+    then do: 
+      assign
+        Diameter = entry(3, auto-tank.name, chr(4))
+        CarVol =  ub.auto-tank.brutto-qnty
+        DocQnty = ub.auto-tank.brutto-qnty
+      .
+    end.
+    release ub.auto-tank.
+    
+  end.
 	
 	
   /*------------------------------------------------------------------------------
@@ -412,13 +477,13 @@ class ibs.th.str.InfoSection:
 /*          if error-status:error or inAttrValue = ""        */
 /*            then AccCommission = ?.                        */
 /*        end.                                               */
-/*      when 'acc-ship' then                                 */
-/*        do:                                                */
-/*          assign                                           */
-/*            AccShip = decimal (inAttrValue) no-error.      */
-/*          if error-status:error or inAttrValue = ""        */
-/*            then AccShip = 0.25.                           */
-/*        end.                                               */
+      when 'acc-ship' then
+        do:
+          assign
+            AccShip = decimal (inAttrValue) no-error.
+          if error-status:error or inAttrValue = ""
+            then AccShip = 0. /*0.25.*/
+        end.
       when 'rn-algo' then 
         do:
           assign
@@ -464,7 +529,16 @@ class ibs.th.str.InfoSection:
           assign
             AccPomi = decimal (inAttrValue) no-error.
         end.
-      
+      when 'tp-norm-auto' then 
+        do:
+          assign
+            TPNormAuto = decimal (inAttrValue) no-error.
+        end.
+      when 'tp-norm-pl' then 
+        do:
+          assign
+            TPNormPL = decimal (inAttrValue) no-error.
+        end.
     end case.
 		
 

@@ -34,6 +34,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,prop-ruleset~
 ,prop-map~
 ,dis-card-mask~
+,dis-card-mask-attr~
 ,curr-accnt~
 ,curr-bank~
 ,c-curr-bank~
@@ -139,6 +140,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,cd-video-link-attr~
 ,gds-mercury~
 ,gds-mercury-attr~
+,units-attr~
 ":U.
 
 
@@ -265,13 +267,7 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-cd-grp~
 ,cd-plu~
 ,c-cd-plu~
-,user-login~
-,user-host~
-,user-obj~
 ,user-context-history~
-,user-login-attr~
-,user-login-action-role~
-,user-login-action-item~
 ,action-post~
 ,action-post-user-login~
 ,action-post-host~
@@ -279,12 +275,6 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,menu-user~
 ,menu-user-call~
 ,action-post-menu-group~
-,user-menu-group~
-,c-user-login~
-,action-role~
-,action-role-item~
-,action-role-item-gds~
-,action-role-item-gds-grp~
 ,action-post-obj~
 ,user-window-attr~
 ,rpt-option~
@@ -675,6 +665,18 @@ define variable v-custom-list as character no-undo initial
 ,season-attr~
 ,gds-season~
 ,gds-season-attr~
+,user-host~
+,user-obj~
+,user-login-attr~
+,user-login-action-role~
+,user-login-action-item~
+,action-role~
+,action-role-item~
+,action-role-item-gds~
+,action-role-item-gds-grp~
+,c-user-login~
+,user-menu-group~
+,user-login~
 ,vsd~
 ,vsd-attr~
 ":U.
@@ -859,6 +861,7 @@ v-custom-except-list-erprn =
 ,c-recipe-gds~
 ,c-recipe-hist~
 ,c-regions~
+,c-norm-loss~
 ,c-rvs-doc~
 ,c-rvs-line~
 ,c-rvs-line-pump~
@@ -1074,6 +1077,7 @@ v-custom-except-list-erprn =
 ,recipe-gds~
 ,regions~
 ,regions-attr~
+,norm-loss~
 ,rvs-doc~
 ,rvs-doc-attr~
 ,rvs-line~
@@ -1197,6 +1201,8 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,regions~
 ,regions-attr~
 ,c-regions~
+,norm-loss~
+,c-norm-loss~
 ,c-pay-type~
 ,c-pay-type-attr~
 ,pay-type~

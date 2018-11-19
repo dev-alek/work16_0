@@ -32,7 +32,7 @@ Creation date: 05/08/07
 
 define input  parameter parparentproc               as widget-handle no-undo .
 define input  parameter p-input-mode                as character no-undo .
-define input  parameter p-db-num                    as integer   no-undo .
+define input-output parameter p-db-num                    as integer   no-undo .
 define input  parameter p-user-id                   as character no-undo .
 define input  parameter p-user-login                as character no-undo .
 define input  parameter p-user-administrator        as logical   no-undo .
@@ -71,7 +71,8 @@ define variable vss-description as character no-undo init "Редактирование данных
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help fi-user-name 
+&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help b-choice-bd ~
+fi-db-num fi-user-name 
 &Scoped-Define DISPLAYED-OBJECTS fi-db-num fi-user-id fi-user-login ~
 fi-max-discnt t-quest-print fi-user-name 
 
@@ -88,6 +89,10 @@ fi-max-discnt t-quest-print fi-user-name
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON b-choice-bd 
+     LABEL "Выбор" 
+     SIZE 11 BY 1.
+
 DEFINE BUTTON b-exit AUTO-GO 
      LABEL "&Ввод" 
      SIZE 10 BY 1
@@ -144,6 +149,7 @@ DEFINE FRAME Dialog-Frame
      fi-db-num AT ROW 2.75 COL 25.5 COLON-ALIGNED HELP
           "" WIDGET-ID 2
           FGCOLOR 4 
+     b-choice-bd AT ROW 2.75 COL 37.5 WIDGET-ID 20
      fi-user-id AT ROW 4 COL 25.5 COLON-ALIGNED HELP
           "" WIDGET-ID 4
           FGCOLOR 4 
@@ -233,6 +239,74 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-choice-bd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choice-bd Dialog-Frame
+ON CHOOSE OF b-choice-bd IN FRAME Dialog-Frame /* Выбор */
+DO:
+  define variable ri as recid no-undo.
+  define buffer buf_db for ub.db.
+
+  run adm/dbs.w (
+                input parparentproc
+               ,input {&lookup}
+               ,output ri) no-error.
+  if ri <> ?
+  then do:
+    find buf_db where recid (buf_db) = ri .
+    display
+    buf_db.db-num @ fi-db-num
+    with frame {&frame-name}.
+    assign
+       fi-db-num = buf_db.db-num.
+  end.
+  else do:
+    assign
+      fi-db-num = ?
+      p-db-num  = ?.
+    display
+    ? @ fi-db-num
+    with frame {&frame-name}.
+  end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME fi-db-num
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-db-num Dialog-Frame
+ON VALUE-CHANGED OF fi-db-num IN FRAME Dialog-Frame /* Номер БД */
+DO:
+    assign
+        fi-db-num
+    .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME fi-db-num
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-db-num Dialog-Frame
+ON LEAVE OF fi-db-num IN FRAME Dialog-Frame /* Название */
+DO:
+  define buffer buf_db for ub.db.
+  if fi-db-num <> ? and
+   not can-find (buf_db where buf_db.db-num = input frame {&frame-name} fi-db-num no-lock ) then do:
+    message "Нет БД с таким номером."
+            view-as alert-box error.
+    assign
+      fi-db-num = ?
+      p-db-num  = ?.
+    display
+    ? @ fi-db-num
+    with frame {&frame-name}.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -251,6 +325,8 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+     
+
   RUN enable_UI.
 
   run display-data in this-procedure .
@@ -315,14 +391,15 @@ PROCEDURE display-data :
     :
 
       assign
-        fi-db-num             = p-db-num
         fi-user-id            = p-user-id
         fi-user-login         = p-user-login
         t-user-administrator  = p-user-administrator
         fi-max-discnt         = p-max-discnt
         t-quest-print         = p-quest-print
       .
-
+/*      if p-db-num <> 0 then do:*/
+        fi-db-num = p-db-num .
+/*      end.  */
       display
         fi-db-num
         fi-user-id
@@ -389,11 +466,12 @@ PROCEDURE enable_UI :
   DISPLAY fi-db-num fi-user-id fi-user-login fi-max-discnt t-quest-print 
           fi-user-name 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-quit b-help fi-user-name 
+  ENABLE b-exit b-quit b-help fi-db-num b-choice-bd fi-user-name 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -429,35 +507,45 @@ PROCEDURE update-record :
         undo, return error return-value .
       end.
 
+      if fi-db-num = ?
+      then do:
+        message
+          "Необходимо ввести номер базы данных" skip
+          view-as alert-box error .
+        apply 'entry':U to fi-db-num .
+        undo, return error return-value .
+      end.
+
       find first buf_user-login no-lock
-        where buf_user-login.db-num = p-db-num
+        where buf_user-login.db-num = fi-db-num
           and buf_user-login.user-login = fi-user-login
           and buf_user-login.user-id <> p-user-id
         no-error .
       if available buf_user-login
       then do:
         message
-          "Уже существует логин" fi-user-login skip
+          "У другого пользователя уже существует логин" fi-user-login skip
+          "для БД" fi-db-num SKIP
           view-as alert-box error .
         apply 'entry':U to fi-user-login .
         undo, return error return-value .
       end.
 
-      /*
       find first buf_user-login no-lock
-        where buf_user-login.db-num = p-db-num
+        where buf_user-login.db-num = fi-db-num
           and buf_user-login.user-id = p-user-id
         no-error .
-      if available buf_user-login
+
+      if available buf_user-login and p-user-login =  "" or
+         available buf_user-login and p-user-login <> ""  and p-db-num <> fi-db-num
       then do:
         message
           "У пользователя уже существует логин" buf_user-login.user-login skip
-          "для БД" p-db-num SKIP
+          "для БД" fi-db-num SKIP
           view-as alert-box error .
         apply 'entry':U to fi-user-login .
         undo, return error return-value .
       end.
-      */
 
       assign
         v-update-data               = true
@@ -465,6 +553,7 @@ PROCEDURE update-record :
         v-output-user-administrator = t-user-administrator
         v-output-max-discnt         = fi-max-discnt
         v-output-quest-print        = t-quest-print
+        p-db-num                    = fi-db-num
       .
     end.
   end.

@@ -44,11 +44,13 @@ abc-analysis-attr~
 ,cd-doc-line~
 ,c-cd-doc-line~
 ,chk-discnt~
+,chk-discnt-attr~
 ,c-chk-discnt~
 ,chk-doc~
 ,chk-doc-attr~
 ,c-chk-doc-attr~
 ,chk-gds~
+,chk-gds-attr~
 ,c-chk-gds~
 ,chk-pay~
 ,chk-gds-attr~
@@ -627,6 +629,8 @@ abc-analysis~
 ,c-recipe-gds~
 ,regions~
 ,c-regions~
+,norm-loss~
+,c-norm-loss~
 ,rp-by-call~
 ,c-rp-by-call~
 ,rp-rule-param~
@@ -751,6 +755,7 @@ abc-analysis~
 ,c-gds-mercury~
 ,gds-mercury~
 ,gds-mercury-attr~
+,units-attr~
 ,c-promo-schedule~
 ,c-promo-schedule-week~
 ,c-PromoAction~
@@ -766,6 +771,8 @@ abc-analysis~
 ,PromoGift~
 ,PromoGoods~
 ,PromoObject~
+,tech-prol-pwd~
+,c-tech-prol-pwd~
 ':U .
 
 
@@ -1025,7 +1032,7 @@ abc-analysis-doc-attr~
 ,cd-grp-attr~
 ,cd-plu-attr~
 ,cd-trans-attr~
-,chk-discnt-attr~
+
 ,cli-art-attr~
 ,cli-gds-attr~
 ,cli-grp-attr~
@@ -1249,7 +1256,6 @@ abc-analysis-doc-attr~
 ,tnved-item-attr~
 ,turnover-buyer-main-attr~
 ,turnover-group-attr~
-,units-attr~
 ,upgrade-attr~
 ,user-account-attr~
 ,user-conn-attr~

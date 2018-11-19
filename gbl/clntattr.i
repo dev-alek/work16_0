@@ -463,6 +463,32 @@ procedure clntattr-cli-for-close-fo :
 end procedure. /* clntattr-auto-tank-for */
 
 
+procedure clntattr-cli-clim-grp :
+
+  define input parameter p-obj-type like ub.clients.obj-type no-undo .
+  define input parameter p-obj-code like ub.clients.obj-code no-undo .
+  define input-output parameter p-value as character no-undo .
+  define output parameter p-setted as logical no-undo .
+
+  do
+  on error undo, return error
+  :
+    &scop proc-name clntattr-cli-clim-grp
+    {&run_proc_attr-lib}
+      (input {2}
+      ,input  p-obj-type
+      ,input  p-obj-code
+      ,input-output p-value
+      ,output p-setted
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+
+end procedure. /* clntattr-cli-clim-grp */
+
 procedure clntattr-main-accholder :
 define input parameter p-obj-type like ub.clients.obj-type no-undo .
 define input parameter p-obj-code like ub.clients.obj-code no-undo .

@@ -4440,6 +4440,7 @@ define input parameter p-obj-code       as integer      no-undo.
     /*признак чека со списанными товарами*/
 
     define buffer buf_chk-doc       for ub.chk-doc.
+    define buffer buf_chk-doc-attr  for ub.chk-doc-attr.
     define buffer buf_chk-gds       for ub.chk-gds.
     define buffer buf_chk-pay       for ub.chk-pay.
     define buffer buf_bar-code      for ub.bar-code.
@@ -4470,7 +4471,8 @@ on error undo, return error
         find first buf_dis-card no-lock
               where buf_dis-card.d-card = buf_chk-doc.d-card
         no-error.
-
+        
+        
         run wp-xmltagopen( input 3, input "check"   , input "" ).
         run wp-xmltagput( input 4, input "type"     , input string( buf_chk-doc.office   )                               , input 2 ).
         run wp-xmltagput( input 4, input "num"      , input string( buf_chk-doc.chk-num  )                               , input 2 ).
@@ -4518,6 +4520,12 @@ on error undo, return error
         then do:        /* Чек изменен вручную */
             run wp-xmltagput( input 4, input "manualChanged"  , input "yes":U                               , input 2 ).
         end.
+        find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq buf_chk-doc.doc-code
+                                      and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
+             no-lock no-error.
+        if avail buf_chk-doc-attr
+        then
+           run wp-xmltagput( input 4, input "CHNumberKKT", input buf_chk-doc-attr.attr-value, input 2 ).
         if buf_chk-doc.d-card <> "":U
         then do:
             if available buf_dis-card
@@ -4589,6 +4597,8 @@ on error undo, return error
             run wp-xmltagput( input 5, input "crcCode"      , input string( entry(1, buf_chk-gds.src-code, {&delim-par}) )      , input 2 ).
             run wp-xmltagput( input 5, input "srcQnty"      , input string( buf_chk-gds.src-qnty )      , input 2 ).
             run wp-xmltagput( input 5, input "srcPrice"     , input string( buf_chk-gds.src-price )     , input 2 ).
+            run wp-xmltagput( input 5, input "VATRate"      , input string( buf_chk-gds.vat-pc      )   , input 2 ).
+            run wp-xmltagput( input 5, input "VAT"          , input string( buf_chk-gds.vat-sum-rubl)   , input 2 ).
             run wp-xmltagclose( input 4, input "checkGds" ).
         end.      /* for each buf_chk-gds no-lock */
         for each buf_chk-pay no-lock

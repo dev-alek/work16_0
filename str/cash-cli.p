@@ -248,7 +248,9 @@ run gbl/d-askw.w (input string(if mode = "U":U
               input 1,
               input 2,
               output v-num).
-
+    if v-num eq 5 or v-num eq 6 or v-num eq 7
+    then
+        v-num = 1. 
     IF v-num = 2 then multiple-shops = no.
     if multiple-shops then do:
       FOR EACH for-shop NO-LOCK where for-shop.host-code = v-host-code,
@@ -261,6 +263,9 @@ run gbl/d-askw.w (input string(if mode = "U":U
     end.
 
   end.
+  if choice eq 5 or choice eq 6
+  then
+      choice = choice - 4. 
 CASE choice :
   when 4 then
       return .
@@ -455,6 +460,26 @@ CASE choice :
       end. /* (ACCUM COUNT dis-card.d-card)  = 0 */
     END .
   end. /*when 1*/
+    when 7 then 
+    do:
+            //create di.
+            create cash-cli.
+            assign
+               cash-cli.cli-code        = ?
+               cash-cli.d-card          = ? 
+               cash-cli.crf             = 1
+               cr                       = 1
+             .
+        if cr > 0 then
+            run str/send-cli.p (
+                input parparentproc
+                ,input p-parent-handle
+                ,input p-log-handle
+                ,input (string(p-obj-code) + {&delim-par} + mode + {&delim-par} +
+                string(multiple-shops, "yes/no":U) + {&delim-par} + "no":U)
+                ) no-error .
+        
+    end.
 END CASE .
 /*пошлем непосланное*/
 if cr > 0 and not v-stop then

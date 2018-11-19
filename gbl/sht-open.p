@@ -22,6 +22,13 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-curr-obj-type like ub.clients.obj-type no-undo .
 define input parameter p-curr-obj-code like ub.clients.obj-code no-undo .
 
+define variable mOk as logical no-undo.
+define variable mBachMode as logical no-undo.
+&if defined(BachMode) ne 0
+&then
+   mBachMode = yes.
+&endif   
+
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -56,7 +63,29 @@ define buffer bf-trb_shift-obj   for ub.shift-obj .
 define buffer open-shift         for ub.shift-obj .
 define buffer buf_shift-obj      for ub.shift-obj .
 define buffer closed-shift       for ub.shift-obj .  /* буфер для закрытой смены */
+&if defined (MyPutMes) eq 0
+&then 
+procedure put-mes:
+define input  parameter iVss    as logical   no-undo.
+define input  parameter iText   as character no-undo.
+define input  parameter iGetMes as logical   no-undo.
+define input  parameter iRetval as character no-undo.
 
+message if ivss then vss-workfile else ""
+        if ivss then vss-revision else ""
+        if ivss then vss-description else ""
+        if ivss then "~n" else ""
+        iText skip
+        if iGetMes then trim(error-status :get-message(1)) else ""  
+        if iGetMes then trim(error-status :get-message(2)) else ""
+        if iGetMes then trim(error-status :get-message(3)) else ""
+        if iGetMes then trim(error-status :get-message(4)) else ""
+        if iGetMes then trim(error-status :get-message(5)) else ""
+        skip
+        iRetval
+   view-as alert-box error .
+end procedure.
+&endif   
 do
 on error undo, return error return-value + error-status:get-message(1) + error-status:get-message(2)
 :
@@ -73,12 +102,7 @@ on error undo, return error return-value + error-status:get-message(1) + error-s
   no-error
 }
 if error-status :error then do:
-  message
-    vss-workfile vss-revision vss-description skip
-    "Ошибка при запуске процедуры objat" skip
-    error-status :get-message(1) skip
-    return-value skip
-    view-as alert-box error .
+  run put-mes(yes ,"Ошибка при запуске процедуры objat",yes,return-value).
   return error.
 end.
 /* Читаем системную дату и дату на объекте */
@@ -86,16 +110,8 @@ run cur-time in this-procedure ( output v-sys-date
                                , output v-sys-time
                                ) no-error.
 if error-status:error then do:
-    message
-      vss-workfile vss-revision vss-description
-      skip "Ошибка при чтении системной даты."
-      skip return-value
-      skip trim(error-status :get-message(1))
-           trim(error-status :get-message(2))
-           trim(error-status :get-message(3))
-           trim(error-status :get-message(4))
-           trim(error-status :get-message(5))
-    view-as alert-box error.
+    run put-mes(yes ,"Ошибка при чтении системной даты.",yes,return-value).
+    
     undo, return error .
 end.
 { gbl/curobjdt.i
@@ -105,17 +121,11 @@ end.
   no-error
 }
 if error-status:error then do:
-  message "Ошибка при чтении календарной даты на текущем объекте."
-  view-as alert-box error.
+  run put-mes(no ,"Ошибка при чтении календарной даты на текущем объекте.",no,"").
   return error.
 end.
 if not glog then do:
-  message
-    vss-workfile vss-revision vss-description skip
-    "На объекте выключены смены." skip
-    "Работа со сменами невозможна." skip
-    "Объект:" p-curr-obj-type p-curr-obj-code skip
-    view-as alert-box error .
+  run put-mes(yes ,substitute("На объекте выключены смены.~nРабота со сменами невозможна.~nОбъект:&1 &2", p-curr-obj-type, p-curr-obj-code),no,"").
   return error.
 end.
 
@@ -160,10 +170,7 @@ else do:
   }
 end.
 if not glog then do:
-  message
-    "Вы не имеете прав для работы со сменами." skip
-    "Объект:" p-curr-obj-type p-curr-obj-code
-    view-as alert-box.
+  run put-mes(no ,substitute("Вы не имеете прав для работы со сменами.~nОбъект:&1 &2", p-curr-obj-type, p-curr-obj-code),no,"").
   return error.
 end.
 find last open-shift where
@@ -172,8 +179,12 @@ find last open-shift where
           open-shift.status_ = {&sht-current}
           use-index pi no-error.
 if available open-shift then do:
-  message "На объекте " p-curr-obj-type " " p-curr-obj-code " уже есть открытая смена " open-shift.shift-date " " open-shift.shift-num " ."
-  view-as alert-box error.
+  run put-mes(no ,substitute("На объекте &1 &2 уже есть открытая смена &3 &4."
+                             ,p-curr-obj-type
+                             ,p-curr-obj-code
+                             ,open-shift.shift-date  
+                             ,open-shift.shift-num
+  ),no,"").
   return error.
 end.
 
@@ -213,16 +224,8 @@ then do:
             , output v-cancel
         ) no-error.
         if error-status:error then do:
-                message
-                vss-workfile vss-revision vss-description
-                skip "Ошибка ввода времени для новой смены."
-                skip return-value
-                skip trim(error-status :get-message(1))
-                    trim(error-status :get-message(2))
-                    trim(error-status :get-message(3))
-                    trim(error-status :get-message(4))
-                    trim(error-status :get-message(5))
-                view-as alert-box error.
+                run put-mes(yes ,"Ошибка ввода времени для новой смены.",yes,return-value).
+          
                 undo, return error .
         end.
         if v-cancel = yes
@@ -237,6 +240,8 @@ then do:
 end.
 else do:
     /* может быть начата произвольная смена */
+    &if defined(BachMode) eq 0
+&then
     run gbl/shift.w (
                     input parparentproc
                   , input p-curr-obj-type
@@ -251,23 +256,30 @@ else do:
                     , output v-cancel
                 ) no-error.
     if error-status:error then do:
-            message
-            vss-workfile vss-revision vss-description
-            skip "Ошибка ввода даты, времени или номера для новой смены."
-            skip return-value
-            skip trim(error-status :get-message(1))
-                trim(error-status :get-message(2))
-                trim(error-status :get-message(3))
-                trim(error-status :get-message(4))
-                trim(error-status :get-message(5))
-            view-as alert-box error.
+      run put-mes(yes ,"Ошибка ввода даты, времени или номера для новой смены.",yes,return-value).
+          
             undo, return error .
     end.
+ &else
+ { gbl/curobjdt.i p-curr-obj-type p-curr-obj-code s-date }
+ find last open-shift where
+           open-shift.obj-type = p-curr-obj-type and
+           open-shift.obj-code = p-curr-obj-code and
+           open-shift.shift-date = today
+          use-index pi no-error.  
+ s-num  = (if available open-shift then open-shift.shift-num else 0) + 1.
+ s-name = "11".
+ s-time = time.
+ e-time = time.
+    &endif
     if v-cancel = yes
     then do:
         undo, return.
     end.
 end.
+
+if not mBachMode 
+then do:
 glog = no.
 message
   "Начать новую смену по" p-curr-obj-type p-curr-obj-code skip
@@ -276,6 +288,9 @@ message
   "Номер смены:" s-name skip
   "Порядок смены" s-num "?"
 view-as alert-box question buttons OK-Cancel update glog.
+end.
+else
+   glog = yes.
 if not glog
 then do:
   return error.
@@ -293,30 +308,33 @@ if available buf_shift-obj then do:
       /* OK */
     end.
     when {&sht-current} then do:
-      message
-        "Смена уже открыта." skip
-        "Дата начала смены:" s-date skip
-        "Номер смены:" s-name skip
-        "Порядок смены:" s-num
-        view-as alert-box.
+      run put-mes(no ,substitute("Смена уже открыта.~nДата начала смены: &1~nНомер смены: &2~nПорядок смены: &3~n" 
+                             ,s-date
+                             ,s-name
+                             ,s-num)  
+                             
+  ),no,"").
+  
+      
       return error.
     end.
     when {&sht-closed} then do:
-      message
-        "Смена уже закрыта." skip
-        "Дата начала смены:" s-date skip
-        "Номер смены:" s-name skip
-        "Порядок смены:" s-num
-        view-as alert-box.
+      run put-mes(no ,substitute("Смена уже закрыта.~nДата начала смены: &1~nНомер смены: &2~nПорядок смены: &3~n" 
+                             ,s-date
+                             ,s-name
+                             ,s-num)  
+                             
+  ),no,"").
       return error.
     end.
     otherwise do:
-      message
-        "Неизвестный статус смены:" buf_shift-obj.status_ skip
-        "Дата начала смены:" s-date skip
-        "Номер смены:" s-name skip
-        "Порядок смены:" s-num
-        view-as alert-box.
+      run put-mes(no ,substitute("Неизвестный статус смены: &1~nДата начала смены: &2~nНомер смены: &3~nПорядок смены: &4~n" 
+                             ,buf_shift-obj.status_
+                             ,s-date
+                             ,s-name
+                             ,s-num)  
+                             
+  ),no,"").
       return error.
     end.
   end case.
@@ -330,11 +348,12 @@ find last closed-shift where
           use-index pi no-error.
 if not available closed-shift and
    not is-super then do:
-  message
-    "Не найдена закрытая смена." skip
-    "Невозможно начать новую смену." skip
-    "Объект:" p-curr-obj-type p-curr-obj-code
-    view-as alert-box.
+           run put-mes(no ,substitute("Не найдена закрытая смена.~nНевозможно начать новую смену.~nОбъект: &1 &2"
+                             ,p-curr-obj-type
+                             ,p-curr-obj-code
+                             
+  ),no,"").
+     
   return error.
 end.
 
@@ -343,29 +362,39 @@ if available closed-shift then do:
   /* проверяем, что закрывал другой пользователь */
   if closed-shift.close-id = v-cntxt-userid and
     not is-super then do:
-    message
-      "Предыдущая смена закрыта пользователем:" v-cntxt-userid skip
-      "Новая смена должна быть открыта другим пользователем."
-      view-as alert-box error .
+      run put-mes(no ,substitute("Предыдущая смена закрыта пользователем: &1 Новая смена должна быть открыта другим пользователем."
+                             ,v-cntxt-userid
+                            
+                             
+  ),no,"").
     return error.
   end.
   if s-date = closed-shift.shift-date then do:
     if s-num <> closed-shift.shift-num + 1 then do:
       /* номера в одном дне не подряд */
-      message
-        "Последняя закрытая смена:" closed-shift.shift-date "Порядок:" closed-shift.shift-num skip
-        "Новая смена должна иметь порядок на 1 больше, или относиться к следующему дню."
-        view-as alert-box error.
+      run put-mes(no ,substitute("Последняя закрытая смена:&1 Порядок: &2~nНовая смена должна иметь порядок на 1 больше, или относиться к следующему дню."
+                             ,closed-shift.shift-date
+                             ,closed-shift.shift-num
+                            
+                             
+  ),no,"").
         return error.
     end.
   end.
   if (s-date - closed-shift.shift-date) > 1 then do:
     /* дни не подряд */
+    if not mbachMode
+    then do:
+      glog = no .
+    
     message
       "Последняя закрытая смена:" closed-shift.shift-date "Порядок:" closed-shift.shift-num skip
       "Последняя смена закрыта не вчера." skip
       "Открыть новую смену" s-date "Номер:" s-name "Порядок:" s-num "?" skip
       view-as alert-box question buttons yes-no update glog.
+    end.
+    else  
+       glog = yes.
     if not glog or
        not is-super then
       return error.
@@ -373,60 +402,61 @@ if available closed-shift then do:
   if s-date > closed-shift.shift-date then do:
     if s-num <> 1 then do:
       /* новый день не с 1-й смены */
-      message
-        "Последняя закрытая смена:" closed-shift.shift-date "Порядок:" closed-shift.shift-num skip
-        "Последняя смена закрыта не сегодня." skip
-        "Новая смена должна иметь порядок 1." skip
-        view-as alert-box error.
+      run put-mes(no ,substitute("Последняя закрытая смена:&1 Порядок: &2~nПоследняя смена закрыта не сегодня.~nНовая смена должна иметь порядок 1."
+                             ,closed-shift.shift-date
+                             ,closed-shift.shift-num
+                            
+                             
+  ),no,"").
       return error.
     end.
   end.
 end.
 if s-date > v-sys-date then do:
-   message
-   "Дата смены " s-date skip
-   "Дата на сервере " v-sys-date skip
-   "Дата смены не может быть больше даты на сервере"
-   view-as alert-box error.
+  run put-mes(no ,substitute("Дата смены &1~nДата на сервере &2~n Дата смены не может быть больше даты на сервере"
+                             ,s-date
+                             ,v-sys-date
+                               
+                             
+  ),no,"").
    return error.
 end.
 if s-date < v-sys-date - 10 and
    is-super = no then do:
-   message
-   "Дата смены " s-date skip
-   "Дата на сервере " v-sys-date skip
-   "Разница " v-sys-date - s-date skip
-   "Эта разница должна быть меньше 10 дней!"
-   view-as alert-box error.
+   run put-mes(no ,substitute("Дата смены &1~nДата на сервере &2~n Разница ~nЭта разница должна быть меньше 10 дней!"
+                             ,s-date
+                             ,v-sys-date
+                             ,v-sys-date - s-date  
+                             
+  ),no,"").
    return error.
 end.
 
+if not mBachMode 
+then do:
 /* проверяем кассовые запреты */
-run str/dskshtop.p (
-                 input parparentproc
-                ,input no /*silent*/
-                ,input p-curr-obj-type
-                ,input p-curr-obj-code
-                ,input s-date
-                ,input s-num
-                ,input s-name
-                ) no-error.
-if error-status :error then do:
-  message
-    vss-workfile vss-revision vss-description skip
-    "Ошибка при проверке кассовых запретов"
-    error-status :get-message (1) skip
-    return-value skip
-    view-as alert-box error.
-  return error.
+    run str/dskshtop.p (
+                     input parparentproc
+                    ,input no /*silent*/
+                    ,input p-curr-obj-type
+                    ,input p-curr-obj-code
+                    ,input s-date
+                    ,input s-num
+        ,input s-name
+                    ) no-error.
+    if error-status :error then do:
+      run put-mes(yes ,"Ошибка при проверке кассовых запретов",yes,return-value).
+      return error.
+    end.
 end.
 if varobj-date - s-date > 4 then do:
-   message
-   "Календарная дата объекта " varobj-date skip
-   "Сменная дата " s-date skip
-   "Разница " varobj-date - s-date skip
-   "Разница должна составлять не более 4 дней."
-   view-as alert-box error.
+  run put-mes(no ,substitute("Календарная дата объекта &1~nСменная дата &2 ~nРазница &3~nРазница должна составлять не более 4 дней."
+                             ,varobj-date
+                             ,s-date
+                             ,v-sys-date - s-date  
+                             
+  ),no,"").
+  
 end.
 if varobj-date < s-date then do:
    message
@@ -450,14 +480,11 @@ run integerm in this-procedure (
     output varmessage ) no-error.
 if error-status:error or
    vardata-valid <> yes then do:
- message "Ошибка при заведении номера смены. " skip
-         return-value skip
-         varmessage
- view-as alert-box error.
+     run put-mes(no ,"Ошибка при заведении номера смены. ",yes,varmessage).
  return error.
 end.
 if s-name-int < 1 then do:
-  message "Номер смены может быть только положительным целым числом." view-as alert-box error.
+  run put-mes(no ,"Номер смены может быть только положительным целым числом.",no,"").
   return error.
 end.
 for each bf-trb_shift-obj where bf-trb_shift-obj.obj-type    = p-curr-obj-type and
@@ -465,12 +492,14 @@ for each bf-trb_shift-obj where bf-trb_shift-obj.obj-type    = p-curr-obj-type a
                                 bf-trb_shift-obj.shift-date  = s-date          and
                                 bf-trb_shift-obj.shift-name  = s-name          and
                                 bf-trb_shift-obj.status_    <> {&sht-expected} on error undo, return error return-value :
-  message "Запрещено добавлять смены с одним номером в одном сменном дне." skip
-          "На объекте " bf-trb_shift-obj.obj-type " " bf-trb_shift-obj.obj-code " есть смена:" skip
-          "Дата смены " bf-trb_shift-obj.shift-date skip
-          "Порядок смены " bf-trb_shift-obj.shift-num skip
-          "Номер смены " bf-trb_shift-obj.shift-name
-  view-as alert-box error.
+ run put-mes(no ,substitute("Запрещено добавлять смены с одним номером в одном сменном дне.~nНа объекте &1 &2 есть смена:~nДата смены &3~nПорядок смены &4~nНомер смены &5" 
+                             ,bf-trb_shift-obj.obj-type
+                             ,bf-trb_shift-obj.obj-code
+                             ,bf-trb_shift-obj.shift-date
+                             ,bf-trb_shift-obj.shift-num 
+                             ,bf-trb_shift-obj.shift-name 
+                             
+  ),no,"").                                 
   return error.
 end.
 
@@ -507,12 +536,14 @@ if v-value-logical then do:
                                   bf-trb_shift-obj.obj-code    = p-curr-obj-code and
                                   bf-trb_shift-obj.shift-date  = s-date          and
                                   bf-trb_shift-obj.shift-name  > s-name          on error undo, return error return-value :
-    message "По настройкам конфигурации (newordsh) вам запрещено добавлять смены с меньшим номером после смены с большим номером в одном сменном дне." skip
-            "На объекте " bf-trb_shift-obj.obj-type " " bf-trb_shift-obj.obj-code " есть смена:" skip
-            "Дата смены " bf-trb_shift-obj.shift-date skip
-            "Порядок смены " bf-trb_shift-obj.shift-num skip
-            "Номер смены " bf-trb_shift-obj.shift-name
-    view-as alert-box error.
+      run put-mes(no ,substitute("По настройкам конфигурации (newordsh) вам запрещено добавлять смены с меньшим номером после смены с большим номером в одном сменном дне.~nНа объекте &1 &2 есть смена:~nДата смены &3~nПорядок смены &4~nНомер смены &5" 
+                             ,bf-trb_shift-obj.obj-type
+                             ,bf-trb_shift-obj.obj-code
+                             ,bf-trb_shift-obj.shift-date
+                             ,bf-trb_shift-obj.shift-num 
+                             ,bf-trb_shift-obj.shift-name 
+                             
+  ),no,""). 
     return error.
   end.
 end.
@@ -546,17 +577,20 @@ do transaction on error undo start-shift, return on stop undo start-shift, retur
        no-error
      }
      if error-status:error then do:
-        message "Ошибка при установке календарной даты."
-        view-as alert-box error.
+       run put-mes(no ,"Ошибка при установке календарной даты.",no,"").
         return error.
      end.
   end.
 end. /*end*/
-
-message
-  "Новая смена открыта."
-  view-as alert-box.
+if not mbachMode
+then
+    message
+      "Новая смена открыта."
+    view-as alert-box.
 end.
+mOk =yes.
+&if defined(BachMode) eq 0
+&then
 run ref/shftpers.w ( INPUT parparentproc
                    , INPUT p-curr-obj-type
                    , INPUT p-curr-obj-code
@@ -564,3 +598,4 @@ run ref/shftpers.w ( INPUT parparentproc
                    , INPUT s-num
                    , INPUT "b-add,b-add-next"
                    , INPUT {&obj-shift-open}) no-error.
+&endif

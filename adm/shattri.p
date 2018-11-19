@@ -1210,7 +1210,15 @@ on error undo, return error
         {&create-thbj-attr}.
       end.
 
-    end.
+          v-prop-code = "{&bef-attr-nakl_par_attr-PN}" .
+&scop ptype character
+&scop prop-value 'dids,nids':U
+&scop prop-code  entry(v-ii,v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+     end.
 
     when {&attr-nakl-glob} then do:
       v-prop-code = "{&bef-attr-nakl-glob_rnd-znk}" .
@@ -1737,6 +1745,14 @@ end.
         {&create-thbj-attr}.
       end.
 
+      v-prop-code = "{&bef-attr-report-glob_cdens}" .
+&scop ptype integer
+&scop prop-value 0
+&scop prop-code entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      
     end.
 
     when {&attr-report-firm} then do:
@@ -2598,7 +2614,28 @@ end.
 &scop prop-value ?
 &scop prop-code entry(v-ii, v-prop-code)
         {&create-thbj-attr}.
-      end.      
+      end. 
+            v-prop-code = "{&bef-attr-mercur_proxy-addres}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_proxy-login}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_proxy-pswd}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.     
     end.
 
     when {&attr-fbrattr} then do:
@@ -2699,6 +2736,43 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+
+    v-prop-code = "{&bef-attr-petrol_otkl-fact-volue}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      
+    v-prop-code = "{&bef-attr-petrol_otkl-temp}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+    v-prop-code = "{&bef-attr-petrol_otkl-density}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+    v-prop-code = "{&bef-attr-petrol_otkl-water}".
+ &scop ptype decimal
+ &scop prop-value 0
+ &scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
       v-prop-code = "{&bef-attr-petrol_mand-choice-autocar}".
 &scop ptype logical
 &scop prop-value no
@@ -2727,7 +2801,16 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-    
+
+       v-prop-code = "{&bef-attr-petrol_dop-info}" .
+&scop ptype character
+&scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj':U
+&scop prop-code  entry(v-ii,v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+          
         v-prop-code = "{&bef-attr-petrol_Delta-mass-horiz}".
             &scop ptype character
             &scop prop-value ""

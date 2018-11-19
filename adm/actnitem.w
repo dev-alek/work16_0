@@ -93,7 +93,7 @@ define stream OutStr-html.
 define variable actr-print as character no-undo.
 define variable v-context  as character no-undo column-label "Привязка"        format "x(15)":u  .
 define variable v-brws-mark      as character no-undo COLUMN-LABEL "*"        FORMAT "X(1)":U  .
-
+define variable v-on-gbl    as logical      no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -731,7 +731,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
    { gbl/getcntxt.i get }
    { gbl/app_help.i }
-
+   
+   { adm/actn-gbl.i
+    v-on-gbl
+    no-error
+   }
     assign
         cb-group :list-item-pairs = substitute( "<Все>,&1", -1 )
     .
@@ -1120,13 +1124,13 @@ on error undo, return error
     empty temp-table buf_temp_actnrole-user.
 
     for each buf_action-role-item no-lock
-       where buf_action-role-item.db-num           = p-db-num
+       where buf_action-role-item.db-num           = (if v-on-gbl then 0 else p-db-num)
          and buf_action-role-item.action-head-code = p-action-head-code
          and buf_action-role-item.action-item-code = p-action-item-code
     on error undo, return error
     :
         for each buf_user-login-action-role no-lock
-           where buf_user-login-action-role.db-num              = buf_action-role-item.db-num
+           where buf_user-login-action-role.db-num              = p-db-num
              and buf_user-login-action-role.action-head-code    = buf_action-role-item.action-head-code
              and buf_user-login-action-role.action-role-code    = buf_action-role-item.action-role-code
         use-index ie03

@@ -92,54 +92,56 @@ define variable v-ref-rec as recid no-undo .
 &scop sort-clmn_1-br-line   get-mark (buffer ub.rvs-line)
 &scop label-clmn_2-br-line  'Артикул'
 &scop sort-clmn_2-br-line   ub.goods.artic
-&scop label-clmn_3-br-line  'Название'
-&scop sort-clmn_3-br-line   ub.goods.gds-name
-&scop label-clmn_4-br-line  'Скл.место'
-&scop sort-clmn_4-br-line   ub.rvs-line.pl-code
-&scop label-clmn_5-br-line  'Номер резервуара'
-&scop sort-clmn_5-br-line   place.loc1
-&scop label-clmn_6-br-line  'Факт остаток'
-&scop sort-clmn_6-br-line   ub.rvs-line.state-measure-qnty
-&scop label-clmn_7-br-line  'Измер. остаток'
-&scop sort-clmn_7-br-line   ub.rvs-line.measure-qnty
-&scop label-clmn_8-br-line  'Учет'
-&scop sort-clmn_8-br-line   ub.rvs-line.system-qnty
-&scop label-clmn_9-br-line  'Первонач.учет'
-&scop sort-clmn_9-br-line   ub.rvs-line.orig-system-qnty
-&scop label-clmn_10-br-line 'Факт в!трубопроводе'
-&scop sort-clmn_10-br-line  ub.rvs-line.state-add-qnty
-&scop label-clmn_11-br-line 'Отклонение(факт)'
-&scop sort-clmn_11-br-line  deviation-fact(buffer ub.rvs-line)
-&scop label-clmn_12-br-line 'Отклонение(измер)'
-&scop sort-clmn_12-br-line  deviation-measure(buffer ub.rvs-line)
-&scop label-clmn_13-br-line 'Допустимое!отклонение'
-&scop sort-clmn_13-br-line  ub.rvs-line.tolerance
-&scop label-clmn_14-br-line 'Факт брутто'
-&scop sort-clmn_14-br-line  ub.rvs-line.state-brutto-qnty
-&scop sort-clmn_15-br-line  ub.rvs-line.brutto-qnty
-&scop sort-clmn_16-br-line  ub.rvs-line.state-density
-&scop sort-clmn_17-br-line  ub.rvs-line.density
-&scop sort-clmn_18-br-line  ub.rvs-line.state-measure-cli-qnty
-&scop sort-clmn_19-br-line  ub.rvs-line.measure-cli-qnty
-&scop sort-clmn_20-br-line  ub.rvs-line.system-cli-qnty
-&scop sort-clmn_21-br-line  ub.rvs-line.orig-system-cli-qnty
-&scop sort-clmn_22-br-line  ub.rvs-line.state-brutto-cli-qnty
-&scop sort-clmn_23-br-line  ub.rvs-line.brutto-cli-qnty
-&scop sort-clmn_24-br-line  ub.rvs-line.state-mh-qnty
-&scop sort-clmn_25-br-line  ub.rvs-line.meas-mh-qnty
-&scop sort-clmn_26-br-line  ub.rvs-line.state-am-qnty
-&scop sort-clmn_27-br-line  ub.rvs-line.meas-am-qnty
-&scop sort-clmn_28-br-line  ub.rvs-line.state-cf-qnty
-&scop sort-clmn_29-br-line  ub.rvs-line.meas-cf-qnty
-&scop sort-clmn_30-br-line  ub.rvs-line.state-level-total
-&scop sort-clmn_31-br-line  ub.rvs-line.level-total
-&scop sort-clmn_32-br-line  ub.rvs-line.state-level-petrol
-&scop sort-clmn_33-br-line  ub.rvs-line.level-petrol
-&scop sort-clmn_34-br-line  ub.rvs-line.state-level-water
-&scop sort-clmn_35-br-line  ub.rvs-line.level-water
-&scop sort-clmn_36-br-line  ub.rvs-line.state-temperature
-&scop sort-clmn_37-br-line  ub.rvs-line.temperature
-&scop enabled-clmn          {&sort-clmn_37-br-line}
+&scop label-clmn_3-br-line  'тв'
+&scop sort-clmn_3-br-line   get-input-type (buffer ub.rvs-line)
+&scop label-clmn_4-br-line  'Название'
+&scop sort-clmn_4-br-line   ub.goods.gds-name
+&scop label-clmn_5-br-line  'Скл.место'
+&scop sort-clmn_5-br-line   ub.rvs-line.pl-code
+&scop label-clmn_6-br-line  'Номер резервуара'
+&scop sort-clmn_6-br-line   place.loc1
+&scop label-clmn_7-br-line  'Факт остаток'
+&scop sort-clmn_7-br-line   ub.rvs-line.state-measure-qnty
+&scop label-clmn_8-br-line  'Измер. остаток'
+&scop sort-clmn_8-br-line   ub.rvs-line.measure-qnty
+&scop label-clmn_9-br-line  'Учет'
+&scop sort-clmn_9-br-line   ub.rvs-line.system-qnty
+&scop label-clmn_10-br-line  'Первонач.учет'
+&scop sort-clmn_10-br-line   ub.rvs-line.orig-system-qnty
+&scop label-clmn_11-br-line 'Факт в!трубопроводе'
+&scop sort-clmn_11-br-line  ub.rvs-line.state-add-qnty
+&scop label-clmn_12-br-line 'Отклонение(факт)'
+&scop sort-clmn_12-br-line  deviation-fact(buffer ub.rvs-line)
+&scop label-clmn_13-br-line 'Отклонение(измер)'
+&scop sort-clmn_13-br-line  deviation-measure(buffer ub.rvs-line)
+&scop label-clmn_14-br-line 'Допустимое!отклонение'
+&scop sort-clmn_14-br-line  ub.rvs-line.tolerance
+&scop label-clmn_15-br-line 'Факт брутто'
+&scop sort-clmn_15-br-line  ub.rvs-line.state-brutto-qnty
+&scop sort-clmn_16-br-line  ub.rvs-line.brutto-qnty
+&scop sort-clmn_17-br-line  ub.rvs-line.state-density
+&scop sort-clmn_18-br-line  ub.rvs-line.density
+&scop sort-clmn_19-br-line  ub.rvs-line.state-measure-cli-qnty
+&scop sort-clmn_20-br-line  ub.rvs-line.measure-cli-qnty
+&scop sort-clmn_21-br-line  ub.rvs-line.system-cli-qnty
+&scop sort-clmn_22-br-line  ub.rvs-line.orig-system-cli-qnty
+&scop sort-clmn_23-br-line  ub.rvs-line.state-brutto-cli-qnty
+&scop sort-clmn_24-br-line  ub.rvs-line.brutto-cli-qnty
+&scop sort-clmn_25-br-line  ub.rvs-line.state-mh-qnty
+&scop sort-clmn_26-br-line  ub.rvs-line.meas-mh-qnty
+&scop sort-clmn_27-br-line  ub.rvs-line.state-am-qnty
+&scop sort-clmn_28-br-line  ub.rvs-line.meas-am-qnty
+&scop sort-clmn_29-br-line  ub.rvs-line.state-cf-qnty
+&scop sort-clmn_30-br-line  ub.rvs-line.meas-cf-qnty
+&scop sort-clmn_31-br-line  ub.rvs-line.state-level-total
+&scop sort-clmn_32-br-line  ub.rvs-line.level-total
+&scop sort-clmn_33-br-line  ub.rvs-line.state-level-petrol
+&scop sort-clmn_34-br-line  ub.rvs-line.level-petrol
+&scop sort-clmn_35-br-line  ub.rvs-line.state-level-water
+&scop sort-clmn_36-br-line  ub.rvs-line.level-water
+&scop sort-clmn_37-br-line  ub.rvs-line.state-temperature
+&scop sort-clmn_38-br-line  ub.rvs-line.temperature
+&scop enabled-clmn          {&sort-clmn_38-br-line}
 
 &scop label-clmn_1-br-line-pump 'ТРК'
 &scop sort-clmn_1-br-line-pump  ub.rvs-line-pump.pump-code
@@ -277,6 +279,17 @@ function get-mark return character (buffer local-rvs-line for ub.rvs-line ).
                                                                  else return "".
 end function.
 
+function get-input-type return character (buffer local-rvs-line for ub.rvs-line ).
+   find first rvs-line-attr no-lock where rvs-line-attr.obj-code  = local-rvs-line.obj-code
+                                     and rvs-line-attr.obj-type  = local-rvs-line.obj-type
+                                     and rvs-line-attr.gds-code  = local-rvs-line.gds-code
+                                     and rvs-line-attr.pl-code   = local-rvs-line.pl-code
+                                     and rvs-line-attr.rvs-code  = local-rvs-line.rvs-code
+                                     and rvs-line-attr.attr-code = "input-type" no-error. 
+   if available rvs-line-attr then return rvs-line-attr.attr-value .
+   else return "" .                                  
+end function.
+
 function deviation-fact    return decimal (buffer local-rvs-line for ub.rvs-line ).
    return (local-rvs-line.state-measure-qnty   + local-rvs-line.state-add-qnty - local-rvs-line.system-qnty).
 end function.
@@ -290,8 +303,8 @@ define query {&browse-name-pump} for ub.rvs-line-pump                scrolling.
 define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_1-br-line}  column-label {&label-clmn_1-br-line}  format "x(1)"
       {&sort-clmn_2-br-line}  column-label {&label-clmn_2-br-line}
-      {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(15)"
-      {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}
+      {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(2)"
+      {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  format "x(15)"
       {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}
       {&sort-clmn_6-br-line}  column-label {&label-clmn_6-br-line}
       {&sort-clmn_7-br-line}  column-label {&label-clmn_7-br-line}
@@ -302,6 +315,7 @@ define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_12-br-line} column-label {&label-clmn_12-br-line}
       {&sort-clmn_13-br-line} column-label {&label-clmn_13-br-line}
       {&sort-clmn_14-br-line} column-label {&label-clmn_14-br-line}
+      {&sort-clmn_15-br-line} column-label {&label-clmn_15-br-line}
       {&sort-clmn_15-br-line}
       {&sort-clmn_16-br-line}
       {&sort-clmn_17-br-line}
@@ -325,6 +339,7 @@ define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_35-br-line}
       {&sort-clmn_36-br-line}
       {&sort-clmn_37-br-line}
+      {&sort-clmn_38-br-line}
       enable {&enabled-clmn}
     with size 98.75 by 6 separators.
 
@@ -842,6 +857,21 @@ disp r-doc.obj-code
 /*     r-doc.state-brutto-tc-qnty*/
 /*     r-doc.brutto-tc-qnty*/
      with frame {&frame-name}.
+     
+find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid.
+if ub.user-account.psn-code <> 0 and ub.user-account.psn-code <> ?
+then do:
+  if pardoc-mode = {&add-def}
+  then do :
+    r-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+    r-doc.wrkr:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+    r-doc.boss:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+  end.
+  if pardoc-mode = {&update}
+  then do :
+    r-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+  end.
+end.
 
 { str/psn-chk.i wrkr on r-doc v-ref-rec }
 { str/psn-chk.i agnt on r-doc v-ref-rec }
@@ -1040,6 +1070,9 @@ define variable v-shift-date like ub.shift-obj.shift-date no-undo.
 define variable v-shift-num  like ub.shift-obj.shift-num  no-undo.
 define variable v-shift-name as   character               no-undo.
 define variable v-obj-date   as   date                    no-undo.
+
+define buffer bf_place  for ub.place.
+define buffer bf_r-line for ub.rvs-line.
 
 if pardoc-mode = {&add-def} or
    pardoc-mode = {&update} then do:
@@ -1275,6 +1308,38 @@ case pardoc-mode :
                 run waitfram-hide in this-procedure.
                 undo tr, return error.
              end.
+             for  each bf_r-line where
+                      bf_r-line.rvs-code = r-doc.rvs-code and
+                      bf_r-line.obj-type = r-doc.obj-type and
+                      bf_r-line.obj-code = r-doc.obj-code
+              , first bf_place    where
+                      bf_place.obj-type = bf_r-line.obj-type and
+                      bf_place.obj-code = bf_r-line.obj-code and
+                      bf_place.pl-code  = bf_r-line.pl-code and
+                      bf_place.is-meas  = yes 
+             :
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = bf_r-line.obj-code
+                     and rvs-line-attr.obj-type  = bf_r-line.obj-type
+                     and rvs-line-attr.gds-code  = bf_r-line.gds-code
+                     and rvs-line-attr.pl-code   = bf_r-line.pl-code
+                     and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = bf_r-line.obj-code
+                  rvs-line-attr.obj-type  = bf_r-line.obj-type
+                  rvs-line-attr.gds-code  = bf_r-line.gds-code
+                  rvs-line-attr.pl-code   = bf_r-line.pl-code
+                  rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type"
+                .
+              end.
+              if varcur-data then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+             end.
+             release rvs-line-attr no-error .
           end.
           run waitfram-show in this-procedure ( input "Создаем строки по ТРК" ).
           { str/pump-sh.i
@@ -1996,6 +2061,7 @@ end procedure. /* proc-chg-pump */
 
 procedure proc_m-meas-3 :
 define buffer meas-place for ub.place.
+
 if available ub.rvs-line then do:
    assign rvs-line-rec      = recid(ub.rvs-line)
           rvs-line-pump-rec = (if available ub.rvs-line-pump then recid(ub.rvs-line-pump) else ?).
@@ -2081,6 +2147,28 @@ if available ub.rvs-line then do:
          view-as alert-box error.
          undo tr, return error.
       end.
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = ub.rvs-line.obj-code
+             and rvs-line-attr.obj-type  = ub.rvs-line.obj-type
+             and rvs-line-attr.gds-code  = ub.rvs-line.gds-code
+             and rvs-line-attr.pl-code   = ub.rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "input-type" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = ub.rvs-line.obj-code
+          rvs-line-attr.obj-type  = ub.rvs-line.obj-type
+          rvs-line-attr.gds-code  = ub.rvs-line.gds-code
+          rvs-line-attr.pl-code   = ub.rvs-line.pl-code
+          rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
+          rvs-line-attr.attr-code = "input-type"
+        .
+      end.
+      if varcur-rvs then rvs-line-attr.attr-value = 'а' .
+      else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+      release rvs-line-attr no-error .
+      
       run waitfram-show in this-procedure ( input "Пересчитывем шапку" ).
       { str/rvsclcln.i "recid( ub.rvs-line )" no-error }
       if error-status :error then do:
@@ -2375,6 +2463,9 @@ run waitfram-hide in this-procedure.
 end procedure.
 
 procedure proc_m-meas-1:
+  define buffer bf_place  for ub.place.
+  define buffer bf_r-line for ub.rvs-line.
+  
   assign rvs-line-rec      = (if available ub.rvs-line      then recid(ub.rvs-line)      else ?)
          rvs-line-pump-rec = (if available ub.rvs-line-pump then recid(ub.rvs-line-pump) else ?).
   run waitfram-show in this-procedure ( input "Просматриваем измеряемые резервуары" ).
@@ -2455,6 +2546,38 @@ procedure proc_m-meas-1:
          run waitfram-hide in this-procedure.
          undo tr, return error.
       end.
+      for  each bf_r-line where
+                bf_r-line.rvs-code = r-doc.rvs-code and
+                bf_r-line.obj-type = r-doc.obj-type and
+                bf_r-line.obj-code = r-doc.obj-code
+        , first bf_place    where
+                bf_place.obj-type = bf_r-line.obj-type and
+                bf_place.obj-code = bf_r-line.obj-code and
+                bf_place.pl-code  = bf_r-line.pl-code and
+                bf_place.is-meas  = yes 
+      :
+        find first rvs-line-attr exclusive-lock
+             where rvs-line-attr.obj-code  = bf_r-line.obj-code
+               and rvs-line-attr.obj-type  = bf_r-line.obj-type
+               and rvs-line-attr.gds-code  = bf_r-line.gds-code
+               and rvs-line-attr.pl-code   = bf_r-line.pl-code
+               and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+               and rvs-line-attr.attr-code = "input-type" no-error.
+        if not available rvs-line-attr then do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = bf_r-line.obj-code
+            rvs-line-attr.obj-type  = bf_r-line.obj-type
+            rvs-line-attr.gds-code  = bf_r-line.gds-code
+            rvs-line-attr.pl-code   = bf_r-line.pl-code
+            rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+            rvs-line-attr.attr-code = "input-type"
+          .
+        end.
+        if varcur-rvs then rvs-line-attr.attr-value = 'а' .
+        else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+      end.
+      release rvs-line-attr no-error .
       run waitfram-show in this-procedure ( input "Пересчитывем шапку" ).
       { str/rvsclchd.i "recid( r-doc )"
                    no                       no-error }

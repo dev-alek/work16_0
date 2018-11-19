@@ -935,6 +935,7 @@ PROCEDURE cre-dump-inkas:
     define buffer buf_chk-pay        for ub.chk-pay.
     define buffer buf_chk-pay-attr   for ub.chk-pay-attr .
     define buffer buf_chk-discnt     for ub.chk-discnt.
+    define buffer buf_chk-discnt-attr     for ub.chk-discnt-attr.
     define buffer buf_chk-doc-attr   for ub.chk-doc-attr.
     define buffer buf_chk-gds-pay      for ub.chk-gds-pay.
     define buffer buf_c-chk-doc        for ub.c-chk-doc.
@@ -1001,6 +1002,10 @@ PROCEDURE cre-dump-inkas:
       for each  buf_chk-discnt where buf_chk-discnt.doc-code = buf_chk-doc.doc-code
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
         run cre-route-dump( p-act-name, {&table_chk-discnt}, (buffer buf_chk-discnt:handle), dmp-ord, input-output rc-ord ).
+      end.
+      for each  buf_chk-discnt-attr where buf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+        run cre-route-dump( p-act-name, {&table_chk-discnt-attr}, (buffer buf_chk-discnt-attr:handle), dmp-ord, input-output rc-ord ).
       end.
       for each  buf_chk-doc-attr where buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :

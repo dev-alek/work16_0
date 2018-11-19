@@ -290,6 +290,7 @@ if ref-list <> "" then do:
   disp ub.clients.obj-type @ t-doc.cli-type with frame {&frame-name}.
 end.
 run check-cli no-error.
+&if "{1}" = "in" &then run fill-mol in this-procedure. &endif
 if error-status :error then return no-apply.
 end.
 
@@ -1959,4 +1960,30 @@ procedure proc-history :
   &scop table-name lock-table
 end procedure. /* proc-history */
 
+
+&if "{1}" = "in" or "{1}" = "inv" &then
+procedure fill-mol:
+  if pardoc-mode = {&update} or pardoc-mode = {&add-def}
+  then 
+  do:
+    find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid.
+    if ub.user-account.psn-code <> 0 and ub.user-account.psn-code <> ?
+      then 
+    do:
+      if t-doc.boss = ? then do:
+        t-doc.boss:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+        apply "leave" to t-doc.boss in frame {&frame-name}.
+      end.
+      if t-doc.wrkr = ?
+      then do:
+        t-doc.wrkr:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+        apply "leave" to t-doc.wrkr in frame {&frame-name}.
+      end.
+    end.
+    t-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+    apply "leave" to t-doc.agnt in frame {&frame-name}.    
+  end.
+  release ub.user-account.
+end.
+&endif
 /* $Workfile$   E n d */

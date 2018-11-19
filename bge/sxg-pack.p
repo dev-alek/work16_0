@@ -46,17 +46,16 @@ define variable vss-description as character no-undo init "отправка и прием паке
 { gbl/ftp-df.i }
 { gbl/cur-time.i }
 { rul/ora-rcpt.i proc }
+{ bge/esysattr.i } // ext-system-attr-value для проверки сертификатов
 DEFINE VARIABLE v-today as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
 
-do
-on error undo, return error
-:
   define stream FLStream.
 
   define variable v-filename         as character no-undo .
   define variable v-fullfilename     as character no-undo .
   define variable v-filetype         as character no-undo .
+  define variable v-num-name-parts   as integer no-undo .
   define variable v-current-pack-num as integer no-undo .
   define variable v-ftp-ip as character no-undo .
   define variable v-ftp-login as character no-undo .
@@ -74,6 +73,10 @@ on error undo, return error
   define buffer buf_esys-all-attr for ub.esys-all-attr.
   define buffer buf_temp-filelist for temp-filelist.
   define buffer buf_esys-pck-sent for ub.esys-pck-sent.
+  
+do
+on error undo, return error
+:
 
   /* если каталога temp-dir нет, то создадим его */
   assign
@@ -87,20 +90,7 @@ on error undo, return error
       return error substitute( "&1. Каталог &2 отсутствует, а создать его не удалось.", vss-workfile, p0-temp-dir ).
     end.
   end.
-  case p-delivery-method:
-    when integer({&esys-dm-CDash}) then do:
-      p0-arch = no.
-    end.
-    when integer({&esys-dm-exite-edi}) then do:
-      p0-arch = no.
-    end.
-    when integer({&esys-dm-contour-edi}) then do:
-      p0-arch = no.
-    end.
-    when integer({&esys-dm-erp-1C-RN}) then do:
-      p0-arch = yes.
-    end.
-  end.
+  
 
   if p0-file-name <> ? then do:  /*при get так не бывает*/
     run file-s-g ( input p0-action
@@ -220,20 +210,23 @@ on error undo, return error
     on error undo, return error
     :
       import stream FLStream v-filename v-fullfilename v-filetype.
-
+      
+      v-num-name-parts = num-entries( v-filename, "." ) .
       if v-filetype begins "F"
-        and num-entries( v-filename, "." ) > 1
+        and v-num-name-parts > 1
+        and lookup(  entry(v-num-name-parts, v-filename, "."),  "$$$"  ) = 0
       then do:
         assign
           file-info:file-name = v-fullfilename
         .
 
-        if lookup(entry( num-entries( v-filename, "." ), v-filename, "." ), "$$$") = 0
-          and file-info:file-type MATCHES "*W*":U /* проверка на атрибут read-only */
+      //  if lookup(entry( num-entries( v-filename, "." ), v-filename, "." ), "$$$") = 0 and
+           if file-info:file-type MATCHES "*W*":U /* проверка на атрибут read-only */
           and file-info:file-type MATCHES "*R*":U /* проверка на возможность чтения файла */
           and not ( file-info:file-type MATCHES "*H*":U )
         then do:
           v-current-pack-num = v-current-pack-num + 1.
+          // переносит пакет из exch в heap и распаковывает его там, если он архив
           run file-s-g ( input p0-action
                         ,input p0-arch
                         ,input v-filename
@@ -272,9 +265,7 @@ procedure file-s-g :
   define input parameter p-target-dir as character no-undo .
   define input parameter p-temp-dir   as character no-undo .
   define input parameter p-current-pack-num as integer no-undo .
-  do
-  on error undo, return error
-  :
+
     define variable v-arch             as logical   no-undo .
     define variable v-arh-name         as character no-undo .
     define variable v-arh-type         as character no-undo .
@@ -289,14 +280,37 @@ procedure file-s-g :
     define variable v-log-file-temp        as character no-undo .
     define variable v-log-file-target      as character no-undo .
 
-
     define variable v-file-name-no-ext as character no-undo .
     define variable v-ext-name         as character no-undo .
+    define variable v-zip-command      as character no-undo .
+
+    define variable v-cert-enstr       as character no-undo . // чтение v-cert-enabled строкой
+    define variable v-cert-enabled     as logical no-undo . // true - добавить цифровую подпись
+    define variable v-attr-type        as character no-undo . // для чтения значений из ext-system-attr
 
     define variable v-err-mess         as character no-undo .
     define variable v-send-log         as logical   no-undo .
     define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd.
 
+  do
+  on error undo, return error
+  :
+
+do :  // просто собрано в одно место из разных частей программы
+  case p-delivery-method:
+    when integer({&esys-dm-CDash}) then do:
+      p-arch = no.
+    end.
+    when integer({&esys-dm-exite-edi}) then do:
+      p-arch = no.
+    end.
+    when integer({&esys-dm-contour-edi}) then do:
+      p-arch = no.
+    end.
+    when integer({&esys-dm-erp-1C-RN}) then do:
+      p-arch = yes.
+    end.
+  end.
     case p-delivery-method:
       when integer({&esys-dm-nn})
       or
@@ -339,6 +353,9 @@ procedure file-s-g :
         v-arh-type = "arj".
       end.
     end case.
+end .
+
+    
     if r-index( p-file-name, '.':u) > 0 then do:
       assign
         v-file-name-no-ext = substring( p-file-name, 1, r-index( p-file-name, '.':u) - 1 )
@@ -351,15 +368,15 @@ procedure file-s-g :
         v-ext-name         = "":U
       .
     end.
+    assign
+      v-file-source     = p-source-dir + {&back-slash-char} + p-file-name
+      v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name
+      v-file-target     = p-target-dir + {&back-slash-char} + p-file-name
+    .
     if p-action = "put"
     or p-action = "fput"
     or p-action = "fget"
     then do:
-    assign
-      v-file-source     = p-source-dir + {&back-slash-char} + p-file-name
-      v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name
-        v-file-target     = p-target-dir + {&back-slash-char} + p-file-name
-    .
       if p-action = "put" then do:
         case p-delivery-method:
           when integer({&esys-dm-oracle-retail}) then do:
@@ -409,15 +426,6 @@ procedure file-s-g :
           buf_esys-all-attr.attr-value = p-file-name.
         end.
       end.
-      assign
-        v-file-source     = p-source-dir + {&back-slash-char} + p-file-name
-        v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name
-        v-file-target     = p-target-dir + {&back-slash-char} + p-file-name
-                            /*(if available buf_esys-all-attr
-                            then  p-file-name
-                            else ("o":U + string( p-current-pack-num, "999999999":U ) + ".xml":U)
-                            )*/
-      .
     end.
 
     /* проверим наличие исходного файла */
@@ -444,13 +452,14 @@ procedure file-s-g :
           v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".arj":U
           v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".arj":U
         .
+        // @FUTU в зависимости от параметра запаковать или только файл, или файл вместе с цифровой подписью
         os-command silent
           value( v-arh-name )
           value( "a -e -y":U )
           value( v-file-source-arj )
           value( v-file-source )
         .
-      end.
+        end.
         if v-arh-type = "zip" then do:
           case p-delivery-method:
             when integer({&esys-dm-oracle-retail}) then do:
@@ -496,9 +505,28 @@ procedure file-s-g :
                 v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".zip":U
                 v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
               .
-              os-command silent
-                value( substitute( "&1 a -tzip -y &2 &3":U, v-arh-name, v-file-source-arj, v-file-source ) )
+              /* в зависимости от параметра запаковать или только файл, или файл вместе с цифровой подписью
+                 29/VIII-2018  параметры настройки ЭЦП перенесены из ini-файла в настройки внешней системы */
+              run ext-system-attr-value in this-procedure (
+                                      input  p-esys-id
+                                     ,input  p-db-num
+                                     ,input  {&attr-esys-cert-sign}
+                                     ,output v-cert-enstr
+                                     ,output v-attr-type) .
+              v-cert-enabled = logical (v-cert-enstr) .
+              v-zip-command =
+              if v-cert-enabled then
+                 substitute( "&1 a -tzip -y &2 &3 &4&5&6.p7s":U
+                   , v-arh-name
+                   , v-file-source-arj
+                   , v-file-source
+                   , p-source-dir, {&back-slash-char} , v-file-name-no-ext
+                 )
+              else
+                 substitute( "&1 a -tzip -y &2 &3":U, v-arh-name, v-file-source-arj, v-file-source )
               .
+               
+              os-command silent value( v-zip-command ) .
               /* проверим наличие заархивированного файла */
               assign
                 file-info:file-name = v-file-source-arj

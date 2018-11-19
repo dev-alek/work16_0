@@ -35,7 +35,7 @@ define variable v-first as logical no-undo .
               ({&cd-type-NCR-GM} + {&comma-char} +
                {&cd-type-IBM-XML} + {&comma-char} +
                {&cd-type-MAGIA-XML} + {&comma-char} +
-               {&cd-type-NCR-AS-R}
+               {&cd-type-NCR-AS-R} + {&cd-type-Autotank}
                )) > 0
      and for-cash-desk.autonomy = integer({&cd-slave}))
      or v-first then next.
@@ -43,6 +43,7 @@ define variable v-first as logical no-undo .
     assign
     v-first = yes
     .
+
     /*для виртуальных касс серверо - их много для каждого маг-на пошлется один раз*/
     run write-log-and-file in p-log-handle (
           input 1

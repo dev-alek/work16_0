@@ -86,6 +86,7 @@ DEFINE BUFFER loc-gds-dtl for ub.gds-dtl.
 define buffer buf_parts for ub.parts .
 define buffer other_doc-line for ub.doc-line.
 define buffer other_gds-dtl  for ub.gds-dtl.
+define buffer buf_doc-fbr-gds for ub.doc-fbr-gds .
 define variable res-qnty                    as decimal no-undo.
 define variable gds-dtl-res-qnty            as decimal no-undo.
 define variable no-partion-qnty             as decimal no-undo.
@@ -752,6 +753,33 @@ if ( num_rec modulo 10 ) = 0 then
     assign
     v-to-reserv = no
     .
+    /* ÏÐÎÈÇÂÎÄÑÒÂÎ */
+    find first goods no-lock where goods.artic = loc-gds-dtl.artic
+                               and goods.prod-type = loc-gds-dtl.prod-type
+                               and goods.prod-code = loc-gds-dtl.prod-code
+                               .
+    if b-trn-doc.ext-doc-type =  {&TDEDT_Vozvrat_Vnesh_Kass}
+    then do :                           
+      find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = replace(loc-gds-dtl.doc-code, "=", "-")
+                                           and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                           no-error .
+      if available buf_doc-fbr-gds 
+      then do :  
+        assign
+          v-to-reserv = no
+        .
+      end.                                   
+    end.
+    if b-trn-doc.ext-doc-type =  {&TDEDT_Ras_Vnesh_Kass}
+    then do :
+      find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = loc-gds-dtl.doc-code
+                                           and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                           no-error .
+      if available buf_doc-fbr-gds 
+      then do :  
+        chg-qnty = buf_doc-fbr-gds.fact-qnty .
+      end.                                     
+    end.
     if v-to-reserv and chg-qnty <> 0 then do:
       if b-trn-doc.status_ = {&doc-froze}
       or b-trn-doc.flag <> no
@@ -794,7 +822,7 @@ if ( num_rec modulo 10 ) = 0 then
       .
     end.
 &if "{2}" = "auto" &then
-if chg-qnty <> res-qnty then do:
+if chg-qnty <> res-qnty and not available buf_doc-fbr-gds then do:
   &scop my-message return-value
   {&display-message}.
 end.
@@ -824,7 +852,14 @@ end.
       buf_sale-doc.doc-qnty = buf_sale-doc.doc-qnty  + chg-qnty
       b-trn-doc.doc-qnty = b-trn-doc.doc-qnty  + chg-qnty
       .
-      {&num_rec_res_plus}.
+      
+      if available buf_doc-fbr-gds
+      then do :
+        if loc-gds-dtl.doc-qnty = buf_doc-fbr-gds.fact-qnty then assign num_rec_res = num_rec_res + 1 .
+      end. 
+      else do :
+        {&num_rec_res_plus}.
+      end.
       if bottle then do:
         { str/in-vatp.i calc b-doc-line.  b-trn-doc. g }
         assign

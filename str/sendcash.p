@@ -239,6 +239,7 @@ else do:
       end. /*not "R"*/
     end.
     when 1 then do:
+      
       run write-log-and-file in p-log-handle (
             input 1
           , input log-file-name
@@ -262,10 +263,10 @@ else do:
                                                ,input 0).
 
       FOR EACH buf_staff WHERE
-               buf_staff.role = {&role-cashier}
+            /*   buf_staff.role = {&role-cashier}
            and buf_staff.role-level = {&role-level-db}
            and buf_staff.work-place = v-work-place
-           and buf_staff.date-end >= v-today,
+           and buf_staff.date-end >= v-today*/ ,
         FIRST buf_clients no-lock WHERE
               buf_clients.obj-type = {&prs}
          AND  buf_clients.obj-code = buf_staff.psn-code :
@@ -282,6 +283,36 @@ else do:
           .
         end.
       END.
+    end.
+    when 4 then do:
+      if mode = "D" 
+      then do:
+      run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input substitute("&1 магазина &2 всех кассиров"
+                            , (if mode = "U" then "Пересылка на кассы" else "Удаление с касс" )
+                            , i-obj-code)
+          ).
+      run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input substitute("Подготовка данных")
+                                          ).
+    
+          create cash-cash.
+          assign
+          cash-cash.cash-code = ?
+          
+          no-error.
+          validate cash-cash no-error.
+          if error-status:error
+          then
+            message error-status:get-message(1)
+            view-as alert-box.
+       end.
     end.
   END CASE.
   if can-find(first cash-cash) then do:

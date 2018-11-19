@@ -53,12 +53,28 @@ define variable vss-description as character no-undo init "Экран настроек работы
 { cmp/showinf.i  }
 { gbl/getcntxt.i def }
 { gbl/color.i    }
+{ gbl/twowin.i   }
+{ str/trdcalib.i }
 
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 
 define variable v-tth           as   handle       no-undo .
 define variable v-to-create     as   logical      no-undo .
 DEFINE VARIABLE v-db-num        like ub.db.db-num no-undo.
+
+define variable v-list-dop-info-full as character    no-undo.
+define variable v-list-dop-info      as character    no-undo.
+
+define temp-table temp_twowin_itemsSelected_col no-undo
+    field its-key   as integer
+    field itm-key   as integer
+    field itmExtKey as character
+
+    index pi is primary unique
+      its-key
+    index im
+      itm-key
+.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -75,15 +91,17 @@ DEFINE VARIABLE v-db-num        like ub.db.db-num no-undo.
 &Scoped-define FRAME-NAME shattrpt
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit ~
-B-Help t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl ~
-rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt ~
-r-temp-for-pomi r-denstclc mass-proc r-algoincptrl t-mand-chioce-autocar ~
-delta-horiz delta-vert 
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 ~
+RECT-4 RECT-5 RECT-6 t-autopump-izm t-autopump t-avtinvpm t-olddens ~
+r-expptrl r-inpptrl dop-info rvs-wt-email B-set_dop-info r-algrvspt ~
+t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc ~
+mass-proc r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz ~
+delta-vert otkl-temp otkl-density otkl-water v-dop-info 
 &Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
-t-olddens r-expptrl r-inpptrl rvs-wt-email r-algrvspt t-rvsnmter t-invclipt ~
-f-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
-t-mand-chioce-autocar delta-horiz delta-vert f-invclipt-name 
+t-olddens r-expptrl r-inpptrl dop-info rvs-wt-email r-algrvspt t-rvsnmter ~
+t-invclipt f-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
+t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp ~
+otkl-density otkl-water v-dop-info f-invclipt-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -120,6 +138,11 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE BUTTON B-set_dop-info 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.
+
 DEFINE VARIABLE delta-horiz AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
      SIZE 20 BY 5 NO-UNDO.
@@ -127,6 +150,10 @@ DEFINE VARIABLE delta-horiz AS CHARACTER
 DEFINE VARIABLE delta-vert AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
      SIZE 20 BY 5 NO-UNDO.
+
+DEFINE VARIABLE dop-info AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 28.5 BY 4.5 NO-UNDO.
 
 DEFINE VARIABLE f-invclipt LIKE clients.obj-code
      VIEW-AS FILL-IN 
@@ -141,9 +168,33 @@ DEFINE VARIABLE mass-proc AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE otkl-density AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
+     LABEL "Плотности" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
+DEFINE VARIABLE otkl-fact-volue AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Фактического объема" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
+DEFINE VARIABLE otkl-temp AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Температуры" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
+DEFINE VARIABLE otkl-water AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Воды" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
+
 DEFINE VARIABLE rvs-wt-email AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
      SIZE 60 BY .96 NO-UNDO.
+
+DEFINE VARIABLE v-dop-info AS CHARACTER FORMAT "X(256)":U INITIAL "Обязательные поля доп.инфо. ПН по НП" 
+      VIEW-AS TEXT 
+     SIZE 37.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE r-algoincptrl AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -156,7 +207,8 @@ DEFINE VARIABLE r-algrvspt AS INTEGER
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS 
           "Алгоритм N1", 1,
-"Алгоритм N2", 2
+          "Алгоритм N2", 2,
+          "Алгоритм N3", 3
      SIZE 16 BY 1.75 NO-UNDO.
 
 DEFINE VARIABLE r-denstclc AS CHARACTER 
@@ -172,17 +224,17 @@ DEFINE VARIABLE r-denstclc AS CHARACTER
 DEFINE VARIABLE r-expptrl AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
-          "Вес", "weight",
+          "Масса", "weight",
 "Объем", "volume"
      SIZE 23.5 BY .83 NO-UNDO.
 
 DEFINE VARIABLE r-inpptrl AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
-          "Вес+плотность", "weight",
+          "Масса+плотность", "weight",
 "Объем+плотность", "volume",
-"Вес+объем", "weight+",
-"Объем+вес", "volume+"
+"Масса+объем", "weight+",
+"Объем+масса", "volume+"
      SIZE 66 BY .83 NO-UNDO.
 
 DEFINE VARIABLE r-temp-for-pomi AS INTEGER 
@@ -207,6 +259,14 @@ DEFINE RECTANGLE RECT-3
 DEFINE RECTANGLE RECT-4
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 96.5 BY 4.17.
+
+DEFINE RECTANGLE RECT-5
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 43.5 BY 7.25.
+
+DEFINE RECTANGLE RECT-6
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 52.5 BY 7.25.
 
 DEFINE VARIABLE t-autopump AS LOGICAL INITIAL no 
      LABEL "Автоматические сверки создавать с чтением всех счетчиков ТРК" 
@@ -255,8 +315,10 @@ DEFINE FRAME shattrpt
      t-avtinvpm AT ROW 4.75 COL 3 WIDGET-ID 42
      t-olddens AT ROW 5.75 COL 3 WIDGET-ID 76
      r-expptrl AT ROW 7.25 COL 72.5 NO-LABEL WIDGET-ID 50
-     r-inpptrl AT ROW 9.38 COL 4 NO-LABEL WIDGET-ID 44
-     rvs-wt-email AT ROW 13.04 COL 4 NO-LABEL WIDGET-ID 90
+     r-inpptrl AT ROW 8.92 COL 4 NO-LABEL WIDGET-ID 44
+     dop-info AT ROW 9.5 COL 69.5 NO-LABEL WIDGET-ID 492
+     rvs-wt-email AT ROW 11.75 COL 3.5 NO-LABEL WIDGET-ID 90
+     B-set_dop-info AT ROW 13 COL 41 WIDGET-ID 496
      r-algrvspt AT ROW 15.83 COL 3.5 NO-LABEL WIDGET-ID 80
      t-rvsnmter AT ROW 17.83 COL 3.5 WIDGET-ID 58
      t-invclipt AT ROW 18.83 COL 3.5 WIDGET-ID 74
@@ -265,41 +327,55 @@ DEFINE FRAME shattrpt
      b-invclipt AT ROW 19.83 COL 15.5 WIDGET-ID 68
      r-temp-for-pomi AT ROW 21.33 COL 64 NO-LABEL WIDGET-ID 96
      r-denstclc AT ROW 23.25 COL 3.5 NO-LABEL WIDGET-ID 32
-     mass-proc AT ROW 27.38 COL 46.75 COLON-ALIGNED WIDGET-ID 100
+     mass-proc AT ROW 26.5 COL 46.75 COLON-ALIGNED WIDGET-ID 100
      r-algoincptrl AT ROW 28.38 COL 38.13 NO-LABEL WIDGET-ID 118
      t-mand-chioce-autocar AT ROW 29.33 COL 3.63 WIDGET-ID 106
-     delta-horiz AT ROW 32.54 COL 2.5 NO-LABEL WIDGET-ID 110
-     delta-vert AT ROW 32.54 COL 24 NO-LABEL WIDGET-ID 122
+     otkl-fact-volue AT ROW 32.5 COL 72.63 COLON-ALIGNED WIDGET-ID 506
+     delta-horiz AT ROW 32.71 COL 3.5 NO-LABEL WIDGET-ID 110
+     delta-vert AT ROW 32.71 COL 25 NO-LABEL WIDGET-ID 122
+     otkl-temp AT ROW 33.58 COL 72.63 COLON-ALIGNED WIDGET-ID 508
+     otkl-density AT ROW 34.71 COL 72.63 COLON-ALIGNED WIDGET-ID 510
+     otkl-water AT ROW 35.79 COL 72.63 COLON-ALIGNED WIDGET-ID 512
+     v-dop-info AT ROW 13 COL 3.5 NO-LABEL WIDGET-ID 498
      f-invclipt-name AT ROW 19.83 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
+     "Максимально допустимые отклонения:" VIEW-AS TEXT
+          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED WIDGET-ID 504
      "Настройки инвентаризации по сверке" VIEW-AS TEXT
           SIZE 35.5 BY .67 AT ROW 15.08 COL 3 WIDGET-ID 78
-     "Тип ввода топлива во всех документах кроме прихода внешнего:" VIEW-AS TEXT
-          SIZE 61 BY .83 AT ROW 7.25 COL 3.5 WIDGET-ID 54
-     "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
-          SIZE 57.5 BY .67 AT ROW 30.75 COL 2.5 WIDGET-ID 112
+     "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
+          SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
      "горизонтальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.71 COL 2.5 WIDGET-ID 126
-     "Температура, к которой приводиться плотность и объем (°С) :" VIEW-AS TEXT
-          SIZE 60 BY .67 AT ROW 21.33 COL 4 WIDGET-ID 94
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 3.5 WIDGET-ID 126
      "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
           SIZE 34.5 BY 1 AT ROW 28.38 COL 3.63 WIDGET-ID 116
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
-          SIZE 79 BY .96 AT ROW 11.96 COL 4 WIDGET-ID 94
+          SIZE 62.5 BY .96 AT ROW 10.79 COL 3.5 WIDGET-ID 94
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
-          SIZE 84 BY .96 AT ROW 10.79 COL 4 WIDGET-ID 92
-     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
-          SIZE 52 BY .63 AT ROW 26.58 COL 3.5 WIDGET-ID 86
-     "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
-          SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
+          SIZE 64.5 BY .96 AT ROW 10.08 COL 3.5 WIDGET-ID 92
      "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
-          SIZE 49 BY .83 AT ROW 8.25 COL 4 WIDGET-ID 48
+          SIZE 49 BY .83 AT ROW 7.92 COL 3.5 WIDGET-ID 48
+     "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
+          SIZE 42 BY .67 AT ROW 30.92 COL 3.5 WIDGET-ID 112
      "вертикальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.71 COL 24 WIDGET-ID 124
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 25 WIDGET-ID 124
+     "Температура, к которой приводиться плотность и объем °С :" VIEW-AS TEXT
+          SIZE 58 BY .83 AT ROW 21.25 COL 3.5 WIDGET-ID 516
+     "Тип ввода топлива во всех документах кроме прихода внешнего :" VIEW-AS TEXT
+          SIZE 63 BY .83 AT ROW 7.13 COL 3.5 WIDGET-ID 514
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE  WIDGET-ID 100.
+
+/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
+DEFINE FRAME shattrpt
+     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
+          SIZE 52 BY .63 AT ROW 27.63 COL 3.5 WIDGET-ID 86
      RECT-1 AT ROW 22.33 COL 2.5 WIDGET-ID 38
      RECT-2 AT ROW 14.71 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 7 COL 2.5 WIDGET-ID 66
      RECT-4 AT ROW 26.33 COL 2.5 WIDGET-ID 84
-     SPACE(1.24) SKIP(7.62)
+     RECT-5 AT ROW 30.75 COL 2.63 WIDGET-ID 500
+     RECT-6 AT ROW 30.75 COL 46.5 WIDGET-ID 502
+     SPACE(1.24) SKIP(0.12)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки работы с ТОПЛИВНЫМ товаром" WIDGET-ID 100.
@@ -327,6 +403,9 @@ DEFINE FRAME shattrpt
 ASSIGN 
        FRAME shattrpt:SCROLLABLE       = FALSE.
 
+ASSIGN 
+       dop-info:READ-ONLY IN FRAME shattrpt        = TRUE.
+
 /* SETTINGS FOR FILL-IN f-invclipt IN FRAME shattrpt
    LIKE = ub.clients.obj-code EXP-LABEL EXP-HELP EXP-SIZE               */
 /* SETTINGS FOR FILL-IN f-invclipt-name IN FRAME shattrpt
@@ -336,6 +415,11 @@ ASSIGN
 
 /* SETTINGS FOR FILL-IN rvs-wt-email IN FRAME shattrpt
    ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN v-dop-info IN FRAME shattrpt
+   ALIGN-L                                                              */
+/* SETTINGS FOR TEXT-LITERAL "Максимально допустимые отклонения:"
+          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED        */
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -418,6 +502,17 @@ DO:
       f-invclipt-name
       with frame {&frame-name} .
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-set_dop-info
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_dop-info shattrpt
+ON CHOOSE OF B-set_dop-info IN FRAME shattrpt
+DO:
+  run select-dop-info in this-procedure.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -640,7 +735,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     .
   end.
 
-
+  RUN proc-init-dop-info.
   RUN enable_UI.
 
   apply "value-changed" to t-invclipt in frame {&frame-name} .
@@ -651,9 +746,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       with frame {&frame-name} .
     enable
       b-quit
+      B-set_dop-info
       with frame {&frame-name} .
   end.
-
+  hide dop-info in frame {&frame-name} .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -693,15 +789,17 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
-          rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt 
+          dop-info rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt 
           r-temp-for-pomi r-denstclc mass-proc r-algoincptrl 
-          t-mand-chioce-autocar delta-horiz delta-vert f-invclipt-name 
+          t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp 
+          otkl-density otkl-water v-dop-info f-invclipt-name 
       WITH FRAME shattrpt.
-  ENABLE B-exit RECT-1 RECT-2 RECT-3 RECT-4 b-quit B-Help t-autopump-izm 
-         t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl rvs-wt-email 
-         r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi 
-         r-denstclc mass-proc r-algoincptrl t-mand-chioce-autocar delta-horiz 
-         delta-vert 
+  ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 RECT-5 RECT-6 
+         t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
+         dop-info rvs-wt-email B-set_dop-info r-algrvspt t-rvsnmter t-invclipt 
+         f-invclipt b-invclipt r-temp-for-pomi r-denstclc mass-proc 
+         r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz 
+         delta-vert otkl-temp otkl-density otkl-water v-dop-info 
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.
@@ -853,6 +951,34 @@ on error undo, return error return-value
               r-algoincptrl :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
               .
           end.
+      when {&attr-petrol_otkl-fact-volue} then 
+          do: 
+            assign
+              otkl-fact-volue = thbjattr_thbj-attr.property-value-decimal 
+              otkl-fact-volue :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.
+      when {&attr-petrol_otkl-temp} then 
+          do: 
+            assign
+              otkl-temp = thbjattr_thbj-attr.property-value-decimal 
+              otkl-temp :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.          
+      when {&attr-petrol_otkl-density} then 
+          do: 
+            assign
+              otkl-density = thbjattr_thbj-attr.property-value-decimal 
+              otkl-density :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.          
+      when {&attr-petrol_otkl-water} then 
+          do: 
+            assign
+              otkl-water = thbjattr_thbj-attr.property-value-decimal 
+              otkl-water :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+              .
+          end.                                            
       when {&attr-petrol_mand-choice-autocar} then 
           do: 
             assign
@@ -873,7 +999,14 @@ on error undo, return error return-value
               delta-vert = thbjattr_thbj-attr.property-value-character 
               delta-vert :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
-          end.  
+          end.
+        when {&attr-petrol_dop-info} then 
+          do:
+            assign 
+              dop-info = thbjattr_thbj-attr.property-value-character 
+              dop-info :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.              
     end case.
     create temp-thbj-attr.
     buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
@@ -881,6 +1014,29 @@ on error undo, return error return-value
 
   
 end.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-init-dop-info shattrpt 
+PROCEDURE proc-init-dop-info :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+
+
+   assign
+      v-list-dop-info      = {&trdcattr-car-num} + "," + {&trdcattr-fio-driver} + "," + {&trdcattr-time-income} + "," + {&trdcattr-time-pour} + "," + {&trdcattr-date-pour} + "," + {&trdcattr-inspection-cert} + ","
+      + {&trdcattr-date-cert} + "," + {&trdcattr-condition} + "," + {&trdcattr-seals-condition} + "," + {&trdcattr-acc-ship} + "," + {&trdcattr-doc-not} + "," + {&trdcattr-spisok-not-doc} + "," + {&trdcattr-ptbobj} + 
+      "," + {&trdcattr-ptb-item-pour} + "," + {&trdcattr-autoent}.
+      v-list-dop-info-full = {&label-trdcattr-car-num} + "," + {&label-trdcattr-fio-driver} + "," + {&label-trdcattr-time-income} + "," + {&label-trdcattr-time-pour} + "," + {&label-trdcattr-date-pour} + "," + {&label-trdcattr-inspection-cert} + ","
+      + {&label-trdcattr-date-cert} + "," + {&label-trdcattr-condition} + "," + {&label-trdcattr-seals-condition} + "," + {&label-trdcattr-acc-ship} + "," + {&label-trdcattr-doc-not} + "," + {&label-trdcattr-spisok-not-doc} +
+       "," + {&label-trdcattr-ptbobj} + "," + {&label-trdcattr-ptb-item-pour} + "," + {&label-trdcattr-autoent}.
+
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -907,7 +1063,8 @@ define variable v-same            as logical        no-undo .
 do
 on error undo, return error return-value
 :
-
+display dop-info with frame {&frame-name} .
+hide dop-info in frame {&frame-name} .
 
   if p-mode = {&lookup} then do:
     return error.
@@ -1027,6 +1184,76 @@ on error undo, return error return-value
   end.
 
 end.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-dop-info shattrpt 
+PROCEDURE select-dop-info :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+
+define variable v-counter       as integer      no-undo.
+define variable v-label         as character    no-undo.
+define variable v-value         as character    no-undo.
+define variable v-list          as character    no-undo.
+define variable v-changed       as logical    no-undo.
+define variable v-accepted      as logical    no-undo.
+define variable v-mode          as integer    no-undo.
+define variable V-EX as logical   no-undo .
+
+do
+with frame {&frame-name}
+on error undo, return error
+:
+if p-mode = {&lookup} then v-mode = 0 .
+else v-mode = 1 .
+
+    run twowin_clear in this-procedure.
+
+    do v-counter = 1 to num-entries( v-list-dop-info-full )
+    on error undo, return error
+    :
+        assign
+            v-label = entry( v-counter, v-list-dop-info-full )
+            v-value = entry( v-counter, v-list-dop-info )
+            v-ex = false
+        .
+           if  lookup (v-value , dop-info ) > 0 then  v-ex = true .
+           else v-ex = false .
+        run twowin_add-item in this-procedure (
+              input v-value
+            , input v-label
+            , input substitute( "Обязательные поля: &1", v-VALUE)
+            , input  V-EX
+        ).
+    end.        /* do */
+    run gbl/twowin.w (
+          input ?
+        , input v-mode
+        , input "Выбор обязательного поля доп.инфо ПН":U
+        , input "":U
+        , input "&Тест"
+        , input table temp_twowin_items
+        , output table temp_twowin_itemsSelected_col
+        , output v-changed
+        , output v-accepted
+    ).
+    if v-changed then do:
+        dop-info = "" .
+        for each temp_twowin_itemsSelected_col :
+        dop-info = dop-info +  temp_twowin_itemsSelected_col.itmExtKey + "," .
+        end.
+        dop-info = trim(dop-info, ",") .
+        display dop-info with frame {&frame-name} .
+                    hide dop-info in frame {&frame-name} .
+    end.
+end.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

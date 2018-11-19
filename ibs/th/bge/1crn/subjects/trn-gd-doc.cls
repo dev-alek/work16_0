@@ -305,10 +305,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
       sw:start-element ("gd").
         write-data-element ("line-num", string-mth (buf_doc-line.line-num)).
         write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
-        write-data-element ("unit-code", string (buf_gds.unit-base)).
-        write-data-element ("koef", string (buf_gds.cli-base-rate)).
-        write-data-element ("qnty-ttn", string-mth (buf_doc-line.doc-qnty)).
-        write-data-element ("qnty-fact", string-mth (buf_doc-line.fact-qnty)).
+        write-data-element ("unit-code", string (buf_doc-line.unit-cli)).
+        write-data-element ("koef", string (buf_doc-line.cli-base-rate)).
+        write-data-element ("qnty-ttn", string-mth (buf_doc-line.cli-qnty)).
+        write-data-element ("qnty-fact", string-mth (buf_doc-line.fact-qnty / buf_doc-line.cli-base-rate)).
         
         if v-doc-type-ERPRN = "8"
         then do:
@@ -383,9 +383,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     {&create-record-cust-date}
     &scop attr-code trdcattr-time-pour
     &scop tag-code time-pour
-    {&create-record-cust}
-    &scop attr-code trdcattr-acc-ship
-    &scop tag-code acc-ship
     {&create-record-cust}
     &scop attr-code trdcattr-doc-not
     &scop tag-code doc-not
@@ -492,6 +489,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
             write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
             /*время отбора пробы часы/минут HourProb MinProb*/
             write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
+            write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
+            write-data-element ("tp-norm", string (infoSecObj:TPNorm)).
+            write-data-element ("tp-tank-norm", string-mth (infoSecObj:TPNormPL)).
+            write-data-element ("tp-nsn-norm", string-mth (infoSecObj:TPNormAuto)).
           sw:end-element ("sc").
         end.
       end.

@@ -1336,6 +1336,7 @@ procedure chk-actg :
   define variable v-ok    as logical      no-undo.
   define variable v-on-gds    as logical      no-undo.
   define variable v-on-grp    as logical      no-undo.
+  define variable v-on-gbl    as logical      no-undo.
   define variable v-full-user-name      as character no-undo .
   define variable v-error-message       as character no-undo .
   define variable v-check-db-num        as integer   no-undo .
@@ -1344,10 +1345,17 @@ procedure chk-actg :
   define variable v-action-item-id      as character no-undo .
   define variable v-action-item-description as character no-undo .
   define variable v-context             as character    no-undo.
+  define variable v-chk-news            as logical   no-undo initial no .
 
   do
   on error undo, return error return-value
   :
+    if num-entries(p-user-id, {&delim-par}) = 2
+    then do :
+      v-chk-news = logical(entry(2, p-user-id, {&delim-par})) no-error.
+      p-user-id = entry(1, p-user-id, {&delim-par}).
+    end.
+    
     case p-action-context:
       when {&cntxt-firm} then do:
          assign
@@ -1377,8 +1385,11 @@ procedure chk-actg :
     :
 /*       проверка прав при приеме новостей бессмысленна */
 
-run gbl\get-gbl2.p (output p-ok ) no-error.
-if p-ok then leave check_block .
+if not v-chk-news
+then do :
+  run gbl\get-gbl2.p (output p-ok ) no-error.
+  if p-ok then leave check_block .
+end.
 /*
       if ibs.th.gbl.gbl-var:g#news = YES  or ibs.th.gbl.gbl-var:g#auto or ibs.th.gbl.gbl-var:g#esys then do:
          assign
@@ -1461,6 +1472,14 @@ if p-ok then leave check_block .
         .
         leave check_block . /* --->>>--- */
       end.
+
+      { adm/actn-gbl.i
+        v-on-gbl
+        no-error
+      }
+      /* if v-on-gbl then
+        v-check-db-num = 0.
+        */
 
       /* ¬ключена работа прав по групп товаров. »щем имеет ли ограничение по группе данное право. */
       if v-on-grp then do:
@@ -2546,6 +2565,42 @@ on error undo, return error
 
 end. /* do on error */
 end procedure. /* actn-grp */
+
+/*==========================================================================*/
+/* включена ли в системе глобальна€ настройка прав */
+procedure actn-gbl :
+define output parameter p-on as logical          no-undo.
+
+define buffer buf_global-state             for ub.global-state .
+define buffer buf_global-state-attr        for ub.global-state-attr .
+
+do
+on error undo, return error
+:
+   FIND FIRST buf_global-state
+        NO-LOCK
+        .
+   FIND FIRST buf_global-state-attr
+        WHERE buf_global-state-attr.gls-id    = buf_global-state.gls-id
+          AND buf_global-state-attr.attr-code = "action-gbl"
+        NO-LOCK
+        NO-error
+        .
+   IF  AVAILABLE buf_global-state-attr
+   AND LOGICAL(buf_global-state-attr.attr-value)
+   THEN DO:
+      assign
+         p-on = TRUE
+      .
+   END.
+   ELSE DO:
+      assign
+         p-on = FALSE
+      .
+   END.
+
+end. /* do on error */
+end procedure. /* actn-gbl */
 
 /*==========================================================================*/
 procedure actgrpcd :

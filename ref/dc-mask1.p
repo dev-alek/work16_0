@@ -38,6 +38,7 @@ define input parameter p-obj-type          like ub.dis-card-mask.obj-type       
 define input parameter p-rank              like ub.dis-card-mask.rank              no-undo .
 define input parameter p-type              like ub.dis-card-mask.type              no-undo .
 define input parameter p-cc-run            like ub.dis-card-mask.cc-run            no-undo .
+define input parameter p-reg-cash          as logical                              no-undo .
 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -68,6 +69,8 @@ define buffer buf_dis-card for ub.dis-card.
 define buffer buf_sysconf for ub.sysconf.
 define buffer buf_clients-obj for ub.clients.
 define buffer buf_clients for ub.clients.
+define buffer buf_dis-card-mask-attr  for ub.dis-card-mask-attr.
+
 DEFINE TEMP-TABLE tt0-dis-card-property NO-UNDO LIKE ub.dis-card-property.
 
 if p-mode <> {&add-def}
@@ -491,6 +494,21 @@ ON STOP UNDO _main, RETURN ERROR:
                              )).
     undo _main, return error "":U.
  end.
+  find first buf_dis-card-mask-attr exclusive-lock where buf_dis-card-mask-attr.attr-code = "reg-cash" and buf_dis-card-mask-attr.mask-num = p-mask-num no-error .
+  if available (buf_dis-card-mask-attr) then do:
+    if p-reg-cash = yes then buf_dis-card-mask-attr.attr-value = "yes" .
+    else buf_dis-card-mask-attr.attr-value = "no" .
+  end.  
+  else do:
+    if p-reg-cash then do:
+      create buf_dis-card-mask-attr .
+      assign
+      buf_dis-card-mask-attr.mask-num   = p-mask-num
+      buf_dis-card-mask-attr.attr-code  = "reg-cash"
+      buf_dis-card-mask-attr.attr-value = "yes"
+      .
+    end.  
+  end.  
 
 end. /*doe*/
 

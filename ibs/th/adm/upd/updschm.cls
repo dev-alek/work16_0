@@ -46,7 +46,7 @@ class ibs.th.adm.upd.updschm:
       ConPar = replace (arg, "&1", ""). 
     end.
 
-  define property isUpdShm as logical no-undo 
+  define property isUpdShm as logical no-undo init yes 
     get.
     private set.
     
@@ -71,6 +71,7 @@ class ibs.th.adm.upd.updschm:
   define private variable m-user-passwd       as character no-undo .
   define private variable m-prowin32FileName  as character no-undo.
   define private variable m-FileDf            as character no-undo.
+  define variable mDfUpdaLL as character no-undo.
   
     
   constructor public updschm (input inConPar as char):
@@ -81,6 +82,8 @@ class ibs.th.adm.upd.updschm:
     DbNum       = obsrvdbObj:DbNum.      
     TargetDBShm = obsrvdbObj:TargetDBShm.
     ConPar      = inConPar.
+    mDfUpdaLL   = obsrvdbObj:upd-all-list-df.
+    
     m-FileDf    = obsrvdbObj:upd-df.
     isNeedUpd = obsrvdbObj:isneedupg().
     if obsrvdbObj:IsErr
@@ -88,7 +91,6 @@ class ibs.th.adm.upd.updschm:
       Msg = obsrvdbObj:Msg.
       IsErr = true.
     end.
-    
     assign
       m-user-passwd = substitute("-U &1 -P &2":U
                                 ,"sysadm"
@@ -107,6 +109,12 @@ class ibs.th.adm.upd.updschm:
 
   method public void upddbshm ():
     define variable vCurrDBShmOld as integer no-undo.
+    define variable vI as integer no-undo.
+    define variable vdbconect as logical no-undo.
+    if  CurrDBShm eq TargetDBShm
+    then
+       vdbconect = yes.
+    
     Block-UpdOne:
     do while CurrDBShm < TargetDBShm :
       isUpdShm = no.
@@ -118,6 +126,21 @@ class ibs.th.adm.upd.updschm:
       then 
         leave Block-UpdOne.
     end.
+    /* загрузка df файлов */
+    if isUpdShm 
+    then do:
+      if vdbconect
+      then 
+         disconnect value ('ub').
+      do vi = 1 to num-entries(mDfUpdaLL):
+         
+         loaddf(entry(vi,mDfUpdaLL)).
+          
+         
+      end.
+      
+       
+    end.  
     return.
   end.    
   method public void upddbshmOne ():  
@@ -151,7 +174,9 @@ class ibs.th.adm.upd.updschm:
     end.
     m-FileDf = obsrvdbObj:upd-df.
     delete object obsrvdbObj no-error.
-    disconnect value ("ub").
+    if NewCurrDBShm eq TargetDBShm
+    then
+       disconnect value ("ub").
     CurrDBShm = NewCurrDBShm.
     isUpdShm = true.
   end method.
@@ -175,8 +200,8 @@ class ibs.th.adm.upd.updschm:
       return.
     end.
     if isRcode
-    then v-cmd-comm = substitute ("&4 &1 -U sysadm -P sysadm -rx -p &2 -param &3,yes", ConPar, loadDFprocFile, v-filedfname, m-prowin32FileName).
-    else v-cmd-comm = substitute ("&4 &1 -U sysadm -P sysadm -p &2 -param &3,yes", ConPar, loadDFprocFile, v-filedfname, m-prowin32FileName).
+    then v-cmd-comm = substitute ("&1 &2 &3 -rx -p &4 -param &5,yes",m-prowin32FileName, ConPar,m-user-passwd, loadDFprocFile, v-filedfname).
+    else v-cmd-comm = substitute ("&1 &2 &3     -p &4 -param &5,yes",m-prowin32FileName, ConPar,m-user-passwd, loadDFprocFile, v-filedfname).
     os-command silent value (v-cmd-comm).
   end.
 

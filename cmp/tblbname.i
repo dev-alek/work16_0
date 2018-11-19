@@ -338,6 +338,7 @@ Creation date: 01/29/07
 &glob bef-table_c-layout-elem-attr c-layout-elem-attr
 &glob bef-table_c-layout-elem-rule c-layout-elem-rule
 &glob bef-table_c-layout-elem-rule-attr c-layout-elem-rule-attr
+&glob bef-table_c-norm-loss c-norm-loss
 &glob bef-table_c-nozzle c-nozzle
 &glob bef-table_c-nozzle-attr c-nozzle-attr
 &glob bef-table_c-nzl-hist c-nzl-hist
@@ -465,6 +466,7 @@ Creation date: 01/29/07
 &glob bef-table_c-tax-rate c-tax-rate
 &glob bef-table_c-tax-rate-gds-grp c-tax-rate-gds-grp
 &glob bef-table_c-tax-units c-tax-units
+&glob bef-table_c-tech-prol-pwd c-tech-prol-pwd
 &glob bef-table_c-thbj-attr c-thbj-attr
 &glob bef-table_c-tnv-in-turnover-group c-tnv-in-turnover-group
 &glob bef-table_c-trn-doc c-trn-doc
@@ -854,6 +856,7 @@ Creation date: 01/29/07
 &glob bef-table_menu-user-attr menu-user-attr
 &glob bef-table_menu-user-call menu-user-call
 &glob bef-table_menu-user-call-attr menu-user-call-attr
+&glob bef-table_norm-loss norm-loss
 &glob bef-table_nozzle nozzle
 &glob bef-table_nozzle-attr nozzle-attr
 &glob bef-table_nws-doc-hist nws-doc-hist
@@ -1154,6 +1157,7 @@ Creation date: 01/29/07
 &glob bef-table_tax-rate-value-attr tax-rate-value-attr
 &glob bef-table_tax-units tax-units
 &glob bef-table_tax-units-attr tax-units-attr
+&glob bef-table_tech-prol-pwd tech-prol-pwd
 &glob bef-table_thbj-attr thbj-attr
 &glob bef-table_tmp-sale tmp-sale
 &glob bef-table_tmp-sale-attr tmp-sale-attr

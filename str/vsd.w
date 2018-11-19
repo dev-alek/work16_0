@@ -956,7 +956,7 @@ procedure setscruuid :
     v-scan-str = "".
     uuid-back = vsdsubCurr:UUID.
     vsdsubCurr:UUID = str.
-    if vsdstrObj:exsistuuid(vsdsubCurr)
+    if vsdstrObj:exsistuuidwithtrn(vsdsubCurr)
     then do:
       vsdsubCurr:UUID = uuid-back.
       message vsdstrObj:Msg view-as alert-box.

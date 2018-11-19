@@ -1,6 +1,9 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Procedure
+using ibs.th.str.ptrl.*.
+&ANALYZE-RESUME
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -11,6 +14,7 @@
 DEFINE BUFFER buf-obj_clients FOR ub.clients.
 DEFINE BUFFER buf_goods FOR ub.goods.
 DEFINE BUFFER buf_place FOR ub.place.
+DEFINE BUFFER buf_rvs-line FOR ub.rvs-line.
 DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO LIKE ub.doc-pl.
 DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO like ub.doc-pl
     field pl-code2 like ub.doc-pl.pl-code
@@ -18,7 +22,7 @@ DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO like ub.doc-pl
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS f-doc-pl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS f-doc-pl 
 /*
 
 $Revision$
@@ -86,12 +90,13 @@ define buffer buf-upd_tt-doc-pl for tt-doc-pl .
 define variable v-is-ptrl as character no-undo .
 define variable v-msg-on  as logical   no-undo .
 define variable v-is-add  as logical   no-undo .
+define variable rvsinvObj as class rvsinvsub no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -102,19 +107,19 @@ define variable v-is-add  as logical   no-undo .
 &Scoped-define FRAME-NAME f-doc-pl
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help
+&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help 
 &Scoped-Define DISPLAYED-FIELDS loc-t-doc-pl.pl-code buf_place.pl-name ~
 buf-obj_clients.obj-type buf-obj_clients.obj-code buf-obj_clients.obj-name ~
 buf_place.loc1 buf_place.loc2 buf_place.loc3 buf_place.loc4 ~
 buf_goods.gds-code buf_goods.gds-name buf_goods.artic buf_goods.prod-type ~
-buf_goods.prod-code
+buf_goods.prod-code 
 &Scoped-define DISPLAYED-TABLES loc-t-doc-pl buf_place buf-obj_clients ~
 buf_goods
 &Scoped-define FIRST-DISPLAYED-TABLE loc-t-doc-pl
 &Scoped-define SECOND-DISPLAYED-TABLE buf_place
 &Scoped-define THIRD-DISPLAYED-TABLE buf-obj_clients
 &Scoped-define FOURTH-DISPLAYED-TABLE buf_goods
-&Scoped-Define DISPLAYED-OBJECTS f-prod-name f-units-base
+&Scoped-Define DISPLAYED-OBJECTS f-prod-name f-units-base 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -129,182 +134,258 @@ buf_goods
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-exit AUTO-GO DEFAULT
-     LABEL "&Ввод "
+DEFINE BUTTON b-exit AUTO-GO DEFAULT 
+     LABEL "&Ввод " 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-help DEFAULT
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help DEFAULT 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-place
+DEFINE BUTTON b-place 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-qnty DEFAULT
-     LABEL "Уст.Кол-ва"
+DEFINE BUTTON b-qnty DEFAULT 
+     LABEL "Уст.Кол-ва" 
      SIZE 11 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY DEFAULT
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY DEFAULT 
+     LABEL "&Отмена" 
      SIZE 10 BY 1.
 
 DEFINE VARIABLE f-doc-line-cli-doc-qnty LIKE ub.doc-line.cli-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-doc-line-cli-fact-qnty LIKE ub.doc-line.cli-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-doc-line-cli-qnty LIKE ub.doc-line.cli-qnty
-     LABEL "по ТТН"
-     VIEW-AS FILL-IN
+     LABEL "по ТТН" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-lblpolnebal as character init "Положительный небаланс  :" format "x(30)"
+     VIEW-AS FILL-IN 
+     SIZE 30 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-lblotrnebal as character init "Отрицательный небаланс  :" format "x(30)"
+     VIEW-AS FILL-IN 
+     SIZE 30 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-lblnebal as character init "Небаланс,кг" format "x(13)"
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 
+     bgcolor 8
+     NO-UNDO.
+
+DEFINE VARIABLE f-polnebal as decimal INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE f-otrnebal as decimal INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+DEFINE VARIABLE f-lblmetrerr as character init "Погр.изм.,кг" format "x(14)"
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 
+     bgcolor 8
+     NO-UNDO.
+
+DEFINE VARIABLE f-polmetrerr as decimal  INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE f-otrmetrerr as decimal  INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 
+     fgcolor 4
+     NO-UNDO.
+
+DEFINE VARIABLE f-lblwastcli as character init "Масса ЕУ,кг" format "x(14)"
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 
+     bgcolor 8
+     NO-UNDO.
+
+DEFINE VARIABLE f-wastcli as decimal  INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE f-lblwast-tp as character init "Масса ТП,кг" format "x(14)"
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 
+     bgcolor 8
+     NO-UNDO.
+
+DEFINE VARIABLE f-wast-tp as decimal  INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE f-lbldiff as character init "Излиш./Недост.,кг" format "x(20)"
+     VIEW-AS FILL-IN 
+     SIZE 20 BY 1 
+     bgcolor 8
+     NO-UNDO.
+
+DEFINE VARIABLE f-izlish as decimal  INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 fgcolor 4 NO-UNDO.
+
+DEFINE VARIABLE f-nedos as decimal  INITIAL 0
+     VIEW-AS FILL-IN 
+     SIZE 13 BY 1 
+     fgcolor 4
+     NO-UNDO.
 
 DEFINE VARIABLE f-doc-line-cli-rest-af-qnty LIKE ub.inv-line.after-cli-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-line-doc-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-doc-line-doc-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-doc-line-doc-qnty LIKE ub.doc-line.doc-qnty
-     LABEL "Заявлено"
-     VIEW-AS FILL-IN
+     LABEL "Заявлено" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-line-fact-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-doc-line-fact-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-doc-line-fact-qnty LIKE ub.doc-line.fact-qnty
-     LABEL "Фактически"
-     VIEW-AS FILL-IN
+     LABEL "Фактически" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-doc-line-rest-af-qnty LIKE ub.doc-line.cli-qnty
-     LABEL "Стало"
-     VIEW-AS FILL-IN
+     LABEL "Стало" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-line-rest-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-doc-line-rest-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-pl-doc-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-doc-pl-doc-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-pl-fact-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-doc-pl-fact-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-doc-pl-rest-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-doc-pl-rest-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-label-density AS CHARACTER FORMAT "x(25)":U INITIAL "Плотность"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-label-density AS CHARACTER FORMAT "x(25)":U INITIAL "Плотность" 
+     VIEW-AS FILL-IN 
      SIZE 10.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-prod-name AS CHARACTER FORMAT "x(45)"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-prod-name AS CHARACTER FORMAT "x(45)" 
+     VIEW-AS FILL-IN 
      SIZE 46.5 BY 1
      BGCOLOR 8  NO-UNDO.
 
-DEFINE VARIABLE f-rvs-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-rvs-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-rvs-measure-cli-qnty LIKE ub.rvs-line.measure-cli-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-rvs-measure-qnty LIKE ub.rvs-line.measure-qnty
-     LABEL "Измерено"
-     VIEW-AS FILL-IN
+     LABEL "Измерено" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-rvs-state-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-rvs-state-density AS DECIMAL FORMAT "->>9.9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-rvs-state-measure-cli-qnty LIKE ub.rvs-line.state-measure-cli-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-rvs-state-measure-qnty LIKE ub.rvs-line.state-measure-qnty
-     LABEL "Фактически"
-     VIEW-AS FILL-IN
+     LABEL "Фактически" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tot-doc-label AS CHARACTER FORMAT "X(256)":U INITIAL "Итого по строке документа:"
-      VIEW-AS TEXT
+DEFINE VARIABLE f-tot-doc-label AS CHARACTER FORMAT "X(256)":U INITIAL "Итого по строке документа:" 
+      VIEW-AS TEXT 
      SIZE 27.5 BY .67 NO-UNDO.
 
 DEFINE VARIABLE f-tot-doc-pl-cli-doc-qnty LIKE ub.doc-pl.cli-doc-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-tot-doc-pl-cli-fact-qnty LIKE ub.doc-pl.cli-fact-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-tot-doc-pl-cli-qnty LIKE ub.doc-pl.cli-qnty
-     LABEL "по ТТН"
-     VIEW-AS FILL-IN
+     LABEL "по ТТН" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-tot-doc-pl-cli-rest-af-qnty LIKE ub.doc-pl.cli-rest-af-qnty
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-tot-doc-pl-doc-qnty LIKE ub.doc-pl.doc-qnty
-     LABEL "Заявлено"
-     VIEW-AS FILL-IN
+     LABEL "Заявлено" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-tot-doc-pl-fact-qnty LIKE ub.doc-pl.fact-qnty
-     LABEL "Фактически"
-     VIEW-AS FILL-IN
+     LABEL "Фактически" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-tot-doc-pl-rest-af-qnty LIKE ub.doc-pl.rest-af-qnty
-     LABEL "Стало"
-     VIEW-AS FILL-IN
+     LABEL "Стало" 
+     VIEW-AS FILL-IN 
      SIZE 16 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-tot-doc-pl-rest-density AS DECIMAL FORMAT "->>9.9999999999" INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-tot-doc-pl-rest-density AS DECIMAL FORMAT "->>9.9999999999" INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-units-base LIKE ub.goods.unit-base
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 6 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-units-cli LIKE ub.goods.unit-base
-     VIEW-AS FILL-IN
+     VIEW-AS FILL-IN 
      SIZE 6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-label-rvs AS CHARACTER FORMAT "x(25)":U INITIAL "По сверкам:"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-label-rvs AS CHARACTER FORMAT "x(25)":U INITIAL "По сверкам:" 
+     VIEW-AS FILL-IN 
      SIZE 26 BY 1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 97 BY 2.75.
 
 DEFINE RECTANGLE RECT-2
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 97 BY 7.
 
 DEFINE RECTANGLE rect-tot
-     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL   
      SIZE 97 BY 7.
 
 
@@ -317,53 +398,53 @@ DEFINE FRAME f-doc-pl
      b-help AT ROW 1 COL 89 WIDGET-ID 8
      loc-t-doc-pl.pl-code AT ROW 2.5 COL 16 COLON-ALIGNED WIDGET-ID 68
           LABEL "Место хранения"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 10.5 BY 1
      b-place AT ROW 2.5 COL 28.5 WIDGET-ID 14
      buf_place.pl-name AT ROW 2.5 COL 30 COLON-ALIGNED NO-LABEL WIDGET-ID 70 FORMAT "X(66)"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 67 BY 1
-          BGCOLOR 8
+          BGCOLOR 8 
      buf-obj_clients.obj-type AT ROW 3.75 COL 16 COLON-ALIGNED WIDGET-ID 104
           LABEL "Объект"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 4 BY 1
      buf-obj_clients.obj-code AT ROW 3.75 COL 20.5 COLON-ALIGNED NO-LABEL WIDGET-ID 52
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 6 BY 1
      buf-obj_clients.obj-name AT ROW 3.75 COL 30 COLON-ALIGNED NO-LABEL WIDGET-ID 56 FORMAT "X(66)"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 67 BY 1
-          BGCOLOR 8
+          BGCOLOR 8 
      buf_place.loc1 AT ROW 5 COL 30 COLON-ALIGNED WIDGET-ID 44
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 8 BY 1
      buf_place.loc2 AT ROW 5 COL 49 COLON-ALIGNED WIDGET-ID 46
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 8 BY 1
      buf_place.loc3 AT ROW 5 COL 68 COLON-ALIGNED WIDGET-ID 48
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 8 BY 1
      buf_place.loc4 AT ROW 5 COL 88 COLON-ALIGNED WIDGET-ID 50
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 9 BY 1
      buf_goods.gds-code AT ROW 6.75 COL 10 COLON-ALIGNED WIDGET-ID 40
           LABEL "Товар"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 10 BY 1
      buf_goods.gds-name AT ROW 6.75 COL 20.5 COLON-ALIGNED NO-LABEL WIDGET-ID 42 FORMAT "X(74)"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 75.5 BY 1
-          BGCOLOR 8
+          BGCOLOR 8 
      buf_goods.artic AT ROW 8 COL 10 COLON-ALIGNED WIDGET-ID 4
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 17 BY 1
      buf_goods.prod-type AT ROW 8 COL 34.5 COLON-ALIGNED WIDGET-ID 106
           LABEL "Пр-ль"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 4 BY 1
      buf_goods.prod-code AT ROW 8 COL 39 COLON-ALIGNED NO-LABEL WIDGET-ID 72
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 10 BY 1
      f-prod-name AT ROW 8 COL 49.5 COLON-ALIGNED NO-LABEL WIDGET-ID 54
      f-units-base AT ROW 9.5 COL 45 COLON-ALIGNED HELP
@@ -372,24 +453,24 @@ DEFINE FRAME f-doc-pl
           "" NO-LABEL WIDGET-ID 170 FORMAT "X(5)"
      f-label-density AT ROW 9.5 COL 82 NO-LABEL WIDGET-ID 172
      loc-t-doc-pl.cli-qnty AT ROW 10.75 COL 16 COLON-ALIGNED WIDGET-ID 180 FORMAT "->>,>>>,>>9.<<<"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
      loc-t-doc-pl.doc-qnty AT ROW 10.75 COL 45 COLON-ALIGNED WIDGET-ID 26
           LABEL "Заявлено"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
      loc-t-doc-pl.cli-doc-qnty AT ROW 10.75 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 20
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
      f-doc-pl-doc-density AT ROW 10.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 204
      loc-t-doc-pl.fact-qnty AT ROW 11.75 COL 45 COLON-ALIGNED WIDGET-ID 38
           LABEL "Фактически"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
      loc-t-doc-pl.cli-fact-qnty AT ROW 11.75 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE  WIDGET-ID 100.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
@@ -397,10 +478,10 @@ DEFINE FRAME f-doc-pl
      f-doc-pl-fact-density AT ROW 11.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 206
      loc-t-doc-pl.rest-af-qnty AT ROW 12.75 COL 45 COLON-ALIGNED WIDGET-ID 198
           LABEL "Стало"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
      loc-t-doc-pl.cli-rest-af-qnty AT ROW 12.75 COL 61.5 COLON-ALIGNED NO-LABEL WIDGET-ID 196
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
      f-doc-pl-rest-density AT ROW 12.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 208
      v-label-rvs AT ROW 13.75 COL 3 NO-LABEL WIDGET-ID 110
@@ -453,10 +534,40 @@ DEFINE FRAME f-doc-pl
      f-doc-line-fact-qnty AT ROW 21.75 COL 45 COLON-ALIGNED HELP
           "" WIDGET-ID 150
           LABEL "Фактически"
+     f-lblpolnebal AT ROW 18.5 COL 1 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-lblotrnebal AT ROW 19.5 COL 1 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-lblnebal AT ROW 17.5 COL 27 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-polnebal AT ROW 18.5 COL 27 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-otrnebal AT ROW 19.5 COL 27 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-lblmetrerr AT ROW 17.5 COL 39 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-polmetrerr AT ROW 18.5 COL 39 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-otrmetrerr AT ROW 19.5 COL 39 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-lblwastcli AT ROW 17.5 COL 52 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-wastcli AT ROW 19.5 COL 52 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-lblwast-tp AT ROW 17.5 COL 64 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-wast-tp AT ROW 19.5 COL 64 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-lbldiff AT ROW 17.5 COL 76 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-izlish AT ROW 18.5 COL 76 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
+     f-nedos AT ROW 19.5 COL 76 COLON-ALIGNED HELP
+          "" no-label WIDGET-ID 150
      f-doc-line-cli-fact-qnty AT ROW 21.75 COL 61.5 COLON-ALIGNED HELP
           "" NO-LABEL WIDGET-ID 142
      f-doc-line-fact-density AT ROW 21.75 COL 80 COLON-ALIGNED NO-LABEL WIDGET-ID 30
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE  WIDGET-ID 100.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
@@ -469,9 +580,9 @@ DEFINE FRAME f-doc-pl
      RECT-1 AT ROW 6.5 COL 2 WIDGET-ID 78
      RECT-2 AT ROW 9.25 COL 2 WIDGET-ID 80
      rect-tot AT ROW 16.25 COL 2 WIDGET-ID 112
-     SPACE(0.87) SKIP(0.20)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(0.87) SKIP(0.80)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "<insert dialog title>" WIDGET-ID 100.
 
 
@@ -498,299 +609,368 @@ DEFINE FRAME f-doc-pl
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX f-doc-pl
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME f-doc-pl:SCROLLABLE       = FALSE.
 
 /* SETTINGS FOR FILL-IN buf_goods.artic IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        buf_goods.artic:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR BUTTON b-place IN FRAME f-doc-pl
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-qnty IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.cli-doc-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        loc-t-doc-pl.cli-doc-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.cli-fact-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        loc-t-doc-pl.cli-fact-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.cli-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE EXP-FORMAT                                      */
-ASSIGN
+ASSIGN 
        loc-t-doc-pl.cli-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        loc-t-doc-pl.cli-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.cli-rest-af-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        loc-t-doc-pl.cli-rest-af-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.doc-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE EXP-LABEL                                       */
-ASSIGN
+ASSIGN 
        loc-t-doc-pl.doc-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-cli-doc-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
-ASSIGN
+ASSIGN 
        f-doc-line-cli-doc-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-cli-doc-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-cli-fact-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
-ASSIGN
+ASSIGN 
        f-doc-line-cli-fact-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-cli-fact-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-cli-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
-ASSIGN
+ASSIGN 
        f-doc-line-cli-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-cli-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-lblpolnebal:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-lblpolnebal:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-lblotrnebal:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-lblotrnebal:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-lblnebal:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-lblnebal:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-polnebal:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-polnebal:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-otrnebal:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-otrnebal:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-lblwastcli:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-lblwastcli:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-wastcli:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-wastcli:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+ASSIGN 
+       f-lblmetrerr:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-lblmetrerr:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+ASSIGN 
+       f-polmetrerr:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-polmetrerr:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+ASSIGN 
+       f-otrmetrerr:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-otrmetrerr:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-lblwast-tp:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-lblwast-tp:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-wast-tp:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-wast-tp:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-lbldiff:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-lbldiff:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-qnty-2 IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
+ASSIGN 
+       f-izlish:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-izlish:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 /* SETTINGS FOR FILL-IN f-doc-line-cli-rest-af-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.inv-line.after-cli-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
+       f-nedos:HIDDEN IN FRAME f-doc-pl           = TRUE
+       f-nedos:READ-ONLY IN FRAME f-doc-pl        = TRUE.
+/* SETTINGS FOR FILL-IN f-doc-line-cli-rest-af-qnty IN FRAME f-doc-pl
+   NO-DISPLAY NO-ENABLE LIKE = ub.inv-line.after-cli-qnty EXP-LABEL EXP-SIZE */
+ASSIGN 
        f-doc-line-cli-rest-af-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-cli-rest-af-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-doc-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-doc-line-doc-density:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-doc-density:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-doc-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.doc-qnty EXP-LABEL EXP-SIZE  */
-ASSIGN
+ASSIGN 
        f-doc-line-doc-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-doc-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-fact-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-doc-line-fact-density:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-fact-density:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-fact-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.fact-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-doc-line-fact-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-fact-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-rest-af-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-line.cli-qnty EXP-LABEL EXP-SIZE  */
-ASSIGN
+ASSIGN 
        f-doc-line-rest-af-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-rest-af-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-line-rest-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-doc-line-rest-density:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-doc-line-rest-density:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-pl-doc-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-doc-pl-doc-density:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-pl-fact-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-doc-pl-fact-density:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN f-doc-pl-rest-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-doc-pl-rest-density:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN f-label-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE ALIGN-L                                         */
-ASSIGN
+ASSIGN 
        f-label-density:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-label-density:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-prod-name IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        f-prod-name:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-rvs-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-rvs-density:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-rvs-density:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-rvs-measure-cli-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.rvs-line.measure-cli-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-rvs-measure-cli-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-rvs-measure-cli-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-rvs-measure-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.rvs-line.measure-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-rvs-measure-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-rvs-measure-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-rvs-state-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-rvs-state-density:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-rvs-state-density:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-rvs-state-measure-cli-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.rvs-line.state-measure-cli-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-rvs-state-measure-cli-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-rvs-state-measure-cli-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-rvs-state-measure-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.rvs-line.state-measure-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-rvs-state-measure-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-rvs-state-measure-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-label IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE ALIGN-L                                         */
-ASSIGN
+ASSIGN 
        f-tot-doc-label:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-label:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-cli-doc-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-pl.cli-doc-qnty EXP-SIZE          */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-cli-doc-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-cli-doc-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-cli-fact-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-pl.cli-fact-qnty EXP-SIZE         */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-cli-fact-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-cli-fact-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-cli-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-pl.cli-qnty EXP-LABEL EXP-FORMAT EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-cli-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-cli-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-cli-rest-af-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-pl.cli-rest-af-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-cli-rest-af-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-cli-rest-af-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-doc-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-pl.doc-qnty EXP-LABEL EXP-SIZE    */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-doc-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-doc-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-fact-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-pl.fact-qnty EXP-LABEL EXP-SIZE   */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-fact-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-fact-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-rest-af-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.doc-pl.rest-af-qnty EXP-LABEL EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-rest-af-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-rest-af-qnty:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-tot-doc-pl-rest-density IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        f-tot-doc-pl-rest-density:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-tot-doc-pl-rest-density:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-units-base IN FRAME f-doc-pl
    NO-ENABLE LIKE = ub.goods.unit-base EXP-LABEL EXP-FORMAT EXP-HELP EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-units-base:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-units-cli IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE LIKE = ub.goods.unit-base EXP-LABEL EXP-FORMAT EXP-HELP EXP-SIZE */
-ASSIGN
+ASSIGN 
        f-units-cli:HIDDEN IN FRAME f-doc-pl           = TRUE
        f-units-cli:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.fact-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE EXP-LABEL                                       */
-ASSIGN
+ASSIGN 
        loc-t-doc-pl.fact-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_goods.gds-code IN FRAME f-doc-pl
    NO-ENABLE EXP-LABEL                                                  */
-ASSIGN
+ASSIGN 
        buf_goods.gds-code:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_goods.gds-name IN FRAME f-doc-pl
    NO-ENABLE EXP-FORMAT                                                 */
-ASSIGN
+ASSIGN 
        buf_goods.gds-name:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_place.loc1 IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        buf_place.loc1:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_place.loc2 IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        buf_place.loc2:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_place.loc3 IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        buf_place.loc3:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_place.loc4 IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        buf_place.loc4:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf-obj_clients.obj-code IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        buf-obj_clients.obj-code:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf-obj_clients.obj-name IN FRAME f-doc-pl
    NO-ENABLE EXP-FORMAT                                                 */
-ASSIGN
+ASSIGN 
        buf-obj_clients.obj-name:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf-obj_clients.obj-type IN FRAME f-doc-pl
    NO-ENABLE EXP-LABEL                                                  */
-ASSIGN
+ASSIGN 
        buf-obj_clients.obj-type:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.pl-code IN FRAME f-doc-pl
    NO-ENABLE EXP-LABEL                                                  */
 /* SETTINGS FOR FILL-IN buf_place.pl-name IN FRAME f-doc-pl
    NO-ENABLE EXP-FORMAT                                                 */
-ASSIGN
+ASSIGN 
        buf_place.pl-name:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_goods.prod-code IN FRAME f-doc-pl
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        buf_goods.prod-code:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR FILL-IN buf_goods.prod-type IN FRAME f-doc-pl
    NO-ENABLE EXP-LABEL                                                  */
-ASSIGN
+ASSIGN 
        buf_goods.prod-type:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
 /* SETTINGS FOR RECTANGLE RECT-1 IN FRAME f-doc-pl
@@ -801,12 +981,12 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN loc-t-doc-pl.rest-af-qnty IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE EXP-LABEL                                       */
-ASSIGN
+ASSIGN 
        loc-t-doc-pl.rest-af-qnty:HIDDEN IN FRAME f-doc-pl           = TRUE.
 
 /* SETTINGS FOR FILL-IN v-label-rvs IN FRAME f-doc-pl
    NO-DISPLAY NO-ENABLE ALIGN-L                                         */
-ASSIGN
+ASSIGN 
        v-label-rvs:HIDDEN IN FRAME f-doc-pl           = TRUE
        v-label-rvs:READ-ONLY IN FRAME f-doc-pl        = TRUE.
 
@@ -823,7 +1003,7 @@ ASSIGN
 */  /* DIALOG-BOX f-doc-pl */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -1766,7 +1946,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK f-doc-pl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK f-doc-pl 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1917,6 +2097,86 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   { str/doc-pl.i enable-tot-fld v-is-ptrl }
+  if v-is-ptrl = "yes"
+  then do:
+    rvsinvObj = new rvsinvsub ().
+    assign
+      rvsinvObj:RvsCode = buf_trn-doc.out-code
+      rvsinvObj:ObjCode = loc-t-doc-pl.obj-code
+      rvsinvObj:ObjType = loc-t-doc-pl.obj-type
+      rvsinvObj:PlCode = loc-t-doc-pl.pl-code
+      rvsinvObj:GdsCode = loc-t-doc-pl.gds-code
+    .
+    if rvsinvObj:RvsInvStrObj:FillSub(rvsinvObj)
+    then do:
+
+        assign
+          f-tot-doc-pl-rest-af-qnty     :row in frame {&frame-name}   = f-tot-doc-pl-doc-qnty :row in frame {&frame-name} - 1 
+          f-tot-doc-pl-rest-af-qnty     :handle :side-label-handle :row in frame {&frame-name} = f-tot-doc-pl-doc-qnty :row in frame {&frame-name} - 1
+          f-tot-doc-pl-cli-rest-af-qnty :row in frame {&frame-name}   = f-tot-doc-pl-rest-af-qnty :row in frame {&frame-name}
+          f-tot-doc-pl-rest-density     :row in frame {&frame-name}   = f-tot-doc-pl-rest-af-qnty :row in frame {&frame-name}
+        .
+
+        assign
+          frame {&frame-name} :height-chars = frame {&frame-name} :height-chars + 1
+          rect-tot :height-chars in frame {&frame-name} = 4.5
+        .
+        
+        if rvsinvObj:Diff < 0
+        then do:
+          assign
+            f-otrnebal = absolute (rvsinvObj:Diff) 
+            f-otrmetrerr = rvsinvObj:MeterErrWast
+            f-nedos = rvsinvObj:DeficitOver
+            f-wastcli = rvsinvObj:NaturWast
+            f-wast-tp = rvsinvObj:TPWast
+          .
+        end.
+        else do:
+          assign
+            f-polnebal = absolute (rvsinvObj:Diff)
+            f-polmetrerr = rvsinvObj:MeterErrWast
+            f-izlish = rvsinvObj:DeficitOver
+          .
+        end.        
+        
+        display
+        f-otrnebal
+        f-polnebal
+        f-lblnebal
+        f-lblpolnebal
+        f-lblotrnebal
+        f-lblmetrerr
+        f-polmetrerr
+        f-otrmetrerr
+        f-lblwastcli
+        f-wastcli
+        f-lblwast-tp
+        f-wast-tp
+        f-lbldiff
+        f-izlish
+        f-nedos
+          with frame {&frame-name}
+        .
+
+        
+
+        hide
+          f-tot-doc-pl-fact-qnty
+          f-tot-doc-pl-cli-fact-qnty
+        in frame {&frame-name}
+        .
+
+      if rvsinvObj:Diff < 0
+      then do:
+        f-otrnebal = rvsinvObj:Diff.
+
+      end.
+      else do:
+      end.
+    end.
+
+  end.
 
   if buf_trn-doc.doc-type = {&income}
     and buf_trn-doc.internal = false
@@ -2121,10 +2381,9 @@ delete loc-t-doc-pl .
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calc-qnty f-doc-pl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calc-qnty f-doc-pl 
 PROCEDURE calc-qnty :
-
-  do
+do
   on error undo, return error return-value
   :
     case p-upd-field :
@@ -2177,7 +2436,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -2196,27 +2455,27 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-prod-name f-units-base
+  DISPLAY f-prod-name f-units-base 
       WITH FRAME f-doc-pl.
-  IF AVAILABLE buf-obj_clients THEN
-    DISPLAY buf-obj_clients.obj-type buf-obj_clients.obj-code
-          buf-obj_clients.obj-name
+  IF AVAILABLE buf-obj_clients THEN 
+    DISPLAY buf-obj_clients.obj-type buf-obj_clients.obj-code 
+          buf-obj_clients.obj-name 
       WITH FRAME f-doc-pl.
-  IF AVAILABLE buf_goods THEN
-    DISPLAY buf_goods.gds-code buf_goods.gds-name buf_goods.artic
-          buf_goods.prod-type buf_goods.prod-code
+  IF AVAILABLE buf_goods THEN 
+    DISPLAY buf_goods.gds-code buf_goods.gds-name buf_goods.artic 
+          buf_goods.prod-type buf_goods.prod-code 
       WITH FRAME f-doc-pl.
-  IF AVAILABLE buf_place THEN
-    DISPLAY buf_place.pl-name buf_place.loc1 buf_place.loc2 buf_place.loc3
-          buf_place.loc4
+  IF AVAILABLE buf_place THEN 
+    DISPLAY buf_place.pl-name buf_place.loc1 buf_place.loc2 buf_place.loc3 
+          buf_place.loc4 
       WITH FRAME f-doc-pl.
-  IF AVAILABLE loc-t-doc-pl THEN
-    DISPLAY loc-t-doc-pl.pl-code
+  IF AVAILABLE loc-t-doc-pl THEN 
+    DISPLAY loc-t-doc-pl.pl-code 
       WITH FRAME f-doc-pl.
-  ENABLE b-exit b-quit b-help
+  ENABLE b-exit b-quit b-help 
       WITH FRAME f-doc-pl.
   {&OPEN-BROWSERS-IN-QUERY-f-doc-pl}
 END PROCEDURE.
