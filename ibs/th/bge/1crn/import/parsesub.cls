@@ -224,9 +224,6 @@ class ibs.th.bge.1crn.import.parsesub:
     currencySubjectObj = new currency ().
     impCurrencyEventHndlrObj = new impcurrency ().
     
-    firmsSubjectObj = new firms ().
-    impFirmsEventHndlrObj = new impfirms ().
-    
     goodGrpsSubjectObj = new good-grps ().
     impGoodGrpsEventHndlrObj = new impgood-grps ().
 
@@ -277,13 +274,14 @@ class ibs.th.bge.1crn.import.parsesub:
 /*    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().  */
 /*    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").*/
     
-    /* создание экземпляров объектов:
+    /* перенесено внутрь парсинга создание экземпляров объектов:
+       - фирм
        - товаров
        - АЗК
        - промо-акций
        - срецификаций к договорам поставки
-       перенесено внутрь парсинга */
-    
+    */
+
     trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().
     trn-gdSubjectObj = new trn-gd ().
     imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().
@@ -365,6 +363,15 @@ class ibs.th.bge.1crn.import.parsesub:
       case hNoderef:name:
         // экземпляр xxxSubjectObj создаётся перед первым импортом
         // экземпляр xxxSubjectObj очищается перед началом каждого нового объекта внутри GetChildrenSub()
+        when "org-unit" then do:
+          if not valid-object(firmsSubjectObj)       then firmsSubjectObj       = new firms (). // <org-unit>
+          if not valid-object(impFirmsEventHndlrObj) then impFirmsEventHndlrObj = new impfirms () .
+          v-iSubject = firmsSubjectObj .
+          v-iImpSub  = impFirmsEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
         when "good" then do:
           if not valid-object(goodSubjectObj)       then goodSubjectObj         = new goods (). // <good>
           if not valid-object(impGoodEventHndlrObj) then do :
@@ -439,10 +446,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "currency" then do:
           GetChildrenSub (hNoderef, (level + 1), currencySubjectObj).
           ReceivedSubjectPublish(currencySubjectObj, impCurrencyEventHndlrObj).
-        end.
-        when "org-unit" then do:
-          GetChildrenSub (hNoderef, (level + 1), firmsSubjectObj).
-          ReceivedSubjectPublish(firmsSubjectObj, impFirmsEventHndlrObj).
         end.
         when "good-grp" then do:
           GetChildrenSub (hNoderef, (level + 1), goodGrpsSubjectObj).

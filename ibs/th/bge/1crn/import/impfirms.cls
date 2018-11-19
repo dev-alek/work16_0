@@ -84,6 +84,7 @@ class ibs.th.bge.1crn.import.impfirms implements ibs.th.bge.1crn.import.iimpsubj
     define variable v-gen-s-f-office     as logical no-undo . /* like ub.sysconf.gen-s-f-office */
 
     /* для создания группы клиентов: */
+    define variable v-cli-grp-name       as character no-undo .
     define variable obj-cli-grp as class cli-grps no-undo .
     define variable imp-cli-grp as class ibs.th.bge.1crn.import.impcli-grps no-undo .
     
@@ -232,13 +233,33 @@ class ibs.th.bge.1crn.import.impfirms implements ibs.th.bge.1crn.import.iimpsubj
     end. /* end_of update */
     else do: /* create */
         /* при создании фирмы создаем группу с кодом фирмы; согласовано с техносервом */
+        /* 01/XI-2018  При приеме фирмы мы создаем группу клиентов с таким же названием.
+                       Далее у нас система начинает проверки и ругается, что есть кавычки.
+                       В группах их действительно не должно быть, а вот в название фирмы без кавычек никак.
+           Изменить создание группы так, чтобы имя группы формировалось без кавычек.
+           Название группы не может содержать символы /\:*?"<>|«»·
+        */
+        assign
+          v-cli-grp-name = replace ( objImp:name_  , '/', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '\', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, ':', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '*', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '?', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '"', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '<', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '>', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '|', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '«', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '»', '' )
+          v-cli-grp-name = replace ( v-cli-grp-name, '·', '' )
+        .
         obj-cli-grp = new cli-grps ().
         obj-cli-grp:SetProp(obj-cli-grp:InitTag, "").
         obj-cli-grp:SetProp("code",       string(v-host-code)).
         obj-cli-grp:SetProp("upper-code", "2"). /* группа "2:Фирмы,Объекты"; согласована с техносервом */
         obj-cli-grp:SetProp("del-l",      "0").
         obj-cli-grp:SetProp("del-f",      "0").
-        obj-cli-grp:SetProp("name",       objImp:name_).
+        obj-cli-grp:SetProp("name",       v-cli-grp-name).
         obj-cli-grp:SetProp(obj-cli-grp:InitTag, "").
         imp-cli-grp = new ibs.th.bge.1crn.import.impcli-grps ().
         v-retfl = imp-cli-grp:Excute(obj-cli-grp).
