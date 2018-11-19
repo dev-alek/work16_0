@@ -177,7 +177,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
       v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
       if not error-status:error then
-        CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name) .
+        CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
+          v-host-code, v-obj-type, v-obj-code) .
     end . /* end_of for_each buf_chk-doc */
     
 
@@ -213,6 +214,9 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                                           , buffer p-buf_chk-doc for ub.chk-doc
                                           , input p-inkas-dtime    as datetime
                                           , input p-inkas-operator as character
+                                          , input p-host-code      as integer
+                                          , input p-obj-type       as character
+                                          , input p-obj-code       as integer
                                           ) :
     define buffer buf_chk-doc-attr for ub.chk-doc-attr .
     define buffer buf_dis-card     for ub.dis-card .
@@ -223,6 +227,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_ext-classif  for ub.ext-classif .
     define buffer buf_chk-pay      for ub.chk-pay .
     define buffer buf_chk-pay-attr for ub.chk-pay-attr .
+    define buffer buf_cash-pay-attr for ub.cash-pay-attr . 
     define buffer buf_chk-discnt   for ub.chk-discnt .
     define buffer bf_chk-discnt    for ub.chk-discnt .
     define buffer buf_chk-gds-pay  for ub.chk-gds-pay .
@@ -232,6 +237,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define variable v-spump        as character no-undo . /* номер ТРК */ 
     define variable v-snozzle-code as character no-undo . /* номер пистолета */
     define variable v-key-one      as integer no-undo . /* для поиска оператора сотовой связи */
+    define variable v-is-nds       as integer no-undo . /* 0/1 признак распределения НДС по платежу */
 
     insw:start-element ({&tag-message}) .
 
@@ -465,6 +471,32 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       insw:write-data-element (  "rrn",  buf_chk-pay-attr.attr-value  ) . /* RNN платежа (Строка) */
       
       insw:write-data-element (  "sum",  left-trim(string(buf_chk-pay.tot-rubl, "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Сумма платежа (либо бонус в рублевом эквиваленте) (Число) */
+
+      /* 15/XI-2018 С учетом того, что НДС с кассы приходит во всех чеках,
+                    а к учету его нужно брать только для определенных платежей,
+                    нам необходимо в 1С посылать информацию о том,
+                    брать НДС из чека для этого платежа или нет.
+         Определять это будем по настройкам типов платежей.
+         Если в типе платежа стоит, что нал, банковская карты или банковская карта оф-лайн,
+         то в тэг is-nds секции платежей ставить 1. Во всех остальных случаях - 0.
+         is-nds Число(0/1) 1-1 Признак распределения НДС по платежу
+      */
+      find first buf_cash-pay-attr no-lock
+           where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
+             and buf_cash-pay-attr.curr-code  = buf_chk-pay.curr-code
+             /* входят в первичный индекс, значения переданы во входных параметрах, но:
+                скопировано из ref/cashpayi.w, и там поиск выполняется без жтих полей.  
+             and buf_cash-pay-attr.host-code  = p-host-code
+             and buf_cash-pay-attr.obj-type   = p-obj-type
+             and buf_cash-pay-attr.obj-code   = p-obj-code
+             */
+             and buf_cash-pay-attr.attr-code  = "cash-prop" no-error .
+      if available buf_cash-pay-attr then do :
+        /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
+        v-is-nds = if can-do ("1,2,3", buf_cash-pay-attr.attr-value) then 1 else 0 .
+      end .
+      else v-is-nds = 0 .
+      insw:write-data-element (  "is-nds",    string(v-is-nds)              ) . /* Признак распределения НДС по платежу (Число 0/1) */
 
       insw:end-element ({&tag-item2}) .
       if last-of(buf_chk-pay.doc-code) then insw:end-element ({&tag-section2}) .
