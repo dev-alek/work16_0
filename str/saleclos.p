@@ -2184,6 +2184,7 @@ define buffer buf-in for ub.trn-doc.
 define buffer buf_chk-doc for ub.chk-doc .
 define buffer buf_inkas-pay for ub.inkas-pay.
 define buffer buf_inkas-pay-desk for ub.inkas-pay-desk.
+define buffer buf_doc-fbr-gds for ub.doc-fbr-gds .
 
 
 _main:
@@ -2398,27 +2399,105 @@ DO ON ERROR undo _main, return error:
           for each buf_doc-line no-lock where
                   buf_Doc-line.doc-code = buf_sale-doc.doc-code
           on error undo _main, return error :
-            if buf_doc-line.doc-qnty <> buf_doc-line.fact-qnty and  buf_sale-doc.doc-kind <> {&sale-add-return-write-off} then do:
-              &scop my-message substitute("&1 (&2) Не все товары зарезервированы... &3 &4&5" ~
-                                      , buf_sale-doc.doc-code                           ~
-                                      , ~{&sale-doc-name~}                           ~
-                                      , buf_doc-line.artic, buf_doc-line.prod-type, buf_doc-line.prod-code ~
-                                      )
-              {&display-message}.
-              undo _main, return error.
+            find first goods no-lock where goods.artic = buf_doc-line.artic
+                                       and goods.prod-type = buf_doc-line.prod-type
+                                       and goods.prod-code = buf_doc-line.prod-code
+                                       .
+            if buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass}
+            then do :                           
+              find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = buf_Doc-line.doc-code
+                                                   and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                                   no-error.
+            end. 
+            if buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass}
+            then do :                           
+              find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = replace(buf_Doc-line.doc-code, "=", "-")
+                                                   and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                                   no-error.
+            end.                                        
+            if available buf_doc-fbr-gds
+            then do :                                      
+              if buf_doc-line.doc-qnty <> buf_doc-fbr-gds.fact-qnty and  buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do:
+                &scop my-message substitute("&1 (&2) Не все товары производства зарезервированы... &3 &4&5" ~
+                                        , buf_sale-doc.doc-code                           ~
+                                        , ~{&sale-doc-name~}                           ~
+                                        , buf_doc-line.artic, buf_doc-line.prod-type, buf_doc-line.prod-code ~
+                                        )
+                {&display-message}.
+                undo _main, return error.
+              end. 
+              if buf_doc-line.doc-qnty <> 0 and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do :
+                &scop my-message substitute("&1 (&2) Возврат в производстве не резервируем! &3 &4&5" ~
+                                        , buf_sale-doc.doc-code                           ~
+                                        , ~{&sale-doc-name~}                           ~
+                                        , buf_doc-line.artic, buf_doc-line.prod-type, buf_doc-line.prod-code ~
+                                        )
+                {&display-message}.
+                undo _main, return error.
+              end.      
+            end .
+            else do :                                     
+              if buf_doc-line.doc-qnty <> buf_doc-line.fact-qnty and  buf_sale-doc.doc-kind <> {&sale-add-return-write-off} then do:
+                &scop my-message substitute("&1 (&2) Не все товары зарезервированы... &3 &4&5" ~
+                                        , buf_sale-doc.doc-code                           ~
+                                        , ~{&sale-doc-name~}                           ~
+                                        , buf_doc-line.artic, buf_doc-line.prod-type, buf_doc-line.prod-code ~
+                                        )
+                {&display-message}.
+                undo _main, return error.
+              end.
             end.
           end.
           for each buf_gds-dtl no-lock where
                   buf_gds-dtl.doc-code = buf_sale-doc.doc-code
           on error undo _main, return error :
-            if buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty  and  buf_sale-doc.doc-kind <> {&sale-add-return-write-off} then do:
-              &scop my-message substitute("&1 (&2) Не все товары зарезервированы...  &3 &4&5" ~
-                                      , buf_sale-doc.doc-code ~
-                                      , ~{&sale-doc-name~} ~
-                                      , buf_gds-dtl.artic, buf_gds-dtl.prod-type, buf_gds-dtl.prod-code ~
-                                      )
-              {&display-message}.
-              undo _main, return error.
+            find first goods no-lock where goods.artic = buf_gds-dtl.artic
+                                       and goods.prod-type = buf_gds-dtl.prod-type
+                                       and goods.prod-code = buf_gds-dtl.prod-code
+                                       .
+            if buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass}
+            then do :                           
+              find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = buf_gds-dtl.doc-code
+                                                   and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                                   no-error.
+            end. 
+            if buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass}
+            then do :                           
+              find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = replace(buf_gds-dtl.doc-code, "=", "-")
+                                                   and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                                   no-error.
+            end.                                        
+            if available buf_doc-fbr-gds
+            then do :                                      
+              if buf_gds-dtl.doc-qnty <> buf_doc-fbr-gds.fact-qnty and buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do:
+                &scop my-message substitute("&1 (&2) Не все товары производства зарезервированы... &3 &4&5" ~
+                                        , buf_sale-doc.doc-code                           ~
+                                        , ~{&sale-doc-name~}                           ~
+                                        , buf_doc-line.artic, buf_doc-line.prod-type, buf_doc-line.prod-code ~
+                                        )
+                {&display-message}.
+                undo _main, return error.
+              end.  
+              if buf_gds-dtl.doc-qnty <> 0 and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do :
+                &scop my-message substitute("&1 (&2) Возврат в производстве не резервируем! &3 &4&5" ~
+                                        , buf_sale-doc.doc-code                           ~
+                                        , ~{&sale-doc-name~}                           ~
+                                        , buf_doc-line.artic, buf_doc-line.prod-type, buf_doc-line.prod-code ~
+                                        )
+                {&display-message}.
+                undo _main, return error.
+              end.       
+            end .
+            else do :
+              if buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty  and  buf_sale-doc.doc-kind <> {&sale-add-return-write-off} then do:
+                &scop my-message substitute("&1 (&2) Не все товары зарезервированы...  &3 &4&5" ~
+                                        , buf_sale-doc.doc-code ~
+                                        , ~{&sale-doc-name~} ~
+                                        , buf_gds-dtl.artic, buf_gds-dtl.prod-type, buf_gds-dtl.prod-code ~
+                                        )
+                {&display-message}.
+                undo _main, return error.
+              end.
             end.
           end.
           &scop my-message substitute("Закрываем &1 (&2 &3) ...", buf_sale-doc.doc-code, ~{&sale-doc-name~}, buf_sale-doc.chr-office)

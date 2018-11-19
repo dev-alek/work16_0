@@ -3311,20 +3311,44 @@ procedure validate-trn-doc :
             end.
           end.
         end.
-        if      buf_doc-line.fact-qnty <> v-parts-fact-qnty and
-           abs( buf_doc-line.fact-qnty  - v-parts-fact-qnty ) > 0.001
-        then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "При закрытии документа по факту имеется несоответствие строки документа" skip
-            "с количеством по партиям (фактическое количество)." skip
-            "Документ" ub.trn-doc.doc-code skip
-            "Расширенный тип документа" ub.trn-doc.ext-doc-type skip
-            "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
-            "buf_doc-line.fact-qnty" buf_doc-line.fact-qnty skip
-            "v-parts-fact-qnty" v-parts-fact-qnty skip
-            view-as alert-box error .
-          undo, return error return-value .
+        find first doc-fbr-gds no-lock where (doc-fbr-gds.out-code = buf_doc-line.doc-code or
+                                              doc-fbr-gds.out-code = replace(buf_doc-line.doc-code, "=", "-") ) 
+                                         and doc-fbr-gds.gds-code = buf_goods.gds-code
+                                         no-error .
+        if available doc-fbr-gds
+        then do :
+          if      buf_doc-line.doc-qnty <> v-parts-fact-qnty and
+             abs( buf_doc-line.doc-qnty  - v-parts-fact-qnty ) > 0.001
+          then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "При закрытии документа по факту имеется несоответствие строки (Производство) документа" skip
+              "с количеством по партиям (фактическое количество)." skip
+              "Документ" ub.trn-doc.doc-code skip
+              "Расширенный тип документа" ub.trn-doc.ext-doc-type skip
+              "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
+              "buf_doc-line.doc-qnty" buf_doc-line.doc-qnty skip
+              "v-parts-fact-qnty" v-parts-fact-qnty skip
+              view-as alert-box error .
+            undo, return error return-value .
+          end.
+        end.
+        else do :                                 
+          if      buf_doc-line.fact-qnty <> v-parts-fact-qnty and
+             abs( buf_doc-line.fact-qnty  - v-parts-fact-qnty ) > 0.001
+          then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "При закрытии документа по факту имеется несоответствие строки документа" skip
+              "с количеством по партиям (фактическое количество)." skip
+              "Документ" ub.trn-doc.doc-code skip
+              "Расширенный тип документа" ub.trn-doc.ext-doc-type skip
+              "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
+              "buf_doc-line.fact-qnty" buf_doc-line.fact-qnty skip
+              "v-parts-fact-qnty" v-parts-fact-qnty skip
+              view-as alert-box error .
+            undo, return error return-value .
+          end.
         end.
       end.
 
