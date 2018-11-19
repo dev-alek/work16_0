@@ -89,14 +89,19 @@ run gbl/d-askw.w (input "бШАНП РНБЮПНБ ДКЪ СДЮКЕМХЪ",
              input 3,
              output choice).
 if choice = 3 then return.
-if choice = 1 then ModeType = yes.
+if    choice = 1 
+   or choice = 4
+then ModeType = yes.
 else ModeType = no.
 if ModeType then do:
-    g#log = no.
-    message "бш рнвмн сбепемш, врн унрхре сдюкхрэ я йюяя бяе рнбюпш?" skip(0)
-            "щрн гюилер лмнцн бпелемх!"
-    view-as alert-box question buttons YES-NO update g#log.
-    if not g#log then return.
+    if choice ne 4
+    then do:
+       g#log = no.
+       message "бш рнвмн сбепемш, врн унрхре сдюкхрэ я йюяя бяе рнбюпш?" skip(0)
+               "щрн гюилер лмнцн бпелемх!"
+       view-as alert-box question buttons YES-NO update g#log.
+       if not g#log then return.
+    end.
 end.
 else do:
     run str/gds-list.w (input parparentproc, input ub.shop.host-code, input {&shop}, input abs(i-obj-code)).
@@ -127,7 +132,19 @@ crgd = 0
 cr-txr = 0
 cr-ncr-dis-kat = 0
 .
-IF ModeType  then do:
+if choice = 4
+then do:
+   create cash-gds.
+   assign
+      cash-gds.main-prt-b-code = ?
+      cash-gds.b-str           = "*"
+      cr                       = 1
+      cash-gds.ean-lz          = "*"
+   
+   .
+     
+end.    
+else IF ModeType  then do:
 /*БЯЕ ОПНУНДХБЬХЕ*/
 run write-log-and-file in p-log-handle (
       input 1

@@ -41,7 +41,7 @@ p-default-button может совпадать p-cancel-button
 Примеры  использования:
 define variable v-num as integer no-undo .
 run gbl/d-askw.w
-  (input "Вопрос" /* Заголовок окна */
+  (input "Вопрос[|код сообщения для автоответа]" /* Заголовок окна */
   ,input "Кажется придется сделать очень ответственную операцию." + {&new-line} /* Общее сообщение */
     + "Вы действительно хотите сделать это?" + {&new-line}
   ,input "|^" /* Символы разделители для кодирования двух следующих параметров */
@@ -101,7 +101,13 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Универсальный диалог для задания вопроса и выбора действия".
 { cmp/vssrevis.i "substitute('&1|&2':u,p-buttons,p-text)" }
 { cmp/showinf.i  }
-
+define variable mCodeMes    as char no-undo.
+if num-entries(p-title,"|") > 1
+then
+assign
+   mCodeMes = entry(2,p-title,"|")
+   p-title  = entry(1,p-title,"|")
+.
 define variable v-buttons    as integer no-undo.
 define variable v-need-confirm as logical no-undo extent 5 .
 
@@ -704,8 +710,29 @@ end.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  def var mAnswer as char no-undo.   
+  publish "ResponseToQuestion" (output mAnswer ).
+  p-number = int (mAnswer) no-error.
+  if error-status:error
+  then do:
+     define variable mbeg as integer no-undo.
+
+     mbeg = index("," + mAnswer   , "," + mcodemes + "=") .
+     mAnswer = substring (mAnswer, mbeg + length(mcodemes) + 1).
+     mAnswer = entry(1,mAnswer).  
+     p-number = int (mAnswer) no-error.
+     if error-status:error
+     then 
+        block-num:
+        do mbeg = 1 to num-entries (mAnswer):
+             p-number = int (entry(mbeg, mAnswer)) no-error.
+              if not error-status:error
+              then 
+                 leave block-num.
+        end.         
+        
      
-  publish "ResponseToQuestion" (output p-number ).
+  end.
   if   p-number eq 0 
   then do:
   RUN enable_UI.

@@ -263,10 +263,10 @@ else do:
                                                ,input 0).
 
       FOR EACH buf_staff WHERE
-               buf_staff.role = {&role-cashier}
+            /*   buf_staff.role = {&role-cashier}
            and buf_staff.role-level = {&role-level-db}
            and buf_staff.work-place = v-work-place
-           and buf_staff.date-end >= v-today,
+           and buf_staff.date-end >= v-today*/ ,
         FIRST buf_clients no-lock WHERE
               buf_clients.obj-type = {&prs}
          AND  buf_clients.obj-code = buf_staff.psn-code :

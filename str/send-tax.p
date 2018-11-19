@@ -153,7 +153,9 @@ run gbl/d-askw.w (input "Выбор категорий и ставок налогов для пересылки на кассу
 
 if choice  = 3 then return.
 
-if choice = 1 then do:
+if    choice = 1  
+   or choice = 5
+      then do:
     /*родим таблицу*/
 
     FOR EACH ub.tax NO-LOCK WHERE ub.tax.to-cashdesk = yes:
@@ -250,7 +252,7 @@ if can-find(first cash-txr NO-LOCK) OR can-find(first cash-txn) then
                     , this-procedure
                     , 'str/sendtaxn.p':U
                     , (string(p-obj-code) + {&delim-par} + action)
-                    , no /*p-auto-go*/
+                    , if    choice = 4  or choice = 5 then yes else no /*p-auto-go*/
                     , '':U
                     , 'Отправка информации по налогам кассу') no-error .
 else do:

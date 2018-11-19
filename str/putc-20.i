@@ -36,7 +36,16 @@ define buffer bf_dis-card-type for ub.dis-card-type.
 assign
 v-version-dec = decimal(p-version) no-error .
 
-
+    if     choice     eq 4
+       and p-pos-type eq {&cd-type-IBM-XML} 
+    then do:
+        run bgelib-tag-open in this-procedure ( input 2, input "MaskCard"
+            , input substitute("code='&1' ctrl='&2' tms='&3'", "*"
+            ,(if action = "U":U then 'ADD':U else 'DEL')
+            ,OS2-time)).
+        run bgelib-tag-close in this-procedure ( input 2, input "MaskCard").
+    end.
+else
 _mask:
 for each buf_dis-card-mask no-lock where
       buf_dis-card-mask.host-code = 0

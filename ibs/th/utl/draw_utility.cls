@@ -129,7 +129,7 @@ class ibs.th.utl.draw_utility inherits Form:
       checkBox23:checked = no
       checkBox24:checked = no
 	  .
-	  define variable vtestlg as logical no-undo init yes.
+	  define variable vtestlg as logical no-undo init NO.
       mUtil:put-log("Начато   : удаление кассиров с касс").
       checkBox7:checked =mutil:sendcode(1).
       mUtil:put-log("Выполнено: удаление кассиров с касс").
@@ -143,42 +143,63 @@ class ibs.th.utl.draw_utility inherits Form:
       
       mUtil:put-log("Начато   : удаление налогов с касс").
         checkBox10:checked = mutil:sendcode(3).
-      mUtil:put-log("Выполнено: удаление кассиров с касс").
+      mUtil:put-log("Выполнено: удаление налогов с касс").
       if vtestlg then message "выполнено "   checkBox10:text view-as alert-box.
       
       mUtil:put-log("Начато   : передача налогов на кассы").
       checkBox9:checked = mutil:sendcode(4).
         mUtil:put-log("Выполнено: передача налогов на кассы").
       if vtestlg then message "выполнено "   checkBox9:text view-as alert-box.
-    
+      
+      mUtil:put-log("Начато   : удаление типов платежей с касс").
       checkBox11:checked = mutil:sendcode(5).
+      mUtil:put-log("Выполнено: удаление типов платежей с касс").
       if vtestlg then message "выполнено "   checkBox11:text view-as alert-box.
-    
+     
+        mUtil:put-log("Начато   : передача типов платежей на кассы").
       checkBox12:checked = mutil:sendcode(6).
+        mUtil:put-log("Выполнено: передача типов платежей на кассы").
       if vtestlg then message "выполнено "   checkBox12:Text view-as alert-box.
-    
+     
+        mUtil:put-log("Начато   : удаление клиентов с касс").
       checkBox13:checked = mutil:sendcode(7). 
+        mUtil:put-log("Выполнено: удаление клиентов с касс").
       if vtestlg then message "выполнено "   checkBox13:text view-as alert-box.
     
+        mUtil:put-log("Начато   : передача клиентов на кассы").
       checkBox14:checked = mutil:sendcode(8).
+        mUtil:put-log("Выполнено: передача клиентов на кассы").
       if vtestlg then message "выполнено "   checkBox14:text view-as alert-box.
     
+        mUtil:put-log("Начато   : удаление масок карт с касс").
       checkBox15:checked = mutil:sendcode(9).
+        mUtil:put-log("Выполнено: удаление масок карт с касс").
       if vtestlg then message "выполнено "   checkBox15:text view-as alert-box.
       
+        mUtil:put-log("Начато   : передача масок карт на кассы").
       checkBox16:checked = mutil:sendcode(10).
+        mUtil:put-log("Выполнено: передача масок карт на кассы").
       if vtestlg then message "выполнено "   checkBox16:text view-as alert-box.
     
-      checkBox17:checked = mutil:sendcode(11).
+      /*  mUtil:put-log("Начато   : удаление справочника ОСС с касс").
+       checkBox17:checked = mutil:sendcode(11).
+        mUtil:put-log("Выполнено: удаление справочника ОСС с касс").
       if vtestlg then message "выполнено "   checkBox17:text view-as alert-box.
-    
-      checkBox18:checked = mutil:sendcode(12).
+    */
+        mUtil:put-log("Начато   : удаление и передача справочника ОСС на кассы").
+      checkBox17:checked = mutil:sendcode(12).
+        checkBox18:checked = checkBox17:checked.
+        mUtil:put-log("Выполнено: удаление и  передача справочника ОСС на кассы").
       if vtestlg then message "выполнено "   checkBox18:text view-as alert-box.
       
+        mUtil:put-log("Начато   : удаление товаров с касс").
       checkBox23:checked = mutil:sendcode(13).
+        mUtil:put-log("Выполнено: удаление товаров с касс").
       if vtestlg then message "выполнено "   checkBox23:text view-as alert-box.
       
+        mUtil:put-log("Начато   : передача товаров на кассы").
       checkBox24:checked = mutil:sendcode(14).
+        mUtil:put-log("Выполнено: передача товаров на кассы").
       if vtestlg then message "выполнено "   checkBox24:text view-as alert-box.
         
       return.

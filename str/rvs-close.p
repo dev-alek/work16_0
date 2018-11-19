@@ -85,7 +85,7 @@ do:
           error-status:get-message(1) skip
           return-value
           view-as alert-box error.
-        run userlogrvs(58, return-value + error-status:get-message(1) ) .
+        //run userlogrvs(58, return-value + error-status:get-message(1) ) .
         undo tr, leave.
       end.
     end.
@@ -299,4 +299,6 @@ do:
 end.
     
 end.
+
+
  

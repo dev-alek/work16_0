@@ -213,6 +213,7 @@ do:
           buf_staff.role       = {&role-cashier}
           buf_staff.role-level = {&role-level-db}
           buf_staff.staff-code = integer(p-Cashiers:code_)
+          buf_staff.work-place = string(g#db-num, '99999')
           .
 
       end.

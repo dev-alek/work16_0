@@ -33,7 +33,7 @@ class ibs.th.utl.method-for-draw-utility final:
     Obj-type = v-cntxt-obj-type.
   end.
   define public variable mAddr         as character no-undo.
-  define public variable mlogHand      as handle no-undo. 
+  //define public variable mlogHand      as handle no-undo. 
   
   
  
@@ -131,13 +131,14 @@ define variable myResultObj     as JsonObject           no-undo.
 define variable mplacelib       as class ibs.th.str.placelib no-undo.
 define stream lsIN.
 define stream lsOUT.
-&glob namelogfile darw_util.log    
+&glob namelogfile    value(substitute("&1darw_util_&2.log", ibs.th.gbl.gbl-inipar:logDir,v-cntxt-obj-code))    
+&glob namelogfileerr value(substitute("&1darw_util_&2.err", ibs.th.gbl.gbl-inipar:logDir,v-cntxt-obj-code))
   constructor public method-for-draw-utility (  ):
     super ().
     mplacelib = new ibs.th.str.placelib().
     mParser = new ObjectModelParser().
-    output to {&namelogfile} .
-    output close.
+   /* output to {&namelogfile} .
+    output close.*/
   end constructor.
 
   destructor public method-for-draw-utility ( ):
@@ -148,25 +149,33 @@ define stream lsOUT.
  DEFINE PUBLIC EVENT write-log 
     SIGNATURE VOID ( INPUT pcCustName AS CHARACTER ).   
 method public void put-log (iText as character ):
-  if valid-handle(mlogHand)
+  /*if valid-handle(mlogHand)
   then
-     run pcall-log-file in mlogHand (Itext).
+     run pcall-log-file in mlogHand (Itext).*/
   put-log-all(Itext).
-  publish "write-log" from parparentproc (111 ).
+  publish "write-log" from parparentproc (Itext ).
   write-log:PUBLISH (iText).
 end method.
 
 method public void put-err-log (iText as character ):
-  if valid-handle(mlogHand)
+  /*if valid-handle(mlogHand)
   then
-     run pcall-log-file in mlogHand (Itext).
+     run pcall-log-file-err in mlogHand (Itext).*/
+  publish "write-log-err" from parparentproc (Itext ).
   put-log-all(Itext).
 end method. 
+
 method public void put-log-all(itext as char):
    output to {&namelogfile} append.
    put unformatted itext skip .
    output close.
 end.  
+method public void put-log-allerr(itext as char):
+   output to {&namelogfileerr} append.
+   put unformatted itext skip .
+   output close.
+end.
+  
 method private void pumpav(
   parobj-type  like ub.clients.obj-type,
   parobj-code  like ub.clients.obj-code,

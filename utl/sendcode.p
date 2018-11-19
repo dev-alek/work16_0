@@ -15,62 +15,61 @@ define input  parameter iCode as integer no-undo.
 11 Справочник ОСС удалены с касс
 12 Справочник ОСС переданы на кассы
 */
-define variable mAnswer as integer no-undo.
+define variable mAnswer as character  no-undo.
 {cmp/str-glbl.i}
 subscribe   to "ResponseToQuestion" anywhere run-procedure "SendAnswer".
 if iCode eq 1
 then do:
-  mAnswer =4.
+  mAnswer = "4".
   run str/sendcash.p(iUtil:parparentproc,this-procedure,this-procedure,string(iUtil:Obj-code) + {&delim-par} + "D").
 end.
 else if iCode eq 2
 then do:
-  mAnswer = 1.
+  mAnswer = "1".
   run str/sendcash.p(iUtil:parparentproc,this-procedure,this-procedure,string(iUtil:obj-code) + {&delim-par} + "U").
 end.
 else if iCode eq 3
 then do:
-mAnswer =4.
+mAnswer = "4".
 run str/send-tax.p (iUtil:parparentproc, {&cd-type-ibm}, iUtil:obj-type, iUtil:obj-code, 'D') .
 end.
 else if iCode eq 4
 then do:
-  mAnswer = 1.
+  mAnswer = "5".
   run str/send-tax.p (iUtil:parparentproc, {&cd-type-ibm}, iUtil:obj-type, iUtil:obj-code, 'U') .
 end.
 else if iCode eq 5
 then do:
-  mAnswer =4.
+  mAnswer = "4".
   run str/2cashpay.p(iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-ibm} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
 end.
 else if iCode eq 6
 then do:
-  mAnswer = 1.
+  mAnswer = "1".
   run str/2cashpay.p(iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-ibm} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
 end.
 
 else if iCode eq 7
 then do:
-  mAnswer = 7.
+  mAnswer = "7".
   run str/cash-cli.p(iUtil:parparentproc,this-procedure,this-procedure,string(ibs.th.gbl.gbl-var:g#db-num) + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
   
 end.
 else if iCode eq 8
 then do:
-  mAnswer = 5.
+  mAnswer = "5".
   run str/cash-cli.p(iUtil:parparentproc,this-procedure,this-procedure,string(ibs.th.gbl.gbl-var:g#db-num)  + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
-  mAnswer = 6.
+  mAnswer = "6".
   run str/cash-cli.p(iUtil:parparentproc,this-procedure,this-procedure,string(ibs.th.gbl.gbl-var:g#db-num)  + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
 end.
-// ------------------------
 else if iCode eq 9
 then do:
-    mAnswer = 1.
+    mAnswer = "4".
     run str/senddcty.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
 end.
 else if iCode eq 10
 then do:
-  mAnswer = 1.
+  mAnswer = "1".
   run str/senddcty.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
 end.
 
@@ -86,19 +85,19 @@ else if iCode eq 12
     end.
 else if iCode eq 13
 then do:
-    mAnswer = 1.
+    mAnswer = "4".
    run str/del-gds.p (iUtil:parparentproc,this-procedure,this-procedure,string(iUtil:obj-code) + {&delim-par} + "no").
 end.
 else if iCode eq 14
 then do:
-    mAnswer = 1.
+    mAnswer = "1".
     // run str/gds-cash.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
     run str/send-gds-draw.p (iUtil:parparentproc).
 end.
 unsubscribe to "ResponseToQuestion".
 
 procedure SendAnswer:
-   define output parameter oAnswer as integer no-undo.
+   define output parameter oAnswer as character  no-undo.
    oAnswer = mAnswer.
 end procedure. 
 
@@ -109,4 +108,8 @@ define input parameter p-int2 as integer no-undo .
 define input parameter p-mess as character no-undo .
 iUtil:put-log(p-mess).
 end procedure. /* write-log-and-file */
+
+procedure show-counter :
+
+end procedure. /* show-counter */
 

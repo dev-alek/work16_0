@@ -36,6 +36,8 @@ define variable vss-description as character no-undo init "Загрузка данных из TH
 define variable mUtil as class ibs.th.utl.method-for-draw-utility no-undo.
 mUtil = new ibs.th.utl.method-for-draw-utility().
 mutil:parparentproc = parparentproc.
+subscribe   to "write-log"     anywhere run-procedure "pcall-log-file".
+subscribe   to "write-log-err" anywhere run-procedure "pcall-log-file-err".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { cmp/library.i }
@@ -740,7 +742,22 @@ define input  parameter p-message as character no-undo .
 
 end procedure. /* pcall-log-file */
 
+procedure pcall-log-file-err :
+define input  parameter p-message as character no-undo .
+  do
+  on error undo, return error return-value
+  :
+    put stream err-stream unformatted p-message skip .
+
+  end.
+
+end procedure. /* pcall-log-file */
 
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+finally:
+unsubscribe   to "write-log"     .
+unsubscribe   to "write-log-err" .
+delete object mutil no-error.
+end finally. 

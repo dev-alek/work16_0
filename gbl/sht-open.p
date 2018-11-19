@@ -261,8 +261,13 @@ else do:
             undo, return error .
     end.
  &else
- { gbl/curobjdt.i p-curr-obj-type p-curr-obj-code s-date }  
- s-num  = 1.
+ { gbl/curobjdt.i p-curr-obj-type p-curr-obj-code s-date }
+ find last open-shift where
+           open-shift.obj-type = p-curr-obj-type and
+           open-shift.obj-code = p-curr-obj-code and
+           open-shift.shift-date = today
+          use-index pi no-error.  
+ s-num  = (if available open-shift then open-shift.shift-num else 0) + 1.
  s-name = "11".
  s-time = time.
  e-time = time.
