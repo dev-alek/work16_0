@@ -29,6 +29,11 @@ class utl.flt-condition:
    define public property Value as char no-undo 
    get.
    set. 
+
+   /* Значение поля */
+   define public property Value1 as char no-undo 
+   get.
+   set. 
    
    /* Операция - равно, не равно, содержит, список и пр.*/
    define public property Operation as char no-undo 
@@ -110,10 +115,11 @@ class utl.flt-condition:
    method private char flt-eq():
       
       def var vRes as char no-undo.
-         vRes = substitute("&1.&2 = &3", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             GetValue()).
+      
+      vRes = substitute("&1.&2 = &3", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          GetValue()).
       return vRes.
 
    end method.
@@ -121,10 +127,12 @@ class utl.flt-condition:
    method private char flt-ne():
       
       def var vRes as char no-undo.
-         vRes = substitute("&1.&2 <> &3", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             GetValue()).
+      
+      vRes = substitute("&1.&2 <> &3", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          GetValue()).
+                          
       return vRes.
 
    end method.
@@ -132,10 +140,12 @@ class utl.flt-condition:
    method private char flt-lt():
       
       def var vRes as char no-undo.
-         vRes = substitute("&1.&2 < &3", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             GetValue()).
+      
+      vRes = substitute("&1.&2 < &3", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          GetValue()).
+                          
       return vRes.
 
    end method.
@@ -144,10 +154,10 @@ class utl.flt-condition:
       
       def var vRes as char no-undo.
       
-         vRes = substitute("&1.&2 <= &3", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             GetValue()).
+      vRes = substitute("&1.&2 <= &3", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          GetValue()).
       return vRes.
 
    end method.
@@ -157,10 +167,10 @@ class utl.flt-condition:
       
       def var vRes   as char no-undo.
       
-         vRes = substitute("&1.&2 > &3", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             GetValue()).
+      vRes = substitute("&1.&2 > &3", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          GetValue()).
       return vRes.
 
    end method.
@@ -169,10 +179,10 @@ class utl.flt-condition:
       
       def var vRes as char no-undo.
       
-         vRes = substitute("&1.&2 >= &3", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             GetValue()).
+      vRes = substitute("&1.&2 >= &3", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          GetValue()).
       return vRes.
 
    end method.
@@ -181,26 +191,25 @@ class utl.flt-condition:
       
       def var vRes as char no-undo.
       
-         vRes = substitute("&1.&2 begins &3", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             GetValue()).
+      vRes = substitute("&1.&2 begins &3", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          GetValue()).
       return vRes.
 
    end method.
    
    method private char flt-between():
       
-      def var vRes as char no-undo.
+      def var vRes   as char no-undo.
       def var vDate1 as date no-undo.
       def var vDate2 as date no-undo.
-      
-      if this-object:FieldType = "date" and
-         num-entries(this-object:Value,"-") = 2 then
+
+      if this-object:FieldType = "date" then
       do:
          assign
-            vDate1 = date(entry(1,this-object:Value,"-"))
-            vDate2 = date(entry(2,this-object:Value,"-"))
+            vDate1 = date(this-object:Value)
+            vDate2 = date(this-object:Value1)
          .
          
          vRes = substitute("(&1.&2 >= &3) and (&1.&2 <= &4)", 
@@ -216,7 +225,9 @@ class utl.flt-condition:
 
    method private char flt-list():
       
-      def var vRes as char no-undo.
+      def var vRes  as char    no-undo.
+      def var vI    as integer no-undo.
+      def var vDate as date    no-undo.
       
       if this-object:FieldType begins "char" then
       do: 
@@ -224,6 +235,31 @@ class utl.flt-condition:
                             this-object:BufferName,
                             this-object:Field_,
                             GetValue()).
+      end.
+
+      if this-object:FieldType begins "int" then
+      do: 
+         vRes = substitute("can-do('&3',string(&1.&2))", 
+                            this-object:BufferName,
+                            this-object:Field_,
+                            this-object:value).
+      end.
+
+      if this-object:FieldType = "date" then
+      do:
+         do vI = 1 to num-entries(this-object:value):
+            
+            vDate = date(entry(vI,this-object:value)).
+            vRes = substitute("&4 &1.&2 = &3 or", 
+                               this-object:BufferName,
+                               this-object:Field_,
+                               quoter(vDate),
+                               vRes).
+            
+         end. 
+         
+         /* последний and отрезаем, он мешает */
+         vRes = trim(vRes,"or").
       end.
       
       return vRes.

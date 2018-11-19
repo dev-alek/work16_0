@@ -305,7 +305,7 @@ class utl.gpwdfrm inherits Form:
       
       ValidateTimes(cast(sender, System.Windows.Forms.ComboBox)).
       
-      catch vErr as ValidateError :
+      catch vErr as utl.ValidateError :
          
          System.Windows.Forms.MessageBox:Show(
             vErr:GetMessage(1),
@@ -1026,9 +1026,9 @@ class utl.gpwdfrm inherits Form:
          cmbFio:Enabled          = no
          rbtnOnce:Enabled        = no
          rbtnInterval:Enabled    = no
-         label8:Visible          = no
-         btnToBuff:Visible       = no
-         btnToBuff:Enabled       = no
+         label8:Visible          = yes
+         btnToBuff:Visible       = yes
+         btnToBuff:Enabled       = yes
          btnFio:enabled          = no
          btnFio:visible          = no
          mtbDate:enabled         = no

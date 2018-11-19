@@ -33,6 +33,7 @@ class utl.gpwdbrw_flt inherits Form:
    define private variable splitContainer1 as System.Windows.Forms.SplitContainer no-undo.
    define private variable ucCashNum as utl.flt_condition_uc no-undo.
    define private variable ucDateGen as utl.flt_condition_uc no-undo.
+   define private variable ucDateProl as utl.flt_condition_uc no-undo.
    define private variable ucFio as utl.flt_condition_uc no-undo.
    define private variable ucHostName as utl.flt_condition_uc no-undo.
    define private variable ucObject as utl.flt_condition_uc no-undo.
@@ -104,6 +105,8 @@ class utl.gpwdbrw_flt inherits Form:
       this-object:splitContainer1 = new System.Windows.Forms.SplitContainer().
       this-object:btnCancel = new System.Windows.Forms.Button().
       this-object:btnApply = new System.Windows.Forms.Button().
+      this-object:ucDateProl = new utl.flt_condition_uc().
+      this-object:ucCashNum = new utl.flt_condition_uc().
       this-object:gbModofier = new System.Windows.Forms.GroupBox().
       this-object:rbOr = new System.Windows.Forms.RadioButton().
       this-object:rbAnd = new System.Windows.Forms.RadioButton().
@@ -113,7 +116,6 @@ class utl.gpwdbrw_flt inherits Form:
       this-object:ucDateGen = new utl.flt_condition_uc().
       this-object:ucHostName = new utl.flt_condition_uc().
       this-object:ucUser = new utl.flt_condition_uc().
-      this-object:ucCashNum = new utl.flt_condition_uc().
       this-object:panel1:SuspendLayout().
       cast(this-object:splitContainer1, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:splitContainer1:Panel1:SuspendLayout().
@@ -128,7 +130,7 @@ class utl.gpwdbrw_flt inherits Form:
       this-object:panel1:Dock = System.Windows.Forms.DockStyle:Fill.
       this-object:panel1:Location = new System.Drawing.Point(0, 0).
       this-object:panel1:Name = "panel1".
-      this-object:panel1:Size = new System.Drawing.Size(649, 566).
+      this-object:panel1:Size = new System.Drawing.Size(631, 663).
       this-object:panel1:TabIndex = 0.
       /*  */
       /* splitContainer1 */
@@ -145,6 +147,8 @@ class utl.gpwdbrw_flt inherits Form:
       /*  */
       /* splitContainer1.Panel2 */
       /*  */
+      this-object:splitContainer1:Panel2:Controls:Add(this-object:ucDateProl).
+      this-object:splitContainer1:Panel2:Controls:Add(this-object:ucCashNum).
       this-object:splitContainer1:Panel2:Controls:Add(this-object:gbModofier).
       this-object:splitContainer1:Panel2:Controls:Add(this-object:ucObject).
       this-object:splitContainer1:Panel2:Controls:Add(this-object:ucFio).
@@ -152,8 +156,8 @@ class utl.gpwdbrw_flt inherits Form:
       this-object:splitContainer1:Panel2:Controls:Add(this-object:ucDateGen).
       this-object:splitContainer1:Panel2:Controls:Add(this-object:ucHostName).
       this-object:splitContainer1:Panel2:Controls:Add(this-object:ucUser).
-      this-object:splitContainer1:Size = new System.Drawing.Size(649, 566).
-      this-object:splitContainer1:SplitterDistance = 77.
+      this-object:splitContainer1:Size = new System.Drawing.Size(631, 663).
+      this-object:splitContainer1:SplitterDistance = 78.
       this-object:splitContainer1:TabIndex = 0.
       /*  */
       /* btnCancel */
@@ -178,13 +182,36 @@ class utl.gpwdbrw_flt inherits Form:
       this-object:btnApply:UseVisualStyleBackColor = true.
       this-object:btnApply:Click:Subscribe(this-object:btnApply_Click).
       /*  */
+      /* ucDateProl */
+      /*  */
+      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar0 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucDateProl:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucDateProl:Location = new System.Drawing.Point(12, 324).
+      this-object:ucDateProl:Name = "ucDateProl".
+      this-object:ucDateProl:Size = new System.Drawing.Size(607, 33).
+      this-object:ucDateProl:TabIndex = 7.
+      /*  */
+      /* ucCashNum */
+      /*  */
+      define variable nestedvar1 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar1 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucCashNum:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucCashNum:Location = new System.Drawing.Point(12, 273).
+      this-object:ucCashNum:Name = "ucCashNum".
+      this-object:ucCashNum:Size = new System.Drawing.Size(607, 33).
+      this-object:ucCashNum:TabIndex = 6.
+      /*  */
       /* gbModofier */
       /*  */
+      define variable nestedvar2 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar2 = cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+      this-object:gbModofier:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
       this-object:gbModofier:Controls:Add(this-object:rbOr).
       this-object:gbModofier:Controls:Add(this-object:rbAnd).
-      this-object:gbModofier:Location = new System.Drawing.Point(12, 320).
+      this-object:gbModofier:Location = new System.Drawing.Point(6, 407).
       this-object:gbModofier:Name = "gbModofier".
-      this-object:gbModofier:Size = new System.Drawing.Size(631, 137).
+      this-object:gbModofier:Size = new System.Drawing.Size(613, 122).
       this-object:gbModofier:TabIndex = 6.
       this-object:gbModofier:TabStop = false.
       this-object:gbModofier:Text = "Способ объединения фильтров".
@@ -215,78 +242,67 @@ class utl.gpwdbrw_flt inherits Form:
       /*  */
       /* ucObject */
       /*  */
-      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar0 = System.Windows.Forms.AnchorStyles:Left.
-      this-object:ucObject:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ucObject:Location = new System.Drawing.Point(12, 202).
+      define variable nestedvar3 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar3 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucObject:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar3, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucObject:Location = new System.Drawing.Point(12, 234).
       this-object:ucObject:Name = "ucObject".
-      this-object:ucObject:Size = new System.Drawing.Size(625, 33).
+      this-object:ucObject:Size = new System.Drawing.Size(607, 33).
       this-object:ucObject:TabIndex = 5.
       /*  */
       /* ucFio */
       /*  */
-      define variable nestedvar1 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar1 = System.Windows.Forms.AnchorStyles:Left.
-      this-object:ucFio:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ucFio:Location = new System.Drawing.Point(12, 163).
+      define variable nestedvar4 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar4 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucFio:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar4, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucFio:Location = new System.Drawing.Point(12, 195).
       this-object:ucFio:Name = "ucFio".
-      this-object:ucFio:Size = new System.Drawing.Size(625, 33).
+      this-object:ucFio:Size = new System.Drawing.Size(607, 33).
       this-object:ucFio:TabIndex = 4.
       /*  */
       /* ucTimeGen */
       /*  */
-      define variable nestedvar2 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar2 = System.Windows.Forms.AnchorStyles:Left.
-      this-object:ucTimeGen:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ucTimeGen:Location = new System.Drawing.Point(12, 124).
+      define variable nestedvar5 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar5 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucTimeGen:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar5, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucTimeGen:Location = new System.Drawing.Point(12, 156).
       this-object:ucTimeGen:Name = "ucTimeGen".
-      this-object:ucTimeGen:Size = new System.Drawing.Size(625, 33).
+      this-object:ucTimeGen:Size = new System.Drawing.Size(607, 33).
       this-object:ucTimeGen:TabIndex = 3.
       /*  */
       /* ucDateGen */
       /*  */
-      define variable nestedvar3 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar3 = System.Windows.Forms.AnchorStyles:Left.
-      this-object:ucDateGen:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar3, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ucDateGen:Location = new System.Drawing.Point(12, 85).
+      define variable nestedvar6 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar6 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucDateGen:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar6, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucDateGen:Location = new System.Drawing.Point(12, 117).
       this-object:ucDateGen:Name = "ucDateGen".
-      this-object:ucDateGen:Size = new System.Drawing.Size(625, 33).
+      this-object:ucDateGen:Size = new System.Drawing.Size(607, 33).
       this-object:ucDateGen:TabIndex = 2.
       /*  */
       /* ucHostName */
       /*  */
-      define variable nestedvar4 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar4 = System.Windows.Forms.AnchorStyles:Left.
-      this-object:ucHostName:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar4, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ucHostName:Location = new System.Drawing.Point(12, 46).
+      define variable nestedvar7 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar7 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucHostName:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar7, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucHostName:Location = new System.Drawing.Point(12, 78).
       this-object:ucHostName:Name = "ucHostName".
-      this-object:ucHostName:Size = new System.Drawing.Size(625, 33).
+      this-object:ucHostName:Size = new System.Drawing.Size(607, 33).
       this-object:ucHostName:TabIndex = 1.
       /*  */
       /* ucUser */
       /*  */
-      define variable nestedvar5 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar5 = System.Windows.Forms.AnchorStyles:Left.
-      this-object:ucUser:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar5, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ucUser:Location = new System.Drawing.Point(12, 7).
+      define variable nestedvar8 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar8 = System.Windows.Forms.AnchorStyles:Left.
+      this-object:ucUser:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar8, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ucUser:Location = new System.Drawing.Point(12, 39).
       this-object:ucUser:Name = "ucUser".
-      this-object:ucUser:Size = new System.Drawing.Size(625, 33).
+      this-object:ucUser:Size = new System.Drawing.Size(607, 33).
       this-object:ucUser:TabIndex = 0.
-      /*  */
-      /* ucCashNum */
-      /*  */
-      define variable nestedvar6 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar6 = System.Windows.Forms.AnchorStyles:Left.
-      this-object:ucCashNum:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar6, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ucCashNum:Location = new System.Drawing.Point(12, 324).
-      this-object:ucCashNum:Name = "ucCashNum".
-      this-object:ucCashNum:Size = new System.Drawing.Size(625, 33).
-      this-object:ucCashNum:TabIndex = 6.
       /*  */
       /* gpwdbrw_flt */
       /*  */
-      this-object:ClientSize = new System.Drawing.Size(649, 566).
-      this-object:Controls:Add(this-object:ucCashNum).
+      this-object:ClientSize = new System.Drawing.Size(631, 663).
       this-object:Controls:Add(this-object:panel1).
       this-object:Name = "gpwdbrw_flt".
       this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterScreen.
@@ -320,6 +336,7 @@ class utl.gpwdbrw_flt inherits Form:
       vForm:SetCondition("Fio",     vForm:Filter:Fio).
       vForm:SetCondition("Object",  vForm:Filter:ObjectNum).
       vForm:SetCondition("CashNum", vForm:Filter:CashNum).
+      vForm:SetCondition("DateProl",vForm:Filter:DateProl).
       vForm:ObjectToForm().
       
       return vForm.
@@ -336,6 +353,7 @@ class utl.gpwdbrw_flt inherits Form:
          when "Fio"      then ucFio:Condition = iCond.
          when "Object"   then ucObject:Condition = iCond.
          when "CashNum"  then ucCashNum:Condition = iCond.
+         when "DateProl"  then ucDateProl:Condition = iCond.
       end case.
 
    end method.
@@ -349,6 +367,7 @@ class utl.gpwdbrw_flt inherits Form:
       this-object:ucObject:FormToObject(). 
       this-object:ucHostName:FormToObject().
       this-object:ucCashNum:FormToObject().
+      this-object:ucDateProl:FormToObject().
       
       if this-object:rbAnd:Checked then
          this-object:Filter:Modifier = "and".
@@ -367,7 +386,7 @@ class utl.gpwdbrw_flt inherits Form:
       this-object:ucObject:ObjectToForm(). 
       this-object:ucHostName:ObjectToForm().
       this-object:ucCashNum:ObjectToForm().
-       
+      this-object:ucDateProl:ObjectToForm().
            
       if this-object:Filter:Modifier = "and" then
          this-object:rbAnd:Checked = yes.

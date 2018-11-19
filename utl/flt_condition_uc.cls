@@ -22,9 +22,12 @@ block-level on error undo, throw.
 
 class utl.flt_condition_uc inherits UserControl: 
    
+   { utl/flt-operator.i }
+   
    define private variable cbOp as System.Windows.Forms.ComboBox no-undo.
    define private variable cbEnabled as System.Windows.Forms.CheckBox no-undo.
    define private variable components as System.ComponentModel.IContainer no-undo.
+   define private variable mtbValue1 as System.Windows.Forms.MaskedTextBox no-undo.
    define private variable tbName as System.Windows.Forms.TextBox no-undo.
    define private variable splitContainer3 as System.Windows.Forms.SplitContainer no-undo.
    define private variable splitContainer2 as System.Windows.Forms.SplitContainer no-undo.
@@ -67,6 +70,7 @@ class utl.flt_condition_uc inherits UserControl:
          assign
             cbOp:enabled = yes
             mtbValue:enabled = yes
+            mtbValue1:enabled = yes
          . 
 		end.
 		else
@@ -74,11 +78,181 @@ class utl.flt_condition_uc inherits UserControl:
 		   assign
             cbOp:enabled = no
             mtbValue:enabled = no
+            mtbValue1:enabled = no
 		   .
 		end.
 		return.
 
 	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void cbOp_SelectionChangeCommitted( input sender as System.Object, input e as System.EventArgs ):
+		
+      SetMask().
+      SetVisible().
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void mtbValue_Validating( input sender as System.Object, input e as System.ComponentModel.CancelEventArgs ):
+		
+      case this-object:Condition:FieldType:
+         when "date" then ValidateDate(sender).
+         when "int" then ValidateInt(sender).    
+      end case.
+      
+      catch vErr as utl.ValidateError :
+         
+         System.Windows.Forms.MessageBox:Show(
+            vErr:GetMessage(1),
+            "Внимание!",
+            System.Windows.Forms.MessageBoxButtons:OK,
+            System.Windows.Forms.MessageBoxIcon:Error).
+         e:Cancel = yes.      
+      end catch.
+		
+	end method.
+
+   method public void ValidateDate(input sender as System.Object):
+      
+      def var vMaskedTextBox as class System.Windows.Forms.MaskedTextBox no-undo.
+      def var vDate as date no-undo.
+      def var vI as integer no-undo.
+      
+      vMaskedTextBox = cast (sender, System.Windows.Forms.MaskedTextBox).
+      
+      case this-object:cbOp:Text:
+         when {&flt-eq} or 
+         when {&flt-lt} or
+         when {&flt-le} or 
+         when {&flt-gt} or
+         when {&flt-ge} or
+         when {&flt-ne} or
+         when {&flt-between} then 
+         do:
+            assign
+               vDate = date(replace(vMaskedTextBox:Text,",","."))
+            no-error.
+            
+            if error-status:error then
+            do:
+               undo, throw new utl.ValidateError("Неправильная дата " + replace(vMaskedTextBox:Text,",","."),-1).
+            end.
+         end.
+         when {&flt-list} then
+         do:
+            do vI = 1 to num-entries(vMaskedTextBox:Text):
+               assign
+                  vDate = date(entry(vI,vMaskedTextBox:Text))
+               no-error.
+               
+               if error-status:error then
+               do:
+                  undo, throw new utl.ValidateError("Неправильная дата " + entry(vI,vMaskedTextBox:Text),-1).
+               end.
+            end.
+            
+         end.
+      end case.
+      return.
+
+   end method.
+
+   method public void ValidateInt(input sender as System.Object):
+      
+      def var vMaskedTextBox as class System.Windows.Forms.MaskedTextBox no-undo.
+      def var vInt as integer no-undo.
+      def var vI   as integer no-undo.
+      
+      vMaskedTextBox = cast (sender, System.Windows.Forms.MaskedTextBox).
+      
+      case this-object:cbOp:Text:
+         when {&flt-eq} or 
+         when {&flt-lt} or
+         when {&flt-le} or 
+         when {&flt-gt} or
+         when {&flt-ge} or
+         when {&flt-ne} then 
+         do:
+            assign
+               vInt = int(vMaskedTextBox:Text)
+            no-error.
+            
+            if error-status:error then
+            do:
+               undo, throw new utl.ValidateError("Неверное число " + vMaskedTextBox:Text,-1).
+            end.
+         end.
+         when {&flt-list} then
+         do:
+            do vI = 1 to num-entries(vMaskedTextBox:Text):
+               assign
+                  vInt = int(entry(vI,vMaskedTextBox:Text))
+               no-error.
+               
+               if error-status:error then
+               do:
+                  undo, throw new utl.ValidateError("Неверное число " + entry(vI,vMaskedTextBox:Text),-1).
+               end.
+            end.
+         end.
+      end case.
+      return.
+
+   end method.
+
+   method public void SetMask():
+      main:
+      do on error undo, throw:
+         
+         if cbOp:text = {&flt-list} then
+         do:
+            this-object:mtbValue:mask = "".
+            leave main.
+         end.
+
+         case this-object:Condition:FieldType:
+            when "char" then this-object:mtbValue:mask = "". 
+            when "int"  then this-object:mtbValue:mask = "".
+            when "time" then this-object:mtbValue:mask = "00:00:00".
+            when "date" then
+            do:
+               assign
+                  this-object:mtbValue:mask = "00/00/0000"
+                  this-object:mtbValue1:mask = "00/00/0000"
+               .
+            end.
+         end case.
+      end.
+      return.
+
+   end method.
+
+   method public void SetVisible():
+
+      case this-object:Condition:FieldType:
+         when "date" then
+         do:
+            if cbOp:text = {&flt-between} then
+               this-object:mtbValue1:Visible = yes.
+            else
+               this-object:mtbValue1:Visible = no.
+         end.
+         otherwise this-object:mtbValue1:Visible = no.
+      end case.
+      
+      return.
+
+   end method.
 
    method private void InitializeComponent(  ):
       
@@ -95,6 +269,7 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:tbName = new System.Windows.Forms.TextBox().
       this-object:splitContainer2 = new System.Windows.Forms.SplitContainer().
       this-object:cbOp = new System.Windows.Forms.ComboBox().
+      this-object:mtbValue1 = new System.Windows.Forms.MaskedTextBox().
       this-object:mtbValue = new System.Windows.Forms.MaskedTextBox().
       this-object:panel1:SuspendLayout().
       cast(this-object:splitContainer1, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -186,6 +361,7 @@ class utl.flt_condition_uc inherits UserControl:
       /*  */
       /* splitContainer2.Panel2 */
       /*  */
+      this-object:splitContainer2:Panel2:Controls:Add(this-object:mtbValue1).
       this-object:splitContainer2:Panel2:Controls:Add(this-object:mtbValue).
       this-object:splitContainer2:Size = new System.Drawing.Size(383, 33).
       this-object:splitContainer2:SplitterDistance = 168.
@@ -200,14 +376,25 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:cbOp:Name = "cbOp".
       this-object:cbOp:Size = new System.Drawing.Size(168, 21).
       this-object:cbOp:TabIndex = 0.
+      this-object:cbOp:SelectionChangeCommitted:Subscribe(this-object:cbOp_SelectionChangeCommitted).
+      /*  */
+      /* mtbValue1 */
+      /*  */
+      this-object:mtbValue1:Dock = System.Windows.Forms.DockStyle:Right.
+      this-object:mtbValue1:Location = new System.Drawing.Point(114, 0).
+      this-object:mtbValue1:Name = "mtbValue1".
+      this-object:mtbValue1:Size = new System.Drawing.Size(97, 26).
+      this-object:mtbValue1:TabIndex = 1.
+      this-object:mtbValue1:Validating:Subscribe(this-object:mtbValue_Validating).
       /*  */
       /* mtbValue */
       /*  */
-      this-object:mtbValue:Dock = System.Windows.Forms.DockStyle:Top.
+      this-object:mtbValue:Dock = System.Windows.Forms.DockStyle:Left.
       this-object:mtbValue:Location = new System.Drawing.Point(0, 0).
       this-object:mtbValue:Name = "mtbValue".
-      this-object:mtbValue:Size = new System.Drawing.Size(211, 26).
+      this-object:mtbValue:Size = new System.Drawing.Size(108, 26).
       this-object:mtbValue:TabIndex = 0.
+      this-object:mtbValue:Validating:Subscribe(this-object:mtbValue_Validating).
       /*  */
       /* flt_condition_uc */
       /*  */
@@ -247,12 +434,14 @@ class utl.flt_condition_uc inherits UserControl:
             this-object:cbEnabled:Checked = this-object:Condition:Enabled
             this-object:tbName:Text = this-object:Condition:FieldName
             this-object:mtbValue:Text = this-object:Condition:Value
+            this-object:mtbValue1:Text = this-object:Condition:Value1
          .
          if this-object:cbEnabled:Checked then
          do:
             assign
                cbOp:enabled = yes
                mtbValue:enabled = yes
+               mtbValue1:enabled = yes
             . 
          end.
          else
@@ -260,6 +449,7 @@ class utl.flt_condition_uc inherits UserControl:
             assign
                cbOp:enabled = no
                mtbValue:enabled = no
+               mtbValue1:enabled = no
             .
             
          end.
@@ -269,7 +459,8 @@ class utl.flt_condition_uc inherits UserControl:
          end.
          
          this-object:cbOp:Text = this-object:Condition:Operation.
-         
+         this-object:SetMask().
+         this-object:SetVisible().
       end.
       
       return.
@@ -286,6 +477,7 @@ class utl.flt_condition_uc inherits UserControl:
          assign
             this-object:Condition:enabled = this-object:cbEnabled:Checked
             this-object:Condition:value = this-object:mtbValue:Text
+            this-object:Condition:value1 = this-object:mtbValue1:Text
             this-object:Condition:Operation = this-object:cbOp:Text  
          .
       end.
@@ -293,6 +485,7 @@ class utl.flt_condition_uc inherits UserControl:
       return.
 
    end method.
+
 
    destructor public flt_condition_uc ( ):
 

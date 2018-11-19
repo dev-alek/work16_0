@@ -58,6 +58,19 @@ class utl.gpwdbrw-filter:
    get.
    set.
 
+   method public character GetModifierName():
+      
+      define variable result as character no-undo.
+      
+      case this-object:Modifier:
+         when "and" then result = "»".
+         when "or" then result = "»À»".
+      end case.
+  
+      return result.
+
+   end method.
+
    method public static utl.gpwdbrw-filter GetObject():
       
       def var vFilter as class utl.gpwdbrw-filter no-undo.
@@ -132,10 +145,10 @@ class utl.gpwdbrw-filter:
 /* ---------------------------- */
       assign
          vCond = new utl.flt-condition()
-         vCond:BufferName = "b-tech-prol-pwd"
-         vCond:Field_ = "shop-surr"
+         vCond:BufferName = "b-clients"
+         vCond:Field_ = "obj-code"
          vCond:FieldName = "Œ·˙ÂÍÚ:"
-         vCond:FieldType = "char"
+         vCond:FieldType = "int"
       .
       
       vCond:AddOp({&flt-eq}).
@@ -146,10 +159,10 @@ class utl.gpwdbrw-filter:
 /* ---------------------------- */
       assign
          vCond = new utl.flt-condition()
-         vCond:BufferName = "b-tech-prol-pwd"
-         vCond:Field_ = "cash-desk-surr"
+         vCond:BufferName = "b-cash-desk"
+         vCond:Field_ = "cash-num"
          vCond:FieldName = " ‡ÒÒ‡:"
-         vCond:FieldType = "char"
+         vCond:FieldType = "int"
       .
       
       vCond:AddOp({&flt-eq}).
@@ -232,6 +245,99 @@ class utl.gpwdbrw-filter:
       .
       
       return vWhere.
+
+   end method.
+   
+   method public log IsEnabled():
+      
+      return this-object:CashNum:Enabled or
+             this-object:DateGen:Enabled or
+             this-object:DateProl:Enabled or
+             this-object:Fio:Enabled or
+             this-object:HostName:Enabled or
+             this-object:ObjectNum:Enabled or
+             this-object:TimeGen:Enabled or
+             this-object:User:Enabled.
+             
+   end method.
+   
+   method public char GetQueryString():
+      
+      def var vWhere       as char no-undo.
+      def var vCond        as char no-undo.
+      def var vQueryString as char no-undo.
+      
+      vQueryString = "for each b-tech-prol-pwd no-lock ".
+      
+      vCond = this-object:HostName:GetWhere().
+      
+      if vCond <> "" then
+         vWhere = substitute("&1 &2 (&3)",vWhere,Modifier,vCond).
+      
+      vCond = this-object:Fio:GetWhere().
+      
+      if vCond <> "" then
+         vWhere = substitute("&1 &2 (&3)",vWhere,Modifier,vCond).
+
+      vCond = this-object:User:GetWhere().
+      
+      if vCond <> "" then
+         vWhere = substitute("&1 &2 (&3)",vWhere,Modifier,vCond).
+
+      vCond = this-object:DateProl:GetWhere().
+      
+      if vCond <> "" then
+         vWhere = substitute("&1 &2 (&3)",vWhere,Modifier,vCond).
+      
+      assign
+         vWhere = trim(vWhere," ")
+         vWhere = trim(vWhere,Modifier)
+      .
+
+      if vWhere <> "" then
+         vQueryString = substitute("&1 where &2", vQueryString, vWhere).
+      
+      assign
+         vQueryString = substitute("&1, first b-clients no-lock where ", vQueryString)
+         vQueryString = substitute("&1        b-clients.obj-type = entry(1,b-tech-prol-pwd.shop-surr) ", vQueryString)
+         vQueryString = substitute("&1    and b-clients.obj-code = int(entry(2,b-tech-prol-pwd.shop-surr)) ", vQueryString)
+      .
+      
+      assign   
+         vQueryString = substitute("&1, first b-cash-desk no-lock where ", vQueryString)
+         vQueryString = substitute("&1        b-cash-desk.db-num   = int64(entry(1,b-tech-prol-pwd.cash-desk-surr)) ", vQueryString)
+         vQueryString = substitute("&1    and b-cash-desk.obj-code = int64(entry(2,b-tech-prol-pwd.cash-desk-surr)) ", vQueryString)
+         vQueryString = substitute("&1    and b-cash-desk.pos-type = entry(3,b-tech-prol-pwd.cash-desk-surr) ",        vQueryString)
+         vQueryString = substitute("&1    and b-cash-desk.cash-num = int64(entry(4,b-tech-prol-pwd.cash-desk-surr)) ", vQueryString)
+      .
+      
+      assign 
+         vQueryString = substitute("&1, first ttTemp ", vQueryString)
+      .
+      
+      assign
+         vCond = this-object:ObjectNum:GetWhere()
+         vWhere = ""
+      .
+      
+      if vCond <> "" then
+         vWhere = substitute("&1 &2 &3 ",vWhere,Modifier,vCond).
+      
+      vCond = this-object:CashNum:GetWhere().
+      
+      if vCond <> "" then
+         vWhere = substitute("&1 &2 &3 ",vWhere,Modifier,vCond).
+      
+      assign
+         vWhere = trim(vWhere)
+         vWhere = trim(vWhere,Modifier)
+         vWhere = trim(vWhere,Modifier)
+      .
+      
+      if vWhere <> "" then
+         vQueryString = substitute("&1 where &2 ", vQueryString,vWhere).
+      
+      return vQueryString.
 
    end method.
 
