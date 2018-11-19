@@ -346,7 +346,7 @@ define stream f-tgds .
 function getImpRow returns character private (buffer buf_tt-parts for tt-imp-parts-ptrl) :
 define variable v-imp-row as character no-undo .
   v-imp-row =    
-          substitute("PART: &1;", buf_tt-parts.artic) +
+          substitute("&1;", buf_tt-parts.artic) +
           ";" +
           substitute("&1;", buf_tt-parts.part-code) +
           substitute("&1;", buf_tt-parts.in-code) +
