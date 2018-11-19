@@ -90,6 +90,7 @@ define temp-table tt-place-attr
   field place-rel-error as decimal
   field pl-twice-code like place.loc1
   field place-dens-prov as decimal
+  field asi-sertif as logical
 index pi as primary unique
   pl-code
 .
@@ -243,6 +244,7 @@ X_place.loc4 FORMAT "X(8)":U
 X_place.obj-type FORMAT "X(3)":U
 X_place.obj-code FORMAT "99999":U
 X_place.is-meas COLUMN-LABEL "Измер." FORMAT "+/-":U
+tt-place-attr.asi-sertif COLUMN-LABEL "Сертификация!АСИ" FORMAT "+/-":U
 X_place.max-qnty FORMAT "->>,>>>,>>9.<<<":U
 X_place.add-qnty COLUMN-LABEL "Доп. кол-во" FORMAT "->>,>>>,>>9.<<<":U
 tt-place-attr.pl-twice-code column-label "Код сдвоенного резервуара" format "X(8)":U
@@ -1098,6 +1100,10 @@ end.
                             do:
                                 if v-ok then tt-place-attr.pl-twice-code = v-value .
                             end.
+                        when {&place-asi-sertif} then 
+                            do:
+                                if v-ok then tt-place-attr.asi-sertif = logical(v-value) .
+                            end.
                     end case.
                 end.
             end.
@@ -1144,10 +1150,12 @@ do:
         when {&place-dens-prov} then do :
           if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
         end.
-                         when {&place-twice-code} then 
-                            do:
-                                if v-ok then tt-place-attr.pl-twice-code = v-value .
-                            end.
+        when {&place-twice-code} then do:
+          if v-ok then tt-place-attr.pl-twice-code = v-value .
+        end.
+        when {&place-asi-sertif} then do:
+          if v-ok then tt-place-attr.asi-sertif = logical(v-value) .
+        end.
       end case.
     end.
   end.
