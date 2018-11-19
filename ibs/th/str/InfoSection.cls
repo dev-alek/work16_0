@@ -20,6 +20,16 @@ using ibs.th.str.*.
 
 class ibs.th.str.InfoSection:
   
+  define property infoSectionTotal as InfoSectionsTotal no-undo
+    get.
+    set.
+  
+  define property UserMode as logical init false no-undo
+    get.
+    set (arg as log):
+      UserMode = arg.
+    end.
+  
   define property CarVol as decimal no-undo
     get.
     set.
@@ -107,12 +117,7 @@ class ibs.th.str.InfoSection:
   define property PlSiName as character no-undo
     get.
     private set.
-  
 
-  define property UserMode as logical init false no-undo
-    get.
-    set.
-  
   define property PlaceSi as integer no-undo
     get.
     set (a as int):
@@ -123,8 +128,8 @@ class ibs.th.str.InfoSection:
         PlSiName = buf_sr-izmerenia.sr-model.
       end.
       else do:
-        if UserMode = true
-          then message "Введено неизвестное стредство измерения" view-as alert-box.
+/*        if UserMode = true and infoSectionTotal:FlagTrn and infoSectionTotal:RdcDnstvalue = "pomi-rn"*/
+/*          then message "Введено неизвестное стредство измерения" view-as alert-box.                  */
       end.
       release buf_sr-izmerenia.
     end.
@@ -143,7 +148,10 @@ class ibs.th.str.InfoSection:
 
   define property SectionName as character no-undo
     get.
-    set.
+    set (arg as char):
+      SectionName = arg.
+      SetCarVol (arg).
+    end.
 
   define property DocQnty as decimal no-undo
     get.
@@ -257,6 +265,21 @@ class ibs.th.str.InfoSection:
 		
   end constructor.
 
+
+  method private void SetCarVol (arg as char):
+    
+    find first ub.auto-tank no-lock where ub.auto-tank.auto-num = infoSectionTotal:CarNum + "#" + SectionName no-error.
+    if available (ub.auto-tank) and UserMode
+    then do: 
+      assign
+        Diameter = entry(3, auto-tank.name, chr(4))
+        CarVol =  ub.auto-tank.brutto-qnty
+        DocQnty = ub.auto-tank.brutto-qnty
+      .
+    end.
+    release ub.auto-tank.
+    
+  end.
 	
 	
   /*------------------------------------------------------------------------------

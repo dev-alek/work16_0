@@ -326,6 +326,7 @@ class ibs.th.str.InfoSectionsTotal:
     do ii = 1 to SectionNum :
 
       InfoSectionCurr = new InfoSection().
+      InfoSectionCurr:infoSectionTotal = this-object.
       
       InfoSectionCurr:idSec = ii.
       
@@ -391,6 +392,7 @@ class ibs.th.str.InfoSectionsTotal:
     .
     idSecCurr = SectionNum.
     InfoSectionCurr:idSec = SectionNum.
+    InfoSectionCurr:infoSectionTotal = this-object.
 
   end method.
 
@@ -1352,7 +1354,7 @@ class ibs.th.str.InfoSectionsTotal:
 /*              undo _trpomi, return no-apply  .*/
             end.
             
-            if InfoSectionCurr:ABTarir = ? or InfoSectionCurr:ABTarir = 0 then do :
+            if InfoSectionCurr:ABTarir = ? then do :
               message
                 "Заполнены не все поля, необходимые " skip
                 "для работы библиотеки ПО МИ"         skip
@@ -1574,8 +1576,9 @@ class ibs.th.str.InfoSectionsTotal:
     if abs(dMP) > dmd + dMed
     then do:
       ME = dMEd.
-    end. 
-    InfoSectionCurr:NaturalLoss = ME.
+    end.
+    if ME > 0
+      then InfoSectionCurr:NaturalLoss = ME.
     
     find first ub.place no-lock where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = InfoSectionCurr:ListTank no-error. 
     if available (ub.place)

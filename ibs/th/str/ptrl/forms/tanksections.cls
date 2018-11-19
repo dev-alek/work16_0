@@ -101,8 +101,8 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
         toolSBtn_Delete:Visible = true.
         this-object:tabControl:Controls:Add(this-object:tabPageAdd).
       end.
-    this-object:tabControl:Controls:Add(this-object:tabPageSum).
-    
+    if infoSecsObj:FlagTrn
+      then this-object:tabControl:Controls:Add(this-object:tabPageSum).
     
     if (infoSecsObj:Mode = "œ–Œ—ÃŒ“–")
     then do: 
@@ -170,7 +170,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabControl:Name = "tabControl".
     this-object:tabControl:SelectedIndex = 0.
     this-object:tabControl:Size = new System.Drawing.Size(710, 745).
-    this-object:tabControl:TabIndex = 0.
+/*    this-object:tabControl:TabIndex = 0.*/
     this-object:tabControl:Click:Subscribe(this-object:tabControl_Click).
     /*  */
     /* imageList */
@@ -191,7 +191,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
     this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
     this-object:tableLayoutPanel1:Size = new System.Drawing.Size(710, 40).
-    this-object:tableLayoutPanel1:TabIndex = 1.
+/*    this-object:tableLayoutPanel1:TabIndex = 1.*/
     /*  */
     /* toolStrip1 */
     /*  */
@@ -207,7 +207,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:toolStrip1:Location = new System.Drawing.Point(0, 0).
     this-object:toolStrip1:Name = "toolStrip1".
     this-object:toolStrip1:Size = new System.Drawing.Size(710, 40).
-    this-object:toolStrip1:TabIndex = 30.
+/*    this-object:toolStrip1:TabIndex = 30.*/
     this-object:toolStrip1:Text = "toolStrip1".
     /*  */
     /* toolSBtn_Exit */
@@ -293,7 +293,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageSum:Name = "tabPageSum".
     this-object:tabPageSum:Padding = new System.Windows.Forms.Padding(3).
     this-object:tabPageSum:Size = new System.Drawing.Size(702, 718).
-    this-object:tabPageSum:TabIndex = 0.
+/*    this-object:tabPageSum:TabIndex = 0.*/
     this-object:tabPageSum:Text = "»ÚÓ„Ó".
     this-object:tabPageSum:UseVisualStyleBackColor = true.
     /*  */
@@ -303,7 +303,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tankSectionSumControl:Location = new System.Drawing.Point(0, 0).
     this-object:tankSectionSumControl:Name = "tankSectionSumControl".
     this-object:tankSectionSumControl:Size = new System.Drawing.Size(700, 720).
-    this-object:tankSectionSumControl:TabIndex = 0.
+/*    this-object:tankSectionSumControl:TabIndex = 0.*/
     /*  */
     /* tabPageAdd */
     /*  */
@@ -311,7 +311,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageAdd:Name = "tabPageAdd".
     this-object:tabPageAdd:Padding = new System.Windows.Forms.Padding(3).
     this-object:tabPageAdd:Size = new System.Drawing.Size(702, 718).
-    this-object:tabPageAdd:TabIndex = 1.
+/*    this-object:tabPageAdd:TabIndex = 1.*/
     this-object:tabPageAdd:Text = "+".
     this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Click).
     this-object:tabPageAdd:UseVisualStyleBackColor = true.
@@ -359,58 +359,64 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
   end.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void tabControl_Click( input sender as System.Object, input e as System.EventArgs ):
-		
-		prevTabIndex = tabControl:SelectedIndex.
-		
-		return.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void tabControl_Click( input sender as System.Object, input e as System.EventArgs ):
 
-	end method.
+    def var ii as int no-undo.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void toolSBtn_Add_Click( input sender as System.Object, input e as System.EventArgs ):
-		
-		return.
+    do ii = 1 to infoSecsObj:SectionNum:
+      tankSectionControl[ii]:SetInfoSec().  
+    end.
+    tankSectionSumControl:SetData(infoSecsObj).
+    prevTabIndex = tabControl:SelectedIndex.
 
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void toolSBtn_Exit_Click( input sender as System.Object, input e as System.EventArgs ):
-		
-		this-object:Close().
     return.
 
-	end method.
+  end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void toolSBtn_Ok_Click( input sender as System.Object, input e as System.EventArgs ):
-		
-		def var ii as int no-undo.
-		do ii = 1 to infoSecsObj:SectionNum:
-		  tankSectionControl[ii]:SetInfoSec().
-		end.
-		
-		infoSecsObj:WasSetting = true.
-		return.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void toolSBtn_Add_Click( input sender as System.Object, input e as System.EventArgs ):
 
-	end method.
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void toolSBtn_Exit_Click( input sender as System.Object, input e as System.EventArgs ):
+
+    this-object:Close().
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void toolSBtn_Ok_Click( input sender as System.Object, input e as System.EventArgs ):
+
+    def var ii as int no-undo.
+    do ii = 1 to infoSecsObj:SectionNum:
+      tankSectionControl[ii]:SetInfoSec().
+    end.
+
+    infoSecsObj:WasSetting = true.
+    return.
+
+  end method.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -432,7 +438,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     tabsel = tabControl:SelectedTab.
     v-idSel = integer (tabsel:Name).
     
-    this-object:tabControl:Controls:Remove(tabPageSum).
+/*    this-object:tabControl:Controls:Remove(tabPageSum).*/
     this-object:tabControl:Controls:Remove(tabPageAdd).
     
     do ii = 1 to infoSecsObj:SectionNum:
@@ -445,7 +451,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     infoSecsObj:DeleteSection(infoSecsObj:InfoSectionCurr:idSec).
     
     SetDataControls().
-    
+    tabControl:SelectedIndex = prevTabIndex.
     return.
     
     
@@ -473,6 +479,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     end.
     
     infoSecsObj:NewSection ().
+    infoSecsObj:InfoSectionCurr:UserMode = true.
     
     this-object:tabPageArr[infoSecsObj:idSecCurr] = this-object:tabPageAdd.
     this-object:tabPageArr[infoSecsObj:idSecCurr]:Name = string (infoSecsObj:idSecCurr).
@@ -493,9 +500,9 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tankSectionControl[infoSecsObj:idSecCurr] = new tanksection(infoSecsObj, infoSecsObj:idSecCurr, this-object).
     this-object:tabPageArr[infoSecsObj:idSecCurr]:Controls:Add(tankSectionControl[infoSecsObj:idSecCurr]).
 
-    this-object:tabControl:Controls:Remove(tabPageSum).
+/*    this-object:tabControl:Controls:Remove(tabPageSum).*/
     this-object:tabControl:Controls:Add(tabPageAdd).
-    this-object:tabControl:Controls:Add(tabPageSum).
+/*    this-object:tabControl:Controls:Add(tabPageSum).*/
 
 
 
@@ -503,7 +510,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     return.
 
   end method.
-	  
+  
   destructor public tanksections ( ):
 
   end destructor.

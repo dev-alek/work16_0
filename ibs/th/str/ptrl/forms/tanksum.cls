@@ -175,7 +175,6 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
 
   method public void SetData( infoSecs as InfoSectionsTotal ):
 
-    infoSecs:GetDBAllAttr().
     infoSecs:CalculateTotal().
     
     maskedTextBoxTankWeightSum:Text = string_round (infoSecs:TankWeightTotal).
