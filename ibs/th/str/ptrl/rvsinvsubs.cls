@@ -25,6 +25,10 @@ class ibs.th.str.ptrl.rvsinvsubs inherits asubjects:
   define property RvsCode as character no-undo
     get.
     set.
+
+  define property IsRvsInvAlg3 as logical no-undo
+    get.
+    set.
     
   define property ObjType as character no-undo
     get.

@@ -41,6 +41,7 @@ ________________________________________________________________________________
 \* ************************************************************************************************************* */
 
 using ibs.th.str.ptrl.* from propath.
+using ibs.th.gbl.ptrl.par.* from propath.
 
 define input        parameter parparentproc   as   handle                  no-undo.
 define input-output parameter pardoc-rec      as   recid                   no-undo.
@@ -2122,9 +2123,34 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
       reposition {&BROWSE-NAME} to recid line-rec no-error.
     end.
   END.
-
   find first bf_rvs where bf_rvs.rvs-code = t-doc.out-code no-lock no-error.
   if available (bf_rvs)
+  then do:
+    def var v-dec as decimal no-undo.
+    def var rvsinvsubsDeficitObj as class rvsinvsubs no-undo.
+    def var rvsinvsubsOverObj as class rvsinvsubs no-undo.
+    def var v-IsRvsInvAlg3 as logical no-undo init false.
+    rvsinvsubsDeficitObj = new rvsinvsubs ().
+    rvsinvsubsOverObj = new rvsinvsubs ().
+    
+    rvsinvsubsOverObj:RvsCode = bf_rvs.rvs-code.
+    rvsinvsubsOverObj:ObjType = bf_rvs.obj-type.
+    rvsinvsubsOverObj:ObjCode = bf_rvs.obj-code.
+
+    rvsinvsubsDeficitObj:RvsCode = bf_rvs.rvs-code.
+    rvsinvsubsDeficitObj:ObjType = bf_rvs.obj-type.
+    rvsinvsubsDeficitObj:ObjCode = bf_rvs.obj-code.    
+    
+    rvsinvsubsDeficitObj:RvsInvStrObj:FillSumByDeficit(rvsinvsubsDeficitObj).
+    rvsinvsubsOverObj:RvsInvStrObj:FillSumByOver(rvsinvsubsOverObj).
+    if rvsinvsubsDeficitObj:IsRvsInvAlg3 or rvsinvsubsOverObj:IsRvsInvAlg3
+    then do:
+      v-IsRvsInvAlg3 = true.
+    end.
+  end.
+  
+  
+  if v-IsRvsInvAlg3  
   then do with frame {&frame-name}:
     hide 
       t-doc.tot-doc 
@@ -2188,22 +2214,7 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
       f-acc
       f-acc-2
     .
-    def var v-dec as decimal no-undo.
-    def var rvsinvsubsDeficitObj as class rvsinvsubs no-undo.
-    def var rvsinvsubsOverObj as class rvsinvsubs no-undo.
-    rvsinvsubsDeficitObj = new rvsinvsubs ().
-    rvsinvsubsOverObj = new rvsinvsubs ().
     
-    rvsinvsubsOverObj:RvsCode = bf_rvs.rvs-code.
-    rvsinvsubsOverObj:ObjType = bf_rvs.obj-type.
-    rvsinvsubsOverObj:ObjCode = bf_rvs.obj-code.
-
-    rvsinvsubsDeficitObj:RvsCode = bf_rvs.rvs-code.
-    rvsinvsubsDeficitObj:ObjType = bf_rvs.obj-type.
-    rvsinvsubsDeficitObj:ObjCode = bf_rvs.obj-code.    
-    
-    rvsinvsubsDeficitObj:RvsInvStrObj:FillSumByDeficit(rvsinvsubsDeficitObj).
-    rvsinvsubsOverObj:RvsInvStrObj:FillSumByOver(rvsinvsubsOverObj).
     f-notbal-2 = absolute ( rvsinvsubsDeficitObj:DiffSum ).
     f-acc-2 = rvsinvsubsDeficitObj:MeteringErrWastSum.
     f-mnorml-2 = rvsinvsubsDeficitObj:TPWastSum.

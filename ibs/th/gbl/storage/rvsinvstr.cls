@@ -228,7 +228,8 @@ class ibs.th.gbl.storage.rvsinvstr:
         
         case bf_rvs-l-attr-1.attr-code:
           when "Diff" then do:
-            rvsinvsubsObj:DiffSum = rvsinvsubsObj:DiffSum + decimal (bf_rvs-l-attr-1.attr-value).            
+            rvsinvsubsObj:DiffSum = rvsinvsubsObj:DiffSum + decimal (bf_rvs-l-attr-1.attr-value).
+            rvsinvsubsObj:IsRvsInvAlg3 = true. /*инвет. сделана по новому алгоритму*/
           end.
           when "TPNormalAuto" then do:
             v-tp-norm = v-tp-norm + decimal (bf_rvs-l-attr-1.attr-value).
