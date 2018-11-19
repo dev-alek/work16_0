@@ -111,17 +111,43 @@ if not g#news then do:
         end.
     
 end.  
-
-if not g#news and ub.action-role-item.db-num <> 0 then do:
-  run nws/cmd-del.p
-    ( input {&table_action-role-item}
-      ,input (buffer ub.action-role-item:handle)
-      ,input v-db-list
-    ) no-error .
-  if error-status :error then do:
-    undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+  find first ub.global-state-attr no-lock where ub.global-state-attr.attr-code = "action-gbl" and ub.global-state-attr.attr-value = "yes" and ub.global-state-attr.gls-id = ub.action-role-item.db-num no-error .
+  if available (ub.global-state-attr) then 
+  do:
+    if not g#news then 
+    do:
+      run nws/cmd-del.p
+        ( input {&table_action-role-item}
+        ,input (buffer ub.action-role-item:handle)
+        ,input v-db-list
+        ) no-error .
+      if error-status :error then 
+      do:
+        undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+      end.
+    end.
   end.
-end.
+  else 
+  do:
+     
+    if not g#news and ub.action-role-item.db-num <> 0 then 
+    do:
+      run nws/cmd-del.p
+        ( input {&table_action-role-item}
+        ,input (buffer ub.action-role-item:handle)
+        ,input v-db-list
+        ) no-error .
+      if error-status :error then 
+      do:
+        undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+      end.
+    end.
+  end.
+
+
+
+
+
     
     if g#oxml = yes
     then do:
