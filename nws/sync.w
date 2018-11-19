@@ -379,7 +379,7 @@ procedure create-routes :
     end.
   end.      
   
-  for each ub.schedule no-lock where ub.schedule.cre-db-num = p-dbnum :
+  for each ub.schedule no-lock :
     run nws/cr-route.p ( input {&send-tbl}, input {&table_schedule}, input (buffer ub.schedule:handle), input string(p-dbnum) ) no-error. 
     if error-status :error then do:
       return error return-value.
