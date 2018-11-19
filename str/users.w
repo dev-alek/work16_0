@@ -4114,42 +4114,38 @@ on error undo, return error return-value
             end.
             undo, return error return-value .
         end.
-    end.
-    define variable v-update-data        as logical   no-undo .
-    define variable v-user-login         as character no-undo .
-    define variable v-user-administrator as logical   no-undo .
-    define variable v-max-discnt         as decimal   no-undo .
-    define variable v-quest-print        as logical   no-undo .
-    define variable v-tmp-dbnum          as integer   no-undo .
-
-    /* редактирование логина пользователя */
-    /* запись захвачена и не может быть изменена */
-    v-tmp-dbnum = buf_user-login.db-num.
-    run str/usrloged.w (
-          input parparentproc
-        , input {&update}
-        , input-output v-tmp-dbnum
-        , input buf_user-login.user-id
-        , input buf_user-login.user-login
-        , input buf_user-login.user-administrator
-        , input buf_user-login.max-discnt
-        , input buf_user-login.quest-print
-        , output v-update-data
-        , output v-user-login
-        , output v-user-administrator
-        , output v-max-discnt
-        , output v-quest-print
-    ) .
-    if v-tmp-dbnum = ? then
-       return.
-    assign
-       buf_user-login.db-num = v-tmp-dbnum
-       p-db-num = buf_user-login.db-num.
-    if v-update-data = true
-    then do:        /* сохранение данных в базу отдельной транзакцией */
-        do transaction
-        on error undo, return error return-value
-        :
+        define variable v-update-data        as logical   no-undo .
+        define variable v-user-login         as character no-undo .
+        define variable v-user-administrator as logical   no-undo .
+        define variable v-max-discnt         as decimal   no-undo .
+        define variable v-quest-print        as logical   no-undo .
+        define variable v-tmp-dbnum          as integer   no-undo .
+    
+        /* редактирование логина пользователя */
+        /* запись захвачена и не может быть изменена */
+        v-tmp-dbnum = buf_user-login.db-num.
+        run str/usrloged.w (
+              input parparentproc
+            , input {&update}
+            , input-output v-tmp-dbnum
+            , input buf_user-login.user-id
+            , input buf_user-login.user-login
+            , input buf_user-login.user-administrator
+            , input buf_user-login.max-discnt
+            , input buf_user-login.quest-print
+            , output v-update-data
+            , output v-user-login
+            , output v-user-administrator
+            , output v-max-discnt
+            , output v-quest-print
+        ) .
+        if v-tmp-dbnum = ? then
+           return.
+        assign
+           buf_user-login.db-num = v-tmp-dbnum
+           p-db-num = buf_user-login.db-num.
+        if v-update-data = true
+        then do:        /* сохранение данных в базу отдельной транзакцией */
             /* здесь ошибки быть не может */
             /* запись была найдена и захвачена чуть выше */
             find first buf_user-login exclusive-lock

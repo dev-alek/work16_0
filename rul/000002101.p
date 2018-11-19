@@ -50,7 +50,7 @@ define input parameter p-cmd-code  as integer no-undo .
                 Файл остаётся до тех пор, пока на него есть ссылка из машины правил.
 */ 
 return.
-
+/*
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -313,4 +313,4 @@ end.
 
 end. /*doe*/
 
-end procedure. /* load-ruleset-context */
+end procedure. /* load-ruleset-context */ */
