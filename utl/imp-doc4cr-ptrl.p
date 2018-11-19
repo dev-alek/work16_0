@@ -16,7 +16,7 @@ Creation date: 24/09/18
 */
 block-level on error undo, throw.
 
-{utl/imp-parts.i }
+{utl/imp-parts-ptrl.i }
 
 /* parparentproc пробрасывается :
 в str/copy-in.i для передачи
@@ -67,7 +67,7 @@ define input  parameter p-is-close       as logical no-undo . // true - закрыват
 define input  parameter p-osn-fname      as character no-undo .
 define input  parameter p-art-fname      as character no-undo .
 define input  parameter p-retry-fname    as character no-undo .
-define input  parameter table for tt-imp-parts .
+define input  parameter table for tt-imp-parts-ptrl.
 define output parameter p-count-err      as integer no-undo .
 
 
@@ -164,6 +164,12 @@ define temp-table temp-2exists no-undo
 define temp-table tt-trn-close no-undo
   field trn-code as character
 .
+
+define temp-table tt-gds no-undo
+  field gds-code as integer
+.
+
+
 
 define temp-table tt-trn-doc   no-undo like ub.trn-doc .
 define temp-table tt2-doc-line no-undo like lib-trn_ret-line .
@@ -299,7 +305,7 @@ if available w-gds then delete w-gds.
 
 define stream f-err-lines .
 if p-retry-fname > '' then . else do :
-  p-retry-fname = substitute("&1imp-parts.err", ibs.th.gbl.gbl-inipar:logDir ) .
+  p-retry-fname = substitute("&1imp-parts-ptrl.err", ibs.th.gbl.gbl-inipar:logDir ) .
 end .
 output stream f-err-lines to value(p-retry-fname) .  
 run create_temp_parts in this-procedure (new_obj-code, new_obj-type, new_host-code, output p-count-err).
@@ -325,12 +331,19 @@ run import-hed in this-procedure no-error .
       {&display-message}.
      end.
   end .
+  for each tt-gds:
+    
+    find first ub.goods-attr where ub.goods-attr.gds-code = tt-gds.gds-code and ub.goods-attr.attr-code = {&attr-ptrl-without-rvs} no-error.
+    if available (ub.goods-attr)
+      then delete ub.goods-attr.
+    
+  end.
 
 
 
 define stream f-tgds .
 /* 25/IX-2018 при вызове из load-from-15_0.w создать выходную строку по прочитанным полям */
-function getImpRow returns character private (buffer buf_tt-parts for tt-imp-parts) :
+function getImpRow returns character private (buffer buf_tt-parts for tt-imp-parts-ptrl) :
 define variable v-imp-row as character no-undo .
   v-imp-row =    
           substitute("PART: &1;", buf_tt-parts.artic) +
@@ -354,7 +367,9 @@ define variable v-imp-row as character no-undo .
           ";" +
           substitute("&1;", buf_tt-parts.supp-code) +
           substitute("&1;", buf_tt-parts.supp-type) +
-          substitute("&1;", buf_tt-parts.cont-prn-code)
+          substitute("&1;", buf_tt-parts.cont-prn-code) +
+          substitute("&1;", buf_tt-parts.pl-loc1) +
+          substitute("&1;", buf_tt-parts.cli-qnty)
   .
   return v-imp-row .
 end function .          
@@ -375,8 +390,9 @@ define variable v-is-supp-err as logical no-undo .
 define variable v-is-cont-err as logical no-undo .
 define variable v-is-good-err as logical no-undo .
 define variable v-my-message  as character no-undo .
-define buffer buf_tt-parts for tt-imp-parts .
-define buffer buf_goods    for ub.goods .
+define buffer buf_tt-parts    for tt-imp-parts-ptrl .
+define buffer buf_goods       for ub.goods .
+define buffer buf_goods-attr  for ub.goods-attr .
 define buffer buf_contract for ub.contract .
 define buffer new_clients  for ub.clients .
 
@@ -496,6 +512,9 @@ p-count-err = 0 .
     if buf_tt-parts.srok-god = "" then v-last-date = 01/01/2001 .
                                   else v-last-date = date(buf_tt-parts.srok-god) no-error .
     do :
+    find first ub.place no-lock where ub.place.obj-type = p-obj-type
+      and ub.place.obj-code = p-obj-code
+      and ub.place.loc1 = buf_tt-parts.pl-loc1 .
     create temp_parts.
     assign
       temp_parts.artic      = v-artic // 19/IX-2018 поле из импорта buf_tt-parts.artic игнорируется
@@ -524,11 +543,13 @@ p-count-err = 0 .
 
       temp_parts.price-rubl = buf_tt-parts.price-rubl // вместо price-cli используется price-rubl
       temp_parts.fact-qnty  = buf_tt-parts.fact-qnty
+      temp_parts.cli-qnty   = buf_tt-parts.cli-qnty
       temp_parts.VAT-type   = {&inc-VAT}
       temp_parts.VAT-pc     = buf_tt-parts.vat-tax-value
       temp_parts.cst-code   = buf_tt-parts.name-gtd
       temp_parts.last-date  = v-last-date
-      
+      temp_parts.cli-base-rate = buf_tt-parts.fact-qnty / cli-qnty
+      temp_parts.pl-code = ub.place.pl-code
       temp_parts.new-cli-type = new_cli-type
       temp_parts.new-cli-code = new_cli-code
     .
@@ -657,7 +678,7 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
 
       tt-parts.qnty           = temp_parts.fact-qnty
       tt-parts.fact-qnty      = temp_parts.fact-qnty
-      tt-parts.cli-qnty       = temp_parts.fact-qnty
+      tt-parts.cli-qnty       = temp_parts.cli-qnty
     
       tt-parts.VAT-pc         = temp_parts.vat-pc
       tt-parts.VAT-type       = temp_parts.vat-type
@@ -690,6 +711,8 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
       tt-parts.out-code       = "" // new_trn-doc.doc-code
       tt-parts.cst-code       = ""
       tt-parts.status_        = no
+      tt-parts.cli-base-rate  = temp_parts.cli-base-rate
+      tt-parts.pl-code        = temp_parts.pl-code
     .
     end .
     
@@ -866,6 +889,7 @@ define input parameter new_cli-code as integer no-undo .
 define variable n-d as character no-undo .
 define variable v-ext-doc-type as character no-undo .
 define buffer buf_goods for ub.goods .
+define buffer buf_goods-attr  for ub.goods-attr .
 define buffer new_trn-doc     for ub.trn-doc  .
 
 do on error undo, return error return-value :
@@ -1087,6 +1111,22 @@ do on error undo, return error return-value :
            where buf_goods.artic     = buf2_temp_parts.artic
              and buf_goods.prod-type = buf2_temp_parts.prod-type
              and buf_goods.prod-code = buf2_temp_parts.prod-code no-error .
+      
+      find first tt-gds where tt-gds.gds-code = buf_goods.gds-code no-error.
+      if not available (tt-gds)
+      then do:
+        create tt-gds.
+        tt-gds.gds-code = buf_goods.gds-code.
+        find first buf_goods-attr where buf_goods-attr.gds-code = tt-gds.gds-code and buf_goods-attr.attr-code = {&attr-ptrl-without-rvs} no-error.
+        if not available (buf_goods-attr)
+        then do:
+          create buf_goods-attr.
+          buf_goods-attr.gds-code = tt-gds.gds-code.
+          buf_goods-attr.attr-code = {&attr-ptrl-without-rvs}. 
+          buf_goods-attr.attr-value = "yes".
+        end.
+      end.
+      
       if not available buf_goods then next .
       create  tt-doc-line.
       assign
@@ -1112,9 +1152,6 @@ do on error undo, return error return-value :
       tt-doc-line.price-base     = buf2_temp_parts.price-rubl
       tt-doc-line.price-cli      = buf2_temp_parts.price-rubl
       tt-doc-line.price-rubl     = buf2_temp_parts.price-rubl
-      tt-doc-line.cli-base-rate  = 1
-      tt-doc-line.doc-density    = 1 / tt-doc-line.cli-base-rate
-      tt-doc-line.fact-density   = 1 / tt-doc-line.cli-base-rate
       tt-doc-line.status_        = "temp"
       tt-doc-line.cli-qnty       = 0
       tt-doc-line.doc-qnty       = 0
@@ -1130,9 +1167,15 @@ do on error undo, return error return-value :
       release temp-2exists.
     end.
     assign
-      tt-doc-line.cli-qnty  = tt-doc-line.cli-qnty  + buf2_temp_parts.fact-qnty
+      tt-doc-line.cli-qnty  = tt-doc-line.cli-qnty  + buf2_temp_parts.cli-qnty
       tt-doc-line.doc-qnty  = tt-doc-line.doc-qnty  + buf2_temp_parts.fact-qnty
       tt-doc-line.fact-qnty = tt-doc-line.fact-qnty + buf2_temp_parts.fact-qnty
+    .
+
+    assign
+      tt-doc-line.cli-base-rate  = tt-doc-line.doc-qnty / tt-doc-line.cli-qnty
+      tt-doc-line.doc-density    = tt-doc-line.cli-qnty / tt-doc-line.doc-qnty
+      tt-doc-line.fact-density   = tt-doc-line.cli-qnty / tt-doc-line.fact-qnty
     .
 
     find first tt2-doc-line exclusive-lock where
@@ -1174,6 +1217,9 @@ do on error undo, return error return-value :
 // temp-table tt-doc-line:WRITE-XML ( "FILE", dsXmlFileName1, true, "UTF-8").
 // temp-table tt2-doc-line:WRITE-XML ( "FILE", dsXmlFileName2, true, "UTF-8").
   end .
+
+  
+  
   end . /*for each    new_line where*/
 if local-trace-on then do:
  dsXmlFileName1 = substitute("&1/&2-&3.xml", ibs.th.gbl.gbl-inipar:logDir, "tt-doc-line", n-d).

@@ -228,17 +228,25 @@ class ibs.th.utl.draw_utility inherits Form:
     end.      
     mutil:mAddr = textbox1:Text.
     checkBox19:checked = mutil:chek_rest().
+    checkBox20:checked = mutil:chek_rest().
     if not checkBox19:checked
     then
        checkBox19:checked = mutil:load_rest(textbox3:text,textbox2:text,"").
+    if not checkBox19:checked
+      then return.
+    if not checkBox20:checked
+    then
+       checkBox20:checked = mutil:load_rest_ptrl(textbox3:text,textbox2:text,"").
+    if not checkBox20:checked
+      then return.
     checkBox21:checked =  mutil:chek_rvs-shift().
     if not checkBox21:checked
     then
        checkBox21:checked = mutil:load_rvs(textbox2:text).
-    checkBox22:checked =  mutil:chek_rvs-close().   
+    checkBox22:checked =  mutil:chek_rvs-close().
     if not checkBox22:checked
     then
-        checkBox22:checked = mutil:close-rvs-all (). 
+        checkBox22:checked = mutil:close-rvs-all ().
     return.
 
   end method.

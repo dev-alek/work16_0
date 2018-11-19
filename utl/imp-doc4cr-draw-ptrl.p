@@ -1,13 +1,13 @@
-{utl/imp-parts.i }
+{utl/imp-parts-ptrl.i }
 define input  parameter iUtil        as class ibs.th.utl.method-for-draw-utility no-undo.
 define input  parameter iosn-fname   as character no-undo.
 define input  parameter iart-fname   as character no-undo.
 define input  parameter iretry-fname as character no-undo.
-define input  parameter table for tt-imp-parts .
+define input  parameter table for tt-imp-parts-ptrl .
 
 
  define variable v-count-err as integer no-undo .
-  run utl/imp-doc4cr.p ( iUtil:parparentproc
+  run utl/imp-doc4cr-ptrl.p ( iUtil:parparentproc
                        , this-procedure // хронометраж через write-log-and-file()
                        , ""             // имя лог-файла, в который выводится хронометраж
                        , iUtil:Obj-code
@@ -16,7 +16,7 @@ define input  parameter table for tt-imp-parts .
                        , iosn-fname // список соответствия поставщиков
                        , iart-fname // список соответствия товаров
                        , iretry-fname // файл для повторного импорта
-                       , input table tt-imp-parts
+                       , input table tt-imp-parts-ptrl
                      , output v-count-err  
                        ) .
                        

@@ -115,7 +115,8 @@ define temp-table tt-place-loc
 
 define temp-table tt-icnt-doc like ub.icnt-doc .
 define temp-table tt-icnt-line like ub.icnt-line .
-{utl/imp-parts.def }
+{utl/imp-parts.i }
+{utl/imp-parts-ptrl.i }
 
 
 { utl/tt301.i    }
@@ -1108,12 +1109,13 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   define variable v-out-file as character no-undo .
   
   case p-file :
-    when "schem-temp.json"    then v-out-file = "schem.json" .
-    when "pumpdoc-temp.json"  then v-out-file = "pumpdoc.json" .
-    when "cashdesk-temp.json" then v-out-file = "cashdesk.json" .
-    when "price-temp.json"    then v-out-file = "price.json" .
-    when "rest-temp.json"     then v-out-file = "rest.json" .
-    when "rvs-temp.json"      then v-out-file = "rvs.json" .
+    when "schem-temp.json"      then v-out-file = "schem.json" .
+    when "pumpdoc-temp.json"    then v-out-file = "pumpdoc.json" .
+    when "cashdesk-temp.json"   then v-out-file = "cashdesk.json" .
+    when "price-temp.json"      then v-out-file = "price.json" .
+    when "rest-temp.json"       then v-out-file = "rest.json" .
+    when "rest-ptrl-temp.json"  then v-out-file = "rest-ptrl.json" .
+    when "rvs-temp.json"        then v-out-file = "rvs.json" .
   end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
@@ -1147,7 +1149,7 @@ method public logical chek_pumpdoc ():
 end method.
 method public void load_pumpdoc ( ) :
   load_pumpdoc (maddr).
-end.  
+end.
 method public void load_pumpdoc (iaddr as character ) :
   define variable v-doc-code as character no-undo .
   define variable v-recid as recid no-undo .
@@ -1307,7 +1309,6 @@ method public logical load_rest (iaddr as character,
   fix-codepage_and_SetJsonObj (input "rest-temp.json") .
   empty temp-table tt-imp-parts.
   
-  
   parse-json(input temp-table tt-imp-parts:default-buffer-handle, input "tt-imp-parts") .
   
   
@@ -1320,6 +1321,57 @@ method public logical load_rest (iaddr as character,
                        , iart-fname // список соответствия товаров
                        , iretry-fname // файл для повторного импорта
                        , input table tt-imp-parts
+                       ) .
+
+// ?? Журналировать каждую загруженную строку ??
+//        put stream log-stream unformatted
+//          "Код в 15.0 " string(tt-gds-price.gds-code) " .Код в 16.0 " string(tt-gds-mapping.gds-code16)
+//          " . Цена: " string(tt-gds-price.price) skip .
+                         
+//  &scop my-message substitute("Всего прочитано &1 записей. Из них отвергнуто &2", v-count-all, v-count-err )
+//  {&display-message}.
+
+  
+  vok = yes.
+  finally:
+     vok = chek_rest() and vok.
+     put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
+     return vok.
+  end finally.
+end method .
+
+method public logical load_rest_ptrl (
+                              iosn-fname   as character,  // список соответствия поставщиков
+                              iart-fname   as  character, // список соответствия товаров
+                              iretry-fname as character   // файл для повторного импорта
+                              ):
+     return load_rest_ptrl (maddr, iosn-fname, iart-fname, iretry-fname).
+end method.
+                                
+method public logical load_rest_ptrl (iaddr as character,
+                              iosn-fname   as character,  // список соответствия поставщиков
+                              iart-fname   as  character, // список соответствия товаров
+                              iretry-fname as character   // файл для повторного импорта
+                              ):
+  define variable vcmd as character no-undo.
+  define variable vOk as logical no-undo.
+  vcmd = substitute ("&1 &2/THGetInfo?GetRestPtrl >&3", search ("exe/curl.exe"), iaddr, "rest-ptrl-temp.json").
+  os-command silent value (vcmd).
+  fix-codepage_and_SetJsonObj (input "rest-ptrl-temp.json") .
+  empty temp-table tt-imp-parts-ptrl.
+  
+  parse-json(input temp-table tt-imp-parts-ptrl:default-buffer-handle, input "tt-imp-parts-ptrl") .
+  
+  
+
+  put-log ( string(now) +  "   Начинаем загрузку остатков по топливу...") .
+  
+  define variable v-count-err as integer no-undo .
+  run utl/imp-doc4cr-draw-ptrl.p ( this-object
+                       , iosn-fname // список соответствия поставщиков
+                       , iart-fname // список соответствия товаров
+                       , iretry-fname // файл для повторного импорта
+                       , input table tt-imp-parts-ptrl
                        ) .
 
 // ?? Журналировать каждую загруженную строку ??
