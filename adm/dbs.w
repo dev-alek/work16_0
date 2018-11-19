@@ -58,6 +58,7 @@ define variable v-rowid       as rowid     no-undo .
 define variable v-type-unload as character no-undo .
 DEFINE VARIABLE hn-option AS CHARACTER NO-UNDO.
 DEFINE VARIABLE attr-option AS CHARACTER NO-UNDO.
+define variable select-list       as longchar  no-undo .
 
 &scop my-refresh ~
   assign ~
@@ -145,6 +146,12 @@ FUNCTION get-infodb-date RETURNS DATE
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+function get-mark returns character
+  (buffer local-db for ub.db ):
+  if lookup (string (recid (local-db)), select-list) > 0  then return "*".
+  else return "".
+end function.
+
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -222,6 +229,23 @@ DEFINE BUTTON b-turn-off
 DEFINE BUTTON b-unld
      LABEL "Вы&грузка"
      SIZE 10 BY 1.
+     
+DEFINE BUTTON b-unld-list
+     LABEL "&Мультивыгрузка"
+     SIZE 15 BY 1
+     tooltip "Выгрузка УБД по списку из онлайн-копии" .
+     
+define button b-mark 
+  label "&*" 
+  size 3 by 1.13.
+  
+define button b-sel-all 
+  label "&+":L 
+  size 3 by 1.13 tooltip "Отметить все БД".
+  
+define button b-unmark 
+  label "&-":L 
+  size 3 by 1.13 tooltip "Снять все отметки".
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -247,6 +271,7 @@ DEFINE BROWSE br-clients
 DEFINE BROWSE br-db
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-db d-db _STRUCTURED
   QUERY br-db NO-LOCK DISPLAY
+      get-mark(BUFFER ub.db) column-label "*"  format "X(1)":U
       ub.db.db-num FORMAT ">>>>>>>>9":U
       ub.db.db-name FORMAT "X(25)":U
       ub.db.add-clients COLUMN-LABEL "Клиенты" FORMAT "+/-":U
@@ -285,6 +310,10 @@ DEFINE FRAME d-db
      b-hn AT ROW 2 COL 51
      b-turn-off AT ROW 2 COL 61 WIDGET-ID 2
      br-db AT ROW 3.5 COL 1
+     b-mark at row 2 col 1
+     b-sel-all at row 2 col 4
+     b-unmark at row 2 col 7
+     b-unld-list at row 1 col 71
      br-clients AT ROW 3.5 COL 63.5
      SPACE(0.36) SKIP(0.26)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -1078,6 +1107,149 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-unld-list
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unld-list d-db
+ON CHOOSE OF b-unld-list IN FRAME d-db /* Выгрузка */
+DO:
+  define buffer buf-new_db      for ub.db .
+  define buffer buf-lst_db      for ub.db .
+  define buffer buf_clients     for ub.clients .
+
+  define variable v-log  as logical   no-undo .
+  define variable v-lock as logical   no-undo .
+  define variable v-msg  as character no-undo .
+  define variable v-ok   as logical   no-undo .
+  define variable v-ii   as integer   no-undo .
+  define variable v-list as character no-undo .
+  
+  if trim(select-list) = ""
+  then do :
+    message "Не отмечена ни одна БД." view-as alert-box .
+    return no-apply .
+  end.
+
+  assign
+    v-type-unload = {&unload-online}
+  .
+  
+  run fill-two-commit-command in this-procedure.
+  
+  do v-ii = 1 to num-entries (select-list):
+    v-list = entry(v-ii, select-list) no-error .
+
+    find first buf-lst_db where recid(buf-lst_db) = integer(v-list) .
+    if buf-lst_db.db-num = 0
+    then do:
+      message
+        "Нельзя выгрузить ГБД!!!"
+        view-as alert-box error.
+      return no-apply.
+    end.
+
+    define variable v-can-unload as logical   no-undo .
+    define variable v-message    as character no-undo .
+
+    run adm/unlddbck.p
+      (input  buf-lst_db.db-num
+      ,output v-can-unload
+      ,output v-message
+      ) .
+    if v-can-unload <> true
+    then do:
+      message
+        "Нельзя произвести выгрузку базы данных" skip
+        "База данных" db.db-num skip
+        v-message skip
+        view-as alert-box error.
+    end.
+    find first temp_db-rec-attr
+      where temp_db-rec-attr.db-num = ?
+      no-error .
+    if available temp_db-rec-attr
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        substitute( "Нельзя выгрузить БД!" ) skip
+        substitute( "Есть незавершенные распределенные команды при которых выгрузка недопустима!" ) skip
+        view-as alert-box error
+      .
+    end.
+  end .
+  
+  assign
+    v-log = FALSE
+  .
+  message
+    "При выгрузке необходимо задать НОВЫЙ ключ БД." skip
+    "Продолжить?"
+    view-as alert-box question buttons yes-no update v-log
+  .
+  if not v-log
+  then do:
+    return no-apply.
+  end.
+
+  run adm/unload-m2.p
+    (input  select-list
+    ) no-error.
+/*  if error-status:error*/
+/*  then do :            */
+/*    return no-apply .  */
+/*  end.                 */
+
+  run adm/unloaddc.p
+    no-error .
+  if error-status :error
+  then do:
+    message
+      vss-workfile vss-revision vss-description skip
+      substitute( "Не удалось отключить БД" ) skip
+      return-value skip
+      error-status :get-message ( error-status :num-messages )
+      view-as alert-box error .
+  end.
+  
+  do v-ii = 1 to num-entries (select-list):
+    v-list = entry(v-ii, select-list) no-error .
+
+    find first buf-lst_db where recid(buf-lst_db) = integer(v-list) .
+
+    assign
+      v-lock = true
+    .
+    { nws/lock-rt.i
+      "'unlock'"
+      buf-lst_db.db-num
+      0
+      "''"
+      v-msg
+      v-lock
+      v-ok
+      no-error
+    }
+    if error-status :error
+    or v-lock = true
+    or v-ok   = false
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        substitute( "&1", v-msg ) skip
+        return-value skip
+        error-status :get-message ( error-status :num-messages )
+        view-as alert-box error
+      .
+      return no-apply.
+    end.
+  
+  end.   
+
+  {&my-refresh}
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define BROWSE-NAME br-db
 &Scoped-define SELF-NAME br-db
@@ -1249,6 +1421,45 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-db
+on choose of b-mark in frame d-db /* * */
+  do:
+    
+    run proc-b-mark in this-procedure no-error.
+
+  end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-sel-all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all d-db
+on choose of b-sel-all in frame d-db /* + */
+  do:
+    assign 
+      select-list = "".
+    if not available ub.db then return.
+    for each ub.db no-lock :
+      { gbl/markstrn.i ub.db select-list }
+    end.
+    br-db:refresh() in frame {&frame-name} .
+  end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-unmark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unmark d-db
+on choose of b-unmark in frame d-db /* - */
+  do:
+    select-list  = "".
+    br-db:refresh() in frame {&frame-name} .
+  end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define BROWSE-NAME br-clients
 &UNDEFINE SELF-NAME
@@ -1341,6 +1552,10 @@ define variable v-userid       as character no-undo .
         b-add
         b-unld
         b-del
+        b-mark
+        b-sel-all
+        b-unmark
+        b-unld-list
         with frame {&frame-name}.
       assign
         b-unld:menu-mouse = 1
@@ -1504,6 +1719,48 @@ CASE p-option:
 END CASE.
 
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark Dialog-Frame 
+procedure local-mark :
+  /* -----------------------------------------------------------
+          Purpose:
+          Parameters:  <none>
+          Notes:
+        -------------------------------------------------------------*/
+  
+  if not available ub.db then 
+  do:
+    message "Неправильный выбор строки.".
+    return no-apply.
+  end.
+  { gbl/markstrn.i ub.db select-list }
+
+  br-db:refresh() in frame {&frame-name} .
+
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-mark Dialog-Frame 
+procedure proc-b-mark :
+  /* -----------------------------------------------------------
+          Purpose:
+          Parameters:  <none>
+          Notes:
+        -------------------------------------------------------------*/
+  define variable varlog as logical no-undo .
+  if not available ub.db then return.
+  run local-mark in this-procedure.
+  assign 
+    varlog = br-db:select-next-row( ) in frame {&frame-name}.
+  apply "ENTRY":U to br-db in frame {&frame-name}.
+  br-db:refresh() in frame {&frame-name} .
+
+end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
