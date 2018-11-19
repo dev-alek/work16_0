@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.str.*.
+using ibs.th.str.ptrl.* from propath.
 
 block-level on error undo, throw.
 
@@ -60,6 +61,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define property BufTableHndlOld as handle no-undo
     get.
     set.
+  
+  define variable rvsinvObj        as class rvsinvsub no-undo .
   
   define variable sw               as handle    no-undo.
   define variable v-is-petrol-trn  as logical   no-undo.
@@ -353,6 +356,27 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
           
           write-data-element ("pipeline-cap", string-mth (round (dAddQnty, 2))).
           write-data-element ("pipeline-wght", string-mth (round (dAddCliQnty, 2))).
+          
+          rvsinvObj = new rvsinvsub ().
+          
+          rvsinvObj = new rvsinvsub ().
+          assign
+            rvsinvObj:RvsCode = bf_rvs-line.rvs-code
+            rvsinvObj:ObjCode = buf_trn-doc.obj-code
+            rvsinvObj:ObjType = buf_trn-doc.obj-type
+            rvsinvObj:PlCode = bf_rvs-line.pl-code
+            rvsinvObj:GdsCode =  buf_gds.gds-code
+          .
+          
+          if rvsinvObj:RvsInvStrObj:FillSub(rvsinvObj)
+          then do:
+            write-data-element ("wght-tp-N", string-mth (round (rvsinvObj:TPNormal, 3))).
+            write-data-element ("wght-tp-F", string-mth (round (rvsinvObj:TPWast, 3))).
+          end.
+          else do:
+            write-data-element ("wght-tp-N", string-mth (round (0.0, 3))).
+            write-data-element ("wght-tp-F", string-mth (round (0.0, 3))).            
+          end.
           
         sw:end-element ("gd").
       end.
