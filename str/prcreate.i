@@ -119,6 +119,7 @@ end.
     buf_price-doc.doc-num-es     = entry(1, buf_price-doc-forming.des, {&delim-par}) no-error.
     buf_price-doc.uid-es         = entry(2, buf_price-doc-forming.des, {&delim-par}) no-error.
     buf_price-doc.doc-date       = date(entry(3, buf_price-doc-forming.des, {&delim-par})) no-error.
+    if buf_price-doc.uid-es = "_" then buf_price-doc.uid-es = "" .
     assign
         p-price-doc-recid = recid ( buf_price-doc )
     .
