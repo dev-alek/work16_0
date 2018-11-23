@@ -58,6 +58,7 @@ on endkey undo, return error
   define variable v-list        as   character        no-undo .
   define variable v-dst-path    as   character        no-undo .
   define variable v-create-adm  as logical      no-undo.
+  define variable v-log  as logical   no-undo .
 
 do v-dbs = 1 to num-entries (p-rec-list):
   v-list = entry(v-dbs, p-rec-list) no-error .
@@ -166,6 +167,15 @@ end .
 
 find first buf_sys-ctrl no-lock .
 
+message
+  "Мультивыгрузка УБД." skip
+  "Все данные, не пришедшие в ГБД будут потеряны." skip
+  "Продолжить?" skip
+  view-as alert-box question buttons yes-no update v-log .
+if not v-log then do:
+  return "not-create":U .
+end.
+
 for each unld_db by unld_db.db-num :
   
   find first buf-new_db
@@ -247,7 +257,7 @@ for each unld_db by unld_db.db-num :
     ( input unld_db.db-num
      ,input unld_db.db-key
      ,input unld_db.db-key-enc
-     ,input {&unload-online}
+     ,input ({&unload-online} + {&delim-par} + "yes")
      ,input unld_db.unload-hist
     ) no-error .
   if error-status :error
@@ -339,6 +349,10 @@ for each unld_db by unld_db.db-num :
     end.
   end.
 end.
+
+message
+    "Перекачка успешно завершена."
+    view-as alert-box information .
 
 end.
 

@@ -52,6 +52,8 @@ define variable par-type as character no-undo.
 define variable fin-doc-par as integer no-undo.
 define variable v-on-gbl as logical no-undo.
 
+define variable v-multi as logical no-undo initial no .
+
 define temp-table temp-cash-desk no-undo
   field last-date like ub.chk-doc.chk-date
   field last-time like ub.chk-doc.chk-time
@@ -122,6 +124,12 @@ on stop   undo, return error substitute( "&1. stop", vss-workfile )
 on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 :
 
+  if num-entries(p-type-unload, {&delim-par}) = 2
+  then do :
+    v-multi = logical(entry(2, p-type-unload, {&delim-par})) no-error.
+    p-type-unload = entry(1, p-type-unload, {&delim-par}) .
+  end.
+
   if transaction = true
   then do:
     message
@@ -179,7 +187,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
   define stream slog .
 
-  if p-type-unload <> {&unload-copy} then do:
+  if p-type-unload <> {&unload-copy}
+  and not v-multi
+  then do:
     message
       "Выгрузка УБД." skip
       "Все данные, не пришедшие в ГБД будут потеряны." skip
@@ -3417,6 +3427,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
   disconnect dst.
 
+  if not v-multi
+  then
   message
     "Перекачка успешно завершена."
     view-as alert-box information .

@@ -1192,10 +1192,10 @@ DO:
   run adm/unload-m2.p
     (input  select-list
     ) no-error.
-/*  if error-status:error*/
-/*  then do :            */
-/*    return no-apply .  */
-/*  end.                 */
+  if return-value = "not-create":U
+  then do :
+    return no-apply .
+  end.
 
   run adm/unloaddc.p
     no-error .
