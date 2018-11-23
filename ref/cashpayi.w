@@ -202,9 +202,8 @@ DEFINE VARIABLE cb-type-pay-fr AS CHARACTER FORMAT "x(200)"
      VIEW-AS COMBO-BOX INNER-LINES 7
      LIST-ITEM-PAIRS "Наличные","1",
                      "Электронные","2",
-                     "Авансом","3",
-                     "Кредитом","4",
-                     "Встречным представление","5",
+                     "Аванс","3",
+                     "Кредит","4",
                      "Нефискальный платеж","-1"
      DROP-DOWN-LIST
      SIZE 24.5 BY 1 NO-UNDO.
