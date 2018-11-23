@@ -155,7 +155,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Включение прав на работу с товарами */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Включение прав на работу */
 DO:
   APPLY "END-ERROR":U TO SELF.
 END.
@@ -174,6 +174,12 @@ DO:
     tg-action-gbl
   .
   RUN global-save IN THIS-PROCEDURE .
+    if tg-action-gbl then do:
+    /*Если поставили галку, тогда удаляем все привязки на УБД*/
+    for each ub.action-role-item exclusive-lock where ub.action-role-item.db-num <> 0 :
+      delete ub.action-role-item .
+    end.  
+  end.  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -186,6 +192,17 @@ ON CHOOSE OF b-help IN FRAME Dialog-Frame /* Помощь */
 OR HELP OF FRAME {&FRAME-NAME}
 DO: /* Call Help Function (or a simple message). */
   MESSAGE "Help for File: {&FILE-NAME}" VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME tg-action-gbl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tg-action-gbl Dialog-Frame
+ON VALUE-CHANGED OF tg-action-gbl IN FRAME Dialog-Frame /* Глобальная настройка прав */
+DO:
+  assign tg-action-gbl.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -444,7 +461,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-enable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-enable Dialog-Frame 
 PROCEDURE ui-enable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -465,3 +482,4 @@ END PROCEDURE. /* ui-enable */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
