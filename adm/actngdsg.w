@@ -176,8 +176,8 @@ DO:
   RUN global-save IN THIS-PROCEDURE .
     if tg-action-gbl then do:
     /*Если поставили галку, тогда удаляем все привязки на УБД*/
-    for each ub.action-role-item exclusive-lock where ub.action-role-item.db-num <> 0 :
-      delete ub.action-role-item .
+    for each ub.user-login-action-role exclusive-lock where ub.user-login-action-role.db-num <> 0 :
+      delete ub.user-login-action-role .
     end.  
   end.  
 END.

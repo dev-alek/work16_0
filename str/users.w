@@ -95,6 +95,8 @@ define variable v-only-lookup           as logical      no-undo.
 
 define buffer buf_init_user-account      for user-account.
 define buffer buf_init_user-login        for user-login.
+define buffer buf_global-state-attr for ub.global-state-attr .
+define buffer buf_global-state for ub.global-state .
 
 define stream out-stream.
 define stream OutStr-html.
@@ -102,6 +104,7 @@ define stream OutStr-html.
 define variable p-report-id               as integer              no-undo .
 define variable v-report-name-html        as CHARACTER            no-undo .
 define variable v-report-name-html-list   as CHARACTER            no-undo .
+
 
   define temp-table tt-user-login no-undo
     field users-id   like ub.user-login.user-id
@@ -160,8 +163,8 @@ temp_filter-fields
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit cb-db b-filter fi-filter-comment ~
 tb-filter b-print b-help rs-scope b-add b-chg b-dup b-del b-userhist ~
-b-hist-user b-add-2 b-copy b-chg-2 b-del-2 bt-password br-user br-login ~
-bt-object bt-firm bt-role bt-menu ed-login-object ed-user-info 
+b-hist-user b-add-2 b-chg-2 b-del-2 bt-password br-user br-login bt-object ~
+bt-firm bt-role bt-menu ed-login-object ed-user-info 
 &Scoped-Define DISPLAYED-OBJECTS cb-db fi-filter-comment tb-filter rs-scope ~
 ed-login-object ed-user-info 
 
@@ -417,6 +420,8 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+/* SETTINGS FOR BUTTON b-copy IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
 ASSIGN 
        b-print:POPUP-MENU IN FRAME Dialog-Frame       = MENU POPUP-MENU-b-print:HANDLE.
 
@@ -2044,7 +2049,7 @@ PROCEDURE enable_UI :
           ed-user-info 
       WITH FRAME Dialog-Frame.
   ENABLE b-exit cb-db b-filter fi-filter-comment tb-filter b-print b-help 
-         rs-scope b-add b-chg b-dup b-del b-userhist b-hist-user b-add-2 b-copy 
+         rs-scope b-add b-chg b-dup b-del b-userhist b-hist-user b-add-2 
          b-chg-2 b-del-2 bt-password br-user br-login bt-object bt-firm bt-role 
          bt-menu ed-login-object ed-user-info 
       WITH FRAME Dialog-Frame.
@@ -2664,7 +2669,10 @@ on error undo, return error
                                         , buf_temp_user-login-obj.obj-name )
             .
         end.        /* for each buf_temp_user-login-obj */
-        define variable v-have-login    as logical      no-undo.
+        
+        define variable v-have-login    as logical      no-undo .
+        define variable v-action-gbl    as logical      no-undo .
+
         assign
             v-have-login = no
         .
@@ -2689,7 +2697,20 @@ on error undo, return error
                 end.
             end.        /* for each buf_user-login */
         end.
-        if v-have-login = yes and v-cntxt-db-num <> 0
+           FIND FIRST buf_global-state
+        NO-LOCK
+        .
+        FIND FIRST buf_global-state-attr
+      WHERE buf_global-state-attr.gls-id = buf_global-state.gls-id
+         AND buf_global-state-attr.attr-code = "action-gbl"
+      EXCLUSIVE-LOCK
+      NO-error
+      .
+   IF AVAILABLE buf_global-state-attr 
+   THEN DO:
+     if buf_global-state-attr.attr-value = "yes" then v-action-gbl = yes .
+   END.
+        if v-have-login = yes and v-cntxt-db-num <> 0 
         then do:
             disable
                 b-add-2
@@ -2697,9 +2718,13 @@ on error undo, return error
             .
         end.
         else do:
+        if v-action-gbl then do:
+            enable
+                b-copy
+            .
+        end.
             enable
                 b-add-2
-                b-copy
             .
         end.
         if buf_init_user-login.db-num = v-cntxt-db-num or v-cntxt-db-num = 0
@@ -2727,9 +2752,13 @@ on error undo, return error
         end.
     end.
     else do:
+        if v-action-gbl then do:
+            enable
+                b-copy
+            .
+        end.
         enable
             b-add-2
-            b-copy
         .
         disable
             b-chg-2
@@ -3807,6 +3836,131 @@ END PROCEDURE. /* procedure-user-login-change-password */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-copy Dialog-Frame 
+PROCEDURE procedure-user-login-copy :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define input parameter p-db-num         as integer          no-undo.
+define input parameter p-user-id        as character        no-undo.
+
+  define variable v-can-edit as logical   no-undo .
+
+  define buffer buf_user-account    for user-account.
+  define buffer buf_user-login      for ub.user-login .
+do
+for buf_user-account
+  , buf_user-login
+on error undo, return error return-value
+:
+
+    do transaction
+    on error undo, return error return-value
+    :       /* блокируем логин пользователя */
+        find first buf_user-login exclusive-lock
+             where buf_user-login.db-num  = p-db-num
+               and buf_user-login.user-id = p-user-id
+        no-error no-wait.
+        if not available buf_user-login
+        then do:
+            if locked( buf_user-login )
+            then do:
+                find first buf_user-login no-lock
+                     where buf_user-login.db-num  = p-db-num
+                       and buf_user-login.user-id = p-user-id
+                .
+                find first buf_user-account no-lock
+                     where buf_user-account.user-id = p-user-id
+                .
+                message
+                    "Редактирование логина невозможно" skip
+                    "Пользователь в данный момент работает в системе" skip
+                    "БД" p-db-num skip
+                    "Идентификатор" p-user-id skip
+                    "Псевдоним"                    buf_user-account.nik skip
+                    "Имя пользователя"             buf_user-account.last-name buf_user-account.first-name buf_user-account.second-name skip
+                    "Компьютер"                    buf_user-login.last-login-computer-name skip
+                    "Пользователь компьютера"      buf_user-login.last-login-computer-user skip
+                    "TCP имя компьютера"           buf_user-login.last-login-computer-tcp-name skip
+                    "IP адрес компьютера"          buf_user-login.last-login-computer-ip-addr skip
+                    "Идентификатор процесса"       buf_user-login.last-login-process-id skip
+                    "Номер подключения к БД"       buf_user-login.last-login-connection-id skip
+                    "Дата и время входа в систему" sys-time_mjd-to-loc-str-func(buf_user-login.last-login-mjd) skip
+                view-as alert-box error .
+            end.
+            else do:
+                message
+                    "Редактирование логина невозможно" skip
+                    "У пользователя нет логина" skip
+                    "БД" p-db-num skip
+                    "Идентификатор" buf_init_user-account.user-id skip
+                view-as alert-box error .
+            end.
+            undo, return error return-value .
+        end.
+    end.
+
+    define variable v-update-data        as logical   no-undo .
+    define variable v-user-login         as character no-undo .
+    define variable v-user-administrator as logical   no-undo .
+    define variable v-max-discnt         as decimal   no-undo .
+    define variable v-quest-print        as logical   no-undo .
+    define variable v-tmp-dbnum          as integer   no-undo .
+    define variable v-list-db            as character no-undo .
+    define variable v-success            as logical   no-undo .
+    
+    /* редактирование логина пользователя */
+    /* запись захвачена и не может быть изменена */
+    v-tmp-dbnum = buf_user-login.db-num.
+    run str/usrloged2.w (
+          input parparentproc
+        , input {&update}
+        , input-output v-tmp-dbnum
+        , input buf_user-login.user-id
+        , input buf_user-login.user-login
+        , input buf_user-login.user-administrator
+        , input buf_user-login.max-discnt
+        , input buf_user-login.quest-print
+        , output v-list-db
+        , output v-update-data
+        , output v-user-login
+        , output v-user-administrator
+        , output v-max-discnt
+        , output v-quest-print
+    ) .
+    if v-list-db = "" then
+       return.
+
+            /* запись была найдена и захвачена чуть выше */
+
+/*копируем логин в выбранные базы*/            
+           run str/copy-login.p (
+              input buf_user-login.user-id
+            , input p-db-num
+            , input v-list-db
+            , output v-success
+        ) no-error.
+        if error-status :error
+        then do:
+            message
+                        vss-workfile vss-revision vss-description
+                skip(1)
+                skip "Ошибка копирования логина."
+                skip return-value
+                skip trim( error-status :get-message( 1 ) )
+                        trim( error-status :get-message( 2 ) )
+                        trim( error-status :get-message( 3 ) )
+            view-as alert-box error.
+            undo, return no-apply.
+        end.
+end.
+END PROCEDURE. /* procedure-user-login-copy */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-create Dialog-Frame 
 PROCEDURE procedure-user-login-create :
 /*------------------------------------------------------------------------------
@@ -4165,133 +4319,6 @@ END PROCEDURE. /* procedure-user-login-edit */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-edit Dialog-Frame 
-PROCEDURE procedure-user-login-copy :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define input parameter p-db-num         as integer          no-undo.
-define input parameter p-user-id        as character        no-undo.
-
-  define variable v-can-edit as logical   no-undo .
-
-  define buffer buf_user-account    for user-account.
-  define buffer buf_user-login      for ub.user-login .
-do
-for buf_user-account
-  , buf_user-login
-on error undo, return error return-value
-:
-
-    do transaction
-    on error undo, return error return-value
-    :       /* блокируем логин пользователя */
-        find first buf_user-login exclusive-lock
-             where buf_user-login.db-num  = p-db-num
-               and buf_user-login.user-id = p-user-id
-        no-error no-wait.
-        if not available buf_user-login
-        then do:
-            if locked( buf_user-login )
-            then do:
-                find first buf_user-login no-lock
-                     where buf_user-login.db-num  = p-db-num
-                       and buf_user-login.user-id = p-user-id
-                .
-                find first buf_user-account no-lock
-                     where buf_user-account.user-id = p-user-id
-                .
-                message
-                    "Редактирование логина невозможно" skip
-                    "Пользователь в данный момент работает в системе" skip
-                    "БД" p-db-num skip
-                    "Идентификатор" p-user-id skip
-                    "Псевдоним"                    buf_user-account.nik skip
-                    "Имя пользователя"             buf_user-account.last-name buf_user-account.first-name buf_user-account.second-name skip
-                    "Компьютер"                    buf_user-login.last-login-computer-name skip
-                    "Пользователь компьютера"      buf_user-login.last-login-computer-user skip
-                    "TCP имя компьютера"           buf_user-login.last-login-computer-tcp-name skip
-                    "IP адрес компьютера"          buf_user-login.last-login-computer-ip-addr skip
-                    "Идентификатор процесса"       buf_user-login.last-login-process-id skip
-                    "Номер подключения к БД"       buf_user-login.last-login-connection-id skip
-                    "Дата и время входа в систему" sys-time_mjd-to-loc-str-func(buf_user-login.last-login-mjd) skip
-                view-as alert-box error .
-            end.
-            else do:
-                message
-                    "Редактирование логина невозможно" skip
-                    "У пользователя нет логина" skip
-                    "БД" p-db-num skip
-                    "Идентификатор" buf_init_user-account.user-id skip
-                view-as alert-box error .
-            end.
-            undo, return error return-value .
-        end.
-    end.
-
-    define variable v-update-data        as logical   no-undo .
-    define variable v-user-login         as character no-undo .
-    define variable v-user-administrator as logical   no-undo .
-    define variable v-max-discnt         as decimal   no-undo .
-    define variable v-quest-print        as logical   no-undo .
-    define variable v-tmp-dbnum          as integer   no-undo .
-    define variable v-list-db            as character no-undo .
-    define variable v-success            as logical   no-undo .
-    
-    /* редактирование логина пользователя */
-    /* запись захвачена и не может быть изменена */
-    v-tmp-dbnum = buf_user-login.db-num.
-    run str/usrloged2.w (
-          input parparentproc
-        , input {&update}
-        , input-output v-tmp-dbnum
-        , input buf_user-login.user-id
-        , input buf_user-login.user-login
-        , input buf_user-login.user-administrator
-        , input buf_user-login.max-discnt
-        , input buf_user-login.quest-print
-        , output v-list-db
-        , output v-update-data
-        , output v-user-login
-        , output v-user-administrator
-        , output v-max-discnt
-        , output v-quest-print
-    ) .
-    if v-list-db = "" then
-       return.
-
-            /* запись была найдена и захвачена чуть выше */
-
-/*копируем логин в выбранные базы*/            
-           run str/copy-login.p (
-              input buf_user-login.user-id
-            , input p-db-num
-            , input v-list-db
-            , output v-success
-        ) no-error.
-        if error-status :error
-        then do:
-            message
-                        vss-workfile vss-revision vss-description
-                skip(1)
-                skip "Ошибка копирования логина."
-                skip return-value
-                skip trim( error-status :get-message( 1 ) )
-                        trim( error-status :get-message( 2 ) )
-                        trim( error-status :get-message( 3 ) )
-            view-as alert-box error.
-            undo, return no-apply.
-        end.
-end.
-END PROCEDURE. /* procedure-user-login-copy */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-menu-group Dialog-Frame 
 PROCEDURE procedure-user-login-menu-group :
