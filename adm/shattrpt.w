@@ -1346,7 +1346,7 @@ hide dop-info in frame {&frame-name} .
       v-vid-param = 
         "UniqueIdRecordARM=" + v-initiator + {&delim-par} +
         "UserName=" + v-name + {&delim-par} +
-        "UserNik=" + v-nik + {&delim-par} 
+        "UserNik=" + v-nik + {&delim-par} + 
         "NumShop=" + string(temp-thbj-attr.obj-code) + {&delim-par} + v-change-param 
         no-error.
 
