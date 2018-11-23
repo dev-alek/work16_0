@@ -85,14 +85,11 @@ on error undo, return error
         undo, return error .
     end.
 
-    /* 06/IX-2018 Отчет-реестр должен выгружаться только в ГБД */
-    if ibs.th.gbl.gbl-var:g#db-num = 0 then
+    /* 06/IX-2018 Отчет-реестр должен выгружаться только в ГБД
+       21/XI-2018 в версии 16.0 отчёт-реестр должен выгружаеться и в УБД
+    */
     run bge-xml-out-dir2 in this-procedure ( output v-out-dir
                                           , output v-out-dirR
-                                          , output v-log-file-name
-                                          ).
-    else
-    run bge-xml-out-dir in this-procedure ( output v-out-dir
                                           , output v-log-file-name
                                           ).
     run bge-xml-init-ext-doc-type in this-procedure .
@@ -255,6 +252,11 @@ define variable v-is-found as logical no-undo .
             else v-is-found = true .
         end.        /* if v-shift-obj-on = yes */
         else do:
+            run wp-XMLWriteLog in this-procedure (
+                input v-log-file-name
+              , input 1
+              , input substitute(" > Экспорт документов по несменному объекту &1&2", temp-obj.obj-type, temp-obj.obj-code )
+            ).
             run export-not-shifts-object (
                   input temp-obj.host-code
                 , input temp-obj.obj-type
@@ -341,9 +343,9 @@ on error undo, return error
               skip "Тип объекта:" p-obj-type
               skip "Код объекта:" p-obj-code
               skip return-value
-              skip trim(error-status :get-message(1))
-                  trim(error-status :get-message(2))
-                  trim(error-status :get-message(3))
+              skip error-status:get-message(1)
+                   error-status :get-message(2)
+                   error-status :get-message(3)
               view-as alert-box error.
               undo, return error .
           end.
@@ -608,8 +610,10 @@ on error undo, return error
       end . /* end_of выгрузка s_файла */
 
 
-      /* 06/IX-2018 Отчет-реестр должен выгружаться только в ГБД */
-      if ibs.th.gbl.gbl-var:g#db-num = 0 then do : /* выгрузка r_файла */
+      /* 06/IX-2018 Отчет-реестр должен выгружаться только в ГБД
+         21/XI-2018 в версии 16.0 отчёт-реестр должен выгружаеться и в УБД      
+      */
+      do : /* выгрузка r_файла */
         assign
             v-prefix = substitute( "r_&1&2&3&4&5&6_"
                                     , substring( string( year( buf_shift-obj.shift-date ), "9999":U ), 3, 2 )
@@ -721,11 +725,6 @@ do
 for buf_shift-obj
 on error undo, return error
 :
-    run wp-XMLWriteLog in this-procedure (
-          input p-log-file-name
-        , input 1
-        , input " > Экспорт документов по несменному объекту " + p-obj-type + string( p-obj-code )
-    ).
     run wp-XMLWriteLog in this-procedure (
           input p-log-file-name
         , input 2

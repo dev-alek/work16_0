@@ -55,6 +55,9 @@ define variable vss-description as character no-undo init "Экран настроек работы
 { gbl/color.i    }
 { gbl/twowin.i   }
 { str/trdcalib.i }
+{ gbl/cur-time.i }
+{ gbl/sys-time.i }
+{ cmp/trg-def.i  }
 
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 
@@ -168,7 +171,7 @@ DEFINE VARIABLE mass-proc AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE otkl-density AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
+DEFINE VARIABLE otkl-density AS CHARACTER FORMAT "9X999":U initial 0.000  
      LABEL "Плотности" 
      VIEW-AS FILL-IN 
      SIZE 9 BY 1 NO-UNDO.
@@ -338,37 +341,37 @@ DEFINE FRAME shattrpt
      otkl-water AT ROW 35.79 COL 72.63 COLON-ALIGNED WIDGET-ID 512
      v-dop-info AT ROW 13 COL 3.5 NO-LABEL WIDGET-ID 498
      f-invclipt-name AT ROW 19.83 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
-     "Максимально допустимые отклонения:" VIEW-AS TEXT
-          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED WIDGET-ID 504
+     "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
+          SIZE 64.5 BY .96 AT ROW 10.08 COL 3.5 WIDGET-ID 92
+     "вертикальных" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 25 WIDGET-ID 124
+     "горизонтальных" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 3.5 WIDGET-ID 126
+     "Температура, к которой приводиться плотность и объем °С :" VIEW-AS TEXT
+          SIZE 58 BY .83 AT ROW 21.25 COL 3.5 WIDGET-ID 516
      "Настройки инвентаризации по сверке" VIEW-AS TEXT
           SIZE 35.5 BY .67 AT ROW 15.08 COL 3 WIDGET-ID 78
      "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
           SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
-     "горизонтальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.88 COL 3.5 WIDGET-ID 126
-     "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
-          SIZE 34.5 BY 1 AT ROW 28.38 COL 3.63 WIDGET-ID 116
-     "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
-          SIZE 62.5 BY .96 AT ROW 10.79 COL 3.5 WIDGET-ID 94
-     "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
-          SIZE 64.5 BY .96 AT ROW 10.08 COL 3.5 WIDGET-ID 92
      "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
           SIZE 49 BY .83 AT ROW 7.92 COL 3.5 WIDGET-ID 48
-     "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
-          SIZE 42 BY .67 AT ROW 30.92 COL 3.5 WIDGET-ID 112
-     "вертикальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.88 COL 25 WIDGET-ID 124
-     "Температура, к которой приводиться плотность и объем °С :" VIEW-AS TEXT
-          SIZE 58 BY .83 AT ROW 21.25 COL 3.5 WIDGET-ID 516
+     "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
+          SIZE 62.5 BY .96 AT ROW 10.79 COL 3.5 WIDGET-ID 94
      "Тип ввода топлива во всех документах кроме прихода внешнего :" VIEW-AS TEXT
           SIZE 63 BY .83 AT ROW 7.13 COL 3.5 WIDGET-ID 514
+     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
+          SIZE 52 BY .63 AT ROW 27.63 COL 3.5 WIDGET-ID 86
+     "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
+          SIZE 34.5 BY 1 AT ROW 28.38 COL 3.63 WIDGET-ID 116
+     "Максимально допустимые отклонения:" VIEW-AS TEXT
+          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED WIDGET-ID 504
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE  WIDGET-ID 100.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME shattrpt
-     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
-          SIZE 52 BY .63 AT ROW 27.63 COL 3.5 WIDGET-ID 86
+     "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
+          SIZE 42 BY .67 AT ROW 30.92 COL 3.5 WIDGET-ID 112
      RECT-1 AT ROW 22.33 COL 2.5 WIDGET-ID 38
      RECT-2 AT ROW 14.71 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 7 COL 2.5 WIDGET-ID 66
@@ -513,6 +516,62 @@ END.
 ON CHOOSE OF B-set_dop-info IN FRAME shattrpt
 DO:
   run select-dop-info in this-procedure.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME otkl-density
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL otkl-density shattrpt
+ON LEAVE OF otkl-density IN FRAME shattrpt /* Плотности */
+DO:
+  assign
+  otkl-density no-error  .
+  if error-status:error or decimal (otkl-density) > 1 then do:
+    message "Формат поля должен быть: Больше единицы и три знака после запятой"
+    view-as alert-box.
+    RETURN NO-APPLY.
+  end.  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME otkl-fact-volue
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL otkl-fact-volue shattrpt
+ON LEAVE OF otkl-fact-volue IN FRAME shattrpt /* Фактического объема */
+DO:
+  assign
+  otkl-fact-volue
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME otkl-temp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL otkl-temp shattrpt
+ON LEAVE OF otkl-temp IN FRAME shattrpt /* Температуры */
+DO:
+  assign
+  otkl-temp
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME otkl-water
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL otkl-water shattrpt
+ON LEAVE OF otkl-water IN FRAME shattrpt /* Воды */
+DO:
+  assign
+  otkl-water
+  .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -968,9 +1027,10 @@ on error undo, return error return-value
       when {&attr-petrol_otkl-density} then 
           do: 
             assign
-              otkl-density = thbjattr_thbj-attr.property-value-decimal 
+              otkl-density = thbjattr_thbj-attr.property-value-character 
               otkl-density :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
               .
+              if otkl-density = "" then otkl-density = "0.000" .
           end.          
       when {&attr-petrol_otkl-water} then 
           do: 
@@ -1060,6 +1120,23 @@ define variable wh                as widget-handle  no-undo .
 define variable fh                as widget-handle  no-undo .
 define variable v-same            as logical        no-undo .
 
+define variable v-change-temp     as logical        no-undo .
+define variable v-change-volume   as logical        no-undo .
+define variable v-change-density  as logical        no-undo .
+define variable v-change-water    as logical        no-undo .
+define variable v-change-param    as character      no-undo .
+define variable v-vid-param       as longchar       no-undo .
+define variable v-vid-action           as integer   no-undo .
+
+define variable v-computer-name        as character no-undo .
+define variable v-computer-tcp-name    as character no-undo .
+define variable v-computer-ip-addr     as character no-undo .
+define variable v-computer-login-name  as character no-undo .
+define variable v-computer-process-pid as integer   no-undo .
+
+define variable v-date                 as character no-undo .
+define variable v-time                 as character no-undo .
+    
 do
 on error undo, return error return-value
 :
@@ -1167,9 +1244,8 @@ hide dop-info in frame {&frame-name} .
     view-as alert-box error .
     undo, return error .
   end.
-
-
-  run thbjattr_set-section in this-procedure
+  
+    run thbjattr_set-section in this-procedure
     ( input p-obj-type
     , input p-obj-code
     , input {&attr-petrol}
@@ -1182,7 +1258,116 @@ hide dop-info in frame {&frame-name} .
     view-as alert-box.
     undo, return error.
   end.
+  
+  
+  for each temp-thbj-attr no-lock:
+    v-change-param = "" .
+    case temp-thbj-attr.prop-code:
+      when {&attr-petrol_otkl-fact-volue} then 
+        do: 
+          if temp-thbj-attr.property-value-decimal <> otkl-fact-volue then 
+          do:
+            v-change-param = "IDParam="  + "otkl-fact-volume" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение фактического объема" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-decimal) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-fact-volue) no-error.
+          end.  
+        end.
+      when {&attr-petrol_otkl-temp} then 
+        do: 
+          if temp-thbj-attr.property-value-decimal <> otkl-temp then 
+          do:
+            v-change-param = "IDParam="  + "otkl-temp" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение температуры" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-decimal) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-temp) no-error.
+      
+          end.  
+        end.          
+      when {&attr-petrol_otkl-density} then 
+        do: 
+          if temp-thbj-attr.property-value-character <> otkl-density then 
+          do:
+            v-change-param = "IDParam="  + "otkl-density" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение плотности" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-character) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-density) no-error.
+          end.  
+        end.          
+      when {&attr-petrol_otkl-water} then 
+        do: 
+          if temp-thbj-attr.property-value-decimal <> otkl-water then 
+          do:
+            v-change-param = "IDParam="  + "otkl-water" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение воды" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-decimal) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-water) no-error.
+          end.                             
+        end.
+    end.
+   
+    if v-change-param <> "" then 
+    do:  
+    
+      define variable v-time-hour    as integer   no-undo .
+      define variable v-time-min     as integer   no-undo .
+      define variable v-nik          as character no-undo .
+      define variable v-name         as character no-undo .
 
+      define variable v-cntxt-userid as character no-undo . /* текущий пользователь  */
+   
+      run get-userid in parparentproc ( output v-cntxt-userid) .
+      run get-userid in parparentproc ( output v-cntxt-userid) .
+  
+      find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error .
+      if available (ub.user-account) then 
+      do:
+        assign
+          v-nik  = ub.user-account.nik
+          v-name = ub.user-account.last-name + " " + ub.user-account.first-name 
+          .
+      end.  
+  
+      run cur-time in this-procedure ( output v-date, output v-time).
+      v-time-hour = integer(v-time) / 3600.
+      v-time-min  = (integer(v-time) - (v-time-hour * 3600)) / 60 .
+  
+      run sys-time_get-comp-user-name in this-procedure
+        (output v-computer-name
+        ,output v-computer-login-name
+        ,output v-computer-process-pid
+        ) .
+    
+      v-vid-action = 66 .
+  
+      { str/initiator.i }
+  
+  
+      v-vid-param = 
+        "UniqueIdRecordARM=" + v-initiator + {&delim-par} +
+        "UserName=" + v-name + {&delim-par} +
+        "UserNik=" + v-nik + {&delim-par} + 
+        "NumShop=" + string(temp-thbj-attr.obj-code) + {&delim-par} + v-change-param 
+        no-error.
+
+      run trg/userlog.p (
+        input {&nwsdochs_action_update}
+        , input {&table_thbj-attr}
+        , input ( buffer temp-thbj-attr :handle )
+        , input v-vid-action
+        , input v-vid-param
+        ) no-error.
+      if error-status :error
+        then
+      do:
+        return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+          , {&new-line}
+          , vss-workfile
+          , return-value
+          , error-status :get-message ( 1 ) ).
+      end.
+    end.
+  end.
 end.
 END PROCEDURE.
 

@@ -1,19 +1,26 @@
+/*
 
-/*------------------------------------------------------------------------
-    File        : send-ack_1c.p
-    Purpose     : 
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
-    Syntax      :
+Генерация и отправка файла-ответа для 1С РН
 
-    Description : 
+Автор: Сливенко Сергей
+Дата создания: 20/11/17
+Author: Slivenko Sergey
+Creation date: 20/11/17
 
-    Author(s)   : SSlivenko
-    Created     : Tue Nov 28 01:01:54 AST 2017
-    Notes       :
-  ----------------------------------------------------------------------*/
+Input:
+    p-sender-id - (chr)
+    p-pck-num   - (int) - номер пакета, тег <num>
+    p-status_   - (int)
+    p-error     - (chr) - текст ошибки, тег <error>
+    p-esys-id
 
-/* ***************************  Definitions  ************************** */
-
+*/
 define input parameter p-sender-id   as character no-undo .
 define variable        v-receiver-id as character no-undo initial '00000' .
 define input parameter p-pck-num as integer no-undo .
@@ -59,23 +66,10 @@ define variable v-source as character no-undo .
 define variable v-file-no-ext as character no-undo .
 define variable v-mess as character no-undo .
 DEFINE VARIABLE v-now AS DATETIME NO-UNDO.
-/* ********************  Preprocessor Definitions  ******************** */
 
 
-/* ***************************  Main Block  *************************** */
-
-
-v-work-dir   = nws-db-format( g#db-num ) + "-":U + "ES" + esys-id-format( p-esys-id ) .
+v-work-dir   = nws-db-format( ibs.th.gbl.gbl-var:g#db-num ) + "-":U + "ES" + esys-id-format( p-esys-id ) .
 v-target-dir = oxml-exch-dir + {&back-slash-char} + v-work-dir .
-
-v-now = now .
-v-file-no-ext = "ack_" + p-sender-id + "_" + v-receiver-id + "_" + string(p-pck-num) + "_"
-                          + string(day(v-now), "99") + string(month(v-now), "99") + string(year(v-now), "9999")
-                          + substring(string(TIME, "HH:MM:SS"), 1, 2)
-                          + substring(string(TIME, "HH:MM:SS"), 4, 2)
-                          + substring(string(TIME, "HH:MM:SS"), 7, 2) .
-v-filename = v-target-dir + {&back-slash-char} + v-file-no-ext + ".xml" .           
-
 assign
   file-info:file-name = v-target-dir
 .
@@ -95,15 +89,23 @@ if file-info:file-type = ?
 end.                                                 
 
 
+v-now = now .
+v-file-no-ext = "ack_" + p-sender-id + "_" + v-receiver-id + "_" + string(p-pck-num) + "_"
+                          + string(day(v-now), "99") + string(month(v-now), "99") + string(year(v-now), "9999")
+                          + replace (  string(TIME, "HH:MM:SS"),  ":",  "") . 
+v-filename = v-target-dir + {&back-slash-char} + v-file-no-ext + ".xml" .           
+
+
+
 define variable v-packdata as memptr no-undo .
 define variable v-signdata as memptr no-undo .
 define variable v-position as integer no-undo .
 define variable v-sign-file as character no-undo .
 
 
+  do : /* создать xml-пакет */
     create sax-writer sw.
     sw:formatted = true.
-//    sw:set-output-destination ("file", v-filename).
     sw:set-output-destination ("memptr", v-packdata).
    
     sw:encoding = "UTF-8".
@@ -124,6 +126,8 @@ define variable v-sign-file as character no-undo .
     sw:end-element ("GC-ERPRN-ACK") .
 
     sw:end-document () .
+  end . /* end_of создать xml-пакет */
+  
     COPY-LOB FROM OBJECT v-packdata TO FILE v-filename NO-CONVERT NO-ERROR .
 
     if valid-object (p-pkcs) then do on error undo, throw :

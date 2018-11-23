@@ -274,7 +274,7 @@ run write-log  in p-log-handle (
     run rul/send-ack_1c.p ( input v-sender-id
                           , input v-pack-num
                            ,input 0
-                           ,input "" 
+                           ,input ""
                            ,input buf_ext-system.esys-id
                            ,input v-cert-subj-name
                            ,input v-cert-issuer-name
@@ -285,7 +285,7 @@ run write-log  in p-log-handle (
     {&display-message}.
 
     catch exAppErrors as class Progress.Lang.AppError :
-      &scop my-message substitute("Ошибка при сохранении данных по пакету 1С (РОСНФЕТЬ) из ВС:&1&2&1&3", {&new-line}, parseSubObj:Msg , error-status :get-message(1)  )
+      &scop my-message substitute("Ошибка при сохранении данных по пакету &4 файл &5 1С (РОСНФЕТЬ) из ВС:&1&2&1&3", {&new-line}, parseSubObj:Msg , error-status:get-message(1), v-pack-num, file-name  )
       v-err-message = {&my-message} .
       {&display-message}.
       v-err-message = trim(parseSubObj:Msg, ";") .

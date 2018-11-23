@@ -24,7 +24,7 @@ define input parameter parParentProc as handle no-undo .
 
 define variable mForm as class gpwdbrw no-undo.
 
-compile utl/flt-condition.cls.
+// compile utl/flt-condition.cls.
 
 if ibs.th.gbl.gbl-var:g#db-num <> 0 then
 do:

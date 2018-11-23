@@ -147,7 +147,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     if v-num-params > 2 then do:
       assign
       v-extsys-list =          entry( 3, p-parameter-string )
-      v-esys-db-num = integer( entry( 4, p-parameter-string ) )
+      v-esys-db-num = integer( entry( 4, p-parameter-string ) ) /* для УБД всегда 0? */
       .
       if v-extsys-list = '' then v-extsys-list = '0'.
     end.
@@ -210,7 +210,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     run xmlischn_fill in this-procedure ( input 18, input 24).
     run xmlischn_fill in this-procedure ( input 20, input 4).
     
-
     _ext-system:
     do i = 1 to num-entries(v-extsys-list)
     on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
@@ -567,40 +566,46 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     v-espr-pack-num = tt-espcknum.tt-espr-pack-num.
                   end.
                 end.
-              do : // выбор имени файла для импорта 
-                find first temp-filelist no-error.
-                if not available temp-filelist then do:
-                  leave rcvd-pack.
-                end.
-                if not can-find(first temp-filelist where integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num))
-                and can-find(first temp-filelist where integer(entry(3, temp-filelist.file-name, "_")) > abs(v-espr-pack-num))
-                then do :
-                    find first temp-filelist where integer(entry(3, temp-filelist.file-name, "_")) > abs(v-espr-pack-num) .
-                    run write-log in p-log-handle (
-                                                  input 2
-                                                , ("Ожидается прием пакета с номером " + string(abs(v-espr-pack-num)) +
-                                                   ", а в каталоге следующий пакет с номером " + entry(3, temp-filelist.file-name, "_"))
+              do : // выбор имени файла для импорта
+
+                  if not can-find (first temp-filelist
+                                   where integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)) then do :
+                    /* отсутствует пакет с ожидаемым номером v-espr-pack-num */                 
+                    find first temp-filelist
+                         where integer(entry(3, temp-filelist.file-name, "_")) > abs(v-espr-pack-num) no-error .
+                    if available temp-filelist then do :     
+                      /* есть пакет с номером после v-espr-pack-num */                                     
+                      run write-log in p-log-handle ( input 2
+                                  , ("Ожидается прием пакета с номером " + string(abs(v-espr-pack-num)) +
+                             ", а в каталоге следующий пакет с номером " + entry(3, temp-filelist.file-name, "_"))
                                                             ) .
-                    run rul/send-ack_1c.p ( input v-sender-id
-                                          , input (abs(v-espr-pack-num) + 1)
+                      run rul/send-ack_1c.p ( input v-sender-id
+                                          , input (abs(v-espr-pack-num))
                                           ,input 1
-                                          ,input string(abs(v-espr-pack-num) + 1)
+                                          ,input string(abs(v-espr-pack-num)) /* в поле описания ошибки <error> кладём номер пропущенного пакета */
                                           ,input buf_ext-system.esys-id
                                           ,input v-cert-subj-name
                                           ,input v-cert-issuer-name
                                           ,input v-sign-fileext
                                           ,input v-pkcs
                                           ) no-error .
-                    if error-status:error then do :                                                               
-                          run write-log in p-log-handle (
-                                                  input 2
+                      if error-status:error then do :                                                               
+                          run write-log in p-log-handle ( input 2
                                                 , ( vss-workfile + {&space-char}
                                         + substitute( "Ошибка при отправке ack_ в ВС &1", buf_ext-system.esys-id) + {&new-line}
                                         + substitute( "&1", error-status:get-message(error-status:num-messages) ) + {&new-line}
                                         + substitute( "&1", return-value ) )
                                                 ) .
+                      end .
                     end .
-                end.
+                    else do :
+                      /* нет пакетов с номером после v-espr-pack-num */                                     
+                      run write-log in p-log-handle ( input 2
+                                                ,substitute(" для ВС '&1' отсутствуют пакеты, подлежащие разбору", buf_ext-system.esys-name ) ) .
+                      leave rcvd-pack.
+                    end .
+                  end . /* end_of отсутствует пакет с ожидаемым номером v-espr-pack-num */                   
+              
                 for each temp-filelist no-lock :
                     if temp-filelist.file-name begins "err_" then do :
                           delete temp-filelist .
@@ -630,7 +635,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     end.
                     delete temp-filelist.
                 end.
-              end . // end_of выбор имени файла для импорта    
+              end . // end_of выбор имени файла для импорта
               end.
               run bge/espcknum.p ( input "get":U
                             ,input buf_ext-system.esys-id
@@ -850,6 +855,10 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                       if v-err-msg > "" then do :
                         v-return-error = 1.
                         set-size(v-pack-data) = 0 .
+                        /* 19/XI-2018 во всех асках писать номер пакета в тексте ошибки.
+                           20/XI-2018 оказалось, что не номер пакета, а имя файла.
+                        */
+                        v-err-msg = substitute("Пакет &1. Файл &2. &3", v-espr-pack-num, v-full-path, v-err-msg) .
                         run write-log in p-log-handle ( input 2, input v-err-msg ).
                         // ... - и без сертификата блокируем дальнейшую работу
                         run rul/send-ack_1c.p

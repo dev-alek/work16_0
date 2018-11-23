@@ -74,16 +74,12 @@ on error undo, return error
         undo, return error .
     end.
 
-    /* 06/IX-2018 Отчет-реестр должен выгружаться только в ГБД */
-    if ibs.th.gbl.gbl-var:g#db-num = 0 then
+    /* 06/IX-2018 Отчет-реестр должен выгружаться только в ГБД
+       21/XI-2018 в версии 16.0 отчёт-реестр должен выгружаеться и в УБД
+    */
     run bge-xml-out-dir2 in this-procedure (
           output v-out-dir
         , output v-out-dirR
-        , output v-log-file-name
-    ).
-    else
-    run bge-xml-out-dir in this-procedure (
-          output v-out-dir
         , output v-log-file-name
     ).
     run bge-xml-init-ext-doc-type in this-procedure .
@@ -616,7 +612,7 @@ define variable v-is-found as logical no-undo .
             end.
             run xml-bge-write-footer in this-procedure ( input v-xml-file-name ).
 
-          if ibs.th.gbl.gbl-var:g#db-num = 0 then do :
+          do :
             assign
                 v-prefix = substitute( "r_&1&2&3&4&5&6_"
                                         , substring( string( year( buf_shift-obj.shift-date ), "9999":U ), 3, 2 )

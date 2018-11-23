@@ -176,7 +176,8 @@ on error undo, return error
                         ) .
         return error.
     end.
-    /* Список параметров должен быть для всех типов выгрузки. */
+
+    do : /* Список параметров должен быть для всех типов выгрузки. */
     run schedule-attr-value in this-procedure (
           input p-cre-db-num
         , input p-task-type
@@ -295,6 +296,7 @@ on error undo, return error
         , input v-param-list
         , output v-exp-s-f
     ).
+    end . /* end_of Список параметров для всех типов выгрузки. */
 
     /*v-gds-grp-list = entry(23,v-param-list,{&comma-char}) no-error.*/
 
@@ -382,6 +384,7 @@ on error undo, return error
     end.        /* if v-exp-doc = yes or ... */
     if v-incr = no
     then do:
+        run write-to-log ( vss-workfile + {&space-char} + " Выгрузка по расписанию. Флаг инкрементальной выгрузки выключен." ) .
         if v-exp-doc = yes
         then do:
             if v-shift-mode-on = yes
@@ -672,6 +675,7 @@ on error undo, return error
 
     end.        /* if v-incr = no  */
     else do:
+        run write-to-log ( vss-workfile + {&space-char} + " Выгрузка по расписанию. Флаг инкрементальной выгрузки включен. " ) .
         if v-exp-doc = yes
         then do:
             if v-shift-mode-on = yes

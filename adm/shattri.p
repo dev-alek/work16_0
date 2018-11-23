@@ -2756,8 +2756,8 @@ end.
       end.
 
     v-prop-code = "{&bef-attr-petrol_otkl-density}".
- &scop ptype decimal
- &scop prop-value 0
+ &scop ptype character
+ &scop prop-value ""
  &scop prop-code entry(v-ii, v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):

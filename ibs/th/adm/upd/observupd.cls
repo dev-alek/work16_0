@@ -54,16 +54,17 @@ class ibs.th.adm.upd.observupd:
   define property Msg as character no-undo
     get.
     private set.
-  &scop NumWorkBase 8
+  &scop NumWorkBase 9
   define private variable  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
             ,"cmp/18091701.df"
             ,"cmp/18091901.df"
             ,"cmp/18091902.df"
-      			,"cmp/18101701_1.df"
-      			,"cmp/18102101.df"
-				    ,"cmp/18102102.df"
+      		,"cmp/18101701_1.df"
+      		,"cmp/18102101.df"
+				,"cmp/18102102.df"
+				,"cmp/18112201.df"
             ] .
   define private variable  m-upd-list-chk      as character extent {&NumWorkBase} no-undo
     initial ["TABLE:gds-mercury"
@@ -73,7 +74,8 @@ class ibs.th.adm.upd.observupd:
             ,"TABLE:norm-loss"
             ,"FIELD:norm-loss.sec-vol1"
             ,"TABLE:tech-prol-pwd" 
-			      ,"FIELD:c-norm-loss.sec-vol1"
+			   ,"FIELD:c-norm-loss.sec-vol1"
+			   ,"FIELD:tech-prol-pwd.f-cash-num"
             ] .
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
     initial ""  

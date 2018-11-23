@@ -79,7 +79,7 @@ define variable v-InfoSection          as class     InfoSection       no-undo .
 define variable iNum                   as integer   no-undo .
 
 define variable v-otkl-fact-volue      as decimal   no-undo .
-define variable v-otkl-density         as decimal   no-undo .
+define variable v-otkl-density         as decimal   no-undo FORMAT "->>,>>9.999":U .
 define variable v-otkl-temp            as decimal   no-undo .
 define variable v-otkl-water           as decimal   no-undo .
     
@@ -343,8 +343,11 @@ for each thbjattr_thbj-attr :
   if thbjattr_thbj-attr.prop-code = {&attr-petrol_otkl-temp} then assign v-otkl-temp = thbjattr_thbj-attr.property-value-decimal .
 end.
 for each thbjattr_thbj-attr :    
-  if thbjattr_thbj-attr.prop-code = {&attr-petrol_otkl-density} then assign v-otkl-density = thbjattr_thbj-attr.property-value-decimal .
+  if thbjattr_thbj-attr.prop-code = {&attr-petrol_otkl-density} then assign v-otkl-density = decimal(thbjattr_thbj-attr.property-value-character) .
 end.
+
+/*если параметры не заданы, процесс не запускать*/
+if v-otkl-fact-volue = 0 and v-otkl-water = 0 and v-otkl-temp = 0 and (v-otkl-density = 0 or v-otkl-density = ?) then return no-apply .
 
 for each temp-rvs no-lock:
   if v-otkl-fact-volue < abs(abs(temp-rvs.qnty1 - temp-rvs.qnty4) - abs(temp-rvs.qnty2 - temp-rvs.qnty3)) then 
@@ -378,7 +381,7 @@ for each temp-rvs no-lock:
     temp-rvs.delta-density = (temp-rvs.density1 - temp-rvs.density2)
     temp-rvs.delta-temp    = (temp-rvs.temp1 - temp-rvs.temp2)
     temp-rvs.delta-water   = (temp-rvs.water1 - temp-rvs.water2)
-    temp-rvs.list-otkl     = "Объем: " + string (v-otkl-fact-volue) + ";" + "Плотность: " + string (v-otkl-density) + ";" + "Температура: " + string (v-otkl-temp) + ";" + "Вода: " + string(v-otkl-water) .    
+    temp-rvs.list-otkl     = "Объем: " + string (v-otkl-fact-volue) + ";" + "Плотность: " + string (v-otkl-density,"9.999") + ";" + "Температура: " + string (v-otkl-temp) + ";" + "Вода: " + string(v-otkl-water) .    
 /*  end.*/
 end.  
 
@@ -389,12 +392,6 @@ define variable v-time-min  as integer no-undo .
 
 for each buf_temp-rvs no-lock where buf_temp-rvs.rvs-error = yes : 
 
-  run sys-time_get-comp-user-name in this-procedure
-    (output v-computer-name
-    ,output v-computer-login-name
-    ,output v-computer-process-pid
-    ) .
-    
   run cur-time in this-procedure ( output v-date, output v-time).
   v-time-hour = integer(v-time) / 3600.
   v-time-min  = (integer(v-time) - (v-time-hour * 3600)) / 60 .
@@ -423,6 +420,7 @@ for each buf_temp-rvs no-lock where buf_temp-rvs.rvs-error = yes :
     "DivergenceDensity=" + string(buf_temp-rvs.delta-density) + {&delim-par} +
     "DivergenceTemperatura=" + string(buf_temp-rvs.delta-temp) + {&delim-par} +
     "DivergenceLevelWater=" + string(buf_temp-rvs.delta-water) + {&delim-par} +            
+    "NumberRevise=" + string(ub.rvs-doc.rvs-code) + {&delim-par} +
     "PermissibleDivergence="   + string(buf_temp-rvs.list-otkl) no-error.
 
         run trg/userlog.p (
