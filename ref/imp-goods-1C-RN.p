@@ -740,6 +740,11 @@ define variable v-barcode-list  as longchar  no-undo .
     RUN gds-attr-delete (v-nbc, {&attr-mercur_FGIS}, output v-attr-del).     
   end.
   
+  if p-GdsObj:pay-flag ne ?
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-item-matter-mark}, string(p-GdsObj:pay-flag)).  
+  end.
+  
   if p-GdsObj:enbl-exc = 1
   then do :
     RUN gds-attr-write (v-nbc, {&attr-ban-bonus}, "yes").  
