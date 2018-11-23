@@ -55,6 +55,9 @@ define variable vss-description as character no-undo init "Экран настроек работы
 { gbl/color.i    }
 { gbl/twowin.i   }
 { str/trdcalib.i }
+{ gbl/cur-time.i }
+{ gbl/sys-time.i }
+{ cmp/trg-def.i  }
 
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 
@@ -1117,6 +1120,23 @@ define variable wh                as widget-handle  no-undo .
 define variable fh                as widget-handle  no-undo .
 define variable v-same            as logical        no-undo .
 
+define variable v-change-temp     as logical        no-undo .
+define variable v-change-volume   as logical        no-undo .
+define variable v-change-density  as logical        no-undo .
+define variable v-change-water    as logical        no-undo .
+define variable v-change-param    as character      no-undo .
+define variable v-vid-param       as longchar       no-undo .
+define variable v-vid-action           as integer   no-undo .
+
+define variable v-computer-name        as character no-undo .
+define variable v-computer-tcp-name    as character no-undo .
+define variable v-computer-ip-addr     as character no-undo .
+define variable v-computer-login-name  as character no-undo .
+define variable v-computer-process-pid as integer   no-undo .
+
+define variable v-date                 as character no-undo .
+define variable v-time                 as character no-undo .
+    
 do
 on error undo, return error return-value
 :
@@ -1224,9 +1244,8 @@ hide dop-info in frame {&frame-name} .
     view-as alert-box error .
     undo, return error .
   end.
-
-
-  run thbjattr_set-section in this-procedure
+  
+    run thbjattr_set-section in this-procedure
     ( input p-obj-type
     , input p-obj-code
     , input {&attr-petrol}
@@ -1239,7 +1258,116 @@ hide dop-info in frame {&frame-name} .
     view-as alert-box.
     undo, return error.
   end.
+  
+  
+  for each temp-thbj-attr no-lock:
+    v-change-param = "" .
+    case temp-thbj-attr.prop-code:
+      when {&attr-petrol_otkl-fact-volue} then 
+        do: 
+          if temp-thbj-attr.property-value-decimal <> otkl-fact-volue then 
+          do:
+            v-change-param = "IDParam="  + "otkl-fact-volume" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение фактического объема" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-decimal) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-fact-volue) no-error.
+          end.  
+        end.
+      when {&attr-petrol_otkl-temp} then 
+        do: 
+          if temp-thbj-attr.property-value-decimal <> otkl-temp then 
+          do:
+            v-change-param = "IDParam="  + "otkl-temp" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение температуры" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-decimal) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-temp) no-error.
+      
+          end.  
+        end.          
+      when {&attr-petrol_otkl-density} then 
+        do: 
+          if temp-thbj-attr.property-value-character <> otkl-density then 
+          do:
+            v-change-param = "IDParam="  + "otkl-density" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение плотности" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-character) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-density) no-error.
+          end.  
+        end.          
+      when {&attr-petrol_otkl-water} then 
+        do: 
+          if temp-thbj-attr.property-value-decimal <> otkl-water then 
+          do:
+            v-change-param = "IDParam="  + "otkl-water" + {&delim-par} +
+              "NameParam=" + "Макс.допустимое значение воды" + {&delim-par} +
+              "ParamBefore=" + string(temp-thbj-attr.property-value-decimal) + {&delim-par} + 
+              "ParamAfter=" + string(otkl-water) no-error.
+          end.                             
+        end.
+    end.
+   
+    if v-change-param <> "" then 
+    do:  
+    
+      define variable v-time-hour    as integer   no-undo .
+      define variable v-time-min     as integer   no-undo .
+      define variable v-nik          as character no-undo .
+      define variable v-name         as character no-undo .
 
+      define variable v-cntxt-userid as character no-undo . /* текущий пользователь  */
+   
+      run get-userid in parparentproc ( output v-cntxt-userid) .
+      run get-userid in parparentproc ( output v-cntxt-userid) .
+  
+      find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error .
+      if available (ub.user-account) then 
+      do:
+        assign
+          v-nik  = ub.user-account.nik
+          v-name = ub.user-account.last-name + " " + ub.user-account.first-name 
+          .
+      end.  
+  
+      run cur-time in this-procedure ( output v-date, output v-time).
+      v-time-hour = integer(v-time) / 3600.
+      v-time-min  = (integer(v-time) - (v-time-hour * 3600)) / 60 .
+  
+      run sys-time_get-comp-user-name in this-procedure
+        (output v-computer-name
+        ,output v-computer-login-name
+        ,output v-computer-process-pid
+        ) .
+    
+      v-vid-action = 66 .
+  
+      { str/initiator.i }
+  
+  
+      v-vid-param = 
+        "UniqueIdRecordARM=" + v-initiator + {&delim-par} +
+        "UserName=" + v-name + {&delim-par} +
+        "UserNik=" + v-nik + {&delim-par} 
+        "NumShop=" + string(temp-thbj-attr.obj-code) + {&delim-par} + v-change-param 
+        no-error.
+
+      run trg/userlog.p (
+        input {&nwsdochs_action_update}
+        , input {&table_thbj-attr}
+        , input ( buffer temp-thbj-attr :handle )
+        , input v-vid-action
+        , input v-vid-param
+        ) no-error.
+      if error-status :error
+        then
+      do:
+        return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+          , {&new-line}
+          , vss-workfile
+          , return-value
+          , error-status :get-message ( 1 ) ).
+      end.
+    end.
+  end.
 end.
 END PROCEDURE.
 
