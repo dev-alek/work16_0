@@ -1087,6 +1087,13 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define rule-stat
 { cmp/cr-prep.i 1 stat-on-cashiers           "статистика-по-кассирам"                    " " stat-on-cashiers           }
 { cmp/cr-prep.i 1 waybill-clear-list         "убр-накл-из-списка"                        " " waybill-clear-list         }
 
+{ cmp/cr-prep.i 1 cash                       "Наличный"                                  " " cash                       }
+{ cmp/cr-prep.i 1 electronic                 "Электронный"                               " " electronic                 }
+{ cmp/cr-prep.i 1 prepayment                 "Аванс"                                     " " prepayment                 }
+{ cmp/cr-prep.i 1 credit                     "Кредит"                                    " " credit                     }
+{ cmp/cr-prep.i 1 counter_presentation       "Встречное представление"                   " " counter_presentation       }
+{ cmp/cr-prep.i 1 non-fiscal_payment         "Нефискальный платеж"                       " " non-fiscal_payment         }
+
 { cmp/cr-prep.i 1 shift                      "смена"                                     " " shift                      }
 { cmp/cr-prep.i 1 regular                    "штатный-режим"                             " " regular-mode               }
 { cmp/cr-prep.i 1 super                      "режим-менеджера"                           " " supervisor                 }
