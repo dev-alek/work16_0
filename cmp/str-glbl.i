@@ -5150,7 +5150,7 @@ end.
 &global-define stop-status-name entry (lookup (~{&stop-status-code}, '1,2,3,4':U) + 1, ',':U + 'стоп-карта,стоп-клиент,стоп-карта;стоп-клиент,удал-карта':U)
 &global-define bef-all-docs-p-ord 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98
 &global-define all-docs-p-ord '{&bef-all-docs-p-ord}':U
-&global-define bef-all-docs-p-siz 1,1,6,2,11,8,8,5,3,1,20,10,1,15,15,1,15,15,15,15,15,15,15,11,10,5,1,15,4,5,10,8,16,8,8,8,9,9,9,9,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+&global-define bef-all-docs-p-siz 1,1,6,2,14,8,8,5,3,1,20,10,1,15,15,1,15,15,15,15,15,15,15,11,10,5,1,15,4,5,10,8,16,8,8,8,9,9,9,9,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 &global-define all-docs-p-siz '{&bef-all-docs-p-siz}':U
 &global-define bef-all-docs-p-vis trim(fill('yes,',40) + fill('no,',58) , ',')
 &global-define all-docs-p-vis '{&bef-all-docs-p-vis}':U
@@ -6846,7 +6846,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 8365c546c285, 1619, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 596aa7f61186, 1620, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -8204,9 +8204,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,mercur,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,cd-type-autotank,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: b9313ad7f18a, 1618, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 8365c546c285, 1619, rls ':U
-&global-define str-glbl5_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 8365c546c285, 1619, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
+&global-define str-glbl5_vss-revision 'Revision: f8efd18195cf, 1635, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
 &endif
