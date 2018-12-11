@@ -1177,6 +1177,7 @@ define input parameter parvat-pc        like ub.parts.vat-pc      no-undo.
     parvat-type = "ТИП_НАЛОГА,КОД_НАКЛАДНОЙ"
 */
 define variable v-doc-code like ub.trn-doc.doc-code no-undo.
+define variable v-has-old-vat as logical no-undo .
 
 define buffer bf_trn-doc              for ub.trn-doc.
 define buffer bf_goods             for ub.goods.
@@ -1309,20 +1310,6 @@ do on error undo, return error return-value :
       end.
     END.
 
-    if bf_contract-specif.VAT-pc <> ?  then do:
-       if bf_contract-specif.VAT-pc <> round ( parvat-pc, 1 ) then do:
-        return error substitute ("В спецификации к договору &1 по фирме &2 в спецификации по товару &3 &4 &5 указан НДС &6 %. Вы указали в накладной НДС &7 %.",
-                                bf_contract.contract-prn-code,
-                                bf_contract.host-code,
-                                bf_goods.artic,
-                                bf_goods.prod-type,
-                                bf_goods.prod-code,
-                                bf_contract-specif.vat-pc,
-                                parvat-pc).
-
-       end.
-    end.
-
     if bf_contract-specif.VAT-type <> ?  and bf_contract-specif.VAT-type <> "" then do:
        if bf_contract-specif.VAT-type <> parvat-type then do:
         return error substitute ("В спецификации к договору &1 по фирме &2 в спецификации по товару &3 &4 &5 указан тип НДС &6. Вы указали в накладной тип НДС &7 .",
@@ -1335,10 +1322,57 @@ do on error undo, return error return-value :
                                 parvat-type).
        end.
     end.
+
+    /* 01/XI-2018  С связи со сменой НДС с 18 на 20% с 1 января 2019 года требуется
+                   доработать блок контроля соответствия данных в приходных документах данным в спецификации.
+       если делать универсально, то надо если НДС отличаются,
+       проверить нет ли такого значения НДС в истории ставки товара.
+       Т.е. у товара ставка 20, в спецификации 18,
+       лезем в справочник налогов, видим, что у ставки с 20% было когда-то 18
+       и считаем, что проверка прошла успешно. */
+    if bf_contract-specif.VAT-pc <> ?  then do:
+       if bf_contract-specif.VAT-pc <> round ( parvat-pc, 1 ) then do:
+         run lib-trn3_vatPrevValue in this-procedure (parvat-pc, bf_contract-specif.VAT-pc, output v-has-old-vat) .
+         if not v-has-old-vat then
+         return error substitute ("В спецификации к договору &1 по фирме &2 в спецификации по товару &3 &4 &5 указан НДС &6 %. Вы указали в накладной НДС &7 %.",
+                                bf_contract.contract-prn-code,
+                                bf_contract.host-code,
+                                bf_goods.artic,
+                                bf_goods.prod-type,
+                                bf_goods.prod-code,
+                                bf_contract-specif.vat-pc,
+                                parvat-pc).
+       end.
+    end.
+
   end.
 end.
 end procedure.
 
+procedure lib-trn3_vatPrevValue private :
+/* Проверить нет ли такого значения НДС в истории ставки товара.
+   Найти tax-rate-value со значением, равным ндс из накладной,
+   и найти tax-rate-value, с тем же rate-code, и со значением ндс из спецификации:
+   если обе записи найдены - вернуть true.
+   Т.е. проверить, что оба значения НДС принадлежат одной и той же ставке налога.
+*/
+define input  parameter p-vat-pc1    as decimal no-undo .
+define input  parameter p-vat-pc2    as decimal no-undo .
+define output parameter p-is-present as logical initial false no-undo .
+define buffer buf_tax-rate-value for ub.tax-rate-value .
+
+  find first buf_tax-rate-value no-lock
+       where buf_tax-rate-value.tax-code   = {&bef-vat-tax-code}
+         and buf_tax-rate-value.rate-value = p-vat-pc1 no-error .
+  if available buf_tax-rate-value then do :
+    p-is-present = can-find (first tax-rate-value
+                             where tax-rate-value.tax-code   = buf_tax-rate-value.tax-code
+                               and tax-rate-value.rate-code  = buf_tax-rate-value.rate-code
+                               and tax-rate-value.rate-value = p-vat-pc2) .
+  end .
+  else p-is-present = false . /* дополнительно: отказать для произвольных значений налогов */
+  
+end procedure .
 
 /* =========================================================================
 Может ли быть в документе налог с продаж
