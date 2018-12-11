@@ -86,7 +86,7 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
-  define property TankTemp as decimal no-undo
+  define property TankTemp as decimal no-undo init ?
     get.
     set.
 
@@ -106,7 +106,7 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
-  define property ABTarir as decimal no-undo
+  define property ABTarir as decimal no-undo init ?
     get.
     set.
 
@@ -142,7 +142,7 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
-  define property DensTemp as decimal no-undo
+  define property DensTemp as decimal no-undo init ?
     get.
     set.
 

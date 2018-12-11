@@ -2531,6 +2531,20 @@ do on error undo main-block, leave main-block :
      find first bf_sysconf where bf_sysconf.host-code = t-doc.host-code no-lock no-error .
    end.
 
+  if is-copy
+  then do:
+    for first src-doc where recid (src-doc) = docrec-src no-lock:
+      { str/tdat-val.i                                    
+         src-doc.doc-code
+         {&trdcattr-is-fuel}
+         varattr 
+         vartype 
+         no-error}
+      if  varattr = "yes"
+        then is-fuel = true.
+    end.
+  end.
+
    run UI-on in this-procedure ( input "enable" ) no-error.
 
    if error-status :error then do:
@@ -2619,7 +2633,7 @@ ELSE
         .
   if is-copy
   then do:
-    for first src-doc where recid (src-doc) = docrec-src no-lock.
+    for first src-doc where recid (src-doc) = docrec-src no-lock:
       t-doc.cli-code = src-doc.cli-code.
       t-doc.cli-type = src-doc.cli-type.
       t-doc.cli-code:screen-value in frame {&frame-name} = string (src-doc.cli-code).
@@ -2661,19 +2675,6 @@ ELSE
         t-doc.exch-rate     = src-doc.exch-rate
         t-doc.exch-scale    = src-doc.exch-scale
       .
-      
-      { str/tdat-val.i                                    
-         src-doc.doc-code
-         {&trdcattr-is-fuel}
-         varattr 
-         vartype
-         no-error } 
-      { str/tdat-wrt.i                                    
-         t-doc.doc-code
-         {&trdcattr-is-fuel}
-         varattr
-         no-error 
-      }  
       
       run fill-mol.
       

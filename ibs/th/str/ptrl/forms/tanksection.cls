@@ -242,6 +242,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   method private void buttonCalcWeight_Click( input sender as System.Object, input e as System.EventArgs ):
     
     SetInfoSec ().
+    if not CheckSec()
+    then do:
+      SetForcus().
+      return.
+    end.
     infoSecsObj:GetInfoSectionProp(idSecTabPage).
     infoSecsObj:CalcWeight().
     SetControls ().
@@ -1126,7 +1131,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxCliQnty:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxCliQnty:TabIndex = 4.
     this-object:maskedTextBoxCliQnty:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
-    this-object:maskedTextBoxCliQnty:Leave:Subscribe(this-object:CalcDoc).
+/*    this-object:maskedTextBoxCliQnty:Leave:Subscribe(this-object:CalcDoc).*/
     /*  */
     /* maskedTextBoxDiameter */
     /*  */
@@ -1144,7 +1149,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDocQnty:Size = new System.Drawing.Size(97, 20).
     this-object:maskedTextBoxDocQnty:TabIndex = 6.
     this-object:maskedTextBoxDocQnty:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
-    this-object:maskedTextBoxDocQnty:Leave:Subscribe(this-object:CalcDoc).
+/*    this-object:maskedTextBoxDocQnty:Leave:Subscribe(this-object:CalcDoc).*/
     /*  */
     /* maskedTextBoxCarVol */
     /*  */
@@ -1172,7 +1177,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDocDens:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxDocDens:TabIndex = 5.
     this-object:maskedTextBoxDocDens:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_1_4).
-    this-object:maskedTextBoxDocDens:Leave:Subscribe(this-object:CalcDoc).
+/*    this-object:maskedTextBoxDocDens:Leave:Subscribe(this-object:CalcDoc).*/
     /*  */
     /* groupBox7 */
     /*  */
@@ -1661,25 +1666,26 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     def var ii as int no-undo.
     
     def var v-maskTextBox as System.Windows.Forms.MaskedTextBox no-undo.
+    
+    v-maskTextBox = cast(sender, System.Windows.Forms.MaskedTextBox).
+    
+    v-maskTextBox:Text = left-trim (v-maskTextBox:Text, "0").
+    
     infoSecsObj:GetInfoSectionProp(idSecTabPage).
     infoSecsObj:InfoSectionCurr:UserMode = true.
-    v-maskTextBox = cast(sender, System.Windows.Forms.MaskedTextBox).
+
     infoSecsObj:InfoSectionCurr:SectionName = maskedTextBoxSecName:Text.
     
-    do ii = 1 to infoSecsObj:SectionNum:
-      infoSecsObj:GetInfoSectionProp(ii).
-      if infoSecsObj:idSecCurr = idSecTabPage
-        then next.
-      if  trim (v-maskTextBox:Text) <> "" and infoSecsObj:InfoSectionCurr:SectionName = v-maskTextBox:Text
-      then do:
-        message "Такой номер уже есть." view-as alert-box.
-        v-maskTextBox:Text = "".
-        infoSecsObj:GetInfoSectionProp(idSecTabPage).
-        return.
-      end. 
+    
+    if not infoSecsObj:CheckNameSec(idSecTabPage, v-maskTextBox:Text)
+    then do:
+      message "Такой номер уже есть." view-as alert-box title "Сообщение".
+      v-maskTextBox:Text = "".
+      v-maskTextBox:Focus().
+      return.
     end.
     
-    
+    infoSecsObj:GetInfoSectionProp(idSecTabPage).    
     maskedTextBoxDiameter:Text = infoSecsObj:InfoSectionCurr:Diameter.
     if infoSecsObj:DocQntyInput
       then maskedTextBoxDocQnty:Text = format_round_3(infoSecsObj:InfoSectionCurr:DocQnty).
@@ -1700,7 +1706,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxCarVol:Text          = format_round_3 (infoSecObj:CarVol).
     this-object:maskedTextBoxDocDens:Text         = format_dens (infoSecObj:DocDensity).
     this-object:maskedTextBoxDocQnty:Text         = format_round_3 (infoSecObj:DocQnty).
-    this-object:maskedTextBoxTTNTemp:Text         = format_temper (infoSecObj:TTNTemp).
+    this-object:maskedTextBoxTTNTemp:Text         = if infoSecObj:TTNTemp = ? then "" else format_temper (infoSecObj:TTNTemp).
     this-object:maskedTextBoxAccShip:Text         = format_round_3 (infoSecObj:AccShip).
     this-object:maskedTextBoxDiameter:Text        = (infoSecObj:Diameter).
     this-object:maskedTextBoxCliQnty:Text         = format_round_3 (infoSecObj:CliQnty).
@@ -1715,8 +1721,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxNaturLoss:Text       = format_round_3 (infoSecObj:NaturalLoss).
     this-object:maskedTextBoxTPNorm:Text          = format_int (integer (infoSecObj:TPNorm)).
     this-object:maskedTextBoxTankWater:Text       = format_round_3 (infoSecObj:TankWater).
-    this-object:maskedTextBoxTankTemp:Text        = format_temper (infoSecObj:TankTemp).
-    this-object:maskedTextBoxDensTemp:Text        = format_temper (infoSecObj:DensTemp).
+    this-object:maskedTextBoxTankTemp:Text        = if infoSecObj:TankTemp = ? then "" else format_temper (infoSecObj:TankTemp).
+    this-object:maskedTextBoxDensTemp:Text        = if infoSecObj:DensTemp = ? then "" else format_temper (infoSecObj:DensTemp).
     this-object:maskedTextBoxListTank:Text        = (infoSecObj:ListTank).
     this-object:maskedTextBoxPlaceSi:Text         = format_int (infoSecObj:PlaceSi).
     this-object:maskedTextBoxNumPlot:Text         = (infoSecObj:NumPlotn).
@@ -2244,12 +2250,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecsObj:GetInfoSectionProp(idSecTabPage).
     
     infoSecObj = infoSecsObj:InfoSectionCurr.
-        
+
     infoSecObj:SectionName = (this-object:maskedTextBoxSecName:Text).                        
     infoSecObj:CarVol          = decimal(this-object:maskedTextBoxCarVol:Text).          
     infoSecObj:DocDensity      = decimal(this-object:maskedTextBoxDocDens:Text).         
     infoSecObj:DocQnty         = decimal(this-object:maskedTextBoxDocQnty:Text).         
-    infoSecObj:TTNTemp         = decimal(this-object:maskedTextBoxTTNTemp:Text).         
+    infoSecObj:TTNTemp         = (if trim (this-object:maskedTextBoxTTNTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxTTNTemp:Text) ).         
     infoSecObj:AccShip         = decimal(this-object:maskedTextBoxAccShip:Text).         
     infoSecObj:Diameter        = (this-object:maskedTextBoxDiameter:Text).        
     infoSecObj:CliQnty         = decimal(this-object:maskedTextBoxCliQnty:Text).         
@@ -2257,14 +2263,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecObj:NormDoc         = (this-object:maskedTextBoxNormDoc:Text).         
     infoSecObj:CertifFuel      = (this-object:maskedTextBoxCertifFuel:Text).      
     infoSecObj:ValidityCertif  = (this-object:maskedTextBoxValidityCertif:Text).  
-    infoSecObj:ABTarir         = decimal(this-object:maskedTextBoxABTArir:Text).         
+    infoSecObj:ABTarir         = if trim (this-object:maskedTextBoxABTArir:Text) = "" then ? else decimal(this-object:maskedTextBoxABTArir:Text).         
     infoSecObj:Mouth           = decimal(this-object:maskedTextBoxMouth:Text).           
     infoSecObj:TankVol         = decimal(this-object:maskedTextBoxTankVol:Text).         
     infoSecObj:TankDensity     = decimal(this-object:maskedTextBoxTankDens:Text).        
     infoSecObj:NaturalLoss     = decimal(this-object:maskedTextBoxNaturLoss:Text).       
     infoSecObj:TankWater       = decimal(this-object:maskedTextBoxTankWater:Text).       
-    infoSecObj:TankTemp        = decimal(this-object:maskedTextBoxTankTemp:Text).        
-    infoSecObj:DensTemp        = decimal(this-object:maskedTextBoxDensTemp:Text).        
+    infoSecObj:TankTemp        = (if trim (this-object:maskedTextBoxTankTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxTankTemp:Text) ).        
+    infoSecObj:DensTemp        = (if trim (this-object:maskedTextBoxDensTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxDensTemp:Text) ).        
     infoSecObj:ListTank        = (this-object:maskedTextBoxListTank:Text).        
     infoSecObj:PlaceSi         = decimal(this-object:maskedTextBoxPlaceSi:Text).         
     infoSecObj:NumPlotn        = (this-object:maskedTextBoxNumPlot:Text).         
@@ -2281,7 +2287,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecObj:DateStart       = date ((this-object:dateTimePickerDateStart:Text)).
     infoSecObj:DateEnd         = date ((this-object:dateTimePickerDateEnd:Text)).
     infoSecObj:TimeStart       = GetTimeInt((this-object:dateTimePickerTimeStart:Text)).
-    infoSecObj:TimeEnd         = GetTimeInt((this-object:dateTimePickerTimeStart:Text)).
+    infoSecObj:TimeEnd         = GetTimeInt((this-object:dateTimePickerTimeEnd:Text)).
     infoSecObj:DatePovPlotn    = date ((this-object:dateTimePickerDatePovPlotn:Text)).
     
     if num-entries (this-object:TimeProb:Text, ":") >= 2
@@ -2578,6 +2584,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       
     end.
     else do:
+
+      if trim (maskedTextBoxSecName:Text) = "" or int (maskedTextBoxSecName:Text) = 0
+      then do:
+        ShowMsg( v-str + "номер секции" ).
+        setFocusMaskTextDoc = maskedTextBoxSecName.
+        return false.
+      end.
+      
+      
       v-dec = decimal (maskedTextBoxDocQnty:Text) no-error.
       if (error-status:error or v-dec = 0) and infoSecsObj:DocQntyInput
       then do:

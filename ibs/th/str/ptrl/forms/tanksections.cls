@@ -92,7 +92,6 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
       this-object:tabPageArr[infoSecsObj:idSecCurr]:Text = string (infoSecsObj:InfoSectionCurr:SectionName).
       tankSectionControl[infoSecsObj:idSecCurr] = new tanksection(infoSecsObj, infoSecsObj:idSecCurr, this-object).
       this-object:tabPageArr[infoSecsObj:idSecCurr]:Controls:Add(tankSectionControl[infoSecsObj:idSecCurr]).
-
     end.
 
     SetDataSum ().
@@ -170,8 +169,10 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabControl:Name = "tabControl".
     this-object:tabControl:SelectedIndex = 0.
     this-object:tabControl:Size = new System.Drawing.Size(710, 745).
-/*    this-object:tabControl:TabIndex = 0.*/
-    this-object:tabControl:Click:Subscribe(this-object:tabControl_SelIndChg).
+    if (infoSecsObj:Mode = "»«Ã≈Õ≈Õ»≈" or infoSecsObj:Mode = "ƒŒ¡¿¬À≈Õ»≈")
+      then do:
+        this-object:tabControl:Deselecting:Subscribe(tabControlCancelEvntHndl).
+      end.
 
     /*  */
     /* imageList */
@@ -297,6 +298,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
 /*    this-object:tabPageSum:TabIndex = 0.*/
     this-object:tabPageSum:Text = "»ÚÓ„Ó".
     this-object:tabPageSum:UseVisualStyleBackColor = true.
+    this-object:tabPageSum:Enter:Subscribe(this-object:tabPageSum_Enter).
     /*  */
     /* tankSectionSumControl */
     /*  */
@@ -314,7 +316,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageAdd:Size = new System.Drawing.Size(702, 718).
 /*    this-object:tabPageAdd:TabIndex = 1.*/
     this-object:tabPageAdd:Text = "+".
-    this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Click).
+    this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Enter).
     this-object:tabPageAdd:UseVisualStyleBackColor = true.
     /*  */
     /* tanksections */
@@ -360,48 +362,35 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
   end.
 
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
-  method private void tabControl_SelIndChg( input sender as System.Object, input e as System.EventArgs ):
-    def var ii as int no-undo.
-
-    def var v-idSel as int no-undo.
-    def var tabsel as TabPage no-undo.
+  method private void tabControlCancelEvntHndl( input sender as System.Object, input e as System.Windows.Forms.TabControlCancelEventArgs ):
     
-    tabsel = tabControl:TabPages [prevTabIndex].
-
-    if infoSecsObj:Mode = "œ–Œ—ÃŒ“–"
+    def var ii as int no-undo.
+    def var tabThis as TabPage no-undo.
+    def var tbcontrol as TabControl no-undo.
+    
+    tbcontrol = cast(sender, tabControl).
+    if tabControl:SelectedIndex < 0
       then return.
     
-    int (tabsel:Name) no-error.
-        
-    if not error-status:error and not tankSectionControl[integer (tabsel:Name)]:CheckSec() 
+    if tabControl:TabPages[tabControl:SelectedIndex] = tabPageSum or tabControl:TabPages[tabControl:SelectedIndex] = tabPageAdd
+      then return.
+     
+    tabThis = tabControl:TabPages[tabControl:SelectedIndex].
+    int (tabThis:Name) no-error.
+    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec() 
     then do:
-      tabControl:SelectedIndex = prevTabIndex.
-      tankSectionControl[integer (tabsel:Name)]:SetForcus ().
+      tankSectionControl[integer (tabThis:Name)]:SetForcus ().
+      tbcontrol = cast(sender, tabControl).
+      e:Cancel = true.
       return.
     end. 
-
-    do ii = 1 to infoSecsObj:SectionNum:
-      tankSectionControl[ii]:SetInfoSec().  
-    end.
-    tankSectionSumControl:SetData(infoSecsObj).
-    prevTabIndex = tabControl:SelectedIndex.
-
-    return.
-
-  end method.
-
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
-  @VisualDesigner.
-  method private void toolSBtn_Add_Click( input sender as System.Object, input e as System.EventArgs ):
-
+    
     return.
 
   end method.
@@ -463,6 +452,9 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
     do ii = 1 to infoSecsObj:SectionNum:
       
+      if ii <> v-idSel 
+        then tankSectionControl[ii]:SetInfoSec().
+            
       this-object:tabControl:Controls:Remove (this-object:tabPageArr[ii]).
       delete object this-object:tabPageArr[ii].
       
@@ -484,13 +476,21 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
   end. 
 
-
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
-  method private void tabPageAdd_Click( input sender as System.Object, input e as System.EventArgs ):
+  method private void tabPageSum_Enter( input sender as System.Object, input e as System.EventArgs ):
+    infoSecsObj:CalculateTotal().
+    SetDataSum ().    
+  end.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void tabPageAdd_Enter( input sender as System.Object, input e as System.EventArgs ):
     
     if infoSecsObj:SectionNum >= maxSec
     then do:
@@ -504,7 +504,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
     this-object:tabPageArr[infoSecsObj:idSecCurr] = this-object:tabPageAdd.
     this-object:tabPageArr[infoSecsObj:idSecCurr]:Name = string (infoSecsObj:idSecCurr).
-    this-object:tabPageArr[infoSecsObj:idSecCurr]:Enter:Unsubscribe(this-object:tabPageAdd_Click).
+    this-object:tabPageArr[infoSecsObj:idSecCurr]:Enter:Unsubscribe(this-object:tabPageAdd_Enter).
 
     this-object:tabPageAdd = new System.Windows.Forms.TabPage().
         
@@ -514,7 +514,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageAdd:Size = new System.Drawing.Size(702, 718).
     this-object:tabPageAdd:TabIndex = 1.
     this-object:tabPageAdd:Text = "+".
-    this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Click).
+    this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Enter).
     this-object:tabPageAdd:UseVisualStyleBackColor = true.
     
     this-object:tabPageArr[infoSecsObj:idSecCurr]:Text = string (infoSecsObj:InfoSectionCurr:SectionName).
