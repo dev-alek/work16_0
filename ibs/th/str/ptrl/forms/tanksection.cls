@@ -2342,7 +2342,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
   method private char format_dens (arg as decimal):
     def var str as char no-undo.
-    str = trim (string (round(arg, 4), "9.9999")).
+    str = trim (string (round(arg, 4), "9.9999")) no-error.
+    if error-status:error
+      then return "".
     return str.
   end.
   
