@@ -293,6 +293,8 @@ define variable v-data-type                         as   character              
 define variable parext-doc-mode                     as   character                     no-undo.
 define variable chk-doc-option                      as   character                     no-undo.
 define variable v-handl-tt                          as   handle                        no-undo.
+define variable is-petrol                           as   logical                       no-undo.
+define variable is-pieces                           as   logical                       no-undo.
 
 DEFINE VARIABLE f-acc as decimal format "->>>,>>>,>>9.999":U
      LABEL "Погр. изм., кг " 
@@ -1237,22 +1239,22 @@ assign
   pardoc-mode     = entry( 1, pardoc-mode, '{&delim-flt}':U )
 .
 
-{ gbl/conf-rd.i  "'is-ptrl'" "''" "''" 0 "''" "''" "''" no v-is-ptrl v-data-type no-error }
-if error-status :error or v-data-type <> "L" or lookup( v-is-ptrl, "yes,no" ) = 0 then do:
+/*{ gbl/conf-rd.i  "'is-ptrl'" "''" "''" 0 "''" "''" "''" no v-is-ptrl v-data-type no-error }
+if error-status :error or v-data-type <> "L" or lookup( v-is-ptrl, "yes,no" ) = 0 or not is-petrol then do:
   assign
     v-is-ptrl = "no"
   .
-end.
+end.*/
 
 { gbl/conf-rd.i  "'inv-prsr'" "''" "''" 0 "''" "''" "''" no v-inv-prsr v-data-type no-error }
 if error-status :error then v-inv-prsr = "no" .
 ub.doc-line.inv-peresort:visible in browse {&browse-name}  = (if v-inv-prsr = "yes" then true else false ) .
 
-assign
+/*assign
   varwas-qnty-kg  :visible in browse {&browse-name} = ( v-is-ptrl = "yes" )
   varare-qnty-kg  :visible in browse {&browse-name} = ( v-is-ptrl = "yes" )
   vardiff-qnty-kg :visible in browse {&browse-name} = ( v-is-ptrl = "yes" )
-.
+.*/
 
 { gbl/srt-clmn.i
     &BROWSE-NAME          = {&BROWSE-NAME}
@@ -1809,7 +1811,26 @@ define variable p-value as character no-undo.
 define variable p-type  as character no-undo.
 
 
+  find first ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code no-error.
+  if available (ub.doc-line)
+  then do:
+    { str/is-petrl.i
+        ub.doc-line.artic
+        ub.doc-line.prod-type
+        ub.doc-line.prod-code
+        is-petrol
+        is-pieces
+        no-error
+    }
+  end.
+
   /* включение пользовательского интерфейса */
+  assign
+    varwas-qnty-kg  :visible in browse {&browse-name} = ( is-petrol )
+    varare-qnty-kg  :visible in browse {&browse-name} = ( is-petrol )
+    vardiff-qnty-kg :visible in browse {&browse-name} = ( is-petrol )
+  .
+  
   disable all with frame {&FRAME-NAME}.
 
   display
