@@ -94,7 +94,6 @@ if v-arc = ? then do:
   return error "Не найдена программа 7z.exe, невозможно упаковать выгрузку в zip" .
 end.          
 
-log-file-name = substitute("&1exp-ATD.log", ibs.th.gbl.gbl-inipar:logDir) .
 
 /* Для лога */
 &scop display-message run write-log-and-file in p_log-handle ~
@@ -102,15 +101,13 @@ log-file-name = substitute("&1exp-ATD.log", ibs.th.gbl.gbl-inipar:logDir) .
       
 
 assign
+  log-file-name    = substitute("&1exp-ATD.log", ibs.th.gbl.gbl-inipar:logDir)
   v-time = time
   v-date = today
-  v-time-file = substring(string(v-time,"HH:MM"),1,2) + substring(string(v-time,"HH:MM"),4,2) + substring(string(v-time,"HH:MM:SS"),7,2)
-v-date-file-name = STRING(YEAR(v-date), "9999") + STRING(DAY(v-date), "99") + STRING(MONTH(v-date), "99")
+  v-time-file      = replace(  string(v-time, "HH:MM:SS"), ":", ""  )
+  v-date-file-name = STRING(YEAR(v-date), "9999") + STRING(DAY(v-date), "99") + STRING(MONTH(v-date), "99")
+  file_name        = substitute("&1HDB_&2_&3_&4.csv", p_path, trim(p-region), v-date-file-name, v-time-file) 
 .
-
-file_name = p_path + 'HDB_' + trim(p-region) + '_'  + v-date-file-name  + '_' + v-time-file +  '.csv'. 
-
-
 
 
 function format_datetime returns character(
@@ -127,7 +124,6 @@ function format_datetime returns character(
         string(year(v-date),"9999"),
         string(v-time, "HH:MM:SS:000")
         ).
-
 end function.
 
 
@@ -209,6 +205,8 @@ for each tt_obj no-lock:
             {&display-message}.
             next.
         end.
+            &scop my-message substitute("Последняя выгруженная смена объекта &1&2 (дата, номер): &3 (атрибут объекта &4)", tt_obj.obj-type, tt_obj.obj-code, c-value, {&attr-bge-exp-last-atd})
+            {&display-message}.
 
         /* Если атрибут отсутствует */
         if c-value = "" then c-value = "1/1/1900,1". /* Начальный атрибут. чтобы было от чего искать смены */
@@ -235,7 +233,7 @@ for each tt_obj no-lock:
         leave.
       end.
       if (p-d_sht-start = ?) then do:
-            &scop my-message substitute("Отсутствуют смены для выгрузки после &1 смена &2. Объект &1&2", v-prev-shift-date, v-prev-shift-num, tt_obj.obj-type, tt_obj.obj-code )
+            &scop my-message substitute("Отсутствуют смены для выгрузки после &1 смена &2. Объект &3&4", v-prev-shift-date, v-prev-shift-num, tt_obj.obj-type, tt_obj.obj-code )
             {&display-message}.
             next. /* next for each tt_obj */
       end.
