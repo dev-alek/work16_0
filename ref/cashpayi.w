@@ -200,11 +200,12 @@ DEFINE VARIABLE cb-prop AS CHARACTER FORMAT "X(256)":U INITIAL "0"
 DEFINE VARIABLE cb-type-pay-fr AS CHARACTER FORMAT "x(200)" 
      LABEL "Тип платежа ФР" 
      VIEW-AS COMBO-BOX INNER-LINES 7
-     LIST-ITEM-PAIRS "Наличные","1",
-                     "Электронные","2",
-                     "Аванс","3",
-                     "Кредит","4",
-                     "Нефискальный платеж","-1"
+     LIST-ITEM-PAIRS {&cash},"1",
+                     {&electronic},"2",
+                     {&prepayment},"3",
+                     {&credit},"4",
+                  /*   {&counter_presentation},"5" */
+                     {&non-fiscal_payment},"-1"
      DROP-DOWN-LIST
      SIZE 24.5 BY 1 NO-UNDO.
 

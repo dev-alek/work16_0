@@ -4436,11 +4436,11 @@ if tt-chk-doc.chk-type = integer({&expense-corr})
 or tt-chk-doc.chk-type = integer({&income-corr})
 then do :
   case parpay-code :
-    when 1031 then varpay-name = "Наличный".
-    when 1081 then varpay-name = "Электронный".
-    when 1215 then varpay-name = "Аванс".
-    when 1216 then varpay-name = "Кредит".
-    when 1217 then varpay-name = "Встречное представление".
+    when 1031 then varpay-name = {&cash}.
+    when 1081 then varpay-name = {&electronic}.
+    when 1215 then varpay-name = {&prepayment}.
+    when 1216 then varpay-name = {&credit}.
+  /*  when 1217 then varpay-name = {&counter_presentation}. */
     otherwise varpay-name = "Неизвестная оплата".
   end case.
   parcurr-name = "Рубль".
