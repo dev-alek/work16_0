@@ -260,7 +260,7 @@ class utl.gpwdbrw inherits Form:
       this-object:panel1:Dock = System.Windows.Forms.DockStyle:Fill.
       this-object:panel1:Location = new System.Drawing.Point(0, 0).
       this-object:panel1:Name = "panel1".
-      this-object:panel1:Size = new System.Drawing.Size(914, 437).
+      this-object:panel1:Size = new System.Drawing.Size(926, 471).
       this-object:panel1:TabIndex = 0.
       /*  */
       /* btnReport */
@@ -319,7 +319,7 @@ class utl.gpwdbrw inherits Form:
       dataGridViewCellStyle2:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
       dataGridViewCellStyle2:WrapMode = System.Windows.Forms.DataGridViewTriState:False.
       this-object:dataGridView1:DefaultCellStyle = dataGridViewCellStyle2.
-      this-object:dataGridView1:Location = new System.Drawing.Point(12, 69).
+      this-object:dataGridView1:Location = new System.Drawing.Point(12, 70).
       this-object:dataGridView1:MultiSelect = false.
       this-object:dataGridView1:Name = "dataGridView1".
       this-object:dataGridView1:ReadOnly = true.
@@ -331,7 +331,7 @@ class utl.gpwdbrw inherits Form:
       dataGridViewCellStyle3:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
       dataGridViewCellStyle3:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
       this-object:dataGridView1:RowHeadersDefaultCellStyle = dataGridViewCellStyle3.
-      this-object:dataGridView1:Size = new System.Drawing.Size(894, 346).
+      this-object:dataGridView1:Size = new System.Drawing.Size(902, 367).
       this-object:dataGridView1:TabIndex = 4.
       this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
       /*  */
@@ -400,9 +400,9 @@ class utl.gpwdbrw inherits Form:
       /*  */
       /* statusStrip1 */
       /*  */
-      this-object:statusStrip1:Location = new System.Drawing.Point(0, 415).
+      this-object:statusStrip1:Location = new System.Drawing.Point(0, 449).
       this-object:statusStrip1:Name = "statusStrip1".
-      this-object:statusStrip1:Size = new System.Drawing.Size(914, 22).
+      this-object:statusStrip1:Size = new System.Drawing.Size(926, 22).
       this-object:statusStrip1:TabIndex = 3.
       this-object:statusStrip1:Text = "statusStrip1".
       /*  */
@@ -441,7 +441,7 @@ class utl.gpwdbrw inherits Form:
       /*  */
       /* gpwdbrw */
       /*  */
-      this-object:ClientSize = new System.Drawing.Size(914, 437).
+      this-object:ClientSize = new System.Drawing.Size(926, 471).
       this-object:Controls:Add(this-object:panel1).
       this-object:Name = "gpwdbrw".
       this-object:Text = "Журнал генерации паролей для технологического пролива".

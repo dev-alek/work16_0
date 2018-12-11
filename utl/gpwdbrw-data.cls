@@ -19,6 +19,8 @@ Creation date: 21/10/18
 
 class utl.gpwdbrw-data:
    
+   { utl/flt-operator.i }
+   
    define stream sHtml.
    
    define temp-table ttTechProlBrw no-undo
@@ -31,21 +33,25 @@ class utl.gpwdbrw-data:
       index fdate fDate ftime  
       .     
 
-   define temp-table ttTemp no-undo
-      field id as int64
-      index id id
-   .     
-
    define public property hQuery as handle no-undo 
    get.
    set. 
 
-   constructor public gpwdbrw-data (  ):
-      super ().
-      create ttTemp.
+   method public char GetQueryString(iFilter as class utl.gpwdbrw-filter):
       
-   end constructor.
-   
+      def var vQueryString as char no-undo init "for each b-tech-prol-pwd no-lock ".
+      def var vWhere    as char   no-undo.
+
+      vWhere = iFilter:GetWhere().
+      if vWhere <> "" then
+      do:
+         vQueryString = substitute("&1 where &2", vQueryString, vWhere).
+      end.
+      
+      return vQueryString.
+      
+   end method.
+      
    method public void RefreshTT(iFilter as class utl.gpwdbrw-filter):
       
       def buffer b-tech-prol-pwd for tech-prol-pwd.
@@ -53,28 +59,46 @@ class utl.gpwdbrw-data:
       def buffer b-clients   for clients.
       def buffer b-cash-desk for cash-desk.
       
+      def var vShop        as char   no-undo. 
+      def var vCashDesk    as char   no-undo.
+      def var vWhere       as char   no-undo.
+      def var hQuery-tt    as handle no-undo.
+      def var vQueryString as char   no-undo.
       
-      def var vShop     as char   no-undo. 
-      def var vCashDesk as char   no-undo.
-      def var hQuery-tt as handle no-undo.
-      def var vQueryString as char no-undo.
-      
-     
-       
       empty temp-table ttTechProlBrw.
 
       create query hQuery-tt.    
-      hQuery-tt:set-buffers(buffer b-tech-prol-pwd:handle, 
-                            buffer b-clients:handle,
-                            buffer b-cash-desk:handle,
-                            buffer ttTemp:handle).
-      vQueryString = iFilter:GetQueryString().
+      hQuery-tt:set-buffers(buffer b-tech-prol-pwd:handle).
+      vQueryString = GetQueryString(iFilter).
       hQuery-tt:query-prepare(vQueryString).
       hQuery-tt:query-open.
       hQuery-tt:get-first().
       
       do while not hQuery-tt:query-off-end:
           
+
+         find first b-clients where 
+                    b-clients.obj-type = entry(1,b-tech-prol-pwd.shop-surr)
+                and b-clients.obj-code = int(entry(2,b-tech-prol-pwd.shop-surr)) 
+         no-lock no-error.
+         
+         if avail b-clients then 
+            vShop = string(b-clients.obj-code).
+         else      
+            vShop = "".
+
+         find first b-cash-desk where 
+                    b-cash-desk.db-num   = int64(entry(1,b-tech-prol-pwd.cash-desk-surr))
+                and b-cash-desk.obj-code = int64(entry(2,b-tech-prol-pwd.cash-desk-surr))
+                and b-cash-desk.pos-type = entry(3,b-tech-prol-pwd.cash-desk-surr)
+                and b-cash-desk.cash-num = int64(entry(4,b-tech-prol-pwd.cash-desk-surr))
+         no-lock no-error.
+         
+         if avail b-cash-desk then 
+            vCashDesk = string(b-cash-desk.cash-num).
+         else
+            vCashDesk = "".
+         
          create ttTechProlBrw.
          assign
             ttTechProlBrw.id = b-tech-prol-pwd.id
@@ -84,8 +108,8 @@ class utl.gpwdbrw-data:
             ttTechProlBrw.fHostName = b-tech-prol-pwd.f-hostname
             ttTechProlBrw.fDetails = substitute(
                "маг &1, касса &2, &3, &4 - &5, &6",
-               string(b-clients.obj-code),
-               string(b-cash-desk.cash-num),
+               vShop,
+               vCashDesk,
                b-tech-prol-pwd.f-date,
                b-tech-prol-pwd.f-beg-time,
                b-tech-prol-pwd.f-end-time,
@@ -164,7 +188,6 @@ class utl.gpwdbrw-data:
       def var vFullFileName as char  no-undo.
       def var vReportId     as int64 no-undo.
       def var vRepViewer    as char  no-undo.
-      def var vFilters      as log   no-undo.
       
       def buffer ttTechProlBrw for ttTechProlBrw.
       
@@ -221,103 +244,38 @@ class utl.gpwdbrw-data:
             '<td colspan="5" style="text-align: center; font-weight: bold; font: 25px arial;">Журнал генерации паролей для проведения технологических проливов </td>' skip
             '</tr>' skip   
             '</thead>' skip .
-         
+
          put stream sHtml unformatted
             '<tr>' skip
             '<td colspan="5" style="text-align: left; font-weight: bold;">Фильтры: </td>' skip
             '</tr>' skip   
             '</thead>' skip .
             
-         if iFilter:IsEnabled() then
+         if iFilter:AllFiltersDisabled() then
          do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;">Способ объединения фильтров: ' + iFilter:GetModifierName() + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-         
-         if iFilter:User:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:User:FieldName,":","") + "-" + iFilter:User:Operation + "-" + iFilter:User:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-
-         if iFilter:HostName:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:HostName:FieldName,":","") + "-" + iFilter:HostName:Operation + "-" + iFilter:HostName:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-
-         if iFilter:DateGen:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:DateGen:FieldName,":","") + "-" + iFilter:DateGen:Operation + "-" + iFilter:DateGen:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-
-         if iFilter:TimeGen:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:TimeGen:FieldName,":","") + "-" + iFilter:TimeGen:Operation + "-" + iFilter:TimeGen:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-
-         if iFilter:Fio:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:Fio:FieldName,":","") + "-" + iFilter:Fio:Operation + "-" + iFilter:Fio:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-         
-         if iFilter:ObjectNum:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:ObjectNum:FieldName,":","") + "-" + iFilter:ObjectNum:Operation + "-" + iFilter:ObjectNum:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-
-         if iFilter:CashNum:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:CashNum:FieldName,":","") + "-" + iFilter:CashNum:Operation + "-" + iFilter:CashNum:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-
-         if iFilter:DateProl:Enabled then
-         do:
-            put stream sHtml unformatted
-               '<tr>' skip
-               '<td colspan="5" style="text-align: left;"> ' + replace(iFilter:DateProl:FieldName,":","") + "-" + iFilter:DateProl:Operation + "-" + iFilter:DateProl:Value + '</td>' skip
-               '</tr>' skip   
-               '</thead>' skip .
-         end.
-         
-         if not iFilter:IsEnabled() then
-         do:  
             put stream sHtml unformatted
                '<tr>' skip
                '<td colspan="5" style="text-align: left; font-weight: bold;">    все </td>' skip
                '</tr>' skip   
                '</thead>' skip .
          end.
-          
+         else
+         do:
+            put stream sHtml unformatted
+               '<tr>' skip
+               '<td colspan="5" style="text-align: left;">Способ объединения фильтров: ' + iFilter:GetModifierName() + '</td>' skip
+               '</tr>' skip   
+               '</thead>' skip.
+            
+            this-object:PutStream(iFilter:User).
+            this-object:PutStream(iFilter:HostName).
+            this-object:PutStream(iFilter:DateGen).
+            this-object:PutStream(iFilter:DateProl).
+            this-object:PutStream(iFilter:Fio).
+            this-object:PutStream(iFilter:ObjectNum).
+            this-object:PutStream(iFilter:CashNum).
+         end.
+             
          put stream sHtml unformatted
             '<tbody>'                                                            skip
             '<TR>'                                                               skip
@@ -354,11 +312,37 @@ class utl.gpwdbrw-data:
             .  
             
          end.
-         output stream sHtml close.
-      
+         
          os-command no-wait value(vRepViewer + " " + vFullFileName).
+         
+         finally:
+            output stream sHtml close.      
+         end finally.
             
       end.
+   end method.
+
+   method public void PutStream(iCondition as class utl.flt-condition):
+      
+      def var vString as char no-undo.
+            
+      if iCondition:Enabled then
+      do:
+         vString = substitute("&1-&2-&3&4",
+                              replace(iCondition:FieldName,":",""),
+                              iCondition:Operation,
+                              iCondition:Value,
+                              if iCondition:FieldType = {&flt-between} 
+                              then ("-" + iCondition:Value1)
+                              else "").
+         
+         put stream sHtml unformatted
+            '<tr>' skip
+            '<td colspan="5" style="text-align: left;"> ' + vString + '</td>' skip
+            '</tr>' skip   
+            '</thead>' skip .
+      end.
+      
    end method.
 
 end class.

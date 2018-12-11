@@ -285,13 +285,33 @@ class utl.gpwdfrm inherits Form:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
+	method private void cmbTimeBeg_Leave( input sender as System.Object, input e as System.EventArgs ):
+		
+		def var vComboBox as System.Windows.Forms.ComboBox no-undo.
+		def var vText as char.
+		
+		vComboBox = cast(sender, System.Windows.Forms.ComboBox).
+		if length(vComboBox:text) = 4 then
+		do:
+		   assign
+   		   vText = substitute("&1:&2",
+   		                      substring(vComboBox:text,1,2),
+   		                      substring(vComboBox:text,3,2))
+   		   vComboBox:text = vText
+   		.
+		end.
+		                       
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
 	method private void cmbTimeBeg_TextChanged( input sender as System.Object, input e as System.EventArgs ):
 		
-		define variable vCombo as System.Windows.Forms.ComboBox no-undo.
-		
-		vCombo = cast(sender, System.Windows.Forms.ComboBox).
-		
-		vCombo:Text = DataProvider:TransChar(vCombo:Text).
 		return.
 
 	end method.
@@ -305,7 +325,7 @@ class utl.gpwdfrm inherits Form:
       
       ValidateTimes(cast(sender, System.Windows.Forms.ComboBox)).
       
-      catch vErr as utl.ValidateError :
+      catch vErr as ValidateError :
          
          System.Windows.Forms.MessageBox:Show(
             vErr:GetMessage(1),
@@ -318,18 +338,28 @@ class utl.gpwdfrm inherits Form:
 
 	end method.
 
+
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
-	method private void cmbTimeEnd_TextChanged( input sender as System.Object, input e as System.EventArgs ):
-      define variable vCombo as System.Windows.Forms.ComboBox no-undo.
-      
-      vCombo = cast(sender, System.Windows.Forms.ComboBox).
-      
-      vCombo:Text = DataProvider:TransChar(vCombo:Text).
+	method private void cmbTimeEnd_Leave( input sender as System.Object, input e as System.EventArgs ):
 		
+      def var vComboBox as System.Windows.Forms.ComboBox no-undo.
+      def var vText as char.
+      
+      vComboBox = cast(sender, System.Windows.Forms.ComboBox).
+      if length(vComboBox:text) = 4 then
+      do:
+         assign
+            vText = substitute("&1:&2",
+                               substring(vComboBox:text,1,2),
+                               substring(vComboBox:text,3,2))
+            vComboBox:text = vText
+         .
+      end.
+
 		return.
 
 	end method.
@@ -636,7 +666,7 @@ class utl.gpwdfrm inherits Form:
       this-object:mtbDate:Location = new System.Drawing.Point(67, 107).
       this-object:mtbDate:Mask = "00.00.00".
       this-object:mtbDate:Name = "mtbDate".
-      this-object:mtbDate:Size = new System.Drawing.Size(90, 20).
+      this-object:mtbDate:Size = new System.Drawing.Size(90, 26).
       this-object:mtbDate:TabIndex = 3.
       this-object:mtbDate:Validating:Subscribe(this-object:mtbDate_Validating).
       this-object:mtbDate:Validated:Subscribe(this-object:mtbDate_Validated).
@@ -646,7 +676,7 @@ class utl.gpwdfrm inherits Form:
       this-object:maskedTextBox1:Location = new System.Drawing.Point(67, 109).
       this-object:maskedTextBox1:Mask = "00.00.00".
       this-object:maskedTextBox1:Name = "maskedTextBox1".
-      this-object:maskedTextBox1:Size = new System.Drawing.Size(90, 20).
+      this-object:maskedTextBox1:Size = new System.Drawing.Size(90, 26).
       this-object:maskedTextBox1:TabIndex = 17.
       /*  */
       /* lblShop */
@@ -751,7 +781,7 @@ class utl.gpwdfrm inherits Form:
       this-object:cmbTimeEnd:Name = "cmbTimeEnd".
       this-object:cmbTimeEnd:Size = new System.Drawing.Size(121, 21).
       this-object:cmbTimeEnd:TabIndex = 5.
-      this-object:cmbTimeEnd:TextChanged:Subscribe(this-object:cmbTimeEnd_TextChanged).
+      this-object:cmbTimeEnd:Leave:Subscribe(this-object:cmbTimeEnd_Leave).
       this-object:cmbTimeEnd:Validating:Subscribe(this-object:cmbTimeEnd_Validating).
       /*  */
       /* cmbTimeBeg */
@@ -814,6 +844,7 @@ class utl.gpwdfrm inherits Form:
       this-object:cmbTimeBeg:Size = new System.Drawing.Size(121, 21).
       this-object:cmbTimeBeg:TabIndex = 4.
       this-object:cmbTimeBeg:TextChanged:Subscribe(this-object:cmbTimeBeg_TextChanged).
+      this-object:cmbTimeBeg:Leave:Subscribe(this-object:cmbTimeBeg_Leave).
       this-object:cmbTimeBeg:Validating:Subscribe(this-object:cmbTimeBeg_Validating).
       /*  */
       /* label4 */
@@ -840,7 +871,7 @@ class utl.gpwdfrm inherits Form:
       this-object:dateTimePicker1:Format = System.Windows.Forms.DateTimePickerFormat:Custom.
       this-object:dateTimePicker1:Location = new System.Drawing.Point(67, 107).
       this-object:dateTimePicker1:Name = "dateTimePicker1".
-      this-object:dateTimePicker1:Size = new System.Drawing.Size(121, 20).
+      this-object:dateTimePicker1:Size = new System.Drawing.Size(121, 26).
       this-object:dateTimePicker1:TabIndex = 3.
       this-object:dateTimePicker1:TabStop = false.
       this-object:dateTimePicker1:ValueChanged:Subscribe(this-object:dateTimePicker1_ValueChanged).
@@ -1026,9 +1057,6 @@ class utl.gpwdfrm inherits Form:
          cmbFio:Enabled          = no
          rbtnOnce:Enabled        = no
          rbtnInterval:Enabled    = no
-         label8:Visible          = yes
-         btnToBuff:Visible       = yes
-         btnToBuff:Enabled       = yes
          btnFio:enabled          = no
          btnFio:visible          = no
          mtbDate:enabled         = no

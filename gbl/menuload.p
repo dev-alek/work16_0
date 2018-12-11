@@ -329,17 +329,6 @@ define variable vss-description as character no-undo init "Информация об объекте
 
 { gbl/menuload.i
   {&bef-menuload_adm_function}
-  "'Генерация пароля для технологического пролива'"
-  "'utl/gen-pwd.p'"
-  " "
-  " "
-  " "
-  " "
-  "yes"
-} 
-
-{ gbl/menuload.i
-  {&bef-menuload_adm_function}
   "'Имена контрагентов в накладных'"
   "'utl/ini-name.p'"
   "yes"

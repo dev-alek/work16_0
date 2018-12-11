@@ -24,8 +24,15 @@ define input parameter parParentProc as handle no-undo .
 
 define variable mForm as class gpwdbrw no-undo.
 
-// compile utl/flt-condition.cls.
-
+  /* --- дл€ cmp/vssrevis.i --- */
+    define variable vss-revision       as character no-undo init "$Revision$":U .
+    define variable vss-author         as character no-undo init "$Author$":U .
+    define variable vss-date           as character no-undo init "$Date$":U .
+    define variable vss-workfile       as character no-undo init "$Workfile$":U .
+    define variable vss-archive        as character no-undo init "$Archive$":U .
+    define variable vss-description    as character no-undo init "Ёкранные триггеры промо-акций". 
+{ cmp/vssrevis.i }
+{ cmp/str-glbl.i }
 if ibs.th.gbl.gbl-var:g#db-num <> 0 then
 do:
    System.Windows.Forms.MessageBox:Show(
@@ -42,18 +49,41 @@ assign
    gpwdbrw:parParentProc = parParentProc
    gpwdfrm:parParentProc = parParentProc
 .
+{ gbl/getcntxt.i def }
 
-
+{ cmp/library.i }
+{ gbl/getcntxt.i get }
+ define variable mOk as logical no-undo.
+ { gbl/hostcode.i v-cntxt-obj-type v-cntxt-obj-code v-cntxt-host-code-obj }
+{ gbl/chk-actg.i
+   v-cntxt-db-num
+   v-cntxt-userid
+   {&action-head-code-main}
+   'actn_gen-pwd':U
+   {&cntxt-firm}
+   v-cntxt-host-code-obj
+   '':U
+   0
+   0
+   0
+   0
+   true
+   mOK
+ }
+ if not mOk then
+      return .
 mForm = new utl.gpwdbrw().
 
 if valid-object(mForm) then
     mForm:Wait().
     
 catch mErr as Progress.Lang.Error :
+   
    System.Windows.Forms.MessageBox:Show(
-      mErr:GetMessage(1) + " " +
-      mErr:GetMessage(2) + " " + 
-      mErr:GetMessage(3) + mErr:CallStack,
+      quoter(mErr:GetMessage(1)) + " " +
+      quoter(mErr:GetMessage(2)) + " " + 
+      quoter(mErr:GetMessage(3)) + " " + 
+      quoter(mErr:CallStack),
       "ќшибка!",
       System.Windows.Forms.MessageBoxButtons:OK,
       System.Windows.Forms.MessageBoxIcon:Error).
