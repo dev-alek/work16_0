@@ -451,6 +451,16 @@ on error undo, return error return-value
       delete object vsds no-error.
       delete object vsdstr no-error.
 
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).
+      for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                                     and ub.gen-attr.p-key =  part-key-rec
+      on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+      :
+          delete ub.gen-attr.
+      end.
+
       delete buf_parts .
     end.
 

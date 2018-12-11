@@ -246,6 +246,7 @@ define variable v-is-gtd-part-type as character no-undo .
 define variable d-gtd-add          as character no-undo .
 define variable var-inp_sum        as logical   no-undo .
 
+define variable v-tth             as handle no-undo .
 define variable v-back-date as logical   no-undo .
 define variable v-not-ord   as logical   no-undo .
 
@@ -414,7 +415,7 @@ b-add-doc b-cnt b-attr b-in-attr-fuel b-notes b-history b-print b-help ~
 varcontract-prn-code b-contr-lkp r-clients r-currency r-acc r-outs r-pay ~
 varpurch-code-name r-wrkr r-agnt r-boss r-sht ov-pc b-add-doc-yes m-inc ~
 r-reas a-n-c loc-art loc-name loc-code b-mark b-add b-bc b-prt b-parts ~
-b-lkp b-chg b-del b-live b-renum varinplnsum br-dtl wrkr-name agnt-name ~
+b-lkp b-chg b-del b-live b-renum b-marks varinplnsum br-dtl wrkr-name agnt-name ~
 boss-name rsn-name
 &Scoped-Define DISPLAYED-FIELDS t-doc.cli-code t-doc.cli-type ~
 clients.obj-name t-doc.exch-code t-doc.exch-date t-doc.discnt-pc ~
@@ -619,6 +620,10 @@ DEFINE BUTTON b-renum
 DEFINE BUTTON b-revis
      LABEL "С&верки"
      SIZE 8 BY 1.
+     
+DEFINE BUTTON b-marks 
+     LABEL "&Марки" 
+     SIZE 6 BY 1.     
 
 DEFINE BUTTON r-acc
      IMAGE-UP FILE "btn-down-arrow":U
@@ -982,10 +987,10 @@ DEFINE FRAME d-in-doc
           SIZE 9.5 BY 1 TOOLTIP "Дата отгрузки"
           FGCOLOR 4 
      r-reas AT ROW 13.5 COL 49.5
-     a-n-c AT ROW 14.5 COL 66 NO-LABEL
-     loc-name AT ROW 14.5 COL 76.5 COLON-ALIGNED NO-LABEL
-     loc-art AT ROW 14.5 COL 76.63 COLON-ALIGNED NO-LABEL
-     loc-code AT ROW 14.5 COL 76.75 COLON-ALIGNED NO-LABEL
+     a-n-c AT ROW 14.5 COL 72 NO-LABEL
+     loc-name AT ROW 14.5 COL 82.5 COLON-ALIGNED NO-LABEL
+     loc-art AT ROW 14.5 COL 82.63 COLON-ALIGNED NO-LABEL
+     loc-code AT ROW 14.5 COL 82.75 COLON-ALIGNED NO-LABEL
      b-mark AT ROW 14.63 COL 1
      b-add AT ROW 14.63 COL 4
      b-bc AT ROW 14.63 COL 10
@@ -996,7 +1001,8 @@ DEFINE FRAME d-in-doc
      b-del AT ROW 14.63 COL 39
      b-live AT ROW 14.63 COL 45.13
      b-renum AT ROW 14.63 COL 52.25
-     varinplnsum AT ROW 14.71 COL 59.38
+     b-marks at row 14.63 col 58
+     varinplnsum AT ROW 14.71 COL 65.38
      br-dtl AT ROW 15.75 COL 1
      ub.currency.curr-abbr AT ROW 3 COL 11.88 COLON-ALIGNED NO-LABEL
            VIEW-AS TEXT 
@@ -1680,6 +1686,20 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-marks d-in-doc
+ON CHOOSE OF b-marks IN FRAME d-in-doc /* Шкала */
+DO:
+  {&stdbtn}
+  run str/add-marks.w (input parparentproc, input t-doc.doc-code, input pardoc-mode)  no-error.
+  if error-status :error then do: return no-apply. end.
+  run ui-on in this-procedure ( input "line" ).
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-renum
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-renum d-in-doc
@@ -2061,6 +2081,7 @@ define menu m-outs
     menu-item m-outs-3 label "Импорт"                            accelerator "alt-3"
     menu-item m-outs-4 label "Импорт из файла"                   accelerator "alt-4"
     menu-item m-outs-6 label "Импорт артикул поставщик"          accelerator "alt-6"
+    menu-item m-outs-7 label "Импорт акцизных марок"             accelerator "alt-7"
     .
 
 ON choose OF MENU-ITEM m-outs-1 IN menu m-outs do:
@@ -2108,6 +2129,18 @@ on choose of menu-item m-outs-6 in menu m-outs do:
   if (t-doc.status_ = {&wayb} or t-doc.status_ = {&inquiry}) and
      not t-doc.flag_ then do:
     run proc-m-outs-6 in this-procedure no-error.
+  end.
+  else do:
+    run err-status in this-procedure.
+    return no-apply.
+  end.
+end.
+
+on choose of menu-item m-outs-7 in menu m-outs do:
+  {&stdbtn}
+  if (t-doc.status_ = {&wayb} or t-doc.status_ = {&inquiry})
+  then do:
+    run proc-m-outs-7 in this-procedure no-error.
   end.
   else do:
     run err-status in this-procedure.
@@ -4218,7 +4251,7 @@ PROCEDURE enable_UI :
          t-doc.shift-name t-doc.shift-num r-sht t-doc.SLT-type t-doc.VAT-type
          ov-pc b-add-doc-yes t-doc.tot-transp t-doc.tot-other m-inc
          t-doc.ship-num t-doc.ship-date r-reas a-n-c loc-art loc-name loc-code
-         b-mark b-add b-bc b-prt b-parts b-lkp b-chg b-del b-live b-renum
+         b-mark b-add b-bc b-prt b-parts b-lkp b-chg b-del b-live b-renum b-marks
          varinplnsum br-dtl ub.currency.curr-abbr t-doc.tot-calc t-doc.road-tax
          ub.pay-type.obj-name t-doc.tot-sale wrkr-name t-doc.tot-fact
          t-doc.VAT-rubl agnt-name t-doc.VAT-base boss-name t-doc.cli-qnty
@@ -5648,7 +5681,91 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-shift-num d-in-doc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-m-outs-7 d-in-doc 
+PROCEDURE proc-m-outs-7 :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define buffer bf_trn-doc for ub.trn-doc.
+define buffer bf_doc-line for ub.doc-line .
+define buffer bf_goods for ub.goods .
+define variable vardoc-code like ub.trn-doc.doc-code no-undo.
+define variable par-alcohol as character no-undo .
+define variable par-mark as character no-undo .
+define variable par-type as character no-undo .
+define variable v-is-alc as logical no-undo .
+define variable v-mark-alchol     as logical no-undo .
+define variable v-type as character no-undo .
+
+delete object v-tth no-error.
+run adm/shattri.p (
+   input "get":U
+  ,input t-doc.obj-type
+  ,input t-doc.obj-code
+  ,input {&attr-nakl_par}
+  ,input  "mark-alchol"
+  ,output v-value-character
+  ,output v-value-date
+  ,output v-value-decimal
+  ,output v-value-integer
+  ,output v-mark-alchol
+  ,output v-type
+  ,INPUT-OUTPUT table-handle v-tth
+  ) no-error .
+  delete object v-tth no-error.
+if error-status:error then do:
+  message "Ошибка при получение параметра mark-alchol"
+  view-as alert-box.
+  return error.
+end.
+if not v-mark-alchol
+then do :
+    message "В системе не включен помарочный учёт. Импорт акцизных марок невозможен." view-as alert-box .
+    return.
+end.
+
+v-is-alc = false .
+for each bf_doc-line no-lock where bf_doc-line.doc-code = t-doc.doc-code :
+    find first bf_goods no-lock where bf_goods.artic     = bf_doc-line.artic
+                                  and bf_goods.prod-type = bf_doc-line.prod-type
+                                  and bf_goods.prod-code = bf_doc-line.prod-code
+                                  no-error .
+                                      
+    run gds-attr-value(
+      bf_goods.gds-code,
+      {&attr-alcohol-prod},
+      output par-alcohol,
+      output par-type
+    ).
+    if par-alcohol = "" or par-alcohol = "no" then next .
+    run gds-attr-value(
+      bf_goods.gds-code,
+      {&attr-mark},
+      output par-mark,
+      output par-type
+    ).
+    if par-mark = "" or par-mark = "no" then next .
+    v-is-alc = true .
+end.
+
+if not v-is-alc
+then do :
+    message "В накладной нет ни одного товара, подлежащего маркировке. Импорт акцизных марок не возможен" view-as alert-box.
+    return .
+end.
+
+do transaction:
+    run str/imp-marks.p (parparentproc, t-doc.doc-code, "in") .    
+end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-shift-num d-in-doc 
 PROCEDURE proc-shift-num :
 define buffer bf_shift-obj   for ub.shift-obj.
   if input frame {&frame-name} t-doc.shift-num <> t-doc.shift-num then do:
@@ -5873,6 +5990,7 @@ if lookup( fnc, "enable" ) > 0 then do:
   case pardoc-mode :
     when {&add-def} then do:
          enable t-doc.cli-code t-doc.cli-type r-clients with frame {&frame-name}.
+         enable b-marks with frame {&frame-name}.
     end.
     when {&lookup} then do:
       if parext-doc-mode = "":U then do:
@@ -5886,6 +6004,7 @@ if lookup( fnc, "enable" ) > 0 then do:
          enable b-prt   with frame {&frame-name}.
       end.
       enable b-parts with frame {&frame-name}.
+	  enable b-marks with frame {&frame-name}.
       assign
          ub.doc-line.cli-qnty  :read-only in browse {&BROWSE-NAME} = yes
          ub.doc-line.fact-qnty :read-only in browse {&BROWSE-NAME} = yes
@@ -6061,6 +6180,8 @@ if lookup( fnc, "enable" ) > 0 then do:
         end.
 
         enable t-doc.cst-code t-doc.ord-num with frame {&frame-name}.
+        
+        enable b-marks with frame {&frame-name}.
 
         if pardoc-mode <> {&lookup} then do:
            enable r-reas t-doc.reason-code with frame {&frame-name}.

@@ -23,6 +23,7 @@ create: Перваков Михаил Сергеевич
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 { gbl/std-func.i {&f-l} }
+{ str/marks.i }
 
   define temp-table tt-alc-codes
     field alc-code      as character
@@ -30,7 +31,12 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
     index pi as primary unique
       alc-code
   .
-
+  
+  define temp-table tt-marks
+    field mark as character
+    index pi as primary unique
+      mark
+  .
 
 procedure rsrv-doc :
   define input  parameter parparentproc          AS WIDGET-HANDLE           NO-UNDO.
@@ -70,13 +76,39 @@ procedure rsrv-doc :
   define buffer buf_doc-line for ub.doc-line .
   define buffer buf1_doc-line-attr for ub.doc-line-attr .
   define buffer buf1_goods    for ub.goods .
+  define buffer buf_goods    for ub.goods .
+  define buffer buf_gen-attr for ub.gen-attr .
+  define buffer buf2_gen-attr for ub.gen-attr .
   
+  define variable v-part-key        as character no-undo .
+  define variable v-value-character as character no-undo .
+  define variable v-value-date      as date no-undo .
+  define variable v-value-decimal   as decimal no-undo .
+  define variable v-value-integer   as integer no-undo .
+  define variable v-izlcstpr        as logical no-undo .
+  define variable v-mark-alchol     as logical no-undo .
+  define variable v-tth             as handle no-undo .
+  define variable v-type            as character no-undo .
   
   define variable v-mark as character no-undo .
   define variable v-mark-list as character no-undo .
   define variable v-alc-code as character no-undo .
   define variable mark-ii as integer  no-undo .
+  define variable jj as integer  no-undo .
   define variable v-alc-qnty as decimal no-undo .
+  
+  define variable varb-code like ub.bar-code.b-code .
+  define variable vardoc-num     like ub.price-list.doc-num    no-undo .
+  define variable varprice-sale  like ub.price-list.price-sale no-undo .
+  define variable varroad-tax    like ub.price-list.road-tax   no-undo .
+  define variable varexcise      like ub.price-list.excise     no-undo .
+  define variable varcur-vat-pc  like ub.price-list.vat-pc     no-undo .
+  define variable varcur-slt-pc  like ub.price-list.slt-pc     no-undo .
+  define variable varprice-rubl  as decimal no-undo .
+  define variable varprice-base  as decimal no-undo .
+  
+  define variable v-exch-rate  like ub.curr-accnt.exch-rate no-undo .
+  define variable v-exch-scale like ub.curr-accnt.exch-scale no-undo .
 
   do
   on error undo, return error return-value
@@ -108,7 +140,58 @@ procedure rsrv-doc :
         view-as alert-box error .
       undo, return error return-value .
     end.
+/*    run gbl/inidebug.p .*/
     
+    delete object v-tth no-error.
+    run adm/shattri.p (
+       input "get":U
+      ,input buf_trn-doc.obj-type
+      ,input buf_trn-doc.obj-code
+      ,input {&attr-nakl_par}
+      ,input  "mark-alchol"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-mark-alchol
+      ,output v-type
+      ,INPUT-OUTPUT table-handle v-tth
+      ) no-error .
+      delete object v-tth no-error.
+    if error-status:error then do:
+      message "Ошибка при получение параметра mark-alchol"
+      view-as alert-box.
+      return error.
+    end.
+    
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+    then do :
+        delete object v-tth no-error.
+        run adm/shattri.p (
+           input "get":U
+          ,input buf_trn-doc.obj-type
+          ,input buf_trn-doc.obj-code
+          ,input {&attr-inv-obj}
+          ,input  "izlcstpr"
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-izlcstpr
+          ,output v-type
+          ,INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+          delete object v-tth no-error.      
+        if error-status:error then do:
+          message "Ошибка при получение параметра izlcstpr"
+          view-as alert-box.
+          return error.
+        end.
+    end.
+    else do :
+        v-izlcstpr = false .
+    end.
+/*    message "!" view-as alert-box.*/
     empty temp-table tt-alc-codes .
     find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
                                    and buf1_goods.prod-type  = buf_doc-line.prod-type
@@ -120,15 +203,20 @@ procedure rsrv-doc :
     if available buf1_doc-line-attr and buf1_doc-line-attr.attr-value <> ''
     then do :
       do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
+        entry(mark-ii, buf1_doc-line-attr.attr-value) = trim(entry(mark-ii, buf1_doc-line-attr.attr-value)) .
         v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
-        if not can-do(v-mark-list, v-mark)
-        then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
+        if v-mark begins "-"
+        then do jj = 1 to num-entries(buf1_doc-line-attr.attr-value) :
+            if entry(jj, buf1_doc-line-attr.attr-value) = left-trim(v-mark, "-")
+            then do :
+               entry(jj, buf1_doc-line-attr.attr-value) = "del=" + entry(jj, buf1_doc-line-attr.attr-value) .
+               leave . 
+            end.
+        end.  
       end.
-      buf1_doc-line-attr.attr-value = v-mark-list .
-      v-mark-list = "" .
       do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
         v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
-        if not can-do(buf1_doc-line-attr.attr-value, ("-" + v-mark)) and not v-mark begins "-"
+        if not (v-mark begins "-" or v-mark begins "del=")
         then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
       end.
       buf1_doc-line-attr.attr-value = v-mark-list .
@@ -151,10 +239,26 @@ procedure rsrv-doc :
             assign tt-alc-codes.alc-code = v-alc-code .
         end.
         tt-alc-codes.qnty = tt-alc-codes.qnty + 1 .
+        
+        create tt-marks.
+        assign tt-marks.mark = v-mark .
       end.
     end.
     release buf1_goods no-error .
     release buf1_doc-line-attr no-error .
+/* run gbl/inidebug.p .*/
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+    then do :
+        for each buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
+                                        and buf_gen-attr.attr-value = (buf_doc-line.artic + {&delim-key} + buf_doc-line.prod-type + {&delim-key} + string(buf_doc-line.prod-code)) 
+                                        and buf_gen-attr.p-key      = ("trn-doc" + {&delim-key} + buf_trn-doc.doc-code) :
+            create tt-marks.
+            assign tt-marks.mark = buf_gen-attr.attr-code .                                
+        end.
+    end.
+    
+    find first tt-marks no-error.
+    if not available tt-marks then v-mark-alchol = false .
     
     v-alc-qnty = 0 .
     for each tt-alc-codes exclusive-lock :
@@ -437,6 +541,21 @@ procedure rsrv-doc :
     run partlist_use-get in this-procedure
       (output v-partlist-use
       ) .
+      
+    find first tt-alc-codes no-error.
+    if available tt-alc-codes
+    then do :
+      v-alc-rsrv = true .
+    end.
+    else do :
+       v-alc-rsrv = false .  
+       find first tt-marks no-error .
+       if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and available tt-marks
+       then do :
+           v-alc-rsrv = true .
+           release tt-marks no-error .
+       end.
+    end.  
 
     if p-chg-qnty < 0
     then do:
@@ -507,14 +626,6 @@ procedure rsrv-doc :
       .
       if v-rsrv-code = {&free-code}
       then do:
-        find first tt-alc-codes no-error.
-        if available tt-alc-codes
-        then do :
-          v-alc-rsrv = true .
-        end.
-        else do :
-           v-alc-rsrv = false .  
-        end.  
         assign
           v-fifo = true
         .
@@ -572,6 +683,8 @@ procedure rsrv-doc :
       v-rsrv-index = 1
       v-rsrv-entry = entry(v-rsrv-index, v-partlist-order, {&comma-char})
     .
+    
+    output stream alc-rsrv to value ("alc-rsrv.log") .
 
     rsrv_cycle:
     do while p-chg-qnty <> 0
@@ -592,6 +705,74 @@ procedure rsrv-doc :
             assign
               v-find-first = false
             .
+            
+            if v-mark-alchol
+            then do :
+              find first tt-marks .
+              assign
+                v-iteration-chg-qnty = v-chg-qnty-sign
+              .
+              find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
+                                                and buf_gen-attr.attr-code = tt-marks.mark
+                                                and num-entries(buf_gen-attr.p-key, {&delim-key}) >= 8
+                                                and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code no-error .
+              if available buf_gen-attr
+              then do :
+                  find first  buf_parts
+                        where buf_parts.obj-type  = entry(2, buf_gen-attr.p-key, {&delim-key})
+                          and buf_parts.obj-code  = integer(entry(3, buf_gen-attr.p-key, {&delim-key}))
+                          and buf_parts.artic     = entry(4, buf_gen-attr.p-key, {&delim-key})
+                          and buf_parts.prod-type = entry(5, buf_gen-attr.p-key, {&delim-key})
+                          and buf_parts.prod-code = integer(entry(6, buf_gen-attr.p-key, {&delim-key}))
+                          and buf_parts.in-code   = entry(7, buf_gen-attr.p-key, {&delim-key})
+                          and buf_parts.out-code  = entry(8, buf_gen-attr.p-key, {&delim-key})
+                          and buf_parts.part-code = entry(9, buf_gen-attr.p-key, {&delim-key})
+                          and buf_parts.status_   = no
+                          and buf_parts.fact-qnty > 0
+                        use-index FIFO
+                        no-error.
+                  if available buf_parts
+                  then v-fifo = false .
+                  else v-fifo = true .
+              end. 
+              if not available buf_gen-attr 
+              or (available buf_gen-attr and not available buf_parts)     
+              then do :
+                  if not available buf_gen-attr
+                  then do :
+                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        "  марка " tt-marks.mark " не найдена в свободной зоне. Ищем партию по алкокоду..." skip .
+                  end.
+                  else do :
+                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        "  марка " tt-marks.mark ". Не найдена партия свободной зоны. Ищем партию по алкокоду..." skip .
+                  end.
+                  run ProcAlcCode (input tt-marks.mark, output v-alc-code) no-error.
+                  if v-alc-code <> "" and v-alc-code <> ? 
+                  then
+                  find first buf_parts
+                    where buf_parts.obj-type  = buf_doc-line.obj-type
+                      and buf_parts.obj-code  = buf_doc-line.obj-code
+                      and buf_parts.artic     = buf_doc-line.artic
+                      and buf_parts.prod-type = buf_doc-line.prod-type
+                      and buf_parts.prod-code = buf_doc-line.prod-code
+                      and buf_parts.out-code  = v-rsrv-code
+                      and buf_parts.status_   = no
+                      and buf_parts.fact-qnty > 0
+                      and num-entries(buf_parts.alc-ref-ab-path) = 4
+                      and entry(3, buf_parts.alc-ref-ab-path) = v-alc-code
+                    use-index FIFO
+                    no-error.
+                  if available buf_parts
+                  then v-fifo = false .
+                  else do :
+                    v-fifo = true .
+                    put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        "  марка " tt-marks.mark ". Алкокод " v-alc-code ". Не найдена партия по алкокоду. Берём по ФИФО." skip .
+                  end.  
+              end.                       
+            end.
+            else
             if v-alc-rsrv
             then do :
               find first tt-alc-codes .
@@ -632,6 +813,7 @@ procedure rsrv-doc :
             end.
             else if not v-alc-rsrv
             then do:
+              if not (v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}) then
               find last buf_parts
                 where buf_parts.obj-type  = buf_doc-line.obj-type
                   and buf_parts.obj-code  = buf_doc-line.obj-code
@@ -647,6 +829,79 @@ procedure rsrv-doc :
           end.
           else do:
             /* ищем следующую доступную партию */
+            if v-mark-alchol
+            then do :
+                find next tt-marks no-error .
+                if available tt-marks
+                then do :
+                  assign
+                    v-iteration-chg-qnty = v-chg-qnty-sign
+                  .
+                  find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
+                                                    and buf_gen-attr.attr-code = tt-marks.mark
+                                                    and num-entries(buf_gen-attr.p-key, {&delim-key}) >= 8
+                                                    and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code no-error .
+                  if available buf_gen-attr
+                  then do :
+                      find first  buf_parts
+                            where buf_parts.obj-type  = entry(2, buf_gen-attr.p-key, {&delim-key})
+                              and buf_parts.obj-code  = integer(entry(3, buf_gen-attr.p-key, {&delim-key}))
+                              and buf_parts.artic     = entry(4, buf_gen-attr.p-key, {&delim-key})
+                              and buf_parts.prod-type = entry(5, buf_gen-attr.p-key, {&delim-key})
+                              and buf_parts.prod-code = integer(entry(6, buf_gen-attr.p-key, {&delim-key}))
+                              and buf_parts.in-code   = entry(7, buf_gen-attr.p-key, {&delim-key})
+                              and buf_parts.out-code  = entry(8, buf_gen-attr.p-key, {&delim-key})
+                              and buf_parts.part-code = entry(9, buf_gen-attr.p-key, {&delim-key})
+                              and buf_parts.status_   = no
+                              and buf_parts.fact-qnty > 0
+                            use-index FIFO
+                            no-error.
+                      if available buf_parts
+                      then v-fifo = false .
+                      else v-fifo = true .
+                  end. 
+                  if not available buf_gen-attr 
+                  or (available buf_gen-attr and not available buf_parts)     
+                  then do :
+                      if not available buf_gen-attr
+                      then do :
+                          put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                            "  марка " tt-marks.mark " не найдена в свободной зоне. Ищем партию по алкокоду..." skip .
+                      end.
+                      else do :
+                          put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                            "  марка " tt-marks.mark ". Не найдена партия свободной зоны. Ищем партию по алкокоду..." skip .
+                      end.
+                      run ProcAlcCode (input tt-marks.mark, output v-alc-code) no-error.
+                      if v-alc-code <> "" and v-alc-code <> ? 
+                      then
+                      find first buf_parts
+                        where buf_parts.obj-type  = buf_doc-line.obj-type
+                          and buf_parts.obj-code  = buf_doc-line.obj-code
+                          and buf_parts.artic     = buf_doc-line.artic
+                          and buf_parts.prod-type = buf_doc-line.prod-type
+                          and buf_parts.prod-code = buf_doc-line.prod-code
+                          and buf_parts.out-code  = v-rsrv-code
+                          and buf_parts.status_   = no
+                          and buf_parts.fact-qnty > 0
+                          and num-entries(buf_parts.alc-ref-ab-path) = 4
+                          and entry(3, buf_parts.alc-ref-ab-path) = v-alc-code
+                        use-index FIFO
+                        no-error.
+                      if available buf_parts
+                      then v-fifo = false .
+                      else do :
+                        v-fifo = true .
+                        put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                            "  марка " tt-marks.mark ". Алкокод " v-alc-code ". Не найдена партия по алкокоду. Берём по ФИФО." skip .
+                      end.
+                  end.
+                end.
+                else do :
+                    v-fifo = true .
+                end.
+            end.
+            else
             if v-alc-rsrv
             then do :
               if p-real-chg-qnty = tt-alc-codes.qnty
@@ -1042,6 +1297,26 @@ procedure rsrv-doc :
 
       if v-process-part = true
       then do:
+          
+        if v-mark-alchol and available buf_gen-attr
+        then do :
+            find current buf_gen-attr exclusive-lock no-error.
+            if available buf_gen-attr then buf_gen-attr.whole-send-news = (if v-rsrv-code = {&free-code} then 1 else 0) .
+            if v-rsrv-code <> {&free-code} and available buf_gen-attr
+            then do :
+                v-part-key = buf_gen-attr.p-key .
+                entry(8, v-part-key, {&delim-key}) = {&free-code} .
+                find first buf2_gen-attr exclusive-lock where buf2_gen-attr.table-name = {&excise-mark}
+                                                          and buf2_gen-attr.p-key = v-part-key
+                                                          and buf2_gen-attr.attr-code = buf_gen-attr.attr-code
+                                                          no-error .
+                if available buf2_gen-attr
+                then do :
+                    buf2_gen-attr.whole-send-news = 0 .
+                    release buf2_gen-attr .
+                end.
+            end.
+        end.  
         /* Резервирование или снятие резервов */
         run partrsrv in this-procedure
           (input  v-iteration-chg-qnty /* p-chg-qnty      */
@@ -1072,8 +1347,12 @@ procedure rsrv-doc :
           p-chg-qnty      = p-chg-qnty      - abs(v-real-chg-qnty) * v-chg-qnty-sign
           p-real-chg-qnty = p-real-chg-qnty + abs(v-real-chg-qnty) * v-chg-qnty-sign
         .
+        
+        
       end.
     end.
+    
+    output stream alc-rsrv close .
 
     if p-chg-qnty = 0
     then do:
@@ -1100,6 +1379,39 @@ procedure rsrv-doc :
     and p-reserv-single-part = false
     and p-purch-code-list    = '':u
     then do:
+      if v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+      then do :
+          p-partscr-prompt-price  = p-partscr-prompt-price + ",izlcstpr=enable" .
+          find first buf_goods no-lock where buf_goods.artic      = buf_doc-line.artic
+                                         and buf_goods.prod-type  = buf_doc-line.prod-type
+                                         and buf_goods.prod-code  = buf_doc-line.prod-code .
+          { gbl/gdsbcode.i buf_goods.gds-code ? varb-code }
+          { gbl/bcprcex.i buf_doc-line.obj-type buf_doc-line.obj-code varb-code 0 0 vardoc-num varprice-sale varroad-tax varexcise varcur-vat-pc varcur-slt-pc }  
+          if varprice-sale = ?
+          then do:
+              assign
+                varprice-sale = 0
+                varcur-vat-pc = 0
+                varcur-slt-pc = 0
+              .
+          end.
+            
+          varprice-rubl = varprice-sale / (1 + (varcur-vat-pc / 100)) .
+          if varprice-rubl = 0
+          then varprice-rubl = buf_doc-line.price-rubl / (1 + (buf_doc-line.vat-pc / 100)) .
+    
+              { gbl/baserate.i
+                buf_trn-doc.host-code
+                today
+                v-exch-rate
+                v-exch-scale
+                no-error
+              }
+          varprice-base = varprice-rubl / v-exch-rate * v-exch-scale .
+          
+          if varprice-rubl <> 0 and varprice-rubl <> ? then p-reserv-rubl = varprice-rubl .
+          if varprice-base <> 0 and varprice-base <> ? then p-reserv-base = varprice-base .
+      end.
       run rsrv-negative in this-procedure
         (input  parparentproc
         ,input  p-db-num
@@ -1173,6 +1485,13 @@ procedure rsrv-negative :
       ,output v-slt-type   /* p-slt-type   */
       ,output v-slt-pc     /* p-slt-pc     */
       ) .
+   
+    if lookup('izlcstpr=enable':u, p-partscr-prompt-price) > 0 
+    and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+    then do :
+        v-vat-pc = 0 .
+        v-vat-type = {&without-VAT} .
+    end.
 
     run partscr in this-procedure
       (input  parparentproc

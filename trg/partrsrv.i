@@ -68,6 +68,8 @@ procedure partrsrv :
   define variable v-new-unrsrv-code  as character no-undo .
   define variable v-unrsrv-qnty      as decimal   no-undo .
 
+  define variable part-key-rec      as character no-undo .
+
   do transaction
   on error undo, return error
   :
@@ -462,6 +464,13 @@ procedure partrsrv :
           undo, return error .
         end.
       end.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer unrsrv-parts:handle)
+                                        ,output part-key-rec).                                
+      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                            and ub.gen-attr.p-key =  part-key-rec :
+            delete ub.gen-attr .                               
+      end.
       delete unrsrv-parts .
     end.
     else do:
@@ -490,6 +499,13 @@ procedure partrsrv :
           undo, return error .
         end.
       end.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer rsrv-parts:handle)
+                                        ,output part-key-rec).                                
+      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                            and ub.gen-attr.p-key =  part-key-rec :
+            delete ub.gen-attr .                               
+      end.
       delete rsrv-parts .
     end.
     else do:
@@ -515,6 +531,13 @@ procedure partrsrv :
             view-as alert-box error .
           undo, return error .
         end.
+      end.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).                                
+      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                            and ub.gen-attr.p-key =  part-key-rec :
+            delete ub.gen-attr .                               
       end.
       delete buf_parts .
     end.

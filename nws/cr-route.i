@@ -687,6 +687,7 @@ PROCEDURE cre-dump-trn-doc:
     define buffer buf_doc-pl-attr          for ub.doc-pl-attr.
     define buffer buf_doc-pl-pump          for ub.doc-pl-pump.
     define buffer buf_parts-attr           for ub.parts-attr.
+    define buffer buf_gen-attr             for ub.gen-attr.
     define buffer buf_doc-attr             for ub.doc-attr.
     define buffer buf_doc-fbr-gds          for ub.doc-fbr-gds.
     define buffer buf_arh-trn-doc-contract for ub.arh-trn-doc-contract.
@@ -705,6 +706,8 @@ PROCEDURE cre-dump-trn-doc:
     define buffer buf_c-chk-pay            for ub.c-chk-pay.
     define buffer buf_c-chk-discnt         for ub.c-chk-discnt.
     */
+    
+    define variable v-parts-uniq-key-rec as character no-undo .
 
     find buf_trn-doc where rowid(buf_trn-doc) = tbl-row.
     for each  buf_ord-chain where buf_ord-chain.rel-doc-code = buf_trn-doc.doc-code and buf_ord-chain.rel-doc-type = 'trn'
@@ -755,6 +758,15 @@ PROCEDURE cre-dump-trn-doc:
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
         run cre-route-dump( p-act-name, {&table_parts-attr}, (buffer buf_parts-attr:handle), dmp-ord, input-output rc-ord ).
       end.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output v-parts-uniq-key-rec).
+      for each buf_gen-attr 
+         where buf_gen-attr.table-name = {&excise-mark}
+           and buf_gen-attr.p-key = v-parts-uniq-key-rec
+      on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+        run cre-route-dump( p-act-name, {&table_gen-attr}, (buffer buf_gen-attr:handle), dmp-ord, input-output rc-ord ).
+      end.                                  
     end.
     for each  buf_parts-root where buf_parts-root.doc-code = buf_trn-doc.doc-code
     on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
