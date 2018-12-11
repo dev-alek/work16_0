@@ -3735,6 +3735,7 @@ decimal,~
 decimal,~
 logical,~
 logical,~
+logical,~
 logical~
 ':U
 &scop prop-label-list-attr-inv-obj '~
@@ -3746,8 +3747,9 @@ logical~
 Максимальное абсолютное отклонение увеличения цены в документе пересортица,~
 Возможность пересортицы товаров с одной единицей измерения в разных количествах,~
 Начисление естественной убыли,~
-Запрещена пересортица товаров из разных групп'
-&scop prop-list-attr-inv-obj  'invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp'
+Запрещена пересортица товаров из разных групп,~
+Приходовать излишки по продажным ценам без НДС'
+&scop prop-list-attr-inv-obj  'invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp,izlcstpr'
 &scop global-attr-inv-obj true
 &scop host-attr-inv-obj true
 &scop shop-attr-inv-obj true
@@ -3763,7 +3765,8 @@ logical~
 &scop attr-inv-obj-pstunqtn_tooltip  (pstunqtn) Возможность пересортицы товаров с одной единицей измерения в разных количествах
 &scop attr-inv-obj-wastage_tooltip   (wastage) Начисление естественной убыли
 &scop attr-inv-obj-pstgrp_tooltip  (pstgrp) Установка Yes запрещает добавлять товары из разных групп
-&scop prop-tooltip-list-attr-inv-obj {&attr-inv-obj-invclcsp_tooltip},{&attr-inv-obj-invdnull_tooltip},{&attr-inv-obj-mxpcdcp_tooltip},{&attr-inv-obj-mxpcicp_tooltip},{&attr-inv-obj-mxsmdcp_tooltip},{&attr-inv-obj-mxsmicp_tooltip},{&attr-inv-obj-pstunqtn_tooltip},{&attr-inv-obj-wastage_tooltip},{&attr-inv-obj-pstgrp_tooltip}
+&scop attr-inv-obj-izlcstpr_tooltip  (izlcstpr) Yes - излишки в инвентаризации приходуются по продажным ценам без НДС
+&scop prop-tooltip-list-attr-inv-obj {&attr-inv-obj-invclcsp_tooltip},{&attr-inv-obj-invdnull_tooltip},{&attr-inv-obj-mxpcdcp_tooltip},{&attr-inv-obj-mxpcicp_tooltip},{&attr-inv-obj-mxsmdcp_tooltip},{&attr-inv-obj-mxsmicp_tooltip},{&attr-inv-obj-pstunqtn_tooltip},{&attr-inv-obj-wastage_tooltip},{&attr-inv-obj-pstgrp_tooltip},{&attr-inv-obj-izlcstpr_tooltip}
 &scop level-way-attr-inv-obj "obj,host,global"
 &scop up-way-attr-inv-obj "inv-obj,inv-obj,inv-obj"
 

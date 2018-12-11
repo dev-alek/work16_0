@@ -1563,7 +1563,7 @@ end.
     end.
 
     when {&attr-inv-obj} then do:
-      v-prop-code = "{&bef-attr-inv-obj_invclcsp},{&bef-attr-inv-obj_invdnull},{&bef-attr-inv-obj_pstunqtn},{&bef-attr-inv-obj_wastage},{&bef-attr-inv-obj_pstgrp}" .
+      v-prop-code = "{&bef-attr-inv-obj_invclcsp},{&bef-attr-inv-obj_invdnull},{&bef-attr-inv-obj_pstunqtn},{&bef-attr-inv-obj_wastage},{&bef-attr-inv-obj_pstgrp},{&bef-attr-inv-obj_izlcstpr}" .
 &scop ptype logical
 &scop prop-value no
 &scop prop-code  entry(v-ii,v-prop-code)

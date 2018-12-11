@@ -80,11 +80,11 @@ I-invclcas I-inv-prs I-pstgrp B-2 invclcsp B-3 invdnull B-4 pstunqtn ~
 invclcas invclcwt inv-prs B-7 wastage B-1 mxpcdcp B-9 mxpcicp B-5 mxsmdcp ~
 B-6 mxsmicp B-8 pstgrp v-invclcsp v-invdnull v-pstunqtn v-invclcas ~
 v-invclcwt v-inv-prs v-wastage v-mxpcdcp v-mxpcicp v-mxsmdcp v-mxsmicp ~
-v-pstgrp 
+v-pstgrp i-izlcstpr izlcstpr v-izlcstpr B-10
 &Scoped-Define DISPLAYED-OBJECTS invclcsp invdnull pstunqtn invclcas ~
 invclcwt inv-prs wastage mxpcdcp mxpcicp mxsmdcp mxsmicp pstgrp v-invclcsp ~
 v-invdnull v-pstunqtn v-invclcas v-invclcwt v-inv-prs v-wastage v-mxpcdcp ~
-v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp 
+v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp izlcstpr v-izlcstpr
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -100,11 +100,6 @@ v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON B-1 
-     IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL "" 
-     SIZE 3 BY 1.
-
-DEFINE BUTTON B-10 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
@@ -145,6 +140,11 @@ DEFINE BUTTON B-8
      SIZE 3 BY 1.
 
 DEFINE BUTTON B-9 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-10 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
@@ -204,10 +204,6 @@ DEFINE VARIABLE v-invdnull AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT 
      SIZE 87 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-izlcstpr AS CHARACTER FORMAT "X(256)":U 
-      VIEW-AS TEXT 
-     SIZE 87 BY 1 NO-UNDO.
-
 DEFINE VARIABLE v-mxpcdcp AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 78 BY 1 NO-UNDO.
@@ -253,10 +249,6 @@ DEFINE IMAGE I-invclcwt
      SIZE 3 BY 1.
 
 DEFINE IMAGE I-invdnull
-     FILENAME "cmp/info.bmp":U
-     SIZE 3 BY 1.
-
-DEFINE IMAGE I-izlcstpr
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
@@ -323,6 +315,19 @@ DEFINE VARIABLE wastage AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 2.38 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-izlcstpr AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 87 BY 1 NO-UNDO.
+
+DEFINE IMAGE I-izlcstpr
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
+DEFINE VARIABLE izlcstpr AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 87 BY 1 NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -375,6 +380,10 @@ DEFINE FRAME Dialog-Frame
      I-invclcas AT ROW 6 COL 1 WIDGET-ID 180
      I-inv-prs AT ROW 8 COL 1 WIDGET-ID 192
      I-pstgrp AT ROW 18.62 COL 1 WIDGET-ID 200
+	 B-10 AT ROW 20 COL 3.6 WIDGET-ID 84
+	 izlcstpr AT ROW 20 COL 6.6 NO-LABEL WIDGET-ID 20
+     v-izlcstpr AT ROW 20 COL 9.4 NO-LABEL WIDGET-ID 20
+     I-izlcstpr AT ROW 20 COL 1 WIDGET-ID 36
      SPACE(94.79) SKIP(0.85)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -465,6 +474,7 @@ ASSIGN
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
+v-izlcstpr:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
  
 
 
@@ -633,6 +643,20 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-10
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-10 Dialog-Frame
+ON CHOOSE OF B-10 IN FRAME Dialog-Frame
+DO:
+  run gbl/v-taobj.w
+      ({&attr-inv-obj},
+       "izlcstpr"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME I-inv-prs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-inv-prs Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-inv-prs IN FRAME Dialog-Frame
@@ -733,6 +757,15 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME I-izlcstpr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-izlcstpr Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-izlcstpr IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME I-pstgrp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-pstgrp Dialog-Frame
@@ -851,7 +884,7 @@ PROCEDURE enable_UI :
   DISPLAY invclcsp invdnull pstunqtn invclcas invclcwt inv-prs wastage mxpcdcp 
           mxpcicp mxsmdcp mxsmicp pstgrp v-invclcsp v-invdnull v-pstunqtn 
           v-invclcas v-invclcwt v-inv-prs v-wastage v-mxpcdcp v-mxpcicp 
-          v-mxsmdcp v-mxsmicp v-pstgrp 
+          v-mxsmdcp v-mxsmicp v-pstgrp izlcstpr v-izlcstpr
       WITH FRAME Dialog-Frame.
   ENABLE B-exit B-quit B-Help I-mxpcdcp I-invclcsp I-invdnull I-pstunqtn 
          I-mxsmdcp I-mxsmicp I-wastage I-mxpcicp I-invclcwt I-invclcas 
@@ -859,7 +892,7 @@ PROCEDURE enable_UI :
          invclcwt inv-prs B-7 wastage B-1 mxpcdcp B-9 mxpcicp B-5 mxsmdcp B-6 
          mxsmicp B-8 pstgrp v-invclcsp v-invdnull v-pstunqtn v-invclcas 
          v-invclcwt v-inv-prs v-wastage v-mxpcdcp v-mxpcicp v-mxsmdcp v-mxsmicp 
-         v-pstgrp 
+         v-pstgrp izlcstpr I-izlcstpr v-izlcstpr B-10
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1010,6 +1043,10 @@ FOR EACH thbjattr_thbj-attr
 &scop type decimal
 {&telo1}
 
+&scop pole izlcstpr
+&scop type logical
+{&telo1}
+
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 
@@ -1078,6 +1115,8 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 &scop pole inv-prs
 {&telo2g}
 
+&scop pole izlcstpr
+{&telo2}
 
 END PROCEDURE.
 
@@ -1175,6 +1214,7 @@ define variable v-found as decimal   no-undo .
      invclcas
      inv-prs
      pstgrp
+	 izlcstpr
      with frame {&frame-name}.
      B-exit:label = "Вы&ход"  .
      hide B-quit in frame {&frame-name} .
@@ -1258,6 +1298,7 @@ ASSIGN
     invclcas
     inv-prs
     pstgrp
+	izlcstpr
  .
 assign
   fh = frame {&frame-name}:first-child
