@@ -572,6 +572,11 @@ DEFINE BUTTON B-20
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-21 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
 DEFINE BUTTON B-22 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
@@ -601,6 +606,10 @@ DEFINE VARIABLE v-attr-PN AS CHARACTER FORMAT "X(256)":U
      SIZE 25.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-back-date AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 66.13 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-edit-fact-wayb AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 66.13 BY 1 NO-UNDO.
 
@@ -648,6 +657,10 @@ DEFINE IMAGE I-back-date
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
+DEFINE IMAGE I-edit-fact-wayb
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
 DEFINE IMAGE I-exc-max-qnty
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
@@ -688,6 +701,11 @@ DEFINE VARIABLE back-date AS LOGICAL INITIAL no
      LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 2 BY 1 NO-UNDO.
+
+DEFINE VARIABLE edit-fact-wayb AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE exc-max-qnty AS LOGICAL INITIAL no 
      LABEL "" 
@@ -741,7 +759,7 @@ DEFINE FRAME Dialog-Frame
      F-button-1 AT ROW 1.33 COL 20.38 COLON-ALIGNED NO-LABEL WIDGET-ID 350
      F-button-2 AT ROW 1.33 COL 33.63 COLON-ALIGNED NO-LABEL WIDGET-ID 348
      RECT-3 AT ROW 2 COL 1 WIDGET-ID 248
-     SPACE(0.49) SKIP(0.91)
+     SPACE(0.62) SKIP(1.87)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для накладных"
@@ -912,7 +930,9 @@ DEFINE FRAME page-2
      exc-max-qnty AT ROW 11.5 COL 6 WIDGET-ID 314
      B-22 AT ROW 12.75 COL 2.88 WIDGET-ID 484
      B-set_attr-PN AT ROW 12.75 COL 32 WIDGET-ID 480
-     attr-PN AT ROW 14 COL 6 NO-LABEL WIDGET-ID 492
+     B-21 AT ROW 13.79 COL 2.88 WIDGET-ID 496
+     edit-fact-wayb AT ROW 13.79 COL 6 WIDGET-ID 498
+     attr-PN AT ROW 15.25 COL 6 NO-LABEL WIDGET-ID 492
      v-reasonm AT ROW 1.13 COL 8.75 NO-LABEL WIDGET-ID 242
      v-reasonme AT ROW 2.17 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 264
      reasonme AT ROW 2.25 COL 32.75 COLON-ALIGNED NO-LABEL WIDGET-ID 266
@@ -925,6 +945,7 @@ DEFINE FRAME page-2
      v-gtd-to-imp-prod AT ROW 10.25 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 308
      v-exc-max-qnty AT ROW 11.5 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 316
      v-attr-PN AT ROW 12.75 COL 4.5 COLON-ALIGNED NO-LABEL WIDGET-ID 494
+     v-edit-fact-wayb AT ROW 13.79 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 502
      I-reasonm AT ROW 1.13 COL 1 WIDGET-ID 240
      I-back-date AT ROW 3.29 COL 1.5 WIDGET-ID 246
      I-not-ord AT ROW 4.42 COL 1 WIDGET-ID 256
@@ -936,10 +957,11 @@ DEFINE FRAME page-2
      I-gtd-to-imp-prod AT ROW 10.25 COL 1 WIDGET-ID 304
      I-exc-max-qnty AT ROW 11.5 COL 1 WIDGET-ID 312
      I-attr-PN AT ROW 12.75 COL 1 WIDGET-ID 486
+     I-edit-fact-wayb AT ROW 13.79 COL 1 WIDGET-ID 500
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.63 ROW 2.33
-         SIZE 99 BY 19.75 WIDGET-ID 300.
+         SIZE 99 BY 20.67 WIDGET-ID 300.
 
 DEFINE FRAME page-1
      B-1 AT ROW 1.08 COL 3.13 WIDGET-ID 80
@@ -993,12 +1015,13 @@ DEFINE FRAME page-1
      v-proxycrd AT ROW 12.58 COL 8.63 NO-LABEL WIDGET-ID 114
      v-vat-sum AT ROW 13.54 COL 6.63 NO-LABEL WIDGET-ID 234
      v-type-vat AT ROW 14.33 COL 6.5 NO-LABEL WIDGET-ID 66
-     v-vat-ext AT ROW 14.33 COL 76.50 NO-LABEL WIDGET-ID 228
+     v-vat-ext AT ROW 14.33 COL 70.63 NO-LABEL WIDGET-ID 228
      v-type-slt AT ROW 15.38 COL 6.5 NO-LABEL WIDGET-ID 78
-     v-slt-ext AT ROW 15.38 COL 76.5 NO-LABEL WIDGET-ID 222
+     v-slt-ext AT ROW 15.38 COL 63.5 NO-LABEL WIDGET-ID 222
      v-multdtyp AT ROW 16.33 COL 6.63 NO-LABEL WIDGET-ID 172
      v-prc-exp AT ROW 17.21 COL 10.88 NO-LABEL WIDGET-ID 208
      v-factorrt AT ROW 18.29 COL 13.13 NO-LABEL WIDGET-ID 106
+     v-inp_sum AT ROW 19.38 COL 9.38 NO-LABEL WIDGET-ID 242
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.5 ROW 2.25
@@ -1006,7 +1029,6 @@ DEFINE FRAME page-1
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME page-1
-     v-inp_sum AT ROW 19.38 COL 9.38 NO-LABEL WIDGET-ID 242
      I-date-close-period AT ROW 1.08 COL 1.25 WIDGET-ID 10
      I-stfactdt AT ROW 2.13 COL 1 WIDGET-ID 34
      I-intprmvq AT ROW 3.17 COL 1 WIDGET-ID 50
@@ -1193,6 +1215,9 @@ ASSIGN
 
 ASSIGN 
        v-back-date:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       v-edit-fact-wayb:READ-ONLY IN FRAME page-2        = TRUE.
 
 ASSIGN 
        v-exc-max-qnty:READ-ONLY IN FRAME page-2        = TRUE.
@@ -1440,6 +1465,20 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-21
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-21 Dialog-Frame
+ON CHOOSE OF B-21 IN FRAME page-2
+DO:
+  run gbl/v-taobj.w
+      ({&attr-nakl_par},
+       "exc-max-qnty"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME B-22
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-22 Dialog-Frame
 ON CHOOSE OF B-22 IN FRAME page-2
@@ -1447,6 +1486,19 @@ DO:
   run gbl/v-taobj.w
       ({&attr-nakl_par},
        "attr-PN"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-22
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-22 Dialog-Frame
+ON CHOOSE OF B-22 IN FRAME page-2
+DO:
+  run gbl/v-taobj.w
+      ({&attr-nakl_par},
+       "edit-fact-wayb"
        ).
 END.
 
@@ -1696,6 +1748,17 @@ END.
 
 
 &Scoped-define FRAME-NAME page-2
+&Scoped-define SELF-NAME I-edit-fact-wayb
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-edit-fact-wayb Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-edit-fact-wayb IN FRAME page-2
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME I-exc-max-qnty
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-exc-max-qnty Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-exc-max-qnty IN FRAME page-2
@@ -2137,17 +2200,19 @@ PROCEDURE enable_UI :
       WITH FRAME page-1.
   {&OPEN-BROWSERS-IN-QUERY-page-1}
   DISPLAY reasonm back-date not-ord neg-ask vat-goods inv-ship round-vat-sum 
-          gtd-to-imp-prod exc-max-qnty attr-PN v-reasonm v-reasonme reasonme 
-          v-back-date v-not-ord v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum 
-          v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN 
+          gtd-to-imp-prod exc-max-qnty edit-fact-wayb attr-PN v-reasonm 
+          v-reasonme reasonme v-back-date v-not-ord v-neg-ask v-vat-goods 
+          v-inv-ship v-round-vat-sum v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN 
+          v-edit-fact-wayb 
       WITH FRAME page-2.
   ENABLE I-reasonm I-back-date I-not-ord I-reasonme I-neg-ask I-vat-goods 
          I-inv-ship I-round-vat-sum I-gtd-to-imp-prod I-exc-max-qnty I-attr-PN 
-         B-11 reasonm B-14 B-ex back-date B-12 B-13 not-ord B-15 neg-ask B-16 
-         vat-goods B-17 inv-ship B-18 round-vat-sum B-19 gtd-to-imp-prod B-20 
-         exc-max-qnty B-22 B-set_attr-PN attr-PN v-reasonm v-reasonme reasonme 
-         v-back-date v-not-ord v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum 
-         v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN 
+         I-edit-fact-wayb B-11 reasonm B-14 B-ex back-date B-12 B-13 not-ord 
+         B-15 neg-ask B-16 vat-goods B-17 inv-ship B-18 round-vat-sum B-19 
+         gtd-to-imp-prod B-20 exc-max-qnty B-22 B-set_attr-PN B-21 
+         edit-fact-wayb attr-PN v-reasonm v-reasonme reasonme v-back-date 
+         v-not-ord v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum 
+         v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN v-edit-fact-wayb 
       WITH FRAME page-2.
   {&OPEN-BROWSERS-IN-QUERY-page-2}
 END PROCEDURE.
@@ -2422,6 +2487,11 @@ FOR EACH thbjattr_thbj-attr
 &scop type character
 {&telo1}
 
+&scop n-page 2
+&scop pole edit-fact-wayb
+&scop type logical
+{&telo1}
+
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 
@@ -2559,6 +2629,9 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 &scop pole attr-PN
 {&telo2}
 
+&scop pole edit-fact-wayb
+{&telo2}
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2680,6 +2753,7 @@ define variable v-found as decimal   no-undo .
      gtd-to-imp-prod
      exc-max-qnty
      attr-PN
+     edit-fact-wayb
      with frame page-2 .
 
      B-exit:label in frame {&frame-name}  = "Вы&ход"  .
@@ -2843,6 +2917,7 @@ ASSIGN
     neg-ask
     vat-goods
     attr-PN
+    edit-fact-wayb
     .
 
 

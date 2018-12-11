@@ -132,8 +132,8 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
     Modifying the contents of this method using a code editor will invalidate any support for this file. */
     
-    this-object:components = new System.ComponentModel.Container().
     @VisualDesigner.FormMember (NeedsInitialize="true").
+    this-object:components = new System.ComponentModel.Container().
     define variable resources as Progress.Util.ResourceManager no-undo.
     resources = new Progress.Util.ResourceManager("ibs.th.str.ptrl.forms.tanksections").
     this-object:tabControl = new System.Windows.Forms.TabControl().

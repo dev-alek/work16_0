@@ -249,6 +249,8 @@ define variable var-inp_sum        as logical   no-undo .
 define variable v-tth             as handle no-undo .
 define variable v-back-date as logical   no-undo .
 define variable v-not-ord   as logical   no-undo .
+define variable v-edit-fact-wayb as logical   no-undo .
+define variable v-fact-qnty as character no-undo.
 
 define new shared variable PrintScale   as logical init true no-undo.
 define new shared variable CostPrice    as logical no-undo.
@@ -2563,6 +2565,28 @@ do on error undo main-block, leave main-block :
    else do:
      find first bf_sysconf where bf_sysconf.host-code = t-doc.host-code no-lock no-error .
    end.
+
+  if t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and not t-doc.flag_ and t-doc.status_ = {&wayb}
+  then do: 
+    
+    run adm/shattri.p (
+        input "get":U
+        ,input t-doc.obj-type
+        ,input t-doc.obj-code
+        ,input {&attr-nakl_par}
+        ,input  "edit-fact-wayb"
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-logical
+        ,output par-type
+        ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+      if error-status :error then.
+
+      else v-edit-fact-wayb = v-value-logical.
+    end.
 
   if is-copy
   then do:
@@ -5127,24 +5151,65 @@ if available  ub.doc-line then do:
     end.
     return .
   end.
+
+  define variable v-gds-code as integer   no-undo .
+  define variable v-update-ok   as logical   no-undo .
+  define variable v-err-message as character no-undo .
+  { gbl/doclicod.i
+    recid(ub.doc-line)
+    v-gds-code
+  }
+  v-fact-qnty = ub.doc-line.fact-qnty:screen-value in browse {&browse-name}.
   if dec ( ub.doc-line.cli-qnty:screen-value in browse {&browse-name}) <>  ub.doc-line.cli-qnty then do:
-     run upd-cli-qnty in this-procedure no-error.
-     if error-status :error then do:
-        display  ub.doc-line.cli-qnty with browse {&browse-name}.
-        return.
-     end.
+    if v-edit-fact-wayb and not t-doc.flag_ and dec (ub.doc-line.cli-qnty:screen-value in browse {&browse-name}) <> ub.doc-line.cli-qnty
+    then do:
+      if v-edit-fact-wayb and not t-doc.flag_
+      then do:
+        ub.doc-line.fact-qnty:screen-value in browse {&browse-name} = string (ub.doc-line.cli-base-rate * ub.doc-line.cli-qnty).
+        t-doc.flag_ = true.
+        run str/doclinfq.p
+          (input  parparentproc
+          ,buffer t-doc
+          ,buffer  ub.doc-line
+          ,input  decimal( ub.doc-line.fact-qnty:screen-value in browse {&browse-name})
+          ,output v-update-ok
+          ,output v-err-message
+          ) no-error .
+        if error-status :error
+        or v-update-ok = false
+        then do:
+          if error-status :error
+          then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при вызове процедуры doclinfq.p" skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          else do:
+            message
+              v-err-message
+              view-as alert-box information .
+          end.
+          display
+             ub.doc-line.fact-qnty
+            with browse {&browse-name} .
+          t-doc.flag_ = false.
+          return.
+        end.
+        t-doc.flag_ = false.
+         
+      end.
+    end.
+    run upd-cli-qnty in this-procedure no-error.
+    if error-status :error then 
+    do:
+      display  ub.doc-line.cli-qnty with browse {&browse-name}.
+      return.
+    end.
   end.
-  if dec ( ub.doc-line.fact-qnty:screen-value in browse {&browse-name}) <>  ub.doc-line.fact-qnty then do:
-    define variable v-gds-code as integer   no-undo .
-
-    { gbl/doclicod.i
-      recid(ub.doc-line)
-      v-gds-code
-    }
-
-    define variable v-update-ok   as logical   no-undo .
-    define variable v-err-message as character no-undo .
-
+  if dec ( v-fact-qnty ) <>  ub.doc-line.fact-qnty then do:
     run str/doclinfq.p
       (input  parparentproc
       ,buffer t-doc
@@ -5175,6 +5240,44 @@ if available  ub.doc-line then do:
         with browse {&browse-name} .
       return.
     end.
+    if v-edit-fact-wayb and not t-doc.flag_
+    then do:
+      t-doc.flag_ = true.
+      ub.doc-line.fact-qnty:screen-value in browse {&browse-name} = v-fact-qnty.
+      run str/doclinfq.p
+        (input  parparentproc
+        ,buffer t-doc
+        ,buffer  ub.doc-line
+        ,input  decimal( ub.doc-line.fact-qnty:screen-value in browse {&browse-name})
+        ,output v-update-ok
+        ,output v-err-message
+        ) no-error .
+      if error-status :error
+      or v-update-ok = false
+      then do:
+        if error-status :error
+        then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            "Ошибка при вызове процедуры doclinfq.p" skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+        end.
+        else do:
+          message
+            v-err-message
+            view-as alert-box information .
+        end.
+        display
+           ub.doc-line.fact-qnty
+          with browse {&browse-name} .
+        t-doc.flag_ = false.
+        return.
+      end.
+      t-doc.flag_ = false.
+    end.
+    
     do
     on error undo, return error return-value
     :
@@ -5983,6 +6086,8 @@ if lookup( fnc, "enable" ) > 0 then do:
           else do:
             if t-doc.flag_ = yes then do: assign  ub.doc-line.cli-qnty  :read-only in browse {&browse-name} = yes. end.
                                   else do: assign  ub.doc-line.fact-qnty :read-only in browse {&browse-name} = yes. end.
+            if v-edit-fact-wayb
+              then assign doc-line.fact-qnty :read-only in browse {&browse-name} = no.
           end.
           if isEgais
             then doc-line.cli-qnty  :read-only in browse {&browse-name} = yes.
@@ -6442,7 +6547,7 @@ if available  ub.doc-line then do:
       return error.
     end.
     find ub.units where ub.units.unit-name = ub.goods.unit-base no-lock.
-    if t-doc.flag_ then do:
+    if t-doc.flag_ and not v-edit-fact-wayb then do:
        message "В данном статусе нельзя редактировать количество по ТТН".
        display  ub.doc-line.cli-qnty with browse {&browse-name}.
        return error.
