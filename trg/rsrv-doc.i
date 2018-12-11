@@ -183,15 +183,20 @@ procedure rsrv-doc :
           ) no-error .
           delete object v-tth no-error.      
         if error-status:error then do:
-          message "Ошибка при получение параметра izlcstpr"
-          view-as alert-box.
-          return error.
+          v-izlcstpr = false .
+/*          message "Ошибка при получение параметра izlcstpr"*/
+/*          view-as alert-box.                               */
+/*          return error.                                    */
         end.
     end.
     else do :
         v-izlcstpr = false .
     end.
-/*    message "!" view-as alert-box.*/
+    
+    if p-pl-code <> ? and trim(p-pl-code) <> "" and p-pl-code <> "0"
+    then
+    v-izlcstpr = false .
+    
     empty temp-table tt-alc-codes .
     find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
                                    and buf1_goods.prod-type  = buf_doc-line.prod-type
@@ -246,7 +251,7 @@ procedure rsrv-doc :
     end.
     release buf1_goods no-error .
     release buf1_doc-line-attr no-error .
-/* run gbl/inidebug.p .*/
+/* run gbl/inidebug.p . */
     if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
         for each buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
@@ -813,7 +818,7 @@ procedure rsrv-doc :
             end.
             else if not v-alc-rsrv
             then do:
-              if not (v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}) then
+              if not (v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}) or (v-izlcstpr and p-action = {&rsrv-dtl_action_reserv-sozdanie}) then
               find last buf_parts
                 where buf_parts.obj-type  = buf_doc-line.obj-type
                   and buf_parts.obj-code  = buf_doc-line.obj-code
@@ -1379,7 +1384,7 @@ procedure rsrv-doc :
     and p-reserv-single-part = false
     and p-purch-code-list    = '':u
     then do:
-      if v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+      if v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and p-action <> {&rsrv-dtl_action_reserv-sozdanie}
       then do :
           p-partscr-prompt-price  = p-partscr-prompt-price + ",izlcstpr=enable" .
           find first buf_goods no-lock where buf_goods.artic      = buf_doc-line.artic
@@ -1486,7 +1491,7 @@ procedure rsrv-negative :
       ,output v-slt-pc     /* p-slt-pc     */
       ) .
    
-    if lookup('izlcstpr=enable':u, p-partscr-prompt-price) > 0 
+    if lookup('izlcstpr=enable':u, p-partscr-prompt-price) > 0 and p-action <> {&rsrv-dtl_action_reserv-sozdanie} 
     and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
     then do :
         v-vat-pc = 0 .
