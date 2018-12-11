@@ -226,7 +226,7 @@ run get-report-num in my-handle (output g#report-num).
         sym7                  column-label ":!:" format "X(1)" space(0)
         vat-acc-ten           column-label "Ñóììà ÍÄÑ!10%":C10 format "->>,>>>,>>9.99" space(0)
         sym8                  column-label ":!:" format "X(1)" space(0)
-        vat-acc-eighteen      column-label "Ñóììà ÍÄÑ!18%:":C10 format "->>,>>>,>>9.99" space(0)
+        vat-acc-eighteen      column-label "Ñóììà ÍÄÑ!18/20%:":C10 format "->>,>>>,>>9.99" space(0)
         sym9                  column-label ":!:" format "X(1)" space(0)
         vat-acc               column-label "Ñóììà ÍÄÑ! ":C10 format "->>,>>>,>>9.99" space(0)
         sym10                 column-label ":!:" format "X(1)" space(0)
@@ -255,7 +255,7 @@ run get-report-num in my-handle (output g#report-num).
         sym7                  column-label ":!:" format "X(1)" space(0)
         vat-acc-ten           column-label "Ñóììà ÍÄÑ!10%":C10 format "->>,>>>,>>9.99" space(0)
         sym8                  column-label ":!:" format "X(1)" space(0)
-        vat-acc-eighteen      column-label "Ñóììà ÍÄÑ!18%:":C10 format "->>,>>>,>>9.99" space(0)
+        vat-acc-eighteen      column-label "Ñóììà ÍÄÑ!18/20%:":C10 format "->>,>>>,>>9.99" space(0)
         sym9                  column-label ":!:" format "X(1)" space(0)
         vat-acc               column-label "Ñóììà ÍÄÑ! ":C10 format "->>,>>>,>>9.99" space(0)
         sym10                 column-label ":!:" format "X(1)" space(0)
@@ -690,7 +690,7 @@ on error undo, return error
                vat-acc-ten      = vat-acc-ten + tt-allsum.vat-rubl-acc
             .
          end.
-         if buf_parts.vat-pc = 18
+         if buf_parts.vat-pc = 20 or buf_parts.vat-pc = 18
          then do:
              assign
                vat-acc-eighteen      = vat-acc-eighteen + tt-allsum.vat-rubl-acc
@@ -712,7 +712,7 @@ on error undo, return error
                vat-acc-ten  = vat-acc-ten + tt-allsum.vat-base-acc
             .
          end.
-         if buf_parts.vat-pc = 18
+         if buf_parts.vat-pc = 20 or buf_parts.vat-pc = 18
          then do:
              assign
                vat-acc-eighteen  = vat-acc-eighteen + tt-allsum.vat-base-acc

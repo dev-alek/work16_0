@@ -3040,7 +3040,7 @@ on error undo, return error return-value
             v-sum-10        = v-sum-10        + temp-nalog.from-sum
           .
         end.
-        if temp-nalog.vat-prc = 18 then do:
+        if temp-nalog.vat-prc = 18 or temp-nalog.vat-prc = 20 then do:
           assign
             v-sum-no-VAT-18 = v-sum-no-VAT-18 + ( temp-nalog.from-sum - temp-nalog.vat-sum )
             v-VAT-18        = v-VAT-18        + temp-nalog.vat-sum
@@ -3058,7 +3058,7 @@ on error undo, return error return-value
          with frame factur-10 .
          down stream Out-stream with frame factur-10 .
          display stream Out-stream
-            "Итого по ставке 18%" @ buf_goods.gds-name
+            "Итого по ставке 18/20%" @ buf_goods.gds-name
             v-sum-no-VAT-18       @ v-sum-no-VAT
             v-VAT-18              @ v-VAT
             v-sum-18              @ v-sum
@@ -3074,7 +3074,7 @@ on error undo, return error return-value
          with frame factur .
          down stream Out-stream with frame factur .
          display stream Out-stream
-            "Итого по ставке 18%" @ buf_goods.gds-name
+            "Итого по ставке 18/20%" @ buf_goods.gds-name
             v-sum-no-VAT-18       @ v-sum-no-VAT
             v-VAT-18              @ v-VAT
             v-sum-18              @ v-sum
@@ -3099,7 +3099,7 @@ on error undo, return error return-value
       ).
       run facturxl-write-cell-data in this-procedure (
             input {&facturxl-f_labelVat18}
-          , input "Итого по ставке 18%":U
+          , input "Итого по ставке 18/20%":U
       ).
       run facturxl-write-cell-data in this-procedure (
             input {&facturxl-f_sumNoVat18}
