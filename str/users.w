@@ -3855,7 +3855,18 @@ for buf_user-account
   , buf_user-login
 on error undo, return error return-value
 :
-
+  find first buf_user-account no-lock
+    where buf_user-account.user-id = p-user-id
+    no-error.
+  if available (buf_user-account) then 
+  do:
+    if buf_user-account.status_ = {&bef-user-status-deleted} then 
+    do:
+      message "Пользователь удален. Копирование логина невозможно"
+        view-as alert-box.
+      return no-apply .
+    end.
+  end.   
     do transaction
     on error undo, return error return-value
     :       /* блокируем логин пользователя */
@@ -3912,7 +3923,6 @@ on error undo, return error return-value
     define variable v-success            as logical   no-undo .
     
     /* редактирование логина пользователя */
-    /* запись захвачена и не может быть изменена */
     v-tmp-dbnum = buf_user-login.db-num.
     run str/usrloged2.w (
           input parparentproc
@@ -3932,8 +3942,6 @@ on error undo, return error return-value
     ) .
     if v-list-db = "" then
        return.
-
-            /* запись была найдена и захвачена чуть выше */
 
 /*копируем логин в выбранные базы*/            
            run str/copy-login.p (

@@ -51,6 +51,7 @@ define buffer new_user-host              for user-host .
 define buffer new_user-menu-group        for user-menu-group .
 define buffer new_user-login-action-role for user-login-action-role .
 
+define buffer buf_user-account           for ub.user-account .
 define buffer buf_db                     for ub.db .
 
 do
@@ -85,8 +86,7 @@ do
       view-as alert-box warning.
     undo, return error .
   end.
-
-
+  
   if p-db-list = "Все" then 
   do:
     p-db-list = "" .
@@ -111,7 +111,7 @@ do
       output to value (ibs.th.gbl.gbl-inipar:logDir + "login-error.log") append .
       /*  for each buf_temp-rvs no-lock where buf_temp-rvs.rvs-error = yes:*/
 
-      put unformatted                "Логин =" + buf_user-login.user-login + " уже есть в БД " + string (buf_user-login.db-num) skip .
+      put unformatted                "Логин =" + new_user-login.user-login + " уже есть в БД " + string (new_user-login.db-num) skip .
 
 
       output close .    

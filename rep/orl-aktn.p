@@ -236,7 +236,9 @@ FOR EACH ub.doc-line WHERE ub.doc-line.doc-code = t-doc.doc-code NO-LOCK ,
        CREATE t-doc-line.
        BUFFER-COPY doc-line TO t-doc-line.
        { gbl/hostcode.i doc-line.obj-type doc-line.obj-code v-host-code }
-       { gbl/pftxvalg.i goods.gds-code {&vat-tax-code} ? v-host-code doc-line.obj-type doc-line.obj-code v-vat-pc no-error }
+       
+       
+       { gbl/pftxvalg.i goods.gds-code {&vat-tax-code} tdoc-date v-host-code doc-line.obj-type doc-line.obj-code v-vat-pc no-error }
        { gbl/pftxvalg.i goods.gds-code {&slt-tax-code} ? v-host-code doc-line.obj-type doc-line.obj-code v-slt-pc no-error }
        assign
            t-doc-line.vat-pc = v-vat-pc

@@ -93,10 +93,16 @@ on error undo, return error return-value
     ,output v-param-type
     ) .
   /*найдем call*/
-  run gen-key-rec in this-procedure (
-                                    input  {&table_schedule}
-                                  ,input (buffer buf_schedule:handle)
-                                  ,output v-uniq-key-rec).
+  if available buf_schedule
+  then do :
+    run gen-key-rec in this-procedure (
+                                      input  {&table_schedule}
+                                    ,input (buffer buf_schedule:handle)
+                                    ,output v-uniq-key-rec).
+  end.
+  else do :
+    v-uniq-key-rec = "schedule" + {&delim-key} + string(p-cre-db-num) + {&delim-key} + p-task-type + {&delim-key} + string(p-task-num) .
+  end.                              
   run get-db-num in parparentproc ( output v-cntxt-db-num).
   run rep/reprum.p
     (

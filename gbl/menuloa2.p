@@ -1558,7 +1558,16 @@ define variable vss-description as character no-undo init "".
  " "
  "yes"
 }
-
+{ gbl/menuload.i
+  {&bef-menuload_service_utility}
+  "'Изменение ставки НДС на 20% в спецификациях'"
+  "'utl/specifNDS.p'"
+  "''"
+  "''"
+  "''"
+  " "
+  "yes"
+}
 { gbl/menuload.i
   {&bef-menuload_service_utility}
   "'Информация о складских архивах'"
@@ -1844,6 +1853,17 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_service_utility}
+  "'Генерация пароля для технологического пролива'"
+  "'utl/gen-pwd.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+} 
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_service_check}                                                  */
 /* Сервис/ Программы проверки                                                 */

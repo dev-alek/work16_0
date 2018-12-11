@@ -264,8 +264,11 @@ define variable vartype                     as character                     no-
 define variable isEgais                     as logical                       no-undo .
 define variable v-vid-action                as integer                       no-undo .
 define variable v-vid-param                 as longchar                      no-undo .
+define variable v-edit-fact-wayb            as logical                       no-undo .
+define variable fq                          as character                     no-undo.
+define variable cq                          as character                     no-undo.
 define variable v-gds-null-price            as logical                       no-undo .
-define variable is-fuel                     as logical                      no-undo .
+define variable is-fuel                     as logical                       no-undo .
 define variable v-specif-unit-list          as character no-undo . /* ед.изм. из спецификации договора */
 define variable v-specif-cli-base-rate      as decimal no-undo .   /* коэф. к базовой ЕИ для ЕИ из договора */ 
 define variable l-repeat-asi                as logical                       no-undo .
@@ -422,7 +425,7 @@ define frame d-in-line
   tt-fr-doc-line.unit-base             at row 7    col 26.5  colon-aligned no-label                   view-as text    size 7     by 1
   b-docsec                             at row 7    col 32  
   tt-fr-doc-line.fact-qnty    format ">>>,>>>,>>9.<<<"  at row 8    col 10.5  colon-aligned    label "&Факт"           view-as fill-in size 16    by 1
-  tt-fr-doc-line.fact-qnty-kg format ">>>,>>>,>>9.<<<"  at row 8    col 30.0  colon-aligned no-label                   view-as fill-in size 16    by 1
+  tt-fr-doc-line.fact-qnty-kg format ">>>,>>>,>>9.<<<"  at row 8    col 29.0  colon-aligned no-label                   view-as fill-in size 16    by 1
   tt-fr-doc-line.vat-pc                 at row 8    col 50    colon-aligned
   tt-fr-doc-line.type-inp-vat           at row 8    col 58    no-label                   view-as toggle-box size 2 by 1
   tt-fr-doc-line.slt-pc                 at row 9    col 50    colon-aligned
@@ -2069,6 +2072,31 @@ empty temp-table thbjattr_thbj-attr.
           no-error .
        end.
    end.
+   else do:
+   
+    if t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and not t-doc.flag_ and t-doc.status_ = {&wayb}
+    then do: 
+      
+      run adm/shattri.p (
+          input "get":U
+          ,input t-doc.obj-type
+          ,input t-doc.obj-code
+          ,input {&attr-nakl_par}
+          ,input  "edit-fact-wayb"
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-value-logical
+          ,output par-type
+          ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+        ) no-error .
+        if error-status :error then .
+        else v-edit-fact-wayb = v-value-logical.
+    end.
+   
+     
+   end.
 
    { gbl/gdsobjat.i
      t-doc.obj-type
@@ -2531,7 +2559,7 @@ else do: /* не добавление (изменение и просмотр) */
                                     tt-fr-doc-line.num-place
                                     tt-fr-doc-line.wt-place  with frame {&frame-name}.
 
-  if t-doc.flag_ = yes or t-doc.status_ = {&fact} then do:
+  if t-doc.flag_ = yes or t-doc.status_ = {&fact} or v-edit-fact-wayb then do:
     display tt-fr-doc-line.fact-qnty with frame {&frame-name}.
     if is-petrolium = yes and is-pieces = no then do:
       display tt-fr-doc-line.fact-qnty-kg with frame {&frame-name}.
@@ -3359,7 +3387,12 @@ if parline-mode <> {&lookup} then do:
      if varfact-qnty-input then enable tt-fr-doc-line.fact-qnty with frame {&frame-name}.
   end.
 end.
+if v-edit-fact-wayb
+  then enable tt-fr-doc-line.fact-qnty with frame {&frame-name}.
 enable b-quit b-help with frame {&frame-name}.
+      assign
+        frame {&frame-name} tt-fr-doc-line.fact-qnty
+      .
 run disp-total in this-procedure.
 end.
 if is-petrolium = yes and is-pieces = no then do:
@@ -3879,12 +3912,74 @@ procedure local-cor-line:
     .
   end.
 
+  if v-edit-fact-wayb
+  then do:
+    fq = tt-fr-doc-line.fact-qnty:screen-value in frame {&frame-name}.
+  end.
+
+  def var ndq as character no-undo.
+  
+  if v-edit-fact-wayb and not t-doc.flag_
+  then do:
+    t-doc.flag_ = true.
+    ndq = tt-fr-doc-line.doc-qnty:screen-value in frame {&frame-name}.
+    tt-fr-doc-line.fact-qnty:screen-value in frame {&frame-name} = string (dec (cq) * tt-fr-doc-line.cli-base-rate).
+    tt-fr-doc-line.cli-qnty:screen-value in frame {&frame-name} = cq.
+    assign
+      tt-fr-doc-line.fact-qnty
+      tt-fr-doc-line.cli-qnty
+      .
+    run calc-all in this-procedure
+      ( input varcli-qnty-calc
+      ) no-error .
+    if error-status :error then do:
+      return no-apply.
+    end.
+    { str/cor-line.i "realy" }
+    if error-status :error then do:
+       message "Ошибка при вызове процедуры сохранения линии."
+               return-value
+               view-as alert-box.
+       t-doc.flag_ = false.
+       return error.
+    end.
+    t-doc.flag_ = false.
+    tt-fr-doc-line.cli-qnty:screen-value in frame {&frame-name} = ndq.
+    assign
+      tt-fr-doc-line.cli-qnty.
+    run calc-all in this-procedure
+      ( input varcli-qnty-calc
+      ) no-error .
+    if error-status :error then do:
+      return no-apply.
+    end.
+  end.
+
+  
   { str/cor-line.i "realy" }
   if error-status :error then do:
      message "Ошибка при вызове процедуры сохранения линии."
              return-value
              view-as alert-box.
      return error.
+  end.
+  
+  
+  if v-edit-fact-wayb and not t-doc.flag_
+  then do:
+    tt-fr-doc-line.fact-qnty:screen-value in frame {&frame-name} = fq.
+    assign
+      tt-fr-doc-line.fact-qnty.
+    t-doc.flag_ = true.
+    { str/cor-line.i "realy" }
+    if error-status :error then do:
+      t-doc.flag_ = false.
+       message "Ошибка при вызове процедуры сохранения линии."
+               return-value
+               view-as alert-box.
+       return error.
+    end.
+    t-doc.flag_ = false.
   end.
 
   find first lc_doc-line where lc_doc-line.doc-code  = t-doc.doc-code           and

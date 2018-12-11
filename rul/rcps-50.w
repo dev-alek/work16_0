@@ -76,7 +76,7 @@ run rep/d-report.w
     , input "{&o-choice}"      /* 5 */
     , input ""                 /* 6 */
     , input ""                 /* 7 */
-    , input substitute("shop,{&send-check},{&Excel-yes},params-only=yes,params-only-mode=&1,parent-handle=&2,call=schedule"
+    , input substitute("shop,{&Excel-yes},params-only=yes,params-only-mode=&1,parent-handle=&2,call=schedule"
                       , p-mode
                       , this-procedure:handle)     /* 8 */
     , input NO                 /* 9 */

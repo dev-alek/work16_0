@@ -837,7 +837,7 @@ assign
             tt-doc-line-attr.gds-code = temp_doc-line.gds-code
             tt-doc-line-attr.attr-value = temp_doc-line.RefB
           .*/
-          { gbl/pftxvalg.i temp_doc-line.gds-code {&vat-tax-code} ? temp_trn-doc.host-code temp_trn-doc.obj-type temp_trn-doc.obj-code tt2-doc-line.VAT-pc no-error }
+/*            { gbl/pftxvalg.i temp_doc-line.gds-code {&vat-tax-code} ? temp_trn-doc.host-code temp_trn-doc.obj-type temp_trn-doc.obj-code tt2-doc-line.VAT-pc no-error }*/
           
         end.
 
@@ -1875,18 +1875,19 @@ procedure create-line:
         no-error.
     if error-status:error then
         return error subst("Не найден документ с кодом &1", p-doc-code).
-
-    { gbl/pftxvalg.i
-      ub.goods.gds-code
-      {&vat-tax-code}
-      today
-      ub.trn-doc.host-code
-      ub.trn-doc.obj-type
-      ub.trn-doc.obj-code
-      vat-pc
-      no-error
-    }
-    
+    /*if tt2-doc-line.vat-pc = ?
+    then do:
+      { gbl/pftxvalg.i
+        ub.goods.gds-code
+        {&vat-tax-code}
+        today
+        ub.trn-doc.host-code
+        ub.trn-doc.obj-type
+        ub.trn-doc.obj-code
+        vat-pc
+        no-error
+      }
+    end.*/
     /* создаем линию накладной */
     { str/crdoclin.i
       ub.trn-doc.doc-code

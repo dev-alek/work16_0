@@ -229,7 +229,7 @@ end.
 PUT SPACE(90) Our_Host.obj-name format "x(40)" skip
     SPACE(90) v-obj-name        format "x(40)" skip(2)
         SPACE(20) "А К Т  формирования продажной цены по документу  N " format "x(80)"
-        t-doc.doc-code format "X(10)"
+        t-doc.doc-code format "X(14)"
         "  от  " t-doc.doc-date format "99.99.9999" SKIP(1).
 
 if t-doc.doc-type = {&income}

@@ -100,7 +100,9 @@ procedure partscr :
   define variable v-action                 as character no-undo .
   define variable l-need-create-old-return as logical   no-undo init false .
   define variable l-create-old-return      as logical   no-undo init false .
-
+  
+  define variable v-izlcstpr        as character no-undo .
+  
   /* свойства товара */
   define variable l-goods-serial           as logical   no-undo .
   define variable l-goods-twounit          as logical   no-undo .
@@ -316,6 +318,12 @@ procedure partscr :
           assign
             v-check-right = logical(entry(2, v-option, '=':u))
           .
+        end.
+        when 'izlcstpr':u
+        then do :
+            assign
+                v-izlcstpr = v-option
+            .
         end.
         otherwise do:
           message
@@ -540,7 +548,7 @@ end.
           if conf-par = "disable"
           or buf_goods.negative-rest = false
           then do:
-            if v-prompt-price = 'prompt=enable':u
+            if v-prompt-price = 'prompt=enable':u and v-izlcstpr <> 'izlcstpr=enable':u
             then do:
               /* должны вызвать интерфейс ручного редактирования партий */
               /* только в случае если разрешено обращение к пользователю */

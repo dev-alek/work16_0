@@ -95,6 +95,7 @@ do:
       temp_doc-line.cli-qnty     = TempDocLine.cli-qnty
       temp_doc-line.part-id      = TempDocLine.part-id
       temp_doc-line.vsd-uuid     = TempDocLine.vsd-uuid
+      temp_doc-line.vat-pc       = TempDocLine.vat-pc
       .
     
   end.

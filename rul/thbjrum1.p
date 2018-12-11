@@ -169,17 +169,34 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
      end.
    end case.
     if entry(1, p-uniq-key-rec, {&delim-key}) = {&table_schedule} then do:
-      if buf_schedule.cre-db-num > 0 then do:
-        if g#db-num > 0 then do:
-          v-db-list = string(0).
+      if available buf_schedule
+      then do :
+        if buf_schedule.cre-db-num > 0 then do:
+          if g#db-num > 0 then do:
+            v-db-list = string(0).
+          end.
+          else do:
+            v-db-list = string(buf_schedule.cre-db-num).
+          end.
+          v-to-send = yes.
         end.
         else do:
-          v-db-list = string(buf_schedule.cre-db-num).
+          /*не шлем никуда*/
         end.
-        v-to-send = yes.
       end.
-      else do:
-        /*не шлем никуда*/
+      else do :
+        if integer(entry(2, p-uniq-key-rec, {&delim-key})) > 0 then do :
+          if g#db-num > 0 then do:
+            v-db-list = string(0).
+          end.
+          else do:
+            v-db-list = entry(2, p-uniq-key-rec, {&delim-key}).
+          end.
+          v-to-send = yes.
+        end.
+        else do :
+          /*не шлем никуда*/
+        end.
       end.
     end.
     else do:

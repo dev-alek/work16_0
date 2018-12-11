@@ -8,3 +8,8 @@
 &global-define flt-between "между"
 &global-define flt-list "список"
 &global-define flt-contrains "содержит"
+
+&global-define flt-type-int "int"
+&global-define flt-type-char "char"
+&global-define flt-type-date "date"
+&global-define flt-type-datetime "datetime"

@@ -863,6 +863,17 @@ else do:
       ).
       os-delete value(log-file-name) .
     end.
+	if search ("alc-rsrv.log") <> ? and not (auto-close or p-auto-fbr or g#auto)  then do:
+	    run gbl/prnfilen.w (
+	          input "«амечани€ по резервированию алкогол€":U
+	        , input 8
+	        , input search ("alc-rsrv.log")
+	        , input 7
+	        , output v-user-action
+	        , output v-printed
+	    ).
+	    os-delete value("alc-rsrv.log") .
+	end.
   end.
   if num_resv > 0
   and (auto-close or p-auto-fbr) then return error "Ќе все товары, подлежащие резервированию, зарезервированы".

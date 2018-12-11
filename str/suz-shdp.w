@@ -708,7 +708,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   find first buf_schedule share-lock where
             buf_schedule.cre-db-num = p-cre-db-num
         and buf_schedule.task-type = p-task-type
-        and buf_schedule.task-num = p-task-num .
+        and buf_schedule.task-num = p-task-num
+        no-error .
 
   run init-param-values in this-procedure
     (input  p-cre-db-num
@@ -927,10 +928,15 @@ END.
 
 
 
-
-run gen-key-rec in this-procedure ( input {&table_schedule}
-                                    ,input (buffer buf_schedule:handle)
-                                    , output v-uniq-key-rec).
+if available buf_schedule
+then do :
+  run gen-key-rec in this-procedure ( input {&table_schedule}
+                                      ,input (buffer buf_schedule:handle)
+                                      , output v-uniq-key-rec).
+end.
+else do :
+  v-uniq-key-rec = "schedule" + {&delim-key} + string(p-cre-db-num) + {&delim-key} + p-task-type + {&delim-key} + string(p-task-num) .
+end.                                      
 run rul/g-callid.p ( input {&rep}
                   ,input v-uniq-key-rec
                   ,output p-call#-id).

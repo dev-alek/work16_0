@@ -45,6 +45,7 @@ procedure partcopy :
   
   define variable part-key-rec      as character no-undo .
   define variable orig-part-key-rec as character no-undo .
+  define variable del-part-key-rec  as character no-undo .
   
   define buffer buf_gen-attr for ub.gen-attr .
 
@@ -113,26 +114,57 @@ procedure partcopy :
           buf_parts.cli-qnty  = 0
         .
         
-        run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
-                                        ,input (buffer buf_orig_parts:handle)
-                                        ,output orig-part-key-rec).
-        run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
-                                        ,input (buffer buf_parts:handle)
-                                        ,output part-key-rec).                                
-        for each ub.gen-attr no-lock where ub.gen-attr.table-name = {&excise-mark}
-                                       and ub.gen-attr.p-key =  orig-part-key-rec :
-            create buf_gen-attr .
-            buffer-copy ub.gen-attr to buf_gen-attr
-            assign
-                buf_gen-attr.p-key = part-key-rec
-                buf_gen-attr.whole-send-news = 0
-            .                                
-        end.
 
         /* сделаем партию доступной для поиска через первичный индекс */
         /* todo - возможно это не нужно, так как блок выделен в отдельную процедуру */
         validate buf_parts .
       end.
+      
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_orig_parts:handle)
+                                        ,output orig-part-key-rec).
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).                                
+      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                           and ub.gen-attr.p-key =  orig-part-key-rec
+                                           and ub.gen-attr.whole-send-news = (if p-out-code = {&free-code} then 0 else 1) :
+        create buf_gen-attr .
+        buffer-copy ub.gen-attr to buf_gen-attr
+        assign
+            buf_gen-attr.p-key = part-key-rec
+/*                    buf_gen-attr.whole-send-news = 0*/
+        no-error .   
+        if error-status:error
+        then
+        delete buf_gen-attr no-error .
+        ub.gen-attr.whole-send-news = (if p-out-code = {&output-code} then 0 else 1) .
+        if p-out-code = {&output-code}    
+        then do :
+            del-part-key-rec = orig-part-key-rec .
+            entry(8, del-part-key-rec, {&delim-key}) = {&free-code} .
+            find first buf_gen-attr exclusive-lock where buf_gen-attr.table-name = {&excise-mark}
+                                                     and buf_gen-attr.p-key =  del-part-key-rec
+                                                     and buf_gen-attr.attr-code = ub.gen-attr.attr-code
+                                                     no-error.
+            if available buf_gen-attr
+            then                                         
+            delete buf_gen-attr .
+        end.  
+        if p-out-code = {&free-code}    
+        then do :
+            del-part-key-rec = orig-part-key-rec .
+            entry(8, del-part-key-rec, {&delim-key}) = {&output-code} .
+            find first buf_gen-attr exclusive-lock where buf_gen-attr.table-name = {&excise-mark}
+                                                     and buf_gen-attr.p-key =  del-part-key-rec
+                                                     and buf_gen-attr.attr-code = ub.gen-attr.attr-code
+                                                     no-error.
+            if available buf_gen-attr
+            then                                         
+            delete buf_gen-attr .
+        end.                       
+      end.
+      
     end.
     else do:
       find first buf_parts exclusive-lock
@@ -214,7 +246,7 @@ procedure partcopy-update-parts :
         view-as alert-box error .
       undo, return error .
     end.
-    
+   
     if buf_trn-doc.ext-doc-type = {&TDEDT_inv}
     then do :
         delete object v-tth no-error.
@@ -1023,7 +1055,7 @@ procedure partcopy-update-parts-delete :
         view-as alert-box error .
       undo, return error .
     end.
-    
+ 
     if buf_trn-doc.ext-doc-type = {&TDEDT_inv}
     then do :
         delete object v-tth no-error.
@@ -1378,11 +1410,18 @@ procedure partcopy-update-parts-delete :
             run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
                                         ,input (buffer buf_parts:handle)
                                         ,output part-key-rec).
-            for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
-                                     and ub.gen-attr.p-key =  part-key-rec
-            on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+            for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                                  and ub.gen-attr.p-key =  part-key-rec
+/*            on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )*/
             :
-                delete ub.gen-attr.
+/*                if v-rsrv-code = {&output-code} and v-unrv-code = {&free-code}                */
+/*                then do :                                                                     */
+/*                    ub.gen-attr.p-key = replace(ub.gen-attr.p-key, v-rsrv-code, v-unrv-code) .*/
+/*                    ub.gen-attr.whole-send-news = 0 .                                         */
+/*                end.                                                                          */
+/*                else do :                                                                     */
+                    delete ub.gen-attr.
+/*                end.*/
             end. 
             delete buf_parts .
           end.
@@ -1604,9 +1643,15 @@ procedure partcopy-update-parts-delete :
                                         ,output part-key-rec).
             for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
                                      and ub.gen-attr.p-key =  part-key-rec
-            on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+/*            on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )*/
             :
-                delete ub.gen-attr.
+/*                if v-rsrv-code = {&free-code} and v-unrv-code = {&output-code}                */
+/*                then do :                                                                     */
+/*                    ub.gen-attr.p-key = replace(ub.gen-attr.p-key, v-rsrv-code, v-unrv-code) .*/
+/*                end.                                                                          */
+/*                else do :                                                                     */
+                    delete ub.gen-attr.
+/*                end.*/
             end.
             delete buf_parts .
           end.

@@ -46,6 +46,7 @@ define variable pychk_zero-n as decimal no-undo .
 define variable pychk_value as character no-undo .
 define variable pychk_type as character no-undo .
 define variable pychk_line-type-chr as character no-undo .
+define variable pychk_payline_rrn as character no-undo .
 
 define temp-table temp-ptrl-goods no-undo
 field b-code as integer
@@ -59,6 +60,7 @@ define buffer buf_temp-chk-gds for temp-chk-gds.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
 define buffer buf2_chk-doc for ub.chk-doc.
 define buffer buf_bar-code for ub.bar-code.
+define buffer buf_chk-pay-attr for ub.chk-pay-attr .
 
 &else
 if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
@@ -143,8 +145,8 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
       end.
       find first temp-chk-gds where
                 temp-chk-gds.doc-code = ub.chk-gds.doc-code
-            and temp-chk-gds.b-code = ub.chk-gds.b-code
             AND temp-chk-gds.rec-type = pychk_rec-type
+            and temp-chk-gds.b-code = ub.chk-gds.b-code
             and temp-chk-gds.line-num = 0
             no-error.
       if not available temp-chk-gds then do:
@@ -170,7 +172,6 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           temp-chk-gds.doc-code = ub.chk-gds.doc-code
           temp-chk-gds.line-num = 0
           temp-chk-gds.rec-type = pychk_rec-type
-          temp-chk-gds.line-num = 0
           temp-chk-gds.sum = 0
           temp-chk-gds.jjp_ = 0
           temp-chk-gds.jjo_ = 0
@@ -182,10 +183,6 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           .
         end.
         assign
-        temp-chk-gds.doc-code = ub.chk-gds.doc-code
-        temp-chk-gds.b-code = ub.chk-gds.b-code
-        temp-chk-gds.line-num = 0
-        temp-chk-gds.rec-type = pychk_rec-type
         temp-chk-gds.line-type = (if pychk_line-type = 1
                                 then {&petrolium}
                                 else entry(1, ub.chk-gds.line-type, {&delim-par})
@@ -298,11 +295,23 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
             ub.cash-pay.cdpay-code = ub.chk-pay.pay-code AND
             ub.cash-pay.curr-code = ub.chk-pay.curr-code No-ERROR.
   if available ub.cash-pay then do:
+    /* 28/XI-2018  в месте, где платежи складываюся вставить еще проверку на RRN */
+    pychk_payline_rrn = "" .
+    if not ub.cash-pay.is-cash then do :
+      for first buf_chk-pay-attr no-lock
+          where buf_chk-pay-attr.doc-code  = ub.CHK-pay.DOC-CODE
+            and buf_chk-pay-attr.attr-code = "cpdoc":U
+            and buf_chk-pay-attr.line-num  = ub.CHK-pay.line-num :
+        pychk_payline_rrn = buf_chk-pay-attr.attr-value .
+      end .
+    end .
+    
       find first temp-chk-pay where
               temp-chk-pay.doc-code = ub.chk-pay.doc-code
           and temp-chk-pay.pay-code = ub.chk-pay.pay-code
           and temp-chk-pay.pay-card = ub.chk-pay.pay-card
           and temp-chk-pay.curr-code = ub.chk-pay.curr-code
+          and temp-chk-pay.rrn       = pychk_payline_rrn
                  no-error.
     if not available temp-chk-pay then do:
       if (ub.chk-pay.tot-sum >= 0) NE (ub.chk-doc.netto >= 0)
@@ -368,6 +377,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           temp-chk-pay.doc-code = ub.chk-doc.doc-code
           temp-chk-pay.pay-code = ub.chk-pay.pay-code
           temp-chk-pay.curr-code = /*(if ub.chk-pay.pay-code = 1 then 0 else ub.chk-pay.curr-code)*/ ub.chk-pay.curr-code
+          temp-chk-pay.rrn       = pychk_payline_rrn
           pychk_pays_count = pychk_pays_count + 1
           .
         end.

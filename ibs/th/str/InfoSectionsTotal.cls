@@ -1270,7 +1270,30 @@ class ibs.th.str.InfoSectionsTotal:
 
     finally:
       
-
+      find first ub.place no-lock where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = InfoSectionCurr:ListTank no-error. 
+      if available (ub.place)
+      then do:
+        assign
+          Parnl:ObjType = ObjType 
+          Parnl:ObjCode = ObjCode
+          Parnl:GdsCode = GdsCode
+          Parnl:AutoNum = CarNum
+          Parnl:OnDate = buf_trn.doc-date
+        .
+        
+        Parnl:PlCode = ub.place.pl-code no-error.
+        release ub.place.
+        Parnl:SecNum = InfoSectionCurr:SectionName.
+        NLStorage:getNormLoss(Parnl).
+        InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
+        InfoSectionCurr:TPNormPL = (InfoSectionCurr:TankWeight / 1000 * ParNl:PLNormLoss).
+        output stream log-algo to value ("log-algo-pomi.txt") append.
+        put stream log-algo unformatted
+          "MTP = " InfoSectionCurr:TPNorm {&new-line}
+          "NHH = " string(Parnl:AutoNormLoss) {&new-line}
+          "NPR = " string(Parnl:PLNormLoss) {&new-line}.
+        output stream log-algo close.      
+      end.
     end finally.
       
     
@@ -1278,8 +1301,7 @@ class ibs.th.str.InfoSectionsTotal:
   end method.
   
   method public void CalcWeight ():  
-  
-    define variable ToolType                as integer no-undo.
+      define variable ToolType                as integer no-undo.
     define variable DeltaAbs_R              as decimal no-undo.
     define variable DeltaAbs_Tv             as decimal no-undo.
     define variable DeltaAbs_Tr             as decimal no-undo.
@@ -1598,17 +1620,41 @@ class ibs.th.str.InfoSectionsTotal:
       NLStorage:getNormLoss(Parnl).
       InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
       InfoSectionCurr:TPNormPL = (InfoSectionCurr:TankWeight / 1000 * ParNl:PLNormLoss).
-      output stream log-algo to value ("log-algo-pomi.txt") append.
-      put stream log-algo unformatted
+/*      output stream log-algo to value ("log-algo-pomi.txt") append.*/
+      output stream outstream to value ("pomi.log") append.
+      put stream outstream unformatted
         "MTP = " InfoSectionCurr:TPNorm {&new-line}
         "NHH = " string(Parnl:AutoNormLoss) {&new-line}
         "NPR = " string(Parnl:PLNormLoss) {&new-line}.
-      output stream log-algo close.
+      output stream outstream close.
     end.
 
   
   
   end.
+  
+  method public logical CheckNameSec (arg1 as int, arg2 as char): /*проверка на совпадения названия секция по все линиям накладной*/
+      
+      def var ii as int no-undo.
+      
+      do ii = 1 to this-object:SectionNum:
+        this-object:GetInfoSectionProp(ii).
+        if this-object:idSecCurr = arg1
+          then next.
+        if  trim (arg2) <> "" and trim (this-object:InfoSectionCurr:SectionName) = trim (arg2)
+        then do:
+          return false.
+        end. 
+      end.
+      
+      return not can-find (first buf_doc-line-attr no-lock where
+            buf_doc-line-attr.doc-code = TrnDocNum
+        and buf_doc-line-attr.gds-code <> GdsCode
+        and buf_doc-line-attr.attr-code begins "section-name" 
+        and trim (arg2) = trim (buf_doc-line-attr.attr-value)).
+    
+  end.
+  
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:

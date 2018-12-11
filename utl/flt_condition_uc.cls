@@ -15,6 +15,8 @@ Creation date: 21/10/18
 
 */
 
+{ utl/flt-operator.i }
+
 using Progress.Lang.*.
 using Progress.Windows.UserControl.
 
@@ -22,12 +24,12 @@ block-level on error undo, throw.
 
 class utl.flt_condition_uc inherits UserControl: 
    
-   { utl/flt-operator.i }
-   
    define private variable cbOp as System.Windows.Forms.ComboBox no-undo.
    define private variable cbEnabled as System.Windows.Forms.CheckBox no-undo.
    define private variable components as System.ComponentModel.IContainer no-undo.
-   define private variable mtbValue1 as System.Windows.Forms.MaskedTextBox no-undo.
+   define private variable dtPicker2 as System.Windows.Forms.DateTimePicker no-undo.
+   define private variable dtPicker1 as System.Windows.Forms.DateTimePicker no-undo.
+   define private variable splitContainer4 as System.Windows.Forms.SplitContainer no-undo.
    define private variable tbName as System.Windows.Forms.TextBox no-undo.
    define private variable splitContainer3 as System.Windows.Forms.SplitContainer no-undo.
    define private variable splitContainer2 as System.Windows.Forms.SplitContainer no-undo.
@@ -65,24 +67,17 @@ class utl.flt_condition_uc inherits UserControl:
 	@VisualDesigner.
 	method private void cbEnabled_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
 	   
-		if cast(sender,System.Windows.Forms.CheckBox):checked then
-		do:
-         assign
-            cbOp:enabled = yes
-            mtbValue:enabled = yes
-            mtbValue1:enabled = yes
-         . 
-		end.
-		else
-		do:
-		   assign
-            cbOp:enabled = no
-            mtbValue:enabled = no
-            mtbValue1:enabled = no
-		   .
-		end.
-		return.
-
+	   def var vEnabled as log no-undo.
+	   
+	   vEnabled = cast(sender,System.Windows.Forms.CheckBox):checked.
+	   
+	   assign
+	     cbOp:enabled      = vEnabled 
+	     mtbValue:enabled  = vEnabled and this-object:cbOp:Text <> ""
+	     dtPicker1:enabled = vEnabled and this-object:cbOp:Text <> ""
+	     dtPicker2:enabled = vEnabled and this-object:cbOp:Text <> ""
+	   .
+	   
 	end method.
 
 	/*------------------------------------------------------------------------------
@@ -90,169 +85,12 @@ class utl.flt_condition_uc inherits UserControl:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
-	method private void cbOp_SelectionChangeCommitted( input sender as System.Object, input e as System.EventArgs ):
+	method private void cbOp_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
 		
-      SetMask().
-      SetVisible().
-		return.
-
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void mtbValue_Validating( input sender as System.Object, input e as System.ComponentModel.CancelEventArgs ):
-		
-      case this-object:Condition:FieldType:
-         when "date" then ValidateDate(sender).
-         when "int" then ValidateInt(sender).    
-      end case.
-      
-      catch vErr as utl.ValidateError :
-         
-         System.Windows.Forms.MessageBox:Show(
-            vErr:GetMessage(1),
-            "Внимание!",
-            System.Windows.Forms.MessageBoxButtons:OK,
-            System.Windows.Forms.MessageBoxIcon:Error).
-         e:Cancel = yes.      
-      end catch.
+		SetComponentsToEnabled().
+		SetVisible().
 		
 	end method.
-
-   method public void ValidateDate(input sender as System.Object):
-      
-      def var vMaskedTextBox as class System.Windows.Forms.MaskedTextBox no-undo.
-      def var vDate as date no-undo.
-      def var vI as integer no-undo.
-      
-      vMaskedTextBox = cast (sender, System.Windows.Forms.MaskedTextBox).
-      
-      case this-object:cbOp:Text:
-         when {&flt-eq} or 
-         when {&flt-lt} or
-         when {&flt-le} or 
-         when {&flt-gt} or
-         when {&flt-ge} or
-         when {&flt-ne} or
-         when {&flt-between} then 
-         do:
-            assign
-               vDate = date(replace(vMaskedTextBox:Text,",","."))
-            no-error.
-            
-            if error-status:error then
-            do:
-               undo, throw new utl.ValidateError("Неправильная дата " + replace(vMaskedTextBox:Text,",","."),-1).
-            end.
-         end.
-         when {&flt-list} then
-         do:
-            do vI = 1 to num-entries(vMaskedTextBox:Text):
-               assign
-                  vDate = date(entry(vI,vMaskedTextBox:Text))
-               no-error.
-               
-               if error-status:error then
-               do:
-                  undo, throw new utl.ValidateError("Неправильная дата " + entry(vI,vMaskedTextBox:Text),-1).
-               end.
-            end.
-            
-         end.
-      end case.
-      return.
-
-   end method.
-
-   method public void ValidateInt(input sender as System.Object):
-      
-      def var vMaskedTextBox as class System.Windows.Forms.MaskedTextBox no-undo.
-      def var vInt as integer no-undo.
-      def var vI   as integer no-undo.
-      
-      vMaskedTextBox = cast (sender, System.Windows.Forms.MaskedTextBox).
-      
-      case this-object:cbOp:Text:
-         when {&flt-eq} or 
-         when {&flt-lt} or
-         when {&flt-le} or 
-         when {&flt-gt} or
-         when {&flt-ge} or
-         when {&flt-ne} then 
-         do:
-            assign
-               vInt = int(vMaskedTextBox:Text)
-            no-error.
-            
-            if error-status:error then
-            do:
-               undo, throw new utl.ValidateError("Неверное число " + vMaskedTextBox:Text,-1).
-            end.
-         end.
-         when {&flt-list} then
-         do:
-            do vI = 1 to num-entries(vMaskedTextBox:Text):
-               assign
-                  vInt = int(entry(vI,vMaskedTextBox:Text))
-               no-error.
-               
-               if error-status:error then
-               do:
-                  undo, throw new utl.ValidateError("Неверное число " + entry(vI,vMaskedTextBox:Text),-1).
-               end.
-            end.
-         end.
-      end case.
-      return.
-
-   end method.
-
-   method public void SetMask():
-      main:
-      do on error undo, throw:
-         
-         if cbOp:text = {&flt-list} then
-         do:
-            this-object:mtbValue:mask = "".
-            leave main.
-         end.
-
-         case this-object:Condition:FieldType:
-            when "char" then this-object:mtbValue:mask = "". 
-            when "int"  then this-object:mtbValue:mask = "".
-            when "time" then this-object:mtbValue:mask = "00:00:00".
-            when "date" then
-            do:
-               assign
-                  this-object:mtbValue:mask = "00/00/0000"
-                  this-object:mtbValue1:mask = "00/00/0000"
-               .
-            end.
-         end case.
-      end.
-      return.
-
-   end method.
-
-   method public void SetVisible():
-
-      case this-object:Condition:FieldType:
-         when "date" then
-         do:
-            if cbOp:text = {&flt-between} then
-               this-object:mtbValue1:Visible = yes.
-            else
-               this-object:mtbValue1:Visible = no.
-         end.
-         otherwise this-object:mtbValue1:Visible = no.
-      end case.
-      
-      return.
-
-   end method.
 
    method private void InitializeComponent(  ):
       
@@ -269,8 +107,10 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:tbName = new System.Windows.Forms.TextBox().
       this-object:splitContainer2 = new System.Windows.Forms.SplitContainer().
       this-object:cbOp = new System.Windows.Forms.ComboBox().
-      this-object:mtbValue1 = new System.Windows.Forms.MaskedTextBox().
       this-object:mtbValue = new System.Windows.Forms.MaskedTextBox().
+      this-object:splitContainer4 = new System.Windows.Forms.SplitContainer().
+      this-object:dtPicker1 = new System.Windows.Forms.DateTimePicker().
+      this-object:dtPicker2 = new System.Windows.Forms.DateTimePicker().
       this-object:panel1:SuspendLayout().
       cast(this-object:splitContainer1, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:splitContainer1:Panel1:SuspendLayout().
@@ -284,6 +124,10 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:splitContainer2:Panel1:SuspendLayout().
       this-object:splitContainer2:Panel2:SuspendLayout().
       this-object:splitContainer2:SuspendLayout().
+      cast(this-object:splitContainer4, System.ComponentModel.ISupportInitialize):BeginInit().
+      this-object:splitContainer4:Panel1:SuspendLayout().
+      this-object:splitContainer4:Panel2:SuspendLayout().
+      this-object:splitContainer4:SuspendLayout().
       this-object:SuspendLayout().
       /*  */
       /* panel1 */
@@ -292,12 +136,13 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:panel1:Dock = System.Windows.Forms.DockStyle:Fill.
       this-object:panel1:Location = new System.Drawing.Point(0, 0).
       this-object:panel1:Name = "panel1".
-      this-object:panel1:Size = new System.Drawing.Size(647, 33).
+      this-object:panel1:Size = new System.Drawing.Size(776, 33).
       this-object:panel1:TabIndex = 0.
       /*  */
       /* splitContainer1 */
       /*  */
       this-object:splitContainer1:Dock = System.Windows.Forms.DockStyle:Fill.
+      this-object:splitContainer1:IsSplitterFixed = true.
       this-object:splitContainer1:Location = new System.Drawing.Point(0, 0).
       this-object:splitContainer1:Name = "splitContainer1".
       /*  */
@@ -308,13 +153,14 @@ class utl.flt_condition_uc inherits UserControl:
       /* splitContainer1.Panel2 */
       /*  */
       this-object:splitContainer1:Panel2:Controls:Add(this-object:splitContainer2).
-      this-object:splitContainer1:Size = new System.Drawing.Size(647, 33).
-      this-object:splitContainer1:SplitterDistance = 260.
+      this-object:splitContainer1:Size = new System.Drawing.Size(776, 33).
+      this-object:splitContainer1:SplitterDistance = 230.
       this-object:splitContainer1:TabIndex = 0.
       /*  */
       /* splitContainer3 */
       /*  */
       this-object:splitContainer3:Dock = System.Windows.Forms.DockStyle:Fill.
+      this-object:splitContainer3:IsSplitterFixed = true.
       this-object:splitContainer3:Location = new System.Drawing.Point(0, 0).
       this-object:splitContainer3:Name = "splitContainer3".
       /*  */
@@ -325,8 +171,8 @@ class utl.flt_condition_uc inherits UserControl:
       /* splitContainer3.Panel2 */
       /*  */
       this-object:splitContainer3:Panel2:Controls:Add(this-object:tbName).
-      this-object:splitContainer3:Size = new System.Drawing.Size(260, 33).
-      this-object:splitContainer3:SplitterDistance = 29.
+      this-object:splitContainer3:Size = new System.Drawing.Size(230, 33).
+      this-object:splitContainer3:SplitterDistance = 25.
       this-object:splitContainer3:TabIndex = 0.
       /*  */
       /* cbEnabled */
@@ -334,7 +180,7 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:cbEnabled:Dock = System.Windows.Forms.DockStyle:Top.
       this-object:cbEnabled:Location = new System.Drawing.Point(0, 0).
       this-object:cbEnabled:Name = "cbEnabled".
-      this-object:cbEnabled:Size = new System.Drawing.Size(29, 24).
+      this-object:cbEnabled:Size = new System.Drawing.Size(25, 24).
       this-object:cbEnabled:TabIndex = 0.
       this-object:cbEnabled:UseCompatibleTextRendering = true.
       this-object:cbEnabled:UseVisualStyleBackColor = true.
@@ -346,12 +192,13 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:tbName:Enabled = false.
       this-object:tbName:Location = new System.Drawing.Point(0, 0).
       this-object:tbName:Name = "tbName".
-      this-object:tbName:Size = new System.Drawing.Size(227, 26).
+      this-object:tbName:Size = new System.Drawing.Size(201, 20).
       this-object:tbName:TabIndex = 0.
       /*  */
       /* splitContainer2 */
       /*  */
       this-object:splitContainer2:Dock = System.Windows.Forms.DockStyle:Fill.
+      this-object:splitContainer2:IsSplitterFixed = true.
       this-object:splitContainer2:Location = new System.Drawing.Point(0, 0).
       this-object:splitContainer2:Name = "splitContainer2".
       /*  */
@@ -361,10 +208,10 @@ class utl.flt_condition_uc inherits UserControl:
       /*  */
       /* splitContainer2.Panel2 */
       /*  */
-      this-object:splitContainer2:Panel2:Controls:Add(this-object:mtbValue1).
       this-object:splitContainer2:Panel2:Controls:Add(this-object:mtbValue).
-      this-object:splitContainer2:Size = new System.Drawing.Size(383, 33).
-      this-object:splitContainer2:SplitterDistance = 168.
+      this-object:splitContainer2:Panel2:Controls:Add(this-object:splitContainer4).
+      this-object:splitContainer2:Size = new System.Drawing.Size(542, 33).
+      this-object:splitContainer2:SplitterDistance = 130.
       this-object:splitContainer2:TabIndex = 0.
       /*  */
       /* cbOp */
@@ -374,34 +221,64 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:cbOp:FormattingEnabled = true.
       this-object:cbOp:Location = new System.Drawing.Point(0, 0).
       this-object:cbOp:Name = "cbOp".
-      this-object:cbOp:Size = new System.Drawing.Size(168, 21).
+      this-object:cbOp:Size = new System.Drawing.Size(130, 21).
       this-object:cbOp:TabIndex = 0.
-      this-object:cbOp:SelectionChangeCommitted:Subscribe(this-object:cbOp_SelectionChangeCommitted).
-      /*  */
-      /* mtbValue1 */
-      /*  */
-      this-object:mtbValue1:Dock = System.Windows.Forms.DockStyle:Right.
-      this-object:mtbValue1:Location = new System.Drawing.Point(114, 0).
-      this-object:mtbValue1:Name = "mtbValue1".
-      this-object:mtbValue1:Size = new System.Drawing.Size(97, 26).
-      this-object:mtbValue1:TabIndex = 1.
-      this-object:mtbValue1:Validating:Subscribe(this-object:mtbValue_Validating).
+      this-object:cbOp:SelectedIndexChanged:Subscribe(this-object:cbOp_SelectedIndexChanged).
       /*  */
       /* mtbValue */
       /*  */
-      this-object:mtbValue:Dock = System.Windows.Forms.DockStyle:Left.
+      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar0 = cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+      this-object:mtbValue:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
       this-object:mtbValue:Location = new System.Drawing.Point(0, 0).
       this-object:mtbValue:Name = "mtbValue".
-      this-object:mtbValue:Size = new System.Drawing.Size(108, 26).
+      this-object:mtbValue:Size = new System.Drawing.Size(365, 20).
       this-object:mtbValue:TabIndex = 0.
-      this-object:mtbValue:Validating:Subscribe(this-object:mtbValue_Validating).
+      /*  */
+      /* splitContainer4 */
+      /*  */
+      define variable nestedvar1 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar1 = cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+      this-object:splitContainer4:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:splitContainer4:IsSplitterFixed = true.
+      this-object:splitContainer4:Location = new System.Drawing.Point(0, 0).
+      this-object:splitContainer4:Name = "splitContainer4".
+      /*  */
+      /* splitContainer4.Panel1 */
+      /*  */
+      this-object:splitContainer4:Panel1:Controls:Add(this-object:dtPicker1).
+      /*  */
+      /* splitContainer4.Panel2 */
+      /*  */
+      this-object:splitContainer4:Panel2:Controls:Add(this-object:dtPicker2).
+      this-object:splitContainer4:Size = new System.Drawing.Size(405, 33).
+      this-object:splitContainer4:SplitterDistance = 197.
+      this-object:splitContainer4:TabIndex = 1.
+      /*  */
+      /* dtPicker1 */
+      /*  */
+      this-object:dtPicker1:Dock = System.Windows.Forms.DockStyle:Top.
+      this-object:dtPicker1:Format = System.Windows.Forms.DateTimePickerFormat:Custom.
+      this-object:dtPicker1:Location = new System.Drawing.Point(0, 0).
+      this-object:dtPicker1:Name = "dtPicker1".
+      this-object:dtPicker1:Size = new System.Drawing.Size(197, 20).
+      this-object:dtPicker1:TabIndex = 1.
+      /*  */
+      /* dtPicker2 */
+      /*  */
+      this-object:dtPicker2:Dock = System.Windows.Forms.DockStyle:Top.
+      this-object:dtPicker2:Format = System.Windows.Forms.DateTimePickerFormat:Custom.
+      this-object:dtPicker2:Location = new System.Drawing.Point(0, 0).
+      this-object:dtPicker2:Name = "dtPicker2".
+      this-object:dtPicker2:Size = new System.Drawing.Size(204, 20).
+      this-object:dtPicker2:TabIndex = 0.
       /*  */
       /* flt_condition_uc */
       /*  */
       this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
       this-object:Controls:Add(this-object:panel1).
       this-object:Name = "flt_condition_uc".
-      this-object:Size = new System.Drawing.Size(647, 33).
+      this-object:Size = new System.Drawing.Size(776, 33).
       this-object:panel1:ResumeLayout(false).
       this-object:splitContainer1:Panel1:ResumeLayout(false).
       this-object:splitContainer1:Panel2:ResumeLayout(false).
@@ -417,6 +294,10 @@ class utl.flt_condition_uc inherits UserControl:
       this-object:splitContainer2:Panel2:PerformLayout().
       cast(this-object:splitContainer2, System.ComponentModel.ISupportInitialize):EndInit().
       this-object:splitContainer2:ResumeLayout(false).
+      this-object:splitContainer4:Panel1:ResumeLayout(false).
+      this-object:splitContainer4:Panel2:ResumeLayout(false).
+      cast(this-object:splitContainer4, System.ComponentModel.ISupportInitialize):EndInit().
+      this-object:splitContainer4:ResumeLayout(false).
       this-object:ResumeLayout(false).
       catch e as Progress.Lang.Error:
          undo, throw e.
@@ -429,63 +310,164 @@ class utl.flt_condition_uc inherits UserControl:
       
       if valid-object(this-object:Condition) then
       do:
-      
-         assign
-            this-object:cbEnabled:Checked = this-object:Condition:Enabled
-            this-object:tbName:Text = this-object:Condition:FieldName
-            this-object:mtbValue:Text = this-object:Condition:Value
-            this-object:mtbValue1:Text = this-object:Condition:Value1
-         .
-         if this-object:cbEnabled:Checked then
-         do:
-            assign
-               cbOp:enabled = yes
-               mtbValue:enabled = yes
-               mtbValue1:enabled = yes
-            . 
-         end.
-         else
-         do:
-            assign
-               cbOp:enabled = no
-               mtbValue:enabled = no
-               mtbValue1:enabled = no
-            .
-            
-         end.
-         
+
          do vI = 1 to num-entries(this-object:Condition:SupportOp):
             this-object:cbOp:Items:Add(entry(vI,this-object:Condition:SupportOp)).
          end.
-         
-         this-object:cbOp:Text = this-object:Condition:Operation.
-         this-object:SetMask().
-         this-object:SetVisible().
-      end.
       
-      return.
+         assign
+            this-object:cbEnabled:Checked = this-object:Condition:Enabled
+            this-object:tbName:Text       = this-object:Condition:FieldName
+            this-object:mtbValue:Text     = this-object:Condition:Value
+            this-object:cbOp:Text         = this-object:Condition:Operation
+         .
+         
+         SetComponentsToEnabled().
+         SetVisible().
+         
+         case this-object:Condition:FieldType:
+            when {&flt-type-date} then
+            do:
+               assign
+                  this-object:dtPicker1:CustomFormat = "dd/MM/yyyy"
+                  this-object:dtPicker2:CustomFormat = "dd/MM/yyyy"
+                  this-object:dtPicker1:Text = this-object:Condition:value
+                  this-object:dtPicker2:Text = this-object:Condition:value1 
+               .
+               
+            end.
+            when {&flt-type-datetime} then
+            do:
+               assign
+                  this-object:dtPicker1:CustomFormat = "dd/MM/yyyy HH:mm"
+                  this-object:dtPicker2:CustomFormat = "dd/MM/yyyy HH:mm"
+                  this-object:dtPicker1:Text = this-object:Condition:value
+                  this-object:dtPicker2:Text = this-object:Condition:value1 
+               .
+               
+            end.
+         end case.
+         
+      end.
+   end method.
 
+   method private void SetVisible():
+      
+      if not valid-object(this-object:Condition) then return.
+
+      case this-object:Condition:FieldType:
+         when {&flt-type-date} then
+         do:
+            assign
+               this-object:mtbValue:Visible = no
+               this-object:dtPicker1:visible = yes
+               this-object:dtPicker2:visible = (this-object:cbOp:Text = {&flt-between})
+            .
+         end.
+         when {&flt-type-datetime} then
+         do:
+            assign
+               this-object:mtbValue:Visible = no
+               this-object:dtPicker1:visible = yes
+               this-object:dtPicker2:visible = (this-object:cbOp:Text = {&flt-between})
+            .
+         end.
+         otherwise
+         do:
+            assign
+               this-object:mtbValue:Visible = yes
+               this-object:dtPicker1:visible = no
+               this-object:dtPicker2:visible = no
+            .
+         end.   
+      end case.
+            
+   end method.
+
+   method private void SetComponentsToEnabled():
+      
+      assign
+         this-object:cbOp:enabled      = this-object:cbEnabled:Checked
+         this-object:mtbValue:enabled  = this-object:cbEnabled:Checked and this-object:cbOp:Text <> ""
+         this-object:dtPicker1:enabled = this-object:cbEnabled:Checked and this-object:cbOp:Text <> ""
+         this-object:dtPicker2:enabled = this-object:cbEnabled:Checked and this-object:cbOp:Text <> ""
+      .
+            
+   end method.
+
+   method public void SetEnabledTo(iState as log):
+      
+      this-object:cbEnabled:Checked = iState.
+          
    end method.
 
    method public void FormToObject():
       
-      def var vI as int64 no-undo.
+      def var vIsDate as log no-undo.
       
       if valid-object(this-object:Condition) then
       do:
       
          assign
-            this-object:Condition:enabled = this-object:cbEnabled:Checked
-            this-object:Condition:value = this-object:mtbValue:Text
-            this-object:Condition:value1 = this-object:mtbValue1:Text
+            this-object:Condition:enabled   = this-object:cbEnabled:Checked
+            this-object:Condition:value     = this-object:mtbValue:Text
             this-object:Condition:Operation = this-object:cbOp:Text  
          .
+         
+         if this-object:Condition:FieldType = {&flt-type-date} or 
+            this-object:Condition:FieldType = {&flt-type-datetime} then
+         do:
+            assign
+               this-object:Condition:value = this-object:dtPicker1:Text
+               this-object:Condition:value1 = this-object:dtPicker2:Text
+            . 
+         end.
+          
       end.
       
       return.
 
    end method.
 
+   method public void SetValue(iValue as char):
+      
+      if cbEnabled:checked then
+      do:
+         if cbOp:text = {&flt-list} then
+         do:
+            assign 
+               mtbValue:text = substitute("&1,&2",mtbValue:text,iValue)
+               mtbValue:text = trim(mtbValue:text,",")
+            .
+         end.
+         else
+         do:
+            mtbValue:text = iValue.
+         end.
+      end.
+   end method.
+   
+   method public void fReset():
+      
+      assign
+         this-object:mtbValue:Text = ""
+         this-object:cbOp:Text = ""
+      .
+            
+   end method.
+
+   method public void ResetAndDisable():
+      
+      this-object:fReset().
+      this-object:SetEnabledTo(no).
+      
+   end method.
+
+   method public char SelectedOp():
+      
+      return this-object:cbOp:Text.
+            
+   end method.
 
    destructor public flt_condition_uc ( ):
 

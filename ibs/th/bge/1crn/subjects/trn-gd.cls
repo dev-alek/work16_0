@@ -41,6 +41,10 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property sum-nds as decimal no-undo 
     get. 
     private set.
+  define property nds-code as decimal no-undo 
+    get. 
+    private set.  
+  
     
   define override property InitTag as character no-undo init "gd"
     get. 
@@ -67,6 +71,9 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
       end.
       when "sum-nds" then do:
         assign sum-nds = decimal (inValue).
+      end.
+      when "nds-code" then do:
+        assign nds-code = decimal (inValue).
       end.
     end case.
   end.

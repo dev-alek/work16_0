@@ -1,3 +1,19 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Условие для фильтра
+
+Автор: Сергей Палагин
+Дата создания: 21/10/18
+Author: Sergey Palagin
+Creation date: 21/10/18
+
+*/
 
 block-level on error undo, throw.
  
@@ -57,16 +73,16 @@ class utl.flt-condition:
       if this-object:Enabled then
       do:
          case this-object:Operation:
-            when {&flt-eq}        then vRes = flt-eq(). 
-            when {&flt-ne}        then vRes = flt-ne().
-            when {&flt-lt}        then vRes = flt-lt().
-            when {&flt-le}        then vRes = flt-le().  
-            when {&flt-gt}        then vRes = flt-gt().
-            when {&flt-ge}        then vRes = flt-ge().
-            when {&flt-begins}    then vRes = flt-begins().
-            when {&flt-between}   then vRes = flt-between().
-            when {&flt-list}      then vRes = flt-list().
-            when {&flt-contrains} then vRes = flt-contrains(). 
+            when {&flt-eq}        then vRes = get-flt("="). 
+            when {&flt-ne}        then vRes = get-flt("<>").
+            when {&flt-lt}        then vRes = get-flt("<").
+            when {&flt-le}        then vRes = get-flt("<=").  
+            when {&flt-gt}        then vRes = get-flt(">").
+            when {&flt-ge}        then vRes = get-flt(">=").
+            when {&flt-begins}    then vRes = get-flt("begins").
+            when {&flt-between}   then vRes = get-flt-between().
+            when {&flt-list}      then vRes = get-flt-list().
+            when {&flt-contrains} then vRes = get-flt-contrains(). 
          end case.
       end.
          
@@ -82,195 +98,90 @@ class utl.flt-condition:
 
    method public char GetValue( ):
       
-      def var vRes   as char no-undo.
+      def var vRes as char no-undo.
          
-      main:
-      do on error undo, throw:
-         
-         if this-object:FieldType begins "int" then
-         do: 
-            vRes = this-object:value.
-            leave main.
+      case this-object:FieldType:
+         when {&flt-type-int}  then vRes = this-object:value.
+         when {&flt-type-char} then vRes = quoter(this-object:value).
+         when {&flt-type-date} then vRes = quoter(date(this-object:value)).
+         when {&flt-type-datetime} then vRes = quoter(datetime(this-object:value)).
+      end case.
+      
+      return vRes.
+
+   end method.
+
+   method private char get-flt(iOp as char):
+      
+      def var vRes as char no-undo.
+
+      vRes = substitute("&1.&2 &3 &4", 
+                          this-object:BufferName,
+                          this-object:Field_,
+                          iOp,
+                          GetValue()).
+     
+      return vRes.
+
+   end method.
+   
+   method private char get-flt-between():
+      
+      def var vRes as char no-undo.
+      
+      case this-object:FieldType:
+         when {&flt-type-date} then 
+         do:
+            vRes = substitute("(&1.&2 >= &3) and (&1.&2 <= &4)", 
+                                this-object:BufferName,
+                                this-object:Field_,
+                                quoter(date(this-object:Value)),
+                                quoter(date(this-object:Value1))).
          end.
-
-         if this-object:FieldType begins "char" then
-         do: 
-            vRes = quoter(this-object:value).
-            leave main.
-         end.
-         
-         if this-object:FieldType = "date" then
-         do: 
-            vRes = quoter(date(this-object:value)).
-            leave main.
-         end.
-         
-      end.
-       
+         when {&flt-type-datetime} then 
+         do:
+            vRes = substitute("(&1.&2 >= &3) and (&1.&2 <= &4)", 
+                                this-object:BufferName,
+                                this-object:Field_,
+                                quoter(datetime(this-object:Value)),
+                                quoter(datetime(this-object:Value1))).
+         end.      
+               
+      end case.
+      
       return vRes.
 
    end method.
 
-   
-   method private char flt-eq():
+   method private char get-flt-list():
       
       def var vRes as char no-undo.
       
-      vRes = substitute("&1.&2 = &3", 
-                          this-object:BufferName,
-                          this-object:Field_,
-                          GetValue()).
-      return vRes.
-
-   end method.
-      
-   method private char flt-ne():
-      
-      def var vRes as char no-undo.
-      
-      vRes = substitute("&1.&2 <> &3", 
-                          this-object:BufferName,
-                          this-object:Field_,
-                          GetValue()).
-                          
-      return vRes.
-
-   end method.
-
-   method private char flt-lt():
-      
-      def var vRes as char no-undo.
-      
-      vRes = substitute("&1.&2 < &3", 
-                          this-object:BufferName,
-                          this-object:Field_,
-                          GetValue()).
-                          
-      return vRes.
-
-   end method.
-   
-   method private char flt-le():
-      
-      def var vRes as char no-undo.
-      
-      vRes = substitute("&1.&2 <= &3", 
-                          this-object:BufferName,
-                          this-object:Field_,
-                          GetValue()).
-      return vRes.
-
-   end method.
-
-   
-   method private char flt-gt():
-      
-      def var vRes   as char no-undo.
-      
-      vRes = substitute("&1.&2 > &3", 
-                          this-object:BufferName,
-                          this-object:Field_,
-                          GetValue()).
-      return vRes.
-
-   end method.
-   
-   method private char flt-ge():
-      
-      def var vRes as char no-undo.
-      
-      vRes = substitute("&1.&2 >= &3", 
-                          this-object:BufferName,
-                          this-object:Field_,
-                          GetValue()).
-      return vRes.
-
-   end method.
-
-   method private char flt-begins():
-      
-      def var vRes as char no-undo.
-      
-      vRes = substitute("&1.&2 begins &3", 
-                          this-object:BufferName,
-                          this-object:Field_,
-                          GetValue()).
-      return vRes.
-
-   end method.
-   
-   method private char flt-between():
-      
-      def var vRes   as char no-undo.
-      def var vDate1 as date no-undo.
-      def var vDate2 as date no-undo.
-
-      if this-object:FieldType = "date" then
-      do:
-         assign
-            vDate1 = date(this-object:Value)
-            vDate2 = date(this-object:Value1)
-         .
-         
-         vRes = substitute("(&1.&2 >= &3) and (&1.&2 <= &4)", 
-                             this-object:BufferName,
-                             this-object:Field_,
-                             quoter(vDate1),
-                             quoter(vDate2)).
-      end.
-      
-      return vRes.
-
-   end method.
-
-   method private char flt-list():
-      
-      def var vRes  as char    no-undo.
-      def var vI    as integer no-undo.
-      def var vDate as date    no-undo.
-      
-      if this-object:FieldType begins "char" then
+      if this-object:FieldType = {&flt-type-char} then
       do: 
          vRes = substitute("can-do(&3,&1.&2)", 
                             this-object:BufferName,
                             this-object:Field_,
                             GetValue()).
       end.
-
-      if this-object:FieldType begins "int" then
+      
+      if this-object:FieldType = {&flt-type-int} then
       do: 
-         vRes = substitute("can-do('&3',string(&1.&2))", 
+         vRes = substitute("can-do(&3,string(&1.&2))", 
                             this-object:BufferName,
                             this-object:Field_,
-                            this-object:value).
-      end.
-
-      if this-object:FieldType = "date" then
-      do:
-         do vI = 1 to num-entries(this-object:value):
-            
-            vDate = date(entry(vI,this-object:value)).
-            vRes = substitute("&4 &1.&2 = &3 or", 
-                               this-object:BufferName,
-                               this-object:Field_,
-                               quoter(vDate),
-                               vRes).
-            
-         end. 
-         
-         /* последний and отрезаем, он мешает */
-         vRes = trim(vRes,"or").
+                            quoter(GetValue())).
       end.
       
       return vRes.
 
    end method.
 
-   method private char flt-contrains():
+   method private char get-flt-contrains():
       
       def var vRes as char no-undo.
       
-      if this-object:FieldType begins "char" then
+      if this-object:FieldType = {&flt-type-char} then
       do: 
          vRes = substitute("&1.&2 matches ('*&3*')", 
                             this-object:BufferName,

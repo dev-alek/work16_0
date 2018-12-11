@@ -68,9 +68,47 @@ procedure partrsrv :
   define variable v-new-unrsrv-code  as character no-undo .
   define variable v-unrsrv-qnty      as decimal   no-undo .
 
+  define variable v-value-character as character no-undo .
+  define variable v-value-date      as date no-undo .
+  define variable v-value-decimal   as decimal no-undo .
+  define variable v-value-integer   as integer no-undo .
+  define variable v-izlcstpr        as logical no-undo .
+  define variable v-tth             as handle no-undo .
+  define variable v-type            as character no-undo .
+  define variable part-key-rec      as character no-undo .
+
   do transaction
   on error undo, return error
   :
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+    then do :
+        delete object v-tth no-error.
+        run adm/shattri.p (
+           input "get":U
+          ,input buf_orig_parts.obj-type
+          ,input buf_orig_parts.obj-code
+          ,input {&attr-inv-obj}
+          ,input  "izlcstpr"
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-izlcstpr
+          ,output v-type
+          ,INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+          delete object v-tth no-error.      
+        if error-status:error then do:
+          v-izlcstpr = false .
+/*          message "Ошибка при получение параметра izlcstpr"*/
+/*          view-as alert-box.                               */
+/*          return error.                                    */
+        end.  
+    end.
+    else do :
+        v-izlcstpr = false .
+    end.
+
     assign
       p-parts-recid = ?
     .
@@ -247,26 +285,44 @@ procedure partrsrv :
         assign
           v-rsrv-qnty = min(abs(buf_parts.qnty), abs(p-chg-qnty) )
         .
-
-        run partcopy in this-procedure
-          (input  true            /* p-free-output-copy */
-          ,input  v-new-rsrv-code /* p-out-code         */
-          ,buffer buf_parts       /* buf_orig_parts     */
-          ,buffer rsrv-parts      /* buf_parts          */
-          ) no-error .
-        if error-status :error then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при создании партии" skip
-            "Объект" buf_parts.obj-type buf_parts.obj-code skip
-            "Артикул" buf_parts.artic buf_parts.prod-type buf_parts.prod-code skip
-            "Партия" buf_parts.in-code buf_parts.part-code skip
-            "Резерв" v-new-rsrv-code skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo, return error .
-        end.
+        
+        if v-izlcstpr and buf_parts.out-code <> v-new-rsrv-code and p-chg-qnty > 0
+        then do :
+            find first rsrv-parts exclusive-lock
+                where rsrv-parts.obj-type  = buf_parts.obj-type
+                  and rsrv-parts.obj-code  = buf_parts.obj-code
+                  and rsrv-parts.artic     = buf_parts.artic
+                  and rsrv-parts.prod-type = buf_parts.prod-type
+                  and rsrv-parts.prod-code = buf_parts.prod-code
+                  and rsrv-parts.in-code   = buf_parts.out-code
+                  and rsrv-parts.out-code  = v-new-rsrv-code
+                  and rsrv-parts.part-code = buf_parts.part-code
+                no-error.
+        end.  
+        if not available rsrv-parts
+        then do :
+            run partcopy in this-procedure
+              (input  true            /* p-free-output-copy */
+              ,input  v-new-rsrv-code /* p-out-code         */
+              ,buffer buf_parts       /* buf_orig_parts     */
+              ,buffer rsrv-parts      /* buf_parts          */
+              ) no-error .
+            if error-status :error then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при создании партии" skip
+                "Объект" buf_parts.obj-type buf_parts.obj-code skip
+                "Артикул" buf_parts.artic buf_parts.prod-type buf_parts.prod-code skip
+                "Партия" buf_parts.in-code buf_parts.part-code skip
+                "Резерв" v-new-rsrv-code skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+              undo, return error .
+            end.
+        end.    
+        if not v-izlcstpr or (v-izlcstpr and p-chg-qnty > 0)
+        then
         assign
           rsrv-parts.qnty      = rsrv-parts.qnty      + v-rsrv-qnty
           rsrv-parts.fact-qnty = rsrv-parts.fact-qnty + v-rsrv-qnty
@@ -344,25 +400,41 @@ procedure partrsrv :
           or v-new-unrsrv-code = v-orig-unrsrv-code
           )
       then do:
-
-        run partcopy in this-procedure
-          (input  true              /* p-free-output-copy */
-          ,input  v-new-unrsrv-code /* p-out-code         */
-          ,buffer buf_parts         /* buf_orig_parts     */
-          ,buffer unrsrv-parts      /* buf_parts          */
-          ) no-error .
-        if error-status :error then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка при создании партии" skip
-            "Объект" buf_parts.obj-type buf_parts.obj-code skip
-            "Артикул" buf_parts.artic buf_parts.prod-type buf_parts.prod-code skip
-            "Партия" buf_parts.in-code buf_parts.part-code skip
-            "Резерв" v-new-rsrv-code skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo, return error .
+        
+        if v-izlcstpr and buf_parts.out-code <> v-new-unrsrv-code and p-chg-qnty < 0
+        then do :
+            find first unrsrv-parts exclusive-lock
+                where unrsrv-parts.obj-type  = buf_parts.obj-type
+                  and unrsrv-parts.obj-code  = buf_parts.obj-code
+                  and unrsrv-parts.artic     = buf_parts.artic
+                  and unrsrv-parts.prod-type = buf_parts.prod-type
+                  and unrsrv-parts.prod-code = buf_parts.prod-code
+                  and unrsrv-parts.in-code   = buf_parts.in-code
+                  and unrsrv-parts.out-code  = v-new-unrsrv-code
+                  and unrsrv-parts.part-code = buf_parts.part-code
+                no-error.
+        end.  
+        if not available unrsrv-parts
+        then do :
+            run partcopy in this-procedure
+              (input  true              /* p-free-output-copy */
+              ,input  v-new-unrsrv-code /* p-out-code         */
+              ,buffer buf_parts         /* buf_orig_parts     */
+              ,buffer unrsrv-parts      /* buf_parts          */
+              ) no-error .
+            if error-status :error then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при создании партии" skip
+                "Объект" buf_parts.obj-type buf_parts.obj-code skip
+                "Артикул" buf_parts.artic buf_parts.prod-type buf_parts.prod-code skip
+                "Партия" buf_parts.in-code buf_parts.part-code skip
+                "Резерв" v-new-rsrv-code skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+              undo, return error .
+            end.
         end.
         assign
           v-unrsrv-qnty = min( (if unrsrv-parts.qnty > 0
@@ -395,6 +467,8 @@ procedure partrsrv :
           end.
         end.
 
+        if not v-izlcstpr or (v-izlcstpr and p-chg-qnty < 0)
+        then
         assign
           unrsrv-parts.qnty      = unrsrv-parts.qnty      - v-unrsrv-qnty
           unrsrv-parts.fact-qnty = unrsrv-parts.fact-qnty - v-unrsrv-qnty
@@ -462,6 +536,13 @@ procedure partrsrv :
           undo, return error .
         end.
       end.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer unrsrv-parts:handle)
+                                        ,output part-key-rec).                                
+      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                            and ub.gen-attr.p-key =  part-key-rec :
+            delete ub.gen-attr .                               
+      end.
       delete unrsrv-parts .
     end.
     else do:
@@ -490,6 +571,13 @@ procedure partrsrv :
           undo, return error .
         end.
       end.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer rsrv-parts:handle)
+                                        ,output part-key-rec).                                
+      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                            and ub.gen-attr.p-key =  part-key-rec :
+            delete ub.gen-attr .                               
+      end.
       delete rsrv-parts .
     end.
     else do:
@@ -515,6 +603,13 @@ procedure partrsrv :
             view-as alert-box error .
           undo, return error .
         end.
+      end.
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).                                
+      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                            and ub.gen-attr.p-key =  part-key-rec :
+            delete ub.gen-attr .                               
       end.
       delete buf_parts .
     end.

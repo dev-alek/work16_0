@@ -324,6 +324,7 @@ define menu m-outs
     menu-item m-outs-3 label "Остатки по списку товаров"    accelerator "alt-3"
     menu-item m-outs-6 label "Остатки по списку партий"     accelerator "alt-6"
     menu-item m-outs-4 label "Сброс"                accelerator "alt-4"
+	menu-item m-outs-8 label "Импорт акцизных марок"                accelerator "alt-8"
 .
 
 define menu m-acc_price
@@ -2413,6 +2414,20 @@ run ui-on ("line").
 apply "entry" to br-dtl in frame {&frame-name}.
 end.
 
+
+on choose of menu-item m-outs-8
+do:
+  {&stdbtn}
+  if (t-doc.status_ = {&wayb} or t-doc.status_ = {&inquiry})
+  then do:
+    run proc-m-outs-8 in this-procedure no-error.
+  end.
+  else do:
+/*    run err-status in this-procedure.*/
+    return no-apply.
+  end.
+end.
+
 on choose of menu-item m-ap-1 in menu m-acc_price  /*Простановка учетных цен без налогов*/
 do:
   run local-cur in this-procedure ( input 1 ) no-error.
@@ -3404,6 +3419,95 @@ if l-inv-on = yes and t-doc.status_ <> {&inquiry} then do:
   return error.
 end.
 
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-m-outs-8 d-out-doc 
+PROCEDURE proc-m-outs-8 :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define buffer bf_trn-doc for ub.trn-doc.
+define buffer bf_doc-line for ub.doc-line .
+define buffer bf_goods for ub.goods .
+define variable vardoc-code like ub.trn-doc.doc-code no-undo.
+define variable par-alcohol as character no-undo .
+define variable par-mark as character no-undo .
+define variable par-type as character no-undo .
+define variable v-is-alc as logical no-undo .
+define variable v-mark-alchol     as logical no-undo .
+define variable v-type as character no-undo .
+define variable v-tth             as handle no-undo .
+define variable v-value-character as character no-undo .
+define variable v-value-date      as date      no-undo .
+define variable v-value-decimal   as decimal   no-undo .
+define variable v-value-integer   as integer   no-undo .
+
+delete object v-tth no-error.
+run adm/shattri.p (
+   input "get":U
+  ,input t-doc.obj-type
+  ,input t-doc.obj-code
+  ,input {&attr-nakl_par}
+  ,input  "mark-alchol"
+  ,output v-value-character
+  ,output v-value-date
+  ,output v-value-decimal
+  ,output v-value-integer
+  ,output v-mark-alchol
+  ,output v-type
+  ,INPUT-OUTPUT table-handle v-tth
+  ) no-error .
+  delete object v-tth no-error.
+if error-status:error then do:
+  message "Ошибка при получение параметра mark-alchol"
+  view-as alert-box.
+  return error.
+end.
+if not v-mark-alchol
+then do :
+    message "В системе не включен помарочный учёт. Импорт акцизных марок невозможен." view-as alert-box .
+    return.
+end.
+
+/*v-is-alc = false .                                                                                                          */
+/*for each bf_doc-line no-lock where bf_doc-line.doc-code = t-doc.doc-code :                                                  */
+/*    find first bf_goods no-lock where bf_goods.artic     = bf_doc-line.artic                                                */
+/*                                  and bf_goods.prod-type = bf_doc-line.prod-type                                            */
+/*                                  and bf_goods.prod-code = bf_doc-line.prod-code                                            */
+/*                                  no-error .                                                                                */
+/*                                                                                                                            */
+/*    run gds-attr-value(                                                                                                     */
+/*      bf_goods.gds-code,                                                                                                    */
+/*      {&attr-alcohol-prod},                                                                                                 */
+/*      output par-alcohol,                                                                                                   */
+/*      output par-type                                                                                                       */
+/*    ).                                                                                                                      */
+/*    if par-alcohol = "" or par-alcohol = "no" then next .                                                                   */
+/*    run gds-attr-value(                                                                                                     */
+/*      bf_goods.gds-code,                                                                                                    */
+/*      {&attr-mark},                                                                                                         */
+/*      output par-mark,                                                                                                      */
+/*      output par-type                                                                                                       */
+/*    ).                                                                                                                      */
+/*    if par-mark = "" or par-mark = "no" then next .                                                                         */
+/*    v-is-alc = true .                                                                                                       */
+/*end.                                                                                                                        */
+/*                                                                                                                            */
+/*if not v-is-alc                                                                                                             */
+/*then do :                                                                                                                   */
+/*    message "В накладной нет ни одного товара, подлежащего маркировке. Импорт акцизных марок не возможен" view-as alert-box.*/
+/*    return .                                                                                                                */
+/*end.                                                                                                                        */
+
+do transaction:
+    run str/imp-marks.p (parparentproc, t-doc.doc-code, "out") .    
+end.
 
 END PROCEDURE.
 

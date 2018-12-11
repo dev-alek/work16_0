@@ -94,14 +94,14 @@ on error undo, return error return-value
         .
         undo update_block, return .
       end.
-      if t-doc.flag_ = false
+      /*if t-doc.flag_ = false
       then do:
         assign
           p-edit-ok     = false
           p-err-message = "В данном статусе нельзя редактировать фактическое количество"
         .
         undo update_block, return .
-      end.
+      end.*/
 
       define variable v-goods-serial as logical   no-undo .
       { gbl/gdscdat.i

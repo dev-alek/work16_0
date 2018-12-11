@@ -28,8 +28,9 @@ define variable vss-description as character no-undo init "Создание записи маршр
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4':u,p-act-name,p-tbl-name,p-tbl-handle,p-send-list)" }
 { cmp/trg-def.i  }
 { nws/lib-nws.i  }
-{ gbl/key-rec.i }
-{ nws/cr-rtd.i  }
+{ str/marks.i    }
+{ gbl/key-rec.i  }
+{ nws/cr-rtd.i   }
 { nws/cr-route.i }
 { gbl/cur-time.i }
 

@@ -1193,7 +1193,7 @@ on error undo, return error
         {&create-thbj-attr}.
       end.
 
-      v-prop-code = "{&bef-attr-nakl_par_stfactdt},{&bef-attr-nakl_par_intprmvq},{&bef-attr-nakl_par_minusprt},{&bef-attr-nakl_par_avail-on-date},{&bef-attr-nakl_par_inp_sum},{&bef-attr-nakl_par_reasonm},{&bef-attr-nakl_par_back-date},{&bef-attr-nakl_par_not-ord},{&bef-attr-nakl_par_neg-ask},{&bef-attr-nakl_par_vat-goods},{&bef-attr-nakl_par_inv-ship},{&bef-attr-nakl_par_round-vat-sum},{&bef-attr-nakl_par_gtd-to-imp-prod},{&bef-attr-nakl_par_exc-max-qnty},{&bef-attr-nakl_par_mark-alchol}" .
+      v-prop-code = "{&bef-attr-nakl_par_stfactdt},{&bef-attr-nakl_par_intprmvq},{&bef-attr-nakl_par_minusprt},{&bef-attr-nakl_par_avail-on-date},{&bef-attr-nakl_par_inp_sum},{&bef-attr-nakl_par_reasonm},{&bef-attr-nakl_par_back-date},{&bef-attr-nakl_par_not-ord},{&bef-attr-nakl_par_neg-ask},{&bef-attr-nakl_par_vat-goods},{&bef-attr-nakl_par_inv-ship},{&bef-attr-nakl_par_round-vat-sum},{&bef-attr-nakl_par_gtd-to-imp-prod},{&bef-attr-nakl_par_exc-max-qnty},{&bef-attr-nakl_par_mark-alchol},{&bef-attr-nakl_par_edit-fact-wayb}" .
 &scop ptype logical
 &scop prop-value no
 &scop prop-code entry(v-ii,v-prop-code)
@@ -1563,7 +1563,7 @@ end.
     end.
 
     when {&attr-inv-obj} then do:
-      v-prop-code = "{&bef-attr-inv-obj_invclcsp},{&bef-attr-inv-obj_invdnull},{&bef-attr-inv-obj_pstunqtn},{&bef-attr-inv-obj_wastage},{&bef-attr-inv-obj_pstgrp}" .
+      v-prop-code = "{&bef-attr-inv-obj_invclcsp},{&bef-attr-inv-obj_invdnull},{&bef-attr-inv-obj_pstunqtn},{&bef-attr-inv-obj_wastage},{&bef-attr-inv-obj_pstgrp},{&bef-attr-inv-obj_izlcstpr}" .
 &scop ptype logical
 &scop prop-value no
 &scop prop-code  entry(v-ii,v-prop-code)

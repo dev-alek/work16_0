@@ -407,20 +407,20 @@ for each buf_temp-rvs no-lock where buf_temp-rvs.rvs-error = yes :
   v-vid-param = 
     "UniqueIdRecordARM=" + v-initiator + {&delim-par} +
     "NumShop=" + string(pobj-code) + {&delim-par} +
-    "NumPlace=" + string (buf_temp-rvs.pl-code) + {&delim-par} +
+    "PlCode=" + string (buf_temp-rvs.pl-code) + {&delim-par} +
     "VolumeStart=" + string(buf_temp-rvs.qnty1) + {&delim-par} +
     "DensityStart=" + string(buf_temp-rvs.density1) + {&delim-par} +
-    "TemperaturaStart=" + string(buf_temp-rvs.temp1) + {&delim-par} +
+    "TemperatureStart=" + string(buf_temp-rvs.temp1) + {&delim-par} +
     "LevelWaterStart=" + string(buf_temp-rvs.water1) + {&delim-par} +
     "CurrentVolume=" + string(buf_temp-rvs.qnty4) + {&delim-par} +
     "CurrentDensity=" + string(buf_temp-rvs.density2) + {&delim-par} +
-    "CurrentTemperatura=" + string(buf_temp-rvs.temp2) + {&delim-par} +
+    "CurrentTemperature=" + string(buf_temp-rvs.temp2) + {&delim-par} +
     "CurrentLevelWater=" + string(buf_temp-rvs.water2) + {&delim-par} +
     "DivergenceVolume=" + string(buf_temp-rvs.delta-qnty) + {&delim-par} +
     "DivergenceDensity=" + string(buf_temp-rvs.delta-density) + {&delim-par} +
-    "DivergenceTemperatura=" + string(buf_temp-rvs.delta-temp) + {&delim-par} +
+    "DivergenceTemperature=" + string(buf_temp-rvs.delta-temp) + {&delim-par} +
     "DivergenceLevelWater=" + string(buf_temp-rvs.delta-water) + {&delim-par} +            
-    "NumberRevise=" + string(ub.rvs-doc.rvs-code) + {&delim-par} +
+    "DocNum=" + string(ub.rvs-doc.rvs-code) + {&delim-par} +
     "PermissibleDivergence="   + string(buf_temp-rvs.list-otkl) no-error.
 
         run trg/userlog.p (

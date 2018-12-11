@@ -108,9 +108,9 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
             TempDocLine.vsd-uuid = objPrt:vad-guid
             TempDocLine.part-id = objPrt:prt-id
             TempDocLine.price-rubl = round (objGd:sum / objGd:qnty-fact, 2)
-            TempDocLine.vat-pc = round (objGd:sum-nds / objGd:qnty-fact , 2). 
+            TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100. 
           .
-        end.        
+        end.
       end.
       if available (TempDocLine)
       then do:
@@ -124,7 +124,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
           TempDocLine.fact-qnty = objGd:qnty-fact
           TempDocLine.doc-qnty = objGd:qnty-fact
           TempDocLine.price-rubl = round (objGd:sum / objGd:qnty-fact, 2)
-          TempDocLine.vat-pc = round (objGd:sum-nds / objGd:qnty-fact , 2). 
+          TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100.
         .
         release TempDocLine.
       end.

@@ -318,10 +318,12 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
             and buf_gds-dtl.prod-type = buf_gds-dtl.prod-type.
           write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
           write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
+          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 2))).
         end.
         else do:
           write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
           write-data-element ("sum-nds", string-mth (round ((buf_doc-line.price-cli * buf_doc-line.cli-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
+          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 2))).
         end.
         
       sw:end-element ("gd").
@@ -545,6 +547,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("qnty-fact", string-mth (buf_gds-dtl.fact-qnty)).
         write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
         write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
+        write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 2))).
       sw:end-element ("gd").
     end.
     sw:end-element ("gds").

@@ -79,6 +79,7 @@ field tot-r-b as decimal
 field tot-rubl as decimal
 field tot-base as decimal
 field flag as logical
+field rrn as character
 index pi is primary unique
 doc-code
 pay-code
@@ -93,6 +94,7 @@ doc-code
 pay-code
 curr-code
 pay-card
+rrn
 index iflag
 doc-code
 flag

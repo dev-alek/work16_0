@@ -61,7 +61,7 @@ class utl.repoPwd inherits repository:
                Obj:f-beg-time     = btech-prol-pwd.f-beg-time
                Obj:f-end-time     = btech-prol-pwd.f-end-time  
                Obj:cash-desk-surr = btech-prol-pwd.cash-desk-surr 
-               Obj:shop-surr      = btech-prol-pwd.shop-surr 
+               Obj:shop-surr      = btech-prol-pwd.shop-surr
             .
             
          end.
@@ -94,6 +94,8 @@ class utl.repoPwd inherits repository:
             btech-prol-pwd.f-end-time     = Obj:f-end-time
             btech-prol-pwd.cash-desk-surr = Obj:cash-desk-surr
             btech-prol-pwd.shop-surr      = Obj:shop-surr
+            btech-prol-pwd.f-object-num   = INT(ENTRY(2,btech-prol-pwd.shop-surr))
+            btech-prol-pwd.f-cash-num     = INT(ENTRY(4,btech-prol-pwd.cash-desk-surr))
          .
          
          run trg/userlog.p (

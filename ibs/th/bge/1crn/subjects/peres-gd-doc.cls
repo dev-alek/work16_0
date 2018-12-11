@@ -62,9 +62,9 @@ class ibs.th.bge.1crn.subjects.peres-gd-doc implements iexpsubject:
   field sum-base           as decimal
   field vat-rubl           as decimal
   field vat-base           as decimal
-  FIELD write-off-qnty     AS DECIMAL
-  FIELD write-off-sum-rubl AS DECIMAL
-  FIELD write-off-sum-base AS DECIMAL
+  field write-off-qnty     as decimal
+  field write-off-sum-rubl as decimal
+  field write-off-sum-base as decimal
   index pi is unique primary doc-code wf-artic wf-prod-type wf-prod-code artic prod-type prod-code.
   
   define temp-table tt-clcparts no-undo like ub.parts
@@ -216,7 +216,6 @@ index sum-type is primary unique sum-type.
 
   method private void GdsLine ():
     
-    
     sw:start-element ("gds").
     for each bf_doc-line 
       where bf_doc-line.doc-code = bf_trn-doc.doc-code no-lock,
@@ -242,7 +241,7 @@ index sum-type is primary unique sum-type.
         sw:start-element ("gd").
           write-data-element ("gd-code-from", string-mth (bf_goods.gds-code)).
           write-data-element ("gd-code-to", string-mth (bf-plus_goods.gds-code)).
-          write-data-element ("qnty", string-mth (round (abs(bf_doc-line.fact-qnty), 3))).
+          write-data-element ("qnty", string-mth ( round (get-income-qnty(buffer bf_doc-line, buffer bf-plus_doc-line), 3) )).
           write-data-element ("sum-from", string-mth (round (get-write-off-sum-rubl (buffer bf_doc-line), 3))).
           write-data-element ("sum-to", string-mth (round (get-income-sum-rbl (buffer bf_doc-line, buffer bf-plus_doc-line ), 3))).
         sw:end-element ("gd").
@@ -319,93 +318,93 @@ index sum-type is primary unique sum-type.
   end.
 
   method private decimal get-write-off-sum-rubl ( buffer local-doc-line for ub.doc-line ) :
-      FIND FIRST tt-doc-line-cashe WHERE tt-doc-line-cashe.doc-code  = local-doc-line.doc-code  AND
-                                         tt-doc-line-cashe.artic     = local-doc-line.artic     AND
-                                         tt-doc-line-cashe.prod-type = local-doc-line.prod-type AND
-                                         tt-doc-line-cashe.prod-code = local-doc-line.prod-code NO-ERROR.
-      IF NOT AVAILABLE tt-doc-line-cashe THEN DO:
+      find first tt-doc-line-cashe where tt-doc-line-cashe.doc-code  = local-doc-line.doc-code  and
+                                         tt-doc-line-cashe.artic     = local-doc-line.artic     and
+                                         tt-doc-line-cashe.prod-type = local-doc-line.prod-type and
+                                         tt-doc-line-cashe.prod-code = local-doc-line.prod-code no-error.
+      if not available tt-doc-line-cashe then do:
         proc-get-write-off (BUFFER local-doc-line).
-        FIND FIRST tt-doc-line-cashe WHERE tt-doc-line-cashe.doc-code  = local-doc-line.doc-code  AND
-                                           tt-doc-line-cashe.artic     = local-doc-line.artic     AND
-                                           tt-doc-line-cashe.prod-type = local-doc-line.prod-type AND
+        find first tt-doc-line-cashe where tt-doc-line-cashe.doc-code  = local-doc-line.doc-code  and
+                                           tt-doc-line-cashe.artic     = local-doc-line.artic     and
+                                           tt-doc-line-cashe.prod-type = local-doc-line.prod-type and
                                            tt-doc-line-cashe.prod-code = local-doc-line.prod-code .
-      END.
-      RETURN tt-doc-line-cashe.sum-rubl.
+      end.
+      return tt-doc-line-cashe.sum-rubl.
       
   end.
   
-  method private decimal get-income-sum-rbl ( BUFFER local-doc-line FOR ub.doc-line, BUFFER local-doc-line-plus FOR ub.doc-line  ) :
-     FIND FIRST tt-doc-line-cashe-plus WHERE tt-doc-line-cashe-plus.doc-code     = local-doc-line.doc-code       AND
-                                             tt-doc-line-cashe-plus.wf-artic     = local-doc-line.artic          AND
-                                             tt-doc-line-cashe-plus.wf-prod-type = local-doc-line.prod-type      AND
+  method private decimal get-income-sum-rbl ( BUFFER local-doc-line for ub.doc-line, BUFFER local-doc-line-plus for ub.doc-line  ) :
+     find first tt-doc-line-cashe-plus where tt-doc-line-cashe-plus.doc-code     = local-doc-line.doc-code       and
+                                             tt-doc-line-cashe-plus.wf-artic     = local-doc-line.artic          and
+                                             tt-doc-line-cashe-plus.wf-prod-type = local-doc-line.prod-type      and
                                              tt-doc-line-cashe-plus.wf-prod-code = local-doc-line.prod-code      and
-                                             tt-doc-line-cashe-plus.artic        = local-doc-line-plus.artic     AND
-                                             tt-doc-line-cashe-plus.prod-type    = local-doc-line-plus.prod-type AND
-                                             tt-doc-line-cashe-plus.prod-code    = local-doc-line-plus.prod-code NO-ERROR.
-     IF NOT AVAILABLE tt-doc-line-cashe-plus THEN DO:
+                                             tt-doc-line-cashe-plus.artic        = local-doc-line-plus.artic     and
+                                             tt-doc-line-cashe-plus.prod-type    = local-doc-line-plus.prod-type and
+                                             tt-doc-line-cashe-plus.prod-code    = local-doc-line-plus.prod-code no-error.
+     if not available tt-doc-line-cashe-plus then do:
        proc-get-write-off (BUFFER local-doc-line).
-       FIND FIRST tt-doc-line-cashe-plus WHERE tt-doc-line-cashe-plus.doc-code     = local-doc-line.doc-code       AND
-                                               tt-doc-line-cashe-plus.wf-artic     = local-doc-line.artic          AND
-                                               tt-doc-line-cashe-plus.wf-prod-type = local-doc-line.prod-type      AND
+       find first tt-doc-line-cashe-plus where tt-doc-line-cashe-plus.doc-code     = local-doc-line.doc-code       and
+                                               tt-doc-line-cashe-plus.wf-artic     = local-doc-line.artic          and
+                                               tt-doc-line-cashe-plus.wf-prod-type = local-doc-line.prod-type      and
                                                tt-doc-line-cashe-plus.wf-prod-code = local-doc-line.prod-code      and
-                                               tt-doc-line-cashe-plus.artic        = local-doc-line-plus.artic     AND
-                                               tt-doc-line-cashe-plus.prod-type    = local-doc-line-plus.prod-type AND
+                                               tt-doc-line-cashe-plus.artic        = local-doc-line-plus.artic     and
+                                               tt-doc-line-cashe-plus.prod-type    = local-doc-line-plus.prod-type and
                                                tt-doc-line-cashe-plus.prod-code    = local-doc-line-plus.prod-code .
-     END.
-     RETURN tt-doc-line-cashe-plus.sum-rubl.
+     end.
+     return tt-doc-line-cashe-plus.sum-rubl.
   end.
   
   method private void proc-get-write-off ( buffer bf-loc_doc-line for ub.doc-line ) :
     
-    DEFINE BUFFER bf-loc-plus_doc-line FOR ub.doc-line.
-    DEFINE BUFFER bf-loc_parts         FOR ub.parts.
-    DEFINE BUFFER bf-loc_parts-root    FOR ub.parts-root.
-    DEFINE BUFFER bf-loc-plus_parts    FOR ub.parts.
-    DEFINE BUFFER bf-loc_goods         FOR ub.goods.
-    DEFINE BUFFER bf-loc-plus_goods    FOR ub.goods.
-    DEFINE VARIABLE varprice-rubl-parts AS DECIMAL NO-UNDO.
-    DEFINE VARIABLE varprice-base-parts AS DECIMAL NO-UNDO.
-    FIND FIRST bf-loc_goods WHERE bf-loc_goods.artic     = bf-loc_doc-line.artic     AND
-                                  bf-loc_goods.prod-type = bf-loc_doc-line.prod-type AND
-                                  bf-loc_goods.prod-code = bf-loc_doc-line.prod-code NO-LOCK.
-    FIND FIRST tt-doc-line-cashe WHERE tt-doc-line-cashe.doc-code  = bf-loc_doc-line.doc-code  AND
-                                       tt-doc-line-cashe.artic     = bf-loc_doc-line.artic     AND
-                                       tt-doc-line-cashe.prod-type = bf-loc_doc-line.prod-type AND
-                                       tt-doc-line-cashe.prod-code = bf-loc_doc-line.prod-code NO-ERROR.
-    IF NOT AVAILABLE tt-doc-line-cashe THEN DO:
-      CREATE tt-doc-line-cashe.
-      ASSIGN
+    define buffer bf-loc-plus_doc-line for ub.doc-line.
+    define buffer bf-loc_parts         for ub.parts.
+    define buffer bf-loc_parts-root    for ub.parts-root.
+    define buffer bf-loc-plus_parts    for ub.parts.
+    define buffer bf-loc_goods         for ub.goods.
+    define buffer bf-loc-plus_goods    for ub.goods.
+    define variable varprice-rubl-parts as decimal no-undo.
+    define variable varprice-base-parts as decimal no-undo.
+    find first bf-loc_goods where bf-loc_goods.artic     = bf-loc_doc-line.artic     and
+                                  bf-loc_goods.prod-type = bf-loc_doc-line.prod-type and
+                                  bf-loc_goods.prod-code = bf-loc_doc-line.prod-code no-lock.
+    find first tt-doc-line-cashe where tt-doc-line-cashe.doc-code  = bf-loc_doc-line.doc-code  and
+                                       tt-doc-line-cashe.artic     = bf-loc_doc-line.artic     and
+                                       tt-doc-line-cashe.prod-type = bf-loc_doc-line.prod-type and
+                                       tt-doc-line-cashe.prod-code = bf-loc_doc-line.prod-code no-error.
+    if not available tt-doc-line-cashe then do:
+      create tt-doc-line-cashe.
+      assign
         tt-doc-line-cashe.doc-code  = bf-loc_doc-line.doc-code
         tt-doc-line-cashe.artic     = bf-loc_doc-line.artic
         tt-doc-line-cashe.prod-type = bf-loc_doc-line.prod-type
         tt-doc-line-cashe.prod-code = bf-loc_doc-line.prod-code .
-    END.
-    ELSE DO:
-      ASSIGN
+    end.
+    else do:
+      assign
         tt-doc-line-cashe.qnty     = 0.00
         tt-doc-line-cashe.sum-rubl = 0.00
         tt-doc-line-cashe.sum-base = 0.00
         tt-doc-line-cashe.vat-rubl = 0.00
         tt-doc-line-cashe.vat-base = 0.00.
-      FOR EACH tt-doc-line-cashe-plus WHERE tt-doc-line-cashe-plus.doc-code     = tt-doc-line-cashe.doc-code  AND
-                                            tt-doc-line-cashe-plus.wf-artic     = tt-doc-line-cashe.artic     AND
-                                            tt-doc-line-cashe-plus.wf-prod-type = tt-doc-line-cashe.prod-type AND
+      for each tt-doc-line-cashe-plus where tt-doc-line-cashe-plus.doc-code     = tt-doc-line-cashe.doc-code  and
+                                            tt-doc-line-cashe-plus.wf-artic     = tt-doc-line-cashe.artic     and
+                                            tt-doc-line-cashe-plus.wf-prod-type = tt-doc-line-cashe.prod-type and
                                             tt-doc-line-cashe-plus.wf-prod-code = tt-doc-line-cashe.prod-code :
-        DELETE tt-doc-line-cashe-plus.
-      END.
-    END.
-    FOR EACH bf-loc_parts WHERE bf-loc_parts.out-code  = bf-loc_doc-line.doc-code  AND
-                                bf-loc_parts.obj-type  = bf-loc_doc-line.obj-type  AND
-                                bf-loc_parts.obj-code  = bf-loc_doc-line.obj-code  AND
-                                bf-loc_parts.artic     = bf-loc_doc-line.artic     AND
-                                bf-loc_parts.prod-type = bf-loc_doc-line.prod-type AND
-                                bf-loc_parts.prod-code = bf-loc_doc-line.prod-code AND
-                                bf-loc_parts.fact-qnty < 0 NO-LOCK :
-      FOR EACH tt-clcparts :
-        DELETE tt-clcparts.
-      END.
-      CREATE tt-clcparts.
-      BUFFER-COPY bf-loc_parts TO tt-clcparts.
+        delete tt-doc-line-cashe-plus.
+      end.
+    end.
+    for each bf-loc_parts where bf-loc_parts.out-code  = bf-loc_doc-line.doc-code  and
+                                bf-loc_parts.obj-type  = bf-loc_doc-line.obj-type  and
+                                bf-loc_parts.obj-code  = bf-loc_doc-line.obj-code  and
+                                bf-loc_parts.artic     = bf-loc_doc-line.artic     and
+                                bf-loc_parts.prod-type = bf-loc_doc-line.prod-type and
+                                bf-loc_parts.prod-code = bf-loc_doc-line.prod-code and
+                                bf-loc_parts.fact-qnty < 0 no-lock :
+      for each tt-clcparts :
+        delete tt-clcparts.
+      end.
+      create tt-clcparts.
+      buffer-copy bf-loc_parts to tt-clcparts.
       run clcprtsl_calc-parts-inkaps in clcprtsl-hndl (
                                       input-output table tt-clcparts
                                     , input-output table tt-allsum
@@ -426,44 +425,44 @@ index sum-type is primary unique sum-type.
                                     , input 0.0                          /* parcurcons-vat-pc*/
                                     , input 0.0                          /* parcurslt-pc     */
                                 ).
-      FIND FIRST tt-allsum WHERE tt-allsum.sum-type = {&sum-general} NO-ERROR.
+      find first tt-allsum where tt-allsum.sum-type = {&sum-general} no-error.
       if available tt-allsum then do:
-        ASSIGN
+        assign
           tt-doc-line-cashe.qnty     = tt-doc-line-cashe.qnty     - tt-allsum.fact-qnty
           tt-doc-line-cashe.sum-rubl = tt-doc-line-cashe.sum-rubl - tt-allsum.sum-dsc-rubl-doc
           tt-doc-line-cashe.sum-base = tt-doc-line-cashe.sum-base - tt-allsum.sum-dsc-base-doc
           tt-doc-line-cashe.vat-rubl = tt-doc-line-cashe.vat-rubl - tt-allsum.vat-rubl-doc
           tt-doc-line-cashe.vat-base = tt-doc-line-cashe.vat-base - tt-allsum.vat-base-doc.
-        ASSIGN
+        assign
           varprice-rubl-parts = tt-allsum.sum-dsc-rubl-doc / tt-allsum.fact-qnty
           varprice-base-parts = tt-allsum.sum-dsc-base-doc / tt-allsum.fact-qnty.
-        FOR EACH bf-loc_parts-root WHERE bf-loc_parts-root.doc-code       = bf-loc_parts.out-code   AND
-                                         bf-loc_parts-root.orig-in-code   = bf-loc_parts.in-code    AND
-                                         bf-loc_parts-root.orig-gds-code  = bf-loc_goods.gds-code   AND
-                                         bf-loc_parts-root.orig-part-code = bf-loc_parts.part-code  NO-LOCK :
-          FIND FIRST bf-loc-plus_goods WHERE bf-loc-plus_goods.gds-code  = bf-loc_parts-root.gds-code NO-LOCK.
-          FIND FIRST bf-loc-plus_parts WHERE bf-loc-plus_parts.obj-type  = bf-loc_doc-line.obj-type    AND
-                                             bf-loc-plus_parts.obj-code  = bf-loc_doc-line.obj-code    AND
-                                             bf-loc-plus_parts.artic     = bf-loc-plus_goods.artic     AND
-                                             bf-loc-plus_parts.prod-type = bf-loc-plus_goods.prod-type AND
-                                             bf-loc-plus_parts.prod-code = bf-loc-plus_goods.prod-code AND
-                                             bf-loc-plus_parts.in-code   = bf-loc_parts-root.in-code   AND
-                                             bf-loc-plus_parts.out-code  = bf-loc_doc-line.doc-code    AND
-                                             bf-loc-plus_parts.part-code = bf-loc_parts-root.part-code NO-LOCK.
-          FIND FIRST bf-loc-plus_doc-line WHERE bf-loc-plus_doc-line.doc-code  = bf-loc-plus_parts.out-code  AND
-                                                bf-loc-plus_doc-line.artic     = bf-loc-plus_parts.artic     AND
-                                                bf-loc-plus_doc-line.prod-type = bf-loc-plus_parts.prod-type AND
+        for each bf-loc_parts-root where bf-loc_parts-root.doc-code       = bf-loc_parts.out-code   and
+                                         bf-loc_parts-root.orig-in-code   = bf-loc_parts.in-code    and
+                                         bf-loc_parts-root.orig-gds-code  = bf-loc_goods.gds-code   and
+                                         bf-loc_parts-root.orig-part-code = bf-loc_parts.part-code  no-lock :
+          find first bf-loc-plus_goods where bf-loc-plus_goods.gds-code  = bf-loc_parts-root.gds-code no-lock.
+          find first bf-loc-plus_parts where bf-loc-plus_parts.obj-type  = bf-loc_doc-line.obj-type    and
+                                             bf-loc-plus_parts.obj-code  = bf-loc_doc-line.obj-code    and
+                                             bf-loc-plus_parts.artic     = bf-loc-plus_goods.artic     and
+                                             bf-loc-plus_parts.prod-type = bf-loc-plus_goods.prod-type and
+                                             bf-loc-plus_parts.prod-code = bf-loc-plus_goods.prod-code and
+                                             bf-loc-plus_parts.in-code   = bf-loc_parts-root.in-code   and
+                                             bf-loc-plus_parts.out-code  = bf-loc_doc-line.doc-code    and
+                                             bf-loc-plus_parts.part-code = bf-loc_parts-root.part-code no-lock.
+          find first bf-loc-plus_doc-line where bf-loc-plus_doc-line.doc-code  = bf-loc-plus_parts.out-code  and
+                                                bf-loc-plus_doc-line.artic     = bf-loc-plus_parts.artic     and
+                                                bf-loc-plus_doc-line.prod-type = bf-loc-plus_parts.prod-type and
                                                 bf-loc-plus_doc-line.prod-code = bf-loc-plus_parts.prod-code .
-          FIND FIRST tt-doc-line-cashe-plus WHERE tt-doc-line-cashe-plus.doc-code     = tt-doc-line-cashe.doc-code  AND
-                                                  tt-doc-line-cashe-plus.wf-artic     = tt-doc-line-cashe.artic     AND
-                                                  tt-doc-line-cashe-plus.wf-prod-type = tt-doc-line-cashe.prod-type AND
-                                                  tt-doc-line-cashe-plus.wf-prod-code = tt-doc-line-cashe.prod-code AND
-                                                  tt-doc-line-cashe-plus.artic        = bf-loc-plus_goods.artic      AND
-                                                  tt-doc-line-cashe-plus.prod-type    = bf-loc-plus_goods.prod-type  AND
-                                                  tt-doc-line-cashe-plus.prod-code    = bf-loc-plus_goods.prod-code  NO-ERROR.
-          IF NOT AVAILABLE tt-doc-line-cashe-plus THEN DO:
+          find first tt-doc-line-cashe-plus where tt-doc-line-cashe-plus.doc-code     = tt-doc-line-cashe.doc-code  and
+                                                  tt-doc-line-cashe-plus.wf-artic     = tt-doc-line-cashe.artic     and
+                                                  tt-doc-line-cashe-plus.wf-prod-type = tt-doc-line-cashe.prod-type and
+                                                  tt-doc-line-cashe-plus.wf-prod-code = tt-doc-line-cashe.prod-code and
+                                                  tt-doc-line-cashe-plus.artic        = bf-loc-plus_goods.artic      and
+                                                  tt-doc-line-cashe-plus.prod-type    = bf-loc-plus_goods.prod-type  and
+                                                  tt-doc-line-cashe-plus.prod-code    = bf-loc-plus_goods.prod-code  no-error.
+          if not available tt-doc-line-cashe-plus then do:
             create tt-doc-line-cashe-plus.
-            ASSIGN
+            assign
               tt-doc-line-cashe-plus.doc-code     = tt-doc-line-cashe.doc-code
               tt-doc-line-cashe-plus.wf-artic     = tt-doc-line-cashe.artic
               tt-doc-line-cashe-plus.wf-prod-type = tt-doc-line-cashe.prod-type
@@ -471,12 +470,12 @@ index sum-type is primary unique sum-type.
               tt-doc-line-cashe-plus.artic        = bf-loc-plus_goods.artic
               tt-doc-line-cashe-plus.prod-type    = bf-loc-plus_goods.prod-type
               tt-doc-line-cashe-plus.prod-code    = bf-loc-plus_goods.prod-code .
-          END.
-          FOR EACH tt-clcparts :
-            DELETE tt-clcparts.
-          END.
-          CREATE tt-clcparts.
-          BUFFER-COPY bf-loc-plus_parts TO tt-clcparts.
+          end.
+          for each tt-clcparts :
+            delete tt-clcparts.
+          end.
+          create tt-clcparts.
+          buffer-copy bf-loc-plus_parts to tt-clcparts.
           run clcprtsl_calc-parts-inkaps in clcprtsl-hndl (
                                           input-output table tt-clcparts
                                         , input-output table tt-allsum
@@ -497,10 +496,10 @@ index sum-type is primary unique sum-type.
                                         , input 0.0                               /* parcurcons-vat-pc*/
                                         , input 0.0                               /* parcurslt-pc     */
                                     ).
-          FIND FIRST tt-allsum WHERE tt-allsum.sum-type = {&sum-general} NO-ERROR.
+          find first tt-allsum where tt-allsum.sum-type = {&sum-general} no-error.
           find first tt-clcparts.
           if available tt-allsum then do:
-            ASSIGN
+            assign
               tt-doc-line-cashe-plus.qnty               = tt-doc-line-cashe-plus.qnty               + tt-allsum.fact-qnty
               tt-doc-line-cashe-plus.sum-rubl           = tt-doc-line-cashe-plus.sum-rubl           + tt-allsum.sum-dsc-rubl-doc
               tt-doc-line-cashe-plus.sum-base           = tt-doc-line-cashe-plus.sum-base           + tt-allsum.sum-dsc-base-doc
@@ -510,13 +509,34 @@ index sum-type is primary unique sum-type.
               tt-doc-line-cashe-plus.write-off-sum-rubl = tt-doc-line-cashe-plus.write-off-sum-rubl + varprice-rubl-parts * tt-clcparts.real-qnty
               tt-doc-line-cashe-plus.write-off-sum-base = tt-doc-line-cashe-plus.write-off-sum-base + varprice-base-parts * tt-clcparts.real-qnty
             .
-          END.
-        END.
-      END.
-    END.
-    
-    
+          end.
+        end.
+      end.
+    end.
   end.
+  
+  method private decimal get-income-qnty
+  ( buffer local-doc-line for ub.doc-line, buffer local-doc-line-plus for ub.doc-line ) :
+   find first tt-doc-line-cashe-plus where tt-doc-line-cashe-plus.doc-code     = local-doc-line.doc-code       and
+                                           tt-doc-line-cashe-plus.wf-artic     = local-doc-line.artic          and
+                                           tt-doc-line-cashe-plus.wf-prod-type = local-doc-line.prod-type      and
+                                           tt-doc-line-cashe-plus.wf-prod-code = local-doc-line.prod-code      and
+                                           tt-doc-line-cashe-plus.artic        = local-doc-line-plus.artic     and
+                                           tt-doc-line-cashe-plus.prod-type    = local-doc-line-plus.prod-type and
+                                           tt-doc-line-cashe-plus.prod-code    = local-doc-line-plus.prod-code no-error.
+   if not available tt-doc-line-cashe-plus then do:
+     proc-get-write-off (buffer local-doc-line).
+     find first tt-doc-line-cashe-plus where tt-doc-line-cashe-plus.doc-code     = local-doc-line.doc-code       and
+                                             tt-doc-line-cashe-plus.wf-artic     = local-doc-line.artic          and
+                                             tt-doc-line-cashe-plus.wf-prod-type = local-doc-line.prod-type      and
+                                             tt-doc-line-cashe-plus.wf-prod-code = local-doc-line.prod-code      and
+                                             tt-doc-line-cashe-plus.artic        = local-doc-line-plus.artic     and
+                                             tt-doc-line-cashe-plus.prod-type    = local-doc-line-plus.prod-type and
+                                             tt-doc-line-cashe-plus.prod-code    = local-doc-line-plus.prod-code .
+   end.
+   return tt-doc-line-cashe-plus.qnty.
+  end method.
+
   
   
 
