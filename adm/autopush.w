@@ -58,6 +58,7 @@ define variable par-is-bge as logical   no-undo .
 define variable par-is-edi as character no-undo .
 define variable par-type   as character no-undo .
 define variable is-edi as logical   no-undo .
+define variable line-row   as rowid     no-undo .
 
 define variable v-c-date as date      no-undo .
 define variable v-c-time as integer   no-undo .
@@ -367,11 +368,24 @@ DO:
   RUN fill-autotask IN THIS-PROCEDURE ( input buf_db.db-num).
   OPEN QUERY br-autotask FOR EACH temp-autotask NO-LOCK WHERE
                                   temp-autotask.db-num = buf_db.db-num.
+  reposition BR-autotask to rowid line-row no-error .                               
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define BROWSE-NAME br-autotask
+&Scoped-define SELF-NAME br-autotask
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-autotask autopush
+ON VALUE-CHANGED OF br-autotask IN FRAME autopush
+DO:
+  if available temp-autotask
+  then
+  line-row = rowid(temp-autotask) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define BROWSE-NAME BR-autotask
 &UNDEFINE SELF-NAME
@@ -758,7 +772,7 @@ define input parameter p-task-type as   character    no-undo .
 
       when {&btpr-type-autosuz}
       then do:
-        /*
+         
         run str/suz-shdp.w
           (input parparentproc
           ,input  buf_sys-ctrl.db-num /* p-cre-db-num */
@@ -773,11 +787,11 @@ define input parameter p-task-type as   character    no-undo .
             view-as alert-box error.
           return error.
         end.
-        */
-        message
-        "  сожалению, невозможно изменить врем€ запуска отчетов по расписанию таким способом"
-        view-as alert-box error .
-        v-cancel = yes.
+        
+/*        message                                                                              */
+/*        "  сожалению, невозможно изменить врем€ запуска отчетов по расписанию таким способом"*/
+/*        view-as alert-box error .                                                            */
+/*        v-cancel = yes.                                                                      */
         if v-cancel = true
         then do:
           assign
