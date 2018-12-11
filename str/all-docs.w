@@ -1067,7 +1067,7 @@ define browse br-docs query br-docs no-lock display
       {&sort-clmn_2-br-dtl}  column-label {&label-clmn_2-br-dtl}  format "x(1)"
       {&sort-clmn_3-br-dtl}  column-label {&label-clmn_3-br-dtl}  format "x(4)"
       {&sort-clmn_4-br-dtl}  column-label {&label-clmn_4-br-dtl}  format "+/-"
-      {&sort-clmn_5-br-dtl}  column-label {&label-clmn_5-br-dtl}
+      {&sort-clmn_5-br-dtl}  column-label {&label-clmn_5-br-dtl}  format "x(14)"
       {&sort-clmn_6-br-dtl}  column-label {&label-clmn_6-br-dtl}  format "99/99/99"
       {&sort-clmn_7-br-dtl}  column-label {&label-clmn_7-br-dtl}
       {&sort-clmn_8-br-dtl}  column-label {&label-clmn_8-br-dtl}  format "x(5)"
