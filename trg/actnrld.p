@@ -69,7 +69,7 @@ on end-key undo main-block, return error substitute('actnrld end-key main-block,
         create buf_c-action-role.
         buffer-copy ub.action-role to buf_c-action-role
             assign
-            buf_c-action-role.chip-num           = next-value (s-corr-chip, {&db-name_schema})
+            buf_c-action-role.chip-num           = next-value (s-action-role-chip, {&db-name_schema})
             buf_c-action-role.corr-time          = v-time
             buf_c-action-role.corr-user-db-num   = g#db-num
             buf_c-action-role.corr-user-name     = g#userid
