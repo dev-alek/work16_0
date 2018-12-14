@@ -119,8 +119,17 @@ define temp-table tt-imp-parts no-undo
 .
 define variable v-count-all   as integer no-undo .
 define variable v-count-err   as integer no-undo .
+/* 12/XII-2018 Если при переносе остатков не нашлось мэппинга для товаров или поставщиков,
+               то считать ошибки отдельно и в конце вывести 3 счетчика по ошибкам:
+               нет соответствий по товарам, нет соответствий по поставщикам, прочие ошибки.
+*/
+define variable v-count-err1  as integer no-undo . /* нет соответствий по товарам */
+define variable v-count-err2  as integer no-undo . /* нет соответствий по поставщикам */
+
 
 run import_file in this-procedure (p-in-file, output v-count-all) .
+&scop my-message substitute("Всего прочитано &1 записей", v-count-all)
+{&display-message}.
 
 /* ----- компоновка принятых строк в партии ----- */
 /* есть:
@@ -158,10 +167,10 @@ run utl/imp-doc4cr.p ( parparentproc
                      , v-art-fname // список соответствия товаров
                      , v-err-file-name // файл для повторного импорта
                      , input table tt-imp-parts
-                     , output v-count-err) .  
-
-  &scop my-message substitute("Всего прочитано &1 записей. Из них отвергнуто &2", v-count-all, v-count-err )
-  {&display-message}.
+                     , output v-count-err
+                     , output v-count-err1
+                     , output v-count-err2
+                     ) .  
 
 
 define stream f-inp .

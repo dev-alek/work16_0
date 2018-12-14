@@ -77,7 +77,7 @@ if not g#news then do:
         create buf_c-action-role-item.
         buffer-copy ub.action-role-item to buf_c-action-role-item
             assign
-            buf_c-action-role-item.chip-num           = next-value (s-corr-chip, {&db-name_schema})
+            buf_c-action-role-item.chip-num           = next-value (s-action-role-chip, {&db-name_schema})
             buf_c-action-role-item.corr-time          = v-time
             buf_c-action-role-item.corr-user-db-num   = g#db-num
             buf_c-action-role-item.corr-user-name     = g#userid

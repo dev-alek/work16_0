@@ -69,6 +69,8 @@ define input  parameter p-art-fname      as character no-undo .
 define input  parameter p-retry-fname    as character no-undo .
 define input  parameter table for tt-imp-parts-ptrl.
 define output parameter p-count-err      as integer no-undo .
+define output parameter p-count-err1     as integer no-undo . /* - нет соответствий по товарам */
+define output parameter p-count-err2     as integer no-undo . /* - нет соответствий по поставщикам */
 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -308,7 +310,14 @@ if p-retry-fname > '' then . else do :
   p-retry-fname = substitute("&1imp-parts-ptrl.err", ibs.th.gbl.gbl-inipar:logDir ) .
 end .
 output stream f-err-lines to value(p-retry-fname) .  
-run create_temp_parts in this-procedure (new_obj-code, new_obj-type, new_host-code, output p-count-err).
+run create_temp_parts in this-procedure
+   (new_obj-code
+  , new_obj-type
+  , new_host-code
+  , output p-count-err
+  , output p-count-err1
+  , output p-count-err2
+  ).
 output stream f-err-lines close .
   
 /* импорт шапки */
@@ -338,6 +347,15 @@ run import-hed in this-procedure no-error .
       then delete ub.goods-attr.
     
   end.
+
+  &scop my-message substitute("При переносе остатков по топливу отвергнуто &1 записей. Из них:", p-count-err )
+  {&display-message}.
+  &scop my-message substitute("  нет соответствий по товарам &1", p-count-err1 )
+  {&display-message}.
+  &scop my-message substitute("  нет соответствий по поставщикам &1", p-count-err2 )
+  {&display-message}.
+  &scop my-message substitute("  прочие ошибки &1", p-count-err - p-count-err2 - p-count-err1 )
+  {&display-message}.
 
 
 
@@ -378,6 +396,8 @@ define input  parameter p-obj-code  as integer no-undo .
 define input  parameter p-obj-type  as character no-undo .
 define input  parameter p-host-code as integer no-undo .
 define output parameter p-count-err as integer no-undo .
+define output parameter p-count-err1 as integer no-undo .
+define output parameter p-count-err2 as integer no-undo .
 define variable v-last-date as date no-undo .
 define variable v-artic     as character no-undo .
 define variable v-prod-type as character no-undo .
@@ -399,7 +419,11 @@ define buffer new_clients  for ub.clients .
   &scop my-message v-my-message
   
 
-p-count-err = 0 .
+  assign
+    p-count-err  = 0
+    p-count-err1 = 0
+    p-count-err2 = 0
+  .
 
   for each buf_tt-parts
   break by buf_tt-parts.supp-code
@@ -447,6 +471,7 @@ p-count-err = 0 .
       else
         put stream f-err-lines unformatted getImpRow(buffer buf_tt-parts) skip .
       p-count-err = p-count-err + 1 .
+      p-count-err2 = p-count-err2 + 1 .
       next .
     end .
       
@@ -500,6 +525,7 @@ p-count-err = 0 .
       else
         put stream f-err-lines unformatted getImpRow(buffer buf_tt-parts) skip .
       p-count-err = p-count-err + 1 .
+      p-count-err1 = p-count-err1 + 1 .
       next .
     end .
     /* 26/IV-2018  Товары с ненайденным договором надо отображать в логе */
