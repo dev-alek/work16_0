@@ -1063,6 +1063,9 @@ method public void  load_price (iAddr as character,ifile-path as character ):
   define variable vcmd as character no-undo.
   define variable num-rec-ok as integer no-undo .
   
+  define variable ii as integer no-undo initial 0 .
+  define variable jj as integer no-undo initial 0 .
+  
   vcmd = substitute ("&1 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), iaddr, "price-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj(input "price-temp.json") .
@@ -1105,6 +1108,7 @@ method public void  load_price (iAddr as character,ifile-path as character ):
           " . Цена: " + string(tt-gds-price.price)) .
       end.
       else do :
+        ii = ii + 1 .
         put-err-log(
           "Не найден товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-gds-price.gds-code) +
           " . Цена: " + string(tt-gds-price.price) ).
@@ -1112,6 +1116,7 @@ method public void  load_price (iAddr as character,ifile-path as character ):
       end. 
     end.
     else do :
+      jj = jj + 1 .
       put-err-log(
         "В файле соответствия " + ifile-path + " нет данных по товару с кодом " + string(tt-gds-price.gds-code) +
         " . Цена: " + string(tt-gds-price.price)).
@@ -1129,8 +1134,20 @@ method public void  load_price (iAddr as character,ifile-path as character ):
   then do :
     undo, return error return-value.
   end.
-  
+  if ii > 0 or jj > 0
+  then do :
+     put-log( substitute("Всего отвергнуто &1 записей при загрузке цен. Из них:",ii )).
+     put-log( substitute("  нет соответствий по товарам &1", ii )).
+     put-log( substitute("В файле соотвествия нет данных по &1 товаров.",jj)) .
+  end.
   put-log( string( now) + "   Цены загружены!") .
+  
+  
+  /*else do :
+    message "Несоответсвий при загрузке цен нет!" view-as alert-box .
+  end.*/
+  
+  
   
 end method .
 method public void fix-codepage_and_SetJsonObj (p-file as character):
