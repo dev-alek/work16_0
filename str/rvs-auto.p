@@ -34,9 +34,12 @@ define variable vss-workfile    as character no-undo initial "$Workfile$":U.
 define variable vss-archive     as character no-undo initial "$Archive$":U.
 define variable vss-description as character no-undo initial "јвтоматическое создание контрольной сверки":U.
 DEFINE VARIABLE mParam AS CHARACTER NO-UNDO.
-DEFINE VARIABLE mRVSNull AS LOGICAL NO-UNDO.
+DEFINE VARIABLE mRVSNull AS LOGICAL no-undo init no.
 publish "RVSParam" (output mParam).
-mRVSNull = logical (entry(1,mParam)).
+
+mRVSNull = logical (entry(1,mParam)) no-error.
+if mRVSNull eq ? then mRVSNull = no.
+
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { str/lib-trn.i  }
