@@ -1229,16 +1229,18 @@ method public logical chek_pumpdoc ():
     end.
     return v-has-records.
 end method.
-method public void load_pumpdoc ( ) :
-  load_pumpdoc (maddr).
+method public void load_pumpdoc (ifile-path as character ) :
+  load_pumpdoc (maddr, ifile-path ).
 end.
-method public void load_pumpdoc (iaddr as character ) :
+method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
   define variable v-doc-code as character no-undo .
   define variable v-recid as recid no-undo .
   define variable vcmd as character no-undo.
   define variable vFlag as logical no-undo.
    put-log(string (now) + "   Отправляем запрос для получения инвентаризации счётчиков ТРК...").
 
+  load_gds_maping(ifile-path).
+  
   empty temp-table tt-gds-prod .
   empty temp-table tt-place-loc .
   empty temp-table tt-icnt-doc.
@@ -1261,25 +1263,17 @@ method public void load_pumpdoc (iaddr as character ) :
   for each tt-icnt-doc no-lock :
     put-log( "Номер документа в 15.0   " + tt-icnt-doc.doc-code).
     for each tt-icnt-line exclusive-lock where tt-icnt-line.doc-code = tt-icnt-doc.doc-code :
-      find first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-icnt-line.gds-code no-error.
-      if not available tt-gds-prod
+      find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-icnt-line.gds-code no-error .
+      if not available tt-gds-mapping
       then do :
-         put-log("No gds-prod").
-        undo, return error "No gds-prod" .
+        put-log(("В файле соответсвий нет топлива " + string(tt-icnt-line.gds-code))).
+        undo, return error ("В файле соответсвий нет топлива " + string(tt-icnt-line.gds-code)) .
       end.
-       
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
+      find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
+      if not available ub.goods
       then do :
-         put-log("No short-code").
-        undo, return error "No short-code" .
-      end.
-      
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-         put-log("No bar-code").
-        undo, return error "No bar-code" .
+         put-log(("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) ).
+        undo, return error ("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) .
       end.
       
       find first tt-place-loc no-lock where tt-place-loc.pl-code = tt-icnt-line.pl-code no-error.
@@ -1299,7 +1293,7 @@ method public void load_pumpdoc (iaddr as character ) :
       assign
         tt-icnt-line.obj-code = v-cntxt-obj-code
         tt-icnt-line.obj-type = v-cntxt-obj-type
-        tt-icnt-line.gds-code = ub.bar-code.gds-code
+        tt-icnt-line.gds-code = tt-gds-mapping.gds-code16
         tt-icnt-line.pl-code  = ub.place.pl-code
       .
     end.
