@@ -146,8 +146,8 @@ define stream lsOUT.
       delete object mParser  no-error.
       delete object mplacelib.
   end destructor.
- DEFINE PUBLIC EVENT write-log 
-    SIGNATURE VOID ( INPUT pcCustName AS CHARACTER ).   
+ define public event write-log 
+    signature void ( input pcCustName as character ).   
 method public void put-log (iText as character ):
   /*if valid-handle(mlogHand)
   then
@@ -167,12 +167,20 @@ end method.
 
 method public void put-log-all(itext as char):
    output to {&namelogfile} append.
-   put unformatted itext skip .
+   if itext = ""
+   then
+      put unformatted skip(1) .
+   else
+      put unformatted itext skip .
    output close.
 end.  
 method public void put-log-allerr(itext as char):
    output to {&namelogfileerr} append.
-   put unformatted itext skip .
+   if itext = ""
+   then
+      put unformatted skip(1) .
+   else
+      put unformatted itext skip .
    output close.
 end.
   
@@ -1054,6 +1062,7 @@ end method.
 
 method public void  load_price (ifile-path as character ):
   load_price (maddr,ifile-path ).
+  
 end method .   
 
 method public void  load_price (iAddr as character,ifile-path as character ):
@@ -1147,7 +1156,7 @@ method public void  load_price (iAddr as character,ifile-path as character ):
     message "Несоответсвий при загрузке цен нет!" view-as alert-box .
   end.*/
   
-  
+  put-log("").
   
 end method .
 method public void fix-codepage_and_SetJsonObj (p-file as character):
@@ -1291,7 +1300,7 @@ method public void load_pumpdoc (iaddr as character ) :
   end.
   
   put-log( string( now) +  "   Инвентаризация счётчиков ТРК загружена!" ) .
-
+  put-log("").
 end method.
 method public logical chek-sht-open():
   define buffer open-shift         for ub.shift-obj .
@@ -1335,6 +1344,7 @@ define variable vOk as logical no-undo.
         put-log("Создание нулевой сверки").
         run str/rvs-auto-draw.p (this-object).
         put-log(if chek_rvs() then "Нулевая сверка создана" else "Нулевая сверка не создана").
+        put-log("").
 end method.
 
 method public logical load_rest (
@@ -1383,6 +1393,7 @@ method public logical load_rest (iaddr as character,
   finally:
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
+     put-log("").
      return vok.
   end finally.
 end method .
@@ -1434,12 +1445,14 @@ method public logical load_rest_ptrl (iaddr as character,
   finally:
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
+     put-log("").
      return vok.
   end finally.
 end method .
 
 method public logical sendcode(icode as integer ):
    run utl/sendcode.p(this-object,icode).
+   put-log("").
    return yes.
 end method.
 method public logical  chek_rest():
@@ -1775,6 +1788,7 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
   finally:
       vOk = chek_rvs-shift() and vok.
      put-log(if vOk then "Сверка загружена" else "Сверка не загружена").
+     put-log("").
   return vOk .
   end finally. 
 end method.   
