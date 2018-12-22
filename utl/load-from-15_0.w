@@ -600,7 +600,7 @@ DO:
   if v-pumpdoc
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Инвентаризация счетчиков ТРК" ).
-    mutil:load_pumpdoc () no-error .
+    mutil:load_pumpdoc (v-file-path) no-error .
     if error-status:error
     then do :
       run waitfram-hide in this-procedure .
