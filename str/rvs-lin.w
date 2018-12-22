@@ -2609,14 +2609,14 @@ PROCEDURE level-water :
 
   define variable is_OK as logical no-undo initial yes.
 
-  if input frame {&frame-name} tt-rvs-line.state-level-petrol >
-     input frame {&frame-name} tt-rvs-line.state-level-total  then do:
-    assign is_OK = no.
-    if p-mode = yes then do:
-      message "”ровень топлива больше значени€ общего уровн€." view-as alert-box error.
-      return error.
-    end.
-  end.
+/*  if input frame {&frame-name} tt-rvs-line.state-level-petrol >                        */
+/*     input frame {&frame-name} tt-rvs-line.state-level-total  then do:                 */
+/*    assign is_OK = no.                                                                 */
+/*    if p-mode = yes then do:                                                           */
+/*      message "”ровень топлива больше значени€ общего уровн€." view-as alert-box error.*/
+/*      return error.                                                                    */
+/*    end.                                                                               */
+/*  end.                                                                                 */
   tt-rvs-line.state-level-petrol = input frame {&frame-name} tt-rvs-line.state-level-total - input frame {&frame-name} tt-rvs-line.state-level-water .
 /*  display input frame {&frame-name} tt-rvs-line.state-level-total  -*/
 /*          input frame {&frame-name} tt-rvs-line.state-level-petrol @*/

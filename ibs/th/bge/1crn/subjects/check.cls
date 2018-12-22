@@ -238,6 +238,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define variable v-snozzle-code as character no-undo . /* номер пистолета */
     define variable v-key-one      as integer no-undo . /* для поиска оператора сотовой связи */
     define variable v-is-nds       as integer no-undo . /* 0/1 признак распределения НДС по платежу */
+    define variable v-ex-Nds       as logical no-undo.
 
     insw:start-element ({&tag-message}) .
 
@@ -315,6 +316,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     if can-find (first buf_chk-gds where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code) then do:
       for each buf_chk-gds no-lock
          where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code :
+            v-ex-Nds = (buf_chk-gds.VAT-pc ne 0 and buf_chk-gds.VAT-sum-rubl ne 0) and (buf_chk-gds.VAT-pc ne ? and buf_chk-gds.VAT-sum-rubl ne ?). 
         insw:start-element ({&tag-item1}) .
         
         insw:write-data-element (  "line-num",  string(buf_chk-gds.line-num)  ) . /* Номер строки чека (Число) */
@@ -481,23 +483,25 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
          то в тэг is-nds секции платежей ставить 1. Во всех остальных случаях - 0.
          is-nds Число(0/1) 1-1 Признак распределения НДС по платежу
       */
-      find first buf_cash-pay-attr no-lock
-           where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
-             and buf_cash-pay-attr.curr-code  = buf_chk-pay.curr-code
-             /* входят в первичный индекс, значения переданы во входных параметрах, но:
-                скопировано из ref/cashpayi.w, и там поиск выполняется без жтих полей.  
-             and buf_cash-pay-attr.host-code  = p-host-code
-             and buf_cash-pay-attr.obj-type   = p-obj-type
-             and buf_cash-pay-attr.obj-code   = p-obj-code
-             */
-             and buf_cash-pay-attr.attr-code  = "cash-prop" no-error .
-      if available buf_cash-pay-attr then do :
-        /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
-        v-is-nds = if can-do ("1,2,3", buf_cash-pay-attr.attr-value) then 1 else 0 .
-      end .
-      else v-is-nds = 0 .
-      insw:write-data-element (  "is-nds",    string(v-is-nds)              ) . /* Признак распределения НДС по платежу (Число 0/1) */
-
+      /* если ндс  не расчитан то надо передать v-is-nds = 0  */
+      if v-ex-Nds then do:
+         find first buf_cash-pay-attr no-lock
+              where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
+                and buf_cash-pay-attr.curr-code  = buf_chk-pay.curr-code
+                /* входят в первичный индекс, значения переданы во входных параметрах, но:
+                   скопировано из ref/cashpayi.w, и там поиск выполняется без жтих полей.  
+                and buf_cash-pay-attr.host-code  = p-host-code
+                and buf_cash-pay-attr.obj-type   = p-obj-type
+                and buf_cash-pay-attr.obj-code   = p-obj-code
+                */
+                and buf_cash-pay-attr.attr-code  = "cash-prop" no-error .
+         if available buf_cash-pay-attr then do :
+           /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
+           v-is-nds = if can-do ("1,2,3", buf_cash-pay-attr.attr-value) then 1 else 0 .
+         end .
+         else v-is-nds = 0 .
+         insw:write-data-element (  "is-nds",    string(v-is-nds)              ) . /* Признак распределения НДС по платежу (Число 0/1) */
+      end.
       insw:end-element ({&tag-item2}) .
       if last-of(buf_chk-pay.doc-code) then insw:end-element ({&tag-section2}) .
     end . /* end_of for each buf_chk-pay */

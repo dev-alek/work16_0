@@ -163,12 +163,12 @@ on stop    undo tr, return error
            substitute( "¬ес топлива больше веса брутто по товару: &1 &2 &3 &4 по месту хранени€: &5",
                        ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).
       end.
-      if ub.rvs-line.state-level-petrol > ub.rvs-line.state-level-total then do:
-         find ub.goods where ub.goods.gds-code = ub.rvs-line.gds-code no-lock.
-         undo tr, return error
-           substitute( "”ровень топлива больше общего уровн€ по товару: &1 &2 &3 &4 по месту хранени€: &5",
-                       ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).
-      end.
+/*      if ub.rvs-line.state-level-petrol > ub.rvs-line.state-level-total then do:                                        */
+/*         find ub.goods where ub.goods.gds-code = ub.rvs-line.gds-code no-lock.                                          */
+/*         undo tr, return error                                                                                          */
+/*           substitute( "”ровень топлива больше общего уровн€ по товару: &1 &2 &3 &4 по месту хранени€: &5",             */
+/*                       ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).*/
+/*      end.                                                                                                              */
     end. /* for each ub.rvs-line */
     /* ѕроверка того, что заданы нараст. итоги по всем механическим счетчикам и кол-во с начала смены */
     for each ub.rvs-line-pump no-lock where ub.rvs-line-pump.rvs-code = ub.rvs-doc.rvs-code :

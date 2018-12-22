@@ -60,26 +60,26 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
     do:
       if objContracts:date_ > objContracts:date-srt then 
       do:
-        Msg = "Дата контракта позже даты начала действия!" .
+        Msg = "Договор с кодом " + objContracts:code_ + " . Дата контракта позже даты начала действия!" .
         return error.
       end.
       else 
       do:  
         if objContracts:date-srt > objContracts:date-end and objContracts:date-end <> "0001-01-01" then 
         do:
-          Msg = "Дата начала действия позже даты окончания действия!" .
+          Msg ="Договор с кодом " + objContracts:code_ +  " . Дата начала действия позже даты окончания действия!" .
           return error.
         end.
       end.
     end.
     if objContracts:contr-code = "" or objContracts:contr-code = ? then 
     do:
-      Msg = "Не задан контрагент".
+      Msg = "Договор с кодом " + objContracts:code_ + " . Не задан контрагент".
       return error.
     end.
     if objContracts:org-code = "" or objContracts:org-code = ? then 
     do:
-      Msg = "Не задана организация" .
+      Msg = "Договор с кодом " + objContracts:code_ + " . Не задана организация" .
       return error Msg.
     end.  
     find first ub.clients no-lock where ub.clients.obj-code = integer(objContracts:org-code)
@@ -93,7 +93,7 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
 /*    end.                                */
 /*    else                                */
 /*    do:                                 */
-      Msg = "Нет такой организации" .
+      Msg = "Договор с кодом " + objContracts:code_ + " . Нет такой организации - " + objContracts:org-code .
       return error Msg.
     end.  
     find first ub.clients no-lock where ub.clients.obj-code = integer(objContracts:contr-code)
@@ -108,7 +108,7 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
     else 
     do:
       /*Создаем нового клиента?*/
-      Msg = "Нет такого контрагента" .
+      Msg = "Договор с кодом " + objContracts:code_ + " . Нет такого контрагента - " + objContracts:contr-code .
       return error Msg.
     end.  
       
@@ -157,7 +157,7 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
       end.
       else 
       do:
-        Msg = "Не найдены системные настройки для фирмы с кодом:" + objContracts:org-code .
+        Msg = "Договор с кодом " + objContracts:code_ + " . Не найдены системные настройки для фирмы с кодом: " + objContracts:org-code .
         find first ub.currency no-lock no-error.
         if AVAILABLE ub.currency then 
         do:
@@ -165,7 +165,7 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
         end.  
         else 
         do:
-          Msg = "Не найден справочник видов оплат".
+          Msg = "Договор с кодом " + objContracts:code_ + " . Не найден справочник видов оплат".
           return error .
         end.  
       end.     

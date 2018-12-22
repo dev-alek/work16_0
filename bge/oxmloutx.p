@@ -113,9 +113,6 @@ do
 for buf_ext-system
 on error undo, return error
 :
-   run get-version-num in parparentproc
-    ( output v-ver-num
-    ).
 
   assign
       v-action =  entry( 1, p-parameter-string )
@@ -182,6 +179,9 @@ on error undo, return error
       return error.
   end.
 
+   run get-version-num in parparentproc
+    ( output v-ver-num
+    ).
   run write-log in p-log-handle (
         input 1
       , input substitute( "Выгрузка данных по внешним системам..." )
@@ -231,7 +231,7 @@ on error undo, return error
       when "one-pack":U then do:
         run write-log in p-log-handle (
               input 2
-              ,input substitute("Отправка одного пакета данных в ВС &1", buf_ext-system.esys-name )
+              ,input substitute("Отправка одного пакета данных в ВС &1 пакет номер &2", buf_ext-system.esys-name, v-esps-pack-num )
         ).
       end.
       when "one-esys-unconf":U

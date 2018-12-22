@@ -323,7 +323,7 @@ class ibs.th.utl.draw_utility inherits Form:
     checkBox1:checked = mutil:Chek_Shem().
     if not checkBox1:checked
     then do:
-       mutil:load_schem().
+       mutil:load_schem(textBox2:text).
        checkBox1:checked = mutil:Chek_Shem(). 
     end. 
       
@@ -363,7 +363,7 @@ class ibs.th.utl.draw_utility inherits Form:
      if         checkBox4:checked
         and not checkBox6:checked
     then do:
-       mutil:load_pumpdoc().
+       mutil:load_pumpdoc(textBox2:text).
        checkBox6:checked = mutil:chek_pumpdoc(). 
     end.
     

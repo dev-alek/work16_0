@@ -146,8 +146,8 @@ define stream lsOUT.
       delete object mParser  no-error.
       delete object mplacelib.
   end destructor.
- DEFINE PUBLIC EVENT write-log 
-    SIGNATURE VOID ( INPUT pcCustName AS CHARACTER ).   
+ define public event write-log 
+    signature void ( input pcCustName as character ).   
 method public void put-log (iText as character ):
   /*if valid-handle(mlogHand)
   then
@@ -167,12 +167,20 @@ end method.
 
 method public void put-log-all(itext as char):
    output to {&namelogfile} append.
-   put unformatted itext skip .
+   if itext = ""
+   then
+      put unformatted skip(1) .
+   else
+      put unformatted itext skip .
    output close.
 end.  
 method public void put-log-allerr(itext as char):
    output to {&namelogfileerr} append.
-   put unformatted itext skip .
+   if itext = ""
+   then
+      put unformatted skip(1) .
+   else
+      put unformatted itext skip .
    output close.
 end.
   
@@ -191,6 +199,7 @@ method private void pumpav(
       and bf_pump.pump-code = parpump-code
     no-error.
   if available bf_pump then do:
+    put-log(substitute("Уже есть ТРК с номером &1", parpump-code) +  "{&str-obj}").
     return error substitute("Уже есть ТРК с номером &1", parpump-code) {&str-obj}.
   end.
   create bf_pump.
@@ -225,8 +234,10 @@ find first bf_pump-nozzle where bf_pump-nozzle.obj-type    = parobj-type    and
                                 bf_pump-nozzle.obj-code    = parobj-code    and
                                 bf_pump-nozzle.pump-code   = parpump-code   and
                                 bf_pump-nozzle.nozzle-code = parnozzle-code no-lock no-error.
-if available bf_pump-nozzle then
+if available bf_pump-nozzle then do:
+             put-log(substitute ("Уже есть запись ТРК-пистолет с номером ТРК &1 и номером пистолета &2", parpump-code, parnozzle-code) + " " + "{&str-obj}").
              return error substitute ("Уже есть запись ТРК-пистолет с номером ТРК &1 и номером пистолета &2", parpump-code, parnozzle-code) {&str-obj}.
+end. 
 create bf_pump-nozzle.
 assign bf_pump-nozzle.obj-type    = parobj-type
        bf_pump-nozzle.obj-code    = parobj-code
@@ -265,6 +276,7 @@ method private void plpumpav(
       and bf_pl-pump.pump-code  = parpump-code
     no-error.
   if available bf_pl-pump then do:
+     put-log(substitute("Уже есть запись резервуар-ТРК с номером резервуара &1 и номером ТРК &2", parpl-code, parpump-code) + " " + "{&str-obj}").
     return error substitute("Уже есть запись резервуар-ТРК с номером резервуара &1 и номером ТРК &2", parpl-code, parpump-code) {&str-obj}.
   end.
   /*Если есть в резервуаре бензин делаем проверку, что через данную ТРК не течет данный бензин
@@ -322,6 +334,7 @@ method private void plpumpav(
          ,input bf_pl-gds-pump.status_
         ) no-error.
       if error-status:error then do:
+        put-log(substitute ("Ошибка при смене статуса записи резервуар-ТРК-пистолет: &1 &2.", return-value, error-status:get-message(1))).
         undo tr, return error substitute ("Ошибка при смене статуса записи резервуар-ТРК-пистолет: &1 &2.", return-value, error-status:get-message(1)).
       end.
     end.
@@ -466,14 +479,18 @@ method private void plpmnzav(
 end method.
 
 // перенос топологии 
-method public void load_schem ():
-  load_schem(mAddr).
-end.  
+method public void load_schem (ifile-path as character):
+  load_schem(mAddr, ifile-path).
+end. 
 
-method public void load_schem (iAddt as character ):
+method public void load_schem (iAddr as character, ifile-path as character ):
   define variable v-rep-rec as recid no-undo .
   define variable v-ok        as logical   no-undo.
+  define variable VFlag as logical no-undo.
   define variable cmd as character no-undo.
+  put-log(string (now) + "   Отправляем запрос для получения топологии...").
+  
+  load_gds_maping(ifile-path).
    
   empty temp-table tt-gds-prod .
   empty temp-table tt-place.
@@ -486,8 +503,9 @@ method public void load_schem (iAddt as character ):
   empty temp-table tt-pl-level. 
   empty temp-table tt-pl-gds. 
   empty temp-table tt-pl-gds-pump. 
-   cmd = substitute ("&1 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddt, "schem-temp.json").
+   cmd = substitute ("&1 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddr, "schem-temp.json").
   os-command silent value (cmd).
+  put-log(string (now) + "   Разбираем полученные данные...").
   fix-codepage_and_SetJsonObj (input "schem-temp.json") .
   
   
@@ -508,20 +526,17 @@ method public void load_schem (iAddt as character ):
   //delete object results-array no-error.
   
   for each tt-gds-prod no-lock :
-    find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-    if not available ub.prod-bc
+    find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-gds-prod.gds-code no-error .
+    if not available tt-gds-mapping
     then do :
-      undo, return error ("Нет короткого кода " + tt-gds-prod.b-str) .
+      put-log(("В файле соответсвий нет топлива " + string(tt-gds-prod.gds-code) + " с коротким кодом " + tt-gds-prod.b-str)).
+      undo, return error ("В файле соответсвий нет топлива " + string(tt-gds-prod.gds-code) + " с коротким кодом " + tt-gds-prod.b-str) .
     end.
-    find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-    if not available ub.bar-code
-    then do :
-      undo, return error ("Нет бар-кода для короткого кода " + tt-gds-prod.b-str) .
-    end.
-    find first ub.goods no-lock where ub.goods.gds-code = ub.bar-code.gds-code no-error.
+    find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
     if not available ub.goods
     then do :
-      undo, return error ("Нет товара с коротким кодом " + tt-gds-prod.b-str) .
+       put-log(("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) ).
+      undo, return error ("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) .
     end.
   end. 
   
@@ -535,6 +550,7 @@ method public void load_schem (iAddt as character ):
        ,input tt-pump.pump-code
       ) no-error.
     if error-status:error then do:
+       put-Log(return-value).
        undo, return error return-value.
     end.
   end.
@@ -545,6 +561,7 @@ method public void load_schem (iAddt as character ):
                         v-cntxt-obj-code,
                         tt-nozzle.nozzle-code) no-error.
     if error-status:error then do:
+       put-Log(return-value).
       undo, return error return-value.
     end.
   end.
@@ -559,6 +576,7 @@ method public void load_schem (iAddt as character ):
              ,input ""
             ) no-error.
     if error-status:error then do:
+       put-Log(return-value).
        undo, return error return-value.
     end.
   end.
@@ -588,6 +606,7 @@ method public void load_schem (iAddt as character ):
       ) no-error.
     if error-status:error then 
     do:
+       put-Log(return-value).
       undo, return error return-value.
     end.
     find first ub.place no-lock where recid(ub.place) = v-rep-rec .
@@ -605,6 +624,7 @@ method public void load_schem (iAddt as character ):
       no-error.   
       if error-status:error then 
       do:
+         put-Log(return-value).
         undo, return error return-value.
       end.                              
     end.
@@ -626,6 +646,7 @@ method public void load_schem (iAddt as character ):
       no-error.   
       if error-status:error then 
       do:
+         put-Log(return-value).
         undo, return error return-value.
       end.
     end.         
@@ -647,6 +668,7 @@ method public void load_schem (iAddt as character ):
       no-error.   
       if error-status:error then 
       do:
+         put-Log(return-value).
         undo, return error return-value.
       end.
     end.                           
@@ -667,22 +689,12 @@ method public void load_schem (iAddt as character ):
     for each tt-pl-gds no-lock where tt-pl-gds.obj-type = tt-place.obj-type
                                  and tt-pl-gds.obj-code = tt-place.obj-code
                                  and tt-pl-gds.pl-code  = tt-place.pl-code,
-    first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-pl-gds.gds-code : 
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
-      then do :
-        undo, return error "No short-code" .
-      end.
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
-      end.
+    first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-pl-gds.gds-code  : 
       run trg/plgdpmvc.p (
           input  v-cntxt-obj-type,
           input  v-cntxt-obj-code,
           input  ub.place.pl-code,
-          input  ub.bar-code.gds-code,
+          input  tt-gds-mapping.gds-code16,
           output v-ok) no-error.
       if error-status:error then 
       do:
@@ -691,6 +703,7 @@ method public void load_schem (iAddt as character ):
 /*              return-value skip                              */
 /*              error-status:get-message(1)                    */
 /*              view-as alert-box error.                       */
+put-Log(return-value).
           undo, return error return-value.
       end.
       if not v-ok then 
@@ -712,6 +725,7 @@ method public void load_schem (iAddt as character ):
                 input ub.place.pl-code,
                 input tt-pl-pump.pump-code) no-error.  
       if error-status:error then do:
+         put-Log(return-value).
          undo, return error return-value.
       end.                                      
     end.  
@@ -738,6 +752,7 @@ method public void load_schem (iAddt as character ):
          ,input tt-pl-pump-nozzle.nozzle-code
         ) no-error.
       if error-status:error then do:
+         put-Log(return-value).
          undo, return error return-value.
       end.
     end.   
@@ -745,21 +760,11 @@ method public void load_schem (iAddt as character ):
     for each tt-pl-gds-pump where tt-pl-gds-pump.obj-type = tt-place.obj-type and
                                   tt-pl-gds-pump.obj-code = tt-place.obj-code and
                                   tt-pl-gds-pump.pl-code = tt-place.pl-code,
-    first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-pl-gds-pump.gds-code :
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
-      then do :
-        undo, return error "No short-code" .
-      end.
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
-      end.
+    first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-pl-gds-pump.gds-code :
       find first pl-gds-pump exclusive-lock where pl-gds-pump.obj-type = v-cntxt-obj-type
                                               and pl-gds-pump.obj-code = v-cntxt-obj-code
                                               and pl-gds-pump.pl-code  = ub.place.pl-code  
-                                              and pl-gds-pump.gds-code = ub.bar-code.gds-code   
+                                              and pl-gds-pump.gds-code = tt-gds-mapping.gds-code16   
                                               and pl-gds-pump.pump-code = tt-pl-gds-pump.pump-code   
                                               no-error.
       if available pl-gds-pump
@@ -769,8 +774,13 @@ method public void load_schem (iAddt as character ):
     end.
                                                                                                               
   end.
-  
-  put-log( string(now) + "   Топология загружена!" ).
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string(now) + "   Топология загружена!" ).
+     else
+        put-log( string(now) + "   Топология не загружена!" ).
+  end finally.
 end method.
 
 method public logical Chek_Shem(
@@ -872,14 +882,16 @@ end.
 method public void load_cashdesk(iAddr as character ) :
   define variable v-rid as recid no-undo .
   define variable vcmd  as character no-undo.
-  
+  define variable vFlag as logical no-undo.
   empty temp-table tt-cash-desk.
   empty temp-table tt-cash-desk-attr.
  
+  put-log(string (now) + "   Отправляем запрос для получения касс...").
   
   
   vcmd = substitute ("&1 &2/THGetInfo?GetCashDesk >&3", search ("exe/curl.exe"), iAddr, "cashdesk-temp.json").
   os-command silent value (vcmd).
+  put-log(string (now) + "   Разбираем полученные данные...").
   fix-codepage_and_SetJsonObj (input "cashdesk-temp.json") .
   
   
@@ -921,6 +933,7 @@ method public void load_cashdesk(iAddr as character ) :
     ,input tt-cash-desk.fr-type
     ) no-error .
     if error-status:error then do:
+       put-Log(return-value).
       undo, return error return-value.
     end.
     for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
@@ -974,8 +987,14 @@ method public void load_cashdesk(iAddr as character ) :
     end.                                       
   end.
   
-  put-log( string(now) + "   Кассы загружены!") .
-   
+  
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string(now) + "   Кассы загружены!") .
+     else
+        put-log( string(now) + "   Кассы не загружены!") .
+  end finally.
 end method.
 method public void parse-json (
   pBuff as handle,
@@ -1046,7 +1065,8 @@ method public void load_gds_maping(ifile-path as character ):
     repeat:
       import unformatted v-line.
       create tt-gds-mapping .
-      tt-gds-mapping.gds-code15 = integer(trim(entry(1, v-line, ";"))) .
+      assign
+      tt-gds-mapping.gds-code15 = integer(trim(entry(1, v-line, ";"))) 
       tt-gds-mapping.gds-code16 = integer(trim(entry(2, v-line, ";"))) no-error .
       if error-status:error then leave .
     end.
@@ -1054,11 +1074,13 @@ end method.
 
 method public void  load_price (ifile-path as character ):
   load_price (maddr,ifile-path ).
+  
 end method .   
 
 method public void  load_price (iAddr as character,ifile-path as character ):
-  
+  define variable vFlag as logical no-undo.
   load_gds_maping(ifile-path).
+  put-log(string (now) + "   Отправляем запрос для получения цен...").
   
   define variable vcmd as character no-undo.
   define variable num-rec-ok as integer no-undo .
@@ -1068,6 +1090,10 @@ method public void  load_price (iAddr as character,ifile-path as character ):
   
   vcmd = substitute ("&1 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), iaddr, "price-temp.json").
   os-command silent value (vcmd).
+  
+  put-log(string (now) + "   Разбираем полученные данные...").
+  
+ 
   fix-codepage_and_SetJsonObj(input "price-temp.json") .
   
   empty temp-table tt-gds-price.
@@ -1132,6 +1158,7 @@ method public void  load_price (iAddr as character,ifile-path as character ):
     ) no-error .
   if error-status:error
   then do :
+     put-Log(return-value).
     undo, return error return-value.
   end.
   if ii > 0 or jj > 0
@@ -1140,8 +1167,16 @@ method public void  load_price (iAddr as character,ifile-path as character ):
      put-log( substitute("  нет соответствий по товарам &1", ii )).
      put-log( substitute("В файле соотвествия нет данных по &1 товаров.",jj)) .
   end.
-  put-log( string( now) + "   Цены загружены!") .
   
+   
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string( now) + "   Цены загружены!") .
+     else
+        put-log( string( now) + "   Цены  не загружены!") .
+        put-log("").
+  end finally.
   
   /*else do :
     message "Несоответсвий при загрузке цен нет!" view-as alert-box .
@@ -1194,13 +1229,17 @@ method public logical chek_pumpdoc ():
     end.
     return v-has-records.
 end method.
-method public void load_pumpdoc ( ) :
-  load_pumpdoc (maddr).
+method public void load_pumpdoc (ifile-path as character ) :
+  load_pumpdoc (maddr, ifile-path ).
 end.
-method public void load_pumpdoc (iaddr as character ) :
+method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
   define variable v-doc-code as character no-undo .
   define variable v-recid as recid no-undo .
   define variable vcmd as character no-undo.
+  define variable vFlag as logical no-undo.
+   put-log(string (now) + "   Отправляем запрос для получения инвентаризации счётчиков ТРК...").
+
+  load_gds_maping(ifile-path).
   
   empty temp-table tt-gds-prod .
   empty temp-table tt-place-loc .
@@ -1209,6 +1248,10 @@ method public void load_pumpdoc (iaddr as character ) :
   
   vcmd = substitute ("&1 &2/THGetInfo?GetPumpDoc >&3", search ("exe/curl.exe"), iaddr, "pumpdoc-temp.json").
   os-command silent value (vcmd).
+  
+  put-log(string (now) + "   Разбираем полученные данные...").
+  
+ 
   fix-codepage_and_SetJsonObj(input "pumpdoc-temp.json") .
   parse-json(input temp-table tt-icnt-doc:default-buffer-handle, input "icnt-doc") .
   parse-json(input temp-table tt-icnt-line:default-buffer-handle, input "icnt-line") .
@@ -1220,40 +1263,37 @@ method public void load_pumpdoc (iaddr as character ) :
   for each tt-icnt-doc no-lock :
     put-log( "Номер документа в 15.0   " + tt-icnt-doc.doc-code).
     for each tt-icnt-line exclusive-lock where tt-icnt-line.doc-code = tt-icnt-doc.doc-code :
-      find first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-icnt-line.gds-code no-error.
-      if not available tt-gds-prod
+      find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-icnt-line.gds-code no-error .
+      if not available tt-gds-mapping
       then do :
-        undo, return error "No gds-prod" .
+        put-log(("В файле соответсвий нет топлива " + string(tt-icnt-line.gds-code))).
+        undo, return error ("В файле соответсвий нет топлива " + string(tt-icnt-line.gds-code)) .
       end.
-       
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
+      find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
+      if not available ub.goods
       then do :
-        undo, return error "No short-code" .
-      end.
-      
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
+         put-log(("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) ).
+        undo, return error ("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) .
       end.
       
       find first tt-place-loc no-lock where tt-place-loc.pl-code = tt-icnt-line.pl-code no-error.
       if not available tt-place-loc
       then do :
+         put-log("No place-loc").
         undo, return error "No place-loc" .
       end.
       
       find first ub.place no-lock where ub.place.loc1 = tt-place-loc.loc1 no-error.
       if not available ub.place
       then do :
+         put-log("No place").
         undo, return error "No place" .
       end.
       
       assign
         tt-icnt-line.obj-code = v-cntxt-obj-code
         tt-icnt-line.obj-type = v-cntxt-obj-type
-        tt-icnt-line.gds-code = ub.bar-code.gds-code
+        tt-icnt-line.gds-code = tt-gds-mapping.gds-code16
         tt-icnt-line.pl-code  = ub.place.pl-code
       .
     end.
@@ -1280,18 +1320,28 @@ method public void load_pumpdoc (iaddr as character ) :
                     ,input table tt-icnt-line
                      ) no-error.
     if error-status:error then do:
+       put-log(return-value).
       undo, return error return-value.
     end.
     run str/icntdoc2.p ( input v-recid
                  ,input yes /*p-silent*/
                  ) no-error.
     if error-status:error then do:
+       put-log(return-value).
       undo, return error return-value.
     end.             
   end.
+ 
   
-  put-log( string( now) +  "   Инвентаризация счётчиков ТРК загружена!" ) .
-
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string( now) +  "   Инвентаризация счётчиков ТРК загружена!" ) .
+     else
+        put-log( string( now) +  "   Инвентаризация счётчиков ТРК не загружена!" ) .
+        put-log("").
+  end finally.
+  
 end method.
 method public logical chek-sht-open():
   define buffer open-shift         for ub.shift-obj .
@@ -1335,6 +1385,7 @@ define variable vOk as logical no-undo.
         put-log("Создание нулевой сверки").
         run str/rvs-auto-draw.p (this-object).
         put-log(if chek_rvs() then "Нулевая сверка создана" else "Нулевая сверка не создана").
+        put-log("").
 end method.
 
 method public logical load_rest (
@@ -1383,6 +1434,7 @@ method public logical load_rest (iaddr as character,
   finally:
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
+     put-log("").
      return vok.
   end finally.
 end method .
@@ -1434,12 +1486,14 @@ method public logical load_rest_ptrl (iaddr as character,
   finally:
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
+     put-log("").
      return vok.
   end finally.
 end method .
 
 method public logical sendcode(icode as integer ):
    run utl/sendcode.p(this-object,icode).
+   put-log("").
    return yes.
 end method.
 method public logical  chek_rest():
@@ -1775,6 +1829,7 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
   finally:
       vOk = chek_rvs-shift() and vok.
      put-log(if vOk then "Сверка загружена" else "Сверка не загружена").
+     put-log("").
   return vOk .
   end finally. 
 end method.   

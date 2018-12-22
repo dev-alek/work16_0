@@ -839,7 +839,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDensTemp:Name = "maskedTextBoxDensTemp".
     this-object:maskedTextBoxDensTemp:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxDensTemp:TabIndex = 21.
-    this-object:maskedTextBoxDensTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
+    this-object:maskedTextBoxDensTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimalNegNum_2_1).
     /*  */
     /* maskedTextBoxListTank */
     /*  */
@@ -856,7 +856,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxTankTemp:Name = "maskedTextBoxTankTemp".
     this-object:maskedTextBoxTankTemp:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxTankTemp:TabIndex = 19.
-    this-object:maskedTextBoxTankTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
+    this-object:maskedTextBoxTankTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimalNegNum_2_1).
     /*  */
     /* maskedTextBoxTankWater */
     /*  */
@@ -1167,7 +1167,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxTTNTemp:Name = "maskedTextBoxTTNTemp".
     this-object:maskedTextBoxTTNTemp:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxTTNTemp:TabIndex = 2.
-    this-object:maskedTextBoxTTNTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
+    this-object:maskedTextBoxTTNTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimalNegNum_2_1).
     /*  */
     /* maskedTextBoxDocDens */
     /*  */
@@ -1841,6 +1841,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     KeyPressMaskTBDecimalNegativeNum (sender, e, 2, 2).
 
   end method.
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void KeyPressMaskTBDecimalNegNum_2_1( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs):
+
+    KeyPressMaskTBDecimalNegativeNum (sender, e, 2, 1).
+
+  end method.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -2350,7 +2361,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   
   method private char format_temper (arg as decimal):
     def var str as char no-undo.
-    str = trim (string (round(arg, 3), "->>9")).
+    str = trim (string (round(arg, 1), "->>9.9")).
     return str.
   end.
   

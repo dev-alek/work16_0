@@ -566,8 +566,149 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     v-espr-pack-num = tt-espcknum.tt-espr-pack-num.
                   end.
                 end.
+                
+                /* 21/XII-2018  Перестали приниматься ack_ с подтверждениями на отправленные нами пакеты.
+                                Сначала обрабатываем все ack_ с подтверждениями на отправленные нами пакеты,
+                                потом переходим к приёму новых пакетов. 
+                */
+                for each temp-filelist where temp-filelist.file-name begins "err_" :
+                          delete temp-filelist .
+                end.
+                for each temp-filelist :
+                        /* 24/VIII-2018 заглушка (такая же стоит в bge/espcknum.p):
+                              исключаем файлы с электронной подисью,
+                              чтобы они читались строго позже файлов с данными */
+                        if (v-sign-fileext > "") and (temp-filelist.file-extension = v-sign-fileext) then do :
+                          delete temp-filelist .
+                          next .
+                        end .
+                        /* 05/IX-2018 ещё заглушка, связанная с bge/espcknum.p и bge/oxmlspci.w */
+                        if can-do("p7s,p7c", temp-filelist.file-extension) then do :
+                          delete temp-filelist .
+                          next .
+                        end . 
+                end.
+                for each temp-filelist where temp-filelist.file-name begins "ack_" :
+                        assign v-custom-pack-name = temp-filelist.file-name.
+                  run gbl/filename.p (
+/* 21/XII-2018 почему-то не может найти файл по короткому имени input temp-filelist.file-name */
+                                      input temp-filelist.full-name
+                                      ,output v-full-path
+                                      ,output v-path
+                                      ,output v-file-name
+                                      ,output v-file-name-no-ext
+                                      ,output v-file-name-ext
+                                      ) no-error .
+                  if error-status :error then do:
+                    run write-log in p-log-handle (
+                                                  input 2
+                      , ("Ошибка приёма подтверждения из файла " + temp-filelist.full-name + " : " + return-value)
+                                                ) .
+                    next .
+                  end.
+                  run write-log in p-log-handle (input 2 ,
+                    substitute ("Прием подтверждения на пакет номер &1 (файл &2)"
+                              , entry(4, v-file-name, "_") 
+                              , v-full-path
+                               )
+                                                ) .
+                  // 26/IX-2018 - загрузить данные в mem-ptr и отдать их на вход в x-document вместо файла
+                  set-size(v-pack-data) = 0 .
+                  COPY-LOB FROM FILE v-full-path TO OBJECT v-pack-data NO-CONVERT NO-ERROR .
+                  // 26/IX-2018 Да, аски тоже надо подписывать.
+                  // Далее скопирована проверка подписи пакета данных                   
+                  /* если включена проверка электронной подписи - то загрузить файл подписи и проверить подпись */
+                  if v-cert-enabled then do on error undo, throw :
+                    v-position = r-index(v-full-path, ".") .
+                    v-sign-file = if v-position > 0 then substring(v-full-path, 1, v-position - 1) else v-full-path .
+                    v-sign-file = substitute("&1.&2", v-sign-file, v-sign-fileext) .
+                    file-info:file-name = v-sign-file .
+                    if file-info:file-type = ? then
+                      v-err-msg = substitute("Отсутствует файл электронной подписи &1", v-sign-file) .
+                    else do :
+                      v-err-msg = "" .  
+                      COPY-LOB FROM FILE v-sign-file TO OBJECT v-sign-data NO-CONVERT .
+                      /* проверка соответствия сертификата отправителю выполняется по sender-id;
+                         для 1с sender-id жестко равен "00000" */
+                      v-pkcs:putSign(v-sign-data) .
+                      v-cert-subject = v-pkcs:getCertSubject() .
+                      if checkCertSubject (v-cert-subject, v-1c-subj) then do :
+                        v-pkcs:verifySign(v-pack-data) .
+                      end .
+                      else do :
+                        v-err-msg = substitute("Идентификатор отправителя [&1] отличается от идентификатора подписавшей стороны [&2]"
+                                             , v-1c-subj, v-cert-subject) .
+                      end .
+                      /* при возникновении ошибок проверьте, что в директории heap
+                         присутствует только один комплект файлов с заданным v-espr-pack-num;
+                         иначе ошибки могут возникать не на тестируемом пакете */
+                    end .
+                    catch exAppErrors as class Progress.Lang.AppError :
+                      v-err-msg = exAppErrors:ReturnValue .
+                      if v-err-msg > "" then . else do :
+                        v-err-msg = exAppErrors:GetMessage(1) . 
+                        if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+                      end .
+                    end catch .
+                    catch exProErrors as class Progress.Lang.ProError :
+                      v-err-msg = exProErrors:GetMessage(1) . 
+                      if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+                    end catch .
+                    catch exAnyErrors as class Progress.Lang.Error:
+                      v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+                    end catch .
+                    finally: 
+                      set-size(v-sign-data) = 0 .
+                      if v-err-msg > "" then do :
+                        set-size(v-pack-data) = 0 .
+                        run write-log in p-log-handle ( input 2, input v-err-msg ).
+                        // ack_ на ack_ не отправляем
+                        undo _ext-system, next _ext-system.
+                      end .
+                    end finally.
+                  end . // end_of if_cert
+                  
+                  run rul/rcv-ack_1c.p (input v-pack-data
+                                       ,input buf_ext-system.esys-id
+                                       ,output v-1c-stat
+                                       ,output v-ack-err
+                                        ) .
+                                        
+                  set-size(v-pack-data) = 0 .
+                  os-delete value(v-full-path) .
+                                        
+                  if v-1c-stat = 1 then do : // коды ошибок, отличные от 1, игнорируем
+                    define variable v-one-pack-num as integer no-undo .
+                    v-one-pack-num = integer (v-ack-err) no-error .
+                  if v-one-pack-num > 0 then do :
+                    run bge/oxmloutx.p ( input parparentproc
+                                        ,input p-parent-handle
+                                        ,input p-log-handle
+                                        ,input substitute("one-pack,&1,&2,&3,&4,&5"
+                                                    ,v-cur-db-num
+                                                    ,buf_ext-system.esys-id
+                                                    ,buf_ext-system.db-num
+                                                    ,g#db-num
+                                                    ,v-ack-err)
+              
+                                  ) no-error.
+                    if error-status:error then do:
+                      run write-log in p-log-handle (
+                                                  input 2
+                                                , ( vss-workfile + {&space-char}
+                                        + substitute( "ERROR!!! Ошибка при отправке одного пакета данных в ВС &1", buf_ext-system.esys-id ) + {&new-line}
+                                        + substitute( "&1", error-status:get-message(error-status:num-messages) ) + {&new-line}
+                                        + substitute( "&1", return-value ) )
+                                                ) .
+                    end.
+                  end.                      
+                  end.                      
+                  
+                end. /* end_of for_each temp-filelist_begins_ack */
+                
               do : // выбор имени файла для импорта
 
+                  
                   if not can-find (first temp-filelist
                                    where integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)) then do :
                     /* отсутствует пакет с ожидаемым номером v-espr-pack-num */                 
@@ -607,26 +748,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                   end . /* end_of отсутствует пакет с ожидаемым номером v-espr-pack-num */                   
               
                 for each temp-filelist no-lock :
-                    if temp-filelist.file-name begins "err_" then do :
-                          delete temp-filelist .
-                          next .
-                    end.
+                    /* 21/XII-2018 вся обработка ack_ вынесена до обработки пакетов.
+                                   Здесь условия по ack_ срабатывать больше не должны. */
                     if integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)
                     or temp-filelist.file-name begins "ack_"
                     or temp-filelist.file-name begins "err_"
                     then do :
-                        /* 24/VIII-2018 заглушка (такая же стоит в bge/espcknum.p):
-                              исключаем файлы с электронной подисью,
-                              чтобы они читались строго позже файлов с данными */
-                        if (v-sign-fileext > "") and (temp-filelist.file-extension = v-sign-fileext) then do :
-                          delete temp-filelist .
-                          next .
-                        end .
-                        /* 05/IX-2018 ещё заглушка, связанная с bge/espcknum.p и bge/oxmlspci.w */
-                        if can-do("p7s,p7c", temp-filelist.file-extension) then do :
-                          delete temp-filelist .
-                          next .
-                        end . 
                         assign v-custom-pack-name = temp-filelist.file-name.
                         if temp-filelist.file-name begins "ack_"
                         then
@@ -702,99 +829,10 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 if v-file-name begins "ack_"
                 and buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
                 then do :
-                  run write-log in p-log-handle (
-                                                  input 2
-                                                , ("Прием подтверждения на пакет номер " + entry(4, v-file-name, "_") )
-                                                ) .
-                  // 26/IX-2018 - загрузить данные в mem-ptr и отдать их на вход в x-document вместо файла
-                  set-size(v-pack-data) = 0 .
-                  COPY-LOB FROM FILE v-full-path TO OBJECT v-pack-data NO-CONVERT NO-ERROR .
-
-                  // 26/IX-2018 Да, аски тоже надо подписывать.
-                  // Далее скопирована проверка подписи пакета данных                   
-                  /* если включена проверка электронной подписи - то загрузить файл подписи и проверить подпись */
-                  if v-cert-enabled then do on error undo, throw :
-                    v-position = r-index(v-full-path, ".") .
-                    v-sign-file = if v-position > 0 then substring(v-full-path, 1, v-position - 1) else v-full-path .
-                    v-sign-file = substitute("&1.&2", v-sign-file, v-sign-fileext) .
-                    file-info:file-name = v-sign-file .
-                    if file-info:file-type = ? then
-                      v-err-msg = substitute("Отсутствует файл электронной подписи &1", v-sign-file) .
-                    else do :
-                      v-err-msg = "" .  
-                      COPY-LOB FROM FILE v-sign-file TO OBJECT v-sign-data NO-CONVERT .
-                      /* проверка соответствия сертификата отправителю выполняется по sender-id;
-                         для 1с sender-id жестко равен "00000" */
-                      v-pkcs:putSign(v-sign-data) .
-                      v-cert-subject = v-pkcs:getCertSubject() .
-                      if checkCertSubject (v-cert-subject, v-1c-subj) then do :
-                        v-pkcs:verifySign(v-pack-data) .
-                      end .
-                      else do :
-                        v-err-msg = substitute("Идентификатор отправителя [&1] отличается от идентификатора подписавшей стороны [&2]"
-                                             , v-1c-subj, v-cert-subject) .
-                      end .
-                      /* при возникновении ошибок проверьте, что в директории heap
-                         присутствует только один комплект файлов с заданным v-espr-pack-num;
-                         иначе ошибки могут возникать не на тестируемом пакете */
-                    end .
-                    catch exAppErrors as class Progress.Lang.AppError :
-                      v-err-msg = exAppErrors:ReturnValue .
-                      if v-err-msg > "" then . else do :
-                        v-err-msg = exAppErrors:GetMessage(1) . 
-                        if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .
-                      end .
-                    end catch .
-                    catch exProErrors as class Progress.Lang.ProError :
-                      v-err-msg = exProErrors:GetMessage(1) . 
-                      if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
-                    end catch .
-                    catch exAnyErrors as class Progress.Lang.Error:
-                      v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
-                    end catch .
-                    finally: 
-                      set-size(v-sign-data) = 0 .
-                      if v-err-msg > "" then do :
-                        set-size(v-pack-data) = 0 .
-                        run write-log in p-log-handle ( input 2, input v-err-msg ).
-                        // ack_ на ack_ не отправляем
-                        undo _ext-system, next _ext-system.
-                      end .
-                    end finally.
-                  end . // end_of if_cert
-                  
-                  run rul/rcv-ack_1c.p (input v-pack-data
-                                       ,input buf_ext-system.esys-id
-                                       ,output v-1c-stat
-                                       ,output v-ack-err
-                                        ) .
-                                        
-                  set-size(v-pack-data) = 0 .
-                  os-delete value(v-full-path) .
-                                        
-                  if v-1c-stat = 1
-                  then do :
-                    run bge/oxmloutx.p ( input parparentproc
-                                        ,input p-parent-handle
-                                        ,input p-log-handle
-                                        ,input substitute("one-pack,&1,&2,&3,&4,&5"
-                                                    ,v-cur-db-num
-                                                    ,buf_ext-system.esys-id
-                                                    ,buf_ext-system.db-num
-                                                    ,g#db-num
-                                                    ,v-ack-err)
-              
-                                  ) no-error.
-                    if error-status:error then do:
-                      run write-log in p-log-handle (
-                                                  input 2
-                                                , ( vss-workfile + {&space-char}
-                                        + substitute( "ERROR!!! Ошибка при отправке одного пакета данных в ВС &1", buf_ext-system.esys-id ) + {&new-line}
-                                        + substitute( "&1", error-status:get-message(error-status:num-messages) ) + {&new-line}
-                                        + substitute( "&1", return-value ) )
-                                                ) .
-                    end.
-                  end.                      
+/* 21/XII-2018  приём подтверждений перенесён выше, до импорта пакетов.
+                Сначала принимаем подтверждения, потом проверяем номер пакета и,
+                если есть пакет с ожидаемым номером - переходим к приёму пакета.                  
+*/
                 end.
                 else do :
                   /* 24/VIII-2018  файл с данными и файл с подписью могут придти в произвольном порядке;

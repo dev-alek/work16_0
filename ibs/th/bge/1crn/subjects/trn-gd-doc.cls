@@ -323,7 +323,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         else do:
           write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
           write-data-element ("sum-nds", string-mth (round ((buf_doc-line.price-cli * buf_doc-line.cli-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
-          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 2))).
+          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
         end.
         
       sw:end-element ("gd").
