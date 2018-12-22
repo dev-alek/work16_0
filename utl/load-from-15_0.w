@@ -583,7 +583,7 @@ DO:
   if v-schem
   then do trans:
     run waitfram-show in this-procedure ( INPUT "Обработка: Топология..." ).
-    mUtil:load_schem() no-error .
+    mUtil:load_schem(v-file-path) no-error .
     if error-status:error
     then do :
       run waitfram-hide in this-procedure .

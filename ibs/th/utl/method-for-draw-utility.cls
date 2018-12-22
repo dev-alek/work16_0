@@ -474,14 +474,16 @@ method private void plpmnzav(
 end method.
 
 // перенос топологии 
-method public void load_schem ():
-  load_schem(mAddr).
-end.  
+method public void load_schem (ifile-path as character):
+  load_schem(mAddr, ifile-path).
+end. 
 
-method public void load_schem (iAddt as character ):
+method public void load_schem (iAddr as character, ifile-path as character ):
   define variable v-rep-rec as recid no-undo .
   define variable v-ok        as logical   no-undo.
   define variable cmd as character no-undo.
+  
+  load_gds_maping(ifile-path).
    
   empty temp-table tt-gds-prod .
   empty temp-table tt-place.
@@ -494,7 +496,7 @@ method public void load_schem (iAddt as character ):
   empty temp-table tt-pl-level. 
   empty temp-table tt-pl-gds. 
   empty temp-table tt-pl-gds-pump. 
-   cmd = substitute ("&1 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddt, "schem-temp.json").
+   cmd = substitute ("&1 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddr, "schem-temp.json").
   os-command silent value (cmd).
   fix-codepage_and_SetJsonObj (input "schem-temp.json") .
   
@@ -516,20 +518,15 @@ method public void load_schem (iAddt as character ):
   //delete object results-array no-error.
   
   for each tt-gds-prod no-lock :
-    find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-    if not available ub.prod-bc
+    find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-gds-prod.gds-code no-error .
+    if not available tt-gds-mapping
     then do :
-      undo, return error ("Нет короткого кода " + tt-gds-prod.b-str) .
+      undo, return error ("В файле соответсвий нет топлива " + string(tt-gds-prod.gds-code) + " с коротким кодом " + tt-gds-prod.b-str) .
     end.
-    find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-    if not available ub.bar-code
-    then do :
-      undo, return error ("Нет бар-кода для короткого кода " + tt-gds-prod.b-str) .
-    end.
-    find first ub.goods no-lock where ub.goods.gds-code = ub.bar-code.gds-code no-error.
+    find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
     if not available ub.goods
     then do :
-      undo, return error ("Нет товара с коротким кодом " + tt-gds-prod.b-str) .
+      undo, return error ("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) .
     end.
   end. 
   
@@ -675,22 +672,12 @@ method public void load_schem (iAddt as character ):
     for each tt-pl-gds no-lock where tt-pl-gds.obj-type = tt-place.obj-type
                                  and tt-pl-gds.obj-code = tt-place.obj-code
                                  and tt-pl-gds.pl-code  = tt-place.pl-code,
-    first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-pl-gds.gds-code : 
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
-      then do :
-        undo, return error "No short-code" .
-      end.
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
-      end.
+    first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-pl-gds.gds-code  : 
       run trg/plgdpmvc.p (
           input  v-cntxt-obj-type,
           input  v-cntxt-obj-code,
           input  ub.place.pl-code,
-          input  ub.bar-code.gds-code,
+          input  tt-gds-mapping.gds-code16,
           output v-ok) no-error.
       if error-status:error then 
       do:
@@ -753,21 +740,11 @@ method public void load_schem (iAddt as character ):
     for each tt-pl-gds-pump where tt-pl-gds-pump.obj-type = tt-place.obj-type and
                                   tt-pl-gds-pump.obj-code = tt-place.obj-code and
                                   tt-pl-gds-pump.pl-code = tt-place.pl-code,
-    first tt-gds-prod no-lock where tt-gds-prod.gds-code = tt-pl-gds-pump.gds-code :
-      find first ub.prod-bc no-lock where ub.prod-bc.b-str = tt-gds-prod.b-str no-error.
-      if not available ub.prod-bc
-      then do :
-        undo, return error "No short-code" .
-      end.
-      find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code no-error.
-      if not available ub.bar-code
-      then do :
-        undo, return error "No bar-code" .
-      end.
+    first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-pl-gds-pump.gds-code :
       find first pl-gds-pump exclusive-lock where pl-gds-pump.obj-type = v-cntxt-obj-type
                                               and pl-gds-pump.obj-code = v-cntxt-obj-code
                                               and pl-gds-pump.pl-code  = ub.place.pl-code  
-                                              and pl-gds-pump.gds-code = ub.bar-code.gds-code   
+                                              and pl-gds-pump.gds-code = tt-gds-mapping.gds-code16   
                                               and pl-gds-pump.pump-code = tt-pl-gds-pump.pump-code   
                                               no-error.
       if available pl-gds-pump
