@@ -128,7 +128,7 @@ define frame doc-line-frm-cli
   sym13 space( 0 ) vardifference                   format "->>,>>9.<<<":U    column-label "13=6-11":C11    space( 0 )
   sym14 space( 0 ) tests-attr.attr-value           format "x(8)":U           column-label "14":C8          space( 0 )
   sym15 space( 0 ) ub.doc-line.fact-density        format "    9.9999":U     column-label "15":C10         space( 0 )
-  sym16 space( 0 ) ub.doc-line.temperature         format "      99.99":U    column-label "16":C11         space( 0 )
+  sym16 space( 0 ) ub.doc-line.temperature         format "     ->9.99":U    column-label "16":C11         space( 0 )
   sym17 space( 0 ) varTemp                         format "x(7)":U           column-label "17":C7          space( 0 )
   sym18 space( 0 )
 header
@@ -159,7 +159,7 @@ define frame doc-line-frm
   sym13 space( 0 ) vardifference                   format "->>,>>9.<<<":U    column-label "13=6-11":C11    space( 0 )
   sym14 space( 0 ) tests-attr.attr-value           format "x(8)":U           column-label "14":C8          space( 0 )
   sym15 space( 0 ) ub.doc-line.fact-density        format "    9.9999":U     column-label "15":C10         space( 0 )
-  sym16 space( 0 ) ub.doc-line.temperature         format "      99.99":U    column-label "16":C11         space( 0 )
+  sym16 space( 0 ) ub.doc-line.temperature         format "     ->9.99":U    column-label "16":C11         space( 0 )
   sym17 space( 0 ) varTemp                         format "x(7)":U           column-label "17":C7          space( 0 )
   sym18 space( 0 )
 header
