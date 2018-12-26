@@ -325,7 +325,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
           find first bf_doc-line-sum no-lock
             where bf_doc-line-sum.doc-code  = buf_trn-doc.doc-code
               and bf_doc-line-sum.gds-code  = buf_gds.gds-code
-              and bf_doc-line-sum.sum-type  = substitute( "&1&2&3&2&4", {&sum-wastage-doc}, {&delim-par}, 'base', bf_rvs-line.pl-code )
+              and bf_doc-line-sum.sum-type  = substitute( "&1&2&3&2&4", {&sum-wastage-doc}, {&delim-par}, 'base', buf_doc-pl.pl-code )
             no-error .
           if available bf_doc-line-sum then do:
             assign
@@ -343,7 +343,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
           find first bf_doc-line-sum no-lock
             where bf_doc-line-sum.doc-code  = buf_trn-doc.doc-code
               and bf_doc-line-sum.gds-code  = buf_gds.gds-code
-              and bf_doc-line-sum.sum-type  = substitute( "&1&2&3&2&4", {&sum-wastage-doc}, {&delim-par}, 'cli', bf_rvs-line.pl-code )
+              and bf_doc-line-sum.sum-type  = substitute( "&1&2&3&2&4", {&sum-wastage-doc}, {&delim-par}, 'cli', buf_doc-pl.pl-code )
             no-error .
           if available bf_doc-line-sum then do:
             assign
@@ -358,8 +358,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
           write-data-element ("pipeline-wght", string-mth (round (dAddCliQnty, 2))).
           
           rvsinvObj = new rvsinvsub ().
-          
-          rvsinvObj = new rvsinvsub ().
+          if available (bf_rvs-line)
+          then do:
           assign
             rvsinvObj:RvsCode = bf_rvs-line.rvs-code
             rvsinvObj:ObjCode = buf_trn-doc.obj-code
@@ -367,6 +367,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
             rvsinvObj:PlCode = bf_rvs-line.pl-code
             rvsinvObj:GdsCode =  buf_gds.gds-code
           .
+          end.
           
           if rvsinvObj:RvsInvStrObj:FillSub(rvsinvObj)
           then do:
