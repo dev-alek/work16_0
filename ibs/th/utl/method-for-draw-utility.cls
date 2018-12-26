@@ -1284,14 +1284,14 @@ method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
       find first tt-place-loc no-lock where tt-place-loc.pl-code = tt-icnt-line.pl-code no-error.
       if not available tt-place-loc
       then do :
-         put-log("No place-loc").
+         put-log(substitute ("Ќе найдено место хранени€ с кодом &1 в переданных данных",tt-icnt-line.pl-code )).
         undo, return error "No place-loc" .
       end.
       
       find first ub.place no-lock where ub.place.loc1 = tt-place-loc.loc1 no-error.
       if not available ub.place
       then do :
-         put-log("No place").
+         put-log(substitute ("Ќе найдено место хранени€ с коротким кодом &1",tt-place-loc.loc1)).
         undo, return error "No place" .
       end.
       

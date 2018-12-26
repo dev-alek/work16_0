@@ -680,6 +680,7 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
   :
     dsLineCount = dsLineCount + 1 .  
     do : /* 16/IV-2018 перенос создания партий из create-nakl() */
+   
     create tt-parts.
     assign
       /* 14/IX-2018 - поля new_prod-type, new_prod-code и new_artic заменены на свои аналоги без new_
@@ -732,14 +733,17 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
     
       /* внутри create-nakl() выполнится привязка партий к сознанной по ним накладной */
       tt-parts.doc-type       = {&income}
-      tt-parts.part-code      = temp_parts.part-code
+      tt-parts.part-code      = temp_parts.part-code + temp_parts.out-code
       tt-parts.in-code        = temp_parts.in-code // в исходной версии - new_trn-doc.doc-code
       tt-parts.out-code       = "" // new_trn-doc.doc-code
       tt-parts.cst-code       = ""
       tt-parts.status_        = no
       tt-parts.cli-base-rate  = temp_parts.cli-base-rate
       tt-parts.pl-code        = temp_parts.pl-code
-    .
+     no-error. 
+     if error-status:error then do:
+         message 'ошибка импорта' tt-parts.artic temp_parts.in-code temp_parts.out-code view-as alert-box.
+         end.
     end .
     
     v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty  .

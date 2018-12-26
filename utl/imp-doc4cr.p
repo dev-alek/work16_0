@@ -655,9 +655,11 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
 /* 21/V-2018 - с разной ценой ложится в разные накладные;
                с разными номерами партий ложится в одну накладную.
    by temp_parts.part-code*/
-  :
+   :
     dsLineCount = dsLineCount + 1 .  
-    do : /* 16/IV-2018 перенос создания партий из create-nakl() */
+    do on error undo, next : /* 16/IV-2018 перенос создания партий из create-nakl() */
+    &scop my-message substitute("артикул &1 " , temp_parts.artic )
+        {&display-message}.
     create tt-parts.
     assign
       /* 14/IX-2018 - поля new_prod-type, new_prod-code и new_artic заменены на свои аналоги без new_
@@ -710,12 +712,15 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
     
       /* внутри create-nakl() выполнится привязка партий к сознанной по ним накладной */
       tt-parts.doc-type       = {&income}
-      tt-parts.part-code      = temp_parts.part-code
-      tt-parts.in-code        = temp_parts.in-code // в исходной версии - new_trn-doc.doc-code
+      tt-parts.part-code      = temp_parts.part-code + string(dsLineCount)
+      tt-parts.in-code        = temp_parts.in-code   // в исходной версии - new_trn-doc.doc-code
       tt-parts.out-code       = "" // new_trn-doc.doc-code
       tt-parts.cst-code       = ""
       tt-parts.status_        = no
-    .
+      no-error. 
+     if error-status:error then do:
+         message 'ошибка импорта товара с артикулом' tt-parts.artic temp_parts.in-code temp_parts.out-code view-as alert-box.
+         end.
     end .
     
     v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty  .
