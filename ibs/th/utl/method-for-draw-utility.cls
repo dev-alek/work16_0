@@ -1212,7 +1212,12 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   input STREAM lsIN close.
   output STREAM lsOUT close.
     delete object mJsonObj no-error.
-  mJsonObj = cast(mParser:ParseFile(search(v-out-file)), JsonObject).
+  mJsonObj = cast(mParser:ParseFile(search(v-out-file)), JsonObject) no-error.
+  if error-status:error
+  then do:
+     put-log("Данные не получены или получены данные не правильного формату.").
+     return error "Данные не получены или получены данные не правильного формату.".
+  end.
 end method.
 
 method public logical chek_pumpdoc ():
