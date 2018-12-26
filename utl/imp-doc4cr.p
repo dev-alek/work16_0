@@ -454,7 +454,7 @@ define buffer new_clients  for ub.clients .
       end .
     end . /* end_of first_of_tt-parts.supp-code */
     if v-is-supp-err then do :
-        message v-is-supp-err 'v-is-supp-err ' v-my-message view-as alert-box.
+/*        message v-is-supp-err 'v-is-supp-err ' v-my-message view-as alert-box.*/
       /* @NOTE надо отсечь все строки с этим поставщиком, а не только первую */
       if buf_tt-parts.imp-row > "" then 
         put stream f-err-lines unformatted buf_tt-parts.imp-row skip .
