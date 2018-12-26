@@ -312,8 +312,11 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
 
     /* section1 обязательность 1-1 */
-    insw:start-element ({&tag-section1}) .
+    /* 21/XII-2018 несмотря на обязательность секции с товарами,
+                   1с не может проглотить файл с секцией по товарам, если в ней нет товаров
+                   Поэтому секцию с товарами при отсутствии товаров не выгружаем. */
     if can-find (first buf_chk-gds where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code) then do:
+    insw:start-element ({&tag-section1}) .
       for each buf_chk-gds no-lock
          where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code :
             v-ex-Nds = (buf_chk-gds.VAT-pc ne 0 and buf_chk-gds.VAT-sum-rubl ne 0) and (buf_chk-gds.VAT-pc ne ? and buf_chk-gds.VAT-sum-rubl ne ?). 
@@ -444,12 +447,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
  
         insw:end-element ({&tag-item1}) .
       end . /* end_of for each buf_chk-gds */
+    insw:end-element ({&tag-section1}) .
     end .
+    /* 21/XII-2018 отменена выгрузка секции при отсутствии товаров
     else do:
       insw:write-empty-element ({&tag-item1}) .
     end .
-    insw:end-element ({&tag-section1}) .
-
+    */
 
     /* section2 обязательность 0-1 */
     for each buf_chk-pay no-lock

@@ -134,11 +134,14 @@ on error undo, return error return-value
   end.
 
 
+  /* не понятно для чего это проверка нужна, и почему ругается на не откртыю смену, хотя при проверки ищет наличие именно закрытой смены
+  соответвенно когда одна открытая смена на объекте и других нету, то расчет архивов не производился*/
+
   define variable v-attr-value as character no-undo .
   define variable v-attr-type  as character no-undo .
-    define variable v-shift-new as logical   no-undo .
+  define variable v-shift-new as logical    no-undo .
 
-  if p-verify-arh or
+  /*if p-verify-arh or
      p-verify-ahsp or
      p-verify-aht  then do:
 
@@ -156,7 +159,7 @@ on error undo, return error return-value
           .
           return .
       end.
-  end.
+  end.*/
 
 
   if p-verify-arh = true

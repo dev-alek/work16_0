@@ -276,9 +276,9 @@ class ibs.th.utl.draw_utility inherits Form:
    end method.
    
    method private void close_shift(  ):
-    if not mutil:chek_rvs()
+    if not checkBox20:checked
     then do:
-       message "Выполните этап 1"
+       message "Выполните этап 3"
        view-as alert-box.
        return.
     end.    
@@ -314,7 +314,8 @@ class ibs.th.utl.draw_utility inherits Form:
      checkBox4:checked = mutil:chek_rvs().
      checkBox5:checked = mutil:chek_price().
      checkBox6:checked = mutil:chek_pumpdoc().
-     
+     checkBox19:checked = mutil:chek_rest().
+    checkBox20:checked = mutil:chek_rest().
   end method .  
   
   method private void BtnStart():

@@ -394,6 +394,7 @@ define variable v-is-supp-err as logical no-undo .
 define variable v-is-cont-err as logical no-undo .
 define variable v-is-good-err as logical no-undo .
 define variable v-my-message  as character no-undo .
+define variable v-today       as date no-undo .
 define buffer buf_tt-parts for tt-imp-parts .
 define buffer buf_goods    for ub.goods .
 define buffer buf_contract for ub.contract .
@@ -405,6 +406,7 @@ define buffer new_clients  for ub.clients .
     p-count-err  = 0
     p-count-err1 = 0
     p-count-err2 = 0
+    v-today = today
   .
 
   for each buf_tt-parts
@@ -413,8 +415,12 @@ define buffer new_clients  for ub.clients .
         by buf_tt-parts.gds-code
   :
     if first-of (buf_tt-parts.supp-code) then do:
+        v-is-supp-err = no.
       /* Если у партии не указан код поставщика - такую строку считать ошибочной и не обрабатывать.
          Код фиктивного контрагента не использовать. */
+         
+         
+         
       if buf_tt-parts.supp-type = ""
       or buf_tt-parts.supp-type = {&stock}
       or buf_tt-parts.supp-type = {&shop} then assign
@@ -422,14 +428,15 @@ define buffer new_clients  for ub.clients .
         v-is-supp-err = true
       .
       else do :
+          
         /* поиск соответствия старого cli-code p-from-version версии в 16.0 */
         find first w-osn where w-osn.supp-code-15_0 = buf_tt-parts.supp-code no-error .
         if available w-osn then do:
           assign
-            new_cli-type = buf_tt-parts.supp-type
+            new_cli-type = {&cmp} /* buf_tt-parts.supp-type */
             new_cli-code = w-osn.supp-code-16_0
           .
-          v-is-supp-err = not can-find (first new_clients
+          v-is-supp-err = not can-find (first new_clients no-lock
                                         where new_clients.obj-type = new_cli-type
                                           and new_clients.obj-code = new_cli-code) .
           if v-is-supp-err then v-my-message = substitute("ошибка (новый клиент &1 &2)", new_cli-type , new_cli-code) .
@@ -438,7 +445,7 @@ define buffer new_clients  for ub.clients .
           v-my-message  = substitute ("Отсутствует код поставщика &1 в файле соответствия &2", buf_tt-parts.supp-code, p-osn-fname )
           v-is-supp-err = true
         .
-      end .
+      end . 
       
       if v-is-supp-err then do :
         /* Ошибку выводить в лог-файл, а строку ошибки выводить в отдельный файл, пригодный для повторного импорта, как есть.
@@ -447,6 +454,7 @@ define buffer new_clients  for ub.clients .
       end .
     end . /* end_of first_of_tt-parts.supp-code */
     if v-is-supp-err then do :
+/*        message v-is-supp-err 'v-is-supp-err ' v-my-message view-as alert-box.*/
       /* @NOTE надо отсечь все строки с этим поставщиком, а не только первую */
       if buf_tt-parts.imp-row > "" then 
         put stream f-err-lines unformatted buf_tt-parts.imp-row skip .
@@ -459,16 +467,54 @@ define buffer new_clients  for ub.clients .
       
     if first-of (buf_tt-parts.cont-prn-code) then do:
       find first buf_contract no-lock
-           where buf_contract.contract-prn-code = buf_tt-parts.cont-prn-code no-error .
+           where buf_contract.contract-prn-code = buf_tt-parts.cont-prn-code 
+           and buf_contract.cli-type = new_cli-type
+           and buf_contract.cli-code = new_cli-code no-error .
       if available buf_contract then assign
         v-contract-code = buf_contract.contract-code
         v-is-cont-err   = false
       .
-      else assign
-        v-contract-code = 0
-        v-is-cont-err   = true
-      .
+      else do :
+        /* 24/XII-2018  При отсутствии договора искать любой похожий, а при полном отсутствии отвергать партию. */
+        assign
+          v-contract-code = 0
+          v-is-cont-err   = true
+        .
+        for each buf_contract no-lock
+           where buf_contract.cli-type = new_cli-type
+             and buf_contract.cli-code = new_cli-code
+              by buf_contract.contract-date-beg descending :
+          if buf_contract.contract-date-end < v-today then . else do :
+            assign
+              v-contract-code = buf_contract.contract-code
+              v-is-cont-err   = false
+            .
+            leave .
+          end .
+        end .
+      end .
+      
+      /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
+      if v-is-cont-err then do :
+        v-my-message  = substitute ("Отсутствует действующий договор для товара &1 из договора № &2 в вер.15 Клиент &3", new_gds-code, buf_tt-parts.cont-prn-code,new_cli-code ) .
+        {&display-message}.
+      end .
+    end . /* end_of first_of_tt-parts.cont-prn-code */
+    /* 26/IV-2018  Товары с ненайденным договором надо отображать в логе.
+       24/XII-2018 Отвергать партию при отсутствии договора.    
+    */
+    if v-is-cont-err then do :
+        
+      if buf_tt-parts.imp-row > "" then 
+        put stream f-err-lines unformatted buf_tt-parts.imp-row skip .
+      else
+        put stream f-err-lines unformatted getImpRow(buffer buf_tt-parts) skip .
+      p-count-err = p-count-err + 1 .
+      p-count-err2 = p-count-err2 + 1 . /* отсутствие договора считаем как несоответствие по поставщикам */
+      next .
     end .
+    
+
 
     if first-of (buf_tt-parts.gds-code) then do:
       /* поиск соответствия старого gds-code из версии p-from-version в новых кодах версии 16.0 */
@@ -488,7 +534,7 @@ define buffer new_clients  for ub.clients .
           v-prod-type = ""
           v-prod-code = 0
           v-is-good-err = true
-          v-my-message  = substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16", new_gds-code )
+          v-my-message  = substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16. Код в 15 &2", new_gds-code ,buf_tt-parts.gds-code )
         .
       end .
       else assign
@@ -500,6 +546,8 @@ define buffer new_clients  for ub.clients .
         {&display-message}.
       end .
     end .
+    
+    
     /* 26/IV-2018  Партии с ненайденным товаром надо отвергать */
     if v-is-good-err then do :
       if buf_tt-parts.imp-row > "" then 
@@ -511,12 +559,6 @@ define buffer new_clients  for ub.clients .
       next .
     end .
 
-    /* 26/IV-2018  Товары с ненайденным договором надо отображать в логе */
-    if v-is-cont-err then do :
-      v-my-message  = substitute ("Отсутствует договор № &1 в целевой БД. Товар &2 будет загружен без указания договора.",
-                                  buf_tt-parts.cont-prn-code, new_gds-code ) .
-      {&display-message}.
-    end .
 
     if buf_tt-parts.srok-god = "" then v-last-date = 01/01/2001 .
                                   else v-last-date = date(buf_tt-parts.srok-god) no-error .
@@ -655,9 +697,11 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
 /* 21/V-2018 - с разной ценой ложится в разные накладные;
                с разными номерами партий ложится в одну накладную.
    by temp_parts.part-code*/
-  :
+   :
     dsLineCount = dsLineCount + 1 .  
-    do : /* 16/IV-2018 перенос создания партий из create-nakl() */
+    do on error undo, next : /* 16/IV-2018 перенос создания партий из create-nakl() */
+    &scop my-message substitute("Товар &1 " , temp_parts.artic )
+        {&display-message}.
     create tt-parts.
     assign
       /* 14/IX-2018 - поля new_prod-type, new_prod-code и new_artic заменены на свои аналоги без new_
@@ -710,12 +754,15 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
     
       /* внутри create-nakl() выполнится привязка партий к сознанной по ним накладной */
       tt-parts.doc-type       = {&income}
-      tt-parts.part-code      = temp_parts.part-code
-      tt-parts.in-code        = temp_parts.in-code // в исходной версии - new_trn-doc.doc-code
+      tt-parts.part-code      = temp_parts.part-code + string(dsLineCount)
+      tt-parts.in-code        = temp_parts.in-code   // в исходной версии - new_trn-doc.doc-code
       tt-parts.out-code       = "" // new_trn-doc.doc-code
       tt-parts.cst-code       = ""
       tt-parts.status_        = no
-    .
+      no-error. 
+     if error-status:error then do:
+         message 'ошибка импорта товара с артикулом' tt-parts.artic temp_parts.in-code temp_parts.out-code view-as alert-box.
+         end.
     end .
     
     v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty  .
@@ -819,6 +866,8 @@ end.
       for each lib-trn_ret-parts :
         delete lib-trn_ret-parts .
       end.
+        &scop my-message substitute("Обработка линий &1 " , temp_parts.artic )
+        {&display-message}.
       run create-nakl in this-procedure  ( temp-line.num, temp-line.new-cli-type, temp-line.new-cli-code ) .
     end.
   end.
@@ -905,7 +954,7 @@ do on error undo, return error return-value :
     {&display-message}.
     undo, throw new Progress.Lang.AppError({&my-message}) .
   end.
-  &scop my-message substitute("Создание ПН № &1 объект &2&3 контраг &4&5 &6" , n-d  , new_obj-type , new_obj-code ,  new_cli-type ,  new_cli-code , temp-line.contract-code )
+  &scop my-message substitute("Создание ПН № &1 объект &2&3 контраг &4&5 &6 Товар " , n-d  , new_obj-type , new_obj-code ,  new_cli-type ,  new_cli-code , temp-line.contract-code )
   {&display-message}.
 
   assign

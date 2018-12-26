@@ -1212,7 +1212,12 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   input STREAM lsIN close.
   output STREAM lsOUT close.
     delete object mJsonObj no-error.
-  mJsonObj = cast(mParser:ParseFile(search(v-out-file)), JsonObject).
+  mJsonObj = cast(mParser:ParseFile(search(v-out-file)), JsonObject) no-error.
+  if error-status:error
+  then do:
+     put-log("Данные не получены или получены данные не правильного формату.").
+     return error "Данные не получены или получены данные не правильного формату.".
+  end.
 end method.
 
 method public logical chek_pumpdoc ():
@@ -1279,14 +1284,14 @@ method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
       find first tt-place-loc no-lock where tt-place-loc.pl-code = tt-icnt-line.pl-code no-error.
       if not available tt-place-loc
       then do :
-         put-log("No place-loc").
+         put-log(substitute ("Не найдено место хранения с кодом &1 в переданных данных",tt-icnt-line.pl-code )).
         undo, return error "No place-loc" .
       end.
       
       find first ub.place no-lock where ub.place.loc1 = tt-place-loc.loc1 no-error.
       if not available ub.place
       then do :
-         put-log("No place").
+         put-log(substitute ("Не найдено место хранения с коротким кодом &1",tt-place-loc.loc1)).
         undo, return error "No place" .
       end.
       

@@ -146,28 +146,28 @@ DEFINE BUTTON BUTTON-gds
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "BUTTON-gds" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-keep-spis 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-node 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "BUTTON-node" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-node-2 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "Button node 2" 
-     SIZE 3 BY .86
+     SIZE 3 BY .88
      BGCOLOR 3 .
 
 DEFINE BUTTON BUTTON-obj 
@@ -175,28 +175,28 @@ DEFINE BUTTON BUTTON-obj
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "BUTTON-obj" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-one 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "Button one" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-prod 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "BUTTON-prod" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-prod-2 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "Button prod 2" 
-     SIZE 3 BY .86
+     SIZE 3 BY .88
      BGCOLOR 4 .
 
 DEFINE BUTTON BUTTON-schet 
@@ -204,28 +204,28 @@ DEFINE BUTTON BUTTON-schet
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-schet-one 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-schet-val 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .86.
+     SIZE 3 BY .88.
 
 DEFINE BUTTON BUTTON-shift 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .86 TOOLTIP "Выбор  смены на объекте"
+     SIZE 3 BY .88 TOOLTIP "Выбор  смены на объекте"
      BGCOLOR 8 .
 
 DEFINE BUTTON BUTTON-Shift-end 
@@ -233,7 +233,7 @@ DEFINE BUTTON BUTTON-Shift-end
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .86 TOOLTIP "Выбор  смены на объекте"
+     SIZE 3 BY .88 TOOLTIP "Выбор  смены на объекте"
      BGCOLOR 8 .
 
 DEFINE BUTTON BUTTON-Shift-Start 
@@ -241,7 +241,7 @@ DEFINE BUTTON BUTTON-Shift-Start
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
-     SIZE 3 BY .86 TOOLTIP "Выбор  смены на объекте"
+     SIZE 3 BY .88 TOOLTIP "Выбор  смены на объекте"
      BGCOLOR 8 .
 
 DEFINE VARIABLE Radio-Period AS CHARACTER FORMAT "X(256)":U 
@@ -249,22 +249,22 @@ DEFINE VARIABLE Radio-Period AS CHARACTER FORMAT "X(256)":U
      LIST-ITEM-PAIRS "За квартал (текущий)","1",
                      "За квартал (прошлый)","3"
      DROP-DOWN-LIST
-     SIZE 52.6 BY 1
+     SIZE 52.63 BY 1
      BGCOLOR 15  NO-UNDO.
 
 DEFINE VARIABLE customer-name AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 28.6 BY 2.48 TOOLTIP "Список выбранных Поставщиков"
+     SIZE 28.63 BY 2.5 TOOLTIP "Список выбранных Поставщиков"
      FONT 4 NO-UNDO.
 
 DEFINE VARIABLE Goods-Editor AS CHARACTER 
      VIEW-AS EDITOR MAX-CHARS 32000 SCROLLBAR-VERTICAL
-     SIZE 33.4 BY 1.95
+     SIZE 33.38 BY 1.96
      FONT 4 NO-UNDO.
 
 DEFINE VARIABLE lkp-schet AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 26 BY 1.95 TOOLTIP "Что выбрали"
+     SIZE 26 BY 1.96 TOOLTIP "Что выбрали"
      FONT 4 NO-UNDO.
 
 DEFINE VARIABLE Date-Alone AS DATE FORMAT "99/99/9999":U 
@@ -287,12 +287,12 @@ DEFINE VARIABLE Date-Start AS DATE FORMAT "99/99/9999":U
 
 DEFINE VARIABLE Goods-count AS CHARACTER FORMAT "X(30)":U 
       VIEW-AS TEXT 
-     SIZE 33.2 BY .67
+     SIZE 33.25 BY .67
      FGCOLOR 1 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE Obj-count AS CHARACTER FORMAT "X(30)":U 
       VIEW-AS TEXT 
-     SIZE 24 BY .81
+     SIZE 24 BY .79
      FGCOLOR 1 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE Shift-Alone AS INTEGER FORMAT ">9":U INITIAL 1 
@@ -335,12 +335,12 @@ DEFINE VARIABLE TEXT-4 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор цен"
 
 DEFINE VARIABLE text-5 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор поставщика" 
       VIEW-AS TEXT 
-     SIZE 29.6 BY .67
+     SIZE 29.63 BY .67
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE text-6 AS CHARACTER FORMAT "X(256)":U INITIAL "Выбор счета" 
       VIEW-AS TEXT 
-     SIZE 15.6 BY .76
+     SIZE 15.63 BY .75
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE Radio-customer AS INTEGER 
@@ -360,7 +360,7 @@ DEFINE VARIABLE Radio-schet AS INTEGER
 "Все abbr_rublevye", 5,
 "Все валютные", 6,
 "По валюте", 7
-     SIZE 15 BY 5.24 TOOLTIP "Выбор банковского счета" NO-UNDO.
+     SIZE 15 BY 5.25 TOOLTIP "Выбор банковского счета" NO-UNDO.
 
 DEFINE VARIABLE RADIO-task AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
@@ -380,8 +380,8 @@ DEFINE VARIABLE SelectGood AS INTEGER
 "Выборочно", 4,
 "Один", 5,
 "Хранимый список", 6,
-"Группы товаров + Производители", 7
-     SIZE 32.6 BY 5.29
+"Гр. товаров + Производители", 7
+     SIZE 29.75 BY 5.29
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
 DEFINE VARIABLE SelectObject AS CHARACTER 
@@ -391,7 +391,7 @@ DEFINE VARIABLE SelectObject AS CHARACTER
 "Текущий", "obj-currency",
 "Выборочно", "obj-choice",
 "Все", "all"
-     SIZE 16.4 BY 2.76 NO-UNDO.
+     SIZE 16.38 BY 2.75 NO-UNDO.
 
 DEFINE VARIABLE SET_PAY_TYPE AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
@@ -399,7 +399,7 @@ DEFINE VARIABLE SET_PAY_TYPE AS INTEGER
           "Продажные цены", 1,
 "Учетные цены", 2,
 "Цены документа", 3
-     SIZE 19.2 BY 2.33 NO-UNDO.
+     SIZE 19.25 BY 2.33 NO-UNDO.
 
 DEFINE VARIABLE SET_val_TYPE AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -407,133 +407,133 @@ DEFINE VARIABLE SET_val_TYPE AS INTEGER
           "abbr_rub", 1,
 "вал", 2,
 "обе валюты", 3
-     SIZE 26.2 BY 1.14 NO-UNDO.
+     SIZE 26.25 BY 1.13 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 59.8 BY 4.52.
+     SIZE 59.75 BY 4.5.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 28.8 BY 4.52.
+     SIZE 28.75 BY 4.5.
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 25.8 BY 4.71.
+     SIZE 25.75 BY 4.71.
 
 DEFINE RECTANGLE RECT-4
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 34.2 BY 10.29
+     SIZE 34.25 BY 10.29
      BGCOLOR 8 FGCOLOR 0 .
 
 DEFINE RECTANGLE RECT-7
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 28.6 BY 4.71.
+     SIZE 28.63 BY 4.71.
 
 DEFINE RECTANGLE RECT-node
      EDGE-PIXELS 1 GRAPHIC-EDGE    
-     SIZE 4 BY 1.19
+     SIZE 4 BY 1.21
      FGCOLOR 8 .
 
 DEFINE RECTANGLE RECT-node-2
      EDGE-PIXELS 1 GRAPHIC-EDGE    
-     SIZE 4 BY 1.19
+     SIZE 4 BY 1.21
      BGCOLOR 8 FGCOLOR 8 .
 
 DEFINE VARIABLE ShowCost AS LOGICAL INITIAL no 
      LABEL "Учетные цены" 
      VIEW-AS TOGGLE-BOX
-     SIZE 18.8 BY .81 TOOLTIP "Показать суммы  в учетных ценах" NO-UNDO.
+     SIZE 18.75 BY .79 TOOLTIP "Показать суммы  в учетных ценах" NO-UNDO.
 
 DEFINE VARIABLE ShowCrsa AS LOGICAL INITIAL no 
      LABEL "Продажные цены" 
      VIEW-AS TOGGLE-BOX
-     SIZE 18.2 BY .81 TOOLTIP "Показать суммы  в продажных ценах" NO-UNDO.
+     SIZE 18.25 BY .79 TOOLTIP "Показать суммы  в продажных ценах" NO-UNDO.
 
 DEFINE VARIABLE ShowSale AS LOGICAL INITIAL no 
      LABEL "Цены документа" 
      VIEW-AS TOGGLE-BOX
-     SIZE 18.2 BY .81 TOOLTIP "Показать суммы  в ценах документа" NO-UNDO.
+     SIZE 18.25 BY .79 TOOLTIP "Показать суммы  в ценах документа" NO-UNDO.
 
 DEFINE VARIABLE TOG-Excel AS LOGICAL INITIAL yes 
      LABEL "Есть экспорт в Excel" 
      VIEW-AS TOGGLE-BOX
-     SIZE 22.2 BY .81
+     SIZE 22.25 BY .79
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE TOG-list-hist AS LOGICAL INITIAL yes 
      LABEL "Печать истории формир. списков" 
      VIEW-AS TOGGLE-BOX
-     SIZE 33.6 BY .81
+     SIZE 33.63 BY .79
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE TOG-Shift AS LOGICAL INITIAL yes 
      LABEL "Смены" 
      VIEW-AS TOGGLE-BOX
-     SIZE 11.2 BY .81 NO-UNDO.
+     SIZE 11.25 BY .79 NO-UNDO.
 
 DEFINE VARIABLE TOG-Shift-2 AS LOGICAL INITIAL no 
      LABEL "Одна смена" 
      VIEW-AS TOGGLE-BOX
-     SIZE 14.8 BY .81 NO-UNDO.
+     SIZE 14.75 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
      Radio-Period AT ROW 2 COL 4 NO-LABEL WIDGET-ID 8
-     TOG-Shift AT ROW 2 COL 32.2
-     SET_PAY_TYPE AT ROW 2 COL 64.6 NO-LABEL
-     Date-Alone AT ROW 2.05 COL 17.8 COLON-ALIGNED
-     TOG-Shift-2 AT ROW 2.05 COL 41.6
-     ShowCrsa AT ROW 2.1 COL 64.6
-     RADIO-task AT ROW 2.24 COL 2 NO-LABEL
-     ShowCost AT ROW 2.76 COL 64.6
-     Shift-Alone AT ROW 2.95 COL 48.2 COLON-ALIGNED
-     BUTTON-shift AT ROW 2.95 COL 53.4
-     Shift-Start AT ROW 3.19 COL 30.6 COLON-ALIGNED
-     BUTTON-Shift-Start AT ROW 3.24 COL 36 WIDGET-ID 2
-     Shift-End AT ROW 3.24 COL 46.8 COLON-ALIGNED
-     BUTTON-Shift-end AT ROW 3.24 COL 52 WIDGET-ID 6
-     ShowSale AT ROW 3.43 COL 64.6
-     Date-Start AT ROW 4.24 COL 30.6 COLON-ALIGNED
-     Date-End AT ROW 4.24 COL 47 COLON-ALIGNED
-     SET_val_TYPE AT ROW 4.24 COL 61.6 NO-LABEL
-     SelectGood AT ROW 6.33 COL 1.8 NO-LABEL
-     SelectObject AT ROW 6.52 COL 38.6 NO-LABEL
-     Radio-customer AT ROW 6.52 COL 61.6 NO-LABEL
-     BUTTON-node AT ROW 7.19 COL 28.4
-     customer-name AT ROW 7.52 COL 61 NO-LABEL
+     TOG-Shift AT ROW 2 COL 32.25
+     SET_PAY_TYPE AT ROW 2 COL 64.63 NO-LABEL
+     Date-Alone AT ROW 2.04 COL 17.75 COLON-ALIGNED
+     TOG-Shift-2 AT ROW 2.04 COL 41.63
+     ShowCrsa AT ROW 2.08 COL 64.63
+     RADIO-task AT ROW 2.25 COL 2 NO-LABEL
+     ShowCost AT ROW 2.75 COL 64.63
+     Shift-Alone AT ROW 2.96 COL 48.25 COLON-ALIGNED
+     BUTTON-shift AT ROW 2.96 COL 53.38
+     Shift-Start AT ROW 3.21 COL 30.63 COLON-ALIGNED
+     BUTTON-Shift-Start AT ROW 3.25 COL 36 WIDGET-ID 2
+     Shift-End AT ROW 3.25 COL 46.75 COLON-ALIGNED
+     BUTTON-Shift-end AT ROW 3.25 COL 52 WIDGET-ID 6
+     ShowSale AT ROW 3.42 COL 64.63
+     Date-Start AT ROW 4.25 COL 30.63 COLON-ALIGNED
+     Date-End AT ROW 4.25 COL 47 COLON-ALIGNED
+     SET_val_TYPE AT ROW 4.25 COL 61.63 NO-LABEL
+     SelectGood AT ROW 6.33 COL 1.75 NO-LABEL
+     SelectObject AT ROW 6.5 COL 38.63 NO-LABEL
+     Radio-customer AT ROW 6.5 COL 61.63 NO-LABEL
+     BUTTON-node AT ROW 7.25 COL 31.5
+     customer-name AT ROW 7.5 COL 61 NO-LABEL
      BUTTON-obj AT ROW 7.67 COL 56
-     BUTTON-prod AT ROW 7.86 COL 28.4
-     BUTTON-gds AT ROW 8.62 COL 28.4
-     BUTTON-one AT ROW 9.43 COL 28.4
-     BUTTON-keep-spis AT ROW 10.14 COL 28.4 WIDGET-ID 12
+     BUTTON-prod AT ROW 7.92 COL 31.5
+     BUTTON-gds AT ROW 8.67 COL 31.5
+     BUTTON-one AT ROW 9.46 COL 31.5
+     BUTTON-keep-spis AT ROW 10.17 COL 31.5 WIDGET-ID 12
      Radio-schet AT ROW 11 COL 36 NO-LABEL
-     BUTTON-node-2 AT ROW 11.81 COL 3.6
-     BUTTON-prod-2 AT ROW 11.81 COL 7.6
-     BUTTON-schet AT ROW 12.52 COL 55.2
-     BUTTON-schet-one AT ROW 13.24 COL 55.2
-     Goods-Editor AT ROW 13.62 COL 1 NO-LABEL
-     BUTTON-schet-val AT ROW 15.52 COL 55.2
-     lkp-schet AT ROW 16.52 COL 35.6 NO-LABEL
-     TOG-Excel AT ROW 16.76 COL 1
-     TOG-list-hist AT ROW 17.76 COL 1
-     TEXT-3 AT ROW 1.29 COL 17.2 COLON-ALIGNED NO-LABEL
+     BUTTON-node-2 AT ROW 11.79 COL 3.63
+     BUTTON-prod-2 AT ROW 11.79 COL 7.63
+     BUTTON-schet AT ROW 12.5 COL 55.25
+     BUTTON-schet-one AT ROW 13.25 COL 55.25
+     Goods-Editor AT ROW 13.63 COL 1 NO-LABEL
+     BUTTON-schet-val AT ROW 15.5 COL 55.25
+     lkp-schet AT ROW 16.5 COL 35.63 NO-LABEL
+     TOG-Excel AT ROW 16.75 COL 1
+     TOG-list-hist AT ROW 17.75 COL 1
+     TEXT-3 AT ROW 1.29 COL 17.25 COLON-ALIGNED NO-LABEL
      TEXT-4 AT ROW 1.29 COL 68 COLON-ALIGNED NO-LABEL
      TEXT-2 AT ROW 5.67 COL 9 COLON-ALIGNED NO-LABEL
-     text-5 AT ROW 5.76 COL 59.4 COLON-ALIGNED NO-LABEL
-     TEXT-1 AT ROW 5.81 COL 39.6 COLON-ALIGNED NO-LABEL
-     Obj-count AT ROW 9.24 COL 34.6 COLON-ALIGNED NO-LABEL
-     text-6 AT ROW 10.24 COL 35 COLON-ALIGNED NO-LABEL
-     Goods-count AT ROW 12.91 COL 1 NO-LABEL
+     text-5 AT ROW 5.75 COL 59.38 COLON-ALIGNED NO-LABEL
+     TEXT-1 AT ROW 5.79 COL 39.63 COLON-ALIGNED NO-LABEL
+     Obj-count AT ROW 9.25 COL 34.63 COLON-ALIGNED NO-LABEL
+     text-6 AT ROW 10.25 COL 35 COLON-ALIGNED NO-LABEL
+     Goods-count AT ROW 12.92 COL 1 NO-LABEL
      RECT-1 AT ROW 1 COL 1
-     RECT-2 AT ROW 1 COL 60.8
-     RECT-3 AT ROW 5.52 COL 35.2
-     RECT-4 AT ROW 5.52 COL 1
-     RECT-7 AT ROW 5.52 COL 61
-     RECT-node AT ROW 11.05 COL 4.2
-     RECT-node-2 AT ROW 11.05 COL 8.6
+     RECT-2 AT ROW 1 COL 60.75
+     RECT-3 AT ROW 5.5 COL 35.25
+     RECT-4 AT ROW 5.5 COL 1
+     RECT-7 AT ROW 5.5 COL 61
+     RECT-node AT ROW 11.04 COL 4.25
+     RECT-node-2 AT ROW 11.04 COL 8.63
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1 SCROLLABLE 
@@ -556,7 +556,7 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 17.57
+         HEIGHT             = 17.58
          WIDTH              = 90.
 /* END WINDOW DEFINITION */
                                                                         */
