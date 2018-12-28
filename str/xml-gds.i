@@ -60,7 +60,7 @@ end.
                                         (if
                                         action = "U"
                                         then "ADD":U
-                                        else "DEL":U), OS2-time, if cash-gds.ean-lz          = "*" then "*" else string(cash-gds.main-prt-b-code))).
+                                        else "DEL":U), OS2-time, if cash-gds.ean-lz          = "*" and cash-gds.main-prt-b-code = ? then "*" else string(cash-gds.main-prt-b-code))).
   &endif
 &endif
 
@@ -469,7 +469,7 @@ run bgelib-tag-close in this-procedure ( input 2, input "Item").
     run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode")
 
 
-&scop output-code                                 (if buf_cash-gds.b-str <> "":U or buf_cash-gds.b-str <> "*" ~
+&scop output-code                                 (if buf_cash-gds.b-str <> "":U and buf_cash-gds.b-str <> "*" ~
                                                   then ( if  buf_cash-gds.unit-cli = buf_cash-gds.unit-base  ~
                                                          AND  (LOOKUP( ~{&weight~}, buf_cash-gds.unit-type ) > 0  ~
                                                          or buf_cash-gds.bc-on-type = ~{&loc-pg-code~}) ~
