@@ -754,6 +754,7 @@ if ( num_rec modulo 10 ) = 0 then
     v-to-reserv = no
     .
     /* опнхгбндярбн */
+    /*
     find first goods no-lock where goods.artic = loc-gds-dtl.artic
                                and goods.prod-type = loc-gds-dtl.prod-type
                                and goods.prod-code = loc-gds-dtl.prod-code
@@ -780,6 +781,7 @@ if ( num_rec modulo 10 ) = 0 then
         chg-qnty = buf_doc-fbr-gds.fact-qnty .
       end.                                     
     end.
+    */
     if v-to-reserv and chg-qnty <> 0 then do:
       if b-trn-doc.status_ = {&doc-froze}
       or b-trn-doc.flag <> no
