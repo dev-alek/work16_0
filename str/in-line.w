@@ -2163,8 +2163,8 @@ empty temp-table thbjattr_thbj-attr.
    end.
    assign frame {&frame-name}:title = "Строка накладной № " + t-doc.doc-code + "    - " + parline-mode.
 
-  /* для возможной проверки допустимости ед.изм поставщика */
-  if t-doc.contract-code > 0 then do :
+  /* для возможной проверки допустимости ед.изм поставщика, для топлива не берем из спецификации*/
+  if t-doc.contract-code > 0 and not is-petrolium then do :
     find first buf_contract-specif no-lock
          where buf_contract-specif.host-code    = t-doc.host-code 
            and buf_contract-specif.contract-num = t-doc.contract-code

@@ -415,6 +415,12 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   method private void toolSBtn_Ok_Click( input sender as System.Object, input e as System.EventArgs ):
 
     def var ii as int no-undo.
+    
+    do ii = 1 to infoSecsObj:SectionNum:
+      if not tankSectionControl[ii]:CheckSec()
+        then return.
+    end.
+    
     do ii = 1 to infoSecsObj:SectionNum:
       tankSectionControl[ii]:SetInfoSec().
     end.
