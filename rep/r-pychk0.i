@@ -47,6 +47,7 @@ define variable pychk_value as character no-undo .
 define variable pychk_type as character no-undo .
 define variable pychk_line-type-chr as character no-undo .
 define variable pychk_payline_rrn as character no-undo .
+define variable vSum as decimal no-undo.
 
 define temp-table temp-ptrl-goods no-undo
 field b-code as integer
@@ -57,6 +58,7 @@ b-code
 .
 
 define buffer buf_temp-chk-gds for temp-chk-gds.
+define buffer buf_temp-chk-gds2 for temp-chk-gds.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
 define buffer buf2_chk-doc for ub.chk-doc.
 define buffer buf_bar-code for ub.bar-code.
@@ -276,17 +278,20 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                     temp-chk-dp.sum = temp-chk-dp.sum - abs(chk-discnt.discnt-value-abs * chk-discnt.object-qnty).
                 end.    
             end.
-            else do:    
-        /*создаем временную структуру для принудительного распределения */
-        create temp-chk-dp .
-        assign
-        temp-chk-dp.doc-code = ub.chk-doc.doc-code
-        temp-chk-dp.sum = abs(chk-discnt.discnt-value-abs) * chk-discnt.object-qnty
-        temp-chk-dp.line-num = chk-discnt.object-line-num
+            else do: 
+                  
+                /*создаем временную структуру для принудительного распределения */
+                create temp-chk-dp .
+                assign
+                temp-chk-dp.doc-code = ub.chk-doc.doc-code
+                temp-chk-dp.sum = abs(chk-discnt.discnt-value-abs) * chk-discnt.object-qnty
+                temp-chk-dp.line-num = chk-discnt.object-line-num
                 temp-chk-dp.pay-code = chk-discnt.rank
                 temp-chk-dp.b-code = chk-gds.b-code
-        .
-           end.
+                temp-chk-dp.qnty   = abs(chk-discnt.discnt-value-pcnt)
+                temp-chk-dp.all-sum =  abs(chk-discnt.discnt-value-abs * temp-chk-dp.qnty)
+                .
+            end.
     end. 
     
   end. /*if first-of ub.chk-pay.DOC-CODE*/
@@ -418,17 +423,27 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
     by temp-chk-pay.line-num:
         /* Сначала распределяем принудительные платежи. */
        dp:
-       for each temp-chk-dp no-lock
-          where temp-chk-dp.pay-code = temp-chk-pay.pay-code
-            and temp-chk-dp.doc-code = temp-chk-pay.doc-code
+       for each temp-chk-dp no-lock 
+          where temp-chk-dp.pay-code = temp-chk-pay.pay-code 
+            and temp-chk-dp.doc-code = temp-chk-pay.doc-code 
             and temp-chk-dp.sum <> 0 :        
+            find first buf_temp-chk-gds2 where
+                buf_temp-chk-gds2.doc-code = ub.chk-doc.doc-code            
+            and buf_temp-chk-gds2.line-num  =  temp-chk-dp.line-num no-error.
+            if available buf_temp-chk-gds2 then
             for each buf_temp-chk-gds where
-                buf_temp-chk-gds.doc-code = ub.chk-doc.doc-code            
-            and buf_temp-chk-gds.line-num  =  temp-chk-dp.line-num:
-                find first temp-chk-gds
-                     where temp-chk-gds.doc-code = ub.chk-doc.doc-code     
-                       and temp-chk-gds.b-code   = buf_temp-chk-gds.b-code           
-                       and temp-chk-gds.line-num = 0 no-error .
+                buf_temp-chk-gds.b-code = buf_temp-chk-gds2.b-code
+                and buf_temp-chk-gds.line-num ne 0
+            no-lock by buf_temp-chk-gds.line-num  ne  temp-chk-dp.line-num :
+                     
+                if abs(temp-chk-dp.all-sum) <= 0.001
+                then
+                   next dp.     
+                find first  temp-chk-gds where
+                    temp-chk-gds.doc-code = ub.chk-doc.doc-code     
+                    and buf_temp-chk-gds.b-code = temp-chk-gds.b-code          
+                  and temp-chk-gds.line-num = 0
+                no-error .
                 if not available temp-chk-gds then next dp.
                 case num-entries(buf_temp-chk-gds.line-type, {&delim-par}):
                     when 1 then do:
@@ -438,9 +453,15 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                       pychk_line-type-chr = temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
                     end.
                 end case.
-                pychk_dop-sumk =  if temp-chk-dp.sum >= 0  then min(temp-chk-dp.sum,buf_temp-chk-gds.sum,temp-chk-pay.tot-r-b) else max(temp-chk-dp.sum,buf_temp-chk-gds.sum).
-                if abs(temp-chk-pay.tot-r-b - pychk_dop-sumk) <= 0.001 then pychk_dop-sumk = temp-chk-pay.tot-r-b.
-                 create buf_chk-gds-pay.
+                pychk_dop-sumk =  if temp-chk-dp.sum >= 0  
+                then min(temp-chk-dp.all-sum,temp-chk-dp.sum,buf_temp-chk-gds.sum,temp-chk-pay.tot-r-b) 
+                else max(temp-chk-dp.all-sum,temp-chk-dp.sum,buf_temp-chk-gds.sum).
+                if abs(temp-chk-pay.tot-r-b - pychk_dop-sumk) <= 0.001 
+                then 
+                   pychk_dop-sumk = temp-chk-pay.tot-r-b.
+                
+                temp-chk-dp.all-sum           = temp-chk-dp.all-sum - pychk_dop-sumk.
+                create buf_chk-gds-pay.
                   assign
                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
                   buf_chk-gds-pay.chk-type = ub.chk-doc.chk-type
@@ -486,7 +507,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 temp-chk-pay.tot-r-b = temp-chk-pay.tot-r-b - buf_chk-gds-pay.tot-r-b
                 pychk_dop-sumk = pychk_dop-sumk - buf_chk-gds-pay.tot-r-b
                 .
-                   if (ub.chk-doc.chk-type = {&bef-rcpt-sale} and temp-chk-pay.tot-r-b <= 0) or (ub.chk-doc.chk-type <> {&bef-rcpt-sale} and temp-chk-pay.tot-r-b >= 0) then leave dp.  /* это подстраховка, если касса лишнего прислала в распределении */
+                 if (ub.chk-doc.chk-type = {&bef-rcpt-sale} and temp-chk-pay.tot-r-b <= 0) or (ub.chk-doc.chk-type <> {&bef-rcpt-sale} and temp-chk-pay.tot-r-b >= 0) then leave dp.  /* это подстраховка, если касса лишнего прислала в распределении */
             end.    
         end.    
       assign
