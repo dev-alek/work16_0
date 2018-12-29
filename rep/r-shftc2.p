@@ -83,6 +83,7 @@ define buffer buf_cash-pay    for ub.cash-pay.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
 define buffer ras-doc         for ub.trn-doc.
 define buffer buf_chk-discnt  for ub.chk-discnt.
+define buffer buf_chk-discnt2 for ub.chk-discnt .
 define buffer buf_chk-gds     for ub.chk-gds.
 
 DEFINE BUFFER b-treal-2       for treal-2.
@@ -346,11 +347,20 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                         if pdiscnt then
                         do:
                            
-                            for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-gds-pay.doc-code
-                                and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
-                                and buf_chk-discnt.record-type = 0
-                                :
-                            
+                            for each buf_chk-discnt no-lock where (buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
+                                                              and  buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                                              and  buf_chk-discnt.record-type     = 0
+                                                              and not can-find(buf_chk-discnt2 where buf_chk-discnt2.doc-code       = buf_chk-gds-pay.doc-code
+                                                                                                and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
+                                                                                                and buf_chk-discnt2.record-type     = 1)
+                                                                  )
+                                                              or
+                                                                 (   buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
+                                                                 and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                                                 and buf_chk-discnt.record-type     = 1
+                                                                 )                                  
+                            :
+                                                        
                                 FIND FIRST b-treal-2 No-LOCK WHERE
                                     b-treal-2.gds-code = buf_bar-code.gds-code
                                     AND b-treal-2.cpay-code = buf_chk-gds-pay.pay-code
