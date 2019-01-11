@@ -280,11 +280,10 @@ class ibs.th.str.InfoSectionsTotal:
       FuelType = "".
     end.
     else FuelType = v-gds-attr-value.
-    
     run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
     if error-status:error or lookup (FuelType, "metan,propan") > 0 then 
     do:
-      RdcDnstvalue = "not".
+      rdc-dnstvalue = "not".
     end.
     RdcDnstvalue = rdc-dnstvalue.
 		

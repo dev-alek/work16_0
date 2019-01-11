@@ -342,6 +342,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     define variable infoSecObj      as class InfoSection       no-undo.
     define variable infoSecObjFirst as class InfoSection       no-undo.
     define variable ii as integer no-undo.
+    define variable is-exist-sec as logical no-undo.
+    
     
     infoSecsObj = new InfoSectionsTotal(). 
 
@@ -413,7 +415,14 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("dnsty-ttn", string-mth (buf_doc-line.doc-density)).
         
         write-data-element ("cap-fact", string-mth (buf_doc-line.fact-qnty)).
-        write-data-element ("wght-fact", string-mth (round (infoSecsObj:FactKgQntyTotal, 3))).
+        if not infoSecsObj:FactKgQntyTotal = 0
+        then do:
+          is-exist-sec = true.
+          write-data-element ("wght-fact", string-mth (round (infoSecsObj:FactKgQntyTotal, 3))).
+        end.
+        else do:
+          write-data-element ("wght-fact", string-mth (round (buf_doc-line.fact-density * buf_doc-line.fact-qnty, 3))).
+        end.
         write-data-element ("dnsty-fact", string-mth (buf_doc-line.fact-density)).
         write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
       
@@ -421,8 +430,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     end.
     sw:end-element ("gds").
 
-    
-    if not buf_trn-doc.cli-code = 800000002
+    if not buf_trn-doc.cli-code = 800000002 and is-exist-sec
     then do:
       
       sw:start-element ("scs").
