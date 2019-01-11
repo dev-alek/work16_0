@@ -315,11 +315,12 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     /* 21/XII-2018 несмотря на обязательность секции с товарами,
                    1с не может проглотить файл с секцией по товарам, если в ней нет товаров
                    Поэтому секцию с товарами при отсутствии товаров не выгружаем. */
+    v-ex-Nds = no.
     if can-find (first buf_chk-gds where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code) then do:
     insw:start-element ({&tag-section1}) .
       for each buf_chk-gds no-lock
          where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code :
-            v-ex-Nds = (buf_chk-gds.VAT-pc ne 0 and buf_chk-gds.VAT-sum-rubl ne 0) and (buf_chk-gds.VAT-pc ne ? and buf_chk-gds.VAT-sum-rubl ne ?). 
+            v-ex-Nds = v-ex-Nds or  (buf_chk-gds.VAT-pc eq 0 or buf_chk-gds.VAT-sum-rubl eq 0) or (buf_chk-gds.VAT-pc eq ? or buf_chk-gds.VAT-sum-rubl eq ?). 
         insw:start-element ({&tag-item1}) .
         
         insw:write-data-element (  "line-num",  string(buf_chk-gds.line-num)  ) . /* Номер строки чека (Число) */
@@ -488,7 +489,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
          is-nds Число(0/1) 1-1 Признак распределения НДС по платежу
       */
       /* если ндс  не расчитан то надо передать v-is-nds = 0  */
-      if v-ex-Nds then do:
+      if  not v-ex-Nds then do:
          find first buf_cash-pay-attr no-lock
               where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
                 and buf_cash-pay-attr.curr-code  = buf_chk-pay.curr-code
