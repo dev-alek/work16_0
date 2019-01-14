@@ -285,7 +285,7 @@ define variable good-name like ub.goods.gds-name
 
 define variable good-prod like ub.clients.obj-name
       view-as text
-     size 25 by 1 fgcolor 4 no-undo.
+     size 19.5 by 1 fgcolor 4 no-undo.
 
 define rectangle rect-1
      edge-chars 0.25 graphic-edge  no-fill
@@ -340,7 +340,7 @@ define frame dialog-frame
       "Наим.товара: " view-as text
           size 13.75 by 1 at row 8.83 col 1.13
           fgcolor 0
-     table-find   at row 6 col 80 colon-aligned no-label
+     table-find   at row 5.5 col 80 colon-aligned no-label
      good-name at row 8.83 col 14.88 no-label
      "Произ-ль: " view-as text
           size 13.75 by 1 at row 8.83 col 44.75
