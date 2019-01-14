@@ -37,9 +37,9 @@ define variable vss-description as character no-undo init "Импорт из файла OpenX
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { cmp/library.i  }
-{ gbl/cur-time.i }
+/* { gbl/cur-time.i } 11/I-2019 - используется включение из str/xmllib.i */
 { gbl/xmlchar.i  }
-{ str/xmllib.i   }
+{ str/xmllib.i   } /* + подключает gbl/cur-time.i */
 { cmp/ini-lib.i  }
 { rul/xmlischn.i "new shared" }
 { bge/oxml-def.i }
@@ -101,6 +101,7 @@ define variable v-cmd-code as integer no-undo .
 define variable v-exch-file-date as character no-undo .
 define variable v-return-error as integer no-undo .
 define variable v-extsys-list as character no-undo .
+define variable v-ack-snum_pack as character no-undo .
 define variable v-1c-stat as integer no-undo .
 define variable v-ack-err as character no-undo .
 define variable v-sender-id as character no-undo .
@@ -370,37 +371,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
               undo _ext-system, next _ext-system.
           end.
 
+          /* 10/I-2019  дублирующая проверка
           if buf_ext-system.esys-have-import
-          then do:
-            /* 17/X-2018 - формирование шаблона сообщения по CASE вынесено за цикл
-            case v-action:
-              when "take":U then do:
-                run write-log in p-log-handle (  input 2
-                                                ,substitute("Прием пакетов данных из ВС &1 '&2'"
-                                                          , buf_ext-system.esys-id
-                                                          , buf_ext-system.esys-name ) ) .
-              end.
-              when "analys":U then do:
-                run write-log in p-log-handle (  input 2
-                                                ,substitute("Разбор данных из ВС &1 '&2'"
-                                                        , buf_ext-system.esys-id
-                                                        , buf_ext-system.esys-name ) ) .
-              end.
-              when "take+analys":U then do:
-                run write-log in p-log-handle (  input 2
-                                                ,substitute("Прием и разбор пакетов данных из ВС &1 '&2'"
-                                                          , buf_ext-system.esys-id
-                                                          , buf_ext-system.esys-name ) ) .
-
-              end.
-              otherwise do:
-                message vss-workfile vss-revision vss-description skip
-                        substitute( "Не предусмотрена операция &1", v-action )
-                        view-as alert-box error.
-                return error.
-              end.
-            end case.
-            */
+          then */ do:
             run write-log in p-log-handle (  input 2
                ,substitute(v-msg-templ-start, buf_ext-system.esys-id, buf_ext-system.esys-name ) ) .
             run write-log in p-log-handle (  input 2
@@ -488,6 +461,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 undo _ext-system, next _ext-system.
               end.
             end.
+
             /* получение всех файлов, находящихся в heap, 
             для внешней системы типа OR APM (SPAR) - разибарются все файлы находящиеся в heap
             в дальнейшем после удачного разбора в обязательном порядке удаляются*/
@@ -533,6 +507,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
             end.
             
             if lookup( v-action, "analys,take+analys":U ) <> 0 then do:
+              run write-log in p-log-handle (input 2 ,  substitute ("Разбор пакетов данных")  ) .
               rcvd-pack:
               do while TRUE
               on error undo, return error
@@ -586,7 +561,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                         if can-do("p7s,p7c", temp-filelist.file-extension) then do :
                           delete temp-filelist .
                           next .
-                        end . 
+                        end .
+                        /* 11/I-2019 в директорию импорта стали попадать файлы иконок, сслылок, и прочего,
+                                     у которых другая структура имени и потом они ругаются на entry(3, ...) */
+                        if num-entries(temp-filelist.file-name, "_") > 2 then . else do :
+                          delete temp-filelist .
+                          next .
+                        end .
                 end.
                 for each temp-filelist where temp-filelist.file-name begins "ack_" :
                         assign v-custom-pack-name = temp-filelist.file-name.
@@ -606,9 +587,11 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                                 ) .
                     next .
                   end.
+
+                  v-ack-snum_pack = entry(4, v-file-name, "_") .
                   run write-log in p-log-handle (input 2 ,
                     substitute ("Прием подтверждения на пакет номер &1 (файл &2)"
-                              , entry(4, v-file-name, "_") 
+                              , v-ack-snum_pack 
                               , v-full-path
                                )
                                                 ) .
@@ -675,13 +658,21 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                         ) .
                                         
                   set-size(v-pack-data) = 0 .
-                  os-delete value(v-full-path) .
-                                        
-                  if v-1c-stat = 1 then do : // коды ошибок, отличные от 1, игнорируем
-                    define variable v-one-pack-num as integer no-undo .
-                    v-one-pack-num = integer (v-ack-err) no-error .
-                  if v-one-pack-num > 0 then do :
-                    run bge/oxmloutx.p ( input parparentproc
+                  case v-1c-stat : // Статус приема пакета:
+                    when 0 then do : // успешно
+                      os-delete value(v-full-path) .
+                      run write-log in p-log-handle (input 2 ,
+                        substitute ("Подтверждение на пакет номер &1 обработано. Статус: успешно. Файл &2 успешно удалён."
+                              , v-ack-snum_pack 
+                              , v-full-path
+                               )
+                                                ) .
+                    end .
+                    when 1 then do : // отсутствует пакет, следующий за последним принятым (для данной ошибки в поле error указывается номер отсутствующего пакета);
+                      define variable v-one-pack-num as integer no-undo .
+                      v-one-pack-num = integer (v-ack-err) no-error .
+                      if v-one-pack-num > 0 then do :
+                        run bge/oxmloutx.p ( input parparentproc
                                         ,input p-parent-handle
                                         ,input p-log-handle
                                         ,input substitute("one-pack,&1,&2,&3,&4,&5"
@@ -690,19 +681,44 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                                     ,buf_ext-system.db-num
                                                     ,g#db-num
                                                     ,v-ack-err)
-              
                                   ) no-error.
-                    if error-status:error then do:
-                      run write-log in p-log-handle (
+                        if error-status:error then do:
+                          run write-log in p-log-handle (
                                                   input 2
                                                 , ( vss-workfile + {&space-char}
                                         + substitute( "ERROR!!! Ошибка при отправке одного пакета данных в ВС &1", buf_ext-system.esys-id ) + {&new-line}
                                         + substitute( "&1", error-status:get-message(error-status:num-messages) ) + {&new-line}
                                         + substitute( "&1", return-value ) )
                                                 ) .
-                    end.
-                  end.                      
-                  end.                      
+                        end.
+                        else os-delete value(v-full-path) .
+                      end.
+                      else do :
+                        run write-log in p-log-handle (input 2 ,
+                        substitute ("Ошибка обработки подтверждения на пакет номер &1. Статус: 1 - отсутствует пакет, следующий за последним принятым. Номер отсутствующего пакета [&2] не является числом."
+                              , v-ack-snum_pack 
+                              , v-ack-err
+                               )
+                                                ) .
+                      end .                      
+                    end .
+                    otherwise do :
+                      /* коды ошибок, отличные от 1, игнорируем:
+                         2 – несоответствие файла данных и ЭП;
+                         3 – ошибка формата файла данных; 
+                         4 – прочие ошибки. 
+                      */
+                      run write-log in p-log-handle (input 2 ,
+                        substitute ("Подтверждение на пакет номер &1 обработано. Статус: &2. Текст ошибки: &3. Файл &4 оставлен без удаления."
+                              , v-ack-snum_pack
+                              , v-1c-stat 
+                              , v-ack-err
+                              , v-full-path
+                               )
+                                                ) .
+                    end .
+                  end case .
+                                        
                   
                 end. /* end_of for_each temp-filelist_begins_ack */
                 
@@ -1084,29 +1100,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 end.
               end.
             end.
+
             run gbl/del-file.p ( input v-temp-dir ) no-error .
             if error-status:error then do:
               run write-to-log( vss-workfile + {&space-char}
                                 + substitute( "&1", return-value )
                               ).
             end.
-            /* 17/X-2018 - формирование шаблона сообщения по CASE вынесено за цикл
-            case v-action:
-              when "take":U then do:
-                run write-log in p-log-handle (  input 2
-                                                ,substitute("Завершен прием пакетов данных из ВС '&1'", buf_ext-system.esys-name ) ) .
-              end.
-              when "analys":U then do:
-                run write-log in p-log-handle (  input 2
-                                                ,substitute("Завершен разбор данных из ВС '&1'", buf_ext-system.esys-name ) ) .
-              end.
-              when "take+analys":U then do:
-                run write-log in p-log-handle (  input 2
-                                                ,substitute("Завершен прием и разбор пакетов данных из ВС '&1'", buf_ext-system.esys-name ) ) .
-
-              end.
-            end case.
-            */
             if (v-analys-count = 0) and (lookup( v-action, "take,take+analys":U ) > 0) then
               run write-log in p-log-handle (  input 2
                                                 ,substitute(" для ВС '&1' нет разобранных пакетов", buf_ext-system.esys-name ) ) .
