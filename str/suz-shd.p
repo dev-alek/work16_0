@@ -101,7 +101,19 @@ on error undo, return error return-value
                                     ,output v-uniq-key-rec).
   end.
   else do :
-    v-uniq-key-rec = "schedule" + {&delim-key} + string(p-cre-db-num) + {&delim-key} + p-task-type + {&delim-key} + string(p-task-num) .
+    find last buf_schedule no-lock where
+            buf_schedule.cre-db-num = p-cre-db-num
+         and buf_schedule.task-type = p-task-type no-error.
+    if available buf_schedule
+    then do :
+      run gen-key-rec in this-procedure (
+                                        input  {&table_schedule}
+                                      ,input (buffer buf_schedule:handle)
+                                      ,output v-uniq-key-rec).
+    end.
+    else do :
+      v-uniq-key-rec = "schedule" + {&delim-key} + string(p-cre-db-num) + {&delim-key} + p-task-type + {&delim-key} + string(p-task-num) .
+    end.
   end.                              
   run get-db-num in parparentproc ( output v-cntxt-db-num).
   run rep/reprum.p

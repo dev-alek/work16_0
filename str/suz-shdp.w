@@ -73,7 +73,7 @@ define variable v-call#-id as integer no-undo .
 define variable v-param-action as character no-undo .
 define buffer buf_rp-by-call for ub.rp-by-call.
 define buffer buf_schedule for ub.schedule.
-
+define buffer buf_schedule-attr for schedule-attr .
 
 { gbl/getcntxt.i def }
 
@@ -710,11 +710,19 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         and buf_schedule.task-type = p-task-type
         and buf_schedule.task-num = p-task-num
         no-error .
-
+        
+  if not available buf_schedule
+  and p-task-num = -1
+  then do :
+    find last buf_schedule no-lock where
+              buf_schedule.cre-db-num = p-cre-db-num
+          and buf_schedule.task-type = p-task-type
+          no-error .
+  end .
   run init-param-values in this-procedure
     (input  p-cre-db-num
     ,input  p-task-type
-    ,input  p-task-num
+    ,input  (if available buf_schedule then buf_schedule.task-num else p-task-num)
     ,output v-uniq-key-rec
     ,output v-call#-id
     ).
@@ -733,7 +741,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   run set-rule-profile in this-procedure .
   {&OPEN-QUERY-br-rule-by-call}
   APPLY "value-changed" TO br-rule-by-call IN FRAME {&FRAME-NAME}.
-
+  
   RUN Myenable.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -1092,11 +1100,21 @@ then do:
     view-as alert-box error .
   undo, return error .
 end.
+ 
 v-mode = (IF AVAILABLE buf_rp-by-call
           AND buf_rp-by-call.profile_id = tt0-rp-by-call.profile_id
           AND buf_rp-by-call.once-more = tt0-rp-by-call.once-more
           THEN {&UPDATE}
           ELSE {&add-def}).
+if p-task-num = - 1
+then do :
+  find first buf_schedule-attr no-lock
+       where buf_schedule-attr.cre-db-num = p-cre-db-num
+         and buf_schedule-attr.task-type  = p-task-type
+         and buf_schedule-attr.task-num   = p-task-num
+         no-error .
+  if not available buf_schedule-attr then v-mode = {&add-def} .       
+end.          
 run rul/thbjrum1.p (
                  input v-mode
                 ,input {&rep}
