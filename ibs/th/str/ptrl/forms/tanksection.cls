@@ -1685,11 +1685,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       return.
     end.
     
-    /*infoSecsObj:GetInfoSectionProp(idSecTabPage).    
+    infoSecsObj:GetInfoSectionProp(idSecTabPage).    
     maskedTextBoxDiameter:Text = infoSecsObj:InfoSectionCurr:Diameter.
-    if infoSecsObj:DocQntyInput
-      then maskedTextBoxDocQnty:Text = format_round_3(infoSecsObj:InfoSectionCurr:DocQnty).
-    maskedTextBoxCarVol:Text = format_round_3(infoSecsObj:InfoSectionCurr:CarVol).*/
+    /*if infoSecsObj:DocQntyInput
+      then maskedTextBoxDocQnty:Text = format_round_3(infoSecsObj:InfoSectionCurr:DocQnty).*/
+    maskedTextBoxCarVol:Text = format_round_3(infoSecsObj:InfoSectionCurr:CarVol).
     tanksecsObj:SetSecName (v-maskTextBox:Text).
 
     return.

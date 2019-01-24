@@ -1146,7 +1146,16 @@ do on error undo, return error return-value :
         varcur-slt-pc = 0
       .
     end.
-
+{ gbl/pftxvalg.i
+            bf_goods.gds-code
+            {&vat-tax-code}
+            bf_trn-doc.fact-date
+            bf_trn-doc.host-code
+            bf_trn-doc.obj-type
+            bf_trn-doc.obj-code
+            varcur-vat-pc
+            no-error
+          }
     /* Если в переоценке налоги не заданы - возвращаем ошибку */
     if varcur-vat-pc = ?
     then do:

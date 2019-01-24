@@ -476,9 +476,9 @@ procedure init-temp-tables :
     else do:
       create temp-ot-tot .
       assign
-        temp-ot-tot.doc-code = ub.trn-doc.doc-code
-        temp-ot-tot.sum-type = {&arh-crsa}
-        temp-ot-tot.cat-id   = {&root-cat-id}
+        temp-ot-tot.doc-code     = ub.trn-doc.doc-code
+        temp-ot-tot.sum-type     = {&arh-crsa}
+        temp-ot-tot.cat-id       = {&root-cat-id}
         temp-ot-tot.ext-doc-type = ub.trn-doc.ext-doc-type
         temp-ot-tot.obj-type     = ub.trn-doc.obj-type
         temp-ot-tot.obj-code     = ub.trn-doc.obj-code
@@ -1506,12 +1506,12 @@ procedure process-doc-line :
           then do:
             create temp-ot-line .
             assign
-              temp-ot-line.doc-code  = ub.doc-line.doc-code
-              temp-ot-line.artic     = ub.doc-line.artic
-              temp-ot-line.prod-type = ub.doc-line.prod-type
-              temp-ot-line.prod-code = ub.doc-line.prod-code
-              temp-ot-line.sum-type  = v-sum-type[ind-ext]
-              temp-ot-line.cat-id    = v-cat-id[ind-ext]
+              temp-ot-line.doc-code     = ub.doc-line.doc-code
+              temp-ot-line.artic        = ub.doc-line.artic
+              temp-ot-line.prod-type    = ub.doc-line.prod-type
+              temp-ot-line.prod-code    = ub.doc-line.prod-code
+              temp-ot-line.sum-type     = v-sum-type[ind-ext]
+              temp-ot-line.cat-id       = v-cat-id[ind-ext]
               temp-ot-line.ext-doc-type = ub.trn-doc.ext-doc-type
               temp-ot-line.obj-type     = ub.trn-doc.obj-type
               temp-ot-line.obj-code     = ub.trn-doc.obj-code
@@ -1652,12 +1652,12 @@ procedure process-doc-line :
       then do:
         create temp-ot-line .
         assign
-          temp-ot-line.doc-code  = ub.doc-line.doc-code
-          temp-ot-line.artic     = ub.doc-line.artic
-          temp-ot-line.prod-type = ub.doc-line.prod-type
-          temp-ot-line.prod-code = ub.doc-line.prod-code
-          temp-ot-line.sum-type  = v-sum-type[ind-ext]
-          temp-ot-line.cat-id    = v-cat-id[ind-ext]
+          temp-ot-line.doc-code     = ub.doc-line.doc-code
+          temp-ot-line.artic        = ub.doc-line.artic
+          temp-ot-line.prod-type    = ub.doc-line.prod-type
+          temp-ot-line.prod-code    = ub.doc-line.prod-code
+          temp-ot-line.sum-type     = v-sum-type[ind-ext]
+          temp-ot-line.cat-id       = v-cat-id[ind-ext]
           temp-ot-line.ext-doc-type = ub.trn-doc.ext-doc-type
           temp-ot-line.obj-type     = ub.trn-doc.obj-type
           temp-ot-line.obj-code     = ub.trn-doc.obj-code
@@ -1809,12 +1809,12 @@ procedure process-doc-line :
     then do:
       create temp-ot-line .
       assign
-        temp-ot-line.doc-code  = ub.doc-line.doc-code
-        temp-ot-line.artic     = ub.doc-line.artic
-        temp-ot-line.prod-type = ub.doc-line.prod-type
-        temp-ot-line.prod-code = ub.doc-line.prod-code
-        temp-ot-line.sum-type  = v-sum-type[ind-ext]
-        temp-ot-line.cat-id    = v-cat-id[ind-ext]
+        temp-ot-line.doc-code     = ub.doc-line.doc-code
+        temp-ot-line.artic        = ub.doc-line.artic
+        temp-ot-line.prod-type    = ub.doc-line.prod-type
+        temp-ot-line.prod-code    = ub.doc-line.prod-code
+        temp-ot-line.sum-type     = v-sum-type[ind-ext]
+        temp-ot-line.cat-id       = v-cat-id[ind-ext]
         temp-ot-line.ext-doc-type = ub.trn-doc.ext-doc-type
         temp-ot-line.obj-type     = ub.trn-doc.obj-type
         temp-ot-line.obj-code     = ub.trn-doc.obj-code
@@ -1897,7 +1897,17 @@ procedure process-doc-line :
         v-crsa-slt-pc = 0
       .
     end.
-
+    { gbl/pftxvalg.i
+            ub.goods.gds-code
+            {&vat-tax-code}
+            ub.trn-doc.fact-date
+            ub.trn-doc.host-code
+            ub.trn-doc.obj-type
+            ub.trn-doc.obj-code
+            v-crsa-vat-pc
+            no-error
+          }
+          
     if v-crsa-vat-pc = ?
     then do:
       message
@@ -2044,12 +2054,12 @@ procedure process-doc-line :
     then do:
       create temp-ot-line .
       assign
-        temp-ot-line.doc-code  = ub.doc-line.doc-code
-        temp-ot-line.artic     = ub.doc-line.artic
-        temp-ot-line.prod-type = ub.doc-line.prod-type
-        temp-ot-line.prod-code = ub.doc-line.prod-code
-        temp-ot-line.sum-type  = v-sum-type[ind-ext]
-        temp-ot-line.cat-id    = v-cat-id[ind-ext]
+        temp-ot-line.doc-code     = ub.doc-line.doc-code
+        temp-ot-line.artic        = ub.doc-line.artic
+        temp-ot-line.prod-type    = ub.doc-line.prod-type
+        temp-ot-line.prod-code    = ub.doc-line.prod-code
+        temp-ot-line.sum-type     = v-sum-type[ind-ext]
+        temp-ot-line.cat-id       = v-cat-id[ind-ext]
         temp-ot-line.ext-doc-type = ub.trn-doc.ext-doc-type
         temp-ot-line.obj-type     = ub.trn-doc.obj-type
         temp-ot-line.obj-code     = ub.trn-doc.obj-code
@@ -2102,9 +2112,9 @@ procedure update-ot-tot :
         then do:
           create temp-ot-tot .
           assign
-            temp-ot-tot.doc-code = temp-ot-line.doc-code
-            temp-ot-tot.sum-type = temp-ot-line.sum-type
-            temp-ot-tot.cat-id   = temp-ot-line.cat-id
+            temp-ot-tot.doc-code     = temp-ot-line.doc-code
+            temp-ot-tot.sum-type     = temp-ot-line.sum-type
+            temp-ot-tot.cat-id       = temp-ot-line.cat-id
             temp-ot-tot.ext-doc-type = ub.trn-doc.ext-doc-type
             temp-ot-tot.obj-type     = ub.trn-doc.obj-type
             temp-ot-tot.obj-code     = ub.trn-doc.obj-code
@@ -4439,7 +4449,7 @@ procedure check-valid-archives :
       day_stk-tot
       except fact-order shift-date shift-num
       to shift_stk-tot
-      CASE-SENSITIVE
+      case-sensitive 
       save result in v-different-fields .
 
     if v-different-fields <> ""
