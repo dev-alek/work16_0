@@ -512,7 +512,7 @@ if ( varis-fin = "yes":u
                                  bf_contract.cli-type  = input frame {&frame-name} t-doc.cli-type and
                                  bf_contract.cli-code  = input frame {&frame-name} t-doc.cli-code no-lock no-error.
     if not available bf_contract then do:
-      if varcontract <> "yes":u then do:
+      if varcontract <> "yes":u or {2} then do:
         assign
           t-doc.contract-code  = 0.
       end.
@@ -538,7 +538,7 @@ if ( varis-fin = "yes":u
       if error-status :error    or
          varcontract-code = ?  or
          varcontract-code = 0  then do:
-        if varcontract <> "yes":u then do:
+        if varcontract <> "yes":u or {2} then do:
           message "Вы не выбрали договор. Вы хотите оформить "
             func-get-name-from-ext-type ( t-doc.ext-doc-type , false ) " без договора?"
           view-as alert-box question buttons yes-no update varlog.

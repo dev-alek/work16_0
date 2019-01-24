@@ -1458,8 +1458,8 @@ class ibs.th.str.InfoSectionsTotal:
               'Номер документа:'         TrnDocNum              skip
               'Секция:'                  InfoSectionCurr:SectionName         skip
               'Процедура'                v-proc                  skip
-              'V_real                 =' InfoSectionCurr:CarVol              skip
-              'DeltaH                 =' InfoSectionCurr:ABTarir             skip
+              'V_real                 =' InfoSectionCurr:TankVol skip
+              'DeltaH                 =' InfoSectionCurr:ABTarir skip
               'Dgor                   =' Dgor                    skip
               'NeckType               =' NeckType                skip 
               'NeckWidth              =' NeckWidth               skip

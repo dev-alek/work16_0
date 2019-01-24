@@ -897,6 +897,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         (bf_trn-doc.flag_ = no and varhold-doc = no or bf_trn-doc.flag_ = yes and varhold-doc = yes) and
         varcontract   = yes and
         vartechproliv = no
+        and not is-fuel = "yes"
       then do:
         if is-fin = "yes":u
         then do:
