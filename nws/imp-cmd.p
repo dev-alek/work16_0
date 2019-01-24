@@ -522,6 +522,32 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 end.
               end.
             when "insalepr":U then do:
+              
+
+              define variable conf-par as character no-undo.
+              define variable mode-erprn as logical no-undo.
+              define variable par-type as character no-undo.
+                { gbl/conf-rd.i
+                "'is-erpRN'"
+                0
+                "''"
+                0
+                "''"
+                "''"
+                "''"
+                NO
+                conf-par
+                par-type
+                no-error
+                }
+              if not error-status:error and conf-par = "yes":u then mode-erprn = yes.
+              else mode-erprn = no.
+              if mode-erprn 
+              then do:
+                /* "При включенном параметре is-erpRN не отправляем в новости.*/
+                return.
+              end.
+              
               assign
                 v-obj-type     = entry(4,rec-full,{&delim-nws})
                 v-obj-code     = integer(entry(5,rec-full,{&delim-nws}))

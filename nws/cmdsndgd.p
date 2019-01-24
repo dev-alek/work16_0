@@ -46,6 +46,31 @@ on stop   undo, return error substitute( "&1. stop", vss-workfile )
 on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 :
 
+
+  define variable conf-par as character no-undo.
+  define variable mode-erprn as logical no-undo.
+  define variable par-type as character no-undo.
+    { gbl/conf-rd.i
+    "'is-erpRN'"
+    0
+    "''"
+    0
+    "''"
+    "''"
+    "''"
+    NO
+    conf-par
+    par-type
+    no-error
+    }
+  if not error-status:error and conf-par = "yes":u then mode-erprn = yes.
+  else mode-erprn = no.
+  if mode-erprn 
+  then do:
+    /* "При включенном параметре is-erpRN запуск распределенной проверки остатков по товарам невозможен." view-as alert-box information title "Внимание".*/
+    return.
+  end.
+
   if p-obj-type = ?
   then do:
     message
