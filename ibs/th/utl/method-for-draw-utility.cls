@@ -2097,6 +2097,24 @@ method public logical load_cash_passwd (iaddr as character) :
   empty temp-table tt-cash-passwd.
   parse-json(input temp-table tt-cash-passwd:default-buffer-handle, input "tt-cash-passwd") .
 
+  /* лог-файлы:
+    - в логе тиражной утилиты только старт-стоп, количество загруженных, количество отвергнутых;
+    - в лог-файле в директории logDir перечень загруженных [код кассира - пароль];
+    - в другом лог-файле в директории logDir перечень отвергнутых [код кассира - пароль];
+  */
+  define variable v-count-confirm   as integer no-undo .
+  define variable v-count-decline   as integer no-undo .
+  define variable v-logfile-confirm as character no-undo .
+  define variable v-logfile-decline as character no-undo .
+  assign
+    v-logfile-confirm = substitute("&1darw_util_pswd_ok.log", ibs.th.gbl.gbl-inipar:logDir)
+    v-logfile-decline = substitute("&1darw_util_pswd_err.log", ibs.th.gbl.gbl-inipar:logDir)
+    v-count-confirm   = 0
+    v-count-decline   = 0
+  .
+  output STREAM lsIN  to value(v-logfile-confirm).
+  output STREAM lsOUT to value(v-logfile-decline).
+  
   put-log ( string(now) +  "   Ќачинаем загрузку паролей кассиров...") .
   define buffer buf_staff for ub.staff .
   for each tt-cash-passwd :
@@ -2106,20 +2124,34 @@ method public logical load_cash_passwd (iaddr as character) :
       find current buf_staff exclusive-lock no-error no-wait .
       if available buf_staff then do :
          buf_staff.password = tt-cash-passwd.password no-error .
-         if error-status:error then
-           put-log(substitute ("  ќтвергнуто (код, пароль) &1 &2 - &3"
-                             , tt-cash-passwd.staff-code, tt-cash-passwd.password, error-status:get-message(1))).
-         else
-           put-log(substitute ("  «агружено (код, пароль) &1 &2"
-                             , tt-cash-passwd.staff-code, tt-cash-passwd.password)).
+         if error-status:error then do :
+           v-count-decline = v-count-decline + 1 .
+           put stream lsOUT unformatted
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - &3"
+                       , tt-cash-passwd.staff-code, tt-cash-passwd.password, error-status:get-message(1))
+           skip.
+         end .
+         else do :
+           v-count-confirm = v-count-confirm + 1 .
+           put stream lsIN unformatted
+             substitute ("  «агружено (код, пароль) &1 &2"
+                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+           skip.
+         end .
       end .
       else if locked buf_staff then do :
-           put-log(substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись зан€та другим пользователем"
-                             , tt-cash-passwd.staff-code, tt-cash-passwd.password)).
+           v-count-decline = v-count-decline + 1 .
+           put stream lsOUT unformatted
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись зан€та другим пользователем"
+                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+           skip.
       end .
       else do :
-           put-log(substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись отсутствует в v.16"
-                             , tt-cash-passwd.staff-code, tt-cash-passwd.password)).
+           v-count-decline = v-count-decline + 1 .
+           put stream lsOUT unformatted
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись отсутствует в v.16"
+                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+           skip.
       end .
       leave.
     end .
@@ -2127,7 +2159,17 @@ method public logical load_cash_passwd (iaddr as character) :
   vok = yes.
   
   finally:
-     put-log( string( now) + if  vok then "   ѕароли кассиров загружены" else "   ѕароли кассиров не загружены!") .
+     output STREAM lsIN close.
+     output STREAM lsOUT close.
+     if vok then
+       put-log( string( now) + 
+                substitute("   ѕароли кассиров загружены. «агржено &1 записей, отвергнуто &2 записей.",
+                           v-count-confirm, v-count-decline
+                           )
+               ) .
+     else
+       put-log( string( now) + "   ѕароли кассиров не загружены!") .
+     
      put-log("").
      return vok.
   end finally.

@@ -323,6 +323,7 @@ class ibs.th.utl.draw_utility inherits Form:
 Пароль кассира обязательное поле. 
 */
      checkBox25:checked = false .
+     checkBox26:checked = mutil:chek_user().
      checkBox19:checked = mutil:chek_rest().
      checkBox20:checked = checkBox19:checked.
   end method .  
