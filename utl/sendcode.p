@@ -1,6 +1,7 @@
 
 define input  parameter iUtil as class ibs.th.utl.method-for-draw-utility no-undo.
 define input  parameter iCode as integer no-undo.
+define input  parameter ireclist as char no-undo.
 /*
 1  Кассиры удалены с касс
 2  Кассиры переданы на кассы
@@ -91,9 +92,14 @@ end.
 else if iCode eq 14
 then do:
     mAnswer = "1".
-    // run str/gds-cash.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
     run str/send-gds-draw.p (iUtil:parparentproc).
 end.
+else if iCode eq 15
+        then 
+    do:
+        run str/sendcashcomm.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U","execute","dbClear",ireclist).
+    end.
+
 unsubscribe to "ResponseToQuestion".
 
 procedure SendAnswer:

@@ -1663,7 +1663,7 @@ method public logical load_rest_ptrl (iaddr as character,
 end method .
 
 method public logical sendcode(icode as integer ):
-   run utl/sendcode.p(this-object,icode).
+   run utl/sendcode.p(this-object,icode,?).
    put-log("").
    return yes.
 end method.
@@ -2175,4 +2175,63 @@ method public logical load_cash_passwd (iaddr as character) :
   end finally.
 end method .
 
+method public character  cangecash (input pcashlist as character ):
+   define variable v-rid-list as character no-undo.
+  define variable ii as integer no-undo .
+  define buffer buf_cash-desk for ub.cash-desk.
+  run ref/cashlist.w (input parparentproc
+                ,input "b-sel,b-mark"
+                ,input {&g___object}
+                ,input v-cntxt-db-num
+                ,input v-host-code
+                ,input obj-type
+                ,input obj-code
+                ,input ?
+                ,output v-rid-list) no-error.
+  if error-status:error
+  or v-rid-list = '':U then do:
+      return error.
+  end.
+  
+  do ii = 1 to num-entries(v-rid-list):
+    find first buf_cash-desk no-lock where
+            recid(buf_cash-desk) = integer(entry(ii, v-rid-list)) no-error .
+    if available buf_cash-desk then do:
+      if lookup(string(buf_cash-desk.cash-num),pcashlist) eq 0
+      then
+         pcashlist = pcashlist + "," + string(buf_cash-desk.cash-num).
+    end.
+  end.
+  pcashlist = trim(pcashlist,",").
+  return pcashlist.
+end method.
+
+method public logical  sendcleanCash (input pcashlist as character ):
+define variable vi as integer no-undo.
+define variable vreclist as character no-undo.
+define buffer buf_cash-desk for ub.cash-desk.
+put-log("Начинаем отправку команды 'резервного копирования базы кассы и удаления всех чеков' на кассы "). 
+do vi = 1 to num-entries(pcashlist):
+    find first buf_cash-desk no-lock where
+               buf_cash-desk.db-num   eq v-cntxt-db-num
+           and buf_cash-desk.obj-code eq obj-code
+           and buf_cash-desk.pos-type eq {&cd-type-IBM-XML}
+           and buf_cash-desk.cash-num = integer(entry(vi, pcashlist)) no-error .
+    if available buf_cash-desk
+    then do:
+       if buf_cash-desk.cash-on  = yes
+       then
+          vreclist = vreclist + "," + string(recid(buf_cash-desk)).
+       else
+          put-log("Касса с номером '" + entry(vi, pcashlist) + "' выключена. Касса будет пропущена.").
+    end.   
+    else
+       put-log("Не найдена касса с номером '" + entry(vi, pcashlist) + "'. Касса будет пропущена.").
+  end.
+  vreclist = trim(vreclist,",").
+          
+  run utl/sendcode.p(this-object,15,vreclist).
+   put-log("").
+   return yes.
+end method.
 end class.
