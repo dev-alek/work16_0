@@ -1717,6 +1717,7 @@ define buffer buf_goods     for ub.goods .
   define variable v-comment    as character no-undo .
   define variable v-can-print  as logical no-undo .
   assign
+    v-today      = today
     v-date-start = v-today
     v-date-end   = v-today
   .
@@ -1724,9 +1725,9 @@ define buffer buf_goods     for ub.goods .
   (input Obj-type /* p-obj-type          */
   ,input Obj-code /* p-obj-code          */
   ,input false      /* p-verify-detail     */
-  ,input false      /* p-verify-arh        */
+  ,input true       /* p-verify-arh        */
   ,input false      /* p-verify-ahsp       */
-  ,input true       /* p-verify-aht        */
+  ,input false      /* p-verify-aht        */
   ,input false      /* true           p-check-act         */
   ,input 0          /* v-cntxt-db-num p-check-act-db-num  */
   ,input ""         /* v-cntxt-userid p-check-act-user-id */
@@ -1764,7 +1765,7 @@ define buffer buf_goods     for ub.goods .
     v-logfile-rj = substitute("&1darw_util_rest_mismatch.log", ibs.th.gbl.gbl-inipar:logDir)
     v-count-confirm   = 0
     v-count-decline   = 0
-    v-today           = today
+    
   .
   put-log(string( now) + "   Начинаем сравнение остатков...") .
 
