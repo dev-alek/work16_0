@@ -439,19 +439,19 @@ define button b-prev auto-go
 
 /* --------------------- Суммы по строке -------------------------------------- */
 define variable p-avrg as decimal format "->>,>>>,>>>,>>9.99" label "Цена учет."
-view-as text size 15 by 0.79
+view-as text size 12 by 0.79
 tooltip "Текущая средняя учетная цена на объекте"
 no-undo.
 
 define variable p-avrg-fact as decimal format "->>,>>>,>>>,>>9.99" label "Цена Ср.Уч."
-view-as text size 15 by 0.79
+view-as text size 12 by 0.79
 tooltip "Средняя учетная цена до момента закрытия переоценки на факт"
 FGCOLOR 3
 no-undo.
 
 
 define variable p-last as decimal format "->>,>>>,>>>,>>9.99" label "Цена прих."
-view-as text size 15 by 0.79
+view-as text size 12 by 0.79
 tooltip "Цена последней внешней ПН "
 no-undo.
 
@@ -463,7 +463,7 @@ fgcolor 4
 no-undo.
 
 define variable p-old as decimal format "->>,>>>,>>>,>>9.99" label "Цена старая"
-view-as text size 15 by 0.79
+view-as text size 12 by 0.79
 tooltip "Цена до переоценки (Цена предыдущей переоценки)"
 no-undo.
 
@@ -490,19 +490,19 @@ tooltip "Новая цена по отношению к цене последнего прихода в процентах"
 no-undo.
 
 define variable p-op-avrg as decimal format "->,>>9.<<<%":u label "Старая/Учет"
-view-as text size 15 by 0.79
+view-as text size 12 by 0.79
 tooltip "Старая цена по отношению к учетной цене в процентах"
 no-undo.
 
 define variable p-op-avrg-fact as decimal format "->,>>9.<<<%":u label "Старая/Ср.Уч"
-view-as text size 15 by 0.79
+view-as text size 11 by 0.79
 tooltip "Старая цена по отношению к учетной цене(факт) в процентах"
 FGCOLOR 3
 no-undo.
 
 
 define variable p-op-last as decimal format "->,>>9.<<<%":u label "Старая/Прих"
-view-as text size 15 by 0.79
+view-as text size 12 by 0.79
 tooltip "Старая цена по отношению к цене последнего прихода в процентах"
 no-undo.
 
@@ -535,7 +535,7 @@ tooltip "Сумма остатка после переоценки"
 no-undo.
 
 define variable s-old as decimal format "->>,>>>,>>>,>>9.99" label "Сумма старая"
-view-as text size 15 by 0.79
+view-as text size 13 by 0.79
 tooltip "Сумма остатка до переоценки"
 no-undo.
 
@@ -560,12 +560,12 @@ tooltip "Новая сумма остатка по отношению к сумме в ценах последнего прихода в п
 no-undo.
 
 define variable op-avrg as decimal format "->,>>9.<<<%":u label "Старая/Учет"
-view-as text size 15 by 0.79
+view-as text size 14 by 0.79
 tooltip "Старая сумма остатка по отношению к сумме в учетных ценах в процентах"
 no-undo.
 
 define variable op-last as decimal format "->,>>9.<<<%":u label "Старая/Прих"
-view-as text size 15 by 0.79
+view-as text size 14 by 0.79
 tooltip "Старая сумма остатка по отношению к сумме в ценах последнего прихода в процентах"
 no-undo.
 
@@ -748,7 +748,7 @@ define frame {&frame-name}
      rect-tot AT ROW 21.04 COL 1
 
      " Итоги по переоценке" view-as text
-          size 20.63 by .67 at row 20.54 col 37.75
+          size 20.63 by .67 at row 20.6 col 37.75
           fgcolor 4
      space(41.24) skip(2.91)
     with view-as dialog-box keep-tab-order
