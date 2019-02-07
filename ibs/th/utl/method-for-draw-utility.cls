@@ -2163,7 +2163,7 @@ method public logical load_cash_passwd (iaddr as character) :
      output STREAM lsOUT close.
      if vok then
        put-log( string( now) + 
-                substitute("   Пароли кассиров загружены. Загржено &1 записей, отвергнуто &2 записей.",
+                substitute("   Пароли кассиров загружены. Загружено &1 записей, отвергнуто &2 записей.",
                            v-count-confirm, v-count-decline
                            )
                ) .

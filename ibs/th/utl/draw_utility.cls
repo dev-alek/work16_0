@@ -294,7 +294,7 @@ class ibs.th.utl.draw_utility inherits Form:
     end.      
     mutil:mAddr = textbox1:Text.
     checkBox19:checked = mutil:chek_rest().
-    checkBox20:checked = mutil:chek_rest().
+    checkBox20:checked = checkBox19:checked.
     if not checkBox19:checked
     then
        checkBox19:checked = mutil:load_rest(textbox3:text,textbox2:text,"").
@@ -346,14 +346,18 @@ class ibs.th.utl.draw_utility inherits Form:
      checkBox4:checked = mutil:chek_rvs().
      checkBox5:checked = mutil:chek_price().
      checkBox6:checked = mutil:chek_pumpdoc().
-/*     checkBox25:checked = mutil:chek_cash_passwd().
-21/I-2019 - перед переносом паролей кассиров таблица с кассирами уже заполнена:
-            кассиры переданы в нулевом пакете.
-При приеме кассиров от 1С пароль кассира равен номеру кассира.
-Пароль кассира обязательное поле. 
-*/
-     checkBox25:checked = false .
-     checkBox26:checked = mutil:chek_user().
+     
+     define variable v-log-param as logical no-undo .
+     /* Перед переносом паролей кассиров таблица с кассирами уже заполнена:
+        пароль кассира обязательное поле БД,
+        поэтому при приеме нулевого пакета от 1С пароль кассира тоже заполнен и равен номеру кассира. 
+     */
+     v-log-param = logical( getPARAM("darw_util_pswd") ) no-error .      
+     checkBox25:checked = if v-log-param then true else false.
+     /* и таблица с пользователями тоже заполнена, но, возможно, не полностью */
+     v-log-param = logical( getPARAM("darw_util_user") ) no-error .      
+     checkBox26:checked = if v-log-param then true else false.
+     
      checkBox19:checked = mutil:chek_rest().
      checkBox20:checked = checkBox19:checked.
   end method .  
@@ -408,13 +412,13 @@ class ibs.th.utl.draw_utility inherits Form:
        checkBox6:checked = mutil:chek_pumpdoc(). 
     end.
    
-    if        checkBox6:checked
+    if        checkBox4:checked
       and not checkBox25:checked then do :
        mutil:load_cash_passwd () .
        checkBox25:checked = mutil:chek_cash_passwd().
     end .
     
-    if        checkBox6:checked
+    if        checkBox4:checked
       and not checkBox26:checked then do :
        mutil:load_user () .
        checkBox26:checked = mutil:chek_user().
@@ -1108,8 +1112,10 @@ class ibs.th.utl.draw_utility inherits Form:
     method public  void SavePARAMs (  input iFile as char ):
         output to value (iFile).
         SavePARAM("host",textBox1:Text).
-        SavePARAM("correspondence_gds",textBox2:Text).
-        SavePARAM("correspondence_supp",textBox3:Text).
+        SavePARAM("correspondence_gds",  textBox2:Text).
+        SavePARAM("correspondence_supp", textBox3:Text).
+        SavePARAM("darw_util_pswd",      string(checkBox25:checked)).
+        SavePARAM("darw_util_user",      string(checkBox26:checked)).
         output close.
     end method.
     method public  void SavePARAM ( input iName as char, input iValue as char ):
