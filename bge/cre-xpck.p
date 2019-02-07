@@ -373,128 +373,128 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       if v-custom-pack-flag = no then do: 
         assign buf_esys-pck-sent.custom-pack-name = buf_esys-pck-sent.custom-pack-name + "xml".
       end.
-    end.
-    assign
-      route-cnt = 0
-      rec-cnt   = 0
-    .
-    define variable v-uniq-gate-rec as character no-undo init ?.
-    define variable v-action as character no-undo .
-    v-uniq-gate-rec = ?.
-    route-label:
-    for each buf_esys-route no-lock
-      where buf_esys-route.esys-id   = p-esys-id
-        and buf_esys-route.db-num    = p-db-num
-        and buf_esys-route.esr-last-pack = -1
-/*        and buf_esys-route.esr-cr-db-num = g#db-num*/
-      by buf_esys-route.esr-tbl-ord
-    on error   undo, return error
-    on end-key undo, return error
-    :
-      if buf_esys-route.esr-tbl-ord > v-last-tbl-ord then do:
-        /* кладем в пакет только те записи, которые созданы до начала формирования пакета */
-        leave route-label.
-      end.
-      if v-uniq-gate-rec = ? then do:
-        assign
-        v-uniq-gate-rec = buf_esys-route.uniq-gate-rec.
-        v-action = buf_esys-route.esr-action.
-      end.
-      if buf_esys-route.uniq-gate-rec <> v-uniq-gate-rec then do:
-        leave route-label.
-      end.
-      if v-action <> buf_esys-route.esr-action then do:
-        leave route-label.
-      end.
-
-      find ub.esys-route exclusive-lock
-        where rowid( ub.esys-route ) = rowid( buf_esys-route )
-        no-wait no-error
+/*    end. 22/01/2019 Объединили создание esys-pck-sent и проставление его номера в esys-route в одну транзакцию */
+      assign
+        route-cnt = 0
+        rec-cnt   = 0
       .
-      if not available ub.esys-route then do:
-        if locked ub.esys-route then do:
-          run write-to-log( vss-workfile + {&space-char}
-                            + substitute( "Подготовка пакета прервана на захваченной записи &1", buf_esys-route.esr-name-rec )
-                          ).
-          if v-sys-key = "IBS":U
-          then do:
-            run gbl/findlock.p
-              (input  recid( buf_esys-route )
-              ,output table temp-lock
-              ) .
-            for each temp-lock
-            :
-              run write-to-log( substitute( "Запись захватил пользователь &1", temp-lock.user-name )
-                                + {&new-line} + substitute( "Номер подключения - &1":U, temp-lock.lock-conn-id )
-                                + {&new-line} + substitute( "Флаги             - &1":U, temp-lock.lock-flag )
-                                + {&new-line} + substitute( "Номер транзакции  - &1":U, temp-lock.trans-id )
-                                + {&new-line} + substitute( "Тип подключения   - &1":U, temp-lock.connect-type )
-                                + {&new-line} + substitute( "Устройство        - &1":U, temp-lock.connect-device )
-                              ).
+      define variable v-uniq-gate-rec as character no-undo init ?.
+      define variable v-action as character no-undo .
+      v-uniq-gate-rec = ?.
+      route-label:
+      for each buf_esys-route no-lock
+        where buf_esys-route.esys-id   = p-esys-id
+          and buf_esys-route.db-num    = p-db-num
+          and buf_esys-route.esr-last-pack = -1
+  /*        and buf_esys-route.esr-cr-db-num = g#db-num*/
+        by buf_esys-route.esr-tbl-ord
+      on error   undo, return error
+      on end-key undo, return error
+      :
+        if buf_esys-route.esr-tbl-ord > v-last-tbl-ord then do:
+          /* кладем в пакет только те записи, которые созданы до начала формирования пакета */
+          leave route-label.
+        end.
+        if v-uniq-gate-rec = ? then do:
+          assign
+          v-uniq-gate-rec = buf_esys-route.uniq-gate-rec.
+          v-action = buf_esys-route.esr-action.
+        end.
+        if buf_esys-route.uniq-gate-rec <> v-uniq-gate-rec then do:
+          leave route-label.
+        end.
+        if v-action <> buf_esys-route.esr-action then do:
+          leave route-label.
+        end.
+  
+        find ub.esys-route exclusive-lock
+          where rowid( ub.esys-route ) = rowid( buf_esys-route )
+          no-wait no-error
+        .
+        if not available ub.esys-route then do:
+          if locked ub.esys-route then do:
+            run write-to-log( vss-workfile + {&space-char}
+                              + substitute( "Подготовка пакета прервана на захваченной записи &1", buf_esys-route.esr-name-rec )
+                            ).
+            if v-sys-key = "IBS":U
+            then do:
+              run gbl/findlock.p
+                (input  recid( buf_esys-route )
+                ,output table temp-lock
+                ) .
+              for each temp-lock
+              :
+                run write-to-log( substitute( "Запись захватил пользователь &1", temp-lock.user-name )
+                                  + {&new-line} + substitute( "Номер подключения - &1":U, temp-lock.lock-conn-id )
+                                  + {&new-line} + substitute( "Флаги             - &1":U, temp-lock.lock-flag )
+                                  + {&new-line} + substitute( "Номер транзакции  - &1":U, temp-lock.trans-id )
+                                  + {&new-line} + substitute( "Тип подключения   - &1":U, temp-lock.connect-type )
+                                  + {&new-line} + substitute( "Устройство        - &1":U, temp-lock.connect-device )
+                                ).
+              end.
             end.
           end.
+          else do:
+            run write-to-log( vss-workfile + {&space-char}
+                              + substitute( "Подготовка пакета прервана на отсутствующей записи &1", buf_esys-route.esr-name-rec )
+                            ).
+          end.
+          assign
+            p-err-gen-pack = 1
+          .
+          leave route-label.
+        end.
+  
+  
+        if ub.esys-route.esr-num-dump = 0 then do:
+          assign
+            qnty-of-cur-rec = 1
+          .
         end.
         else do:
-          run write-to-log( vss-workfile + {&space-char}
-                            + substitute( "Подготовка пакета прервана на отсутствующей записи &1", buf_esys-route.esr-name-rec )
-                          ).
+          assign
+            qnty-of-cur-rec = ub.esys-route.esr-num-dump
+          .
         end.
         assign
-          p-err-gen-pack = 1
+          route-cnt = route-cnt + 1
+          rec-cnt = rec-cnt + qnty-of-cur-rec
         .
-        leave route-label.
-      end.
-
-
-      if ub.esys-route.esr-num-dump = 0 then do:
+        if rec-cnt <> qnty-of-cur-rec
+          and rec-cnt > v-max-pack-size
+        then do:
+          leave route-label.
+        end.
+  
+        do with frame inf
+        :
+          assign
+            p-esys-id :screen-value   = string( p-esys-id, p-esys-id :format)
+            v-pack-num :screen-value = string( v-pack-num, v-pack-num :format)
+            route-cnt :screen-value  = string( route-cnt, route-cnt :format)
+            rec-cnt :screen-value  = string( rec-cnt - route-cnt, rec-cnt :format)
+          .
+        end.
+  
         assign
-          qnty-of-cur-rec = 1
+          ub.esys-route.esr-last-pack = v-pack-num
         .
-      end.
-      else do:
-        assign
-          qnty-of-cur-rec = ub.esys-route.esr-num-dump
-        .
-      end.
-      assign
-        route-cnt = route-cnt + 1
-        rec-cnt = rec-cnt + qnty-of-cur-rec
-      .
-      if rec-cnt <> qnty-of-cur-rec
-        and rec-cnt > v-max-pack-size
-      then do:
-        leave route-label.
-      end.
-
-      do with frame inf
-      :
-        assign
-          p-esys-id :screen-value   = string( p-esys-id, p-esys-id :format)
-          v-pack-num :screen-value = string( v-pack-num, v-pack-num :format)
-          route-cnt :screen-value  = string( route-cnt, route-cnt :format)
-          rec-cnt :screen-value  = string( rec-cnt - route-cnt, rec-cnt :format)
-        .
-      end.
-
-      assign
-        ub.esys-route.esr-last-pack = v-pack-num
-      .
-      if buf_esys-route.esr-action = {&nwsdochs_action_command-bush}
-      and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) 
-      then do:
-        leave route-label.
-      end.
-    end. /* for each buf_esys-route */
+        if buf_esys-route.esr-action = {&nwsdochs_action_command-bush}
+        and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) 
+        then do:
+          leave route-label.
+        end.
+      end. /* for each buf_esys-route */
 
   /*  if p-err-gen-pack = 2 then do:*/
   /*    undo, return error.*/
   /*  end.*/
 
-    do transaction
-    on error  undo, return error substitute( "&1 (pck-sent). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
-    on stop   undo, return error substitute( "&1 (pck-sent). stop", vss-workfile )
-    on endkey undo, return error substitute( "&1 (pck-sent). endkey", vss-workfile )
-    :
+/*    do transaction                                                                                                                                                       */
+/*    on error  undo, return error substitute( "&1 (pck-sent). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )*/
+/*    on stop   undo, return error substitute( "&1 (pck-sent). stop", vss-workfile )                                                                                       */
+/*    on endkey undo, return error substitute( "&1 (pck-sent). endkey", vss-workfile )                                                                                     */
+/*    :                                                                                                                                                                    */
 
       find first ub.esys-pck-sent exclusive-lock
         where ub.esys-pck-sent.esys-id  = p-esys-id
