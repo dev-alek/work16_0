@@ -251,6 +251,11 @@ assign
   session :data-entry-return = yes
 .
 
+/* 21/I-2019  текст комментари€ скопирован из gbl/font-chk.p:
+
+ѕроверок теперь не проводитс€, так как не €сно, каким образом
+проводить проверку дл€ экранов с разными разрешени€ми
+
 run gbl/font-chk.p no-error .
 if error-status :error
 then do:
@@ -261,6 +266,7 @@ then do:
     return-value skip
     view-as alert-box information .
 end.
+*/
 
 do1:
 do

@@ -23,7 +23,7 @@ Creation date: 04/13/06
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
-{ gbl/cur-time.i }
+/* { gbl/cur-time.i } 18/I-2019  вызов cur-time() заменено на просто today */
 
 /*этот код клиента принадлежит этой БД?*/
 FUNCTION gbclcode-is-this-db-code returns logical ( input p-db-num as integer
@@ -97,10 +97,13 @@ FUNCTION gbclcode-is-this-db-role returns integer ( input p-role as character
                                                     ,input p-staff-code as integer
                                                     ,input p-date as date
                                                      ):
-DEFINE VARIABLE v-time as integer no-undo .
+/*DEFINE VARIABLE v-time as integer no-undo .*/
 define buffer buf_staff for ub.staff.
 if p-date = ? then do:
+/* 18/I-2019 - параметр v-time не используется
    run cur-time in this-procedure ( output p-date, output v-time).
+*/
+  p-date = today .
 end.
 find first buf_staff no-lock where
           buf_staff.role = p-role
@@ -119,11 +122,14 @@ FUNCTION gbclcode-get-this-db-first-role returns integer ( input p-role as chara
                                                           ,input p-db-num as integer
                                                           ,input p-date as date
                                                               ):
-DEFINE VARIABLE v-time as integer no-undo .
+/*DEFINE VARIABLE v-time as integer no-undo .*/
 define buffer buf_staff for ub.staff.
 define buffer buf2_staff for ub.staff.
 if p-date = ? then do:
+/* 18/I-2019 - параметр v-time не используется
   run cur-time in this-procedure ( output p-date, output v-time).
+*/
+  p-date = today .  
 end.
 
 for each  buf_staff no-lock where
@@ -148,10 +154,13 @@ FUNCTION gbclcode-get-db-role returns integer ( input p-role as character
                                                ,input p-date as date
                                                ,output p-c-password as character
                                                      ):
-DEFINE VARIABLE v-time as integer no-undo .
+/*DEFINE VARIABLE v-time as integer no-undo .*/
 define buffer buf_staff for ub.staff.
 if p-date = ? then do:
+/* 18/I-2019 - параметр v-time не используется
   run cur-time in this-procedure ( output p-date, output v-time).
+*/
+  p-date = today .  
 end.
 
 find first buf_staff no-lock where
@@ -177,10 +186,13 @@ FUNCTION gbclcode-is-psn-role returns integer (
                                               ,input p-psn-code as integer
                                               ,input p-date as date
                                                   ):
-DEFINE VARIABLE v-time as integer no-undo .
+/*DEFINE VARIABLE v-time as integer no-undo .*/
 define buffer buf_staff for ub.staff.
 if p-date = ? then do:
+/* 18/I-2019 - параметр v-time не используется
   run cur-time in this-procedure ( output p-date, output v-time).
+*/
+  p-date = today .  
 end.
 for each buf_staff no-lock where
           buf_staff.psn-code = p-psn-code
@@ -244,11 +256,14 @@ FUNCTION gbclcode-get-level-last-code returns integer (
                                                       , input p-date-start as date
                                                       ):
 DEFINE VARIABLE v-today as date no-undo .
-DEFINE VARIABLE v-time as integer no-undo .
+/*DEFINE VARIABLE v-time as integer no-undo .*/
 define buffer buf_staff for ub.staff.
 if p-work-place = {&question-mark} then return ?.
 if p-date-start = ? then do:
+/* 18/I-2019 - параметр v-time не используется
   run cur-time in this-procedure(output v-today, output v-time).
+*/
+  v-today = today .
 end.
 else do:
   v-today = p-date-start.

@@ -105,7 +105,10 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
     FOR EACH ub.chk-gds No-LOCK WHERE
             ub.chk-gds.doc-code = ub.chk-pay.doc-code
     BY ub.chk-gds.line-num:
-      if ub.chk-gds.write-off-code > 0 then NEXT.
+      if   ub.chk-gds.write-off-code > 0 
+        or ub.chk-gds.doc-qnty  eq 0  
+        or ub.chk-gds.doc-qnty  eq ?
+      then NEXT.
       find first buf_bar-code no-lock where
                 buf_bar-code.b-code = ub.chk-gds.b-code no-error.
       if not available buf_bar-code then do:
@@ -436,9 +439,10 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 and buf_temp-chk-gds.line-num ne 0
             no-lock by buf_temp-chk-gds.line-num  ne  temp-chk-dp.line-num :
                      
-                if abs(temp-chk-dp.all-sum) <= 0.001
+                /* if         temp-chk-dp.all-sum  eq ?
+                    or abs(temp-chk-dp.all-sum) <= 0.001
                 then
-                   next dp.     
+                   next dp. */     
                 find first  temp-chk-gds where
                     temp-chk-gds.doc-code = ub.chk-doc.doc-code     
                     and buf_temp-chk-gds.b-code = temp-chk-gds.b-code          

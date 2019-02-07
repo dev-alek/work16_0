@@ -179,6 +179,7 @@ define buffer bufbr_tt-line for tt-line .
 { gbl/getcntxt.i def }
 { gbl/cd-mode1.i }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 
 { str/prep-lay.i def-tt }
 { str/libthpos_bh-def.i }

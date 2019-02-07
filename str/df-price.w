@@ -101,6 +101,7 @@ define buffer buf_qnty-in-qnty-group for ub.qnty-in-qnty-group  .
 define buffer buf_sum-in-sum-group   for ub.sum-in-sum-group  .
 define buffer buf_tnv-in-tnv-group   for ub.tnv-in-turnover-group  .
 define buffer buf_global-state       for ub.global-state  .
+define buffer buf_doc-line           for ub.doc-line .
 
 define stream imp.
 
@@ -681,6 +682,21 @@ DEFINE VARIABLE p-avrg AS DECIMAL FORMAT "->>>>>>>>>>9.99" INITIAL 0
      LABEL "Цена учет."
       VIEW-AS TEXT
      SIZE 15 BY .67 TOOLTIP "Текущая средняя учетная цена по группе объектов" NO-UNDO.
+     
+DEFINE VARIABLE v-free-qnty AS DECIMAL FORMAT "->>>>>>>9.<<" INITIAL ?
+     LABEL "Свободно"
+      VIEW-AS TEXT
+     SIZE 12 BY .67 NO-UNDO.
+     
+DEFINE VARIABLE v-fact-qnty AS DECIMAL FORMAT "->>>>>>>9.<<" INITIAL ?
+     LABEL "Факт"
+      VIEW-AS TEXT
+     SIZE 12 BY .67 NO-UNDO.
+     
+DEFINE VARIABLE v-in-doc-qnty AS DECIMAL FORMAT "->>>>>>>9.<<" INITIAL ?
+     LABEL "Приход"
+      VIEW-AS TEXT
+     SIZE 12 BY .67 NO-UNDO.
 
 DEFINE VARIABLE p-calc-metod AS CHARACTER FORMAT "x(17)"
       VIEW-AS TEXT
@@ -1004,10 +1020,13 @@ DEFINE FRAME Dialog-Frame
      p-pc-last AT ROW 20.17 COL 66.63 COLON-ALIGNED
      p-pc-op-last AT ROW 20.17 COL 89 COLON-ALIGNED
      prev-price_doc-num AT ROW 20.92 COL 12 COLON-ALIGNED
+     v-free-qnty AT ROW 20.92 COL 40.5 COLON-ALIGNED
      v-ost AT ROW 21.13 COL 44.25 COLON-ALIGNED WIDGET-ID 8
      obj-in-code AT ROW 21.67 COL 11 COLON-ALIGNED
+     v-fact-qnty AT ROW 21.67 COL 40.5 COLON-ALIGNED
      v-new-price-vat AT ROW 21.75 COL 44.25 COLON-ALIGNED WIDGET-ID 16
      obj-in-date AT ROW 22.38 COL 11 COLON-ALIGNED
+     v-in-doc-qnty AT ROW 22.38 COL 40.5 COLON-ALIGNED
      v-prod-price-prc AT ROW 22.42 COL 89 COLON-ALIGNED WIDGET-ID 14
      v-prod-price AT ROW 22.5 COL 44.25 COLON-ALIGNED WIDGET-ID 12
      v-prod-price-prc-2 AT ROW 23 COL 89 COLON-ALIGNED WIDGET-ID 20
@@ -2617,6 +2636,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
  { gbl/hot-key.i b-mark }
 
 { gbl/setfltnm.i no-button }
+
 { gbl/brwrefre.i "run OpenBr in this-procedure (yes, no, '':U)." }
 
 { gbl/srt-clmd.i
@@ -2724,7 +2744,37 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     run my_enable in this-procedure .
     run Open1 .
   end.
-
+  
+  if par-is-pharm = "yes" then do:
+      display
+        v-ost
+        v-prod-price
+        v-new-price-vat
+        v-prod-price-prc
+        v-priceprodwithvat-2
+        v-prod-price-prc-2
+        v-prod-price-prc-3
+        doc-code
+      with frame {&frame-name} no-error .
+      enable doc-code with frame {&frame-name} .
+  end.
+  else do :
+    hide
+        v-ost
+        v-prod-price
+        v-new-price-vat
+        v-prod-price-prc
+        v-priceprodwithvat-2
+        v-prod-price-prc-2
+        v-prod-price-prc-3
+      in frame {&frame-name}  .
+    display
+      v-free-qnty
+      v-fact-qnty
+      v-in-doc-qnty
+    with frame {&frame-name} no-error .  
+  end.
+  
   a-n-c = "art" .
   apply "value-change" to a-n-c in frame {&frame-name} .
   display a-n-c with frame {&frame-name} .
@@ -5772,7 +5822,7 @@ PROCEDURE vc-pdf :
   Parameters:  <none>
   Notes:
 -------------------------------------------------------------*/
-
+v-in-doc-qnty = ? .
 if not available buf_price-doc-forming-gds then return.
 
 define variable v1-recid as recid no-undo .
@@ -5786,6 +5836,9 @@ assign
   obj-in-date = 01/01/1990
   obj-in-code = ""
   p-last = 0
+  v-free-qnty = 0
+  v-fact-qnty = 0
+  v-in-doc-qnty = ?
 .
 find first bf_goods no-lock where
            bf_goods.artic = buf_price-doc-forming-gds.artic and
@@ -5820,9 +5873,26 @@ for each x_obj-group :
                   obj-in-date = ub.gds-obj.in-date
                   obj-in-code = ub.gds-obj.in-code
                   p-last = if var-pr-r-b = "rubl" then  ub.gds-obj.last-rubl else ub.gds-obj.last-base
+                  v-free-qnty = ub.gds-obj.free-qnty
+                  v-fact-qnty = ub.gds-obj.fact-qnty
                 .
             end.
         end.
+end.
+
+if obj-in-code <> ? and obj-in-code > "" and available bf_goods
+then do:
+  find first buf_doc-line no-lock where buf_doc-line.doc-code  = obj-in-code
+                                   and buf_doc-line.artic     = bf_goods.artic
+                                   and buf_doc-line.prod-type = bf_goods.prod-type
+                                   and buf_doc-line.prod-code = bf_goods.prod-code no-error .
+  if available buf_doc-line
+  then do:
+    v-in-doc-qnty = buf_doc-line.fact-qnty .
+  end.  
+  else do: 
+    v-in-doc-qnty = ? .
+  end.                               
 end.
 if obj-in-date = 01/01/1990  then obj-in-date = ?.
 if p-qnty1 = 0 or p-qnty1 = ? then p-avrg = ? .
@@ -5964,7 +6034,8 @@ display
       with frame {&frame-name} no-error .
       enable doc-code with frame {&frame-name} .
   end.
-  else hide
+  else do :
+    hide
         v-ost
         v-prod-price
         v-new-price-vat
@@ -5973,6 +6044,12 @@ display
         v-prod-price-prc-2
         v-prod-price-prc-3
       in frame {&frame-name}  .
+    display
+      v-free-qnty
+      v-fact-qnty
+      v-in-doc-qnty
+    with frame {&frame-name} no-error .  
+  end.
 
 if p-mode = {&lookup} then  disable doc-code with frame {&frame-name} .
 

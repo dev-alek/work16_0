@@ -635,6 +635,16 @@ on error undo _buf_sale-doc, next _buf_sale-doc:
                 ub.goods.prod-code = ub.doc-line.prod-code NO-LOCK
    on error undo _doc-line, next _doc-line :
     IF ub.doc-line.fact-qnty = ub.doc-line.doc-qnty then NEXT _doc-line.
+    if buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass}
+    then do :
+      find first ub.doc-fbr-gds no-lock where ub.doc-fbr-gds.out-code = replace(ub.doc-line.doc-code, "=", "-")
+                                          and ub.doc-fbr-gds.gds-code = ub.goods.gds-code
+                                          no-error.
+      if available ub.doc-fbr-gds and ub.doc-fbr-gds.fact-qnty < 0
+      then do :
+        if ub.doc-line.doc-qnty = abs(ub.doc-fbr-gds.fact-qnty) then NEXT _doc-line.
+      end.                                     
+    end.                                      
     IF NOT (rdoc-line = ?) then do:
       if  NOT recid(ub.doc-line) = rdoc-line THEN NEXT _doc-line.
       assign

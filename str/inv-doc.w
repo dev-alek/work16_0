@@ -166,7 +166,8 @@ first ub.goods no-lock where ~
 &SCOP clmn_31-br-list       fncdiffqntykg( buffer ub.doc-line )
 &SCOP label-clmn_32-br-list 'Пересортица'
 &SCOP clmn_32-br-list       ub.doc-line.inv-peresort-qnty
-
+&SCOP label-clmn_33-br-list  'НДС'
+&SCOP clmn_33-br-list        ub.doc-line.vat-pc
 
 &SCOP NUM-LOCKED-COLUMNS-br-list 3
 &SCOP disp-list ~
@@ -180,6 +181,7 @@ first ub.goods no-lock where ~
  {&clmn_6-br-list}   @ varbefore-qnty        column-label {&label-clmn_6-br-list} ~
  {&clmn_7-br-list}                           column-label {&label-clmn_7-br-list} ~
  {&clmn_8-br-list}                           column-label {&label-clmn_8-br-list} ~
+ {&clmn_33-br-list}                          column-label {&label-clmn_33-br-list} format ">9.9%":U ~
  {&clmn_9-br-list}                           column-label {&label-clmn_9-br-list} ~
  {&clmn_10-br-list}  @ varextra-qnty         column-label {&label-clmn_10-br-list} ~
  {&clmn_11-br-list}  @ varmiss-qnty          column-label {&label-clmn_11-br-list} ~
@@ -1260,7 +1262,7 @@ ub.doc-line.inv-peresort:visible in browse {&browse-name}  = (if v-inv-prsr = "y
     &BROWSE-NAME          = {&BROWSE-NAME}
     &FRAME-NAME           = {&FRAME-NAME}
     &table-name           = "ub.doc-line"
-    &ext-col              = 32
+    &ext-col              = 33
     &start-column         = "{&num-locked-columns-br-list} + 1"
     &label-clmn_1         = "{&label-clmn_1-br-list}"
     &sort-clmn_1          = "{&clmn_1-br-list}"
@@ -1326,6 +1328,8 @@ ub.doc-line.inv-peresort:visible in browse {&browse-name}  = (if v-inv-prsr = "y
     &sort-clmn_31         = "{&clmn_31-br-list} DESCENDING"
     &label-clmn_32        = "{&label-clmn_32-br-list}"
     &sort-clmn_32         = "{&clmn_32-br-list} DESCENDING"
+    &label-clmn_33        = "{&label-clmn_33-br-list}"
+    &sort-clmn_33         = "{&clmn_33-br-list} DESCENDING"
     &before-sort          = "ASSIGN dif-only = ""all"". DISPLAY dif-only WITH FRAME {&FRAME-NAME}."
     &open-query           = "{&OPEN-QUERY-br-list} BY ~{&sort-clmn_~{&clmn_num~}~}."
     &open-query-otherwise = "{&OPEN-QUERY-br-list} BY ub.doc-line.line-num."
@@ -1694,6 +1698,10 @@ do while parnext-prev :
   main-block:
   do on error   undo main-block, leave main-block
      on end-key undo main-block, leave main-block :
+
+    assign 
+       {&browse-name}:column-resizable in frame {&frame-name} = true.
+
     if pardoc-mode = {&add-def} then do:
       { str/adinvdoc.i
         v-cntxt-obj-type

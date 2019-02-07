@@ -39,12 +39,6 @@ define variable vss-description as character no-undo init "Отчет 'Контрольная ве
 &global-define bottom-height 2
 &global-define page-height   43
 
-do
-on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
-on stop   undo, return error substitute( "&1. stop", vss-workfile )
-on endkey undo, return error substitute( "&1. endkey", vss-workfile )
-:
-
   define variable v-line      as character no-undo .
   define variable v-cnt-obj   as integer   no-undo .
   define variable v-count     as integer   no-undo .
@@ -139,16 +133,17 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   with width {&DOS_CW_2} down stream-io use-text NO-BOX.
 
 
+do
+on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+on stop   undo, return error substitute( "&1. stop", vss-workfile )
+on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+:
+
   run waitfram-show in this-procedure ({&MyWaitMess} ).
 
-  assign
     v-cnt-obj = 0.
-  .
-  for each obj-list
-  :
-    assign
-      v-cnt-obj = v-cnt-obj + 1
-    .
+    for each obj-list :
+      v-cnt-obj = v-cnt-obj + 1 .
   end.
 
   for each sheetf
@@ -470,15 +465,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
           for each buf_rvs-line-pump no-lock
             where buf_rvs-line-pump.rvs-code = buf_rvs-doc.rvs-code
-              and buf_rvs-line-pump.gds-code = gds-list.gds-code
-              and buf_rvs-line-pump.obj-code = buf_shift-obj.obj-code
               and buf_rvs-line-pump.obj-type = buf_shift-obj.obj-type
+              and buf_rvs-line-pump.obj-code = buf_shift-obj.obj-code
+               /* and для всех buf_rvs-line-pump.pl-code */
+              and buf_rvs-line-pump.gds-code = gds-list.gds-code
             break by buf_rvs-line-pump.pump-code
                   by buf_rvs-line-pump.nozzle-code
-                  by buf_rvs-line-pump.pl-code
           :
             /*по одной ТРК надо собрать по всем пистолетам*/
-            if first-of(buf_rvs-line-pump.pl-code) then do:
+            /* 28/XI-2018  не по "по одной ТРК", а по одному топливу собрать по всем пистолетам всех ТРК */
               assign
                 pol7 = pol7 + buf_rvs-line-pump.state-mh-cnt
               .
@@ -525,7 +520,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   leave.
                 end.
               end.
-            end.
           end.
         end. /* for each buf_rvs-doc no-lock */
 

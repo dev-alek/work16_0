@@ -475,7 +475,12 @@ define buffer new_clients  for ub.clients .
         v-is-cont-err   = false
       .
       else do :
+        /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
         /* 24/XII-2018  При отсутствии договора искать любой похожий, а при полном отсутствии отвергать партию. */
+        v-my-message  = substitute (
+          "Отсутствует договор № &2 (вер.15) по поставщику &3 в вер.16. Товар &1 в вер.15",
+          buf_tt-parts.gds-code, buf_tt-parts.cont-prn-code, new_cli-code ) .
+        {&display-message}.
         assign
           v-contract-code = 0
           v-is-cont-err   = true
@@ -492,19 +497,20 @@ define buffer new_clients  for ub.clients .
             leave .
           end .
         end .
-      end .
+        
+        if v-is-cont-err then do :
+          v-my-message  = substitute (
+            "Отсутствует действующий договор на дату &3 по поставщику &2 в вер.16. Товар &1 в вер.15",
+            buf_tt-parts.gds-code, new_cli-code, v-today ) .
+          {&display-message}.
+        end .
+      end . /* end_of not_avail_contract_by_num */
       
-      /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
-      if v-is-cont-err then do :
-        v-my-message  = substitute ("Отсутствует действующий договор для товара &1 из договора № &2 в вер.15 Клиент &3", new_gds-code, buf_tt-parts.cont-prn-code,new_cli-code ) .
-        {&display-message}.
-      end .
     end . /* end_of first_of_tt-parts.cont-prn-code */
     /* 26/IV-2018  Товары с ненайденным договором надо отображать в логе.
        24/XII-2018 Отвергать партию при отсутствии договора.    
     */
     if v-is-cont-err then do :
-        
       if buf_tt-parts.imp-row > "" then 
         put stream f-err-lines unformatted buf_tt-parts.imp-row skip .
       else

@@ -76,6 +76,7 @@ define variable vss-description as character no-undo init "Проверка корректности
 { cmp/str-glbl.i }
 { cmp/library.i }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 
 DEFINE VARIABLE var-chk-type as character no-undo .
 DEFINE VARIABLE var-entry as character no-undo .

@@ -84,6 +84,7 @@ define variable vidn-priceBase like ub.wth-parts.price-base  no-undo.
 define variable vidn-range     like ub.wth-parts.fact-rangeFrom  no-undo.
 
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 { str/wthparts.i }
 /*проверим включены ли МЦ в системе*/
 

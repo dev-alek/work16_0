@@ -212,6 +212,7 @@ define variable v-data-type                 as   character                     n
 define variable is-doc-hold                 as   logical                       no-undo.
 define variable d-reason                    as   character                     no-undo.
 define variable ch-vsd as character no-undo .
+define variable vat-sum as decimal no-undo .
 define variable is-fuel as logical no-undo initial no.
 define variable choice as integer no-undo.
 define variable isEgais  as logical   no-undo .
@@ -355,6 +356,8 @@ end.
 &scop sort-clmn_29-br-dtl   lineattr-get-reason( buffer ub.doc-line )
 &scop label-clmn_30-br-dtl  'ÂÑÄ'
 &scop sort-clmn_30-br-dtl   get-vsdsts( buffer ub.doc-line )
+&scop label-clmn_31-br-dtl  'Ñóììà ÍÄÑ'
+&scop sort-clmn_31-br-dtl   get-vat-sum( buffer ub.doc-line )
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -375,7 +378,7 @@ end.
 &Scoped-define INTERNAL-TABLES  ub.doc-line ub.goods ub.gds-prt ub.gds-obj
 
 /* Definitions for BROWSE br-dtl                                        */
-&Scoped-define FIELDS-IN-QUERY-br-dtl {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} @ d-kg-fact-qnty {&sort-clmn_25-br-dtl} @ d-kg-price-base {&sort-clmn_26-br-dtl} @ d-kg-price-rubl {&sort-clmn_27-br-dtl} @ d-kg-after-qnty {&sort-clmn_28-br-dtl} @ d-gtd-add {&sort-clmn_29-br-dtl} @ d-reason {&sort-clmn_30-br-dtl} @ ch-vsd
+&Scoped-define FIELDS-IN-QUERY-br-dtl {&sort-clmn_1-br-dtl} {&sort-clmn_2-br-dtl} {&sort-clmn_3-br-dtl} {&sort-clmn_4-br-dtl} {&sort-clmn_5-br-dtl} {&sort-clmn_6-br-dtl} {&sort-clmn_7-br-dtl} {&sort-clmn_8-br-dtl} {&sort-clmn_9-br-dtl} {&sort-clmn_10-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_12-br-dtl} {&sort-clmn_13-br-dtl} {&sort-clmn_14-br-dtl} {&sort-clmn_15-br-dtl} {&sort-clmn_16-br-dtl} {&sort-clmn_17-br-dtl} {&sort-clmn_18-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl} {&sort-clmn_21-br-dtl} {&sort-clmn_22-br-dtl} {&sort-clmn_23-br-dtl} {&sort-clmn_24-br-dtl} @ d-kg-fact-qnty {&sort-clmn_25-br-dtl} @ d-kg-price-base {&sort-clmn_26-br-dtl} @ d-kg-price-rubl {&sort-clmn_27-br-dtl} @ d-kg-after-qnty {&sort-clmn_28-br-dtl} @ d-gtd-add {&sort-clmn_29-br-dtl} @ d-reason {&sort-clmn_30-br-dtl} @ ch-vsd {&sort-clmn_31-br-dtl} @ ch-vsd
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-dtl {&sort-clmn_6-br-dtl} {&sort-clmn_11-br-dtl} {&sort-clmn_19-br-dtl} {&sort-clmn_20-br-dtl}
 &Scoped-define SELF-NAME br-dtl
 &Scoped-define QUERY-STRING-br-dtl FOR EACH  ub.doc-line WHERE  ub.doc-line.doc-code = t-doc.doc-code NO-LOCK, ~
@@ -510,6 +513,15 @@ FUNCTION get-vsdsts RETURNS CHARACTER
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-mark d-in-doc 
+FUNCTION get-vat-sum RETURNS decimal
+(buffer local-doc-line for doc-line ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -808,6 +820,7 @@ DEFINE BROWSE br-dtl
       {&sort-clmn_15-br-dtl}                   column-label {&label-clmn_15-br-dtl} format "->>>,>>9.<<":U
       {&sort-clmn_16-br-dtl}                   column-label {&label-clmn_16-br-dtl} format "x(10)":U
       {&sort-clmn_17-br-dtl}                   column-label {&label-clmn_17-br-dtl} format ">9.9%":U
+      {&sort-clmn_31-br-dtl} @ vat-sum         column-label {&label-clmn_31-br-dtl} format ">>,>>>,>>>,>>>,>>9.99"
       {&sort-clmn_18-br-dtl}                   column-label {&label-clmn_18-br-dtl}
       {&sort-clmn_19-br-dtl}                   column-label {&label-clmn_19-br-dtl}
       {&sort-clmn_20-br-dtl}                   column-label {&label-clmn_20-br-dtl}
@@ -2474,6 +2487,9 @@ n-p:
 do while parnext-prev :
 main-block:
 do on error undo main-block, leave main-block :
+
+   assign 
+       {&browse-name}:column-resizable in frame {&frame-name} = true.
    if pardoc-mode = {&add-copy}
     then
     assign
@@ -7274,6 +7290,16 @@ FUNCTION get-vsdsts RETURNS CHARACTER
   end.
 
   return "".
+  
+end function.
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-vsdsts d-in-doc 
+FUNCTION get-vat-sum RETURNS decimal
+(buffer local-doc-line for doc-line ):
+  
+  def var v-vat-sum as decimal no-undo.
+  v-vat-sum = (ub.doc-line.cli-qnty *  ub.doc-line.price-cli * doc-line.VAT-pc) / (100 + doc-line.VAT-pc) .
+  return v-vat-sum.
   
 end function.
 

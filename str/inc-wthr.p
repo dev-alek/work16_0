@@ -40,6 +40,8 @@ define variable p-auto         as integer no-undo . /*этот параметр указывает на
 
 { str/incwthtt.i "SHARED" "temp-cash-doc" }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
+
 
 DEFINE VARIABLE v-err-count as integer no-undo .
 DEFINE VARIABLE v-all-count as integer no-undo .

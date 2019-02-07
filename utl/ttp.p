@@ -11,6 +11,7 @@ $Archive$
 Author: Bakhtadze Natalya
 Creation date: 06/15/07
 
+21/I-2019 - не используется.
 */
 
 define input parameter p-metka as character no-undo .

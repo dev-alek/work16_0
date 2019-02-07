@@ -41,6 +41,7 @@ DEFINE VARIABLE vss-description as character no-undo init "Программа приема чеко
 
 { str/get-chkc.i def }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 /*только чековая часть*/
 { cmp/bitoper.i }
 { str/r-keepdf.i "SHARED" "temp" }

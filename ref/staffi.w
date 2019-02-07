@@ -62,6 +62,7 @@ define variable vss-description as character no-undo init "Редактирование данных
 { cmp/showinf.i }
 { gbl/getcntxt.i DEF }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 DEFINE VARIABLE v-tab-order AS CHARACTER NO-UNDO.
 define variable is-temp as logical no-undo .
 

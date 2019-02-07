@@ -11964,6 +11964,8 @@ on error undo, return error
   define input-output parameter objNormWast as class ibs.th.ref.normwastsub no-undo.
 
   define variable v-mes as character no-undo .
+  define variable v-value as character no-undo.
+  define variable v-type as character no-undo.
   
   if not valid-object (objNormWast)
   then do:
@@ -12027,9 +12029,38 @@ on error undo, return error
       end.
     end case.
 
+    find first buf_normal-wastage-gds-obj-attr no-lock
+        where buf_normal-wastage-gds-obj-attr.gds-code = objNormWast:ParGdsOAttr:GdsCode
+          and buf_normal-wastage-gds-obj-attr.attr-code = {&attr-cli-decommissioned}
+          and buf_normal-wastage-gds-obj-attr.obj-type  = objNormWast:ParGdsOAttr:ObjType
+          and buf_normal-wastage-gds-obj-attr.obj-code  = objNormWast:ParGdsOAttr:ObjCode
+    no-error .
+    
+    run clntattr-value in this-procedure (input objNormWast:ParGdsOAttr:ObjType,
+                                          input objNormWast:ParGdsOAttr:ObjCode,
+                                          input {&attr-cli-decommissioned},
+                                          output v-value,
+                                          output v-type) no-error.
+    objNormWast:IsDecommissioned = (v-value = "yes":u).
+
+    run clntattr-value in this-procedure (input objNormWast:ParGdsOAttr:ObjType,
+                                          input objNormWast:ParGdsOAttr:ObjCode,
+                                          input {&attr-cli-clim-grp},
+                                          output v-value,
+                                          output v-type) no-error.
+    
+    if num-entries(v-value) = 3 then assign
+      objNormWast:BeginSummer = date (entry(2, v-value))
+      objNormWast:BeginWinter  = date (entry(3, v-value))
+    .
+    else do:
+      objNormWast:BeginSummer = 01/03.
+      objNormWast:BeginSummer = 01/10.
+    end.
+    
     if objNormWast:ParGdsOAttr:OnDate <> ?
     then do:
-      if 3 < month (objNormWast:ParGdsOAttr:OnDate) and month (objNormWast:ParGdsOAttr:OnDate) < 10
+      if objNormWast:BeginSummer <= objNormWast:ParGdsOAttr:OnDate and objNormWast:ParGdsOAttr:onDate < objNormWast:BeginWinter
       then do:
         objNormWast:NormalWastageDate = objNormWast:NormalWastageSummer.
         objNormWast:NormalWastageTransDate = objNormWast:NormalWastageTransSummer.

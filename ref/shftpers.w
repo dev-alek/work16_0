@@ -53,6 +53,8 @@ define variable vss-description as character no-undo init "Процедура выбора перс
 { ref/shftpers.i "NEW SHARED" }
 { gbl/getcntxt.i def }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
+
 DEFINE BUFFER next-shft-pers for shft-pers.
 DEFINE variable add-option as char no-undo.
 define variable v-need-rec as recid no-undo .

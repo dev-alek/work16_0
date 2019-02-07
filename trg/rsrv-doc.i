@@ -1400,10 +1400,28 @@ procedure rsrv-doc :
                 varcur-slt-pc = 0
               .
           end.
+          
+          { gbl/pftxvalg.i
+            buf_goods.gds-code
+            {&vat-tax-code}
+            ?
+            buf_trn-doc.host-code
+            buf_trn-doc.obj-type
+            buf_trn-doc.obj-code
+            varcur-vat-pc
+            no-error
+          }
             
           varprice-rubl = varprice-sale / (1 + (varcur-vat-pc / 100)) .
+          
           if varprice-rubl = 0
-          then varprice-rubl = buf_doc-line.price-rubl / (1 + (buf_doc-line.vat-pc / 100)) .
+          then do :
+            if varcur-vat-pc <> 0 and varcur-vat-pc <> ?
+            then 
+              varprice-rubl = buf_doc-line.price-rubl / (1 + (varcur-vat-pc / 100)) .
+            else
+              varprice-rubl = buf_doc-line.price-rubl / (1 + (buf_doc-line.vat-pc / 100)) .
+          end.
     
               { gbl/baserate.i
                 buf_trn-doc.host-code

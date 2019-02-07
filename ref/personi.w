@@ -61,6 +61,7 @@ define variable vss-description as character no-undo init "Карточка редактирован
 { gbl/getcntxt.i def }
 { gbl/clntattr.i }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 { trg/person1s.i tt-staff }
 define variable v-db-num like ub.db.db-num no-undo .
 define variable is-fin as logical no-undo .

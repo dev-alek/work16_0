@@ -435,7 +435,7 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         v-is-kitchen-store   = no
         v-kitchen-store-code = 0
         v-kitchen-store-type = ""
-        v-no-eq          = no
+        v-no-eq           = yes /* 18/XII-2018 устанавливать галочку «Запрещен приход при отсутствии цен» */
         v-out-line-discnt = no
         v-out-rate       = no
         v-pr-cash        = yes
