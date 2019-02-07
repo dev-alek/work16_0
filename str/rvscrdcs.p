@@ -19,6 +19,7 @@ using ibs.th.str.ptrl.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.str.*.
 using ibs.th.gbl.logging.*.
+using ibs.th.ref.*.
 
 define input  parameter parparentproc as handle    no-undo.
 define input  parameter p-rvs-rowid   as rowid     no-undo .
@@ -71,6 +72,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define buffer bf_doc-line         for ub.doc-line.
   define buffer bf_inv-line         for ub.inv-line.
   define buffer bf-prev_doc-line for ub.doc-line.
+  define buffer bf-prev_trn-doc for ub.trn-doc.
+  define buffer bf-prev_doc-pl for ub.doc-pl.
   define buffer bf-wst_trn-doc   for ub.trn-doc.
   define buffer bf-wst_doc-line  for ub.doc-line.
   define buffer bf-wst_inv-line  for ub.inv-line.
@@ -92,10 +95,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define buffer buf-spi_gds-dtl        for ub.gds-dtl .
   define buffer buf-spi_parts          for ub.parts .
   define buffer buf-spi_doc-pl         for ub.doc-pl .
-  define buffer buf_rvs-line_wast      for ub.rvs-line.
-  define buffer buf_rvs-doc_wast       for ub.rvs-doc.
-  define buffer buf_rvs-line_wast_next for ub.rvs-line.
-  define buffer buf_rvs-doc_wast_next  for ub.rvs-doc.
   
 
   define variable chs-gds-inv                         as   logical                       no-undo.
@@ -135,6 +134,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-normal-tp-pl                      as   decimal                       no-undo.
   define variable v-normal-wastage-winter             as   decimal                       no-undo init ?.
   define variable v-normal-wastage-summer             as   decimal                       no-undo init ?.
+  define variable v-norm-wast-decomm                  as   decimal                       no-undo init 0.
   define variable v-rsrv-qnty                         like ub.doc-line.fact-qnty         no-undo.
   define variable v-value                             as character                       no-undo.
   define variable v-ok                                as logical                         no-undo.
@@ -158,15 +158,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-metering-pipe-error-base          as   decimal                       no-undo.
   define variable v-metering-pipe-error-cli           as   decimal                       no-undo.
   define variable v-metering-pipe-qnty-cli            as   decimal                       no-undo .
-  define variable NormWast                            as   class ibs.th.ref.normwastsub  no-undo.
+  define variable oNormWast                           as   class ibs.th.ref.normwastsub  no-undo.
   define variable v-wastage-qnty-base                 as   decimal                       no-undo .
   define variable v-wastage-qnty-cli                  as   decimal                       no-undo .
   define variable WST-base                            as   decimal                       no-undo.
   define variable WST-cli                             as   decimal                       no-undo.
   define variable varfact-order-prev-inv              like ub.trn-doc.fact-order         no-undo.
   define variable InfoSecsObj                         as   class InfoSectionsTotal       no-undo.
-
-
+  
   define variable dM as decimal no-undo.
   define variable dMMBd as decimal no-undo.
   define variable MKN as decimal no-undo.
@@ -180,12 +179,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable dMPT as decimal no-undo.
   define variable dMPOT as decimal no-undo.
   define variable MPOT as decimal no-undo.
-  define variable dMHREY as decimal no-undo.
   define variable MNED as decimal no-undo.
   
-  define variable v-decommiss-str as character no-undo.
   define variable v-par-type as character no-undo.
-  
+  define variable ii as integer no-undo.
 
 
   /* создавать ли TDEDT_Spi_Vnesh */
@@ -476,18 +473,13 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         end.
       end.
       
-      NormWast = new ibs.th.ref.normwastsub ().
-      NormWast:ParGdsOAttr:GdsCode = buf_goods.gds-code.
-      NormWast:ParGdsOAttr:ObjType = buf_trn-doc.obj-type.
-      NormWast:ParGdsOAttr:ObjCode = buf_trn-doc.obj-code.
-      NormWast:ParGdsOAttr:OnDate = if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date.
+      oNormWast = new normwastsub ().
+      oNormWast:ParGdsOAttr:GdsCode = buf_goods.gds-code.
+      oNormWast:ParGdsOAttr:ObjType = buf_trn-doc.obj-type.
+      oNormWast:ParGdsOAttr:ObjCode = buf_trn-doc.obj-code.
+      oNormWast:ParGdsOAttr:OnDate = if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date.
+      oNormWast:FillNormWast().
       
-    /* у топлива в атрибутах, т.к. до 3-х знаков после запятой */
-      run gds-o-normal-wastage-value in this-procedure
-                        ( input-output NormWast
-                        ) no-error.
-
-
       if error-status:error
       then do:
         message
@@ -499,7 +491,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         undo block_cre-inv, retry block_cre-inv.
       end.
       
-      v-normal-wastage = NormWast:NormalWastageDate.
+      v-normal-wastage = oNormWast:NormalWastageDate.
       
       if v-normal-wastage = ? then do:
         assign
@@ -720,134 +712,165 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               if available bf-prev_doc-line then do:
                 assign
                   varfact-order-prev-inv = bf-prev_doc-line.fact-order
+                  
                 .
+                find first bf-prev_doc-pl no-lock
+                  where bf-prev_doc-pl.obj-type = bf-prev_doc-line.obj-type
+                    and bf-prev_doc-pl.obj-code = bf-prev_doc-line.obj-code
+                    and bf-prev_doc-pl.pl-code  = buf_rvs-line.pl-code
+                    and bf-prev_doc-pl.out-code = bf-prev_doc-line.doc-code
+                    and bf-prev_doc-pl.gds-code = buf_rvs-line.gds-code
+                  no-error.
+                
+                if ptrlprop-algrvspt = 3 and oNormWast:IsDecommissioned
+                then do:
+                  find first bf-prev_trn-doc no-lock where bf-prev_trn-doc.doc-code = bf-prev_doc-line.doc-code.
+                  oNormWast:ParGdsOAttr:ToInvDate = buf_rvs-doc.fact-date.
+                  oNormWast:ParGdsOAttr:FromInvDate =  if bf-prev_trn-doc.fact-date <> ? then bf-prev_trn-doc.fact-date else bf-prev_trn-doc.doc-date.
+                  oNormWast:ParGdsOAttr:FromInvFQKg = bf-prev_doc-pl.cli-rest-af-qnty.
+                  oNormWast:ParGdsOAttr:PlCode = buf_rvs-line.pl-code.
+                  oNormWast:FillNormWast().
+                end.
+                
               end.
               else do:
                 assign
                   varfact-order-prev-inv = 0
                 .
               end.
+           
 
-              &scop proc-name clntattr-value
-              {&run_proc_attr-lib}
-              (input buf_rvs-line.obj-type
-              ,input buf_rvs-line.obj-code
-              ,input  {&attr-cli-decommissioned}
-              ,output v-decommiss-str
-              ,output v-par-type
-              ) .
-              
-              if v-decommiss-str = "yes":u /*опред. ест. убыль для неэксплуат. азс*/
+              if ptrlprop-algrvspt = 3
               then do:
-                def var ii as int no-undo.
-                find first ub.trn-doc where ub.trn-doc.doc-code = bf-prev_doc-line.doc-code no-error.
-                if available (ub.inv-doc)
-                then do:
-                  do ii = integer (ub.trn-doc.fact-date) to integer (today):
-                    
-                    NormWast = new ibs.th.ref.normwastsub ().
-                    NormWast:ParGdsOAttr:GdsCode = buf_goods.gds-code.
-                    NormWast:ParGdsOAttr:ObjType = buf_trn-doc.obj-type.
-                    NormWast:ParGdsOAttr:ObjCode = buf_trn-doc.obj-code.
-                    NormWast:ParGdsOAttr:OnDate = if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date.
-                    
-                  /* у топлива в атрибутах, т.к. до 3-х знаков после запятой */
-                    run gds-o-normal-wastage-value in this-procedure
-                                      ( input-output NormWast
-                                      ) no-error.
-                    
+                
+                logger:StrLogPut =
+                      "Технологические потери по документам ПН в межинвентаризационный период (если есть)" + 
+                      "Объект: " + buf_rvs-line.obj-type + string (buf_rvs-line.obj-code) + {&new-line} +
+                      "Товар: " + string (buf_goods.gds-code) + " - " + buf_goods.gds-name
+                    .
+                
+                for each bf-wst_doc-line no-lock
+                  where ( bf-wst_doc-line.obj-type         = buf_doc-line.obj-type
+                          and bf-wst_doc-line.obj-code     = buf_doc-line.obj-code
+                          and bf-wst_doc-line.prod-type    = buf_doc-line.prod-type
+                          and bf-wst_doc-line.prod-code    = buf_doc-line.prod-code
+                          and bf-wst_doc-line.artic        = buf_doc-line.artic
+                          and 
+                          (
+                            (bf-wst_doc-line.ext-doc-type <> {&TDEDT_Inv} and bf-wst_doc-line.ext-doc-type <> {&TDEDT_Peresort} and oNormWast:IsDecommissioned)
+                            or
+                            (bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} and not oNormWast:IsDecommissioned)
+                          )
+                          and bf-wst_doc-line.status_      = {&fact}
+                          and bf-wst_doc-line.fact-order   > varfact-order-prev-inv
+                        )
+                on error undo block_cre-inv, retry block_cre-inv
+                :
                   
+                  if oNormWast:IsDecommissioned
+                  then do:
+                    find first bf-wst_trn-doc no-lock where bf-wst_trn-doc.doc-code = bf-wst_doc-line.doc-code.
+                    find first bf-wst_doc-pl no-lock
+                      where bf-wst_doc-pl.obj-type = bf-wst_doc-line.obj-type
+                        and bf-wst_doc-pl.obj-code = bf-wst_doc-line.obj-code
+                        and bf-wst_doc-pl.pl-code  = buf_rvs-line.pl-code
+                        and bf-wst_doc-pl.out-code = bf-wst_doc-line.doc-code
+                        and bf-wst_doc-pl.gds-code = buf_rvs-line.gds-code
+                      no-error.
+                    if bf-wst_trn-doc.doc-type = {&income}
+                    then oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, bf-wst_doc-pl.cli-fact-qnty).
+                    else oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, - bf-wst_doc-pl.cli-fact-qnty).
                   end.
                   
-                  
-                end.
-                
-                
-                
-                
-              end.
-              
-              logger:StrLogPut =
-                    "Технологические потери по документам ПН в межинвентаризационный период (если есть)" + 
-                    "Объект: " + buf_rvs-line.obj-type + string (buf_rvs-line.obj-code) + {&new-line} +
-                    "Товар: " + string (buf_goods.gds-code) + " - " + buf_goods.gds-name
-                    .
-              for each bf-wst_doc-line no-lock
-                where ( bf-wst_doc-line.obj-type         = buf_doc-line.obj-type
-                        and bf-wst_doc-line.obj-code     = buf_doc-line.obj-code
-                        and bf-wst_doc-line.prod-type    = buf_doc-line.prod-type
-                        and bf-wst_doc-line.prod-code    = buf_doc-line.prod-code
-                        and bf-wst_doc-line.artic        = buf_doc-line.artic
-                        and bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh}
-                        and bf-wst_doc-line.status_      = {&fact}
-                        and bf-wst_doc-line.fact-order   > varfact-order-prev-inv
-                        and (not can-find (first buf_sale-doc
-                                           where buf_sale-doc.doc-code = bf-wst_doc-line.doc-code
-                                             and buf_sale-doc.doc-kind = {&sale-add2-in-tech-refuell}))
-                      )
-                      or
-                      ( bf-wst_doc-line.obj-type         = buf_doc-line.obj-type
-                        and bf-wst_doc-line.obj-code     = buf_doc-line.obj-code
-                        and bf-wst_doc-line.prod-type    = buf_doc-line.prod-type
-                        and bf-wst_doc-line.prod-code    = buf_doc-line.prod-code
-                        and bf-wst_doc-line.artic        = buf_doc-line.artic
-                        and bf-wst_doc-line.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
-                        and bf-wst_doc-line.status_      = {&fact}
-                        and bf-wst_doc-line.fact-order   > varfact-order-prev-inv
-                      )
-              on error undo block_cre-inv, retry block_cre-inv
-              :
-                find first bf-wst_doc-pl no-lock
-                  where bf-wst_doc-pl.obj-type = bf-wst_doc-line.obj-type
-                    and bf-wst_doc-pl.obj-code = bf-wst_doc-line.obj-code
-                    and bf-wst_doc-pl.pl-code  = buf_rvs-line.pl-code
-                    and bf-wst_doc-pl.out-code = bf-wst_doc-line.doc-code
-                    and bf-wst_doc-pl.gds-code = buf_rvs-line.gds-code
-                  no-error.
-                if available bf-wst_doc-pl then do:
-                  assign
-                    WST-base = WST-base + (if bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} then bf-wst_doc-pl.fact-qnty else - bf-wst_doc-pl.fact-qnty)
-                    WST-cli  = WST-cli + (if bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} then bf-wst_doc-pl.cli-fact-qnty else - bf-wst_doc-pl.cli-fact-qnty )
-                  .
-                end.
-                if  bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} 
-                then do:
-                  
-                  InfoSecsObj = new InfoSectionsTotal ().
-                  
-                  find first ub.place no-lock where ub.place.pl-code = buf_rvs-line.pl-code 
-                    and ub.place.obj-code = buf_rvs-line.obj-code and ub.place.obj-type = buf_rvs-line.obj-type no-error.
-                  
-                  def var listSecLoc as char no-undo.
-                   
-                  if available (ub.place)
+                  if  bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} 
                   then do:
                     
-                    InfoSecsObj:Initialization(bf-wst_doc-line.doc-code, buf_goods.gds-code).
-                    InfoSecsObj:GetDBAllAttr().
-                    InfoSecsObj:CalculateTotal().
-                    listSecLoc = InfoSecsObj:GetInfoSectionProp(ub.place.loc1).
-                    if listSecLoc <> ""
+                    InfoSecsObj = new InfoSectionsTotal ().
+                    
+                    find first ub.place no-lock where ub.place.pl-code = buf_rvs-line.pl-code 
+                      and ub.place.obj-code = buf_rvs-line.obj-code and ub.place.obj-type = buf_rvs-line.obj-type no-error.
+                    
+                    def var listSecLoc as char no-undo.
+                     
+                    if available (ub.place)
                     then do:
-                      do ii = 1 to num-entries (listSecLoc, {&delim-par}):
-                        InfoSecsObj:GetInfoSectionProp(integer (entry (ii, listSecLoc, {&delim-par} ))).
-                        logger:StrLogPut =
-                              "Номер ПН: " + bf-wst_doc-line.doc-code + {&new-line} +
-                              "Место хранения:" + string (ub.place.pl-code) + " - " + ub.place.pl-name + {&new-line} +
-                              "Потери при сливе в резервуар: " + string (InfoSecsObj:InfoSectionCurr:TPNormPL) + {&new-line} +
-                              "Потери при сливе из АЦ: " + string (InfoSecsObj:InfoSectionCurr:TPNormAuto) + {&new-line} +
-                              "Сумма технолог. потерь: " + string (InfoSecsObj:InfoSectionCurr:TPNorm) + {&new-line}
-                              .
-                        v-normal-tp = v-normal-tp + InfoSecsObj:InfoSectionCurr:TPNorm.
-                        v-normal-tp-auto = v-normal-tp-auto + round (InfoSecsObj:InfoSectionCurr:TPNormAuto, 0).
-                        v-normal-tp-pl = v-normal-tp-pl + round (InfoSecsObj:InfoSectionCurr:TPNormPL, 0).
+                      
+                      InfoSecsObj:Initialization(bf-wst_doc-line.doc-code, buf_goods.gds-code).
+                      InfoSecsObj:GetDBAllAttr().
+                      InfoSecsObj:CalculateTotal().
+                      listSecLoc = InfoSecsObj:GetInfoSectionProp(ub.place.loc1).
+                      if listSecLoc <> ""
+                      then do:
+                        do ii = 1 to num-entries (listSecLoc, {&delim-par}):
+                          InfoSecsObj:GetInfoSectionProp(integer (entry (ii, listSecLoc, {&delim-par} ))).
+                          logger:StrLogPut =
+                                "Номер ПН: " + bf-wst_doc-line.doc-code + {&new-line} +
+                                "Место хранения:" + string (ub.place.pl-code) + " - " + ub.place.pl-name + {&new-line} +
+                                "Потери при сливе в резервуар: " + string (InfoSecsObj:InfoSectionCurr:TPNormPL) + {&new-line} +
+                                "Потери при сливе из АЦ: " + string (InfoSecsObj:InfoSectionCurr:TPNormAuto) + {&new-line} +
+                                "Сумма технолог. потерь: " + string (InfoSecsObj:InfoSectionCurr:TPNorm) + {&new-line}
+                                .
+                          v-normal-tp = v-normal-tp + InfoSecsObj:InfoSectionCurr:TPNorm.
+                          v-normal-tp-auto = v-normal-tp-auto + round (InfoSecsObj:InfoSectionCurr:TPNormAuto, 0).
+                          v-normal-tp-pl = v-normal-tp-pl + round (InfoSecsObj:InfoSectionCurr:TPNormPL, 0).
+                        end.
                       end.
                     end.
-                    
                   end.
                 end.
                 
+                if oNormWast:IsDecommissioned
+                then do:
+                  oNormWast:CalcWastNorm().
+                  logger:StrLogPut =
+                        "Норма естественной убыли хранения " + string (oNormWast:NormWastDays)
+                      .
+                end.
                 
+              end.
+              else do: 
+                for each bf-wst_doc-line no-lock
+                  where ( bf-wst_doc-line.obj-type         = buf_doc-line.obj-type
+                          and bf-wst_doc-line.obj-code     = buf_doc-line.obj-code
+                          and bf-wst_doc-line.prod-type    = buf_doc-line.prod-type
+                          and bf-wst_doc-line.prod-code    = buf_doc-line.prod-code
+                          and bf-wst_doc-line.artic        = buf_doc-line.artic
+                          and bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh}
+                          and bf-wst_doc-line.status_      = {&fact}
+                          and bf-wst_doc-line.fact-order   > varfact-order-prev-inv
+                          and (not can-find (first buf_sale-doc
+                                             where buf_sale-doc.doc-code = bf-wst_doc-line.doc-code
+                                               and buf_sale-doc.doc-kind = {&sale-add2-in-tech-refuell}))
+                        )
+                        or
+                        ( bf-wst_doc-line.obj-type         = buf_doc-line.obj-type
+                          and bf-wst_doc-line.obj-code     = buf_doc-line.obj-code
+                          and bf-wst_doc-line.prod-type    = buf_doc-line.prod-type
+                          and bf-wst_doc-line.prod-code    = buf_doc-line.prod-code
+                          and bf-wst_doc-line.artic        = buf_doc-line.artic
+                          and bf-wst_doc-line.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
+                          and bf-wst_doc-line.status_      = {&fact}
+                          and bf-wst_doc-line.fact-order   > varfact-order-prev-inv
+                        )
+                on error undo block_cre-inv, retry block_cre-inv
+                :
+                  find first bf-wst_doc-pl no-lock
+                    where bf-wst_doc-pl.obj-type = bf-wst_doc-line.obj-type
+                      and bf-wst_doc-pl.obj-code = bf-wst_doc-line.obj-code
+                      and bf-wst_doc-pl.pl-code  = buf_rvs-line.pl-code
+                      and bf-wst_doc-pl.out-code = bf-wst_doc-line.doc-code
+                      and bf-wst_doc-pl.gds-code = buf_rvs-line.gds-code
+                    no-error.
+                  if available bf-wst_doc-pl then do:
+                    assign
+                      WST-base = WST-base + (if bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} then bf-wst_doc-pl.fact-qnty else - bf-wst_doc-pl.fact-qnty)
+                      WST-cli  = WST-cli + (if bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} then bf-wst_doc-pl.cli-fact-qnty else - bf-wst_doc-pl.cli-fact-qnty )
+                    .
+                  end.
+
+                  
+                  
+                end.
               end.
 
               assign
@@ -856,35 +879,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 v-normal-wastage-dens = WST-cli / WST-base
               .
             end.
-            
-            
-            
-            
-            case ptrlprop-algrvspt :
-              when 3 then do:
-                
-                for each buf_rvs-doc_wast where 
-                        buf_rvs-doc_wast.obj-type = buf_rvs-line.obj-type 
-                    and buf_rvs-doc_wast.obj-code = buf_rvs-line.obj-code
-                    and buf_rvs-doc_wast.fact-order >  varfact-order-prev-inv
-                :
-                  for each buf_rvs-line_wast where buf_rvs-line_wast.rvs-code = buf_rvs-doc_wast.rvs-code
-                      and buf_rvs-line_wast.obj-type = buf_rvs-line.obj-type
-                      and buf_rvs-line_wast.obj-code = buf_rvs-line.obj-code
-                      and buf_rvs-line_wast.pl-code = buf_rvs-line.pl-code
-                  :
-/*                    find first buf_rvs-line_wast where                            */
-/*                          buf_rvs-line_wast.obj-type = buf_rvs-line.obj-type      */
-/*                      and buf_rvs-line_wast.obj-code = buf_rvs-line.obj-code      */
-/*                      buf_rvs-line_wast.rvs-prev-code = buf_rvs-line_wast.rvs-code*/
-                    
-                    
-                  end.
-                  
-                end.
-              end.
-            end case.
-            
 
             if ptrlprop-expptrl = {&calc-petrol-weight} then do:
               /* работаем относительно килограммов */
@@ -1087,7 +1081,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               end.
               else do: /*недостача*/
                 dMPT = v-normal-tp.
-                dMPOT = dMHREY + dMPT.
+                dMPOT = oNormWast:NormWastDays + dMPT.
                 MPOT = MKN - MFO - dMMBd.
                 if absolute (dM) <= dMMBd + dMPOT
                 then do:
@@ -1113,9 +1107,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             rvsinvsubObj:MeteringErr = dMMBd.
             if rvsinvsubObj:Diff < 0
             then do:
-              rvsinvsubObj:NormalWastage = dMHREY.
               rvsinvsubObj:TPNormalAuto = v-normal-tp-auto.
               rvsinvsubObj:TPNormalPl = v-normal-tp-pl.
+              rvsinvsubObj:NormalWastage = oNormWast:NormWastDays.
             end.
             else do:
               rvsinvsubObj:NormalWastage = 0.
@@ -1141,7 +1135,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   "Сумма по ПН технол. потерь в резервуаре: " + string (v-normal-tp-pl) + {&new-line} +
                   "Сумма по ПН технол. потерь при сливе из АЦ: " + string (v-normal-tp-auto) + {&new-line} +
                   "Общая сумма по ПН технол. потерь dMPT: " + string (v-normal-tp) + {&new-line} +
-                  "Общая сумма ест. убыли при хр. dMHREY : " + string (dMHREY) + {&new-line} +
+                  "Общая сумма ест. убыли при хр. dMHREY : " + string (oNormWast:NormWastDays) + {&new-line} +
                   "Небаланс |dM|: " + string (absolute (dM)) + {&new-line} +
                   "Недостача MNED : " + string (absolute (MNED)) + {&new-line} +
                   "Излишки MI : " + string (absolute (MI)) + {&new-line} +
