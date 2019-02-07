@@ -31,6 +31,7 @@ define input parameter p-recid  as recid     no-undo.
 define input parameter p-type as character no-undo .
 
 define variable v-num as character no-undo. /* рецептура № */
+define variable v-orgname as character no-undo . /* огранизация */
 define variable v-name as character no-undo. /* название */
 define variable v-weight as character no-undo. /* выход */
 define variable v-ps as character no-undo. /* технология приготовления */
@@ -55,8 +56,9 @@ define variable v-show-t2 as logical no-undo. /* показывать таблицу с белками, ж
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get " " parparentproc }
 
-&glob format-num "->>>,>>>,>>9.99"
+&glob format-num "->>>,>>>,>>9.999"
 &glob format-pc "->>9.99"
+&glob format-pc3 "->>9.999"
 
 define temp-table tt-line no-undo
     field gds-name as character /** название */
@@ -88,9 +90,20 @@ end.
 procedure prepare-info:   
     define variable v-type as character no-undo.
     define variable v-val as character no-undo.
-    
+    define variable v-host-code as integer no-undo .
+
     find first ub.recipe no-lock where recid(ub.recipe) = p-recid.
-    
+/* в рецепте оба значения не определены;
+   для взятия наименования своей организкции будем использовать текущие obj-type и obj-code из контекста
+      ub.recipe.obj-type
+      ub.recipe.obj-code
+*/      
+    { gbl/hostname.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      v-host-code
+      v-orgname
+    }    
     find first ub.goods no-lock
         where ub.goods.artic = ub.recipe.artic
         and ub.goods.prod-type = ub.recipe.prod-type
@@ -101,7 +114,7 @@ procedure prepare-info:
         v-ps = ub.recipe.recipe-technique
         v-num = ub.recipe.recipe-ref-num
         v-name = ub.recipe.recipe-name
-        v-weight = string(ub.recipe.portion-weight, "->>>,>>9.99") + " кг"
+        v-weight = string(ub.recipe.portion-weight, {&format-num}) + " кг"
     .
 
     run gds-attr-value(
@@ -208,6 +221,7 @@ procedure write-data:
     
     hw:insert-attribute ("name", v-name).
     hw:insert-attribute ("num", v-num).
+    hw:insert-attribute ("org", v-orgname).
     hw:insert-attribute ("ps", v-ps).
     hw:insert-attribute ("ps1", v-ps1).
     hw:insert-attribute ("weight", v-weight).
@@ -224,8 +238,8 @@ procedure write-data:
         hw:insert-attribute ("unit", tt-line.gds-unit).
         hw:insert-attribute ("brutto", string(tt-line.brutto, {&format-num})).
         hw:insert-attribute ("netto", string(tt-line.netto, {&format-num})).
-        hw:insert-attribute ("netto-1", string(tt-line.netto-1, {&format-num})).
-        hw:insert-attribute ("waste-pc", string(tt-line.waste-pc, {&format-pc})).
+        hw:insert-attribute ("netto-1",  if tt-line.netto-1 = ? then "" else string(tt-line.netto-1, {&format-num}) ).
+        hw:insert-attribute ("waste-pc", string(tt-line.waste-pc, {&format-pc3})).
         hw:insert-attribute ("final-weight", string(tt-line.final-weight, {&format-num})).
         hw:end-element ("line").
     end.    
