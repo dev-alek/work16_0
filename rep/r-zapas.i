@@ -499,10 +499,6 @@ procedure display-line :
                             '</TR>'skip    
                             .  
                         end.
-                      run new-tmp-page .
-                        num#str# = num#str# + 1.
-                        num#col# = 1.
-                    
                     end.  /*   if tPrintRubl   */
                     else do :
                       if v-photo then do:
@@ -544,10 +540,10 @@ procedure display-line :
                             '</TR>'skip    
                             .  
                         end.
-                      run new-tmp-page .
-                        num#str# = num#str# + 1.
-                        num#col# = 1.
                     end.
+                    run new-tmp-page .
+                    num#str# = num#str# + 1.
+                    num#col# = 1.
                   end.     /*  if PayType = 2    */
                   else do :
                     if v-photo then do:
@@ -646,16 +642,16 @@ procedure print-header :
                 '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
                 '   </style>' skip
                 '  </head>' skip
+        '<body>' skip
+        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+        '<thead>' skip
+        '<TR class="set_columns">'skip
             .
             
  /*определяем кол-во колонок*/
  if not Parts-Det then do :
     if v-photo then do:
     put stream OutStr-html unformatted
-        '<body>' skip
-        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
-        '<thead>' skip
-        '<TR class="set_columns">'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 200px;"></TD>'skip
@@ -708,10 +704,10 @@ procedure print-header :
             '<TR>'skip
                 '<TD colspan="12">Цены указаны в ' + x-base-type + '</TD>'skip
             '</TR>'skip    
-            '</thead>' skip
             .
      end. 
      put stream OutStr-html unformatted
+            '</thead>' skip
         '<tbody>'
         '<TR>'skip
             '<TH style="text-align: center;">Код</TH>'skip
@@ -732,10 +728,6 @@ procedure print-header :
     end.
     else do:   
     put stream OutStr-html unformatted
-        '<body>' skip
-        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
-        '<thead>' skip
-        '<TR class="set_columns">'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 200px;"></TD>'skip
@@ -788,10 +780,10 @@ procedure print-header :
             '<TR>'skip
                 '<TD colspan="11">Цены указаны в ' + x-base-type + '</TD>'skip
             '</TR>'skip    
-            '</thead>' skip
             .
      end. 
      put stream OutStr-html unformatted
+            '</thead>' skip
         '<tbody>'
         '<TR>'skip
             '<TH style="text-align: center;">Код</TH>'skip
@@ -813,10 +805,6 @@ procedure print-header :
     else do :
       if v-photo then do:
           put stream OutStr-html unformatted
-        '<body>' skip
-        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
-        '<thead>' skip
-        '<TR class="set_columns">'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 200px;"></TD>'skip
@@ -870,10 +858,10 @@ procedure print-header :
             '<TR>'skip
                 '<TD colspan="13">Цены указаны в ' + x-base-type + '</TD>'skip
             '</TR>'skip 
-            '</thead>'skip   
             .
      end. 
          put stream OutStr-html unformatted
+            '</thead>'skip   
         '<tbody>'
         '<TR>'skip
             '<TH style="text-align: center;">Код</TH>'skip
@@ -894,10 +882,6 @@ procedure print-header :
       end.
       else do:  
           put stream OutStr-html unformatted
-        '<body>' skip
-        '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
-        '<thead>' skip
-        '<TR class="set_columns">'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 100px;"></TD>'skip
             '<TD style="width: 200px;"></TD>'skip
@@ -950,10 +934,10 @@ procedure print-header :
             '<TR>'skip
                 '<TD colspan="12">Цены указаны в ' + x-base-type + '</TD>'skip
             '</TR>'skip 
-            '</thead>'skip   
             .
      end. 
          put stream OutStr-html unformatted
+            '</thead>'skip   
         '<tbody>'
         '<TR>'skip
             '<TH style="text-align: center;">Код</TH>'skip

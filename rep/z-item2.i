@@ -21,11 +21,10 @@ Creation date: 03/03/06
       gds-zap-artic      = {4}.artic
       gds-zap-grp-name   = {4}.grp-name
       gds-zap-b-code     = {4}.gds-code
-      gds-zap-prod-name  = b-clients.obj-name .
-  if g#gds-engl then
-      assign gds-zap-gds-name = {4}.engl-name.
-  else
-      assign gds-zap-gds-name = {4}.gds-name.
+      gds-zap-prod-name  = b-clients.obj-name
+      gds-zap-gds-name   = if g#gds-engl then {4}.engl-name else {4}.gds-name
+  .
+  
       gds-zap-gds-long-name = substring(
                 (if {4}.engl-name <> ? then trim({4}.engl-name) else "" ) +
                 (if {4}.label-name <> ? then trim({4}.label-name) else "" ),1,120 ) .

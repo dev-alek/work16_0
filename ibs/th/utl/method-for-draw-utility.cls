@@ -131,6 +131,39 @@ define temp-table tt-icnt-line like ub.icnt-line .
 {utl/imp-parts.i }
 {utl/imp-parts-ptrl.i }
 
+/* выгружаемая таблица по товарам. Сравнение остатков. Скопирована из v.15.0 exp-rest.p */
+define temp-table tt-stk-gd no-undo
+  field gds-name      as character /* переставлена на первую позицию, чтобы соответствовать формату лог-файла */
+  field gds-code      as integer
+  field fact-qnty     as decimal /* количество в 15 */
+  field sum-rubl-cost as decimal /* сумма в учетных ценах в 15 */
+  field vat-rubl      as decimal /* сумма НДС в учетных ценах в 15 */
+  field sum-rubl-crsa as decimal /* сумма в продажных ценах в 15 */
+  /* index pi is primary gds-code - для импорта переопределён на поле gds-code16 */
+.
+define temp-table tt-stk-gd2 no-undo like tt-stk-gd
+  field gds-code16      as integer
+  field fact-qnty16     as decimal /* количество в 16 */
+  field sum-rubl-cost16 as decimal /* сумма в учетных ценах в 16 */
+  field vat-rubl16      as decimal /* сумма НДС в учетных ценах в 16 */
+  field sum-rubl-crsa16 as decimal /* сумма в продажных ценах в 16 */
+  index pi is primary gds-code16
+.
+
+/* выгружаемая таблица по топливу. Сравнение остатков. Скопирована из v.15.0 exp-rest.p */
+define temp-table tt-stk-fu no-undo
+  field gds-name      as character /* переставлена на первую позицию, чтобы соответствовать формату лог-файла */
+  field gds-code      as integer
+  field fact-qnty-lt  as decimal /* остатки в лт в 15 */
+  field fact-qnty-kg  as decimal /* остатки в кг в 15 */
+  /* index pi is primary gds-code - для импорта переопределён на поле gds-code16 */
+.
+define temp-table tt-stk-fu2 no-undo like tt-stk-fu
+  field gds-code16      as integer
+  field fact-qnty-lt16  as decimal /* остатки в лт в 16 */
+  field fact-qnty-kg16  as decimal /* остатки в кг в 16 */
+  index pi is primary gds-code16
+.
 
 { utl/tt301.i    }
 
@@ -1355,15 +1388,16 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   define variable v-out-file as character no-undo .
   
   case p-file :
-    when "schem-temp.json"      then v-out-file = "schem.json" .
-    when "pumpdoc-temp.json"    then v-out-file = "pumpdoc.json" .
-    when "cashdesk-temp.json"   then v-out-file = "cashdesk.json" .
-    when "price-temp.json"      then v-out-file = "price.json" .
-    when "rest-temp.json"       then v-out-file = "rest.json" .
-    when "rest-ptrl-temp.json"  then v-out-file = "rest-ptrl.json" .
-    when "rvs-temp.json"        then v-out-file = "rvs.json" .
-    when "cashp-temp.json"      then v-out-file = "cashp.json" .
-    when "user-temp.json"       then v-out-file = "user.json" .
+    when "schem-temp.json"       then v-out-file = "schem.json" .
+    when "pumpdoc-temp.json"     then v-out-file = "pumpdoc.json" .
+    when "cashdesk-temp.json"    then v-out-file = "cashdesk.json" .
+    when "price-temp.json"       then v-out-file = "price.json" .
+    when "rest-temp.json"        then v-out-file = "rest.json" .
+    when "rest-ptrl-temp.json"   then v-out-file = "rest-ptrl.json" .
+    when "verify-rest-temp.json" then v-out-file = "verify-rest.json" .
+    when "rvs-temp.json"         then v-out-file = "rvs.json" .
+    when "cashp-temp.json"       then v-out-file = "cashp.json" .
+    when "user-temp.json"        then v-out-file = "user.json" .
   end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
@@ -1371,7 +1405,7 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   repeat:
     vline2 = vline.
     import stream lsIN unformatted vline.
-    vLine = replace(vline, chr(4), "|") .
+    vLine = replace(vline, {&delim-par}, "|") .
     if vline2 = vline and length(vline2) < 3 then leave.
     put stream lsOUT unformatted  vline skip .
   end.
@@ -1381,8 +1415,8 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   mJsonObj = cast(mParser:ParseFile(search(v-out-file)), JsonObject) no-error.
   if error-status:error
   then do:
-     put-log("Данные не получены или получены данные не правильного формату.").
-     return error "Данные не получены или получены данные не правильного формату.".
+     put-log("Данные не получены либо содержат ошибку в формате.").
+     return error "Данные не получены либо содержат ошибку в формате.".
   end.
 end method.
 
@@ -1579,8 +1613,6 @@ method public logical load_rest (iaddr as character,
   empty temp-table tt-imp-parts.
   
   parse-json(input temp-table tt-imp-parts:default-buffer-handle, input "tt-imp-parts") .
-  
-  
 
   put-log ( string(now) +  "   Начинаем загрузку остатков...") .
   
@@ -1592,15 +1624,6 @@ method public logical load_rest (iaddr as character,
                        , input table tt-imp-parts
                        ) .
 
-// ?? Журналировать каждую загруженную строку ??
-//        put stream log-stream unformatted
-//          "Код в 15.0 " string(tt-gds-price.gds-code) " .Код в 16.0 " string(tt-gds-mapping.gds-code16)
-//          " . Цена: " string(tt-gds-price.price) skip .
-                         
-//  &scop my-message substitute("Всего прочитано &1 записей. Из них отвергнуто &2", v-count-all, v-count-err )
-//  {&display-message}.
-
-  
   vok = yes.
   finally:
      vok = chek_rest() and vok.
@@ -1661,6 +1684,269 @@ method public logical load_rest_ptrl (iaddr as character,
      return vok.
   end finally.
 end method .
+
+method public logical verify_rest (ifile-path as character):
+    return verify_rest(mAddr,ifile-path).
+end  method.
+method public logical verify_rest (iAddr as character, ifile-path as character) :
+define variable vcmd as character no-undo.
+define variable vok  as logical no-undo.
+define variable v-count-confirm   as integer no-undo .
+define variable v-count-decline   as integer no-undo .
+define variable v-count-mismatch  as integer no-undo .
+define variable v-logfile-gd      as character no-undo .
+define variable v-logfile-fu      as character no-undo .
+define variable v-logfile-rj      as character no-undo .
+define variable v-err-message     as character no-undo .
+define variable v-today           as date no-undo .
+define variable v-fact-qnty16     as decimal no-undo .
+define variable v-sum-rubl-cost16 as decimal no-undo .
+define variable v-vat-rubl16      as decimal no-undo .
+define variable v-sum-rubl-crsa16 as decimal no-undo .
+define variable v-fact-qnty-lt16  as decimal no-undo .
+define variable v-fact-qnty-kg16  as decimal no-undo .
+define buffer buf_pl-gds    for ub.pl-gds .
+define buffer buf_stk-line  for ub.stk-line .
+define buffer buf_goods     for ub.goods .
+
+  /* 02/II-2019  Расчет архивов надо принудительно запустить при сверке и на 15 и 16 версиях. */
+  put-log(string (now) + "   Расчет архивов перед сравнением остатков...").
+  define variable v-date-start as date no-undo .
+  define variable v-date-end   as date no-undo .
+  define variable v-archive-ok as logical no-undo .
+  define variable v-comment    as character no-undo .
+  define variable v-can-print  as logical no-undo .
+  assign
+    v-date-start = v-today
+    v-date-end   = v-today
+  .
+  run rep/chk-ahz.p
+  (input Obj-type /* p-obj-type          */
+  ,input Obj-code /* p-obj-code          */
+  ,input false      /* p-verify-detail     */
+  ,input false      /* p-verify-arh        */
+  ,input false      /* p-verify-ahsp       */
+  ,input true       /* p-verify-aht        */
+  ,input false      /* true           p-check-act         */
+  ,input 0          /* v-cntxt-db-num p-check-act-db-num  */
+  ,input ""         /* v-cntxt-userid p-check-act-user-id */
+  ,input-output v-date-start /* p-date-start        */
+  ,input-output v-date-end   /* p-date-end          */
+  ,output       v-archive-ok      /* p-archive-ok        */
+  ,output       v-comment         /* p-comment           */
+  ,output       v-can-print       /* p-can-print         */
+  ) .
+  
+
+  put-log(string (now) + "   Отправляем запрос для сравнения остатков...").
+  vcmd = substitute ("&1 &2/THGetInfo?VerifyRest >&3", search ("exe/curl.exe"), iaddr, "verify-rest-temp.json").
+  os-command silent value (vcmd).
+
+  put-log(string (now) + "   Разбираем полученные данные...").
+  fix-codepage_and_SetJsonObj(input "verify-rest-temp.json") .
+  
+  empty temp-table tt-stk-gd .
+  parse-json(input temp-table tt-stk-gd:default-buffer-handle, input "tt-stk-gd") .
+
+  empty temp-table tt-stk-fu .
+  parse-json(input temp-table tt-stk-fu:default-buffer-handle, input "tt-stk-fu") .
+
+  load_gds_maping(ifile-path).
+
+  /* лог-файлы:
+    - в логе тиражной утилиты только старт-стоп, количество загруженных, количество отвергнутых;
+    - в директории logDir файлы с данными из 15-й и 16-й версиях отдельно по товарам и топливу;
+    - если по товарам есть расхождение, то вывести эти товары дополнительно в отдельный файл;
+  */
+  assign
+    v-logfile-gd = substitute("&1darw_util_verified_good.log", ibs.th.gbl.gbl-inipar:logDir)
+    v-logfile-fu = substitute("&1darw_util_verified_fuel.log", ibs.th.gbl.gbl-inipar:logDir)
+    v-logfile-rj = substitute("&1darw_util_rest_mismatch.log", ibs.th.gbl.gbl-inipar:logDir)
+    v-count-confirm   = 0
+    v-count-decline   = 0
+    v-today           = today
+  .
+  put-log(string( now) + "   Начинаем сравнение остатков...") .
+
+  /* ----- топливо ----- */
+  empty temp-table tt-stk-fu2 .
+  for each tt-stk-fu:
+    find first tt-gds-mapping where tt-gds-mapping.gds-code15 = tt-stk-fu.gds-code no-error .
+    if not available tt-gds-mapping then do :
+      v-count-decline = v-count-decline + 1 .
+      v-err-message = substitute("В файле соответствия отсутствует топливо &1", tt-stk-fu.gds-code) .
+      put-log(v-err-message).
+      /* undo, return error v-err-message . 29/I-2019 - переходим к следующему товару */
+      next .
+    end.
+    assign
+      v-fact-qnty-lt16 = 0
+      v-fact-qnty-kg16 = 0
+    .
+    /* скопировано из v.15.0 exp-rest.p */
+    for each buf_pl-gds no-lock
+       where buf_pl-gds.gds-code = tt-gds-mapping.gds-code16
+         and buf_pl-gds.obj-type = Obj-type
+         and buf_pl-gds.obj-code = Obj-code :
+      assign
+        v-fact-qnty-lt16 = v-fact-qnty-lt16 + buf_pl-gds.fact-qnty
+        v-fact-qnty-kg16 = v-fact-qnty-kg16 + buf_pl-gds.cli-fact-qnty
+      .
+    end .
+
+    find first tt-stk-fu2 where tt-stk-fu2.gds-code16 = tt-gds-mapping.gds-code16 no-error .
+    if available tt-stk-fu2 then do :
+      assign
+        tt-stk-fu2.fact-qnty-lt16 = tt-stk-fu2.fact-qnty-lt16 + v-fact-qnty-lt16
+        tt-stk-fu2.fact-qnty-kg16 = tt-stk-fu2.fact-qnty-kg16 + v-fact-qnty-kg16
+        v-count-confirm = v-count-confirm + 1
+      no-error .
+    end .
+    else do :
+      create tt-stk-fu2 .
+      buffer-copy tt-stk-fu to tt-stk-fu2 assign
+        tt-stk-fu2.gds-code16     = tt-gds-mapping.gds-code16
+        tt-stk-fu2.fact-qnty-lt16 = v-fact-qnty-lt16
+        tt-stk-fu2.fact-qnty-kg16 = v-fact-qnty-kg16
+        v-count-confirm = v-count-confirm + 1
+      no-error .
+    end .
+
+  end . /* end_of for_each топливо */
+
+  /* ----- нетопливо ----- */
+  empty temp-table tt-stk-gd2 .
+  for each tt-stk-gd:
+    find first tt-gds-mapping where tt-gds-mapping.gds-code15 = tt-stk-gd.gds-code no-error .
+    if not available tt-gds-mapping then do :
+      v-count-decline = v-count-decline + 1 .
+      v-err-message = substitute("В файле соответствия отсутствует товар &1", tt-stk-gd.gds-code) .
+      put-log(v-err-message).
+      /* undo, return error v-err-message . 29/I-2019 - переходим к следующему товару */
+      next .
+    end.
+    find first buf_goods no-lock where buf_goods.gds-code = tt-gds-mapping.gds-code16 no-error .
+    if not available buf_goods then do :
+      v-count-decline = v-count-decline + 1 .
+      v-err-message = substitute( "В справочнике товаров отсутствует товар &1. Код в v15.0 - &2"
+                                , tt-gds-mapping.gds-code16, tt-gds-mapping.gds-code15 ) .
+      put-log(v-err-message).
+      /* undo, return error v-err-message . 29/I-2019 - переходим к следующему товару */
+      next .
+    end.
+    assign
+      v-fact-qnty16     = 0
+      v-sum-rubl-cost16 = 0
+      v-vat-rubl16      = 0
+      v-sum-rubl-crsa16 = 0
+    .
+
+    /* скопировано из v.15.0 exp-rest.p */
+    find last buf_stk-line no-lock
+        where buf_stk-line.obj-type   = Obj-type
+          and buf_stk-line.obj-code   = Obj-code
+          and buf_stk-line.artic      = buf_goods.artic
+          and buf_stk-line.prod-type  = buf_goods.prod-type
+          and buf_stk-line.prod-code  = buf_goods.prod-code
+          and buf_stk-line.sum-type   = {&arh-cost}    /* 'cost':U учетная цена */
+          and buf_stk-line.cat-id     = {&root-cat-id} /* '##,##':U */
+          and buf_stk-line.fact-date <= v-today
+    use-index category no-error.
+    if available buf_stk-line then assign
+      v-fact-qnty16     = buf_stk-line.fact-qnty
+      v-sum-rubl-cost16 = buf_stk-line.sum-rubl
+      v-vat-rubl16      = buf_stk-line.VAT-rubl
+    .
+    find last buf_stk-line no-lock
+        where buf_stk-line.obj-type   = Obj-type
+          and buf_stk-line.obj-code   = Obj-code
+          and buf_stk-line.artic      = buf_goods.artic
+          and buf_stk-line.prod-type  = buf_goods.prod-type
+          and buf_stk-line.prod-code  = buf_goods.prod-code
+          and buf_stk-line.sum-type   = {&arh-crsa}    /* 'crsa':U продажная цена */
+          and buf_stk-line.cat-id     = {&root-cat-id} /* '##,##':U */
+          and buf_stk-line.fact-date <= v-today
+    use-index category no-error.
+    if available buf_stk-line then assign
+      /* считаем, что stk-line.fact-qnty для cost и для crsa совпадают */
+      v-fact-qnty16     = buf_stk-line.fact-qnty when v-fact-qnty16 = 0
+      v-sum-rubl-crsa16 = buf_stk-line.sum-rubl
+    .
+
+    find first tt-stk-gd2 where tt-stk-gd2.gds-code16 = tt-gds-mapping.gds-code16 no-error .
+    if available tt-stk-gd2 then do :
+      assign
+        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16
+        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16
+        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16
+        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16
+        v-count-confirm = v-count-confirm + 1
+      no-error .
+    end .
+    else do :
+      create tt-stk-gd2 .
+      buffer-copy tt-stk-gd to tt-stk-gd2 assign
+        tt-stk-gd2.gds-code16      = tt-gds-mapping.gds-code16
+        tt-stk-gd2.fact-qnty16     = v-fact-qnty16
+        tt-stk-gd2.sum-rubl-cost16 = v-sum-rubl-cost16
+        tt-stk-gd2.vat-rubl16      = v-vat-rubl16
+        tt-stk-gd2.sum-rubl-crsa16 = v-sum-rubl-crsa16
+        v-count-confirm = v-count-confirm + 1
+      no-error .
+    end .
+    
+  end . /* end_of for_each нетопливо */
+
+
+  v-count-mismatch = 0 .
+  output STREAM lsOut to value(v-logfile-rj).
+  output STREAM lsIN  to value(v-logfile-gd).
+  for each tt-stk-gd2:
+    export stream lsIN  tt-stk-gd2 .
+    if (tt-stk-gd2.fact-qnty16     <> tt-stk-gd2.fact-qnty)
+    or (tt-stk-gd2.sum-rubl-cost16 <> tt-stk-gd2.sum-rubl-cost)
+    or (tt-stk-gd2.vat-rubl16      <> tt-stk-gd2.vat-rubl)
+    or (tt-stk-gd2.sum-rubl-crsa16 <> tt-stk-gd2.sum-rubl-crsa)
+    then do :
+    export stream lsOut tt-stk-gd2 .
+    v-count-mismatch = v-count-mismatch + 1 .
+    end .
+  end.
+  output STREAM lsIN close.
+
+  output STREAM lsIN to value(v-logfile-fu).
+  for each tt-stk-fu2:
+    export stream lsIN  tt-stk-fu2 .
+    if (tt-stk-fu2.fact-qnty-lt16 <> tt-stk-fu2.fact-qnty-lt)
+    or (tt-stk-fu2.fact-qnty-kg16 <> tt-stk-fu2.fact-qnty-kg)
+    then do :
+    export stream lsOut tt-stk-fu2 .
+    v-count-mismatch = v-count-mismatch + 1 .
+    end .
+  end.
+
+  vok = yes.
+  finally:
+     output STREAM lsIN close.
+     output STREAM lsOUT close.
+
+     if vok then do :
+       put-log( string(now) + "   Сравнение остатков выполнено." ) .
+       put-log(    substitute("   Всего в сравнении &1 записей о товарах и о топливе,", v-count-confirm + v-count-decline) ) .
+       put-log(    substitute("   из них для &1 записей найдены товары для сравнения в вер.16.0, а для &2 записей товары для сравнения в вер.16.0 отсутствуют.",
+                              v-count-confirm, v-count-decline) ) .
+       put-log(    substitute("   При сравнении остатков выявлено &1 расхождений среди &2 товаров, найденных для сравнения в вер.16.", v-count-mismatch, v-count-confirm) ) .
+       put-log(    substitute("   Файл со сравнением товаров: &1",                  v-logfile-gd)     ) .
+       put-log(    substitute("   Файл со сравнением топлива: &1",                  v-logfile-fu)     ) .
+       put-log(    substitute("   Файл с расхождениями: &1",                        v-logfile-rj)     ) .
+     end .
+     else
+       put-log( string(now) + "   Сравнение остатков не выполнено!") .
+
+     put-log("").
+     return vok.
+  end finally.
+end method . /* end_of verify_rest */
 
 method public logical sendcode(icode as integer ):
    run utl/sendcode.p(this-object,icode,?).
