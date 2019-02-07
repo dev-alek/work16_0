@@ -35,6 +35,7 @@ define variable vss-description as character no-undo init "Библиотека процедур п
 { ref/chdcclim.i }
 { str/getcshft.i libchkvl_ }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 
 { str/pos_context.i dis-card-mask libchkvl_ }
 

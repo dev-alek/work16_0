@@ -49,6 +49,7 @@ define variable vss-description as character no-undo init "Импорт/изменение клие
 { cmp/trg-def.i }
 { cmp/library.i }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 { cmp/getmcode.i ub }
 { ref/extclass.i }
 { gbl/key-rec.i }

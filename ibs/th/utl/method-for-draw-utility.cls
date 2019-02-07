@@ -93,6 +93,11 @@ define temp-table tt-rvs-line-pump like rvs-line-pump
     field loc1 as character 
     field Findex as logical
     index pi FINdex.
+define temp-table tt-cash-passwd
+  field staff-code as integer   // like staff.staff-code
+  field password   as character // like staff.password
+.
+
 
 define temp-table tt-gds-mapping
   field gds-code15 as integer
@@ -1198,6 +1203,7 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
     when "rest-temp.json"       then v-out-file = "rest.json" .
     when "rest-ptrl-temp.json"  then v-out-file = "rest-ptrl.json" .
     when "rvs-temp.json"        then v-out-file = "rvs.json" .
+    when "cashp-temp.json"      then v-out-file = "cashp.json" .
   end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
@@ -1911,5 +1917,60 @@ end method.
 
     end method.
    
- 
+method public logical chek_cash_passwd():
+    define variable v-has-records as logical no-undo.
+    v-has-records = can-find (first ub.staff where ub.staff.role     = {&role-cashier}
+                                               and ub.staff.password <> "").
+    return v-has-records .
+end method.
+
+method public logical load_cash_passwd ( ) :
+  load_cash_passwd(mAddr).
+end method. 
+method public logical load_cash_passwd (iaddr as character) :
+  define variable vcmd as character no-undo.
+  define variable vOk as logical no-undo.
+  vcmd = substitute ("&1 &2/THGetInfo?GetCashp >&3", search ("exe/curl.exe"), iaddr, "cashp-temp.json").
+  os-command silent value (vcmd).
+  fix-codepage_and_SetJsonObj (input "cashp-temp.json") .
+  
+  empty temp-table tt-cash-passwd.
+  parse-json(input temp-table tt-cash-passwd:default-buffer-handle, input "tt-cash-passwd") .
+
+  put-log ( string(now) +  "   Начинаем загрузку паролей кассиров...") .
+  define buffer buf_staff for ub.staff .
+  for each tt-cash-passwd :
+    for first buf_staff no-lock
+        where buf_staff.role       = {&role-cashier}
+          and buf_staff.staff-code = tt-cash-passwd.staff-code :
+      find current buf_staff exclusive-lock no-error no-wait .
+      if available buf_staff then do :
+         buf_staff.password = tt-cash-passwd.password no-error .
+         if error-status:error then
+           put-log(substitute ("  Отвергнуто (код, пароль) &1 &2 - &3"
+                             , tt-cash-passwd.staff-code, tt-cash-passwd.password, error-status:get-message(1))).
+         else
+           put-log(substitute ("  Загружено (код, пароль) &1 &2"
+                             , tt-cash-passwd.staff-code, tt-cash-passwd.password)).
+      end .
+      else if locked buf_staff then do :
+           put-log(substitute ("  Отвергнуто (код, пароль) &1 &2 - запись занята другим пользователем"
+                             , tt-cash-passwd.staff-code, tt-cash-passwd.password)).
+      end .
+      else do :
+           put-log(substitute ("  Отвергнуто (код, пароль) &1 &2 - запись отсутствует в v.16"
+                             , tt-cash-passwd.staff-code, tt-cash-passwd.password)).
+      end .
+      leave.
+    end .
+  end .
+  vok = yes.
+  
+  finally:
+     put-log( string( now) + if  vok then "   Пароли кассиров загружены" else "   Пароли кассиров не загружены!") .
+     put-log("").
+     return vok.
+  end finally.
+end method .
+
 end class.

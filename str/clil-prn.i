@@ -39,8 +39,8 @@ FOR EACH {1} No-LOCK
         ub.person.psn-code = {1}.obj-code No-ERROR.
     if avail person then do:
       assign
-      for-cashier = gbclcode-is-psn-role({&role-cashier}, ub.person.psn-code, ?)
-      for-seller = gbclcode-is-psn-role( {&role-seller}, ub.person.psn-code, ?)
+      for-cashier = gbclcode-is-psn-role({&role-cashier}, ub.person.psn-code, v-today)
+      for-seller  = gbclcode-is-psn-role( {&role-seller}, ub.person.psn-code, v-today)
       .
     end.
     else

@@ -22,6 +22,7 @@ Creation date: 05/19/06
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 
 PROCEDURE request-proc-save-staff :
 DEFINE INPUT PARAMETER p-child-handle AS HANDLE NO-UNDO.

@@ -128,7 +128,7 @@ DEFINE VARIABLE ii as integer no-undo.
 DEFINE VARIABLE v-codes as character no-undo .
 DEFINE VARIABLE v-labels as character no-undo .
 DEFINE VARIABLE v-options as character no-undo .
-
+define variable v-today as date no-undo .
 
 DEFINE VARIABLE t-1 AS CHARACTER INITIAL "||||"
      VIEW-AS EDITOR
@@ -145,7 +145,7 @@ DEFINE FRAME top-frame
  DEFINE FRAME Cli
    with width {&DOS_CW_2} down stream-io use-text NO-BOX.
 
-
+v-today = today .
 CASE pReportOption:
   when "excel":U then do:
     /*устанока параметра в Excel*/

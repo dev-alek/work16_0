@@ -36,6 +36,7 @@ define variable vss-description as character no-undo init "Заполнение временной 
 { cmp/trg-def.i }
 { gbl/clntattr.i }
 { gbl/gbclcode.i }
+{ gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 { gbl/key-rec.i }
 { gbl/thbjattr.i }
 { ref/extclass.i }
