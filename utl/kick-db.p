@@ -53,6 +53,7 @@ end.
    
 
 define variable v-today as date      no-undo.
+define variable v-time  as integer   no-undo.
 define variable glog as logical no-undo .
 define variable v-cntxt-db-num         like ub.sys-ctrl.db-num   no-undo. /*текущая БД*/
 define variable v-cntxt-userid         as   character            no-undo. /*текущий пользователь*/
@@ -146,7 +147,10 @@ assign
 
 run waitfram-show in this-procedure ("Инициализация курсов валют").
 
-v-today = today.
+  run cur-time in this-procedure ( output v-today
+                                 , output v-time
+                                 ).
+
 find buf_curr-accnt where buf_curr-accnt.curr-code = 0 no-error.
 if not available buf_curr-accnt then do:
   create buf_curr-accnt.
@@ -228,13 +232,13 @@ if p-sys-key <> "raimbek":U then do:
   run cre-tax-rate in this-procedure (1, 2, "НДС 2").
   run cre-tax-rate in this-procedure (1, 3, "НДС 3").
 
-  run cre-tax-rate-value in this-procedure (1, 1, 18).
-  run cre-tax-rate-value in this-procedure (1, 2, 10).
-  run cre-tax-rate-value in this-procedure (1, 3, 0).
+  run cre-tax-rate-value in this-procedure (1, 1, 20, v-today, v-time).
+  run cre-tax-rate-value in this-procedure (1, 2, 10, v-today, v-time).
+  run cre-tax-rate-value in this-procedure (1, 3, 0,  v-today, v-time).
 end.
 
 run cre-tax-rate in this-procedure (2, 22, "НП 22").
-run cre-tax-rate-value in this-procedure (2, 22, 0).
+run cre-tax-rate-value in this-procedure (2, 22, 0, v-today, v-time).
 
 run waitfram-show in this-procedure ("Заполнение налогов на группу товаров").
 run add-tax-gds-grp in this-procedure  no-error .
@@ -626,14 +630,12 @@ procedure cre-tax-rate-value:
 def input param taxcode   like DICTDB.tax.tax-code              no-undo.
 def input param ratecode  like DICTDB.tax-rate.rate-code        no-undo.
 def input param ratevalue like DICTDB.tax-rate-value.rate-value no-undo.
+def input param p-today   as date no-undo .
+def input param p-time    as integer no-undo .
 DEFINE VARIABLE var-day-end-fact-order as decimal no-undo .
-define variable v-time  as integer   no-undo.
 define buffer buf_tax-rate-value    for DICTDB.tax-rate-value .
 
-  run cur-time in this-procedure ( output v-today
-                                 , output v-time
-                                 ).
-  run factord-end-day in this-procedure (input v-today, output var-day-end-fact-order).
+  run factord-end-day in this-procedure (input p-today, output var-day-end-fact-order).
 
   find LAST  buf_tax-rate-value where
              buf_tax-rate-value.rate-code   = ratecode  AND
@@ -650,14 +652,14 @@ define buffer buf_tax-rate-value    for DICTDB.tax-rate-value .
       buf_tax-rate-value.tax-code = taxcode
       buf_tax-rate-value.rate-code = ratecode
       buf_tax-rate-value.rate-value = ratevalue
-      buf_tax-rate-value.fact-date = v-today
+      buf_tax-rate-value.fact-date  = p-today
       buf_tax-rate-value.fact-order = var-day-end-fact-order
       buf_tax-rate-value.status_ = {&current-status}
       buf_tax-rate-value.host-code = 0
       buf_tax-rate-value.obj-type = "":U
       buf_tax-rate-value.obj-code = 0
-      buf_tax-rate-value.corr-date = v-today
-      buf_tax-rate-value.corr-time = v-time
+      buf_tax-rate-value.corr-date = p-today
+      buf_tax-rate-value.corr-time = p-time
       buf_tax-rate-value.corr-user-db-num = v-cntxt-db-num
       buf_tax-rate-value.corr-user-name = v-cntxt-userid
       .
