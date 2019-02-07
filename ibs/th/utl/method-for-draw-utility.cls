@@ -2404,16 +2404,32 @@ method public logical load_cash_passwd (iaddr as character) :
   put-log ( string(now) +  "   Ќачинаем загрузку паролей кассиров...") .
   define buffer buf_staff for ub.staff .
   for each tt-cash-passwd :
-    for first buf_staff no-lock
-        where buf_staff.role       = {&role-cashier}
-          and buf_staff.staff-code = tt-cash-passwd.staff-code :
+    find first buf_staff no-lock
+        where buf_staff.staff-code = tt-cash-passwd.staff-code no-error.
+    if not available buf_staff 
+    then do:
+       v-count-decline = v-count-decline + 1 .
+       put stream lsOUT unformatted
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись отсутствует в вер.16"
+                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+           skip.
+    end.
+    else if buf_staff.role ne {&role-cashier}
+    then do:
+       v-count-decline = v-count-decline + 1 .
+       put stream lsOUT unformatted
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - пользователь не €вл€етс€ кассиром в вер.16"
+                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+           skip.
+    end.
+    else do:          
       find current buf_staff exclusive-lock no-error no-wait .
       if available buf_staff then do :
          buf_staff.password = tt-cash-passwd.password no-error .
          if error-status:error then do :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
-             substitute ("  ќтвергнуто (код, пароль) &1 &2 - &3"
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - &3 в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password, error-status:get-message(1))
            skip.
          end .
@@ -2428,20 +2444,21 @@ method public logical load_cash_passwd (iaddr as character) :
       else if locked buf_staff then do :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
-             substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись зан€та другим пользователем"
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись кассира зан€та другим пользователем в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password)
            skip.
       end .
       else do :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
-             substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись отсутствует в v.16"
+             substitute ("  ќтвергнуто (код, пароль) &1 &2 - запись кассира кто-то уже удалил в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password)
            skip.
       end .
-      leave.
+      
     end .
   end .
+  
   vok = yes.
   
   finally:
