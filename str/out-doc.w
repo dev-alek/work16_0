@@ -2710,6 +2710,9 @@ n-p:
 do while parnext-prev :
 main-block:
 do on error   undo main-block, leave main-block :
+assign 
+   {&browse-name}:column-resizable in frame {&frame-name} = true.  
+  
 if available t-doc then do:
   find ub.sysconf where ub.sysconf.host-code = t-doc.host-code no-lock.
 end.

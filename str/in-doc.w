@@ -2487,6 +2487,9 @@ n-p:
 do while parnext-prev :
 main-block:
 do on error undo main-block, leave main-block :
+
+   assign 
+       {&browse-name}:column-resizable in frame {&frame-name} = true.
    if pardoc-mode = {&add-copy}
     then
     assign
