@@ -62,10 +62,17 @@ define temp-table tt-pl-pump-nozzle like ub.pl-pump-nozzle .
 define temp-table tt-pl-level       like ub.pl-level .
 define temp-table tt-pl-gds         like ub.pl-gds .
 define temp-table tt-pl-gds-pump    like ub.pl-gds-pump .
-define temp-table tt-cash-desk like ub.cash-desk .
+define temp-table tt-cash-desk      like ub.cash-desk .
 define temp-table tt-cash-desk-attr like ub.cash-desk-attr
   field attr-value as character 
 .
+
+define temp-table tt-user-account     like ub.user-account .
+define temp-table tt-user-login       like ub.user-login .
+define temp-table tt-user-obj         like ub.user-obj .
+define temp-table tt-user-host        like ub.user-host .
+define temp-table tt-user-menu-group  like ub.user-menu-group .
+
 define temp-table tt-rvs-doc          like ub.rvs-doc 
     field Findex as logical
     index pi FINdex.
@@ -117,6 +124,7 @@ define temp-table tt-place-loc
   index pi as primary unique
     pl-code
 .
+
 
 define temp-table tt-icnt-doc like ub.icnt-doc .
 define temp-table tt-icnt-line like ub.icnt-line .
@@ -1186,10 +1194,161 @@ method public void  load_price (iAddr as character,ifile-path as character ):
   /*else do :
     message "Несоответсвий при загрузке цен нет!" view-as alert-box .
   end.*/
-  
-  
-  
 end method .
+
+method public logical chek_user():
+    define variable v-has-records as logical no-undo.
+    v-has-records = can-find (first ub.user-login where ub.user-login.user-login <> "адм" and ub.user-login.user-login <> "sysadm"  ).
+    
+    return v-has-records .
+end method.
+
+method public logical load_user ( ) :
+  load_user(mAddr).
+end method.
+ 
+method public void load_user(iAddr as character ) :
+  define variable v-rid as recid no-undo .
+  define variable vcmd  as character no-undo.
+  define variable vFlag as logical no-undo.
+  define variable v-user-id as character  no-undo .
+  empty temp-table tt-user-account.
+  empty temp-table tt-user-login.
+  empty temp-table tt-user-host.
+  empty temp-table tt-user-obj.
+  empty temp-table tt-user-menu-group.
+  
+  define buffer buf_user-login for ub.user-login .
+  define buffer buf_user-host for ub.user-host .
+  define buffer buf_user-obj  for ub.user-obj .
+  define buffer buf_user-menu-group for ub.user-menu-group .
+  define buffer buf_user-account  for ub.user-account .
+  define buffer buf_tt-user-login for tt-user-login .
+  define buffer bf_tt-user-login for tt-user-login .
+  
+  put-log(string (now) + "   Отправляем запрос для получения пользователей...").
+  
+  vcmd = substitute ("&1 &2/THGetInfo?GetUser >&3", search ("exe/curl.exe"), iAddr, "user-temp.json").
+  os-command silent value (vcmd).
+  put-log(string (now) + "   Разбираем полученные данные...").
+  
+  fix-codepage_and_SetJsonObj (input "user-temp.json") .
+  
+  
+  parse-json(input temp-table tt-user-account:default-buffer-handle, input "user-account") .
+  parse-json(input temp-table tt-user-login:default-buffer-handle, input "user-login") .
+  parse-json(input temp-table tt-user-host:default-buffer-handle, input "user-host") .
+  parse-json(input temp-table tt-user-obj:default-buffer-handle, input "user-obj") .
+  parse-json(input temp-table tt-user-menu-group:default-buffer-handle, input "user-menu-group") .
+  
+  /* Delete all objects created by this procedure to avoid memory leaks */
+  
+  put-log( string(now) + "   Начинаем загрузку пользователей...") .
+  
+  user_:
+  for each tt-user-account where tt-user-account.status_ = {&bef-user-status-normal} exclusive-lock,
+    first buf_tt-user-login where buf_tt-user-login.user-id = tt-user-account.user-id and buf_tt-user-login.db-num = v-cntxt-db-num :
+
+    put-log(  "Пользователь " + string(tt-user-account.user-id) ).
+
+    find first buf_user-account exclusive-lock where buf_user-account.first-name = tt-user-account.first-name 
+      and buf_user-account.last-name = tt-user-account.last-name and buf_user-account.second-name = tt-user-account.second-name no-error .
+    if available (buf_user-account) then 
+    do:
+      next user_ .
+    end.  
+
+    for each tt-user-login no-lock where tt-user-login.user-id = tt-user-account.user-id and tt-user-login.status_ = {&bef-user-status-normal} and tt-user-login.db-num = v-cntxt-db-num:
+      find first bf_tt-user-login where bf_tt-user-login.user-id = tt-user-login.user-id and bf_tt-user-login.user-login = "адм" no-error .
+      if available (bf_tt-user-login) then 
+      do:
+        next user_ .
+      end.
+      else 
+      do:  
+      run str/usracc01.p (
+      input {&add-def}
+      , input v-cntxt-db-num /*Номер БД, в которой создается пользователь*/
+      , input "":U
+      , input tt-user-account.last-name
+      , input tt-user-account.first-name
+      , input tt-user-account.second-name
+      , input tt-user-account.nik
+      , input tt-user-account.phone-number
+      , input tt-user-account.mobile-phone-number
+      , input tt-user-account.company
+      , input tt-user-account.department
+      , input tt-user-account.position
+      , input tt-user-account.room
+      , input tt-user-account.e-mail
+      , input tt-user-account.internal-phone-number
+      , input tt-user-account.PS
+      , input tt-user-account.psn-code
+      , output v-user-id
+      ) no-error.
+    if error-status :error
+      then 
+    do:
+      put-Log(return-value).
+    end.
+    
+        create buf_user-login .
+        buffer-copy tt-user-login except tt-user-login.user-id to buf_user-login .
+        assign
+          buf_user-login.user-id = v-user-id
+          .
+      end.        
+    end.  
+
+    for each tt-user-host no-lock where tt-user-host.user-id = tt-user-account.user-id and tt-user-host.db-num = v-cntxt-db-num:
+      create buf_user-host .
+      assign
+        buf_user-host.user-id         = v-user-id
+        buf_user-host.host-code       = v-host-code
+        buf_user-host.db-num          = tt-user-host.db-num
+        buf_user-host.whole-send-news = tt-user-host.whole-send-news
+        .      
+    end.  
+
+    for each tt-user-obj no-lock where tt-user-obj.user-id = tt-user-account.user-id and tt-user-obj.db-num = v-cntxt-db-num:
+      create buf_user-obj .
+      assign
+        buf_user-obj.user-id         = v-user-id
+        buf_user-obj.db-num          = tt-user-obj.db-num
+        buf_user-obj.obj-type        = v-cntxt-obj-type
+        buf_user-obj.obj-code        = v-cntxt-obj-code
+        buf_user-obj.host-code       = v-host-code
+        buf_user-obj.whole-send-news = tt-user-obj.whole-send-news
+        .
+    end.  
+
+    for each tt-user-menu-group no-lock where tt-user-menu-group.user-id = tt-user-account.user-id and tt-user-menu-group.db-num = v-cntxt-db-num,
+      first ub.menu-group where ub.menu-group.menu-group-id = tt-user-menu-group.menu-group-id and ub.menu-group.menu-code = tt-user-menu-group.menu-code:
+      create buf_user-menu-group .
+      assign
+        buf_user-menu-group.db-num  = v-cntxt-db-num
+        buf_user-menu-group.menu-code  = ub.menu-group.menu-code
+        buf_user-menu-group.menu-group-code = ub.menu-group.menu-group-code
+        buf_user-menu-group.menu-group-context  = tt-user-menu-group.menu-group-context
+        buf_user-menu-group.menu-group-id = ub.menu-group.menu-group-id
+        buf_user-menu-group.user-id   = v-user-id
+        buf_user-menu-group.host-code = v-host-code
+        buf_user-menu-group.obj-code  = v-cntxt-obj-code
+        buf_user-menu-group.obj-type  = v-cntxt-obj-type
+        buf_user-menu-group.user-menu-group-code  = next-value(s-user-menu-group)
+        . 
+    end.  
+  end.
+  
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string(now) + "   Пользователи загружены!") .
+     else
+        put-log( string(now) + "   Пользователи не загружены!") .
+  end finally.
+end method.
+
 method public void fix-codepage_and_SetJsonObj (p-file as character):
   define variable vline as char no-undo .
   define variable vline2 as char no-undo .
@@ -1204,6 +1363,7 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
     when "rest-ptrl-temp.json"  then v-out-file = "rest-ptrl.json" .
     when "rvs-temp.json"        then v-out-file = "rvs.json" .
     when "cashp-temp.json"      then v-out-file = "cashp.json" .
+    when "user-temp.json"       then v-out-file = "user.json" .
   end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
