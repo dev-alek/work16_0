@@ -259,19 +259,24 @@ end.
                                    buf_parts.prod-type = buf_doc-line.prod-type and
                                    buf_parts.prod-code = buf_doc-line.prod-code no-error .
         if AVAILABLE buf_parts then do:
-        
-        if PrintRubl = yes then temp-str.price = buf_parts.price-rubl. 
-                           else temp-str.price = buf_parts.price-base.  
+          if costprice = no or temp-str.b-qnty = 0 then temp-str.price          = temp-str.price-after  .
+          else do:
+          if PrintRubl = yes then 
+          temp-str.price = buf_parts.price-rubl. 
+          else temp-str.price = buf_parts.price-base. 
+          end.
+
         assign    
             temp-str.aa-qnty        = temp-str.a-qnty - temp-str.b-qnty
             temp-str.aa-stoim       = temp-str.aa-qnty * temp-str.price 
             temp-str.bb-stoim       = (temp-str.a-stoim - temp-str.aa-stoim) 
             temp-str.bb-price       = ABSOLUTE(temp-str.bb-stoim / temp-str.b-qnty)
-            temp-str.price = buf_parts.price-rubl
-        .    
-        end.    
 
-    end. 
+        .   
+        if temp-str.bb-price = ? then temp-str.bb-price       = 0 .
+        end.    
+        end.
+
     if rep-tipe = "invent-gold" then do:
       if is-after-cli = yes then do:
         find first buf_doc-line-sum no-lock where
@@ -387,8 +392,10 @@ end procedure. /* t-level */
   define buffer loc-gds-grp for ub.gds-grp .
 
   v-lvl-num = 0 .
-    repeat while p-lvl-num <> v-lvl-num :
-      find first loc-gds-grp where loc-gds-grp.node-code = p-upper-code no-error .
+  repeat while p-lvl-num <> v-lvl-num :
+    find first loc-gds-grp where loc-gds-grp.node-code = p-upper-code no-error .
+    if AVAILABLE (loc-gds-grp) then 
+    do:
       run grplib-get-full-name in this-procedure
         (  input loc-gds-grp.node-code
         , output p-node-name
@@ -398,6 +405,8 @@ end procedure. /* t-level */
         p-upper-code = loc-gds-grp.upper-code
       .
     end.
+    else v-lvl-num = v-lvl-num + 1 .
+  end.
 end procedure. /* n-level */
 /*-----------*/
  procedure no-classify :
