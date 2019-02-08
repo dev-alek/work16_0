@@ -319,12 +319,14 @@ class ibs.th.utl.draw_utility inherits Form:
    end method.
    
    method private void close_shift(  ):
+    
     if not checkBox20:checked
     then do:
        message "Выполните этап 3"
        view-as alert-box.
        return.
-    end.    
+    end.
+    mutil:mAddr = textbox1:Text.    
     checkBox21:checked =  mutil:chek_rvs-shift().
     if not checkBox21:checked
     then
