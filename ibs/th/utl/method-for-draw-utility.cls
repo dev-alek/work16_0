@@ -1280,7 +1280,7 @@ method public void load_user(iAddr as character ) :
   
   user_:
   for each tt-user-account where tt-user-account.status_ = {&bef-user-status-normal} exclusive-lock,
-    first buf_tt-user-login where buf_tt-user-login.user-id = tt-user-account.user-id and buf_tt-user-login.db-num = v-cntxt-db-num :
+    first buf_tt-user-login where buf_tt-user-login.user-id = tt-user-account.user-id:
 
     put-log(  "Пользователь " + string(tt-user-account.user-id) ).
 
@@ -1291,7 +1291,7 @@ method public void load_user(iAddr as character ) :
       next user_ .
     end.  
 
-    for each tt-user-login no-lock where tt-user-login.user-id = tt-user-account.user-id and tt-user-login.status_ = {&bef-user-status-normal} and tt-user-login.db-num = v-cntxt-db-num:
+    for each tt-user-login no-lock where tt-user-login.user-id = tt-user-account.user-id and tt-user-login.status_ = {&bef-user-status-normal}:
       find first bf_tt-user-login where bf_tt-user-login.user-id = tt-user-login.user-id and bf_tt-user-login.user-login = "адм" no-error .
       if available (bf_tt-user-login) then 
       do:
@@ -1326,14 +1326,15 @@ method public void load_user(iAddr as character ) :
     end.
     
         create buf_user-login .
-        buffer-copy tt-user-login except tt-user-login.user-id to buf_user-login .
+        buffer-copy tt-user-login except tt-user-login.user-id tt-user-login.db-num to buf_user-login .
         assign
           buf_user-login.user-id = v-user-id
+          buf_user-login.db-num  = v-cntxt-db-num
           .
       end.        
     end.  
 
-    for each tt-user-host no-lock where tt-user-host.user-id = tt-user-account.user-id and tt-user-host.db-num = v-cntxt-db-num:
+    for each tt-user-host no-lock where tt-user-host.user-id = tt-user-account.user-id:
       create buf_user-host .
       assign
         buf_user-host.user-id         = v-user-id
@@ -1343,7 +1344,7 @@ method public void load_user(iAddr as character ) :
         .      
     end.  
 
-    for each tt-user-obj no-lock where tt-user-obj.user-id = tt-user-account.user-id and tt-user-obj.db-num = v-cntxt-db-num:
+    for each tt-user-obj no-lock where tt-user-obj.user-id = tt-user-account.user-id:
       create buf_user-obj .
       assign
         buf_user-obj.user-id         = v-user-id
@@ -1355,7 +1356,7 @@ method public void load_user(iAddr as character ) :
         .
     end.  
 
-    for each tt-user-menu-group no-lock where tt-user-menu-group.user-id = tt-user-account.user-id and tt-user-menu-group.db-num = v-cntxt-db-num,
+    for each tt-user-menu-group no-lock where tt-user-menu-group.user-id = tt-user-account.user-id,
       first ub.menu-group where ub.menu-group.menu-group-id = tt-user-menu-group.menu-group-id and ub.menu-group.menu-code = tt-user-menu-group.menu-code:
       create buf_user-menu-group .
       assign
