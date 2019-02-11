@@ -621,7 +621,7 @@ Action-role-item
               buf_Action-role-item2.db-num = v-db-num
             .
           end .
-          /* 05/IX-2018 - временно исключить расписания из копирования
+          
           define buffer buf_schedule      for ub.schedule .
           define buffer buf_schedule-attr for ub.schedule-attr .
           define buffer buf_schedule2      for ub.schedule .
@@ -642,6 +642,7 @@ Action-role-item
               buf_schedule2.cre-db-num  = v-db-num
               buf_schedule2.db-num-char = objImp:code_ // = string(v-obj-code) = string(v-db-num) 
             .
+            if buf_schedule.task-type = "autonws" then buf_schedule2.db-num-char = "0" .
           end .
           for each buf_schedule-attr no-lock
              where buf_schedule-attr.cre-db-num = buf_sysconf.xdn-grp-code :
@@ -650,8 +651,13 @@ Action-role-item
             assign
               buf_schedule-attr2.cre-db-num = v-db-num
             .
+            if buf_schedule-attr.task-type = "autogcd"
+            then do :
+              if buf_schedule-attr.attr-code = "schedule-obj-list"
+              then buf_schedule-attr.attr-value = replace(buf_schedule-attr.attr-value, string(buf_sysconf.xdn-grp-code), objImp:code_) .
+            end.
           end .
-          */
+          
         end . // end_of if buf_sysconf.xdn-grp-code
       end .
     end . // end_of копирование прав для v-mode = &add-def
