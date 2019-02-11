@@ -73,6 +73,9 @@ define temp-table tt-user-obj         like ub.user-obj .
 define temp-table tt-user-host        like ub.user-host .
 define temp-table tt-user-menu-group  like ub.user-menu-group .
 
+define temp-table tt-schedule         like ub.schedule .
+define temp-table tt-schedule-attr    like ub.schedule-attr .
+
 define temp-table tt-rvs-doc          like ub.rvs-doc 
     field Findex as logical
     index pi FINdex.
@@ -903,6 +906,101 @@ method public logical Chek_Shem(
     end.
     return v-has-records.
 end method. 
+
+method public logical chek_schedule():
+    
+    define variable v-has-records as logical no-undo.
+    for each ub.schedule no-lock where ub.schedule.cre-db-num = v-cntxt-db-num-obj :
+      v-has-records = true .
+      leave.    
+    end.
+    if not v-has-records
+    then
+    for each ub.schedule-attr no-lock where ub.schedule-attr.cre-db-num = v-cntxt-db-num-obj :
+      v-has-records = true .
+      leave.    
+    end.
+    return  v-has-records.
+end method.
+
+method public void load_schedule ():
+  define variable v-file-sch as character no-undo .
+  define variable v-file-attr as character no-undo .
+  define variable vFlag as logical no-undo.
+  
+  define buffer buf_schedule for ub.schedule .
+  define buffer buf_schedule-attr for ub.schedule-attr .
+  
+  vFlag = no .
+  
+  empty temp-table tt-schedule .
+  empty temp-table tt-schedule-attr .
+  
+  put-log(string (now) + "   Создаем расписания для автозаданий...").
+  
+  v-file-sch = search("cmp/schedule.txt") .
+  file-info:file-name = v-file-sch .
+  if file-info:file-type = ? then do :
+    put-log("Отсутствует файл с эталонным расписанием для автозаданий schedule.txt") .
+    return error "Отсутствует файл с эталонным расписанием для автозаданий schedule.txt" .
+  end.
+  
+  v-file-attr = search("cmp/schedule-attr.txt") .
+  file-info:file-name = v-file-attr .
+  if file-info:file-type = ? then do :
+    put-log("Отсутствует файл с атрибутами для эталонного расписания автозаданий utl/schedule-attr.txt") .
+    return error "Отсутствует файл с атрибутами для эталонного расписания автозаданий utl/schedule-attr.txt" .
+  end.
+  
+  input from value(v-file-sch) .
+  repeat :
+    create tt-schedule .
+    import tt-schedule .
+  end.
+  input close .
+  
+  input from value(v-file-attr) .
+  repeat :
+    create tt-schedule-attr .
+    import tt-schedule-attr .
+  end.
+  input close .
+  
+  for each tt-schedule no-lock :
+    if tt-schedule.task-num = ? or tt-schedule.task-num <= 0 then next .
+    create buf_schedule.
+    buffer-copy tt-schedule to buf_schedule
+    assign
+      buf_schedule.cre-db-num  = v-cntxt-db-num-obj
+      buf_schedule.db-num-char = string(v-cntxt-db-num-obj) // = string(v-obj-code) = string(v-db-num) 
+    .
+    if buf_schedule.task-type = "autonws" then buf_schedule.db-num-char = "0" .
+  end.
+  
+  for each tt-schedule-attr no-lock :
+    if tt-schedule-attr.task-num = ? or tt-schedule-attr.task-num <= 0 then next .
+    create buf_schedule-attr.
+    buffer-copy tt-schedule-attr to buf_schedule-attr
+    assign
+      buf_schedule-attr.cre-db-num = v-cntxt-db-num-obj
+    .
+    if buf_schedule-attr.task-type = "autogcd"
+    and buf_schedule-attr.attr-code = "schedule-obj-list"
+    then do :
+      buf_schedule-attr.attr-value = replace(buf_schedule-attr.attr-value, string(tt-schedule-attr.cre-db-num), string(v-cntxt-db-num-obj)) .
+    end.
+  end.
+  
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string(now) + "   Расписания для автозаданий созданы!") .
+     else
+        put-log( string(now) + "   Расписания для автозаданий не созданы!") .
+  end finally.
+  
+end. 
+
 method public logical chek_cash_desk():
     
     define variable v-has-records as logical no-undo.

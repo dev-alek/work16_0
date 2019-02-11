@@ -565,6 +565,7 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
     /* 28/VIII-2018 Если номер БД для начальных настроек больше нуля,
                     то после создания нового объекта и новой БД копируем с заданной БД расписание и права. */
     define buffer buf_sysconf for ub.sysconf . 
+    /* Права и расписания копировать не нужно. Расписания создаются в тиражной утилите.
     if v-mode = {&add-def} then do :
       /* 28/VIII-2018 При загрузке нового объекта смотрим его фирму, смотрим начальные настройки.
                       Название параметра «Номер БД для копирования прав и расписания при импорте из 1С».
@@ -661,7 +662,7 @@ Action-role-item
         end . // end_of if buf_sysconf.xdn-grp-code
       end .
     end . // end_of копирование прав для v-mode = &add-def
-    
+    */
     /* 19/X-2018 При создании объекта выставлять следующие настройки: */
     define variable v-param-type as character no-undo .
     define variable v-value-character as character no-undo .

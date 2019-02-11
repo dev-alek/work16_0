@@ -1,0 +1,1 @@
+"autofree" 4 0 "schd-free-idrvs-auto" "Автоматическое создание сверокstr/rvs-auto.pyesyesnono" 1
