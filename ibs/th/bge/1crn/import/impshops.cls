@@ -640,7 +640,7 @@ Action-role-item
             buffer-copy buf_schedule to buf_schedule2
             assign
               buf_schedule2.cre-db-num  = v-db-num
-              buf_schedule2.db-num-char = objImp:code_ // = string(v-obj-code) = string(v-db-num) 
+              buf_schedule2.db-num-char = string(v-db-num) // = string(v-obj-code) = string(v-db-num) 
             .
             if buf_schedule.task-type = "autonws" then buf_schedule2.db-num-char = "0" .
           end .
@@ -654,7 +654,7 @@ Action-role-item
             if buf_schedule-attr.task-type = "autogcd"
             then do :
               if buf_schedule-attr.attr-code = "schedule-obj-list"
-              then buf_schedule-attr.attr-value = replace(buf_schedule-attr.attr-value, string(buf_sysconf.xdn-grp-code), objImp:code_) .
+              then buf_schedule-attr2.attr-value = replace(buf_schedule-attr.attr-value, string(buf_sysconf.xdn-grp-code), string(v-db-num)) .
             end.
           end .
           
