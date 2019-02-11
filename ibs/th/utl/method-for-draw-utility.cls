@@ -1339,7 +1339,7 @@ method public void load_user(iAddr as character ) :
       assign
         buf_user-host.user-id         = v-user-id
         buf_user-host.host-code       = v-host-code
-        buf_user-host.db-num          = tt-user-host.db-num
+        buf_user-host.db-num          = v-cntxt-db-num
         buf_user-host.whole-send-news = tt-user-host.whole-send-news
         .      
     end.  
@@ -1348,7 +1348,7 @@ method public void load_user(iAddr as character ) :
       create buf_user-obj .
       assign
         buf_user-obj.user-id         = v-user-id
-        buf_user-obj.db-num          = tt-user-obj.db-num
+        buf_user-obj.db-num          = v-cntxt-db-num
         buf_user-obj.obj-type        = v-cntxt-obj-type
         buf_user-obj.obj-code        = v-cntxt-obj-code
         buf_user-obj.host-code       = v-host-code
