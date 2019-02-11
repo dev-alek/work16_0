@@ -330,25 +330,7 @@ BREAK
 By ub.cash-desk.pos-type
 with frame a :
   IF FIRST-OF(ub.cash-desk.pos-type) then do:
-    if ub.cash-desk.pos-type <> dflt-cd
-    and lookup(ub.cash-desk.pos-type, {&cd-type-codes-for-dflt}) > 0
-    then do:
-      run write-log-and-file in p-log-handle (
-            input 1
-          , input log-file-name
-          , input 1
-          , input substitute("!!!¬нимание! ¬ &1&2 существует включенна€ касса типа &3,&5хот€ магазин настроен дл€ работы с типом &4.&5!!!ѕоследстви€ могут быть непредсказуемыми!!!"
-                            , p-obj-type
-                            , p-obj-code
-                            , ub.cash-desk.pos-type
-                            , dflt-cd
-                            , {&new-line}
-                              )).
-      assign
-      v-view-log = yes
-      .
-    end.
-    assign
+    
     v-index = index(p-other, ub.cash-desk.pos-type + '=').
     if v-index > 0 then do:
       /*извлечем спец команду*/
