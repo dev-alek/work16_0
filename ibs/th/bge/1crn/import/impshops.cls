@@ -565,6 +565,7 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
     /* 28/VIII-2018 Если номер БД для начальных настроек больше нуля,
                     то после создания нового объекта и новой БД копируем с заданной БД расписание и права. */
     define buffer buf_sysconf for ub.sysconf . 
+    /* Права и расписания копировать не нужно. Расписания создаются в тиражной утилите.
     if v-mode = {&add-def} then do :
       /* 28/VIII-2018 При загрузке нового объекта смотрим его фирму, смотрим начальные настройки.
                       Название параметра «Номер БД для копирования прав и расписания при импорте из 1С».
@@ -621,7 +622,7 @@ Action-role-item
               buf_Action-role-item2.db-num = v-db-num
             .
           end .
-          /* 05/IX-2018 - временно исключить расписания из копирования
+          
           define buffer buf_schedule      for ub.schedule .
           define buffer buf_schedule-attr for ub.schedule-attr .
           define buffer buf_schedule2      for ub.schedule .
@@ -640,8 +641,9 @@ Action-role-item
             buffer-copy buf_schedule to buf_schedule2
             assign
               buf_schedule2.cre-db-num  = v-db-num
-              buf_schedule2.db-num-char = objImp:code_ // = string(v-obj-code) = string(v-db-num) 
+              buf_schedule2.db-num-char = string(v-db-num) // = string(v-obj-code) = string(v-db-num) 
             .
+            if buf_schedule.task-type = "autonws" then buf_schedule2.db-num-char = "0" .
           end .
           for each buf_schedule-attr no-lock
              where buf_schedule-attr.cre-db-num = buf_sysconf.xdn-grp-code :
@@ -650,12 +652,17 @@ Action-role-item
             assign
               buf_schedule-attr2.cre-db-num = v-db-num
             .
+            if buf_schedule-attr.task-type = "autogcd"
+            then do :
+              if buf_schedule-attr.attr-code = "schedule-obj-list"
+              then buf_schedule-attr2.attr-value = replace(buf_schedule-attr.attr-value, string(buf_sysconf.xdn-grp-code), string(v-db-num)) .
+            end.
           end .
-          */
+          
         end . // end_of if buf_sysconf.xdn-grp-code
       end .
     end . // end_of копирование прав для v-mode = &add-def
-    
+    */
     /* 19/X-2018 При создании объекта выставлять следующие настройки: */
     define variable v-param-type as character no-undo .
     define variable v-value-character as character no-undo .

@@ -148,7 +148,7 @@ if ufo-passwd > "" then do:
   os-command silent value(ufo-passwd) value(cash-cash.psswd) > value(v-shadow-fname) .
   input stream finp from value(v-shadow-fname) .
   repeat:
-    set stream finp ufo-enc20.
+    import stream finp unformatted ufo-enc20 no-error.
     enc-passwd = enc-passwd + ufo-enc20.
   end.
   input stream finp close.

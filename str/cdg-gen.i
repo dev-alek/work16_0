@@ -22,24 +22,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 define variable dflt-cd{&vssseq} as character no-undo .
 { gbl/dflt-cd.i ~{&shop~} {&cd-buffer}.obj-code dflt-cd{&vssseq} no-error }
-if {&cd-buffer}.pos-type <> dflt-cd{&vssseq}
-and lookup({&cd-buffer}.pos-type, {&cd-type-codes-for-dflt}) > 0
-then do:
-  run write-log-and-file in p-log-handle (
-        input 1
-      , input log-file-name
-      , input 1
-      , input substitute("!!!Внимание! В &1&2 существует включенная касса типа &3,&5хотя магазин настроен для работы с типом &4.&5!!!Последствия могут быть непредсказуемыми!!!"
-                        , {&shop}
-                        , {&cd-buffer}.obj-code
-                        , {&cd-buffer}.pos-type
-                        , dflt-cd{&vssseq}
-                        , {&new-line}
-                          )).
-  assign
-  v-view-log = yes
-  .
-end.
 
 case {&cd-buffer}.pos-type:
 &if "{&cdt-IBM-XML}" = "yes"  or "{&cdt-MAGIA-XML}" = "yes" or "{&cdt-infokiosk}" = "yes" or "{&cdt-autotank}" = "yes"  &then
