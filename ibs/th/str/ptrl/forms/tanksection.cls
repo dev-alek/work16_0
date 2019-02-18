@@ -411,9 +411,52 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       
     end.
 
+    if infoSecsObj:RdcDnstvalue = "not"
+    then do:
+      groupBox7:Visible = false.
+      
+      
+      groupBox6:Visible = false.
+      
+      maskedTextBoxTankTemp:Visible = false.
+      maskedTextBoxTankVolPomi:Visible = false.
+      maskedTextBoxTankDensityPomi:Visible = false.
+      maskedTextBoxAccWeight:Visible = false.
+      label23:Visible = false.
+      label22:Visible = false.
+      label24:Visible = false.
+      
+      groupBox4:Location = groupBox7:Location.
+      groupBox5:Location = new System.Drawing.Point(10, 470).
+      buttonCalcWeight:Visible = false.
+      label20:Visible = false.      
+
+    
+    end.
+
+    if infoSecsObj:RdcDnstvalue = "manual"
+    then do:
+      //groupBox7:Visible = false.
+      maskedTextBoxTankVolPomi:Enabled = true.
+      maskedTextBoxTankDensityPomi:Enabled = true.
+      maskedTextBoxTankDensityPomi:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_1_4).
+      groupBox6:Visible = false.
+      
+      maskedTextBoxAccWeight:Visible = false.
+      
+      label24:Visible = false.
+      
+      //groupBox4:Location = groupBox7:Location.
+    
+    end.
+
     if infoSecsObj:Mode = "опнялнрп"
       then 
     do:
+      
+      maskedTextBoxTankVolPomi:Enabled = false.
+      maskedTextBoxTankDensityPomi:Enabled = false.
+      
       do ii = 1 to extent (maskedTextBoxArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
         this-object:maskedTextBoxArr[ii]:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
@@ -450,31 +493,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       groupBox6:Visible = false.
       groupBox7:Visible = false.
     end.
-
-    if infoSecsObj:RdcDnstvalue = "not"
-    then do:
-      groupBox7:Visible = false.
-      
-      
-      groupBox6:Visible = false.
-      
-      maskedTextBoxTankTemp:Visible = false.
-      maskedTextBoxTankVolPomi:Visible = false.
-      maskedTextBoxTankDensityPomi:Visible = false.
-      maskedTextBoxAccWeight:Visible = false.
-      label23:Visible = false.
-      label22:Visible = false.
-      label24:Visible = false.
-      
-      groupBox4:Location = groupBox7:Location.
-      groupBox5:Location = new System.Drawing.Point(10, 470).
-      buttonCalcWeight:Visible = false.
-      label20:Visible = false.      
-      label23:Visible = false.
-      label23:Visible = false.
-    
-    end.
-
     
     if (infoSecsObj:Mode = "днаюбкемхе" or infoSecsObj:Mode = "хглемемхе") and not infoSecsObj:FlagTrn
     then do:
