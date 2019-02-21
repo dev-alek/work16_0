@@ -726,7 +726,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
   end.
   end.
   /*проверка на заполнение обязательных атрибутов в накладной*/
-  if v-attr-PN <> "" then do:
+  if v-attr-PN <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
       v-error-attr = "" .
       for each buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code and buf_doc-attr.attr-value = "" and lookup (buf_doc-attr.attr-code, v-attr-PN) > 0:
         v-error-attr = v-error-attr + ", " + buf_doc-attr.attr-code .
@@ -898,6 +898,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         varcontract   = yes and
         vartechproliv = no
         and not is-fuel = "yes"
+        and not bf_trn-doc.doc-code matches "*=*" 
       then do:
         if is-fin = "yes":u
         then do:

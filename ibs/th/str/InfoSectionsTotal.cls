@@ -1570,6 +1570,10 @@ class ibs.th.str.InfoSectionsTotal:
             undo, return no-apply  .
           end.
       end.
+      when "manual" then do:
+        InfoSectionCurr:TankWeight = InfoSectionCurr:TankDensityPomi * InfoSectionCurr:TankVolPomi . 
+      end.
+      
       
     end case.
     
