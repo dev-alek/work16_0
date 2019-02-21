@@ -479,6 +479,21 @@ define buffer same-gds-prt  for ub.gds-prt.
         end.
       end.
       else do:
+        /* 21/II-2019 проверка исключена по просьбе Сибинтек:
+          
+Согласно высланной инструкции добавили баркод для adblue под номером 13,
+но т.к. код для сопутствующих товаров код  должен содержать минимум 5 символов,
+пакет от ERP с этим изменением выдал ошибку при распаковке и остановил обмен на заправочных станциях.
+
+Есть ли возможность изменить ограничение по символам для сопутствующих товаров в ТБД,
+чтобы пакет корректно распаковался?
+          
+        if length(p-b-str) < 6 then do:
+          v-mess =  "ДопБк должен быть длиннее 5 разрядов.".
+          run err-mess in this-procedure ( input-output v-mess).
+          undo, return error (if p-silent then v-mess else '').
+        end.
+        */
         if can-find( first buf_code-range no-lock
           where buf_code-range.range-type  = {&gbl-ss-code}
             and buf_code-range.db-num      = g#db-num
@@ -493,11 +508,6 @@ define buffer same-gds-prt  for ub.gds-prt.
                               "и бар-кода с дополнительной ед. изм. типа ДРОБНАЯ"
                               ,p-b-str
                               , {&new-line}).
-          run err-mess in this-procedure ( input-output v-mess).
-          undo, return error (if p-silent then v-mess else '').
-        end.
-        if length(p-b-str) < 6 then do:
-          v-mess =  "ДопБк должен быть длиннее 5 разрядов.".
           run err-mess in this-procedure ( input-output v-mess).
           undo, return error (if p-silent then v-mess else '').
         end.
@@ -548,7 +558,7 @@ define buffer same-gds-prt  for ub.gds-prt.
         undo, return error (if p-silent then v-mess else '').
       end.
       /* проверяем, что топливный код - единственный */
-     /*
+     /* 21/II-2019 проверка уже была закомментирована
       find first buf2_prod-bc no-lock
         where buf2_prod-bc.b-code = p-b-code
           and buf2_prod-bc.b-str <> p-b-str no-error.
