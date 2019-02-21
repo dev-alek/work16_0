@@ -984,8 +984,8 @@ define buffer buf_place     for ub.place.
     END.
     ELSE DO :
       ASSIGN
-        v-mm:H                      = integer( tt-rvs-line.state-level-total) * 10
-        v-mm:H_water                = integer( tt-rvs-line.state-level-water) * 10
+        v-mm:H                      = integer(round( tt-rvs-line.state-level-total, 1) * 10)
+        v-mm:H_water                = integer(round( tt-rvs-line.state-level-water, 1) * 10)
         v-mm:CalibrationTable       = CalibTable
         v-mm:Tr                     = tt-rvs-line.state-temperature
         v-mm:R                      = ( tt-rvs-line.izmer-density * 1000 )
@@ -1001,34 +1001,30 @@ define buffer buf_place     for ub.place.
         v-mm:DeltaOtn_N             = DeltaOtn_N
       .
       assign varstate-water-qnty .
-          OUTPUT stream outstream to value ("pomi.log") append.
-                    PUT STREAM outstream
-                    "    " SKIP
-                    "    " SKIP
-                    cur-time-string()           FORMAT "x(16)"    SKIP
-                    'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
-                    'CODE_PL                = ' tt-rvs-line.pl-code                           SKIP
-                    'H                      = ' tt-rvs-line.level-total * 10                  SKIP
-                    'H_water                = ' tt-rvs-line.level-water * 10                  SKIP
-                    'CalibrationTable       = ' CalibTable                  FORMAT "x(2048)"  SKIP
-                    'Tv                     = ' tt-rvs-line.state-temp-layer1                 SKIP
-                    'Tr                     = ' tt-rvs-line.temperature                       SKIP
-                    'R                      = ' ( tt-rvs-line.density * 1000 )                SKIP
-                    'Tcy                    = ' temp-for-pomi                                 SKIP
-                    'ToolType               = ' ToolType                                      SKIP
-                    'DeltaOtn_K             = ' DeltaOtn_K                                    SKIP
-                    'A_Reservoir            = ' 0.0000125                                     SKIP
-                    'DeltaAbs_H             = ' DeltaAbs_H                                    SKIP
-                    'DeltaAbs_H_Water       = ' DeltaAbs_H_Water                              SKIP
-                    'DeltaAbs_R             = ' DeltaAbs_R                                    SKIP
-                    'DeltaAbs_Tv            = ' DeltaAbs_Tv                                   SKIP
-                    'DeltaAbs_Tr            = ' DeltaAbs_Tr                                   SKIP
-                    'DeltaOtn_N             = ' DeltaOtn_N                                    SKIP
-                    "v_total                ="               tt-rvs-line.state-measure-qnty skip
-                    "V_water                 =" varstate-water-qnty
-                        SKIP 
-                        .
 
+      OUTPUT stream outstream to value ("pomi.log") append.
+              PUT STREAM outstream
+              "    " SKIP
+              "    " SKIP
+              cur-time-string()           FORMAT "x(16)"    SKIP
+              'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
+              'CODE_PL                = ' tt-rvs-line.pl-code                           SKIP
+              'H                      = ' v-mm:H                                             SKIP
+              'H_water                = ' v-mm:H_water                                       SKIP
+              'CalibrationTable       = ' v-mm:CalibrationTable                  FORMAT "x(2048)"  SKIP
+              'Tr                     = ' v-mm:Tr                                            SKIP
+              'R                      = ' v-mm:R                                             SKIP
+              'Tcy                    = ' v-mm:Tcy                                           SKIP
+              'ToolType               = ' v-mm:ToolType                                      SKIP
+              'DeltaOtn_K             = ' v-mm:DeltaOtn_K                                    SKIP
+              'A_Reservoir            = ' v-mm:A_Reservoir                                   SKIP
+              'DeltaAbs_H             = ' v-mm:DeltaAbs_H                                    SKIP
+              'DeltaAbs_H_Water       = ' v-mm:DeltaAbs_H_Water                              SKIP
+              'DeltaAbs_R             = ' v-mm:DeltaAbs_R                                    SKIP
+              'DeltaAbs_Tv            = ' v-mm:DeltaAbs_Tv                                   SKIP
+              'DeltaAbs_Tr            = ' v-mm:DeltaAbs_Tr                                   SKIP
+              'DeltaOtn_N             = ' v-mm:DeltaOtn_N                                    SKIP
+                  .
       if place-type = 1 then do :
         v-mm:Rprov = ( dens-prov * 1000 ) .
 /*        v-mm:Mpokr = mass-float-cov .*/
@@ -1043,12 +1039,15 @@ define buffer buf_place     for ub.place.
             and buf_place.pl-code  = tt-rvs-line.pl-code no-error.
       if buf_place.is-meas  = yes then do :
          v-mm:Tv = tt-rvs-line.state-temperature .
+         put stream outstream
+           'Tv                     = ' v-mm:Tv                 SKIP
+         .
       end.
       else do :
         if place-type <> 1 then do :
           v-mm:D = place-diameter .
           put stream outstream
-            "v-mm:D                      = " place-diameter                skip
+            "v-mm:D                      = " v-mm:D                skip
           .
         end.
         assign
@@ -1058,10 +1057,10 @@ define buffer buf_place     for ub.place.
           v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool
         .
         put stream outstream
-          "v-mm:T_lower                = " tt-rvs-line.state-temp-layer1 skip
-          "v-mm:T_middle               = " tt-rvs-line.state-temp-layer2 skip
-          "v-mm:T_upper                = " tt-rvs-line.state-temp-layer3 skip
-          "v-mm:A_LevelMeasurementTool = " A_LevelMeasurementTool        skip
+          "v-mm:T_lower                = " v-mm:T_lower skip
+          "v-mm:T_middle               = " v-mm:T_middle skip
+          "v-mm:T_upper                = " v-mm:T_upper skip
+          "v-mm:A_LevelMeasurementTool = " v-mm:A_LevelMeasurementTool        skip
         .
       end.
       output stream outstream close.
