@@ -1099,14 +1099,31 @@ end.
 
 on leave of tt-fr-doc-line.vat-pc or
    leave of tt-fr-doc-line.slt-pc in frame {&frame-name} do:
+define variable v-new-vat-pc as decimal no-undo .
 if keyfunction( lastkey ) <> "end-error" and
    not ( last-event :event-type = "progress":u and last-event :widget-enter = b-quit :handle ) then do:
-   run leave-pc in this-procedure no-error.
+  v-new-vat-pc = input frame {&frame-name} tt-fr-doc-line.vat-pc .
+  if v-new-vat-pc <> tt-fr-doc-line.vat-pc or
+     input frame {&frame-name} tt-fr-doc-line.slt-pc <> tt-fr-doc-line.slt-pc then do:
+   if vat-sumvalue <> "yes" then do:
+      run p-chk-vat in this-procedure (v-new-vat-pc) no-error .
+      if error-status :error then do:
+     display tt-fr-doc-line.vat-pc tt-fr-doc-line.slt-pc with frame {&frame-name}.
+     apply "entry" to self in frame {&frame-name}.
+     return no-apply.
+      end.
+   end.
+   assign frame {&frame-name} tt-fr-doc-line.vat-pc
+          frame {&frame-name} tt-fr-doc-line.slt-pc.
+   run calc-all in this-procedure ( input ( if varprice-cli-input = yes then varprice-cli-calc
+                                                                        else varbase-price-calc ) ) no-error.
    if error-status :error then do:
      display tt-fr-doc-line.vat-pc tt-fr-doc-line.slt-pc with frame {&frame-name}.
      apply "entry" to self in frame {&frame-name}.
      return no-apply.
    end.
+  end.
+     
 end.
 end.
 
@@ -1217,8 +1234,7 @@ if keyfunction(lastkey) <> "end-error" and
        else do:
           assign frame {&frame-name} sum-vat.
           run calc-vat-pc in this-procedure.
-          run p-chk-vat  in this-procedure .
-          /*run leave-pc in this-procedure no-error.  */
+          run p-chk-vat  in this-procedure (tt-fr-doc-line.vat-pc) .
           run calc-all in this-procedure ( input ( if varprice-cli-input = yes then varprice-cli-calc
                                                                                else varbase-price-calc ) ) no-error.
           if error-status :error then do:
@@ -4771,13 +4787,15 @@ end.
 end.
 end procedure.
 
+/* 14/II-2019 - исключена, т.к. выдавала ошибку,
+                сравнивая внутри p-chk-vat значение из tt-fr-doc-line вместо значения с экрана
 procedure leave-pc:
 do on error undo, return error return-value:
-if input frame {&frame-name} tt-fr-doc-line.vat-pc <> tt-fr-doc-line.vat-pc or
-   input frame {&frame-name} tt-fr-doc-line.slt-pc <> tt-fr-doc-line.slt-pc then do:
-   if vat-sumvalue <> "yes" then do:
+  if input frame {&frame-name} tt-fr-doc-line.vat-pc <> tt-fr-doc-line.vat-pc or
+     input frame {&frame-name} tt-fr-doc-line.slt-pc <> tt-fr-doc-line.slt-pc then do:
+    if vat-sumvalue <> "yes" then do:
       run p-chk-vat  .
-   end.
+    end.
    assign frame {&frame-name} tt-fr-doc-line.vat-pc
           frame {&frame-name} tt-fr-doc-line.slt-pc.
    run calc-all in this-procedure ( input ( if varprice-cli-input = yes then varprice-cli-calc
@@ -4787,7 +4805,7 @@ end.
 
 end.
 end procedure.
-
+*/
 procedure chg-unit:
 define variable v-unit-name as character no-undo .
 define buffer buf_units    for ub.units .
@@ -6035,10 +6053,11 @@ run lineattr-write in this-procedure (
 end.
 
 end procedure. /* save-price-prod */
-procedure p-chk-vat:
-      if dops > '' and not f-chekval(input dops, input tt-fr-doc-line.vat-pc) then do:
-         message "Неверное значение НДС:" input frame {&frame-name} tt-fr-doc-line.vat-pc  skip
-                 "Разрешенные значения: " dops "."
+procedure p-chk-vat private:
+define input parameter p-new-vat-pc as decimal no-undo .
+      if dops > '' and not f-chekval(input dops, input p-new-vat-pc) then do:
+         message "Неверное значение НДС:" p-new-vat-pc skip
+                 "Разрешенные значения: " replace(dops, ",", "%, ") + "%."
                  view-as alert-box.
          display tt-fr-doc-line.vat-pc with frame {&frame-name}.
          return error.
