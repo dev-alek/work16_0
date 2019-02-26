@@ -3415,6 +3415,22 @@ end.
 &global-define attr-office-type '{&bef-attr-office-type}':U
 &global-define bef-attr-item-matter-mark item-matter-mark
 &global-define attr-item-matter-mark '{&bef-attr-item-matter-mark}':U
+&global-define bef-attr-cash-book-id cash-book-id
+&global-define attr-cash-book-id '{&bef-attr-cash-book-id}':U
+&global-define bef-attr-oper-serv-id oper-serv-idd
+&global-define attr-oper-serv-id '{&bef-attr-oper-serv-id}':U
+&global-define bef-attr-cash-book-rul-basis cash-book-rul-basis
+&global-define attr-cash-book-rul-basis '{&bef-attr-cash-book-rul-basis}':U
+&global-define bef-attr-cash-book-rul-att cash-book-rul-att
+&global-define attr-cash-book-rul-att '{&bef-attr-cash-book-rul-att}':U
+&global-define bef-attr-cash-book-separated cash-book-separated
+&global-define attr-cash-book-separated '{&bef-attr-cash-book-separated}':U
+&global-define bef-attr-cash-book-partite cash-book-partite
+&global-define attr-cash-book-partite '{&bef-attr-cash-book-partite}':U
+&global-define bef-attr-cash-book-mask-pko cash-book-mask-pko
+&global-define attr-cash-book-mask-pko '{&bef-attr-cash-book-mask-pko}':U
+&global-define bef-attr-cash-book-mask-rko cash-book-mask-rko
+&global-define attr-cash-book-mask-rko '{&bef-attr-cash-book-mask-rko}':U
 &global-define bef-attr-group-np group-np
 &global-define attr-group-np '{&bef-attr-group-np}':U
 &global-define bef-attr-fuel-type fuel-type
@@ -6846,7 +6862,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 596aa7f61186, 1620, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 851805edf09a, 1754, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -8041,10 +8057,12 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-bge-export_bgecliiv '{&bef-attr-bge-export_bgecliiv}':U
 &global-define bef-attr-auto-task auto-task
 &global-define attr-auto-task '{&bef-attr-auto-task}':U
-&global-define bef-prop-list-attr-auto-task send-msg-to-email
+&global-define bef-prop-list-attr-auto-task send-msg-to-email,user-list
 &global-define prop-list-attr-auto-task '{&bef-prop-list-attr-auto-task}':U
 &global-define bef-attr-auto-task_send-msg-to-email send-msg-to-email
 &global-define attr-auto-task_send-msg-to-email '{&bef-attr-auto-task_send-msg-to-email}':U
+&global-define bef-attr-auto-task_user-list user-list
+&global-define attr-auto-task_user-list '{&bef-attr-auto-task_user-list}':U
 &global-define bef-attr-wnd-size wnd-size
 &global-define attr-wnd-size '{&bef-attr-wnd-size}':U
 &global-define bef-prop-list-attr-wnd-size max,store
@@ -8204,9 +8222,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,mercur,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,cd-type-autotank,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: b9313ad7f18a, 1618, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: ea4bbe67f929, 1755, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: f8efd18195cf, 1635, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
+&global-define str-glblt_vss-revision 'Revision: 851805edf09a, 1754, rls ':U
 &endif
