@@ -202,6 +202,8 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
+  def var v-msg-not-del as character.
+
   find first buf_Dis-card no-lock where
             buf_Dis-card.d-card = p-d-card no-error.
   if not available buf_dis-card then do:
@@ -262,6 +264,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                                                 buffer buf_dis-card
                                                               , input g#db-num
                                                               , output l-is-used) no-error .
+    v-msg-not-del = return-value.
     if not error-status:error
     and not l-is-used then do:
       delete buf_dis-card no-error .
@@ -285,7 +288,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   end.
   else do:
     if v-is-remote-dbs then
-    run write-log-and-file in p-log-handle (
+    
+    if l-is-used
+    then
+      run write-log-and-file in p-log-handle (
+                                              input 1
+                                            , input log-file-name
+                                            , input 1
+                                            , input  substitute( "Карта &1: Начат процесс изменения статуса на неисп., окончательное удаление невозможно. &3Обнаружено: &2."
+                                                                ,buf_dis-card.d-card, v-msg-not-del, {&new-line} )
+                                                                        ).
+    else
+      run write-log-and-file in p-log-handle (
                                             input 1
                                           , input log-file-name
                                           , input 1
@@ -293,7 +307,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                                               ,buf_dis-card.d-card )
                                                                       ).
     else
-    run write-log-and-file in p-log-handle (
+    
+    
+    if l-is-used
+    then
+      run write-log-and-file in p-log-handle (
+                                              input 1
+                                            , input log-file-name
+                                            , input 1
+                                            , input  substitute( "Карта &1: Изменен статус на неисп., окончательное удаление невозможно. &3Обнаружено: &2."
+                                                                ,buf_dis-card.d-card, v-msg-not-del, {&new-line} )
+                                                                        ).
+    else 
+      run write-log-and-file in p-log-handle (
                                               input 1
                                             , input log-file-name
                                             , input 1
