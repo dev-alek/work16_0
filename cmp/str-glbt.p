@@ -505,7 +505,7 @@ attr-bge-export
 { cmp/cr-prep.i 1 attr-auto-task             auto-task             " " auto-task }
 
 { cmp/cr-prepc.i 1 prop-list-attr-auto-task
-"send-msg-to-email"
+"send-msg-to-email,user-list"
 attr-auto-task
 }
 
