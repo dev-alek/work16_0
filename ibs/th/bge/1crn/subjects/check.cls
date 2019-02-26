@@ -239,6 +239,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define variable v-key-one      as integer no-undo . /* для поиска оператора сотовой связи */
     define variable v-is-nds       as integer no-undo . /* 0/1 признак распределения НДС по платежу */
     define variable v-ex-Nds       as logical no-undo.
+    define variable v-chk-pay-is-nds as logical no-undo . /* true: в чеке есть платёж с is-nds=1 */
 
     insw:start-element ({&tag-message}) .
 
@@ -311,6 +312,24 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
 
 
+    /* 19/II-2019  Если в чеке есть платеж, с is-nds = 1, то в товарных строках НДС выгружать,
+                   если нет, то НДС не выгружать совсем. */
+    /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
+    &scoped-define is-nds-eq-1 can-do ("1,2,3", buf_cash-pay-attr.attr-value)
+    v-chk-pay-is-nds = false .
+    for each buf_cash-pay-attr no-lock
+       where buf_cash-pay-attr.attr-code  = "cash-prop"
+         and {&is-nds-eq-1} :
+      if can-find (first buf_chk-pay
+                   where buf_chk-pay.doc-code  = p-buf_chk-doc.doc-code
+                     and buf_chk-pay.pay-code  = buf_cash-pay-attr.cdpay-code
+                     and buf_chk-pay.curr-code = buf_cash-pay-attr.curr-code) then do :
+        v-chk-pay-is-nds = true .
+        leave .
+      end .
+    end .
+
+
     /* section1 обязательность 1-1 */
     /* 21/XII-2018 несмотря на обязательность секции с товарами,
                    1с не может проглотить файл с секцией по товарам, если в ней нет товаров
@@ -320,7 +339,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     insw:start-element ({&tag-section1}) .
       for each buf_chk-gds no-lock
          where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code :
-            v-ex-Nds = v-ex-Nds or  (buf_chk-gds.VAT-pc eq 0 or buf_chk-gds.VAT-sum-rubl eq 0) or (buf_chk-gds.VAT-pc eq ? or buf_chk-gds.VAT-sum-rubl eq ?). 
+        v-ex-Nds = v-ex-Nds or buf_chk-gds.VAT-pc eq ? or buf_chk-gds.VAT-sum-rubl eq ? . 
         insw:start-element ({&tag-item1}) .
         
         insw:write-data-element (  "line-num",  string(buf_chk-gds.line-num)  ) . /* Номер строки чека (Число) */
@@ -413,11 +432,14 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         if buf_chk-gds.pass-gds > 0 then
         insw:write-data-element (  "dry-chk",  string(buf_chk-gds.pass-gds)  ) . /* Признак сухого чека (Число 1,0) */
         
-        if buf_chk-gds.VAT-pc ne ? then
-        insw:write-data-element (  "vat-rate",  string(buf_chk-gds.VAT-pc)  ) .
+        if v-chk-pay-is-nds then do :        
+          if buf_chk-gds.VAT-pc ne ? then
+            insw:write-data-element (  "vat-rate",  string(buf_chk-gds.VAT-pc)        ) .
         
-        if buf_chk-gds.VAT-sum-rubl ne ? then
-        insw:write-data-element (  "vat",  string(buf_chk-gds.VAT-sum-rubl)  ) .
+          if buf_chk-gds.VAT-sum-rubl ne ? then
+            insw:write-data-element (  "vat",       string(buf_chk-gds.VAT-sum-rubl)  ) .
+        end .
+        
         /* обязательность 0-1
            «Оператор» это оператор сотовой связи. Берется из атрибута строки чека с кодом oss-code.
            Название подтягивается из соответствующего справочника.
@@ -488,8 +510,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
          то в тэг is-nds секции платежей ставить 1. Во всех остальных случаях - 0.
          is-nds Число(0/1) 1-1 Признак распределения НДС по платежу
       */
-      /* если ндс  не расчитан то надо передать v-is-nds = 0  */
-      if  not v-ex-Nds then do:
+      /* если ндс не расчитан то не надо передавать v-is-nds вообще  */
+      if not v-ex-Nds then do:
          find first buf_cash-pay-attr no-lock
               where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
                 and buf_cash-pay-attr.curr-code  = buf_chk-pay.curr-code
@@ -501,8 +523,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                 */
                 and buf_cash-pay-attr.attr-code  = "cash-prop" no-error .
          if available buf_cash-pay-attr then do :
-           /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
-           v-is-nds = if can-do ("1,2,3", buf_cash-pay-attr.attr-value) then 1 else 0 .
+           v-is-nds = if {&is-nds-eq-1} then 1 else 0 .
          end .
          else v-is-nds = 0 .
          insw:write-data-element (  "is-nds",    string(v-is-nds)              ) . /* Признак распределения НДС по платежу (Число 0/1) */
