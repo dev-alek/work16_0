@@ -34,7 +34,7 @@ run bgelib-tag-put in this-procedure ( input 3, input "PAType":U
 run bgelib-tag-put in this-procedure ( input 3, input "PABeg":U
   , input Xml-CD-DateTimetoString(v-promo-action:beg-date,0), input 1 ).
 run bgelib-tag-put in this-procedure ( input 3, input "PAEnd":U
-  , input Xml-CD-DateTimetoString(if v-promo-action:changeDate <> ? then v-promo-action:changeDate else v-promo-action:end-date,0), input 1 ).
+  , input Xml-CD-DateTimetoString(if v-promo-action:changeDate <> ? then v-promo-action:changeDate else v-promo-action:end-date,86399), input 1 ).
 run bgelib-tag-put in this-procedure ( input 3, input "PAPriority":U
   , input string(v-promo-action:priority), input 1 ).
   do vIp = 1 to num-entries(v-promo-action:paymenttype,{&delim-par}):
