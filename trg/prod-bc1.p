@@ -41,6 +41,7 @@ define variable vss-description as character no-undo init "—охранение ƒопЅ ".
 { cmp/trg-def.i }
 { trg/new-bcod.i }
 { gbl/is-num.i   }
+{ ref/gds-attr.i }
 
 define variable glog as logical   no-undo .
 define variable v-on as logical   no-undo .
@@ -150,6 +151,15 @@ define buffer same-gds-prt  for ub.gds-prt.
         ) no-error.
     delete object v-tth.
   end.
+
+  define variable v-attr-sale-trk as character no-undo .
+  define variable v-attr-type as character no-undo .
+  
+  run gds-attr-value in this-procedure (
+                               input buf_goods.gds-code
+                              ,input {&attr-ptrl-as-good}
+                              ,output v-attr-sale-trk
+                              ,output v-attr-type) no-error.
 
   case p-cdrg-type:
     when {&loc-sc-code} then do:
@@ -508,6 +518,11 @@ define buffer same-gds-prt  for ub.gds-prt.
                               "и бар-кода с дополнительной ед. изм. типа ƒ–ќЅЌјя"
                               ,p-b-str
                               , {&new-line}).
+          run err-mess in this-procedure ( input-output v-mess).
+          undo, return error (if p-silent then v-mess else '').
+        end.
+        if length(p-b-str) < 6 and not v-attr-sale-trk = 'yes' then do:
+          v-mess =  "ƒопЅк должен быть длиннее 5 разр€дов.".
           run err-mess in this-procedure ( input-output v-mess).
           undo, return error (if p-silent then v-mess else '').
         end.

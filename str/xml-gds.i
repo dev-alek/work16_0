@@ -21,6 +21,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 define variable i-entry as integer no-undo .
 define variable v-attr-value as character no-undo .
 define variable v-attr-egais as integer no-undo .
+define variable v-attr-sale-trk as character no-undo .
+define variable v-attr-type as character no-undo .
 define buffer buf_cash-gds for cash-gds.
 define buffer buf_goods-attr for ub.goods-attr.
 define buffer buf_gds-obj-attr for ub.gds-obj-attr.
@@ -125,7 +127,11 @@ find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and 
   v-attr-value = buf_goods-attr.attr-value .
   end.
 end.                            
-
+    run gds-attr-value in this-procedure (
+                                 input cash-gds.gds-code
+                                ,input {&attr-ptrl-as-good}
+                                ,output v-attr-sale-trk
+                                ,output v-attr-type) no-error.
     /* Режим отдельных поддиректорий для каждого товара */
 define variable v-param-types   as character  no-undo.
 define variable v-value-char    as character  no-undo.
@@ -172,6 +178,7 @@ end.
                                           input string(if (LOOKUP({&petrolium}, cash-gds.unit-cli-type) > 0
                                                         and LOOKUP({&divisional}, cash-gds.unit-cli-type) > 0)
                                                         or cash-gds.pp > 0
+                                                        or (v-attr-sale-trk = "yes" and LOOKUP({&divisional}, cash-gds.unit-cli-type) > 0)
                                                         then 1
                                                         else 0), input 1 ).
     /*run bgelib-tag-put in this-procedure ( input 4, input "ISAuthorize" ,

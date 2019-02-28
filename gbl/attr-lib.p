@@ -6974,7 +6974,7 @@ procedure gds-attr_check-ptrl-divis :
       .
       return.
     end.
-    if not v-is-petrolium then do:
+    if not v-is-petrolium and not p-code = {&attr-ptrl-as-good} then do:
       case p-code:
 /*        when {&attr-is-gas} then do:                                                                    */
 /*          assign                                                                                        */
@@ -6986,11 +6986,11 @@ procedure gds-attr_check-ptrl-divis :
             p-error-code = substitute("Товар-топливо не требующий сверки должен иметь топливную единицу измерения")
           .
         end.
-        when {&attr-ptrl-as-good} then do:
+        /*when {&attr-ptrl-as-good} then do:
           assign
             p-error-code = substitute("ТНП продающийся через ТРК должен иметь топливную единицу измерения")
           .
-        end.
+        end.*/
       end case.
       return p-error-code.
     end.

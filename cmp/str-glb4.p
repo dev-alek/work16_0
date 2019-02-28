@@ -435,6 +435,30 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Признак предмета расчета */
 { cmp/cr-prep.i 1 attr-item-matter-mark     item-matter-mark     " " item-matter-mark     }
 
+/* cash-book-id */
+{ cmp/cr-prep.i 1 attr-cash-book-id     cash-book-id     " " cash-book-id     }
+
+/* oper-serv-id */
+{ cmp/cr-prep.i 1 attr-oper-serv-id     oper-serv-idd     " " oper-serv-id     }
+
+/* Правило заполнения графы "Основание" */
+{ cmp/cr-prep.i 1 attr-cash-book-rul-basis     cash-book-rul-basis     " " cash-book-rul-basis }
+
+/* Правило заполнения графы "Приложение" */
+{ cmp/cr-prep.i 1 attr-cash-book-rul-att       cash-book-rul-att       " " cash-book-rul-att }
+
+/* Отдельный платеж для каждой кассы */
+{ cmp/cr-prep.i 1 attr-cash-book-separated       cash-book-separated     " " cash-book-separated }
+
+/* Раздельно НП и ТНП */
+{ cmp/cr-prep.i 1 attr-cash-book-partite       cash-book-partite     " " cash-book-partite }
+
+/* маска номера ПКО */
+{ cmp/cr-prep.i 1 attr-cash-book-mask-pko       cash-book-mask-pko     " " cash-book-mask-pko }
+
+/* маска номера РКО */
+{ cmp/cr-prep.i 1 attr-cash-book-mask-rko       cash-book-mask-rko     " " cash-book-mask-rko }
+
 /* Группа НП */
 { cmp/cr-prep.i 1 attr-group-np         group-np     " " group-np     }
 
