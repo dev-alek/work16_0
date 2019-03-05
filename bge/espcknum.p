@@ -47,6 +47,7 @@ define variable vss-description as character no-undo init "√енераци€ дл€ ¬— номе
 { gbl/filelist.i }
 { gbl/db-attr.i  }
 
+/* 01/III-2019
 function esys-id-format returns character ( input p-esys-id as integer):
   return string(p-esys-id, "99999").
 end.
@@ -58,6 +59,7 @@ FUNCTION nws-db-format returns character ( input p-db-num as integer):
   .
   return v-nws-db-format.
 END FUNCTION.
+*/
 /* 12/IX-2018 - повторный поиск ext-system не используетс€
 function first-pack-num returns integer (  input p-esys-id as integer,
                                            input p-db-num  as integer  ) :
@@ -92,8 +94,8 @@ end function .
   
   define variable v-ftp-path-in as character no-undo .
   define variable v-type as character no-undo .
-  define variable v-dbnum-str as character no-undo .
-  define variable v-esysid-str as character no-undo .
+/*  define variable v-dbnum-str as character no-undo .*/
+/*  define variable v-esysid-str as character no-undo .*/
   define variable v-num-entries as integer no-undo .
 
 
@@ -102,7 +104,63 @@ do
 on error undo, return error
 :
 
-  /* 1. номер пакета */
+  /* 1. им€ директории */
+  run bge/esdirnam.p ( input p-action
+                      ,input p-esys-id
+                      ,input p-db-num
+                      ,input p-delivery-method
+                      ,input oxml-exch-dir
+                      ,input oxml-heap-dir
+                      ,output p-source-dir
+                      ,output p-target-dir
+                      ,output p-temp-dir
+                      ,output p-log-file-name
+                     ) .
+  /* 01/III-2019 - фармирование имени деректории выделено в bge/esdirnam.p
+  assign
+    v-esysid-str = esys-id-format( p-esys-id )
+    v-dbnum-str  = nws-db-format( ibs.th.gbl.gbl-var:g#db-num )
+  .
+  
+  case p-action :
+    when "get":U
+    or
+    when "fget":U
+    then do:
+      assign
+        v-work-dir   = "ES" + v-esysid-str + "-":U + v-dbnum-str
+        p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + v-esysid-str
+        p-source-dir = oxml-exch-dir + {&back-slash-char} + v-work-dir
+        p-target-dir = oxml-heap-dir + {&back-slash-char} + v-work-dir
+        p-log-file-name  =  (if p-delivery-method = integer({&esys-dm-oracle-retail})
+                            then (oxml-heap-dir + {&back-slash-char} + v-dbnum-str + "-":U + "ES" + v-esysid-str)
+                            else (oxml-heap-dir + {&back-slash-char} + "actions.log")
+                            )
+      .
+    end.
+    when "put":U
+    or
+    when "fput"
+    then do:
+      assign
+      v-work-dir   = v-dbnum-str + "-":U + "ES" + v-esysid-str
+      p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + v-dbnum-str
+      p-source-dir = oxml-heap-dir + {&back-slash-char} + v-work-dir
+      p-target-dir = oxml-exch-dir + {&back-slash-char} + v-work-dir
+      p-log-file-name  =  oxml-heap-dir + {&back-slash-char} + "actions.log"
+      .
+    end.
+    otherwise do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ќе предусмотрена операци€" p-action "дл€" vss-workfile
+        view-as alert-box error.
+      return error.
+    end.
+  end case.
+  */
+
+  /* 2. номер пакета */
   if p-pack-num = -1 then do:
     v-new-pack = yes.
     case p-action :
@@ -182,50 +240,6 @@ on error undo, return error
     v-new-pack = yes.
     p-pack-num = abs(p-pack-num).
   end.
-
-  
-  /* 2. им€ директории */
-  assign
-    v-esysid-str = esys-id-format( p-esys-id )
-    v-dbnum-str  = nws-db-format( ibs.th.gbl.gbl-var:g#db-num )
-  .
-  
-  case p-action :
-    when "get":U
-    or
-    when "fget":U
-    then do:
-      assign
-        v-work-dir   = "ES" + v-esysid-str + "-":U + v-dbnum-str
-        p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + v-esysid-str
-        p-source-dir = oxml-exch-dir + {&back-slash-char} + v-work-dir
-        p-target-dir = oxml-heap-dir + {&back-slash-char} + v-work-dir
-        p-log-file-name  =  (if p-delivery-method = integer({&esys-dm-oracle-retail})
-                            then (oxml-heap-dir + {&back-slash-char} + v-dbnum-str + "-":U + "ES" + v-esysid-str)
-                            else (oxml-heap-dir + {&back-slash-char} + "actions.log")
-                            )
-      .
-    end.
-    when "put":U
-    or
-    when "fput"
-    then do:
-      assign
-      v-work-dir   = v-dbnum-str + "-":U + "ES" + v-esysid-str
-      p-temp-dir   = oxml-exch-dir + {&back-slash-char} + v-work-dir + ".":U + v-dbnum-str
-      p-source-dir = oxml-heap-dir + {&back-slash-char} + v-work-dir
-      p-target-dir = oxml-exch-dir + {&back-slash-char} + v-work-dir
-      p-log-file-name  =  oxml-heap-dir + {&back-slash-char} + "actions.log"
-      .
-    end.
-    otherwise do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ќе предусмотрена операци€" p-action "дл€" vss-workfile
-        view-as alert-box error.
-      return error.
-    end.
-  end case.
   p-list-file-name =  oxml-heap-dir + {&back-slash-char} + "lst":U + string( p-pack-num, "999999999") + ".":U .
 
   /* если каталога source-dir нет, то создадим его */
@@ -310,10 +324,11 @@ on error undo, return error
       if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
 
           empty temp-table temp-filelist .
+          /* 04/III-2019 забираем только файлы с нужным расширением */
           run filelist-init in this-procedure
           (input p-source-dir /* внутри требуетс€ наличие p-source-dir */
-          ,input false
-          ,input ""
+          ,input true
+          ,input "xml,zip" // ,p7s,p7c"
           ,input ""
           ) no-error.
           

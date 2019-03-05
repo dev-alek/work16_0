@@ -92,6 +92,7 @@ define variable v-msg-templ-start   as character no-undo .
 define variable v-msg-templ-finish  as character no-undo .
 define variable v-take-count        as integer no-undo .
 define variable v-analys-count      as integer no-undo .
+define variable v-analys-ack        as integer no-undo .
 define variable v-err-msg as character no-undo .
 define variable v-ver-num as character no-undo .
 define variable add-log-file-name0 as character no-undo .
@@ -210,7 +211,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     run xmlischn_fill in this-procedure ( input 18, input 20).
     run xmlischn_fill in this-procedure ( input 18, input 24).
     run xmlischn_fill in this-procedure ( input 20, input 4).
-    
+
     _ext-system:
     do i = 1 to num-entries(v-extsys-list)
     on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
@@ -395,14 +396,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                           ,input oxml-heap-dir
                           ,input v-sign-fileext
                           ,input-output v-espr-pack-num    // передаётся в sxg-pack.p
-                          ,input-output v-custom-pack-name
-                          ,output v-espr-pack-name
+                          ,input-output v-custom-pack-name // снаружи не используется; перед анализом обнуляется
+                          ,output v-espr-pack-name // до анализа не используется; в анализе читается повторно
                           ,output v-source-dir // передаётся в sxg-pack.p
                           ,output v-target-dir // передаётся в sxg-pack.p
                           ,output v-temp-dir   // передаётся в sxg-pack.p
-                          ,output v-log-file-name
-                          ,output v-list-file-name
-                          ,output v-custom-pack-flag
+                          ,output v-log-file-name // до анализа не используется; в анализе - только для oracle-retail
+                          ,output v-list-file-name // не используется
+                          ,output v-custom-pack-flag // до анализа не используется; в анализе читается повторно
                         ) no-error.
             if error-status:error then do:
               run write-log in p-log-handle (
@@ -420,9 +421,11 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
             assign
               v-take-count   = 0
               v-analys-count = 0
+              v-analys-ack   = 0
               v-rcvd-pack = false
             .
             if lookup( v-action, "take,take+analys":U ) <> 0 then do:
+              run write-log in p-log-handle (input 2 ,  substitute ("Копирование пакетов данных из &1 в &2", v-source-dir, v-target-dir)  ) .
 
               /* копируем скопом все файлы из exch в heap
                  17/X-2018 - для 1с копирует только файлы с номерами пакетов больше текущего;
@@ -430,12 +433,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
               */
               /*очищаем таблицу - чтобы туда потом написать названия файлов - они могут понадобиться в методе EXITE*/
               // run filelist-clear in this-procedure . 17/X-2018 из filelist.i вынесено сюда:
-              do :
                 v-filelist-total-file-num = 0 .
                 empty temp-table temp-filelist .
-              end .
-              // 17/X-2018 внутри sxg-pack.p для get таблица temp-filelist очищается повторно,
-              //           но переменная v-filelist-total-file-num при этом не сбрасывается
+              /* 17/X-2018 внутри sxg-pack.p для get таблица temp-filelist очищается повторно,
+                           но переменная v-filelist-total-file-num при этом не сбрасывается
+                 Используется v-source-dir для взятия архивов arj и zip, либо остальных файлов
+                 и v-target-dir для распаковки или копирования туда
+              */
               run bge/sxg-pack.p (
                             input parparentproc
                             ,input this-procedure:handle /*p-parent-handle*/ /*место определения write-to-lo и write-to-screen*/
@@ -443,9 +447,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                             ,input "get":U
                             ,input true
                             ,input ?
-                            ,input v-source-dir
-                            ,input v-target-dir
-                            ,input v-temp-dir
+                            ,input v-source-dir // получено из espcknum.p
+                            ,input v-target-dir // получено из espcknum.p
+                            ,input v-temp-dir   // получено из espcknum.p
                             ,input v-espr-pack-num /*p-esps-pack-num <> 0 потому что если надо переименовыват файлы с кривыми именами*/
                             ,input buf_ext-system.esys-id
                             ,input buf_ext-system.db-num
@@ -507,7 +511,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
             end.
             
             if lookup( v-action, "analys,take+analys":U ) <> 0 then do:
-              run write-log in p-log-handle (input 2 ,  substitute ("Разбор пакетов данных")  ) .
+              run write-log in p-log-handle (input 2 ,  substitute ("Разбор пакетов данных из &1", v-target-dir)  ) .
               rcvd-pack:
               do while TRUE
               on error undo, return error
@@ -570,7 +574,10 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                         end .
                 end.
                 for each temp-filelist where temp-filelist.file-name begins "ack_" :
-                        assign v-custom-pack-name = temp-filelist.file-name.
+                        assign
+                           v-custom-pack-name = temp-filelist.file-name
+                           v-analys-ack = v-analys-ack + 1
+                         .
                   run gbl/filename.p (
 /* 21/XII-2018 почему-то не может найти файл по короткому имени input temp-filelist.file-name */
                                       input temp-filelist.full-name
@@ -672,6 +679,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                       define variable v-one-pack-num as integer no-undo .
                       v-one-pack-num = integer (v-ack-err) no-error .
                       if v-one-pack-num > 0 then do :
+                        run write-log in p-log-handle (input 2 ,
+                        substitute ("Обработано подтверждение на пакет номер &1. Статус: 1 - отсутствует пакет, следующий за последним принятым. Запрошена повторная отправка пакета [&2]."
+                              , v-ack-snum_pack 
+                              , v-ack-err
+                               )
+                                                ) .
                         run bge/oxmloutx.p ( input parparentproc
                                         ,input p-parent-handle
                                         ,input p-log-handle
@@ -721,6 +734,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                         
                   
                 end. /* end_of for_each temp-filelist_begins_ack */
+                run write-log in p-log-handle (input 2 ,  substitute ("Разбор подтверждений из &1. Просмотрено файлов &2", v-target-dir, v-analys-ack)  ) .
                 
               do : // выбор имени файла для импорта
 
@@ -818,6 +832,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                               then ''
                               else 'xml')
                 .
+                run write-log in p-log-handle (input 2 ,  substitute ("Разбор пакетов из &1. Обработка пакета &2", v-target-dir, v-file-name)  ) .
+                
                 run gbl/filename.p (
                                       input v-file-name
                                       ,output v-full-path
@@ -1217,86 +1233,68 @@ define variable timestr as character no-undo.
   define variable java as character no-undo.
   define variable saxon as character no-undo.
   define variable xsl as character no-undo.
-  define variable v-l-err as logical no-undo.
+/*  define variable v-l-err as logical no-undo. 04/III-2019 не используется */
   define variable ii as integer no-undo.    
 
 do
 on error undo, return error
 :
-  if p-ext-sys-met <> integer({&esys-dm-contour-edi})
-  then do:
-    run filelist-init in this-procedure
-    (input p-target-dir
-    ,input false
-    ,input ""
-    ,input ""
-    ) no-error.
-    if error-status:error then do:
-      undo, return error .
-    end.
-  end.
-
-  if p-ext-sys-met <> integer({&esys-dm-contour-edi}) then do:
-    for each temp-filelist:
-      create tt-espcknum.
-      if p-ext-sys-met = integer({&esys-dm-erp-1C-RN}) then do:
-/*
-        if not temp-filelist.file-name begins "azs_up_th0" and not temp-filelist.file-name begins "o" then do:
-          delete tt-espcknum .
-          next.
-        end.
-        if temp-filelist.file-name begins "azs_up_th0" then do:
-*/        if num-entries(temp-filelist.file-name, "_") = 4
-          or (num-entries(temp-filelist.file-name, "_") = 5 and temp-filelist.file-name begins "ack")
-          then do :
-          end.
-          else do :
-              delete temp-filelist.
-              next.
-          end.   
-          if v-espr-pack-num > integer (entry (3, temp-filelist.file-name-no-ext, "_"))
-          then next .  
-          assign
-            tt-espcknum.tt-espr-pack-name = temp-filelist.file-name
-            tt-espcknum.tt-espr-pack-num = integer (entry (3, temp-filelist.file-name-no-ext, "_"))
-          no-error.
-          if error-status:error then do: /* ошибка возникнет при присвоение, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
-            delete tt-espcknum .
-          end.
-          
-/*
-        end.
-        else do:
-          assign
-            tt-espcknum.tt-espr-pack-name = temp-filelist.file-name-no-ext
-            tt-espcknum.tt-espr-pack-num = integer (substring (temp-filelist.file-name-no-ext, 2))
-          no-error.
-          if error-status:error then do: /* ошибка возникнет при присвоение, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
-            delete tt-espcknum .
-          end.
-          else do:
-            if tt-espcknum.tt-espr-pack-name <> "o":U + string( tt-espcknum.tt-espr-pack-num, "999999999":U ) then delete tt-espcknum .
-          end.
-          next.
-        end.
-*/
+  /* 01/III-2019
+     1. Нам надо забирать из EXCH только нужные расширения,
+     2. и в разбор тоже надо брать только нужные файлы.
+     Вызывается только для &esys-dm-contour-edi и для &esys-dm-erp-1C-RN
+  */
+  case p-ext-sys-met :
+    when {&bef-esys-dm-erp-1C-RN} then do :
+      
+      run filelist-init in this-procedure
+      (input p-target-dir
+      ,input true
+      ,input "xml" // ,p7s,p7c"
+      ,input ""
+      ) no-error.
+      if error-status:error then do:
+        undo, return error .
       end.
-    end.
-    
-  end.
-  else do:
-    ii = 0.
-    for each temp-filelist where temp-filelist.file-name begins "fail" 
-      and  not (temp-filelist.file-name matches "*Stsmsg*"
-                or  temp-filelist.file-name matches "*unknown*") :
-      ii = ii + 1.
-      create tt-espcknum.
-      assign
-        tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
-        tt-espcknum.tt-espr-pack-num = ii
-      no-error.      
-    end.
-    for each temp-filelist where temp-filelist.file-name begins "ok" 
+      
+      for each temp-filelist:
+        if  num-entries(temp-filelist.file-name, "_") = 4
+        or (num-entries(temp-filelist.file-name, "_") = 5 and temp-filelist.file-name begins "ack")
+        then . /* пакеты и аски оставляем */
+        else do :
+          /* прочие файлы игнорируем */
+          delete temp-filelist.
+          next.
+        end.
+        if v-espr-pack-num > integer (entry (3, temp-filelist.file-name-no-ext, "_")) then next .  
+           
+        create tt-espcknum.
+        assign
+          tt-espcknum.tt-espr-pack-name = temp-filelist.file-name
+          tt-espcknum.tt-espr-pack-num  = integer (entry (3, temp-filelist.file-name-no-ext, "_"))
+        no-error.
+        if error-status:error then do:
+          /* ошибка возникнет при присвоение, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
+          delete tt-espcknum .
+        end.
+      end. /* end_of for_each temp-filelist */
+
+    end . /* end_of when esys-dm-erp-1C-RN */
+    when {&bef-esys-dm-contour-edi} then do :
+      
+      ii = 0.
+      for each temp-filelist
+         where temp-filelist.file-name begins "fail" 
+      and not (temp-filelist.file-name matches "*Stsmsg*"
+           or  temp-filelist.file-name matches "*unknown*") :
+        ii = ii + 1.
+        create tt-espcknum.
+        assign
+          tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
+          tt-espcknum.tt-espr-pack-num = ii
+        no-error.      
+      end.
+      for each temp-filelist where temp-filelist.file-name begins "ok" 
       and  not (temp-filelist.file-name matches "*Stsmsg*"
                 or  temp-filelist.file-name matches "*unknown*") :
       ii = ii + 1.
@@ -1305,26 +1303,29 @@ on error undo, return error
         tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
         tt-espcknum.tt-espr-pack-num = ii
       no-error.
-    end.
-    for each temp-filelist where temp-filelist.file-name begins "ORDRSP" :
+      end.
+      for each temp-filelist where temp-filelist.file-name begins "ORDRSP" :
       ii = ii + 1.
       create tt-espcknum.
       assign
         tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
         tt-espcknum.tt-espr-pack-num = ii
       no-error.
-    end.
-    for each temp-filelist where temp-filelist.file-name begins "DESADV" :
+      end.
+      for each temp-filelist where temp-filelist.file-name begins "DESADV" :
       ii = ii + 1.
       create tt-espcknum.
       assign
         tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
         tt-espcknum.tt-espr-pack-num = ii
       no-error.            
-    end.
-    
-    
-  end.
+      end.
+      
+    end . /* end_of when esys-dm-contour-edi */
+    otherwise return .
+  end case .
+
+  
   for each temp-filelist where temp-filelist.file-name begins "ORDRSP" :
     ii = ii + 1.
     create tt-espcknum.
@@ -1342,13 +1343,13 @@ on error undo, return error
     no-error.            
   end.
 
-
+/* 04/III-2019 - не используется
   if v-l-err then
     run write-log in p-log-handle (
           input 1
         , input substitute( "При преобразовании файла(ов) возникли ошибки. Проверьте целостность xml пакетов.")
     ).
-
+*/
 end.
 
 end procedure. /* get-num-namepack */

@@ -315,6 +315,7 @@ procedure file-s-g private :
     define variable v-log-file-temp        as character no-undo .
     define variable v-log-file-target      as character no-undo .
 
+    define variable v-r-index          as integer no-undo .
     define variable v-file-name-no-ext as character no-undo .
     define variable v-ext-name         as character no-undo .
     define variable v-zip-command      as character no-undo .
@@ -329,16 +330,54 @@ procedure file-s-g private :
   on error undo, return error
   :
 
-do :  // просто собрано в одно место из разных частей программы
+    v-r-index = r-index(p-file-name, '.':u) .
+    if v-r-index > 0 then assign
+      v-file-name-no-ext = substring( p-file-name, 1, v-r-index - 1 )
+      v-ext-name         = substring( p-file-name, v-r-index + 1 )
+    .
+    else assign
+      v-file-name-no-ext = p-file-name
+      v-ext-name         = "":U
+    .
+    assign
+/* 11/I-2019 - вместо v-file-source используется p-fullfile-name
+      v-file-source     = p-source-dir + {&back-slash-char} + p-file-name*/
+      v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name
+      v-file-target     = p-target-dir + {&back-slash-char} + p-file-name
+    .
+    
   case p-delivery-method:
+    when integer({&esys-dm-nn}) or
+    when integer({&esys-dm-nnold}) then do:
+      v-arh-name = ''.
+      p-arch = no.
+    end.
     when integer({&esys-dm-CDash}) then do:
+      v-arh-name = "".
+      v-arh-type = "".
       p-arch = no.
     end.
     when integer({&esys-dm-exite-edi}) then do:
+      v-arh-name = ''.
       p-arch = no.
     end.
     when integer({&esys-dm-contour-edi}) then do:
+      v-arh-name = ''.
       p-arch = no.
+    end.
+    when integer({&esys-dm-oracle-retail}) then do:
+      v-arh-name = search('exe/pkzipc.exe':U).
+      v-arh-type = "zip".
+      if p-action = "put" then do :
+            if search(p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG") <> ? then do:
+              v-send-log = yes.
+              assign
+              v-log-file-source     = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG"
+              v-log-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".LOG"
+              v-log-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG"
+              .
+            end.
+      end . /* end_of put */
     end.
     when integer({&esys-dm-erp-1C-RN}) then do:
       p-arch = yes.
@@ -351,84 +390,38 @@ do :  // просто собрано в одно место из разных частей программы
       end .
       else do :
                                v-arh-name = search('exe/pkzipc.exe':U).
-      end .  
+      end .
+      if v-ext-name = "zip" then do :
+        if p-action = "get" then do :
+          if v-arh-name = ? then
+            return error substitute( "&1. Программа архиватор не найдена", vss-workfile ).
+          v-arch = true .
+        end .
+      end .
+      else do :
+        if p-action = "get" then do :
+        /* 01/III-2019
+           1. Нам надо забирать из EXCH только нужные расширения,
+           2. и в разбор тоже надо брать только нужные файлы.
+        */
+          if not can-do ("xml,p7s,p7c", v-ext-name) then return .
+          v-arch = false .
+        end .
+      end .
     end.
+    otherwise do :
+        v-arh-name = search( "exe/arj32.exe":U ) .
+      if v-arh-name = ? then
+        v-arh-name = search( "exe/arj.exe":U ) .
+      v-arh-type = "arj".
+    end .
   end case .
-    case p-delivery-method:
-      when integer({&esys-dm-nn})
-      or
-      when integer({&esys-dm-nnold})
-      or
-      when integer({&esys-dm-exite-edi})
-      then do:
-      v-arh-name = ''.
-      p-arch = no.
-    end.
-      when integer({&esys-dm-contour-edi})
-      then do:
-        v-arh-name = ''.
-        p-arch = no.
-      end.
-      when integer({&esys-dm-oracle-retail})
-      then do:
-        v-arh-name = search('exe/pkzipc.exe':U).
-        v-arh-type = "zip".
-      end.
-      when integer({&esys-dm-cdash})
-      then do:
-        v-arh-name = "".
-        v-arh-type = "".
-      end.
-      when integer({&esys-dm-erp-1C-RN}) then .
-      otherwise  do:
-        assign
-          v-arh-name = search( "exe/arj32.exe":U )
-        .
-        if v-arh-name = ? then do:
-          assign
-            v-arh-name = search( "exe/arj.exe":U )
-          .
-        end.
-        v-arh-type = "arj".
-      end.
-    end case.
-end .
 
     
-    if r-index( p-file-name, '.':u) > 0 then do:
-      assign
-        v-file-name-no-ext = substring( p-file-name, 1, r-index( p-file-name, '.':u) - 1 )
-        v-ext-name         = entry( num-entries( p-file-name, "." ), p-file-name, "." )
-      .
-    end.
-    else do:
-      assign
-        v-file-name-no-ext = p-file-name
-        v-ext-name         = "":U
-      .
-    end.
-    assign
-/* 11/I-2019 - вместо v-file-source используется p-fullfile-name
-      v-file-source     = p-source-dir + {&back-slash-char} + p-file-name*/
-      v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name
-      v-file-target     = p-target-dir + {&back-slash-char} + p-file-name
-    .
     case p-action :
       when "fput" or
       when "fget" then .
       when "put" then do :
-        
-        if p-delivery-method = integer({&esys-dm-oracle-retail}) then do:
-            if search(p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG") <> ? then do:
-              v-send-log = yes.
-              assign
-              v-log-file-source     = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG"
-              v-log-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".LOG"
-              v-log-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG"
-              .
-            end.
-        end .
-        
       end . /* end_of put */
       otherwise do :
         
