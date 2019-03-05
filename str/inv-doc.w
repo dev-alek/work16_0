@@ -174,7 +174,7 @@ first ub.goods no-lock where ~
  {&clmn_1-br-list}   @ inv-mark              column-label {&label-clmn_1-br-list} format "x(1)":U ~
  {&clmn_2-br-list}   @ prt-mark              column-label {&label-clmn_2-br-list} format "x(1)":U ~
  {&clmn_3-br-list}                           column-label {&label-clmn_3-br-list} ~
- {&clmn_4-br-list}                           column-label {&label-clmn_4-br-list} format "x(37)":U ~
+ {&clmn_4-br-list}                           column-label {&label-clmn_4-br-list} format "x(150)":U ~
  {&clmn_29-br-list}  @ varwas-qnty-kg        column-label {&label-clmn_29-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_30-br-list}  @ varare-qnty-kg        column-label {&label-clmn_30-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
@@ -1782,6 +1782,9 @@ do while parnext-prev :
     assign
       dif-only = "all":U
     .
+    ub.goods.gds-name:width     in browse {&browse-name}   = 40.
+    
+    
     { gbl/mv-clmn.i
         &ext-col      = 29
         &frame-name   = "{&frame-name}"
