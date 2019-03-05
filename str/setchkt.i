@@ -89,7 +89,13 @@ if v-b-c <> ? then do:
     {&prefix}view-log = yes
     .
   end.
-  
+  find first ub.goods-attr where ub.goods-attr.gds-code = buf_goods.gds-code and ub.goods-attr.attr-code = {&attr-ptrl-as-good} no-error.
+
+  if LOOKUP({&petrolium}, buf_units.type) = 0 and (available (ub.goods-attr) and ub.goods-attr.attr-value= 'yes') then do:
+    buf_chk-gds.nozzle-code = 0.
+    buf_chk-gds.pump = 0.
+  end.
+
   IF buf_chk-gds.pump > 0 and LOOKUP({&petrolium}, buf_units.type) = 0 and buf_goods.gds-type = {&gds-office} then do:
     buf_chk-gds.pump = 0.
   end.

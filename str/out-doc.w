@@ -792,7 +792,7 @@ DEFINE BROWSE br-dtl
   {&sort-clmn_2-br-dtl}                       column-label {&label-clmn_2-br-dtl}  format ">>>>>9"
   {&sort-clmn_3-br-dtl}                       column-label {&label-clmn_3-br-dtl}
   {&sort-clmn_4-br-dtl}                       column-label {&label-clmn_4-br-dtl}
-  {&sort-clmn_5-br-dtl}     @ v-gds-name      column-label {&label-clmn_5-br-dtl}  format "x(100)"
+  {&sort-clmn_5-br-dtl}     @ v-gds-name      column-label {&label-clmn_5-br-dtl}  format "x(150)"
   {&sort-clmn_6-br-dtl}                       column-label {&label-clmn_6-br-dtl}  format ">>>,>>>,>>9.999"
   {&sort-clmn_7-br-dtl}                       column-label {&label-clmn_7-br-dtl}  format ">>>,>>>,>>9.999"
   {&sort-clmn_8-br-dtl}                       column-label {&label-clmn_8-br-dtl}  format "x(3)"

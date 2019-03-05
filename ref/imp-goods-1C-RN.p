@@ -127,7 +127,11 @@ define variable v-barcode-list  as longchar  no-undo .
   
   find first ub.clients no-lock where ub.clients.db-num   = ibs.th.gbl.gbl-var:g#db-num
                                   and ub.clients.obj-type = {&shop}
-                                  and ub.clients.stts = 0 .
+                                  and ub.clients.stts = 0  no-error.
+  if not available ub.clients
+  then do:
+      undo, return error substitute("Не найден ни один активный магазин для бд &1", ibs.th.gbl.gbl-var:g#db-num ) .
+  end.                               
   
   for first buf_gds-prt field (node-code) no-lock
       where buf_gds-prt.root = true

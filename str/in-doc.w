@@ -807,7 +807,7 @@ DEFINE BROWSE br-dtl
       {&sort-clmn_2-br-dtl}                    column-label {&label-clmn_2-br-dtl}  format ">>>>9":U
       {&sort-clmn_3-br-dtl}                    column-label {&label-clmn_3-br-dtl}  format "+/-":U
       {&sort-clmn_4-br-dtl}                    column-label {&label-clmn_4-br-dtl}
-      {&sort-clmn_5-br-dtl}                    column-label {&label-clmn_5-br-dtl}
+      {&sort-clmn_5-br-dtl}                    column-label {&label-clmn_5-br-dtl}  format "x(150)"
       {&sort-clmn_6-br-dtl}                    column-label {&label-clmn_6-br-dtl}
       {&sort-clmn_7-br-dtl}                    column-label {&label-clmn_7-br-dtl}  format "x(3)":U
       {&sort-clmn_8-br-dtl}                    column-label {&label-clmn_8-br-dtl}
@@ -2667,6 +2667,7 @@ do on error undo main-block, leave main-block :
                                                 and ub.clients-attr.attr-value = "yes")
    then do:*/
    b-in-attr-fuel:sensitive = true.
+   ub.goods.gds-name:width     in browse {&browse-name}   = 40.
   /*end.*/
    
   if not is-fuel
