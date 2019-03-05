@@ -218,7 +218,7 @@ do:
 
       end.
       if p-Cashiers:del-l = 1 then buf_staff.date-end = v-today. 
-      buf_staff.date-end = date("31/12/9999")  .
+      else buf_staff.date-end = date("31/12/9999")  .
       
       if p-Cashiers:del-f = 0 then bf_clients.stts = 0 .
       
