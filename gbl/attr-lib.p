@@ -2946,7 +2946,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-nakl_par   true
 &scop output-display-attr-nakl_par  true
 &scop other-attr-nakl_par           'spr-ext=gbl\naklpa1.w':U
-&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,logical':U
+&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,character,character,character,logical':U
 &scop prop-label-list-attr-nakl_par 'Дата закрытия периода~
 ,Дата факт = Дате документа (для внешних ПН РН и МФ )~
 ,Тип заведения НДС по умолчанию~
@@ -2968,10 +2968,13 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 ,В ПН Обязательно указывать ГТД для товаров с испортным производителем~
 ,Запрещен приход при превышении максимальных остатков~
 ,Помарочный учет движения алкогольной продукции~
-,Обязательные атрибуты ПН~
+,Приход внешний топливо~
+,Приход внешний товары~
+,Возврат поставщику товары~
+,Расход внешний товары~
 ,Разрешено вводить фактическое количество в статусе Накл-~
 '
-&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,edit-fact-wayb'
+&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb'
 &scop global-attr-nakl_par true
 &scop host-attr-nakl_par   true
 &scop shop-attr-nakl_par   true
@@ -2999,7 +3002,10 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-nakl_par_gtd-to-imp-prod_tooltip   (gtd-to-imp-prod) Запрещено закрытие на факт ПН` если не указана ГТД для товара` у производителя которого стоит атрибут - Импортный производитель
 &scop attr-nakl_par_exc-max-qnty_tooltip   (exc-max-qnty) Запрещено закрытие на факт ПН` если после закрытия остатки товара будут больше` чем установленные максимальные остатки на объекте
 &scop attr-nakl_par_mark-alchol_tooltip   (mark-alchol) Помарочный учет движения алкогольной продукции
-&scop attr-nakl_par_attr-PN_tooltip  (attr-PN) Обязательные атрибуты ПН
+&scop attr-nakl_par_attr-PN_tooltip  (attr-PN) Обязательные атрибуты накладной приход внешний топливо
+&scop attr-nakl_par_attr-mandatory-gds-in-wayb_tooltip  (attr-mandatory-gds-in-wayb)  Обязательные атрибуты накладной приход внешний товары
+&scop attr-nakl_par_attr-mandatory-gds-ret-wayb_tooltip (attr-mandatory-gds-ret-wayb) Обязательные атрибуты накладной возврат поставщику товары
+&scop attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip (attr-mandatory-gds-exp-wayb) Обязательные атрибуты накладной расход внешний товары
 &scop attr-nakl_par_edit-fact-wayb_tooltip (edit-fact-wayb) Разрешено вводить фактическое количество в статусе Накл-
 &scop prop-tooltip-list-attr-nakl_par {&attr-nakl_par_date-close-period_tooltip},~
 {&attr-nakl_par_stfactdt_tooltip},~
@@ -3023,7 +3029,10 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 {&attr-nakl_par_exc-max-qnty_tooltip},~
 {&attr-nakl_par_mark-alchol_tooltip},~
 {&attr-nakl_par_attr-PN_tooltip},~
-{&attr-nakl_par_edit-fact-wayb_tooltip}
+{&attr-nakl_par_attr-mandatory-gds-in-wayb_tooltip},~
+{&attr-nakl_par_attr-mandatory-gds-ret-wayb_tooltip},~
+{&attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip},~
+{&attr-nakl_par_edit-fact-wayb_tooltip_tooltip}
 &scop level-way-attr-nakl_par "obj,host,global"
 &scop up-way-attr-nakl_par "nakl_par,nakl_par,nakl_par"
 

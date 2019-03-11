@@ -73,6 +73,15 @@ define variable v-list-edt      as character    no-undo.
 define variable v-list-attr-PN-full as character    no-undo.
 define variable v-list-attr-PN      as character    no-undo.
 
+define variable v-list-attr-mandatory-gds-in-wayb-full  as character no-undo.
+define variable v-list-attr-mandatory-gds-in-wayb       as character no-undo.
+
+define variable v-list-attr-mandatory-gds-ret-wayb-full as character no-undo.
+define variable v-list-attr-mandatory-gds-ret-wayb      as character no-undo.
+
+define variable v-list-attr-mandatory-gds-exp-wayb-full as character no-undo.
+define variable v-list-attr-mandatory-gds-exp-wayb      as character no-undo.
+
 
 assign
 v-tth  = buffer thbjattr_thbj-attr:table-handle .
@@ -582,28 +591,82 @@ DEFINE BUTTON B-22
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-23 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-24 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-25 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
 DEFINE BUTTON B-ex 
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
+
+DEFINE BUTTON B-set_attr-mandatory-gds-exp-wayb 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.
+
+DEFINE BUTTON B-set_attr-mandatory-gds-in-wayb 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.
+
+DEFINE BUTTON B-set_attr-mandatory-gds-ret-wayb 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.
 
 DEFINE BUTTON B-set_attr-PN 
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
      SIZE 2.63 BY 1.08.
 
+DEFINE VARIABLE attr-mandatory-gds-exp-wayb AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 35.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE attr-mandatory-gds-in-wayb AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 35.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE attr-mandatory-gds-ret-wayb AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 35.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE attr-PN AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 35.5 BY 6 NO-UNDO.
+     SIZE 35.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE reasonme AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 41.25 BY 1
      FGCOLOR 1  NO-UNDO.
 
+DEFINE VARIABLE v-attr-mandatory-gds-exp-wayb AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 28 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-attr-mandatory-gds-in-wayb AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 28 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-attr-mandatory-gds-ret-wayb AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 28 BY 1 NO-UNDO.
+
 DEFINE VARIABLE v-attr-PN AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 25.5 BY 1 NO-UNDO.
+     SIZE 28 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-back-date AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
@@ -648,6 +711,18 @@ DEFINE VARIABLE v-round-vat-sum AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE v-vat-goods AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 66.13 BY 1 NO-UNDO.
+
+DEFINE IMAGE I-attr-mandatory-gds-exp-wayb
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
+DEFINE IMAGE I-attr-mandatory-gds-in-wayb
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
+DEFINE IMAGE I-attr-mandatory-gds-ret-wayb
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
 
 DEFINE IMAGE I-attr-PN
      FILENAME "cmp/info.bmp":U
@@ -765,148 +840,6 @@ DEFINE FRAME Dialog-Frame
          TITLE "Настройки для накладных"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
 
-DEFINE FRAME page-1
-     B-1 AT ROW 1.08 COL 3.13 WIDGET-ID 80
-     date-close-period AT ROW 1.08 COL 4.63 COLON-ALIGNED NO-LABEL WIDGET-ID 48
-     B-2 AT ROW 2.13 COL 3.13 WIDGET-ID 82
-     stfactdt AT ROW 2.13 COL 6.63 WIDGET-ID 46
-     B-3 AT ROW 3.17 COL 3.13 WIDGET-ID 84
-     intprmvq AT ROW 3.17 COL 6.63 WIDGET-ID 52
-     B-4 AT ROW 4.21 COL 3.13 WIDGET-ID 86
-     minusprt AT ROW 4.21 COL 6.63 WIDGET-ID 58
-     part-prc AT ROW 5.17 COL 3.13 WIDGET-ID 182
-     curcli AT ROW 6 COL 3.13 WIDGET-ID 148
-     B-7 AT ROW 6.88 COL 3.13 WIDGET-ID 92
-     avail-on-date AT ROW 6.88 COL 6.63 WIDGET-ID 96
-     nocurbas AT ROW 7.83 COL 60 NO-LABEL WIDGET-ID 124
-     rnd-znk AT ROW 9.79 COL 46.5 COLON-ALIGNED NO-LABEL WIDGET-ID 214
-     chk-prs AT ROW 9.83 COL 3.13 WIDGET-ID 130
-     convimp AT ROW 10.79 COL 3.13 WIDGET-ID 134
-     noapndsc AT ROW 10.79 COL 48.5 WIDGET-ID 176
-     is-bcdoc AT ROW 11.67 COL 3.13 WIDGET-ID 156
-     is-ov AT ROW 11.67 COL 48.5 WIDGET-ID 164
-     B-9 AT ROW 12.58 COL 3.13 WIDGET-ID 108
-     proxycrd AT ROW 12.58 COL 6.63 WIDGET-ID 112
-     vat-sum AT ROW 13.54 COL 3.13 WIDGET-ID 232
-     B-5 AT ROW 14.33 COL 3.13 WIDGET-ID 88
-     type-vat AT ROW 14.33 COL 37.88 NO-LABEL WIDGET-ID 68
-     vat-ext AT ROW 14.33 COL 60.5 COLON-ALIGNED NO-LABEL WIDGET-ID 226
-     B-6 AT ROW 15.38 COL 3.13 WIDGET-ID 90
-     type-slt AT ROW 15.38 COL 37.88 NO-LABEL WIDGET-ID 74
-     slt-ext AT ROW 15.38 COL 60.5 COLON-ALIGNED NO-LABEL WIDGET-ID 220
-     multdtyp AT ROW 16.33 COL 3.13 WIDGET-ID 170
-     prc-exp AT ROW 17.21 COL 1.13 COLON-ALIGNED NO-LABEL WIDGET-ID 210
-     B-8 AT ROW 18.29 COL 3.13 WIDGET-ID 100
-     factorrt AT ROW 18.29 COL 5 COLON-ALIGNED NO-LABEL WIDGET-ID 102
-     B-10 AT ROW 19.38 COL 3.13 WIDGET-ID 238
-     inp_sum AT ROW 19.38 COL 6.63 WIDGET-ID 236
-     v-date-close-period AT ROW 1.08 COL 19.13 NO-LABEL WIDGET-ID 6
-     v-stfactdt AT ROW 2.13 COL 9.38 NO-LABEL WIDGET-ID 18
-     v-intprmvq AT ROW 3.17 COL 9.38 NO-LABEL WIDGET-ID 54
-     v-minusprt AT ROW 4.21 COL 9.38 NO-LABEL WIDGET-ID 60
-     v-part-prc AT ROW 5.17 COL 6.63 NO-LABEL WIDGET-ID 184
-     v-curcli AT ROW 6 COL 6.63 NO-LABEL WIDGET-ID 150
-     v-avail-on-date AT ROW 6.88 COL 9.38 NO-LABEL WIDGET-ID 98
-     v-nocurbas AT ROW 7.83 COL 3.13 NO-LABEL WIDGET-ID 122
-     v-rnd-znk AT ROW 9.79 COL 52.5 NO-LABEL WIDGET-ID 216
-     v-chk-prs AT ROW 9.83 COL 5.75 NO-LABEL WIDGET-ID 132
-     v-convimp AT ROW 10.79 COL 5.75 NO-LABEL WIDGET-ID 138
-     v-noapndsc AT ROW 10.79 COL 52.25 NO-LABEL WIDGET-ID 178
-     v-is-bcdoc AT ROW 11.67 COL 5.75 NO-LABEL WIDGET-ID 160
-     v-is-ov AT ROW 11.67 COL 52.13 NO-LABEL WIDGET-ID 166
-     v-proxycrd AT ROW 12.58 COL 8.63 NO-LABEL WIDGET-ID 114
-     v-vat-sum AT ROW 13.54 COL 6.63 NO-LABEL WIDGET-ID 234
-     v-type-vat AT ROW 14.33 COL 6.5 NO-LABEL WIDGET-ID 66
-     v-vat-ext AT ROW 14.33 COL 70.63 NO-LABEL WIDGET-ID 228
-     v-type-slt AT ROW 15.38 COL 6.5 NO-LABEL WIDGET-ID 78
-     v-slt-ext AT ROW 15.38 COL 63.5 NO-LABEL WIDGET-ID 222
-     v-multdtyp AT ROW 16.33 COL 6.63 NO-LABEL WIDGET-ID 172
-     v-prc-exp AT ROW 17.21 COL 10.88 NO-LABEL WIDGET-ID 208
-     v-factorrt AT ROW 18.29 COL 13.13 NO-LABEL WIDGET-ID 106
-     v-inp_sum AT ROW 19.38 COL 9.38 NO-LABEL WIDGET-ID 242
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
-         SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.5 ROW 2.25
-         SIZE 99 BY 20 WIDGET-ID 200.
-
-/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
-DEFINE FRAME page-1
-     I-date-close-period AT ROW 1.08 COL 1.25 WIDGET-ID 10
-     I-stfactdt AT ROW 2.13 COL 1 WIDGET-ID 34
-     I-intprmvq AT ROW 3.17 COL 1 WIDGET-ID 50
-     I-minusprt AT ROW 4.21 COL 1 WIDGET-ID 56
-     I-part-prc AT ROW 5.17 COL 1 WIDGET-ID 180
-     I-curcli AT ROW 6 COL 1 WIDGET-ID 146
-     I-avail-on-date AT ROW 6.88 COL 1 WIDGET-ID 94
-     I-nocurbas AT ROW 7.83 COL 1 WIDGET-ID 118
-     I-chk-prs AT ROW 9.83 COL 1 WIDGET-ID 128
-     I-rnd-znk AT ROW 9.79 COL 46 WIDGET-ID 212
-     I-convimp AT ROW 10.79 COL 1 WIDGET-ID 136
-     I-noapndsc AT ROW 10.79 COL 46 WIDGET-ID 174
-     I-is-bcdoc AT ROW 11.67 COL 1 WIDGET-ID 158
-     I-is-ov AT ROW 11.67 COL 46 WIDGET-ID 162
-     I-proxycrd AT ROW 12.58 COL 1 WIDGET-ID 110
-     I-vat-sum AT ROW 13.46 COL 1 WIDGET-ID 230
-     I-type-vat AT ROW 14.33 COL 1 WIDGET-ID 64
-     I-vat-ext AT ROW 14.33 COL 60 WIDGET-ID 224
-     I-type-slt AT ROW 15.33 COL 1 WIDGET-ID 72
-     I-slt-ext AT ROW 15.38 COL 60 WIDGET-ID 218
-     I-multdtyp AT ROW 16.38 COL 1 WIDGET-ID 168
-     I-prc-exp AT ROW 17.21 COL 1 WIDGET-ID 204
-     I-factorrt AT ROW 18.25 COL 1 WIDGET-ID 104
-     I-inp_sum AT ROW 19.38 COL 1 WIDGET-ID 240
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
-         SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.5 ROW 2.25
-         SIZE 99 BY 20 WIDGET-ID 200.
-
-DEFINE FRAME page-2
-     B-11 AT ROW 1.13 COL 2.88 WIDGET-ID 238
-     reasonm AT ROW 1.13 COL 6 WIDGET-ID 236
-     B-14 AT ROW 2.17 COL 5.75 WIDGET-ID 260
-     B-ex AT ROW 2.17 COL 31.13 WIDGET-ID 268
-     back-date AT ROW 3.25 COL 5.5 WIDGET-ID 248
-     B-12 AT ROW 3.29 COL 2.88 WIDGET-ID 244
-     B-13 AT ROW 4.42 COL 2.88 WIDGET-ID 252
-     not-ord AT ROW 4.42 COL 6 WIDGET-ID 254
-     B-15 AT ROW 5.46 COL 2.88 WIDGET-ID 270
-     neg-ask AT ROW 5.46 COL 6 WIDGET-ID 274
-     B-16 AT ROW 6.58 COL 2.88 WIDGET-ID 278
-     vat-goods AT ROW 6.58 COL 6 WIDGET-ID 282
-     B-17 AT ROW 7.75 COL 2.88 WIDGET-ID 286
-     inv-ship AT ROW 7.75 COL 6 WIDGET-ID 290
-     B-18 AT ROW 9 COL 2.88 WIDGET-ID 294
-     round-vat-sum AT ROW 9 COL 6 WIDGET-ID 298
-     B-19 AT ROW 10.25 COL 2.88 WIDGET-ID 302
-     gtd-to-imp-prod AT ROW 10.25 COL 6 WIDGET-ID 306
-     B-20 AT ROW 11.5 COL 2.88 WIDGET-ID 310
-     exc-max-qnty AT ROW 11.5 COL 6 WIDGET-ID 314
-     v-reasonm AT ROW 1.13 COL 8.75 NO-LABEL WIDGET-ID 242
-     v-reasonme AT ROW 2.17 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 264
-     reasonme AT ROW 2.25 COL 32.75 COLON-ALIGNED NO-LABEL WIDGET-ID 266
-     v-back-date AT ROW 3.38 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 250
-     v-not-ord AT ROW 4.42 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 258
-     v-neg-ask AT ROW 5.46 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 276
-     v-vat-goods AT ROW 6.58 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 284
-     v-inv-ship AT ROW 7.75 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 292
-     v-round-vat-sum AT ROW 9 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 300
-     v-gtd-to-imp-prod AT ROW 10.25 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 308
-     v-exc-max-qnty AT ROW 11.5 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 316
-     I-reasonm AT ROW 1.13 COL 1 WIDGET-ID 240
-     I-back-date AT ROW 3.29 COL 1.5 WIDGET-ID 246
-     I-not-ord AT ROW 4.42 COL 1 WIDGET-ID 256
-     I-reasonme AT ROW 2.17 COL 3.88 WIDGET-ID 262
-     I-neg-ask AT ROW 5.46 COL 1 WIDGET-ID 272
-     I-vat-goods AT ROW 6.58 COL 1 WIDGET-ID 280
-     I-inv-ship AT ROW 7.75 COL 1 WIDGET-ID 288
-     I-round-vat-sum AT ROW 9 COL 1 WIDGET-ID 296
-     I-gtd-to-imp-prod AT ROW 10.25 COL 1 WIDGET-ID 304
-     I-exc-max-qnty AT ROW 11.5 COL 1 WIDGET-ID 312
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
-         SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.63 ROW 2.33
-         SIZE 99 BY 19.75 WIDGET-ID 300.
-
 DEFINE FRAME page-2
      B-11 AT ROW 1.13 COL 2.88 WIDGET-ID 238
      reasonm AT ROW 1.13 COL 6 WIDGET-ID 236
@@ -928,11 +861,20 @@ DEFINE FRAME page-2
      gtd-to-imp-prod AT ROW 10.25 COL 6 WIDGET-ID 306
      B-20 AT ROW 11.5 COL 2.88 WIDGET-ID 310
      exc-max-qnty AT ROW 11.5 COL 6 WIDGET-ID 314
-     B-22 AT ROW 12.75 COL 2.88 WIDGET-ID 484
-     B-set_attr-PN AT ROW 12.75 COL 32 WIDGET-ID 480
-     B-21 AT ROW 13.79 COL 2.88 WIDGET-ID 496
-     edit-fact-wayb AT ROW 13.79 COL 6 WIDGET-ID 498
-     attr-PN AT ROW 15.25 COL 6 NO-LABEL WIDGET-ID 492
+     B-22 AT ROW 13.75 COL 6.88 WIDGET-ID 484
+     B-set_attr-PN AT ROW 13.75 COL 39 WIDGET-ID 480
+     attr-PN AT ROW 13.75 COL 42 NO-LABEL WIDGET-ID 492
+     B-23 AT ROW 14.75 COL 6.88 WIDGET-ID 504
+     B-set_attr-mandatory-gds-in-wayb AT ROW 14.75 COL 39 WIDGET-ID 506
+     attr-mandatory-gds-in-wayb AT ROW 14.75 COL 42 NO-LABEL WIDGET-ID 528
+     B-24 AT ROW 15.75 COL 6.88 WIDGET-ID 512
+     B-set_attr-mandatory-gds-ret-wayb AT ROW 15.75 COL 39 WIDGET-ID 514
+     attr-mandatory-gds-ret-wayb AT ROW 15.75 COL 42 NO-LABEL WIDGET-ID 530
+     B-25 AT ROW 16.75 COL 6.88 WIDGET-ID 520
+     B-set_attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 39 WIDGET-ID 522
+     attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 42 NO-LABEL WIDGET-ID 532
+     B-21 AT ROW 17.79 COL 2.88 WIDGET-ID 496
+     edit-fact-wayb AT ROW 17.79 COL 6 WIDGET-ID 498
      v-reasonm AT ROW 1.13 COL 8.75 NO-LABEL WIDGET-ID 242
      v-reasonme AT ROW 2.17 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 264
      reasonme AT ROW 2.25 COL 32.75 COLON-ALIGNED NO-LABEL WIDGET-ID 266
@@ -943,12 +885,24 @@ DEFINE FRAME page-2
      v-inv-ship AT ROW 7.75 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 292
      v-round-vat-sum AT ROW 9 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 300
      v-gtd-to-imp-prod AT ROW 10.25 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 308
-     v-exc-max-qnty AT ROW 11.5 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 316
-     v-attr-PN AT ROW 12.75 COL 4.5 COLON-ALIGNED NO-LABEL WIDGET-ID 494
-     v-edit-fact-wayb AT ROW 13.79 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 502
+     v-exc-max-qnty AT ROW 11.5 COL 8.5 NO-LABEL WIDGET-ID 316
+     v-attr-PN AT ROW 13.75 COL 8.5 COLON-ALIGNED NO-LABEL WIDGET-ID 494
+     v-attr-mandatory-gds-in-wayb AT ROW 14.75 COL 8.5 COLON-ALIGNED NO-LABEL WIDGET-ID 510
+     v-attr-mandatory-gds-ret-wayb AT ROW 15.75 COL 8.5 COLON-ALIGNED NO-LABEL WIDGET-ID 518
+     v-attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 8.5 COLON-ALIGNED NO-LABEL WIDGET-ID 526
+     v-edit-fact-wayb AT ROW 17.79 COL 6.5 COLON-ALIGNED NO-LABEL WIDGET-ID 502
+     "Обязательные атрибуты накладных:" VIEW-AS TEXT
+          SIZE 36 BY .67 AT ROW 12.75 COL 1 WIDGET-ID 534
      I-reasonm AT ROW 1.13 COL 1 WIDGET-ID 240
      I-back-date AT ROW 3.29 COL 1.5 WIDGET-ID 246
      I-not-ord AT ROW 4.42 COL 1 WIDGET-ID 256
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
+         AT COL 1.63 ROW 2.33
+         SIZE 99 BY 20.67 WIDGET-ID 300.
+
+/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
+DEFINE FRAME page-2
      I-reasonme AT ROW 2.17 COL 3.88 WIDGET-ID 262
      I-neg-ask AT ROW 5.46 COL 1 WIDGET-ID 272
      I-vat-goods AT ROW 6.58 COL 1 WIDGET-ID 280
@@ -956,8 +910,11 @@ DEFINE FRAME page-2
      I-round-vat-sum AT ROW 9 COL 1 WIDGET-ID 296
      I-gtd-to-imp-prod AT ROW 10.25 COL 1 WIDGET-ID 304
      I-exc-max-qnty AT ROW 11.5 COL 1 WIDGET-ID 312
-     I-attr-PN AT ROW 12.75 COL 1 WIDGET-ID 486
-     I-edit-fact-wayb AT ROW 13.79 COL 1 WIDGET-ID 500
+     I-attr-PN AT ROW 13.75 COL 5 WIDGET-ID 486
+     I-edit-fact-wayb AT ROW 17.79 COL 1 WIDGET-ID 500
+     I-attr-mandatory-gds-in-wayb AT ROW 14.75 COL 5 WIDGET-ID 508
+     I-attr-mandatory-gds-ret-wayb AT ROW 15.75 COL 5 WIDGET-ID 516
+     I-attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 5 WIDGET-ID 524
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.63 ROW 2.33
@@ -1208,7 +1165,25 @@ ASSIGN
 /* SETTINGS FOR FRAME page-2
                                                                         */
 ASSIGN 
+       attr-mandatory-gds-exp-wayb:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       attr-mandatory-gds-in-wayb:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       attr-mandatory-gds-ret-wayb:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
        attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       v-attr-mandatory-gds-exp-wayb:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       v-attr-mandatory-gds-in-wayb:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       v-attr-mandatory-gds-ret-wayb:READ-ONLY IN FRAME page-2        = TRUE.
 
 ASSIGN 
        v-attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
@@ -1219,6 +1194,8 @@ ASSIGN
 ASSIGN 
        v-edit-fact-wayb:READ-ONLY IN FRAME page-2        = TRUE.
 
+/* SETTINGS FOR FILL-IN v-exc-max-qnty IN FRAME page-2
+   ALIGN-L                                                              */
 ASSIGN 
        v-exc-max-qnty:READ-ONLY IN FRAME page-2        = TRUE.
 
@@ -1492,13 +1469,42 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME B-22
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-22 Dialog-Frame
-ON CHOOSE OF B-22 IN FRAME page-2
+
+&Scoped-define SELF-NAME B-23
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-23 Dialog-Frame
+ON CHOOSE OF B-23 IN FRAME page-2
 DO:
   run gbl/v-taobj.w
       ({&attr-nakl_par},
-       "edit-fact-wayb"
+       "attr-mandatory-gds-in-wayb"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-24
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-24 Dialog-Frame
+ON CHOOSE OF B-24 IN FRAME page-2
+DO:
+  run gbl/v-taobj.w
+      ({&attr-nakl_par},
+       "attr-mandatory-gds-ret-wayb"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-25
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-25 Dialog-Frame
+ON CHOOSE OF B-25 IN FRAME page-2
+DO:
+  run gbl/v-taobj.w
+      ({&attr-nakl_par},
+       "attr-mandatory-gds-exp-wayb"
        ).
 END.
 
@@ -1619,11 +1625,68 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-set_attr-mandatory-gds-exp-wayb
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_attr-mandatory-gds-exp-wayb Dialog-Frame
+ON CHOOSE OF B-set_attr-mandatory-gds-exp-wayb IN FRAME page-2
+DO:
+  run select-attr-mandat-wayb in this-procedure
+    ( input v-list-attr-mandatory-gds-exp-wayb,
+      input v-list-attr-mandatory-gds-exp-wayb-full,
+      input-output attr-mandatory-gds-exp-wayb
+    )
+    .
+  assign attr-mandatory-gds-exp-wayb:screen-value = attr-mandatory-gds-exp-wayb.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-set_attr-mandatory-gds-in-wayb
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_attr-mandatory-gds-in-wayb Dialog-Frame
+ON CHOOSE OF B-set_attr-mandatory-gds-in-wayb IN FRAME page-2
+DO:
+  run select-attr-mandat-wayb in this-procedure
+    ( input v-list-attr-mandatory-gds-in-wayb,
+      input v-list-attr-mandatory-gds-in-wayb-full,
+      input-output attr-mandatory-gds-in-wayb
+    )
+    .
+  assign attr-mandatory-gds-in-wayb:screen-value = attr-mandatory-gds-in-wayb.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-set_attr-mandatory-gds-ret-wayb
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_attr-mandatory-gds-ret-wayb Dialog-Frame
+ON CHOOSE OF B-set_attr-mandatory-gds-ret-wayb IN FRAME page-2
+DO:
+  run select-attr-mandat-wayb  in this-procedure
+    ( input v-list-attr-mandatory-gds-ret-wayb,
+      input v-list-attr-mandatory-gds-ret-wayb-full,
+      input-output attr-mandatory-gds-ret-wayb
+    )
+    .
+  assign attr-mandatory-gds-ret-wayb:screen-value = attr-mandatory-gds-ret-wayb.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME B-set_attr-PN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_attr-PN Dialog-Frame
 ON CHOOSE OF B-set_attr-PN IN FRAME page-2
 DO:
-  run select-attr-PN in this-procedure.
+  run select-attr-mandat-wayb in this-procedure
+    ( input v-list-attr-PN,
+      input v-list-attr-PN-full,
+      input-output attr-PN
+    )
+    .
+  assign attr-PN:screen-value = attr-PN.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1667,6 +1730,39 @@ END.
 
 
 &Scoped-define FRAME-NAME page-2
+&Scoped-define SELF-NAME I-attr-mandatory-gds-exp-wayb
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-attr-mandatory-gds-exp-wayb Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-attr-mandatory-gds-exp-wayb IN FRAME page-2
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME I-attr-mandatory-gds-in-wayb
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-attr-mandatory-gds-in-wayb Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-attr-mandatory-gds-in-wayb IN FRAME page-2
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME I-attr-mandatory-gds-ret-wayb
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-attr-mandatory-gds-ret-wayb Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-attr-mandatory-gds-ret-wayb IN FRAME page-2
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME I-attr-PN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-attr-PN Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-attr-PN IN FRAME page-2
@@ -2200,19 +2296,29 @@ PROCEDURE enable_UI :
       WITH FRAME page-1.
   {&OPEN-BROWSERS-IN-QUERY-page-1}
   DISPLAY reasonm back-date not-ord neg-ask vat-goods inv-ship round-vat-sum 
-          gtd-to-imp-prod exc-max-qnty edit-fact-wayb attr-PN v-reasonm 
-          v-reasonme reasonme v-back-date v-not-ord v-neg-ask v-vat-goods 
-          v-inv-ship v-round-vat-sum v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN 
+          gtd-to-imp-prod exc-max-qnty attr-PN attr-mandatory-gds-in-wayb 
+          attr-mandatory-gds-ret-wayb attr-mandatory-gds-exp-wayb edit-fact-wayb 
+          v-reasonm v-reasonme reasonme v-back-date v-not-ord v-neg-ask 
+          v-vat-goods v-inv-ship v-round-vat-sum v-gtd-to-imp-prod 
+          v-exc-max-qnty v-attr-PN v-attr-mandatory-gds-in-wayb 
+          v-attr-mandatory-gds-ret-wayb v-attr-mandatory-gds-exp-wayb 
           v-edit-fact-wayb 
       WITH FRAME page-2.
   ENABLE I-reasonm I-back-date I-not-ord I-reasonme I-neg-ask I-vat-goods 
          I-inv-ship I-round-vat-sum I-gtd-to-imp-prod I-exc-max-qnty I-attr-PN 
-         I-edit-fact-wayb B-11 reasonm B-14 B-ex back-date B-12 B-13 not-ord 
-         B-15 neg-ask B-16 vat-goods B-17 inv-ship B-18 round-vat-sum B-19 
-         gtd-to-imp-prod B-20 exc-max-qnty B-22 B-set_attr-PN B-21 
-         edit-fact-wayb attr-PN v-reasonm v-reasonme reasonme v-back-date 
-         v-not-ord v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum 
-         v-gtd-to-imp-prod v-exc-max-qnty v-attr-PN v-edit-fact-wayb 
+         I-edit-fact-wayb I-attr-mandatory-gds-in-wayb 
+         I-attr-mandatory-gds-ret-wayb I-attr-mandatory-gds-exp-wayb B-11 
+         reasonm B-14 B-ex back-date B-12 B-13 not-ord B-15 neg-ask B-16 
+         vat-goods B-17 inv-ship B-18 round-vat-sum B-19 gtd-to-imp-prod B-20 
+         exc-max-qnty B-22 B-set_attr-PN attr-PN B-23 
+         B-set_attr-mandatory-gds-in-wayb attr-mandatory-gds-in-wayb B-24 
+         B-set_attr-mandatory-gds-ret-wayb attr-mandatory-gds-ret-wayb B-25 
+         B-set_attr-mandatory-gds-exp-wayb attr-mandatory-gds-exp-wayb B-21 
+         edit-fact-wayb v-reasonm v-reasonme reasonme v-back-date v-not-ord 
+         v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum v-gtd-to-imp-prod 
+         v-exc-max-qnty v-attr-PN v-attr-mandatory-gds-in-wayb 
+         v-attr-mandatory-gds-ret-wayb v-attr-mandatory-gds-exp-wayb 
+         v-edit-fact-wayb 
       WITH FRAME page-2.
   {&OPEN-BROWSERS-IN-QUERY-page-2}
 END PROCEDURE.
@@ -2488,6 +2594,21 @@ FOR EACH thbjattr_thbj-attr
 {&telo1}
 
 &scop n-page 2
+&scop pole attr-mandatory-gds-in-wayb
+&scop type character
+{&telo1}
+
+&scop n-page 2
+&scop pole attr-mandatory-gds-ret-wayb
+&scop type character
+{&telo1}
+
+&scop n-page 2
+&scop pole attr-mandatory-gds-exp-wayb
+&scop type character
+{&telo1}
+
+&scop n-page 2
 &scop pole edit-fact-wayb
 &scop type logical
 {&telo1}
@@ -2627,6 +2748,15 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 {&telo2}
 
 &scop pole attr-PN
+{&telo2}
+
+&scop pole attr-mandatory-gds-in-wayb
+{&telo2}
+
+&scop pole attr-mandatory-gds-ret-wayb
+{&telo2}
+
+&scop pole attr-mandatory-gds-exp-wayb
 {&telo2}
 
 &scop pole edit-fact-wayb
@@ -2778,6 +2908,9 @@ define variable v-found as decimal   no-undo .
      with frame page-1.
   end.
   hide attr-PN in frame page-2 .
+  hide attr-mandatory-gds-in-wayb in frame page-2 .
+  hide attr-mandatory-gds-ret-wayb in frame page-2 .
+  hide attr-mandatory-gds-exp-wayb in frame page-2 .
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2810,12 +2943,52 @@ PROCEDURE proc-init-attr-PN :
       v-list-attr-PN      = {&trdcattr-nids} + "," + {&trdcattr-dids} + "," + {&trdcattr-nsf} + "," + {&trdcattr-dsf} + "," + {&trdcattr-expense_own} + "," + {&trdcattr-ndog} + ","
       + {&trdcattr-ddog} + "," + {&trdcattr-ndov} + "," + {&trdcattr-ddov} + "," + {&trdcattr-print-num} + "," + {&trdcattr-idCountryContr} + "," + {&trdcattr-car-time} +
       "," + {&trdcattr-t_pass-fname} + "," + {&trdcattr-t_pass-position} + "," + {&trdcattr-t_accept-fname} + "," + {&trdcattr-t_accept-position} + "," +
-      {&trdcattr-ndovwho} + "," + {&trdcattr-nosn} + "," + {&trdcattr-shipper}.
-      v-list-attr-PN-full = {&label-trdcattr-nids} + "," + {&label-trdcattr-dids} + "," + {&label-trdcattr-nsf} + "," + {&label-trdcattr-dsf} + "," + {&label-trdcattr-expense_own} + "," + {&label-trdcattr-ndog} + ","
-      + {&label-trdcattr-ddog} + "," + {&label-trdcattr-ndov} + "," + {&label-trdcattr-ddov} + "," + {&label-trdcattr-print-num} + "," + {&label-trdcattr-idCountryContr} + "," + {&label-trdcattr-car-time} +
-      "," + {&label-trdcattr-t_pass-fname} + "," + {&label-trdcattr-t_pass-position} + "," + {&label-trdcattr-t_accept-fname} + "," + {&label-trdcattr-t_accept-position} + "," +
-      {&label-trdcattr-ndovwho} + "," + {&label-trdcattr-nosn} + "," + {&label-trdcattr-shipper}.
+      {&trdcattr-ndovwho} + "," + {&trdcattr-nosn} + "," + {&trdcattr-shipper}
+      v-list-attr-PN-full = {&label-trdcattr-nids} + {&delim-flf} + {&label-trdcattr-dids} + {&delim-flf} + {&label-trdcattr-nsf} + {&delim-flf} + {&label-trdcattr-dsf} + {&delim-flf} + {&label-trdcattr-expense_own} + {&delim-flf} + {&label-trdcattr-ndog} + {&delim-flf}
+      + {&label-trdcattr-ddog} + {&delim-flf} + {&label-trdcattr-ndov} + {&delim-flf} + {&label-trdcattr-ddov} + {&delim-flf} + {&label-trdcattr-print-num} + {&delim-flf} + {&label-trdcattr-idCountryContr} + {&delim-flf} + {&label-trdcattr-car-time} +
+      {&delim-flf} + {&label-trdcattr-t_pass-fname} + {&delim-flf} + {&label-trdcattr-t_pass-position} + {&delim-flf} + {&label-trdcattr-t_accept-fname} + {&delim-flf} + {&label-trdcattr-t_accept-position} + {&delim-flf} +
+      {&label-trdcattr-ndovwho} + {&delim-flf} + {&label-trdcattr-nosn} + {&delim-flf} + {&label-trdcattr-shipper}.
 
+   assign
+      v-list-attr-mandatory-gds-in-wayb = v-list-attr-PN
+      v-list-attr-mandatory-gds-in-wayb-full = v-list-attr-PN-full
+   .
+
+   assign
+      v-list-attr-mandatory-gds-exp-wayb = {&trdcattr-nsf} + "," + {&trdcattr-dsf} + "," + {&trdcattr-expense_own} + "," + {&trdcattr-ndog} + ","
+      + {&trdcattr-ddog} + "," + {&trdcattr-ndov} + "," + {&trdcattr-ddov} + "," + {&trdcattr-print-num} + "," + {&trdcattr-idCountryContr} +
+      "," + {&trdcattr-t_pass-fname} + "," + {&trdcattr-t_pass-position} + "," + {&trdcattr-t_accept-fname} + "," + {&trdcattr-t_accept-position}
+      + "," + {&trdcattr-ndovwho} + "," + {&trdcattr-nosn}
+      
+      + "," + {&trdcattr-auto} + "," + {&trdcattr-driver} + "," + {&trdcattr-dfindoc}
+      + "," + {&trdcattr-nfindoc} + "," + {&trdcattr-delivery-date} + "," + {&trdcattr-recipient}
+      + "," + {&trdcattr-delivery-time} + "," + {&trdcattr-ord_phone} + "," + {&trdcattr-ord_contact}
+      
+      + "," + {&trdcattr-dispath} + "," + {&trdcattr-packer} + "," + {&trdcattr-ord_contact}
+      + "," + {&trdcattr-qntyplace} + "," + {&trdcattr-zakaz-date} + "," + {&trdcattr-ord_dl}
+      + "," + {&trdcattr-ord_adr} + "," + {&trdcattr-carry-type} + "," + {&trdcattr-cargo-mass}
+      + "," + {&trdcattr-cargo-desc} + "," + {&trdcattr-exp-trans} + "," + {&trdcattr-zakaz-number}
+      
+      v-list-attr-mandatory-gds-exp-wayb-full = {&label-trdcattr-nsf} + {&delim-flf} + {&label-trdcattr-dsf} + {&delim-flf} + {&label-trdcattr-expense_own} + {&delim-flf} + {&label-trdcattr-ndog} + {&delim-flf}
+      + {&label-trdcattr-ddog} + {&delim-flf} + {&label-trdcattr-ndov} + {&delim-flf} + {&label-trdcattr-ddov} + {&delim-flf} + {&label-trdcattr-print-num} + {&delim-flf} + {&label-trdcattr-idCountryContr} + 
+      {&delim-flf} + {&label-trdcattr-t_pass-fname} + {&delim-flf} + {&label-trdcattr-t_pass-position} + {&delim-flf} + {&label-trdcattr-t_accept-fname} + {&delim-flf} + {&label-trdcattr-t_accept-position}
+      + {&delim-flf} + {&label-trdcattr-ndovwho} + {&delim-flf} + {&label-trdcattr-nosn}
+      
+      + {&delim-flf} + {&label-trdcattr-auto} + {&delim-flf} + {&label-trdcattr-driver} + {&delim-flf} + {&label-trdcattr-dfindoc}
+      + {&delim-flf} + {&label-trdcattr-nfindoc} + {&delim-flf} + {&label-trdcattr-delivery-date} + {&delim-flf} + {&label-trdcattr-recipient}
+      + {&delim-flf} + {&label-trdcattr-delivery-time} + {&delim-flf} + {&label-trdcattr-ord_phone} + {&delim-flf} + {&label-trdcattr-ord_contact}
+      
+      + {&delim-flf} + {&label-trdcattr-dispath} + {&delim-flf} + {&label-trdcattr-packer} + {&delim-flf} + {&label-trdcattr-ord_contact}
+      + {&delim-flf} + {&label-trdcattr-qntyplace} + {&delim-flf} + {&label-trdcattr-zakaz-date} + {&delim-flf} + {&label-trdcattr-ord_dl}
+      + {&delim-flf} + {&label-trdcattr-ord_adr} + {&delim-flf} + {&label-trdcattr-carry-type} + {&delim-flf} + {&label-trdcattr-cargo-mass}
+      + {&delim-flf} + {&label-trdcattr-cargo-desc} + {&delim-flf} + {&label-trdcattr-exp-trans} + {&delim-flf} + {&label-trdcattr-zakaz-number}
+      .
+      
+    assign
+      v-list-attr-mandatory-gds-ret-wayb = v-list-attr-mandatory-gds-exp-wayb
+      v-list-attr-mandatory-gds-ret-wayb-full = v-list-attr-mandatory-gds-exp-wayb-full
+    .
+      
 
 END PROCEDURE.
 
@@ -3034,22 +3207,25 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-attr-PN Dialog-Frame 
-PROCEDURE select-attr-PN :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-attr-mandat-wayb Dialog-Frame 
+PROCEDURE select-attr-mandat-wayb :
 /*------------------------------------------------------------------------------
   Purpose:
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+define input  parameter p-list-attr-mandat-wayb       as character no-undo.
+define input  parameter p-list-attr-mandat-wayb-full  as character no-undo.
+define input-output parameter p-attr-mandat-wayb      as character no-undo.
 
 define variable v-counter       as integer      no-undo.
 define variable v-label         as character    no-undo.
 define variable v-value         as character    no-undo.
 define variable v-list          as character    no-undo.
-define variable v-changed       as logical    no-undo.
-define variable v-accepted      as logical    no-undo.
-define variable V-EX as logical   no-undo .
-define variable v-mode          as integer      no-undo .
+define variable v-changed       as logical      no-undo.
+define variable v-accepted      as logical      no-undo.
+define variable V-EX            as logical      no-undo.
+define variable v-mode          as integer      no-undo.
 
 do
 with frame {&frame-name}
@@ -3060,15 +3236,15 @@ else v-mode = 1 .
 
     run twowin_clear in this-procedure.
 
-    do v-counter = 1 to num-entries( v-list-attr-PN-full )
+    do v-counter = 1 to num-entries( p-list-attr-mandat-wayb-full, {&delim-flf})
     on error undo, return error
     :
         assign
-            v-label = entry( v-counter, v-list-attr-PN-full )
-            v-value = entry( v-counter, v-list-attr-PN )
+            v-label = entry( v-counter, p-list-attr-mandat-wayb-full, {&delim-flf} )
+            v-value = entry( v-counter, p-list-attr-mandat-wayb )
             v-ex = false
         .
-           if  lookup (v-value , attr-PN ) > 0 then  v-ex = true .
+           if  lookup (v-value , p-attr-mandat-wayb ) > 0 then  v-ex = true .
            else v-ex = false .
         run twowin_add-item in this-procedure (
               input v-value
@@ -3080,7 +3256,7 @@ else v-mode = 1 .
     run gbl/twowin.w (
           input ?
         , input v-mode
-        , input "Выбор атрибутов ПН":U
+        , input "Выбор атрибутов":U
         , input "":U
         , input "&Тест"
         , input table temp_twowin_items
@@ -3089,13 +3265,11 @@ else v-mode = 1 .
         , output v-accepted
     ).
     if v-changed then do:
-        attr-PN = "" .
+        p-attr-mandat-wayb = "" .
         for each temp_twowin_itemsSelected_col :
-        attr-PN = attr-PN +  temp_twowin_itemsSelected_col.itmExtKey + "," .
+          p-attr-mandat-wayb = p-attr-mandat-wayb + temp_twowin_itemsSelected_col.itmExtKey + "," .
         end.
-        attr-PN = trim(attr-PN, ",") .
-        display attr-PN with frame page-2 .
-        hide attr-PN in frame page-2 .
+        p-attr-mandat-wayb = trim(p-attr-mandat-wayb, ",") .
     end.
 end.
 
@@ -3130,7 +3304,7 @@ on error undo, return error
     on error undo, return error
     :
         assign
-            v-label = entry( v-counter, v-list-edt-full )
+            v-label = entry( v-counter, v-list-edt-full)
             v-value = entry( v-counter, v-list-edt )
             v-ex = false
         .
