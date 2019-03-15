@@ -2000,27 +2000,73 @@ define buffer buf_goods     for ub.goods .
 
   v-count-mismatch = 0 .
   output STREAM lsOut to value(v-logfile-rj).
+  put stream lsOut unformatted
+  "наименование товара в 15.0;"
+  "код товара в 15.0;"
+  "количество в 15.0;"
+  "сумма в учетных ценах в 15.0;"
+  "сумма НДС в учетных ценах в 15.0;"
+  "сумма в продажных ценах в 15.0;"
+  "код товара в 16.0;"
+  "количество в 16.0;"
+  "сумма в учетных ценах в 16.0;"
+  "сумма НДС в учетных ценах в 16.0;"
+  "сумма в продажных ценах в 16.0" skip
+  .
   output STREAM lsIN  to value(v-logfile-gd).
+  put stream lsIn unformatted
+  "наименование товара в 15.0;"
+  "код товара в 15.0;"
+  "количество в 15.0;"
+  "сумма в учетных ценах в 15.0;"
+  "сумма НДС в учетных ценах в 15.0;"
+  "сумма в продажных ценах в 15.0;"
+  "код товара в 16.0;"
+  "количество в 16.0;"
+  "сумма в учетных ценах в 16.0;"
+  "сумма НДС в учетных ценах в 16.0;"
+  "сумма в продажных ценах в 16.0" skip
+  .
   for each tt-stk-gd2:
-    export stream lsIN  tt-stk-gd2 .
+    export stream lsIN delimiter ';':U tt-stk-gd2 .
     if (tt-stk-gd2.fact-qnty16     <> tt-stk-gd2.fact-qnty)
     or (tt-stk-gd2.sum-rubl-cost16 <> tt-stk-gd2.sum-rubl-cost)
     or (tt-stk-gd2.vat-rubl16      <> tt-stk-gd2.vat-rubl)
     or (tt-stk-gd2.sum-rubl-crsa16 <> tt-stk-gd2.sum-rubl-crsa)
     then do :
-    export stream lsOut tt-stk-gd2 .
+    export stream lsOut delimiter ';':U tt-stk-gd2 .
     v-count-mismatch = v-count-mismatch + 1 .
     end .
   end.
   output STREAM lsIN close.
 
+  /* @NOTE: т.к. в файл с отверженными товарами у нас ложится и топливо, и товары,
+            то в этот файл добавляется вторая строка заголовков для топлива */
+  put stream lsOut unformatted
+  "наименование товара в 15.0;"
+  "код товара в 15.0;"
+  "остатки в лт в 15.0;"
+  "остатки в кг в 15.0;"
+  "код товара в 16.0;"
+  "остатки в лт в 16.0;"
+  "остатки в кг в 16.0" skip
+  .
   output STREAM lsIN to value(v-logfile-fu).
+  put stream lsIn unformatted
+  "наименование товара в 15.0;"
+  "код товара в 15.0;"
+  "остатки в лт в 15.0;"
+  "остатки в кг в 15.0;"
+  "код товара в 16.0;"
+  "остатки в лт в 16.0;"
+  "остатки в кг в 16.0" skip
+  .
   for each tt-stk-fu2:
-    export stream lsIN  tt-stk-fu2 .
+    export stream lsIN delimiter ';':U tt-stk-fu2 .
     if (tt-stk-fu2.fact-qnty-lt16 <> tt-stk-fu2.fact-qnty-lt)
     or (tt-stk-fu2.fact-qnty-kg16 <> tt-stk-fu2.fact-qnty-kg)
     then do :
-    export stream lsOut tt-stk-fu2 .
+    export stream lsOut delimiter ';':U tt-stk-fu2 .
     v-count-mismatch = v-count-mismatch + 1 .
     end .
   end.
@@ -2499,7 +2545,9 @@ method public logical load_cash_passwd (iaddr as character) :
     v-count-decline   = 0
   .
   output STREAM lsIN  to value(v-logfile-confirm).
+  put stream lsIN unformatted "Загружено (код, пароль);код;пароль" skip .
   output STREAM lsOUT to value(v-logfile-decline).
+  put stream lsOUT unformatted "Отвергнуто (код, пароль);код;пароль;причина" skip .
   
   put-log ( string(now) +  "   Начинаем загрузку паролей кассиров...") .
   define buffer buf_staff for ub.staff .
@@ -2510,7 +2558,7 @@ method public logical load_cash_passwd (iaddr as character) :
     then do:
        v-count-decline = v-count-decline + 1 .
        put stream lsOUT unformatted
-             substitute ("  Отвергнуто (код, пароль) &1 &2 - запись отсутствует в вер.16"
+             substitute ("Отвергнуто (код, пароль);&1;&2;запись отсутствует в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password)
            skip.
     end.
@@ -2518,7 +2566,7 @@ method public logical load_cash_passwd (iaddr as character) :
     then do:
        v-count-decline = v-count-decline + 1 .
        put stream lsOUT unformatted
-             substitute ("  Отвергнуто (код, пароль) &1 &2 - пользователь не является кассиром в вер.16"
+             substitute ("Отвергнуто (код, пароль);&1;&2;пользователь не является кассиром в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password)
            skip.
     end.
@@ -2529,14 +2577,14 @@ method public logical load_cash_passwd (iaddr as character) :
          if error-status:error then do :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
-             substitute ("  Отвергнуто (код, пароль) &1 &2 - &3 в вер.16"
+             substitute ("Отвергнуто (код, пароль);&1;&2;&3 в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password, error-status:get-message(1))
            skip.
          end .
          else do :
            v-count-confirm = v-count-confirm + 1 .
            put stream lsIN unformatted
-             substitute ("  Загружено (код, пароль) &1 &2"
+             substitute ("Загружено (код, пароль);&1;&2"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password)
            skip.
          end .
@@ -2544,14 +2592,14 @@ method public logical load_cash_passwd (iaddr as character) :
       else if locked buf_staff then do :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
-             substitute ("  Отвергнуто (код, пароль) &1 &2 - запись кассира занята другим пользователем в вер.16"
+             substitute ("Отвергнуто (код, пароль);&1;&2;запись кассира занята другим пользователем в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password)
            skip.
       end .
       else do :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
-             substitute ("  Отвергнуто (код, пароль) &1 &2 - запись кассира кто-то уже удалил в вер.16"
+             substitute ("Отвергнуто (код, пароль);&1;&2;запись кассира кто-то уже удалил в вер.16"
                        , tt-cash-passwd.staff-code, tt-cash-passwd.password)
            skip.
       end .
