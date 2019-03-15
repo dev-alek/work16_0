@@ -90,8 +90,7 @@ if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
     .
   end .
 end.
-if pychk_create then do:
-  
+if pychk_create /* and ub.chk-doc.doc-code eq "35/11778" */ then do:
 create-block:
 do transaction
 on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -292,7 +291,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 temp-chk-dp.pay-code = chk-discnt.rank
                 temp-chk-dp.b-code = chk-gds.b-code
                 temp-chk-dp.qnty   = abs(chk-discnt.discnt-value-pcnt)
-                temp-chk-dp.all-sum =  abs(chk-discnt.discnt-value-abs * temp-chk-dp.qnty)
+                temp-chk-dp.all-sum =  chk-discnt.discnt-value-abs * temp-chk-dp.qnty
                 .
             end.
     end. 
@@ -558,7 +557,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
             NEXT _repeat.
           end.
           assign
-          pychk_dop-sumg = temp-chk-gds.sum
+          pychk_dop-sumg = if available temp-chk-gds then temp-chk-gds.sum else 0
           temp-chk-gds.flag = yes
           .
         end. /*if pychk_dop-sumg = 0 then do:*/
@@ -584,7 +583,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
               pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
             end.
           end case.
-/* если строчка была принудительно размазана, то пропускаем ее */
+          /* если строчка была принудительно размазана, то пропускаем ее */
           if not (buf_temp-chk-gds.sum = 0 and can-find (first temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code and buf_temp-chk-gds.line-num  =  temp-chk-dp.line-num)) then do:
               if can-find (first temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code) then do:
                   find first buf_chk-gds-pay where buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
@@ -597,74 +596,52 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                   if not available buf_chk-gds-pay then create buf_chk-gds-pay.
               end.    
               else create buf_chk-gds-pay.
-          assign
-          buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
-          buf_chk-gds-pay.chk-type = ub.chk-doc.chk-type
-          buf_chk-gds-pay.algo-num = {&current-algo-1}
-          buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
-          buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
-          buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
-          buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
-          buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
-              buf_chk-gds-pay.tot-r-b = buf_chk-gds-pay.tot-r-b  + (if temp-chk-gds.num-lines = 1
-                                    and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
-                                    then pychk_dop-sumk
-                                    else (pychk_dop-sumk * buf_temp-chk-gds.sum / temp-chk-gds.sum)
-                                    )
-          buf_chk-gds-pay.eff-base-rate = pychk_exch
+              assign
+              buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+              buf_chk-gds-pay.chk-type = ub.chk-doc.chk-type
+              buf_chk-gds-pay.algo-num = {&current-algo-1}
+              buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
+              buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
+              buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+              buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
+              buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
+              vSum                     = (if    temp-chk-gds.num-lines = 1
+                                            and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
+                                          then pychk_dop-sumk
+                                          else (pychk_dop-sumk * buf_temp-chk-gds.sum / temp-chk-gds.sum)
+                                         )
+              buf_chk-gds-pay.tot-r-b = buf_chk-gds-pay.tot-r-b  + vSum
+              buf_chk-gds-pay.eff-base-rate = pychk_exch
               buf_chk-gds-pay.eff-doc-qnty = (if buf_chk-gds-pay.eff-doc-qnty = ? then 0 else buf_chk-gds-pay.eff-doc-qnty) + (if (temp-chk-gds.num-lines = 1
-                                          and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
-                                          and pychk_pays_count = 1) 
-                                          or (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt) = 0 
-                                          then temp-chk-gds.doc-qnty
-                                          else (buf_chk-gds-pay.tot-r-b / (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt))
-                                          )
-          buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
-          buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
-          buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
-          buf_chk-gds-pay.price-base = buf_temp-chk-gds.price-base
-          buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
-          buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
-          buf_chk-gds-pay.line-type = pychk_line-type-chr
-          buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+                                              and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
+                                              and pychk_pays_count = 1) 
+                                              or (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt) = 0 
+                                              then temp-chk-gds.doc-qnty
+                                              else (vSum / (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt))
+                                              )
+              buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
+              buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
+              buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
+              buf_chk-gds-pay.price-base = buf_temp-chk-gds.price-base
+              buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
+              buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
+              buf_chk-gds-pay.line-type = pychk_line-type-chr
+              buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
           buf_chk-gds-pay.density  = buf_temp-chk-gds.density
-          buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
-          buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
-          buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
-          buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
-          buf_chk-gds-pay.out-code = ub.chk-doc.out-code
-          buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
-          buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
-          buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
-          buf_temp-chk-gds.flag = yes  
-          .
-        end.
+              buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
+              buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
+              buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
+              buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
+              buf_chk-gds-pay.out-code = ub.chk-doc.out-code
+              buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
+              buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
+              buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
+              buf_temp-chk-gds.flag = yes  
+              .
+            end.
         end.
         /*--------------------записали в нужную таблицу квант товар-оплата--------------------------*/
-        /*если покрылась вся сумма перейдем к следующему товару*/
-        if abs(pychk_dop-sumg) <= 0 then do:
-          assign
-          pychk_kk = pychk_kk + 1.
-          if pychk_kk >= pychk_jj then LEAVE _repeat.
-
-          if pychk_kk <= pychk_jjp then do:
-            find first temp-chk-gds where
-                      temp-chk-gds.doc-code = ub.chk-doc.doc-code
-                and temp-chk-gds.line-num = 0
-                AND temp-chk-gds.jjp_ = pychk_kk
-                no-error .
-          end.
-          else do:
-            find first temp-chk-gds where
-                      temp-chk-gds.doc-code = ub.chk-doc.doc-code
-                  and temp-chk-gds.line-num = 0
-                  AND temp-chk-gds.jjo_ = pychk_kk - pychk_jjp no-error .
-            if not available temp-chk-gds then do:
-              LEAVE _repeat.
-            end.
-          end.
-          pychk_dop-sumg = temp-chk-gds.sum.
-        end. /*if pychk_dop-sumg <= 0 then do:*/
+        
       end. /*    REPEAT WHILE  abs(pychk_dop-sump) > 0 :*/
     end. /*for each temp-chk-pay :*/
     if available temp-chk-gds then release temp-chk-gds.
@@ -683,6 +660,25 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
         and temp-chk-pay.flag = no:
        pychk_zero-pay = pychk_zero-pay + 1.
     end.
+    
+    
+    /* создаем распределяем неоплаченые товары по не использованым оплатам равномерно */
+    /* если нет оплаты по которой не было оплаты товара все неоплаченые товары привяжем к первой оплате */
+    find first temp-chk-pay where temp-chk-pay.doc-code = ub.chk-pay.doc-code
+                              and temp-chk-pay.flag = no
+    no-lock no-error.
+    if not available temp-chk-pay
+    then do:
+       block-pay:
+       for each temp-chk-pay where temp-chk-pay.doc-code = ub.chk-pay.doc-code:
+          assign
+             pychk_zero-pay = pychk_zero-pay +  1
+             temp-chk-pay.flag = no
+          .
+          leave block-pay.
+       end.
+    end.
+    
     for each temp-chk-pay
     where   temp-chk-pay.doc-code = ub.chk-pay.doc-code
         and temp-chk-pay.flag = no:

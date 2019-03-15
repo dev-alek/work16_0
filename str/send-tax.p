@@ -166,7 +166,8 @@ if    choice = 1
         .
         _tax-rate:
         FOR EACH ub.tax-rate NO-LOCK WHERE
-                          ub.tax-rate.tax-code = ub.tax.tax-code:
+                          ub.tax-rate.tax-code = ub.tax.tax-code
+                      and ub.tax-rate.status_  <>   {&deleted-status-int-full}:
             create cash-txr.
             assign
             cash-txr.tax-code = tax.tax-code
@@ -219,21 +220,28 @@ else do:
                     cash-txn.tax-code = ub.tax.tax-code
                     cash-txn.tax-name = ub.tax.tax-name
                     .
+                    define variable mi as integer no-undo.
+                     FOR EACH ub.tax-rate NO-LOCK WHERE
+                          ub.tax-rate.tax-code = ub.tax.tax-code
+                      and ub.tax-rate.status_  <>   {&deleted-status-int-full}:
+                        create cash-txr.
+                        assign
+                        cash-txr.tax-code = tax.tax-code
+                        cash-txr.rate-code = tax-rate.rate-code
+                        cash-txr.tax-type = tax.tax-type
+                        cash-txr.host-code = v-host-code
+                        cash-txr.obj-type = p-obj-type
+                        cash-txr.obj-code = p-obj-code
+                        cash-txr.status_ = tax-rate.status_
+                        cash-txr.rc = mi
+                        cash-txr.crf = mi
+                        mi = mi + 1
+                        .
+                        { gbl/pftaxval.i recid(ub.tax-rate) 0 0 ? v-host-code p-obj-type p-obj-code cash-txr.rate-value no-error }
+                        if error-status:error then next _ii.
+                    END.
                 end. /*IF NOT avail cash-txn*/
-                create cash-txr.
-                assign
-                cash-txr.tax-code = ub.tax.tax-code
-                cash-txr.rate-code = ub.tax-rate.rate-code
-                cash-txr.tax-type = ub.tax.tax-type
-                cash-txr.host-code = v-host-code
-                cash-txr.obj-type = p-obj-type
-                cash-txr.obj-code = p-obj-code
-                cash-txr.status_ = ub.tax-rate.status_
-                cash-txr.rc = ii
-                cash-txr.crf = ii
-                .
-                { gbl/pftaxval.i recid(ub.tax-rate) 0 0 ? v-host-code p-obj-type p-obj-code cash-txr.rate-value no-error }
-                if error-status:error then NEXT _ii.
+                
             end. /*tax.to-cashdesk = yes*/
         end. /*avail tax-rate*/
     END. /*DO ii = 1 to*/

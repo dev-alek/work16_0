@@ -45,7 +45,7 @@ if not avail bf-tax-rate then return error.
 loc#log = no.
 
 CASE bf-tax-rate.status_:
-  when {&current-status} then do:
+  when {&current-status} or when "" then do:
       message "Вы действительно хотите удалить (логически) запись о ставке налога" bf-tax-rate.rate-name "?"
       view-as alert-box QUESTION buttons YES-NO
       update loc#log.
