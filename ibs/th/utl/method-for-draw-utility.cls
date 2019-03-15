@@ -2479,7 +2479,7 @@ method public logical load_cash_passwd (iaddr as character) :
   vcmd = substitute ("&1 &2/THGetInfo?GetCashp >&3", search ("exe/curl.exe"), iaddr, "cashp-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj (input "cashp-temp.json") .
-  
+
   empty temp-table tt-cash-passwd.
   parse-json(input temp-table tt-cash-passwd:default-buffer-handle, input "tt-cash-passwd") .
 
@@ -2560,7 +2560,25 @@ method public logical load_cash_passwd (iaddr as character) :
   end .
   
   vok = yes.
-  
+
+  define variable Msg as character no-undo .
+  catch exAppErrors as class Progress.Lang.AppError :
+      Msg = exAppErrors:ReturnValue .
+      if Msg > "" then . else do :
+        Msg = exAppErrors:GetMessage(1) .
+        if Msg > "" then . else Msg = "AppError в фирмах" .
+      end .
+      put-log ( string(now) +  "   AppError " + Msg) .
+  end catch .
+  catch exProErrors as class Progress.Lang.ProError :
+      Msg = exProErrors:GetMessage(1) . 
+      if Msg > "" then . else Msg = "ProError в фирмах" .
+      put-log ( string(now) +  "   ProError " + Msg) .
+  end catch .
+  catch exAnyErrors as class Progress.Lang.Error:
+      Msg = "Unexpected error в фирмах" .
+      put-log ( string(now) +  "   LangError " + Msg) .
+  end catch .
   finally:
      output STREAM lsIN close.
      output STREAM lsOUT close.
