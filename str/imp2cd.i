@@ -221,7 +221,7 @@ on error undo, return error
       AND cash-txr.rate-code = p-rate-code
       AND cash-txr.obj-type = p-obj-type
       AND cash-txr.obj-code = p-obj-code
-      AND (p-status_ = ? or cash-txr.status_ = p-status_)
+      /* AND (p-status_ = ? or cash-txr.status_ = p-status_) */
       AND cash-txr.rc = p-rec no-error .
   if not avail cash-txr then do:
     find first  cash-txn where
@@ -234,35 +234,105 @@ on error undo, return error
       cash-txn.tax-name = buf_tax.tax-name
       .
       release cash-txn.
-    end.
-    create cash-txr.
-    assign
-    cash-txr.tax-code  = p-tax-code
-    cash-txr.rate-code = p-rate-code
-    cash-txr.host-code = p-host-code
-    cash-txr.obj-type  = p-obj-type
-    cash-txr.obj-code  = p-obj-code
-    cash-txr.tax-type  = p-tax-type
-    cash-txr.crf       = p-crf
-    cash-txr.rc        = p-rec
-    cash-txr.status_   = (if p-status_ = ? then {&current-status} else p-status_)
-    .
-    if p-value = ? then do:
-      { gbl/pftaxval.i
-        p-rec
-        0
-        0
-        ?
-        p-host-code
-        p-obj-type
-        p-obj-code
-        cash-txr.rate-value
-        no-error
-      }
+      define variable II as integer no-undo.
+      find last  cash-txr where cash-txr.crf > 0 no-error.
+      if available cash-txr
+      then 
+         II = cash-txr.crf + 1.
+      else 
+         II = 1. 
+       /* отправим все ствки по налогу */
+         _tax-rate:  
+      FOR EACH ub.tax-rate NO-LOCK WHERE
+                          ub.tax-rate.tax-code = buf_tax.tax-code
+                      and ub.tax-rate.status_  <>   {&deleted-status-int-full}:
+                        create cash-txr.
+                        assign
+                        cash-txr.tax-code = tax-rate.tax-code
+                        cash-txr.rate-code = tax-rate.rate-code
+                        cash-txr.tax-type = buf_tax.tax-type
+                        cash-txr.host-code = p-host-code
+                        cash-txr.obj-type = p-obj-type
+                        cash-txr.obj-code = p-obj-code
+                        cash-txr.status_ = tax-rate.status_
+                        cash-txr.rc = RECID(tax-rate)
+                        cash-txr.crf = ii
+                        ii = ii + 1
+                        .
+                        
+                        { gbl/pftaxval.i recid(ub.tax-rate) 0 0 ? p-host-code p-obj-type p-obj-code cash-txr.rate-value no-error }
+                        if error-status:error then next _tax-rate.
+       END.
+       
     end.
     else do:
-      cash-txr.rate-value = p-value.
+       for each cash-txr where cash-txr.tax-code = tax-rate.tax-code:
+          delete cash-txr.
+       end.
+       _tax-rate2:
+        FOR EACH ub.tax-rate NO-LOCK WHERE
+                          ub.tax-rate.tax-code = buf_tax.tax-code
+                      and ub.tax-rate.status_  <>   {&deleted-status-int-full}:
+                        create cash-txr.
+                        assign
+                        cash-txr.tax-code = tax-rate.tax-code
+                        cash-txr.rate-code = tax-rate.rate-code
+                        cash-txr.tax-type = buf_tax.tax-type
+                        cash-txr.host-code = p-host-code
+                        cash-txr.obj-type = p-obj-type
+                        cash-txr.obj-code = p-obj-code
+                        cash-txr.status_ = tax-rate.status_
+                        cash-txr.rc = RECID(tax-rate)
+                        cash-txr.crf = ii
+                        ii = ii + 1
+                        .
+                        
+                        { gbl/pftaxval.i recid(ub.tax-rate) 0 0 ? p-host-code p-obj-type p-obj-code cash-txr.rate-value no-error }
+                        if error-status:error then next _tax-rate2.
+       END.
+    end.   
+    /* обработаем пришедшую стаку которой нет еще в базе */   
+    find first cash-txr where
+          cash-txr.tax-code = p-tax-code
+      AND cash-txr.rate-code = p-rate-code
+     /* AND cash-txr.host-code = p-host-code
+      AND cash-txr.obj-type = p-obj-type
+      AND cash-txr.obj-code = p-obj-code
+      AND cash-txr.rc = p-rec*/ no-error .
+    if not avail cash-txr and  p-status_ <> {&deleted-status-int-full} 
+    then do:        
+       create cash-txr.
+       assign
+       cash-txr.tax-code  = p-tax-code
+       cash-txr.rate-code = p-rate-code
+       cash-txr.host-code = p-host-code
+       cash-txr.obj-type  = p-obj-type
+       cash-txr.obj-code  = p-obj-code
+       cash-txr.tax-type  = p-tax-type
+       cash-txr.crf       = p-crf
+       cash-txr.rc        = p-rec
+       cash-txr.status_   = (if p-status_ = ? then {&current-status} else p-status_)
+       .
+    
     end.
+    if  avail cash-txr 
+    then do: 
+       if p-status_ eq {&deleted-status-int-full}
+       then
+          delete cash-txr.
+       else assign
+       cash-txr.tax-code  = p-tax-code
+       cash-txr.rate-code = p-rate-code
+       cash-txr.host-code = p-host-code
+       cash-txr.obj-type  = p-obj-type
+       cash-txr.obj-code  = p-obj-code
+       cash-txr.tax-type  = p-tax-type
+       cash-txr.crf       = p-crf
+       cash-txr.rc        = p-rec
+       cash-txr.status_   = (if p-status_ = ? then {&current-status} else p-status_)
+       .
+       
+    end.   
     release cash-txr.
   end.
 end.
