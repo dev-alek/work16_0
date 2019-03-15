@@ -33,7 +33,7 @@ define variable vss-description as character no-undo initial "Ñìåííûé îò÷åò (Ïñê
 { cmp/vssrevis.i     }
 
 &scop ttl " ÑÌÅÍÍÛÉ ÎÒ×ÅÒ "
-custom-par = "all,{&Arc-OT-yes},{&Arc-Supp-yes},{&Arc-stk-yes},{&Excel-yes}" + {&comma-char} + "TOG-Shift-2 = yes" + {&comma-char} + "CALL='new-rep'".
+custom-par = "all,{&Arc-OT-yes},{&Arc-Supp-yes},{&Arc-stk-yes},{&Excel-yes}" + {&comma-char} + "TOG-Shift-2 = yes" + {&comma-char} + custom-par + {&comma-char} + "CALL='new-rep'" .
 run rep/d-report.w (
                 input parparentproc ,
                 input 'rep/e-shift.w',

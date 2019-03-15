@@ -1078,7 +1078,7 @@ end.
         "X-SHIFT-END = " + string(t-shift-obj.shift-num) .
        if prep-name = "g-shift"
        then do:
-          run rep/g-shift.p
+          run rep/g-new-shift.p
             (input parparentproc
             ,input mypar
             ) .
