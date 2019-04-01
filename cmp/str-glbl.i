@@ -6862,7 +6862,7 @@ end.
 &global-define egais-wb-send-full '{&bef-egais-wb-send-full}':U
 &if defined(shattri) <> 0 or defined(attr-lib) <> 0  &then
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: 851805edf09a, 1754, rls  ".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)Workfile: str-glbt.p Revision: eaf52311ea8f, 1774, rls  ".
 &endif
 &global-define bef-attr-autosale autosale
 &global-define attr-autosale '{&bef-attr-autosale}':U
@@ -7497,7 +7497,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-nakl_par '{&bef-attr-nakl_par}':U
 &global-define bef-attr-nakl_par-full nakl_par
 &global-define attr-nakl_par-full '{&bef-attr-nakl_par-full}':U
-&global-define bef-prop-list-attr-nakl_par date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,edit-fact-wayb
+&global-define bef-prop-list-attr-nakl_par date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb
 &global-define prop-list-attr-nakl_par '{&bef-prop-list-attr-nakl_par}':U
 &global-define bef-attr-nakl_par_date-close-period date-close-period
 &global-define attr-nakl_par_date-close-period '{&bef-attr-nakl_par_date-close-period}':U
@@ -7543,6 +7543,12 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define attr-nakl_par_mark-alchol '{&bef-attr-nakl_par_mark-alchol}':U
 &global-define bef-attr-nakl_par_attr-PN attr-PN
 &global-define attr-nakl_par_attr-PN '{&bef-attr-nakl_par_attr-PN}':U
+&global-define bef-attr-nakl_par_attr-mandatory-gds-in-wayb attr-mandatory-gds-in-wayb
+&global-define attr-nakl_par_attr-mandatory-gds-in-wayb '{&bef-attr-nakl_par_attr-mandatory-gds-in-wayb}':U
+&global-define bef-attr-nakl_par_attr-mandatory-gds-ret-wayb attr-mandatory-gds-ret-wayb
+&global-define attr-nakl_par_attr-mandatory-gds-ret-wayb '{&bef-attr-nakl_par_attr-mandatory-gds-ret-wayb}':U
+&global-define bef-attr-nakl_par_attr-mandatory-gds-exp-wayb attr-mandatory-gds-exp-wayb
+&global-define attr-nakl_par_attr-mandatory-gds-exp-wayb '{&bef-attr-nakl_par_attr-mandatory-gds-exp-wayb}':U
 &global-define bef-attr-nakl_par_edit-fact-wayb edit-fact-wayb
 &global-define attr-nakl_par_edit-fact-wayb '{&bef-attr-nakl_par_edit-fact-wayb}':U
 &global-define bef-attr-fin-plan fin-plan
@@ -8222,9 +8228,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,mercur,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,cd-type-autotank,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: b9313ad7f18a, 1618, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
 &global-define str-glbl4_vss-revision 'Revision: ea4bbe67f929, 1755, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: f8efd18195cf, 1635, rls ':U
-&global-define str-glblt_vss-revision 'Revision: 851805edf09a, 1754, rls ':U
+&global-define str-glblt_vss-revision 'Revision: eaf52311ea8f, 1774, rls ':U
 &endif
