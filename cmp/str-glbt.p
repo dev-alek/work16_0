@@ -274,7 +274,7 @@ attr-contr-in }
 /* атрибутџ накладных от глобального к объекту  */
 { cmp/cr-prep.i 1 attr-nakl_par  nakl_par nakl_par nakl_par nakl_par  }
 { cmp/cr-prepc.i 1 prop-list-attr-nakl_par
-"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,edit-fact-wayb"
+"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb"
 attr-nakl_par }
 
 /*ѕланируемые цифры */
