@@ -3557,12 +3557,14 @@ end.
 &global-define cda-MAGIA-XML_operative_last-check-date-time '{&bef-cda-MAGIA-XML_operative_last-check-date-time}':U
 &global-define bef-cda-IBM-XML_operative IBM-XML_operative
 &global-define cda-IBM-XML_operative '{&bef-cda-IBM-XML_operative}':U
-&global-define bef-prop-list-cda-IBM-XML_operative last-check-params,fo-version
+&global-define bef-prop-list-cda-IBM-XML_operative last-check-params,fo-version,device-kind
 &global-define prop-list-cda-IBM-XML_operative '{&bef-prop-list-cda-IBM-XML_operative}':U
 &global-define bef-cda-IBM-XML_operative_last-check-params last-check-params
 &global-define cda-IBM-XML_operative_last-check-params '{&bef-cda-IBM-XML_operative_last-check-params}':U
 &global-define bef-cda-IBM-XML_operative_fo-version fo-version
 &global-define cda-IBM-XML_operative_fo-version '{&bef-cda-IBM-XML_operative_fo-version}':U
+&global-define bef-cda-IBM-XML_operative_device-kind device-kind
+&global-define cda-IBM-XML_operative_device-kind '{&bef-cda-IBM-XML_operative_device-kind}':U
 &global-define bef-cda-IBM-XML_general IBM-XML_general
 &global-define cda-IBM-XML_general '{&bef-cda-IBM-XML_general}':U
 &global-define bef-prop-list-cda-IBM-XML_general use-kbo,easyfuel
@@ -8230,7 +8232,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: ea4bbe67f929, 1755, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 64e1e27f7423, 1776, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: f8efd18195cf, 1635, rls ':U
 &global-define str-glblt_vss-revision 'Revision: eaf52311ea8f, 1774, rls ':U
 &endif
