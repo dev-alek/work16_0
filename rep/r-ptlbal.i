@@ -218,12 +218,12 @@ case buf_trn-doc.doc-type:
           varwayb_difference = varwayb - varwayb_measure
         .
       end.
-      else do:
-        assign
-          varwayb_measure    = ?
-          varwayb_difference = ?
-        .
-      end.
+/*      else do:                  */
+/*        assign                  */
+/*          varwayb_measure    = ?*/
+/*          varwayb_difference = ?*/
+/*        .                       */
+/*      end.                      */
     end.
     else do:
       assign
