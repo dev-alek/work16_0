@@ -627,8 +627,8 @@ define input parameter tog-raz-html as char no-undo.
          '         <td style="width: 200px; border: none;"></td>' skip      /*Наименование товара*/
          '         <td style="width: 78px; border: none;"></td>' skip    /* Единица измерения*/
          '         <td style="width: 78px; border: none;"></td>' skip   /*Количество*/
-         '         <td style="width: 68px; border: none;"></td>' skip  /*Сумма без скидок*/
-         '         <td style="width: 68px; border: none;"></td>' skip  /*Сумма со скидкой*/
+         '         <td style="width: 78px; border: none;"></td>' skip  /*Сумма без скидок*/
+         '         <td style="width: 78px; border: none;"></td>' skip  /*Сумма со скидкой*/
          '         <td style="width: 78px; border: none;"></td>' skip  /*Количество чеков*/
          '         <td style="width: 78px; border: none;"></td>' skip  /*Количество покупок*/
          '         <td style="width: 78px; border: none;"></td>' skip   /*Средний чек по количеству товаров*/
@@ -867,9 +867,9 @@ if p-tog-raz = yes then do:
                     '         <td colspan="3" style="display: yes; text-align: left; font-weight: bold">' +  buf-html-temp-chk.gds-name + '</td>' skip
                     '         <td style="display: yes; text-align:  right; font-weight: bold">'  + if buf-html-temp-chk.qnty <> ?  then fnc-convert-dot-to-colon( buf-html-temp-chk.qnty, "->>>>>>>>>>>>9.99") + '</td>' else "?" + '</td>' skip
                     '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.sum-unbase <> ? then fnc-convert-dot-to-colon( buf-html-temp-chk.sum-unbase, "->>>>>>>>>>>>9.99")   + '</td>' else "?" + '</td>' skip
-                    '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.sum-base <> ? then fnc-convert-dot-to-colon( buf-html-temp-chk.sum-base, "->>>>>>>9.99")  + '</td>' else "?" + '</td>' skip
-                    '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.doc-qnty <> ? then fnc-convert-dot-to-colon( buf-html-temp-chk.doc-qnty, "->>>>>>>9") + '</td>' else "?" + '</td>' skip
-                    '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.pok-qnty <> ? then fnc-convert-dot-to-colon( buf-html-temp-chk.pok-qnty, "->>>>>>>9") + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.sum-base <> ? then fnc-convert-dot-to-colon( buf-html-temp-chk.sum-base, "->>>>>>>>>>>>>9.99")  + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.doc-qnty <> ? then fnc-convert-dot-to-colon( buf-html-temp-chk.doc-qnty, "->>>>>>>>>>>>>>9") + '</td>' else "?" + '</td>' skip
+                    '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.pok-qnty <> ? then fnc-convert-dot-to-colon( buf-html-temp-chk.pok-qnty, "->>>>>>>>>>>>>9") + '</td>' else "?" + '</td>' skip
                     '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.srchk-kol-tov <> ?  then fnc-convert-dot-to-colon( buf-html-temp-chk.srchk-kol-tov, "->>>>>>>9.99") + '</td>' else "?" + '</td>' skip
                                   
                     '         <td style="display: yes; text-align:  right; font-weight: bold">'   + if buf-html-temp-chk.srchk-sum <> ?  then fnc-convert-dot-to-colon( buf-html-temp-chk.srchk-sum, "->>>>>>>>>9.99") + '</td>' else "?" + '</td>' skip
