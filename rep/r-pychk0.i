@@ -90,7 +90,7 @@ if first-of(ub.CHK-pay.DOC-CODE) THEN Do:
     .
   end .
 end.
-if pychk_create /* and ub.chk-doc.doc-code eq "35/11778" */ then do:
+if pychk_create  /* and ub.chk-doc.doc-code eq "38/47470" */ then do:
 create-block:
 do transaction
 on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -438,10 +438,10 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 and buf_temp-chk-gds.line-num ne 0
             no-lock by buf_temp-chk-gds.line-num  ne  temp-chk-dp.line-num :
                      
-                /* if         temp-chk-dp.all-sum  eq ?
+                 if         temp-chk-dp.all-sum  eq ?
                     or abs(temp-chk-dp.all-sum) <= 0.001
                 then
-                   next dp. */     
+                   next dp.      
                 find first  temp-chk-gds where
                     temp-chk-gds.doc-code = ub.chk-doc.doc-code     
                     and buf_temp-chk-gds.b-code = temp-chk-gds.b-code          
