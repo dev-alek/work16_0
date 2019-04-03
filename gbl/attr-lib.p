@@ -8184,32 +8184,40 @@ false'
 &scop output-display-cda-IBM-XML_operative true
 &scop user-can-edit-list-cda-IBM-XML_operative '~
 true~
+,false~
 ,false'
 &scop output-display-list-cda-IBM-XML_operative '~
 true~
+,true~
 ,true'
-&scop other-cda-IBM-XML_operative 'spr=cd-attr-last-check-params,'
-&scop prop-type-list-cda-IBM-XML_operative 'character,character'
-&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)'
+&scop other-cda-IBM-XML_operative 'spr=cd-attr-last-check-params,,'
+&scop prop-type-list-cda-IBM-XML_operative 'character,character,integer'
+&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)|9'
 &scop prop-label-list-cda-IBM-XML_operative '~
 Параметры последнего принятого чека/док-та~
-,Версия кассовой программы'
-&scop manual-edit-cda-IBM-XML_operative  '1,0'
-&scop batch-edit-cda-IBM-XML_operative  '0,0'
+,Версия кассовой программы~
+,Признак исполнения кассы'
+&scop manual-edit-cda-IBM-XML_operative  '1,0,0'
+&scop batch-edit-cda-IBM-XML_operative  '0,0,0'
 &scop news-cda-IBM-XML_operative '~
 false~
+,true~
 ,true'
 &scop from-gbd-cda-IBM-XML_operative '~
 false~
+,false~
 ,false'
 &scop from-ubd-cda-IBM-XML_operative '~
 true~
+,true~
 ,true'
 &scop hist-cda-IBM-XML_operative '~
 false~
+,true~
 ,true'
 &scop send-param-cda-IBM-XML_operative  '~
 false~
+,false~
 ,false'
 /**/
 

@@ -38,6 +38,11 @@ define input parameter p-version             like ub.cash-desk.version          
 define input parameter p-registration-code   like ub.cash-desk.registration-code  no-undo .
 define input parameter p-serial-code         like ub.cash-desk.serial-code        no-undo .
 define input parameter p-fr-type             like ub.cash-desk.fr-type            no-undo .
+/* вариант исполнения кассы: обычная, ТСО, мобильная.
+   1,2,3 = вариант исполения, отличный от обычного
+   0 = обычный вариант исполнения: в БД не пишем, если был записан - стираем. 
+   "?" = "оставить прежнее значение"
+*/
 define input parameter p-device-kind         as integer no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -71,7 +76,7 @@ define variable conf-par as character no-undo .
 define variable par-type as character no-undo .
 define variable num-cd as integer no-undo .
 define variable ii-num-cd as integer no-undo .
-define variable v-dopi as integer no-undo .
+/*define variable v-dopi as integer no-undo .*/
 define variable v-dopd as decimal no-undo  .
 define variable v-dop-path as character no-undo .
 define variable v-cd-list as character no-undo .
@@ -122,7 +127,10 @@ addr-path
 .
 
 
-
+/* первая часть процедуры предполагает:
+   1. здесь высветить message с текстом ошибки
+   2. вернуть в return-value имя поля, на которое надо установить курсор в форме ввода
+*/
 if p-mode <> {&add-def}
 AND p-mode <> {&update} then do:
   message
@@ -299,15 +307,15 @@ if not p-is-del then do:
   )
   AND p-autonomy = integer({&cd-self}) then do:
     message
-    substitute("В настоящее время  работа с автономными кассами типа&1&2 &3 &4&1" +
+    substitute("В настоящее время  работа с автономными кассами типа&1&2 &3 &4 &5&1" +
                "не поддерживается"
                ,{&new-line}
                ,{&cd-type-NCR-GM}
                ,{&cd-type-magia-XML}
-               ,{&cd-type-maria})
+               ,{&cd-type-maria}
+               ,{&cd-type-autotank})
     view-as alert-box error .
     undo, return error "autonomy":U.
-
   end.
   if p-pos-type = {&cd-type-infokiosk}
   or p-pos-type = {&cd-type-pricecheck-Servispl}
@@ -403,28 +411,15 @@ if not p-is-del then do:
   end.
 
 
+  define variable l-ipaddr as character no-undo .
   CASE p-pos-type:
-    when {&cd-type-NCR-GM}
-    or
-    when {&cd-type-MAGIA-XML}
-    then do:
-      /*ввовдим все что угодно*/
-      /*
-      if p-autonomy = integer({&cd-manager}) then do:
-          message
-          "Для кассы типа" p-pos-type skip
-          "не надо вводить ПУТЬ(АДРЕС)"
-          view-as alert-box ERROR .
-          undo, return error "addr-path":U.
-      end.
-      */
-    end.
-    when {&cd-type-IBM}
-    or
-    when {&cd-type-omron}
-    or
-    when {&cd-type-NKT-IBM}
-    then do:
+    when {&cd-type-NCR-GM} or
+    when {&cd-type-MAGIA-XML} then . /*ввовдим все что угодно*/
+
+    when {&cd-type-IBM} or
+    when {&cd-type-omron} or
+    when {&cd-type-NKT-IBM} then do:
+      /* 28/III-2019 разрешено вводить как ip-адрес, так и dns-имя
       IF NUm-entries(p-addr-path, ".") <> 4 then do:
         message
         "Для кассы типа" p-pos-type
@@ -432,7 +427,9 @@ if not p-is-del then do:
         view-as alert-box ERROR .
         undo, return error "addr-path":U.
       end.
+      */
     end.
+    
     when {&cd-type-IBM-XML} then do:
       if p-autonomy = integer({&cd-manager})
       then do:
@@ -463,6 +460,7 @@ if not p-is-del then do:
             undo, return error "addr-path":U.
           end.
         end.
+        /* 28/III-2019 разрешено вводить как ip-адрес, так и dns-имя
         IF NUm-entries(entry(2, p-addr-path, {&delim-par}), ".":U) <> 4 then do:
           message
           "Для кассы типа" p-pos-type
@@ -470,26 +468,16 @@ if not p-is-del then do:
           view-as alert-box ERROR .
           undo, return error "addr-path":U.
         end.
-        if num-entries(entry(4
-                             ,entry(2, p-addr-path, {&delim-par})
-                             ,".")
-                      , ":") <> 2
-        then do:
+        */
+        l-ipaddr = entry(2, p-addr-path, {&delim-par}) .
+        if num-entries(l-ipaddr, ":") <> 2 then do:
           message
           "Для автономной кассы типа" p-pos-type
-          "надо указать IP порт в адресе кассы в формате NNN.NNN.NNN.NNN:PPPP !"
+          "надо указать IP адрес и порт в формате NNN.NNN.NNN.NNN:PPPP или DNS-имя кассы и порт в формате DNS:PPPP"
           view-as alert-box ERROR .
           undo, return error "addr-path":U.
         end.
-        assign
-        v-dopi = integer(entry(2
-                               ,entry(4
-                                      ,entry(2, p-addr-path, {&delim-par})
-                                      ,".":U)
-                              , ":"
-                              )
-                        )
-        no-error .
+        integer(  entry(2, l-ipaddr, ":")  ) no-error .
         if error-status:error then do:
           message
           "Для автономной кассы типа" p-pos-type
@@ -520,6 +508,7 @@ if not p-is-del then do:
             undo, return error "addr-path":U.
           end.
         end.
+        /*
         IF NUm-entries(entry(2, p-addr-path, {&delim-par}), ".":U) <> 4 then do:
           message
           "Для кассы типа" p-pos-type
@@ -527,30 +516,21 @@ if not p-is-del then do:
           view-as alert-box ERROR .
           undo, return error "addr-path":U.
         end.
-        if num-entries(entry(4
-                             ,entry(2, p-addr-path, {&delim-par})
-                             ,".")
-                      , ":") <> 2
+        */
+        l-ipaddr = entry(2, p-addr-path, {&delim-par}) .        
+        if num-entries(l-ipaddr, ":") <> 2
         then do:
           message
           "Для кассового менеджера типа" p-pos-type
-          "надо указать IP порт в адресе кассы в формате NNN.NNN.NNN.NNN:PPPP !"
+          "надо указать IP адрес и порт в формате NNN.NNN.NNN.NNN:PPPP или DNS-имя кассы и порт в формате DNS:PPPP"
           view-as alert-box ERROR .
           undo, return error "addr-path":U.
         end.
-        assign
-        v-dopi = integer(entry(2
-                               ,entry(4
-                                      ,entry(2, p-addr-path, {&delim-par})
-                                      ,".":U)
-                              , ":"
-                              )
-                        )
-        no-error .
+        integer(  entry(2, l-ipaddr, ":")  ) no-error .
         if error-status:error then do:
           message
           "Для кассового менеджера типа" p-pos-type
-          "порт в IP адресе кассы должен быть цифровым!"
+          "порт в IP адресе кассы должен быть цифровым"
           view-as alert-box ERROR .
           undo, return error "addr-path":U.
         end.
@@ -652,9 +632,7 @@ if not p-is-del then do:
               end.
             end.
 
-            assign
-            v-dopi = integer(trim (v-dop-path, 'COM'))
-            no-error .
+            integer(trim (v-dop-path, 'COM')) no-error .
             if error-status:error
             then do:
               message
@@ -681,9 +659,7 @@ if not p-is-del then do:
               view-as alert-box ERROR .
               undo, return error "addr-path":U.
             end.
-            assign
-            v-dopi = integer(trim (entry(1, v-dop-path, '+'), 'COM1'))
-            no-error .
+            integer(trim (entry(1, v-dop-path, '+'), 'COM1')) no-error .
             if error-status:error
             then do:
               message
@@ -945,6 +921,9 @@ if not p-is-del then do:
   end. /*p-addr-path <> "":U*/
 end.
 
+/* вторая часть процедуры добавляет к первому предположению:
+   3. вернуть в return-value текст ошибки вместо имени поля
+*/
 _MAIN:
 DO ON ERROR UNDO, RETURN ERROR return-value
 ON STOP UNDO, RETURN ERROR return-value :
@@ -1227,30 +1206,37 @@ ON STOP UNDO, RETURN ERROR return-value :
   end.
 
   /* признак какая это касса: ТСО, обычная касса или мобильная */
-run gbl/inidebug.p.
   define buffer buf_cash-desk-attr for ub.cash-desk-attr .
-  find first buf_cash-desk-attr exclusive-lock
-       where buf_cash-desk-attr.db-num   = p-db-num
-         and buf_cash-desk-attr.obj-code = p-obj-code
-         and buf_cash-desk-attr.pos-type = p-pos-type
-         and buf_cash-desk-attr.cash-num = p-cash-num
-         and buf_cash-desk-attr.upper-attr-code = p-pos-type + "_operative":U
-         and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
-  if available buf_cash-desk-attr then
-    buf_cash-desk-attr.attr-value-integer = p-device-kind.
-  else do :
-    create buf_cash-desk-attr .
-    assign
-      buf_cash-desk-attr.db-num   = p-db-num
-      buf_cash-desk-attr.obj-code = p-obj-code
-      buf_cash-desk-attr.pos-type = p-pos-type
-      buf_cash-desk-attr.cash-num = p-cash-num
-      buf_cash-desk-attr.upper-attr-code    = p-pos-type + "_operative":U
-      buf_cash-desk-attr.attr-code          = "device-kind":U
-      buf_cash-desk-attr.attr-value-integer = p-device-kind
-    .
-  end .
-
+  if p-device-kind <> ? then do :
+    find first buf_cash-desk-attr exclusive-lock
+         where buf_cash-desk-attr.db-num   = p-db-num
+           and buf_cash-desk-attr.obj-code = p-obj-code
+           and buf_cash-desk-attr.pos-type = p-pos-type
+           and buf_cash-desk-attr.cash-num = p-cash-num
+           and buf_cash-desk-attr.upper-attr-code = p-pos-type + "_operative":U
+           and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
+    if available buf_cash-desk-attr then do :
+      if p-device-kind = 0 then delete buf_cash-desk-attr .
+      else assign
+        buf_cash-desk-attr.attr-value-integer = p-device-kind when
+        buf_cash-desk-attr.attr-value-integer <> p-device-kind
+      .
+    end . 
+    else if p-device-kind > 0 then do :
+      create buf_cash-desk-attr .
+      assign
+        buf_cash-desk-attr.db-num   = p-db-num
+        buf_cash-desk-attr.obj-code = p-obj-code
+        buf_cash-desk-attr.pos-type = p-pos-type
+        buf_cash-desk-attr.cash-num = p-cash-num
+        buf_cash-desk-attr.upper-attr-code    = p-pos-type + "_operative":U
+        buf_cash-desk-attr.attr-code          = "device-kind":U
+        buf_cash-desk-attr.attr-value-integer = p-device-kind
+      .
+    end .
+  end . /* end_of device-kind */
+  
+  
 end. /*doe*/
 
 procedure update-cda :
