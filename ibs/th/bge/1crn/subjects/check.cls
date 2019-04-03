@@ -231,6 +231,9 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_chk-discnt   for ub.chk-discnt .
     define buffer bf_chk-discnt    for ub.chk-discnt .
     define buffer buf_chk-gds-pay  for ub.chk-gds-pay .
+    define buffer buf_cash-desk-attr for ub.cash-desk-attr .
+    define buffer buf_clients      for ub.clients .
+    define buffer buf_cash-desk    for ub.cash-desk .
     define variable v-is-petrolium as logical no-undo . /* true = топливо */
     define variable v-is-pieces    as logical no-undo .
     define variable v-loc1         as character no-undo . /* номер резервуара */
@@ -251,6 +254,34 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     insw:write-data-element (  "chk-num":U,         string(p-buf_chk-doc.chk-num)     ). /* Номер чека на кассе (Число) */
     insw:write-data-element (  "cb-num":U,          string(p-buf_chk-doc.pay-desk)    ). /* Номер кассы (Число) */
     insw:write-data-element (  "chk-id":U,                 p-buf_chk-doc.doc-code     ). /* Номер чека в GC (Строка) */
+    
+    /* 29/III-2019  признак какая это касса: ТСО, обычная касса или мобильная */
+    define variable v-c-type as integer no-undo .
+    v-c-type = 0 .
+    find first buf_clients no-lock
+         where buf_clients.obj-code = p-obj-code
+           and buf_clients.obj-type = p-obj-type no-error .
+    if available buf_clients then do :
+      find first buf_cash-desk no-lock
+           where buf_cash-desk.db-num   = buf_clients.db-num
+             and buf_cash-desk.obj-code = p-obj-code
+          /* and buf_cash-desk.pos-type = в чеке отсутствует тип кассы */
+             and buf_cash-desk.cash-num = p-buf_chk-doc.pay-desk no-error .
+      if available buf_cash-desk then do :
+        find first buf_cash-desk-attr no-lock
+             where buf_cash-desk-attr.db-num   = buf_clients.db-num
+               and buf_cash-desk-attr.obj-code = p-obj-code
+               and buf_cash-desk-attr.pos-type = buf_cash-desk.pos-type
+               and buf_cash-desk-attr.cash-num = p-buf_chk-doc.pay-desk
+               and buf_cash-desk-attr.upper-attr-code = buf_cash-desk.pos-type + "_operative":U
+               and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
+        if available buf_cash-desk-attr then do :
+          v-c-type = buf_cash-desk-attr.attr-value-integer .
+        end .
+      end .
+    end .
+    insw:write-data-element (  "c-type":U,  string(v-c-type)  ). /* признак какая это касса */
+    
     
     /* обязательность 0-1 для del-l, ext-num, direct-chk-num */
     
