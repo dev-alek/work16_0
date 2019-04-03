@@ -416,6 +416,9 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
+        if can-find(first bf_rvs-doc no-lock where
+             bf_rvs-doc.rvs-code = buf_trn-doc.out-code) 
+          then write-data-element ("check-fuel-doc", buf_trn-doc.out-code).
   end.
 
   method private void EndDocInvFuel ():
