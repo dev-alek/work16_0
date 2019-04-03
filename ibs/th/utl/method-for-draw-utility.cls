@@ -1075,6 +1075,7 @@ method public void load_cashdesk(iAddr as character ) :
     ,input tt-cash-desk.registration-code
     ,input tt-cash-desk.serial-code
     ,input tt-cash-desk.fr-type
+    ,input ? /* вариант исполнения кассы (ТСО,неТСО,мобильн); "?" = "оставить прежнее значение" */
     ) no-error .
     if error-status:error then do:
        put-Log(return-value).

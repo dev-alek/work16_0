@@ -38,6 +38,7 @@ define input parameter p-version             like ub.cash-desk.version          
 define input parameter p-registration-code   like ub.cash-desk.registration-code  no-undo .
 define input parameter p-serial-code         like ub.cash-desk.serial-code        no-undo .
 define input parameter p-fr-type             like ub.cash-desk.fr-type            no-undo .
+define input parameter p-device-kind         as integer no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -131,14 +132,14 @@ AND p-mode <> {&update} then do:
   return error '':u.
 end.
 
-{ gbl/curdbnum.i v-db-num }
-
 if LOOKUP(p-pos-type, {&cd-type-codes}) = 0 then do:
   message
   "Неверный тип кассы" p-pos-type
   view-as alert-box error .
   return error "pos-type":U.
 end.
+
+ v-db-num = ibs.th.gbl.gbl-var:g#db-num .
 
 find first buf_clients no-lock where
           buf_clients.obj-code = p-obj-code
@@ -1161,6 +1162,7 @@ ON STOP UNDO, RETURN ERROR return-value :
       man_cash-desk.addr-path = v-cd-list.
     end.
   end.
+
   release ub.cash-desk no-error.
   if error-status:error then do:
     message
@@ -1223,6 +1225,32 @@ ON STOP UNDO, RETURN ERROR return-value :
      end.
     end.
   end.
+
+  /* признак какая это касса: ТСО, обычная касса или мобильная */
+run gbl/inidebug.p.
+  define buffer buf_cash-desk-attr for ub.cash-desk-attr .
+  find first buf_cash-desk-attr exclusive-lock
+       where buf_cash-desk-attr.db-num   = p-db-num
+         and buf_cash-desk-attr.obj-code = p-obj-code
+         and buf_cash-desk-attr.pos-type = p-pos-type
+         and buf_cash-desk-attr.cash-num = p-cash-num
+         and buf_cash-desk-attr.upper-attr-code = p-pos-type + "_operative":U
+         and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
+  if available buf_cash-desk-attr then
+    buf_cash-desk-attr.attr-value-integer = p-device-kind.
+  else do :
+    create buf_cash-desk-attr .
+    assign
+      buf_cash-desk-attr.db-num   = p-db-num
+      buf_cash-desk-attr.obj-code = p-obj-code
+      buf_cash-desk-attr.pos-type = p-pos-type
+      buf_cash-desk-attr.cash-num = p-cash-num
+      buf_cash-desk-attr.upper-attr-code    = p-pos-type + "_operative":U
+      buf_cash-desk-attr.attr-code          = "device-kind":U
+      buf_cash-desk-attr.attr-value-integer = p-device-kind
+    .
+  end .
+
 end. /*doe*/
 
 procedure update-cda :

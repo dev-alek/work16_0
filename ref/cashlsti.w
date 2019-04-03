@@ -8,9 +8,9 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_cash-desk FOR ub.cash-desk.
-DEFINE TEMP-TABLE tt-cash-desk NO-UNDO LIKE ub.cash-desk.
-DEFINE BUFFER X_cash-desk FOR ub.cash-desk.
+DEFINE BUFFER locked_cash-desk FOR cash-desk.
+DEFINE TEMP-TABLE tt-cash-desk NO-UNDO LIKE cash-desk.
+DEFINE BUFFER X_cash-desk FOR cash-desk.
 
 
 
@@ -37,14 +37,20 @@ Creation date: 11/27/03
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-define input        parameter parparentproc AS WIDGET-HANDLE no-undo.
+define input        parameter parparentproc AS HANDLE no-undo.
+/* parparentproc не используется. Передаётся в:
+- ref/cda-cc.w
+- ref/cd-atti.w
+- ref/cda-29.w
+- ref/cda-31.w
+- value(v-spr) из thbjattr_code:attr-other
+- ref/ccshlist.w
+*/
 define input        parameter p-mode as character  no-undo.
 define input        parameter p-db-num like ub.cash-desk.db-num  no-undo.
 define input        parameter p-obj-code like ub.cash-desk.obj-code  no-undo.
 define input        parameter p-pos-type like ub.cash-desk.pos-type no-undo .
 define input        parameter p-cash-num like ub.cash-desk.cash-num  no-undo.
-
-
 define input-output parameter p-rid  as recid no-undo.
 
 /* Local Variable Definitions ---                                       */
@@ -72,6 +78,7 @@ DEFINE VARIABLE v-fr-type-list-items-full AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-fr-type-list-items AS CHARACTER NO-UNDO.
 define variable l-shift-on as logical no-undo .
 define buffer buf_cash-desk for ub.cash-desk.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -87,7 +94,7 @@ define buffer buf_cash-desk for ub.cash-desk.
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES tt-cash-desk ub.cash-desk
+&Scoped-define INTERNAL-TABLES tt-cash-desk cash-desk
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 &Scoped-define FIELDS-IN-QUERY-Dialog-Frame tt-cash-desk.cash-num ~
@@ -102,12 +109,12 @@ tt-cash-desk.serial-code
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame tt-cash-desk
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame tt-cash-desk
 &Scoped-define QUERY-STRING-Dialog-Frame FOR EACH tt-cash-desk SHARE-LOCK, ~
-      EACH ub.cash-desk WHERE TRUE /* Join to tt-cash-desk incomplete */ SHARE-LOCK
+      EACH cash-desk WHERE TRUE /* Join to tt-cash-desk incomplete */ SHARE-LOCK
 &Scoped-define OPEN-QUERY-Dialog-Frame OPEN QUERY Dialog-Frame FOR EACH tt-cash-desk SHARE-LOCK, ~
-      EACH ub.cash-desk WHERE TRUE /* Join to tt-cash-desk incomplete */ SHARE-LOCK.
-&Scoped-define TABLES-IN-QUERY-Dialog-Frame tt-cash-desk ub.cash-desk
+      EACH cash-desk WHERE TRUE /* Join to tt-cash-desk incomplete */ SHARE-LOCK.
+&Scoped-define TABLES-IN-QUERY-Dialog-Frame tt-cash-desk cash-desk
 &Scoped-define FIRST-TABLE-IN-QUERY-Dialog-Frame tt-cash-desk
-&Scoped-define SECOND-TABLE-IN-QUERY-Dialog-Frame ub.cash-desk
+&Scoped-define SECOND-TABLE-IN-QUERY-Dialog-Frame cash-desk
 
 
 /* Standard List Definitions                                            */
@@ -117,9 +124,9 @@ tt-cash-desk.version tt-cash-desk.registration-code ~
 tt-cash-desk.serial-code 
 &Scoped-define ENABLED-TABLES tt-cash-desk
 &Scoped-define FIRST-ENABLED-TABLE tt-cash-desk
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-attr B-attr-2 B-cli-attr ~
-B-hist B-Help f-obj-name COMBO-protocol-maria COMBO-protocol CB-fr-type ~
-f-fr-type T-remote 
+&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 b-quit B-attr B-attr-2 ~
+B-cli-attr B-hist B-Help f-obj-name COMBO-protocol-maria COMBO-protocol ~
+cb-device-kind CB-fr-type f-fr-type T-remote 
 &Scoped-Define DISPLAYED-FIELDS tt-cash-desk.cash-num tt-cash-desk.db-num ~
 tt-cash-desk.obj-code tt-cash-desk.addr-path tt-cash-desk.pos-type ~
 tt-cash-desk.cash-os tt-cash-desk.autonomy tt-cash-desk.version ~
@@ -127,7 +134,8 @@ tt-cash-desk.registration-code tt-cash-desk.serial-code
 &Scoped-define DISPLAYED-TABLES tt-cash-desk
 &Scoped-define FIRST-DISPLAYED-TABLE tt-cash-desk
 &Scoped-Define DISPLAYED-OBJECTS f-obj-name f-cash-num-char f-pswd ~
-COMBO-protocol-maria COMBO-protocol CB-fr-type f-fr-type T-remote 
+COMBO-protocol-maria COMBO-protocol cb-device-kind CB-fr-type f-fr-type ~
+T-remote 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -173,6 +181,16 @@ DEFINE BUTTON b-quit AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE VARIABLE cb-device-kind AS INTEGER FORMAT ">9" INITIAL 0 
+     LABEL "Признак исполнения кассы" 
+     VIEW-AS COMBO-BOX INNER-LINES 4
+     LIST-ITEM-PAIRS "Стандартное",0,
+                     "ТСО Элекснет",1,
+                     "ТСО Auto GC",2,
+                     "Мобильное приложение",3
+     DROP-DOWN-LIST
+     SIZE 25 BY 1.
+
 DEFINE VARIABLE CB-fr-type AS CHARACTER FORMAT "x(15)" 
      LABEL "Тип ФР" 
      VIEW-AS COMBO-BOX INNER-LINES 5
@@ -214,6 +232,10 @@ DEFINE VARIABLE f-pswd AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 27 BY 1 NO-UNDO.
 
+DEFINE RECTANGLE RECT-1
+     EDGE-PIXELS 1 GRAPHIC-EDGE  NO-FILL   
+     SIZE 77 BY 2.14.
+
 DEFINE VARIABLE T-remote AS LOGICAL INITIAL no 
      LABEL "Удаленная" 
      VIEW-AS TOGGLE-BOX
@@ -223,7 +245,7 @@ DEFINE VARIABLE T-remote AS LOGICAL INITIAL no
 &ANALYZE-SUSPEND
 DEFINE QUERY Dialog-Frame FOR 
       tt-cash-desk, 
-      ub.cash-desk SCROLLING.
+      cash-desk SCROLLING.
 &ANALYZE-RESUME
 
 /* ************************  Frame Definitions  *********************** */
@@ -259,7 +281,7 @@ DEFINE FRAME Dialog-Frame
           BGCOLOR 15 FGCOLOR 0 
      COMBO-protocol-maria AT ROW 6.29 COL 50 COLON-ALIGNED
      COMBO-protocol AT ROW 6.29 COL 50 COLON-ALIGNED
-     tt-cash-desk.pos-type AT ROW 7.52 COL 11.6 COLON-ALIGNED
+     tt-cash-desk.pos-type AT ROW 8.86 COL 12 COLON-ALIGNED
           LABEL "Тип POS"
           VIEW-AS COMBO-BOX INNER-LINES 11
           LIST-ITEM-PAIRS "1","1",
@@ -272,36 +294,40 @@ DEFINE FRAME Dialog-Frame
           DROP-DOWN-LIST
           SIZE 26.6 BY 1
           BGCOLOR 15 FGCOLOR 0 
-     tt-cash-desk.cash-os AT ROW 7.52 COL 50 COLON-ALIGNED
+     tt-cash-desk.cash-os AT ROW 8.86 COL 50.4 COLON-ALIGNED
           LABEL "Тип ОС"
           VIEW-AS COMBO-BOX INNER-LINES 4
           LIST-ITEMS "","OS/2","DOS","LINUX","WINDOWS" 
           DROP-DOWN-LIST
-          SIZE 9 BY 1
+          SIZE 10.6 BY 1
           BGCOLOR 15 FGCOLOR 0 
-     tt-cash-desk.autonomy AT ROW 8.76 COL 13.6 NO-LABEL
+     tt-cash-desk.autonomy AT ROW 10.76 COL 13 NO-LABEL
           VIEW-AS RADIO-SET HORIZONTAL
           RADIO-BUTTONS 
                     "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3
           SIZE 66 BY 1
-     CB-fr-type AT ROW 10 COL 11.6 COLON-ALIGNED WIDGET-ID 4
-     tt-cash-desk.version AT ROW 10 COL 60.6 COLON-ALIGNED
+     cb-device-kind AT ROW 11.95 COL 49 COLON-ALIGNED WIDGET-ID 14
+     CB-fr-type AT ROW 13.67 COL 11.2 COLON-ALIGNED WIDGET-ID 4
+     tt-cash-desk.version AT ROW 13.67 COL 60.2 COLON-ALIGNED
           LABEL "Версия протокола"
           VIEW-AS FILL-IN 
           SIZE 19.6 BY 1
-     f-fr-type AT ROW 11.14 COL 50 COLON-ALIGNED WIDGET-ID 8
-     T-remote AT ROW 11.29 COL 13.4
-     tt-cash-desk.registration-code AT ROW 12.48 COL 11.8 COLON-ALIGNED
+     f-fr-type AT ROW 14.81 COL 49.6 COLON-ALIGNED WIDGET-ID 8
+     T-remote AT ROW 14.95 COL 13
+     tt-cash-desk.registration-code AT ROW 16.14 COL 11.8 COLON-ALIGNED
           LABEL "Регистр. №"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
-     tt-cash-desk.serial-code AT ROW 12.48 COL 50 COLON-ALIGNED
+     tt-cash-desk.serial-code AT ROW 16.14 COL 49.6 COLON-ALIGNED
           LABEL "Сер. №"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
-     SPACE(1.89) SKIP(1.21)
+     " формат общения с кассой" VIEW-AS TEXT
+          SIZE 30 BY .62 AT ROW 7.91 COL 14 WIDGET-ID 12
+     RECT-1 AT ROW 8.14 COL 3 WIDGET-ID 10
+     SPACE(3.99) SKIP(7.76)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Касса"
@@ -410,15 +436,18 @@ DO:
           DISABLE
           tt-cash-desk.cash-num
           WITH FRAME {&FRAME-NAME}.
+          hide cb-device-kind in frame {&FRAME-NAME}. 
       END.
       OTHERWISE DO:
           ASSIGN
           tt-cash-desk.cash-num = tcode.
           DISPLAY
           tt-cash-desk.cash-num
+          cb-device-kind
           WITH FRAME {&FRAME-NAME}.
           ENABLE
           tt-cash-desk.cash-num when p-mode = {&add-def}
+          cb-device-kind
           WITH FRAME {&FRAME-NAME}.
       END.
   END CASE.
@@ -459,7 +488,7 @@ define variable v-rid-list as character no-undo .
                     ,input tt-cash-desk.obj-code
                     ,input tt-cash-desk.pos-type
                     ,input tt-cash-desk.cash-num
-					,input no
+                                        ,input no
                   ).
   end.
 END.
@@ -505,7 +534,7 @@ define variable v-setted as logical no-undo .
                       ,input tt-cash-desk.obj-code
                       ,input tt-cash-desk.pos-type
                       ,input tt-cash-desk.cash-num
-					  ,input no
+                                          ,input no
                     ).
     end.
   end case.
@@ -677,6 +706,7 @@ END.
 ON VALUE-CHANGED OF tt-cash-desk.pos-type IN FRAME Dialog-Frame /* Тип POS */
 DO:
   if p-mode = {&lookup} then return no-apply.
+  
   assign
   tt-cash-desk.pos-type.
   if lookup(tt-cash-desk.pos-type,
@@ -689,20 +719,19 @@ DO:
   end.
   else do:
       enable
-      t-remote when (p-mode <> {&lookup} and not l-shift-on)
+      t-remote when (not l-shift-on)
       with frame {&frame-name}.
   end.
+  
   if lookup(tt-cash-desk.pos-type
             , ({&cd-type-IBm-XML} + {&comma-char} +
                {&cd-type-autotank})) > 0
       then do:
-      if p-mode <> {&lookup} then do:
         view
         combo-protocol
         in frame {&frame-name}.
-      end.
       enable
-      combo-protocol when (p-mode <> {&lookup} and not l-shift-on)
+      combo-protocol when (not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -716,13 +745,11 @@ DO:
   end.
   if lookup({&cd-type-maria}, tt-cash-desk.pos-type) > 0
       then do:
-      if p-mode <> {&lookup} then do:
         view
         combo-protocol-maria
         in frame {&frame-name}.
-      end.
       enable
-      combo-protocol-maria when (p-mode <> {&lookup} and not l-shift-on)
+      combo-protocol-maria when (not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -738,7 +765,7 @@ DO:
   if lookup({&cd-type-maria}, tt-cash-desk.pos-type) > 0
       then do:
       enable
-      f-cash-num-char when (p-mode <> {&lookup} and not l-shift-on)
+      f-cash-num-char when (not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -753,7 +780,7 @@ DO:
   if lookup({&cd-type-maria}, tt-cash-desk.pos-type) > 0
       then do:
       enable
-      f-pswd when (p-mode <> {&lookup} and not l-shift-on)
+      f-pswd when (not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -778,7 +805,6 @@ DO:
       with frame {&frame-name} .
       enable
       f-fr-TYPE
-      when p-mode <> {&lookup}
       with frame {&frame-name}.
 
   end.
@@ -794,7 +820,6 @@ DO:
       with frame {&frame-name}.
       enable
       cb-fr-TYPE
-      when p-mode <> {&lookup}
       with frame {&frame-name}.
   end.
   if lookup(tt-cash-desk.pos-type,
@@ -805,7 +830,7 @@ DO:
             {&cd-type-autotank}
             )) > 0 then do:
       enable
-      tt-cash-desk.autonomy when (p-mode <> {&lookup} and not l-shift-on)
+      tt-cash-desk.autonomy when (not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -849,27 +874,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    p-mode = entry(1, p-mode, {&delim-par})
    .
  end.
- if p-mode  <> {&add-def}
- and p-mode <> {&update}
- and p-mode <> {&lookup}
- then do:
-    message
-    vss-workfile vss-revision vss-description skip
-    "Неверное значение параметров вызова p-mode"  p-mode
-    view-as alert-box ERROR.
-    undo, return error
-    .
- end.
- { gbl/curdbnum.i v-db-num }
+ v-db-num = ibs.th.gbl.gbl-var:g#db-num .
  { gbl/hostcode.i ~{&shop~} p-obj-code v-host-code }
-  for each tt-cash-desk:
-    delete tt-cash-desk.
-  end.
-  if p-mode = {&update}
-  or p-mode = {&lookup} then do:
-    if p-mode = {&update} then do:
-      find first locked_cash-desk EXclusive-lock where
-                   recid(locked_cash-desk) = p-rid no-wait no-error.
+
+  empty temp-table tt-cash-desk .
+  case p-mode :
+    when {&update} then do:
+      find first locked_cash-desk EXclusive-lock
+           where recid(locked_cash-desk) = p-rid no-wait no-error.
       if locked locked_cash-desk then do:
         message
         vss-workfile vss-revision vss-description skip
@@ -877,71 +889,81 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         view-as alert-box error .
         undo, return error.
       end.
-    end.
-    else do:
-      find first locked_cash-desk no-lock where
-                       recid(locked_cash-desk) = p-rid.
       if not available locked_cash-desk then do:
-        find first locked_cash-desk no-lock where
-                  locked_cash-desk.db-num  = p-db-num
-            AND Locked_Cash-desk.obj-code = p-obj-code
-            AND locked_cash-desk.cash-num = p-cash-num
-            AND locked_cash-desk.pos-type = p-pos-type    no-error.
-      end.
-    end.
-    if not available locked_cash-desk then do:
       message
       vss-workfile vss-revision vss-description skip
       "Не найдена запись КАССА"
       view-as alert-box error .
       undo, return error.
-    end.
-    if p-mode = {&update} and
-        locked_cash-desk.db-num <> v-db-num then do:
+      end.
+      if locked_cash-desk.db-num <> v-db-num then do:
             message
             vss-workfile vss-revision vss-description skip
             "Нельзя изменять кассу чужой БД"
             view-as alert-box error .
             undo, return error.
-        end.
-    IF p-mode = {&UPDATE} AND LOCKED_cash-desk.is-del = YES  THEN DO:
+      end.
+      IF LOCKED_cash-desk.is-del THEN DO:
         message
         vss-workfile vss-revision vss-description skip
         "Нельзя изменять кассу? которая логически удалена"
         view-as alert-box error .
         undo, return error.
-    END.
-  end.
-  if p-mode = {&add-def} then do:
-    { gbl/dflt-cd.i {&shop} p-obj-code dflt-cd }
-     for each buf_cash-desk NO-LOCK where
-             buf_cash-desk.db-num = v-db-num
-      BY buf_cash-desk.cash-num :
-         tcode = buf_cash-desk.cash-num.
+      END.
+      create tt-cash-desk.
+      buffer-copy locked_cash-desk to tt-cash-desk .
+      tcode = tt-cash-desk.cash-num .
+    end.
+    when {&lookup} then do :
+      find first locked_cash-desk no-lock
+           where recid(locked_cash-desk) = p-rid no-error .
+      if not available locked_cash-desk then do:
+        find first locked_cash-desk no-lock
+             where locked_cash-desk.db-num   = p-db-num
+               AND Locked_Cash-desk.obj-code = p-obj-code
+               AND locked_cash-desk.cash-num = p-cash-num
+               AND locked_cash-desk.pos-type = p-pos-type    no-error.
+        if not available locked_cash-desk then do:
+      message
+      vss-workfile vss-revision vss-description skip
+      "Не найдена запись КАССА"
+      view-as alert-box error .
+      undo, return error.
+        end.
+      end.
+      create tt-cash-desk.
+      buffer-copy locked_cash-desk to tt-cash-desk .
+      tcode = tt-cash-desk.cash-num .
+    end .
+    when {&add-def} then do:
+      { gbl/dflt-cd.i {&shop} p-obj-code dflt-cd }
+      for each buf_cash-desk NO-LOCK
+         where buf_cash-desk.db-num = v-db-num
+             BY buf_cash-desk.cash-num :
+        tcode = buf_cash-desk.cash-num.
       end.
       tcode = tcode + 1.
-    create tt-cash-desk.
-    assign
-    tt-cash-desk.db-num = v-db-num
-    tt-cash-desk.obj-code = p-obj-code
-    tt-cash-desk.cash-num = tcode
-    tt-cash-desk.pos-type = dflt-cd
-    tt-cash-desk.addr-path = (if dflt-cd = {&cd-type-IBM}
-                              or
-                             dflt-cd = {&cd-type-omron}
-                             then "192.1.1.1"
-                             else "":U)
-    tt-cash-desk.cash-os = "OS/2"
-    tt-cash-desk.cash-on = no
-    .
-  end.
-  else do:
-    create tt-cash-desk.
-    buffer-copy locked_cash-desk to tt-cash-desk
-    assign tcode = tt-cash-desk.cash-num
-    .
-  end.
-
+      
+      create tt-cash-desk.
+      assign
+    tt-cash-desk.db-num    = v-db-num
+    tt-cash-desk.obj-code  = p-obj-code
+    tt-cash-desk.cash-num  = tcode
+    tt-cash-desk.pos-type  = dflt-cd
+    tt-cash-desk.addr-path = (if dflt-cd = {&cd-type-IBM} or dflt-cd = {&cd-type-omron} then "192.1.1.1":U else "":U)
+    tt-cash-desk.cash-os   = "OS/2"
+    tt-cash-desk.cash-on   = no
+      .
+    end.
+    otherwise do :
+    message
+    vss-workfile vss-revision vss-description skip
+    "Неверное значение параметров вызова p-mode"  p-mode
+    view-as alert-box ERROR.
+    undo, return error .
+    end .
+  end case .
+  
   RUN MyENable in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -985,7 +1007,7 @@ PROCEDURE enable_UI :
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
   DISPLAY f-obj-name f-cash-num-char f-pswd COMBO-protocol-maria COMBO-protocol 
-          CB-fr-type f-fr-type T-remote 
+          cb-device-kind CB-fr-type f-fr-type T-remote 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-cash-desk THEN 
     DISPLAY tt-cash-desk.cash-num tt-cash-desk.db-num tt-cash-desk.obj-code 
@@ -993,10 +1015,10 @@ PROCEDURE enable_UI :
           tt-cash-desk.autonomy tt-cash-desk.version 
           tt-cash-desk.registration-code tt-cash-desk.serial-code 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-attr B-attr-2 B-cli-attr B-hist B-Help 
+  ENABLE B-exit RECT-1 b-quit B-attr B-attr-2 B-cli-attr B-hist B-Help 
          tt-cash-desk.obj-code f-obj-name tt-cash-desk.addr-path 
          COMBO-protocol-maria COMBO-protocol tt-cash-desk.pos-type 
-         tt-cash-desk.cash-os tt-cash-desk.autonomy CB-fr-type 
+         tt-cash-desk.cash-os tt-cash-desk.autonomy cb-device-kind CB-fr-type 
          tt-cash-desk.version f-fr-type T-remote tt-cash-desk.registration-code 
          tt-cash-desk.serial-code 
       WITH FRAME Dialog-Frame.
@@ -1009,27 +1031,22 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
+/* ----- тип POS ----- */
 DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-ii         AS INTEGER   NO-UNDO.
-define variable v-fr-type-list-item-pairs as character no-undo .
 DO v-ii = 1 TO NUM-ENTRIES({&cd-type-codes-real}):
     ASSIGN
     v-list-items = v-list-items + (IF v-ii > 1 THEN  {&comma-char} ELSE "":U) +
                    ENTRY(v-ii, {&cd-type-codes-real-full}) + {&comma-char} +
                    ENTRY(v-ii, {&cd-type-codes-real}).
 END.
+tt-cash-desk.pos-type:list-item-pairs in frame {&frame-name} = v-list-items .
+  /* ----- end_of тип POS ----- */
 
-assign
-tt-cash-desk.pos-type:list-item-pairs in frame {&frame-name} = v-list-items
-t-remote = if tt-cash-desk.remote = 1
-                    then  yes
-                    else no
-tt-cash-desk.autonomy:radio-buttons = "&Автономная касса" + {&comma-char} + {&cd-self} +  {&comma-char} +
-                                    "&Подчиненная касса" + {&comma-char} + {&cd-slave} + {&comma-char} +
-                                    "&Касс.менеджер" + {&comma-char} + {&cd-manager}
-.
+
+  /* ----- тип ФР ----- */
+define variable v-fr-type-list-item-pairs as character no-undo .
 DO v-ii = 1 TO NUM-ENTRIES({&fr-type-codes}):
-
     ASSIGN
     v-fr-type-list-item-pairs = v-fr-type-list-item-pairs + (IF v-ii > 1 THEN  {&comma-char} ELSE "":U) +
                                       ENTRY(v-ii, {&fr-type-codes-full}) +
@@ -1038,8 +1055,8 @@ DO v-ii = 1 TO NUM-ENTRIES({&fr-type-codes}):
     v-fr-type-list-items-full = v-fr-type-list-items-full + (IF v-ii > 1 THEN  {&comma-char} ELSE "":U) +
                                       ENTRY(v-ii, {&fr-type-codes-full})
     v-fr-type-list-items = v-fr-type-list-items + (IF v-ii > 1 THEN  {&comma-char} ELSE "":U) +
-                                      ENTRY(v-ii, {&fr-type-codes}).
-
+                                      ENTRY(v-ii, {&fr-type-codes})
+    .
 END.
 assign
 cb-fr-type:LIST-ITEM-pairs IN FRAME {&FRAME-NAME} = trim(v-fr-type-list-item-pairs, {&comma-char})
@@ -1050,9 +1067,40 @@ f-fr-type:row = cb-fr-type:row
 f-fr-type:side-label-handle:row = f-fr-type:row
 f-fr-type:side-label-handle:column = f-fr-type:column
 .
+  /* ----- end_of тип ФР ----- */
+
+
+  /* ----- признак исполнения кассы ----- */
+  /* признак какая это касса: ТСО, обычная касса или мобильная.
+     Признак не зависит от pos-type, хранится в cash-desk-attr,
+     и он там такой один, который вызывается прямо из формы редактирования,
+     минуя фильтрацию по pos-type.
+  */
+  define buffer buf_cash-desk-attr for ub.cash-desk-attr .
+  find first buf_cash-desk-attr no-lock
+       where buf_cash-desk-attr.db-num   = tt-cash-desk.db-num
+         and buf_cash-desk-attr.obj-code = tt-cash-desk.obj-code
+         and buf_cash-desk-attr.pos-type = tt-cash-desk.pos-type
+         and buf_cash-desk-attr.cash-num = tt-cash-desk.cash-num
+         and buf_cash-desk-attr.upper-attr-code = tt-cash-desk.pos-type + "_operative":U
+         and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
+  if available buf_cash-desk-attr then
+       cb-device-kind = buf_cash-desk-attr.attr-value-integer .
+  else cb-device-kind = 0 .
+  /* ----- end_of признак исполнения кассы ----- */
+
+
+  /* ----- остальное ----- */
+assign
+t-remote = (tt-cash-desk.remote = 1)
+tt-cash-desk.autonomy:radio-buttons = "&Автономная касса"  + {&comma-char} + {&cd-self} +  {&comma-char} +
+                                      "&Подчиненная касса" + {&comma-char} + {&cd-slave} + {&comma-char} +
+                                      "&Касс.менеджер"     + {&comma-char} + {&cd-manager}
+.
 
 DISPLAY
 f-obj-name
+cb-device-kind
 T-remote
 WITH FRAME {&frame-name} .
 IF AVAILABLE tt-cash-desk THEN DO:
@@ -1104,7 +1152,7 @@ b-hist when p-mode <> {&add-def}
 B-Help
 tt-cash-desk.cash-num when (p-mode = {&add-def} and not l-shift-on)
 tt-cash-desk.obj-code  when (p-mode = {&add-def} and not l-shift-on)
-tt-cash-desk.addr-path when (p-mode <> {&lookup} and not l-shift-on)
+tt-cash-desk.addr-path when (p-mode <> {&lookup})
 tt-cash-desk.pos-type  when (p-mode = {&add-def} and not l-shift-on)
 tt-cash-desk.cash-os when (p-mode <> {&lookup} and not l-shift-on)
 tt-cash-desk.version when p-mode <> {&lookup}
@@ -1112,6 +1160,7 @@ tt-cash-desk.registration-code when p-mode <> {&lookup} /*when (p-mode <> {&look
 tt-cash-desk.serial-code when p-mode <> {&lookup} /*when (p-mode <> {&lookup} and not l-shift-on)*/
 T-remote when (p-mode <> {&lookup} and not l-shift-on)
 tt-cash-desk.autonomy when (p-mode <> {&lookup} and not l-shift-on)
+cb-device-kind when (p-mode <> {&lookup})
 WITH FRAME {&frame-name}.
 if p-mode = {&lookup} then do:
     assign
@@ -1131,8 +1180,6 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
-  
-
 IF COMBO-protocol:visible in FRAME {&FRAME-NAME} THEN
 ASSIGN
 COMBO-protocol
@@ -1180,7 +1227,10 @@ ELSE do:
   f-FR-TYPE = "":U.
 end.
 
-
+if cb-device-kind:sensitive in frame {&frame-name}
+  then assign cb-device-kind .
+  else cb-device-kind = 0 .
+  
 assign
 frame {&frame-name} tt-cash-desk.addr-path
 tt-cash-desk.addr-path = (IF combo-protocol <> "":U
@@ -1227,11 +1277,20 @@ run ref/cashdsk1.p (
 ,input tt-cash-desk.registration-code
 ,input tt-cash-desk.serial-code
 ,input tt-cash-desk.fr-type
+,input cb-device-kind
 ) no-error .
 if error-status:error then do:
- { gbl/reterhnd.i error }
+  if num-entries(return-value, " ") > 1 then message
+    substitute("&1&2&3", error-status:get-message(1) , {&new-line}, return-value)
+  view-as alert-box error .
+  else if return-value > "" then do:
+    /* здесь, наверное, предполагалось выполнить 
+       apply "entry" to value(return-value) in frame {&FRAME-NAME} no-error.
+    */
+  end .
   undo, return error.
 end.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
