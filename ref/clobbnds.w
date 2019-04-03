@@ -1031,8 +1031,8 @@ b-chg when (not (p-resource-type = {&lob-res-report} or p-resource-type = {&lob-
 b-del when (lookup("b-add", bttns ) > 0
             and not (p-resource-type = {&lob-res-report} or p-resource-type = {&lob-res-report-xml})
             and not transaction)
-b-sel when (lookup("b-sel", bttns) > 0
-             and not transaction)
+b-sel when (lookup("b-sel", bttns) > 0)
+/*             and not transaction)*/ /*не понятно что это такое и для чего*/ 
 b-mark when (lookup("b-mark", bttns) > 0
              and not transaction)
 b-lkp
