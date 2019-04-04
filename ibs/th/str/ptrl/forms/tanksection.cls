@@ -767,7 +767,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label18:Name = "label18".
     this-object:label18:Size = new System.Drawing.Size(117, 20).
     this-object:label18:TabIndex = 29.
-    this-object:label18:Text = "Объем воды:".
+    this-object:label18:Text = "Объем воды,л:".
     this-object:label18:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label18:UseCompatibleTextRendering = true.
     /*  */
@@ -787,7 +787,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label16:Name = "label16".
     this-object:label16:Size = new System.Drawing.Size(117, 20).
     this-object:label16:TabIndex = 31.
-    this-object:label16:Text = "Масса ЕУ:".
+    this-object:label16:Text = "Масса ЕУ,кг:".
     this-object:label16:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label16:UseCompatibleTextRendering = true.
     /*  */
@@ -797,7 +797,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label15:Name = "label15".
     this-object:label15:Size = new System.Drawing.Size(117, 20).
     this-object:label15:TabIndex = 32.
-    this-object:label15:Text = "Объем топлива:".
+    this-object:label15:Text = "Объем топлива,л:".
     this-object:label15:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label15:UseCompatibleTextRendering = true.
     /*  */
@@ -816,7 +816,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label14:Name = "label14".
     this-object:label14:Size = new System.Drawing.Size(117, 20).
     this-object:label14:TabIndex = 33.
-    this-object:label14:Text = "Объем горловины:".
+    this-object:label14:Text = "Объем горловины,л:".
     this-object:label14:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label14:UseCompatibleTextRendering = true.
     /*  */
@@ -828,7 +828,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label13:Name = "label13".
     this-object:label13:Size = new System.Drawing.Size(179, 28).
     this-object:label13:TabIndex = 34.
-    this-object:label13:Text = "Уровень цистерны относит. тарировочной планки:".
+    this-object:label13:Text = "Уровень цистерны относит. тарировочной планки, мм:".
     this-object:label13:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label13:UseCompatibleTextRendering = true.
     /*  */
@@ -1046,12 +1046,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label8 */
     /*  */
-    this-object:label8:Location = new System.Drawing.Point(474, 10).
+    this-object:label8:Location = new System.Drawing.Point(478, 10).
     this-object:label8:Name = "label8".
-    this-object:label8:Size = new System.Drawing.Size(95, 20).
+    this-object:label8:Size = new System.Drawing.Size(96, 20).
     this-object:label8:TabIndex = 0.
     this-object:label8:Text = "Погр. изм. пост.:".
-    this-object:label8:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label8:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label8:UseCompatibleTextRendering = true.
     /*  */
     /* maskedTextBoxAccShip */
@@ -1064,7 +1064,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxSecName */
     /*  */
-    this-object:maskedTextBoxSecName:Location = new System.Drawing.Point(148, 10).
+    this-object:maskedTextBoxSecName:Location = new System.Drawing.Point(136, 10).
     this-object:maskedTextBoxSecName:Name = "maskedTextBoxSecName".
     this-object:maskedTextBoxSecName:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxSecName:TabIndex = 1.
@@ -1073,88 +1073,87 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label7 */
     /*  */
-    this-object:label7:Location = new System.Drawing.Point(17, 10).
+    this-object:label7:Location = new System.Drawing.Point(9, 10).
     this-object:label7:Name = "label7".
-    this-object:label7:Size = new System.Drawing.Size(126, 20).
+    this-object:label7:Size = new System.Drawing.Size(126, 15).
     this-object:label7:TabIndex = 4.
     this-object:label7:Text = "Номер секции:".
-    this-object:label7:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label7:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label7:UseCompatibleTextRendering = true.
     /*  */
     /* label6 */
     /*  */
-    this-object:label6:Location = new System.Drawing.Point(255, 61).
+    this-object:label6:Location = new System.Drawing.Point(239, 58).
     this-object:label6:Name = "label6".
-    this-object:label6:Size = new System.Drawing.Size(112, 20).
+    this-object:label6:Size = new System.Drawing.Size(126, 20).
     this-object:label6:TabIndex = 5.
-    this-object:label6:Text = "Размер горловины:".
-    this-object:label6:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label6:Text = "Размер горловины,мм:".
+    this-object:label6:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label6:UseCompatibleTextRendering = true.
     /*  */
     /* label5 */
     /*  */
-    this-object:label5:Location = new System.Drawing.Point(247, 11).
+    this-object:label5:Location = new System.Drawing.Point(246, 10).
     this-object:label5:Name = "label5".
     this-object:label5:Size = new System.Drawing.Size(120, 20).
     this-object:label5:TabIndex = 6.
     this-object:label5:Text = "Температура по ТТН:".
-    this-object:label5:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label5:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label5:UseCompatibleTextRendering = true.
     /*  */
     /* label4 */
     /*  */
-    this-object:label4:Location = new System.Drawing.Point(55, 35).
+    this-object:label4:Location = new System.Drawing.Point(28, 34).
     this-object:label4:Name = "label4".
-    this-object:label4:Size = new System.Drawing.Size(88, 20).
+    this-object:label4:Size = new System.Drawing.Size(106, 20).
     this-object:label4:TabIndex = 7.
-    this-object:label4:Text = "Масса по док.:".
-    this-object:label4:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label4:Text = "Масса по док.,кг:".
+    this-object:label4:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label4:UseCompatibleTextRendering = true.
     /*  */
     /* label3 */
     /*  */
-    this-object:label3:Location = new System.Drawing.Point(483, 35).
+    this-object:label3:Location = new System.Drawing.Point(475, 34).
     this-object:label3:Name = "label3".
-    this-object:label3:Size = new System.Drawing.Size(86, 20).
+    this-object:label3:Size = new System.Drawing.Size(98, 20).
     this-object:label3:TabIndex = 8.
-    this-object:label3:Text = "Кол-во по док.:".
-    this-object:label3:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label3:Text = "Кол-во по док.,л:".
+    this-object:label3:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label3:UseCompatibleTextRendering = true.
     /*  */
     /* label2 */
     /*  */
-    this-object:label2:Location = new System.Drawing.Point(17, 61).
+    this-object:label2:Location = new System.Drawing.Point(9, 58).
     this-object:label2:Name = "label2".
     this-object:label2:Size = new System.Drawing.Size(126, 20).
     this-object:label2:TabIndex = 9.
     this-object:label2:Text = "Объем по паспорту, л:".
-    this-object:label2:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label2:UseCompatibleTextRendering = true.
     /*  */
     /* label1 */
     /*  */
-    this-object:label1:Location = new System.Drawing.Point(262, 35).
+    this-object:label1:Location = new System.Drawing.Point(245, 34).
     this-object:label1:Name = "label1".
-    this-object:label1:Size = new System.Drawing.Size(105, 20).
+    this-object:label1:Size = new System.Drawing.Size(120, 20).
     this-object:label1:TabIndex = 10.
     this-object:label1:Text = "Плотность по док.:".
-    this-object:label1:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label1:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label1:UseCompatibleTextRendering = true.
     /*  */
     /* maskedTextBoxCliQnty */
     /*  */
     this-object:maskedTextBoxCliQnty:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxCliQnty:Location = new System.Drawing.Point(149, 35).
+    this-object:maskedTextBoxCliQnty:Location = new System.Drawing.Point(136, 34).
     this-object:maskedTextBoxCliQnty:Name = "maskedTextBoxCliQnty".
     this-object:maskedTextBoxCliQnty:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxCliQnty:TabIndex = 4.
     this-object:maskedTextBoxCliQnty:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
-/*    this-object:maskedTextBoxCliQnty:Leave:Subscribe(this-object:CalcDoc).*/
     /*  */
     /* maskedTextBoxDiameter */
     /*  */
     this-object:maskedTextBoxDiameter:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxDiameter:Location = new System.Drawing.Point(373, 58).
+    this-object:maskedTextBoxDiameter:Location = new System.Drawing.Point(367, 58).
     this-object:maskedTextBoxDiameter:Name = "maskedTextBoxDiameter".
     this-object:maskedTextBoxDiameter:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxDiameter:TabIndex = 8.
@@ -1167,12 +1166,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDocQnty:Size = new System.Drawing.Size(97, 20).
     this-object:maskedTextBoxDocQnty:TabIndex = 6.
     this-object:maskedTextBoxDocQnty:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
-/*    this-object:maskedTextBoxDocQnty:Leave:Subscribe(this-object:CalcDoc).*/
     /*  */
     /* maskedTextBoxCarVol */
     /*  */
     this-object:maskedTextBoxCarVol:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(149, 61).
+    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(136, 58).
     this-object:maskedTextBoxCarVol:Name = "maskedTextBoxCarVol".
     this-object:maskedTextBoxCarVol:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxCarVol:TabIndex = 7.
@@ -1181,7 +1179,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxTTNTemp */
     /*  */
-    this-object:maskedTextBoxTTNTemp:Location = new System.Drawing.Point(373, 11).
+    this-object:maskedTextBoxTTNTemp:Location = new System.Drawing.Point(367, 10).
     this-object:maskedTextBoxTTNTemp:Name = "maskedTextBoxTTNTemp".
     this-object:maskedTextBoxTTNTemp:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxTTNTemp:TabIndex = 2.
@@ -1190,12 +1188,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxDocDens */
     /*  */
     this-object:maskedTextBoxDocDens:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxDocDens:Location = new System.Drawing.Point(373, 34).
+    this-object:maskedTextBoxDocDens:Location = new System.Drawing.Point(367, 34).
     this-object:maskedTextBoxDocDens:Name = "maskedTextBoxDocDens".
     this-object:maskedTextBoxDocDens:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxDocDens:TabIndex = 5.
     this-object:maskedTextBoxDocDens:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_1_4).
-/*    this-object:maskedTextBoxDocDens:Leave:Subscribe(this-object:CalcDoc).*/
     /*  */
     /* groupBox7 */
     /*  */
@@ -1370,7 +1367,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label34:Name = "label34".
     this-object:label34:Size = new System.Drawing.Size(135, 20).
     this-object:label34:TabIndex = 42.
-    this-object:label34:Text = "Кол-во пробы (л):".
+    this-object:label34:Text = "Кол-во пробы,л:".
     this-object:label34:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label34:UseCompatibleTextRendering = true.
     /*  */
@@ -1555,11 +1552,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* label25 */
     /*  */
     this-object:label25:ForeColor = System.Drawing.SystemColors:HotTrack.
-    this-object:label25:Location = new System.Drawing.Point(271, 8).
+    this-object:label25:Location = new System.Drawing.Point(256, 8).
     this-object:label25:Name = "label25".
-    this-object:label25:Size = new System.Drawing.Size(96, 20).
+    this-object:label25:Size = new System.Drawing.Size(111, 20).
     this-object:label25:TabIndex = 35.
-    this-object:label25:Text = "Масса топлива:".
+    this-object:label25:Text = "Масса топлива,кг:".
     this-object:label25:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label25:UseCompatibleTextRendering = true.
     /*  */
@@ -1588,11 +1585,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* label22 */
     /*  */
     this-object:label22:ForeColor = System.Drawing.SystemColors:HotTrack.
-    this-object:label22:Location = new System.Drawing.Point(9, 34).
+    this-object:label22:Location = new System.Drawing.Point(0, 34).
     this-object:label22:Name = "label22".
-    this-object:label22:Size = new System.Drawing.Size(135, 20).
+    this-object:label22:Size = new System.Drawing.Size(144, 20).
     this-object:label22:TabIndex = 38.
-    this-object:label22:Text = "Объем топлива привед.:".
+    this-object:label22:Text = "Объем топлива привед.,л:".
     this-object:label22:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label22:UseCompatibleTextRendering = true.
     /*  */

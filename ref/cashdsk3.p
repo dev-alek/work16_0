@@ -265,6 +265,7 @@ on error undo _main, return error return-value
                     ,input buf_cash-desk.registration-code
                     ,input buf_cash-desk.serial-code
                     ,input buf_cash-desk.fr-type
+                    ,input ? /* вариант исполнения кассы (ТСО,неТСО,мобильн); "?" = "оставить прежнее значение" */
                     ) no-error .
                     if error-status:error then do:
                       undo _main, return error substitute("&1&2&3", error-status:get-message(1) , {&new-line}, return-value ).

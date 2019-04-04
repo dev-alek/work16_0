@@ -76,6 +76,7 @@ define   shared stream  PrnLibStream.
 define buffer buf_chk-doc  for ub.chk-doc .
 define buffer buf_chk-gds-pay  for ub.chk-gds-pay.
 define buffer buf_chk-discnt  for ub.chk-discnt .
+define buffer buf_chk-discnt2  for ub.chk-discnt .
 define buffer buf_chk-gds  for ub.chk-gds.
 define buffer buf_cash-pay  for ub.cash-pay.
 define buffer bf_t-10      for t-10 .
@@ -166,9 +167,18 @@ on error undo, return error
             bf_t-10.qnty = bf_t-10.qnty + buf_chk-gds-pay.eff-doc-qnty.
             bf_t-10.sum-brutto = bf_t-10.sum-brutto + buf_chk-gds.src-sum * (buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty) .
 
-            for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-gds-pay.doc-code
-                                              and buf_chk-discnt.object-line-num = buf_chk-gds.line-num
-                                              and buf_chk-discnt.record-type = 0
+           for each buf_chk-discnt no-lock where (buf_chk-discnt.doc-code       = buf_chk-gds-pay.doc-code
+                                              and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                              and buf_chk-discnt.record-type     = 0
+                                              and not can-find(buf_chk-discnt2 where buf_chk-discnt2.doc-code        = buf_chk-gds-pay.doc-code
+                                                                                 and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
+                                                                                 and buf_chk-discnt2.record-type     = 1)
+                                              )
+                                              or
+                                              (   buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
+                                              and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                              and buf_chk-discnt.record-type     = 1
+                                              )   
             :
 
               find first t-10 where t-10.gds-code = buf_goods.gds-code

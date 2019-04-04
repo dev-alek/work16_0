@@ -175,7 +175,7 @@ define variable v-kol-doc as integer   no-undo .
 define variable v-is-add-doc as logical   no-undo init false  .
 define variable v-reasonm as logical   no-undo init false .
 define variable v-reasonme as character no-undo .
-define variable v-attr-PN  as character no-undo .
+define variable v-attr-mandat-wayb  as character no-undo .
 define variable v-attr-dop-info  as character no-undo .
 define variable v-is-ord-doc as logical   no-undo init false .
 define variable v-event-code as character no-undo .
@@ -207,6 +207,7 @@ define variable vsdStr as class vsdtostorage no-undo.
 define variable keyrecObj as class keyrec no-undo.
 define variable v-error-attr  as character no-undo .
 define variable is-fuel          as   character            no-undo.
+def var isFuel as logical no-undo init false.
 define variable parisfueltype    as   character            no-undo.
 define variable v-show-str       as character no-undo .
 
@@ -323,16 +324,59 @@ for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = {&attr-nakl-glob_chk-prs}   then varchk-prs     = thbjattr_thbj-attr.property-value-logical .
 end.
 
-v-reasonme      = "".
-v-attr-PN       = "".
+{ str/tdat-val.i                                    
+ bf_trn-doc.doc-code
+ {&trdcattr-is-fuel}
+ is-fuel 
+ parisfueltype no-error}
+assign
+  isFuel = yes when is-fuel = "yes".
+v-reasonme  = "".
+v-attr-mandat-wayb = "".
 v-attr-dop-info = "".
 { gbl/getsect.i run bf_trn-doc.obj-type bf_trn-doc.obj-Code {&attr-nakl_par} }
+find first bf_doc-line no-lock where bf_doc-line.doc-code = bf_trn-doc.doc-code no-error.
+if error-status :error
+then do:
+  undo, return error error-status:get-message(1).
+end.
+{ str/is-petrl.i
+  bf_doc-line.artic
+  bf_doc-line.prod-type
+  bf_doc-line.prod-code
+  varis-petrol
+  varis-pieces
+  no-error
+}
+if error-status :error
+then do:
+  undo, return error return-value.
+end.
 for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_minusprt}  then varminus-parts = thbjattr_thbj-attr.property-value-logical .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonm}   then v-reasonm      = thbjattr_thbj-attr.property-value-logical .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonme}  then v-reasonme     = thbjattr_thbj-attr.property-value-character .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_inv-ship}  then inv-shipvalue  = thbjattr_thbj-attr.property-value-logical .
-    if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_attr-PN}   then v-attr-PN      = thbjattr_thbj-attr.property-value-character .
+    if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} 
+    then do:
+      if isFuel 
+      then do:
+        if thbjattr_thbj-attr.prop-code = 'attr-PN' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      end.
+      else do:
+        if thbjattr_thbj-attr.prop-code = 'attr-mandatory-gds-in-wayb' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      end.
+    end.
+    if not (varis-petrol and
+      not varis-pieces) /*применяеться только если есть хотя бы один не топливный товар в накладной*/
+    then do:
+      case bf_trn-doc.ext-doc-type:
+      when {&TDEDT_Ras_Vnesh_VP} then
+        if thbjattr_thbj-attr.prop-code = 'attr-mandatory-gds-ret-wayb' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      when {&TDEDT_Ras_Vnesh} then
+        if thbjattr_thbj-attr.prop-code = 'attr-mandatory-gds-exp-wayb' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      end case.
+    end.
 end.
 { gbl/getsect.i run bf_trn-doc.obj-type bf_trn-doc.obj-Code {&attr-petrol} }
 for each thbjattr_thbj-attr :
@@ -725,24 +769,46 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                             , replace( bf_trn-doc.doc-code, "*", "$" ) ).
   end.
   end.
+
   /*проверка на заполнение обязательных атрибутов в накладной*/
-  if v-attr-PN <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
+  if v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
       v-error-attr = "" .
-      for each buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code and buf_doc-attr.attr-value = "" and lookup (buf_doc-attr.attr-code, v-attr-PN) > 0:
+      if not can-find (first buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code 
+        and lookup (buf_doc-attr.attr-code, v-attr-mandat-wayb) > 0)
+      then v-error-attr = "empty".
+      
+      if bf_trn-doc.VAT-rubl = 0
+      then do:
+         if 
+             (num-entries (v-attr-mandat-wayb) = 2 and lookup ({&trdcattr-nsf}, v-attr-mandat-wayb) > 0 and lookup ({&trdcattr-dsf}, v-attr-mandat-wayb) > 0)
+          or (num-entries (v-attr-mandat-wayb) = 1 and lookup ({&trdcattr-nsf}, v-attr-mandat-wayb) > 0 or lookup ({&trdcattr-dsf}, v-attr-mandat-wayb) > 0)
+          then v-error-attr = "".
+      end.
+      
+      for each buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code 
+        and lookup (buf_doc-attr.attr-code, v-attr-mandat-wayb) > 0 
+        and not lookup (buf_doc-attr.attr-code, {&trdcattr-nsf} + "," + {&trdcattr-dsf}) > 0
+        and buf_doc-attr.attr-value = "":
         v-error-attr = v-error-attr + ", " + buf_doc-attr.attr-code .
       end.
+      
+      
+      for each buf_doc-attr no-lock where
+        bf_trn-doc.VAT-rubl > 0
+        and buf_doc-attr.doc-code = pardoc-code
+        and lookup (buf_doc-attr.attr-code, v-attr-mandat-wayb) > 0 
+        and lookup (buf_doc-attr.attr-code, {&trdcattr-nsf} + "," + {&trdcattr-dsf}) > 0
+        and buf_doc-attr.attr-value = "":
+        v-error-attr = v-error-attr + ", " + buf_doc-attr.attr-code .
+      end.
+      
       if v-error-attr <> "" then do:
         run waitfram-hide in this-procedure no-error.
         undo, return error "Не все атрибуты накладной заполнены.".
       end.  
   end.
   v-error-attr = "".
-  { str/tdat-val.i                                    
-   bf_trn-doc.doc-code
-   {&trdcattr-is-fuel}
-   is-fuel 
-   parisfueltype no-error}
-  if is-fuel = "yes" and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  if isFuel and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
   then do:
     do ii = 1 to num-entries (v-attr-dop-info):
       find first buf_doc-attr no-lock 
@@ -763,7 +829,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     end.
   end.
     
-      if bf_trn-doc.status_ <> {&inquiry}  then do:
+  if bf_trn-doc.status_ <> {&inquiry}  then do:
   /* */
   define variable v-reasonm-type-n as character no-undo.
 
@@ -897,7 +963,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         (bf_trn-doc.flag_ = no and varhold-doc = no or bf_trn-doc.flag_ = yes and varhold-doc = yes) and
         varcontract   = yes and
         vartechproliv = no
-        and not is-fuel = "yes"
+        and not isFuel
         and not bf_trn-doc.doc-code matches "*=*" 
       then do:
         if is-fin = "yes":u

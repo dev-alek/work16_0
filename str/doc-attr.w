@@ -39,6 +39,7 @@ define variable vss-description as character no-undo initial "–едактирование атр
 { str/funcgrzp.i }
 { gbl/getsect.i def }
 { gbl/color.i    }
+{ str/lib-trn.i  }
 
 /* ***************************  Definitions  ************************** */
 
@@ -51,13 +52,17 @@ define input parameter table for tt-upd-attr .
 /* Local Variable Definitions ---                                       */
 define variable varrec-id as recid no-undo.
 define variable v-no-news as logical   no-undo init false .
-define variable v-attr-PN as character  no-undo .
+define variable v-attr-mandat-wayb as character  no-undo .
 
 define variable ii  as integer  no-undo .
 define variable bcol as handle extent no-undo.
 define variable hBrowse as handle no-undo.
 
+define variable varis-petrol                 as   logical                     no-undo.
+define variable varis-pieces                 as   logical                     no-undo.
 define buffer buf_trn-doc for ub.trn-doc .
+define buffer bf_doc-line for ub.doc-line .
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -250,7 +255,6 @@ DO:
     varrec-id = recid(ub.doc-attr).
   run st-attr in this-procedure no-error.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-  run open-browse .
   if varrec-id <> ? then reposition {&browse-name} to recid varrec-id.
 end.
 
@@ -487,12 +491,65 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   /* ѕолучим из секции —кладские документы   нужные переменные */
   find first buf_trn-doc no-lock where buf_trn-doc.doc-code = pardoc-code .
+  def var is-fuel as logical no-undo.
+  def var v-value as character no-undo.
+  def var v-type as logical no-undo.
+  { str/tdat-val.i                                    
+   buf_trn-doc.doc-code
+   {&trdcattr-is-fuel}
+   is-fuel 
+   v-type no-error}
+  assign
+    is-fuel = yes when v-value = "yes".
+  v-attr-mandat-wayb = "".
+  { gbl/getsect.i run buf_trn-doc.obj-type buf_trn-doc.obj-code {&attr-nakl_par} }  
+
+  if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  then do:
+    if is-fuel 
+    then
+      for each thbjattr_thbj-attr :
+        if thbjattr_thbj-attr.prop-code = 'attr-PN' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      end.
+    else
+      for each thbjattr_thbj-attr :
+        if thbjattr_thbj-attr.prop-code = 'attr-mandatory-gds-in-wayb' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      end.
+  end.
+    
   
-        v-attr-PN = "".
-        { gbl/getsect.i run buf_trn-doc.obj-type buf_trn-doc.obj-code {&attr-nakl_par} }
-        for each thbjattr_thbj-attr :
-            if thbjattr_thbj-attr.prop-code = 'attr-PN' then v-attr-PN =  thbjattr_thbj-attr.property-value-character .
-        end.
+  find first bf_doc-line no-lock where bf_doc-line.doc-code = buf_trn-doc.doc-code no-error.
+  if available (bf_doc-line)
+  then do:
+    { str/is-petrl.i
+      bf_doc-line.artic
+      bf_doc-line.prod-type
+      bf_doc-line.prod-code
+      varis-petrol
+      varis-pieces
+      no-error
+    }
+    if error-status :error
+    then do:
+      undo, return error return-value.
+    end.
+  end.
+  
+  if not (varis-petrol and
+    not varis-pieces) /*примен€етьс€ только если есть хот€ бы один не топливный товар в накладной*/
+  then do:
+    case buf_trn-doc.ext-doc-type:
+    when {&TDEDT_Ras_Vnesh_VP} then
+      for each thbjattr_thbj-attr :
+        if thbjattr_thbj-attr.prop-code = 'attr-mandatory-gds-ret-wayb' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      end.  
+    when {&TDEDT_Ras_Vnesh} then
+      for each thbjattr_thbj-attr :
+        if thbjattr_thbj-attr.prop-code = 'attr-mandatory-gds-exp-wayb' then v-attr-mandat-wayb =  thbjattr_thbj-attr.property-value-character .
+      end.  
+    end case.
+  end.
+  
         
   run init-proc in this-procedure .
   hbrowse = browse b-doc-attr:handle.
@@ -600,7 +657,7 @@ do ii = 1 to extent (bcol).
     if valid-handle (bcol[ii]) 
     then do:
       assign
-        bcol[ii]:fgcolor = RED_COLOR when lookup (ub.doc-attr.attr-code, v-attr-PN) > 0.
+        bcol[ii]:fgcolor = RED_COLOR when lookup (ub.doc-attr.attr-code, v-attr-mandat-wayb) > 0.
     end.
   end.  
 

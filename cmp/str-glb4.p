@@ -660,7 +660,7 @@ cda-MAGIA-XML_operative
 
 /* Параметры последнего принятого чека */
 { cmp/cr-prepc.i 1 prop-list-cda-IBM-XML_operative
-"last-check-params,fo-version"
+"last-check-params,fo-version,device-kind"
 cda-IBM-XML_operative
 }
 

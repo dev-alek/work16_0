@@ -19,6 +19,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property del-f         as integer      no-undo get. private set.
   define property grp-code      as character    no-undo get. private set.
   define property name_         as character    no-undo get. private set.
+  define property eng-name      as character    no-undo get. private set.
   define property label-name    as character    no-undo get. private set.
   define property chk-name      as character    no-undo get. private set.
   define property artic         as character    no-undo get. private set.
@@ -72,6 +73,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "del-f"         then del-f         = {&attr-integer} .
       when "grp-code"      then grp-code      = {&attr-str} .
       when "name"          then name_         = {&attr-str} .
+      when "eng-name"      then eng-name      = {&attr-str} .
       when "label-name"    then label-name    = {&attr-str} .
       when "chk-name"      then chk-name      = {&attr-str} .
       when "artic"         then artic         = {&attr-str} .
@@ -148,6 +150,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         del-f         = ?
         grp-code      = ?
         name_         = ?
+        eng-name      = ?
         label-name    = ?
         chk-name      = ?
         artic         = ?

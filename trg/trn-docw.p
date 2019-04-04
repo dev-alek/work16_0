@@ -130,6 +130,7 @@ define variable v-trdcattr-value           as   character              no-undo .
 define variable v-trdcattr-type            as   character              no-undo .
 define variable var-ok-assort-pol as logical   no-undo .
 define variable var-mess-assort-pol as character no-undo .
+define variable v-new-trn-doc       as logical   no-undo . /* true - документ создан, false - документ изменён */
 
 define buffer buf_goods       for ub.goods .
 define buffer buf_es_trn-doc  for ub.trn-doc.
@@ -167,7 +168,74 @@ on error   undo main-block, return error substitute('trn-docw error main-block,&
 on end-key undo main-block, return error substitute('trn-docw end-key main-block,&1', return-value )
 :
 
+  assign
+    v-new-trn-doc = new(ub.trn-doc)
+  .
+  
+  /* --- Проверки на основе данных редактируемой записи --- */
+  
+  /* проверяем правильность задания типа документа */
+do :
+  if ub.trn-doc.ext-doc-type = ""
+  or ub.trn-doc.ext-doc-type = ?
+  then do:
+    v-message = "Не задан расширенный тип документа" .
+    message
+      vss-workfile vss-revision vss-description skip
+      v-message skip
+      "Документ" ub.trn-doc.doc-code skip
+      "Тип документа" ub.trn-doc.ext-doc-type skip
+      "doc-type" ub.trn-doc.doc-type skip
+      "internal" ub.trn-doc.internal skip
+      "discnt-type" ub.trn-doc.discnt-type skip
+      "ret-supp" ub.trn-doc.ret-supp skip
+      "pay-code" ub.trn-doc.pay-code skip
+      view-as alert-box error .
+    undo main-block, return error v-message .
+  end.
+  if v-new-trn-doc = false
+  and ub.trn-doc.ext-doc-type <> old-doc.ext-doc-type
+  and not (old-doc.ext-doc-type = {&TDEDT_Pri_Perem} or ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+  then do:
+    /* новое в 16.0 по сравнению с 15.1: расширенный тип документа можно менять с &TDEDT_Pri_Perem на любой, либо с любого на &TDEDT_Pri_Perem */
+    v-message = "Расширенный тип документа нельзя менять" .
+    message
+      vss-workfile vss-revision vss-description skip
+      v-message skip
+      "Документ" ub.trn-doc.doc-code skip
+      "Новый тип документа" ub.trn-doc.ext-doc-type skip
+      "Старый тип документа" old-doc.ext-doc-type skip
+      "doc-type" ub.trn-doc.doc-type skip
+      "internal" ub.trn-doc.internal skip
+      "discnt-type" ub.trn-doc.discnt-type skip
+      "ret-supp" ub.trn-doc.ret-supp skip
+      "pay-code" ub.trn-doc.pay-code skip
+      view-as alert-box error .
+    undo, return error v-message .
+  end.
+  { gbl/chkextdt.i
+    ub.trn-doc
+    no-error
+  }
+  if error-status :error then do:
+    assign
+      v-message = substitute( "&1. Ошибка при проверке типа документа.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
+    .
+    if g#news = false then do:
+      message
+        v-message
+        view-as alert-box error .
+    end.
+    undo main-block, return error v-message .
+  end.
+end . /* end_of проверяем правильность задания типа документа */
+  
+  /* --- Проверки на основе данных, связанных с редактируемой записью --- */
+
+
+  
   run init-local-vars in this-procedure no-error .
+  /* установлен буффер ub.store или ub.shop, заполнены loc#obj-active и loc#in-ov */
   if error-status :error then do:
     assign
       v-message = substitute( "&1. Ошибка при инициализации глобальных переменных.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
@@ -234,64 +302,8 @@ end.
     undo main-block, return error v-message .
   end.
 
-  if ub.trn-doc.ext-doc-type = ""
-  or ub.trn-doc.ext-doc-type = ?
-  then do:
-    message
-      vss-workfile vss-revision vss-description skip
-      "Не задан расширенный тип документа" skip
-      "Документ" ub.trn-doc.doc-code skip
-      "Тип документа" ub.trn-doc.ext-doc-type skip
-      "doc-type" ub.trn-doc.doc-type skip
-      "internal" ub.trn-doc.internal skip
-      "discnt-type" ub.trn-doc.discnt-type skip
-      "ret-supp" ub.trn-doc.ret-supp skip
-      "pay-code" ub.trn-doc.pay-code skip
-      error-status :get-message(1) skip
-      return-value skip
-      view-as alert-box error .
-    undo main-block, return error return-value .
-  end.
-  /* проверяем правильность задания типа документа */
-  { gbl/chkextdt.i
-    ub.trn-doc
-    no-error
-  }
-  if error-status :error then do:
-    assign
-      v-message = substitute( "&1. Ошибка при проверке типа документа.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
-    .
-    if g#news = false then do:
-      message
-        v-message
-        view-as alert-box error .
-    end.
-    undo main-block, return error v-message .
-  end.
+  /* @futu добавить вызов curr-time() */
 
-  define variable v-new-trn-doc as logical   no-undo .
-
-  assign
-    v-new-trn-doc = new(ub.trn-doc)
-  .
-
-  if v-new-trn-doc = false
-  and ub.trn-doc.ext-doc-type <> old-doc.ext-doc-type and not (old-doc.ext-doc-type = {&TDEDT_Pri_Perem} or ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
-  then do:
-    message
-      vss-workfile vss-revision vss-description skip
-      "Расширенный тип документа нельзя менять" skip
-      "Документ" ub.trn-doc.doc-code skip
-      "Новый тип документа" ub.trn-doc.ext-doc-type skip
-      "Старый тип документа" old-doc.ext-doc-type skip
-      "doc-type" ub.trn-doc.doc-type skip
-      "internal" ub.trn-doc.internal skip
-      "discnt-type" ub.trn-doc.discnt-type skip
-      "ret-supp" ub.trn-doc.ret-supp skip
-      "pay-code" ub.trn-doc.pay-code skip
-      view-as alert-box error .
-    undo, return error return-value .
-  end.
   if v-new-trn-doc = true then do:
    assign
       ub.trn-doc.real-date-create = today
@@ -2097,7 +2109,6 @@ procedure validate-trn-doc :
     define variable l-goods-twounit     as logical no-undo .
     define variable v-root-node         like ub.gds-prt.node-code no-undo .
 
-/* run gbl\inidebug.p. */
     for each buf_doc-line no-lock
       where buf_doc-line.doc-code = ub.trn-doc.doc-code
     on error undo, return error return-value
@@ -2585,13 +2596,14 @@ procedure validate-trn-doc :
               undo, return error return-value .
             end.
 
+            define variable v-curr-road-tax as decimal   no-undo .
+
             /* проверка соответствия цен клиента и учетной цены */
 
             /* проверяем совпадение дорожного налога по приходу */
-            if v-curr-r-b = {&r-b-base}
+            v-curr-road-tax = if v-curr-r-b = {&r-b-base} then buf_parts.road-tax-base else buf_parts.road-tax-rubl .
+            if v-curr-road-tax <> buf_doc-line.road-tax
             then do:
-              if buf_parts.road-tax-base <> buf_doc-line.road-tax
-              then do:
                 define variable v-road-tax-name as character no-undo .
                 run tax-name in this-procedure
                   (input {&road-tax}      /* pardef-tax  */
@@ -2604,39 +2616,21 @@ procedure validate-trn-doc :
                   "Расширенный тип документа" ub.trn-doc.ext-doc-type skip
                   "Артикул" buf_parts.artic buf_parts.prod-type buf_parts.prod-code skip
                   "buf_parts.road-tax-base"  buf_parts.road-tax-base skip
-                  "buf_doc-line.road-tax"      buf_doc-line.road-tax skip
-                  view-as alert-box error .
-                undo, return error return-value .
-              end.
-            end.
-            else do:
-              if buf_parts.road-tax-rubl <> buf_doc-line.road-tax
-              then do:
-                run tax-name in this-procedure
-                  (input {&road-tax}      /* pardef-tax  */
-                  ,output v-road-tax-name /* parname-tax */
-                  ) .
-                message
-                  vss-workfile vss-revision vss-description skip
-                  "Различается" v-road-tax-name "по приходу и по расходу" skip
-                  "Документ" ub.trn-doc.doc-code skip
-                  "Расширенный тип документа" ub.trn-doc.ext-doc-type skip
-                  "Артикул" buf_parts.artic buf_parts.prod-type buf_parts.prod-code skip
                   "buf_parts.road-tax-rubl"  buf_parts.road-tax-rubl skip
                   "buf_doc-line.road-tax"      buf_doc-line.road-tax skip
                   view-as alert-box error .
                 undo, return error return-value .
-              end.
             end.
 
             /* вычисляем учетную цену */
             define variable v-parts-artic          like ub.parts.artic           no-undo .
             define variable v-parts-prod-type      like ub.parts.prod-type       no-undo .
             define variable v-parts-prod-code      like ub.parts.prod-code       no-undo .
-            define variable v-parts-price-base     like ub.parts.price-base      no-undo .
-            define variable v-parts-price-rubl     like ub.parts.price-rubl      no-undo .
-            define variable v-parts-road-tax-base  like ub.parts.road-tax-base   no-undo .
-            define variable v-parts-road-tax-rubl  like ub.parts.road-tax-rubl   no-undo .
+/*12/II-2019 - не используется*/
+/*            define variable v-parts-price-base     like ub.parts.price-base      no-undo .*/
+/*            define variable v-parts-price-rubl     like ub.parts.price-rubl      no-undo .*/
+/*            define variable v-parts-road-tax-base  like ub.parts.road-tax-base   no-undo .*/
+/*            define variable v-parts-road-tax-rubl  like ub.parts.road-tax-rubl   no-undo .*/
             define variable v-parts-other-base     like ub.parts.other-base      no-undo .
             define variable v-parts-other-rubl     like ub.parts.other-rubl      no-undo .
             define variable v-parts-transport-base like ub.parts.transport-base  no-undo .
@@ -2650,10 +2644,10 @@ procedure validate-trn-doc :
               v-parts-artic          = buf_parts.artic
               v-parts-prod-type      = buf_parts.prod-type
               v-parts-prod-code      = buf_parts.prod-code
-              v-parts-price-base     = buf_parts.price-base
-              v-parts-price-rubl     = buf_parts.price-rubl
-              v-parts-road-tax-base  = buf_parts.road-tax-base
-              v-parts-road-tax-rubl  = buf_parts.road-tax-rubl
+/*              v-parts-price-base     = buf_parts.price-base   */
+/*              v-parts-price-rubl     = buf_parts.price-rubl   */
+/*              v-parts-road-tax-base  = buf_parts.road-tax-base*/
+/*              v-parts-road-tax-rubl  = buf_parts.road-tax-rubl*/
               v-parts-other-base     = buf_parts.other-base
               v-parts-other-rubl     = buf_parts.other-rubl
               v-parts-transport-base = buf_parts.transport-base
@@ -2664,19 +2658,6 @@ procedure validate-trn-doc :
               v-parts-cli-base-rate  = buf_parts.cli-base-rate
             .
 
-            define variable v-curr-road-tax as decimal   no-undo .
-
-            if v-curr-r-b = {&r-b-base}
-            then do:
-              assign
-                v-curr-road-tax = v-parts-road-tax-base
-              .
-            end.
-            else do:
-              assign
-                v-curr-road-tax = v-parts-road-tax-rubl
-              .
-            end.
 
             if v-parts-vat-pc < 0
             or v-parts-vat-pc >= 100
@@ -2725,7 +2706,7 @@ procedure validate-trn-doc :
               v-parts-prod-code
               v-parts-price-cli
               v-parts-cli-base-rate
-              v-parts-price-rubl
+              buf_parts.price-rubl
               v-parts-vat-pc
               v-parts-slt-pc
               v-curr-road-tax
@@ -2775,36 +2756,36 @@ procedure validate-trn-doc :
             end.
             assign
               v-parts-price-cli  = v-price-cli
-              v-parts-price-rubl = v-price-rubl
-              v-parts-price-base = v-price-base
+/*              v-parts-price-rubl = v-price-rubl*/
+/*              v-parts-price-base = v-price-base*/
             .
             /* проверяем соответствие с точностью до 7 знака */
-            if abs(buf_parts.price-base - v-parts-price-base) > 0.0000001
-            or abs(buf_parts.price-rubl - v-parts-price-rubl) > 0.0000001
+            &scoped-define seven-sign 0.0000001
+            &scoped-define seven-trun 7
+            if abs(buf_parts.price-base - v-price-base) > {&seven-sign} /* = v-parts-price-base */
+            or abs(buf_parts.price-rubl - v-price-rubl) > {&seven-sign} /* = v-parts-price-rubl */
             then do:
+              v-message = substitute( "Несоответсвие учетной цены и цены поставщика. Артикул &1 &2 &3",
+                                      buf_parts.artic, buf_parts.prod-type, buf_parts.prod-code ) .
               message
                 vss-workfile vss-revision vss-description skip
-                "Несоответсвие учетной цены и цены поставщика" skip
-                "Документ" ub.trn-doc.doc-code skip
+                "Документ" ub.trn-doc.doc-code
                 "Расширенный тип документа" ub.trn-doc.ext-doc-type skip
-                "Артикул" buf_parts.artic buf_parts.prod-type buf_parts.prod-code skip
                 "buf_parts.part-code"       buf_parts.part-code       skip
                 "" skip
-                "Поле"           {&tabulation} {&tabulation} "Отлич."                                      {&tabulation} "Партия"                {&tabulation} "Должно быть значение"  skip
-                "price-base"                   {&tabulation} buf_parts.price-base     <> v-parts-price-base     {&tabulation} buf_parts.price-base     {&tabulation} v-parts-price-base      skip
-                "price-rubl"     {&tabulation} {&tabulation} buf_parts.price-rubl     <> v-parts-price-rubl     {&tabulation} buf_parts.price-rubl     {&tabulation} v-parts-price-rubl      skip
-                "road-tax-base"                {&tabulation} buf_parts.road-tax-base  <> v-parts-road-tax-base  {&tabulation} buf_parts.road-tax-base  {&tabulation} v-parts-road-tax-base   skip
-                "road-tax-rubl"                {&tabulation} buf_parts.road-tax-rubl  <> v-parts-road-tax-rubl  {&tabulation} buf_parts.road-tax-rubl  {&tabulation} v-parts-road-tax-rubl   skip
-                "other-base"                   {&tabulation} buf_parts.other-base     <> v-parts-other-base     {&tabulation} buf_parts.other-base     {&tabulation} v-parts-other-base      skip
-                "other-rubl"     {&tabulation} {&tabulation} buf_parts.other-rubl     <> v-parts-other-rubl     {&tabulation} buf_parts.other-rubl     {&tabulation} v-parts-other-rubl      skip
-                "transport-base"               {&tabulation} buf_parts.transport-base <> v-parts-transport-base {&tabulation} buf_parts.transport-base {&tabulation} v-parts-transport-base  skip
-                "transport-rubl"               {&tabulation} buf_parts.transport-rubl <> v-parts-transport-rubl {&tabulation} buf_parts.transport-rubl {&tabulation} v-parts-transport-rubl  skip
-                "SLT-PC"         {&tabulation} {&tabulation} buf_parts.SLT-PC         <> v-parts-SLT-PC         {&tabulation} buf_parts.SLT-PC         {&tabulation} v-parts-SLT-PC          skip
-                "VAT-PC"         {&tabulation} {&tabulation} buf_parts.VAT-PC         <> v-parts-VAT-PC         {&tabulation} buf_parts.VAT-PC         {&tabulation} v-parts-VAT-PC          skip
-                "price-cli"      {&tabulation} {&tabulation} buf_parts.price-cli      <> v-parts-price-cli      {&tabulation} buf_parts.price-cli      {&tabulation} v-parts-price-cli       skip
-                "cli-base-rate"                {&tabulation} buf_parts.cli-base-rate  <> v-parts-cli-base-rate  {&tabulation} buf_parts.cli-base-rate  {&tabulation} v-parts-cli-base-rate   skip
-                view-as alert-box error .
-              undo, return error return-value .
+"Поле"           {&tabulation} {&tabulation} "Отлич."                                           {&tabulation} "Партия"                 {&tabulation} "Должно быть значение"  skip
+"price-base"                   {&tabulation} buf_parts.price-base     <> v-price-base           {&tabulation} buf_parts.price-base     {&tabulation} truncate(v-price-base, {&seven-trun}) skip
+"price-rubl "                  {&tabulation} buf_parts.price-rubl     <> v-price-rubl           {&tabulation} buf_parts.price-rubl     {&tabulation} truncate(v-price-rubl, {&seven-trun}) skip
+"other-base"                   {&tabulation} buf_parts.other-base     <> v-parts-other-base     {&tabulation} buf_parts.other-base     {&tabulation} v-parts-other-base      skip
+"other-rubl "                  {&tabulation} buf_parts.other-rubl     <> v-parts-other-rubl     {&tabulation} buf_parts.other-rubl     {&tabulation} v-parts-other-rubl      skip
+"transport-base"               {&tabulation} buf_parts.transport-base <> v-parts-transport-base {&tabulation} buf_parts.transport-base {&tabulation} v-parts-transport-base  skip
+"transport-rubl"               {&tabulation} buf_parts.transport-rubl <> v-parts-transport-rubl {&tabulation} buf_parts.transport-rubl {&tabulation} v-parts-transport-rubl  skip
+"SLT-PC"         {&tabulation} {&tabulation} buf_parts.SLT-PC         <> v-parts-SLT-PC         {&tabulation} buf_parts.SLT-PC         {&tabulation} v-parts-SLT-PC          skip
+"VAT-PC"         {&tabulation} {&tabulation} buf_parts.VAT-PC         <> v-parts-VAT-PC         {&tabulation} buf_parts.VAT-PC         {&tabulation} v-parts-VAT-PC          skip
+"price-cli"      {&tabulation} {&tabulation} buf_parts.price-cli      <> v-parts-price-cli      {&tabulation} buf_parts.price-cli      {&tabulation} v-parts-price-cli       skip
+"cli-base-rate"                {&tabulation} buf_parts.cli-base-rate  <> v-parts-cli-base-rate  {&tabulation} buf_parts.cli-base-rate  {&tabulation} v-parts-cli-base-rate   skip
+              view-as alert-box error .
+              undo, return error v-message .
             end.
 
             if buf_parts.supp-code <> ub.trn-doc.cli-code

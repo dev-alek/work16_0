@@ -274,7 +274,7 @@ define variable v-barcode-list  as longchar  no-undo .
                   , input integer(p-GdsObj:grp-code)
                   , input p-GdsObj:name_
                   , input "":U /*par-saved-name like ub.buf_goods.gds-name no-undo */
-                  , input "":U /*engl-name */
+                  , input p-GdsObj:eng-name /*engl-name */
                   , input p-GdsObj:label-name
                   , input p-GdsObj:chk-name
                   , input "RU" /*buf_temp-goods_.alpha1*/

@@ -64,17 +64,17 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
     this-object:label39:Name = "label39".
     this-object:label39:Size = new System.Drawing.Size(117, 20).
     this-object:label39:TabIndex = 37.
-    this-object:label39:Text = "Объем топлива:".
+    this-object:label39:Text = "Объем топлива, л:".
     this-object:label39:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label39:UseCompatibleTextRendering = true.
     /*  */
     /* label16 */
     /*  */
-    this-object:label16:Location = new System.Drawing.Point(206, 173).
+    this-object:label16:Location = new System.Drawing.Point(189, 173).
     this-object:label16:Name = "label16".
-    this-object:label16:Size = new System.Drawing.Size(150, 20).
+    this-object:label16:Size = new System.Drawing.Size(167, 20).
     this-object:label16:TabIndex = 35.
-    this-object:label16:Text = "Количество по документу:".
+    this-object:label16:Text = "Количество по документу, л:".
     this-object:label16:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label16:UseCompatibleTextRendering = true.
     /*  */
@@ -84,7 +84,7 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
     this-object:label15:Name = "label15".
     this-object:label15:Size = new System.Drawing.Size(117, 20).
     this-object:label15:TabIndex = 34.
-    this-object:label15:Text = "Вес топлива:".
+    this-object:label15:Text = "Вес топлива, кг:".
     this-object:label15:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label15:UseCompatibleTextRendering = true.
     /*  */

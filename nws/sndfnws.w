@@ -674,7 +674,7 @@ END.
 &Scoped-define BROWSE-NAME BR-db
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
 
 
 /* ***************************  Main Block  *************************** */
@@ -708,7 +708,7 @@ run disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE confirm-password Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE confirm-password Dialog-Frame
 PROCEDURE confirm-password :
 DEFINE INPUT PARAMETER p-file-name AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-today AS date NO-UNDO.
@@ -731,6 +731,7 @@ DO v-ii = 1 TO LENGTH(string(p-today, "99/99/9999")):
 END.
 ASSIGN
 v-need-password = STRING(v-need-password-int).
+/* message v-need-password view-as alert-box. */
 run ref/per-pswd.w ( output v-psw-buf ) .
 IF v-psw-buf =  v-need-password THEN p-ok = YES.
 END PROCEDURE.
@@ -744,7 +745,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide 
+               dynamic widgets we have created and/or hide
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -763,13 +764,13 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other 
+               These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY Rs-mode rs-path-type f-path 
+  DISPLAY Rs-mode rs-path-type f-path
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help b-mark B-all-select B-all-deselect BR-db Rs-mode 
-         rs-path-type f-path b-add b-del B-params BR-files 
+  ENABLE B-exit b-quit B-Help b-mark B-all-select B-all-deselect BR-db Rs-mode
+         rs-path-type f-path b-add b-del B-params BR-files
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -778,7 +779,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
 PROCEDURE MyEnable :
 assign
 rs-mode:radio-buttons in frame {&frame-name} =
@@ -839,7 +840,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-add-file Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-add-file Dialog-Frame
 PROCEDURE proc-add-file :
 define variable v_os-file   AS CHAR NO-UNDO INIT "".
 define variable ll_commit AS LOG    NO-UNDO INIT NO.
@@ -940,7 +941,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-all-deselect Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-all-deselect Dialog-Frame
 PROCEDURE proc-b-all-deselect :
 DEFINE BUFFER buf_tt-db FOR tt-db.
 FOR EACH buf_tt-db:
@@ -952,7 +953,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-all-select Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-all-select Dialog-Frame
 PROCEDURE proc-b-all-select :
 DEFINE BUFFER buf_tt-db FOR tt-db.
 GET first br-db no-lock.
@@ -977,7 +978,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-mark-db Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-mark-db Dialog-Frame
 PROCEDURE proc-mark-db :
 DEFINE VARIABLE v-deleted-db-num AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-new-db-num AS INTEGER NO-UNDO.
@@ -1020,10 +1021,10 @@ ELSE DO:
     END.
     else do:
       FIND first buf_db NO-LOCK WHERE
-              buf_db.db-num = v-new-db-num NO-ERROR.
-    IF AVAILABLE buf_db THEN DO:
-      REPOSITION br-db TO RECID RECID(buf_db).
-    END.
+                buf_db.db-num = v-new-db-num NO-ERROR.
+      IF AVAILABLE buf_db THEN DO:
+        REPOSITION br-db TO RECID RECID(buf_db).
+      END.
     end.
 END.
 
@@ -1032,7 +1033,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-run Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-run Dialog-Frame
 PROCEDURE proc-run :
 DEFINE VARIABLE glog AS LOGICAL NO-UNDO.
 DEFINE VARIABLE v-today as date no-undo .
@@ -1087,7 +1088,7 @@ OR rs-mode = {&save-db-and-run} THEN DO:
                            , {&slash-char}
                           ).
   run cur-time in THIS-PROCEDURE ( output v-today, output v-time).
-
+/*
   RUN confirm-password IN THIS-PROCEDURE (
                                           INPUT v-file-name
                                          ,INPUT v-today
@@ -1100,6 +1101,8 @@ OR rs-mode = {&save-db-and-run} THEN DO:
       VIEW-AS ALERT-BOX ERROR.
      UNDO, RETURN ERROR.
   END.
+  
+  */
   for each buf_tt-ext-file-par no-lock:
     if (buf_tt-ext-file-par.param-type = {&type-char}
        AND buf_tt-ext-file-par.param-name = '':U)
@@ -1134,6 +1137,7 @@ OR rs-mode = {&save-db-and-run} THEN DO:
   IF glog = NO THEN RETURN ERROR.
 END.
 else do:
+    /* закрыли запрос всех паролей
   run cur-time in THIS-PROCEDURE ( output v-today, output v-time).
 
   RUN confirm-password IN THIS-PROCEDURE (
@@ -1148,6 +1152,7 @@ else do:
       VIEW-AS ALERT-BOX ERROR.
       UNDO, RETURN ERROR.
   END.
+  */
 end.
 
 run str/diallog.w (

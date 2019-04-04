@@ -856,7 +856,7 @@ DEFINE FRAME d-in-doc
      b-history AT ROW 1 COL 89.5
      b-print AT ROW 1 COL 93
      b-help AT ROW 1 COL 96
-     t-doc.cli-code AT ROW 2 COL 10 COLON-ALIGNED
+     t-doc.cli-code AT ROW 2 COL 11 COLON-ALIGNED
           LABEL "П&оставщик"
           VIEW-AS FILL-IN
           SIZE 10 BY 1
@@ -992,7 +992,7 @@ DEFINE FRAME d-in-doc
           VIEW-AS FILL-IN 
           SIZE 15 BY .71 TOOLTIP "Прочие расходы"
           FGCOLOR 4 
-     m-inc AT ROW 12.25 COL 25.5 COLON-ALIGNED
+     m-inc AT ROW 12.25 COL 27 COLON-ALIGNED
      t-doc.ship-num AT ROW 13.5 COL 10 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 10.5 BY 1 TOOLTIP "№ отгрузки"
@@ -4328,7 +4328,7 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tt d-in-doc
-PROCEDURE fill-tt :
+PROCEDURE fill-tt private :
 define input parameter pardoc-code like ub.trn-doc.doc-code no-undo.
 define buffer bf_trn-doc       for ub.trn-doc.
 define buffer bf_doc-line      for ub.doc-line.
@@ -4347,14 +4347,16 @@ for each lib-trn_ret-line:
 end.
 for each bf_doc-line where bf_doc-line.doc-code = bf_trn-doc.doc-code no-lock :
   create lib-trn_ret-line.
-  buffer-copy bf_doc-line to lib-trn_ret-line.
+  buffer-copy bf_doc-line except road-tax to lib-trn_ret-line .
   assign
     lib-trn_ret-line.cst-code = bf_trn-doc.cst-code.
 end.
 for each lib-trn_ret-line-attr:
   delete lib-trn_ret-line-attr.
 end.
-for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code no-lock :
+for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code
+                            and bf_doc-line-attr.attr-code <> 'old_other-ras' 
+no-lock :
   create lib-trn_ret-line-attr.
   buffer-copy bf_doc-line-attr to lib-trn_ret-line-attr.
 end.
@@ -5635,11 +5637,11 @@ do on error undo, return error return-value :
 if not ((t-doc.status_ = {&wayb} or t-doc.status_ = {&inquiry}) and not t-doc.flag_) then do:
   return error "Данное действие недопустимо в этом статусе.".
 end.
-/* Список документов по объекту */
 if not b-add:sensitive in frame {&frame-name} then do:
   message "Добавление строк из другого документа при этом статусе невозможно.".
   return error.
 end.
+/* Список документов по объекту */
 run str/all-docs.w
   (  input parparentproc,
       input t-doc.host-code ,

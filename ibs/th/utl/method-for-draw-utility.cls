@@ -1056,7 +1056,11 @@ method public void load_cashdesk(iAddr as character ) :
       tt-cash-desk.fr-type = tt-cash-desk-attr.attr-value .                                    
     end.          
      
-    put-log(  "Касса " + tt-cash-desk.pos-type + " №" + string(tt-cash-desk.cash-num) + " IP: " + entry(2,tt-cash-desk.addr-path, chr(4))).       
+    put-log(  "Касса " + tt-cash-desk.pos-type 
+            + " №"     + string(tt-cash-desk.cash-num) 
+            + " IP: "  + entry(if tt-cash-desk.addr-path eq "" then 1 else num-entries(tt-cash-desk.addr-path, chr(4)) ,
+                               tt-cash-desk.addr-path, 
+                               chr(4))).       
                         
     run ref/cashdsk1.p (
      input-output v-rid
@@ -1075,6 +1079,7 @@ method public void load_cashdesk(iAddr as character ) :
     ,input tt-cash-desk.registration-code
     ,input tt-cash-desk.serial-code
     ,input tt-cash-desk.fr-type
+    ,input ? /* вариант исполнения кассы (ТСО,неТСО,мобильн); "?" = "оставить прежнее значение" */
     ) no-error .
     if error-status:error then do:
        put-Log(return-value).

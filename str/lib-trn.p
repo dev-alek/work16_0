@@ -45,6 +45,8 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { str/valddnst.i def }
 { gbl/ptrlprop.i def }
 
+define variable g-varr-b as character no-undo. /* читается из gbl/curr-r-b.i один раз на всю библиотеку */
+
 if valid-handle (g#lib-trn)
 and g#lib-trn <> this-procedure :handle
 and g#lib-trn :get-signature('lib-trn_acc-cost':u) <> ""
@@ -67,6 +69,13 @@ else do:
   assign
     g#lib-trn = this-procedure :handle
   .
+  { gbl/curr-r-b.i
+    g-varr-b
+    no-error
+  }
+  if error-status :error then do:
+    return error "Ошибка при определении валюты продажи.".
+  end.
   def var gbl-hndllibObj as class gbl-hndllib no-undo.
   gbl-hndllibObj = new gbl-hndllib ().
   gbl-hndllibObj:InitHndl("g#lib-trn", g#lib-trn).
@@ -108,7 +117,6 @@ define output parameter partotal-doc-line_cli-qnty       like ub.trn-doc.cli-qnt
 define variable vartotal-parts_fact-base like ub.parts.price-base no-undo.
 define variable vartotal-parts_fact-rubl like ub.parts.price-rubl no-undo.
 define variable vartotal-parts_fact-qnty like ub.parts.fact-qnty  no-undo.
-define variable varr-b                   as   character           no-undo.
 define variable rec-inv-lin              as   recid               no-undo.
 define variable varfact-qnty-kg          as   decimal             no-undo.
 define variable varis-petrolium as logical no-undo.
@@ -120,7 +128,7 @@ define buffer parts-ch    for ub.parts.
 define buffer trn-doc-ch  for ub.trn-doc.
 
 do on error undo, return error return-value :
-{ gbl/curr-r-b.i varr-b }
+/* { gbl/curr-r-b.i varr-b } 12/II-2019 - вынесено в main-block */
   find first trn-doc-ch  where trn-doc-ch.doc-code = pardoc-code.
   if trn-doc-ch.doc-type <> {&inventory} then do:
     assign
@@ -168,7 +176,7 @@ do on error undo, return error return-value :
                             gds-dtl-ch.artic     = parartic     and
                             gds-dtl-ch.prod-type = parprod-type and
                             gds-dtl-ch.prod-code = parprod-code no-lock :
-     if varr-b = "rubl":U then do:
+     if g-varr-b = "rubl":U then do:
       assign
        partotal-doc-line_tot-ov = partotal-doc-line_tot-ov
                                 + (gds-dtl-ch.cur-base - gds-dtl-ch.price-rubl) * gds-dtl-ch.fact-qnty.
@@ -346,11 +354,10 @@ define variable vartotal-tot-rubl like ub.trn-doc.tot-rubl no-undo.
 define variable varcount   as integer   no-undo.
 define variable vartime    as integer   no-undo.
 define variable varmessage as character no-undo.
-define variable varr-b     as character no-undo.
 define variable vartotal-doc-qnty as decimal   no-undo .
 
 do transaction on error undo, return error return-value :
-{ gbl/curr-r-b.i varr-b }
+/* { gbl/curr-r-b.i varr-b } 12/II-2019 - вынесено в main-block */
 assign
   vartime  = time
   varcount = 0
@@ -388,7 +395,7 @@ on error undo, return error
   .
 end. /*doc-line*/
 fc_trn-doc.doc-qnty = vartotal-doc-qnty .
-if varr-b = "rubl":u then do:
+if g-varr-b = "rubl":u then do:
   assign
     fc_trn-doc.tot-rubl = vartotal-tot-rubl
     fc_trn-doc.tot-doc  = fc_trn-doc.tot-rubl / fc_trn-doc.base-rate * fc_trn-doc.base-scale
@@ -421,14 +428,13 @@ define buffer cdl_inv-line for ub.inv-line.
 define buffer cdl_gds-dtl  for ub.gds-dtl.
 define buffer cdl_trn-doc  for ub.trn-doc.
 define variable varsum-sale like ub.gds-dtl.price-rubl no-undo.
-define variable varr-b      as   character             no-undo.
 define variable rec-inv-lin as   recid                 no-undo.
 define variable varis-petrolium as logical no-undo.
 define variable varis-pieces    as logical no-undo.
 
 { str/get-pr.i def }
 do on error undo, return error return-value :
-{ gbl/curr-r-b.i varr-b }
+/* { gbl/curr-r-b.i varr-b } 12/II-2019 - вынесено в main-block */
 find first cdl_doc-line where recid(cdl_doc-line)  = parrec-line.
 find first cdl_inv-line
   where cdl_inv-line.doc-code  = cdl_doc-line.doc-code
@@ -452,7 +458,7 @@ for each cdl_gds-dtl where cdl_gds-dtl.doc-code  = cdl_doc-line.doc-code
    if parstate-price then do:
      { str/get-pr.i calc cdl_gds-dtl.obj-type cdl_gds-dtl.obj-code cdl_goods.gds-code cdl_gds-dtl.prt-code " " cdl_trn-doc.fact-order }
      if gp-price-sale <> ? then do:
-       if varr-b = "rubl":u then do:
+       if g-varr-b = "rubl":u then do:
          assign
            cdl_doc-line.excise      = gp-excise
            cdl_doc-line.road-tax    = gp-road-tax
@@ -466,7 +472,7 @@ for each cdl_gds-dtl where cdl_gds-dtl.doc-code  = cdl_doc-line.doc-code
        end.
      end.
      else do:
-       if varr-b = "rubl":u then do:
+       if g-varr-b = "rubl":u then do:
          assign
            cdl_gds-dtl.price-rubl = 0.
        end.
@@ -475,7 +481,7 @@ for each cdl_gds-dtl where cdl_gds-dtl.doc-code  = cdl_doc-line.doc-code
            cdl_gds-dtl.price-base = 0.
        end.
      end.
-    if varr-b = "base":u then do:
+    if g-varr-b = "base":u then do:
       assign
         cdl_gds-dtl.price-rubl = cdl_gds-dtl.price-base * cdl_trn-doc.base-rate / cdl_trn-doc.base-scale.
     end.
@@ -484,7 +490,7 @@ for each cdl_gds-dtl where cdl_gds-dtl.doc-code  = cdl_doc-line.doc-code
         cdl_gds-dtl.price-base = cdl_gds-dtl.price-rubl / cdl_trn-doc.base-rate * cdl_trn-doc.base-scale.
     end.
    end.
-   if varr-b = "base":u then do:
+   if g-varr-b = "base":u then do:
      assign varsum-sale = varsum-sale + cdl_gds-dtl.price-base * cdl_gds-dtl.doc-qnty.
    end.
    else do:
@@ -492,7 +498,7 @@ for each cdl_gds-dtl where cdl_gds-dtl.doc-code  = cdl_doc-line.doc-code
    end.
 end. /*gds-dtl*/
 
-  if varr-b = "base":u then do:
+  if g-varr-b = "base":u then do:
     assign
       partot-doc   = varsum-sale
       partot-rubl  = partot-doc * cdl_trn-doc.base-rate / cdl_trn-doc.base-scale
@@ -1202,7 +1208,6 @@ define buffer iv-units    for ub.units.
 define variable vartype   as character no-undo.
 define variable varpetrol as logical   no-undo.
 define variable varpieces as logical   no-undo.
-define variable varr-b    as character no-undo.
 define variable varhave-vat-slt as logical no-undo.
 
 define buffer buf_trn-doc for ub.trn-doc .
@@ -1210,7 +1215,7 @@ define buffer buf_trn-doc for ub.trn-doc .
 do
 on error undo, return error return-value
 :
-{ gbl/curr-r-b.i varr-b }
+/* { gbl/curr-r-b.i varr-b } 12/II-2019 - вынесено в main-block */
 if pardoc-code-or-zone = "zakaz":u then do:
   assign
     varhave-vat-slt  = yes
@@ -1255,18 +1260,12 @@ else do:
   assign vartype = "rubl".
 end.
 
-if vartype = "rubl" then do:
-  assign parprice-rubl = parpr-rubl.
-end.
-else do:
-  assign parprice-cli           = parpr-cli
-         parprice-cli-unit-base = parprice-cli / parcli-base-rate.
-end.
 /*-----------------------------------------------------------------------------------*/
 /*      Если р_ублевая цена является определяющей, то раскрываем ее компоненты.       */
 /*         В случае определения рассчитываемых цен, пишем в "цену по ТТН".            */
 /*-----------------------------------------------------------------------------------*/
 if vartype = "rubl" then do:
+  assign parprice-rubl = parpr-rubl.
   run lib-trn_in-vat-incl in this-procedure (input  parother-rubl                  ,
                            input  partransport-rubl              ,
                            input  parroad-tax                    ,
@@ -1293,6 +1292,11 @@ if vartype = "rubl" then do:
                          / parexch-rate  * parexch-scale
          parprice-cli = parprice-cli-unit-base * parcli-base-rate.
 end.
+else do:
+  assign parprice-cli           = parpr-cli
+         parprice-cli-unit-base = parprice-cli / parcli-base-rate.
+end.
+
 /*---------------------------------------------------------------------------------*/
 /*                    Вычисление компонентов цены по ТТН                           */
 /*---------------------------------------------------------------------------------*/
@@ -1305,7 +1309,7 @@ parprice-transport-exp = (if partransport-rubl <> ? then partransport-rubl else 
                          / parexch-rate * parexch-scale
                          * parcli-base-rate
 .
-if varr-b = "rubl":u then do:
+if g-varr-b = "rubl":u then do:
   assign
     parprice-road-tax      = parroad-tax
                              / parexch-rate * parexch-scale
@@ -1381,7 +1385,7 @@ if vartype = "cli" then do:
                     * parexch-rate / parexch-scale
                     / parcli-base-rate
                     +
-                    parroad-tax * (if varr-b = "base":u then parbase-rate  /  parbase-scale else 1) +
+                    parroad-tax * (if g-varr-b = "base":u then parbase-rate  /  parbase-scale else 1) +
                     (if partransport-rubl <> ? then partransport-rubl else 0)  +
                     (if parother-rubl     <> ? then parother-rubl     else 0)
                     ).
@@ -2303,7 +2307,6 @@ procedure lib-trn_copy-inh :
   define variable conf-par                       as   character                no-undo.
   define variable par-type                       as   character                no-undo.
   define variable g-doc-prt                      as   logical                  no-undo.
-  define variable varr-b                         as   character                no-undo.
   define variable varr-btype                     as   character                no-undo.
   define variable varerr-recalc                  as   logical                  no-undo.
   define variable v-accum-cli-qnty               like ub.doc-line.cli-qnty     no-undo.
@@ -2346,10 +2349,7 @@ on error undo, return error return-value
     return error "Некорректный параметр parmode передан процедуре lib-trn_copy-inh.".
   end.
   
-  { gbl/curr-r-b.i varr-b no-error }
-  if error-status :error then do:
-    return error "Ошибка при определении валюты продажи.".
-  end.
+/* { gbl/curr-r-b.i varr-b } 12/II-2019 - вынесено в main-block */
   
 find first ca_trn-doc where recid(ca_trn-doc) = parrec-doc.
 find first ca_clients where ca_clients.obj-type = ca_trn-doc.obj-type and
@@ -2606,19 +2606,30 @@ else do:
      ca_goods.prod-code
      "'insalepr=request'":U
      v-insalepr
+     no-error
    }
+   if error-status:error then do :
+     v-insalepr = false .
+   end .
    /* Приемка по продажной цене */
    if v-insalepr = true then do:
-      { str/get-pr.i calc ca_trn-doc.obj-type ca_trn-doc.obj-code ca_goods.gds-code ca_gds-prt.node-code "undo, return error return-value."}
+      { str/get-pr.i
+        calc
+        ca_trn-doc.obj-type
+        ca_trn-doc.obj-code
+        ca_goods.gds-code
+        ca_gds-prt.node-code
+        "undo, return error return-value."
+      }
       if gp-price-sale = ? then do:
            undo, return error substitute ("Не могу найти продажную цену для товара: &1 &2 &3 &4.", ca_goods.artic, ca_goods.prod-type, ca_goods.prod-code, ca_goods.gds-name).
       end.
       else do:
         ASSIGN
-          ca_doc-line.price-cli  = gp-price-sale * (IF varr-b = "base":u THEN ca_trn-doc.base-rate / ca_trn-doc.base-scale else 1)
+          ca_doc-line.price-cli  = gp-price-sale * (IF g-varr-b = "base":u THEN ca_trn-doc.base-rate / ca_trn-doc.base-scale else 1)
                                / ca_trn-doc.exch-rate * ca_trn-doc.exch-scale * ca_doc-line.cli-base-rate
-          ca_doc-line.price-base = gp-price-sale / (IF varr-b = "base":u THEN 1 else ca_trn-doc.base-rate * ca_trn-doc.base-scale)
-          ca_doc-line.price-rubl = gp-price-sale * (IF varr-b = "base":u THEN ca_trn-doc.base-rate / ca_trn-doc.base-scale else 1)
+          ca_doc-line.price-base = gp-price-sale / (IF g-varr-b = "base":u THEN 1 else ca_trn-doc.base-rate * ca_trn-doc.base-scale)
+          ca_doc-line.price-rubl = gp-price-sale * (IF g-varr-b = "base":u THEN ca_trn-doc.base-rate / ca_trn-doc.base-scale else 1)
           ca_doc-line.road-tax   = gp-road-tax
           ca_doc-line.excise     = gp-excise.
       end.
@@ -2996,7 +3007,7 @@ else do:
               (ca_lib-trn_ret-dtl.price-rubl - ca_lib-trn_ret-dtl.discnt-rubl) <> 0 and
               (ca_lib-trn_ret-dtl.price-rubl - ca_lib-trn_ret-dtl.discnt-rubl) <> ? then do:
               assign
-                ca_doc-line.price-cli = (ca_lib-trn_ret-dtl.price-rubl - ca_lib-trn_ret-dtl.discnt-rubl - (if varr-b = "rubl" then ca_lib-trn_ret-line.road-tax else ca_lib-trn_ret-line.road-tax * ca_trn-doc.base-rate / ca_trn-doc.base-scale)) * ca_doc-line.cli-base-rate.
+                ca_doc-line.price-cli = (ca_lib-trn_ret-dtl.price-rubl - ca_lib-trn_ret-dtl.discnt-rubl - (if g-varr-b = "rubl" then ca_lib-trn_ret-line.road-tax else ca_lib-trn_ret-line.road-tax * ca_trn-doc.base-rate / ca_trn-doc.base-scale)) * ca_doc-line.cli-base-rate.
                 ca_doc-line.road-tax  = ca_lib-trn_ret-line.road-tax.
            end.
            else do:
@@ -3006,7 +3017,7 @@ else do:
                 (ca_lib-trn_ret-dtl.price-base - ca_lib-trn_ret-dtl.discnt-base) <> 0 and
                 (ca_lib-trn_ret-dtl.price-base - ca_lib-trn_ret-dtl.discnt-base) <> ? then do:
                 assign
-                  ca_doc-line.price-cli = (ca_lib-trn_ret-dtl.price-base - ca_lib-trn_ret-dtl.discnt-base - (if varr-b = "base" then ca_lib-trn_ret-line.road-tax else ca_lib-trn_ret-line.road-tax / ca_trn-doc.base-rate * ca_trn-doc.base-scale)) * ca_doc-line.cli-base-rate.
+                  ca_doc-line.price-cli = (ca_lib-trn_ret-dtl.price-base - ca_lib-trn_ret-dtl.discnt-base - (if g-varr-b = "base" then ca_lib-trn_ret-line.road-tax else ca_lib-trn_ret-line.road-tax / ca_trn-doc.base-rate * ca_trn-doc.base-scale)) * ca_doc-line.cli-base-rate.
                   ca_doc-line.road-tax  = ca_lib-trn_ret-line.road-tax.
              end.
            end.
@@ -3662,7 +3673,6 @@ define variable varlegal-node like ub.gds-prt.node-code no-undo.
 define variable varis-petrolium as logical no-undo.
 define variable varis-pieces    as logical no-undo.
 define variable varis-term as logical no-undo.
-define variable varr-b as character no-undo.
 define variable varr-b-type as character no-undo.
 define variable conf-par  as char    no-undo.
 define variable par-type  as char    no-undo.
@@ -3692,13 +3702,7 @@ find first cs_bar-code where cs_bar-code.b-code = parb-code.
   par-type
   no-error
 }
-{ gbl/curr-r-b.i
-  varr-b
-  no-error
-}
-if error-status :error then do:
-  return error "Ошибка при определении валюты продажи.".
-end.
+/* { gbl/curr-r-b.i varr-b } 12/II-2019 - вынесено в main-block */
 if cs_trn-doc.obj-type = {&shop} then do:
    find first cs_shop where cs_shop.obj-code = cs_trn-doc.obj-code no-lock.
    if conf-par = "yes" and
@@ -4177,10 +4181,10 @@ and not cs_trn-doc.flag_ then do:
            { str/get-pr.i calc cs_trn-doc.obj-type cs_trn-doc.obj-code cs_goods.gds-code cs_gds-prt.node-code "undo, return error substitute('&1 &2', parmes, return-value)." }
            if gp-price-sale <> ? then undo, return error substitute("&1 &2", parmes, return-value).
            assign
-             cs_doc-line.price-cli  = gp-price-sale * (if varr-b = "base" then cs_trn-doc.base-rate / cs_trn-doc.base-scale else 1)
+             cs_doc-line.price-cli  = gp-price-sale * (if g-varr-b = "base" then cs_trn-doc.base-rate / cs_trn-doc.base-scale else 1)
                                    / cs_trn-doc.exch-rate * cs_trn-doc.exch-scale * cs_doc-line.cli-base-rate
-             cs_doc-line.price-base = gp-price-sale / (if varr-b = "base":u then 1 else cs_trn-doc.base-rate * cs_trn-doc.base-scale)
-             cs_doc-line.price-rubl = gp-price-sale * (if varr-b = "base":u then cs_trn-doc.base-rate / cs_trn-doc.base-scale else 1)
+             cs_doc-line.price-base = gp-price-sale / (if g-varr-b = "base":u then 1 else cs_trn-doc.base-rate * cs_trn-doc.base-scale)
+             cs_doc-line.price-rubl = gp-price-sale * (if g-varr-b = "base":u then cs_trn-doc.base-rate / cs_trn-doc.base-scale else 1)
              cs_doc-line.excise     = gp-excise
              cs_doc-line.road-tax   = gp-road-tax.
         end.
