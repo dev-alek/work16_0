@@ -66,10 +66,11 @@ define variable g#report-num              as integer              no-undo .
 { str/valddnst.i def }
 { gbl/cd-attr.i      }
 { cmp/abbr-nc.i      }
+
 { rep/fmtcli.i       }
 { rep/torgconf.i     }
 { trg/factord.i  }
-
+{ ref/fd-attr.i }
 { rep/reprumpr.i print-plain-text,print-printer,print-xlt }
 { rep/r-sym.i        }
 { rep/km6xl.i        }
@@ -137,6 +138,7 @@ define variable Fact-order-1    like ub.stk-tot.Fact-order no-undo.
 define variable Fact-order-2    like ub.stk-tot.Fact-order no-undo.
 define variable v-pko-num       as character             no-undo .
 define variable v-pko-date      as date                  no-undo .
+DEFINE VARIABLE v-fin-doc-shift-name-num AS CHARACTER NO-UNDO.
 
 define variable PgNPP           as integer               no-undo .
 define variable v-b-code        as integer               no-undo .
@@ -271,7 +273,8 @@ FUNCTION f-wp-qnty returns character ( input p-dec as decimal ) :
   end.
   RETURN ( Pr ) .
 END FUNCTION. /* f-wp-qnty */
-
+FUNCTION get-shift RETURNS DATE
+  ( BUFFER buf_fin-doc FOR ub.fin-doc, OUTPUT v-fin-doc-shift-name-num AS character)  FORWARD.
 
 /* main block */
 do on error undo, return error
@@ -415,9 +418,9 @@ for each tt-cash-desk
       v-itogo-sum = v-itogo-sum + temp-str.summ-sale - temp-str.summ-return.
       v-itogo-nal = v-itogo-nal + temp-str.summ-nal - temp-str.summ-return.
    end.
-   PUT STREAM Out-Stream
-       Line format {&format-km-gold} .
-
+/*   PUT STREAM Out-Stream              */
+/*       Line format {&format-km-gold} .*/
+       
    display stream Out-Stream
           "          ИТОГО" @ temp-str.summ-end
           sym7 sym8 sym9
@@ -969,19 +972,23 @@ do on error undo, return error return-value  :
                       and buf_fin-doc.payer-code = buf_sysconf.sale-code
                       then do:   /*контрагент-реализация*/
 
-                      if v-pko-num = "" then do :
-                        assign v-pko-num = buf_fin-doc.prn-doc-code .
+                      if v-pko-num = "" then 
+                      do :
+                        assign 
+                          v-pko-num = buf_fin-doc.prn-doc-code .
                       end.
-                      else do :
-                        assign v-pko-num = v-pko-num + "," + buf_fin-doc.prn-doc-code .
+                      else 
+                      do :
+                        assign 
+                          v-pko-num = v-pko-num + "," + buf_fin-doc.prn-doc-code .
                       end.
-                      assign v-pko-date = buf_fin-doc.fact-date .
+                          v-pko-date = get-shift(BUFFER buf_fin-doc, OUTPUT v-fin-doc-shift-name-num) .
+                    end.
                   end.
-        end.
     end.
 
    /* TEXT */
-   PAGE STREAM Out-Stream.
+   
    PUT STREAM Out-Stream
        "Итого выручка в сумме " f-wp-qnty(v-itogo-nal) format "X(82)"  skip
 /*       STRING(PropisSumall + " {&abbr_rub}. " + STRING(v-kop,"99") + " {&abbr_kop}.", "x(150)") format "x(150)" SKIP*/
@@ -1049,17 +1056,15 @@ if v-cassir-op     = "" then v-cassir-op     = UndLine.
        space(5) "Старший кассир"
                                             UndLine format "X(20)" AT 39 v-cassir format "X(35)" AT 70 skip
                                             "(подпись)" format "X(25)" AT 44 "(расшифровка подписи)" format "X(25)" AT 73 skip
-
        space(5) "Кассир-операционист"
                                             UndLine format "X(20)" AT 39 v-cassir-op format "X(35)" AT 70 skip
                                             "(подпись)" format "X(20)" AT 44 "(расшифровка подписи)" format "X(25)" AT 73 skip
-
        space(5) "Руководитель"
        v-head-position format "X(15)" AT 21 UndLine format "X(20)" AT 39 v-director format "X(35)" AT 70 skip
        "(должность)" format "X(15)" AT 21   "(подпись)" format "X(20)" AT 44 "(расшифровка подписи)" format "X(25)" AT 73 skip
-       "" skip
-       "" skip
-       "Печатать с оборотом. Подписи печатать на обороте." AT 65 skip
+/*       "" skip                                                       */
+/*       "" skip                                                       */
+/*       "Печатать с оборотом. Подписи печатать на обороте." AT 65 skip*/
    .
      /*Excel*/
 
@@ -1076,6 +1081,30 @@ end.
 end procedure. /* PrintPodval */
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-shift Dialog-Frame
+FUNCTION get-shift RETURNS DATE
+  ( BUFFER buf_fin-doc FOR ub.fin-doc, OUTPUT p-shift-name-num AS CHARACTER) :
+define variable v-fin-doc-shift-name-num as character no-undo.
+define variable v-fin-doc-shift-name as character no-undo .
+IF buf_fin-doc.shift-date = ? THEN DO:
+   RETURN ?.
+END.
+ { str/shiftnam.i
+     buf_fin-doc.obj-type
+     buf_fin-doc.obj-code
+     buf_fin-doc.shift-date
+     buf_fin-doc.shift-num
+     v-fin-doc-shift-name
+     v-fin-doc-shift-name-num
+     no-error
+  }
+
+ASSIGN
+p-shift-name-num = v-fin-doc-shift-name-num
+ .
+RETURN buf_fin-doc.shift-date.   /* Function return value. */
+
+END FUNCTION.
 
 PROCEDURE on-same-page :
   define input parameter p-line-number as integer  no-undo .

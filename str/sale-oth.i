@@ -1020,10 +1020,29 @@ else do:
       end. /*TPSI*/
       /*обычная ситуация*/
       else do:
-        find first buf_gds-dtl NO-LOCK where
+        for each buf_gds-dtl NO-LOCK where
                     buf_gds-dtl.doc-code = buf_sale-doc.doc-code
-                AND buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty USE-INDEX pi no-error .
-        if available buf_gds-dtl then do:
+                AND buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty USE-INDEX pi :
+          find first goods no-lock where goods.artic = buf_gds-dtl.artic
+                                     and goods.prod-type = buf_gds-dtl.prod-type
+                                     and goods.prod-code = buf_gds-dtl.prod-code
+                                     .
+          if buf_sale-doc.doc-kind = {&tdEDT_vozvrat_vnesh_kass} 
+          then do :
+            find first doc-fbr-gds no-lock where doc-fbr-gds.out-code = replace(buf_gds-dtl.doc-code, "=", "-")
+                                             and doc-fbr-gds.gds-code = goods.gds-code
+                                             no-error .
+          end.
+          if buf_sale-doc.doc-kind = {&tdEDT_ras_vnesh_kass} 
+          then do :
+            find first doc-fbr-gds no-lock where doc-fbr-gds.out-code = buf_gds-dtl.doc-code
+                                             and doc-fbr-gds.gds-code = goods.gds-code
+                                             no-error .
+          end.
+          if available doc-fbr-gds
+          then do :
+            next. /* Для производства проверки в резервировании */
+          end.
           assign
           b-close-enabled = no
           .

@@ -1316,8 +1316,8 @@ PROCEDURE print-docs :
     define variable v-user-action       as character    no-undo.
     define variable v-printed           as logical      no-undo.
     define variable v-log               as logical      no-undo.
-    define variable listGdsProcActn     as character init "rep/inv-3p.p,rep/inv-3.p,rep/inv-19.p,rep/inv-8l.p,rep/inv-8.p,rep/inv-26.p,rep/inv-3del.p,rep/inv-pst.p,rep/inv-3slg.p,rep/inv-pst.p" no-undo. /*список отчетов, требущий проверки прав*/
-    define variable listPtrlProcActn    as character init "rep/inv-3-kg.p,rep/r-orsvx1.p,rep/r-np34.p,rep/r-orioxl.p,rep/r-orsvxl.p" no-undo. /*список отчетов, требущий проверки прав*/
+    define variable listGdsProcActn     as character init "rep/inv-3p.p,rep/inv-3.p,rep/inv-19.p,rep/inv-8l.p,rep/inv-8.p,rep/inv-3del.p,rep/inv-pst.p,rep/inv-3slg.p,rep/inv-pst.p" no-undo. /*список отчетов, требущий проверки прав*/
+    define variable listPtrlProcActn    as character init "rep/inv-3-kg.p,rep/r-orsvx1.p,rep/r-np34.p,rep/r-orioxl.p" no-undo. /*список отчетов, требущий проверки прав*/
     
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_t_tmp#list    for tmp#list.
@@ -1352,7 +1352,7 @@ on error undo, return error
             then do:
               
               
-              if lookup (buf_tmp#list.proc-name, listGdsProcActn) > 0
+              if lookup (buf_tmp#list.proc-name, listGdsProcActn) > 0 and not buf_tmp#list.blank-name = "Предварительная инвентаризационная опись"
               then do:
                 /* Проверка прав */
                   { gbl/chk-actg.i
