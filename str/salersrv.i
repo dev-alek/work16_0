@@ -754,45 +754,52 @@ if ( num_rec modulo 10 ) = 0 then
     v-to-reserv = no
     .
     /* ÏÐÎÈÇÂÎÄÑÒÂÎ */
-    find first goods no-lock where goods.artic = loc-gds-dtl.artic
-                               and goods.prod-type = loc-gds-dtl.prod-type
-                               and goods.prod-code = loc-gds-dtl.prod-code
-                               .
-    if b-trn-doc.ext-doc-type =  {&TDEDT_Vozvrat_Vnesh_Kass}
-    then do :                           
-      find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = replace(loc-gds-dtl.doc-code, "=", "-")
-                                           and buf_doc-fbr-gds.gds-code = goods.gds-code
-                                           no-error .
-      if available buf_doc-fbr-gds 
-      then do :  
-        if buf_doc-fbr-gds.fact-qnty >= 0
-        then do :
-          assign
-            v-to-reserv = no
-          .
-        end.
-        else do :
-          chg-qnty = if res-qnty >= 0 then abs(buf_doc-fbr-gds.fact-qnty) else buf_doc-fbr-gds.fact-qnty.
-        end.
-      end.                                   
-    end.
-    if b-trn-doc.ext-doc-type =  {&TDEDT_Ras_Vnesh_Kass}
+    if p-auto-fbr-on
     then do :
-      find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = loc-gds-dtl.doc-code
-                                           and buf_doc-fbr-gds.gds-code = goods.gds-code
-                                           no-error .
-      if available buf_doc-fbr-gds 
-      then do : 
-        if buf_doc-fbr-gds.fact-qnty >= 0
+      find first goods no-lock where goods.artic = loc-gds-dtl.artic
+                                 and goods.prod-type = loc-gds-dtl.prod-type
+                                 and goods.prod-code = loc-gds-dtl.prod-code
+                                 .
+      if b-trn-doc.ext-doc-type =  {&TDEDT_Vozvrat_Vnesh_Kass}
+      then do :                           
+        find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = replace(loc-gds-dtl.doc-code, "=", "-")
+                                             and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                             no-error .
+        if available buf_doc-fbr-gds 
+        then do :  
+          if buf_doc-fbr-gds.fact-qnty > 0
+          then do :
+            assign
+              v-to-reserv = no
+            .
+          end.
+          else
+          if buf_doc-fbr-gds.fact-qnty < 0
+          then do :
+            chg-qnty = if res-qnty >= 0 then abs(buf_doc-fbr-gds.fact-qnty) else buf_doc-fbr-gds.fact-qnty.
+          end.
+        end.                                   
+      end.
+      if b-trn-doc.ext-doc-type =  {&TDEDT_Ras_Vnesh_Kass}
+      then do :
+        find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = loc-gds-dtl.doc-code
+                                             and buf_doc-fbr-gds.gds-code = goods.gds-code
+                                             no-error .
+        if available buf_doc-fbr-gds 
         then do : 
-          chg-qnty = buf_doc-fbr-gds.fact-qnty .
-        end.
-        else do :
-          assign
-            v-to-reserv = no
-          .
-        end.
-      end.                                     
+          if buf_doc-fbr-gds.fact-qnty > 0
+          then do : 
+            chg-qnty = if res-qnty >= 0 then buf_doc-fbr-gds.fact-qnty else - buf_doc-fbr-gds.fact-qnty .
+          end.
+          else
+          if buf_doc-fbr-gds.fact-qnty < 0
+          then do :
+            assign
+              v-to-reserv = no
+            .
+          end.
+        end.                                     
+      end.
     end.
     if v-to-reserv and chg-qnty <> 0 then do:
       if b-trn-doc.status_ = {&doc-froze}
@@ -871,12 +878,17 @@ end.
       if available buf_doc-fbr-gds
       then do :
         if rz then do :
-          if buf_doc-fbr-gds.fact-qnty >= 0
+          if buf_doc-fbr-gds.fact-qnty > 0
           then do :
             if loc-gds-dtl.doc-qnty = buf_doc-fbr-gds.fact-qnty then assign num_rec_res = num_rec_res + 1 .
           end.
-          else do :
+          else
+          if buf_doc-fbr-gds.fact-qnty < 0 
+          then do :
             if loc-gds-dtl.doc-qnty = - buf_doc-fbr-gds.fact-qnty then assign num_rec_res = num_rec_res + 1 .
+          end.
+          else do :
+            {&num_rec_res_plus}.
           end.
         end.
         else do :

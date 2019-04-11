@@ -900,9 +900,9 @@ on error undo, return error return-value
                   ub.doc-fbr-gds.fbr-obj-type = t-gds.fbr-obj-type
               AND ub.doc-fbr-gds.fbr-obj-code= t-gds.fbr-obj-code
               AND ub.doc-fbr-gds.gds-code = t-gds.gds-code
-              AND ub.doc-fbr-gds.out-code = buf_sale-doc.doc-code NO-ERROR.
+              AND ub.doc-fbr-gds.out-code = (if buf_sale-doc.doc-kind = {&TDEDT_VOZVRAT_Vnesh_KASS} then replace(buf_sale-doc.doc-code, "=", "-") else buf_sale-doc.doc-code) NO-ERROR.
         IF avail ub.doc-fbr-gds then do:
-          ub.doc-fbr-gds.fact-qnty = ub.doc-fbr-gds.fact-qnty - abs(t-gds.doc-qnty).
+          ub.doc-fbr-gds.fact-qnty = ub.doc-fbr-gds.fact-qnty - t-gds.doc-qnty.
           if ub.doc-fbr-gds.fact-qnty = 0 then delete ub.doc-fbr-gds.
         end.
       end.
