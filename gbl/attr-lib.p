@@ -882,11 +882,11 @@ end.
 &scop manual-edit-attr-tank-farm-for  1
 &scop batch-edit-attr-tank-farm-for  1
 
-/* јтрибут клиента - €вл€естс€ перевозчиком дл€:*/
+/* јтрибут клиента - €вл€етс€ перевозчиком дл€:*/
 &scop type-attr-auto-tank-for {&type-char}
 &scop format-attr-auto-tank-for "X(255)"
-&scop label-attr-auto-tank-for "явл€естс€ перевозчиком дл€:"
-&scop tooltip-attr-auto-tank-for "явл€естс€ перевозчиком дл€:"
+&scop label-attr-auto-tank-for "явл€етс€ перевозчиком дл€:"
+&scop tooltip-attr-auto-tank-for "явл€етс€ перевозчиком дл€:"
 &scop user-can-edit-attr-auto-tank-for  true
 &scop output-display-attr-auto-tank-for  true
 &scop other-attr-auto-tank-for 'spr=clntattr-auto-tank-for':u
