@@ -663,6 +663,18 @@ procedure init-temp-tables :
             v-goods-slt-pc = 0
           .
         end.
+        { gbl/pftxvalg.i
+            buf_goods.gds-code
+            {&vat-tax-code}
+            ub.trn-doc.fact-date
+            ub.trn-doc.host-code
+            ub.trn-doc.obj-type
+            ub.trn-doc.obj-code
+            v-goods-vat-pc
+            no-error
+          }
+          
+    
         if v-goods-vat-pc = ?
         then do:
           message
