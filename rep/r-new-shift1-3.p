@@ -659,6 +659,7 @@ if available (ub.doc-line) then v-fact-order-inv = ub.doc-line.fact-order .
         dO:
             NEXT _shift-chk.
         END.
+
         run add-chk in this-procedure ( 
             input buf_chk-doc.obj-type
             , input buf_chk-doc.obj-code
@@ -1023,6 +1024,7 @@ put stream OutStr-html unformatted
     '</tr>' skip
     .
 /*—бор данных*/
+
 for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
     if first-of(temp-rvs-line.gds-code) then 
     do:
@@ -1046,6 +1048,7 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
                     .           
                  
             end.
+            
             assign
                 temp-rvs-line.itog-pol4-l   = temp-rvs-line.itog-pol4-l + buf_temp-rvs-line.pol4-l-system
                 temp-rvs-line.itog-pol4-kg  = temp-rvs-line.itog-pol4-kg + buf_temp-rvs-line.pol4-kg-system
@@ -1206,7 +1209,14 @@ put stream OutStr-html unformatted
 
     '</tbody>' skip .                                                                                                    
 output stream OutStr-html close.
-
+output to c:\temp\tttt.txt.
+for each temp-line-pump:
+  export temp-line-pump .
+end.  
+for each temp-rvs-line:
+  export temp-rvs-line .
+end.  
+output close.
 procedure add-chk :
     define input  parameter p-obj-type like ub.chk-doc.obj-type no-undo .
     define input  parameter p-obj-code like ub.chk-doc.obj-code no-undo .
@@ -1236,14 +1246,14 @@ procedure add-chk :
             and buf_bar-code.gds-code = p-gds-code
             no-lock
             :
-                
             for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.pump-code = buf_chk-gds.pump
                 and ub.pl-gds-pump.gds-code = p-gds-code
                 and ub.pl-gds-pump.pl-code = p-pl-code
                 and ub.pl-gds-pump.status_ <> {&blocked-status}
                 ,
                 first ub.pl-pump-nozzle where ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code
-                and ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code :
+                and ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code 
+                and ub.pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code  :
 
                 find first temp-line-pump 
                     WHERE
