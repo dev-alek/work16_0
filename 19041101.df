@@ -1,0 +1,61 @@
+ADD FIELD "f-cash-num" OF "c-tech-prol-pwd" AS integer
+  FORMAT "->,>>>,>>9"
+  POSITION 19
+  INITIAL "0"
+  LABEL "Номер кассы"
+  ORDER 120
+  MAX-WIDTH 4
+
+ADD FIELD "f-object-num" OF "c-tech-prol-pwd" AS integer
+  FORMAT "->,>>>,>>9"
+  POSITION 20
+  INITIAL "0"
+  COLUMN-LABEL "Номер объекта"
+  ORDER 110
+  MAX-WIDTH 4
+
+ADD FIELD "f-cash-num" OF "tech-prol-pwd" AS integer
+  FORMAT "->,>>>,>>9"
+  POSITION 14
+  INITIAL "0"
+  LABEL "Номер кассы"
+  ORDER 120
+  MAX-WIDTH 4
+
+ADD FIELD "f-object-num" OF "tech-prol-pwd" AS integer
+  FORMAT "->,>>>,>>9"
+  POSITION 15
+  INITIAL "0"
+  COLUMN-LABEL "Номер объекта"
+  ORDER 110
+  MAX-WIDTH 4
+
+ADD INDEX "idx-cash-num" ON "tech-prol-pwd"
+  AREA "Primary_index"
+  INDEX-FIELD "f-cash-num" ASCENDING
+
+ADD INDEX "idx-date" ON "tech-prol-pwd"
+  AREA "Primary_index"
+  INDEX-FIELD "f-date" ASCENDING
+
+ADD INDEX "idx-fio" ON "tech-prol-pwd"
+  AREA "Primary_index"
+  INDEX-FIELD "f-fio" ASCENDING
+
+ADD INDEX "idx-hostname" ON "tech-prol-pwd"
+  AREA "Primary_index"
+  INDEX-FIELD "f-hostname" ASCENDING
+
+ADD INDEX "idx-object-num" ON "tech-prol-pwd"
+  AREA "Primary_index"
+  INDEX-FIELD "f-object-num" ASCENDING
+
+ADD INDEX "idx-user" ON "tech-prol-pwd"
+  AREA "Primary_index"
+  INDEX-FIELD "f-user" ASCENDING
+
+.
+PSC
+cpstream=1251
+.
+0000001301
