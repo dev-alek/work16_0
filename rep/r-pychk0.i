@@ -291,7 +291,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 temp-chk-dp.pay-code = chk-discnt.rank
                 temp-chk-dp.b-code = chk-gds.b-code
                 temp-chk-dp.qnty   = abs(chk-discnt.discnt-value-pcnt)
-                temp-chk-dp.all-sum =  chk-discnt.discnt-value-abs * temp-chk-dp.qnty
+                temp-chk-dp.all-sum =  chk-discnt.discnt-value-abs * chk-discnt.discnt-value-pcnt
                 .
             end.
     end. 

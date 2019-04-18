@@ -2419,7 +2419,9 @@ DO ON ERROR undo _main, return error:
             then do :      
               if buf_doc-fbr-gds.fact-qnty > 0
               then do :                                
-                if buf_doc-line.doc-qnty <> buf_doc-fbr-gds.fact-qnty and  buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do:
+                if buf_doc-line.doc-qnty <> buf_doc-fbr-gds.fact-qnty
+                and buf_doc-line.doc-qnty <> buf_doc-line.fact-qnty
+                and  buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do:
                   &scop my-message substitute("&1 (&2) Ќе все товары производства зарезервированы... &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
@@ -2428,7 +2430,9 @@ DO ON ERROR undo _main, return error:
                   {&display-message}.
                   undo _main, return error.
                 end. 
-                if buf_doc-line.doc-qnty <> 0 and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do :
+                if buf_doc-line.doc-qnty <> 0
+                and buf_doc-line.doc-qnty <> buf_doc-line.fact-qnty
+                and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do :
                   &scop my-message substitute("&1 (&2) ¬озврат в производстве не резервируем! &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
@@ -2441,7 +2445,9 @@ DO ON ERROR undo _main, return error:
               else
               if buf_doc-fbr-gds.fact-qnty < 0
               then do :
-                if buf_doc-line.doc-qnty <> abs(buf_doc-fbr-gds.fact-qnty) and  buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do:
+                if buf_doc-line.doc-qnty <> abs(buf_doc-fbr-gds.fact-qnty)
+                and buf_doc-line.doc-qnty <> buf_doc-line.fact-qnty
+                and  buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do:
                   &scop my-message substitute("&1 (&2) Ќе все товары производства зарезервированы... &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
@@ -2450,7 +2456,9 @@ DO ON ERROR undo _main, return error:
                   {&display-message}.
                   undo _main, return error.
                 end. 
-                if buf_doc-line.doc-qnty <> 0 and buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do :
+                if buf_doc-line.doc-qnty <> 0
+                and buf_doc-line.doc-qnty <> buf_doc-line.fact-qnty
+                and buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do :
                   &scop my-message substitute("&1 (&2) ¬озврат в производстве не резервируем! &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
@@ -2507,7 +2515,9 @@ DO ON ERROR undo _main, return error:
             then do :     
               if buf_doc-fbr-gds.fact-qnty > 0
               then do :                               
-                if buf_gds-dtl.doc-qnty <> buf_doc-fbr-gds.fact-qnty and buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do:
+                if buf_gds-dtl.doc-qnty <> buf_doc-fbr-gds.fact-qnty 
+                and buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty
+                and buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do:
                   &scop my-message substitute("&1 (&2) Ќе все товары производства зарезервированы... &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
@@ -2516,7 +2526,9 @@ DO ON ERROR undo _main, return error:
                   {&display-message}.
                   undo _main, return error.
                 end.  
-                if buf_gds-dtl.doc-qnty <> 0 and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do :
+                if buf_gds-dtl.doc-qnty <> 0
+                and buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty
+                and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do :
                   &scop my-message substitute("&1 (&2) ¬озврат в производстве не резервируем! &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
@@ -2529,7 +2541,9 @@ DO ON ERROR undo _main, return error:
               else
               if buf_doc-fbr-gds.fact-qnty < 0
               then do :
-                if buf_gds-dtl.doc-qnty <> abs(buf_doc-fbr-gds.fact-qnty) and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do:
+                if buf_gds-dtl.doc-qnty <> abs(buf_doc-fbr-gds.fact-qnty)
+                and buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty
+                and buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} then do:
                   &scop my-message substitute("&1 (&2) Ќе все товары производства зарезервированы... &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
@@ -2538,7 +2552,9 @@ DO ON ERROR undo _main, return error:
                   {&display-message}.
                   undo _main, return error.
                 end.  
-                if buf_gds-dtl.doc-qnty <> 0 and buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do :
+                if buf_gds-dtl.doc-qnty <> 0
+                and buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty
+                and buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass} then do :
                   &scop my-message substitute("&1 (&2) ¬озврат в производстве не резервируем! &3 &4&5" ~
                                           , buf_sale-doc.doc-code                           ~
                                           , ~{&sale-doc-name~}                           ~
