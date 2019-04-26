@@ -771,7 +771,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
   end.
 
   /*проверка на заполнение обязательных атрибутов в накладной*/
-  if v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
+  if not vartechproliv and v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
       v-error-attr = "" .
       if not can-find (first buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code 
         and lookup (buf_doc-attr.attr-code, v-attr-mandat-wayb) > 0)
@@ -808,7 +808,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end.  
   end.
   v-error-attr = "".
-  if isFuel and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  if not vartechproliv and isFuel and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
   then do:
     do ii = 1 to num-entries (v-attr-dop-info):
       find first buf_doc-attr no-lock 
