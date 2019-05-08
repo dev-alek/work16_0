@@ -4427,8 +4427,8 @@ character~
 &scop user-can-edit-attr-auto-task   true
 &scop output-display-attr-auto-task  true
 &scop other-attr-auto-task 'spr-ext=adm\shattrat.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-auto-task 'character':U
-&scop prop-label-list-attr-auto-task 'email на который отсылать сообщения'
+&scop prop-type-list-attr-auto-task 'character,character':U
+&scop prop-label-list-attr-auto-task 'email на который отсылать сообщения,список пользователей для авто процессов'
 &scop global-attr-auto-task true
 &scop host-attr-auto-task false
 &scop shop-attr-auto-task false

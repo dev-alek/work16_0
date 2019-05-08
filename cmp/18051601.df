@@ -743,7 +743,7 @@ ADD FIELD "cli-type" OF "c-vsd" AS character
   INITIAL ""
   POSITION 26
   MAX-WIDTH 60
-  ORDER 270
+  ORDER 271
 
 ADD FIELD "gds-guid" OF "c-vsd" AS character 
   FORMAT "x(40)"
@@ -760,7 +760,7 @@ ADD FIELD "gds-name-merc" OF "c-vsd" AS character
   LABEL "Наименование товара в Меркурии"
   POSITION 28
   MAX-WIDTH 16
-  ORDER 250
+  ORDER 251
 
 ADD FIELD "is-del" OF "c-vsd" AS character 
   FORMAT "yes/no"

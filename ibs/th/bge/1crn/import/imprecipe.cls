@@ -40,7 +40,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
   method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
     define variable v-mode       as character no-undo . /* create/update */
     define variable objImp       as class {&impclass} no-undo.
-    define variable v-gds-list   as class subjects no-undo .
+    define variable v-gds-list   as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:recipe-gds[]
     define variable v-recipe-gd  as class recipe-gd no-undo .
     define variable v-retfl      as logical no-undo .
     define variable v-db-num     as integer no-undo .
@@ -177,10 +177,17 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-ii    as integer no-undo .
     define variable v-rowid as rowid no-undo .
     
+    /* Глобальный момент: у нас есть проверка наличия обязательных тегов в сущности,
+                          но нет проверки наличия обязательных элементов в коллекции.
+       Поэтому наш импорт принимает пустую секцию <recipe-gds /> при том, что он исправно проверяет
+       как наличие этой секции внутри <recipe>, так и наличие <gd-code> внутри <recipe-gd>.
+       Место для проверки наличия <recipe-gd> внутри <recipe-gds> в нашей архитектуре пока отсутствует.
+    */
     assign
       v-gds-list = objImp:recipe-gds
       v-rgds     = ""      
     .
+    if valid-object (v-gds-list) then do :
     do v-ii = 1 to v-gds-list:Get(v-ii):
       v-recipe-gd = cast (v-gds-list:SubjectObjCurr, recipe-gd) .
       v-gds-code = integer (v-recipe-gd:gd-code) .
@@ -209,6 +216,14 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       end.
       
     end. /* end_of clear recipe-gds */
+    end .
+    else do :
+      Msg = substitute(
+        "Ошибка импорта рецепта [&1]: отсутствуют товары в рецепте - в секции &2 отсутствуют элементы &3",
+        v-recipe-code, "recipe-gds", "recipe-gd" ) .
+        v-retfl = false .
+        return false. /* уходит в finally, где перевозвращает v-retfl вместо false */
+    end . 
 
     v-retfl = true .
     /* ----- end_of создание/обновление рецепта ----- */

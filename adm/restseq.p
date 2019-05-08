@@ -4603,7 +4603,7 @@ procedure restore-s-cd-trans :
     &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
-
+    &undefine not-include-in-seq-records
     {&update-sequence}
   end.
 
@@ -4777,7 +4777,7 @@ procedure restore-s-layout-id :
     &scoped-define not-include-in-seq-records if int64(restseq.{&table-name}.cr-db-num) <> p-curr-db-num then NEXT.
     &scoped-define seq-expresstion assign v-new-seq-value = get-layout-id-int64(p-curr-db-num, restseq.{&table-name}.{&seq-field-name}) no-error .
     {&validate-sequence}
-
+    &undefine not-include-in-seq-records
 
     {&update-sequence}
   end.
@@ -4823,7 +4823,7 @@ procedure restore-s-sost :
     &scoped-define not-include-in-seq-records if restseq.{&table-name}.from-db-num <> p-curr-db-num then next. if restseq.{&table-name}.file-num = 2147483647 then next.
     &scoped-define seq-expresstion assign v-new-seq-value = abs(restseq.{&table-name}.{&seq-field-name} ).
     {&validate-sequence}
-
+    &undefine not-include-in-seq-records
     {&update-sequence}
   end.
 
@@ -4885,7 +4885,7 @@ procedure restore-s-gds-mercury-id :
     &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
-
+    &undefine not-include-in-seq-records
 
     {&update-sequence}
   end.
@@ -4906,7 +4906,7 @@ procedure restore-s-gds-mercury-id :
     &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
-
+    &undefine not-include-in-seq-records
 
     {&update-sequence}
   end.

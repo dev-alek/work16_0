@@ -2535,6 +2535,14 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+       v-prop-code = "{&bef-attr-auto-task_user-list}".
+&scop ptype character
+&scop prop-value 'nws':U
+&scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
     end.
     when {&attr-wnd-size} then do:
       v-prop-code = "{&bef-attr-wnd-size_max},{&bef-attr-wnd-size_store}"  .

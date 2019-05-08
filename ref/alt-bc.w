@@ -302,7 +302,7 @@ DEFINE QUERY BR-pbc FOR
 DEFINE BROWSE br-bc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-bc Dialog-Frame _FREEFORM
   QUERY br-bc NO-LOCK DISPLAY
-      X_bar-code.b-code FORMAT "999999999":U
+      X_bar-code.b-code FORMAT "9999999999":U
       X_bar-code.unit-cli COLUMN-LABEL "Изм."
       X_bar-code.cli-base-rate COLUMN-LABEL "Коэф." FORMAT ">,>>9.<<<"
       stts-string(X_bar-code.stts_) COLUMN-LABEL "Статус" FORMAT "X(10)"

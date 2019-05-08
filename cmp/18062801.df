@@ -318,7 +318,7 @@ ADD FIELD "idCrit" OF "PromoGift" AS int64
 ADD FIELD "gds-code" OF "PromoGift" AS integer 
   DESCRIPTION "код товара"
   FORMAT "->,>>>,>>>,>>9"
-  INITIAL ""
+  INITIAL "0"
   LABEL "код товара"
   POSITION 5
   MAX-WIDTH 16
@@ -418,7 +418,7 @@ ADD FIELD "idAction" OF "PromoGoods" AS int64
 ADD FIELD "gds-code" OF "PromoGoods" AS integer 
   DESCRIPTION "код товара"
   FORMAT "->,>>>,>>>,>>9"
-  INITIAL ""
+  INITIAL "0"
   LABEL "gds-code"
   POSITION 5
   MAX-WIDTH 16
@@ -1048,7 +1048,7 @@ ADD FIELD "idCrit" OF "c-PromoGift" AS int64
 ADD FIELD "gds-code" OF "c-PromoGift" AS integer
   DESCRIPTION "код товара"
   FORMAT "->,>>>,>>>,>>9"
-  INITIAL ""
+  INITIAL "0"
   LABEL "код товара"
   POSITION 5
   MAX-WIDTH 16
@@ -1236,7 +1236,7 @@ ADD FIELD "idAction" OF "c-PromoGoods" AS int64
 ADD FIELD "gds-code" OF "c-PromoGoods" AS integer
   DESCRIPTION "код товара"
   FORMAT "->,>>>,>>>,>>9"
-  INITIAL ""
+  INITIAL "0"
   LABEL "gds-code"
   POSITION 5
   MAX-WIDTH 16

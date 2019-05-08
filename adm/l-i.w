@@ -448,6 +448,7 @@ on stop   undo, leave
   end.
 end. /* do1 */
 
+
 assign
   session :data-entry-return = no
 .
@@ -459,6 +460,7 @@ then
 DO2:
 do
 :
+  run utl/chgpsw.p . 
   run adm/unloaddb.w
     (input  name
     ,input  password

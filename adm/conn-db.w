@@ -43,6 +43,7 @@ define variable vss-description as character no-undo init "создание УБД".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/showinf.i  }
+{ utl/setpwd.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -259,7 +260,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   then do:
     assign
       p-user-name = "sysadm":U
-      p-user-pswd = "sysadm":U
+      p-user-pswd = {&paswordcur}
     .
   end.
 
