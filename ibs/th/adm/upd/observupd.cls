@@ -145,7 +145,9 @@ class ibs.th.adm.upd.observupd:
               CurrDBShm = integer (_field._initial) no-error.
               /* нужно если не происходит откат загрузки при ошибке */
               /*writeResult (CurrDBShm).*/
+              release _field.
            end.
+           release _file.
         end.
     end.
    /* CurrDBShm = 8.*/
@@ -207,9 +209,12 @@ class ibs.th.adm.upd.observupd:
   
   method private logical chkdbforupd ():
 
-    define variable v-process-id as integer no-undo.
+    define variable v-process-id   as integer   no-undo.
     define variable v-process-list as character no-undo.
-
+    define variable vUserIgnor     as character no-undo.
+    
+    define buffer buf_thbj-attr for ub.thbj-attr.
+    
     run gbl/getprcid.p ( output v-process-id ) no-error.
     if error-status:error 
     then do:
@@ -217,8 +222,30 @@ class ibs.th.adm.upd.observupd:
       IsErr = true.
       return false.
     end.
+       
+    /*вместо run adm/shattri.p так как потом не получится отконектиться от базы*/
+    find first buf_thbj-attr no-lock
+       where buf_thbj-attr.obj-type        = {&db}
+         and buf_thbj-attr.obj-code        = DbNum 
+         and buf_thbj-attr.upper-prop-code = {&attr-auto-task}
+         and buf_thbj-attr.prop-code       = {&attr-auto-task_user-list}
+    no-error.
+    if available buf_thbj-attr
+    then do:
+       vUserIgnor = buf_thbj-attr.property-value-character.
+       release buf_thbj-attr.
+    end.
+    else
+       vUserIgnor = "nws".
     
-    for each _Connect where _Connect._Connect-Type = "REMC" and _Connect._Connect-Pid <> ? and _Connect._Connect-Pid <> v-process-id:
+    
+     
+    
+    for each _Connect where _Connect._Connect-Type = "REMC" 
+                        and _Connect._Connect-Pid <> ? 
+                        and _Connect._Connect-Pid <> v-process-id
+                        and not can-do(vUserIgnor,_Connect._Connect-Name)
+    no-lock:
       v-process-list = v-process-list + {&new-line} + string (_Connect._Connect-Pid) + " - " + _Connect._Connect-Name +  " - " + _Connect._Connect-Device.
     end.
     if v-process-list <> ""
@@ -339,8 +366,7 @@ class ibs.th.adm.upd.observupd:
   
   method public logical isneedupg ():
     
-    define variable updschmObj as class updschm no-undo.
-    if upd-all-list-df ne "" then return true.
+    
     if CurrDBShm < TargetDBShm
       then 
     do:
@@ -350,6 +376,7 @@ class ibs.th.adm.upd.observupd:
       return true.
   
     end.
+    if upd-all-list-df ne "" then return true.
     return false.
     
   end.

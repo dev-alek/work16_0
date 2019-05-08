@@ -74,9 +74,9 @@ define variable v-to-create     as logical  no-undo .
 &Scoped-define FRAME-NAME shattrat
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help f-email-list
-&Scoped-Define DISPLAYED-OBJECTS f-email-list ~
-label-email-list
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help f-email-list f-user-list
+&Scoped-Define DISPLAYED-OBJECTS f-email-list f-user-list ~
+label-email-list label-user-list
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -110,10 +110,17 @@ DEFINE VARIABLE f-email-list AS CHARACTER
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
      SIZE 55 BY 5 DROP-TARGET NO-UNDO.
 
+DEFINE VARIABLE f-user-list AS CHARACTER
+     VIEW-AS fill-in 
+     SIZE 55 BY 1 DROP-TARGET NO-UNDO.
+
 DEFINE VARIABLE label-email-list AS CHARACTER FORMAT "X(256)":U INITIAL "Список email для отправки сообщений"
       VIEW-AS TEXT
      SIZE 47.5 BY .67 NO-UNDO.
 
+DEFINE VARIABLE label-user-list AS CHARACTER FORMAT "X(256)":U INITIAL "Список логинов исключенных из проверки подключений при обновление системы"
+      VIEW-AS TEXT
+     SIZE 75 BY .67 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -122,8 +129,10 @@ DEFINE FRAME shattrat
      b-quit AT ROW 1 COL 11 WIDGET-ID 6
      B-Help AT ROW 1 COL 50 WIDGET-ID 4
      f-email-list AT ROW 3.75 COL 4.5 NO-LABEL WIDGET-ID 22
+     f-user-list AT ROW 10.75 COL 4.5 NO-LABEL WIDGET-ID 22
      label-email-list AT ROW 2.75 COL 2.5 NO-LABEL WIDGET-ID 28
-     SPACE(11.99) SKIP(10.40)
+     label-user-list AT ROW 9.75 COL 2.5 NO-LABEL WIDGET-ID 28
+     SPACE(1)  SKIP(2.40) 
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          TITLE "Настройки АВТОПРОЦЕССОВ" WIDGET-ID 100.
@@ -155,6 +164,10 @@ ASSIGN
    NO-ENABLE ALIGN-L                                                    */
 ASSIGN
        label-email-list:READ-ONLY IN FRAME shattrat        = TRUE.
+/* SETTINGS FOR FILL-IN label-user-list IN FRAME shattrat
+   NO-ENABLE ALIGN-L                                                    */
+ASSIGN
+       label-user-list:READ-ONLY IN FRAME shattrat        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -345,9 +358,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-email-list label-email-list
+  DISPLAY f-email-list f-user-list label-email-list label-user-list
       WITH FRAME shattrat.
-  ENABLE B-exit b-quit B-Help f-email-list
+  ENABLE B-exit b-quit B-Help f-email-list f-user-list
       WITH FRAME shattrat.
   {&OPEN-BROWSERS-IN-QUERY-shattrat}
 END PROCEDURE.
@@ -418,6 +431,12 @@ on error undo, return error return-value
           f-email-list  :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
         .
       end.
+      when {&attr-auto-task_user-list} then do:
+        assign
+          f-user-list  = thbjattr_thbj-attr.property-value-character
+          f-user-list  :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+        .
+      end.
     end case.
 
     create temp-thbj-attr.
@@ -456,6 +475,7 @@ on error undo, return error return-value
 
   assign
     frame {&frame-name} f-email-list
+    frame {&frame-name} f-user-list
     fh = frame {&frame-name}:first-child
     wh = fh:first-child
   .
