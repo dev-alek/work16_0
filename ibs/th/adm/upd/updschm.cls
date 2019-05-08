@@ -79,6 +79,7 @@ class ibs.th.adm.upd.updschm:
     
   define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
+  define variable analisdfObj as class analisdf no-undo.
   define private variable m-user-passwd       as character no-undo .
   define private variable m-prowin32FileName  as character no-undo.
   define private variable m-FileDf            as character no-undo.
@@ -129,9 +130,10 @@ class ibs.th.adm.upd.updschm:
     /* загрузка df файлов */
     if isUpdShm  /* загрузка df файлов коректировки выполняется всегда*/
     then do:
-      if vdbconect
-      then 
-         disconnect value ('ub').
+      /* if vdbconect
+         
+      then */
+         disconnect value ('ub'). 
       do vi = 1 to num-entries(mDfUpdaLL):
          
          loaddf(entry(vi,mDfUpdaLL)).
@@ -175,26 +177,29 @@ class ibs.th.adm.upd.updschm:
           end.
        end.
     end.
+   /* else
+       disconnect value ('ub'). */
   end method.
   method public void upddbshmAllOneDf ():  
     
     
     
+    
     if CurrDBShm < TargetDBShm
     then do:
-      obsrvdbObj = new observupd ().
-      obsrvdbObj:IsComp = IsComp.
-      if  obsrvdbObj:createDF(CurrDBShm)
+      analisdfObj = new analisdf ().
+      analisdfObj:IsComp = IsComp.
+      if  analisdfObj:createDF(CurrDBShm)
       then do:
          assign
-            m-FileDf     = obsrvdbObj:mFileDf
-            NewCurrDBShm = obsrvdbObj:mUpdateTo
+            m-FileDf     = analisdfObj:mFileDf
+            NewCurrDBShm = analisdfObj:mUpdateTo
          .
       end.
       else
          isErr = yes. 
       
-      delete object obsrvdbObj no-error.
+      delete object analisdfObj no-error.
       disconnect value ('ub').
       upddbshm-1(m-FileDf).
       if isErr then 
@@ -211,21 +216,22 @@ class ibs.th.adm.upd.updschm:
     end.
     
     
-     obsrvdbObj = new observupd ().
-     if obsrvdbObj:createDF(CurrDBShm)
+     analisdfObj = new analisdf ().
+     if analisdfObj:createDF(CurrDBShm)
      then do:
-        m-FileDf     = obsrvdbObj:mFileDf.
-        if not obsrvdbObj:CheckTable("new_" + m-FileDf)
+        m-FileDf     = analisdfObj:mFileDf.
+        if not analisdfObj:CheckTable("new_" + m-FileDf)
         then do:
            IsErr = true.
-           delete object obsrvdbObj no-error.
+           delete object analisdfObj no-error.
            message "Поля не прошедшие проверку выгружены в файл" "new_" + m-FileDf "(" search("new_" + m-FileDf) ")" 
            
            view-as alert-box.
            return.
         end.   
      end.
-      
+     delete object analisdfObj no-error. 
+     obsrvdbObj = new observupd ().
     obsrvdbObj:writeResult(NewCurrDBShm).
     if obsrvdbObj:IsErr
     then do:
@@ -245,11 +251,11 @@ class ibs.th.adm.upd.updschm:
     view-as alert-box. */
     if CurrDBShm < TargetDBShm
     then do:
-      obsrvdbObj = new observupd ().
+      analisdfObj = new analisdf ().
       if not m-FileDf begins "proc:"
       then 
-         m-FileDf = obsrvdbObj:addDFNumUpd(m-FileDf,CurrDBShm + 1).
-      delete object obsrvdbObj no-error.
+         m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1).
+      delete object analisdfObj no-error.
       disconnect value ('ub').
       upddbshm-1(m-FileDf).
       if isErr then 
@@ -278,9 +284,9 @@ class ibs.th.adm.upd.updschm:
     end.
     m-FileDf = obsrvdbObj:upd-df.
     delete object obsrvdbObj no-error.
-    if NewCurrDBShm eq TargetDBShm
+   /* if NewCurrDBShm eq TargetDBShm
     then
-       disconnect value ("ub").
+       disconnect value ("ub").*/
     CurrDBShm = NewCurrDBShm.
     isUpdShm = true.
   end method.
