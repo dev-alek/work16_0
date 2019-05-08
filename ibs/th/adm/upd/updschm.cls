@@ -83,7 +83,7 @@ class ibs.th.adm.upd.updschm:
     TargetDBShm = obsrvdbObj:TargetDBShm.
     ConPar      = inConPar.
     mDfUpdaLL   = obsrvdbObj:upd-all-list-df.
-    
+   
     m-FileDf    = obsrvdbObj:upd-df.
     isNeedUpd = obsrvdbObj:isneedupg().
     if obsrvdbObj:IsErr
@@ -108,26 +108,15 @@ class ibs.th.adm.upd.updschm:
   end constructor.
 
   method public void upddbshm ():
-    define variable vCurrDBShmOld as integer no-undo.
     define variable vI as integer no-undo.
     define variable vdbconect as logical no-undo.
     if  CurrDBShm eq TargetDBShm
     then
        vdbconect = yes.
     
-    Block-UpdOne:
-    do while CurrDBShm < TargetDBShm :
-      isUpdShm = no.
-      upddbshmOne().
-      if vCurrDBShmOld >= CurrDBShm 
-      then 
-        isErr = yes.
-      if isErr
-      then 
-        leave Block-UpdOne.
-    end.
+    upddbshmall().
     /* загрузка df файлов */
-    if isUpdShm 
+    if isUpdShm  /* загрузка df файлов коректировки выполняется всегда*/
     then do:
       if vdbconect
       then 
@@ -142,13 +131,53 @@ class ibs.th.adm.upd.updschm:
        
     end.  
     return.
-  end.    
-  method public void upddbshmOne ():  
+  end. 
+  method public void upddbshmall():
+    Block-UpdOne:
+    do while CurrDBShm < TargetDBShm :
+      isUpdShm = no.
+      upddbshmAllOneDf().
+    /*  isErr = yes.*/
+      /*upddbshmOne(). */
+      if isErr
+      then 
+        leave Block-UpdOne.
+    end.
+    if isErr 
+    then do:
+       message "Ошибка обновление попробуем обновить по частям"
+       view-as alert-box.
+       isErr = no.
+       Block-UpdOneTry:
+       do while CurrDBShm < TargetDBShm :
+          isUpdShm = no.
+         
+          upddbshmOne().
+          if isErr
+          then 
+             leave Block-UpdOneTry.
+       end.
+    end.
+  end method.
+  method public void upddbshmAllOneDf ():  
     
-    disconnect value ('ub').
+    
     
     if CurrDBShm < TargetDBShm
     then do:
+      obsrvdbObj = new observupd ().
+      if  obsrvdbObj:createDF(CurrDBShm)
+      then do:
+         assign
+            m-FileDf     = obsrvdbObj:mFileDf
+            NewCurrDBShm = obsrvdbObj:mUpdateTo
+         .
+      end.
+      else
+         isErr = yes. 
+      
+      delete object obsrvdbObj no-error.
+      disconnect value ('ub').
       upddbshm-1(m-FileDf).
       if isErr then 
       do:
@@ -160,8 +189,65 @@ class ibs.th.adm.upd.updschm:
         IsErr = true.
         return.
       end.
+      connect value(substitute(ConPar + " &1", m-user-passwd)).
     end.
-    connect value(substitute(ConPar + " &1", m-user-passwd)).  
+    
+    
+     obsrvdbObj = new observupd ().
+     if obsrvdbObj:createDF(CurrDBShm)
+     then do:
+        m-FileDf     = obsrvdbObj:mFileDf.
+        if not obsrvdbObj:CheckTable("new_" + m-FileDf)
+        then do:
+           IsErr = true.
+           delete object obsrvdbObj no-error.
+           message "Поля не прошедшие проверку выгружены в файл" "new_" + m-FileDf "(" search("new_" + m-FileDf) ")" 
+           
+           view-as alert-box.
+           return.
+        end.   
+     end.
+      
+    obsrvdbObj:writeResult(NewCurrDBShm).
+    if obsrvdbObj:IsErr
+    then do:
+      Msg = obsrvdbObj:Msg.
+      delete object obsrvdbObj no-error.
+      IsErr = true.
+      return.  
+    end.
+    delete object obsrvdbObj no-error.
+    CurrDBShm = NewCurrDBShm.
+    isUpdShm = true.
+  end method.      
+  method public void upddbshmOne ():  
+    
+    
+   /* message CurrDBShm
+    view-as alert-box. */
+    if CurrDBShm < TargetDBShm
+    then do:
+      obsrvdbObj = new observupd ().
+      if not m-FileDf begins "proc:"
+      then 
+         m-FileDf = obsrvdbObj:addDFNumUpd(m-FileDf,CurrDBShm + 1).
+      delete object obsrvdbObj no-error.
+      disconnect value ('ub').
+      upddbshm-1(m-FileDf).
+      if isErr then 
+      do:
+        Msg =
+          substitute("Ошибка при обновлении схемы базы данных") + {&new-line} +
+          error-status :get-message(1) + {&new-line} +
+          return-value
+          .
+        IsErr = true.
+        return.
+      end.
+      connect value(substitute(ConPar + " &1", m-user-passwd)).
+    end.
+   /* message 3
+    view-as alert-box. */ 
     NewCurrDBShm = CurrDBShm + 1.
     obsrvdbObj = new observupd ().
     obsrvdbObj:writeResult(NewCurrDBShm).
@@ -181,16 +267,43 @@ class ibs.th.adm.upd.updschm:
     isUpdShm = true.
   end method.
   
-  method private void upddbshm-1 (input iDf as character ):
-    loaddf (iDf).
+  method private void upddbshm-1 (input iparam as character ):
+    define variable vproc  as character no-undo.
+    define variable vparam as character no-undo.
+    if iparam begins "proc:"
+    then do:
+       assign
+          iparam = substring (iparam,6) 
+          vproc  = entry(1,iparam,";")
+          vparam = entry(2,iparam,";")
+       no-error.
+       vproc = SearchPFile (vproc).
+       if vproc ne ?
+       then
+          runsession (vproc,vparam).
+    end.
+    else do:
+       
+       loaddf (iparam).
+    end.   
     if IsErr = true
       then return.
   end method.
-
+  
+  method private character  SearchPFile (input inFile as char):
+     define variable oFile as character no-undo.
+     inFile = entry(1,inFile,".").
+     oFile = search(inFile + ".r" ).
+     if oFile eq ?
+     then
+        oFile = search(inFile + ".p" ).
+     return oFile.
+     
+  end.
   method private void loaddf (input inFileDF as char):
     
     def var v-filedfname as character no-undo.
-    def var v-cmd-comm as character no-undo.
+    
     
     v-filedfname = search (inFileDF).
     if v-filedfname = ?
@@ -199,10 +312,16 @@ class ibs.th.adm.upd.updschm:
       IsErr = true.
       return.
     end.
-    if isRcode
-    then v-cmd-comm = substitute ("&1 &2 &3 -rx -p &4 -param &5,yes",m-prowin32FileName, ConPar,m-user-passwd, loadDFprocFile, v-filedfname).
-    else v-cmd-comm = substitute ("&1 &2 &3     -p &4 -param &5,yes",m-prowin32FileName, ConPar,m-user-passwd, loadDFprocFile, v-filedfname).
-    os-command silent value (v-cmd-comm).
+    runsession(loadDFprocFile,v-filedfname).
+    
   end.
+  
+  method private void runsession (input iProc as char,input iParam as char):
+     def var v-cmd-comm as character no-undo.
+     if isRcode
+     then v-cmd-comm = substitute ("&1 &2 &3 -rx -p &4 -param &5",m-prowin32FileName, ConPar,m-user-passwd, iProc, iParam).
+     else v-cmd-comm = substitute ("&1 &2 &3     -p &4 -param &5",m-prowin32FileName, ConPar,m-user-passwd, iProc, iParam).
+    os-command silent value (v-cmd-comm).
+  end method.
 
 end class.

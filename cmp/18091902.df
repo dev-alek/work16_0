@@ -66,7 +66,7 @@ ADD FIELD "corr-user-db-num" OF "c-norm-loss" AS integer
   INITIAL "0"
   LABEL "Номер БД"
   MAX-WIDTH 4
-  ORDER 90
+  ORDER 91
   MANDATORY
 
 ADD FIELD "corr-user-name" OF "c-norm-loss" AS character 
@@ -75,7 +75,7 @@ ADD FIELD "corr-user-name" OF "c-norm-loss" AS character
   INITIAL ""
   LABEL "ИмЯ"
   MAX-WIDTH 16
-  ORDER 100
+  ORDER 101
   MANDATORY
 
 ADD FIELD "corr-date" OF "c-norm-loss" AS date 

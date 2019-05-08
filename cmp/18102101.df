@@ -95,7 +95,7 @@ ADD FIELD "f-beg-time" OF "tech-prol-pwd" AS character
   POSITION 10
   MAX-WIDTH 16
   COLUMN-LABEL "Время начала"
-  ORDER 80
+  ORDER 81
 
 ADD FIELD "f-end-time" OF "tech-prol-pwd" AS character 
   DESCRIPTION "Время завершения для интервального пароля"
@@ -251,7 +251,7 @@ ADD FIELD "f-beg-time" OF "c-tech-prol-pwd" AS character
   POSITION 10
   MAX-WIDTH 16
   COLUMN-LABEL "Время начала"
-  ORDER 80
+  ORDER 81
 
 ADD FIELD "f-end-time" OF "c-tech-prol-pwd" AS character 
   DESCRIPTION "Время завершения для интервального пароля"
@@ -281,14 +281,14 @@ ADD FIELD "f-pwd" OF "c-tech-prol-pwd" AS character
   POSITION 13
   MAX-WIDTH 100
   COLUMN-LABEL "Пароль"
-  ORDER 100
+  ORDER 105
 
 ADD FIELD "chip-num" OF "c-tech-prol-pwd" AS int64 
   DESCRIPTION "Chip-num"
   LABEL "chip-num"
   POSITION 14
   COLUMN-LABEL "chip-num"
-  ORDER 100
+  ORDER 104
   MANDATORY
 
 ADD FIELD "corr-date" OF "c-tech-prol-pwd" AS DATE
@@ -296,21 +296,21 @@ ADD FIELD "corr-date" OF "c-tech-prol-pwd" AS DATE
   LABEL "corr-date"
   POSITION 15
   COLUMN-LABEL "corr-date"
-  ORDER 100
+  ORDER 103
 
 ADD FIELD "corr-time" OF "c-tech-prol-pwd" AS int64 
   DESCRIPTION "Время корректировки"
   LABEL "corr-time"
   POSITION 16
   COLUMN-LABEL "corr-time"
-  ORDER 100
+  ORDER 102
 
 ADD FIELD "corr-user-db-num" OF "c-tech-prol-pwd" AS int64 
   DESCRIPTION "Corr-user-db-num"
   LABEL "corr-user-db-num"
   POSITION 17
   COLUMN-LABEL "Corr-user-db-num"
-  ORDER 100
+  ORDER 101
   MANDATORY
 
 ADD FIELD "corr-user-name" OF "c-tech-prol-pwd" AS character
