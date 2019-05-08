@@ -358,11 +358,14 @@ class ibs.th.adm.upd.updschm:
      if Ini
      then do:
          vParamStart = " -ininame "  + GetStartupParam("-ininame").
-     end.   
+     end.
+     if iproc eq loadDFprocFile
+     then 
+        vParamStart = vParamStart + " -rx " .
      def var v-cmd-comm as character no-undo.
      if isRcode
-     then v-cmd-comm = substitute ("&1 &2 &3 &4 -rx -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
-     else v-cmd-comm = substitute ("&1 &2 &3 &4     -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
+     then v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
+     else v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
     os-command silent value (v-cmd-comm).
   end method.
    
