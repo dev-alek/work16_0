@@ -109,7 +109,7 @@ else do:
       .
       delete _User.
       create _User.
-      buffer-copy tempUser except tempUserCopy._TenantId to _User.
+      buffer-copy tempUser except tempUser._TenantId to _User.
       /*_User._Password = encode("{&pasword}").*/
       put-log("” пользовател€ {&login} установлен новый пароль.").
    end. 
