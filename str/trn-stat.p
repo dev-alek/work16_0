@@ -769,7 +769,46 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
                             , replace( bf_trn-doc.doc-code, "*", "$" ) ).
   end.
   end.
+  assign
+     vartechproliv = no.
+  if bf_trn-doc.obj-type = {&shop} then do:
+     run adm/shattri.p (
+               input "get":U
+              ,input  bf_trn-doc.obj-type
+              ,input  bf_trn-doc.obj-code
+              ,input  {&attr-autosale}
+              ,input  {&attr-autosale_sale-add} /*p-param-code*/
+              ,output v-value-character
+              ,output v-value-date
+              ,output v-value-decimal
+              ,output v-value-integer
+              ,output v-value-logical
+              ,output par-type
+              ,input-output table-handle v-tth
+              ) no-error .
+     if error-status:error then do:
+        if valid-object(v-tth) then delete object v-tth.
+        undo, return error return-value + error-status :get-message(1) .
+     end.
+     if valid-object(v-tth) then delete object v-tth.
 
+     _ii:
+     do ii = 1 to num-entries(v-value-character, ';':U):
+        assign
+            v-entry    =  ENTRY(ii, v-value-character, ';':U)
+            v-doc-kind = ENTRY(1, v-entry)
+            v-obj-type = entry (2, v-entry)
+            v-obj-code = integer(entry (3, v-entry))
+        .
+        if v-doc-kind = {&sale-add-tech-refuell} and
+           bf_trn-doc.cli-type = v-obj-type      and
+           bf_trn-doc.cli-code = v-obj-code      
+        then do:
+           vartechproliv = yes.
+           leave _ii.
+        end.
+     end. /*do ii*/
+  end.
   /*проверка на заполнение обязательных атрибутов в накладной*/
   if not vartechproliv and v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
       v-error-attr = "" .
@@ -835,18 +874,18 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
 
 
 
-          if v-reasonm and
+    if v-reasonm and
              lookup( bf_trn-doc.ext-doc-type ,v-reasonme) = 0 and
              lookup( bf_trn-doc.ext-doc-type ,{&TDEDT_List-not-ver-reason}) = 0
-           then do:
-              if bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ? then do:
+     then do:
+        if bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ? then do:
                 run waitfram-hide in this-procedure no-error.
                 undo, return error "Не задано поле ПРИЧИНА СОЗДАНИЯ ДОКУМЕНТА.".
-              end.
-          end.
-      end.
+         end.
+     end.
+  end.
 
-      if bf_trn-doc.status_ <> {&inquiry}                           and
+  if bf_trn-doc.status_ <> {&inquiry}                           and
         not (bf_trn-doc.status_  = {&wayb}   and
               bf_trn-doc.doc-type = {&return} and
               bf_trn-doc.internal)                                  and
@@ -856,48 +895,48 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
               bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}       ) and
               varhold-doc = yes
               )
-      then do:
-        if varchk-prs and not (bf_trn-doc.status_ = {&wayb} and varflag = true)
-        then do:
-          define buffer buf_sale-doc for ub.sale-doc.
-          if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
+  then do:
+     if varchk-prs and not (bf_trn-doc.status_ = {&wayb} and varflag = true)
+     then do:
+        define buffer buf_sale-doc for ub.sale-doc.
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
             /*это приход по техпроливу по продаже*/
             find first buf_sale-doc no-lock where
                       buf_sale-doc.doc-code = bf_trn-doc.doc-code no-error.
-          end.
-          if not available buf_sale-doc
+        end.
+        if not available buf_sale-doc
           or (available buf_sale-doc and buf_sale-doc.doc-kind <> {&sale-add2-in-tech-refuell})
-          then do:
+        then do:
             /*проверяем если документы не по продаже*/
-            find first bf_clients where bf_clients.obj-type = {&prs}          and
-                                        bf_clients.obj-code = bf_trn-doc.boss no-lock no-error.
-            if not available bf_clients
-            then do:
+           find first bf_clients where bf_clients.obj-type = {&prs}          and
+                                       bf_clients.obj-code = bf_trn-doc.boss no-lock no-error.
+           if not available bf_clients
+           then do:
               run waitfram-hide in this-procedure no-error.
               undo, return error "Не указан или неправильный менеджер.".
-            end.
-            find first bf_clients where bf_clients.obj-type = {&prs}          and
+           end.
+           find first bf_clients where bf_clients.obj-type = {&prs}          and
                                         bf_clients.obj-code = bf_trn-doc.agnt no-lock no-error.
-            if not available bf_clients
-            then do:
+           if not available bf_clients
+           then do:
               run waitfram-hide in this-procedure no-error.
               undo, return error "Не указан или неправильный исполнитель.".
-            end.
-          end.
+           end.
         end.
-      end.
+     end.
+  end.
 
-      /* Параметр "is-fin" (Доступна группа меню Взаиморасчёты) задаётся через
-         'АРМ Администратор/Справочники/Настройки и конфигурация системы'
-          или при первоначальной настройке системы */
-      { gbl/conf-rd.i "'is-fin'"  "''" "''" 0 "''" "''" "''" no is-fin par-type no-error }
+  /* Параметр "is-fin" (Доступна группа меню Взаиморасчёты) задаётся через
+    'АРМ Администратор/Справочники/Настройки и конфигурация системы'
+     или при первоначальной настройке системы */
+  { gbl/conf-rd.i "'is-fin'"  "''" "''" 0 "''" "''" "''" no is-fin par-type no-error }
 
-      if is-fin = "yes" or
-        bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or
-        bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
-      then do:
-        run adm/shattri.p (
-        input "get":U
+  if is-fin = "yes" or
+     bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or
+     bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  then do:
+     run adm/shattri.p (
+         input "get":U
         ,input  bf_trn-doc.obj-type
         ,input  bf_trn-doc.obj-code
         ,input  {&attr-contr-in}
@@ -910,55 +949,14 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         ,output v-value-character
         ,input-output table-handle v-tth-contr
         ) no-error  .
-        if error-status:error then do:
-          if valid-object(v-tth-contr) then delete object v-tth-contr.
-          undo, return error return-value + error-status :get-message(1) .
-        end.
+     if error-status:error then do:
         if valid-object(v-tth-contr) then delete object v-tth-contr.
-      end.
+        undo, return error return-value + error-status :get-message(1) .
+     end.
+     if valid-object(v-tth-contr) then delete object v-tth-contr.
+  end.
 
-      assign
-        vartechproliv = no.
-      if bf_trn-doc.obj-type = {&shop} then do:
-        run adm/shattri.p (
-              input "get":U
-              ,input  bf_trn-doc.obj-type
-              ,input  bf_trn-doc.obj-code
-              ,input  {&attr-autosale}
-              ,input  {&attr-autosale_sale-add} /*p-param-code*/
-              ,output v-value-character
-              ,output v-value-date
-              ,output v-value-decimal
-              ,output v-value-integer
-              ,output v-value-logical
-              ,output par-type
-              ,input-output table-handle v-tth
-              ) no-error .
-        if error-status:error then do:
-          if valid-object(v-tth) then delete object v-tth.
-          undo, return error return-value + error-status :get-message(1) .
-        end.
-        if valid-object(v-tth) then delete object v-tth.
-
-        _ii:
-        do ii = 1 to num-entries(v-value-character, ';':U):
-          assign
-            v-entry    =  ENTRY(ii, v-value-character, ';':U)
-            v-doc-kind = ENTRY(1, v-entry)
-            v-obj-type = entry (2, v-entry)
-            v-obj-code = integer(entry (3, v-entry))
-            .
-          if v-doc-kind = {&sale-add-tech-refuell} and
-            bf_trn-doc.cli-type = v-obj-type      and
-            bf_trn-doc.cli-code = v-obj-code      then do:
-            assign
-              vartechproliv = yes.
-            leave _ii.
-          end.
-        end. /*do ii*/
-      end.
-
-      if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+     if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
         bf_trn-doc.status_      = {&wayb}            and
         (bf_trn-doc.flag_ = no and varhold-doc = no or bf_trn-doc.flag_ = yes and varhold-doc = yes) and
         varcontract   = yes and
