@@ -83,6 +83,7 @@ class ibs.th.adm.upd.updschm:
   define private variable m-user-passwd       as character no-undo .
   define private variable m-prowin32FileName  as character no-undo.
   define private variable m-FileDf            as character no-undo.
+  define private variable m-Batch             as logical   no-undo.
   define variable mDfUpdaLL as character no-undo.
   
     
@@ -142,10 +143,11 @@ class ibs.th.adm.upd.updschm:
       /* if vdbconect
          
       then */
-         disconnect value ('ub'). 
+         disconnect value ('ub').
+         m-Batch = yes. 
       do vi = 1 to num-entries(mDfUpdaLL):
          
-         loaddf(entry(vi,mDfUpdaLL)).
+         upddbshm-1(entry(vi,mDfUpdaLL)).
           
          
       end.
@@ -313,7 +315,7 @@ class ibs.th.adm.upd.updschm:
        vproc = SearchPFile (vproc).
        if vproc ne ?
        then
-          runsession (vproc,vparam).
+          runsession (vproc,vparam,yes).
     end.
     else do:
        
@@ -348,13 +350,42 @@ class ibs.th.adm.upd.updschm:
     runsession(loadDFprocFile,v-filedfname).
     
   end.
-  
   method private void runsession (input iProc as char,input iParam as char):
+     runsession(iProc,iParam,no).
+  end.   
+  method private void runsession (input iProc as char,input iParam as char,input Ini as logical ):
+     define variable vParamStart as character no-undo.
+     if Ini
+     then do:
+         vParamStart = " -ininame "  + GetStartupParam("-ininame").
+     end.   
      def var v-cmd-comm as character no-undo.
      if isRcode
-     then v-cmd-comm = substitute ("&1 &2 &3 -rx -p &4 -param &5",m-prowin32FileName, ConPar,m-user-passwd, iProc, iParam).
-     else v-cmd-comm = substitute ("&1 &2 &3     -p &4 -param &5",m-prowin32FileName, ConPar,m-user-passwd, iProc, iParam).
+     then v-cmd-comm = substitute ("&1 &2 &3 &4 -rx -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
+     else v-cmd-comm = substitute ("&1 &2 &3 &4     -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
     os-command silent value (v-cmd-comm).
   end method.
+   
+   method public character GetStartupParam (input iParam as character  ):
+      
+   define variable vStartupParameters as character no-undo.
+   vStartupParameters = session:startup-parameters.
+   define variable vNumStartupParameters as integer no-undo.
+   vNumStartupParameters = num-entries( vStartupParameters ).
 
+   define variable i as integer no-undo.
+      block-par:
+   do i = 1 to vNumStartupParameters:
+      define variable vParameter as character no-undo.
+      vParameter = entry( i, vStartupParameters ).
+      if vParameter begins iParam then
+      do:
+         define variable vList as character no-undo.
+         vList  = entry(2,vParameter,' ').
+        /* vList  = vList + " " +  vParameter.*/
+        /* leave block-par.*/
+      end.
+   end.
+   return vList.
+   end method.  
 end class.

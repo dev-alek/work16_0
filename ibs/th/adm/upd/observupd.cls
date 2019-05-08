@@ -95,7 +95,7 @@ class ibs.th.adm.upd.observupd:
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
-    initial ""  
+    initial "proc:utl/set-range-bcgb.p"  
     get.
                
   define property upd-df as character no-undo

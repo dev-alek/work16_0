@@ -244,14 +244,28 @@ on error undo, return error
       buf_code-range.range-type = {&gbl-bc-code}
       buf_code-range.PS         = "авто"
       buf_code-range.beg-date   = today
-      buf_code-range.first-code = if p-extra-to = 1 then 1 else 100000
+      buf_code-range.first-code = 100000
       buf_code-range.last-code  = v-last-code
       buf_code-range.db-num = loc_db-num
       buf_code-range.stts = "a":U
       dynamic-current-value( "s-bcgb-code":U, LDBNAME("DICTDB":U) ) =
        (if p-sys-key <> "raimbek":U  and p-extra-to <> 1 then buf_code-range.first-code - 1 else buf_code-range.last-code + 1 )
     .
-
+    if p-extra-to = 1 then do:
+       buf_code-range.stts = "u".
+       create buf_code-range.
+       assign
+         buf_code-range.range-type = {&gbl-bc-code}
+         buf_code-range.PS         = "авто"
+         buf_code-range.beg-date   = today
+         buf_code-range.first-code = 1000000000
+         buf_code-range.last-code  = 2000000000
+         buf_code-range.db-num = loc_db-num
+         buf_code-range.stts = "a":U
+         dynamic-current-value( "s-bcgb-code":U, LDBNAME("DICTDB":U) ) =
+            (if p-sys-key <> "raimbek":U  and p-extra-to <> 1 then buf_code-range.first-code - 1 else buf_code-range.last-code + 1 )
+       .
+    end.
     create buf_code-range.
     assign
       buf_code-range.range-type = {&gbl-dc-code}
