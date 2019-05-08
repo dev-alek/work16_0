@@ -39,10 +39,19 @@ class ibs.th.adm.upd.updschm:
   define property CurrDB0Shm as integer  no-undo 
     get.
     private set.
-
+    
+  define property IsComp as logical no-undo
+    get.
+    set.
+    
   define property ConPar as character no-undo /*без &1*/ 
     get.
     set (arg as char):
+      if arg begins "iscomp|"
+      then do:
+         iscomp = yes.
+         arg = entry(2,arg,"|").
+      end.
       ConPar = replace (arg, "&1", ""). 
     end.
 
@@ -65,7 +74,9 @@ class ibs.th.adm.upd.updschm:
   define property Msg as character no-undo
     get.
     private set.
-
+  
+  
+    
   define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
   define private variable m-user-passwd       as character no-undo .
@@ -145,17 +156,23 @@ class ibs.th.adm.upd.updschm:
     end.
     if isErr 
     then do:
-       message "Ошибка обновление попробуем обновить по частям"
-       view-as alert-box.
-       isErr = no.
-       Block-UpdOneTry:
-       do while CurrDBShm < TargetDBShm :
-          isUpdShm = no.
-         
-          upddbshmOne().
-          if isErr
-          then 
-             leave Block-UpdOneTry.
+       if IsComp 
+       then 
+          message "Ошибка обновления БД."
+            view-as alert-box.
+       else do:
+          message "Ошибка обновления БД. Попробуем обновить по частям"
+          view-as alert-box.
+          isErr = no.
+          Block-UpdOneTry:
+          do while CurrDBShm < TargetDBShm :
+             isUpdShm = no.
+            
+             upddbshmOne().
+             if isErr
+             then 
+                leave Block-UpdOneTry.
+          end.
        end.
     end.
   end method.
@@ -166,6 +183,7 @@ class ibs.th.adm.upd.updschm:
     if CurrDBShm < TargetDBShm
     then do:
       obsrvdbObj = new observupd ().
+      obsrvdbObj:IsComp = IsComp.
       if  obsrvdbObj:createDF(CurrDBShm)
       then do:
          assign

@@ -54,6 +54,10 @@ class ibs.th.adm.upd.observupd:
   define property Msg as character no-undo
     get.
     private set.
+    
+  define property IsComp as logical no-undo
+    get.
+    set.
   &scop NumWorkBase 9
   define private variable  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
@@ -65,6 +69,7 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/18102101.df"
             ,"cmp/18102102.df"
             ,"cmp/18112201.df"
+
             /*,"up2.df"
             ,"up3.df"
             ,"proc:ibs/th/adm/upd/copytable.p;tax-rate-value"
@@ -81,6 +86,7 @@ class ibs.th.adm.upd.observupd:
             ,"TABLE:tech-prol-pwd" 
             ,"FIELD:c-norm-loss.sec-vol1"
             ,"FIELD:tech-prol-pwd.f-cash-num"
+
             /*,"TABLE:tax-rate-value_old"
             ,"TABLE:tax-rate-value"
             ,"proc:ibs/th/adm/upd/chkemptable.p;tax-rate-value_old"
@@ -117,14 +123,18 @@ class ibs.th.adm.upd.observupd:
     
     define buffer buf_sys-ctrl for ub.sys-ctrl.
     define buffer buf_db for ub.db.
-    find first buf_sys-ctrl no-lock.
+    
     TargetDBShm = extent(m-upd-list-df).
+    find first buf_sys-ctrl no-lock no-error.
+    if available buf_sys-ctrl
+    then do:
+       DbNum = buf_sys-ctrl.db-num. 
     
-      DbNum = buf_sys-ctrl.db-num. 
-    
-    find first buf_db no-lock where buf_db.db-num = DbNum no-error.
-    CurrDBShm = integer (buf_db.reserve1-char) no-error.
+       find first buf_db no-lock where buf_db.db-num = DbNum no-error.
+       CurrDBShm = integer (buf_db.reserve1-char) no-error.
+    end.
     if     error-status:error
+       or not available buf_db
        or buf_db.reserve1-char eq ""
     then do: find first _file no-lock where _file._file-name = "db"  no-error.
         if available _file
@@ -133,7 +143,8 @@ class ibs.th.adm.upd.observupd:
            if available (_field)
            then do:
               CurrDBShm = integer (_field._initial) no-error.
-              writeResult (CurrDBShm).
+              /* нужно если не происходит откат загрузки при ошибке */
+              /*writeResult (CurrDBShm).*/
            end.
         end.
     end.
@@ -309,12 +320,19 @@ class ibs.th.adm.upd.observupd:
          end.
        end.
     end.
-    find first buf_sys-ctrl no-lock.
-    find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
-    buf_db.reserve1-char = string (inShm).
+    if not iscomp
+    then do:
+       find first buf_sys-ctrl no-lock no-error.
+       if available buf_sys-ctrl 
+       then do:
+          find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
+          buf_db.reserve1-char = string (inShm).
+          CurrDBShm = inShm.
+          buf_db.reserve2-char = "deferred-callnews".
+          release buf_db.
+       end.
+    end.
     CurrDBShm = inShm.
-    buf_db.reserve2-char = "deferred-callnews".
-    release buf_db.
     isUpdShm = true.
     
   end.
@@ -789,7 +807,7 @@ define temp-table {&prefixtt}INDEX
             vField = vBuffer:buffer-field(vItm).
             vFieldName = substring(vField:name,vFieldPref).
             
-            if not can-do("mode,name,newname,table,Data-Type,localindex",vFieldName)
+            if not can-do("mode,name,newname,table,Data-Type,localindex" + (if iscomp then ",area" else "") ,vFieldName)
             then do:
                
                do vj = 1 to if vField:buffer-value eq ? then 1 else num-entries(vField:buffer-value,{&delim-par}):
