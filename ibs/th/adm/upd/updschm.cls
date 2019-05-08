@@ -97,6 +97,19 @@ class ibs.th.adm.upd.updschm:
     mDfUpdaLL   = obsrvdbObj:upd-all-list-df.
    
     m-FileDf    = obsrvdbObj:upd-df.
+    define variable vupd as logical no-undo.
+    loadDFProcFile = search ("ibs/th/adm/upd/loaddf.r").
+    if loadDFProcFile <> ?
+    then isRcode = true.
+    else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
+    if not isRcode and CurrDBShm < TargetDBShm 
+    then do:
+       message "Îáíîâèòü áàçó ñ âåðñèè " CurrDBShm  " äî " TargetDBShm "?" view-as alert-box question 
+          buttons yes-no title "[ ÂÍÈÌÀÍÈÅ! ]" update vupd.
+       if not vupd
+       then
+          return.
+    end.
     isNeedUpd = obsrvdbObj:isneedupg().
     if obsrvdbObj:IsErr
     then do:
@@ -110,10 +123,6 @@ class ibs.th.adm.upd.updschm:
                                 )
     .
     
-    loadDFProcFile = search ("ibs/th/adm/upd/loaddf.r").
-    if loadDFProcFile <> ?
-    then isRcode = true.
-    else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
     m-prowin32FileName =  search ("bin/prowin32.exe").
     delete object obsrvdbObj.
     
