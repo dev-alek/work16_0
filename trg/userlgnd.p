@@ -48,17 +48,19 @@ on end-key undo main-block, return error substitute('userlgnd end-key main-block
         no-error .
       if not available buf_user
       then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Не найдена запись логина в словаре базы данных" skip
-          "БД" ub.user-login.db-num skip
-          "Идентификатор" ub.user-login.user-id skip
-          "Логин" ub.user-login.user-login skip
-          view-as alert-box error .
-        undo, return error return-value .
+/*        message                                                */
+/*          vss-workfile vss-revision vss-description skip       */
+/*          "Не найдена запись логина в словаре базы данных" skip*/
+/*          "БД" ub.user-login.db-num skip                       */
+/*          "Идентификатор" ub.user-login.user-id skip           */
+/*          "Логин" ub.user-login.user-login skip                */
+/*          view-as alert-box error .                            */
+/*        undo, return error return-value .                      */
       end.
+      else do:
 
       delete buf_user .
+      end.
     end.
   end.
 
