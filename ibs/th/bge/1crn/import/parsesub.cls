@@ -257,10 +257,6 @@ class ibs.th.bge.1crn.import.parsesub:
     measuringSubjectObj = new measuring ().
     impmeasuringEventHndlrObj = new impmeasuring ().
     
-    recipeSubjectObj = new recipe ().
-    imprecipeEventHndlrObj = new imprecipe ().
-    recipe-gd-listSubjectsObj = new subjects ("recipe-gds").
-
     transportSubjectObj = new transport ().
     imptransportEventHndlrObj = new imptransport ().
     transport_section-listSubjectsObj = new subjects ("sections").
@@ -277,6 +273,7 @@ class ibs.th.bge.1crn.import.parsesub:
     /* перенесено внутрь парсинга создание экземпляров объектов:
        - фирм
        - товаров
+       - рецептов
        - АЗК
        - промо-акций
        - срецификаций к договорам поставки
@@ -308,7 +305,6 @@ class ibs.th.bge.1crn.import.parsesub:
   end method .
 
   method public logical Parse1CRNSub (input inFileName as character):
-
     define variable result as logical no-undo.
     define variable hDoc as handle no-undo.
     define variable hRoot as handle no-undo.
@@ -317,7 +313,6 @@ class ibs.th.bge.1crn.import.parsesub:
     create x-noderef hRoot.
 
     hDoc:load("file",inFileName,false).
-
     hDoc:get-document-element(hRoot).
     
     iNum = 3.
@@ -392,6 +387,19 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
           v-iSubject = goodSubjectObj .
           v-iImpSub  = impGoodEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "recipe" then do:
+          if not valid-object(recipeSubjectObj)       then recipeSubjectObj       = new recipe (). // <recipe>
+          if not valid-object(imprecipeEventHndlrObj) then do :
+            imprecipeEventHndlrObj = new imprecipe ().
+            // imprecipeEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) . - пока не требуется
+          end .
+          v-iSubject = recipeSubjectObj .
+          v-iImpSub  = imprecipeEventHndlrObj .
+          
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
@@ -499,10 +507,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "measuring" then do:
           GetChildrenSub (hNoderef, (level + 1), measuringSubjectObj).
           ReceivedSubjectPublish(measuringSubjectObj, impmeasuringEventHndlrObj).
-        end.
-        when "recipe" then do:
-          GetChildrenSub (hNoderef, (level + 1), recipeSubjectObj).
-          ReceivedSubjectPublish(recipeSubjectObj, imprecipeEventHndlrObj).
         end.
         when "transport" then do:
           GetChildrenSub (hNoderef, (level + 1), transportSubjectObj).
@@ -615,7 +619,6 @@ class ibs.th.bge.1crn.import.parsesub:
       /* обработка элементов, вложенных в секции (классы, вложенные в коллекции или в родительские классы) */
       case hnoderef:name:
         /* ----- имена секций любого уровня вложенности ----- */
-        when "recipe-gds" or
         when "sections" or when "calibration-table" or
         when "cal-tbl" or
         when "nb-carriers" or when "nb-suppliers" or when "prts"
@@ -730,20 +733,24 @@ class ibs.th.bge.1crn.import.parsesub:
           end case.
           if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
         end.
-        
-        when "recipe-gd" then do: /* второй уровень с данными. обработка зависимой сущности recipe-gd  */
-          case true : 
-            when recipeSubjectObj:IsInitSubForWrite then do: /*идет запись рецепта*/  
-              if not valid-object(recipe-gd-listSubjectsObj) then recipe-gd-listSubjectsObj = new subjects ("recipe-gds") .    
-              recipe-gd-listSubjectsObj:Add(new recipe-gd()). /* а вот здесь уже создаем объект сущнности*/
-              recipe-gdSubjectObj = cast (recipe-gd-listSubjectsObj:SubjectObjCurr, recipe-gd).
-              GetChildrenSub (hNoderef, (level + 1), recipe-gdSubjectObj).
+        when "recipe-gds" then do :
+          v-need-parse = true .
+          if v-need-parse and valid-object (recipeSubjectObj) then do : // recipes:recipe:recipe-gds
+            if recipeSubjectObj:IsInitSubForWrite then do:
+              recipe-gd-listSubjectsObj = new subjects ("recipe-gds") .
+                 GetChildrenSub (hNoderef, (level + 1), ?).
               recipeSubjectObj:SetProp (recipe-gd-listSubjectsObj).
-            end.
-            otherwise do:
-              
-            end.
-          end case.
+              v-need-parse = false . 
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
+        when "recipe-gd" then do: // recipes:recipe:recipe-gds:recipe-gd
+            if not valid-object(recipe-gd-listSubjectsObj) then
+              undo, throw new Progress.Lang.AppError("отсутствует секция recipe-gds для перечня recipe-gd") .
+            recipe-gd-listSubjectsObj:Add(  new recipe-gd()  ).
+            recipe-gdSubjectObj = cast (recipe-gd-listSubjectsObj:SubjectObjCurr, recipe-gd).
+            GetChildrenSub (hNoderef, (level + 1), recipe-gdSubjectObj).
         end.
         when "section" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
           case true : 
