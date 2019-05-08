@@ -11,6 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impgoods implements ibs.th.bge.1crn.import.iimpsubject:
      
@@ -44,7 +45,8 @@ class ibs.th.bge.1crn.import.impgoods implements ibs.th.bge.1crn.import.iimpsubj
       end.
       
       run ref/imp-goods-1C-RN.p (input objGoods) no-error .
-      if error-status:error
+      /* чтобы перехватить throw надо отдельно проверить return-value */
+      if (return-value <> "") or error-status:error
       then do :
           Msg = return-value .
           return false.
