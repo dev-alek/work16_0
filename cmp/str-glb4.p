@@ -1739,6 +1739,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define tpsi-doc-
 { cmp/cr-prep.i 1 sale-add-return-write-off  rwo          Списание-по-Возврату   rwo  Write-off-by-Return}
 { cmp/cr-prep.i 1 sale-add-write-off         swo          Списание               swo  Write-off}
 { cmp/cr-prep.i 1 sale-add-nat-gas           ngs          Приход-Природный-Газ   ngs  Natural-Gas}
+{ cmp/cr-prep.i 1 sale-add-ret-nat-gas       rgs          Возврат-Природный-Газ  rgs  Return-Natural-Gas}
 { cmp/cr-prep.i 1 sale-add-vir-res           vir          Перемещение-Вирт-Рез   vir  Virtual-Res}
 
 
@@ -1747,6 +1748,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define tpsi-doc-
 ,{&bef-sale-add-tech-refuell}~
 ,{&bef-sale-add-write-off}~
 ,{&bef-sale-add-nat-gas}~
+,{&bef-sale-add-ret-nat-gas}~
 ,{&bef-sale-add-vir-res}~
 ':U
 
@@ -1757,6 +1759,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-
 ,{&bef-sale-add-tech-refuell-full}~
 ,{&bef-sale-add-write-off-full}~
 ,{&bef-sale-add-nat-gas-full}~
+,{&bef-sale-add-ret-nat-gas-full}~
 ,{&bef-sale-add-vir-res-full}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-kinds-full {&sale-add-kinds-full}" ).
@@ -1770,6 +1773,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-add-
 {&bef-sale-add-tech-refuell},~
 {&bef-sale-add-write-off},~
 {&bef-sale-add-nat-gas},~
+{&bef-sale-add-ret-nat-gas},~
 {&bef-sale-add-vir-res}~
 ':U
 
@@ -1782,6 +1786,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define sale-all-
 {&bef-sale-add-tech-refuell-full},~
 {&bef-sale-add-write-off-full},~
 {&bef-sale-add-nat-gas-full},~
+{&bef-sale-add-ret-nat-gas-full},~
 {&bef-sale-add-vir-res-full}~
 ':U
 
