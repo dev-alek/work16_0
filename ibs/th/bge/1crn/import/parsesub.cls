@@ -310,7 +310,6 @@ class ibs.th.bge.1crn.import.parsesub:
   method public logical Parse1CRNSub (input inFileName as character):
 
     define variable result as logical no-undo.
-
     define variable hDoc as handle no-undo.
     define variable hRoot as handle no-undo.
 
@@ -322,15 +321,29 @@ class ibs.th.bge.1crn.import.parsesub:
     hDoc:get-document-element(hRoot).
     
     iNum = 3.
-    
     GetChildren(hRoot, 1).
         
     delete object hDoc.
     delete object hRoot.
-    
-
     return result.
+  end method.
+  method public logical Parse1CRNSub (input inFileMem as memptr):
+    define variable result as logical no-undo.
+    define variable hDoc as handle no-undo.
+    define variable hRoot as handle no-undo.
 
+    create x-document hDoc.
+    create x-noderef hRoot.
+
+    hDoc:load("memptr",inFileMem,false).
+    hDoc:get-document-element(hRoot).
+    
+    iNum = 3.
+    GetChildren(hRoot, 1).
+        
+    delete object hDoc.
+    delete object hRoot.
+    return result.
   end method.
   
   
