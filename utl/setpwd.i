@@ -1,5 +1,6 @@
 &glob login sysadm
-&glob paswordold sysadm
+/* Менять нельзя та как используется в выгрузке убд и создание копии*/
+&glob paswordold sysadm 
 &glob paswordnew !sysadm_new1
 &glob xpaswordcur "{&paswordold}":U
 &glob paswordcur if pasold() eq 1 then "sysadm":U else if pasold() eq 2 then "{&paswordold}":U else "{&paswordnew}":U

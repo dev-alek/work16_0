@@ -294,7 +294,7 @@ DO:
      .
   END.
   define variable vConect as character no-undo.
-  vConect = SUBSTITUTE("&1 -ld dst -U sysadm -P &2", v-db-dst,{&paswordcur}) .
+  vConect = SUBSTITUTE("&1 -ld dst -U sysadm -P &2", v-db-dst,"{&paswordold}") .
   connect value(vConect) no-error.
   if not connected ("dst") then do:
     message

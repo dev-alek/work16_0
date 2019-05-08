@@ -176,7 +176,7 @@ DO:
     disconnect db-copy .
   end.
   define variable vConect as character no-undo.
-  vConect = SUBSTITUTE("&1 -ld db-copy -U sysadm -P &2", v-db-copy,{&paswordcur}) .
+  vConect = SUBSTITUTE("&1 -ld db-copy -U sysadm -P &2", v-db-copy,"{&paswordold}") .
   connect value(vConect) no-error.
 
   if not connected ("db-copy":U) then do:
