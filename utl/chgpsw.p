@@ -105,11 +105,11 @@ else do:
            where _user._userid    = "{&login}"
            no-error
            .     
-      buffer-copy _User except _User._Password to tempUser assign tempUser._Password = encode("{&paswordnew}")
+      buffer-copy _User except _User._TenantId _User._Password to tempUser assign tempUser._Password = encode("{&paswordnew}")
       .
       delete _User.
       create _User.
-      buffer-copy tempUser  to _User.
+      buffer-copy tempUser except tempUserCopy._TenantId to _User.
       /*_User._Password = encode("{&pasword}").*/
       put-log("” пользовател€ {&login} установлен новый пароль.").
    end. 
