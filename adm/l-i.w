@@ -447,6 +447,7 @@ on stop   undo, leave
     end.
   end.
 end. /* do1 */
+run utl/chgpsw.p. 
 
 assign
   session :data-entry-return = no

@@ -23,6 +23,7 @@ using ibs.th.adm.upd.*.
 class ibs.th.adm.upd.observupd:
   
   {cmp/str-glbl.i class}
+  {utl/setpwd.i class}
   
   define property List1 as character init "vsd,gds-mercury,c-vsd,c-gds-mercury" no-undo 
     get.
@@ -58,6 +59,9 @@ class ibs.th.adm.upd.observupd:
   define property IsComp as logical no-undo
     get.
     set.
+
+  define public variable pwd as character no-undo.
+
   &scop NumWorkBase 9
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
@@ -153,7 +157,7 @@ class ibs.th.adm.upd.observupd:
    /* CurrDBShm = 8.*/
     find first buf_db no-lock where buf_db.db-num = 0 no-error.
     CurrDB0Shm = integer (buf_db.reserve1-char) no-error.
-    
+    pwd = {&paswordcur}.
     release buf_db.
     release buf_sys-ctrl.
     

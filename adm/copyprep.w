@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "Подготовка копии БД д
 { cmp/trg-def.i  }
 { cmp/showinf.i  }
 { gbl/getcntxt.i def }
+{ utl/setpwd.i}
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -174,8 +175,9 @@ DO:
   if connected( "db-copy":U ) then do:
     disconnect db-copy .
   end.
-
-  connect VALUE(SUBSTITUTE("&1", v-db-copy )) "-ld db-copy -P sysadm -U sysadm " no-error.
+  define variable vConect as character no-undo.
+  vConect = SUBSTITUTE("&1 -ld db-copy -U sysadm -P &2", v-db-copy,{&paswordcur}) .
+  connect value(vConect) no-error.
 
   if not connected ("db-copy":U) then do:
     connect value(v-db-copy) -U odbc -P odbc -ld db-copy no-error.

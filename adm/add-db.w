@@ -40,6 +40,7 @@ define variable vss-description as character no-undo init "создание УБД".
 { cmp/showinf.i  }
 { cmp/trg-def.i  }
 { adm/unloaddb.i }
+{ utl/setpwd.i }
 
 define buffer buf_sys-ctrl for ub.sys-ctrl .
 
@@ -292,8 +293,9 @@ DO:
         v-create-adm = TRUE
      .
   END.
-
-  connect value(v-db-dst) -ld dst -U sysadm -P sysadm no-error.
+  define variable vConect as character no-undo.
+  vConect = SUBSTITUTE("&1 -ld dst -U sysadm -P &2", v-db-dst,{&paswordcur}) .
+  connect value(vConect) no-error.
   if not connected ("dst") then do:
     message
       vss-workfile vss-revision vss-description skip

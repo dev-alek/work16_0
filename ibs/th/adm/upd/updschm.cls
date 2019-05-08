@@ -17,6 +17,7 @@ class ibs.th.adm.upd.updschm:
 
   {cmp/str-glbl.i class}
   
+  
   define variable loadDFprocFile as character no-undo.
 
   /*------------------------------------------------------------------------------
@@ -120,7 +121,7 @@ class ibs.th.adm.upd.updschm:
     assign
       m-user-passwd = substitute("-U &1 -P &2":U
                                 ,"sysadm"
-                                ,"sysadm"
+                                ,obsrvdbObj:pwd 
                                 )
     .
     
