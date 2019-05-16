@@ -847,24 +847,11 @@ on error undo, return error
   assign
  fi-default-printer = session :printer-name
   .
-  run gbl/conf-rd.p (
-        input "sys-key"
-      , input ""
-      , input ""
-      , input 0
-      , input ""
-      , input ""
-      , input ""
-      , input yes
-      , output v-menu-doc-sys-key
-      , output v-par-type
-  ) no-error.
-  if error-status :error
-  then do:
-    assign
-    v-menu-doc-sys-key = "":U
-    .
-  end.
+ { gbl/currsysk.i
+      v-menu-doc-sys-key
+      no-error
+    }
+  
   for each temp_fin-doc-code
   on error undo, return error
   :

@@ -794,7 +794,7 @@ define variable v-widget      as handle     no-undo .
    IF ap then  do: { rep/r-mtdedt.i {&TDEDT_Corr_Acc_Price} 16 }     END.
    IF pc then  do: { rep/r-mtdedt.i {&TDEDT_Chg_Purch_Code} 17 }     END.
    IF mp then  do: { rep/r-mtdedt.i {&TDEDT_Corr_Minus_Parts} 18 }   END.
-   IF vt then  do: { rep/r-mtdedt.i {&TDEDT_Peresort} 19 }           END.
+   IF vp then  do: { rep/r-mtdedt.i {&TDEDT_Peresort} 19 }           END.
 
 
    IF  NOT can-find (FIRST temp_twowin_itemsSelected_col)

@@ -93,7 +93,7 @@ class ibs.th.skt.ControlledClients.TableMenu:
       if not available(ub.bar-code) then next.
       response = response + string(ub.bar-code.b-code) + ',' +
         replace(replace(replace(replace(ub.goods.label-name, "&", "&amp;"), '"', "&quot;") , "'", "&apos;"), ',', '.') + ',' +
-        replace(replace(replace(replace(ub.goods.engl-name, "&", "&amp;"), '"', "&quot;") , "'", "&apos;"), ',', '.') + ',' +
+        replace(replace(replace(replace(if ub.goods.engl-name = ? then "" else ub.goods.engl-name, "&", "&amp;"), '"', "&quot;") , "'", "&apos;"), ',', '.') + ',' +
         trim(string(ub.gds-obj.price-sale, "->>>>>>>>>>>9.99")) + '|'.
     end.
     SomeStr = response.

@@ -1280,6 +1280,9 @@ tt-icnt-doc.doc-date
 tt-icnt-doc.shift-date
 tt-icnt-doc.shift-num
 tt-icnt-doc.shift-name
+tt-icnt-doc.wrkr
+tt-icnt-doc.agnt
+tt-icnt-doc.boss
 with frame {&frame-name}.
 run display-value in this-procedure .
 { str/psn-chk.i wrkr on tt-icnt-doc v-ref-rec }

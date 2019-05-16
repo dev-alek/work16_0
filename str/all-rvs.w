@@ -996,9 +996,26 @@ END.
 ON CHOOSE OF b-inv IN FRAME d-all-r-docs /* Инвент. */
 DO:
 
-        define variable v-docs-info as character no-undo .
-
-        {&no-rvs}
+  define variable v-docs-info as character no-undo .
+{ gbl/chk-actg.i
+              v-cntxt-db-num
+              v-cntxt-userid
+              {&action-head-code-main}
+              'actn_inventory_add':U
+              {&cntxt-object}
+              r-doc.host-code
+              r-doc.obj-type
+              r-doc.obj-code
+              0
+              0
+              0
+              true
+              varlog
+            }
+    if varlog <> yes then do:
+      return no-apply.
+    end.               
+  {&no-rvs}
   if r-doc.status_ <> {&permitted} then do:
         message
             substitute( "Инвентаризацию можно проводить только по документам сверки в статусе &1.", {&permitted} )
