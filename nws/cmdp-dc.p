@@ -155,6 +155,10 @@ define buffer buf_temp-smart-link  for temp-smart-link.
 define buffer buf_temp-nws-outline for temp-nws-outline.
 define buffer buf_temp-no-route  for temp-no-route.
 
+define variable conf-par as character no-undo.
+define variable mode-erprn as logical no-undo.
+define variable par-type as character no-undo.
+
 
 &scop sign sign *
 
@@ -182,6 +186,22 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
  /*страховка*/
   if p-step > 3
   or p-step = 3 and g#db-num > 0 then return.
+  
+  { gbl/conf-rd.i
+    "'is-erpRN'"
+    0
+    "''"
+    0
+    "''"
+    "''"
+    "''"
+    NO
+    conf-par
+    par-type
+    no-error
+    }
+  IF not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+  else mode-erprn = no.
 
   file-info:filename = "cmdp-dc.log".
   if file-info:full-pathname <> ? then do:
@@ -1346,7 +1366,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     if v-is-empty then do:
       run delete-command in v-cmd-proc-handle ( input buf_temp-cmd.cmd-code ). /* p-command-code */
     end.
-    if false then do:
+    if not v-is-empty and not mode-erprn then do:
       run send-command in v-cmd-proc-handle
         ( input buf_temp-cmd.cmd-code  /* p-command-code */
           ,input buf_temp-cmd.db-list

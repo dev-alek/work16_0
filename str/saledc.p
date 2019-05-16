@@ -163,6 +163,8 @@ define buffer buf_temp-smart-link  for temp-smart-link.
 define buffer buf_temp-nws-outline for temp-nws-outline.
 define buffer buf_temp-no-route for temp-no-route.
 
+define variable mode-erprn as logical no-undo.
+
 &scop run-persistent no
 
 
@@ -178,6 +180,22 @@ on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, retur
 on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
 on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
 :
+
+  { gbl/conf-rd.i
+    "'is-erpRN'"
+    0
+    "''"
+    0
+    "''"
+    "''"
+    "''"
+    NO
+    conf-par
+    par-type
+    no-error
+    }
+  IF not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+  else mode-erprn = no.
 
   { gbl/curr-r-b.i
     v-curr-r-b
@@ -1026,7 +1044,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                 buf_dis-card-type.type = temp-d-card.type
            and  buf_dis-card-type.emitent-host-code = temp-d-card.emitent-host-code.
       v-dct-uniq-key-rec = buf_dis-card-type.uniq-key-rec.
-      if false then do:
+      if p-save and not mode-erprn then do:
         run create-nws-outline in this-procedure (
                                                    input v-cmd-proc-handle
                                                   ,input buf_temp-cmd.cmd-code
@@ -1078,7 +1096,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
           on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
           on endkey undo _main, return error substitute( "&1. endkey", vss-workfile ) :
             if p-save then do:
-            if not available buf_temp-cmd then do:
+              if not available buf_temp-cmd then do:
                 find first buf_temp-cmd use-index pi .
               end.
             end.
@@ -1199,7 +1217,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       end. /*do v-jj*/
     end. /*if first-of(temp-d-card.type) then do:*/
   end. /*for each temp-d-card*/
-  if false then do:
+  if p-save and not mode-erprn then do:
   find first buf_temp-cmd.
   run after-command in this-procedure ( buffer buf_temp-cmd) no-error.
         if error-status:error then do:
@@ -1603,7 +1621,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
 :
 
 
-if false then do:
+if p-save and not mode-erprn then do:
   /*пустышка разделитель*/
   run create-nws-outline in this-procedure (
                                               input v-cmd-proc-handle
@@ -1623,7 +1641,7 @@ if {&run-persistent} then do:
                                                       input this-procedure:handle
                                                       ,input '':U /*p-proc-name */ ).
 end.
-if false then do:
+if p-save and not mode-erprn then do:
   if g#db-num = 0 then do:
     find first buf1_temp-cmd where buf1_temp-cmd.db-list = string(-1).
   end.
