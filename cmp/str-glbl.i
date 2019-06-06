@@ -4323,23 +4323,27 @@ end.
 &global-define sale-add-nat-gas '{&bef-sale-add-nat-gas}':U
 &global-define bef-sale-add-nat-gas-full Приход-Природный-Газ
 &global-define sale-add-nat-gas-full '{&bef-sale-add-nat-gas-full}':U
+&global-define bef-sale-add-ret-nat-gas rgs
+&global-define sale-add-ret-nat-gas '{&bef-sale-add-ret-nat-gas}':U
+&global-define bef-sale-add-ret-nat-gas-full Возврат-Природный-Газ
+&global-define sale-add-ret-nat-gas-full '{&bef-sale-add-ret-nat-gas-full}':U
 &global-define bef-sale-add-vir-res vir
 &global-define sale-add-vir-res '{&bef-sale-add-vir-res}':U
 &global-define bef-sale-add-vir-res-full Перемещение-Вирт-Рез
 &global-define sale-add-vir-res-full '{&bef-sale-add-vir-res-full}':U
-&global-define sale-add-kinds 'rwo,trf,swo,ngs,vir':U
-&global-define sale-add-kinds-full 'Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Перемещение-Вирт-Рез':U
-&global-define sale-all-doc-kinds '~{&bef-TDEDT_Ras_Vnesh_Kass},~{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U
-&global-define sale-all-doc-kinds-full '~{&bef-TDEDT_Ras_Vnesh_Kass-full},~{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Перемещение-Вирт-Рез':U
+&global-define sale-add-kinds 'rwo,trf,swo,ngs,rgs,vir':U
+&global-define sale-add-kinds-full 'Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Возврат-Природный-Газ,Перемещение-Вирт-Рез':U
+&global-define sale-all-doc-kinds '~{&bef-TDEDT_Ras_Vnesh_Kass},~{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,rgs,vir':U
+&global-define sale-all-doc-kinds-full '~{&bef-TDEDT_Ras_Vnesh_Kass-full},~{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Возврат-Природный-Газ,Перемещение-Вирт-Рез':U
 &global-define sale-add-ext-doc-types '~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Spi_Vnesh},~{&bef-TDEDT_Ras_Vnesh}':U
 &global-define bef-sale-add2-in-tech-refuell itr
 &global-define sale-add2-in-tech-refuell '{&bef-sale-add2-in-tech-refuell}':U
 &global-define bef-sale-add2-in-tech-refuell-full ПриТехПрол
 &global-define sale-add2-in-tech-refuell-full '{&bef-sale-add2-in-tech-refuell-full}':U
-&global-define sale-doc-name entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U + ',' + 'itr':U) + 1, ',' + '{&bef-TDEDT_Ras_Vnesh_Kass-full},{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Перемещение-Вирт-Рез':U + ',' + 'ПриТехПрол':U )
-&global-define sale-doc-kind-born entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U), 'main,pair,trio-m,quadro,stock-down,quadro,chip')
-&global-define sale-doc-main-receipt-type entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U) + 1, '0,~{&bef-rcpt-sale},~{&bef-rcpt-return},~{&bef-rcpt-return-write-off},~{&bef-rcpt-tech-refuell},~{&bef-rcpt-write-off},~{&bef-rcpt-tech-refuell},~{&bef-rcpt-tech-refuell}':U)
-&global-define sale-doc-poss-wro-codes entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,vir':U) + 1, '0,~{&bef-wro-r-modificator},~{&bef-wro-v-modificator},~{&bef-wro-cancell-item};~{&bef-wro-v-modificator-ci};~{&bef-wro-cancell-all};~{&bef-wro-v-modificator-ca},~{&bef-wro-r-tech-refuell},~{&bef-wro-without-payment};~{&bef-wro-r-modificator-wp}':U)
+&global-define sale-doc-name entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,rgs,vir':U + ',' + 'itr':U) + 1, ',' + '{&bef-TDEDT_Ras_Vnesh_Kass-full},{&bef-TDEDT_Vozvrat_Vnesh_Kass-full},Списание-по-Возврату,ТехПролив,Списание,Приход-Природный-Газ,Возврат-Природный-Газ,Перемещение-Вирт-Рез':U + ',' + 'ПриТехПрол':U )
+&global-define sale-doc-kind-born entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,rgs,vir':U), 'main,pair,trio-m,quadro,stock-down,quadro,chip')
+&global-define sale-doc-main-receipt-type entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,rgs,vir':U) + 1, '0,~{&bef-rcpt-sale},~{&bef-rcpt-return},~{&bef-rcpt-return-write-off},~{&bef-rcpt-tech-refuell},~{&bef-rcpt-write-off},~{&bef-rcpt-tech-refuell},~{&bef-rcpt-tech-refuell}':U)
+&global-define sale-doc-poss-wro-codes entry (lookup (~{&sale-doc-kind}, '{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},rwo,trf,swo,ngs,rgs,vir':U) + 1, '0,~{&bef-wro-r-modificator},~{&bef-wro-v-modificator},~{&bef-wro-cancell-item};~{&bef-wro-v-modificator-ci};~{&bef-wro-cancell-all};~{&bef-wro-v-modificator-ca},~{&bef-wro-r-tech-refuell},~{&bef-wro-without-payment};~{&bef-wro-r-modificator-wp}':U)
 &global-define sale-doc-fbrsale '~{&bef-TDEDT_Ras_Vnesh_Kass},swo':U
 &global-define sale-all-ext-doc-types '~{&bef-TDEDT_Ras_Vnesh_Kass},~{&bef-TDEDT_Vozvrat_Vnesh_Kass},~{&bef-TDEDT_Spi_Vnesh}':U
 &global-define bef-contr-chf-nodef Не определено
@@ -8230,9 +8234,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define thbjattr-list 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-autotank,cd-type-maria,arh-global,nakl_par,contr-in,rt-trn-doc,overval,inv-obj,rezerv-obj,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,mercur,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,report-glob,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define thbjattr-list-all 'autosale,get-chk,chk-view,cd-sending,cd-inf-send,scale-inf,cd-type-ibm,cd-type-ipc-servispl,cd-type-NCR-GM,cd-type-NCR-AS-R,cd-type-magia-xml,cd-type-omron,cd-type-omron-new,cd-type-IBM-XML,cd-type-IBS-TH,cd-type-IBS-TH-MOB,alias-tpsi,cd-type-r-keeper,cd-type-maria,cd-type-autotank,arh-global,nakl-glob,nakl_par,contr-in,rt-trn-doc,overval,inv-global,inv-obj,rezerv-global,rezerv-obj,ord-global,ord-obj,abc-sale-day,Ass-obj,fin-global,fin-plan,fin-doc,gds-ref,gds-ref_obj,dc-ref,cli-all,cashpays,wthdoc,wthdoc_obj,attr-wthrep,rum,rum_obj,easyfuel,images,prt-glob,prt-firm,prt-obj,report-glob,report-firm,report-obj,code-range,bge-export,auto-task,wnd-size,obj-date,fbrattr,petrol,staff,srv-auth-ASU,egais,mercur':U
 &global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
-&global-define str-glbl2_vss-revision 'Revision: 596aa7f61186, 1620, rls ':U
-&global-define str-glbl3_vss-revision 'Revision: 3b8251a2b477, 1513, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 64e1e27f7423, 1776, rls ':U
+&global-define str-glbl2_vss-revision 'Revision: b9313ad7f18a, 1618, rls ':U
+&global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 590e99b18846, 1808, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: f8efd18195cf, 1635, rls ':U
 &global-define str-glblt_vss-revision 'Revision: eaf52311ea8f, 1774, rls ':U
 &endif
