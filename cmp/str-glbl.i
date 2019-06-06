@@ -3502,7 +3502,7 @@ end.
 &global-define attr-office-type_tso-ret '{&bef-attr-office-type_tso-ret}':U
 &global-define bef-attr-office-type_card-act card-act
 &global-define attr-office-type_card-act '{&bef-attr-office-type_card-act}':U
-&global-define bef-prop-list-attr-item-matter-mark 1,2,3,4,5,6,7,8,9,10,11
+&global-define bef-prop-list-attr-item-matter-mark 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
 &global-define prop-list-attr-item-matter-mark '{&bef-prop-list-attr-item-matter-mark}':U
 &global-define bef-attr-item-matter-mark_1 1
 &global-define attr-item-matter-mark_1 '{&bef-attr-item-matter-mark_1}':U
@@ -3526,6 +3526,22 @@ end.
 &global-define attr-item-matter-mark_10 '{&bef-attr-item-matter-mark_10}':U
 &global-define bef-attr-item-matter-mark_11 11
 &global-define attr-item-matter-mark_11 '{&bef-attr-item-matter-mark_11}':U
+&global-define bef-attr-item-matter-mark_12 12
+&global-define attr-item-matter-mark_12 '{&bef-attr-item-matter-mark_12}':U
+&global-define bef-attr-item-matter-mark_13 13
+&global-define attr-item-matter-mark_13 '{&bef-attr-item-matter-mark_13}':U
+&global-define bef-attr-item-matter-mark_14 14
+&global-define attr-item-matter-mark_14 '{&bef-attr-item-matter-mark_14}':U
+&global-define bef-attr-item-matter-mark_15 15
+&global-define attr-item-matter-mark_15 '{&bef-attr-item-matter-mark_15}':U
+&global-define bef-attr-item-matter-mark_16 16
+&global-define attr-item-matter-mark_16 '{&bef-attr-item-matter-mark_16}':U
+&global-define bef-attr-item-matter-mark_17 17
+&global-define attr-item-matter-mark_17 '{&bef-attr-item-matter-mark_17}':U
+&global-define bef-attr-item-matter-mark_18 18
+&global-define attr-item-matter-mark_18 '{&bef-attr-item-matter-mark_18}':U
+&global-define bef-attr-item-matter-mark_19 19
+&global-define attr-item-matter-mark_19 '{&bef-attr-item-matter-mark_19}':U
 &global-define bef-prop-list-attr-group-np I,II,III,IV
 &global-define prop-list-attr-group-np '{&bef-prop-list-attr-group-np}':U
 &global-define bef-attr-group-np_I I
@@ -8236,7 +8252,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define str-glbl_vss-revision 'Revision: c4bcabd2b746, 1363, rls ':U
 &global-define str-glbl2_vss-revision 'Revision: b9313ad7f18a, 1618, rls ':U
 &global-define str-glbl3_vss-revision 'Revision: 7aff86f6c2f3, 1439, rls ':U
-&global-define str-glbl4_vss-revision 'Revision: 590e99b18846, 1808, rls ':U
+&global-define str-glbl4_vss-revision 'Revision: 732637b89a4d, 1843, rls ':U
 &global-define str-glbl5_vss-revision 'Revision: f8efd18195cf, 1635, rls ':U
 &global-define str-glblt_vss-revision 'Revision: eaf52311ea8f, 1774, rls ':U
 &endif
