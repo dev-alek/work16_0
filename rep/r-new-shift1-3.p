@@ -151,30 +151,32 @@ define temp-table tt-pump-nozzle no-undo
     .
 
 define temp-table temp-line-pump no-undo /*временная таблица по резервуарам*/
-    field gds-code              like ub.rvs-line.gds-code
-    field pump-code             like ub.rvs-line-pump.pump-code
-    field nozzle-code           like ub.rvs-line-pump.nozzle-code
-    field state-mh-cnt          like ub.rvs-line-pump.state-mh-cnt
-    field state-el-cnt          like ub.rvs-line-pump.state-el-cnt
-    field previous-state-mh-cnt like previous-rvs-line-pump.state-mh-cnt
-    field previous-state-el-cnt like previous-rvs-line-pump.state-el-cnt
-    field pol6                  like ub.rvs-line-pump.state-mh-cnt format '>>9.99'
-    field pol7                  like ub.rvs-line-pump.state-mh-cnt
-    field pol8-l                as decimal 
-    field pol8-kg               as decimal
-    field pol9-l                as decimal
-    field pol9-kg               as decimal
-    field pol10                 as decimal 
-    field pol11                 as decimal
-    field pol12                 as decimal 
-    field pl-code               like ub.rvs-line-pump.pl-code
-    /*  field error-l       like ub.rvs-line-pump.state-el-cnt*/
-    /*  field error-kg      like ub.rvs-line-pump.state-el-cnt*/
-    field error-19              like ub.rvs-line-pump.state-el-cnt 
-    index pi as unique primary
-    gds-code
-    pl-code
-    .
+  field gds-code              like ub.rvs-line.gds-code
+  field pump-code             like ub.rvs-line-pump.pump-code
+  field nozzle-code           like ub.rvs-line-pump.nozzle-code
+  field state-mh-cnt          like ub.rvs-line-pump.state-mh-cnt
+  field state-el-cnt          like ub.rvs-line-pump.state-el-cnt
+  field previous-state-mh-cnt like previous-rvs-line-pump.state-mh-cnt
+  field previous-state-el-cnt like previous-rvs-line-pump.state-el-cnt
+  field pol6                  like ub.rvs-line-pump.state-mh-cnt format '>>9.99'
+  field pol7                  like ub.rvs-line-pump.state-mh-cnt
+  field pol8-l                as decimal 
+  field pol8-kg               as decimal
+  field pol9-l                as decimal
+  field pol9-kg               as decimal
+  field pol10                 as decimal 
+  field pol11                 as decimal
+  field pol12                 as decimal 
+  field pl-code               like ub.rvs-line-pump.pl-code
+  field loc1                  as character
+  /*  field error-l       like ub.rvs-line-pump.state-el-cnt*/
+  /*  field error-kg      like ub.rvs-line-pump.state-el-cnt*/
+  field error-19              like ub.rvs-line-pump.state-el-cnt 
+  index pi as unique primary
+  gds-code
+  pl-code
+  loc1
+  .
 
 define VARIABLE num-pol8-l   as DECIMAL no-undo . 
 define VARIABLE num-pol8-kg  as DECIMAL no-undo .
@@ -548,30 +550,33 @@ if available (ub.doc-line) then v-fact-order-inv = ub.doc-line.fact-order .
         :
             
         
-        for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.pump-code = ub.rvs-line-pump.pump-code
-                and ub.pl-gds-pump.gds-code = ub.rvs-line-pump.gds-code
-                and ub.pl-gds-pump.pl-code = ub.rvs-line-pump.pl-code
-                and ub.pl-gds-pump.status_ <> {&blocked-status}:
-         find first temp-line-pump where temp-line-pump.gds-code = rvs-line-pump.gds-code and temp-line-pump.pl-code = rvs-line-pump.pl-code no-error.
-        if not AVAILABLE temp-line-pump then 
-        do:
-            create temp-line-pump .
-            assign
-                temp-line-pump.gds-code     = ub.rvs-line-pump.gds-code
-                temp-line-pump.pl-code      = ub.rvs-line-pump.pl-code
-                temp-line-pump.state-mh-cnt = ub.rvs-line-pump.state-mh-cnt
-                temp-line-pump.state-el-cnt = ub.rvs-line-pump.state-el-cnt
-                temp-line-pump.pol6         = temp-line-pump.state-mh-cnt
-                .
-        end.
-        else 
-        do:
-            assign
-                temp-line-pump.state-mh-cnt = ub.rvs-line-pump.state-mh-cnt
-                temp-line-pump.state-el-cnt = ub.rvs-line-pump.state-el-cnt
-                temp-line-pump.pol6         = temp-line-pump.pol6 + temp-line-pump.state-mh-cnt
-                .
-        end.   
+    for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.pump-code = ub.rvs-line-pump.pump-code
+      and ub.pl-gds-pump.gds-code = ub.rvs-line-pump.gds-code
+      and ub.pl-gds-pump.pl-code = ub.rvs-line-pump.pl-code
+      and ub.pl-gds-pump.status_ <> {&blocked-status}
+        :
+      find first temp-line-pump where temp-line-pump.gds-code = rvs-line-pump.gds-code and temp-line-pump.pl-code = rvs-line-pump.pl-code 
+      no-error.
+      if not AVAILABLE temp-line-pump then 
+      do:
+        create temp-line-pump .
+        assign
+          temp-line-pump.gds-code     = ub.rvs-line-pump.gds-code
+          temp-line-pump.pl-code      = ub.rvs-line-pump.pl-code
+          temp-line-pump.state-mh-cnt = ub.rvs-line-pump.state-mh-cnt
+          temp-line-pump.state-el-cnt = ub.rvs-line-pump.state-el-cnt
+          temp-line-pump.pol6         = temp-line-pump.state-mh-cnt
+          temp-line-pump.loc1         = temp-rvs-line.place_loc1
+          .
+      end.
+      else 
+      do:
+        assign
+          temp-line-pump.state-mh-cnt = ub.rvs-line-pump.state-mh-cnt
+          temp-line-pump.state-el-cnt = ub.rvs-line-pump.state-el-cnt
+          temp-line-pump.pol6         = temp-line-pump.pol6 + temp-line-pump.state-mh-cnt
+          .
+      end.   
         
         /*найдем показания счетного механизма по пистолету в сменной сверке за пред. смену*/
   
@@ -653,22 +658,22 @@ if available (ub.doc-line) then v-fact-order-inv = ub.doc-line.fact-order .
         IF ( buf_chk-doc.shift-date = x-Date-Start
             AND  buf_chk-doc.shift-num  < x-Shift-Start)
 
-            OR ( buf_chk-doc.shift-date = x-Date-End
-            AND  buf_chk-doc.shift-num  > x-Shift-End)
-            THEN 
-        dO:
-            NEXT _shift-chk.
-        END.
-
-        run add-chk in this-procedure ( 
-            input buf_chk-doc.obj-type
-            , input buf_chk-doc.obj-code
-            , input buf_chk-doc.doc-code
-            , input buf_chk-doc.chk-type
-            , input temp-rvs-line.gds-code
-            , input temp-rvs-line.pl-code
-            ) .
+      OR ( buf_chk-doc.shift-date = x-Date-End
+      AND  buf_chk-doc.shift-num  > x-Shift-End)
+      THEN 
+    dO:
+      NEXT _shift-chk.
     END.
+    run add-chk in this-procedure ( 
+      input buf_chk-doc.obj-type
+      , input buf_chk-doc.obj-code
+      , input buf_chk-doc.doc-code
+      , input buf_chk-doc.chk-type
+      , input temp-rvs-line.gds-code
+      , input temp-rvs-line.pl-code
+      , input temp-rvs-line.place_loc1
+      ) .
+  END.
      
 
     
@@ -1208,97 +1213,86 @@ end.
 put stream OutStr-html unformatted                                                                     
 
     '</tbody>' skip .                                                                                                    
-output stream OutStr-html close.
-output to c:\temp\tttt.txt.
-for each temp-line-pump:
-  export temp-line-pump .
-end.  
-for each temp-rvs-line:
-  export temp-rvs-line .
-end.  
-output close.
+
 procedure add-chk :
-    define input  parameter p-obj-type like ub.chk-doc.obj-type no-undo .
-    define input  parameter p-obj-code like ub.chk-doc.obj-code no-undo .
-    define input  parameter p-doc-code like ub.chk-doc.doc-code no-undo .
-    define input  parameter p-chk-type like ub.chk-doc.chk-type no-undo .
-    define input  parameter p-gds-code like ub.goods.gds-code   no-undo .
-    define input  parameter p-pl-code like ub.chk-gds.pl-code   no-undo .
+  define input  parameter p-obj-type like ub.chk-doc.obj-type no-undo .
+  define input  parameter p-obj-code like ub.chk-doc.obj-code no-undo .
+  define input  parameter p-doc-code like ub.chk-doc.doc-code no-undo .
+  define input  parameter p-chk-type like ub.chk-doc.chk-type no-undo .
+  define input  parameter p-gds-code like ub.goods.gds-code   no-undo .
+  define input  parameter p-pl-code  like ub.chk-gds.pl-code  no-undo .
+  define input  parameter p-loc1     like ub.chk-gds.loc1     no-undo .
 
-    define buffer buf_chk-gds  for ub.chk-gds.
-    define buffer bf_chk-gds   for ub.chk-gds.
-    define buffer buf_bar-code for ub.bar-code.
-    define VARIABLE v-pl-code as integer no-undo .
-
-    /*                                                               */
-    /*define variable v-pump as integer   no-undo .                  */
-    /*define variable v-nozzle-code    as integer      no-undo.      */
-    define variable v-qnty    like ub.chk-gds.doc-qnty no-undo init 0.
-
-    do
-        on error undo, return error return-value
-        :
-        for each buf_chk-gds
-            where buf_chk-gds.doc-code = p-doc-code
-            no-lock,
-            first buf_bar-code
-            where buf_bar-code.b-code = buf_chk-gds.b-code
-            and buf_bar-code.gds-code = p-gds-code
-            no-lock
-            :
-            for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.pump-code = buf_chk-gds.pump
-                and ub.pl-gds-pump.gds-code = p-gds-code
-                and ub.pl-gds-pump.pl-code = p-pl-code
-                and ub.pl-gds-pump.status_ <> {&blocked-status}
-                ,
-                first ub.pl-pump-nozzle where ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code
-                and ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code 
-                and ub.pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code  :
-
-                find first temp-line-pump 
-                    WHERE
-                    temp-line-pump.gds-code    = buf_bar-code.gds-code
-                    AND temp-line-pump.pl-code =  ub.pl-gds-pump.pl-code 
-                    no-error .
-                if AVAILABLE temp-line-pump then 
-                do:
-                    v-qnty        = buf_chk-gds.doc-qnty .
-                    if p-chk-type = integer({&rcpt-tech-refuell})
-                        then 
-                    do:
-                        assign
-                            temp-line-pump.pol8-l  = temp-line-pump.pol8-l + v-qnty
-                            temp-line-pump.pol8-kg = temp-line-pump.pol8-kg + (v-qnty * buf_chk-gds.density)
-                            .
-                    end.
-                    if p-chk-type = integer({&rcpt-sale}) or p-chk-type = integer({&rcpt-return})
-                        then 
-                    do:
-                        assign
-                            temp-line-pump.pol9-l  = temp-line-pump.pol9-l + v-qnty
-                            temp-line-pump.pol9-kg = temp-line-pump.pol9-kg + (v-qnty * buf_chk-gds.density)
-                            .
-                    end.
-                    if p-chk-type = integer({&rcpt-overflow}) THEN 
-                    DO:
-                        assign
-                            temp-line-pump.pol12 = temp-line-pump.pol12 + v-qnty
-                            .
-                    end.
-                    if p-chk-type = integer({&rcpt-trans-cancell}) THEN 
-                    DO:
-                        if buf_chk-gds.write-off-code = 0 then
-                            assign
-                                temp-line-pump.pol10 = temp-line-pump.pol10  + v-qnty
-                                .
-                        if buf_chk-gds.write-off-code = 1 then
-                            assign
-                                temp-line-pump.pol11 = temp-line-pump.pol11 + v-qnty
-                                . 
-                    end.
-                end.
-            end.
-        end. /*for each buf_chk-gds*/
-    end. /*do on error */
+  define buffer buf_chk-gds  for ub.chk-gds.
+  define buffer bf_chk-gds   for ub.chk-gds.
+  define buffer buf_bar-code for ub.bar-code.
+  define VARIABLE v-pl-code as integer no-undo .
+  define buffer bf_place  for ub.place .
+  /*                                                               */
+  /*define variable v-pump as integer   no-undo .                  */
+  /*define variable v-nozzle-code    as integer      no-undo.      */
+  define variable v-qnty    like ub.chk-gds.doc-qnty no-undo init 0.
+ 
+  do
+    on error undo, return error return-value
+    :
+    for each buf_chk-gds
+      where buf_chk-gds.doc-code = p-doc-code 
+      and buf_chk-gds.loc1 = p-loc1
+      no-lock,
+      first buf_bar-code
+      where buf_bar-code.b-code = buf_chk-gds.b-code
+      and buf_bar-code.gds-code = p-gds-code
+      no-lock
+      :
+      find first temp-line-pump WHERE temp-line-pump.gds-code = buf_bar-code.gds-code
+        and temp-line-pump.loc1 = buf_chk-gds.loc1
+        no-error .
+      if not available (temp-line-pump) then 
+      do:
+          create temp-line-pump.
+          assign
+            temp-line-pump.gds-code = buf_bar-code.gds-code
+            temp-line-pump.pl-code  = p-pl-code
+            temp-line-pump.loc1     = buf_chk-gds.loc1
+            .
+      end.      
+        v-qnty        = buf_chk-gds.doc-qnty .
+        if p-chk-type = integer({&rcpt-tech-refuell})
+          then 
+        do:
+          assign
+            temp-line-pump.pol8-l  = temp-line-pump.pol8-l + v-qnty
+            temp-line-pump.pol8-kg = temp-line-pump.pol8-kg + (v-qnty * buf_chk-gds.density)
+            .
+        end.
+        if p-chk-type = integer({&rcpt-sale}) or p-chk-type = integer({&rcpt-return})
+          then 
+        do:
+          assign
+            temp-line-pump.pol9-l  = temp-line-pump.pol9-l + v-qnty
+            temp-line-pump.pol9-kg = temp-line-pump.pol9-kg + (v-qnty * buf_chk-gds.density)
+            .
+        end.
+        if p-chk-type = integer({&rcpt-overflow}) THEN 
+        DO:
+          assign
+            temp-line-pump.pol12 = temp-line-pump.pol12 + v-qnty
+            .
+        end.
+        if p-chk-type = integer({&rcpt-trans-cancell}) THEN 
+        DO:
+          if buf_chk-gds.write-off-code = 0 then
+            assign
+              temp-line-pump.pol10 = temp-line-pump.pol10  + v-qnty
+              .
+          if buf_chk-gds.write-off-code = 1 then
+            assign
+              temp-line-pump.pol11 = temp-line-pump.pol11 + v-qnty
+              . 
+        end.
+            
+    end. /*for each buf_chk-gds*/
+  end. /*do on error */
 
 end procedure. /* add-chk */
