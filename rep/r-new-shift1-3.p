@@ -378,7 +378,6 @@ end. /*if available previous-shift-obj*/
 
 /*для определения смены*/
 
-
 define temp-table temp-shift-obj no-undo like ub.shift-obj
   FIELD num as integer
   INDEX ii IS UNIQUE num
@@ -562,7 +561,6 @@ if available (ub.doc-line) then v-fact-order-inv = ub.doc-line.fact-order .
     for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.pump-code = ub.rvs-line-pump.pump-code
       and ub.pl-gds-pump.gds-code = ub.rvs-line-pump.gds-code
       and ub.pl-gds-pump.pl-code = ub.rvs-line-pump.pl-code
-/*      and ub.pl-gds-pump.status_ <> {&blocked-status}*/
         :
       find first temp-line-pump where temp-line-pump.gds-code = rvs-line-pump.gds-code and temp-line-pump.pl-code = rvs-line-pump.pl-code and temp-line-pump.loc1 
        = temp-rvs-line.place_loc1 and temp-line-pump.pump-code    = ub.rvs-line-pump.pump-code and
@@ -970,8 +968,8 @@ put stream OutStr-html unformatted
             
     '<tbody>' skip
     '<tr>' skip
-    '<th text_wrap="true" rowspan="2" style="text-align: center;">Наименование продукта</th>' skip
-    '<th text_wrap="true" rowspan="2" style="text-align: center;">№ резервуара</th>' skip
+    '<th text_wrap="true" rowspan="2" style="text-align: center;">Наим продукта</th>' skip
+    '<th text_wrap="true" rowspan="2" style="text-align: center;">№ рез.</th>' skip
     '<th text_wrap="true" rowspan="2" style="text-align: center;">ед. изм.</th>' skip.
 if p-param-shft-qty = {&par-system} then 
 do:
@@ -994,7 +992,7 @@ put stream OutStr-html unformatted
     /*    '<th text_wrap="true" rowspan="2" style="text-align: center;">Обороты по кассе</th>'                         */
     /*    '<th text_wrap="true" colspan="8" style="text-align: center;">Остаток нефтепродукта на конец смены</th>' skip*/
     '<th text_wrap="true" style="text-align: center;">Небаланс фактическ</th>' skip
-    '<th text_wrap="true" rowspan="2" style="text-align: center;">Погрешность измерения массы в резервуаре, ±кг</th>' skip
+    '<th text_wrap="true" rowspan="2" style="text-align: center;">Погр. изм. массы в рез, ±кг</th>' skip
     '</tr>' skip
     '<tr>' skip
     
@@ -1049,15 +1047,15 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
         for each temp-line-pump where buf_temp-rvs-line.gds-code = temp-line-pump.gds-code
           and temp-line-pump.pl-code = buf_temp-rvs-line.pl-code
           and temp-line-pump.loc1 = buf_temp-rvs-line.place_loc1  :
-          find first buf_temp-line-pump where buf_temp-line-pump.gds-code = temp-line-pump.gds-code and buf_temp-line-pump.pump-code = temp-line-pump.pump-code
-            and buf_temp-line-pump.nozzle-code = temp-line-pump.nozzle-code and buf_temp-line-pump.loc1 <> temp-line-pump.loc1 no-error .
-          if available (buf_temp-line-pump) then 
-          do:
-            if not temp-line-pump.log_ then 
-              assign
-                buf_temp-rvs-line.pol61 = buf_temp-rvs-line.pol61 + (temp-line-pump.pol6 - temp-line-pump.pol7) 
-                buf_temp-line-pump.log_ = yes .
-          end.  
+/*          find first buf_temp-line-pump where buf_temp-line-pump.gds-code = temp-line-pump.gds-code and buf_temp-line-pump.pump-code = temp-line-pump.pump-code*/
+/*            and buf_temp-line-pump.nozzle-code = temp-line-pump.nozzle-code and buf_temp-line-pump.loc1 <> temp-line-pump.loc1 no-error .                      */
+/*          if available (buf_temp-line-pump) then                                                                                                               */
+/*          do:                                                                                                                                                  */
+/*            if not temp-line-pump.log_ then                                                                                                                    */
+/*              assign                                                                                                                                           */
+/*                buf_temp-rvs-line.pol61 = buf_temp-rvs-line.pol61 + (temp-line-pump.pol6 - temp-line-pump.pol7)                                                */
+/*                buf_temp-line-pump.log_ = yes .                                                                                                                */
+/*          end.                                                                                                                                                 */
           assign
             buf_temp-rvs-line.pol6    = buf_temp-rvs-line.pol6 + (temp-line-pump.pol6 - temp-line-pump.pol7)
             buf_temp-rvs-line.pol8-l  = buf_temp-rvs-line.pol8-l + temp-line-pump.pol8-l
@@ -1096,7 +1094,7 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
   	      temp-rvs-line.itog-pol21    = temp-rvs-line.itog-pol21 + buf_temp-rvs-line.pol21 .
       end.
  
-    
+  
         put stream OutStr-html unformatted
             '<tr>' skip 
             '<td text_wrap="true" rowspan="3" style="text-align: right;">' + temp-rvs-line.gds-name + '</td>' skip /*товар*/
