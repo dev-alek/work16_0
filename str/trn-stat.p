@@ -18,7 +18,7 @@ using ibs.th.str.*.
 using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
-
+ 
 define input  parameter parparentproc   as   widget-handle       no-undo.
 define input  parameter parparenthandle as   handle              no-undo.
 define input  parameter parmode         as   character           no-undo. /* режим обработки */
@@ -1687,8 +1687,14 @@ vartechproliv = no
               if varprice-sale = 0 or
                 varprice-sale = ?
               then do:
-                if varnocurbas = "no"       or
-                  varnocurbas = "no_today" and bf_trn-doc.fact-date = v-today
+                  
+                run gds-attr-value in this-procedure (input bf_goods.gds-code
+                                         ,input {&attr-null-price}
+                                         ,output v-attr-value
+                                         ,output v-attr-type ) no-error.
+                                                                                  
+                if (varnocurbas = "no"       or
+                  varnocurbas = "no_today") and bf_trn-doc.fact-date = v-today and not logical(v-attr-value)
                 then do:
                   run waitfram-hide in this-procedure no-error.
                   undo, return error substitute( 'Не задана текущая продажная цена. Закрытие документа отменяется. '
