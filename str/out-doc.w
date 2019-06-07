@@ -99,7 +99,7 @@ define variable vss-description as character no-undo initial "Обработка РН (заве
 &scop label-clmn_2-br-dtl   'П/П'
 &scop sort-clmn_2-br-dtl    ub.doc-line.line-num
 &scop label-clmn_3-br-dtl   'Бар-код'
-&scop sort-clmn_3-br-dtl    ub.bar-code.b-code
+&scop sort-clmn_3-br-dtl    ub.bar-code.b-code 
 &scop label-clmn_4-br-dtl   'Артикул'
 &scop sort-clmn_4-br-dtl    ub.gds-dtl.artic
 &scop label-clmn_5-br-dtl   'Имя '
@@ -790,7 +790,7 @@ DEFINE BROWSE br-dtl
   QUERY br-dtl DISPLAY
   {&sort-clmn_1-br-dtl}                       column-label {&label-clmn_1-br-dtl}  format "x(1)"
   {&sort-clmn_2-br-dtl}                       column-label {&label-clmn_2-br-dtl}  format ">>>>>9"
-  {&sort-clmn_3-br-dtl}                       column-label {&label-clmn_3-br-dtl}
+  {&sort-clmn_3-br-dtl}                       column-label {&label-clmn_3-br-dtl}  format "99999999999" 
   {&sort-clmn_4-br-dtl}                       column-label {&label-clmn_4-br-dtl}
   {&sort-clmn_5-br-dtl}     @ v-gds-name      column-label {&label-clmn_5-br-dtl}  format "x(150)"
   {&sort-clmn_6-br-dtl}                       column-label {&label-clmn_6-br-dtl}  format ">>>,>>>,>>9.999"

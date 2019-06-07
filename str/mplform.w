@@ -328,7 +328,7 @@ DEFINE FRAME Dialog-Frame
            VIEW-AS TEXT
           SIZE 9 BY .67
           BGCOLOR 3 FGCOLOR 15
-     buf_price-doc-forming-gds.b-code AT ROW 2.75 COL 62.13 COLON-ALIGNED
+     buf_price-doc-forming-gds.b-code AT ROW 2.75 COL 62.13 COLON-ALIGNED FORMAT "99999999999":U
           LABEL "Бар-код"
            VIEW-AS TEXT
           SIZE 10 BY .67

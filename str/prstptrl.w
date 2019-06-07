@@ -170,7 +170,7 @@ DEFINE QUERY b-place FOR
 DEFINE BROWSE b-place
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS b-place frame-place _FREEFORM
   QUERY b-place DISPLAY
-      pl-code             COLUMN-LABEL "Бар-код рез."
+      pl-code             COLUMN-LABEL "Бар-код рез." FORMAT "99999999999":U
 loc1                COLUMN-LABEL "Код"
 pl-name             COLUMN-LABEL "Название"
 before-l            COLUMN-LABEL "Факт(л)"

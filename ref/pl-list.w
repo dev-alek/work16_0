@@ -234,7 +234,7 @@ DEFINE BROWSE br-pl
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-pl d-pl-list _FREEFORM
   QUERY br-pl NO-LOCK DISPLAY
       mark-string(recid(X_place), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
-X_place.pl-code FORMAT "999999999":U
+X_place.pl-code FORMAT "99999999999":U
 X_place.pl-name FORMAT "X(40)":U
 X_place.status_ format "X(8)":U
 X_place.loc1 FORMAT "X(8)":U

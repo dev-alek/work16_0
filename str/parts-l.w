@@ -477,7 +477,7 @@ DEFINE BUTTON b-mark
      LABEL "&*"
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-pl
+DEFINE BUTTON b-pl 
      LABEL "&Место"
      SIZE 10 BY 1.
 
@@ -772,7 +772,7 @@ DEFINE BROWSE br-parts
       parts.cst-code FORMAT "X(31)"
       parts.last-date format '99/99/9999':u column-label "Годен до"
       parts.hold-date format '99/99/9999':u column-label "Дата МФ"
-      parts.pl-code column-label "Место"
+      parts.pl-code column-label "Место" FORMAT "99999999999":U
       get-b-code(buffer parts) @ parts-b-code
       get-purch-code(buffer parts) @ parts-purch-code
       get-contract-prn-code(recid(parts)) @ parts-contract-prn-code column-label "Договор" format "x(20)"

@@ -201,7 +201,7 @@ first ub.goods no-lock where ~
  {&clmn_25-br-list}  @ varwastage            column-label {&label-clmn_25-br-list} ~
  {&clmn_26-br-list}  @ varwast-rb            column-label {&label-clmn_26-br-list} ~
  {&clmn_27-br-list}  @ varunus-wast-rb       column-label {&label-clmn_27-br-list} ~
- {&clmn_28-br-list}                          column-label {&label-clmn_28-br-list} ~
+ {&clmn_28-br-list}                          column-label {&label-clmn_28-br-list} FORMAT "99999999999":U ~
  {&clmn_32-br-list}                          column-label {&label-clmn_32-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_5-br-list}   @ scl-name              column-label {&label-clmn_5-br-list} format "x(10)":U
 

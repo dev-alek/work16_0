@@ -430,7 +430,7 @@ DEFINE QUERY br-list FOR {1} SCROLLING.
 
 DEFINE BROWSE br-list QUERY br-list NO-LOCK DISPLAY
       {1}.to-sel  format "+/" column-label "*"
-      {1}.gds-code
+      {1}.gds-code FORMAT "99999999999":U
       {1}.artic
       {1}.gds-name &if "{1}" = "scn-list" &then format "x(25)"
       {1}.qnty column-label "Количество" format "->>>,>>9.999" &endif

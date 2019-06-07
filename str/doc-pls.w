@@ -236,7 +236,7 @@ DEFINE VARIABLE f-label-density AS CHARACTER FORMAT "x(25)":U INITIAL "Плотность
      VIEW-AS FILL-IN
      SIZE 10.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-pl-name LIKE ub.place.pl-name
+DEFINE VARIABLE f-pl-name LIKE ub.place.pl-name FORMAT "99999999999":U
      LABEL "Место хранения"
      VIEW-AS FILL-IN
      SIZE 80 BY 1 NO-UNDO.
@@ -306,7 +306,7 @@ DEFINE QUERY br-info FOR
 DEFINE BROWSE br-doc-pl
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-doc-pl f-tt-doc-pl _FREEFORM
   QUERY br-doc-pl NO-LOCK DISPLAY
-      tt-doc-pl.pl-code COLUMN-LABEL "Место хр." FORMAT "999999999":U
+      tt-doc-pl.pl-code COLUMN-LABEL "Место хр." FORMAT "99999999999":U
             WIDTH 10
       tt-doc-pl.cli-qnty FORMAT "->>,>>>,>>9.<<<":U WIDTH 16
       tt-doc-pl.doc-qnty FORMAT "->>,>>>,>>9.<<<":U WIDTH 16
@@ -317,7 +317,7 @@ DEFINE BROWSE br-doc-pl
       tt-doc-pl.cli-rest-af-qnty FORMAT "->>,>>>,>>9.<<<":U WIDTH 16
       tt-density COLUMN-LABEL {&rest-density} FORMAT "->>9.9999999999":U
             WIDTH 14
-      tt-doc-pl.gds-code FORMAT "999999999":U
+      tt-doc-pl.gds-code FORMAT "99999999999":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS DROP-TARGET SIZE 96.5 BY 5.25 FIT-LAST-COLUMN.

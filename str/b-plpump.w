@@ -174,7 +174,7 @@ DEFINE QUERY br_table FOR
 DEFINE BROWSE br_table
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br_table B-table-Win _FREEFORM
   QUERY br_table NO-LOCK DISPLAY
-      ub.pl-pump.pl-code COLUMN-LABEL "Бар-код резервуара"
+      ub.pl-pump.pl-code COLUMN-LABEL "Бар-код резервуара" FORMAT "99999999999":U
       ub.pl-pump.pump-code
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
