@@ -273,6 +273,7 @@ procedure foreach :
 end procedure. /* foreach */
 
 procedure display-line :
+define variable v-sum-dsc-rubl-acc-no-nds as decimal no-undo .  
  do
  on error undo, return error return-value
  :
@@ -305,89 +306,61 @@ procedure display-line :
                         fr = false .
           end.
             if not Parts-Det then do :
-  
+              put stream OutStr-html unformatted
+                '<TR>'skip
+                '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
+                '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
+                '<TD> ' + string(gds-zap-gds-name) + '</TD>'skip
+                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+/* Количество */    '<TD num="0.000" val="' + fnc-convert-dot-to-colon(gds-zap-qnty,      "->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if gds-zap-qnty <> ? then fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
+/* Цена */          '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-price-base <> ? then fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+/* Стоимость */     '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-stoim-base <> ? then fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+/* НДС */           '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-Nds,       "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-Nds <> ? then fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+/* НП */            '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-Np,        "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-Np <> ? then fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+/* Цена без НДС */  '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-price-nds, "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-price-nds <> ? then fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+/* Сумма без НДС */ '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(tot_tqnty,         "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if tot_tqnty <> ? then fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+              .                
                 if v-photo then do:
                               put stream OutStr-html unformatted
-                              '<TR>'skip
-                                  '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
-                                  '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
-                                  '<TD> ' + string(gds-zap-gds-name) + '</TD>'skip
-                                  '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
-                                  '<TD num="0.000" val="' + fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if gds-zap-qnty <> ? then fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-base <> ? then fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-stoim-base <> ? then fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Nds <> ? then fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Np <> ? then fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-nds <> ? then fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if tot_tqnty <> ? then fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
                                   '<TD style="text-align: center; width: 20px;">'skip
                                   '<img  src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
                                   '</TD>'skip
-                              '</TR>'skip    
                               .                
                 end.  
-                else do:
-                              put stream OutStr-html unformatted
-                              '<TR>'skip
-                                  '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
-                                  '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
-                                  '<TD> ' + string(gds-zap-gds-name) + '</TD>'skip
-                                  '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
-                                  '<TD num="0.000" val="' + fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if gds-zap-qnty <> ? then fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-base <> ? then fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-stoim-base <> ? then fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Nds <> ? then fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Np <> ? then fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-nds <> ? then fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if tot_tqnty <> ? then fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                              '</TR>'skip    
-                              .                
-              end.
+              put stream OutStr-html unformatted
+                '</TR>'skip    
+              .                
                 run new-tmp-page .
                   num#str# = num#str# + 1.
                   num#col# = 1.
             end.
             /*Детализация по партиям*/
             else do :
+              put stream OutStr-html unformatted
+                '<TR>'skip
+                  '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
+                  '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
+                  '<TD style="text-align: left"> ' + string(gds-zap-gds-name) + '</TD>'skip
+                  '<TD style="text-align: center"> ' + if string(gds-zap-part-b-code) = ? then " " + '</TD>' else string(gds-zap-part-b-code) + '</TD>'skip
+                  '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+'<TD num="0.000" val="' + fnc-convert-dot-to-colon(gds-zap-qnty,      "->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if gds-zap-qnty <> ? then fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
+'<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-price-base <> ? then fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+'<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-stoim-base <> ? then fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+'<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-Nds,       "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-Nds <> ? then fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+'<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-Np,        "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-Np <> ? then fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+'<TD num="0.00"  val="' + fnc-convert-dot-to-colon(gds-zap-price-nds, "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if gds-zap-price-nds <> ? then fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+'<TD num="0.00"  val="' + fnc-convert-dot-to-colon(tot_tqnty,         "->>>>>>>>>>>9.99", 2) + '" style="text-align: right"> ' + if tot_tqnty <> ? then fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+              .                          
               if v-photo then do:
                             put stream OutStr-html unformatted
-                            '<TR>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
-                                '<TD style="text-align: left"> ' + string(gds-zap-gds-name) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + if string(gds-zap-part-b-code) = ? then " " + '</TD>' else string(gds-zap-part-b-code) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
-                                  '<TD num="0.000" val="' + fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if gds-zap-qnty <> ? then fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-base <> ? then fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-stoim-base <> ? then fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Nds <> ? then fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Np <> ? then fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-nds <> ? then fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if tot_tqnty <> ? then fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
                                 '<TD style="text-align: center; width: 20px;">'skip
                                   '<img src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
                                   '</TD>'skip
-                            '</TR>'skip    
                             .                          
               end.
-              else do:  
-                            put stream OutStr-html unformatted
-                            '<TR>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-b-code) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-artic) + '</TD>'skip
-                                '<TD style="text-align: left"> ' + string(gds-zap-gds-name) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + if string(gds-zap-part-b-code) = ? then " "  + '</TD>' else string(gds-zap-part-b-code) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
-                                  '<TD num="0.000" val="' + fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if gds-zap-qnty <> ? then fnc-convert-dot-to-colon(gds-zap-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-base <> ? then fnc-convert-dot-to-colon(gds-zap-price-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-stoim-base <> ? then fnc-convert-dot-to-colon(gds-zap-stoim-base,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Nds <> ? then fnc-convert-dot-to-colon(gds-zap-Nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-Np <> ? then fnc-convert-dot-to-colon(gds-zap-Np,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if gds-zap-price-nds <> ? then fnc-convert-dot-to-colon(gds-zap-price-nds,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                  '<TD num="0.00" val="' + fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if tot_tqnty <> ? then fnc-convert-dot-to-colon(tot_tqnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                            '</TR>'skip    
-                            .                        
-              end.
+              put stream OutStr-html unformatted
+                '</TR>'skip    
+              .                        
               run new-tmp-page .
                 num#str# = num#str# + 1.
                 num#col# = 1.
@@ -496,21 +469,24 @@ procedure display-line :
 
                   IF PayType = 2 then do :
                     if tPrintRubl then do :
+                      v-sum-dsc-rubl-acc-no-nds = buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc .
+                      put stream OutStr-html unformatted
+                        '<TR>'skip
+                        '<TD></TD>'skip
+                        '<TD></TD>'skip
+                        '<TD style="text-align: center"> ' + string(v-show-part-code) + '</TD>'skip
+                        '<TD style="text-align: center"> ' + if string(gds-zap-part-print-code) = ? then " " else string(gds-zap-part-print-code) + '</TD>'skip
+                        '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
+/* Количество */    '<TD num="0.000" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if buf_tt-allsum.fact-qnty <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
+/* Цена */          '<TD num="0.00"  val="' + fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2 ) + '" style="text-align: right"> ' +  fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2 ) + '</TD>'skip
+/* Стоимость */     '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.sum-dsc-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip  
+/* НДС */           '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.vat-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+/* НП */            '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.slt-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
+/* Цена без НДС */  '<TD num="0.00"  val="' + fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then v-sum-dsc-rubl-acc-no-nds / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' +  fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then v-sum-dsc-rubl-acc-no-nds / buf_tt-allsum.fact-qnty else 0  ),"->>>>>>>>>>>9.99",2) + '</TD>'skip
+/* Сумма без НДС */ '<TD num="0.00"  val="' + fnc-convert-dot-to-colon(v-sum-dsc-rubl-acc-no-nds,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + fnc-convert-dot-to-colon(v-sum-dsc-rubl-acc-no-nds,"->>>>>>>>>>>9.99",2) + '</TD>'skip
+                      .              
                       if v-photo then do:
                             put stream OutStr-html unformatted
-                            '<TR>'skip
-                                '<TD></TD>'skip
-                                '<TD></TD>'skip
-                                '<TD style="text-align: center"> ' + string(v-show-part-code) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + if string(gds-zap-part-print-code) = ? then " " else string(gds-zap-part-print-code) + '</TD>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
-                                '<TD num="0.000" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if buf_tt-allsum.fact-qnty <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2 ) + '" style="text-align: right"> ' +  fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2 ) + '</TD>'skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2 ) + '" style="text-align: right"> ' +  fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc) / buf_tt-allsum.fact-qnty else 0  ),"->>>>>>>>>>>9.99",2) + '</TD>'skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.sum-dsc-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip  
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.vat-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.slt-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + fnc-convert-dot-to-colon((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc),"->>>>>>>>>>>9.99",2) + '</TD>'skip
                                 '<TD style="text-align: center; width: 20px;">'skip
                                   '<img src="' + gds-zap-image + '"; alt="Фото товара" style="height: 50px;"/>'
                                   '</TD>'skip
@@ -545,19 +521,6 @@ procedure display-line :
                       end.
                       else do:
                             put stream OutStr-html unformatted
-                            '<TR>'skip
-                                '<TD></TD>'skip
-                                '<TD></TD>'skip
-                                '<TD style="text-align: center"> ' + string(v-show-part-code) + '</TD>'skip
-                                '<TD style="text-align: center"></TD>'skip
-                                '<TD style="text-align: center"> ' + string(gds-zap-unit-base) + '</TD>'skip
-                                '<TD num="0.000" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: right"> ' + if buf_tt-allsum.fact-qnty <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.fact-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</td>' skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2 ) + '" style="text-align: right"> ' +  fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then buf_tt-allsum.sum-dsc-rubl-acc / buf_tt-allsum.fact-qnty else 0),"->>>>>>>>>>>9.99",2 ) + '</TD>'skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc) / buf_tt-allsum.fact-qnty else 0  ),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' +  fnc-convert-dot-to-colon((if buf_tt-allsum.fact-qnty <> 0 then (buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc) / buf_tt-allsum.fact-qnty else 0  ),"->>>>>>>>>>>9.99",2) + '</TD>'skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.sum-dsc-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.sum-dsc-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip  
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.vat-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.vat-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + if buf_tt-allsum.slt-rubl-acc <> ? then fnc-convert-dot-to-colon(buf_tt-allsum.slt-rubl-acc,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</td>' skip
-                                '<TD num="0.00" val="' + fnc-convert-dot-to-colon((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc),"->>>>>>>>>>>9.99",2) + '" style="text-align: right"> ' + fnc-convert-dot-to-colon((buf_tt-allsum.sum-dsc-rubl-acc - buf_tt-allsum.vat-rubl-acc),"->>>>>>>>>>>9.99",2) + '</TD>'skip                                
                             '</TR>'skip    
                             .  
                             do ii = 1 to NUM-ENTRIES(v-marks, ","):
