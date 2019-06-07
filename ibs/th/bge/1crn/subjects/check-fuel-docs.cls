@@ -166,8 +166,39 @@ sw = insw .
       end.
     end.
     
+         
+    if tt-rvs-doc.del-f = 0 then 
+    do:
+      for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = tt-rvs-doc.rvs-code:
+        create tt-rvs-line . 
+        BUFFER-COPY buf_rvs-line to tt-rvs-line .
+        for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.gds-code = tt-rvs-line.gds-code and buf_rvs-line-pump.pl-code = tt-rvs-line.pl-code
+          and buf_rvs-line-pump.rvs-code = tt-rvs-line.rvs-code and buf_rvs-line-pump.obj-code = tt-rvs-line.obj-code and buf_rvs-line-pump.obj-type = tt-rvs-line.obj-type:
+            
+          create tt-rvs-line-pump .      
+          BUFFER-COPY buf_rvs-line-pump to tt-rvs-line-pump .
+
+        end.
+      end.      
+    end.
+    else 
+    do:
+      for each buf_c-rvs-line no-lock where buf_c-rvs-line.rvs-code = tt-rvs-doc.rvs-code and buf_c-rvs-line.chip-num = tt-rvs-doc.chip-num:
+        create tt-rvs-line . 
+        BUFFER-COPY buf_c-rvs-line to tt-rvs-line .
+        for each buf_c-rvs-line-pump no-lock where buf_c-rvs-line-pump.gds-code = tt-rvs-line.gds-code and buf_c-rvs-line-pump.pl-code = tt-rvs-line.pl-code
+          and buf_c-rvs-line-pump.rvs-code = tt-rvs-line.rvs-code and buf_c-rvs-line-pump.obj-code = tt-rvs-line.obj-code and buf_c-rvs-line-pump.obj-type = tt-rvs-line.obj-type
+          and buf_c-rvs-line-pump.chip-num = tt-rvs-line.chip-num  :
+            
+          create tt-rvs-line-pump .      
+          BUFFER-COPY buf_c-rvs-line-pump to tt-rvs-line-pump .
+
+        end.
+      end.    
+    end.  
+    
     v-input-type-list = '' .
-    for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = tt-rvs-doc.rvs-code:
+    for each tt-rvs-line no-lock :
       find first buf_rvs-line-attr no-lock
             where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
             and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
@@ -210,36 +241,6 @@ sw = insw .
     and not can-do(v-input-type-list, 'ê')
     and not can-do(v-input-type-list, 'ï') 
     then v-doc-input-type = 'ð'.
-      
-    if tt-rvs-doc.del-f = 0 then 
-    do:
-      for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = tt-rvs-doc.rvs-code:
-        create tt-rvs-line . 
-        BUFFER-COPY buf_rvs-line to tt-rvs-line .
-        for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.gds-code = tt-rvs-line.gds-code and buf_rvs-line-pump.pl-code = tt-rvs-line.pl-code
-          and buf_rvs-line-pump.rvs-code = tt-rvs-line.rvs-code and buf_rvs-line-pump.obj-code = tt-rvs-line.obj-code and buf_rvs-line-pump.obj-type = tt-rvs-line.obj-type:
-            
-          create tt-rvs-line-pump .      
-          BUFFER-COPY buf_rvs-line-pump to tt-rvs-line-pump .
-
-        end.
-      end.      
-    end.
-    else 
-    do:
-      for each buf_c-rvs-line no-lock where buf_c-rvs-line.rvs-code = tt-rvs-doc.rvs-code and buf_c-rvs-line.chip-num = tt-rvs-doc.chip-num:
-        create tt-rvs-line . 
-        BUFFER-COPY buf_c-rvs-line to tt-rvs-line .
-        for each buf_c-rvs-line-pump no-lock where buf_c-rvs-line-pump.gds-code = tt-rvs-line.gds-code and buf_c-rvs-line-pump.pl-code = tt-rvs-line.pl-code
-          and buf_c-rvs-line-pump.rvs-code = tt-rvs-line.rvs-code and buf_c-rvs-line-pump.obj-code = tt-rvs-line.obj-code and buf_c-rvs-line-pump.obj-type = tt-rvs-line.obj-type
-          and buf_c-rvs-line-pump.chip-num = tt-rvs-line.chip-num  :
-            
-          create tt-rvs-line-pump .      
-          BUFFER-COPY buf_c-rvs-line-pump to tt-rvs-line-pump .
-
-        end.
-      end.    
-    end.  
 
     /*    sw:start-element ("check-fuel-docs") .*/
 
