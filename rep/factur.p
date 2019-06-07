@@ -949,11 +949,11 @@ on error undo, return error
         gds-str1 = ''
         gds-str2 = ''
     .
-    find first ub.Units no-lock
-         where ub.units.unit-name = buf_goods.unit-base
+    find first Units no-lock
+         where units.unit-name = buf_goods.unit-base
     .
-    v-unit-code = (if ub.units.OKEI = 0 then "-" else string(ub.units.OKEI)) .
-    if (units.type = "{&bef-divisional},{&bef-twounit}"  or  ub.Units.type = "{&bef-divisional},{&bef-altunit}" )
+    v-unit-code = (if units.OKEI = 0 then "-" else string(units.OKEI)) .
+    if (units.type = "{&bef-divisional},{&bef-twounit}"  or  units.type = "{&bef-divisional},{&bef-altunit}" )
     then do:
         assign
             str =  (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "")  + string(buf_goods.Sort,"x(5)") + " " + trim(buf_goods.gds-name)
@@ -978,89 +978,90 @@ on error undo, return error
         gds-str1 = breakstr(str, {&gds-len}, input-output gds-str1, input-output gds-str2).
     .
 
-    find first ub.gds-prt no-lock
-         where ub.gds-prt.upper-code = ub.doc-line.prt-root
+    find first gds-prt no-lock
+         where gds-prt.upper-code = doc-line.prt-root
     .
     assign
-        rootnode_code = ub.gds-prt.node-code
+        rootnode_code = gds-prt.node-code
     .
-    if ( ub.gds-prt.node-name <> {&empty-scale} )
+    if ( gds-prt.node-name <> {&empty-scale} )
 /*    and ( not invers )*/
     then do:
         /*---S------------- Не пустая шкала и не от поставщика ---------------------*/
-        assign
-            v-tot-prt-qnty          = 0
-            v-tot-prt-VAT           = 0
-            v-tot-prt-SLT           = 0
-            v-tot-prt-sum-no-VAT    = 0
-            v-tot-prt-sum           = 0
-        .
-        if PrintScale = yes
-        then do:
+       assign
+           v-tot-prt-qnty          = 0
+           v-tot-prt-VAT           = 0
+           v-tot-prt-SLT           = 0
+           v-tot-prt-sum-no-VAT    = 0
+           v-tot-prt-sum           = 0
+       .
+       if PrintScale = yes
+       then do:
           define variable is-printed as logical initial no no-undo .
-          for each ub.parts no-lock
-             where ub.parts.out-code  = ub.doc-line.doc-code
-               and ub.parts.obj-type  = ub.doc-line.obj-type
-               and ub.parts.obj-code  = ub.doc-line.obj-code
-               and ub.parts.artic     = ub.doc-line.artic
-               and ub.parts.prod-type = ub.doc-line.prod-type
-               and ub.parts.prod-code = ub.doc-line.prod-code
+          for each parts no-lock
+             where parts.out-code  = doc-line.doc-code
+               and parts.obj-type  = doc-line.obj-type
+               and parts.obj-code  = doc-line.obj-code
+               and parts.artic     = doc-line.artic
+               and parts.prod-type = doc-line.prod-type
+               and parts.prod-code = doc-line.prod-code
           :
-            /*---S------------- По партиям - для печати ГТД ---------------------*/
-            assign v-GTD = ub.parts.cst-code.
-            if available ub.country
-            and ub.country.alpha1 = "RU":U
-            then do:
-                assign
-                    v-GTD       = "":U
-                    v-country-code = "":U
-                    v-country   = "":U
-                .
-            end.
-            find first buf_parts-attr no-lock
-              where buf_parts-attr.in-code   = ub.parts.in-code
-                and buf_parts-attr.gds-code  = ub.goods.gds-code
-                and buf_parts-attr.part-code = ub.parts.part-code
-            no-error .
-            if available buf_parts-attr
-              and buf_parts-attr.country-code <> 0
+             /*---S------------- По партиям - для печати ГТД ---------------------*/
+              assign v-GTD = parts.cst-code.
+              if     available country
+                 and country.alpha1 = "RU":U
               then do:
-                  find first buf_country
-                  where buf_country.num-code = buf_parts-attr.country-code
-                  no-error.
-                  if available buf_country
-                  and buf_country.num-code <> ub.country.num-code
-                  and buf_country.short-name <> ""
-                  then do :
-                      assign
-                          v-country-code = " " + string(buf_country.num-code)
-                          v-country = buf_country.short-name
-                        .
-                      if buf_country.alpha1 = "RU":U
-                      then do :
-                          assign
-                            v-country-code = "":U
-                            v-country = "":U
-                            v-GTD     = "":U
-                          .
-                      end .
-                  end.
-            end.
+                 assign
+                     v-GTD       = "":U
+                     v-country-code = "":U
+                     v-country   = "":U
+                .
+              end.
+              find first buf_parts-attr no-lock
+                   where buf_parts-attr.in-code   = parts.in-code
+                     and buf_parts-attr.gds-code  = goods.gds-code
+                     and buf_parts-attr.part-code = parts.part-code
+              no-error .
+              if available buf_parts-attr
+                 and buf_parts-attr.country-code <> 0
+              then do:
+                 find first buf_country
+                 where buf_country.num-code = buf_parts-attr.country-code
+                 no-error.
+                 if available buf_country
+                    and buf_country.num-code <> country.num-code
+                    and buf_country.short-name <> ""
+                 then do :
+                    assign
+                       v-country-code = " " + string(buf_country.num-code)
+                       v-country = buf_country.short-name
+                    .
+                    if buf_country.alpha1 = "RU":U
+                    then do :
+                       assign
+                           v-country-code = "":U
+                           v-country = "":U
+                           v-GTD     = "":U
+                       .
+                    end .
+                 end.
+              end.
             /*---S------------- Печатать по шкале ---------------------*/
-            if is-printed = no then do:
+            if is-printed = no 
+              then do:
               assign is-printed = yes .
-              if lookup( "dec10", p-mode ) <> 0
-              THEN DO:
-                display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 v-GTD
-                                          sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
-                down stream Out-stream 1 with frame factur-10 .
-              END.
-              ELSE DO:
-                display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 v-GTD
-                                          sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
-                down stream Out-stream 1 with frame factur .
-              END.
-                run facturxl-write-line-data in this-procedure (
+                 if lookup( "dec10", p-mode ) <> 0
+                 THEN DO:
+                    display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 v-GTD
+                                             sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
+                    down stream Out-stream 1 with frame factur-10 .
+                 END.
+                 ELSE DO:
+                    display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 v-GTD
+                                              sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
+                    down stream Out-stream 1 with frame factur .
+                 END.
+                 run facturxl-write-line-data in this-procedure (
                       input gds-str1        /*  p-Name     */
                     , input "":U            /*  p-UAES     */  
                     , input "":U            /*  p-OKEI     */
@@ -1076,20 +1077,51 @@ on error undo, return error
                     , input v-country       /*  p-country  */
                     , input v-GTD           /*  p-GTD      */
                 ).
-            end.
-            else do:
-              if v-GTD <> "" then do:
-                if lookup( "dec10", p-mode ) <> 0
-                THEN DO:
-                  display stream Out-stream /*sym1*/ sym16 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
-                  down stream Out-stream 1 with frame factur-10 .
-                END.
-                ELSE DO:
-                  display stream Out-stream sym1 sym16 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
-                  down stream Out-stream 1 with frame factur .
-                END.
-                run facturxl-write-line-data in this-procedure (
-                      input "":U            /*  p-Name     */
+              end.
+              else do:
+                 if v-GTD <> "" 
+                 then do:
+                    if lookup( "dec10", p-mode ) <> 0
+                    THEN DO:
+                       display stream Out-stream /*sym1*/ sym16 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
+                       down stream Out-stream 1 with frame factur-10 .
+                    END.
+                    ELSE DO:
+                       display stream Out-stream sym1 sym16 sym14 sym2  sym3 v-GTD sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
+                       down stream Out-stream 1 with frame factur .
+                    END.
+                    run facturxl-write-line-data in this-procedure (
+                          input "":U            /*  p-Name     */
+                        , input "":U            /*  p-UAES     */  
+                        , input "":U            /*  p-OKEI     */
+                        , input "":U            /*  p-EI       */
+                        , input "":U            /*  p-qnty     */
+                        , input "":U            /*  p-price    */
+                        , input "":U            /*  p-SumNoVAT */
+                        , input "":U            /*  p-SumActciz*/
+                        , input "":U            /*  p-VATpc    */
+                        , input "":U            /*  p-VATsum   */
+                        , input "":U            /*  p-sum      */
+                        , input "":U            /*  p-countrycode  */
+                        , input "":U            /*  p-country  */
+                        , input v-GTD           /*  p-GTD      */
+                    ).
+                 end.
+              end.
+          end.
+          if is-printed = no 
+          then do:
+             if lookup( "dec10", p-mode ) <> 0
+             THEN DO:
+                display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
+                down stream Out-stream 1 with frame factur-10 .
+             END.
+             ELSE DO:
+                display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
+                down stream Out-stream 1 with frame factur .
+             END.
+             run facturxl-write-line-data in this-procedure (
+                      input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name  /*  p-Name     */
                     , input "":U            /*  p-UAES     */  
                     , input "":U            /*  p-OKEI     */
                     , input "":U            /*  p-EI       */
@@ -1100,85 +1132,57 @@ on error undo, return error
                     , input "":U            /*  p-VATpc    */
                     , input "":U            /*  p-VATsum   */
                     , input "":U            /*  p-sum      */
-                    , input "":U            /*  p-countrycode  */
-                    , input "":U            /*  p-country  */
-                    , input v-GTD           /*  p-GTD      */
+                    , input v-country-code  /*  p-countrycode  */
+                    , input v-country       /*  p-country  */
+                    , input "":U            /*  p-GTD      */
                 ).
-              end.
-            end.
-          end.
-          if is-printed = no then do:
-            if lookup( "dec10", p-mode ) <> 0
-            THEN DO:
-              display stream Out-stream /*sym1*/ gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 /*sym13*/ with frame factur-10 .
-              down stream Out-stream 1 with frame factur-10 .
-            END.
-            ELSE DO:
-              display stream Out-stream sym1 gds-str1 @ buf_goods.gds-name sym16 sym14 sym2 v-country sym3 sym4 sym5 sym6 sym7 sym8 sym9  sym11 sym15 sym12 sym13 with frame factur .
-              down stream Out-stream 1 with frame factur .
-            END.
-            run facturxl-write-line-data in this-procedure (
-                  input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name  /*  p-Name     */
-                , input "":U            /*  p-UAES     */  
-                , input "":U            /*  p-OKEI     */
-                , input "":U            /*  p-EI       */
-                , input "":U            /*  p-qnty     */
-                , input "":U            /*  p-price    */
-                , input "":U            /*  p-SumNoVAT */
-                , input "":U            /*  p-SumActciz*/
-                , input "":U            /*  p-VATpc    */
-                , input "":U            /*  p-VATsum   */
-                , input "":U            /*  p-sum      */
-                , input v-country-code  /*  p-countrycode  */
-                , input v-country       /*  p-country  */
-                , input "":U            /*  p-GTD      */
-            ).
-            if FullGdsName
-            and gds-str1 <> "":U then do :
-              run print-more in this-procedure.
-            end.
+             if FullGdsName
+               and gds-str1 <> "":U 
+             then do :
+                run print-more in this-procedure.
+             end.
           end.
           /*---E------------- Печатать по шкале ---------------------*/
-        end.        /* if PrintScale = yes */
-        for each ub.gds-dtl no-lock
-           where ub.gds-dtl.prod-type  = ub.doc-line.prod-type
-             and ub.gds-dtl.prod-code  = ub.doc-line.prod-code
-             and ub.gds-dtl.artic      = ub.doc-line.artic
-             and ub.gds-dtl.doc-code   = ub.doc-line.doc-code
-        :
-            /*---S------------- for each ub.gds-dtl ---------------------*/
-            find first ub.gds-prt no-lock
-                 where ub.gds-prt.node-code = ub.gds-dtl.prt-code
-            .
-            if CostPrice = yes
-            then do:
-                { str/in-vatp.i calc ub.doc-line. buf_trn-doc. g }
-                assign
-                    v-VAT-prc   = vat-pc-loc
-                    v-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
-                    v-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
-                .
-                if v-VAT = ?        then assign v-VAT       = 0.
-                if v-SLT = ?        then assign v-SLT       = 0.
-                assign
+       end.        /* if PrintScale = yes */
+       for each gds-dtl no-lock
+           where gds-dtl.prod-type  = doc-line.prod-type
+             and gds-dtl.prod-code  = doc-line.prod-code
+             and gds-dtl.artic      = doc-line.artic
+             and gds-dtl.doc-code   = doc-line.doc-code
+       :
+            /*---S------------- for each gds-dtl ---------------------*/
+           find first gds-prt no-lock
+                 where gds-prt.node-code = gds-dtl.prt-code
+           .
+           if CostPrice = yes
+           then do:
+              { str/in-vatp.i calc doc-line. buf_trn-doc. g }
+              assign
+                 v-VAT-prc   = vat-pc-loc
+                 v-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
+                 v-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
+              .
+              if v-VAT = ?        then assign v-VAT       = 0.
+              if v-SLT = ?        then assign v-SLT       = 0.
+              assign
 /*                        v-price-no-VAT = ( if PrintRubl*/
 /*                                        then price-rubl-with-tax-loc - vat-rubl-loc - slt-rubl-loc - road-tax-rubl-loc*/
 /*                                        else price-base-with-tax-loc - vat-base-loc - slt-base-loc - road-tax-base-loc)*/
-                    v-price-no-VAT   = ( if PrintRubl then price-rubl-with-tax-loc else price-base-with-tax-loc ) - v-VAT - v-SLT
-                    v-prt-qnty       = ub.gds-dtl.fact-qnty
-                .
-                if v-r-factur-is-vozvrat-vnesh = yes
-                then do:
-                    assign
-                        v-price-no-VAT = v-price-no-VAT -
-                                        ( if PrintRubl
+                  v-price-no-VAT   = ( if PrintRubl then price-rubl-with-tax-loc else price-base-with-tax-loc ) - v-VAT - v-SLT
+                    v-prt-qnty       = gds-dtl.fact-qnty
+              .
+              if v-r-factur-is-vozvrat-vnesh = yes
+              then do:
+                 assign
+                    v-price-no-VAT = v-price-no-VAT -
+                                  ( if PrintRubl
                                             then ( transport-rubl-loc + other-rubl-loc )
                                             else ( transport-base-loc + other-base-loc ) )
                     .
-                end.
-                if p-round = 'round':U
-                then do:
-                    run p-fmt-round in this-procedure (
+              end.
+              if p-round = 'round':U
+              then do:
+                 run p-fmt-round in this-procedure (
                           input v-prt-qnty
                         , input v-price-no-VAT
                         , input v-VAT
@@ -1202,41 +1206,41 @@ on error undo, return error
 /*                        v-prt-VAT           = round( v-VAT          * v-prt-qnty, 2 )*/
 /*                        v-prt-sum-no-VAT    = round( v-price-no-VAT * v-prt-qnty, 2 )*/
 /*                    .*/
-                end.        /* if p-round = 'round':U */
-                else do:
-                    assign
-                        v-prt-VAT       =  v-VAT            * v-prt-qnty
-                        v-prt-SLT        = v-SLT            * v-prt-qnty
-                        v-prt-sum-no-VAT = v-price-no-VAT   * v-prt-qnty
-                    .
-                end.        /* if NOT( p-round = 'round':U ) */
-                assign
-                    v-price          = v-price-no-VAT + v-VAT
-                    v-prt-sum        = v-prt-sum-no-VAT + v-prt-VAT
-                .
-                assign
-                    v-tot-prt-qnty          = v-tot-prt-qnty        + v-prt-qnty
-                    v-tot-prt-VAT           = v-tot-prt-VAT         + v-prt-VAT
-                    v-tot-prt-SLT           = v-tot-prt-SLT         + v-prt-SLT
-                    v-tot-prt-sum-no-VAT    = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
-                    v-tot-prt-sum           = v-tot-prt-sum         + v-prt-sum
-                .
-            end.        /* CostPrice = yes  */
-            else do:
-                { str/out-vatp.i calc-gds-dtl ub.doc-line. buf_trn-doc. ub.gds-dtl. }
-                assign
-                    v-VAT = ( if PrintRubl then vat-rubl-buyer else vat-base-buyer )
-                    v-SLT = ( if PrintRubl then slt-rubl-sale else slt-base-sale )
-                .
-                if v-VAT = ? then assign v-VAT = 0.
-                if v-SLT = ? then assign v-SLT = 0.
-                assign
-                    v-price-no-VAT   = ( if PrintRubl then price-rubl-with-tax-sale else price-base-with-tax-sale ) - v-VAT - v-SLT
-                    v-prt-qnty       = ub.gds-dtl.fact-qnty
-                .
-                if p-round = 'round':U
-                then do:
-                    run p-fmt-round in this-procedure (
+              end.        /* if p-round = 'round':U */
+              else do:
+                 assign
+                    v-prt-VAT       =  v-VAT            * v-prt-qnty
+                    v-prt-SLT        = v-SLT            * v-prt-qnty
+                    v-prt-sum-no-VAT = v-price-no-VAT   * v-prt-qnty
+                 .
+              end.        /* if NOT( p-round = 'round':U ) */
+              assign
+                 v-price          = v-price-no-VAT + v-VAT
+                 v-prt-sum        = v-prt-sum-no-VAT + v-prt-VAT
+              .
+              assign
+                 v-tot-prt-qnty          = v-tot-prt-qnty        + v-prt-qnty
+                 v-tot-prt-VAT           = v-tot-prt-VAT         + v-prt-VAT
+                 v-tot-prt-SLT           = v-tot-prt-SLT         + v-prt-SLT
+                 v-tot-prt-sum-no-VAT    = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
+                 v-tot-prt-sum           = v-tot-prt-sum         + v-prt-sum
+              .
+           end.        /* CostPrice = yes  */
+           else do:
+              { str/out-vatp.i calc-gds-dtl doc-line. buf_trn-doc. gds-dtl. }
+              assign
+                 v-VAT = ( if PrintRubl then vat-rubl-buyer else vat-base-buyer )
+                 v-SLT = ( if PrintRubl then slt-rubl-sale else slt-base-sale )
+              .
+              if v-VAT = ? then assign v-VAT = 0.
+              if v-SLT = ? then assign v-SLT = 0.
+              assign
+                 v-price-no-VAT   = ( if PrintRubl then price-rubl-with-tax-sale else price-base-with-tax-sale ) - v-VAT - v-SLT
+                 v-prt-qnty       = gds-dtl.fact-qnty
+              .
+              if p-round = 'round':U
+              then do:
+                 run p-fmt-round in this-procedure (
                           input v-prt-qnty
                         , input v-price-no-VAT
                         , input v-VAT
@@ -1260,92 +1264,92 @@ on error undo, return error
 /*                        v-prt-VAT           = round( v-VAT          * v-prt-qnty, 2 )*/
 /*                        v-prt-sum-no-VAT    = round( v-price-no-VAT * v-prt-qnty, 2 )*/
 /*                    .*/
-                end.        /* p-round = 'round':U */
-                else do:
+              end.        /* p-round = 'round':U */
+              else do:
+                 assign
+                    v-prt-VAT        = v-VAT          * v-prt-qnty
+                    v-prt-SLT        = v-SLT          * v-prt-qnty
+                    v-prt-sum-no-VAT = v-price-no-VAT * v-prt-qnty
+                 .
+              end.        /* NOT ( p-round = 'round':U ) */
+              assign
+                 v-price          = v-price-no-VAT + v-VAT
+                 v-prt-sum        = v-prt-sum-no-VAT + v-prt-VAT
+              .
+              assign
+                 v-tot-prt-qnty          = v-tot-prt-qnty        + v-prt-qnty
+                 v-tot-prt-VAT           = v-tot-prt-VAT         + v-prt-VAT
+                 v-tot-prt-SLT           = v-tot-prt-SLT         + v-prt-SLT
+                 v-tot-prt-sum-no-VAT    = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
+                 v-tot-prt-sum           = v-tot-prt-sum         + v-prt-sum
+              .
+           end.        /* NOT ( CostPrice = yes  ) */
+           if PrintScale
+           then do:
+              /*---S------------- Печатать шкалу ---------------------*/
+              find first bar-code no-lock
+                   where bar-code.gds-code    = buf_goods.gds-code
+                     and bar-code.unit-cli    = buf_goods.unit-base
+                     and bar-code.node-code   = gds-dtl.prt-code
+                     and bar-code.part-code   = ""
+                     and bar-code.in-code     = ""
+              .
+              assign
+                 v-prt-name = ""
+              .
+              do while available gds-prt:
+                 if available gds-prt
+                 then do:
                     assign
-                        v-prt-VAT        = v-VAT          * v-prt-qnty
-                        v-prt-SLT        = v-SLT          * v-prt-qnty
-                        v-prt-sum-no-VAT = v-price-no-VAT * v-prt-qnty
+                       v-prt-name     = "\" + string( gds-prt.node-name, "X(10)" ) + v-prt-name
+                       v-node-code   = gds-prt.upper-code
                     .
-                end.        /* NOT ( p-round = 'round':U ) */
-                assign
-                    v-price          = v-price-no-VAT + v-VAT
-                    v-prt-sum        = v-prt-sum-no-VAT + v-prt-VAT
-                .
-                assign
-                    v-tot-prt-qnty          = v-tot-prt-qnty        + v-prt-qnty
-                    v-tot-prt-VAT           = v-tot-prt-VAT         + v-prt-VAT
-                    v-tot-prt-SLT           = v-tot-prt-SLT         + v-prt-SLT
-                    v-tot-prt-sum-no-VAT    = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
-                    v-tot-prt-sum           = v-tot-prt-sum         + v-prt-sum
-                .
-            end.        /* NOT ( CostPrice = yes  ) */
-            if PrintScale
-            then do:
-                /*---S------------- Печатать шкалу ---------------------*/
-                find first ub.bar-code no-lock
-                     where ub.bar-code.gds-code    = buf_goods.gds-code
-                       and ub.bar-code.unit-cli    = buf_goods.unit-base
-                       and ub.bar-code.node-code   = ub.gds-dtl.prt-code
-                       and ub.bar-code.part-code   = ""
-                       and ub.bar-code.in-code     = ""
-                .
-                assign
-                    v-prt-name = ""
-                .
-                do while available ub.gds-prt:
-                    if available ub.gds-prt
-                    then do:
-                        assign
-                            v-prt-name     = "\" + string( ub.gds-prt.node-name, "X(10)" ) + v-prt-name
-                            v-node-code   = ub.gds-prt.upper-code
-                        .
-                    end.
-                    find first ub.gds-prt no-lock
-                         where ub.gds-prt.node-code = v-node-code
-                           and ub.gds-prt.root <> yes
-                    no-error.
-                end.
-                if lookup( "dec10", p-mode ) <> 0
-                THEN DO:
-                  display stream out-stream
-                        /*sym1*/ v-prt-name @ buf_goods.gds-name
+                 end.
+                 find first gds-prt no-lock
+                      where gds-prt.node-code = v-node-code
+                        and gds-prt.root <> yes
+                 no-error.
+              end.
+              if lookup( "dec10", p-mode ) <> 0
+              THEN DO:
+                 display stream out-stream
+                       /*sym1*/ v-prt-name                 @ buf_goods.gds-name
                         sym2 "  -   " @ v-uaes-code
                         sym16 v-unit-code
                         sym14 "  " + buf_goods.unit-base
-                        sym3 v-prt-qnty @ v-qnty
+                        sym3 v-prt-qnty                     @ v-qnty
                         sym4 v-price-no-VAT
-                        sym5 v-prt-sum-no-VAT @ v-sum-no-VAT
-                        sym6 "без акциза" format "x(10)" @ v-sum-actciz
+                        sym5 v-prt-sum-no-VAT               @ v-sum-no-VAT
+                        sym6 "без акциза" format "x(10)"         @ v-sum-actciz
                         sym7 v-VAT-prc
                         sym8 v-prt-VAT when v-prt-qnty <> 0 @ v-VAT
-                        sym9 v-prt-sum @ v-sum
+                        sym9 v-prt-sum                      @ v-sum
     /*                            sym10 v-prt-SLT when v-prt-qnty <> 0 @ v-SLT*/
                         sym11 sym15 sym12 /*sym13*/
                         with frame factur-10 .
-                  assign v-lines-counter = v-lines-counter + 1 .
-                  down stream out-stream 1 with frame factur-10 .
-                END.
-                ELSE DO:
-                  display stream out-stream
-                        sym1 v-prt-name @ buf_goods.gds-name
+                 assign v-lines-counter = v-lines-counter + 1 .
+                 down stream out-stream 1 with frame factur-10 .
+              END.
+              ELSE DO:
+                 display stream out-stream
+                        sym1 v-prt-name                     @ buf_goods.gds-name
                         sym2 "  -   " @ v-uaes-code
                         sym16 v-unit-code
                         sym14 "  " + buf_goods.unit-base
-                        sym3 v-prt-qnty @ v-qnty
+                        sym3 v-prt-qnty                     @ v-qnty
                         sym4 v-price-no-VAT
-                        sym5 v-prt-sum-no-VAT @ v-sum-no-VAT
-                        sym6 "без акциза" format "x(10)" @ v-sum-actciz
+                        sym5 v-prt-sum-no-VAT               @ v-sum-no-VAT
+                        sym6 "без акциза" format "x(10)"         @ v-sum-actciz
                         sym7 v-VAT-prc
                         sym8 v-prt-VAT when v-prt-qnty <> 0 @ v-VAT
-                        sym9 v-prt-sum @ v-sum
+                        sym9 v-prt-sum                      @ v-sum
     /*                            sym10 v-prt-SLT when v-prt-qnty <> 0 @ v-SLT*/
                         sym11 sym15 sym12 sym13
                         with frame factur .
                   assign v-lines-counter = v-lines-counter + 1 .
                   down stream out-stream 1 with frame factur .
-                END.
-                run facturxl-write-line-data in this-procedure (
+              END.
+              run facturxl-write-line-data in this-procedure (
                       input v-prt-name                  /*  p-Name     */
                     , input v-uaes-code                 /*  p-UAES     */  
                     , input v-unit-code                 /*  p-OKEI     */
@@ -1362,8 +1366,8 @@ on error undo, return error
                     , input "":U                        /*  p-GTD      */
                 ).
                 /*---E------------- Печатать шкалу ---------------------*/
-            end.
-            /*---E------------- for each ub.gds-dtl ---------------------*/
+           end.
+            /*---E------------- for each gds-dtl ---------------------*/
         end.
         assign
             v-qnty          = v-tot-prt-qnty
@@ -1375,209 +1379,210 @@ on error undo, return error
         if not PrintScale
         then do:
             /*---S------------- Не печатать признаки ---------------------*/
-            assign v-price-no-VAT = v-sum-no-VAT / v-qnty.
-            find first ub.bar-code no-lock
-                    where ub.bar-code.gds-code = buf_goods.gds-code
-                    and ub.bar-code.unit-cli   = buf_goods.unit-base
-                    and ub.bar-code.node-code  = rootnode_code
-                    and ub.bar-code.part-code  = ""
-                    and ub.bar-code.in-code    = ""
-            .
-            for each ub.parts no-lock
-                where ub.parts.out-code    = ub.doc-line.doc-code
-                    and ub.parts.obj-type  = ub.doc-line.obj-type
-                    and ub.parts.obj-code  = ub.doc-line.obj-code
-                    and ub.parts.artic     = ub.doc-line.artic
-                    and ub.parts.prod-type = ub.doc-line.prod-type
-                    and ub.parts.prod-code = ub.doc-line.prod-code
-            :
+           assign v-price-no-VAT = v-sum-no-VAT / v-qnty.
+           find first bar-code no-lock
+                where bar-code.gds-code = buf_goods.gds-code
+                  and bar-code.unit-cli   = buf_goods.unit-base
+                  and bar-code.node-code  = rootnode_code
+                  and bar-code.part-code  = ""
+                  and bar-code.in-code    = ""
+           .
+           for each parts no-lock
+                where parts.out-code    = doc-line.doc-code
+                  and parts.obj-type  = doc-line.obj-type
+                   and parts.obj-code  = doc-line.obj-code
+                   and parts.artic     = doc-line.artic
+                   and parts.prod-type = doc-line.prod-type
+                   and parts.prod-code = doc-line.prod-code
+           :
                     /*---S------------- По партиям ---------------------*/
-                    assign v-GTD = ub.parts.cst-code.
-                    if available ub.country
-                    and ub.country.alpha1 = "RU":U
-                    then do:
-                        assign
-                            v-GTD       = "":U
-                            v-country-code = "":U
-                            v-country   = "":U
-                        .
-                    end.
-                    find first buf_parts-attr no-lock
-                      where buf_parts-attr.in-code   = ub.parts.in-code
-                        and buf_parts-attr.gds-code  = ub.goods.gds-code
-                        and buf_parts-attr.part-code = ub.parts.part-code
-                    no-error .
-                    if available buf_parts-attr
-                      and buf_parts-attr.country-code <> 0
-                      then do:
-                          find first buf_country
-                          where buf_country.num-code = buf_parts-attr.country-code
-                          no-error.
-                          if available buf_country
-                          and buf_country.num-code <> ub.country.num-code
-                          and buf_country.short-name <> ""
-                          then do :
-                              assign
-                                  v-country-code = " " + string(buf_country.num-code)
-                                  v-country = buf_country.short-name
-                                .
-                              if buf_country.alpha1 = "RU":U
-                              then do :
-                                  assign
-                                    v-country-code = "":U
-                                    v-country = "":U
-                                    v-GTD     = "":U
-                                  .
-                              end .
-                          end.
-                    end.
-                    if lookup( "dec10", p-mode ) <> 0
-                    THEN DO:
-                      display stream Out-stream
-                            /*sym1*/ ((if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name)      @ buf_goods.gds-name
+              assign v-GTD = parts.cst-code.
+              if available country
+                 and country.alpha1 = "RU":U
+              then do:
+                 assign
+                    v-GTD       = "":U
+                    v-country-code = "":U
+                    v-country   = "":U
+                 .
+              end.
+              find first buf_parts-attr no-lock
+                   where buf_parts-attr.in-code   = parts.in-code
+                     and buf_parts-attr.gds-code  = goods.gds-code
+                     and buf_parts-attr.part-code = parts.part-code
+              no-error .
+              if available buf_parts-attr
+                 and buf_parts-attr.country-code <> 0
+              then do:
+                 find first buf_country
+                      where buf_country.num-code = buf_parts-attr.country-code
+                 no-error.
+                 if available buf_country
+                    and buf_country.num-code <> country.num-code
+                    and buf_country.short-name <> ""
+                 then do :
+                    assign
+                       v-country-code = " " + string(buf_country.num-code)
+                       v-country = buf_country.short-name
+                    .
+                    if buf_country.alpha1 = "RU":U
+                    then do :
+                       assign
+                          v-country-code = "":U
+                          v-country = "":U
+                          v-GTD     = "":U
+                       .
+                    end .
+                 end.
+              end.
+              if lookup( "dec10", p-mode ) <> 0
+              THEN DO:
+                 display stream Out-stream
+                           /*sym1*/ ((if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name)      @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
                             sym14 "  " + buf_goods.unit-base
-                            sym3 ub.parts.fact-qnty                                                       @ v-qnty
+                            sym3 parts.fact-qnty                                                       @ v-qnty
                             sym4 v-price-no-VAT
-                            sym5 (if v-qnty <> 0 then v-sum-no-VAT * ub.parts.fact-qnty / v-qnty else 0 ) @ v-sum-no-VAT
-                            sym6 "без акциза" format "x(10)" @ v-sum-actciz
+                            sym5 (if v-qnty <> 0 then v-sum-no-VAT * parts.fact-qnty / v-qnty else 0 ) @ v-sum-no-VAT
+                            sym6 "без акциза" format "x(10)"                                             @ v-sum-actciz
                             sym7 v-VAT-prc
-                            sym8 v-VAT * ub.parts.fact-qnty / v-qnty when v-qnty <> 0 @ v-VAT
-                            sym9 (if v-qnty <> 0 then v-sum * ub.parts.fact-qnty / v-qnty else 0 ) @ v-sum
-/*                                sym10 v-SLT * ub.parts.fact-qnty / v-qnty when v-qnty <> 0 @ v-SLT*/
+                            sym8 v-VAT * parts.fact-qnty / v-qnty when v-qnty <> 0                     @ v-VAT
+                            sym9 (if v-qnty <> 0 then v-sum * parts.fact-qnty / v-qnty else 0 )        @ v-sum
+/*                                sym10 v-SLT * parts.fact-qnty / v-qnty when v-qnty <> 0 @ v-SLT*/
                             sym11 v-country-code
                             sym15 v-country
                             sym12 v-GTD
                             /*sym13*/
                             with frame factur-10 .
-                      down stream Out-stream 1 with frame factur-10 .
-                    END.
-                    ELSE DO:
-                      display stream Out-stream
-                            sym1 ((if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name)          @ buf_goods.gds-name
+                 down stream Out-stream 1 with frame factur-10 .
+              END.
+              ELSE DO:
+                 display stream Out-stream
+                             sym1 ((if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name)          @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
                             sym14 "  " + buf_goods.unit-base
-                            sym3 ub.parts.fact-qnty                                                       @ v-qnty
+                            sym3 parts.fact-qnty                                                       @ v-qnty
                             sym4 v-price-no-VAT
-                            sym5 (if v-qnty <> 0 then v-sum-no-VAT * ub.parts.fact-qnty / v-qnty else 0 ) @ v-sum-no-VAT
+                            sym5 (if v-qnty <> 0 then v-sum-no-VAT * parts.fact-qnty / v-qnty else 0 ) @ v-sum-no-VAT
                             sym6 "без акциза" format "x(10)" @ v-sum-actciz
                             sym7 v-VAT-prc
-                            sym8 v-VAT * ub.parts.fact-qnty / v-qnty when v-qnty <> 0 @ v-VAT
-                            sym9 (if v-qnty <> 0 then v-sum * ub.parts.fact-qnty / v-qnty else 0 ) @ v-sum
-/*                                sym10 v-SLT * ub.parts.fact-qnty / v-qnty when v-qnty <> 0 @ v-SLT*/
+                            sym8 v-VAT * parts.fact-qnty / v-qnty when v-qnty <> 0                     @ v-VAT
+                            sym9 (if v-qnty <> 0 then v-sum * parts.fact-qnty / v-qnty else 0 )        @ v-sum
+/*                                sym10 v-SLT * parts.fact-qnty / v-qnty when v-qnty <> 0 @ v-SLT*/
                             sym11 v-country-code
                             sym15 v-country
                             sym12 v-GTD
                             sym13
                             with frame factur .
-                      down stream Out-stream 1 with frame factur .
-                    END.
-                    run facturxl-write-line-data in this-procedure (
+                 down stream Out-stream 1 with frame factur .
+              END.
+              run facturxl-write-line-data in this-procedure (
                           input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name                 /*  p-Name     */
                         , input v-uaes-code                                                                   /*  p-UAES     */  
                         , input v-unit-code                                                                   /*  p-OKEI     */
-                        , input buf_goods.unit-base                                         /*  p-EI       */
-                        , input string( ub.parts.fact-qnty )                               /*  p-qnty     */
-                        , input string( v-price-no-VAT )                                /*  p-price    */
-                        , input (if v-qnty <> 0 then v-sum-no-VAT * ub.parts.fact-qnty / v-qnty else 0 )            /*  p-SumNoVAT */
-                        , input " без акциза":U                                              /*  p-SumActciz*/
-                        , input string( v-VAT-prc )                                     /*  p-VATpc    */
-                        , input ( if v-qnty = 0 then "":U else string( v-VAT * ub.parts.fact-qnty / v-qnty ) )          /*  p-VATsum   */
-                        , input string( if v-qnty <> 0 then v-sum * ub.parts.fact-qnty / v-qnty else 0 )            /*  p-sum      */
-                        , input v-country-code                                               /*  p-countrycode  */
+                        , input buf_goods.unit-base                                                           /*  p-EI       */
+                        , input string( parts.fact-qnty )                                                     /*  p-qnty     */
+                        , input string( v-price-no-VAT )                                                      /*  p-price    */
+                        , input (if v-qnty <> 0 then v-sum-no-VAT * parts.fact-qnty / v-qnty else 0 )         /*  p-SumNoVAT */
+                        , input " без акциза":U                                                                    /*  p-SumActciz*/
+                        , input string( v-VAT-prc )                                                           /*  p-VATpc    */
+                        , input ( if v-qnty = 0 then "":U else string( v-VAT * parts.fact-qnty / v-qnty ) )   /*  p-VATsum   */
+                        , input string( if v-qnty <> 0 then v-sum * parts.fact-qnty / v-qnty else 0 )         /*  p-sum      */
+                        , input v-country-code                                                                /*  p-countrycode  */
                         , input v-country                                                                     /*  p-country  */
-                        , input v-GTD                                                   /*  p-GTD      */
+                        , input v-GTD                                                                         /*  p-GTD      */
                     ).
-                    v-lines-counter = v-lines-counter + 1 .
+              v-lines-counter = v-lines-counter + 1 .
                     /*---E------------- По партиям ---------------------*/
-            end.
+           end.
             /*---E------------- Не печатать признаки ---------------------*/
         end.
         /*---E------------- Не пустая шкала и не от поставщика ---------------------*/
     end.
     else do:
         /*---S------------- Пустая шкала или от поставщика ---------------------*/
-        find first ub.bar-code no-lock
-                where ub.bar-code.gds-code = buf_goods.gds-code
-                and ub.bar-code.unit-cli   = buf_goods.unit-base
-                and ub.bar-code.node-code  = rootnode_code
-                and ub.bar-code.part-code  = ""
-                and ub.bar-code.in-code    = ""
-        .
-        if CostPrice = yes
-        then do:
+       find first bar-code no-lock
+               where bar-code.gds-code = buf_goods.gds-code
+                and bar-code.unit-cli   = buf_goods.unit-base
+                and bar-code.node-code  = rootnode_code
+                and bar-code.part-code  = ""
+                and bar-code.in-code    = ""
+       .
+       if CostPrice = yes
+       then do:
             /*---S------------------- Счет-фактура от поставщика -----------------*/
-            assign v-qnty = ub.doc-line.doc-qnty.
+          assign v-qnty = doc-line.doc-qnty.
 
-            { str/in-vatp.i calc ub.doc-line. buf_trn-doc. g }
-            assign
-                v-VAT-prc   = vat-pc-loc
-                v-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
-                v-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
-                v-tax-price = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
-            .
-            if v-VAT = ?        then assign v-VAT       = 0.
-            if v-SLT = ?        then assign v-SLT       = 0.
-            if v-tax-price = ?  then assign v-tax-price = 0.
-            assign
-                    v-price-no-VAT = ( if PrintRubl
+          { str/in-vatp.i calc doc-line. buf_trn-doc. g }
+          assign
+             v-VAT-prc   = vat-pc-loc
+             v-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
+             v-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
+             v-tax-price = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
+          .
+          if v-VAT = ?        then assign v-VAT       = 0.
+          if v-SLT = ?        then assign v-SLT       = 0.
+          if v-tax-price = ?  then assign v-tax-price = 0.
+          assign
+             v-price-no-VAT = ( if PrintRubl
                                         then price-rubl-with-tax-loc - vat-rubl-loc - slt-rubl-loc - road-tax-rubl-loc
                                         else price-base-with-tax-loc - vat-base-loc - slt-base-loc - road-tax-base-loc)
-            .
-            if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
-            then do:
-               assign
-                  v-price-no-VAT = v-price-no-VAT -
+          .
+          if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
+          then do:
+             assign
+                v-price-no-VAT = v-price-no-VAT -
                                    ( if PrintRubl
                                         then ( transport-rubl-loc + other-rubl-loc )
                                          else ( transport-base-loc + other-base-loc ) )
-                    .
-            end.
-            if v-r-factur-is-vozvrat-vnesh = yes
-            then do:
-                assign
-                    v-price-no-VAT = v-price-no-VAT
-                                    - ( if PrintRubl
+             .
+          end.
+          if v-r-factur-is-vozvrat-vnesh = yes
+          then do:
+             assign
+                v-price-no-VAT = v-price-no-VAT
+                                     - ( if PrintRubl
                                         then ( transport-rubl-loc + other-rubl-loc )
                                         else ( transport-base-loc + other-base-loc ) )
-                .
-            end.
+             .
+          end.
             /*---E------------------- Счет-фактура от поставщика -----------------*/
-        end.
-        else do:
+       end.
+       else do:
             /*---S---------------------- Обычный счет-фактура --------------------*/
-            find first ub.gds-dtl no-lock
-                 where ub.gds-dtl.doc-code  = ub.doc-line.doc-code
-                   and ub.gds-dtl.prod-type = ub.doc-line.prod-type
-                   and ub.gds-dtl.prod-code = ub.doc-line.prod-code
-                   and ub.gds-dtl.artic     = ub.doc-line.artic
-                   and ub.gds-dtl.prt-code  = rootnode_code
-            .
-            assign
-                v-qnty = ub.gds-dtl.fact-qnty
-            .
-            { str/out-vatp.i calc-gds-dtl ub.doc-line. buf_trn-doc. ub.gds-dtl. }
-            assign
-                v-VAT       = ( if PrintRubl then vat-rubl-buyer        else vat-base-buyer )
-                v-SLT       = ( if PrintRubl then slt-rubl-sale         else slt-base-sale )
-                v-tax-price = ( if PrintRubl then road-tax-rubl-sale    else road-tax-base-sale )
-            .
-            if v-VAT = ?        then assign v-VAT       = 0.
-            if v-SLT = ?        then assign v-SLT       = 0.
-            if v-tax-price = ?  then assign v-tax-price = 0.
+          find first gds-dtl no-lock
+                 where gds-dtl.doc-code  = doc-line.doc-code
+                   and gds-dtl.prod-type = doc-line.prod-type
+                   and gds-dtl.prod-code = doc-line.prod-code
+                   and gds-dtl.artic     = doc-line.artic
+                   and gds-dtl.prt-code  = rootnode_code
+                   
+          .
+          assign
+             v-qnty = gds-dtl.fact-qnty
+          .
+          { str/out-vatp.i calc-gds-dtl doc-line. buf_trn-doc. gds-dtl. }
+          assign
+             v-VAT       = ( if PrintRubl then vat-rubl-buyer        else vat-base-buyer )
+             v-SLT       = ( if PrintRubl then slt-rubl-sale         else slt-base-sale )
+             v-tax-price = ( if PrintRubl then road-tax-rubl-sale    else road-tax-base-sale )
+          .
+          if v-VAT = ?        then assign v-VAT       = 0.
+          if v-SLT = ?        then assign v-SLT       = 0.
+          if v-tax-price = ?  then assign v-tax-price = 0.
 
-            assign
-                v-price-no-VAT = ( if PrintRubl
+          assign
+             v-price-no-VAT = ( if PrintRubl
                                    then price-rubl-with-tax-sale
                                    else price-base-with-tax-sale ) - v-VAT - v-SLT - v-tax-price
-            .
+          .
             /*---E---------------------- Обычный счет-фактура --------------------*/
-        end.
-        if p-round = 'round':U
-        then do:
-            run p-fmt-round in this-procedure (
+       end.
+       if p-round = 'round':U
+       then do:
+          run p-fmt-round in this-procedure (
                   input v-qnty
                 , input v-price-no-VAT
                 , input v-VAT
@@ -1591,7 +1596,7 @@ on error undo, return error
                 , output v-tax
                 , output v-sum-no-VAT
                 , output v-void-decimal
-            ).
+          ).
 /*            assign*/
 /*                        v-vat-prc            = v-VAT / v-price-no-VAT*/
 /*                        v-slt-pc            = v-SLT / ( v-price-no-VAT + v-VAT )*/
@@ -1601,33 +1606,33 @@ on error undo, return error
 /*                        v-sum-no-VAT        = round( v-price-no-VAT * v-qnty, 2 )*/
 /*                        v-tax               = round( v-tax-price * v-qnty, 2 )*/
 /*            .*/
-            assign
-                        v-sum               = v-sum-no-VAT + v-VAT
-            .
-        end.        /* p-round = 'round':U */
-        else do:
-            assign
-                v-VAT           = v-VAT * v-qnty
-                v-SLT           = v-SLT * v-qnty
-                v-sum-no-VAT    = v-price-no-VAT * v-qnty
-                v-tax           = v-tax-price * v-qnty
-                v-sum           = v-sum-no-VAT + v-VAT
-            .
-        end.        /* NOT ( p-round = 'round':U ) */
-        if buf_goods.gds-type = {&gds-office}
-        then do:
+          assign
+             v-sum               = v-sum-no-VAT + v-VAT
+          .
+       end.        /* p-round = 'round':U */
+       else do:
+          assign
+             v-VAT           = v-VAT * v-qnty
+             v-SLT           = v-SLT * v-qnty
+             v-sum-no-VAT    = v-price-no-VAT * v-qnty
+             v-tax           = v-tax-price * v-qnty
+             v-sum           = v-sum-no-VAT + v-VAT
+          .
+       end.        /* NOT ( p-round = 'round':U ) */
+       if buf_goods.gds-type = {&gds-office}
+       then do:
             /*---S------------- Услуга ---------------------*/
-            if lookup( "dec10", p-mode ) <> 0
-            THEN DO:
-                display stream Out-stream
-                /*sym1*/ gds-str1 @ buf_goods.gds-name
+          if lookup( "dec10", p-mode ) <> 0
+          THEN DO:
+             display stream Out-stream
+                /*sym1*/ gds-str1                                                  @ buf_goods.gds-name
                 sym2 "  -   " @ v-uaes-code
                 sym16 v-unit-code
-                sym14 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + buf_goods.unit-base) ) @ buf_goods.unit-base
+                sym14 ( if invers then ("  " + doc-line.unit-cli) else ("  " + buf_goods.unit-base) ) @ buf_goods.unit-base
                 sym3 v-qnty
                 sym4 v-price-no-VAT
                 sym5 v-sum-no-VAT
-                sym6 "без акциза" format "x(10)" @ v-sum-actciz
+                sym6 "без акциза" format "x(10)"                                      @ v-sum-actciz
                 sym7 v-VAT-prc
                 sym8 v-VAT
                 sym9 v-sum
@@ -1636,19 +1641,19 @@ on error undo, return error
                 sym15 v-country
                 sym12
                 /*sym13*/
-              with frame factur-10 .
-              down stream Out-stream 1 with frame factur-10 .
-            END.
-            ELSE DO:
-              display stream Out-stream
-                sym1 gds-str1 @ buf_goods.gds-name
+             with frame factur-10 .
+             down stream Out-stream 1 with frame factur-10 .
+          END.
+          ELSE DO:
+             display stream Out-stream
+                sym1 gds-str1                                                      @ buf_goods.gds-name
                 sym2 "  -   " @ v-uaes-code
                 sym16 v-unit-code
-                sym14 ( if invers then ("  " + ub.doc-line.unit-cli) else ("  " + buf_goods.unit-base) ) @ buf_goods.unit-base
+                sym14 ( if invers then ("  " + doc-line.unit-cli) else ("  " + buf_goods.unit-base) ) @ buf_goods.unit-base
                 sym3 v-qnty
                 sym4 v-price-no-VAT
                 sym5 v-sum-no-VAT
-                sym6 "без акциза" format "x(10)" @ v-sum-actciz
+                sym6 "без акциза" format "x(10)"                                      @ v-sum-actciz
                 sym7 v-VAT-prc
                 sym8 v-VAT
                 sym9 v-sum
@@ -1657,14 +1662,14 @@ on error undo, return error
                 sym15 v-country
                 sym12
                 sym13
-              with frame factur .
-              down stream Out-stream 1 with frame factur .
-            END.
-            run facturxl-write-line-data in this-procedure (
+             with frame factur .
+             down stream Out-stream 1 with frame factur .
+          END.
+          run facturxl-write-line-data in this-procedure (
                   input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name        /*  p-Name     */
                 , input v-uaes-code                          /*  p-UAES     */  
                 , input v-unit-code                          /*  p-OKEI     */
-                , input ( if invers then ub.doc-line.unit-cli else buf_goods.unit-base )            /*  p-EI       */
+                , input ( if invers then ub.doc-line.unit-cli else buf_goods.unit-base )     /*  p-EI       */
                 , input string( v-qnty          )            /*  p-qnty     */
                 , input string( v-price-no-VAT  )            /*  p-price    */
                 , input string( v-sum-no-VAT    )            /*  p-SumNoVAT */
@@ -1675,130 +1680,134 @@ on error undo, return error
                 , input v-country-code                       /*  p-countrycode  */
                 , input v-country                            /*  p-country  */
                 , input "":U                                 /*  p-GTD      */
-            ).
-            if FullGdsName
-            and gds-str1 <> "":U then do :
-              run print-more in this-procedure.
-            end.
-            assign v-lines-counter = v-lines-counter + 1.
+          ).
+          if FullGdsName
+             and gds-str1 <> "":U 
+          then do :
+             run print-more in this-procedure.
+          end.
+          assign v-lines-counter = v-lines-counter + 1.
             /*---E------------- Услуга ---------------------*/
-        end.
-        else do:
+       end.
+       else do:
             /*---S------------- Не услуга ---------------------*/
-            define variable v-first-parts   as logical     no-undo.
-            assign
-                v-first-parts = yes
-            .
-            for each ub.parts no-lock
-                where ub.parts.out-code = ub.doc-line.doc-code
-                and ub.parts.obj-type   = ub.doc-line.obj-type
-                and ub.parts.obj-code   = ub.doc-line.obj-code
-                and ub.parts.artic      = ub.doc-line.artic
-                and ub.parts.prod-type  = ub.doc-line.prod-type
-                and ub.parts.prod-code  = ub.doc-line.prod-code
-            :
+          define variable v-first-parts   as logical     no-undo.
+          assign
+             v-first-parts = yes
+          .
+          block-parts:
+          for each parts no-lock
+                where parts.out-code = doc-line.doc-code
+                and parts.obj-type   = doc-line.obj-type
+                and parts.obj-code   = doc-line.obj-code
+                and parts.artic      = doc-line.artic
+                and parts.prod-type  = doc-line.prod-type
+                and parts.prod-code  = doc-line.prod-code
+          :
                 /*---S------------- Для каждой партии ---------------------*/
+              
+             assign
+                v-GTD       = parts.cst-code
+                v-prt-qnty  = parts.fact-qnty
+             .
+             if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+             then do:
                 assign
-                    v-GTD       = ub.parts.cst-code
-                    v-prt-qnty  = ub.parts.fact-qnty
+                   v-prt-qnty  = parts.cli-qnty
                 .
-                if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
-                then do:
-                    assign
-                     v-prt-qnty  = ub.parts.cli-qnty
-                    .
-                end.
-                if available ub.country
-                and ub.country.alpha1 = "RU":U
-                then do:
-                    assign
-                        v-GTD       = "":U
-                        v-country-code   = "":U
-                        v-country   = "":U
-                    .
-                end.
-                find first buf_parts-attr no-lock
-                  where buf_parts-attr.in-code   = ub.parts.in-code
-                    and buf_parts-attr.gds-code  = ub.goods.gds-code
-                    and buf_parts-attr.part-code = ub.parts.part-code
-                no-error .
-                if available buf_parts-attr
-                  and buf_parts-attr.country-code <> 0
-                  then do:
-                      find first buf_country
+             end.
+             if available country
+                and country.alpha1 = "RU":U
+             then do:
+                assign
+                   v-GTD       = "":U
+                   v-country-code   = "":U
+                   v-country   = "":U
+                .
+             end.
+             find first buf_parts-attr no-lock
+                  where buf_parts-attr.in-code   = parts.in-code
+                    and buf_parts-attr.gds-code  = goods.gds-code
+                    and buf_parts-attr.part-code = parts.part-code
+             no-error .
+             if available buf_parts-attr
+                 and buf_parts-attr.country-code <> 0
+             then do:
+                find first buf_country
                       where buf_country.num-code = buf_parts-attr.country-code
-                      no-error.
-                      if available buf_country
-                      and buf_country.num-code <> ub.country.num-code
+                no-error.
+                if available buf_country
+                      and buf_country.num-code <> country.num-code
                       and buf_country.short-name <> ""
-                      then do :
-                          assign
-                              v-country-code = " " + string(buf_country.num-code)
-                              v-country = buf_country.short-name
-                            .
-                          if buf_country.alpha1 = "RU":U
-                          then do :
-                              assign
-                                v-country = "":U
-                                v-country-code   = "":U
-                                v-GTD     = "":U
-                              .
-                          end .
-                      end.
+                then do :
+                   assign
+                      v-country-code = " " + string(buf_country.num-code)
+                      v-country = buf_country.short-name
+                   .
+                   if buf_country.alpha1 = "RU":U
+                   then do :
+                      assign
+                         v-country = "":U
+                         v-country-code   = "":U
+                         v-GTD     = "":U
+                      .
+                   end.
                 end.
-                if CostPrice = yes
-                then do:
+             end.
+             if CostPrice = yes
+             then do:
 /* Если приход, то цену по партиям не осреднять, печатать как есть */
-                    { str/in-vatp.i calc-parts ub.parts. buf_trn-doc. g }
+                { str/in-vatp.i calc-parts parts. buf_trn-doc. g }
 
-                    assign
-                        v-VAT-prc         = vat-pc-loc
-                        v-parts-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
-                        v-parts-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
-                        v-tax-price       = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
-                    .
-                    if v-parts-VAT = ?  then assign v-parts-VAT = 0.
-                    if v-parts-SLT = ?  then assign v-parts-SLT = 0.
-                    if v-tax-price = ?  then assign v-tax-price = 0.
-                    assign
-                        v-parts-price-no-VAT    =
+                assign
+                   v-VAT-prc         = vat-pc-loc
+                   v-parts-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
+                   v-parts-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
+                   v-tax-price       = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
+                .
+                if v-parts-VAT = ?  then assign v-parts-VAT = 0.
+                if v-parts-SLT = ?  then assign v-parts-SLT = 0.
+                if v-tax-price = ?  then assign v-tax-price = 0.
+                assign
+                   v-parts-price-no-VAT    =
                                           ( if PrintRubl
                                           then price-rubl-with-tax-loc - vat-rubl-loc - slt-rubl-loc - road-tax-rubl-loc
                                           else price-base-with-tax-loc - vat-base-loc - slt-base-loc - road-tax-base-loc )
-                        v-parts-sum             =
+                   v-parts-sum             =
                                           ( if PrintRubl
                                           then price-rubl-with-tax-loc
                                           else price-base-with-tax-loc ) * v-prt-qnty
-                    .
-                    if v-r-factur-is-vozvrat-vnesh = yes
+                .
+                if v-r-factur-is-vozvrat-vnesh = yes
                     or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
 
-                    then do:
-                        assign
-                            v-parts-price-no-VAT = v-parts-price-no-VAT
+                then do:
+                   assign
+                      v-parts-price-no-VAT = v-parts-price-no-VAT
                                             - ( if PrintRubl
                                                 then ( transport-rubl-loc + other-rubl-loc )
                                                 else ( transport-base-loc + other-base-loc ) )
-                            v-parts-sum          = v-parts-sum
+                      v-parts-sum          = v-parts-sum
                                             - ( ( if PrintRubl
                                                   then ( transport-rubl-loc + other-rubl-loc )
                                                   else ( transport-base-loc + other-base-loc ) ) * v-prt-qnty )
-                        .
-                    end.
-                    if p-round = 'round':U
-                    then do:
-                        if v-first-parts = yes
-                        then do:
-                            assign
-                                v-first-parts   = no
-                                v-sum-no-VAT    = 0
-                                v-VAT           = 0
-                                v-SLT           = 0
-                                v-tax           = 0
-                                v-sum           = 0
-                            .
-                        end.
-                        run p-fmt-round in this-procedure (
+                   .
+                end.
+                if p-round = 'round':U
+                then do:
+                   if v-first-parts = yes
+                   then do:
+                      assign
+                         v-first-parts   = no
+                         v-sum-no-VAT    = 0
+                         v-VAT           = 0
+                         v-SLT           = 0
+                         v-tax           = 0
+                         v-sum           = 0
+                      .
+                   end.
+                  
+                   run p-fmt-round in this-procedure (
                               input v-prt-qnty
                             , input v-parts-price-no-VAT
                             , input v-parts-VAT
@@ -1812,7 +1821,7 @@ on error undo, return error
                             , output v-sum-tax
                             , output v-parts-sum-no-VAT
                             , output v-parts-sum
-                        ).
+                   ).
 /*                        assign*/
 /*                            v-vat-prc                = v-parts-VAT / v-parts-price-no-VAT*/
 /*                            v-slt-pc                = v-parts-SLT / ( v-parts-price-no-VAT + v-parts-VAT )*/
@@ -1825,40 +1834,43 @@ on error undo, return error
 /*                                                                    else road-tax-base-loc )*/
 /*                                                             ) * v-prt-qnty, 2 )*/
 /*                        .*/
-                        assign
-                            v-sum-no-VAT    = v-sum-no-VAT  + v-parts-sum-no-VAT
-                            v-VAT           = v-VAT         + v-sum-VAT
-                            v-SLT           = v-SLT         + v-sum-SLT
-                            v-tax           = v-tax         + v-sum-tax
-                            v-sum           = v-sum         + v-parts-sum
-                        .
-                    end.        /* p-round = 'round':U */
-                    if lookup( "dec10", p-mode ) <> 0
-                    THEN DO:
-                      if invers then do :   /*в единицах поставщика */
-                          display stream Out-stream
+                assign
+                      v-sum-no-VAT    = v-sum-no-VAT  + v-parts-sum-no-VAT
+                      v-VAT           = v-VAT         + v-sum-VAT
+                      v-SLT           = v-SLT         + v-sum-SLT
+                      v-tax           = v-tax         + v-sum-tax
+                      v-sum           = v-sum         + v-parts-sum
+                   .
+                end.        /* p-round = 'round':U */
+                
+                
+                if lookup( "dec10", p-mode ) <> 0
+                THEN DO:
+                   if invers 
+                   then do :   /*в единицах поставщика */
+                      display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
                             sym14 ub.doc-line.unit-cli                                               @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
-                            sym4 v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty               @ v-price-no-VAT
-                            sym5 v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty  @ v-sum-no-VAT
+                            sym4 v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty                  @ v-price-no-VAT
+                            sym5 v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty     @ v-sum-no-VAT
                             sym6 "без акциза" format "x(10)"                                           @ v-sum-actciz
                             sym7 v-VAT-prc
-                            sym8 ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
-                            sym9 ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty )
-                            + ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
+                            sym8 ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
+                            sym9 ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty )
+                            + ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
                             sym11 v-country-code
                             sym15 v-country
                             sym12 v-GTD
                             /*sym13*/
-                          with frame factur-10 .
-                          down stream Out-stream 1 with frame factur-10 .
+                      with frame factur-10 .
+                      down stream Out-stream 1 with frame factur-10 .
 
-                      end.  /*в единицах поставщика */
-                      else do :
-                          display stream Out-stream
+                   end.  /*в единицах поставщика */
+                   else do :
+                      display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
@@ -1874,34 +1886,34 @@ on error undo, return error
                             sym15 v-country
                             sym12 v-GTD
                             /*sym13*/
-                          with frame factur-10 .
-                          down stream Out-stream 1 with frame factur-10 .
-                      end.
-                    END.
-                    ELSE DO:
-                      if invers then do :   /*в единицах поставщика */
-                          display stream Out-stream
+                      with frame factur-10 .
+                      down stream Out-stream 1 with frame factur-10 .
+                   end.
+                END.
+                ELSE DO:
+                   if invers then do :  /*в единицах поставщика */
+                      display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
-                            sym14 ub.doc-line.unit-cli                                                  @ buf_goods.unit-base
+                            sym14 doc-line.unit-cli                                                  @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
-                            sym4 v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty               @ v-price-no-VAT
-                            sym5 v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty  @ v-sum-no-VAT
+                            sym4 v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty                  @ v-price-no-VAT
+                            sym5 v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty     @ v-sum-no-VAT
                             sym6 "без акциза" format "x(10)"                                           @ v-sum-actciz
                             sym7 v-VAT-prc
-                            sym8 ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
-                            sym9 ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty )
-                            + ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
+                            sym8 ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
+                            sym9 ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty )
+                            + ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
                             sym11 v-country-code
                             sym15 v-country
                             sym12 v-GTD
                             sym13
-                          with frame factur .
-                          down stream Out-stream 1 with frame factur .
-                      end.  /*в единицах поставщика */
-                      else do :
-                          display stream Out-stream
+                      with frame factur .
+                      down stream Out-stream 1 with frame factur .
+                   end.  /*в единицах поставщика */
+                   else do :
+                      display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
@@ -1917,76 +1929,88 @@ on error undo, return error
                             sym15 v-country
                             sym12 v-GTD
                             sym13
-                          with frame factur .
-                          down stream Out-stream 1 with frame factur .
-                      end.
-                    END.
-                    if invers then do : /*в единицах поставщика */
-                        run facturxl-write-line-data in this-procedure (
+                      with frame factur .
+                      down stream Out-stream 1 with frame factur .
+                   end.
+                END.
+                if invers then do : /*в единицах поставщика */
+                   run facturxl-write-line-data in this-procedure (
                               input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name                /*  p-Name     */
                             , input v-uaes-code                                                                  /*  p-UAES     */  
                             , input v-unit-code                                                                  /*  p-OKEI     */
-                            , input ( ub.doc-line.unit-cli )                                                        /*  p-EI       */
+                            , input ( doc-line.unit-cli )                                                        /*  p-EI       */
                             , input string( v-prt-qnty                        )                                  /*  p-qnty     */
-                            , input string( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty )               /*  p-price    */
-                            , input string( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty )  /*  p-SumNoVAT */
-                            , input "без акциза":U                                                                   /*  p-SumActciz*/
+                            , input string( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty )                  /*  p-price    */
+                            , input string( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty )     /*  p-SumNoVAT */
+                            , input " без акциза":U                                                                   /*  p-SumActciz*/
                             , input string( v-VAT-prc          )                                                 /*  p-VATpc    */
                             , input ( if v-prt-qnty = 0 or v-qnty = 0 then "":U                                  /*  p-VATsum   */
-                            else string( ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
+                            else string( ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
                             , input ( if v-prt-qnty = 0 or v-qnty = 0 then "":U                                  /*  p-sum      */
-                            else string( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty + ( v-parts-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
+                            else string( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty + ( v-parts-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
                             , input v-country-code                                                               /*  p-countrycode  */
                             , input v-country                                                                    /*  p-country  */
                             , input v-GTD                                                                        /*  p-GTD      */
-                        ).
-                    end.    /*в единицах поставщика */
-                    else do :
-                        run facturxl-write-line-data in this-procedure (
+                   ).
+                end.    /*в единицах поставщика */
+                else do :
+                   run facturxl-write-line-data in this-procedure (
                           input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name        /*  p-Name     */
                         , input v-uaes-code                                     /*  p-UAES     */  
                         , input v-unit-code                                     /*  p-OKEI     */
-                            , input ( buf_goods.unit-base )                         /*  p-EI       */
-                            , input string( v-prt-qnty                        )     /*  p-qnty     */
-                            , input string( v-parts-price-no-VAT              )     /*  p-price    */
-                            , input string( v-parts-price-no-VAT * v-prt-qnty )     /*  p-SumNoVAT */
-                            , input " без акциза":U                                      /*  p-SumActciz*/
-                            , input string( v-VAT-prc          )                    /*  p-VATpc    */
-                            , input ( if v-qnty = 0 then "":U else string( v-parts-VAT * v-prt-qnty ) )  /*  p-VATsum   */
-                            , input string( v-parts-sum              )              /*  p-sum      */
+                        , input ( buf_goods.unit-base )                         /*  p-EI       */
+                        , input string( v-prt-qnty                        )     /*  p-qnty     */
+                        , input string( v-parts-price-no-VAT              )     /*  p-price    */
+                        , input string( v-parts-price-no-VAT * v-prt-qnty )     /*  p-SumNoVAT */
+                        , input " без акциза":U                                      /*  p-SumActciz*/
+                        , input string( v-VAT-prc          )                    /*  p-VATpc    */
+                        , input ( if v-qnty = 0 then "":U else string( v-parts-VAT * v-prt-qnty ) )  /*  p-VATsum   */
+                        , input string( v-parts-sum              )              /*  p-sum      */
                         , input v-country-code                                  /*  p-countrycode  */
-                            , input v-country                                       /*  p-country  */
-                            , input v-GTD                                           /*  p-GTD      */
-                        ).
-                    end.
+                        , input v-country                                       /*  p-country  */
+                        , input v-GTD                                           /*  p-GTD      */
+                   ).
+                end.
+             end. 
+             else do:
+ 
+                if v-first-parts = yes
+                then do:
+                   v-first-parts   = no.
                 end.
                 else do:
-                    if lookup( "dec10", p-mode ) <> 0
-                    THEN DO:
-                      if invers then do :   /*в единицах поставщика */
-                          display stream Out-stream
+                   if     not invers                       /* не в ед. поставщика */
+                  /* то нам нужна только первая строка  чтобы просто вывести информацию, все остальные это дубль */
+                   then
+                      leave block-parts.
+                end.
+                
+                if lookup( "dec10", p-mode ) <> 0
+                THEN DO:
+                   if invers then do :   /*в единицах поставщика */
+                      display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
-                            sym14 ub.doc-line.unit-cli                                                  @ buf_goods.unit-base
+                            sym14 doc-line.unit-cli                                                  @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
-                            sym4 v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty                     @ v-price-no-VAT
-                            sym5 v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty        @ v-sum-no-VAT
+                            sym4 v-price-no-VAT * v-qnty / doc-line.cli-qnty                        @ v-price-no-VAT
+                            sym5 v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty           @ v-sum-no-VAT
                             sym6 "без акциза" format "x(10)"                                           @ v-sum-actciz
                             sym7 v-VAT-prc
-                            sym8 ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
-                            sym9 ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty )
-                            + ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
+                            sym8 ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
+                            sym9 ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty )
+                            + ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
                             sym11 v-country-code
                             sym15 v-country
                             sym12 v-GTD
                             /*sym13*/
-                          with frame factur-10 .
-                          down stream Out-stream 1 with frame factur-10 .
+                      with frame factur-10 .
+                      down stream Out-stream 1 with frame factur-10 .
 
-                      end.  /*в единицах поставщика */
-                      else do :
-                          display stream Out-stream
+                   end.  /*в единицах поставщика */
+                   else do :
+                      display stream Out-stream
                             /*sym1*/ gds-str1                                                       @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
@@ -2002,34 +2026,36 @@ on error undo, return error
                             sym15 v-country
                             sym12 v-GTD
                             /*sym13*/
-                          with frame factur-10 .
-                          down stream Out-stream 1 with frame factur-10 .
-                      end.
-                    END.
-                    ELSE DO:
-                      if invers then do :   /*в единицах поставщика */
-                          display stream Out-stream
+                      with frame factur-10 .
+                      down stream Out-stream 1 with frame factur-10 .
+                   end.
+                END.
+                ELSE DO:
+                   if invers then do :   /*в единицах поставщика */
+                      display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
-                            sym14 ub.doc-line.unit-cli                                                  @ buf_goods.unit-base
+                            sym14 doc-line.unit-cli                                                  @ buf_goods.unit-base
                             sym3 v-prt-qnty                                                         @ v-qnty
                             sym4 v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty                     @ v-price-no-VAT
-                            sym5 v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty        @ v-sum-no-VAT
+                            sym5 v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty           @ v-sum-no-VAT
                             sym6 "без акциза" format "x(10)"                                           @ v-sum-actciz
                             sym7 v-VAT-prc
-                            sym8 ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
-                            sym9 ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty )
-                            + ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
+                            sym8 ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100  when v-qnty <> 0   @ v-VAT
+                            sym9 ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty )
+                            + ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100                        @ v-sum
                             sym11 v-country-code
                             sym15 v-country
                             sym12 v-GTD
                             sym13
-                          with frame factur .
-                          down stream Out-stream 1 with frame factur .
-                      end.  /*в единицах поставщика */
-                      else do :
-                          display stream Out-stream
+                      with frame factur .
+                      down stream Out-stream 1 with frame factur .
+                   end.  /*в единицах поставщика */
+                   else do :
+/* -------------------------------------------------------                       c*/
+                      
+                      display stream Out-stream
                             sym1 gds-str1                                                           @ buf_goods.gds-name
                             sym2 "  -   " @ v-uaes-code
                             sym16 v-unit-code
@@ -2045,70 +2071,72 @@ on error undo, return error
                             sym15 v-country
                             sym12 v-GTD
                             sym13
-                          with frame factur .
-                          down stream Out-stream 1 with frame factur .
-                      end.
-                    END.
-                    if invers then do : /*в единицах поставщика */
-                        run facturxl-write-line-data in this-procedure (
+                      with frame factur .
+                      down stream Out-stream 1 with frame factur .
+                     
+                   end.
+                END.
+                if invers then do : /*в единицах поставщика */
+                   run facturxl-write-line-data in this-procedure (
                               input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name                /*  p-Name     */
                             , input v-uaes-code                                                                  /*  p-UAES     */  
                             , input v-unit-code                                                                  /*  p-OKEI     */
-                            , input ( ub.doc-line.unit-cli )                                                        /*  p-EI       */
+                            , input ( doc-line.unit-cli )                                                        /*  p-EI       */
                             , input string( v-prt-qnty                        )                                  /*  p-qnty     */
-                            , input string( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty )                     /*  p-price    */
-                            , input string( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty )        /*  p-SumNoVAT */
-                            , input "без акциза":U                                                                   /*  p-SumActciz*/
+                            , input string( v-price-no-VAT * v-qnty / doc-line.cli-qnty )                        /*  p-price    */
+                            , input string( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty )           /*  p-SumNoVAT */
+                            , input " без акциза":U                                                                   /*  p-SumActciz*/
                             , input string( v-VAT-prc          )                                                 /*  p-VATpc    */
                             , input ( if v-prt-qnty = 0 or v-qnty = 0 then "":U                                  /*  p-VATsum   */
-                            else string( ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
+                            else string( ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
                             , input ( if v-prt-qnty = 0 or v-qnty = 0 then "":U                                  /*  p-sum      */
-                            else string( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty + ( v-price-no-VAT * v-qnty / ub.doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
-                            , input v-country-code                                                                    /*  p-countrycode  */
+                            else string( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty + ( v-price-no-VAT * v-qnty / doc-line.cli-qnty * v-prt-qnty ) * v-VAT-prc / 100 ) )
+                            , input v-country-code                                                               /*  p-countrycode  */
                             , input v-country                                                                    /*  p-country  */
                             , input v-GTD                                                                        /*  p-GTD      */
-                        ).
-                    end.    /*в единицах поставщика */
-                    else do :
-                        run facturxl-write-line-data in this-procedure (
+                   ).
+                end.  /*в единицах поставщика */
+                else do :
+                   run facturxl-write-line-data in this-procedure (
                               input (if rep-artic then (string( buf_goods.artic, "x(16)" ) + " ") else "") + buf_goods.gds-name         /*  p-Name     */
                             , input v-uaes-code                                                           /*  p-UAES     */  
                             , input v-unit-code                                                           /*  p-OKEI     */
-                            , input ( buf_goods.unit-base )                                          /*  p-EI       */
-                            , input string( v-qnty )                                                 /*  p-qnty     */
-                            , input string( v-price-no-VAT              )                            /*  p-price    */
-                            , input string( v-price-no-VAT * v-qnty )                                /*  p-SumNoVAT */
-                            , input "без акциза":U                                                       /*  p-SumActciz*/
-                            , input string( v-VAT-prc          )                                     /*  p-VATpc    */
-                            , input string( v-VAT )                                                  /*  p-VATsum   */
-                            , input string( ( v-price-no-VAT * v-qnty ) + v-VAT )                    /*  p-sum      */
+                            , input ( buf_goods.unit-base )                                               /*  p-EI       */
+                            , input string( v-qnty )                                                      /*  p-qnty     */
+                            , input string( v-price-no-VAT              )                                 /*  p-price    */
+                            , input string( v-price-no-VAT * v-qnty )                                     /*  p-SumNoVAT */
+                            , input "без акциза":U                                                        /*  p-SumActciz*/
+                            , input string( v-VAT-prc          )                                          /*  p-VATpc    */
+                            , input string( v-VAT )                                                       /*  p-VATsum   */
+                            , input string( ( v-price-no-VAT * v-qnty ) + v-VAT )                         /*  p-sum      */
                             , input v-country-code                                                        /*  p-countrycode  */
-                            , input v-country                                                        /*  p-country  */
-                            , input v-GTD                                                            /*  p-GTD      */
-                        ).
-                    end.
+                            , input v-country                                                             /*  p-country  */
+                            , input v-GTD                                                                 /*  p-GTD      */
+                   ).
                 end.
-                if FullGdsName
-                and gds-str1 <> "":U then do :
-                  run print-more in this-procedure.
-                end.
+             end.
+             if FullGdsName
+                and gds-str1 <> "":U 
+             then do :
+                run print-more in this-procedure.
+             end.
 
-                run print-tax in this-procedure (
+             run print-tax in this-procedure (
                     input recid( buf_goods )
-                ).
-                assign v-lines-counter = v-lines-counter + 1.
+             ).
+             assign v-lines-counter = v-lines-counter + 1.
                 /*---E------------- Для каждой партии ---------------------*/
-            end.
+          end.
             /*---E------------- Не услуга ---------------------*/
-        end.
+       end.
         /*---E------------- Пустая шкала или от поставщика ---------------------*/
     end.
     assign
-        v-tot-sum-no-VAT    = v-tot-sum-no-VAT  + v-sum-no-VAT  + v-tax
-        v-tot-VAT           = v-tot-VAT         + v-VAT
-        v-tot-SLT           = v-tot-SLT         + v-SLT
-        v-tot-tax           = v-tot-tax         + v-tax
-        v-tot-sum           = v-tot-sum         + v-sum         + v-tax
+       v-tot-sum-no-VAT    = v-tot-sum-no-VAT  + v-sum-no-VAT  + v-tax
+       v-tot-VAT           = v-tot-VAT         + v-VAT
+       v-tot-SLT           = v-tot-SLT         + v-SLT
+       v-tot-tax           = v-tot-tax         + v-tax
+       v-tot-sum           = v-tot-sum         + v-sum         + v-tax
     .
 end.
 end procedure. /* print-line */
