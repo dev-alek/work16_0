@@ -452,12 +452,12 @@ ON STOP UNDO _main, RETURN ERROR:
                     ,input buf_dis-card-type.dflt-staff-card
                     ,input today /*buf_dis-card-type.issue-date*/
                     ,input (if p-obj-code <> 0 then p-obj-code else 0) /*p-issue-code*/
-                    ,input ? /*valid-from*/
-                    ,input ? /*valid-date*/
+                    ,input buf_dis-card.valid-from /*valid-from*/
+                    ,input buf_dis-card.valid-date /*valid-date*/
                     ,input "":U /*sourced-card*/
                     ,input "":U /*cli-message*/
                     ,input yes /*mask-card*/
-                    ,input yes /*main-card*/
+                    ,input buf_dis-card.main-card /*main-card*/
                     ,input no /*is-subdi*/
                     ,INPUT no /*p-update-property*/
                     ,INPUT table tt0-dis-card-property

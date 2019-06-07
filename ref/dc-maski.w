@@ -1169,6 +1169,7 @@ end.
 
 assign
 frame {&frame-name}
+reg-cash
 rs-CLI-MASK
 rs-region
 cb-cc-run
