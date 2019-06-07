@@ -773,9 +773,7 @@ if ( num_rec modulo 10 ) = 0 then
               v-to-reserv = no
             .
           end.
-          else
-          if buf_doc-fbr-gds.fact-qnty < 0
-          then do :
+          else do :
             chg-qnty = if res-qnty >= 0 then abs(buf_doc-fbr-gds.fact-qnty) else buf_doc-fbr-gds.fact-qnty.
           end.
         end.                                   
@@ -787,13 +785,11 @@ if ( num_rec modulo 10 ) = 0 then
                                              no-error .
         if available buf_doc-fbr-gds 
         then do : 
-          if buf_doc-fbr-gds.fact-qnty > 0
+          if buf_doc-fbr-gds.fact-qnty >= 0
           then do : 
             chg-qnty = if res-qnty >= 0 then buf_doc-fbr-gds.fact-qnty else - buf_doc-fbr-gds.fact-qnty .
           end.
-          else
-          if buf_doc-fbr-gds.fact-qnty < 0
-          then do :
+          else do :
             assign
               v-to-reserv = no
             .
