@@ -180,7 +180,7 @@ on error undo, return error
             run trg/calcaht.p
               (input buf_clients.obj-type /* p-obj-type       */
               ,input buf_clients.obj-code /* p-obj-code       */
-              ,input true                 /* p-check-doc      */
+              ,input false                /* p-check-doc      */
               ,input false                /* p-message-on     */
               ,input v-recalc-date        /* p-last-fact-date */
               ,input true                 /* p-check-act         */
@@ -265,7 +265,7 @@ on error undo, return error
           run trg/calcaht.p
             (input buf_clients.obj-type /* p-obj-type       */
             ,input buf_clients.obj-code /* p-obj-code       */
-            ,input true                 /* p-check-doc      */
+            ,input false                /* p-check-doc      */
             ,input (p-install <> true)  /* p-message-on     */
             ,input v-recalc-date        /* p-last-fact-date */
             ,input true                 /* p-check-act         */
