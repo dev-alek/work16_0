@@ -166,6 +166,7 @@ v-length = (if p-pos-type = {&cd-type-maria} then 24 else v-length)
 v-length = (if p-pos-type = {&cd-type-maria} and lookup({&petrolium}, p-unit-cli-type) > 0
             then 5
             else v-length)
+v-length = (if p-pos-type = {&cd-type-ibm-xml} then 128 else v-length )
 nam-2str-shift = (if p-nam-2str then v-length else 0)
 .
 if p-nam-artc then do:
@@ -191,7 +192,7 @@ else do:
 end.
 if p-nam-2str then do:
   assign
-  p-second-name = {&double-quote} + substr(chk_name, v-length) + {&double-quote}
+  p-second-name = {&double-quote} + trim(substr(chk_name, v-length)," ") + {&double-quote}
   chk_name = substr(chk_name, 1, v-length)
   .
 end.
