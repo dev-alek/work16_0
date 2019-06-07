@@ -424,7 +424,7 @@ ASSIGN
    NO-ENABLE                                                            */
 ASSIGN 
        b-print:POPUP-MENU IN FRAME Dialog-Frame       = MENU POPUP-MENU-b-print:HANDLE.
-
+ASSIGN b-print :MENU-MOUSE = 1.
 ASSIGN 
        ed-login-object:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
@@ -1129,6 +1129,17 @@ END.
 &ANALYZE-RESUME
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
+ON MOUSE-SELECT-CLICK OF b-print IN FRAME Dialog-Frame /* Печать */
+DO:
+   APPLY "CHOOSE" TO b-print IN FRAME {&frame-name}.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-userhist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-userhist Dialog-Frame
 ON CHOOSE OF b-userhist IN FRAME Dialog-Frame /* История */
@@ -1482,7 +1493,10 @@ DO:
   v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
     
     run PROC-print-list in this-procedure.
-
+        {&OPEN-QUERY-br-user}
+        run manage-fields in this-procedure .
+        {&OPEN-QUERY-br-login}
+        run manage-fields-login in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1501,7 +1515,10 @@ DO:
   v-report-name-html = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
     
     run PROC-print-prava in this-procedure.
-
+        {&OPEN-QUERY-br-user}
+        run manage-fields in this-procedure .
+        {&OPEN-QUERY-br-login}
+        run manage-fields-login in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1512,10 +1529,24 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-user Dialog-Frame
 ON CHOOSE OF MENU-ITEM m_b-print-user /* Пользователь */
 DO:
-  run adm/usr-prnt.p ( INPUT parparentproc
-                     , INPUT buf_init_user-login.user-id
-                     , INPUT buf_init_user-login.db-num
-                     ) .
+  if available buf_init_user-login
+    then 
+  do:
+    run adm/usr-prnt.p ( INPUT parparentproc
+      , INPUT buf_init_user-login.user-id
+      , INPUT buf_init_user-login.db-num
+      ) .
+  end.
+  else do:
+    message
+         "Пользователь не найден, для которого необходим отчет"
+       view-as alert-box information.
+       return.
+  end.  
+        {&OPEN-QUERY-br-user}
+        run manage-fields in this-procedure .
+        {&OPEN-QUERY-br-login}
+        run manage-fields-login in this-procedure .
 END.
 
 /* _UIB-CODE-BLOCK-END */
