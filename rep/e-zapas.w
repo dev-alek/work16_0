@@ -62,7 +62,7 @@ define variable g#log as logical   no-undo .
 &Scoped-Define ENABLED-OBJECTS RECT-5 RECT-6 Classify SortType ShowZero ~
 Long-name PartsDet v-photo  
 &Scoped-Define DISPLAYED-OBJECTS Classify SortType SumsOnly ShowZero ~
-Long-name PartsDet v-photo 
+Long-name PartsDet v-photo v-alc-marks 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -126,6 +126,11 @@ DEFINE VARIABLE SumsOnly AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 16 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-alc-marks AS LOGICAL INITIAL no 
+     LABEL "Печать акцизных марок":L 
+     VIEW-AS TOGGLE-BOX
+     SIZE 23.63 BY 1.08 NO-UNDO.
+
 DEFINE VARIABLE v-photo AS LOGICAL INITIAL no 
      LABEL "Фото":L 
      VIEW-AS TOGGLE-BOX
@@ -143,7 +148,7 @@ DEFINE FRAME F-Main
      Long-name AT ROW 10.13 COL 2.25
      PartsDet AT ROW 11.08 COL 2.25
      v-photo AT ROW 12.21 COL 2.38 WIDGET-ID 2
-/*     v-photo-size AT ROW 12.25 COL 37.13 COLON-ALIGNED WIDGET-ID 4*/
+     v-alc-marks AT ROW 13.25 COL 2.38 WIDGET-ID 4
      "Классификация :" VIEW-AS TEXT
           SIZE 15 BY .75 AT ROW 1.33 COL 9.5
           FGCOLOR 4 
@@ -174,7 +179,7 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 12.58
+         HEIGHT             = 13.67
          WIDTH              = 56.13.
 /* END WINDOW DEFINITION */
                                                                         */
@@ -208,6 +213,8 @@ ASSIGN
        BUTTON-1:HIDDEN IN FRAME F-Main           = TRUE.
 
 /* SETTINGS FOR TOGGLE-BOX SumsOnly IN FRAME F-Main
+   NO-ENABLE                                                            */
+/* SETTINGS FOR TOGGLE-BOX v-alc-marks IN FRAME F-Main
    NO-ENABLE                                                            */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -282,7 +289,36 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL PartsDet s-object
 ON VALUE-CHANGED OF PartsDet IN FRAME F-Main /* Детализировать по партиям */
 DO:
+define variable v-value-character            as   character                   no-undo.
+define variable v-value-date                 as   date                        no-undo.
+define variable v-value-decimal              as   decimal                     no-undo.
+define variable v-value-integer              as   integer                     no-undo.
+define variable v-value-mark                 as   logical                     no-undo.
+define variable par-type                     as   character                   no-undo.                  
+    
   ASSIGN PartsDet .
+
+      run adm/shattri.p (
+        input "get":U
+        ,input v-cntxt-obj-type
+        ,input v-cntxt-obj-code
+        ,input {&attr-nakl_par}
+        ,input  "mark-alchol"
+        ,output v-value-character
+        ,output v-value-date
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-mark
+        ,output par-type
+        ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+        ) no-error .
+
+if v-value-mark and PartsDet then do:
+    enable v-alc-marks with frame {&FRAME-NAME} . 
+end.    
+else do:
+    DISABLE v-alc-marks with frame {&frame-name} .
+end.    
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -307,6 +343,17 @@ DO:
       disable v-photo with frame {&FRAME-NAME} .
 
   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME v-alc-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-alc-marks s-object
+ON VALUE-CHANGED OF v-alc-marks IN FRAME F-Main /* Печать акцизных марок */
+DO:
+  ASSIGN v-alc-marks .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -435,15 +482,15 @@ v-kol = 0.
  End.
   CASE Classify:
     WHEN "no-classify":U    THEN
-        run rep/r-zapas1.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
+        run rep/r-zapas1.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo, INPUT v-alc-marks).
     WHEN "grp-goods":U      THEN
-         run rep/r-zapas2.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
+         run rep/r-zapas2.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo, INPUT v-alc-marks).
     WHEN "prod":U           THEN
-        run rep/r-zapas3.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
+        run rep/r-zapas3.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo, INPUT v-alc-marks).
     WHEN "prod/grp-goods":U THEN
-         run rep/r-zapas4.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
+         run rep/r-zapas4.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo, INPUT v-alc-marks).
     WHEN "grp-goods/prod":U THEN
-         run rep/r-zapas5.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo).
+         run rep/r-zapas5.p (input v-cntxt-obj-code,input v-cntxt-obj-type,input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, INPUT long-name, INPUT PartsDet, INPUT v-photo, INPUT v-alc-marks).
  End case.
 
 
@@ -458,7 +505,7 @@ PROCEDURE my-var :
   Purpose:     здесь происходит вызов  значений переменных
   например  Название отчета, может быть еще пример шапки???
 ------------------------------------------------------------------------------*/
-assign frame {&frame-name} SumsOnly ShowZero  Classify SortType long-name PartsDet.
+assign frame {&frame-name} SumsOnly ShowZero  Classify SortType long-name PartsDet v-alc-marks.
  { rep/claslabl.i }
 x-date-end = x-date-alone.
 
