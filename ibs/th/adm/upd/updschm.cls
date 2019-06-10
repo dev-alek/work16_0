@@ -360,7 +360,7 @@ class ibs.th.adm.upd.updschm:
      then do:
          vParamStart = " -ininame "  + GetStartupParam("-ininame").
      end.
-     if iproc eq loadDFprocFile
+     if iproc eq loadDFprocFile and isRcode
      then 
         vParamStart = vParamStart + " -rx " .
      def var v-cmd-comm as character no-undo.

@@ -219,7 +219,7 @@ DEFINE QUERY br_table FOR
 DEFINE BROWSE br_table
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br_table B-table-Win _FREEFORM
   QUERY br_table NO-LOCK DISPLAY
-      ub.pl-pump-nozzle.pl-code column-label "Бар-код резервуара"
+      ub.pl-pump-nozzle.pl-code FORMAT "99999999999":U column-label "Бар-код резервуара"
 loc-code (buffer ub.pl-pump-nozzle) @ varloc1 format "x(3)" column-label "Код"
 ub.pl-pump-nozzle.pump-code
 ub.pl-pump-nozzle.nozzle-code column-label "Пистолет"

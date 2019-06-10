@@ -599,7 +599,7 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.line-num COLUMN-LABEL "NN"  FORMAT "->>>>9"
       tt-chk-gds.src-code COLUMN-LABEL "Исходный код" format "X(19)" width 14
       tt-chk-gds.is-error COLUMN-LABEL "Ош" FORMAT "+/"
-      tt-chk-gds.b-code
+      tt-chk-gds.b-code FORMAT "99999999999":U
       tt-gds-info.artic COLUMN-LABEL "Артикул" FORMAT "X(16)"
       tt-gds-info.gds-name COLUMN-LABEL "Название товара" FORMAT "X(48)" width 20
       tt-chk-gds.src-qnty
@@ -619,7 +619,7 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.nozzle-code COLUMN-LABEL  "Пист" FORMAT ">>9"
       tt-chk-gds.loc1 COLUMN-LABEL  "Рез." FORMAT "X(3)"
       tt-chk-gds.src-pl-code COLUMN-LABEL  "Скл.!место!в чеке" FORMAT ">>>>>>>>9"
-      tt-chk-gds.pl-code COLUMN-LABEL  "Скл.!место!БД" FORMAT ">>>>>>>>9"
+      tt-chk-gds.pl-code COLUMN-LABEL  "Скл.!место!БД" FORMAT ">>>>>>>>>>9"
       if (tt-chk-gds.write-off-code = 1 and can-do("14,15,16,17,36", string(tt-chk-doc.chk-type))) then "Пролито"       
       else {&wro-name} COLUMN-LABEL "Код спис" FORMAT "X(20)"
       tt-chk-gds.depart-id COLUMN-LABEL "Объект!кухни!в чеке"

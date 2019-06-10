@@ -883,7 +883,7 @@ DEFINE BROWSE BROWSE-1
   QUERY BROWSE-1 NO-LOCK DISPLAY
       {&cop-l0}  COLUMN-LABEL {&col-l0}  FORMAT "X(1)":U
     {&cop-l1}  COLUMN-LABEL {&col-l1}  FORMAT ">>>>>>9":U
-    {&cop-l2}  COLUMN-LABEL {&col-l2}  FORMAT "999999999":U
+    {&cop-l2}  COLUMN-LABEL {&col-l2}  FORMAT "99999999999":U
     {&cop-l3}  COLUMN-LABEL {&col-l3}  FORMAT "X(16)":U
     {&cop-l4}  COLUMN-LABEL {&col-l4}  FORMAT "X(3)":U
     fnc-gds-name ( recid( buf_goods ) , recid( buf_bar-code)) @ {&cop-l5}  COLUMN-LABEL {&col-l5}  FORMAT "X(60)":U WIDTH 20

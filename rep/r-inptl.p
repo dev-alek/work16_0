@@ -61,6 +61,9 @@ define variable varhost-code  like ub.trn-doc.host-code           no-undo .
 define variable varTemp       as   character                      no-undo .
 define variable varvol-attr   as   decimal                        no-undo .
 define variable v-ind         as   integer                        no-undo .
+define variable v-num-sections as integer no-undo .
+define variable v-n-section    as integer no-undo .
+define variable v-temperature  as decimal no-undo .
 
 define variable v-tot-doc-qnty   like ub.doc-pl.cli-doc-qnty         no-undo .
 define variable v-tot-fact-qnty  like ub.doc-pl.cli-fact-qnty        no-undo .
@@ -180,9 +183,9 @@ if not available obj-list then do:
   return.
 end.
 
-find first gds-list no-lock .
+find first gds-list no-lock no-error .
 if not available gds-list then do:
-  message "Вы не выбрали товар." view-as alert-box error.
+  message "Выберите товар для выполнения отчёта." view-as alert-box error.
   return.
 end.
 

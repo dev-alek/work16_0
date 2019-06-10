@@ -1240,7 +1240,9 @@ procedure fill-tt-rep :
                                                                                           then buf_ot-line.vat-base
                                                                                           else 0)
                                                                  )
-                                                            ) / abs(buf_ot-line.fact-qnty).
+                                                            ) / if buf_ot-line.fact-qnty <> 0 then abs(buf_ot-line.fact-qnty) else 1.
+/*                                                            message doc_temp-cp.sum "sum" doc_temp-cp.doc-code "sum-rubl" buf_ot-line.sum-rubl "gds-code" p-gds-code view-as alert-box.*/
+                                                        
          end.
          release doc_temp-cp.
       end.

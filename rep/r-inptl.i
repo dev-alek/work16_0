@@ -43,6 +43,7 @@ for each ub.trn-doc
 on error undo, return error return-value
 :
 
+  do : /* фильтр по датам */
   if ( x-radio-task = 1 /* Запрос по календарным датам */
        and ub.trn-doc.fact-date >= x-date-start
        and ub.trn-doc.fact-date <= x-date-end
@@ -78,7 +79,8 @@ on error undo, return error return-value
   else do:
     next .
   end.
-
+  end . /* end_of фильтр по датам */
+  
   find first ub.clients-attr no-lock
     where ub.clients-attr.obj-type   = ub.trn-doc.cli-type
       and ub.clients-attr.obj-code   = ub.trn-doc.cli-code
@@ -104,6 +106,38 @@ on error undo, return error return-value
       and tests-attr.gds-code    = gds-list.gds-code
       and tests-attr.attr-code   = "tests":U
     no-error .
+    
+  /* температура по секциям:
+     ttn-temp = -1 для n = 1,
+     ttn-temp = -1 {&delim-par} 1...n для n > 1
+  */
+  find first doc-line-attr no-lock
+       where doc-line-attr.doc-code  = ub.doc-line.doc-code 
+         and doc-line-attr.gds-code  = gds-list.gds-code
+         and doc-line-attr.attr-code = "n":U no-error .
+  if available doc-line-attr then
+    v-num-sections = integer (doc-line-attr.attr-value) no-error .
+  else v-num-sections = 1 .
+  
+  v-temperature = ? .
+  for each doc-line-attr no-lock
+     where doc-line-attr.doc-code  = ub.doc-line.doc-code
+       and doc-line-attr.gds-code  = gds-list.gds-code :
+    if entry(1, doc-line-attr.attr-code, {&delim-par}) = "ttn-temp":U then do :
+      if num-entries (doc-line-attr.attr-code, {&delim-par}) > 1 then do :
+        v-n-section = integer (  entry(2, doc-line-attr.attr-code, {&delim-par})  ) no-error .
+        if v-n-section = 1 then do :
+          v-temperature = decimal (doc-line-attr.attr-value) no-error .
+          leave .
+        end .
+      end .
+      else do :
+        v-temperature = decimal (doc-line-attr.attr-value) no-error .
+        leave .
+      end .
+    end .
+  end .
+      
 
   /* Сверки */
   find first bef-rvs-doc no-lock
@@ -186,7 +220,8 @@ on error undo, return error return-value
       sym13 vardifference
       sym14 ( if available tests-attr   then tests-attr.attr-value              else ? ) @ tests-attr.attr-value
       sym15 ub.doc-line.fact-density
-      sym16 ub.doc-line.temperature
+/*      sym16 ub.doc-line.temperature 20/V-2019 заменено на температуру из первой секции */
+      sym16 v-temperature @ ub.doc-line.temperature
       sym17
       sym18
     with frame doc-line-frm{&sufix} .

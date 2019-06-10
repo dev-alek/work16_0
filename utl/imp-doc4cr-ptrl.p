@@ -488,6 +488,10 @@ define buffer new_clients  for ub.clients .
       .
       else do :
         /* 24/XII-2018  При отсутствии договора искать любой похожий, а при полном отсутствии отвергать партию. */
+        v-my-message  = substitute (
+          "Предупреждение. Отсутствует договор № &2 (вер.15) по поставщику &3 в вер.16. Товар &1 в вер.15",
+          buf_tt-parts.gds-code, buf_tt-parts.cont-prn-code, new_cli-code ) .
+        {&display-message}.
         assign
           v-contract-code = 0
           v-is-cont-err   = true
@@ -497,6 +501,11 @@ define buffer new_clients  for ub.clients .
              and buf_contract.cli-code = new_cli-code
               by buf_contract.contract-date-beg descending :
           if buf_contract.contract-date-end < v-today then . else do :
+            v-my-message  = substitute (
+              "Предупреждение. Вместо договора № &2 (вер.15) по поставщику &3 в вер.16 используется договор &4 (код=&5). Товар &1 в вер.15&6",
+              buf_tt-parts.gds-code, buf_tt-parts.cont-prn-code, new_cli-code,
+              buf_contract.contract-prn-code, buf_contract.contract-code, {&new-line} ) .
+            {&display-message}.
             assign
               v-contract-code = buf_contract.contract-code
               v-is-cont-err   = false
@@ -504,18 +513,24 @@ define buffer new_clients  for ub.clients .
             leave .
           end .
         end .
+        /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
+        if v-is-cont-err then do :
+          /* 05/VI-2019  нестыковочка: по техпроливу нет договора,
+                         поэтому отсутствие договора в топливе считать допустимым */
+          v-is-cont-err = false.
+          v-my-message  = substitute (
+            "Предупреждение. Отсутствует действующий договор на дату &3 по поставщику &2 в вер.16. Товар &1 в вер.15&4",
+            buf_tt-parts.gds-code, new_cli-code, v-today, {&new-line} ) .
+          {&display-message}.
+        end .
       end.
 
-      /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
-      if v-is-cont-err then do :
-        v-my-message  = substitute ("Отсутствует действующий договор для контрагента &1 из договора № &2 в вер.15", new_cli-type + string (new_cli-code), buf_tt-parts.cont-prn-code ) .
-        {&display-message}.
-        v-is-cont-err = false.
-      end .
     end . /* end_of first_of_tt-parts.cont-prn-code */
     /* 26/IV-2018  Товары с ненайденным договором надо отображать в логе.
-       24/XII-2018 Отвергать партию при отсутствии договора.    
+       24/XII-2018 Отвергать партию при отсутствии договора.
+       05/VI-2019  Ничего этого не надо, т.к. топливо можно импортировать без договора.    
     */
+    /*
     if v-is-cont-err then do :
       if buf_tt-parts.imp-row > "" then 
         put stream f-err-lines unformatted buf_tt-parts.imp-row skip .
@@ -525,6 +540,7 @@ define buffer new_clients  for ub.clients .
       p-count-err2 = p-count-err2 + 1 . /* отсутствие договора считаем как несоответствие по поставщикам */
       next .
     end .
+    */
 
     if first-of (buf_tt-parts.gds-code) then do:
       /* поиск соответствия старого gds-code из версии p-from-version в новых кодах версии 16.0 */
@@ -567,12 +583,13 @@ define buffer new_clients  for ub.clients .
       next .
     end .
     /* 26/IV-2018  Товары с ненайденным договором надо отображать в логе */
+    /* 05/VI-2019  Для топлива товар можно импортировать без договора. Не надо отображать.    
     if v-is-cont-err then do :
       v-my-message  = substitute ("Отсутствует договор № &1 в целевой БД. Товар &2 будет загружен без указания договора.",
                                   buf_tt-parts.cont-prn-code, new_gds-code ) .
       {&display-message}.
     end .
-
+    */
     if buf_tt-parts.srok-god = "" then v-last-date = 01/01/2001 .
                                   else v-last-date = date(buf_tt-parts.srok-god) no-error .
     do :

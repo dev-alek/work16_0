@@ -385,7 +385,7 @@ DEFINE FRAME d-out-prt
           VIEW-AS FILL-IN
           SIZE 50 BY 1
           FGCOLOR 4
-     b-c-b.b-code AT ROW 6.46 COL 20 COLON-ALIGNED
+     b-c-b.b-code AT ROW 6.46 COL 20 COLON-ALIGNED FORMAT "99999999999"
           VIEW-AS FILL-IN
           SIZE 10 BY 1
           FGCOLOR 4

@@ -563,7 +563,7 @@ space(0)
       num#col# ,    /* p-col      */
       ?     , /* p-row-2    */
       ?     ) .      /* p-col-2    */
-    run macr_excel_char in this-procedure("Детализация цен:  "  + if entry (1, p-par1) = "bgl" then "По гурппам покупателей" else "По покупателям" , num#str# , num#col#   ) .
+    run macr_excel_char in this-procedure("Детализация цен:  "  + if entry (1, p-par1) = "bgl" then "По группам покупателей" else "По покупателям" , num#str# , num#col#   ) .
     num#str# = num#str# + 1.
     run macr_cell_format in this-procedure
     ( 10    ,    /* p-size     */
@@ -743,11 +743,13 @@ define output parameter ii as integer   no-undo  .
                   :
             find first buf_buyer-in-buyer-group no-lock
               where buf_clients.obj-code = buf_buyer-in-buyer-group.bbg-obj-code
-              and buf_clients.obj-type = buf_buyer-in-buyer-group.bbg-obj-type no-error
+              and buf_clients.obj-type = buf_buyer-in-buyer-group.bbg-obj-type 
+              and buf_buyer-in-buyer-group.stts <> 1 no-error
             .
             find first buf_buyer-group no-lock
               where buf_buyer-group.bgr-id = buf_buyer-in-buyer-group.bgr-id
-              and buf_buyer-group.bgr-db-num = buf_buyer-in-buyer-group.bgr-db-num no-error
+              and buf_buyer-group.bgr-db-num = buf_buyer-in-buyer-group.bgr-db-num 
+              and buf_buyer-group.stts <> 1 no-error
             .
             if available buf_buyer-group
             then do:

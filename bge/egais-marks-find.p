@@ -56,6 +56,23 @@ procedure find-mark :
     end.
 end procedure.
 
+procedure find-marks-part :
+    define input  parameter p-parts-key-rec as character no-undo .
+    define output parameter p-mark as character no-undo .
+    define output parameter p-rezerv as integer no-undo .
+    
+    define buffer buf_gen-attr for ub.gen-attr.
+    
+    for each buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
+                                      and buf_gen-attr.p-key  = p-parts-key-rec :
+
+        p-mark = p-mark + "," + buf_gen-attr.attr-code .
+        p-rezerv        = buf_gen-attr.whole-send-news .
+    end.
+    p-mark = TRIM (p-mark, ",") .
+    
+end procedure.
+
 procedure create-mark :
     define input parameter p-mark as character no-undo .
     define parameter buffer buf_parts for ub.parts .  

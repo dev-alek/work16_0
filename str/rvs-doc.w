@@ -305,7 +305,7 @@ define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_2-br-line}  column-label {&label-clmn_2-br-line}
       {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(2)"
       {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  format "x(15)"
-      {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}
+      {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}  FORMAT "99999999999":U
       {&sort-clmn_6-br-line}  column-label {&label-clmn_6-br-line}
       {&sort-clmn_7-br-line}  column-label {&label-clmn_7-br-line}
       {&sort-clmn_8-br-line}  column-label {&label-clmn_8-br-line}

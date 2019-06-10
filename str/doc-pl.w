@@ -396,7 +396,7 @@ DEFINE FRAME f-doc-pl
      b-quit AT ROW 1 COL 12 WIDGET-ID 18
      b-qnty AT ROW 1 COL 22 WIDGET-ID 16
      b-help AT ROW 1 COL 89 WIDGET-ID 8
-     loc-t-doc-pl.pl-code AT ROW 2.5 COL 16 COLON-ALIGNED WIDGET-ID 68
+     loc-t-doc-pl.pl-code AT ROW 2.5 COL 16 COLON-ALIGNED WIDGET-ID 68 FORMAT "99999999999"
           LABEL "Место хранения"
           VIEW-AS FILL-IN 
           SIZE 10.5 BY 1
@@ -428,7 +428,7 @@ DEFINE FRAME f-doc-pl
      buf_place.loc4 AT ROW 5 COL 88 COLON-ALIGNED WIDGET-ID 50
           VIEW-AS FILL-IN 
           SIZE 9 BY 1
-     buf_goods.gds-code AT ROW 6.75 COL 10 COLON-ALIGNED WIDGET-ID 40
+     buf_goods.gds-code AT ROW 6.75 COL 10 COLON-ALIGNED WIDGET-ID 40 FORMAT "99999999999"
           LABEL "Товар"
           VIEW-AS FILL-IN 
           SIZE 10 BY 1

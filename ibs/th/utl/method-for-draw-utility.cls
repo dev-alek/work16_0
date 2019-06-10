@@ -1809,6 +1809,8 @@ define variable v-vat-rubl16      as decimal no-undo .
 define variable v-sum-rubl-crsa16 as decimal no-undo .
 define variable v-fact-qnty-lt16  as decimal no-undo .
 define variable v-fact-qnty-kg16  as decimal no-undo .
+define variable v-vat-rubl-delta  as decimal no-undo .
+define variable v-sum-rubl-delta  as decimal no-undo .
 define buffer buf_pl-gds    for ub.pl-gds .
 define buffer buf_stk-line  for ub.stk-line .
 define buffer buf_goods     for ub.goods .
@@ -2002,7 +2004,7 @@ define buffer buf_goods     for ub.goods .
     
   end . /* end_of for_each нетопливо */
 
-
+  /* ----- вывод расхождений ----- */
   v-count-mismatch = 0 .
   output STREAM lsOut to value(v-logfile-rj).
   put stream lsOut unformatted
@@ -2034,9 +2036,17 @@ define buffer buf_goods     for ub.goods .
   .
   for each tt-stk-gd2:
     export stream lsIN delimiter ';':U tt-stk-gd2 .
+    /*
+    04/VI-2019  Исключить из отчёта строки с расхождением по суммам НДС в учетных ценах менее одной сотой
+    06/VI-2019  сделать проверку на 5-й знак после запятой в НДС и в сумме
+    */
+    assign
+      v-sum-rubl-delta = truncate(tt-stk-gd2.sum-rubl-cost16 - tt-stk-gd2.sum-rubl-cost, 4)
+      v-vat-rubl-delta = truncate(tt-stk-gd2.vat-rubl16      - tt-stk-gd2.vat-rubl,      4)
+    . 
     if (tt-stk-gd2.fact-qnty16     <> tt-stk-gd2.fact-qnty)
-    or (tt-stk-gd2.sum-rubl-cost16 <> tt-stk-gd2.sum-rubl-cost)
-    or (tt-stk-gd2.vat-rubl16      <> tt-stk-gd2.vat-rubl)
+    or (v-sum-rubl-delta <> 0)
+    or (v-vat-rubl-delta <> 0)
     or (tt-stk-gd2.sum-rubl-crsa16 <> tt-stk-gd2.sum-rubl-crsa)
     then do :
     export stream lsOut delimiter ';':U tt-stk-gd2 .

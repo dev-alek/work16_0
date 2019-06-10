@@ -722,13 +722,13 @@ DEFINE FRAME d-gds-form
           size 84.38 by 0.96
           FGCOLOR 4
      goods.chk-name at row 9.92 col 13.13 COLON-ALIGNED
-           LABEL "На  чеке" FORMAT "X(25)"
+           LABEL "На  чеке" FORMAT "X(128)"
           VIEW-AS FILL-IN
-          size 26.25 by 0.96
+          size 50.5 by 0.96
           FGCOLOR 4
-     goods.okdp at row 9.88 col 53.5 COLON-ALIGNED
+     goods.okdp at row 9.88 col 70 COLON-ALIGNED
           VIEW-AS FILL-IN
-          SIZE 12.25 BY 1
+          SIZE 10 BY 1
           FGCOLOR 4
      NegRest at row 9.88 col 82.75
      goods.unit-base at row 11.04 col 14.5 COLON-ALIGNED

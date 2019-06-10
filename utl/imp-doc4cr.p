@@ -478,7 +478,7 @@ define buffer new_clients  for ub.clients .
         /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
         /* 24/XII-2018  При отсутствии договора искать любой похожий, а при полном отсутствии отвергать партию. */
         v-my-message  = substitute (
-          "Отсутствует договор № &2 (вер.15) по поставщику &3 в вер.16. Товар &1 в вер.15",
+          "Предупреждение. Отсутствует договор № &2 (вер.15) по поставщику &3 в вер.16. Товар &1 в вер.15",
           buf_tt-parts.gds-code, buf_tt-parts.cont-prn-code, new_cli-code ) .
         {&display-message}.
         assign
@@ -490,6 +490,11 @@ define buffer new_clients  for ub.clients .
              and buf_contract.cli-code = new_cli-code
               by buf_contract.contract-date-beg descending :
           if buf_contract.contract-date-end < v-today then . else do :
+            v-my-message  = substitute (
+              "Предупреждение. Вместо договора № &2 (вер.15) по поставщику &3 в вер.16 используется договор &4 (код=&5). Товар &1 в вер.15&6",
+              buf_tt-parts.gds-code, buf_tt-parts.cont-prn-code, new_cli-code,
+              buf_contract.contract-prn-code, buf_contract.contract-code, {&new-line} ) .
+            {&display-message}.
             assign
               v-contract-code = buf_contract.contract-code
               v-is-cont-err   = false
@@ -497,11 +502,10 @@ define buffer new_clients  for ub.clients .
             leave .
           end .
         end .
-        
         if v-is-cont-err then do :
           v-my-message  = substitute (
-            "Отсутствует действующий договор на дату &3 по поставщику &2 в вер.16. Товар &1 в вер.15",
-            buf_tt-parts.gds-code, new_cli-code, v-today ) .
+            "Ошибка. Отсутствует действующий договор на дату &3 по поставщику &2 в вер.16. Товар &1 в вер.15&4",
+            buf_tt-parts.gds-code, new_cli-code, v-today, {&new-line} ) .
           {&display-message}.
         end .
       end . /* end_of not_avail_contract_by_num */

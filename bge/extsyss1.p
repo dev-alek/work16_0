@@ -125,14 +125,12 @@ do : // проверки
     return error (if p-silent then v-mess else 'esys-type':U).
   end.
   if p-esys-type = integer({&openxml-type-exite-edi})
-  and (p-delivery-method <> integer({&esys-dm-exite-edi}) or p-delivery-method <> integer({&esys-dm-contour-edi})) then do:
+  and (p-delivery-method <> integer({&esys-dm-exite-edi}) and p-delivery-method <> integer({&esys-dm-contour-edi})) then do:
     &scop openxml-type-code string(p-esys-type)
-    &scop esys-dm-code {&esys-dm-exite-edi}
-    v-mess = substitute("Для ВС типа &2 (&1)&3 метод доставки должен быть &4"
+    v-mess = substitute("Для ВС типа &2 (&1)&3 метод доставки должен быть Exite-EDI или Контур.EDI"
                         , p-esys-type
                         , {&openxml-type-name}
                         , {&new-line}
-                        ,{&esys-dm-name}
                         ).
     run err-mess in this-procedure ( input-output v-mess).
     return error (if p-silent then v-mess else '':U).

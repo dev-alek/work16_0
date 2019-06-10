@@ -610,10 +610,10 @@ FOR EACH t-2 NO-LOCK
                     <td style="text-align: right;">&3</td>
                     <td rowspan="2" text_wrap="true" style="text-align: right;">&4</td>
                     <td rowspan="2" text_wrap="true">&5</td>
-                    <td style="text-align: right;">&6</td>
-                    <td rowspan="2" style="text-align: right;">&7</td>
-                    <td rowspan="2" style="text-align: right;">&8</td>
-                    <td rowspan="2" style="text-align: right;">&9</td>'
+                    <td text_wrap="true" style="text-align: right;">&6</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&8</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&9</td>'
           ,
           pol1,
           if main-line = no then "" else string(pol2,"->>>>>>>>>>>9.99"),
@@ -628,14 +628,14 @@ FOR EACH t-2 NO-LOCK
         put stream OutStr-html unformatted
           substitute (
           '
-                    <td rowspan="2" style="text-align: right;">&1</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&1</td>
                     <td rowspan="2" text_wrap="true">&2</td>
                     <td rowspan="2" style="text-align: right;">&3</td>
-                    <td rowspan="2" style="text-align: right;">&4</td>
-                    <td rowspan="2" style="text-align: right;">&5</td>
-                    <td rowspan="2" style="text-align: right;">&6</td>
-                    <td rowspan="2" style="text-align: right;">&7</td>
-                    <td style="text-align: right;">&8</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&6</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
+                    <td text_wrap="true" style="text-align: right;">&8</td>
                     </tr>
                '
           ,
@@ -774,9 +774,9 @@ FOR EACH t-2 NO-LOCK
                     <td rowspan="2" text_wrap="true" style="text-align: right;">&4</td>
                     <td rowspan="2" text_wrap="true">&5</td>
                     <td style="text-align: right;">&6</td>
-                    <td rowspan="2" style="text-align: right;">&7</td>
-                    <td rowspan="2" style="text-align: right;">&8</td>
-                    <td rowspan="2" style="text-align: right;">&9</td>'
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&8</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&9</td>'
           ,
           pol1,
           if main-line = no then "" else string(pol2,"->>>>>>>>>>>9.99"),
@@ -791,14 +791,14 @@ FOR EACH t-2 NO-LOCK
         put stream OutStr-html unformatted
           substitute (
           '
-                    <td rowspan="2" style="text-align: right;">&1</td>
-                    <td rowspan="2" text_wrap="true">&2</td>
-                    <td rowspan="2" style="text-align: right;">&3</td>
-                    <td rowspan="2" style="text-align: right;">&4</td>
-                    <td rowspan="2" style="text-align: right;">&5</td>
-                    <td rowspan="2" style="text-align: right;">&6</td>
-                    <td rowspan="2" style="text-align: right;">&7</td>
-                    <td style="text-align: right;">&8</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&1</td>
+                    <td text_wrap="true" rowspan="2" text_wrap="true">&2</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&6</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
+                    <td text_wrap="true" style="text-align: right;">&8</td>
                     </tr>
                '
           ,
@@ -815,9 +815,9 @@ FOR EACH t-2 NO-LOCK
         put stream OutStr-html unformatted
           substitute (
           '  <tr>
-                    <td style="text-align: right;">&1</td>
-                    <td style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
+                    <td text_wrap="true" style="text-align: right;">&1</td>
+                    <td text_wrap="true" style="text-align: right;">&2</td>
+                    <td text_wrap="true" style="text-align: right;">&3</td>
              </tr> '      
           ,
           if main-line = no then "" else string(pol3,"->>>>>>>>>>>9.99"),
@@ -894,7 +894,7 @@ FOR EACH t-2 NO-LOCK
                     <th rowspan="2"></th>
                     <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
                     <th rowspan="2" text_wrap="true" style="vertical-align: middle;">&6</th>
-                    <th rowspan="2" style="text-align: left; vertical-align: middle;">&7</th>
+                    <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&7</th>
                     '
       ,
       pol1,
@@ -914,12 +914,12 @@ FOR EACH t-2 NO-LOCK
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>       
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
-            <th style="text-align: right; vertical-align: middle;">&5</th>
+            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
             </tr>
             <tr>
-            <th style="text-align: right; vertical-align: middle;">&6</th>
-            <th style="text-align: right; vertical-align: middle;">&7</th>
-            <th style="text-align: right; vertical-align: middle;">&8</th>
+            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
+            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&7</th>
+            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&8</th>
             </tr>'
       ,
       string(pol14,"->>>>>>>>>>>9.99"),
@@ -1013,12 +1013,12 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th text_wrap="true">&1</th>
-                    <th style="text-align: right; vertical-align: middle;">&2</th>
-                    <th style="text-align: right; vertical-align: middle;">&3</th>
-                    <th style="text-align: right; vertical-align: middle;">&4</th>
-                    <th style="text-align: right; vertical-align: middle;">&5</th>
-                    <th style="text-align: right; vertical-align: middle;">&6</th>
-                    <th style="text-align: right; vertical-align: middle;">&7</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&2</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&7</th>
                     <th></th>
                     <th></th>
                </tr>'
@@ -1065,9 +1065,9 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th text_wrap="true">&1</th>
-                    <th style="text-align: right; vertical-align: middle;">&2</th>
-                    <th style="text-align: right; vertical-align: middle;">&3</th>
-                    <th style="text-align: right; vertical-align: middle;">&4</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&2</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
                     <th></th>
                     <th></th>
                     <th></th>

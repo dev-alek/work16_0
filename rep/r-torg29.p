@@ -588,7 +588,8 @@ procedure create-report :
   define buffer buf_doc-line  for ub.doc-line.
   define buffer buf_ot-line   for ub.ot-line.
   define buffer buf_obj-list  for obj-list.
-
+  define buffer tt_report     for tt-report .
+  
   define variable var-x-store-code    like ub.clients.obj-code    no-undo.
   define variable var-x-store-type    like ub.clients.obj-type    no-undo.
   define variable var-x-date-start    like ub.stk-tot.Fact-date   no-undo.
@@ -767,18 +768,42 @@ on error undo, return error return-value
           when {&TDEDT_Pri_Prvo}
           then do:
             if x-SET_PAY_TYPE = {&p-sale} then next _ot-line.
-            create tt-report.
+          find first tt_report where 
+              tt_report.ext-doc-type = {&income-type}
+          and tt_report.obj-type      = obj-list.obj-type
+          and tt_report.obj-code      = obj-list.obj-code
+          and tt_report.doc-code      = buf_ot-line.doc-code
+          and tt_report.gds-code      = tt-goods.gds-code no-error .
+          if not available (tt_report) then do:
+            create tt_report.
             assign
-              tt-report.ext-doc-type = {&income-type}
+              tt_report.ext-doc-type = {&income-type}
+              tt_report.obj-type      = obj-list.obj-type
+              tt_report.obj-code      = obj-list.obj-code
+              tt_report.doc-code      = buf_ot-line.doc-code
+              tt_report.gds-code      = tt-goods.gds-code
             .
+          end.  
           end.
           when {&tdedt_vozvrat_vnesh}       or
           when {&tdedt_vozvrat_vnesh_kass}
           then do:
-            create tt-report.
+          find first tt_report where 
+              tt_report.ext-doc-type = {&income-type}
+          and tt_report.obj-type      = obj-list.obj-type
+          and tt_report.obj-code      = obj-list.obj-code
+          and tt_report.doc-code      = buf_ot-line.doc-code
+          and tt_report.gds-code      = tt-goods.gds-code no-error .
+          if not available (tt_report) then do:
+            create tt_report.
             assign
-              tt-report.ext-doc-type = {&income-type}
+              tt_report.ext-doc-type = {&income-type}
+              tt_report.obj-type      = obj-list.obj-type
+              tt_report.obj-code      = obj-list.obj-code
+              tt_report.doc-code      = buf_ot-line.doc-code
+              tt_report.gds-code      = tt-goods.gds-code
             .
+          end.  
           end.
           /* ÐÀÑÕÎÄ */
           when {&TDEDT_Ras_Vnesh}           or
@@ -789,10 +814,22 @@ on error undo, return error return-value
           when {&TDEDT_Ras_Prvo}            or
           when {&TDEDT_Spi_Prvo}
           then do:
-            create tt-report.
+          find first tt_report where 
+              tt_report.ext-doc-type = {&outcome-type}
+          and tt_report.obj-type      = obj-list.obj-type
+          and tt_report.obj-code      = obj-list.obj-code
+          and tt_report.doc-code      = buf_ot-line.doc-code
+          and tt_report.gds-code      = tt-goods.gds-code no-error .
+          if not available (tt_report) then do:
+            create tt_report.
             assign
-              tt-report.ext-doc-type = {&outcome-type}
+              tt_report.ext-doc-type = {&outcome-type}
+              tt_report.obj-type      = obj-list.obj-type
+              tt_report.obj-code      = obj-list.obj-code
+              tt_report.doc-code      = buf_ot-line.doc-code
+              tt_report.gds-code      = tt-goods.gds-code
             .
+          end.              
           end.
           when {&TDEDT_Inv}               or
           when {&TDEDT_Peresort}          or
@@ -801,11 +838,47 @@ on error undo, return error return-value
           when {&TDEDT_Corr_Minus_Parts}
           then do:
             if x-SET_PAY_TYPE = {&p-sale} then next _ot-line.
-            create tt-report.
-            assign
-              tt-report.ext-doc-type = if ( buf_ot-line.sum-base > 0 or buf_ot-line.sum-rubl > 0 ) then {&income-type} else {&outcome-type}
-            .
+          if ( buf_ot-line.sum-base > 0 or buf_ot-line.sum-rubl > 0 ) then 
+          do:
+            find first tt_report where 
+              tt_report.ext-doc-type = {&income-type}
+              and tt_report.obj-type      = obj-list.obj-type
+              and tt_report.obj-code      = obj-list.obj-code
+              and tt_report.doc-code      = buf_ot-line.doc-code
+              and tt_report.gds-code      = tt-goods.gds-code no-error .
+            if not available (tt_report) then 
+            do:
+              create tt_report.
+              assign
+                tt_report.ext-doc-type = {&income-type}
+                tt_report.obj-type     = obj-list.obj-type
+                tt_report.obj-code     = obj-list.obj-code
+                tt_report.doc-code     = buf_ot-line.doc-code
+                tt_report.gds-code     = tt-goods.gds-code
+                .
+            end.
           end.
+          else 
+          do:
+            find first tt_report where 
+              tt_report.ext-doc-type = {&outcome-type}
+              and tt_report.obj-type      = obj-list.obj-type
+              and tt_report.obj-code      = obj-list.obj-code
+              and tt_report.doc-code      = buf_ot-line.doc-code
+              and tt_report.gds-code      = tt-goods.gds-code no-error .
+            if not available (tt_report) then 
+            do:
+              create tt_report.
+              assign
+                tt_report.ext-doc-type = {&outcome-type}
+                tt_report.obj-type     = obj-list.obj-type
+                tt_report.obj-code     = obj-list.obj-code
+                tt_report.doc-code     = buf_ot-line.doc-code
+                tt_report.gds-code     = tt-goods.gds-code
+                .
+            end.
+          end.                  
+        end.
 
           otherwise do:
             next _ot-line.
@@ -813,26 +886,24 @@ on error undo, return error return-value
         end case.
         run factord-to-date in this-procedure ( input buf_ot-line.fact-order , output v-doc-date ) .
         assign
-          tt-report.obj-type      = obj-list.obj-type
-          tt-report.obj-code      = obj-list.obj-code
-          tt-report.doc-code      = buf_ot-line.doc-code
-          tt-report.gds-code      = tt-goods.gds-code
-          tt-report.fact-order    = buf_ot-line.fact-order
-          tt-report.fact-date     = v-doc-date
-          tt-report.gds-name      = tt-goods.gds-name
-          tt-report.gds-sum       = abs( if v-print-rubl = yes then buf_ot-line.sum-rubl
+
+          tt_report.fact-order    = buf_ot-line.fact-order
+          tt_report.fact-date     = v-doc-date
+          tt_report.gds-name      = tt-goods.gds-name
+          tt_report.gds-sum       = abs( if v-print-rubl = yes then buf_ot-line.sum-rubl
                                     else buf_ot-line.sum-base )
-          tt-report.tara-sum      = 0 /*abs( if v-print-rubl = yes then buf_ot-line.road-tax-rubl*/
+          tt_report.tara-sum      = 0 /*abs( if v-print-rubl = yes then buf_ot-line.road-tax-rubl*/
                                     /*else buf_ot-line.road-tax-base )*/
-          tt-report.fact-date-str = string( v-doc-date , "99.99.9999" )
-          tt-report.gds-sum-str   = if tt-report.gds-sum = 0  then v-none-sym-1
-                                    else string( tt-report.gds-sum , "->>>,>>>,>>9.99" )
-          tt-report.tara-sum-str  = if tt-report.tara-sum = 0  then v-none-sym-2
-                                    else string( tt-report.tara-sum , "->>>,>>>,>>9.99")
-          tt-report.buh-1         = ""
-          tt-report.buh-2         = ""
+          tt_report.fact-date-str = string( v-doc-date , "99.99.9999" )
+          tt_report.gds-sum-str   = if tt_report.gds-sum = 0  then v-none-sym-1
+                                    else string( tt_report.gds-sum , "->>>,>>>,>>9.99" )
+          tt_report.tara-sum-str  = if tt_report.tara-sum = 0  then v-none-sym-2
+                                    else string( tt_report.tara-sum , "->>>,>>>,>>9.99")
+          tt_report.buh-1         = ""
+          tt_report.buh-2         = ""
           v-counter               = v-counter + 1
          .
+         release tt_report .
       end. /* for each buf_ot-line */
 
       if x-SET_PAY_TYPE = {&p-sale} then do:
@@ -854,10 +925,22 @@ on error undo, return error return-value
             when {&TDEDT_Vozvrat_Perem}       or
             when {&TDEDT_Pri_Prvo}
             then do:
-              create tt-report.
-              assign
-                tt-report.ext-doc-type = {&income-type}
-              .
+          find first tt_report where 
+              tt_report.ext-doc-type = {&outcome-type}
+          and tt_report.obj-type      = obj-list.obj-type
+          and tt_report.obj-code      = obj-list.obj-code
+          and tt_report.doc-code      = buf_ot-line.doc-code
+          and tt_report.gds-code      = tt-goods.gds-code no-error .
+          if not available (tt_report) then do:
+            create tt_report.
+            assign
+              tt_report.ext-doc-type = {&outcome-type}
+              tt_report.obj-type      = obj-list.obj-type
+              tt_report.obj-code      = obj-list.obj-code
+              tt_report.doc-code      = buf_ot-line.doc-code
+              tt_report.gds-code      = tt-goods.gds-code
+            .
+          end. 
             end.
             when {&TDEDT_Inv}               or
             when {&TDEDT_Peresort}          or
@@ -865,10 +948,46 @@ on error undo, return error return-value
             when {&TDEDT_Corr_Acc_Price}    or
             when {&TDEDT_Corr_Minus_Parts}
             then do:
-              create tt-report.
+          if ( buf_ot-line.sum-base > 0 or buf_ot-line.sum-rubl > 0 ) then 
+          do:
+            find first tt_report where 
+              tt_report.ext-doc-type = {&income-type}
+              and tt_report.obj-type      = obj-list.obj-type
+              and tt_report.obj-code      = obj-list.obj-code
+              and tt_report.doc-code      = buf_ot-line.doc-code
+              and tt_report.gds-code      = tt-goods.gds-code no-error .
+            if not available (tt_report) then 
+            do:
+              create tt_report.
               assign
-                tt-report.ext-doc-type = if ( buf_ot-line.sum-base > 0 or buf_ot-line.sum-rubl > 0 ) then {&income-type} else {&outcome-type}
-              .
+                tt_report.ext-doc-type = {&income-type}
+                tt_report.obj-type     = obj-list.obj-type
+                tt_report.obj-code     = obj-list.obj-code
+                tt_report.doc-code     = buf_ot-line.doc-code
+                tt_report.gds-code     = tt-goods.gds-code
+                .
+            end.
+          end.
+          else 
+          do:
+            find first tt_report where 
+              tt_report.ext-doc-type = {&outcome-type}
+              and tt_report.obj-type      = obj-list.obj-type
+              and tt_report.obj-code      = obj-list.obj-code
+              and tt_report.doc-code      = buf_ot-line.doc-code
+              and tt_report.gds-code      = tt-goods.gds-code no-error .
+            if not available (tt_report) then 
+            do:
+              create tt_report.
+              assign
+                tt_report.ext-doc-type = {&outcome-type}
+                tt_report.obj-type     = obj-list.obj-type
+                tt_report.obj-code     = obj-list.obj-code
+                tt_report.doc-code     = buf_ot-line.doc-code
+                tt_report.gds-code     = tt-goods.gds-code
+                .
+            end.
+          end.        
             end.
             otherwise do:
               next _ot-line-sale.
@@ -876,27 +995,23 @@ on error undo, return error return-value
           end case.
           run factord-to-date in this-procedure ( input buf_ot-line.fact-order , output v-doc-date ) .
           assign
-            tt-report.obj-type      = obj-list.obj-type
-            tt-report.obj-code      = obj-list.obj-code
-            tt-report.doc-code      = buf_ot-line.doc-code
-            tt-report.gds-code      = tt-goods.gds-code
-            tt-report.fact-order    = buf_ot-line.fact-order
-            tt-report.fact-date     = v-doc-date
-            tt-report.gds-name      = tt-goods.gds-name
-            tt-report.gds-sum       = abs( if v-print-rubl = yes then buf_ot-line.sum-rubl
+            tt_report.fact-order    = buf_ot-line.fact-order
+            tt_report.fact-date     = v-doc-date
+            tt_report.gds-name      = tt-goods.gds-name
+            tt_report.gds-sum       = abs( if v-print-rubl = yes then buf_ot-line.sum-rubl
                                       else buf_ot-line.sum-base )
-            tt-report.tara-sum      = 0 /*abs( if v-print-rubl = yes then buf_ot-line.road-tax-rubl*/
+            tt_report.tara-sum      = 0 /*abs( if v-print-rubl = yes then buf_ot-line.road-tax-rubl*/
                                       /*else buf_ot-line.road-tax-base )*/
-            tt-report.fact-date-str = string( v-doc-date , "99.99.9999" )
-            tt-report.gds-sum-str   = if tt-report.gds-sum = 0  then v-none-sym-1
-                                      else string( tt-report.gds-sum , "->>>,>>>,>>9.99" )
-            tt-report.tara-sum-str  = if tt-report.tara-sum = 0  then v-none-sym-2
-                                      else string( tt-report.tara-sum , "->>>,>>>,>>9.99")
-            tt-report.buh-1         = ""
-            tt-report.buh-2         = ""
+            tt_report.fact-date-str = string( v-doc-date , "99.99.9999" )
+            tt_report.gds-sum-str   = if tt_report.gds-sum = 0  then v-none-sym-1
+                                      else string( tt_report.gds-sum , "->>>,>>>,>>9.99" )
+            tt_report.tara-sum-str  = if tt_report.tara-sum = 0  then v-none-sym-2
+                                      else string( tt_report.tara-sum , "->>>,>>>,>>9.99")
+            tt_report.buh-1         = ""
+            tt_report.buh-2         = ""
             v-counter               = v-counter + 1
           .
-
+          release tt_report .
         end.
       end.
     end. /* for each tt-goods */
