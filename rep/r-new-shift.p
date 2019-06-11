@@ -1928,32 +1928,30 @@ procedure first-line-tog2-html :
                         <td style="width:60px"></td>
                         <td style="width:70px"></td>                        
                         <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
                       </tr>
                     <tr>
-                      <td colspan="19" >&2</td>
+                      <td colspan="17" >&2</td>
                     </tr>
                     <tr>
-                      <td colspan="19" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                     </tr>
                     <tr>
-                      <td colspan="19" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
+                      <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
                     </tr>
                     <tr>
-                      <td colspan="19"> Смены  с &3  по &4 </td>
+                      <td colspan="17"> Смены  с &3  по &4 </td>
                     </tr>
                     <tr>
-                      <td colspan="19"> Закрыта &5 </td>
+                      <td colspan="17"> Закрыта &5 </td>
                     </tr>
                     <tr>
-                      <td colspan="19"> Старший смены: &6 </td>
+                      <td colspan="17"> Старший смены: &6 </td>
                     </tr>
                     <tr>
-                      <td colspan="19"> Операторы: &7 </td>
+                      <td colspan="17"> Операторы: &7 </td>
                     </tr>
                     <tr>
-                    <td colspan="19" style="height:30px;"></td>
+                    <td colspan="17" style="height:30px;"></td>
                     </tr>                    
                     </thead>'
                 ,
@@ -1994,19 +1992,18 @@ procedure first-line-tog2-html :
                         <td style="width:70px"></td>                        
                         <td style="width:60px"></td>
                         <td style="width:60px"></td>
-                        <td style="width:60px"></td>
                       </tr>
                     <tr>
-                      <td colspan="18" style="height:30px;"></td>
+                      <td colspan="17" style="height:30px;"></td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
+                      <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="height:30px;"></td>
+                      <td colspan="17" style="height:30px;"></td>
                     </tr>
                     </thead>'
                 ,chr(123), chr(125)
@@ -2041,19 +2038,19 @@ procedure first-line-tog2-html :
                         <td style="width:50px"></td>
                         <td style="width:80px"></td>
                         <td style="width:60px"></td>
-                        <td style="width:60px"></td>                     
+                 
                       </tr>
                     <tr>
-                      <td colspan="18" style="height:30px;"></td>
+                      <td colspan="17" style="height:30px;"></td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
+                      <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
                     </tr>
                     <tr>
-                      <td colspan="18" style="height:30px;"></td>
+                      <td colspan="17" style="height:30px;"></td>
                     </tr>                    
                     </thead>'
             ,chr(123), chr(125)
