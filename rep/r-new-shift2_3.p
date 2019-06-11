@@ -653,7 +653,7 @@ FOR EACH t-2 NO-LOCK
           substitute (
           '  <tr>
                     <td style="text-align: right;">&1</td>
-                    <td style="text-align: right;">&2</td>
+                    <td text_wrap="true">&2</td>
                     <td style="text-align: right;">&3</td>
              </tr> '      
           ,
@@ -892,9 +892,10 @@ FOR EACH t-2 NO-LOCK
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
                     <th rowspan="2"></th>
                     <th rowspan="2"></th>
+                    <th rowspan="2"></th>
                     <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
-                    <th rowspan="2" text_wrap="true" style="vertical-align: middle;">&6</th>
-                    <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&7</th>
+                    <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
+                    <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;">&7</th>
                     '
       ,
       pol1,
@@ -910,7 +911,6 @@ FOR EACH t-2 NO-LOCK
       substitute (
       '
             <th rowspan="2" style="text-align: right; vertical-align: middle;">&1</th>
-            <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>       
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
@@ -947,8 +947,8 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th text_wrap="true">&1</th>
                     <th></th>
+                    <th text_wrap="true">&1</th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -1012,6 +1012,7 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
+                    <th></th>
                     <th text_wrap="true">&1</th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&2</th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
@@ -1019,7 +1020,6 @@ FOR EACH t-2 NO-LOCK
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&7</th>
-                    <th></th>
                     <th></th>
                </tr>'
           ,
@@ -1064,11 +1064,11 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
+                    <th></th>
                     <th text_wrap="true">&1</th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&2</th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
-                    <th></th>
                     <th></th>
                     <th></th>
                     <th></th>
