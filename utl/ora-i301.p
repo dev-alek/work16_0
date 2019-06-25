@@ -229,9 +229,17 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
              temp-price-list.doc-num = temp-price-doc.doc-num :
 
         if temp-price-list.gds-code <> ? and temp-price-list.gds-code <> 0
-        then do :                 
+        then do :   
+          find first buf_goods no-lock  where
+                     buf_goods.gds-code = temp-price-list.gds-code no-error .
+                      if error-status :error then do:
+                        v-end-message = substitute("код товара  &1 &2" , temp-price-list.gds-code,  error-status :get-message(1) ) .
+                        run pcall-log-file in p-log-handle (input v-end-message) .
+                        undo, return error v-end-message.
+                      end.              
           find first buf_bar-code no-lock where
-                     buf_bar-code.gds-code = temp-price-list.gds-code no-error .
+                     buf_bar-code.gds-code = temp-price-list.gds-code and
+                     buf_bar-code.unit-cli = buf_goods.unit-base no-error .
                      if error-status :error then do:
                        v-end-message = substitute("Товар с кодом &1 &2" , temp-price-list.gds-code,  error-status :get-message(1) ) .
                        run pcall-log-file in p-log-handle (input v-end-message) .
@@ -246,6 +254,13 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
                        run pcall-log-file in p-log-handle (input v-end-message) .
                        undo, return error v-end-message.
                      end.
+          find first buf_goods no-lock  where
+                     buf_goods.gds-code = buf_bar-code.gds-code no-error .
+                      if error-status :error then do:
+                        v-end-message = substitute("код товара  &1 &2" , buf_bar-code.gds-code,  error-status :get-message(1) ) .
+                        run pcall-log-file in p-log-handle (input v-end-message) .
+                        undo, return error v-end-message.
+                      end.
         end.             
         find first  ver_price-doc-forming-gds no-lock where
                     ver_price-doc-forming-gds.plt-id     = buf_price-doc.plt-id      and
@@ -272,13 +287,7 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
           end.
         end.
 
-        find first buf_goods no-lock  where
-                   buf_goods.gds-code = buf_bar-code.gds-code no-error .
-                    if error-status :error then do:
-                      v-end-message = substitute("код товара  &1 &2" , buf_bar-code.gds-code,  error-status :get-message(1) ) .
-                      run pcall-log-file in p-log-handle (input v-end-message) .
-                      undo, return error v-end-message.
-                    end.
+          
 
         if buf_goods.unit-base = buf_bar-code.unit-cli then do: /* ++++++++++++++++++++++ОСНОВНОЙ КОД */
          assign
@@ -316,9 +325,17 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
              temp-price-list.doc-num = temp-price-doc.doc-num :
 
         if temp-price-list.gds-code <> ? and temp-price-list.gds-code <> 0
-        then do :                 
+        then do :  
+          find first buf_goods no-lock  where
+                     buf_goods.gds-code = temp-price-list.gds-code no-error .
+                      if error-status :error then do:
+                        v-end-message = substitute("код товара  &1 &1" , buf_bar-code.gds-code,  error-status :get-message(1) ) .
+                        run pcall-log-file in p-log-handle (input v-end-message) .
+                        undo, return error v-end-message.
+                      end.               
           find first buf_bar-code no-lock where
-                     buf_bar-code.gds-code = temp-price-list.gds-code no-error .
+                     buf_bar-code.gds-code = temp-price-list.gds-code and
+                     buf_bar-code.unit-cli = buf_goods.unit-base no-error .
                      if error-status :error then do:
                        v-end-message = substitute("Товар с кодом &1 &2" , temp-price-list.gds-code,  error-status :get-message(1) ) .
                        run pcall-log-file in p-log-handle (input v-end-message) .
@@ -333,14 +350,15 @@ define buffer ver_price-doc-forming-gds for ub.price-doc-forming-gds  .
                        run pcall-log-file in p-log-handle (input v-end-message) .
                        undo, return error v-end-message.
                      end.
+          find first buf_goods no-lock  where
+                     buf_goods.gds-code = buf_bar-code.gds-code no-error .
+                      if error-status :error then do:
+                        v-end-message = substitute("код товара  &1 &1" , buf_bar-code.gds-code,  error-status :get-message(1) ) .
+                        run pcall-log-file in p-log-handle (input v-end-message) .
+                        undo, return error v-end-message.
+                      end.
         end.
-        find first buf_goods no-lock  where
-                   buf_goods.gds-code = buf_bar-code.gds-code no-error .
-                    if error-status :error then do:
-                      v-end-message = substitute("код товара  &1 &1" , buf_bar-code.gds-code,  error-status :get-message(1) ) .
-                      run pcall-log-file in p-log-handle (input v-end-message) .
-                      undo, return error v-end-message.
-                    end.
+          
 
         if buf_goods.unit-base <> buf_bar-code.unit-cli then do: /* ++++++++++++++++++++++НЕОСНОВНОЙ КОД */
          assign
