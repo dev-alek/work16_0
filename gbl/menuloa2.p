@@ -1864,6 +1864,17 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 } 
+
+{ gbl/menuload.i
+  {&bef-menuload_service_utility}
+  "'Импорт GTIN из файла'"
+  "'utl/imp-gtin.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_service_check}                                                  */
 /* Сервис/ Программы проверки                                                 */
