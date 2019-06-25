@@ -13,9 +13,10 @@ using Progress.Lang.*.
 
 
 class ibs.th.bge.1crn.subjects.goods_barcode inherits ibs.th.bge.1crn.subjects.asubject:
-    define property bcode      as character    no-undo get. private set.
-    define property unit-code  as character    no-undo get. private set. 
-    define property coeff      as decimal      no-undo get. private set. 
+    define property bcode         as character    no-undo get. private set.
+    define property unit-code     as character    no-undo get. private set. 
+    define property coeff         as decimal      no-undo get. private set. 
+    define property barcode-type  as integer      no-undo get. private set. 
 
     define override  property InitTag as character no-undo init "barcode"
       get.
@@ -37,6 +38,11 @@ class ibs.th.bge.1crn.subjects.goods_barcode inherits ibs.th.bge.1crn.subjects.a
             do:
               assign 
                 coeff = decimal(inValue) no-error.
+            end.
+          when "barcode-type" then 
+            do:
+              assign 
+                barcode-type = integer(inValue) no-error.
             end.
       end case.
 
@@ -64,6 +70,7 @@ class ibs.th.bge.1crn.subjects.goods_barcode inherits ibs.th.bge.1crn.subjects.a
         bcode = ?
         unit-code = ?
         coeff = ?
+        barcode-type = ?
       .
 
     end method.

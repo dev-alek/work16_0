@@ -28,6 +28,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property wt            as decimal      no-undo get. private set.
   define property ms            as decimal      no-undo get. private set.
   define property gds-type      as character    no-undo get. private set.
+  define property mark-type     as integer      no-undo get. private set.
   define property img           as longchar     no-undo get. private set.
   define property unit-spl-code as character    no-undo get. private set.
   define property unit-k        as decimal      no-undo get. private set.
@@ -82,6 +83,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "wt"            then wt            = {&attr-dec} .
       when "ms"            then ms            = {&attr-dec} .
       when "gds-type"      then gds-type      = {&attr-str} .
+      when "mark-type"     then mark-type     = {&attr-integer} .
       when "img"           then img           = {&attr-str} .
       when "unit-spl-code" then unit-spl-code = {&attr-str} .
       when "unit-k"        then unit-k        = {&attr-dec} .
@@ -159,6 +161,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         wt            = ?
         ms            = ?
         gds-type      = ?
+        mark-type     = ?
         img           = ?
         unit-spl-code = ?
         unit-k        = ?

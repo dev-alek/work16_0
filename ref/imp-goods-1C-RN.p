@@ -97,6 +97,7 @@ define buffer buf-clients for clients.
 define variable v-fuel-type     as character no-undo .
 define variable v-oil-grp       as character no-undo .
 define variable v-srvc-type     as character no-undo .
+define variable v-mark-type     as character no-undo .
 define variable v-neu-l         as decimal   no-undo .
 define variable v-neu-z         as decimal   no-undo .
 define variable v-neu-storage-l as decimal   no-undo .
@@ -351,6 +352,7 @@ define variable v-barcode-list  as longchar  no-undo .
     RUN gds-attr-delete (v-nbc, {&attr-fuel-type}, output v-attr-del).     
   end.
   if v-is-petrl then RUN gds-attr-write (v-nbc, {&attr-dflt-insalepr}, 'yes').
+  
   case p-GdsObj:srvc-type :
     when 1 then v-srvc-type = {&attr-office-type_oss-pay}.
     when 2 then v-srvc-type = {&attr-office-type_card-act} .
@@ -358,6 +360,26 @@ define variable v-barcode-list  as longchar  no-undo .
     otherwise v-srvc-type = ? .
   end case.
   
+  if v-srvc-type <> ?
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-office-type}, v-srvc-type).  
+  end.
+  else do :
+    RUN gds-attr-delete (v-nbc, {&attr-office-type}, output v-attr-del).     
+  end.
+  
+  case p-GdsObj:mark-type :
+    when 1 then v-mark-type = {&attr-mark-type_tabak}.
+    otherwise v-mark-type = ? .
+  end case.
+  
+  if v-mark-type <> ?
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-mark-type}, v-mark-type).  
+  end.
+  else do :
+    RUN gds-attr-delete (v-nbc, {&attr-mark-type}, output v-attr-del).     
+  end.
   
   if p-GdsObj:oil-grp <> ?
   then do:
@@ -367,13 +389,6 @@ define variable v-barcode-list  as longchar  no-undo .
     RUN gds-attr-delete (v-nbc, {&attr-group-np}, output v-attr-del).
   end.  
   
-  if v-srvc-type <> ?
-  then do :
-    RUN gds-attr-write (v-nbc, {&attr-office-type}, v-srvc-type).  
-  end.
-  else do :
-    RUN gds-attr-delete (v-nbc, {&attr-office-type}, output v-attr-del).     
-  end.
   /* Если блюдо поставим атрибуты на объекте, что это блюдо */
 
   if p-GdsObj:gds-type = "б":U then do:
@@ -503,16 +518,17 @@ define variable v-barcode-list  as longchar  no-undo .
                 end.
             end.    
             v-b-str = v-barcode:bcode .
-            run trg/prod-bc1.p (
+            run trg/prod-bc2.p (
                                  input  parparentproc
                                 ,input yes /*p-silent*/
                                 ,input ? /* dif-pdbc */
                                 ,input ? /*pbc-veto*/
                                 ,input send-ref
-                                ,input if p-GdsObj:gds-type = "н" then {&loc-pt-code} else ""
+                                ,input (if p-GdsObj:gds-type = "н" then {&loc-pt-code} else if v-barcode:barcode-type = 1 then {&gtin} else "")
                                 ,input ""
                                 ,buffer ub.goods
                                 ,input ub.bar-code.b-code
+                                ,input (if v-barcode:barcode-type = 2 then yes else no)  
                                 ,input-output v-b-str
                                 ,output v-rid-pbc
                                 ) no-error.
@@ -546,16 +562,17 @@ define variable v-barcode-list  as longchar  no-undo .
         if ub.goods.unit-base = v-barcode:unit-code
         then do :
             v-b-str = v-barcode:bcode .
-            run trg/prod-bc1.p (
+            run trg/prod-bc2.p (
                                  input  parparentproc
                                 ,input yes /*p-silent*/
                                 ,input ? /* dif-pdbc */
                                 ,input ? /*pbc-veto*/
                                 ,input send-ref
-                                ,input if p-GdsObj:gds-type = "н" then {&loc-pt-code} else ""
+                                ,input (if p-GdsObj:gds-type = "н" then {&loc-pt-code} else if v-barcode:barcode-type = 1 then {&gtin} else "")
                                 ,input ""
                                 ,buffer ub.goods
                                 ,input base-bar-code.b-code
+                                ,input (if v-barcode:barcode-type = 2 then yes else no) 
                                 ,input-output v-b-str
                                 ,output v-rid-pbc
                                 ) no-error.
