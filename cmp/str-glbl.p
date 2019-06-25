@@ -935,6 +935,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define tax-type-
 { cmp/cr-prep.i 1 gbl-ct-code        ctgb             " " ctgb}  /* глобальный код договора*/
 { cmp/cr-prep.i 1 gbl-ca-code        cagb             " " cagb}  /* глобальный код точки привязки*/
 { cmp/cr-prep.i 1 gbl-fd-code        fdgb             " " fdgb}  /* глобальный код фин документам*/
+{ cmp/cr-prep.i 1 gtin               GTIN             " " GTIN}  /* GTIN */
+
+{ cmp/cr-prep.i 1 mark               mark             " " mark}  /* требует обязательную маркитровку */
+ 
 
 &glob grp-bcode  '{&bef-loc-ss-code},{&bef-gbl-bc-code},{&bef-loc-sc-code},{&bef-gbl-sc-code},{&bef-gbl-ss-code},{&bef-loc-pg-code},{&bef-loc-pt-code}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define grp-bcode {&grp-bcode}" ).

@@ -131,6 +131,14 @@ define variable v-is-global as logical no-undo .
 if error-status:error then return ?.
 return v-is-global.
 end function.
+FUNCTION IS-NeedMark returns logical ( buffer buf_prod-bc for ub.prod-bc):
+    DEFINE BUFFER buf_prod-bc-attr FOR ub.prod-bc-attr.
+find first buf_prod-bc-attr where buf_prod-bc-attr.b-code eq buf_prod-bc.b-code
+                              and buf_prod-bc-attr.b-str eq buf_prod-bc.b-str 
+                              and buf_prod-bc-attr.attr-code eq {&mark}
+  no-lock no-error. 
+return if available buf_prod-bc-attr then logical(buf_prod-bc-attr.attr-value) else no .
+end function.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -191,7 +199,7 @@ X_prod-bc.b-str
 &Scoped-define FIRST-ENABLED-TABLE X_goods
 &Scoped-define SECOND-ENABLED-TABLE X_prod-bc
 &Scoped-Define ENABLED-OBJECTS b-quit B-Help b-add b-chg b-del b-print-2 ~
-b-hist-0 b-on b-dpl b-add-1 b-del-1 b-print-1 b-hist-2 br-bc BR-pbc ~
+b-hist-0 b-on b-dpl b-add-1 b-del-1 b-gtin-1 b-print-1 b-hist-2 br-bc BR-pbc ~
 Rs-attr-mode b-add-attr b-chg-attr b-del-attr br-bc-attr
 &Scoped-Define DISPLAYED-FIELDS X_goods.artic X_goods.gds-name ~
 X_prod-bc.b-str
@@ -249,8 +257,12 @@ DEFINE BUTTON b-dpl
      LABEL "&Повтор"
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-gtin-1 
+     LABEL "&GTIN" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
@@ -305,11 +317,11 @@ DEFINE BROWSE br-bc
       X_bar-code.b-code FORMAT "9999999999":U
       X_bar-code.unit-cli COLUMN-LABEL "Изм."
       X_bar-code.cli-base-rate COLUMN-LABEL "Коэф." FORMAT ">,>>9.<<<"
-      stts-string(X_bar-code.stts_) COLUMN-LABEL "Статус" FORMAT "X(10)"
-      get-cr-db-num(X_bar-code.b-code, X_bar-code.cr-db-num)  FORMAT ">>>>9" column-label "Создан(БД)"
+      stts-string(X_bar-code.stts_) COLUMN-LABEL "Статус" FORMAT "X(6)"
+      get-cr-db-num(X_bar-code.b-code, X_bar-code.cr-db-num)  FORMAT ">>>>9" column-label "Соз.(БД)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 45 BY 14.27
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 39 BY 14.24
          TITLE "Собственные" FIT-LAST-COLUMN.
 
 DEFINE BROWSE br-bc-attr
@@ -329,14 +341,16 @@ DEFINE BROWSE BR-pbc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-pbc Dialog-Frame _FREEFORM
   QUERY BR-pbc NO-LOCK DISPLAY
       X_prod-bc.bc-on FORMAT "+/"
-X_prod-bc.b-str FORMAT "X(29)":U
-X_prod-bc.cr-db-num FORMAT ">>>>9" column-label "Создан(БД)"
-is-global(buffer X_prod-bc)  FORMAT "+/-" column-label "Глоб"
+X_prod-bc.b-str FORMAT "X(25)":U
+X_prod-bc.cr-db-num FORMAT ">>>>9" column-label "Соз.(БД)"
+X_prod-bc.bc-on-type eq {&gtin} or is-global(buffer X_prod-bc)  FORMAT "+/-" column-label "Глоб"
+if X_prod-bc.bc-on-type eq {&gtin} then {&gtin} else  "" FORMAT "X(5)":U column-label "Тип"
+IS-NeedMark (buffer X_prod-bc) FORMAT "+/" column-label "Требует!маркировку"
 ENABLE
 X_prod-bc.b-str
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 50.5 BY 14.27
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 60.6 BY 14.24
          TITLE "Дополнительные" FIT-LAST-COLUMN.
 
 
@@ -356,28 +370,29 @@ DEFINE FRAME Dialog-Frame
      b-add AT ROW 4 COL 1 WIDGET-ID 2
      b-chg AT ROW 4 COL 11 WIDGET-ID 4
      b-del AT ROW 4 COL 21 WIDGET-ID 6
-     b-print-2 AT ROW 4 COL 40 WIDGET-ID 12
-     b-hist-0 AT ROW 4 COL 43 WIDGET-ID 14
-     b-on AT ROW 4 COL 47 WIDGET-ID 20
-     b-dpl AT ROW 4 COL 57 WIDGET-ID 22
-     b-add-1 AT ROW 4 COL 67 WIDGET-ID 8
-     b-del-1 AT ROW 4 COL 77 WIDGET-ID 10
-     b-print-1 AT ROW 4 COL 91 WIDGET-ID 16
-     b-hist-2 AT ROW 4 COL 94 WIDGET-ID 18
+     b-print-2 AT ROW 4 COL 34 WIDGET-ID 12
+     b-hist-0 AT ROW 4 COL 37 WIDGET-ID 14
+     b-on AT ROW 4 COL 41 WIDGET-ID 20
+     b-dpl AT ROW 4 COL 51 WIDGET-ID 22
+     b-add-1 AT ROW 4 COL 61 WIDGET-ID 8
+     b-del-1 AT ROW 4 COL 71 WIDGET-ID 10
+     b-gtin-1 AT ROW 4 COL 81 WIDGET-ID 40
+     b-print-1 AT ROW 4 COL 93 WIDGET-ID 16
+     b-hist-2 AT ROW 4 COL 96 WIDGET-ID 18
      br-bc AT ROW 5 COL 1 WIDGET-ID 100
-     BR-pbc AT ROW 5 COL 47 WIDGET-ID 200
+     BR-pbc AT ROW 5 COL 40 WIDGET-ID 200
      Rs-attr-mode AT ROW 14 COL 5 NO-LABEL WIDGET-ID 30
      b-add-attr AT ROW 14 COL 51 WIDGET-ID 24
      b-chg-attr AT ROW 14 COL 61 WIDGET-ID 26
      b-del-attr AT ROW 14 COL 71 WIDGET-ID 28
      br-bc-attr AT ROW 15 COL 1 WIDGET-ID 300
      X_prod-bc.b-str AT ROW 22 COL 1 NO-LABEL WIDGET-ID 38 FORMAT "X(40)"
-          VIEW-AS FILL-IN
-          SIZE 66.5 BY 1
-          BGCOLOR 8 FGCOLOR 4
-     SPACE(32.20) SKIP(0.22)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          VIEW-AS FILL-IN 
+          SIZE 66.6 BY 1
+          BGCOLOR 8 FGCOLOR 4 
+     SPACE(32.39) SKIP(0.23)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          CANCEL-BUTTON b-quit.
 
@@ -1333,6 +1348,47 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-gtin-1
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-gtin-1 Dialog-Frame
+ON CHOOSE OF b-gtin-1 IN FRAME Dialog-Frame /* GTIN */
+DO:
+    define variable glog as logical no-undo .
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_alt-barcode_preparation':U
+  {&cntxt-global}
+  0
+  '':U
+  0
+  0
+  X_goods.grp-code
+  0
+  true
+  glog
+  }
+  if not glog then return no-apply.
+run ref/pbc-form.w
+    (input parparentproc
+    ,input X_bar-code.b-code
+    ,input ""
+    ,input no
+    ,input {&gtin}
+    ,input-output rid
+    ).
+  if rid = ? then
+    return no-apply.
+  apply "entry" to br-pbc in frame {&frame-name}.
+  apply "value-changed" to br-bc.
+  reposition br-pbc to recid rid no-error.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-hist-0
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist-0 Dialog-Frame
 ON CHOOSE OF b-hist-0 IN FRAME Dialog-Frame
@@ -1669,7 +1725,7 @@ PROCEDURE enable_UI :
     DISPLAY X_prod-bc.b-str
       WITH FRAME Dialog-Frame.
   ENABLE b-quit B-Help X_goods.artic X_goods.gds-name b-add b-chg b-del
-         b-print-2 b-hist-0 b-on b-dpl b-add-1 b-del-1 b-print-1 b-hist-2 br-bc
+         b-print-2 b-hist-0 b-on b-dpl b-add-1 b-del-1 b-gtin-1 b-print-1 b-hist-2 br-bc
          BR-pbc Rs-attr-mode b-add-attr b-chg-attr b-del-attr br-bc-attr
          X_prod-bc.b-str
       WITH FRAME Dialog-Frame.
@@ -1747,7 +1803,7 @@ do: /* A */
     define variable v-value-integer as INTEGER no-undo.
     define variable v-value-logical AS LOGICAL no-undo.
     define variable v-param-type as character no-undo.
-
+    define buffer buf_goods-attr for goods-attr.
     assign v-tth = buffer thbjattr_thbj-attr:table-handle.
 
     FOR EACH thbjattr_thbj-attr:
@@ -1775,6 +1831,7 @@ end. /* A */
 ENABLE
 b-print-2 br-bc br-pbc b-quit b-help b-hist-2 b-hist-0 /*b-dpl - перенёс (см. ниже) для выполнения ТН-3097. Арн. 2014г*/
 b-add-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
+b-gtin-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
 b-del-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
 b-on    when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
 b-dpl   when v-chg-bcod = no
@@ -1850,7 +1907,10 @@ else do:
   rs-attr-mode in frame {&frame-name}
   .
 end.
-
+b-gtin-1:visible = can-find (first buf_goods-attr
+               where buf_goods-attr.gds-code   = X_goods.gds-code
+                 and buf_goods-attr.attr-code  = {&attr-mark-type} 
+                 and buf_goods-attr.attr-value <> {&attr-mark-type_not-type} ).
 if base-bar-code.in-code = "" then
   if X_gds-prt.upper-code = X_goods.prt-root then
     frame {&frame-name}:title = "Коды: ТОВАР".

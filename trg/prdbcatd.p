@@ -35,6 +35,24 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+    if not g#news
+    then do:
+     run nws/cmd-del.p
+      ( input {&table_prod-bc-attr}
+       ,input (buffer ub.prod-bc-attr:handle)
+       ,input "":U
+      ) no-error .
+    if error-status :error then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Невозможно маршрутизировать удаление {&main-tbl} для отправки в новости" skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+      undo , return error return-value .
+    end.
+    end.
+    
     if g#oxml = yes
     then do:
     run str/calloxml.p (
