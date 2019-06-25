@@ -28,6 +28,14 @@ define buffer buf_goods-attr for ub.goods-attr.
 define buffer buf_gds-obj-attr for ub.gds-obj-attr.
 define buffer buf_alc-type  for ub.alc-type.
 define buffer buf_alc-type-gds for ub.alc-type-gds.
+define buffer buf_bar-code for ub.bar-code .
+define buffer buf_ext-classif for ub.ext-classif .
+define variable v-IBCType as integer no-undo .
+define variable v-mark  as logical no-undo initial no.
+define variable GTIN  like ub.prod-bc.b-str .
+define variable v-cli-base  as character initial "".
+define buffer buf_prod-bc-attr for ub.prod-bc-attr .
+define buffer buf_prod-bc for ub.prod-bc .
 
 &if "{1}" <> "7" &then
 if action = 'U':U then do:
@@ -417,7 +425,25 @@ if pos-type <> {&cd-type-infokiosk} then do:
     end.
     &endif
 end.
-
+find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
+              and buf_goods-attr.attr-code  = {&attr-mark-type} no-error . 
+    if available (buf_goods-attr) then do:
+      v-mark = yes .
+      case buf_goods-attr.attr-value:
+        when "not-type" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "0", input 1 ).
+        end.
+        when "tabak" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "1", input 1 ).
+        end.
+        when "shoes" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "2", input 1 ).
+        end.                
+      end case .
+    end.
+    else do:
+      run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "0", input 1 ).
+    end. 
 run bgelib-tag-close in this-procedure ( input 2, input "Item").
 
   if v-attr-egais = 1 then do:  
@@ -472,6 +498,8 @@ run bgelib-tag-close in this-procedure ( input 2, input "Item").
                                           , input ub.country.short-name, input 1 ).                              ~
       run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         ~
                                           , input string( cash-gds.price-sale ), input 1 ).                   ~
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         ~
+                                          , input string( v-IBCType ), input 1 ).                   ~
     end.                                                                                                      ~
     run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode")
 
@@ -502,7 +530,93 @@ for each buf_cash-gds no-lock where
 &endif
    if LOOKUP( {&weight}, cash-gds.unit-cli-type ) > 0 and buf_cash-gds.b-str = "" and ub.shop.cd-sc-base  then NEXT.
    if (ub.shop.cd-loc-base = no and buf_cash-gds.is-main-code = yes) then next.
+   v-IBCType = 0 .
+   if v-mark then do: 
+       find first buf_prod-bc no-lock where buf_prod-bc.b-code = buf_cash-gds.b-code and buf_prod-bc.bc-on-type = {&gtin} 
+                                        and buf_prod-bc.b-str = buf_cash-gds.b-str no-error .
+       if available (buf_prod-bc) then do:
+         GTIN = buf_prod-bc.b-str .
+       v-IBCType = 2 .
+       end.
+       else do:
+       find first buf_prod-bc-attr no-lock where buf_prod-bc-attr.b-code = buf_cash-gds.b-code
+                              and buf_prod-bc-attr.b-str = buf_cash-gds.b-str 
+                              and buf_prod-bc-attr.attr-code = {&mark} 
+                              no-error .
+       if available (buf_prod-bc-attr) then do:
+         v-IBCType = 1 .
+       end.                              
+     end. 
+  
+   if buf_cash-gds.cli-base-rate > 1 then v-cli-base = "02" .
+   else v-cli-base = "01" .   
+   end.
+  if v-mark and buf_cash-gds.b-str = "" then v-IBCType = 1 .
+  find first ub.prod-bc no-lock where ub.prod-bc.b-str = buf_cash-gds.b-str and ub.prod-bc.bc-on-type = {&gtin} 
+  no-error .
+  if available (ub.prod-bc) then do:
+        run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 
+                                          , (if action = "U" 
+                                             then "ADD":U    
+                                             else "DEL":U)   
+                                          , OS2-time         
+                                          , string(v-cli-base + buf_cash-gds.b-str))).                                              
+    run bgelib-tag-put in this-procedure ( input 3, input "IBCCode"                                          
+                                          , input cash-gds.main-prt-b-code                                            
+                                          , input 1 ).                                                       
+    if action = 'U':U then do:                                                                               
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCProducer"                                      
+                                          , input string(cash-gds.producer-int), input 1 ).                   
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCIngredient"                                    
+                                          , input trim(string( cash-gds.ingredient, "X(40)")), input 1 ).     
+      if cash-gds.gtd <> "":U then                                                                             
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCGTD"                                           
+                                          , input trim(string( cash-gds.gtd, "X(40)")), input 1 ).            
+      find first country no-lock where country.alpha1 = cash-gds.alpha1 no-error.                              
+      if available country then                                                                                
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCCountry"                                       
+                                          , input country.short-name, input 1 ).                              
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         
+                                          , input string( cash-gds.price-sale ), input 1 ).                   
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         
+                                          , input string( v-IBCType ), input 1 ).                   
+    end.                                                                                                      
+    run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode") .           
+  end.  
+  else do: 
   {&output-phrase}.
+  end.
+  if v-mark and buf_cash-gds.cli-base-rate > 1 and buf_cash-gds.b-str = "" then do:
+    
+    run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 
+                                          , (if action = "U" 
+                                             then "ADD":U    
+                                             else "DEL":U)   
+                                          , OS2-time         
+                                          , string(v-cli-base + GTIN))).                                              
+    run bgelib-tag-put in this-procedure ( input 3, input "IBCCode"                                          
+                                          , input cash-gds.main-prt-b-code                                            
+                                          , input 1 ).                                                       
+    if action = 'U':U then do:                                                                               
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCProducer"                                      
+                                          , input string(cash-gds.producer-int), input 1 ).                   
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCIngredient"                                    
+                                          , input trim(string( cash-gds.ingredient, "X(40)")), input 1 ).     
+      if cash-gds.gtd <> "":U then                                                                             
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCGTD"                                           
+                                          , input trim(string( cash-gds.gtd, "X(40)")), input 1 ).            
+      find first country no-lock where country.alpha1 = cash-gds.alpha1 no-error.                              
+      if available country then                                                                                
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCCountry"                                       
+                                          , input country.short-name, input 1 ).                              
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         
+                                          , input string( cash-gds.price-sale ), input 1 ).                   
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         
+                                          , input string( v-IBCType ), input 1 ).                   
+    end.                                                                                                      
+    run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode") .                                                        
+
+  end.   
 
 &if "{&called}" <> "send-bc" and "{&called}" <> "send-bcn" and "{&called}" <> "s-prodbc" and "{&called}" <> "s-prodbcn" &then
 if buf_cash-gds.b-str = ""
