@@ -32,6 +32,9 @@ define variable vss-description as character no-undo init "Импорт gtin".
 
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
+{ gbl/getcntxt.i def }
+{ gbl/thbj-def.i }
+{ gbl/thbjattr.i }
 
 define variable v-imp-file as character no-undo .
 define variable v-err-file as character no-undo .
@@ -104,6 +107,49 @@ then do :
   message "В системе не найдена единица измерения 'блок'!" view-as alert-box error .
   return .
 end.
+
+do: /* A */
+  { gbl/getcntxt.i get }
+  
+  define variable v-tth as handle no-undo.  
+  define variable v-chg-bcod as logical no-undo.
+  define variable v-value-character as character no-undo.
+  define variable v-value-date as date no-undo.
+  define variable v-value-decimal as decimal no-undo.
+  define variable v-value-integer as INTEGER no-undo.
+  define variable v-value-logical AS LOGICAL no-undo.
+  define variable v-param-type as character no-undo.
+  define buffer buf_goods-attr for goods-attr.
+  assign v-tth = buffer thbjattr_thbj-attr:table-handle.
+
+  FOR EACH thbjattr_thbj-attr:
+      delete thbjattr_thbj-attr.
+  end.
+
+  run adm/shattri.p (
+            input "get":U
+          , input v-cntxt-obj-type
+          , input v-cntxt-obj-code
+          , input {&attr-gds-ref_obj}
+          , input {&attr-gds-ref_obj_chg-bcod} /*p-param-code*/
+          , output v-value-character
+          , output v-value-date
+          , output v-value-decimal
+          , output v-value-integer
+          , output v-value-logical
+          , output v-param-type
+          , INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+  
+   v-chg-bcod = v-value-logical.
+   if v-cntxt-db-num = 0 then v-chg-bcod = no .
+end. /* A */
+
+if v-chg-bcod 
+then do :
+  message "Запрещена работа с доп. БК. Импорт невозможен." view-as alert-box .
+  return .
+end .
 
 SYSTEM-DIALOG GET-FILE
   v-imp-file
@@ -236,16 +282,18 @@ for each tt-gds-gtin no-lock :
       next .
     end.
     
-    find first goods-attr no-lock where goods-attr.gds-code = buf_goods.gds-code
-                                    and goods-attr.attr-code = {&attr-mark-type}
-                                    and goods-attr.attr-value = {&attr-mark-type_tabak}
-                                    no-error.
+    find first goods-attr exclusive-lock where goods-attr.gds-code = buf_goods.gds-code
+                                          and goods-attr.attr-code = {&attr-mark-type}
+                                          no-error.
     if not available goods-attr
     then do :
-      export stream s-err delimiter ";" tt-gds-gtin .
-      put stream s-log unformatted "Товар " string(buf_goods.gds-code) "  " buf_goods.gds-name " не является табачной продукцией. Атрибут 'Тип маркировки'"  skip skip .
-      next .
+      create goods-attr .
+      assign
+        goods-attr.gds-code = buf_goods.gds-code
+        goods-attr.attr-code = {&attr-mark-type}
+      .
     end.
+    assign goods-attr.attr-value = {&attr-mark-type_tabak} .
     
     v-bar-code = buf_bar-code.b-code .
     
