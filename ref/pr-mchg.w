@@ -1,10 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -81,6 +81,7 @@ define variable v-ban-sales-via-cd as character  no-undo .
 define variable v-alchol           as character  no-undo .
 define variable v-mark             as character  no-undo .
 define variable v-sum-grp          as integer    no-undo .
+define variable v-mark-type        as character  no-undo .
 define variable ix                 as integer    no-undo .
 
 /* Temp-Table and Buffer definitions                                    */
@@ -103,7 +104,7 @@ define buffer buf_gds-grp-obj for ub.gds-grp-obj.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -112,23 +113,24 @@ define buffer buf_gds-grp-obj for ub.gds-grp-obj.
 
 /* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
-&Scoped-define BROWSE-NAME BR-temp_obj-list
+&Scoped-define BROWSE-NAME br-level-dis
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES temp_obj-list
+&Scoped-define INTERNAL-TABLES tt-level-dis-attr temp_obj-list
 
 /* Definitions for BROWSE br-level-dis                                  */
-&Scoped-define FIELDS-IN-QUERY-br-level-dis tt-level-dis-attr.attr-code tt-level-dis-attr.attr-value
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-level-dis
+&Scoped-define FIELDS-IN-QUERY-br-level-dis tt-level-dis-attr.attr-code tt-level-dis-attr.attr-value   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-level-dis   
 &Scoped-define SELF-NAME br-level-dis
 &Scoped-define QUERY-STRING-br-level-dis FOR EACH tt-level-dis-attr NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-br-level-dis OPEN QUERY {&SELF-NAME} FOR EACH tt-level-dis-attr NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-br-level-dis tt-level-dis-attr
 &Scoped-define FIRST-TABLE-IN-QUERY-br-level-dis tt-level-dis-attr
 
+
 /* Definitions for BROWSE BR-temp_obj-list                              */
-&Scoped-define FIELDS-IN-QUERY-BR-temp_obj-list temp_obj-list.obj-type + {&space-char} + string(temp_obj-list.obj-code)
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-temp_obj-list
+&Scoped-define FIELDS-IN-QUERY-BR-temp_obj-list temp_obj-list.obj-type + {&space-char} + string(temp_obj-list.obj-code)   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-temp_obj-list   
 &Scoped-define SELF-NAME BR-temp_obj-list
 &Scoped-define QUERY-STRING-BR-temp_obj-list FOR EACH temp_obj-list
 &Scoped-define OPEN-QUERY-BR-temp_obj-list OPEN QUERY {&SELF-NAME} FOR EACH temp_obj-list.
@@ -142,17 +144,20 @@ define buffer buf_gds-grp-obj for ub.gds-grp-obj.
     ~{&OPEN-QUERY-BR-temp_obj-list}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit l-income-cli l-marg l-marg-pr-paraf l-rmethod ~
-l-increase-pc l-notcorr l-alc-min-price l-level-dis b-quit B-Help ~
-BR-temp_obj-list RS-option fi-increase-pc fi-marg-min fill-sum-grp r-sum-grp fi-marg-max ~
-S-round-method F-base fi-cli-type fi-cli-code r-cli fi-cli-name fi-notcorr ~
-fi-alc-min-price br-level-dis fi-marg-pr-paraf fi-grp-name n-increase-pc l-min ~
-l-max n-rmethod n-income-cli n-notcorr n-alc-min-price fill-sum-grp r-sum-grp n-level-dis
-&Scoped-Define DISPLAYED-OBJECTS RS-option fi-increase-pc n-marg ~
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help l-income-cli l-marg ~
+l-marg-pr-paraf l-rmethod l-increase-pc l-notcorr l-alc-min-price ~
+l-level-dis n-no-inc-auto-rep n-ban-sales-via-cd BR-temp_obj-list RS-option ~
+n-alchol n-mark fill-sum-grp r-sum-grp fi-increase-pc c-mark-type ~
+fi-marg-min fi-marg-max S-round-method F-base fi-cli-type fi-cli-code r-cli ~
+fi-cli-name fi-notcorr fi-alc-min-price br-level-dis fi-marg-pr-paraf B-add ~
+B-chg B-del fi-grp-name n-increase-pc l-min l-max n-rmethod n-income-cli ~
+n-notcorr n-alc-min-price n-level-dis 
+&Scoped-Define DISPLAYED-OBJECTS n-no-inc-auto-rep n-ban-sales-via-cd ~
+RS-option n-alchol n-mark fill-sum-grp fi-increase-pc c-mark-type n-marg ~
 fi-marg-min fi-marg-max S-round-method F-base fi-cli-type fi-cli-code ~
-fi-cli-name fi-notcorr fi-alc-min-price n-marg-pr-paraf fi-marg-pr-paraf fi-grp-name ~
-n-increase-pc fill-sum-grp l-min l-max n-rmethod n-income-cli n-notcorr n-alc-min-price ~
-n-level-dis B-add B-chg B-del
+fi-cli-name fi-notcorr fi-alc-min-price n-marg-pr-paraf fi-marg-pr-paraf ~
+fi-grp-name n-increase-pc l-min l-max n-rmethod n-income-cli n-notcorr ~
+n-alc-min-price n-level-dis 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -176,26 +181,38 @@ FUNCTION func-cli-name RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-add 
+     LABEL "&Добавить" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-chg 
+     LABEL "&Изменить" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-del 
+     LABEL "&Удалить" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON r-cli
+DEFINE BUTTON r-cli 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1 TOOLTIP "Для заказов ОО".
 
 DEFINE BUTTON r-sum-grp 
@@ -205,8 +222,14 @@ DEFINE BUTTON r-sum-grp
      LABEL "" 
      SIZE 3 BY 1 TOOLTIP "Группа товаров на кассе".
 
+DEFINE VARIABLE c-mark-type AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Тип маркировки" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "1","1"
+     DROP-DOWN-LIST
+     SIZE 22 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-notcorr AS CHARACTER FORMAT "X(256)":U
+DEFINE VARIABLE fi-notcorr AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS COMBO-BOX INNER-LINES 2
      LIST-ITEM-PAIRS "Да","yes",
                      "Нет","no",
@@ -215,131 +238,101 @@ DEFINE VARIABLE fi-notcorr AS CHARACTER FORMAT "X(256)":U
      DROP-DOWN-LIST
      SIZE 7.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE n-marg AS CHARACTER INITIAL "Диапазон торговой наценки %"
+DEFINE VARIABLE n-marg AS CHARACTER INITIAL "Диапазон торговой наценки %" 
      VIEW-AS EDITOR
      SIZE 19.63 BY 2.17
-     FGCOLOR 5 NO-UNDO.
+     FGCOLOR 5  NO-UNDO.
 
-DEFINE VARIABLE n-marg-pr-paraf AS CHARACTER INITIAL "Наценка к цене внутреннего прихода партии %"
+DEFINE VARIABLE n-marg-pr-paraf AS CHARACTER INITIAL "Наценка к цене внутреннего прихода партии %" 
      VIEW-AS EDITOR
      SIZE 17.5 BY 2.5
      FGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE F-base AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE F-base AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 15 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-alc-min-price AS CHARACTER FORMAT "X(255)"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-alc-min-price AS CHARACTER FORMAT "X(255)" 
+     VIEW-AS FILL-IN 
      SIZE 25.5 BY 1 TOOLTIP "Для алкоголя, %сод.спирта,мин.цена;%сод.спирта,мин.цена"
      FGCOLOR 4 .
 
-DEFINE VARIABLE fi-cli-code AS INTEGER FORMAT ">>>>>" INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-cli-code AS INTEGER FORMAT ">>>>>" INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 6 BY 1 TOOLTIP "Для заказов ОО".
 
-DEFINE VARIABLE fi-cli-name AS CHARACTER FORMAT "X(20)"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-cli-name AS CHARACTER FORMAT "X(20)" 
+     VIEW-AS FILL-IN 
      SIZE 28 BY 1 TOOLTIP "Для заказов ОО"
      FGCOLOR 4 .
 
-DEFINE VARIABLE fi-cli-type AS CHARACTER FORMAT "X(3)"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-cli-type AS CHARACTER FORMAT "X(3)" 
+     VIEW-AS FILL-IN 
      SIZE 4.13 BY 1 TOOLTIP "Для заказов ОО".
 
-DEFINE VARIABLE fi-grp-name AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-grp-name AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 57.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE fi-increase-pc AS DECIMAL FORMAT "->>>>9.99" INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-increase-pc AS DECIMAL FORMAT "->>>>9.99" INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 10.63 BY 1.
 
-DEFINE VARIABLE n-level-dis AS CHARACTER FORMAT "X(256)":U INITIAL "Границы пороговой наценки"
-      VIEW-AS TEXT
-     SIZE 27 BY .67
-     FGCOLOR 3  NO-UNDO.
+DEFINE VARIABLE fi-marg-max AS DECIMAL FORMAT "->>>>9.99" INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 10.63 BY 1.
 
-DEFINE VARIABLE fi-marg-pr-paraf AS DECIMAL FORMAT "->>>>9.99" INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE fi-marg-min AS DECIMAL FORMAT "->>>>9.99" INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 10.63 BY 1.
+
+DEFINE VARIABLE fi-marg-pr-paraf AS DECIMAL FORMAT "->>>>9.99" INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 8 BY 1.
-
-DEFINE VARIABLE fi-marg-max AS DECIMAL FORMAT "->>>>9.99" INITIAL 0
-     VIEW-AS FILL-IN
-     SIZE 10.63 BY 1.
-
-DEFINE VARIABLE fi-marg-min AS DECIMAL FORMAT "->>>>9.99" INITIAL 0
-     VIEW-AS FILL-IN
-     SIZE 10.63 BY 1.
 
 DEFINE VARIABLE fill-sum-grp AS INTEGER FORMAT ">>9":U INITIAL 0 
      LABEL "Группа товаров на кассе" 
      VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
 
-DEFINE VARIABLE l-max AS CHARACTER FORMAT "X(256)":U INITIAL "Макс"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-max AS CHARACTER FORMAT "X(256)":U INITIAL "Макс" 
+      VIEW-AS TEXT 
      SIZE 6.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-min AS CHARACTER FORMAT "X(256)":U INITIAL "Мин"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-min AS CHARACTER FORMAT "X(256)":U INITIAL "Мин" 
+      VIEW-AS TEXT 
      SIZE 6.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE n-alc-min-price AS CHARACTER FORMAT "X(256)":U INITIAL "Правила определения мин.цены алкоголя"
-      VIEW-AS TEXT
+DEFINE VARIABLE n-alc-min-price AS CHARACTER FORMAT "X(256)":U INITIAL "Правила определения мин.цены алкоголя" 
+      VIEW-AS TEXT 
      SIZE 37.38 BY 1 TOOLTIP "Для алкоголя"
      FGCOLOR 3  NO-UNDO.
 
-DEFINE VARIABLE n-income-cli AS CHARACTER FORMAT "X(256)":U INITIAL "Внутренний поставщик"
-      VIEW-AS TEXT
+DEFINE VARIABLE n-income-cli AS CHARACTER FORMAT "X(256)":U INITIAL "Внутренний поставщик" 
+      VIEW-AS TEXT 
      SIZE 20.13 BY 1
      FGCOLOR 3  NO-UNDO.
 
-DEFINE VARIABLE n-increase-pc AS CHARACTER FORMAT "X(256)":U INITIAL "Торговая наценка %"
-      VIEW-AS TEXT
+DEFINE VARIABLE n-increase-pc AS CHARACTER FORMAT "X(256)":U INITIAL "Торговая наценка %" 
+      VIEW-AS TEXT 
      SIZE 19.75 BY 1
      FGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE n-notcorr AS CHARACTER FORMAT "X(256)":U INITIAL "Запрет на кор-ку рассчитанного заказа"
-      VIEW-AS TEXT
+DEFINE VARIABLE n-level-dis AS CHARACTER FORMAT "X(256)":U INITIAL "Границы пороговой наценки" 
+      VIEW-AS TEXT 
+     SIZE 27 BY .67
+     FGCOLOR 3  NO-UNDO.
+
+DEFINE VARIABLE n-notcorr AS CHARACTER FORMAT "X(256)":U INITIAL "Запрет на кор-ку рассчитанного заказа" 
+      VIEW-AS TEXT 
      SIZE 37.38 BY 1 TOOLTIP "Для заказов ОП"
      FGCOLOR 3  NO-UNDO.
 
-DEFINE VARIABLE n-rmethod AS CHARACTER FORMAT "X(256)":U INITIAL "Метод округления"
-      VIEW-AS TEXT
+DEFINE VARIABLE n-rmethod AS CHARACTER FORMAT "X(256)":U INITIAL "Метод округления" 
+      VIEW-AS TEXT 
      SIZE 16.13 BY 1
      FGCOLOR 15  NO-UNDO.
-     
-DEFINE VARIABLE n-no-inc-auto-rep AS LOGICAL
-     LABEL "Не учитывать в автоматической отчетности"
-     VIEW-AS TOGGLE-BOX
-     SIZE 45 BY 1
-     FGCOLOR 3  NO-UNDO.
 
-DEFINE VARIABLE n-ban-sales-via-cd AS LOGICAL
-     LABEL "Запрет продажи через кассу"
-     VIEW-AS TOGGLE-BOX
-     SIZE 40 BY 1
-     FGCOLOR 3  NO-UNDO.
-
-
-
-
-
-
-
-DEFINE VARIABLE n-alchol AS LOGICAL
-    LABEL "По умолчанию алкоголь"
-    VIEW-AS TOGGLE-BOX
-    SIZE 40 BY 1
-    FGCOLOR 3  NO-UNDO.
-
-DEFINE VARIABLE n-mark AS LOGICAL
-    LABEL "По умолчанию обязательная маркировка"
-    VIEW-AS TOGGLE-BOX
-    SIZE 40 BY 1
-    FGCOLOR 3  NO-UNDO.
-    
 DEFINE IMAGE l-alc-min-price
      FILENAME "adeicon\lock":U
      SIZE 2.88 BY 1.
@@ -372,37 +365,49 @@ DEFINE IMAGE l-rmethod
      FILENAME "adeicon\lock":U
      SIZE 2.88 BY .92.
 
-DEFINE VARIABLE RS-option AS CHARACTER
+DEFINE VARIABLE RS-option AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "1",
 "Item 2", "2",
 "Item 3", "3",
 "Item 4", "4"
      SIZE 38.13 BY 3.71 NO-UNDO.
 
-DEFINE VARIABLE S-round-method AS CHARACTER
-     VIEW-AS SELECTION-LIST SINGLE SCROLLBAR-VERTICAL
+DEFINE VARIABLE S-round-method AS CHARACTER 
+     VIEW-AS SELECTION-LIST SINGLE SCROLLBAR-VERTICAL 
      SIZE 20.38 BY 6.04 NO-UNDO.
 
-DEFINE BUTTON B-add
-     LABEL "&Добавить"
-     SIZE 10 BY 1.
+DEFINE VARIABLE n-alchol AS LOGICAL INITIAL no 
+     LABEL "По умолчанию алкоголь" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 40 BY 1
+     FGCOLOR 3  NO-UNDO.
 
- DEFINE BUTTON B-chg
-     LABEL "&Изменить"
-     SIZE 10 BY 1.
+DEFINE VARIABLE n-ban-sales-via-cd AS LOGICAL INITIAL no 
+     LABEL "Запрет продажи через кассу" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 40 BY 1
+     FGCOLOR 3  NO-UNDO.
 
-DEFINE BUTTON B-del
-     LABEL "&Удалить"
-     SIZE 10 BY 1.
+DEFINE VARIABLE n-mark AS LOGICAL INITIAL no 
+     LABEL "По умолчанию обязательная маркировка" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 40 BY 1
+     FGCOLOR 3  NO-UNDO.
+
+DEFINE VARIABLE n-no-inc-auto-rep AS LOGICAL INITIAL no 
+     LABEL "Не учитывать в автоматической отчетности" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 45 BY 1
+     FGCOLOR 3  NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-level-dis FOR
+DEFINE QUERY br-level-dis FOR 
       tt-level-dis-attr SCROLLING.
 
-DEFINE QUERY BR-temp_obj-list FOR
+DEFINE QUERY BR-temp_obj-list FOR 
       temp_obj-list SCROLLING.
 &ANALYZE-RESUME
 
@@ -432,9 +437,16 @@ DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 57
+     n-no-inc-auto-rep AT ROW 3 COL 65
+     n-ban-sales-via-cd AT ROW 4 COL 65
      BR-temp_obj-list AT ROW 4.13 COL 47.63
      RS-option AT ROW 4.17 COL 2 NO-LABEL
+     n-alchol AT ROW 6 COL 65
+     n-mark AT ROW 7 COL 65
+     fill-sum-grp AT ROW 8 COL 88.38 COLON-ALIGNED
+     r-sum-grp AT ROW 8 COL 101.13
      fi-increase-pc AT ROW 8.67 COL 31.88 RIGHT-ALIGNED NO-LABEL
+     c-mark-type AT ROW 9.33 COL 79 COLON-ALIGNED WIDGET-ID 50
      n-marg AT ROW 10.29 COL 2.13 NO-LABEL
      fi-marg-min AT ROW 10.38 COL 32.13 RIGHT-ALIGNED NO-LABEL
      fi-marg-max AT ROW 11.38 COL 32.13 RIGHT-ALIGNED NO-LABEL
@@ -449,36 +461,29 @@ DEFINE FRAME Dialog-Frame
      br-level-dis AT ROW 24 COL 1.13 WIDGET-ID 200
      n-marg-pr-paraf AT ROW 24 COL 36.5 NO-LABEL WIDGET-ID 44
      fi-marg-pr-paraf AT ROW 24 COL 62 RIGHT-ALIGNED NO-LABEL
+     B-add AT ROW 28.54 COL 2 WIDGET-ID 12
+     B-chg AT ROW 28.54 COL 12 WIDGET-ID 14
+     B-del AT ROW 28.54 COL 22 WIDGET-ID 16
      fi-grp-name AT ROW 3.08 COL 2 COLON-ALIGNED NO-LABEL
      n-increase-pc AT ROW 8.63 COL 2 NO-LABEL
      l-min AT ROW 10.25 COL 35.5 COLON-ALIGNED NO-LABEL
      l-max AT ROW 11.5 COL 35.5 COLON-ALIGNED NO-LABEL
      n-rmethod AT ROW 13.08 COL 5.88 NO-LABEL
-     n-no-inc-auto-rep AT ROW 3 COL 65 NO-LABEL
-     n-ban-sales-via-cd AT ROW 4 COL 65 NO-LABEL
-
-     n-alchol AT ROW 6 COL 65 NO-LABEL
-     n-mark AT ROW 7 COL 65 NO-LABEL
-     fill-sum-grp AT ROW 8 COL 88.38 colon-aligned 
-     r-sum-grp AT ROW 8 COL 101.13
      n-income-cli AT ROW 19.42 COL 1.13 NO-LABEL
      n-notcorr AT ROW 20.63 COL 1.13 NO-LABEL WIDGET-ID 6
      n-alc-min-price AT ROW 21.75 COL 1 NO-LABEL WIDGET-ID 10
      n-level-dis AT ROW 23 COL 1.13 NO-LABEL
      l-income-cli AT ROW 19.42 COL 64
      l-marg AT ROW 10.71 COL 34.75
-     l-marg-pr-paraf AT ROW 24.00 COL 64
+     l-marg-pr-paraf AT ROW 24 COL 64
      l-rmethod AT ROW 13.17 COL 44.13
      l-increase-pc AT ROW 8.63 COL 34.75
      l-notcorr AT ROW 20.75 COL 46.5 WIDGET-ID 4
      l-alc-min-price AT ROW 21.75 COL 64 WIDGET-ID 16
-     l-level-dis AT ROW 23 COL 28.00 WIDGET-ID 42
-     B-add AT ROW 28.55 COL 2 WIDGET-ID 12
-     B-chg AT ROW 28.55 COL 12 WIDGET-ID 14
-     B-del AT ROW 28.55 COL 22 WIDGET-ID 16
-     SPACE(50) SKIP(0.00)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     l-level-dis AT ROW 23 COL 28 WIDGET-ID 42
+     SPACE(79.12) SKIP(5.55)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры на объектах для группы товаров"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -499,9 +504,9 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BR-temp_obj-list B-Help Dialog-Frame */
+/* BROWSE-TAB BR-temp_obj-list n-ban-sales-via-cd Dialog-Frame */
 /* BROWSE-TAB br-level-dis fi-alc-min-price Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -515,13 +520,11 @@ ASSIGN
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN fi-increase-pc IN FRAME Dialog-Frame
    ALIGN-R                                                              */
-/* SETTINGS FOR FILL-IN n-level-dis IN FRAME Dialog-Frame
-   ALIGN-L                                                              */
-/* SETTINGS FOR FILL-IN fi-marg-pr-paraf IN FRAME Dialog-Frame
-   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN fi-marg-max IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN fi-marg-min IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN fi-marg-pr-paraf IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN n-alc-min-price IN FRAME Dialog-Frame
    ALIGN-L                                                              */
@@ -529,14 +532,16 @@ ASSIGN
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN n-increase-pc IN FRAME Dialog-Frame
    ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN n-level-dis IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
 /* SETTINGS FOR EDITOR n-marg IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        n-marg:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR n-marg-pr-paraf IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        n-marg-pr-paraf:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN n-notcorr IN FRAME Dialog-Frame
@@ -568,7 +573,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH temp_obj-list.
 */  /* BROWSE BR-temp_obj-list */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -590,6 +595,134 @@ END.
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Параметры на объектах для группы товаров */
 DO:
   APPLY "END-ERROR":U TO SELF.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-add
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-add Dialog-Frame
+ON CHOOSE OF B-add IN FRAME Dialog-Frame /* Добавить */
+DO :
+
+ define variable v-pole1 as character no-undo .
+ define variable v-pole2 as character no-undo .
+
+  run str/lvldsc.w ( input-output v-pole1 , input-output v-pole2 ) .
+  create tt-level-dis-attr.
+  assign
+    tt-level-dis-attr.attr-code  = v-pole1
+    tt-level-dis-attr.attr-value = v-pole2
+  no-error
+  .
+  if error-status :error then do:
+    message
+      "Пороговая наценка," skip
+      "где интервал " v-pole1 skip
+      "наценка " v-pole2 "," skip
+      "уже есть."
+    view-as alert-box error.
+    delete tt-level-dis-attr.
+  end.
+  else do:
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define BROWSE-NAME br-level-dis
+&Scoped-define SELF-NAME br-level-dis
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-level-dis Dialog-Frame
+ON RIGHT-MOUSE-CLICK OF br-level-dis IN FRAME Dialog-Frame
+DO:
+    assign
+    n-level-dis:fgcolor = 3
+    l-level-dis:visible = true
+    .
+    for each tt-level-dis-attr.
+      delete tt-level-dis-attr.
+    end.
+    hide
+    br-level-dis
+    B-add
+    B-chg
+    B-del
+    in frame {&frame-name}.
+    ENABLE l-level-dis
+    with frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END*/
+
+ON RIGHT-MOUSE-CLICK OF fi-marg-pr-paraf IN FRAME Dialog-Frame
+DO:
+    assign
+    n-marg-pr-paraf:fgcolor = 15
+    l-marg-pr-paraf:visible = true
+    v-marg-pr-paraf = '':U
+    .
+    hide
+    fi-marg-pr-paraf
+    in frame {&frame-name}.
+    ENABLE l-marg-pr-paraf
+    with frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END*/
+
+ON ENTRY OF fi-marg-max IN FRAME Dialog-Frame
+DO:
+assign
+    v-old-value = fi-marg-max:screen-value
+.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME fi-alc-min-price
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-alc-min-price Dialog-Frame
+ON ENTRY OF fi-alc-min-price IN FRAME Dialog-Frame
+DO:
+assign
+    v-old-value = fi-alc-min-price :screen-value
+.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-alc-min-price Dialog-Frame
+ON RIGHT-MOUSE-CLICK OF fi-alc-min-price IN FRAME Dialog-Frame
+DO:
+  assign
+    n-alc-min-price:fgcolor = 3
+    l-alc-min-price:visible = true
+    v-alc-min-price = '':U
+    .
+    hide
+    FI-alc-min-price
+    in frame {&frame-name}.
+    ENABLE l-alc-min-price
+    with frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-alc-min-price Dialog-Frame
+ON VALUE-CHANGED OF fi-alc-min-price IN FRAME Dialog-Frame
+DO:
+  assign
+    v-value-changed = ( if v-value-changed = no and v-old-value = fi-alc-min-price :screen-value then no else yes )
+.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -708,7 +841,6 @@ assign
 END.
 
 /* _UIB-CODE-BLOCK-END */
-
 &ANALYZE-RESUME
 
 
@@ -721,7 +853,6 @@ assign
 END.
 
 /* _UIB-CODE-BLOCK-END */
-
 &ANALYZE-RESUME
 
 
@@ -745,62 +876,7 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-level-dis Dialog-Frame
-ON RIGHT-MOUSE-CLICK OF br-level-dis IN FRAME Dialog-Frame
-DO:
-    assign
-    n-level-dis:fgcolor = 3
-    l-level-dis:visible = true
-    .
-    for each tt-level-dis-attr.
-      delete tt-level-dis-attr.
-    end.
-    hide
-    br-level-dis
-    B-add
-    B-chg
-    B-del
-    in frame {&frame-name}.
-    ENABLE l-level-dis
-    with frame {&frame-name}.
-END.
-
-/* _UIB-CODE-BLOCK-END*/
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-marg-pr-paraf Dialog-Frame
-ON RIGHT-MOUSE-CLICK OF fi-marg-pr-paraf IN FRAME Dialog-Frame
-DO:
-    assign
-    n-marg-pr-paraf:fgcolor = 15
-    l-marg-pr-paraf:visible = true
-    v-marg-pr-paraf = '':U
-    .
-    hide
-    fi-marg-pr-paraf
-    in frame {&frame-name}.
-    ENABLE l-marg-pr-paraf
-    with frame {&frame-name}.
-END.
-
-/* _UIB-CODE-BLOCK-END*/
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME fi-marg-max
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-marg-max Dialog-Frame
-ON ENTRY OF fi-marg-max IN FRAME Dialog-Frame
-DO:
-assign
-    v-old-value = fi-marg-max:screen-value
-.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-marg-max Dialog-Frame
 ON LEAVE OF fi-marg-max IN FRAME Dialog-Frame
 DO:
@@ -890,20 +966,6 @@ assign
 .
 END.
 
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME fi-alc-min-price
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-alc-min-price Dialog-Frame
-ON ENTRY OF fi-alc-min-price IN FRAME Dialog-Frame
-DO:
-assign
-    v-old-value = fi-alc-min-price :screen-value
-.
-END.
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -924,7 +986,6 @@ DO:
 
 END.
 
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -940,16 +1001,28 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-alc-min-price Dialog-Frame
-ON VALUE-CHANGED OF fi-alc-min-price IN FRAME Dialog-Frame
+
+&Scoped-define SELF-NAME l-alc-min-price
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL l-alc-min-price Dialog-Frame
+ON MOUSE-SELECT-CLICK OF l-alc-min-price IN FRAME Dialog-Frame
 DO:
-  assign
-    v-value-changed = ( if v-value-changed = no and v-old-value = fi-alc-min-price :screen-value then no else yes )
-.
+  IF l-alc-min-price:visible then do:
+    assign
+    n-alc-min-price:fgcolor = ?
+    l-alc-min-price:visible = false.
+    enable
+    fi-alc-min-price
+    with frame {&frame-name}.
+    display
+     fi-alc-min-price
+    with frame {&frame-name}.
+    APPLY "ENTRY" TO fi-alc-min-price.
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME l-income-cli
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL l-income-cli Dialog-Frame
@@ -972,25 +1045,6 @@ DO:
     APPLY "ENTRY" TO fi-cli-type.
   end.
 
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-alc-min-price Dialog-Frame
-ON RIGHT-MOUSE-CLICK OF fi-alc-min-price IN FRAME Dialog-Frame
-DO:
-  assign
-    n-alc-min-price:fgcolor = 3
-    l-alc-min-price:visible = true
-    v-alc-min-price = '':U
-    .
-    hide
-    FI-alc-min-price
-    in frame {&frame-name}.
-    ENABLE l-alc-min-price
-    with frame {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1138,16 +1192,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME r-cli
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-cli Dialog-Frame
-ON CHOOSE OF r-cli IN FRAME Dialog-Frame
-DO:
-  /* 1 */
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &Scoped-define SELF-NAME n-alchol
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL n-alchol Dialog-Frame
 ON VALUE-CHANGED OF n-alchol IN FRAME Dialog-Frame /* По умолчанию алкоголь */
@@ -1164,6 +1208,18 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME r-cli
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-cli Dialog-Frame
+ON CHOOSE OF r-cli IN FRAME Dialog-Frame
+DO:
+  /* 1 */
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME r-sum-grp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sum-grp Dialog-Frame
@@ -1190,6 +1246,7 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME S-round-method
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL S-round-method Dialog-Frame
@@ -1241,119 +1298,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME l-alc-min-price
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL l-alc-min-price Dialog-Frame
-ON MOUSE-SELECT-CLICK OF l-alc-min-price IN FRAME Dialog-Frame
-DO:
-  IF l-alc-min-price:visible then do:
-    assign
-    n-alc-min-price:fgcolor = ?
-    l-alc-min-price:visible = false.
-    enable
-    fi-alc-min-price
-    with frame {&frame-name}.
-    display
-     fi-alc-min-price
-    with frame {&frame-name}.
-    APPLY "ENTRY" TO fi-alc-min-price.
-  end.
-END.
-
-
-/* _UIB-CODE-BLOCK-END */
-
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME B-add
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-add Dialog-Frame
-ON CHOOSE OF B-add IN FRAME Dialog-Frame /* Добавить */
-DO :
-
- define variable v-pole1 as character no-undo .
- define variable v-pole2 as character no-undo .
-
-  run str/lvldsc.w ( input-output v-pole1 , input-output v-pole2 ) .
-  create tt-level-dis-attr.
-  assign
-    tt-level-dis-attr.attr-code  = v-pole1
-    tt-level-dis-attr.attr-value = v-pole2
-  no-error
-  .
-  if error-status :error then do:
-    message
-      "Пороговая наценка," skip
-      "где интервал " v-pole1 skip
-      "наценка " v-pole2 "," skip
-      "уже есть."
-    view-as alert-box error.
-    delete tt-level-dis-attr.
-  end.
-  else do:
-    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-  end.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-
-&Scoped-define SELF-NAME B-chg
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-chg Dialog-Frame
-ON CHOOSE OF B-chg IN FRAME Dialog-Frame /* Изменить */
-DO:
-
- define variable v-pole1 as character no-undo .
- define variable v-pole2 as character no-undo .
-
-  if available tt-level-dis-attr then do:
-    assign
-      v-pole1 = tt-level-dis-attr.attr-code
-      v-pole2 = tt-level-dis-attr.attr-value
-    .
-    delete tt-level-dis-attr .
-    run str/lvldsc.w ( input-output v-pole1 , input-output v-pole2 ) .
-
-    create tt-level-dis-attr.
-    assign
-      tt-level-dis-attr.attr-code  = v-pole1
-      tt-level-dis-attr.attr-value = v-pole2
-    no-error
-    .
-    if error-status :error then do:
-      message
-        "Пороговая наценка," skip
-        "где интервал " v-pole1 skip
-        "наценка " v-pole2 "," skip
-        "уже есть."
-      view-as alert-box error.
-      delete tt-level-dis-attr.
-    end.
-    else do:
-      {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-    end.
-  end.
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME B-del
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-del Dialog-Frame
-ON CHOOSE OF B-del IN FRAME Dialog-Frame /* Удалить */
-DO:
-  if available tt-level-dis-attr then do:
-    delete tt-level-dis-attr .
-  end.
-
-  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-END.
-
-/* _UIB-CODE-BLOCK-END */
-
-&ANALYZE-RESUME
-
-
-&Scoped-define BROWSE-NAME BR-temp_obj-list
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
@@ -1373,7 +1317,7 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   { gbl/getcntxt.i get }
-    if NOT (p-mode = {&add-def} or p-mode = {&update} or p-mode = {&lookup}) then do:
+  if NOT (p-mode = {&add-def} or p-mode = {&update} or p-mode = {&lookup}) then do:
     message
     vss-workfile vss-revision vss-description skip
     "Неверный параметр вызова p-mode" p-mode
@@ -1428,6 +1372,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     undo, return error.
   end.
   RUN MYenable.
+  run proc-load.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -1461,10 +1406,11 @@ on error undo, return error
   define input parameter v-level-dis-attr     as character                no-undo .
   define input parameter v-no-inc-auto-rep    as character                no-undo .
   define input parameter v-ban-sales-via-cd   as character                no-undo .
-
+  
   define input parameter v-alchol             as character                no-undo . 
   define input parameter v-mark               as character                no-undo . 
-  define input parameter v-sum-grp            as character                no-undo . 
+  define input parameter v-sum-grp            as character                no-undo .
+  define input parameter v-mark-type          as character                no-undo .  
 
   DEFINE VARIABLE v-node-code  like ub.gds-grp.node-code  no-undo .
   DEFINE VARIABLE v-upper-code like ub.gds-grp.upper-code no-undo .
@@ -1475,21 +1421,21 @@ define buffer buf_clients   for ub.clients.
 if fi-cli-type:visible in frame  {&frame-name}  then do:
     if v-cli-type = ""
         then do:
-          message "Неверно введен тип поставщика! "  view-as alert-box information .
+          message "Не верно введен тип поставщика! "  view-as alert-box information .
           return error .
         end.
 
 
     if v-cli-code = 0
         then do:
-          message "Неверно введен код поставщика! "  view-as alert-box information .
+          message "Не верно введен код поставщика! "  view-as alert-box information .
           return error .
         end.
 
     if not( v-cli-type = {&shop} or
       v-cli-type = {&stock} )
         then do:
-          message "Неверно введен тип поставщика! Может быть только магазин или склад ! "  v-cli-type view-as alert-box information .
+          message "Не верно введен тип поставщика! Может быть только магазин или склад ! "  v-cli-type view-as alert-box information .
           return error .
         end.
 
@@ -1558,7 +1504,6 @@ end.
               ,input gds-grp.node-name
               ,input gds-grp.calc-method
               ,input v-increase-pc
-              ,input gds-grp.print-code
               ,input v-round-method
               ,input v-base
               ,output rid
@@ -1803,6 +1748,33 @@ end.
           undo, return error.
         end.
       end.  
+      if v-mark-type <> ""
+      then do:
+        run ggoattr-write (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-type}
+          ,input   v-mark-type
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+       end.
+       else do: 
+        run ggoattr-delete (
+          input   p-node-code
+          ,input   0
+          ,input   ""
+          ,input   0
+          ,input   {&ggoattr-mark-type}
+          ,output  v-mark-type
+          ) no-error .
+        if error-status :error then do:
+          undo, return error.
+        end.
+      end.  
     end.
     when {&company} then do:
       run grp-obj-write in this-procedure (
@@ -2020,6 +1992,7 @@ end.
           undo, return error.
         end.
       end.
+      
     end.
     when {&g___object} then do:
     run grp-obj-write in this-procedure (
@@ -2400,12 +2373,42 @@ end.
           undo, return error.
         end.
       end.
+      
       end.
     end.
   end case.
 end.
 
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-load Dialog-Frame 
+PROCEDURE proc-load :
+define variable v-list-names as character no-undo init "Не определен,Табачная продукция,Обувь".
+define variable v-list as character no-undo.
+define variable i as integer no-undo.
+define variable v-val as character no-undo.
+define variable v-text as character no-undo.
+
+do i = 1 to num-entries({&prop-list-attr-mark-type}):
+    v-val  = entry(i, {&prop-list-attr-mark-type}).
+    v-text = entry(i, v-list-names).
+    
+    v-list = v-list + "," + v-text + "," + v-val.
+end.
+
+v-list = trim(v-list, ",").
+c-mark-type:list-item-pairs in frame {&FRAME-NAME} = v-list.
+
+if p-mode = {&add-def} OR p-mode = {&update} then do:
+    enable c-mark-type with frame {&FRAME-NAME}.
+end.
+
+display c-mark-type with frame {&FRAME-NAME}.
+
+end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -2710,7 +2713,6 @@ if available buf_gds-grp-obj then do:
       ,output  v-ban-sales-via-cd
       ,output  v-type ) no-error .
       
-
     run ggoattr-value (
        input   p-node-code
       ,input   buf_gds-grp-obj.host-code
@@ -2738,7 +2740,16 @@ if available buf_gds-grp-obj then do:
       ,input   {&ggoattr-sum-grps}
       ,output  v-sum-grp
       ,output  v-type ) no-error .
-      
+
+    run ggoattr-value (
+       input   p-node-code
+      ,input   buf_gds-grp-obj.host-code
+      ,input   buf_gds-grp-obj.obj-type
+      ,input   buf_gds-grp-obj.obj-code
+      ,input   {&ggoattr-mark-type}
+      ,output  c-mark-type
+      ,output  v-type ) no-error .
+            
 repeat ix = 1 to num-entries (v-level-dis-attr, {&delim-par}) - 1 :
   create
     tt-level-dis-attr
@@ -2761,7 +2772,6 @@ else do:
     v-alc-min-price = "":U
     v-no-inc-auto-rep = "no"
     v-ban-sales-via-cd = "no"
-    
     v-alchol        = "no"
     v-mark          = "no"
     v-sum-grp       = 0
@@ -2834,7 +2844,6 @@ l-level-dis
 n-marg-pr-paraf
 n-no-inc-auto-rep
 n-ban-sales-via-cd
-
 WITH FRAME Dialog-Frame.
 
 run Show-hide-lock in this-procedure.
@@ -2861,8 +2870,19 @@ BR-temp_obj-list
     in frame {&frame-name}.
 end.
 
-
-
+{ gbl/conf-rd.i
+  "'is-tm'"
+  0
+  "''"
+  0
+  "''"
+  "''"
+  "''"
+  no
+  v-value
+  v-type
+  no-error
+}
 
 
 v-value = "no".
@@ -2892,6 +2912,7 @@ end.
 enable 
   fill-sum-grp 
   r-sum-grp
+  c-mark-type
   with frame {&frame-name} .    
 if p-mode = {&lookup} then do:
     disable
@@ -2921,7 +2942,6 @@ if p-mode = {&lookup} then do:
      n-rmethod 
      n-no-inc-auto-rep 
      n-ban-sales-via-cd
-
      n-alchol
      n-mark
      fill-sum-grp
@@ -2936,6 +2956,7 @@ if p-mode = {&lookup} then do:
      l-rmethod 
      l-increase-pc 
      l-notcorr 
+     c-mark-type
      l-alc-min-price 
      l-level-dis 
      B-add 
@@ -2982,6 +3003,7 @@ fi-increase-pc
 s-round-method
 f-base
 fi-marg-pr-paraf
+c-mark-type
 
 v-increase-pc  = if fi-increase-pc:sensitive
                  and fi-increase-pc:visible then fi-increase-pc else ?
@@ -3049,6 +3071,7 @@ run create-attr in this-procedure ( input v-marg-min
                                    ,input string(n-alchol)
                                    ,input string(n-mark)
                                    ,input fill-sum-grp
+                                   ,input c-mark-type
                                   ) no-error.
 if error-status:error then do:
    message error-status :get-message(1) .
@@ -3317,8 +3340,261 @@ CASE p-mode:
     disp n-no-inc-auto-rep with frame {&FRAME-NAME}.
     n-ban-sales-via-cd = logical(if v-ban-sales-via-cd = "" then "no" else v-ban-sales-via-cd).
     disp n-ban-sales-via-cd with frame {&FRAME-NAME}.
-    
-    
+    n-alchol = logical(if v-alchol = "" then "no" else v-alchol).
+    display n-alchol with frame {&FRAME-NAME}.
+    n-mark = logical(if v-mark = "" then "no" else v-mark).
+    display n-mark with frame {&FRAME-NAME}.
+    fill-sum-grp = v-sum-grp .
+    display fill-sum-grp with frame {&FRAME-NAME}.
+  end.
+    when {&lookup} then do:
+    if v-marg-min <> ? and v-marg-max <> ? then do:
+      display
+      v-marg-min @ fi-marg-min
+      v-marg-max @ fi-marg-max
+      with frame {&frame-name}
+      .
+      ENABLE
+      fi-marg-max
+      fi-marg-min
+      with frame {&frame-name}
+      .
+      hide
+      l-marg
+      in frame {&frame-name}
+      .
+    end.
+    else do:
+      hide
+      fi-marg-max
+      fi-marg-min
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-marg
+      with frame {&frame-name}.
+      display
+      l-marg
+      with frame {&frame-name}.
+    end.
+    if v-increase-pc <> ? then do:
+      display
+      v-increase-pc @ fi-increase-pc
+      with frame {&frame-name}
+      .
+      ENABLE
+      fi-increase-pc
+      with frame {&frame-name}
+      .
+      assign
+      n-increase-pc:fgcolor = ?
+      .
+      hide
+      l-increase-pc
+      in frame {&frame-name}
+      .
+    end.
+    else do:
+      hide
+      fi-increase-pc
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-increase-pc
+      with frame {&frame-name}.
+
+      display
+      l-increase-pc
+      with frame {&frame-name}.
+    end.
+    if v-round-method <> "":U then do:
+      assign
+      s-round-method:screen-value = v-round-method
+      .
+      ENABLE
+      s-round-method
+      with frame {&frame-name}
+      .
+      assign
+      n-rmethod:fgcolor = ?
+      .
+      hide
+      l-rmethod
+      in frame {&frame-name}
+      .
+      APPLY "VALUE-CHANGED" to s-round-method.
+    end.
+    else do:
+      APPLY "VALUE-CHANGED" to s-round-method.
+      hide
+      s-round-method
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-rmethod
+      with frame {&frame-name}.
+
+      display
+      l-rmethod
+      with frame {&frame-name}.
+    end.
+
+    if v-cli-type <> "" and v-cli-code <> 0 then do:
+      display
+      v-cli-type @ fi-cli-type
+      v-cli-code @ fi-cli-code
+      v-cli-name @ fi-cli-name
+      with frame {&frame-name}
+      .
+      ENABLE
+      fi-cli-type
+      fi-cli-code
+      r-cli
+      fi-cli-name
+      with frame {&frame-name}
+      .
+      hide
+      l-income-cli
+      in frame {&frame-name}
+      .
+    end.
+    else do:
+      hide
+      fi-cli-type
+      fi-cli-code
+      r-cli
+      fi-cli-name
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-income-cli
+      with frame {&frame-name}.
+      display
+      l-income-cli
+      with frame {&frame-name}.
+    end.
+
+    if v-notcorr <> ""  then do:
+      fi-notcorr = v-notcorr .
+      display
+       fi-notcorr
+      with frame {&frame-name}
+      .
+      ENABLE
+      fi-notcorr
+      with frame {&frame-name}
+      .
+      hide
+      l-notcorr
+      in frame {&frame-name}
+      .
+    end.
+    else do:
+      hide
+      fi-notcorr
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-notcorr
+      with frame {&frame-name}.
+      display
+      l-notcorr
+      with frame {&frame-name}.
+    end.
+    if v-alc-min-price <> ""  then do:
+      fi-alc-min-price = v-alc-min-price .
+      display
+       fi-alc-min-price
+      with frame {&frame-name}
+      .
+      ENABLE
+      fi-alc-min-price
+      with frame {&frame-name}
+      .
+      hide
+      l-alc-min-price
+      in frame {&frame-name}
+      .
+    end.
+    else do:
+      hide
+      fi-alc-min-price
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-alc-min-price
+      with frame {&frame-name}.
+      display
+      l-alc-min-price
+      with frame {&frame-name}.
+    end.
+    if v-marg-pr-paraf <> ""  then do:
+      fi-marg-pr-paraf = decimal (v-marg-pr-paraf).
+      display
+      fi-marg-pr-paraf
+      with frame {&frame-name}
+      .
+      ENABLE
+      fi-marg-pr-paraf
+      with frame {&frame-name}
+      .
+      hide
+      l-marg-pr-paraf
+      in frame {&frame-name}
+      .
+    end.
+    else do:
+      hide
+      fi-marg-pr-paraf
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-marg-pr-paraf
+      with frame {&frame-name}.
+      display
+      l-marg-pr-paraf
+      with frame {&frame-name}.
+    end.
+    if can-find (first tt-level-dis-attr) then do:
+      {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+      display
+      br-level-dis
+      B-add
+      B-chg
+      B-del
+      with frame {&frame-name}
+      .
+      ENABLE
+      br-level-dis
+      B-add
+      B-chg
+      B-del
+      with frame {&frame-name}
+      .
+      hide
+      l-level-dis
+      in frame {&frame-name}
+      .
+    end.
+    else do:
+      hide
+      br-level-dis
+      B-add
+      B-chg
+      B-del
+      in frame {&frame-name}
+      .
+      ENABLE
+      l-level-dis
+      with frame {&frame-name}.
+      display
+      l-level-dis
+      with frame {&frame-name}.
+    end.
+    n-no-inc-auto-rep = logical(if v-no-inc-auto-rep = "" then "no" else v-no-inc-auto-rep).
+    disp n-no-inc-auto-rep with frame {&FRAME-NAME}.
+    n-ban-sales-via-cd = logical(if v-ban-sales-via-cd = "" then "no" else v-ban-sales-via-cd).
+    disp n-ban-sales-via-cd with frame {&FRAME-NAME}.
     n-alchol = logical(if v-alchol = "" then "no" else v-alchol).
     display n-alchol with frame {&FRAME-NAME}.
     n-mark = logical(if v-mark = "" then "no" else v-mark).
@@ -3423,8 +3699,6 @@ CASE p-mode:
     disp n-no-inc-auto-rep with frame {&FRAME-NAME}.
     n-ban-sales-via-cd = logical(if v-ban-sales-via-cd = "" then "no" else v-ban-sales-via-cd).
     disp n-ban-sales-via-cd with frame {&FRAME-NAME}.
-   
-   
     n-alchol = logical(if v-alchol = "" then "no" else v-alchol).
     display n-alchol with frame {&FRAME-NAME}.
     n-mark = logical(if v-mark = "" then "no" else v-mark).

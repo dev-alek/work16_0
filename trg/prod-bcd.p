@@ -135,7 +135,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         end.
       end.
     end.
-  if l-prod-bc-global then do:
+  if l-prod-bc-global or prod-bc.bc-on-type eq {&gtin} then do:
     run nws/cmd-del.p
       ( input {&table_prod-bc}
        ,input (buffer ub.prod-bc:handle)
@@ -185,3 +185,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
     end.
 end.
+
+for each prod-bc-attr where prod-bc-attr.b-code eq prod-bc.b-code
+                        and prod-bc-attr.b-str  eq prod-bc.b-str
+   exclusive-lock:
+       delete prod-bc-attr.
+end.                     

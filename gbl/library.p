@@ -4562,6 +4562,11 @@ procedure prodbcat :
         view-as alert-box error .
       undo, return error return-value .
     end.
+    if buf_prod-bc.bc-on-type eq {&gtin}
+    then do:
+      /*  p-return-attribute = true. */
+       return.
+    end.
     define variable ind                    as integer   no-undo .
     define variable v-num-entries-p-action as integer   no-undo .
     define variable v-action               as character no-undo .

@@ -25,6 +25,8 @@ Creation date: 05/08/07
 
 /* ***************************  Definitions  ************************** */
 using ibs.th.adm.upd.*.
+using ibs.th.gbl.*.
+
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -33,7 +35,9 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Окно входа в систему".
 { cmp/vssrevis.i }
-{ cmp/str-glbl.i }
+&global-define delim-par chr(4)
+&global-define db-name_schema ub
+/*{ cmp/str-glbl.i }*/
 { cmp/showinf.i }
 
 define variable v-cConnect          as character no-undo .
@@ -331,8 +335,10 @@ on stop   undo, leave
   assign
     name
     password .
+  run utl/chkstrgbl.p.
   
   v-cConnect = ibs.th.gbl.gbl-inipar:conPar.
+   
   if v-cConnect = ?
   or trim (v-cConnect) = ""
   then do:

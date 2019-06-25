@@ -1249,6 +1249,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_c-point-io}
             or when {&table_price-all}
             or when {&table_prod-bc-db}
+            or when {&table_prod-bc-attr}
             or when {&table_schedule}
             or when {&table_schedule-attr}
             or when {&table_action-post}

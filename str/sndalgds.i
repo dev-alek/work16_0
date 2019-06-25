@@ -81,8 +81,10 @@ FOR EACH ub.gds-obj No-LOCK where
                  buf_fbr-gds-obj.obj-type = {&shop}
              AND buf_fbr-gds-obj.obj-code = i-obj-code
              AND buf_fbr-gds-obj.gds-code = ub.gds-obj.gds-code no-error .
-      if not available buf_fbr-gds-obj
-      or not buf_fbr-gds-obj.is-cd then NEXT _gds-obj.
+      if     available buf_fbr-gds-obj
+         and not buf_fbr-gds-obj.is-cd 
+      then 
+         NEXT _gds-obj.
     end.
   {&NEW-GOOD}
     FIND FIRST ub.goods NO-LOCK where

@@ -38,8 +38,10 @@ if v-is-restaurant then do:
               buf_fbr-gds-obj.obj-type = {&shop}
           AND buf_fbr-gds-obj.obj-code = i-obj-code
           AND buf_fbr-gds-obj.gds-code = ub.bar-code.gds-code no-error .
-  if not available buf_fbr-gds-obj
-  or not buf_fbr-gds-obj.is-cd then return "NEXT".
+  if     available buf_fbr-gds-obj
+     and not buf_fbr-gds-obj.is-cd 
+  then 
+     return "NEXT".
 end.
 
 FIND FIRST ub.goods WHERE
@@ -64,8 +66,10 @@ if v-is-restaurant then do:
               buf_fbr-gds-obj.obj-type = {&shop}
           AND buf_fbr-gds-obj.obj-code = i-obj-code
           AND buf_fbr-gds-obj.gds-code = ub.bar-code.gds-code no-error .
-  if not available buf_fbr-gds-obj
-  or not buf_fbr-gds-obj.is-cd then return.
+  if     available buf_fbr-gds-obj
+     and not buf_fbr-gds-obj.is-cd 
+  then 
+     return.
 end.
 FIND FIRST ub.goods WHERE
            ub.goods.gds-code = ub.bar-code.gds-code NO-LOCK NO-ERROR.

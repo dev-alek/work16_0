@@ -136,7 +136,12 @@ DEFINE BUTTON b-quit AUTO-END-KEY
 DEFINE VARIABLE t-EAN AS LOGICAL INITIAL no
      LABEL "“ÓÎ¸ÍÓ EAN"
      VIEW-AS TOGGLE-BOX
-     SIZE 15 BY .83 NO-UNDO.
+     SIZE 13 BY .83 NO-UNDO.
+
+DEFINE VARIABLE t-NEdeMark AS LOGICAL INITIAL no 
+     LABEL "“Â·ÛÂÚÒˇ  Ï‡ÍËÓ‚Í‡" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 24 BY .83 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -153,7 +158,8 @@ DEFINE FRAME d-bc-form
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
-     t-EAN AT ROW 2.5 COL 17.25
+     t-EAN AT ROW 2.5 COL 17
+     t-NEdeMark AT ROW 2.5 COL 31
      ub.prod-bc.b-str AT ROW 3.67 COL 15 COLON-ALIGNED FORMAT "X(40)"
           VIEW-AS FILL-IN
           SIZE 41.5 BY 1
@@ -173,9 +179,9 @@ DEFINE FRAME d-bc-form
      ub.bar-code.cli-base-rate AT ROW 6.33 COL 35.13 COLON-ALIGNED FORMAT ">,>>9.9999999999"
           VIEW-AS FILL-IN
           SIZE 21.63 BY 1
-     SPACE(2.86) SKIP(0.58)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(3.49) SKIP(0.58)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
@@ -207,6 +213,8 @@ ASSIGN
 /* SETTINGS FOR FILL-IN ub.units.long-name IN FRAME d-bc-form
    NO-ENABLE                                                            */
 /* SETTINGS FOR TOGGLE-BOX t-EAN IN FRAME d-bc-form
+   NO-DISPLAY NO-ENABLE                                                 */
+/* SETTINGS FOR TOGGLE-BOX t-NEdeMark IN FRAME d-bc-form
    NO-DISPLAY NO-ENABLE                                                 */
 /* SETTINGS FOR FILL-IN ub.goods.unit-base IN FRAME d-bc-form
    NO-ENABLE EXP-LABEL                                                  */
@@ -268,6 +276,38 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME prod-bc.b-str
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL prod-bc.b-str d-bc-form
+ON leave OF prod-bc.b-str IN FRAME d-bc-form /* ¡‡-ÍÓ‰ */
+DO:
+    define variable VTXT as char no-undo.
+    define variable vGtin as int64 no-undo.
+    if p-cdrg-type  eq {&gtin}
+    then do:
+        vTXt = prod-bc.b-str:screen-value.
+      if    length(vtxt) > 14
+      then do:  
+         if    (length(vtxt) eq 14 + 7 + 4 + 4
+             or length(vtxt) eq 14 + 7 + 4 )
+         then 
+            prod-bc.b-str:screen-value = substring(vtxt,1,14).
+         else if vtxt begins "01"
+         then
+            prod-bc.b-str:screen-value = substring(vtxt,3,14).
+         else do:
+            /*int(substring(vtxt,1,2)) no-error.
+            prod-bc.b-str:screen-value = if error-status:error
+                                         then substring(vtxt,3,14)
+                                         else substring(vtxt,1,14).
+          */
+         end.
+      end.    
+   end. 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &UNDEFINE SELF-NAME
 
@@ -307,18 +347,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     where ub.units.unit-name = ub.bar-code.unit-cli
     .
   assign
-    t-EAN = yes
+    t-EAN = p-cdrg-type ne {&Gtin}
+    t-NEDEMark = no
   .
   display
     ub.bar-code.unit-cli
-    t-EAN
+    t-EAN when p-cdrg-type ne {&Gtin}
+    t-NEDEMark when p-cdrg-type ne {&Gtin}
     ub.bar-code.cli-base-rate
     ub.units.long-name
     ub.goods.unit-base
     with frame {&frame-name}.
   enable
     ub.prod-bc.b-str
-    t-EAN
+    t-EAN when p-cdrg-type ne {&Gtin}
+    t-NEDEMark when p-cdrg-type ne {&Gtin}
     b-exit
     b-help
     b-quit
@@ -329,10 +372,27 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       t-ean = no
     .
     display
-      t-EAN
+      t-EAN when p-cdrg-type ne {&Gtin}
       with frame {&frame-name} .
   end.
-
+  if p-cdrg-type eq {&Gtin}
+  then assign
+     t-EAN:visible = no
+     t-NEDEMark:visible = no.
+  else do:
+      define buffer buf_prod-bc for prod-bc.
+      define buffer buf_gtin_bar for bar-code.
+      t-NEdeMark:visible = no. 
+      for each buf_gtin_bar where buf_gtin_bar.gds-code  = ub.goods.gds-code
+                              and can-find (first buf_prod-bc
+                                            where buf_prod-bc.b-code =  buf_gtin_bar.b-code
+                                              and buf_prod-bc.bc-on-type = {&GTIN} )
+      no-lock: 
+          t-NEdeMark:visible = yes. 
+          t-NEdeMark = yes.
+          disp t-NEdeMark with frame {&frame-name} .
+      end.
+  end.    
   if par-shbl <> ""
   then do:
     display
@@ -346,7 +406,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   assign
     rid = ?
   .
-  assign frame {&frame-name} :title = "ƒŒœŒÀÕ»“≈À‹Õ€… ·‡-ÍÓ‰              ƒŒ¡¿¬À≈Õ»≈".
+  assign frame {&frame-name} :title = "ƒŒœŒÀÕ»“≈À‹Õ€… " + (if p-cdrg-type eq {&Gtin} then {&Gtin} else "·‡-ÍÓ‰ ") + "              ƒŒ¡¿¬À≈Õ»≈".
 
   wait-for go of frame {&frame-name}  focus ub.prod-bc.b-str.
 END.
@@ -382,19 +442,21 @@ define variable v-b-str as character no-undo .
 define buffer buf_prod-bc for ub.prod-bc.
 v-b-str = input frame {&frame-name} ub.prod-bc.b-str.
 rid = ?.
-run trg/prod-bc1.p (
+run trg/prod-bc2.p (
                      input  parparentproc
                     ,input no /*p-silent*/
-                    ,input ? /* dif-pdbc */
-                    ,input ? /*pbc-veto*/
+                    ,input no /* dif-pdbc */
+                    ,input no /*pbc-veto*/
                     ,input send-ref
                     ,input p-cdrg-type
-                    ,input (if input frame {&frame-name} t-EAN then "EAN" else "")
+                    ,input (if logical(t-EAN:screen-value) then "EAN" else "")
                     ,buffer ub.goods
                     ,input ub.bar-code.b-code
+                    ,input logical(t-NEDEMark:screen-value)
                     ,input-output v-b-str
                     ,output rid
                     ) no-error.
+   
 if error-status :error
 or rid = ? then do:
   apply "entry" to ub.prod-bc.b-str in frame {&frame-name}.

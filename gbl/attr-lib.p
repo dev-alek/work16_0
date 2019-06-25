@@ -882,11 +882,11 @@ end.
 &scop manual-edit-attr-tank-farm-for  1
 &scop batch-edit-attr-tank-farm-for  1
 
-/* Атрибут клиента - является перевозчиком для:*/
+/* Атрибут клиента - являестся перевозчиком для:*/
 &scop type-attr-auto-tank-for {&type-char}
 &scop format-attr-auto-tank-for "X(255)"
-&scop label-attr-auto-tank-for "Является перевозчиком для:"
-&scop tooltip-attr-auto-tank-for "Является перевозчиком для:"
+&scop label-attr-auto-tank-for "Являестся перевозчиком для:"
+&scop tooltip-attr-auto-tank-for "Являестся перевозчиком для:"
 &scop user-can-edit-attr-auto-tank-for  true
 &scop output-display-attr-auto-tank-for  true
 &scop other-attr-auto-tank-for 'spr=clntattr-auto-tank-for':u
@@ -5823,6 +5823,19 @@ end procedure.
 &scop manual-edit-attr-alcohol-prod 0
 &scop batch-edit-attr-alcohol-prod  7
 
+/*Требует обязательной маркировки*/
+&glob type-attr-mark {&type-log}
+&glob format-attr-mark  "+/ "
+&glob label-attr-mark   "Товар требует обязательной маркировки"
+&glob tooltip-attr-mark   "Товар требует обязательной маркировки"
+&glob user-can-edit-attr-mark  true
+&glob output-display-attr-mark  true
+&glob other-attr-mark  ""
+&glob news-attr-mark true
+&glob copy-attr-mark  true
+&scop manual-edit-attr-mark 0
+&scop batch-edit-attr-mark  7
+
 &scop type-attr-egais-name {&type-char}
 &scop format-attr-egais-name  "X(100)"
 &scop label-attr-egais-name   "Наименование товара в ЕГАИС"
@@ -5894,6 +5907,18 @@ end procedure.
 &scop copy-attr-office-type  true
 &scop manual-edit-attr-office-type 1
 &scop batch-edit-attr-office-type  1
+
+&scop type-attr-mark-type {&type-char}
+&scop format-attr-mark-type  "X(50)"
+&scop label-attr-mark-type   "Тип маркировки"
+&scop tooltip-attr-mark-type   "Тип маркировки"
+&scop user-can-edit-attr-mark-type  true
+&scop output-display-attr-mark-type  true
+&scop other-attr-mark-type  "spr-ext=ref\mark-type.w/spr-param=mark-type/check=gds-attr_check-mark-type"
+&scop news-attr-mark-type true
+&scop copy-attr-mark-type  true
+&scop manual-edit-attr-mark-type 1
+&scop batch-edit-attr-mark-type  1
 
 &scop type-attr-item-matter-mark {&type-int}
 &scop format-attr-item-matter-mark  ">9"
@@ -6360,6 +6385,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-office-type
       {&attr-temp-full-code}
+      &scop attr-code attr-mark-type
+      {&attr-temp-full-code}
       &scop attr-code attr-item-matter-mark
       {&attr-temp-full-code}
       &scop attr-code attr-group-np
@@ -6456,6 +6483,8 @@ do
       {&attr-temp-code}
       &scop attr-code attr-office-type
       {&attr-temp-code}
+      &scop attr-code attr-mark-type
+      {&attr-temp-code}      
       &scop attr-code attr-item-matter-mark
       {&attr-temp-code}
       &scop attr-code attr-group-np
@@ -6785,6 +6814,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-office-type
       {&attr-news-code}
+      &scop attr-code attr-mark-type
+      {&attr-news-code}
       &scop attr-code attr-item-matter-mark
       {&attr-news-code}
       &scop attr-code attr-group-np
@@ -6874,6 +6905,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-ptrl-without-rvs
       {&attr-copy-code}
       &scop attr-code attr-office-type
+      {&attr-copy-code}
+      &scop attr-code attr-mark-type
       {&attr-copy-code}
       &scop attr-code attr-item-matter-mark
       {&attr-copy-code}
@@ -7112,6 +7145,41 @@ on error undo, return error return-value
         p-error-code = "Товар должен быть услугой".
       end.
       if lookup(p-value, {&prop-list-attr-office-type}) = 0 then do:
+        p-error-code = "Значение атрибута должно быть одним из списка {&prop-list-attr-office-type}".
+      end.
+     
+     if p-error-code <> "" then
+        return p-error-code.
+    end.
+  END CASE.
+end.
+assign
+p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-mark-type :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+define buffer buf_goods for ub.goods.
+define buffer buf_gds-host-attr for ub.gds-host-attr.
+do
+on error undo, return error return-value
+:
+  CASE p-mode:
+    when {&add-def} then do:
+/*     find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .                                          */
+/*      if not available buf_goods then do:                                                                                   */
+/*        return error substitute("(Еще) Нет товара с кодом &1, невозможно выполнить проверку корректности установки атрибута"*/
+/*                                , p-gds-code).                                                                              */
+/*      end.                                                                                                                  */
+
+      if lookup(p-value, {&prop-list-attr-mark-type}) = 0 then do:
         p-error-code = "Значение атрибута должно быть одним из списка {&prop-list-attr-office-type}".
       end.
      
@@ -7438,6 +7506,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-office-type
       {&attr-manual-edit-code}
+      &scop attr-code attr-mark-type
+      {&attr-manual-edit-code}
       &scop attr-code attr-item-matter-mark
       {&attr-manual-edit-code}
       &scop attr-code attr-group-np
@@ -7528,6 +7598,8 @@ do
       &scop attr-code attr-ptrl-without-rvs
       {&attr-batch-edit-code}
       &scop attr-code attr-office-type
+      {&attr-batch-edit-code}
+      &scop attr-code attr-mark-type
       {&attr-batch-edit-code}
       &scop attr-code attr-item-matter-mark
       {&attr-batch-edit-code}
@@ -14793,6 +14865,18 @@ end procedure.
 &scop manual-edit-ggoattr-sum-grps 0
 &scop batch-edit-ggoattr-sum-grps 0
 
+/* По умолчанию тип маркировки */
+&scop type-ggoattr-mark-type {&type-char}
+&scop format-ggoattr-mark-type "X(256)"
+&scop label-ggoattr-mark-type "Тип маркировки"
+&scop tooltip-ggoattr-mark-type "Тип маркировки"
+&scop user-can-edit-ggoattr-mark-type  false
+&scop output-display-ggoattr-mark-type true
+&scop other-ggoattr-mark-type '':u
+&scop news-ggoattr-mark-type true
+&scop manual-edit-ggoattr-mark-type 0
+&scop batch-edit-ggoattr-mark-type 0
+
 /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
 
 &scop attr-temp-code ~
@@ -14867,6 +14951,8 @@ procedure ggoattr-code :
       {&attr-temp-full-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-full-code}
+      &scop attr-code ggoattr-mark-type
+      {&attr-temp-full-code}      
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут группы товаров на объекте &1", p-code) .
@@ -14903,7 +14989,8 @@ procedure ggoattr-tooltip :
       {&attr-temp-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-code}
-
+      &scop attr-code ggoattr-mark-type
+      {&attr-temp-code}
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
       otherwise do:
         undo, return error substitute("неизвестный атрибут группы товаров на объекте &1", p-code) .
@@ -15210,7 +15297,8 @@ procedure ggoattr-news :
       {&attr-news-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-news-code}
-
+      &scop attr-code ggoattr-mark-type
+      {&attr-news-code}
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
       otherwise do:
         undo, return error substitute("неизвестный атрибут группы товаров на объекте &1", p-code) .
@@ -15338,7 +15426,8 @@ procedure assmatat-code :
       {&attr-temp-full-code}
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-full-code}
-
+      &scop attr-code ggoattr-mark-type
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут ассортиментной матрицы &1", p-code) .

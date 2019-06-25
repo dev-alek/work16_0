@@ -107,7 +107,7 @@ define variable vss-description as character no-undo init "ѕрограмма генерации ф
 define variable v-file-name as character no-undo .
 
 assign
-  v-file-name = 'cmp/str-glbl.new'
+  v-file-name = 'str-glbl.new'
 .
 
 run filwrlib_set-file-name in this-procedure
@@ -118,11 +118,11 @@ run filwrlib_clear-file in this-procedure  .
 
 run filwrlib_append-new-line in this-procedure (input "/*" ) .
 run filwrlib_append-new-line in this-procedure (input "" ) .
-run filwrlib_append-new-line in this-procedure (input "$" + "Revision: " + "$" ) .
-run filwrlib_append-new-line in this-procedure (input "$" + "Author: " + "$" ) .
-run filwrlib_append-new-line in this-procedure (input "$" + "Date: " + "$" ) .
-run filwrlib_append-new-line in this-procedure (input "$" + "Workfile: " + "$" ) .
-run filwrlib_append-new-line in this-procedure (input "$" + "Archive: " + "$" ) .
+run filwrlib_append-new-line in this-procedure (input "$" + "Revision:" + "$" ) .
+run filwrlib_append-new-line in this-procedure (input "$" + "Author:" + "$" ) .
+run filwrlib_append-new-line in this-procedure (input "$" + "Date:" + "$" ) .
+run filwrlib_append-new-line in this-procedure (input "$" + "Workfile:" + "$" ) .
+run filwrlib_append-new-line in this-procedure (input "$" + "Archive:" + "$" ) .
 run filwrlib_append-new-line in this-procedure (input "                                        " ) .
 run filwrlib_append-new-line in this-procedure (input "‘айл глобальных определений" ) .
 run filwrlib_append-new-line in this-procedure (input "" ) .
@@ -935,6 +935,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define tax-type-
 { cmp/cr-prep.i 1 gbl-ct-code        ctgb             " " ctgb}  /* глобальный код договора*/
 { cmp/cr-prep.i 1 gbl-ca-code        cagb             " " cagb}  /* глобальный код точки прив€зки*/
 { cmp/cr-prep.i 1 gbl-fd-code        fdgb             " " fdgb}  /* глобальный код фин документам*/
+{ cmp/cr-prep.i 1 gtin               GTIN             " " GTIN}  /* GTIN */
+
+{ cmp/cr-prep.i 1 mark               mark             " " mark}  /* требует об€зательную маркитровку */
+ 
 
 &glob grp-bcode  '{&bef-loc-ss-code},{&bef-gbl-bc-code},{&bef-loc-sc-code},{&bef-gbl-sc-code},{&bef-gbl-ss-code},{&bef-loc-pg-code},{&bef-loc-pt-code}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define grp-bcode {&grp-bcode}" ).
@@ -1937,9 +1941,14 @@ run filwrlib_append-new-line in this-procedure
 os-delete value(p-dir-name + '/str-glbl.i') .
 
 os-create-dir value(p-dir-name) .
-
 os-rename value(v-file-name) value(p-dir-name + '/str-glbl.i') .
 
+/*if os-error <> 0
+then 
+   message "os-error" os-error
+   view-as alert-box.
+*/
+os-delete value(v-file-name).
 run filwrlib_num-lines-get in this-procedure
   (output v-num-lines
   ) .

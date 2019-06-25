@@ -137,7 +137,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     .
   end.
 
-  if l-prod-bc-global = true then do:
+  if    l-prod-bc-global = true 
+     or ub.prod-bc.bc-on-type eq {&gtin}
+  then do:
     if l-prod-bc-weight = true then do:
       if not g#news then do:
     { gbl/getsect.i def "''" 0 {&attr-gds-ref} }

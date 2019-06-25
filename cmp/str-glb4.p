@@ -432,6 +432,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Тип услуги */
 { cmp/cr-prep.i 1 attr-office-type     office-type     " " office-type     }
 
+/* Тип маркировки */
+{ cmp/cr-prep.i 1 attr-mark-type       mark-type     " " mark-type     }
+
 /* Признак предмета расчета */
 { cmp/cr-prep.i 1 attr-item-matter-mark     item-matter-mark     " " item-matter-mark     }
 
@@ -561,6 +564,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-is-gas}~
 ,{&bef-attr-ptrl-without-rvs}~
 ,{&bef-attr-office-type}~
+,{&bef-attr-mark-type}~
 ,{&bef-attr-item-matter-mark}~
 ,{&bef-attr-group-np}~
 ,{&bef-attr-fuel-type}~
@@ -600,6 +604,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-
 { cmp/cr-prepc.i 1 prop-list-attr-office-type
 "oss-pay,tso-ret,card-act"
 attr-office-type
+}
+
+/* типы маркировки */
+{ cmp/cr-prepc.i 1 prop-list-attr-mark-type
+"not-type,tabak,shoes"
+attr-mark-type
 }
 
 /*"Реализуемый товар кроме подакцизного;

@@ -85,6 +85,7 @@ define variable spool-time_ as integer no-undo .
 define variable v-eff-date as date no-undo .
 define variable v-eff-time as integer no-undo .
 define variable v-oss-code as character no-undo init "".
+define variable price-old as decimal no-undo .
 define variable disc-d-card as character no-undo.
 define variable ibm-ccm as integer no-undo.
 
@@ -629,6 +630,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     v-flag-card = no
     d-mask_ = "":U
     cli-type_ = "":U
+	price-old = 0
     cli-code_ = 0
     v-chk-type[1] = 0
     v-chk-type[2] = 0
@@ -1360,6 +1362,12 @@ on error undo, return error
           end.
         
         end.
+        when "CSPriceOrig":u then do:
+          assign
+          price-old = dec(buf_temp-temp.field-value)
+          no-error
+          .
+        end.        
         when "CSPrice":u then do:
           assign
           price-from-check = dec(buf_temp-temp.field-value)
@@ -1897,6 +1905,15 @@ on error undo, return error
       .
       v-oss-code = "".
     end.
+    if price-old <> 0 then do:
+     create ub.chk-gds-attr.
+      assign
+        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.line-num = ub.chk-gds.line-num
+        ub.chk-gds-attr.attr-code = "CSPriceOrig"
+        ub.chk-gds-attr.attr-value =  string(price-old)
+      .
+    end.  
     if p-pos-type = {&cd-type-ibm-xml}
     or p-pos-type = {&cd-type-autotank}
     then do:
@@ -1986,6 +2003,7 @@ end procedure. /* proc-01 */
 
 
 procedure proc-02-gds :
+define variable v-attr-code as character no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
 
 define buffer buf_temp-temp for temp-temp.
@@ -1999,14 +2017,10 @@ on error undo, return error
        AND buf_temp-temp.id = v-id:
       CASE buf_temp-temp.field-name:
         when "CBCType":U then do:
-                assign
-                CBCType_ = fdecimal(buf_temp-temp.field-value)
-                no-error .
+                CBCType_ = fdecimal(buf_temp-temp.field-value) no-error .
               end.
               when "CBCString":U then do:
-                assign
-                CBCString_ = fdecimal(buf_temp-temp.field-value)
-                no-error .
+                CBCString_ = fdecimal(buf_temp-temp.field-value) no-error .
               end.
               when "CBCBarcode":U then do:
                 run xmlchar-decode in this-procedure (
@@ -2031,9 +2045,25 @@ on error undo, return error
             and
             v-to-delete[2] = no))
     then do:
-      find first ub.chk-gds-attr where ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code and 
-        ub.chk-gds-attr.line-num = CBCString_ and
-        ub.chk-gds-attr.attr-code = "mark-code" no-error.
+      if CBCType_ = 32768 then do :
+        /* сертификаты автопомощи (для товаров pay-agent-gd) */
+        v-attr-code = "agent-gd-code":U .
+      end .
+      else
+      if CBCType_ = 65536
+      or CBCType_ = 65537
+      then do :
+        /* табачные марки */
+        v-attr-code = "tobacco-mark":U .
+      end . 
+      else do :
+        /* аксцизные марки */
+        v-attr-code = "mark-code":U .
+      end .
+      find first ub.chk-gds-attr exclusive-lock
+           where ub.chk-gds-attr.doc-code  = ub.chk-doc.doc-code
+             and ub.chk-gds-attr.line-num  = CBCString_
+             and ub.chk-gds-attr.attr-code = v-attr-code no-error.
       if available ub.chk-gds-attr then do:
       CBCBarcode_ = ub.chk-gds-attr.attr-value + "," + CBCBarcode_ .
       ub.chk-gds-attr.attr-value =  CBCBarcode_ .
@@ -2043,7 +2073,7 @@ on error undo, return error
       assign
         ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code
         ub.chk-gds-attr.line-num = CBCString_
-        ub.chk-gds-attr.attr-code = "mark-code"
+        ub.chk-gds-attr.attr-code = v-attr-code
         ub.chk-gds-attr.attr-value =  CBCBarcode_ 
       .
       end.
