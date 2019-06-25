@@ -43,7 +43,8 @@ on error undo, leave
 on stop  undo, leave
 :
   define variable v-ok as logical   no-undo .
-
+  &if "iscompil" eq ""
+  &then
   message
     "Создание файлов определений str-glbl.i" skip
     "Продолжить?" skip
@@ -52,13 +53,22 @@ on stop  undo, leave
   then do:
     undo, leave .
   end.
-
+  &endif
   run waitfram-show in this-procedure
     (input "Создание файла определений cmp/str-glbl.i"
     ) .
-
+  define variable mfile as character no-undo.  
+  define variable mdir as character no-undo.
+  define variable vi as integer no-undo.
+  mfile = replace (search ("cmp/str-glbl.p"), "\","/").
+  
+  do vi = 1 to num-entries(mfile,"/") - 2:
+     mdir = mdir + entry(vi,mfile,"/") + "/".
+      
+  end.
+  
   run cmp/str-glbl.p
-    (input 'cmp'
+    (input mdir + 'cmp'
     ,output v-rus-num-lines
     ) 'rus':U .
 
@@ -67,7 +77,7 @@ on stop  undo, leave
     ) .
 
   run cmp/str-glbl.p
-    (input 'int/cmp':U
+    (input mdir + 'int/cmp':U
     ,output v-eng-num-lines
     ) 'eng':U .
 
@@ -82,7 +92,7 @@ on stop  undo, leave
     v-line-num = 0
   .
 
-  input stream sinp from value('cmp/str-glbl.i':U) .
+  input stream sinp from value(search('cmp/str-glbl.i':U)) .
   repeat
   :
     assign
@@ -110,41 +120,44 @@ on stop  undo, leave
     end.
   end.
   input stream sinp close .
+  v-rus-num-lines = v-line-num.  
 
   assign
     v-line-num = 0
   .
 
-  input stream sinp from value('int/cmp/str-glbl.i':U) .
-  repeat
-  :
-    assign
-      v-line     = '':U
-      v-line-num = v-line-num + 1
-    .
-    import stream sinp unformatted
-      v-line
-      .
-    if v-line begins '&glob'
-    then do:
-      find first temp-definitions
-        where temp-definitions.temp-name = entry(2, v-line, ' ':U)
-        no-error .
-      if not available temp-definitions
-      then do:
-        create temp-definitions .
-        assign
-          temp-definitions.temp-name     = entry(2, v-line, ' ':U)
-        .
-      end.
-      assign
-        temp-definitions.temp-eng-line = v-line-num
-      .
-    end.
+  if search("int/cmp/str-glbl.i") ne ?
+  then do:
+     input stream sinp from value(search('int/cmp/str-glbl.i':U)) .
+     repeat
+     :
+       assign
+         v-line     = '':U
+         v-line-num = v-line-num + 1
+       .
+       import stream sinp unformatted
+         v-line
+         .
+       if v-line begins '&glob'
+       then do:
+         find first temp-definitions
+           where temp-definitions.temp-name = entry(2, v-line, ' ':U)
+           no-error .
+         if not available temp-definitions
+         then do:
+           create temp-definitions .
+           assign
+             temp-definitions.temp-name     = entry(2, v-line, ' ':U)
+           .
+         end.
+         assign
+           temp-definitions.temp-eng-line = v-line-num
+         .
+       end.
+     end.
+     input stream sinp close .
   end.
-  input stream sinp close .
-
-
+  v-eng-num-lines = v-line-num.
   define variable v-clear-file  as logical   no-undo .
   define variable v-error-exist as logical   no-undo .
 
@@ -175,7 +188,10 @@ on stop  undo, leave
   end.
 
   run waitfram-hide in this-procedure .
-
+  
+  &if "iscompil" eq ""
+  &then
+  
   if v-error-exist = true
   then do:
     message
@@ -201,7 +217,33 @@ on stop  undo, leave
       "Строк в файле" v-eng-num-lines skip
       view-as alert-box information  .
   end.
-
+  &else
+  output to "error.log".
+  if v-error-exist = true
+  then do:
+     put unformatted
+      "Были обнаружены ошибки при создании файлов" skip
+      "" skip
+      "Создание файлов определений str-glbl.i завершено" skip
+      "Файл" 'cmp/str-glbl.i':U skip
+      "Строк в файле " v-rus-num-lines skip
+      "Файл" 'int/cmp/str-glbl.i':U skip
+      "Строк в файле " v-eng-num-lines skip
+    .
+  end.
+  else do:
+     put unformatted
+      "OK" skip
+      "" skip
+      "Создание файлов определений str-glbl.i завершено" skip
+      "Файл" 'cmp/str-glbl.i':U skip
+      "Строк в файле " v-rus-num-lines skip
+      "Файл" 'int/cmp/str-glbl.i':U skip
+      "Строк в файле " v-eng-num-lines skip
+     .
+  end.
+  output close.
+  &endif
 end.
 
-quit .
+/* quit . */ 

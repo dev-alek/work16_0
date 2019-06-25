@@ -1,0 +1,1 @@
+{utl/mkstrglb.p &iscompil = yes}
