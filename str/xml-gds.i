@@ -36,6 +36,7 @@ define variable GTIN  like ub.prod-bc.b-str .
 define variable v-cli-base  as character initial "".
 define buffer buf_prod-bc-attr for ub.prod-bc-attr .
 define buffer buf_prod-bc for ub.prod-bc .
+define buffer     prod-bc for ub.prod-bc .
 
 &if "{1}" <> "7" &then
 if action = 'U':U then do:
