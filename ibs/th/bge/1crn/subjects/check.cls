@@ -235,6 +235,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_clients      for ub.clients .
     define buffer buf_cash-desk    for ub.cash-desk .
     define variable v-is-petrolium as logical no-undo . /* true = топливо */
+    define variable v-price-azs    as decimal no-undo .
     define variable v-is-pieces    as logical no-undo .
     define variable v-loc1         as character no-undo . /* номер резервуара */
     define variable v-spump        as character no-undo . /* номер ТРК */ 
@@ -491,7 +492,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           if available buf_ext-classif then
             insw:write-data-element (  "operator-name",  entry(1, buf_ext-classif.charkey_two, {&delim-par})  ) . /* Наименование оператора(эмитента) (Строка) */
         end .
-
+        
         /* 17/XI-2017 Добавляем поле «price» (цена до применения скидок) в секции «chk-gd». */
         insw:write-data-element (  "price",  left-trim(string(buf_chk-gds.src-price, "->>>>>>>>9.99"))  ) . /* Цена до применения скидок (Число 15,2) */
 
@@ -500,6 +501,24 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         if enum-chk-type:GetEnum(p-buf_chk-doc.chk-type) = enum-chk-type:entranscancell then do:
           if buf_chk-gds.write-off-code >= 0 then
             insw:write-data-element (  "prolito",  string(buf_chk-gds.write-off-code)  ). /* Признак для сбросов: 0 – не пролито; 1 – пролито. (Число, enum) */
+        end .
+        
+        /* 23/V-2019  тэги для табачки - цена БД и датаматрикс */
+        find first buf_chk-gds-attr no-lock
+             where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
+               and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
+               and buf_chk-gds-attr.attr-code = "CSPriceOrig":U no-error .
+        if available buf_chk-gds-attr then do:
+          v-price-azs = decimal(buf_chk-gds-attr.attr-value) .
+          insw:write-data-element (  "price-azs",  left-trim(string(v-price-azs, "->>>>>>>>9.99"))  ) . /* Розничная цена в соответствии с данными БД на АЗК/АЗС (Число 15,2) */
+        end .
+        
+        find first buf_chk-gds-attr no-lock
+             where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
+               and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
+               and buf_chk-gds-attr.attr-code = "tobacco-mark":U no-error .
+        if available buf_chk-gds-attr then do:
+          insw:write-data-element (  "dm",  base64-enc(buf_chk-gds-attr.attr-value) ) . /* Datamatrix (строка) */
         end .
  
         insw:end-element ({&tag-item1}) .
@@ -761,6 +780,42 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
     return v-loc1 .        
   end method .
+  
+  method private character base64-enc ( input v-string as character ) :
+    
+    define variable v-base64-encode as character no-undo .
+    
+    
+    do
+    on error undo, return error return-value
+    :
+      define variable v-raw     as raw       no-undo .
+      define variable v-raw-str as character no-undo .
+    
+      if v-string = ?
+      then do:
+        undo, return error "base64-encode: строка имеет неопределенное значение" .
+        end.
+    
+        assign
+          length(v-raw) = length(v-string) + 1
+        .
+        assign
+          put-string(v-raw, 1) = v-string
+        .
+        assign
+          v-raw-str = string(v-raw)
+        .
+        assign
+          length(v-raw) = 0
+        .
+        assign
+          v-base64-encode = substring(v-raw-str, 7)
+        .
+    end.
+    
+    return v-base64-encode .
+  end.
 
   
 end class.
