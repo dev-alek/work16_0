@@ -85,6 +85,7 @@ define variable spool-time_ as integer no-undo .
 define variable v-eff-date as date no-undo .
 define variable v-eff-time as integer no-undo .
 define variable v-oss-code as character no-undo init "".
+define variable price-old as decimal no-undo .
 define variable disc-d-card as character no-undo.
 define variable ibm-ccm as integer no-undo.
 
@@ -629,6 +630,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     v-flag-card = no
     d-mask_ = "":U
     cli-type_ = "":U
+	price-old = 0
     cli-code_ = 0
     v-chk-type[1] = 0
     v-chk-type[2] = 0
@@ -1360,6 +1362,12 @@ on error undo, return error
           end.
         
         end.
+        when "CSPriceOrig":u then do:
+          assign
+          price-old = dec(buf_temp-temp.field-value)
+          no-error
+          .
+        end.        
         when "CSPrice":u then do:
           assign
           price-from-check = dec(buf_temp-temp.field-value)
@@ -1897,6 +1905,15 @@ on error undo, return error
       .
       v-oss-code = "".
     end.
+    if price-old <> 0 then do:
+     create ub.chk-gds-attr.
+      assign
+        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.line-num = ub.chk-gds.line-num
+        ub.chk-gds-attr.attr-code = "CSPriceOrig"
+        ub.chk-gds-attr.attr-value =  string(price-old)
+      .
+    end.  
     if p-pos-type = {&cd-type-ibm-xml}
     or p-pos-type = {&cd-type-autotank}
     then do:
