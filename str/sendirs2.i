@@ -37,8 +37,10 @@ if v-is-restaurant then do:
               buf_fbr-gds-obj.obj-type = {&shop}
           AND buf_fbr-gds-obj.obj-code = i-obj-code
           AND buf_fbr-gds-obj.gds-code = ub.goods.gds-code no-error .
-  if not available buf_fbr-gds-obj
-  or not buf_fbr-gds-obj.is-cd then return .
+  if     available buf_fbr-gds-obj
+     and not buf_fbr-gds-obj.is-cd 
+  then 
+     return .
 end.
 
 FIND FIRST b-units No-LOCK WHERE

@@ -96,8 +96,8 @@ FOR EACH gds-list by order-num:
                  buf_fbr-gds-obj.obj-type = {&shop}
              AND buf_fbr-gds-obj.obj-code = i-obj-code
              AND buf_fbr-gds-obj.gds-code = gds-list.gds-code no-error .
-      /*if not available buf_fbr-gds-obj
-      or (not gds-list.to-del and not buf_fbr-gds-obj.is-cd) then NEXT.
+      /*if  available buf_fbr-gds-obj
+      and  (not gds-list.to-del and not buf_fbr-gds-obj.is-cd) then NEXT.
     end.*/
 
     if not g#news then do:

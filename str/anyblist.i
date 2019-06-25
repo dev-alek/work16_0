@@ -3871,7 +3871,10 @@ define parameter buffer goods for ub.goods.
                   buf_fbr-gds-obj.obj-type = p-curr-obj-type
               AND buf_fbr-gds-obj.obj-code = p-curr-obj-code
               AND buf_fbr-gds-obj.gds-code = ub.goods.gds-code no-error .
-        if not available buf_fbr-gds-obj  or not buf_fbr-gds-obj.is-cd then NEXT.
+        if    available buf_fbr-gds-obj  
+          and not buf_fbr-gds-obj.is-cd 
+        then 
+           NEXT.
       end.
       run get-gds-obj-fields in this-procedure(
                                                  buffer ub.gds-obj

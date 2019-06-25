@@ -79,8 +79,10 @@ by ub.price-doc-forming-gds.prod-code
                  buf_fbr-gds-obj.obj-type = {&shop}
              AND buf_fbr-gds-obj.obj-code = i-obj-code
              AND buf_fbr-gds-obj.gds-code = ub.goods.gds-code no-error .
-      if not available buf_fbr-gds-obj
-      or not buf_fbr-gds-obj.is-cd then NEXT _price-list.
+      if     available buf_fbr-gds-obj
+         and not buf_fbr-gds-obj.is-cd 
+      then 
+         NEXT _price-list.
     end.
     FIND FIRST ub.gds-obj WHERE
                ub.gds-obj.obj-type = {&shop} AND
