@@ -755,7 +755,7 @@ DEFINE BUFFER buf_chk-discnt   for ub.chk-discnt .
                   v-rrn = "".   
               for first buf_chk-pay-attr no-lock
                  where  buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code 
-                    and buf_chk-pay-attr.attr-code = "RRN"
+                    and (buf_chk-pay-attr.attr-code = "RRN" or buf_chk-pay-attr.attr-code = "RRN-VBRR")
                     and buf_chk-pay.line-num =  buf_chk-pay-attr.line-num :
                   v-rrn = buf_chk-pay-attr.attr-value.
               end.       
