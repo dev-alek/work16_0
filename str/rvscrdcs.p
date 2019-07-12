@@ -226,9 +226,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   .
   message
     "Вы хотите сделать инвентаризацию по сверке?"    skip
-    "YES    - по всем товарам из сверки"             skip
-    "NO     - не делать инвентаризацию"              skip
-    "CANCEL - опционально по товарам и бакам"
+    "Да     - по всем товарам из сверки"             skip
+    "Нет    - не делать инвентаризацию"              skip
+    "Отмена - опционально по товарам и бакам"
     view-as alert-box buttons yes-no-cancel update v-log.
   if v-log = no then do:
     return no-apply.
