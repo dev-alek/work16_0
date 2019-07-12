@@ -536,7 +536,7 @@ do
                 assign
                     v-doc-code = buf_trn-doc.doc-code
                     .
-                if buf_goods.engl-name = "" then v-gds-name = buf_goods.gds-name . 
+                if buf_goods.engl-name = "" or buf_goods.engl-name = ? then v-gds-name = buf_goods.gds-name . 
                 else v-gds-name = buf_goods.engl-name .
                          
                                
@@ -887,7 +887,7 @@ procedure print-table1:
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-TH) + " " + string(tt-petrol.date-TH) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-AC) + '</TD>' skip
-            '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.name-gds) + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: center;">' + if tt-petrol.name-gds <> ? then string(tt-petrol.name-gds) + '</TD>' else " "  + '</TD>' skip
             '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '</TD>' skip
             '<TD text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9999",4) + '" colspan="2" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9999",4) + '</TD>' skip        
             '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9",0) + '</TD>' skip
