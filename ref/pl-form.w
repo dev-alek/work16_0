@@ -86,7 +86,7 @@ tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-hist b-help t-place-virtual ~
 rvd-dnstv rvd-lvl rvd-tmp place-type place-locat error-mass place-si ~
 r-sr-izm dead-balance place-diameter place-ratio-error dens-prov ~
-place-twice-code t-chk-max-qnty 
+place-twice-code tt-place.chk-max-qnty 
 &Scoped-Define DISPLAYED-FIELDS tt-place.loc1 tt-place.loc2 tt-place.loc3 ~
 tt-place.loc4 tt-place.pl-name tt-place.is-meas tt-place.pl-code ~
 tt-place.issue-year tt-place.start-date tt-place.add-qnty tt-place.max-qnty ~
@@ -95,7 +95,7 @@ tt-place.PS
 &Scoped-define FIRST-DISPLAYED-TABLE tt-place
 &Scoped-Define DISPLAYED-OBJECTS t-place-virtual t-asi-srtif rvd-dnstv ~
 rvd-lvl rvd-tmp place-type place-locat error-mass place-si dead-balance ~
-place-diameter place-ratio-error dens-prov place-twice-code t-chk-max-qnty 
+place-diameter place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -202,11 +202,6 @@ DEFINE VARIABLE t-asi-srtif AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 22.13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-chk-max-qnty AS LOGICAL INITIAL no 
-     LABEL "Проверять макс. допустимое кол-во товара на месте хранения" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 62.63 BY .83 NO-UNDO.
-
 DEFINE VARIABLE t-place-virtual AS LOGICAL INITIAL no 
      LABEL "Виртуальный резервуар" 
      VIEW-AS TOGGLE-BOX
@@ -279,7 +274,10 @@ DEFINE FRAME d-pl-form
      place-ratio-error AT ROW 16.25 COL 88 RIGHT-ALIGNED WIDGET-ID 20
      dens-prov AT ROW 17.25 COL 88 RIGHT-ALIGNED
      place-twice-code AT ROW 18.25 COL 88 RIGHT-ALIGNED WIDGET-ID 24
-     t-chk-max-qnty AT ROW 20.25 COL 3 WIDGET-ID 2
+     tt-place.chk-max-qnty AT ROW 20.25 COL 3 WIDGET-ID 2
+          LABEL "Проверять макс. допустимое кол-во товара на месте хранения" 
+          VIEW-AS TOGGLE-BOX
+          SIZE 62.63 BY .83 
      tt-place.PS AT ROW 22.58 COL 2 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 87 BY 4
@@ -394,7 +392,7 @@ DO:
     tt-place.max-qnty
     tt-place.start-date
     tt-place.issue-year
-    t-chk-max-qnty
+    tt-place.chk-max-qnty
     t-place-virtual
     t-asi-srtif
     place-locat
@@ -437,7 +435,7 @@ run ref/place01.p
   , input tt-place.max-qnty
   , input tt-place.issue-year
   , input tt-place.start-date
-  , input t-chk-max-qnty
+  , input tt-place.chk-max-qnty
   ) no-error.
 if error-status:error then 
 do:
@@ -779,15 +777,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       then 
     do:
       assign
-        t-chk-max-qnty = false
+        tt-place.chk-max-qnty = false
         .
     end.
-    else 
-    do:
-      assign
-        t-chk-max-qnty = (if locked_place.whole-send-news = 0 then true else false)
-        .
-    end.
+/*    else                                                                                  */
+/*    do:                                                                                   */
+/*      assign                                                                              */
+/*        tt-place.chk-max-qnty = (if locked_place.whole-send-news = 0 then true else false)*/
+/*        .                                                                                 */
+/*    end.                                                                                  */
   end.
   ii = 0.
   do ii = 1 to num-entries({&list-place-attr},','):
@@ -897,19 +895,19 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY t-place-virtual t-asi-srtif rvd-dnstv rvd-lvl rvd-tmp place-type 
           place-locat error-mass place-si dead-balance place-diameter 
-          place-ratio-error dens-prov place-twice-code t-chk-max-qnty 
+          place-ratio-error dens-prov place-twice-code 
       WITH FRAME d-pl-form.
   IF AVAILABLE tt-place THEN 
     DISPLAY tt-place.loc1 tt-place.loc2 tt-place.loc3 tt-place.loc4 
           tt-place.pl-name tt-place.is-meas tt-place.pl-code tt-place.issue-year 
-          tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS 
+          tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS tt-place.chk-max-qnty 
       WITH FRAME d-pl-form.
   ENABLE b-exit b-quit B-hist b-help tt-place.loc1 tt-place.loc2 tt-place.loc3 
          tt-place.loc4 tt-place.pl-name t-place-virtual tt-place.is-meas 
          rvd-dnstv rvd-lvl rvd-tmp tt-place.issue-year place-type 
          tt-place.start-date place-locat tt-place.add-qnty error-mass 
          tt-place.max-qnty place-si r-sr-izm dead-balance place-diameter 
-         place-ratio-error dens-prov place-twice-code t-chk-max-qnty 
+         place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty 
          tt-place.PS 
       WITH FRAME d-pl-form.
   {&OPEN-BROWSERS-IN-QUERY-d-pl-form}
@@ -924,7 +922,7 @@ PROCEDURE Myenable :
   run enable_UI in this-procedure .
   assign
     v-tab-order = "loc1,loc2,loc3,loc4,pl-name,is-meas,"
-                  + "issue-year,start-date,add-qnty,max-qnty,t-chk-max-qnty,"
+                  + "issue-year,start-date,add-qnty,max-qnty,chk-max-qnty,"
                   + "ps,place-type,place-SI,r-sr-izm,place-diameter,dead-balance,place-ratio-error,dens-prov,t-place-virtual,place-twice-code,t-sert-urov".
   if p-mode = {&lookup} then do:
     disable

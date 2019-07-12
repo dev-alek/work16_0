@@ -553,7 +553,7 @@ for each buf_cash-gds no-lock where
    else v-cli-base = "01" .   
    end.
   if v-mark and buf_cash-gds.b-str = "" then v-IBCType = 1 .
-  find first ub.prod-bc no-lock where ub.prod-bc.b-str = buf_cash-gds.b-str and ub.prod-bc.bc-on-type = {&gtin} 
+  find first ub.prod-bc no-lock where ub.prod-bc.b-str = buf_cash-gds.b-str and ub.prod-bc.b-str <> "" and ub.prod-bc.bc-on-type = {&gtin} 
   no-error .
   if available (ub.prod-bc) then do:
         run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 

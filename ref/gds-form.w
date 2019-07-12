@@ -675,7 +675,7 @@ DEFINE FRAME d-gds-form
           size 19.5 by 1
           BGCOLOR 3 FGCOLOR 15
      ArtBar at row 4.42 col 35.25 NO-LABEL
-     ub.bar-code.b-code at row 4.42 col 43 COLON-ALIGNED FORMAT "999999999"
+     ub.bar-code.b-code at row 4.42 col 43 COLON-ALIGNED FORMAT "9999999999"
           VIEW-AS FILL-IN
           size 10.5 by 1
           BGCOLOR 3 FGCOLOR 15
@@ -3684,6 +3684,7 @@ CASE mode :
     if not available temp-goods then do:
       create temp-goods.
     end.
+
     buffer-copy goods to temp-goods.
     FIND clients WHERE
          clients.obj-type = goods.prod-type AND
@@ -3983,6 +3984,7 @@ CASE mode :
     ub.goods.max-rate when ub.goods.max-rate <> 0
     f-fbr-grp-name
     with frame {&frame-name}.
+
     if gds-prt.node-name <> {&empty-scale}
     then
     DISPLAY gds-prt.node-name with frame {&frame-name}.

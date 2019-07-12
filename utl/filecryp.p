@@ -31,8 +31,15 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "шифрование файла".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
-{ cmp/library.i  }
-
+&if "{1}" = "nodb"
+&then
+   { gbl/pencrypt.i defproc  }
+   { gbl/pdecrypt.i defproc  }
+&else
+   { cmp/library.i  }
+   
+&endif
+ 
 DEFINE STREAM st-in.
 DEFINE STREAM st-out.
 

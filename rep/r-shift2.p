@@ -171,12 +171,12 @@ END FUNCTION.
 
 DEFINE FRAME FRAME-2
   pol1  COLUMN-LABEL "2.1":C12  FORMAT "x(12)":U        SPACE( 0 )   sym1  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
-  pol2  COLUMN-LABEL "2.2":C9   FORMAT  ">>>>>>>>9":U   SPACE( 0 )   sym2  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
+  pol2  COLUMN-LABEL "2.2":C10  FORMAT  ">>>>>>>>>9":U  SPACE( 0 )   sym2  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
   pol3  COLUMN-LABEL "2.3":C8   FORMAT  ">>>>9.99":U    SPACE( 0 )   sym3  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
   pol4  COLUMN-LABEL "2.4":C9   FORMAT "->>>>9.99":U    SPACE( 0 )   sym4  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
   pol5  COLUMN-LABEL "2.5":C9   FORMAT "->>>>>.99":U    SPACE( 0 )   sym5  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
   pol6  COLUMN-LABEL "2.6":C18  FORMAT "x(18)":U        SPACE( 0 )   sym6  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
-  pol7  COLUMN-LABEL "2.7":C8   FORMAT ">>>>>>>9":U    SPACE( 0 )   sym7  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
+  pol7  COLUMN-LABEL "2.7":C9   FORMAT ">>>>>>>>9":U    SPACE( 0 )   sym7  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
   pol8  COLUMN-LABEL "2.8":C14  FORMAT "x(14)":U        SPACE( 0 )   sym8  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
   pol9  COLUMN-LABEL "2.9":C8   FORMAT ">>>>9.99":U     SPACE( 0 )   sym9  COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )
   pol10 COLUMN-LABEL "2.10":C5  FORMAT "9.9999":U        SPACE( 0 )   sym10 COLUMN-LABEL ":" FORMAT "x(1)":U SPACE( 0 )

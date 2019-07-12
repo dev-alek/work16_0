@@ -20,12 +20,38 @@ Required:
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
+&if "{1}" eq "defproc"
+&then
+&glob defproc_pencrypt yes 
+procedure pencrypt :
+  define input parameter ip-value-to-enc as character no-undo.
+  define output parameter op-char-value  as character no-undo.
+  define variable crypto-value           as raw       no-undo.
+  do
+  on error undo, return error return-value
+  :
 
-&scop proc-name pencrypt
+   assign
+      crypto-value  = encrypt(ip-value-to-enc)
+      op-char-value = base64-encode(crypto-value)
+   .
+   end.
+end procedure. /* pencrypt */
+&else
+&if  defined(defproc_pencrypt) ne 0
+&then
+
+run pencrypt in this-procedure (input  {1} /* p-string   */
+  ,output {2} /* p-encripted-string */
+  ) {3} .
+&else
+  &scop proc-name pencrypt
 {&run_proc_library2}
   (input  {1} /* p-string   */
   ,output {2} /* p-encripted-string */
   ) {3} .
 
+&endif
+&endif
 
 /* $Workfile$ e n d */

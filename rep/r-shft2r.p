@@ -46,7 +46,7 @@ DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INITIAL "—бор данных дл€ см
 { rep/real-2cr.i treal-2        }
 { arc/ot-lnrv.i  calc           }
 { ref/gds-attr.i }
-
+{ str/trdcalib.i }
 
 DEFINE VARIABLE loc-ii            AS   INTEGER                  NO-UNDO INITIAL 1.
 DEFINE VARIABLE for-supp-name     AS   CHARACTER                NO-UNDO.
@@ -75,6 +75,7 @@ DEFINE VARIABLE v-sum-base        LIKE ub.ot-line.sum-base      NO-UNDO.
 DEFINE VARIABLE p-base-code       AS   INTEGER                  NO-UNDO.
 DEFINE VARIABLE v-qnty1           AS   DECIMAL                  NO-UNDO.
 DEFINE VARIABLE v-qnty2           AS   DECIMAL                  NO-UNDO.
+define variable v-doc-code        as   character                no-undo.
 
 define variable v-InfoSectionsTotal  as class     InfoSectionsTotal no-undo .
 define variable v-InfoSection        as class     InfoSection       no-undo .
@@ -301,13 +302,22 @@ define temp-table temp-rvs no-undo
     v-InfoSectionsTotal:GetDBAllAttr().
     do iNum = 1 to v-InfoSectionsTotal:SectionNum:  
     v-InfoSectionsTotal:GetInfoSectionProp(iNum).
+          /* номер документа из атрибутов */
+    { str/tdat-val.i
+        ub.trn-doc.doc-code
+        {&trdcattr-nids}
+        v-attr-value
+        v-attr-type
+        }
+      if v-attr-value <> "" then v-doc-code = v-attr-value .  
+      else v-doc-code       = ub.trn-doc.doc-code .
     CREATE tincome-2.
     assign
       tincome-2.gds-code    = t-2.gds-code
       tincome-2.supp-name   = if iNum = 1 then for-supp-name else ""
       tincome-2.supp-type   = ub.trn-doc.cli-type
       tincome-2.supp-code   = ub.trn-doc.cli-code
-      tincome-2.doc-code    = ub.trn-doc.doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName
+      tincome-2.doc-code    = v-doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName
       tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:FactQnty
       tincome-2.qnty2       = ( IF AVAILABLE ub.inv-line THEN v-InfoSectionsTotal:InfoSectionCurr:FactKgQnty ELSE 0 )
       tincome-2.temperature = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DensTemp

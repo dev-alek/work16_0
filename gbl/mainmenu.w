@@ -1896,12 +1896,18 @@ PROCEDURE bc-brief :
         .
       end.
     end.
-    display
-      fi-gds-artic
-      fi-gds-name
-      fi-gds-qnty
-      fi-gds-price-sale
-      with frame {&frame-name}.
+    do with frame {&frame-name}:
+       assign
+         fi-gds-artic     :screen-value = fi-gds-artic
+         fi-gds-name      :screen-value = fi-gds-name
+         fi-gds-qnty      :screen-value = fi-gds-qnty
+         fi-gds-price-sale:screen-value = fi-gds-price-sale
+         fi-gds-artic     :visible      = yes
+         fi-gds-name      :visible      = yes  
+         fi-gds-qnty      :visible      = yes 
+         fi-gds-price-sale:visible      = yes 
+         .
+     end.
   end.
 
 END PROCEDURE.
@@ -3786,29 +3792,29 @@ PROCEDURE disp-static :
 
     do with frame {&frame-name}
     :
-      display
+      assign
         /*fi-menu-group-name*/
         /*fi-db-num*/
-        fi-nickname
-        fi-user-login
-        fi-user-name
-        with frame {&frame-name} .
+        fi-nickname:screen-value = fi-nickname
+        fi-user-login:screen-value = fi-user-login
+        fi-user-name:screen-value = fi-user-name
+        fi-nickname:visible = yes
+        fi-user-login:visible = yes
+        fi-user-name:visible = yes
+         .
 
       if v-cntxt-level = {&cntxt-global}
       then do:
-        hide
-          fi-host
-          fi-host-basecode-desc
-          fi-obj
-          fi-obj-description
-          t-obj-active
-        in frame {&frame-name} .
         assign
-          fi-host-description = "Без фирмы объекта."
+          fi-host               :visible = no
+          fi-host-basecode-desc :visible = no
+          fi-obj                :visible = no
+          fi-obj-description    :visible = no
+          t-obj-active          :visible = no
+          fi-host-description            = "Без фирмы объекта."
+          fi-host-description   :screen-value = fi-host-description
+          fi-host-description   :visible = yes
         .
-        display
-          fi-host-description
-        with frame {&frame-name} .
 /*        if v-logo-image-visible <> yes then do:*/
 /*/*          run logo in this-procedure .*/     */
 /*        end.                                   */
@@ -3816,17 +3822,17 @@ PROCEDURE disp-static :
 
       if v-cntxt-level = {&cntxt-firm}
       then do:
-        display
-          fi-host
-          fi-host-basecode-desc
-          fi-host-description
-          with frame {&frame-name} .
-
-        hide
-          fi-obj
-          fi-obj-description
-          t-obj-active
-        in frame {&frame-name} .
+        assign
+          fi-host              :screen-value = fi-host
+          fi-host-basecode-desc:screen-value = fi-host-basecode-desc
+          fi-host-description  :screen-value = fi-host-description
+          fi-host              :visible      = yes
+          fi-host-basecode-desc:visible      = yes
+          fi-host-description  :visible      = yes
+          fi-obj               :visible      = no
+          fi-obj-description   :visible      = no
+          t-obj-active         :visible      = no
+         .
 /*        if v-logo-image-visible <> yes then do:*/
 /*/*          run logo in this-procedure .*/     */
 /*        end.                                   */
@@ -3845,14 +3851,20 @@ PROCEDURE disp-static :
 /*            b-search-bar-code                     */
 /*          in frame {&frame-name} .                */
 /*/*        end.*/                                  */
-        display
-          fi-host
-          fi-host-basecode-desc
-          fi-host-description
-          fi-obj
-          fi-obj-description
-          t-obj-active
-          with frame {&frame-name} .
+        assign
+          fi-host              :screen-value = fi-host
+          fi-host-basecode-desc:screen-value = fi-host-basecode-desc
+          fi-host-description  :screen-value = fi-host-description
+          fi-obj               :screen-value = fi-obj
+          fi-obj-description   :screen-value = fi-obj-description
+          t-obj-active         :screen-value = string(t-obj-active)
+          fi-host              :visible      = yes
+          fi-host-basecode-desc:visible      = yes
+          fi-host-description  :visible      = yes
+          fi-obj               :visible      = yes
+          fi-obj-description   :visible      = yes
+          t-obj-active         :visible      = yes
+           .
       end.
     end.
 
@@ -5226,7 +5238,7 @@ define output parameter p-cur-date-error-code   as integer          no-undo.
     :
       assign
         fi-obj-date           = ?
-        fi-close-date           = ?
+        fi-close-date         = ?
         fi-shift-date         = ?
         fi-shift-name         = '':U
         fi-shift-order        = '':U
@@ -5235,18 +5247,18 @@ define output parameter p-cur-date-error-code   as integer          no-undo.
         if v-cntxt-level = {&cntxt-global}
         or v-cntxt-level = {&cntxt-firm}
         then do:
-            hide
-                fi-shift-date
-                fi-shift-name
-                fi-shift-order
-                b-show-date
-            in frame {&frame-name} .
+            
             run cur-time in this-procedure (
                 output fi-obj-date
               , output v-time ) .
-            display
-                fi-obj-date
-            with frame {&frame-name} .
+            assign
+                fi-shift-date :visible      = no
+                fi-shift-name :visible      = no
+                fi-shift-order:visible      = no
+                b-show-date   :visible      = no
+                fi-obj-date   :screen-value = string(fi-obj-date,"99/99/9999":U)
+                fi-obj-date   :visible      = yes
+            .
         end.
         if v-cntxt-level = {&cntxt-object}
         then do:
@@ -5320,29 +5332,37 @@ define output parameter p-cur-date-error-code   as integer          no-undo.
                         fi-shift-order        = string(v-shift-num)
                     .
                 end.
-                display
-                    fi-shift-date
-                    fi-shift-name
-                    fi-shift-order
-                with frame {&frame-name} .
+                assign
+                    fi-shift-date:screen-value  = fi-shift-date 
+                    fi-shift-name:screen-value  = fi-shift-name
+                    fi-shift-order:screen-value = fi-shift-order
+                    fi-shift-date:visible       = yes
+                    fi-shift-name:visible       = yes
+                    fi-shift-order:visible      = yes
+                .
             end.
             else do:
-            hide
-                fi-shift-date
-                fi-shift-name
-                fi-shift-order
-                in frame {&frame-name} .
+               assign
+                  fi-shift-date :visible       = no
+                  fi-shift-name :visible       = no
+                  fi-shift-order:visible       = no
+               .
             end.
-            display
-                fi-obj-date
-                b-show-date
-            with frame {&frame-name} .
+            assign
+                fi-obj-date:screen-value = string(fi-obj-date, '99/99/9999':U)
+               
+                fi-obj-date:visible      = yes
+                b-show-date:visible      = yes
+            .
         end.
 
         run proc-fi-close-date in this-procedure
             ( output fi-close-date  ) .
         if fi-close-date = ? then hide fi-close-date.
-        else display fi-close-date with frame {&frame-name} .
+        else assign 
+                fi-close-date :screen-value  = string(fi-close-date, '99/99/9999':U)
+                fi-close-date :visible       = yes 
+             .
 
     end.
 

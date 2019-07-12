@@ -158,7 +158,7 @@ DEFINE BROWSE b-plgdspm
       X_pl-gds-pump.pump-code FORMAT ">9":U
 X_pl-pump-nozzle.nozzle-code FORMAT ">9":U
 X_goods.artic FORMAT "X(16)":U
-X_goods.gds-code FORMAT "999999999":U
+X_goods.gds-code FORMAT "9999999999":U
 X_goods.gds-name FORMAT "X(10)":U
 X_place.loc1 COLUMN-LABEL "Резервуар" FORMAT "X(8)":U
 X_pl-gds-pump.status_ FORMAT "X(8)":U

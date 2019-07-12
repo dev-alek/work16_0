@@ -255,7 +255,7 @@ FUNCTION check-ban-sales-via-cd return logical ( input p-gds-code as integer ) :
     define variable v-upper-code as int no-undo.
     define variable v-value as character no-undo.
     define variable v-type as character no-undo.
-    
+
     define buffer lc_gds-grp for ub.gds-grp.
     define buffer lc_goods for ub.goods.
     
@@ -278,7 +278,7 @@ FUNCTION check-ban-sales-via-cd return logical ( input p-gds-code as integer ) :
         if v-value = "yes" then
             return true.
         else
-            v-upper-code = lc_gds-grp.upper-code.
+            v-upper-code = 0.
     end.
 end.
 

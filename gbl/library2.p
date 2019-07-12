@@ -2385,40 +2385,8 @@ procedure frmdbnum :
 
 end procedure. /* objdbnum */
 
-
-procedure pdecrypt :
-  define input parameter ip-value-to-dec as character no-undo.
-  define output parameter op-char-value  as character no-undo.
-
-  define variable decrypt-value          as raw       no-undo.
-  define variable long-char-value        as longchar  no-undo.
-  do
-  on error undo, return error return-value
-  :
-
-   assign
-      long-char-value = ip-value-to-dec
-      op-char-value   = get-string(decrypt(base64-decode(long-char-value)),1)
-      long-char-value = ""
-   .
-   end.
-end procedure. /* pdecrypt */
-
-
-procedure pencrypt :
-  define input parameter ip-value-to-enc as character no-undo.
-  define output parameter op-char-value  as character no-undo.
-  define variable crypto-value           as raw       no-undo.
-  do
-  on error undo, return error return-value
-  :
-
-   assign
-      crypto-value  = encrypt(ip-value-to-enc)
-      op-char-value = base64-encode(crypto-value)
-   .
-   end.
-end procedure. /* pencrypt */
+{gbl/pdecrypt.i defproc}
+{gbl/pencrypt.i defproc}
 
 procedure gtplobjq :
 
