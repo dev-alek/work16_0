@@ -614,8 +614,22 @@ define buffer same-gds-prt  for ub.gds-prt.
       undo, return error (if p-silent then v-mess else '').
     end.
   end case.
-  if p-cdrg-type ne {&gtin}
+  if p-cdrg-type eq {&gtin}
   then do:
+     if length(p-b-str) ne 14 
+     then do:
+        v-mess = "В GTIN должно быть 14 цифр.".
+        run err-mess in this-procedure ( input-output v-mess).
+        undo, return error (if p-silent then v-mess else '').
+     end.
+     else if not is-numeral (p-b-str,"digit")
+     then do:
+        v-mess = "В GTIN должны быть только цифры.".
+        run err-mess in this-procedure ( input-output v-mess).
+        undo, return error (if p-silent then v-mess else ''). 
+     end. 
+  end.
+  else do:
      if ( /* длинный доп. БК */
           length (p-b-str) > 13 and
           not is-numeral ((p-b-str),
@@ -629,25 +643,48 @@ define buffer same-gds-prt  for ub.gds-prt.
         run err-mess in this-procedure ( input-output v-mess).
         undo, return error (if p-silent then v-mess else '').
       end.
-   end. 
+  end. 
   /* берем бар-код без контрольной суммы */
   bar_code = substr (p-b-str, 1, length (p-b-str) - 1).
   run str/chk-sum.p
     (input-output bar_code
     ) no-error .
   if error-status :error
-  and p-ean-type = "EAN"
   then do:
-    v-mess = "Бар-код должен быть EAN8 или EAN13.".
-    run err-mess in this-procedure ( input-output v-mess).
-    undo, return error (if p-silent then v-mess else '').
+     if p-ean-type = "EAN"
+     then do:
+        v-mess = "Бар-код должен быть EAN8 или EAN13.".
+        run err-mess in this-procedure ( input-output v-mess).
+        undo, return error (if p-silent then v-mess else '').
+     end.
+     else if p-cdrg-type eq {&gtin}
+     then do:
+        v-mess = "Бар-код должен быть GTIN.".
+        run err-mess in this-procedure ( input-output v-mess).
+        undo, return error (if p-silent then v-mess else '').
+     end.
   end.
-  if ((length (p-b-str) <> 8 and
+  if     p-cdrg-type eq {&gtin}
+     and substr (bar_code, length (bar_code), 1) <> substr (p-b-str, length (bar_code), 1)
+  then do:
+     v-mess = "Бар-код должен быть GTIN." .
+     if session:debug-alert 
+     then
+        v-mess = v-mess + " Ваш код " + p-b-str + " Правильный GTIN " + bar_code.
+     run err-mess in this-procedure ( input-output v-mess).
+     undo, return error (if p-silent then v-mess else '').
+  end.
+  else if ((length (p-b-str) <> 8 and
         length (p-b-str) <> 13) or
       substr (bar_code, length (bar_code), 1) <> substr (p-b-str, length (bar_code), 1)) and
       p-ean-type = "EAN"
   then do:
     v-mess = "Бар-код должен быть EAN8 или EAN13.".
+    if session:debug-alert
+       and (   length (p-b-str) eq 8 
+            or length (p-b-str) eq 13) 
+     then
+        v-mess = v-mess + " Ваш код " + p-b-str + " Правильный EAN " + bar_code.
     run err-mess in this-procedure ( input-output v-mess).
     undo, return error (if p-silent then v-mess else '').
   end.
