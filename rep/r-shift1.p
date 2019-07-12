@@ -434,7 +434,7 @@ on error undo, return error return-value
                                    and buf_rvs-line-attr.gds-code = temp-rvs-line.gds-code
                                    and buf_rvs-line-attr.pl-code = temp-rvs-line.pl-code
                                    and buf_rvs-line-attr.rvs-code = temp-rvs-line.rvs-code
-                                   and buf_rvs-line-attr.attr-code = "mask" no-lock.
+                                   and buf_rvs-line-attr.attr-code = "mask" no-lock no-error.
       
       /* На previous-rvs-doc мы уже стоим (строка 261) */
       
@@ -477,9 +477,9 @@ on error undo, return error return-value
       
       assign
       pol1 = "Метан (КПГ)"
-      pol2 = previous-rvs-line.state-level-total
+      pol2 = previous-rvs-line.state-level-total  when avail previous-rvs-line
       pol5 = temp-rvs-line.state-level-petrol
-      pol6 = previous-rvs-line.state-level-petrol
+      pol6 = previous-rvs-line.state-level-petrol when avail previous-rvs-line
       pol7 = pol5 - pol6
       pol9 = temp-rvs-line.state-level-total.
 
@@ -510,8 +510,10 @@ on error undo, return error return-value
       
       assign
       pol1 = "CH4 м3"
-      pol5 = integer(entry(1,buf_rvs-line-attr.attr-value, ";"))
-      pol6 = integer(entry(1,buf_prev-rvs-line-attr.attr-value, ";"))
+      pol5 = 0
+      pol6 = 0
+      pol5 = integer(entry(1,buf_rvs-line-attr.attr-value, ";"))      when avail buf_rvs-line-attr
+      pol6 = integer(entry(1,buf_prev-rvs-line-attr.attr-value, ";")) when avail buf_rvs-line-attr
       pol7 = pol5 - pol6.
       
       display stream PrnLibstream
@@ -536,8 +538,10 @@ on error undo, return error return-value
       /* Третья строчка для газа */
       assign
       pol1 = "Pвх-CH4 кгс/см2"
-      pol2 = integer(entry(2,buf_prev-rvs-line-attr.attr-value, ";"))
-      pol15 = integer(entry(2,buf_rvs-line-attr.attr-value, ";")).
+      pol2 = 0
+      pol15 = 0
+      pol2 = integer(entry(2,buf_prev-rvs-line-attr.attr-value, ";")) when Avail buf_prev-rvs-line-attr
+      pol15 = integer(entry(2,buf_rvs-line-attr.attr-value, ";"))     when Avail buf_prev-rvs-line-attr .
       
       display stream PrnLibstream
       {&All-sym}
@@ -569,8 +573,10 @@ on error undo, return error return-value
 
       assign
       pol1 = "Tвх - CH4 °C"
-      pol2 = integer(entry(3,buf_prev-rvs-line-attr.attr-value, ";"))
-      pol15 = integer(entry(3,buf_rvs-line-attr.attr-value, ";")).
+      pol2 = 0
+      pol15 = 0
+      pol2 = integer(entry(3,buf_prev-rvs-line-attr.attr-value, ";")) when Avail buf_rvs-line-attr
+      pol15 = integer(entry(3,buf_rvs-line-attr.attr-value, ";"))     when Avail buf_rvs-line-attr.
       
       display stream PrnLibstream
       {&All-sym}

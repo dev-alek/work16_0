@@ -528,7 +528,7 @@ on error undo, return error return-value
                                    and buf_rvs-line-attr.gds-code = temp-rvs-line.gds-code
                                    and buf_rvs-line-attr.pl-code = temp-rvs-line.pl-code
                                    and buf_rvs-line-attr.rvs-code = temp-rvs-line.rvs-code
-                                   and buf_rvs-line-attr.attr-code = "mask" no-lock.
+                                   and buf_rvs-line-attr.attr-code = "mask" no-lock no-error.
       
       /* На previous-rvs-doc мы уже стоим (строка 261) */
       
