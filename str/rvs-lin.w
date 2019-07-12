@@ -2414,6 +2414,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     else do :
       disable tt-rvs-line.izmer-density with frame {&frame-name}.
     end.
+    if pl-rvd-dens or tt-rvs-line.density = ?
+    then do :
+      enable tt-rvs-line.state-density with frame {&frame-name}.
+    end.
+    else do :
+      disable tt-rvs-line.state-density with frame {&frame-name}.
+    end.
     if pl-rvd-lvl or tt-rvs-line.density = ?
     then do :
       enable tt-rvs-line.state-level-total tt-rvs-line.state-level-water with frame {&frame-name}.
