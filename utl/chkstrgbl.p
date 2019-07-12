@@ -23,40 +23,52 @@ define variable vss-description as character no-undo init "Процедура обновления 
 define variable mliststrfile as character no-undo.
 define variable mi           as integer   no-undo.
 define variable changstr     as logical   no-undo.
-define variable mfilesize    as integer no-undo.
-define variable msizeinfile  as integer no-undo.
-define variable mfile        as character no-undo.
+define variable chancript    as logical   no-undo.
+define variable mfilesize    as integer   no-undo.
+define variable msizeinfile  as integer   no-undo.
+define variable mverinfile   as integer   no-undo.
 
+define variable mfile        as character no-undo.
+define variable mfileNew     as character no-undo.
+
+define temp-table tt-file-ver
+field  filename as character 
+field  filesize as integer 
+field  filever as integer init ?
+.
 
 if search("adm/l-i.r") eq ?
 then do:
    
    mliststrfile = "cmp/str-glb2.p,cmp/str-glb3.p,cmp/str-glb4.p,cmp/str-glb5.p,cmp/str-glbl.p,cmp/str-glbt.p".
-   if search ("{&fileparam}") ne ?
-   then do:
-      block-file:
-      do mi = 1 to num-entries(mliststrfile):
-         mfile = entry(mi,mliststrfile).
-         if search (mfile ) = ? 
-         then
-            mfilesize = 0.
-         else do:
-            file-info:file-name = search (mfile).
-            mfilesize = file-info:file-size.
-         end.
-         assign 
+   block-file:
+   do mi = 1 to num-entries(mliststrfile):
+      mfile = entry(mi,mliststrfile).
+      if search (mfile ) = ? 
+      then
+         mfilesize = 0.
+      else do:
+         file-info:file-name = search (mfile).
+         mfilesize = file-info:file-size.
+      end.
+      create tt-file-ver.
+      assign
+         tt-file-ver.filename = entry(mi,mliststrfile)
+         tt-file-ver.filesize = mfilesize
+      .
+      if search ("{&fileparam}") ne ?
+      then do:
+         assign
             msizeinfile = 0  
             msizeinfile = int(getParam("{&fileparam}",mfile))
          no-error.
          if msizeinfile ne mfilesize
-         then do:
+         then 
             changstr = yes.
-            leave block-file. 
-         end.
       end.
+      else
+         changstr = yes.
    end.
-   else
-      changstr = yes.
    if    changstr
       or search ("cmp/str-glbl.i") eq ?
    then do:
@@ -67,15 +79,80 @@ then do:
          view-as alert-box.
          return.                                 
       end.
+      changstr = yes.
       run utl/mkstrglb.p.
+      
+   end.
+   mliststrfile = "cmp/actn.txt,cmp/menu.txt".
+   do mi = 1 to num-entries(mliststrfile):
+      mfile = entry(mi,mliststrfile).
+      create tt-file-ver.
+      tt-file-ver.filename = mfile.
+      mfile = search(mfile).
+      run getverfile (mfile, 
+                      output tt-file-ver.filesize,
+                      output tt-file-ver.filever).
+      if search ("{&fileparam}") ne ?
+      then do:
+         assign
+            msizeinfile = 0  
+            msizeinfile = int(getParam("{&fileparam}",mfile))
+         no-error.
+         assign
+            mverinfile = 0  
+            mverinfile = int(getParam("{&fileparam}",mfile + "|ver"))
+         no-error.
+         if    msizeinfile ne tt-file-ver.filesize
+            or mverinfile  ne tt-file-ver.filever
+         then do: 
+            chancript = yes.
+            mfilenew = replace (mfile,".txt",".enc").
+            run utl/filecrypnodb.p ( input mfile
+                               , input "sysadm"
+                               , input yes
+                               , input mfileNew
+                              ) .
+         end.
+      end.
+      else
+         chancript = yes.
+      
+   end.
+   if    changstr
+      or chancript
+   then do:
       output to "{&fileparam}".
-      do mi = 1 to num-entries(mliststrfile):
-         mfile = entry(mi,mliststrfile).
-         file-info:file-name = search (mfile).
-         saveparam(mfile,string(file-info:file-size)).
+      for each tt-file-ver:
+         
+         saveparam(tt-file-ver.filename,string(tt-file-ver.filesize)).
+         if tt-file-ver.filever ne ?
+         then
+            saveparam(tt-file-ver.filename + "|ver" ,string(tt-file-ver.filever)).
       end.
       output close.
    end.   
 end.
-
+define stream sinp .
+procedure getverfile:
+   define input  parameter iFileName as character no-undo.
+   define output parameter oFilesize as integer   no-undo.
+   define output parameter oFilever  as integer   no-undo.
+   define variable vTXt as character no-undo.
+   if iFileName eq ? 
+   then do:
+      ofilesize = 0.
+      return.
+   end.
+   else do:
+      file-info:file-name = iFileName.
+      ofilesize = file-info:file-size.
+   end.
    
+   input stream sinp from value(iFileName) .
+
+   import stream sinp unformatted vTXt .
+    
+   oFilever = integer (trim(vtxt,'"')) no-error.
+   input stream sinp close .
+   
+end.
