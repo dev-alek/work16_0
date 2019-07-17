@@ -65,7 +65,9 @@ run bgelib-tag-close in this-procedure ( input 2, input "Client").
                                                                  else "DEL":U
                                                                  )
                                                              else (if action = "U"
-                                                                   then 'ADD':U
+                                                                   then (if lookup({&current-status}, cash-cli.status_ ) > 0
+                                                                         then "ADD":U
+                                                                         else "DEL":U)
                                                                    else "DEL":U
                                                                   )
                                                              )
