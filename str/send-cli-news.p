@@ -1,0 +1,1 @@
+{str/send-cli.p news}

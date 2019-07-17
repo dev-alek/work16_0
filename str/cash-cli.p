@@ -84,9 +84,10 @@ DEFINE VARIABLE v-date as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
 define variable v-disp-msg as character no-undo .
 
-define buffer for-cash-desk for ub.cash-desk.
-define buffer for-shop for ub.shop.
-define buffer for-clients for ub.clients.
+
+define buffer for-cash-desk for cash-desk.
+define buffer for-shop for shop.
+define buffer for-clients for clients.
 
 assign
 p-db-num = integer(entry(1, p-parameter, {&delim-par}))
@@ -286,8 +287,8 @@ CASE choice :
       kk = 0.
       _kk:
         for each dc-list no-lock,
-            first ub.dis-card no-lock where
-                  ub.dis-card.d-card = dc-list.d-card,
+            first dis-card no-lock where
+                  dis-card.d-card = dc-list.d-card,
              FIRST ub.dis-card-type No-LOCK WHERE
                       ub.dis-card-type.type = ub.dis-card.type and
                       ub.dis-card-type.emitent-host-code = ub.dis-card.emitent-host-code AND
@@ -296,12 +297,12 @@ CASE choice :
                       ub.dis-card-type.obj-code = 0:
           if ( lookup(ub.dis-card.type, ub.dis-card-type.DCBYSHOP) > 0  and
               ub.dis-card.issue-code <> p-obj-code) then NEXT _kk.
-            FIND ub.clients WHERE
-                ub.dis-card.cli-type = ub.clients.obj-type AND
-                ub.dis-card.cli-code = ub.clients.obj-code
+            FIND clients WHERE
+                dis-card.cli-type = clients.obj-type AND
+                dis-card.cli-code = clients.obj-code
           NO-LOCK NO-ERROR.
           kk = kk + 1.
-          { str/cash-c-i.i }
+          { str/cash-c-i.i mask}
 
           /*нарежем на куски по cdpcknum штук*/
           if ( kk  modulo cdpcknum)  = 0  and not alllstcs then do:
@@ -369,7 +370,7 @@ CASE choice :
       if not avail(ub.dis-card-type) then NEXT _each.
       if ( lookup(ub.dis-card.type, ub.dis-card-type.DCBYSHOP) > 0  and
           ub.dis-card.issue-code <> p-obj-code) then NEXT _each.
-      { str/cash-c-i.i }
+      { str/cash-c-i.i mask}
       /*нарежем на куски по cdpcknum штук*/
       ACCUMULATE dis-card.d-card (COUNT).
       if ( ( ACCUM COUNT dis-card.d-card)  modulo cdpcknum)  = 0  and not alllstcs then do:
@@ -427,7 +428,7 @@ CASE choice :
         if not avail(ub.dis-card-type) then NEXT _each1.
         if ( lookup(ub.dis-card.type, ub.dis-card-type.DCBYSHOP) > 0  and
         ub.dis-card.issue-code <> p-obj-code) then NEXT _each1.
-      { str/cash-c-i.i }
+      { str/cash-c-i.i mask}
       /*нарежем на куски по cdpcknum штук*/
       ACCUMULATE dis-card.d-card (COUNT).
       if ( ( ACCUM COUNT dis-card.d-card)  modulo cdpcknum)  = 0  and not alllstcs then do:

@@ -47,7 +47,7 @@ define variable p-db-num like ub.db.db-num no-undo .
 { cmp/stpllist.i stpl-list  def "shared" }
 { str/defc-cli.i "new shared" }
 { str/pdf-list.i pdf-list def "shared" }
-
+define shared temp-table dc-dis-card-mask no-undo like ub.dis-card-mask.
 
 
 define buffer buf_clients for ub.clients.
@@ -78,10 +78,10 @@ or can-find(first gdsolist no-lock) then do:
                   gds-list.gds-code = gdsolist.gds-code no-error .
         if avail gds-list then NEXT.
         if not avail gds-list then do:
-          find first ub.goods no-lock where
-                    ub.goods.gds-code = gdsolist.gds-code no-error .
+          find first goods no-lock where
+                    goods.gds-code = gdsolist.gds-code no-error .
           create gds-list.
-          buffer-copy ub.goods to gds-list.
+          buffer-copy goods to gds-list.
         end.
         if avail gds-list then
         assign
@@ -244,7 +244,7 @@ if can-find(first dc-list no-lock) then do:
   on error undo, return error
   :
     if first-of(buf_shop.host-code) then do:
-      run str/send-cli.p (
+      run str/send-cli-news.p (
                     input parparentproc
                    ,input p-parent-handle
                    ,input p-log-handle

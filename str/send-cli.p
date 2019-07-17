@@ -70,7 +70,11 @@ define variable p-other as character no-undo .
 { ref/get-dpcn.i }
 define buffer buf_dis-thbj-rule for ub.dis-thbj-rule.
 { gbl/disrules.i cash-desk }
-
+&if "{1}" eq "news"
+&then
+define shared temp-table dc-dis-card-mask no-undo like ub.dis-card-mask.
+define shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask-attr.
+&endif
 define variable ii as integer no-undo.
 /*вспомогат*/
 define variable conf-attr as character no-undo.
@@ -137,7 +141,8 @@ v-del-mrkt-cli = lookup("del-mrkt-cli":U, p-other) > 0
 
 run fill-temp-cd in this-procedure ( input g#db-num, input {&shop}, input i-obj-code, input yes).
 { str/cdpcknum.i {&shop} i-obj-code }
-
+define variable p-obj-type as character no-undo.
+p-obj-type = {&shop}.
 run adm/shattri.p (
     input "get":U
     ,input  {&shop}
@@ -191,11 +196,11 @@ action = "U":U.
 
 
 /*блокируем файл*/
-if can-find(first ub.cash-desk No-LOCK WHERE
-                  ub.cash-desk.db-num = g#db-num and
-                  ub.cash-desk.obj-code = i-obj-code AND
-                  ub.cash-desk.cash-on = yes AND
-                  ub.cash-desk.pos-type = {&cd-type-ipc-servispl}) then do:
+if can-find(first cash-desk No-LOCK WHERE
+                  cash-desk.db-num = g#db-num and
+                  cash-desk.obj-code = i-obj-code AND
+                  cash-desk.cash-on = yes AND
+                  cash-desk.pos-type = {&cd-type-ipc-servispl}) then do:
 
   _lock-cli:
   DO while ind < 100 :
@@ -228,11 +233,11 @@ if can-find(first ub.cash-desk No-LOCK WHERE
   end.
 end.
 
-if can-find(first ub.cash-desk No-LOCK WHERE
-                  ub.cash-desk.db-num = g#db-num and
-                  ub.cash-desk.obj-code = i-obj-code AND
-                  ub.cash-desk.cash-on = yes AND
-                  ub.cash-desk.pos-type = {&cd-type-MAGIA-XML}) then do:
+if can-find(first cash-desk No-LOCK WHERE
+                  cash-desk.db-num = g#db-num and
+                  cash-desk.obj-code = i-obj-code AND
+                  cash-desk.cash-on = yes AND
+                  cash-desk.pos-type = {&cd-type-MAGIA-XML}) then do:
   find first buf_dis-thbj-rule no-lock where
             buf_dis-thbj-rule.obj-type = ''
          and buf_dis-thbj-rule.obj-code = 0
@@ -263,21 +268,21 @@ or run-from = "O":U
 or run-from = "E":U
 then do:
   FOR EACH dc-list NO-LOCK,
-      FIRST ub.dis-card no-lock where
-            ub.dis-card.d-card = dc-list.d-card,
-      first ub.clients no-lock where
-            ub.clients.obj-type = ub.dis-card.cli-type
-        AND  ub.clients.obj-code = ub.dis-card.cli-code,
+      FIRST dis-card no-lock where
+            dis-card.d-card = dc-list.d-card,
+      first clients no-lock where
+            clients.obj-type = dis-card.cli-type
+        AND  clients.obj-code = dis-card.cli-code,
       FIRST ub.dis-card-type No-LOCK WHERE
-            ub.dis-card-type.type = ub.dis-card.type AND
-            ub.dis-card-type.emitent-host-code = ub.dis-card.emitent-host-code AND
+            ub.dis-card-type.type = dis-card.type AND
+            ub.dis-card-type.emitent-host-code = dis-card.emitent-host-code AND
             ub.dis-card-type.host-code = 0 AND
             ub.dis-card-type.obj-type = "":U AND
             ub.dis-card-type.obj-code = 0 :
     if dis-card.emitent-host-code <> 0 and
       dis-card.emitent-host-code <> ub.shop.host-code then NEXT.
     ii = ii + 1.
-    { str/cash-c-i.i }
+    { str/cash-c-i.i mask}
     /*эти записи предназначались одному объекту!!!*/
     if dc-list.flog = yes then delete dc-list.
 
@@ -388,6 +393,21 @@ end.
 /*PROCEDURE putc-cli.*/
 /*разнящийся вывод для разных типов касс*/
 { str/putc-2.i }
+
+
+/*PROCEDURE putc-dis-card-mask.*/
+/*разнящийся вывод для разных типов касс*/
+&if "{1}" eq "news"
+&then
+{ str/putc-20.i dc-dis-card}
+&else
+PROCEDURE putc-dis-card-mask.
+define parameter buffer buf_cash-desk for ub.cash-desk.
+define input parameter p-pos-type as character no-undo.
+define input parameter p-version as character no-undo .
+end.
+&endif
+
 
 /*PROCEDURE for-cash-cycle*/
 /*пройдем цикл по всем кассам одного типа*/

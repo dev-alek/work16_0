@@ -565,6 +565,75 @@ PROCEDURE proc-load-dis-card: /* 14 */
   end.                                                                                 
 END PROCEDURE. /* proc-load-dis-card 14 */
 
+
+define temp-table wt-dis-card-mask no-undo like ub.dis-card-mask. 
+PROCEDURE proc-load-dis-card-mask: /* 14 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-dis-card-mask. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-dis-card-mask. stop" )   
+  on endkey undo, return error substitute( "$proc-load-dis-card-mask. endkey" ) 
+  :                                                   
+    define buffer tb-dis-card-mask for ub.dis-card-mask.            
+    define variable compare-log as logical no-undo.   
+    for each wt-dis-card-mask  
+    on error undo, return error substitute( "$proc-load-dis-card(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-dis-card-mask . 
+    end. 
+    create wt-dis-card-mask.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_dis-card-mask}          
+       ,input (buffer wt-dis-card-mask:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+    find first tb-dis-card-mask                 
+      where tb-dis-card-mask.mask-num = wt-dis-card-mask.mask-num
+      exclusive-lock no-error.
+    { nws/inc/imp/dis-card-mask.i } 
+    delete wt-dis-card-mask.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-dis-card 14 */
+
+define temp-table wt-dis-card-mask-attr no-undo like ub.dis-card-mask-attr. 
+PROCEDURE proc-load-dis-card-mask-attr: /* 14 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-dis-card-mask-attr. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-dis-card-mask-attr. stop" )   
+  on endkey undo, return error substitute( "$proc-load-dis-card-mask-attr. endkey" ) 
+  :                                                   
+    define buffer tb-dis-card-mask-attr for ub.dis-card-mask-attr.            
+    define variable compare-log as logical no-undo.   
+    for each wt-dis-card-mask-attr  
+    on error undo, return error substitute( "$proc-load-dis-card(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-dis-card-mask-attr . 
+    end. 
+    create wt-dis-card-mask-attr.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_dis-card-mask-attr}          
+       ,input (buffer wt-dis-card-mask-attr:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+    find first tb-dis-card-mask-attr                 
+      where tb-dis-card-mask-attr.mask-num = wt-dis-card-mask-attr.mask-num
+      and  tb-dis-card-mask-attr.attr-code = wt-dis-card-mask-attr.attr-code 
+      exclusive-lock no-error.
+    { nws/inc/imp/dis-card-mask-attr.i } 
+    delete wt-dis-card-mask-attr.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-dis-card 14 */
+
+
 { nws/inc/imp/def-out/dc-prop.i }
 define temp-table wt-dis-card-property no-undo like ub.dis-card-property. 
 PROCEDURE proc-load-dis-card-property: /* 15 */

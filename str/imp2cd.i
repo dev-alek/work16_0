@@ -20,6 +20,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 { cmp/gds-list.i gds-list def "new shared" }
 { cmp/dc-list.i  dc-list  def " new shared "  } /*не должен использоваться в load-rec.p*/
+define new shared temp-table dc-dis-card-mask no-undo like ub.dis-card-mask.
+define new shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask-attr.
 { cmp/dcp-list.i  dcp-list  def " new shared "  } /*не должен использоваться в load-rec.p*/
 { cmp/stpllist.i stpl-list  def " new shared "  }
 { cmp/pbc-list.i pbc-list def new } /*не должен использоваться в load-rec.p*/
@@ -47,6 +49,7 @@ procedure send-to-cash:
     or can-find(first cash-txn no-lock)
     or can-find(first cash-txr no-lock)
     or can-find(first dc-list no-lock)
+    or can-find(first dc-dis-card-mask no-lock)
     or can-find(first stpl-list no-lock)
     or can-find(first pdf-list no-lock)
     then do:
@@ -100,6 +103,40 @@ on error undo, return error
   end.
 end.
 end procedure. /* fill-dc-list */
+
+procedure fill-dc-list-mask :
+define parameter buffer buf_dis-card-mask for ub.dis-card-mask .
+
+do
+on error undo, return error
+:
+  find first dc-dis-card-mask where
+            dc-dis-card-mask.mask-num = buf_dis-card-mask.mask-num no-lock no-error.
+  if not available dc-dis-card-mask then do:
+    create dc-dis-card-mask.
+    buffer-copy buf_dis-card-mask to dc-dis-card-mask.
+    release dc-dis-card-mask.
+  end.
+end.
+end procedure. /* fill-dc-list-mask */
+
+procedure fill-dc-list-mask-attr :
+define parameter buffer buf_dis-card-mask-attr for ub.dis-card-mask-attr .
+
+do
+on error undo, return error
+:
+  find first dc-dis-card-mask-attr where
+            dc-dis-card-mask-attr.mask-num  = buf_dis-card-mask-attr.mask-num
+       and  dc-dis-card-mask-attr.attr-code = buf_dis-card-mask-attr.attr-code
+            no-lock no-error.
+  if not available dc-dis-card-mask-attr then do:
+    create dc-dis-card-mask-attr.
+    buffer-copy buf_dis-card-mask-attr to dc-dis-card-mask-attr.
+    release dc-dis-card-mask-attr.
+  end.
+end.
+end procedure. /* fill-dc-list-mask */
 
 procedure fill-dc-list-attr :
 define input parameter p-d-card as character no-undo .
