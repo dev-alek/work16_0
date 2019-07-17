@@ -159,6 +159,10 @@ BY for-cash-desk.cash-num:
                                             ).
     end.
   end.
+  
+  RUN putc-dis-card-mask ( buffer for-cash-desk
+                          ,input for-cash-desk.pos-type
+                          ,input for-cash-desk.version ).
   /*закрываем поток*/
   { str/cloc-gen.i
   &cd-buffer=for-cash-desk

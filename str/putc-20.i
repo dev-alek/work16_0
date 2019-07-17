@@ -26,16 +26,24 @@ define input parameter p-version as character no-undo .
 define variable v-host-code like ub.sysconf.host-code no-undo .
 define variable v-version-dec as decimal no-undo .
 define variable v-reg-cahs  as integer  no-undo .
-
+&if "{1}" eq ""
+&then
 define buffer buf_dis-card-mask for ub.dis-card-mask.
 define buffer buf_dis-card-mask-attr  for ub.dis-card-mask-attr.
 define buffer buf_dis-card-type for ub.dis-card-type.
 define buffer bf_dis-card-type for ub.dis-card-type.
-
+&else
+define buffer dis-card for dc-list.
+define buffer buf_dis-card-mask for {1}-mask.
+define buffer buf_dis-card-mask-attr  for {1}-mask-attr.
+define buffer buf_dis-card-type for ub.dis-card-type.
+define buffer bf_dis-card-type for ub.dis-card-type.
+&endif
 { gbl/hostcode.i p-obj-type i-obj-code v-host-code }
 assign
 v-version-dec = decimal(p-version) no-error .
-
+&if "{1}" eq ""
+&then
     if     choice     eq 4
        and p-pos-type eq {&cd-type-IBM-XML} 
     then do:
@@ -46,6 +54,7 @@ v-version-dec = decimal(p-version) no-error .
         run bgelib-tag-close in this-procedure ( input 2, input "MaskCard").
     end.
 else
+&endif
 _mask:
 for each buf_dis-card-mask no-lock where
       buf_dis-card-mask.host-code = 0
@@ -53,7 +62,10 @@ for each buf_dis-card-mask no-lock where
         AND buf_dis-card-mask.obj-code = 0)
     or (buf_dis-card-mask.obj-type = p-obj-type
         AND
-        buf_dis-card-mask.obj-code = i-obj-code),
+        buf_dis-card-mask.obj-code = i-obj-code)
+&if "{1}" eq ""
+&then  
+        ,
    first buf_dis-card-type no-lock where
          buf_dis-card-type.emitent-host-code = buf_dis-card-mask.emitent-host-code
      AND buf_dis-card-type.type              = buf_dis-card-mask.type    :
@@ -62,17 +74,35 @@ for each buf_dis-card-mask no-lock where
               temp-dis-card-mask.mask-num = buf_dis-card-mask.mask-num no-error .
     if not available temp-dis-card-mask then next _mask.
   end.
- if buf_dis-card-mask.use-on = integer({&dcm-only-th}) then next.
+&else
+  :
+&endif
+  if buf_dis-card-mask.use-on = integer({&dcm-only-th}) then next.
   find first buf_dis-card-mask-attr no-lock where buf_dis-card-mask-attr.attr-code = "reg-cash" and buf_dis-card-mask-attr.mask-num = buf_dis-card-mask.mask-num no-error .
   if available (buf_dis-card-mask-attr) then do:
    if buf_dis-card-mask-attr.attr-value = "yes" then v-reg-cahs = 1 .
    else v-reg-cahs = 0 .
   end.
+  else do: 
+  
+  &if "{1}" eq ""
+  &then  
+  v-reg-cahs = 0 .
+  &else
+  
+  find first dis-card-mask-attr no-lock where dis-card-mask-attr.attr-code = "reg-cash" and dis-card-mask-attr.mask-num = buf_dis-card-mask.mask-num no-error .
+  if available (dis-card-mask-attr) then do:
+   if dis-card-mask-attr.attr-value = "yes" then v-reg-cahs = 1 .
+   else v-reg-cahs = 0 .
+  end.
   else v-reg-cahs = 0 .
+  &endif
+  end.
+   
     
-  find first ub.dis-card no-lock where
-            ub.dis-card.d-card = buf_dis-card-mask.mask no-error .
-  if available ub.dis-card and
+  find first dis-card no-lock where
+             dis-card.d-card = buf_dis-card-mask.mask no-error .
+  if available dis-card and
   buf_dis-card-mask.cli-code <> 0 then do:
     find first ub.clients no-lock where
               ub.clients.obj-type = buf_dis-card-mask.cli-type
@@ -94,7 +124,8 @@ for each buf_dis-card-mask no-lock where
              no-error .
     end.
     if available cash-cli then do:
-
+&if "{1}" eq ""
+  &then  
         RUN putc-2 in this-procedure ( buffer buf_cash-desk
                                       ,input p-pos-type
                                       ,input p-version
@@ -109,11 +140,13 @@ for each buf_dis-card-mask no-lock where
               , input "!Ошибка при пересылке на кассу: " + (if return-value <> "":U then return-value else "":U)
                                                 ).
         end.
+ &endif
     end.
   end.
+  
   { gbl/objdpcnt.i
-    buf_dis-card-type.type
-    buf_dis-card-type.emitent-host-code
+    buf_dis-card-mask.type
+    buf_dis-card-mask.emitent-host-code
     0
     '':U
     0
@@ -121,8 +154,8 @@ for each buf_dis-card-mask no-lock where
     v-d-pcnt0
   }
   { gbl/objdpcnt.i
-    buf_dis-card-type.type
-    buf_dis-card-type.emitent-host-code
+    buf_dis-card-mask.type
+    buf_dis-card-mask.emitent-host-code
     0
     '':U
     0
@@ -130,8 +163,8 @@ for each buf_dis-card-mask no-lock where
     v-cash-d-pcnt0
   }
   { gbl/objdpcnt.i
-    buf_dis-card-type.type
-    buf_dis-card-type.emitent-host-code
+    buf_dis-card-mask.type
+    buf_dis-card-mask.emitent-host-code
     0
     '':U
     0
@@ -147,7 +180,8 @@ for each buf_dis-card-mask no-lock where
   if v-categ0 = ? then do:
     v-categ0 = 0.
   end.
-
+&if "{1}" eq ""
+  &then  
   if available cash-cli and cash-cli.d-pcnt-byshop then do:
     v-d-pcnt = decimal(trim(get-dpcn ( input cash-cli.d-card
                       , input cash-cli.emitent-host-code
@@ -189,6 +223,7 @@ for each buf_dis-card-mask no-lock where
                       , input cash-cli.cash-d-pcnt
                       , input cash-cli.kat-pcnt), "%()i ")).
   end.
+  &endif
   CASE p-pos-type:
     when {&cd-type-ibm} then do:
       /*предварительно уже послали САМОГО КЛИЕНТА для карты*/
@@ -244,7 +279,10 @@ for each buf_dis-card-mask no-lock where
     when {&cd-type-IBM-XML} then do:
       run bgelib-tag-open in this-procedure ( input 2, input "MaskCard"
                                             , input substitute("code='&1' ctrl='&2' tms='&3'", buf_dis-card-mask.rank
-                                            ,(if action = "U":U then 'ADD':U else 'DEL')
+                                            ,(if action = "U":U then if buf_dis-card-mask.stts eq {&bef-current-status-int}
+                                                                     then 'ADD'
+                                                                     else 'DEL' 
+                                              else 'DEL')
                                             ,OS2-time)).
       run bgelib-tag-put in this-procedure ( input 3, input "MCCard", input buf_dis-card-mask.mask, input 1 ).
       if v-version-dec >= 1.05 then do:
@@ -289,7 +327,6 @@ for each buf_dis-card-mask no-lock where
                                           , input string(0), input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "MCBarRead", input string(v-reg-cahs), input 1 ).                                          
       run bgelib-tag-close in this-procedure ( input 2, input "MaskCard").
-      
     end.
 
   END CASE .

@@ -70,7 +70,11 @@ define variable p-other as character no-undo .
 { ref/get-dpcn.i }
 define buffer buf_dis-thbj-rule for ub.dis-thbj-rule.
 { gbl/disrules.i cash-desk }
-
+&if "{1}" eq "news"
+&then
+define shared temp-table dc-dis-card-mask no-undo like ub.dis-card-mask.
+define shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask-attr.
+&endif
 define variable ii as integer no-undo.
 /*вспомогат*/
 define variable conf-attr as character no-undo.
@@ -137,7 +141,8 @@ v-del-mrkt-cli = lookup("del-mrkt-cli":U, p-other) > 0
 
 run fill-temp-cd in this-procedure ( input g#db-num, input {&shop}, input i-obj-code, input yes).
 { str/cdpcknum.i {&shop} i-obj-code }
-
+define variable p-obj-type as character no-undo.
+p-obj-type = {&shop}.
 run adm/shattri.p (
     input "get":U
     ,input  {&shop}
@@ -388,6 +393,21 @@ end.
 /*PROCEDURE putc-cli.*/
 /*разнящийся вывод для разных типов касс*/
 { str/putc-2.i }
+
+
+/*PROCEDURE putc-dis-card-mask.*/
+/*разнящийся вывод для разных типов касс*/
+&if "{1}" eq "news"
+&then
+{ str/putc-20.i dc-dis-card}
+&else
+PROCEDURE putc-dis-card-mask.
+define parameter buffer buf_cash-desk for ub.cash-desk.
+define input parameter p-pos-type as character no-undo.
+define input parameter p-version as character no-undo .
+end.
+&endif
+
 
 /*PROCEDURE for-cash-cycle*/
 /*пройдем цикл по всем кассам одного типа*/
