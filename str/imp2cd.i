@@ -110,31 +110,49 @@ define parameter buffer buf_dis-card-mask for ub.dis-card-mask .
 do
 on error undo, return error
 :
+   find first dc-list where
+            dc-list.d-card = buf_dis-card-mask.mask no-lock no-error.
+   if not available dc-list
+   then do:
+      find first ub.dis-card no-lock where
+                 ub.dis-card.d-card = buf_dis-card-mask.mask no-error .
+      if  available dis-card
+      then
+         run fill-dc-list(buffer dis-card) .         
+   end.
+            
+            
   find first dc-dis-card-mask where
-            dc-dis-card-mask.mask-num = buf_dis-card-mask.mask-num no-lock no-error.
-  if not available dc-dis-card-mask then do:
-    create dc-dis-card-mask.
-    buffer-copy buf_dis-card-mask to dc-dis-card-mask.
-    release dc-dis-card-mask.
-  end.
+             dc-dis-card-mask.mask-num = buf_dis-card-mask.mask-num no-lock no-error.
+  buffer-copy buf_dis-card-mask to dc-dis-card-mask.
+  release dc-dis-card-mask.
+  
 end.
 end procedure. /* fill-dc-list-mask */
 
 procedure fill-dc-list-mask-attr :
 define parameter buffer buf_dis-card-mask-attr for ub.dis-card-mask-attr .
+define buffer dis-card-mask for ub.dis-card-mask .
 
 do
 on error undo, return error
 :
+  find first dc-dis-card-mask where
+             dc-dis-card-mask.mask-num = buf_dis-card-mask-attr.mask-num no-lock no-error.
+  if not available dc-dis-card-mask
+  then do:
+     find first dis-card-mask where dis-card-mask.mask-num eq buf_dis-card-mask-attr.mask-num no-lock no-error.
+     if available dis-card-mask
+     then
+        run  fill-dc-list-mask (buffer dis-card-mask).
+  end.
   find first dc-dis-card-mask-attr where
             dc-dis-card-mask-attr.mask-num  = buf_dis-card-mask-attr.mask-num
        and  dc-dis-card-mask-attr.attr-code = buf_dis-card-mask-attr.attr-code
             no-lock no-error.
-  if not available dc-dis-card-mask-attr then do:
-    create dc-dis-card-mask-attr.
-    buffer-copy buf_dis-card-mask-attr to dc-dis-card-mask-attr.
-    release dc-dis-card-mask-attr.
-  end.
+  buffer-copy buf_dis-card-mask-attr to dc-dis-card-mask-attr.
+  release dc-dis-card-mask-attr.
+  
 end.
 end procedure. /* fill-dc-list-mask */
 
