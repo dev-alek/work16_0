@@ -112,6 +112,8 @@ for each buf_dis-card-mask no-lock where
               ub.dis-card-type.type = buf_dis-card-mask.type
           AND ub.dis-card-type.emitent-host-code = buf_dis-card-mask.emitent-host-code
                 no-error .
+     &if "{1}" eq ""
+     &then              
     { str/cash-c-i.i "mask" }
     if buf_dis-card-mask.cli-code  = 0 then do:
       find first cash-cli no-lock where
@@ -124,8 +126,7 @@ for each buf_dis-card-mask no-lock where
              no-error .
     end.
     if available cash-cli then do:
-&if "{1}" eq ""
-  &then  
+ 
         RUN putc-2 in this-procedure ( buffer buf_cash-desk
                                       ,input p-pos-type
                                       ,input p-version
@@ -140,8 +141,9 @@ for each buf_dis-card-mask no-lock where
               , input "!Ошибка при пересылке на кассу: " + (if return-value <> "":U then return-value else "":U)
                                                 ).
         end.
- &endif
+ 
     end.
+    &endif
   end.
   
   { gbl/objdpcnt.i
