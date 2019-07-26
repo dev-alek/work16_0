@@ -251,6 +251,9 @@ if p-disc-reason <> 0 then do:
     then do:
       return integer({&discnt-t-bonuscard}).
     end.
+    when 16 then do:
+      return integer({&discnt-t-petrolcoupon}).
+    end.    
   END CASE.
 end.
 CASE p-disc-type:

@@ -246,7 +246,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-v-
 { cmp/cr-prep.i 1 discnt-t-payment         19                Платеж                19   Payment }
 { cmp/cr-prep.i 1 discnt-t-cashloyal       20                ЛНР                  20   "Cash Loyality" }
 { cmp/cr-prep.i 1 discnt-t-cashround       21                Округление           21   "Cash of Rounding" }
-{ cmp/cr-prep.i 1 discnt-t-bonuscard       22                Оплата бонусной картой 22   Payment of bonus card }
+{ cmp/cr-prep.i 1 discnt-t-bonuscard       22                Оплата бонусной картой 23   Payment of bonus card }
+{ cmp/cr-prep.i 1 discnt-t-petrolcoupon    23                "Оплата топливным купоном (Ашан)" 17   "Payment of petrol coupon" }
 { cmp/cr-prep.i 1 discnt-t-alt-condition  998                Доп.условие         998   Alt-condition }
 { cmp/cr-prep.i 1 discnt-t-another        999                Другое              999   Another }
 { cmp/cr-prep.i 1 discnt-t-fault         1001                Погрешность         1001  Fault }
@@ -268,6 +269,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-v-
 ,{&bef-discnt-t-d-mask}~
 ,{&bef-discnt-t-round}~
 ,{&bef-discnt-t-template}~
+,{&bef-discnt-t-petrolcoupon}~
 ,{&bef-discnt-t-abs}~
 ,{&bef-discnt-t-group}~
 ,{&bef-discnt-t-payment}~
@@ -297,6 +299,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define discnt-ty
 ,{&bef-discnt-t-d-mask-full}~
 ,{&bef-discnt-t-round-full}~
 ,{&bef-discnt-t-template-full}~
+,{&bef-discnt-t-petrolcoupon-full}~
 ,{&bef-discnt-t-abs-full}~
 ,{&bef-discnt-t-group-full}~
 ,{&bef-discnt-t-payment-full}~

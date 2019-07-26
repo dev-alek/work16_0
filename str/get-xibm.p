@@ -2833,7 +2833,7 @@ define variable disc-gds-reason as int no-undo .
       ub.chk-discnt.time-oper = v-time
       ub.chk-discnt.line-type = (if disc-mode_ = "I":U
                              then integer({&discnt-gds})
-                             else (if disc-mode_ = "T"
+                             else (if disc-mode_ = "T":U or (disc-mode_ = "P":U and disc-reason_ = 16)
                                    then integer({&discnt-sub-total})
                                    else integer({&discnt-unknown})
                                    )
