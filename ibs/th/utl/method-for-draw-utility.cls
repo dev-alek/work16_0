@@ -2594,7 +2594,7 @@ method public logical load_cash_passwd (iaddr as character) :
        v-count-decline = v-count-decline + 1 .
        put stream lsOUT unformatted
              substitute ("ќтвергнуто (код, пароль);&1;&2;запись отсутствует в вер.16"
-                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+                       , tt-cash-passwd.staff-code, fill("*",length(tt-cash-passwd.password)))
            skip.
     end.
     else if buf_staff.role ne {&role-cashier}
@@ -2602,7 +2602,7 @@ method public logical load_cash_passwd (iaddr as character) :
        v-count-decline = v-count-decline + 1 .
        put stream lsOUT unformatted
              substitute ("ќтвергнуто (код, пароль);&1;&2;пользователь не €вл€етс€ кассиром в вер.16"
-                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+                       , tt-cash-passwd.staff-code, fill("*",length(tt-cash-passwd.password)))
            skip.
     end.
     else do:          
@@ -2613,14 +2613,14 @@ method public logical load_cash_passwd (iaddr as character) :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
              substitute ("ќтвергнуто (код, пароль);&1;&2;&3 в вер.16"
-                       , tt-cash-passwd.staff-code, tt-cash-passwd.password, error-status:get-message(1))
+                       , tt-cash-passwd.staff-code, fill("*",length(tt-cash-passwd.password)), error-status:get-message(1))
            skip.
          end .
          else do :
            v-count-confirm = v-count-confirm + 1 .
            put stream lsIN unformatted
              substitute ("«агружено (код, пароль);&1;&2"
-                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+                       , tt-cash-passwd.staff-code, fill("*",length(tt-cash-passwd.password)))
            skip.
          end .
       end .
@@ -2628,14 +2628,14 @@ method public logical load_cash_passwd (iaddr as character) :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
              substitute ("ќтвергнуто (код, пароль);&1;&2;запись кассира зан€та другим пользователем в вер.16"
-                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+                       , tt-cash-passwd.staff-code, fill("*",length(tt-cash-passwd.password)))
            skip.
       end .
       else do :
            v-count-decline = v-count-decline + 1 .
            put stream lsOUT unformatted
              substitute ("ќтвергнуто (код, пароль);&1;&2;запись кассира кто-то уже удалил в вер.16"
-                       , tt-cash-passwd.staff-code, tt-cash-passwd.password)
+                       , tt-cash-passwd.staff-code, fill("*",length(tt-cash-passwd.password)))
            skip.
       end .
       
