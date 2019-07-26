@@ -215,6 +215,7 @@ def var isFuel as logical no-undo init false.
 define variable parisfueltype    as   character            no-undo.
 define variable v-show-str       as character no-undo .
 define variable v-add-nat-gas    as logical no-undo .
+define variable var-is-auto-trn  as logical no-undo .
 
 
 define stream str-err.
@@ -287,6 +288,12 @@ then do:
   end.
 end.
 
+var-is-auto-trn = yes.
+{ str/tdat-wrt.i                                    
+   bf_trn-doc.doc-code
+   {&trdcattr-is-auto-trn}
+   "yes" 
+no-error}
 
 
 /* Получим из ТПЛ автопереоценок нужные переменные */
@@ -872,7 +879,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end.
   end.
   /*проверка на заполнение обязательных атрибутов в накладной*/
-  if not v-add-nat-gas and not vartechproliv and v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
+  if not var-is-auto-trn and not v-add-nat-gas and not vartechproliv and v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
       v-error-attr = "" .
       if not can-find (first buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code 
         and lookup (buf_doc-attr.attr-code, v-attr-mandat-wayb) > 0)
@@ -909,7 +916,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end.  
   end.
   v-error-attr = "".
-  if not vartechproliv and isFuel and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  if not var-is-auto-trn and not vartechproliv and isFuel and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
   then do:
     do ii = 1 to num-entries (v-attr-dop-info):
       find first buf_doc-attr no-lock 

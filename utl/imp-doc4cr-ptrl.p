@@ -17,6 +17,7 @@ Creation date: 24/09/18
 block-level on error undo, throw.
 
 {utl/imp-parts-ptrl.i }
+{str/trdcalib.i}
 
 /* parparentproc пробрасывается :
 в str/copy-in.i для передачи
@@ -334,6 +335,13 @@ run import-hed in this-procedure no-error .
 
   /* 29/X-2018 сначала всё импортируем, потом всё закрываем. */
   for each tt-trn-close :
+
+    { str/tdat-wrt.i                                    
+       tt-trn-close.trn-code
+       {&trdcattr-is-auto-trn}
+       "yes" 
+    no-error}
+    
     &scop my-message substitute(" Закрытие документа &1 на ФАКТ" , tt-trn-close.trn-code )
     {&display-message}.
     run clos-trn2 in this-procedure (tt-trn-close.trn-code) no-error .
