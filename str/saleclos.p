@@ -175,6 +175,7 @@ define buffer buf_sysconf for ub.sysconf.
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_ret-doc for ub.trn-doc.
 define buffer buf_spis-doc for ub.trn-doc.
+define buffer buf_cash-pay-attr for ub.cash-pay-attr.
 define buffer locked_inkas for ub.inkas.
 define buffer locked_trn-doc for ub.trn-doc.
 define buffer buf_prt-obj for ub.prt-obj.
@@ -3043,6 +3044,24 @@ DO ON ERROR undo _main, return error:
           end.
           assign
           v-rec-id = recid(locked_trn-doc).
+          if buf_sale-doc.doc-kind = {&sale-add-write-off} 
+          then do:
+            _cpa:
+            for each buf_cash-pay-attr where buf_cash-pay-attr.attr-code = "dop-doc" no-lock:
+              if entry(1, buf_cash-pay-attr.attr-value, ',') = {&sale-add-write-off}
+              then do:
+                if entry(2, buf_cash-pay-attr.attr-value, ',') = locked_trn-doc.cli-type and integer (entry(3, buf_cash-pay-attr.attr-value, ',')) = locked_trn-doc.cli-code 
+                then do:
+                  { str/tdat-wrt.i                                    
+                     locked_trn-doc.doc-code
+                     {&trdcattr-techpass}
+                     "yes" 
+                  no-error}
+                  leave _cpa.
+                end.
+              end.
+            end.
+          end.
           if v-is-ptrl = yes then do:
         &scop my-message "           Обработка топливных товаров..."
         {&display-message}.

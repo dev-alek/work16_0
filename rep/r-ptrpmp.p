@@ -320,6 +320,18 @@ procedure spill-fuel :
         if error-status :error then do: next. end.
 
         /* остался только техпролив топлива */
+        def var v-value as character no-undo.
+        def var v-type  as character no-undo.
+        def var v-tech-pass as logical no-undo.
+        { str/tdat-val.i                                    
+          bf-spi_trn-doc.doc-code
+          {&trdcattr-techpass}
+          v-value 
+          v-type 
+          no-error
+        }
+        assign
+          v-tech-pass = yes when v-value = "yes".
         create tt_tsf.
         assign tt_tsf.obj-type  = bf_chk-doc.obj-type
                tt_tsf.obj-code  = bf_chk-doc.obj-code
@@ -333,7 +345,7 @@ procedure spill-fuel :
         find first buf_sale-doc no-lock where
                   buf_Sale-doc.inkas-code = bf_inkas.inkas-code
              and  buf_Sale-doc.doc-kind = {&sale-add-tech-refuell} no-error.
-        if available buf_sale-doc then do:
+        if available buf_sale-doc or v-tech-pass then do:
           find first bf-spi_trn-doc where bf-spi_trn-doc.doc-code = v-value no-lock no-error.
           if available bf-spi_trn-doc and
             substring(bf-spi_trn-doc.ps, 1, 1) <> "@" then do:

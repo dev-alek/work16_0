@@ -3893,15 +3893,27 @@ on error undo, return error
     end.
     run wp-xmltagput( input 3, input "dCard"   ,  input p-d-card , input 0 ).
     /* списание техпролив */
+    def var v-value as character no-undo.
+    def var v-type  as character no-undo.
+    def var v-tech-pass as logical no-undo.
+    { str/tdat-val.i                                    
+      p-doc-code
+      {&trdcattr-techpass}
+      v-value 
+      v-type 
+      no-error
+    }
+    assign
+      v-tech-pass = yes when v-value = "yes".
     if p-ext-doc-type = {&TDEDT_Spi_Vnesh} and
-        can-find(first ub.sale-doc where ub.sale-doc.doc-code = p-doc-code and ub.sale-doc.doc-kind = {&sale-add-tech-refuell})
+        (can-find(first ub.sale-doc where ub.sale-doc.doc-code = p-doc-code and ub.sale-doc.doc-kind = {&sale-add-tech-refuell}) or v-tech-pass)
     then do:
       run safe-wp-xmltagput in this-procedure ( input 3, input "techfuel":U  , input "yes":u, input 1 ).
     end. /* if p-ext-doc-type = {&TDEDT_Spi_Vnesh} */
 
     /* приход техпролив */
     if p-ext-doc-type = {&TDEDT_Pri_Vnesh} and
-        can-find(first ub.sale-doc where ub.sale-doc.doc-code = p-doc-code and ub.sale-doc.doc-kind = {&sale-add2-in-tech-refuell})
+        (can-find(first ub.sale-doc where ub.sale-doc.doc-code = p-doc-code and ub.sale-doc.doc-kind = {&sale-add2-in-tech-refuell}) or v-tech-pass)
     then do:
       run safe-wp-xmltagput in this-procedure ( input 3, input "techfuel":U  , input "yes":u, input 1 ).
     end. /* if p-ext-doc-type = {&TDEDT_Pri_Vnesh} */

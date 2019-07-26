@@ -982,8 +982,22 @@ on stop undo main-block, retry main-block
         .
       end.
     end.
+    
+    def var v-value as character no-undo.
+    def var v-type  as character no-undo.
+    def var v-tech-pass as logical no-undo.
+    { str/tdat-val.i                                    
+      buf_trn-doc.doc-code
+      {&trdcattr-techpass}
+      v-value 
+      v-type 
+      no-error
+    }
+    assign
+      v-tech-pass = yes when v-value = "yes".
+    
     if buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} and
-    can-find(first ub.sale-doc where ub.sale-doc.doc-code = p-doc-code and ub.sale-doc.doc-kind = {&sale-add-tech-refuell})
+    (v-tech-pass or can-find(first ub.sale-doc where ub.sale-doc.doc-code = p-doc-code and ub.sale-doc.doc-kind = {&sale-add-tech-refuell}))
     then do:
       buf_operation.techfuel = yes.
     end.
