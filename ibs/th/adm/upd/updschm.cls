@@ -90,12 +90,13 @@ class ibs.th.adm.upd.updschm:
     
   constructor public updschm (input inConPar as char):
     obsrvdbObj = new observupd ().
-    
+    ConPar      = inConPar.
+    obsrvdbObj:IsComp = IsComp. 
     CurrDBShm   = obsrvdbObj:CurrDBShm.  
     CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
     DbNum       = obsrvdbObj:DbNum.      
     TargetDBShm = obsrvdbObj:TargetDBShm.
-    ConPar      = inConPar.
+    
     mDfUpdaLL   = obsrvdbObj:upd-all-list-df.
    
     m-FileDf    = obsrvdbObj:upd-df.
