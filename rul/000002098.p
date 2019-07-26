@@ -127,6 +127,7 @@ define variable v-esys-id as integer no-undo .
 define variable v-err-message as character no-undo .
 define variable v-pack-num as character no-undo .
 define new shared variable g#LogStr as character no-undo.
+define variable v-oxml-log-name as character no-undo .
 
 { rul/seterror.i }
 define buffer buf_temp-cmd for temp-cmd.
@@ -168,7 +169,14 @@ end.
                 input 1                            ~
               , input log-file-name                ~
               , input 1                            ~
-              , input ~{&my-message}~)
+              , input ~{&my-message}~) .           ~
+          if v-oxml-log-name > ''                  ~
+          then do :                                ~
+            run writelog in p-log-handle (         ~
+                input v-oxml-log-name              ~
+              , input 1                            ~
+              , input ~{&my-message}~) .           ~
+          end  
 
 
 
@@ -194,7 +202,6 @@ define variable v-pkcs             as class ibs.th.gbl.pkcs no-undo .
 on delete of this-procedure do:
   run delete-procedure in this-procedure .
 end.
-
 
 &scop sign v-sign *
 
@@ -406,6 +413,8 @@ end.
         no-error
        .
        v-pack-num = entry(3, entry(num-entries(file-name, "\"), file-name, "\") ,"_") no-error.
+       
+       v-oxml-log-name = entry(4, p-process-file-name, {&delim-par}) no-error .
        
         find first buf_ext-system no-lock where
                   buf_ext-system.esys-id = v-esys-id
