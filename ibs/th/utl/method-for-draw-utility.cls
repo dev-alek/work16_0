@@ -651,7 +651,7 @@ method public void load_schem (iAddr as character, ifile-path as character ):
       , input tt-place.max-qnty
       , input tt-place.issue-year
       , input tt-place.start-date
-      , input yes
+      , input no
       ) no-error.
     if error-status:error then 
     do:
