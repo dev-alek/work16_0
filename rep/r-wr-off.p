@@ -63,6 +63,7 @@ define variable v-fact-order-end   like ub.ot-line.fact-order no-undo.
 { rep/repfrm.i   def }   /* Показать окно информации о текущем процессе */
 { cmp/r-page1.i  }
 { str/in-vatp.i  def }
+{ str/trdcalib.i }
 
 /* ************************  Frame Definitions  *********************** */
 define frame {&FRAME-NAME}
@@ -108,6 +109,9 @@ do:
       input x-Date-End,
       output v-fact-order-end
       ).
+  def var v-value as character no-undo.
+  def var v-type  as character no-undo.
+  def var v-tech-pass as logical no-undo.      
   for each obj-list no-lock
    :
     for each buf_trn-doc no-lock
@@ -117,9 +121,18 @@ do:
          and buf_trn-doc.fact-order  >= v-fact-order-start
          and buf_trn-doc.fact-order   <= v-fact-order-end
          and buf_trn-doc.status_      = {&fact} :
-
-      if not can-find(first ub.sale-doc where ub.sale-doc.doc-code = buf_trn-doc.doc-code
-                                          and ub.sale-doc.doc-kind = {&sale-add-tech-refuell}) then do :
+      { str/tdat-val.i                                    
+        buf_trn-doc.doc-code
+        {&trdcattr-techpass}
+        v-value 
+        v-type 
+        no-error
+      }
+      assign
+        v-tech-pass = yes when v-value = "yes".
+      
+      if not (v-tech-pass or can-find(first ub.sale-doc where ub.sale-doc.doc-code = buf_trn-doc.doc-code
+                                          and ub.sale-doc.doc-kind = {&sale-add-tech-refuell})) then do :
         for each buf_doc-line no-lock
             where buf_doc-line.doc-code = buf_trn-doc.doc-code :
           for each buf_parts no-lock

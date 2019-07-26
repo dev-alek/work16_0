@@ -41,6 +41,7 @@ define variable vss-description as character no-undo initial "Главная форма инте
 { cmp/trg-def.i }
 { cmp/library.i  }
 { str/salttemp.i }
+{ ref/gds-attr.i }
 { str/salersrv.i def }
 { str/libbcrcn.i }
 { gbl/waitfram.i }
@@ -59,7 +60,7 @@ define variable vss-description as character no-undo initial "Главная форма инте
 { gbl/fltopend.i defproc }
 
 { str/writelog.i def "'fbr-rsrv-errors-sale.txt'" }
-{ ref/gds-attr.i }
+
 { gbl/key-rec.i }
 { cmp/ini-lib.i }
 os-delete value (search ('fbr-rsrv-errors-sale.txt')) no-error.

@@ -41,6 +41,7 @@ define variable g#report-num  as integer no-undo .
 { rep/ostatok.i  }
 { rep/ost-line.i }
 { rep/trg810xl.i }
+{ str/trdcalib.i }
 
 define stream out-stream.
 
@@ -275,7 +276,10 @@ define temp-table sub_temp-grp-obj no-undo
             end .
          end.
       end.
-
+        def var v-value as character no-undo.
+        def var v-type  as character no-undo.
+        def var v-tech-pass as logical no-undo.
+        
         for each temp-gds
         where temp-gds.obj-code  = buf_obj-list.obj-code
           and temp-gds.obj-type  = buf_obj-list.obj-type
@@ -300,6 +304,15 @@ define temp-table sub_temp-grp-obj no-undo
                     case buf_ot-line.ext-doc-type :
 /*ПРИХОД: */
   /*поступ.от пост.*/  when {&TDEDT_Pri_Vnesh} then do :
+                           { str/tdat-val.i                                    
+                             buf_ot-line.doc-code
+                             {&trdcattr-techpass}
+                             v-value 
+                             v-type 
+                             no-error
+                           }
+                            assign
+                              v-tech-pass = yes when v-value = "yes".
                             if can-find(first buf_sale-doc where buf_sale-doc.doc-code = buf_ot-line.doc-code and buf_sale-doc.doc-kind = {&sale-add2-in-tech-refuell})
                             then do :
    /*прих.техпролив*/         assign temp-grp-obj.income = temp-grp-obj.income + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
@@ -330,6 +343,15 @@ define temp-table sub_temp-grp-obj no-undo
                           assign temp-grp-obj.expense = temp-grp-obj.expense + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
                        end .
   /*списание*/         when {&TDEDT_Spi_Vnesh} then do :
+                         { str/tdat-val.i                                    
+                           buf_ot-line.doc-code
+                           {&trdcattr-techpass}
+                           v-value 
+                           v-type 
+                           no-error
+                         }
+                          assign
+                            v-tech-pass = yes when v-value = "yes".
                           if can-find(first buf_sale-doc where buf_sale-doc.doc-code = buf_ot-line.doc-code and buf_sale-doc.doc-kind = {&sale-add-tech-refuell})
                           then do :
   /*спис.техпролив*/          assign temp-grp-obj.int-expense = temp-grp-obj.int-expense + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .

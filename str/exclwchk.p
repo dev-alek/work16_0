@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "Исключения чека МЦ из
 { str/saledoc.i }
 { str/inc-salf.i }
 { str/lib-trn.i }
+{ ref/gds-attr.i }
 
 &glob display-message  run waitfram-show in this-procedure (~{&MY-MESSAGE~} )
 

@@ -1491,6 +1491,7 @@ procedure rsrv-negative :
   define output parameter p-real-rsrv-qnty       as decimal   no-undo .
 
   define buffer buf_parts for ub.parts .
+  define buffer buf_goods for ub.goods .
 
   define variable v-vat-type  as character no-undo .
   define variable v-vat-pc    as decimal   no-undo .
@@ -1501,6 +1502,12 @@ procedure rsrv-negative :
   do
   on error undo, return error return-value
   :
+    find first buf_goods no-lock where buf_goods.artic      = buf_doc-line.artic
+                                   and buf_goods.prod-type  = buf_doc-line.prod-type
+                                   and buf_goods.prod-code  = buf_doc-line.prod-code
+                                   .
+    if is-gas(buf_goods.gds-code) then return .
+                                   
     run partscr_get-default-values in this-procedure
       (buffer buf_doc-line /* buf_doc-line */
       ,output v-vat-type   /* p-vat-type   */

@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "Отчет по движению СТ.
 { trg/factord.i  }
 { rep/ostatok.i  }
 { rep/ost-line.i }
+{ str/trdcalib.i }
 
 define stream out-stream.
 
@@ -230,6 +231,11 @@ define temp-table temp-gds no-undo
             end .
         end.
       end.
+      
+        def var v-value as character no-undo.
+        def var v-type  as character no-undo.
+        def var v-tech-pass as logical no-undo.
+      
         for each temp-gds no-lock :
           find first temp-grp-obj
             where temp-grp-obj.grpname  = temp-gds.grp-name
@@ -246,12 +252,24 @@ define temp-table temp-gds no-undo
               AND   buf_ot-line.obj-type      = buf_obj-list.obj-type
               AND   buf_ot-line.sum-type      = {&arh-cost}
              use-index art-ot no-lock :
-                 assign Counter1 = Counter1 + 1.
-                 { rep/repfrm.i disp Counter1 }
+               assign Counter1 = Counter1 + 1.
+               { rep/repfrm.i disp Counter1 }
+                 
                     case buf_ot-line.ext-doc-type :
 /*ПРИХОД: */
   /*поступ.от пост.*/  when {&TDEDT_Pri_Vnesh} then do :
-   /*техпролив*/          if can-find(first buf_sale-doc where buf_sale-doc.doc-code = buf_ot-line.doc-code and buf_sale-doc.doc-kind = {&sale-add2-in-tech-refuell})
+    
+                         { str/tdat-val.i                                    
+                           buf_ot-line.doc-code
+                           {&trdcattr-techpass}
+                           v-value 
+                           v-type 
+                           no-error
+                         }
+                          assign
+                            v-tech-pass = yes when v-value = "yes".
+    
+   /*техпролив*/          if v-tech-pass or can-find(first buf_sale-doc where buf_sale-doc.doc-code = buf_ot-line.doc-code and buf_sale-doc.doc-kind = {&sale-add2-in-tech-refuell})
                             then do :
                               assign temp-grp-obj.prielse   = temp-grp-obj.prielse  + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
                             end .
@@ -279,7 +297,17 @@ define temp-table temp-gds no-undo
   /*перемещ.со скл.*/  when {&TDEDT_Ras_Perem}      then assign temp-grp-obj.rasperem   = temp-grp-obj.rasperem  + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
   /*перемещ.в груп.*/  when {&TDEDT_Spi_Prvo}       then assign temp-grp-obj.rasprvo    = temp-grp-obj.rasprvo   + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl) .
   /*списание*/         when {&TDEDT_Spi_Vnesh} then do :
-                             if can-find(first buf_sale-doc where buf_sale-doc.doc-code = buf_ot-line.doc-code and buf_sale-doc.doc-kind = {&sale-add-tech-refuell})
+                             { str/tdat-val.i                                    
+                               buf_ot-line.doc-code
+                               {&trdcattr-techpass}
+                               v-value 
+                               v-type 
+                               no-error
+                             }
+                              assign
+                                v-tech-pass = yes when v-value = "yes".
+                              
+                             if v-tech-pass or can-find(first buf_sale-doc where buf_sale-doc.doc-code = buf_ot-line.doc-code and buf_sale-doc.doc-kind = {&sale-add-tech-refuell})
                              then do :
                                 assign temp-grp-obj.raselse    = temp-grp-obj.raselse   + ABS(buf_ot-line.sum-rubl - buf_ot-line.VAT-rubl).
                              end .

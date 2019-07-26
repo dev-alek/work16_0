@@ -33,6 +33,7 @@ define variable vss-description as character no-undo init "Выгрузка в систему Ан
 {cmp/trg-def.i}
 {ref/gds-attr.i}
 {str/findtank.i}
+{ str/trdcalib.i }
 
 /* ***************************  Definitions  ************************** */
 
@@ -510,13 +511,28 @@ define buffer buf_sale-doc    for ub.sale-doc .
 /*       and can-do ("{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass}":U, buf_trn-doc.ext-doc-type) = false : */
        and can-do ("{&bef-TDEDT_Ras_Vnesh_Kass},{&bef-TDEDT_Vozvrat_Vnesh_Kass},{&bef-TDEDT_Inv}":U,
                    buf_trn-doc.ext-doc-type) = false :
+    
+    def var v-value as character no-undo.
+    def var v-type  as character no-undo.
+    def var v-tech-pass as logical no-undo.
+    { str/tdat-val.i                                    
+      buf_trn-doc.doc-code
+      {&trdcattr-techpass}
+      v-value 
+      v-type 
+      no-error
+    }
+    assign
+      v-tech-pass = yes when v-value = "yes".
           
     /* исключаем списание по техпроливу */
-    if (buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}) and
-       can-find (first buf_clients where buf_clients.obj-type = buf_trn-doc.cli-type
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
+       and
+       (v-tech-pass or 
+       (can-find (first buf_clients where buf_clients.obj-type = buf_trn-doc.cli-type
                                      and buf_clients.obj-code = buf_trn-doc.cli-code) and
        can-find (first buf_sale-doc where buf_sale-doc.doc-code = buf_trn-doc.doc-code
-                                      and buf_sale-doc.doc-kind = {&sale-add-tech-refuell})
+                                      and buf_sale-doc.doc-kind = {&sale-add-tech-refuell})))
     then next trn-doc_ .
     
     v-trn-stype = if can-do("{&bef-income},{&bef-return}":U, buf_trn-doc.doc-type) then "2" else "1" .

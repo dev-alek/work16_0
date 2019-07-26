@@ -46,7 +46,7 @@ class ibs.th.bge.1crn.import.impgoods implements ibs.th.bge.1crn.import.iimpsubj
       
       run ref/imp-goods-1C-RN.p (input objGoods) no-error .
       /* чтобы перехватить throw надо отдельно проверить return-value */
-      if (return-value <> "") or error-status:error
+      if error-status:error
       then do :
           Msg = return-value .
           return false.

@@ -1313,6 +1313,32 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-is-fuel true
 &glob sort-trdcattr-is-fuel 100
 
+/* Технологический пролив */
+&glob fillin_width-trdcattr-techpass 3
+&glob fillin_height-trdcattr-techpass 1
+&glob type-trdcattr-techpass {&type-log}
+&glob format-trdcattr-techpass "yes/no"
+&glob label-trdcattr-techpass "Признак топливной накладной"
+&glob tooltip-trdcattr-techpass "Признак топливной накладной"
+&glob user-can-edit-trdcattr-techpass false
+&glob output-display-trdcattr-techpass false
+&glob other-trdcattr-techpass '':u
+&glob news-trdcattr-techpass true
+&glob sort-trdcattr-techpass 100
+
+/* Признак накладной сформированной автоматически */
+&glob fillin_width-trdcattr-is-auto-trn 3
+&glob fillin_height-trdcattr-is-auto-trn 1
+&glob type-trdcattr-is-auto-trn {&type-log}
+&glob format-trdcattr-is-auto-trn "yes/no"
+&glob label-trdcattr-is-auto-trn "Признак накладной сформированной автоматически"
+&glob tooltip-trdcattr-is-auto-trn " Признак накладной сформированной автоматически "
+&glob user-can-edit-trdcattr-is-auto-trn false
+&glob output-display-trdcattr-is-auto-trn false
+&glob other-trdcattr-is-auto-trn '':u
+&glob news-trdcattr-is-auto-trn true
+&glob sort-trdcattr-is-auto-trn 100
+
 &if "{1}" = "class" &then
 &else
 define new global shared variable g#trdcalib as handle no-undo.

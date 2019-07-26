@@ -516,7 +516,7 @@ run bgelib-tag-close in this-procedure ( input 2, input "Item").
                                                                                                 else buf_cash-gds.b-str ~
                                                               ) ~
                                                        ) ~
-                                                  else string(buf_cash-gds.b-code))
+                                                  else (if buf_cash-gds.b-str eq "*" then buf_cash-gds.b-str else string(buf_cash-gds.b-code)))
 for each buf_cash-gds no-lock where
 &if "{&called}" <> "send-bc" and "{&called}" <> "send-bcn" and "{&called}" <> "s-prodbc" and "{&called}" <> "s-prodbcn" &then
           buf_cash-gds.main-prt-b-code = cash-gds.main-prt-b-code

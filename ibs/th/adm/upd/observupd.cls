@@ -380,7 +380,7 @@ class ibs.th.adm.upd.observupd:
       return true.
   
     end.
-    if upd-all-list-df ne "" then return true.
+    if upd-all-list-df ne "" and not IsComp then return true.
     return false.
     
   end.

@@ -52,6 +52,7 @@ define variable r-prod-code                 like ub.doc-line.prod-code no-undo .
 define variable r-prt-code                  like ub.gds-dtl.prt-code no-undo .
 { cmp/croslist.i }
 { cmp/strcodec.i }
+{ str/is-gas.i }
 &else
 
 &scoped-define vssseq {&sequence}
@@ -376,7 +377,10 @@ if cashplace then do: /*складскоместный*/
       .
     end.
     /*нет резервирования по складским местам чужих товаров!!!!!!!!!!!!!!*/
-    {&num_rec_plus}.
+    if not (is-gas(gdscode) and buf_sale-doc.doc-kind <> {&TDEDT_Vozvrat_Vnesh_Kass})
+    then do :
+      {&num_rec_plus}.
+    end.
 
     /* снимаем полностью все резервы по месту хранения */
     assign
@@ -466,7 +470,10 @@ if cashplace then do: /*складскоместный*/
       if v-err-msg <> "":U then do:
 &if "{2}" = "auto" &then
 &scop my-message v-err-msg
+if not is-gas(gdscode)
+then do :
 {&display-message}.
+end.
 &endif
 &if "{2}" = "excl-chk" &then
         v-return-st-fl = no.
@@ -606,7 +613,10 @@ end.
         .
       end.
       /*не резервирования по партиям чужих товаров!!!!!!!!!!!!!!!!*/
-      {&num_rec_plus}.
+      if not (is-gas(gdscode) and buf_sale-doc.doc-kind <> {&TDEDT_Vozvrat_Vnesh_Kass})
+      then do :
+        {&num_rec_plus}.
+      end.
       run trg/rsrv-dtl.p (
                          input parparentproc
                         ,input rsrv-option
@@ -809,8 +819,11 @@ if ( num_rec modulo 10 ) = 0 then
         v-return-st-fl = yes
         .
       end.
-      {&num_rec_plus}.
-/*      run gbl/inidebug.p .*/
+      if not (is-gas(gdscode) and buf_sale-doc.doc-kind <> {&TDEDT_Vozvrat_Vnesh_Kass})
+      then do :
+        {&num_rec_plus}.
+      end.
+
       run trg/rsrv-dtl.p (
                        input parparentproc
                       ,input rsrv-option
@@ -980,7 +993,10 @@ end.
                                         ).
         if not v-is-own and p-r-v > 0 and v-gds-dtl-fact-qnty <> 0 then do:
           /*снадо резервировать по чужим - подготовим счетчик */
-          {&num_rec_plus}.
+          if not (is-gas(gdscode) and buf_sale-doc.doc-kind <> {&TDEDT_Vozvrat_Vnesh_Kass})
+          then do :
+            {&num_rec_plus}.
+          end.
           run write-tt0-info in this-procedure (
                                                 input b-doc-line.artic
                                               ,input b-doc-line.prod-type

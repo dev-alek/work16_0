@@ -37,7 +37,6 @@ define variable vss-description as character no-undo init "Импорт из файла OpenX
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { cmp/library.i  }
-/* { gbl/cur-time.i } 11/I-2019 - используется включение из str/xmllib.i */
 { gbl/xmlchar.i  }
 { str/xmllib.i   } /* + подключает gbl/cur-time.i */
 { cmp/ini-lib.i  }
@@ -218,33 +217,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       v-esys-id = int(entry(i,v-extsys-list,';')).
       /* по всем внешним системам,
              где esys-have-import + esys-db-num-imp + esys-id
+         Внутри цикла целевые действия выполняются только для buf_ext-system.esys-have-import = true
       */
       for each buf_ext-system no-lock
-/* 26/IX-2018 - составляющая
- buf_ext-system.esys-have-export = yes and buf_ext-system.exp-conf-wait = integer({&openxml-exp-conf-wait}) не используется
- Внутри цикла чтение параметров выполняется для всех buf_ext-system, попавших в выборку,
- но целевые действия выполняются только для buf_ext-system у которых buf_ext-system.esys-have-import = true
-
-        where ( buf_ext-system.esys-have-import = yes
-                and buf_ext-system.esys-db-num-imp = v-cur-db-num
-            and (v-esys-id = 0
-                or
-                (buf_ext-system.esys-id = v-esys-id
-                and
-                buf_ext-system.db-num = v-esys-db-num)
-                )
-                )
-          or
-          (buf_ext-system.esys-have-export = yes
-        and buf_ext-system.exp-conf-wait = integer({&openxml-exp-conf-wait})
-        and buf_ext-system.esys-db-num-exp = v-cur-db-num
-        and (v-esys-id = 0
-          or
-          (buf_ext-system.esys-id = v-esys-id
-          and
-          buf_ext-system.db-num = v-esys-db-num)
-        ))
-*/
         where buf_ext-system.esys-have-import = yes
           and buf_ext-system.esys-db-num-imp = v-cur-db-num
           and (v-esys-id = 0
@@ -372,15 +347,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
               undo _ext-system, next _ext-system.
           end.
 
-          /* 10/I-2019  дублирующая проверка
-          if buf_ext-system.esys-have-import
-          then */ do:
-            run write-log in p-log-handle (  input 2
+        run write-log in p-log-handle (  input 2
                ,substitute(v-msg-templ-start, buf_ext-system.esys-id, buf_ext-system.esys-name ) ) .
-            run write-log in p-log-handle (  input 2
+        run write-log in p-log-handle (  input 2
                  ,( if v-cert-enabled then substitute("Используются файлы электронной подписи с расширением '.&1'", v-sign-fileext)
                                       else "Файлы электронной подписи не используются." )            
                                           ) .
+          do:
                                           
             /*начинаем сканирование директории*/
             assign
@@ -432,7 +405,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                              пакеты с принятыми номерами повторно не копирует  
               */
               /*очищаем таблицу - чтобы туда потом написать названия файлов - они могут понадобиться в методе EXITE*/
-              // run filelist-clear in this-procedure . 17/X-2018 из filelist.i вынесено сюда:
                 v-filelist-total-file-num = 0 .
                 empty temp-table temp-filelist .
               /* 17/X-2018 внутри sxg-pack.p для get таблица temp-filelist очищается повторно,
@@ -545,34 +517,31 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     v-espr-pack-num = tt-espcknum.tt-espr-pack-num.
                   end.
                 end.
+
+                /* оставляем только файлы, подлежащие обработке */
+                for each temp-filelist :
+                  if  num-entries(temp-filelist.file-name, "_") = 4
+                  or (num-entries(temp-filelist.file-name, "_") = 5 and temp-filelist.file-name begins "ack")
+                  then . /* пакеты и аски оставляем */
+                  else do :
+                    /* прочие файлы игнорируем:
+                       - where temp-filelist.file-name begins "err_"
+                       - исключаем файлы с электронной подисью (такая же стоит в bge/espcknum.p):
+                         if (v-sign-fileext > "") and (temp-filelist.file-extension = v-sign-fileext)
+                       - ещё электронная подпись, связанная с bge/espcknum.p и bge/oxmlspci.w:
+                         if can-do("p7s,p7c", temp-filelist.file-extension)
+                       - в директорию импорта стали попадать файлы иконок, сслылок, и прочего,
+                         у которых другая структура имени и потом они ругаются на entry(3, ...):
+                         if num-entries(temp-filelist.file-name, "_") > 2 then . else delete temp-filelist .
+                    */
+                    delete temp-filelist.
+                  end.
+                end.
                 
                 /* 21/XII-2018  Перестали приниматься ack_ с подтверждениями на отправленные нами пакеты.
                                 Сначала обрабатываем все ack_ с подтверждениями на отправленные нами пакеты,
                                 потом переходим к приёму новых пакетов. 
                 */
-                for each temp-filelist where temp-filelist.file-name begins "err_" :
-                          delete temp-filelist .
-                end.
-                for each temp-filelist :
-                        /* 24/VIII-2018 заглушка (такая же стоит в bge/espcknum.p):
-                              исключаем файлы с электронной подисью,
-                              чтобы они читались строго позже файлов с данными */
-                        if (v-sign-fileext > "") and (temp-filelist.file-extension = v-sign-fileext) then do :
-                          delete temp-filelist .
-                          next .
-                        end .
-                        /* 05/IX-2018 ещё заглушка, связанная с bge/espcknum.p и bge/oxmlspci.w */
-                        if can-do("p7s,p7c", temp-filelist.file-extension) then do :
-                          delete temp-filelist .
-                          next .
-                        end .
-                        /* 11/I-2019 в директорию импорта стали попадать файлы иконок, сслылок, и прочего,
-                                     у которых другая структура имени и потом они ругаются на entry(3, ...) */
-                        if num-entries(temp-filelist.file-name, "_") > 2 then . else do :
-                          delete temp-filelist .
-                          next .
-                        end .
-                end.
                 for each temp-filelist where temp-filelist.file-name begins "ack_" :
                         assign
                            v-custom-pack-name = temp-filelist.file-name
@@ -592,6 +561,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                                   input 2
                       , ("Ошибка приёма подтверждения из файла " + temp-filelist.full-name + " : " + return-value)
                                                 ) .
+                    delete temp-filelist .
                     next .
                   end.
 
@@ -732,18 +702,21 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     end .
                   end case .
                                         
-                  
+                  delete temp-filelist .
                 end. /* end_of for_each temp-filelist_begins_ack */
                 run write-log in p-log-handle (input 2 ,  substitute ("Разбор подтверждений из &1. Просмотрено файлов &2", v-target-dir, v-analys-ack)  ) .
                 
               do : // выбор имени файла для импорта
 
-                  
+                  /* 11/VII-2019 обработка ack_ закончена.
+                                 При отсутствии замечаний условия, связанные с асками, ниже по тексту будут исключаться. */
                   if not can-find (first temp-filelist
-                                   where integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)) then do :
-                    /* отсутствует пакет с ожидаемым номером v-espr-pack-num */                 
+                                   where num-entries(temp-filelist.file-name, "_") = 4
+                                     and integer(entry(3, temp-filelist.file-name, "_")) = abs(v-espr-pack-num)) then do :
+                    /* отсутствует пакет с ожидаемым номером v-espr-pack-num */
                     find first temp-filelist
-                         where integer(entry(3, temp-filelist.file-name, "_")) > abs(v-espr-pack-num) no-error .
+                         where num-entries(temp-filelist.file-name, "_") = 4
+                           and integer(entry(3, temp-filelist.file-name, "_")) > abs(v-espr-pack-num) no-error .
                     if available temp-filelist then do :     
                       /* есть пакет с номером после v-espr-pack-num */                                     
                       run write-log in p-log-handle ( input 2

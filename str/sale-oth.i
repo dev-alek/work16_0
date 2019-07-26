@@ -932,6 +932,7 @@ else do:
                 buf_goods.artic = buf_gds-dtl.artic
             AND buf_goods.prod-type = buf_gds-dtl.prod-type
             AND buf_goods.prod-code = buf_gds-dtl.prod-code:
+          if is-gas(buf_goods.gds-code) then next.
           { gbl/fgdsobjt.i buf_gds-dtl.obj-type buf_gds-dtl.obj-code buf_goods.gds-code "'is-dish=request,is-modificator=request'" v-is-dish no-error }
           if error-status:error or lookup('1':U, v-is-dish) = 0 then do:
             assign
@@ -950,12 +951,20 @@ else do:
           find first buf_gds-dtl NO-LOCK where
                           buf_gds-dtl.doc-code = buf_sale-doc.doc-code
                       AND buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty USE-INDEX pi no-error .
-          if available buf_gds-dtl then do:
-            assign
-            b-close-enabled = no
-            .
-            run waitfram-hide in this-procedure .
-            return.
+          if available buf_gds-dtl
+          then do:
+            find first buf_goods no-lock where
+                  buf_goods.artic = buf_gds-dtl.artic
+              AND buf_goods.prod-type = buf_gds-dtl.prod-type
+              AND buf_goods.prod-code = buf_gds-dtl.prod-code .
+            if not is-gas(buf_goods.gds-code)
+            then do :
+              assign
+              b-close-enabled = no
+              .
+              run waitfram-hide in this-procedure .
+              return.
+            end.
           end.
         end.
       end.

@@ -344,7 +344,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "П."
           VIEW-AS FILL-IN
           SIZE 4.1 BY 1
-     tt-chk-doc.chk-num AT ROW 6 COL 55 COLON-ALIGNED
+     tt-chk-doc.chk-num AT ROW 6 COL 55 COLON-ALIGNED format "99999999999"
           LABEL "N по кассе"
           VIEW-AS FILL-IN
           SIZE 10.9 BY 1

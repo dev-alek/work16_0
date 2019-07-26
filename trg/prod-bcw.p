@@ -29,7 +29,13 @@ define variable vss-description as character no-undo init "Триггер на запись бар
 { trg/prod-bch.i trig oldb ub.prod-bc }
 { gbl/cur-time.i }
 { trg/check-bc.i }
+define variable mMessFlg  as logical no-undo.
+define variable mMessText as character no-undo.
 
+mMessFlg =     not g#news 
+           and not g#auto
+           and not g#oxml
+           and not g#esys.
 
 main-block:
 do
@@ -64,6 +70,28 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   define variable l-prod-bc-global as logical no-undo .
   define variable l-prod-bc-weight as logical no-undo .
   define variable l-prod-bc-pgweight as logical no-undo .
+  define variable vB-Str-Int         as integer no-undo.
+  vB-Str-Int = int( ub.prod-bc.b-str) no-error.
+  if     not error-status:error
+     and vB-Str-Int ne 0 
+  then do:
+     find buf_bar-code where buf_bar-code.b-code = vB-Str-Int no-lock no-error.
+     if available buf_bar-code
+     then do:
+        mMessText = substitute("Ошибка создания/изменения дополнительный бар-код &2 &1Уже существует основной бар-код &3&1для товара с кодом &4",
+             {&new-line},
+             ub.prod-bc.b-str,
+             buf_bar-code.b-code,
+             buf_bar-code.gds-code).
+        if mMessflg
+        then 
+           message 
+              vss-workfile vss-revision vss-description skip
+              mMessText view-as alert-box error .
+        undo main-block, return error mMessText.
+     end.
+  end. 
+  
   { gbl/prodbcat.i
     ub.prod-bc
     "'global=request':u"
@@ -71,16 +99,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     no-error
   }
   if error-status :error then do:
+    mMessText = substitute("Ошибка при определении типа дополнительного бар-кода prodbcat &1Основной бар-код &2 &1 Дополнительный бар-код &3&1Действие global=request",
+             {&new-line},
+             ub.prod-bc.b-code,
+             ub.prod-bc.b-str).
+    if mMessFlg
+    then
     message
       vss-workfile vss-revision vss-description skip
-      "Ошибка при определении типа дополнительного бар-кода prodbcat" skip
-      "Основной бар-код" ub.prod-bc.b-code skip
-      "Дополнительный бар-код" ub.prod-bc.b-str skip
-      "Действие global=request" skip
+      mMessText skip
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
-    undo main-block, return error .
+    undo main-block, return error mMessText.
   end.
   { gbl/prodbcat.i
     ub.prod-bc
@@ -89,16 +120,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     no-error
   }
   if error-status :error then do:
+    mMessText = substitute("Ошибка при определении типа дополнительного бар-кода prodbcat &1Основной бар-код &2 &1 Дополнительный бар-код &3&1Действие weight=request",
+             {&new-line},
+             ub.prod-bc.b-code,
+             ub.prod-bc.b-str).
+    if mMessFlg
+    then
     message
       vss-workfile vss-revision vss-description skip
-      "Ошибка при определении типа дополнительного бар-кода prodbcat" skip
-      "Основной бар-код" ub.prod-bc.b-code skip
-      "Дополнительный бар-код" ub.prod-bc.b-str skip
-      "Действие weight=request" skip
+      mMessText skip
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
-    undo main-block, return error .
+    undo main-block, return error mMessText.
   end.
 
   { gbl/prodbcat.i
@@ -108,16 +142,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     no-error
   }
   if error-status :error then do:
+     mMessText = substitute("Ошибка при определении типа дополнительного бар-кода prodbcat &1Основной бар-код &2 &1 Дополнительный бар-код &3&1Действие pgweight=request",
+             {&new-line},
+             ub.prod-bc.b-code,
+             ub.prod-bc.b-str).
+    if mMessFlg
+    then
     message
       vss-workfile vss-revision vss-description skip
-      "Ошибка при определении типа дополнительного бар-кода prodbcat" skip
-      "Основной бар-код" ub.prod-bc.b-code skip
-      "Дополнительный бар-код" ub.prod-bc.b-str skip
-      "Действие pgweight=request" skip
+      mMessText skip
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
-    undo main-block, return error .
+    undo main-block, return error mMessText.
   end.
 
   if g#news then do:
@@ -148,12 +185,15 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         if thbjattr_thbj-attr.prop-code = {&attr-gds-ref_is-scgb} then v-is-scgb = thbjattr_thbj-attr.property-value-logical .
     end.
     if v-is-scgb <> true then do:
+       mMessText = substitute("Создание глобальных весовых кодов запрещено параметром (is-scgb)! &1Изменить этот параметр можно в Администратор-Глобальные настройки",
+             {&new-line}).
+      if mMessFlg
+      then
           message
             vss-workfile vss-revision vss-description skip
-            "Создание глобальных весовых кодов запрещено параметром (is-scgb)!" skip
-            "Изменить этот параметр можно в Администратор-Глобальные настройки" skip
+            mMessText skip
             view-as alert-box.
-          undo main-block, return error .
+          undo main-block, return error mMessText.
         end.
       end.
       if new( ub.prod-bc ) then do:
@@ -186,13 +226,17 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                               ,input (buffer ub.prod-bc:handle)
                               ) no-error .
         if error-status :error then do:
+           mMessText = substitute("Невозможно маршрутизировать prod-bc для отправки в новости",
+             {&new-line}).
+          if mMessFlg
+          then
           message
             vss-workfile vss-revision vss-description skip
-            "Невозможно маршрутизировать prod-bc для отправки в новости" skip
+            mMessText skip
             error-status :get-message(1) skip
             return-value skip
             view-as alert-box.
-          undo main-block, return error .
+          undo main-block, return error mMessText.
         end.
       end.
     end.
@@ -256,13 +300,17 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                 buf_bar-code.b-code = ub.prod-bc.b-code No-ERROR.
      { gbl/sclcdatr.i buf_bar-code.gds-code "''" 0 ? yes no-error }
       if error-status:error then do:
+           mMessText = substitute("Не удалось создать атрибут товара на объекте ВЕСОВОЙ КОД" ,
+             {&new-line}).
+            if mMessFlg
+            then
             message
             vss-workfile vss-revision vss-description skip
-            "Не удалось создать атрибут товара на объекте ВЕСОВОЙ КОД" skip
+            mMessText skip
             error-status :get-message(1) skip
             return-value skip
             view-as alert-box.
-          undo main-block, return error .
+          undo main-block, return error mMessText.
       end.
    end.
   end.
@@ -326,7 +374,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     }
   if error-status:error
   then do:
-    if not g#news then do:
+    if mMessFlg then do:
       message
         vss-workfile vss-revision vss-description skip
         "Ошибка при вызове процедуры rum-runa.i" skip

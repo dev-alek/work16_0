@@ -44,6 +44,7 @@ define variable vss-description as character no-undo init "Экспорт XML смены".
 { str/lib-trn.i  }
 { cmp/obj-list.i new } /* нужен для rep/fostatok.i */
 { rep/fostatok.i  &arh-name = "arh-fin-doc-schet-nal-obj" }
+{ str/trdcalib.i }
 
 define variable conf-par as character no-undo . /* чтобы прочесть is-wth через conf-rd.i */
 define variable par-type as character no-undo . /* чтобы прочесть is-wth через conf-rd.i */
@@ -1058,11 +1059,23 @@ on error undo, return error
              and buf_trn-doc.status_    = {&fact}
             on error undo, return error
             :
+          def var v-value as character no-undo.
+          def var v-type  as character no-undo.
+          def var v-tech-pass as logical no-undo.
+          { str/tdat-val.i                                    
+            buf_trn-doc.doc-code
+            {&trdcattr-techpass}
+            v-value 
+            v-type 
+            no-error
+          }
+          assign
+            v-tech-pass = yes when v-value = "yes".
           if  buf_trn-doc.cli-type = buf_clients.obj-type   and
               buf_trn-doc.cli-code = buf_clients.obj-code   and
               buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
           then do:
-            if not can-find(first ub.sale-doc where ub.sale-doc.doc-code = buf_trn-doc.doc-code and ub.sale-doc.doc-kind = {&sale-add-tech-refuell})
+            if not (v-tech-pass or can-find(first ub.sale-doc where ub.sale-doc.doc-code = buf_trn-doc.doc-code and ub.sale-doc.doc-kind = {&sale-add-tech-refuell}))
               then 
             do:
               /* это не техпролив */

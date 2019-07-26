@@ -68,6 +68,7 @@ define variable vss-description as character no-undo init "Форма ТОРГ-29 по доку
 { rep/gn-extp.i }
 { str/trdcalib.i }
 { gbl/ggoattr.i }
+{ str/trdcalib.i }
 
 define variable g#report-num   as integer no-undo .
 run get-report-num in parparentproc (output g#report-num).
@@ -2003,6 +2004,20 @@ on error undo, return error
 :
 
   /*найдем не списание ли это по техпроливу*/
+  
+  def var v-value as character no-undo.
+  def var v-type  as character no-undo.
+  def var v-tech-pass as logical no-undo.
+  { str/tdat-val.i                                    
+    buf_trn-doc.doc-code
+    {&trdcattr-techpass}
+    v-value 
+    v-type 
+    no-error
+  }
+  assign
+    v-tech-pass = yes when v-value = "yes".
+  
   find first buf_sale-doc no-lock where
             buf_sale-doc.doc-code = buf_trn-doc.doc-code
         and buf_sale-doc.doc-kind = {&sale-add-tech-refuell} no-error.
