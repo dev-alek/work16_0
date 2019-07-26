@@ -101,7 +101,10 @@ define temp-table temp_parts no-undo like ub.parts
   field new_artic     as character
   field new_prod-type as character
   field new_prod-code as integer
-*/  
+*/
+  field cli-qnty1     as decimal
+  field fact-qnty1    as decimal
+  field qnty1         as decimal  
   field new-cli-type  as character
   field new-cli-code  as integer
   index pi is primary
@@ -609,10 +612,10 @@ define buffer new_clients  for ub.clients .
     if available (temp_parts)
     then do:
       assign
-        temp_parts.fact-qnty = temp_parts.fact-qnty + buf_tt-parts.fact-qnty
-        temp_parts.cli-qnty = temp_parts.cli-qnty + buf_tt-parts.cli-qnty
+        temp_parts.fact-qnty1 = temp_parts.fact-qnty1 + buf_tt-parts.fact-qnty
+        temp_parts.cli-qnty1 = temp_parts.cli-qnty1 + buf_tt-parts.cli-qnty
       .
-        temp_parts.cli-base-rate = temp_parts.fact-qnty / temp_parts.cli-qnty.
+        temp_parts.cli-base-rate = temp_parts.fact-qnty1 / temp_parts.cli-qnty1.
       next.
     end.
       
@@ -643,13 +646,13 @@ define buffer new_clients  for ub.clients .
 //  field gds-code      as integer - в таблице parts не предусмотрено поле gds-code
 
       temp_parts.price-rubl = buf_tt-parts.price-rubl // вместо price-cli используется price-rubl
-      temp_parts.fact-qnty  = buf_tt-parts.fact-qnty
-      temp_parts.cli-qnty   = buf_tt-parts.cli-qnty
+      temp_parts.fact-qnty1  = buf_tt-parts.fact-qnty
+      temp_parts.cli-qnty1   = buf_tt-parts.cli-qnty
       temp_parts.VAT-type   = {&inc-VAT}
       temp_parts.VAT-pc     = buf_tt-parts.vat-tax-value
       temp_parts.cst-code   = buf_tt-parts.name-gtd
       temp_parts.last-date  = v-last-date
-      temp_parts.cli-base-rate = temp_parts.fact-qnty / temp_parts.cli-qnty
+      temp_parts.cli-base-rate = temp_parts.fact-qnty1 / temp_parts.cli-qnty1
       temp_parts.pl-code = ub.place.pl-code
       temp_parts.new-cli-type = new_cli-type
       temp_parts.new-cli-code = new_cli-code
@@ -755,7 +758,6 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
   :
     dsLineCount = dsLineCount + 1 .  
     do : /* 16/IV-2018 перенос создания партий из create-nakl() */
-   
     create tt-parts.
     assign
       /* 14/IX-2018 - поля new_prod-type, new_prod-code и new_artic заменены на свои аналоги без new_
@@ -778,9 +780,9 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
       tt-parts.price-cli      = temp_parts.price-rubl
       tt-parts.cli-base-rate  = 1
 
-      tt-parts.qnty           = temp_parts.fact-qnty
-      tt-parts.fact-qnty      = temp_parts.fact-qnty
-      tt-parts.cli-qnty       = temp_parts.cli-qnty
+      tt-parts.qnty           = temp_parts.fact-qnty1
+      tt-parts.fact-qnty      = temp_parts.fact-qnty1
+      tt-parts.cli-qnty       = temp_parts.cli-qnty1
     
       tt-parts.VAT-pc         = temp_parts.vat-pc
       tt-parts.VAT-type       = temp_parts.vat-type
@@ -821,8 +823,8 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
          end.
     end .
     
-    v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty  .
-    v-qnty-cli  = v-qnty-cli  + temp_parts.cli-qnty  . // - не заполняется
+    v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty1  .
+    v-qnty-cli  = v-qnty-cli  + temp_parts.cli-qnty1  . // - не заполняется
 
     if last-of ( temp_parts.price-rubl ) then do:
       /* 28/IV-2018 - добавить вместе с объединением партий с разной ценой в одну накладную
@@ -1272,9 +1274,9 @@ do on error undo, return error return-value :
       release temp-2exists.
     end.
     assign
-      tt-doc-line.cli-qnty  = tt-doc-line.cli-qnty  + buf2_temp_parts.cli-qnty
-      tt-doc-line.doc-qnty  = tt-doc-line.doc-qnty  + buf2_temp_parts.fact-qnty
-      tt-doc-line.fact-qnty = tt-doc-line.fact-qnty + buf2_temp_parts.fact-qnty
+      tt-doc-line.cli-qnty  = tt-doc-line.cli-qnty  + buf2_temp_parts.cli-qnty1
+      tt-doc-line.doc-qnty  = tt-doc-line.doc-qnty  + buf2_temp_parts.fact-qnty1
+      tt-doc-line.fact-qnty = tt-doc-line.fact-qnty + buf2_temp_parts.fact-qnty1
     .
 
     assign
