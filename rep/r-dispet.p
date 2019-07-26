@@ -225,7 +225,7 @@ on stop   undo , return error return-value
   or v-sort-list = "":U
   then do:
     delete object v-tth.
-    &scop my-message  return-value
+    &scop my-message  "Не заполнен параметр {&attr-prt-glob_rep-sort} в секции Настройки для ОТЧЕТОВ - Сортировка топлива в отчетах по октановому числу" 
     {&display-message}.
     if p-xml
     and v-write-err
@@ -427,6 +427,7 @@ on error undo, return error
     FOR EACH  buf_place
         WHERE buf_place.obj-type = buf_obj-list.obj-type
           and buf_place.obj-code = buf_obj-list.obj-code
+          and buf_place.status_ <> {&deleted-status}
         no-lock :
         assign  
           v-min-qnty = 0
