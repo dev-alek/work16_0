@@ -217,8 +217,9 @@ or return-value = "return" then return.
 if not this-procedure:persistent then do:
   run proc-main in this-procedure  no-error .
   if error-status:error then do:
+      v-err-message = return-value.  /*  на тот случай когда следующая процедура сделает return */
       run delete-procedure in this-procedure .
-      undo, return error.
+      undo, return error v-err-message.
   end.
   run delete-procedure in this-procedure .
 end.
@@ -233,7 +234,7 @@ define variable v-type as character no-undo .
 
 _main:
 do
-on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+on error  undo _main, return error substitute( "&1. &2&3&4&3&5", vss-workfile, return-value, {&new-line}, error-status :get-message (1),v-err-message)
 on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
 on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
 :
@@ -298,7 +299,7 @@ run write-log  in p-log-handle (
       v-err-message = trim(parseSubObj:Msg, ";") .
       v-err-message = trim(v-err-message) .
       v-err-message = trim(v-err-message, ";") .
-      
+      message view-as alert-box.
       run rul/send-ack_1c.p ( input v-sender-id
                             , input v-pack-num
                               ,input 4
