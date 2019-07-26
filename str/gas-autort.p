@@ -49,6 +49,7 @@ define variable vss-description as character no-undo init "Создание приходного д
 { gbl/key-rec.i  }
 {trg/partscr.i}
 { trg/partrqst.i }
+{str/trdcalib.i}
 {cmp/gds-list.i gds-list def "new shared"}
 { trg/partcopy.i }
 { trg/partrsrv.i }
@@ -439,6 +440,12 @@ assign
   buf-new_trn-doc.agnt  = v-agnt
   buf-new_trn-doc.boss  = v-boss
 . 
+
+{ str/tdat-wrt.i                                    
+   buf-new_trn-doc.doc-code
+   {&trdcattr-is-auto-trn}
+   "yes" 
+no-error}
 
 run str/trn-stat.p (
     input parparentproc,

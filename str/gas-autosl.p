@@ -46,6 +46,7 @@ define variable vss-description as character no-undo init "Создание приходного д
 {gbl/getsect.i def }
 {str/doc-code.i}
 {trg/partscr.i}
+{str/trdcalib.i}
 {cmp/gds-list.i gds-list def "new shared"}
 
 
@@ -317,6 +318,18 @@ run partscr in this-procedure
  no-error}
  
 buf-new_trn-doc.tot-calc = buf-new_trn-doc.tot-cli .
+
+{ str/tdat-wrt.i                                    
+   buf-new_trn-doc.doc-code
+   {&trdcattr-is-auto-trn}
+   "yes" 
+no-error}
+
+{ str/tdat-wrt.i                                    
+   buf-new_trn-doc.doc-code
+   {&trdcattr-is-fuel}
+   "yes" 
+no-error}
 
 { gbl/getsect.i run buf-new_trn-doc.obj-type buf-new_trn-doc.obj-code {&attr-autosale} }
 for each thbjattr_thbj-attr :

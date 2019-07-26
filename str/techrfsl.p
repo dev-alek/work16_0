@@ -47,6 +47,7 @@ define variable vss-description as character no-undo init "Создание приходного д
 { cmp/croslist.i }
 { ref/gdsoattr.i }
 { str/placelib.i }
+{ str/trdcalib.i }
 
 define variable v-mes as character no-undo .
 define variable v-out-pay         as integer   no-undo .
@@ -466,6 +467,13 @@ on error undo, return error return-value :
         buf-new_trn-doc.shift-name = ?
       .
     end.
+    
+    { str/tdat-wrt.i                                    
+       buf-new_trn-doc.doc-code
+       {&trdcattr-is-auto-trn}
+       "yes" 
+    no-error}
+    
     run saledoc-create  in this-procedure (
                                             input buf_trn-doc.out-code
                                             ,input buf-new_trn-doc.host-code
