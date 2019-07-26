@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "Безусловное/условное 
 { cmp/vssrevis.i }
 
 { cmp/trg-def.i }
+{ ref/gds-attr.i }
 { str/salersrv.i def }
 { str/trdcalib.i }
 /*определение локальной таблицы для ТПСИ док*/

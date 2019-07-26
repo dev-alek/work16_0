@@ -143,6 +143,9 @@ define variable v-run-tpsi    as logical no-undo .
 define variable v-real-qnty like ub.inkas.qnty no-undo .
 define variable v-base-rate like ub.trn-doc.base-rate no-undo .
 define variable v-base-scale like ub.trn-doc.base-scale no-undo .
+define variable v-cash-pay-attr as character no-undo.
+define variable cli-type-to-reserv as character no-undo.
+define variable cli-code-to-reserv as integer no-undo.
 
 define variable par-alcohol as character no-undo .
 
@@ -157,6 +160,7 @@ define buffer buf_chk-discnt for ub.chk-discnt.
 define buffer buf_chk-pay for ub.chk-pay.
 define buffer buf_chk-doc-attr for ub.chk-doc-attr.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay.
+define buffer buf_cash-pay-attr for ub.cash-pay-attr.
 define buffer buf_c-chk-doc for ub.c-chk-doc.
 define buffer buf_c-chk-gds for ub.c-chk-gds.
 define buffer buf_c-chk-pay for ub.c-chk-pay.
@@ -235,6 +239,56 @@ on error undo, return error return-value
                               , output kind-to-reserv
                               , output add-nf-amount
                               ).
+                              
+  v-cash-pay-attr = "".
+  cli-type-to-reserv = "".
+  cli-code-to-reserv = 0.
+  
+  if X_chk-doc.chk-type = integer({&rcpt-tech-refuell}) then do:
+  
+      for each buf_chk-pay where buf_chk-pay.doc-code = X_chk-doc.doc-code no-lock:
+          
+          find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
+                                       and buf_cash-pay-attr.curr-code = buf_chk-pay.curr-code
+                                       and buf_cash-pay-attr.attr-code = "dop-doc" no-lock no-error.
+          
+          if not available(buf_cash-pay-attr) then next.
+          
+          v-cash-pay-attr = buf_cash-pay-attr.attr-value.
+          
+          case entry(1, v-cash-pay-attr, ','):
+          
+              when {&sale-add-write-off} then do: /* Списание */
+                  v-add = no.
+                  docs-to-reserv = 1.
+                  office-to-reserv = {&gds-goods}.
+                  kind-to-reserv = entry(1, v-cash-pay-attr, ','). /* {&sale-add-write-off} */
+                  cli-type-to-reserv = entry(2, v-cash-pay-attr, ',').
+                  cli-code-to-reserv = int(entry(3, v-cash-pay-attr, ',')).
+              end.
+              
+              when {&sale-add-tech-refuell} then do: /* Техпролив */
+                  cli-type-to-reserv = entry(2, v-cash-pay-attr, ',').
+                  cli-code-to-reserv = int(entry(3, v-cash-pay-attr, ',')).
+              end.
+              
+              when {&sale-add-vir-res} then do: /* Перемещение в вирт.рез. */
+                  kind-to-reserv = {&sale-add-vir-res}. /* {&sale-add-write-off} */
+                  cli-type-to-reserv = entry(2, v-cash-pay-attr, ',').
+                  cli-code-to-reserv = int(entry(3, v-cash-pay-attr, ',')).
+              end.
+              
+              when 'none' then do:
+                  docs-to-reserv = 0.
+                  kind-to-reserv = 'none'.
+              end. /* не создавать */
+              
+          end case.
+          
+      end. /* for each buf_chk-pay */
+  
+  end. /* if X_chk-doc.doc-type */                            
+
   /*проверим на ТПСИ*/
   assign
   v-is-tpsi-obj = can-find(first tpsi_sale-doc no-lock where
@@ -304,6 +358,39 @@ on error undo, return error return-value
                                 , output kind-to-reserv-GDS
                                 , output add-nf-gds-amount
                                 ).
+    
+    if X_chk-doc.chk-type = integer({&rcpt-tech-refuell}) then do:
+    
+        for each buf_chk-pay where buf_chk-pay.doc-code = X_chk-doc.doc-code no-lock:
+            
+            find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
+                                         and buf_cash-pay-attr.curr-code = buf_chk-pay.curr-code
+                                         and buf_cash-pay-attr.attr-code = "dop-doc" no-lock no-error.
+            
+            if not available(buf_cash-pay-attr) then next.
+            
+            v-cash-pay-attr = buf_cash-pay-attr.attr-value.
+            
+            case entry(1, v-cash-pay-attr, ','):
+                when {&sale-add-vir-res} then do: /* Перемещение в вирт.рез. */
+                    assign
+                    kind-to-reserv-gds = {&sale-add-vir-res}
+                    docs-to-reserv-gds = 1
+                    v-add = no
+                    office-TO-RESERV-GDS = 'т'.
+                end.
+                when 'none' then do:
+                    assign
+                    kind-to-reserv-gds = 'none'
+                    docs-to-reserv-gds = 0
+                    v-add = no
+                    office-TO-RESERV-GDS = 'т'.
+                end.
+             end case.       
+        end. /* for each buf_chk-pay */
+    
+    end. /* if X_chk-doc.doc-type */                            
+                                
     gds-amount = gds-amount - 1.
     nf-gds-amount = nf-gds-amount  - add-nf-gds-amount.
     assign

@@ -1209,6 +1209,7 @@ DO ii = 1 TO NUM-ENTRIES(v-sale-add, ';'):
     v-cli-code = integer(ENTRY(3, v-entry))
     v-doc-kind-label = '':U
     .
+    if v-doc-kind = {&sale-add-ret-nat-gas} then next _ii .
     assign
     v-doc-kind-label = {&sale-doc-name}
     no-error
@@ -1246,6 +1247,7 @@ DO ii = 1 TO NUM-ENTRIES(v-sale-add, ';'):
     END.
 END.
 do ii = 1 to num-entries({&sale-add-kinds}):
+  if entry(ii, {&sale-add-kinds}) = {&sale-add-ret-nat-gas} then next .
   find first tt-sale-add where
             tt-sale-add.doc-kind = entry(ii, {&sale-add-kinds}) no-error .
 &scop sale-doc-kind entry(ii, ~{&sale-add-kinds~})

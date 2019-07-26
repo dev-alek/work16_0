@@ -67,6 +67,7 @@ define variable log-file-name as character no-undo .
 
 { cmp/library.i  }
 { str/salttemp.i }
+{ ref/gds-attr.i }
 { str/salersrv.i def }
 { str/libbcrcn.i }
 { gbl/waitfram.i }

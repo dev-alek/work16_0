@@ -146,6 +146,16 @@ CASE p-doc-kind:
    .
    return {&sale-add-nat-gas}.
  end.
+ when {&sale-add-ret-nat-gas} then do:
+   assign
+   p-msign = -1
+   p-main = no
+   p-in-inkas = no
+   p-order = 700
+   p-dir_ = -1
+   .
+   return {&sale-add-ret-nat-gas}.
+ end.
  otherwise do:
     /*другие неопределенные типы документов*/
     assign

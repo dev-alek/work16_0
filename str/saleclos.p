@@ -78,6 +78,7 @@ define variable v-input-error as logical no-undo .
 
 { cmp/library.i  }
 { str/salttemp.i }
+{ ref/gds-attr.i }
 { str/salersrv.i def }
 { str/libbcrcn.i }
 { gbl/waitfram.i }
@@ -99,8 +100,6 @@ define variable v-input-error as logical no-undo .
 { str/lib-trn.i }
 { str/chksplin.i }
 { gbl/thbjattr.i }
-{ ref/gds-attr.i }
-{ str/is-gas.i }
 
 define variable v-obj-type like ub.inkas.obj-type no-undo .
 define variable v-obj-code like ub.inkas.obj-code no-undo .
@@ -138,11 +137,11 @@ define variable num_resv_res as integer no-undo.
 
 
 /*есть неучтенные чеки */
-define variable not-all-saled-chk as logical initial no.
+define variable not-all-saled-chk as logical initial no .
 /*есть неуправильные чеки */
-define variable not-all-normal-chk as logical initial no.
+define variable not-all-normal-chk as logical initial no .
 /*есть незакрытые продажи */
-define variable not-all-inkas-closed as logical no-undo initial no.
+define variable not-all-inkas-closed as logical no-undo initial no .
 define variable note-compense as character no-undo.
 define variable compensed     as logical no-undo . /*компенсация была проведена*/
 define variable v-is-ptrl as logical no-undo .
@@ -152,15 +151,21 @@ define variable v-value-date      as date      no-undo .
 define variable v-value-decimal   as decimal   no-undo .
 define variable v-value-integer   as integer   no-undo .
 define variable v-close-day-period AS LOGICAL no-undo .
-define variable v-log-handle as handle no-undo.
+define variable v-log-handle as handle no-undo .
 define variable v-vid-action      as integer   no-undo .
 define variable v-vid-param       as longchar  no-undo .
-define variable varoldstatus      like ub.trn-doc.status_ no-undo.
-define variable varoldflag        like ub.trn-doc.flag_ no-undo.
-define variable varobj-shift-date as date      no-undo.
-define variable varobj-shift-num  as integer   no-undo.
-define variable varobj-shift-name as character no-undo.
-define variable v-mess            as character no-undo.
+define variable varoldstatus      like ub.trn-doc.status_ no-undo .
+define variable varoldflag        like ub.trn-doc.flag_ no-undo .
+define variable varobj-shift-date as date      no-undo .
+define variable varobj-shift-num  as integer   no-undo .
+define variable varobj-shift-name as character no-undo .
+define variable v-mess            as character no-undo .
+define variable v-gas-income-created as character no-undo .
+define variable v-gas-compensed as logical no-undo .
+define variable v-gas-cli-type as character no-undo .
+define variable v-gas-cli-code as integer no-undo .
+define variable v-new_doc-code as character no-undo .
+define variable v-root-node as integer no-undo .
 { str/initiator.i }
 
 
@@ -169,10 +174,12 @@ define buffer buf_inkas for ub.inkas.
 define buffer buf_sysconf for ub.sysconf.
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_ret-doc for ub.trn-doc.
+define buffer buf_spis-doc for ub.trn-doc.
 define buffer locked_inkas for ub.inkas.
 define buffer locked_trn-doc for ub.trn-doc.
 define buffer buf_prt-obj for ub.prt-obj.
 define buffer bf_clients for ub.clients.
+define buffer buf-new_trn-doc for ub.trn-doc.
 
 &glob display-message  run write-log-and-file in p-log-handle ( ~
           input 1 ~
@@ -435,11 +442,7 @@ define variable v-param-type as character no-undo .
 define variable v-found as decimal no-undo.
 define variable v-tth as handle no-undo .
 define variable v-entry as character no-undo.
-define variable v-gas-cli-type as character no-undo.
-define variable v-gas-cli-code as integer no-undo.
 define variable v-run-tpsi-line as logical no-undo.
-define variable v-new_doc-code as character no-undo.
-define variable v-root-node as integer no-undo.
 
 /* для выгрузке смены с изменёнными продажами в 1с */
 define variable v-old-shift-obj as handle no-undo  .
@@ -447,10 +450,11 @@ define variable v-new-shift-obj as handle no-undo  .
 
 define buffer buf_shift-obj for ub.shift-obj.
 define buffer tpsi_sale-doc for ub.sale-doc.
-define buffer buf-new_trn-doc for ub.trn-doc.
 define buffer buf_goods for ub.goods.
 define buffer buf_doc-line for ub.doc-line.
+define buffer spis_doc-line for ub.doc-line.
 define buffer buf_sale-doc for ub.sale-doc.
+define buffer spis_sale-doc for ub.sale-doc.
 
 do
 on error undo, return error return-value
@@ -728,6 +732,8 @@ on error undo, return error return-value
     else compensed = yes.
     run set-compensed in p-parent-handle(input compensed) no-error .
     
+    v-gas-income-created = "" .
+    
     if buf_trn-doc.ext-doc-type = {&TDEDT_ras_vnesh_kass} then do:
 
         run thbjattr_value in this-procedure (input v-obj-type
@@ -788,6 +794,7 @@ on error undo, return error return-value
                     r-b-code = ?
                     r-pl-code = ?
                     rgds-dtl = ?.
+                    find current buf_trn-doc exclusive-lock .
                     run RSRV-line in this-procedure (input 1,
                                                      input no,
                                                      input no,
@@ -803,9 +810,173 @@ on error undo, return error return-value
                                                      buffer buf_doc-line,
                                                      buffer buf_trn-doc,
                                                      buffer buf_sale-doc).
+                    find current buf_trn-doc no-lock .
+                    find first buf_spis-doc exclusive-lock where buf_spis-doc.doc-code = replace(buf_trn-doc.doc-code, "-", "^") no-error.
+                    find first spis_sale-doc exclusive-lock where spis_sale-doc.inkas-code = p-inkas-code
+                                                              and spis_sale-doc.doc-kind =  {&sale-add-tech-refuell}  
+                                                              no-error .                               
+                    find first spis_doc-line exclusive-lock where spis_doc-line.doc-code  = replace(buf_doc-line.doc-code, "-", "^")     
+                                                              and spis_doc-line.artic     = buf_doc-line.artic
+                                                              and spis_doc-line.prod-type = buf_doc-line.prod-type
+                                                              and spis_doc-line.prod-code = buf_doc-line.prod-code
+                                                              no-error .
+                    if available buf_spis-doc
+                    and available spis_sale-doc
+                    and available spis_doc-line
+                    then do :
+                      run RSRV-line in this-procedure (input 1,
+                                                       input no,
+                                                       input no,
+                                                       input yes,
+                                                       input no,
+                                                       input v-new_doc-code,
+                                                       input no,
+                                                       input no,
+                                                       input yes,
+                                                       input buf_goods.gds-code,
+                                                       input v-root-node,
+                                                       output v-run-tpsi-line,
+                                                       buffer spis_doc-line,
+                                                       buffer buf_spis-doc,
+                                                       buffer spis_sale-doc).
+                                                       
+                    end.   
+                    find first buf_spis-doc exclusive-lock where buf_spis-doc.doc-code = replace(buf_trn-doc.doc-code, "-", "`") no-error.
+                    find first spis_sale-doc exclusive-lock where spis_sale-doc.inkas-code = p-inkas-code
+                                                              and spis_sale-doc.doc-kind =  {&sale-add-write-off}  
+                                                              no-error .                               
+                    find first spis_doc-line exclusive-lock where spis_doc-line.doc-code  = replace(buf_doc-line.doc-code, "-", "`")     
+                                                              and spis_doc-line.artic     = buf_doc-line.artic
+                                                              and spis_doc-line.prod-type = buf_doc-line.prod-type
+                                                              and spis_doc-line.prod-code = buf_doc-line.prod-code
+                                                              no-error .
+                    if available buf_spis-doc
+                    and available spis_sale-doc
+                    and available spis_doc-line
+                    then do :
+                      run RSRV-line in this-procedure (input 1,
+                                                       input no,
+                                                       input no,
+                                                       input yes,
+                                                       input no,
+                                                       input v-new_doc-code,
+                                                       input no,
+                                                       input no,
+                                                       input yes,
+                                                       input buf_goods.gds-code,
+                                                       input v-root-node,
+                                                       output v-run-tpsi-line,
+                                                       buffer spis_doc-line,
+                                                       buffer buf_spis-doc,
+                                                       buffer spis_sale-doc).
+                                                       
+                    end.    
+                    v-gas-income-created = v-gas-income-created + "," + string(buf_goods.gds-code) .                              
                 end. /*if is-gas(buf_goods.gds-code) */
             
             end. /*  for each buf_doc-line */
+            
+            for each spis_doc-line exclusive-lock where spis_doc-line.doc-code  = replace(buf_trn-doc.doc-code, "-", "^") :
+              find first buf_goods where buf_goods.prod-code = spis_doc-line.prod-code
+                                     and buf_goods.prod-type = spis_doc-line.prod-type
+                                     and buf_goods.artic = spis_doc-line.artic no-lock.
+                                      
+              /* Проверим, если газ */
+              if is-gas(buf_goods.gds-code)
+              and not can-do(v-gas-income-created, string(buf_goods.gds-code))
+              then do:
+                find first buf_spis-doc exclusive-lock where buf_spis-doc.doc-code = replace(buf_trn-doc.doc-code, "-", "^") no-error.
+                find first spis_sale-doc exclusive-lock where spis_sale-doc.inkas-code = p-inkas-code
+                                                          and spis_sale-doc.doc-kind =  {&sale-add-tech-refuell}  
+                                                          no-error .
+                if available buf_spis-doc
+                and available spis_sale-doc 
+                then do :                                          
+                  run str/gas-autosl.p (input parparentproc,
+                                        input p-log-handle,
+                                        input log-file-name,
+                                        input p-auto,
+                                        input p-inkas-code,
+                                        input v-curr-r-b,
+                                        input v-gas-cli-type,
+                                        input v-gas-cli-code,
+                                        output v-new_doc-code,
+                                        output v-root-node,
+                                        buffer buf_trn-doc,
+                                        buffer spis_doc-line,
+                                        buffer buf-new_trn-doc).
+                  
+                  run RSRV-line in this-procedure (input 1,
+                                                   input no,
+                                                   input no,
+                                                   input yes,
+                                                   input no,
+                                                   input v-new_doc-code,
+                                                   input no,
+                                                   input no,
+                                                   input yes,
+                                                   input buf_goods.gds-code,
+                                                   input v-root-node,
+                                                   output v-run-tpsi-line,
+                                                   buffer spis_doc-line,
+                                                   buffer buf_spis-doc,
+                                                   buffer spis_sale-doc).
+                                                   
+                  v-gas-income-created = v-gas-income-created + "," + string(buf_goods.gds-code) .
+                end.                                   
+              end.
+            end.
+            
+            for each spis_doc-line exclusive-lock where spis_doc-line.doc-code  = replace(buf_trn-doc.doc-code, "-", "`") :
+              find first buf_goods where buf_goods.prod-code = spis_doc-line.prod-code
+                                     and buf_goods.prod-type = spis_doc-line.prod-type
+                                     and buf_goods.artic = spis_doc-line.artic no-lock.
+                                      
+              /* Проверим, если газ */
+              if is-gas(buf_goods.gds-code)
+              and not can-do(v-gas-income-created, string(buf_goods.gds-code))
+              then do:
+                find first buf_spis-doc exclusive-lock where buf_spis-doc.doc-code = replace(buf_trn-doc.doc-code, "-", "`") no-error.
+                find first spis_sale-doc exclusive-lock where spis_sale-doc.inkas-code = p-inkas-code
+                                                          and spis_sale-doc.doc-kind =  {&sale-add-write-off}  
+                                                          no-error .
+                if available buf_spis-doc
+                and available spis_sale-doc 
+                then do :                                          
+                  run str/gas-autosl.p (input parparentproc,
+                                        input p-log-handle,
+                                        input log-file-name,
+                                        input p-auto,
+                                        input p-inkas-code,
+                                        input v-curr-r-b,
+                                        input v-gas-cli-type,
+                                        input v-gas-cli-code,
+                                        output v-new_doc-code,
+                                        output v-root-node,
+                                        buffer buf_trn-doc,
+                                        buffer spis_doc-line,
+                                        buffer buf-new_trn-doc).
+                  
+                  run RSRV-line in this-procedure (input 1,
+                                                   input no,
+                                                   input no,
+                                                   input yes,
+                                                   input no,
+                                                   input v-new_doc-code,
+                                                   input no,
+                                                   input no,
+                                                   input yes,
+                                                   input buf_goods.gds-code,
+                                                   input v-root-node,
+                                                   output v-run-tpsi-line,
+                                                   buffer spis_doc-line,
+                                                   buffer buf_spis-doc,
+                                                   buffer spis_sale-doc).
+                                                   
+                  v-gas-income-created = v-gas-income-created + "," + string(buf_goods.gds-code) .
+                end.                                   
+              end.
+            end.
             
         end. /* if v-gas-cli-code > 0 */
             
@@ -1428,6 +1599,7 @@ on endkey undo _docline, return error substitute( "&1. endkey", vss-workfile )
                b-goods.prod-type = b-doc-line.prod-type AND
                b-goods.prod-code = b-doc-line.prod-code NO-ERROR.
     IF NOT AVAILABLE b-goods then NEXT _docline.
+    if is-gas(b-goods.gds-code) then v-gas-compensed = false .
     FIND FIRST buf_units NO-LOCK WHERE
                buf_units.unit-name = b-goods.unit-base No-ERROR.
     IF NOT AVAILABLE buf_units then NEXT _docline.
@@ -1952,160 +2124,161 @@ on endkey undo _docline, return error substitute( "&1. endkey", vss-workfile )
     /*компенсировать не по партия и складским местам модно только то количество
     которое продано не по партиям и складским местам  и не по двум ед измерения*/
     IF lookup({&twounit}, buf_units.type) = 0 then do:
-    for each b-gds-dtl where
-             b-gds-dtl.doc-code = buf_ret-doc.doc-code AND
-             b-gds-dtl.artic = b-doc-line.artic AND
-             b-gds-dtl.prod-type = b-doc-line.prod-type AND
-             b-gds-dtl.prod-code = b-doc-line.prod-code:
-        find first br-gds-dtl where
-                   br-gds-dtl.doc-code = buf_trn-doc.doc-code AND
-                   br-gds-dtl.artic = b-gds-dtl.artic AND
-                   br-gds-dtl.prod-type = b-gds-dtl.prod-type AND
-                   br-gds-dtl.prod-code = b-gds-dtl.prod-code AND
-                   br-gds-dtl.prt-code = b-gds-dtl.prt-code NO-ERROR.
-        find first brw-gds-dtl where
-                   brw-gds-dtl.doc-code = v-return-write-off-code AND
-                   brw-gds-dtl.artic = b-gds-dtl.artic AND
-                   brw-gds-dtl.prod-type = b-gds-dtl.prod-type AND
-                   brw-gds-dtl.prod-code = b-gds-dtl.prod-code AND
-                   brw-gds-dtl.prt-code = b-gds-dtl.prt-code NO-ERROR.
-
-        IF AVAILABLE br-gds-dtl then do:
-            /*если все зарезервировалось то компенсировать не будем*/
-            if b-gds-dtl.doc-qnty = b-gds-dtl.fact-qnty AND br-gds-dtl.doc-qnty = br-gds-dtl.fact-qnty then NEXT _docline.
-            /*компенсируем*/
-            /*сначала надо сравнить цены и скидки*/
-            if (v-curr-r-b = {&r-b-base} and br-gds-dtl.price-base <> b-gds-dtl.price-base)
-            OR (v-curr-r-b = {&r-b-rubl} and br-gds-dtl.price-rubl <> b-gds-dtl.price-rubl)
-            then NEXT _docline.
-            /*сколько на возврате можно скомпенсировать ?*/
-            assign
-            cv = MAXIMUM(b-gds-dtl.fact-qnty - b-gds-dtl.doc-qnty - (if available brw-gds-dtl then brw-gds-dtl.fact-qnty else 0)
-                       , br-gds-dtl.fact-qnty - br-gds-dtl.doc-qnty)
-            cv = if b-gds-dtl.fact-qnty < cv then b-gds-dtl.fact-qnty else cv
-            cv = if (br-gds-dtl.fact-qnty  - (if available brw-gds-dtl then brw-gds-dtl.fact-qnty else 0)) < cv
-                 then br-gds-dtl.fact-qnty
-                 else cv
-            /*компенсация по gds-dtl не должна затронуть часть проданную по партиям и сладским местам*/
-            cv = MINIMUM(cv, old-doc-line-fact-qnty-r - (saled-by-place-r + saled-by-parts-r))
-            cv = MINIMUM(cv, old-doc-line-fact-qnty-v - (saled-by-place-v + saled-by-parts-v) -
-                             (old-doc-line-fact-qnty-rw - (saled-by-place-rw + saled-by-parts-rw))
-                         )
-            /*сколько резервов надо снять с возврата*/
-            unresv = cv - (b-gds-dtl.fact-qnty - b-gds-dtl.doc-qnty)
-            /*сколько резервов надо снять с расхода*/
-            unresr = cv - (br-gds-dtl.fact-qnty - br-gds-dtl.doc-qnty)
-            .
-            if
-            b-gds-dtl.fact-qnty - cv = 0 AND
-            br-gds-dtl.fact-qnty - cv = 0 AND
-            ((v-curr-r-b = {&r-b-base} and b-gds-dtl.discnt-base <> br-gds-dtl.discnt-base)
-            OR
-             (v-curr-r-b = {&r-b-rubl} and b-gds-dtl.discnt-rubl <> br-gds-dtl.discnt-rubl)
-            )
-             then do:
-            /*если предполагается компенсировать ВСЕ кол-ва по расх и возврату а скидки не равны,
-            то возникнет висяк! - попытаемся уменьшить компенсируемое количество!
-            тогда можно будет поменять скидку на расходе*/
-                if cv > 1 then
+      for each b-gds-dtl where
+               b-gds-dtl.doc-code = buf_ret-doc.doc-code AND
+               b-gds-dtl.artic = b-doc-line.artic AND
+               b-gds-dtl.prod-type = b-doc-line.prod-type AND
+               b-gds-dtl.prod-code = b-doc-line.prod-code:
+          find first br-gds-dtl where
+                     br-gds-dtl.doc-code = buf_trn-doc.doc-code AND
+                     br-gds-dtl.artic = b-gds-dtl.artic AND
+                     br-gds-dtl.prod-type = b-gds-dtl.prod-type AND
+                     br-gds-dtl.prod-code = b-gds-dtl.prod-code AND
+                     br-gds-dtl.prt-code = b-gds-dtl.prt-code NO-ERROR.
+          find first brw-gds-dtl where
+                     brw-gds-dtl.doc-code = v-return-write-off-code AND
+                     brw-gds-dtl.artic = b-gds-dtl.artic AND
+                     brw-gds-dtl.prod-type = b-gds-dtl.prod-type AND
+                     brw-gds-dtl.prod-code = b-gds-dtl.prod-code AND
+                     brw-gds-dtl.prt-code = b-gds-dtl.prt-code NO-ERROR.
+  
+          IF AVAILABLE br-gds-dtl then do:
+              /*если все зарезервировалось то компенсировать не будем*/
+              if b-gds-dtl.doc-qnty = b-gds-dtl.fact-qnty AND br-gds-dtl.doc-qnty = br-gds-dtl.fact-qnty then NEXT _docline.
+              /*компенсируем*/
+              /*сначала надо сравнить цены и скидки*/
+              if (v-curr-r-b = {&r-b-base} and br-gds-dtl.price-base <> b-gds-dtl.price-base)
+              OR (v-curr-r-b = {&r-b-rubl} and br-gds-dtl.price-rubl <> b-gds-dtl.price-rubl)
+              then NEXT _docline.
+              /*сколько на возврате можно скомпенсировать ?*/
+              assign
+              cv = MAXIMUM(b-gds-dtl.fact-qnty - b-gds-dtl.doc-qnty - (if available brw-gds-dtl then brw-gds-dtl.fact-qnty else 0)
+                         , br-gds-dtl.fact-qnty - br-gds-dtl.doc-qnty)
+              cv = if b-gds-dtl.fact-qnty < cv then b-gds-dtl.fact-qnty else cv
+              cv = if (br-gds-dtl.fact-qnty  - (if available brw-gds-dtl then brw-gds-dtl.fact-qnty else 0)) < cv
+                   then br-gds-dtl.fact-qnty
+                   else cv
+              /*компенсация по gds-dtl не должна затронуть часть проданную по партиям и сладским местам*/
+              cv = MINIMUM(cv, old-doc-line-fact-qnty-r - (saled-by-place-r + saled-by-parts-r))
+              cv = MINIMUM(cv, old-doc-line-fact-qnty-v - (saled-by-place-v + saled-by-parts-v) -
+                               (old-doc-line-fact-qnty-rw - (saled-by-place-rw + saled-by-parts-rw))
+                           )
+              /*сколько резервов надо снять с возврата*/
+              unresv = cv - (b-gds-dtl.fact-qnty - b-gds-dtl.doc-qnty)
+              /*сколько резервов надо снять с расхода*/
+              unresr = cv - (br-gds-dtl.fact-qnty - br-gds-dtl.doc-qnty)
+              .
+              if
+              b-gds-dtl.fact-qnty - cv = 0 AND
+              br-gds-dtl.fact-qnty - cv = 0 AND
+              ((v-curr-r-b = {&r-b-base} and b-gds-dtl.discnt-base <> br-gds-dtl.discnt-base)
+              OR
+               (v-curr-r-b = {&r-b-rubl} and b-gds-dtl.discnt-rubl <> br-gds-dtl.discnt-rubl)
+              )
+               then do:
+              /*если предполагается компенсировать ВСЕ кол-ва по расх и возврату а скидки не равны,
+              то возникнет висяк! - попытаемся уменьшить компенсируемое количество!
+              тогда можно будет поменять скидку на расходе*/
+                  if cv > 1 then
+                  assign
+                  cv = cv - 1
+                  unresv = unresv - 1
+                  unresr = unresr - 1
+                  .
+                  else NEXT _docline.
+              end.
+              if unresv > 0 then do:
+                  assign
+                  rdoc-line = recid (b-doc-line)
+                  rgds-dtl = recid(b-gds-dtl)
+                  r-qnty =  - unresv
+                  r-b-code = ?
+                  r-doc-prts-qnty = ?
+                  r-or-v = {&TDEDT_vozvrat_vnesh_kass}
+                  r-office = {&gds-goods}
+                  from-menu = yes.
+                  run b-unres-proc in this-procedure (
+                                        buffer buf_inkas
+                                      , buffer buf_trn-doc
+                                      , buffer buf_ret-doc
+                                      , input p-is-tpsi-obj
+                                      , input yes) no-error.
+                  if error-status:error then do:
+                    undo _docline, return error.
+                  end.
+              end. /*if unresv > 0 */
+              if unresr > 0 then do:
+                  assign
+                  rdoc-line = recid (br-doc-line)
+                  rgds-dtl = recid(br-gds-dtl)
+                  r-qnty =  - unresr
+                  r-b-code = ?
+                  r-doc-prts-qnty = ?
+                  r-or-v = {&TDEDT_ras_vnesh_kass}
+                  r-office = {&gds-goods}
+                  from-menu = yes.
+                  run b-unres-proc in this-procedure (
+                                        buffer buf_inkas
+                                      , buffer buf_trn-doc
+                                      , buffer buf_ret-doc
+                                      , input p-is-tpsi-obj
+                                      , input yes) no-error.
+                  if error-status:error then do:
+                    undo _docline, return error.
+                  end.
+              end. /*if unresv > 0 */
+              /*непосредственная компенсация*/
+              assign
+              /*тов суммы до коменсанции*/
+              tsall = (if v-curr-r-b = {&r-b-base}
+                       then (br-gds-dtl.fact-qnty * (br-gds-dtl.price-base - br-gds-dtl.discnt-base) -
+                             b-gds-dtl.fact-qnty * (b-gds-dtl.price-base - b-gds-dtl.discnt-base))
+                       else (br-gds-dtl.fact-qnty * (br-gds-dtl.price-rubl - br-gds-dtl.discnt-rubl) -
+                             b-gds-dtl.fact-qnty * (b-gds-dtl.price-rubl - b-gds-dtl.discnt-rubl))
+                       )
+              b-gds-dtl.fact-qnty = b-gds-dtl.fact-qnty - cv
+              br-gds-dtl.fact-qnty = br-gds-dtl.fact-qnty - cv
+              br-doc-line.fact-qnty = br-doc-line.fact-qnty - cv
+              b-doc-line.fact-qnty = b-doc-line.fact-qnty - cv
+              qnty-compense = qnty-compense + cv
+              qnty-compense-abs = qnty-compense-abs + abs(cv)
+              .
+  
+              if (v-curr-r-b = {&r-b-base} and b-gds-dtl.discnt-base <> br-gds-dtl.discnt-base)
+              OR (v-curr-r-b = {&r-b-rubl} and b-gds-dtl.discnt-rubl <> br-gds-dtl.discnt-rubl)
+                then do:
+              /*если скидки у расхода/возврата не равны то пересчитаем их*/
+  
+  
+              if v-curr-r-b = {&r-b-base} then do:
                 assign
-                cv = cv - 1
-                unresv = unresv - 1
-                unresr = unresr - 1
+                br-gds-dtl.discnt-base = (if br-gds-dtl.fact-qnty <> 0
+                                          then (br-gds-dtl.price-base - ( b-gds-dtl.fact-qnty * (b-gds-dtl.price-base - b-gds-dtl.discnt-base) +
+                                                                         tsall )  / br-gds-dtl.fact-qnty )
+                                          else br-gds-dtl.discnt-base )
+                br-gds-dtl.discnt-rubl = br-gds-dtl.discnt-base * (buf_trn-doc.base-rate / buf_trn-doc.base-scale )
+                b-gds-dtl.discnt-rubl =  b-gds-dtl.discnt-base * (buf_trn-doc.base-rate / buf_trn-doc.base-scale)
                 .
-                else NEXT _docline.
-            end.
-            if unresv > 0 then do:
+              end.
+              else do:
                 assign
-                rdoc-line = recid (b-doc-line)
-                rgds-dtl = recid(b-gds-dtl)
-                r-qnty =  - unresv
-                r-b-code = ?
-                r-doc-prts-qnty = ?
-                r-or-v = {&TDEDT_vozvrat_vnesh_kass}
-                r-office = {&gds-goods}
-                from-menu = yes.
-                run b-unres-proc in this-procedure (
-                                      buffer buf_inkas
-                                    , buffer buf_trn-doc
-                                    , buffer buf_ret-doc
-                                    , input p-is-tpsi-obj
-                                    , input yes) no-error.
-                if error-status:error then do:
-                  undo _docline, return error.
-                end.
-            end. /*if unresv > 0 */
-            if unresr > 0 then do:
-                assign
-                rdoc-line = recid (br-doc-line)
-                rgds-dtl = recid(br-gds-dtl)
-                r-qnty =  - unresr
-                r-b-code = ?
-                r-doc-prts-qnty = ?
-                r-or-v = {&TDEDT_ras_vnesh_kass}
-                r-office = {&gds-goods}
-                from-menu = yes.
-                run b-unres-proc in this-procedure (
-                                      buffer buf_inkas
-                                    , buffer buf_trn-doc
-                                    , buffer buf_ret-doc
-                                    , input p-is-tpsi-obj
-                                    , input yes) no-error.
-                if error-status:error then do:
-                  undo _docline, return error.
-                end.
-            end. /*if unresv > 0 */
-            /*непосредственная компенсация*/
-            assign
-            /*тов суммы до коменсанции*/
-            tsall = (if v-curr-r-b = {&r-b-base}
-                     then (br-gds-dtl.fact-qnty * (br-gds-dtl.price-base - br-gds-dtl.discnt-base) -
-                           b-gds-dtl.fact-qnty * (b-gds-dtl.price-base - b-gds-dtl.discnt-base))
-                     else (br-gds-dtl.fact-qnty * (br-gds-dtl.price-rubl - br-gds-dtl.discnt-rubl) -
-                           b-gds-dtl.fact-qnty * (b-gds-dtl.price-rubl - b-gds-dtl.discnt-rubl))
-                     )
-            b-gds-dtl.fact-qnty = b-gds-dtl.fact-qnty - cv
-            br-gds-dtl.fact-qnty = br-gds-dtl.fact-qnty - cv
-            br-doc-line.fact-qnty = br-doc-line.fact-qnty - cv
-            b-doc-line.fact-qnty = b-doc-line.fact-qnty - cv
-            qnty-compense = qnty-compense + cv
-            qnty-compense-abs = qnty-compense-abs + abs(cv)
-            .
-
-            if (v-curr-r-b = {&r-b-base} and b-gds-dtl.discnt-base <> br-gds-dtl.discnt-base)
-            OR (v-curr-r-b = {&r-b-rubl} and b-gds-dtl.discnt-rubl <> br-gds-dtl.discnt-rubl)
-              then do:
-            /*если скидки у расхода/возврата не равны то пересчитаем их*/
-
-
-            if v-curr-r-b = {&r-b-base} then do:
-              assign
-              br-gds-dtl.discnt-base = (if br-gds-dtl.fact-qnty <> 0
-                                        then (br-gds-dtl.price-base - ( b-gds-dtl.fact-qnty * (b-gds-dtl.price-base - b-gds-dtl.discnt-base) +
-                                                                       tsall )  / br-gds-dtl.fact-qnty )
-                                        else br-gds-dtl.discnt-base )
-              br-gds-dtl.discnt-rubl = br-gds-dtl.discnt-base * (buf_trn-doc.base-rate / buf_trn-doc.base-scale )
-              b-gds-dtl.discnt-rubl =  b-gds-dtl.discnt-base * (buf_trn-doc.base-rate / buf_trn-doc.base-scale)
-              .
+                br-gds-dtl.discnt-rubl = (if br-gds-dtl.fact-qnty <> 0
+                                          then (br-gds-dtl.price-rubl - ( b-gds-dtl.fact-qnty * (b-gds-dtl.price-rubl - b-gds-dtl.discnt-rubl) +
+                                                                        tsall )  / br-gds-dtl.fact-qnty )
+                                          else br-gds-dtl.discnt-rubl )
+                b-gds-dtl.discnt-rubl = (if br-gds-dtl.fact-qnty = 0 and b-gds-dtl.fact-qnty <> 0
+                                         then (b-gds-dtl.price-rubl -  ( br-gds-dtl.fact-qnty * (br-gds-dtl.price-rubl - br-gds-dtl.discnt-rubl) -
+                                                                        tsall ) / b-gds-dtl.fact-qnty )
+                                        else b-gds-dtl.discnt-rubl)
+                br-gds-dtl.discnt-base = br-gds-dtl.discnt-rubl / buf_trn-doc.base-rate * buf_trn-doc.base-scale
+                b-gds-dtl.discnt-base =  b-gds-dtl.discnt-rubl / buf_trn-doc.base-rate * buf_trn-doc.base-scale
+                .
+              end.
             end.
-            else do:
-              assign
-              br-gds-dtl.discnt-rubl = (if br-gds-dtl.fact-qnty <> 0
-                                        then (br-gds-dtl.price-rubl - ( b-gds-dtl.fact-qnty * (b-gds-dtl.price-rubl - b-gds-dtl.discnt-rubl) +
-                                                                      tsall )  / br-gds-dtl.fact-qnty )
-                                        else br-gds-dtl.discnt-rubl )
-              b-gds-dtl.discnt-rubl = (if br-gds-dtl.fact-qnty = 0 and b-gds-dtl.fact-qnty <> 0
-                                       then (b-gds-dtl.price-rubl -  ( br-gds-dtl.fact-qnty * (br-gds-dtl.price-rubl - br-gds-dtl.discnt-rubl) -
-                                                                      tsall ) / b-gds-dtl.fact-qnty )
-                                      else b-gds-dtl.discnt-rubl)
-              br-gds-dtl.discnt-base = br-gds-dtl.discnt-rubl / buf_trn-doc.base-rate * buf_trn-doc.base-scale
-              b-gds-dtl.discnt-base =  b-gds-dtl.discnt-rubl / buf_trn-doc.base-rate * buf_trn-doc.base-scale
-              .
-            end.
-          end.
-        end.  /*if available br-gds-dtl*/
-    end. /*for each b-gds-dtl*/
-  end. /*    IF lookup('{&twounit}, buf_units.type) = 0 then*/
+          end.  /*if available br-gds-dtl*/
+      end. /*for each b-gds-dtl*/
+    end. /*    IF lookup('{&twounit}, buf_units.type) = 0 then*/
+    if is-gas(b-goods.gds-code) then v-gas-compensed = true .
 end. /*for each b-doc-line*/
 FIND FIRST b-doc where b-doc.doc-code = buf_trn-doc.doc-code No-ERROR.
 assign
@@ -2176,6 +2349,7 @@ define variable v-tth as handle no-undo .
 
 
 define buffer buf_clients for ub.clients.
+define buffer buf_goods for ub.goods.
 define buffer buf_sale-doc for ub.sale-doc.
 define buffer locked_trn-doc for ub.trn-doc.
 define buffer buf_doc-line for ub.doc-line.
@@ -2948,6 +3122,35 @@ DO ON ERROR undo _main, return error:
               undo _main, return error return-value .
             end.
           end. /*if varminus-parts = "yes":u then do:*/
+          
+          if v-gas-cli-code > 0 then do:
+            for each buf_doc-line exclusive-lock where buf_doc-line.doc-code  = replace(locked_trn-doc.doc-code, "-", "=") :
+              find first buf_goods where buf_goods.prod-code = buf_doc-line.prod-code
+                                     and buf_goods.prod-type = buf_doc-line.prod-type
+                                     and buf_goods.artic = buf_doc-line.artic no-lock.
+                                      
+              /* Проверим, если газ */
+              if is-gas(buf_goods.gds-code)
+              and not v-gas-compensed
+              then do:
+                  run str/gas-autort.p (input parparentproc,
+                                        input p-log-handle,
+                                        input log-file-name,
+                                        input p-auto,
+                                        input p-inkas-code,
+                                        input v-curr-r-b,
+                                        input v-gas-cli-type,
+                                        input v-gas-cli-code,
+                                        output v-new_doc-code,
+                                        output v-root-node,
+                                        buffer locked_trn-doc,
+                                        buffer buf_doc-line,
+                                        buffer buf-new_trn-doc)
+                                        no-error .
+                                                   
+              end.
+            end.
+          end.
         end.
         if available buf_sale-doc
         and (buf_sale-doc.doc-kind = {&sale-add-tech-refuell} or buf_sale-doc.doc-kind = {&sale-add-vir-res}) then do:

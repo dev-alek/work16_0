@@ -137,6 +137,10 @@ define stream alc-rsrv .
 { str/plgdsfnd.i }
 { trg/trndocrs.i }
 { cmp/strcodec.i }
+{ cmp/trg-def.i  }
+{ gbl/lineattr.i }
+{ ref/gds-attr.i }
+{ str/is-gas.i   }
 { trg/rsrv-doc.i }
 { trg/rsrvincr.i }
 { trg/partrsrv.i }
@@ -146,10 +150,8 @@ define stream alc-rsrv .
 { str/trdcalib.i }
 { trg/holdprts.i }
 { trg/partlist.i }
-{ cmp/trg-def.i  }
-{ gbl/lineattr.i }
-{ ref/gds-attr.i }
-{ str/is-gas.i }
+
+
 /* что резервируем: документ, товар, признак, объект */
 define variable v-obj-type   like ub.gds-dtl.obj-type  no-undo .
 define variable v-obj-code   like ub.gds-dtl.obj-code  no-undo .
@@ -1727,8 +1729,9 @@ procedure rsrv-pri-doc :
     end.
 
     /* производим перерезервирование */
-    if chg-qnty > 0
-    or v-goods-twounit = true
+    if (chg-qnty > 0
+    or v-goods-twounit = true)
+    and not is-gas(ub.goods.gds-code)
     then do:
       if v-goods-twounit = true
       then do:
@@ -2002,8 +2005,10 @@ procedure rsrv-pri-fact :
           leave.
         end.
       end.
+      
 
       if chg-qnty > 0
+      and not is-gas(ub.goods.gds-code)
       then do:
         run partscr_get-default-values in this-procedure
           (buffer ub.doc-line /* buf_doc-line */

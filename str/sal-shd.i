@@ -699,4 +699,22 @@ define buffer buf_chk-doc for ub.chk-doc.
   end. /*doe*/
 end procedure. /* proc-step-400 */
 
+procedure get-db-num:
+  
+  define output parameter pDbNum as integer no-undo.
+  
+  pDbNum = g#db-num.
+
+end.
+
+procedure get-userid:
+
+  define output parameter pUserId as character no-undo.
+
+  assign
+    pUserId  = g#userid
+    .
+  
+end.
+
 /* $Workfile$ e n d */
