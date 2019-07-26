@@ -140,6 +140,8 @@ then do:
       cash-gds.b-str           = "*"
       cr                       = 1
       cash-gds.ean-lz          = "*"
+      cash-gds.obj-type        = {&shop}
+      cash-gds.obj-code        = i-obj-code
    
    .
      
