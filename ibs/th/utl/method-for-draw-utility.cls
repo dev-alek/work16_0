@@ -2006,20 +2006,9 @@ define buffer buf_goods     for ub.goods .
 
   /* ----- вывод расхождений ----- */
   v-count-mismatch = 0 .
+  define variable vFirst as logical no-undo.
   output STREAM lsOut to value(v-logfile-rj).
-  put stream lsOut unformatted
-  "наименование товара в 15.0;"
-  "код товара в 15.0;"
-  "количество в 15.0;"
-  "сумма в учетных ценах в 15.0;"
-  "сумма НДС в учетных ценах в 15.0;"
-  "сумма в продажных ценах в 15.0;"
-  "код товара в 16.0;"
-  "количество в 16.0;"
-  "сумма в учетных ценах в 16.0;"
-  "сумма НДС в учетных ценах в 16.0;"
-  "сумма в продажных ценах в 16.0" skip
-  .
+  
   output STREAM lsIN  to value(v-logfile-gd).
   put stream lsIn unformatted
   "наименование товара в 15.0;"
@@ -2034,6 +2023,8 @@ define buffer buf_goods     for ub.goods .
   "сумма НДС в учетных ценах в 16.0;"
   "сумма в продажных ценах в 16.0" skip
   .
+  Vfirst = yes.
+  put stream lsOut unformatted skip "Расхождения по товарам:" skip.
   for each tt-stk-gd2:
     export stream lsIN delimiter ';':U tt-stk-gd2 .
     /*
@@ -2049,23 +2040,37 @@ define buffer buf_goods     for ub.goods .
     or (v-vat-rubl-delta <> 0)
     or (tt-stk-gd2.sum-rubl-crsa16 <> tt-stk-gd2.sum-rubl-crsa)
     then do :
-    export stream lsOut delimiter ';':U tt-stk-gd2 .
-    v-count-mismatch = v-count-mismatch + 1 .
+       if vFirst
+       then do:
+          vfirst = no.
+          put stream lsOut unformatted
+           "наименование товара в 15.0;"
+           "код товара в 15.0;"
+           "количество в 15.0;"
+           "сумма в учетных ценах в 15.0;"
+           "сумма НДС в учетных ценах в 15.0;"
+           "сумма в продажных ценах в 15.0;"
+           "код товара в 16.0;"
+           "количество в 16.0;"
+           "сумма в учетных ценах в 16.0;"
+           "сумма НДС в учетных ценах в 16.0;"
+           "сумма в продажных ценах в 16.0" skip
+           .
+       end.
+       export stream lsOut delimiter ';':U tt-stk-gd2 .
+       v-count-mismatch = v-count-mismatch + 1 .
     end .
   end.
+  if Vfirst 
+  then
+     put stream lsOut unformatted "Расхождений не обнаружено." skip.
+  else
+     Vfirst = yes.
   output STREAM lsIN close.
 
+  put stream lsOut unformatted skip "Расхождения по топливу:" skip.
   /* @NOTE: т.к. в файл с отверженными товарами у нас ложится и топливо, и товары,
             то в этот файл добавляется вторая строка заголовков для топлива */
-  put stream lsOut unformatted
-  "наименование товара в 15.0;"
-  "код товара в 15.0;"
-  "остатки в лт в 15.0;"
-  "остатки в кг в 15.0;"
-  "код товара в 16.0;"
-  "остатки в лт в 16.0;"
-  "остатки в кг в 16.0" skip
-  .
   output STREAM lsIN to value(v-logfile-fu).
   put stream lsIn unformatted
   "наименование товара в 15.0;"
@@ -2081,11 +2086,26 @@ define buffer buf_goods     for ub.goods .
     if (tt-stk-fu2.fact-qnty-lt16 <> tt-stk-fu2.fact-qnty-lt)
     or (tt-stk-fu2.fact-qnty-kg16 <> tt-stk-fu2.fact-qnty-kg)
     then do :
-    export stream lsOut delimiter ';':U tt-stk-fu2 .
-    v-count-mismatch = v-count-mismatch + 1 .
+       if vfirst
+       then do:
+          vfirst = no.
+          put stream lsOut unformatted
+                 "наименование товара в 15.0;"
+                 "код товара в 15.0;"
+                 "остатки в лт в 15.0;"
+                 "остатки в кг в 15.0;"
+                 "код товара в 16.0;"
+                 "остатки в лт в 16.0;"
+                 "остатки в кг в 16.0" skip
+                 .
+       end.
+       export stream lsOut delimiter ';':U tt-stk-fu2 .
+       v-count-mismatch = v-count-mismatch + 1 .
     end .
   end.
-
+  if Vfirst 
+  then
+     put stream lsOut unformatted "Расхождений не обнаружено." skip.
   vok = yes.
   finally:
      output STREAM lsIN close.
