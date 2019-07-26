@@ -386,12 +386,19 @@ on error undo, return error
     when {&attr-autosale} then do:
       v-prop-code = "{&bef-attr-autosale_automail},{&bef-attr-autosale_augetres},{&bef-attr-autosale_autoclos}," +
                     "{&bef-attr-autosale_autocomp},{&bef-attr-autosale_autocalc},{&bef-attr-autosale_one-curs}," +
-                    "{&bef-attr-autosale_prcl-spl},{&bef-attr-autosale_autofbr},{&bef-attr-autosale_restdish}," +
-                    "{&bef-attr-autosale_restingr},{&bef-attr-autosale_resttpsi},{&bef-attr-autosale_sale-filter}," +
+                    "{&bef-attr-autosale_prcl-spl}," +
+                    "{&bef-attr-autosale_resttpsi},{&bef-attr-autosale_sale-filter}," +
                     "{&bef-attr-autosale_neg-tpsi-weight},{&bef-attr-autosale_neg-tpsi-oper},{&bef-attr-autosale_main-tpsi},{&bef-attr-autosale_one-sale-per-day},{&bef-attr-autosale_close-day-period}".
       do v-ii = 1 to num-entries(v-prop-code):
 &scop ptype logical
 &scop prop-value no
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-autosale_autofbr},{&bef-attr-autosale_restdish},{&bef-attr-autosale_restingr}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype logical
+&scop prop-value yes
 &scop prop-code entry(v-ii, v-prop-code)
         {&create-thbj-attr}.
       end.
@@ -517,7 +524,7 @@ on error undo, return error
       v-prop-code =  "{&bef-attr-cd-sending_dflt-cd}".
 
 &scop ptype character
-&scop prop-value ~{&cd-type-ibm~}
+&scop prop-value ~{&cd-type-IBM-XML}
 &scop prop-code v-prop-code
 
       {&create-thbj-attr}.
@@ -531,10 +538,19 @@ on error undo, return error
       {&create-thbj-attr}.
     end.
     when {&attr-cd-inf-send} then do:
-      v-prop-code =  "{&bef-attr-cd-inf-send_tax-cass},{&bef-attr-cd-inf-send_nam-2str},{&bef-attr-cd-inf-send_nam-artc}," +
+      v-prop-code =  "{&bef-attr-cd-inf-send_nam-2str},{&bef-attr-cd-inf-send_nam-artc}," +
                      "{&bef-attr-cd-inf-send_cod-pcod},{&bef-attr-cd-inf-send_cp-is-use}".
 &scop ptype logical
 &scop prop-value no
+&scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      
+      v-prop-code =  "{&bef-attr-cd-inf-send_tax-cass}".
+&scop ptype logical
+&scop prop-value yes
 &scop prop-code entry(v-ii, v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):
@@ -2704,7 +2720,7 @@ end.
     when {&attr-petrol} then do:
       v-prop-code = "{&bef-attr-petrol_denstclc}".
 &scop ptype character
-&scop prop-value 'shft_rvs-inc':U
+&scop prop-value 'avrg-chk':U
 &scop prop-code entry(v-ii, v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):
@@ -2713,7 +2729,7 @@ end.
 
       v-prop-code = "{&bef-attr-petrol_inpptrl}".
 &scop ptype character
-&scop prop-value {&calc-petrol-weight}
+&scop prop-value {&calc-petrol-volume-plus}
 &scop prop-code entry(v-ii, v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):
