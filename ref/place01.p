@@ -141,14 +141,51 @@ on error undo, return error return-value
 
   CASE p-mode:
     when {&add-def} then do:
-      run gen-b-code in this-procedure ( input {&gbl-bc-code}, output p-pl-code) no-error.
-      if error-status:error then do:
-        if return-value <> '':u then do:
-          v-mess = return-value .
-          run err-mes in this-procedure ( input-output v-mess).
-        end.
-        undo main-block, return error (if p-silent then v-mess else 'pl-code').
-      end.
+       define variable conf-par as character no-undo.
+       define variable par-type as character no-undo.
+       { gbl/conf-rd.i
+             "'is-erpRN'"
+             0
+             "''"
+             0
+             "''"
+             "''"
+             "''"
+             NO
+             conf-par
+             par-type
+             no-error
+         }
+         IF not error-status:error and conf-par = "yes":U 
+         then do: 
+
+          find last c-place where c-place.obj-type = p-obj-type
+                              and c-place.obj-code = p-obj-code
+                              and c-place.pl-code  < 10000000000 /* возьмем для индекса*/
+                              no-lock no-error.
+          if available c-place 
+          then 
+             p-pl-code = c-place.pl-code.
+          find last place where place.obj-type = p-obj-type
+                            and place.obj-code = p-obj-code
+                            and place.pl-code  < 10000000000 /* возьмем для индекса*/
+                              no-lock no-error.
+          if available place 
+          then 
+             p-pl-code = max(place.pl-code,p-pl-code).
+          if p-pl-code < 100000 then p-pl-code = 100000.
+          p-pl-code =  p-pl-code +  1.
+         end.
+         else do:   
+           run gen-b-code in this-procedure ( input {&gbl-bc-code}, output p-pl-code) no-error.
+            if error-status:error then do:
+              if return-value <> '':u then do:
+                v-mess = return-value .
+                run err-mes in this-procedure ( input-output v-mess).
+              end.
+              undo main-block, return error (if p-silent then v-mess else 'pl-code').
+            end.
+         end.
       create main_place.
       assign
       main_place.obj-type = p-obj-type

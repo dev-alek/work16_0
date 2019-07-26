@@ -56,6 +56,26 @@ do
 
     if new(ub.place) then 
     do:
+       
+       define variable conf-par as character no-undo.
+       define variable par-type as character no-undo.
+       { gbl/conf-rd.i
+             "'is-erpRN'"
+             0
+             "''"
+             0
+             "''"
+             "''"
+             "''"
+             NO
+             conf-par
+             par-type
+             no-error
+         }
+         IF not error-status:error and conf-par = "yes":U 
+         then do: 
+         end.
+         else do:
         /* только для новых записей надо искать диапазон
          старые и так там находятся */
         run gen-new-code-range-if-neces in this-procedure (
@@ -75,7 +95,7 @@ do
                 view-as alert-box error .
             undo main-block,  return error .
         end.
-  
+        end.
         run trg/userlog.p (
             input {&nwsdochs_action_create}
             , input {&table_place}
