@@ -2695,8 +2695,8 @@ IF available tt-meas-file and   tt-meas-file.log-brutto = no THEN DO:
       END.
       ELSE DO :
         ASSIGN
-          v-mm:H                      = integer( bf_rvs-line.level-total) * 10
-          v-mm:H_water                = integer( bf_rvs-line.level-water) * 10
+          v-mm:H                      = integer(round( bf_rvs-line.level-total, 1) * 10)
+          v-mm:H_water                = integer(round( bf_rvs-line.level-water, 1) * 10)
           v-mm:CalibrationTable       = CalibTable
           v-mm:Tv                     = bf_rvs-line.state-temp-layer1 
           v-mm:Tr                     = bf_rvs-line.temperature
@@ -2717,24 +2717,25 @@ IF available tt-meas-file and   tt-meas-file.log-brutto = no THEN DO:
                     "    " SKIP
                     "    " SKIP
                     cur-time-string()           FORMAT "x(16)"    SKIP
-                    'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
-                    'CODE_PL                = ' bf_rvs-line.pl-code                           SKIP
-                    'H                      = ' bf_rvs-line.level-total * 10                  SKIP
-                    'H_water                = ' bf_rvs-line.level-water * 10                  SKIP
-                    'CalibrationTable       = ' CalibTable                  FORMAT "x(2048)"  SKIP
-                    'Tv                     = ' bf_rvs-line.state-temp-layer1                 SKIP
-                    'Tr                     = ' bf_rvs-line.temperature                       SKIP
-                    'R                      = ' ( bf_rvs-line.density * 1000 )                SKIP
-                    'Tcy                    = ' temp-for-pomi                                 SKIP
-                    'ToolType               = ' ToolType                                      SKIP
-                    'DeltaOtn_K             = ' DeltaOtn_K                                    SKIP
-                    'A_Reservoir            = ' 0.0000125                                     SKIP
-                    'DeltaAbs_H             = ' DeltaAbs_H                                    SKIP
-                    'DeltaAbs_H_Water       = ' DeltaAbs_H_Water                              SKIP
-                    'DeltaAbs_R             = ' DeltaAbs_R                                    SKIP
-                    'DeltaAbs_Tv            = ' DeltaAbs_Tv                                   SKIP
-                    'DeltaAbs_Tr            = ' DeltaAbs_Tr                                   SKIP
-                    'DeltaOtn_N             = ' DeltaOtn_N                                    SKIP
+                    'Процедура'                 v-proc                   FORMAT "x(128)"   SKIP
+                    'CODE_PL                = ' bf_rvs-line.pl-code                        SKIP
+                    'H                      = ' v-mm:H                                     SKIP
+                    'H_water                = ' v-mm:H_water                               SKIP
+                    'CalibrationTable       = ' v-mm:CalibrationTable    FORMAT "x(2048)"  SKIP
+                    'Tv                     = ' v-mm:Tv                                    SKIP
+                    'Tr                     = ' v-mm:Tr                                    SKIP
+                    'R                      = ' v-mm:R                                     SKIP
+                    'Tcy                    = ' v-mm:Tcy                                   SKIP
+                    'ToolType               = ' v-mm:ToolType                              SKIP
+                    'DeltaOtn_K             = ' v-mm:DeltaOtn_K                            SKIP
+                    'A_Reservoir            = ' v-mm:A_Reservoir                           SKIP
+                    'DeltaAbs_H             = ' v-mm:DeltaAbs_H                            SKIP
+                    'DeltaAbs_H_Water       = ' v-mm:DeltaAbs_H_Water                      SKIP
+                    'DeltaAbs_R             = ' v-mm:DeltaAbs_R                            SKIP
+                    'DeltaAbs_Tv            = ' v-mm:DeltaAbs_Tv                           SKIP
+                    'DeltaAbs_Tr            = ' v-mm:DeltaAbs_Tr                           SKIP
+                    'DeltaOtn_N             = ' v-mm:DeltaOtn_N                            SKIP
+                    
                         SKIP SKIP 
         .
 
