@@ -34,7 +34,6 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define buffer buf_parent_user-account for ub.user-account .
   define buffer buf_user-account        for ub.user-account .
   define buffer buf_place-attr          for ub.place-attr .
-  define buffer buf_pl-gds-pump         for ub.pl-gds-pump .
   
   define TEMP-TABLE tt-rvs-doc like ub.c-rvs-doc
     field del-f as integer .
@@ -348,10 +347,7 @@ sw = insw .
     find first tt-rvs-line-pump no-error .
     if AVAILABLE (tt-rvs-line-pump) then do:
     sw:start-element ("trk-ps") .
-    for each tt-rvs-line-pump,
-    each buf_pl-gds-pump no-lock where buf_pl-gds-pump.pl-code = tt-rvs-line-pump.pl-code and buf_pl-gds-pump.status_ <> {&blocked-status} 
-    and buf_pl-gds-pump.pump-code = tt-rvs-line-pump.pump-code and buf_pl-gds-pump.gds-code = tt-rvs-line-pump.gds-code
-    and buf_pl-gds-pump.obj-code = tt-rvs-line-pump.obj-code and buf_pl-gds-pump.obj-type = tt-rvs-line-pump.obj-type:
+    for each tt-rvs-line-pump :
       sw:start-element ("trk-p") .
       sw:write-data-element ("tank-num" , if tt-rvs-line-pump.pl-code = ? then "0" else string-mth(tt-rvs-line-pump.pl-code)) no-error .
       sw:write-data-element ("trk-num" , if tt-rvs-line-pump.pump-code = ? then "0" else string-mth(tt-rvs-line-pump.pump-code)) no-error .
