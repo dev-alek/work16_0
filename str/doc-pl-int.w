@@ -326,7 +326,7 @@ DEFINE FRAME f-doc-pl
      b-quit AT ROW 1 COL 12 WIDGET-ID 18
      b-qnty AT ROW 1 COL 22 WIDGET-ID 16
      b-help AT ROW 1 COL 89 WIDGET-ID 8
-     loc-t-doc-pl.pl-code AT ROW 3.75 COL 19 COLON-ALIGNED WIDGET-ID 68
+     loc-t-doc-pl.pl-code AT ROW 3.75 COL 19 COLON-ALIGNED WIDGET-ID 68 FORMAT ">>>>>>>>>>9"
           LABEL "Место хранения  с"
           VIEW-AS FILL-IN
           SIZE 10.5 BY 1
@@ -362,7 +362,7 @@ DEFINE FRAME f-doc-pl
           VIEW-AS FILL-IN
           SIZE 64 BY 1
           BGCOLOR 8
-     loc-t-doc-pl.pl-code2 AT ROW 6.25 COL 19 COLON-ALIGNED WIDGET-ID 168
+     loc-t-doc-pl.pl-code2 AT ROW 6.25 COL 19 COLON-ALIGNED WIDGET-ID 168 FORMAT ">>>>>>>>>>9"
           LABEL "Место хранения на"
           VIEW-AS FILL-IN
           SIZE 10.5 BY 1
@@ -1827,7 +1827,7 @@ DO:
         and buf_place2.status_ <> {&deleted-status}
       no-error .
 
-    if available buf_place then do:
+    if available buf_place2 then do:
       display
         buf_place2.pl-name
         buf_place2.loc1
