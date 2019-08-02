@@ -2494,10 +2494,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   end.
 
   method public void ClWght ( input sender as System.Object, input e as System.EventArgs ):
-    maskedTextBoxTankDensityPomi:Text = "".
-    maskedTextBoxTankVolPomi:Text = "".
-    maskedTextBoxTankWeight:Text = "".
-    maskedTextBoxAccWeight:Text = "".
+    if not infoSecsObj:RdcDnstvalue = "not"
+    then do:
+      maskedTextBoxTankDensityPomi:Text = "".
+      maskedTextBoxTankVolPomi:Text = "".
+      maskedTextBoxTankWeight:Text = "".
+      maskedTextBoxAccWeight:Text = "".
+    end.
   end.
 
   method public logical CheckSec ():
