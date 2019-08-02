@@ -1100,28 +1100,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               if v-new-fact-qnty <> p-new-fact-qnty
                 or v-new-density <> p-new-density
               then do:
-                if p-fact-edit = true then do:
-                  message
-                    substitute( "ѕо результатам измерени€ автоцистерны фактическое кол-во необходимо изменить." ) skip
-                    substitute( "Ѕудем мен€ть фактические" ) skip
-                    substitute( "количество на &1 (&2),", infoSectionsTotal:FactKgQntyTotal, buf_goods.unit-cli ) skip
-                    substitute( "плотность на &1 ?", v-new-density ) skip
-                    view-as alert-box question buttons yes-no update v-log .
-                end.
-                else do:
-                  message
-                    substitute( "ѕо результатам измерени€ фактическое кол-во товара измен€етс€ на &1 (&2),", infoSectionsTotal:FactKgQntyTotal, buf_goods.unit-cli ) skip
-                    substitute( "фактическа€ плотность на &1.", v-new-density ) skip
-                    view-as alert-box information .
-                end.
+                message
+                  substitute( "ѕо результатам измерени€ фактическое кол-во товара измен€етс€ на &1 (&2),", infoSectionsTotal:FactKgQntyTotal, buf_goods.unit-cli ) skip
+                  substitute( "фактическа€ плотность на &1.", v-new-density ) skip
+                  view-as alert-box information .
               end.
-              if v-log = yes then do:
-                assign
-                  p-new-fact-qnty     = v-new-fact-qnty
-                  p-new-density       = v-new-density
-                  p-new-cli-fact-qnty = p-new-fact-qnty * p-new-density
-                .
-              end.
+              assign
+                p-new-fact-qnty     = v-new-fact-qnty
+                p-new-density       = v-new-density
+                p-new-cli-fact-qnty = p-new-fact-qnty * p-new-density
+              .
             end.
           end.
         end.
