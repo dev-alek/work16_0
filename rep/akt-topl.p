@@ -18,6 +18,8 @@ Creation date: 01/30/09
 
 */
 
+using ibs.th.str.*.
+
 define input parameter p-mainmenu-handle as widget-handle no-undo.
 define input parameter rec_id            as recid         no-undo.
 define input parameter parprint-water    as logical       no-undo.
@@ -102,26 +104,26 @@ define variable before_real-time  as integer          no-undo.
 define variable after_real-time   as integer          no-undo.
 define variable doc-line_1st-run  as logical          no-undo .
 
-define variable v-ship-org          like ub.doc-line-attr.attr-value no-undo.
-define variable v-autoent-obj-code  like ub.doc-line-attr.attr-value no-undo.
-define variable v-autoent-obj-type  like ub.doc-line-attr.attr-value no-undo.
-define variable v-dids              like ub.doc-line-attr.attr-value no-undo.
-define variable v-nids              like ub.doc-line-attr.attr-value no-undo.
+define variable v-ship-org          like doc-line-attr.attr-value no-undo.
+define variable v-autoent-obj-code  like doc-line-attr.attr-value no-undo.
+define variable v-autoent-obj-type  like doc-line-attr.attr-value no-undo.
+define variable v-dids              like doc-line-attr.attr-value no-undo.
+define variable v-nids              like doc-line-attr.attr-value no-undo.
 define variable v-attr-type         as character                  no-undo.
-define variable v-car-num           like ub.doc-line-attr.attr-value no-undo.
-define variable v-car-vol           like ub.doc-line-attr.attr-value no-undo.
-define variable v-item-pour         like ub.doc-line-attr.attr-value no-undo.
-define variable v-tank-density      like ub.doc-line-attr.attr-value no-undo.
-define variable v-tank-temp         like ub.doc-line-attr.attr-value no-undo.
-define variable v-tank-vol          like ub.doc-line-attr.attr-value no-undo.
-define variable v-tank-water        like ub.doc-line-attr.attr-value no-undo.
-define variable v-tank-weight       like ub.doc-line-attr.attr-value no-undo.
-define variable v-time-pour         like ub.doc-line-attr.attr-value no-undo.
-define variable v-time-income       like ub.doc-line-attr.attr-value no-undo.
-define variable v-time-start        like ub.doc-line-attr.attr-value no-undo.
-define variable v-time-end          like ub.doc-line-attr.attr-value no-undo.
-define variable v-type-inp-vat      like ub.doc-line-attr.attr-value no-undo.
-define variable v-fio               like ub.doc-line-attr.attr-value no-undo.
+define variable v-car-num           like doc-line-attr.attr-value no-undo.
+define variable v-car-vol           like doc-line-attr.attr-value no-undo.
+define variable v-item-pour         like doc-line-attr.attr-value no-undo.
+define variable v-tank-density      like doc-line-attr.attr-value no-undo.
+define variable v-tank-temp         like doc-line-attr.attr-value no-undo.
+define variable v-tank-vol          like doc-line-attr.attr-value no-undo.
+define variable v-tank-water        like doc-line-attr.attr-value no-undo.
+define variable v-tank-weight       like doc-line-attr.attr-value no-undo.
+define variable v-time-pour         like doc-line-attr.attr-value no-undo.
+define variable v-time-income       like doc-line-attr.attr-value no-undo.
+define variable v-time-start        like doc-line-attr.attr-value no-undo.
+define variable v-time-end          like doc-line-attr.attr-value no-undo.
+define variable v-type-inp-vat      like doc-line-attr.attr-value no-undo.
+define variable v-fio               like doc-line-attr.attr-value no-undo.
 define variable v-delta-mass        as decimal                    no-undo.
 define variable v-mass-pogresh      as decimal                    no-undo.
 define variable v-delta-res as decimal                    no-undo.
@@ -141,6 +143,8 @@ define variable after_qnty          like ub.rvs-line.state-measure-qnty     no-u
 define variable after_temperature   like ub.rvs-line.state-temperature      no-undo.
 define variable after_density       like ub.rvs-line.state-density          no-undo.
 define variable after_cli-qnty      like ub.rvs-line.state-measure-cli-qnty no-undo.
+
+define variable v-InfoSectionsTotal as class InfoSectionsTotal no-undo .
 
 /* ----E----- Блок описания переменных --------------- */
 
@@ -251,6 +255,10 @@ for each buf_doc-line no-lock
     assign                /* Если сюда дошли, значит хоть один топливный товар есть */
         v-have-petrol = yes
     .
+
+    v-InfoSectionsTotal = new InfoSectionsTotal().
+    v-InfoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_goods.gds-code).
+    v-InfoSectionsTotal:GetDBAllAttr().
     for each buf_doc-line-attr no-lock
        where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
          and buf_doc-line-attr.gds-code = buf_goods.gds-code
@@ -288,6 +296,14 @@ for each buf_doc-line no-lock
           { rep/akt-topl.i dec tank-water    }
     /* ---E---- Переводим табличные значения в Decimal -------- */
 
+    v-car-vol = string (v-InfoSectionsTotal:CarVolTotal).
+    v-tank-vol-dec = v-InfoSectionsTotal:TankVolTotal.
+    v-tank-density-dec = v-InfoSectionsTotal:TankWeightTotal / v-InfoSectionsTotal:TankVolTotal.
+    v-tank-weight-dec = v-InfoSectionsTotal:TankWeightTotal.
+    v-tank-water-dec = v-InfoSectionsTotal:TankWaterVolTotal.
+    v-time-start =  string ( v-InfoSectionsTotal:StartRealTime ).
+    v-time-end =  string ( v-InfoSectionsTotal:EndRealTime ).
+    
     find first buf_clients_ship no-lock
         where buf_clients_ship.obj-type = v-autoent-obj-type
           and buf_clients_ship.obj-code = integer(v-autoent-obj-code)
@@ -509,17 +525,17 @@ for each buf_doc-line no-lock
           "автоцистерне"    format "X(12)"    at {&P-S} + 2
           ":"         format "X(1)"           at {&P-C2-S}
       .
-      if v-tank-vol-dec <> ?
+      if v-InfoSectionsTotal:TankVolTotal <> ?
       then put stream out-stream
-          v-tank-vol-dec
+          v-InfoSectionsTotal:TankVolTotal
                                       format "zz,zz9.999"    at right-field( {&P-C3-S} - 2, 10)
       .
       put stream out-stream
           ":"         format "X(1)"           at {&P-C3-S}
       .
-      if v-tank-temp-dec <> ?
+      if v-InfoSectionsTotal:GetInfoSectionProp(1):TankTemp <> ?
       then put stream out-stream
-          v-tank-temp-dec
+          v-InfoSectionsTotal:GetInfoSectionProp(1):TankTemp
                                       format "->>9.99"           at right-field( {&P-C4-S} - 1, 7)
       .
       put stream out-stream
@@ -533,16 +549,16 @@ for each buf_doc-line no-lock
       put stream out-stream
           ":"         format "X(1)"           at {&P-C5-S}
       .
-      if v-tank-weight-dec <> ?
+      if v-InfoSectionsTotal:TankWeightTotal <> ?
       then put stream out-stream
-          v-tank-weight-dec
+          v-InfoSectionsTotal:TankWeightTotal
                                       format "zzz,zzz,zz9.999"  at right-field( {&P-C6-S} - 2, 15)
       .
       put stream out-stream
           ":"         format "X(1)"           at {&P-C6-S}
       .
-      if v-tank-water-dec <> ? then do:
-        put stream out-stream v-tank-water-dec format "zzz,zzz,zz9.999"  at right-field( {&P-E} - 2, 15).
+      if v-InfoSectionsTotal:TankWaterVolTotal <> ? then do:
+        put stream out-stream v-InfoSectionsTotal:TankWaterVolTotal format "zzz,zzz,zz9.999"  at right-field( {&P-E} - 2, 15).
       end.
       put stream out-stream
           ":"         format "X(1)"           at {&P-E}
@@ -631,33 +647,34 @@ for each buf_doc-line no-lock
           "автоцистерне"    format "X(12)"    at {&P-S} + 2
           ":"         format "X(1)"           at {&P-C2-S}
       .
-      if v-tank-vol-dec <> ?
+      
+      if v-InfoSectionsTotal:TankVolTotal <> ?
       then put stream out-stream
-          v-tank-vol-dec
+          v-InfoSectionsTotal:TankVolTotal
                                       format "zz,zz9.999"    at right-field( {&P-C3-S} - 2, 10)
       .
       put stream out-stream
           ":"         format "X(1)"           at {&P-C3-S}
       .
-      if v-tank-temp-dec <> ?
+      if v-InfoSectionsTotal:GetInfoSectionProp(1):TankTemp <> ?
       then put stream out-stream
-          v-tank-temp-dec
+          v-InfoSectionsTotal:GetInfoSectionProp(1):TankTemp
                                       format "->>9.99"           at right-field( {&P-C4-S} - 1, 7)
       .
       put stream out-stream
           ":"         format "X(1)"           at {&P-C4-S}
       .
-      if v-tank-density-dec <> ? then
+      if v-InfoSectionsTotal:DocDensityAvg <> ? then
       put stream out-stream
-          v-tank-density-dec
+          v-InfoSectionsTotal:DocDensityAvg
                                       format "9.9999999999"            at right-field( {&P-C5-S} - 2, 12)
       .
       put stream out-stream
           ":"         format "X(1)"           at {&P-C5-S}
       .
-      if v-tank-weight-dec <> ?
+      if v-InfoSectionsTotal:TankWeightTotal <> ?
       then put stream out-stream
-          v-tank-weight-dec
+          v-InfoSectionsTotal:TankWeightTotal
                                       format "zzz,zzz,zz9.999"  at right-field( {&P-C6-S} - 2, 15)
       .
       put stream out-stream
@@ -863,6 +880,7 @@ for each buf_doc-line no-lock
     ).
     /* ----E----- Итог документа ------------------------- */
     page stream out-stream.
+    delete object v-InfoSectionsTotal.
 end.
 /* ---E----- Для каждой линии документа печатаем отдельный лист ---- */
 

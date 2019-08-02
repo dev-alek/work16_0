@@ -149,7 +149,7 @@ DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame Dialog-Frame _FREEFORM
     QUERY BROWSE-2 DISPLAY
   tt-pl.mark format "*"
-  tt-pl.pl-code format "999999999"
+  tt-pl.pl-code format "99999999999"
   tt-pl.pl-name
   tt-pl.pl-coord
 /* _UIB-CODE-BLOCK-END */
