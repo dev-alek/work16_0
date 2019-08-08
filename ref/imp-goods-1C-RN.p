@@ -439,7 +439,14 @@ define variable v-barcode-list  as longchar  no-undo .
       ii_ :
       do ii = 1 to v-barcodes:iCounter:
         v-barcodes:Get(ii) .
-        v-barcode = cast (v-barcodes:SubjectObjCurr, goods_barcode).  
+        v-barcode = cast (v-barcodes:SubjectObjCurr, goods_barcode).
+         if length (v-barcode:bcode) <= 2
+         then do :
+              next ii_ .
+              /*  undo, return error
+                ("Баркод должен быть длиннее 2  символов код " +
+                 v-barcode:bcode + " . Товар " + p-GdsObj:code_) .*/
+            end.  
         v-barcode-list = v-barcode-list + v-barcode:bcode + "," .
         find first ub.prod-bc exclusive-lock where ub.prod-bc.b-str = v-barcode:bcode no-error.
         if not available ub.prod-bc
