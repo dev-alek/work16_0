@@ -116,11 +116,14 @@ create query qh.
   end.
   delete widget qh.
 end.
-
+def var v-is-petrol as logical no-undo.
+def var v-is-pieces as logical no-undo.
+def var is-petrol as logical no-undo.
 fill-doc:
 do transaction on error undo fill-doc, return error return-value :
   assign
     varcount = 0.
+  gds-lst_:
   for each gds-list,
        each goods where goods.prod-type = gds-list.prod-type
                        and goods.prod-code = gds-list.prod-code
@@ -128,6 +131,46 @@ do transaction on error undo fill-doc, return error return-value :
     assign
       varcount = varcount + 1.
     run waitfram-show in this-procedure (waitfram-join-function ("Работа со списком в документе инвентаризации.", "Создание строк в документе.", substitute("Всего строк &1. Время &2.", varcount, string(time - vartime, "hh:mm:ss")))) no-error.
+    
+    { str/is-petrl.i
+        gds-list.artic
+        gds-list.prod-type
+        gds-list.prod-code
+        v-is-petrol
+        v-is-pieces
+        no-error
+    }
+    
+    if
+      can-find (first ub.doc-line no-lock where
+                 ub.doc-line.doc-code  = t-doc.doc-code)
+    then do:
+      if not (is-petrol = v-is-petrol)
+      then do:
+        run waitfram-hide in this-procedure.
+        if is-petrol 
+        then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            substitute("Ошибка при добавлении строки инвентаризации.") skip
+            substitute("Запрещено добовалять нетопливный товар вместе с топливными.") skip
+            return-value skip
+            view-as alert-box error .
+          undo gds-lst_, next gds-lst_.
+        end.
+        else do:
+          message
+            vss-workfile vss-revision vss-description skip
+            substitute("Ошибка при добавлении строки инвентаризации.") skip
+            substitute("Запрещено добовалять топливный товар вместе с нетопливными.") skip
+            return-value skip
+            view-as alert-box error .
+          undo gds-lst_, next gds-lst_.
+        end.
+      end.
+    end.
+    else is-petrol = v-is-petrol.
+    
     gds-list.to-del = yes.  /* пометка - потенциально лишняя запись */
     { str/adinvlin.i
       parparentproc

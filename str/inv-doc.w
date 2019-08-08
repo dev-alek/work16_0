@@ -2421,33 +2421,34 @@ procedure local-add :
           no-error
       }
       
-      if not (is-petrol = v-is-petrol) and can-find (first bf_doc-line where
-                 bf_doc-line.doc-code  = t-doc.doc-code and
-                 bf_doc-line.artic     = ub.goods.artic and
-                 bf_doc-line.prod-type = ub.goods.prod-type and
-                 bf_doc-line.prod-code = ub.goods.prod-code)
+      if can-find (first bf_doc-line no-lock where
+                   bf_doc-line.doc-code  = t-doc.doc-code)
       then do:
-        run waitfram-hide in this-procedure.
-        if is-petrol 
+        if not (is-petrol = v-is-petrol)
         then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute("Ошибка при добавлении строки инвентаризации.") skip
-            substitute("Запрещено добовалять нетопливный товар вместе с топливными.") skip
-            return-value skip
-            view-as alert-box error .
-          undo tr, next tr.
-        end.
-        else do:
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute("Ошибка при добавлении строки инвентаризации.") skip
-            substitute("Запрещено добовалять топливный товар вместе с нетопливными.") skip
-            return-value skip
-            view-as alert-box error .
-          undo tr, next tr.
+          run waitfram-hide in this-procedure.
+          if is-petrol 
+          then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              substitute("Ошибка при добавлении строки инвентаризации.") skip
+              substitute("Запрещено добовалять нетопливный товар вместе с топливными.") skip
+              return-value skip
+              view-as alert-box error .
+            undo tr, next tr.
+          end.
+          else do:
+            message
+              vss-workfile vss-revision vss-description skip
+              substitute("Ошибка при добавлении строки инвентаризации.") skip
+              substitute("Запрещено добовалять топливный товар вместе с нетопливными.") skip
+              return-value skip
+              view-as alert-box error .
+            undo tr, next tr.
+          end.
         end.
       end.
+      else is-petrol = v-is-petrol.
       
       find ub.goods no-lock
         where  ub.goods.gds-code = tt-gds-list.gds-code .
