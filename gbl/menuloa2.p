@@ -580,7 +580,16 @@ define variable vss-description as character no-undo init "".
   "'Irk-Oil'"
   "yes"
 }
-
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Выгрузка данных по реализации в учетных ценах (.dbf)'"
+  "'rep/g-seb1c.p'"
+  "''"
+  "''"
+  "''"
+  " "
+  "yes"
+}
 
 { gbl/menuload.i
   {&bef-menuload_adm_impexp}

@@ -2405,11 +2405,50 @@ procedure local-add :
       vartime = time
       lns-cnt = 0
     .
+    def var v-is-petrol as logical no-undo.
+    def var v-is-pieces as logical no-undo.
     tr:
     for each tt-gds-list
       break by tt-gds-list.nn
     on error undo tr, next tr
     :
+      { str/is-petrl.i
+          tt-gds-list.artic
+          tt-gds-list.prod-type
+          tt-gds-list.prod-code
+          v-is-petrol
+          v-is-pieces
+          no-error
+      }
+      
+      if not (is-petrol = v-is-petrol) and can-find (first bf_doc-line where
+                 bf_doc-line.doc-code  = t-doc.doc-code and
+                 bf_doc-line.artic     = ub.goods.artic and
+                 bf_doc-line.prod-type = ub.goods.prod-type and
+                 bf_doc-line.prod-code = ub.goods.prod-code)
+      then do:
+        run waitfram-hide in this-procedure.
+        if is-petrol 
+        then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            substitute("Ошибка при добавлении строки инвентаризации.") skip
+            substitute("Запрещено добовалять нетопливный товар вместе с топливными.") skip
+            return-value skip
+            view-as alert-box error .
+          undo tr, next tr.
+        end.
+        else do:
+          message
+            vss-workfile vss-revision vss-description skip
+            substitute("Ошибка при добавлении строки инвентаризации.") skip
+            substitute("Запрещено добовалять топливный товар вместе с нетопливными.") skip
+            return-value skip
+            view-as alert-box error .
+          undo tr, next tr.
+        end.
+      end.
+      
       find ub.goods no-lock
         where  ub.goods.gds-code = tt-gds-list.gds-code .
 
