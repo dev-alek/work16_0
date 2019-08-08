@@ -164,7 +164,7 @@ CASE par-pos-type:
           {&prefix}cash-pay.pay-code > 1*/ ) then NEXT.
     run bgelib-tag-open in this-procedure ( input 2, input "Payment"
                                           , input substitute("ctrl='&1' tms='&2' code='&3'", (if action = "U"
-                                                                                              then "ADD":U
+                                                                                              then if {&prefix}cash-pay.status_ eq {&current-status}  then "ADD":U else "DEL":U
                                                                                               else "DEL":U),
                                                               OS2-time, &if defined (prefix) eq 0
                                                                         &then cash-pay.cdpay-code
