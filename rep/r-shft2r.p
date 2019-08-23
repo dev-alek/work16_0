@@ -311,6 +311,9 @@ define temp-table temp-rvs no-undo
         }
       if v-attr-value <> "" then v-doc-code = v-attr-value .  
       else v-doc-code       = ub.trn-doc.doc-code .
+    find first tincome-2 no-lock where tincome-2.gds-code = t-2.gds-code and tincome-2.doc-code = (v-doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName) 
+    and tincome-2.supp-code   = ub.trn-doc.cli-code no-error .
+    if not available (tincome-2) then do: 
     CREATE tincome-2.
     assign
       tincome-2.gds-code    = t-2.gds-code
@@ -329,9 +332,14 @@ define temp-table temp-rvs no-undo
       v-qnty1               = v-qnty1 + tincome-2.qnty1
       v-qnty2               = v-qnty2 + tincome-2.qnty2
     .
+    release tincome-2 .
+    end.
     end.
     if last-of(ub.trn-doc.cli-code) then do:
       if pshift-date <> pshift-date1 or (pshift-date = pshift-date1 and pshift-num <> pshift-num1) then do:
+            find first tincome-2 no-lock where tincome-2.gds-code = t-2.gds-code and tincome-2.doc-code = (v-doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName) 
+    and tincome-2.supp-code   = ub.trn-doc.cli-code no-error .
+    if not available (tincome-2) then do: 
         CREATE tincome-2.
         ASSIGN
           tincome-2.gds-code    = t-2.gds-code
@@ -348,6 +356,8 @@ define temp-table temp-rvs no-undo
           v-qnty1               = 0
           v-qnty2               = 0
         .
+        release tincome-2 .
+      end.
       end.
     end.
   END. /* FOR EACH ub.trn-doc */
