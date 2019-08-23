@@ -297,7 +297,48 @@ define temp-table temp-rvs no-undo
              ub.inv-line.artic     = ub.doc-line.artic     AND
              ub.inv-line.prod-type = ub.doc-line.prod-type AND
              ub.inv-line.prod-code = ub.doc-line.prod-code NO-ERROR.
-
+     { str/tdat-val.i                                    
+      ub.trn-doc.doc-code
+      {&trdcattr-techpass}
+      v-value 
+      v-type 
+      no-error
+    }
+    if v-value = "yes" then do:
+          { str/tdat-val.i
+        ub.trn-doc.doc-code
+        {&trdcattr-nids}
+        v-attr-value
+        v-attr-type
+        }
+      if v-attr-value <> "" then v-doc-code = v-attr-value .  
+      else v-doc-code       = ub.trn-doc.doc-code .
+    find first tincome-2 no-lock where tincome-2.gds-code = t-2.gds-code and tincome-2.doc-code = (v-doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName) 
+    and tincome-2.supp-code   = ub.trn-doc.cli-code no-error .
+    if not available (tincome-2) then do: 
+    CREATE tincome-2.
+    assign
+      tincome-2.gds-code    = t-2.gds-code
+      tincome-2.supp-name   = for-supp-name
+      tincome-2.supp-type   = ub.trn-doc.cli-type
+      tincome-2.supp-code   = ub.trn-doc.cli-code
+      tincome-2.doc-code    = v-doc-code
+      tincome-2.qnty1       = ub.doc-line.fact-qnty
+      tincome-2.qnty2       = ( IF AVAILABLE ub.inv-line THEN ub.doc-line.fact-qnty * ub.doc-line.fact-density ELSE 0 )
+      tincome-2.temperature = ub.doc-line.temperature
+      tincome-2.density     = ( IF tincome-2.qnty2 / tincome-2.qnty1 = ? THEN 0 ELSE tincome-2.qnty2 / tincome-2.qnty1 )
+      tincome-2.naturalloss = 0 
+      tincome-2.is-fact     = YES
+      tincome-2.ii          = loc-ii
+      loc-ii                = loc-ii + 1
+      v-qnty1               = v-qnty1 + tincome-2.qnty1
+      v-qnty2               = v-qnty2 + tincome-2.qnty2
+    .
+    release tincome-2 .
+    end.
+      
+    end.
+    else do:  
     v-InfoSectionsTotal:Initialization(ub.trn-doc.doc-code, t-2.gds-code).
     v-InfoSectionsTotal:GetDBAllAttr().
     do iNum = 1 to v-InfoSectionsTotal:SectionNum:  
@@ -333,6 +374,7 @@ define temp-table temp-rvs no-undo
       v-qnty2               = v-qnty2 + tincome-2.qnty2
     .
     release tincome-2 .
+    end.
     end.
     end.
     if last-of(ub.trn-doc.cli-code) then do:
