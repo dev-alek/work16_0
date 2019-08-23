@@ -2368,7 +2368,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   .
   
   abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 .
-  abs-delta-mass-qnty = tt-rvs-line.state-measure-cli-qnty * input frame {&frame-name} delta-mass-qnty / 100 .
+  abs-delta-mass-qnty = tt-rvs-line.state-measure-cli-qnty * delta-mass-qnty / 100 .
   
   display
     tt-rvs-line.calc-add-mass
