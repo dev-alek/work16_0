@@ -319,11 +319,26 @@ RUN gds-attr-value (
             end.
         end.         
      end.                   
-run wp-XMLTagPut(3, "comment", buf_goods.PS, 0).
+  run wp-XMLTagPut(3, "comment", buf_goods.PS, 0).
   run wp-XMLTagPut(3, "mercuri"           , string( if v-gds-mercur = "no" then "0" else "1"),  0).
   run wp-XMLTagPut(3, "perishable"        , string( if v-gds-perishable = "no" then "0" else "1"),  0).
-
-
+  RUN gds-attr-value (
+                        INPUT buf_goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT v-gds-attr-value-old,
+                        OUTPUT v-gds-attr-type
+                        ).
+  def var mMark as integer no-undo.
+  mMark =   LOOKUP(v-gds-attr-value-old,{&prop-list-attr-mark-type}) - 1.
+  
+  run wp-XMLTagPut(3, "mark-type"        , if mMark < 0 then  "" else string(mmark),  0).
+  RUN gds-attr-value (
+                        INPUT buf_goods.gds-code,
+                        INPUT {&attr-item-matter-mark},
+                        OUTPUT v-gds-attr-value-old,
+                        OUTPUT v-gds-attr-type
+                        ).
+  run wp-XMLTagPut(3, "item-matter-mark"        , v-gds-attr-value-old,  0).
 run fill-gds-host-attr in this-procedure (
       input p-gds-code
     , output v-have-attr
