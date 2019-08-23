@@ -55,6 +55,7 @@ define variable ii as integer no-undo.
           run bgelib-tag-put in this-procedure ( input 3, input "OSPreSlip":U, input trim(string(entry(11, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSSlipName":U, input trim(string(entry(12, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSCalcType":U, input trim(string(entry(13, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSOperType":U, input trim(string(entry(13, buf_ext-classif.CharKey_Two, {&delim-par}))), input 1 ).
         run bgelib-tag-close in this-procedure ( input 2, input "OperServ").    
   
       end.

@@ -12,12 +12,51 @@ DEFINE BUFFER buf-obj_clients FOR ub.clients.
 DEFINE BUFFER buf_goods FOR ub.goods.
 DEFINE BUFFER buf_place FOR ub.place.
 DEFINE BUFFER buf_place2 FOR ub.place.
-DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO LIKE ub.doc-pl
-    field pl-code2 like ub.doc-pl.pl-code
+
+DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO 
+field pl-code as integer format "99999999999"
+field pl-code2 as integer format "99999999999"
+field whole-send-news like ub.doc-pl.whole-send-news
+field obj-type like ub.doc-pl.obj-type
+field obj-code like ub.doc-pl.obj-code
+field out-code like ub.doc-pl.out-code
+field fact-qnty like ub.doc-pl.fact-qnty
+field doc-qnty like ub.doc-pl.doc-qnty
+field gds-code as integer format "99999999999"
+field cli-qnty like ub.doc-pl.cli-qnty
+field cli-fact-qnty like ub.doc-pl.cli-fact-qnty
+field cli-doc-qnty like ub.doc-pl.cli-doc-qnty
+field rest-af-qnty like ub.doc-pl.rest-af-qnty
+field cli-rest-af-qnty like ub.doc-pl.cli-rest-af-qnty
+field rest-bf-qnty like ub.doc-pl.rest-bf-qnty
+field cli-rest-bf-qnty like ub.doc-pl.cli-rest-bf-qnty
+index pi obj-type obj-code pl-code out-code gds-code
+index doc out-code gds-code obj-code obj-type pl-code
+index gds-code gds-code
 .
-DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO like ub.doc-pl
-    field pl-code2 like ub.doc-pl.pl-code
+
+DEFINE TEMP-TABLE tt-doc-pl NO-UNDO 
+field pl-code as integer format "99999999999"
+field pl-code2 as integer format "99999999999"
+field whole-send-news like ub.doc-pl.whole-send-news
+field obj-type like ub.doc-pl.obj-type
+field obj-code like ub.doc-pl.obj-code
+field out-code like ub.doc-pl.out-code
+field fact-qnty like ub.doc-pl.fact-qnty
+field doc-qnty like ub.doc-pl.doc-qnty
+field gds-code as integer format "99999999999"
+field cli-qnty like ub.doc-pl.cli-qnty
+field cli-fact-qnty like ub.doc-pl.cli-fact-qnty
+field cli-doc-qnty like ub.doc-pl.cli-doc-qnty
+field rest-af-qnty like ub.doc-pl.rest-af-qnty
+field cli-rest-af-qnty like ub.doc-pl.cli-rest-af-qnty
+field rest-bf-qnty like ub.doc-pl.rest-bf-qnty
+field cli-rest-bf-qnty like ub.doc-pl.cli-rest-bf-qnty
+index pi obj-type obj-code pl-code out-code gds-code
+index doc out-code gds-code obj-code obj-type pl-code
+index gds-code gds-code
 .
+
 /*DEFINE VARIABLE f-pl-code2 NO-UNDO LIKE ub.doc-pl.pl-code .*/
 
 
@@ -379,7 +418,7 @@ DEFINE FRAME f-doc-pl
      buf_place2.loc4 AT ROW 7.5 COL 88 COLON-ALIGNED WIDGET-ID 150
           VIEW-AS FILL-IN
           SIZE 9 BY 1
-     buf_goods.gds-code AT ROW 9.25 COL 10 COLON-ALIGNED WIDGET-ID 40
+     buf_goods.gds-code AT ROW 9.25 COL 10 COLON-ALIGNED WIDGET-ID 40 FORMAT ">>>>>>>>>>9"
           LABEL "Товар"
           VIEW-AS FILL-IN
           SIZE 10 BY 1

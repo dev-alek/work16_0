@@ -1,3 +1,4 @@
+
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 /* Connected Databases 
@@ -241,10 +242,10 @@ DEFINE FRAME d-pl-form
           LABEL "Измеряется приборами"
           VIEW-AS TOGGLE-BOX
           SIZE 23.63 BY 1
-     tt-place.pl-code AT ROW 6.75 COL 5.63 COLON-ALIGNED
+     tt-place.pl-code AT ROW 6.75 COL 5.63 COLON-ALIGNED format "99999999999"
           LABEL "Код"
           VIEW-AS FILL-IN 
-          SIZE 10.63 BY 1
+          SIZE 10.93 BY 1
      rvd-dnstv AT ROW 6.75 COL 35.5 WIDGET-ID 40
      rvd-lvl AT ROW 6.75 COL 51.38 WIDGET-ID 44
      rvd-tmp AT ROW 6.75 COL 66.88 WIDGET-ID 46

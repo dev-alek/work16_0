@@ -22,75 +22,88 @@ block-level on error undo, throw.
 &scoped-define txt-sec секци€
 &scoped-define txt-key параметр
 &scoped-define txt-ini в .ini файле
+&scoped-define sec-rep-sets REP-SETS
+&scoped-define sec-revision revision
+&scoped-define sec-bge      BGE
+&scoped-define sec-oxml     OXML
+
 
 class ibs.th.gbl.gbl-inipar: 
 
   /* REP-SETS */
+  &scoped-define section-name {&sec-rep-sets}
   define static property conPar as character no-undo
     get.
     private set.
   define static property conParKeyName as character no-undo
-    initial "{&txt-sec} REP-SETS {&txt-key} ConPar {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} ConPar {&txt-ini}"
     get.
     
   define static property conParFlt as character no-undo
     get.
     private set.
   define static property conParFltKeyName as character no-undo
-    initial "{&txt-sec} REP-SETS {&txt-key} ConParFlt {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} ConParFlt {&txt-ini}"
     get.
     
   define static property logDir as character no-undo
     get.
     private set.
   define static property logDirKeyName as character no-undo
-    initial "{&txt-sec} REP-SETS {&txt-key} logDir {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} logDir {&txt-ini}"
     get.
+  &undefine section-name
     
   /* revision */
+  &scoped-define section-name {&sec-revision}
   define static property comstr as character no-undo
     get.
     private set.
   define static property comstrKeyName as character no-undo
-    initial "{&txt-sec} revision {&txt-key} comstr {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} comstr {&txt-ini}"
     get.
 
   define static property dirflrvs as character no-undo
     get.
     private set.
   define static property dirflrvsKeyName as character no-undo
-    initial "{&txt-sec} revision {&txt-key} dirflrvs {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} dirflrvs {&txt-ini}"
     get.
 
   define static property dirflpmp as character no-undo
     get.
     private set.
   define static property dirflpmpKeyName as character no-undo
-    initial "{&txt-sec} revision {&txt-key} dirflpmp {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} dirflpmp {&txt-ini}"
     get.
+  &undefine section-name
 
   /* BGE */
-  define static property dirfrgAcc as character no-undo
+  &scoped-define section-name {&sec-bge}
+  define static property dirfrgAcc as character no-undo initial ?
     get.
     private set.
   define static property dirfrgAccKeyName as character no-undo
-    initial "{&txt-sec} BGE {&txt-key} Dirfrg-acc {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} Dirfrg-acc {&txt-ini}"
     get.
+  &undefine section-name
 
   /* OXML */
+  &scoped-define section-name {&sec-oxml}
   define static property oxmlDir as character no-undo // значение дл€ переменной oxml-heap-dir
     get.
     private set.
   define static property oxmlDirKeyName as character no-undo
-    initial "{&txt-sec} OXML {&txt-key} oxml-dir {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} oxml-dir {&txt-ini}"
     get.
 
   define static property oxmlExchDir as character no-undo // значение дл€ переменной oxml-exch-dir
     get.
     private set.
   define static property oxmlExchDirKeyName as character no-undo
-    initial "{&txt-sec} OXML {&txt-key} oxml-exch-dir {&txt-ini}"
+    initial "{&txt-sec} {&section-name} {&txt-key} oxml-exch-dir {&txt-ini}"
     get.
+  &undefine section-name
 /* 29/VIII-2018  параметры настройки Ё÷ѕ перенесены из ini-файла в настройки внешней системы
   define static property certSign as logical no-undo
     get.
@@ -147,7 +160,11 @@ class ibs.th.gbl.gbl-inipar:
     get-key-value section "revision" key "comstr"    value comstr .
     get-key-value section "revision" key "dirflrvs"  value dirflrvs .
     get-key-value section "revision" key "dirflpmp"  value dirflpmp .
-    get-key-value section "bge" key "dirfrg-acc"     value dirfrgAcc .
+    
+    &scoped-define section-name "{&sec-bge}"
+    get-key-value section {&section-name} key "dirfrg-acc"     value dirfrgAcc .
+    &undefine section-name
+    
     get-key-value section "oxml" key "oxml-dir"      value oxmlDir .
     get-key-value section "oxml" key "oxml-exch-dir" value oxmlExchDir .
 /* 29/VIII-2018  параметры настройки Ё÷ѕ перенесены из ini-файла в настройки внешней системы
@@ -163,6 +180,97 @@ class ibs.th.gbl.gbl-inipar:
     end .
 */    
   end method. // end_of InitPar
+
+  method public static character PutKeyValue (input p-section as character,
+                                              input p-key     as character,
+                                              input p-value   as character ) :
+  define variable v-message  as character no-undo .
+  define variable v-par-name as character no-undo .
+  
+    /* найти параметр среди обслуживаемых */
+    case p-section :
+      when "{&sec-rep-sets}" then do :
+        case p-key :
+          when "ConPar"    then v-par-name = conParKeyName .
+          when "ConParFlt" then v-par-name = conParFltKeyName .
+          when "logDir"    then v-par-name = logDirKeyName .
+          otherwise v-par-name = "" .
+        end case .
+      end .
+      when "{&sec-revision}" then do :
+        case p-key :
+          when "comstr"   then v-par-name = comstrKeyName .
+          when "dirflrvs" then v-par-name = dirflrvsKeyName .
+          when "dirflpmp" then v-par-name = dirflpmpKeyName .
+          otherwise v-par-name = "" .
+        end case .
+      end .
+      when "{&sec-bge}" then do :
+        case p-key :
+          when "dirfrg-acc" then v-par-name = dirfrgAccKeyName .
+          otherwise v-par-name = "" .
+        end case .
+      end .
+      when "{&sec-oxml}" then do :
+        case p-key :
+          when "oxml-dir"      then v-par-name = oxmlDirKeyName .
+          when "oxml-exch-dir" then v-par-name = oxmlExchDirKeyName .
+          otherwise v-par-name = "" .
+        end case .
+      end .
+      otherwise v-par-name = "" .
+    end case .
+    
+    if v-par-name = "" then do :
+      v-message = substitute("ќшибка сохранени€ параметра: {&txt-sec} &1 {&txt-key} &2 {&txt-ini} вне статичного контекста."
+                            , p-section, p-key) .
+    end .
+    else do :
+      /* сохранить значение параметра и обновить поле в классе */
+      /* @FUTU  добавить проверку, что новое значение отличаетс€ от текущего */
+      put-key-value section p-section key p-key value p-value no-error.
+      if error-status:num-messages > 0 then
+        v-message = substitute("ќшибка сохранени€ параметра: &1: &2"
+                              , v-par-name, error-status:get-message (error-status:num-messages)
+                              ) .
+      else if error-status:error then
+        v-message = substitute("ќшибка сохранени€ параметра: &1", v-par-name) .
+      else do :
+        v-message = "" .
+        /* ещЄ раз найти параметр среди обслуживаемых и обновить его поле в классе */
+        case p-section :
+          when "{&sec-rep-sets}" then do :
+            case p-key :
+              when "ConPar"    then conPar    = p-value .
+              when "ConParFlt" then conParFlt = p-value .
+              when "logDir"    then logDir    = p-value .
+            end case .
+          end .
+          when "{&sec-revision}" then do :
+            case p-key :
+              when "comstr"   then comstr   = p-value .
+              when "dirflrvs" then dirflrvs = p-value .
+              when "dirflpmp" then dirflpmp = p-value .
+            end case .
+          end .
+          when "{&sec-bge}" then do :
+            case p-key :
+              when "dirfrg-acc" then dirfrgAcc = p-value .
+            end case .
+          end .
+          when "{&sec-oxml}" then do :
+            case p-key :
+              when "oxml-dir"      then oxmlDir     = p-value .
+              when "oxml-exch-dir" then oxmlExchDir = p-value .
+            end case .
+          end .
+        end case .
+      end . 
+    end .
+       
+    return v-message .                                       
+  end method. // end_of PutKeyValue
+
 
   /* ----- переменные дл€ печати ----- */
   method public static character prn-lib-get-report-name ( ) :

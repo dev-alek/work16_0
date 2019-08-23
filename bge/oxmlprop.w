@@ -188,6 +188,7 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-save F-Frame-Win
 ON CHOOSE OF b-save IN FRAME F-Main /* Сохранить */
 DO:
+  define variable v-err-message as character no-undo .
 
   assign
     v-exch-dir
@@ -195,8 +196,11 @@ DO:
   .
   if v-exch-dir = v-heap-dir then do:
     message
-    "Каталог EXCH и каталог HEAP НЕ ДОЛЖНЫ СОВПАДАТЬ" skip
-    "Это нарушит работу системы OXML"
+    "Каталог EXCH и каталог HEAP должны различаться." skip(1)
+    "папкой обмена EXCH для системы OXML указан каталог" skip
+    v-exch-dir skip(1)
+    "папкой разбора HEAP для системы OXML указан каталог" skip
+    v-heap-dir
     view-as alert-box error .
     return no-apply.
   end.
@@ -212,12 +216,13 @@ DO:
   end.
   else do:
     if v-exch-dir <> v-old-exch-dir then do:
-      put-key-value section "OXML":U key "oxml-exch-dir":U value v-exch-dir  no-error.
-      if error-status:error then do:
+      v-err-message = ibs.th.gbl.gbl-inipar:PutKeyValue("OXML":U, "oxml-exch-dir":U, v-exch-dir) .
+      if v-err-message > "" then do:
         message
           vss-workfile vss-revision vss-description skip
-          "Файл настроек progress доступен только для чтения!" skip
-          "Сохранение параметров невозможно."
+          v-err-message skip(1)
+          "Возможно, файл настроек progress доступен только для чтения." skip
+          "Сохранение параметра отклонено."
           view-as alert-box error.
         return no-apply.
       end.
@@ -236,12 +241,13 @@ DO:
   end.
   else do:
     if v-heap-dir <> v-old-heap-dir then do:
-      put-key-value section "OXML":U key "oxml-dir":U value v-heap-dir .
-      if error-status:error then do:
+      v-err-message = ibs.th.gbl.gbl-inipar:PutKeyValue("OXML":U, "oxml-dir":U, v-heap-dir) .
+      if v-err-message > "" then do:
         message
           vss-workfile vss-revision vss-description skip
-          "Файл настроек progress доступен только для чтения!" skip
-          "Сохранение параметров невозможно."
+          v-err-message skip(1)
+          "Возможно, файл настроек progress доступен только для чтения." skip
+          "Сохранение параметра отклонено."
           view-as alert-box error.
         return no-apply.
       end.
@@ -328,19 +334,14 @@ END.
 /* ***************************  Main Block  *************************** */
 { gbl/personly.i }
 
-get-key-value section "OXML":U key "oxml-exch-dir":U value v-exch-dir .
-get-key-value section "OXML":U key "oxml-dir":U value v-heap-dir .
-
-if v-exch-dir = ? then do:
-  assign
-    v-exch-dir = "":U
-  .
-end.
-if v-heap-dir = ? then do:
-  assign
-    v-heap-dir = "":U
-  .
-end.
+assign
+  v-exch-dir = ibs.th.gbl.gbl-inipar:oxmlExchDir
+  v-heap-dir = ibs.th.gbl.gbl-inipar:oxmlDir
+.
+assign
+  v-exch-dir = "":U when v-exch-dir = ?
+  v-heap-dir = "":U when v-heap-dir = ?
+.
 assign
   v-old-exch-dir = v-exch-dir
   v-old-heap-dir = v-heap-dir
