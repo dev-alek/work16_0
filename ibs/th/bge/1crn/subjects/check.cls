@@ -586,6 +586,11 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     end . /* end_of for each buf_chk-pay */
 
     /* section3 обязательность 0-1 */
+    /* если в чеке есть скидка по топливному купону, у которой discnt-type = 23 и discnt-value-pcnt = 0 - то
+       из этого чека скидки не выгружаем вообще. Там попадается скидка -1000% */
+    if not can-find (first chk-discnt where chk-discnt.doc-code = p-buf_chk-doc.doc-code
+                                        and chk-discnt.discnt-type       = 23
+                                        and chk-discnt.discnt-value-pcnt = 0) then do :
     for each buf_chk-discnt no-lock
        where buf_chk-discnt.doc-code = p-buf_chk-doc.doc-code
         /* скидки обычные (record-type = 0) и скидки, которыми выравниваются погрешности (record-type = 2) */
@@ -643,6 +648,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       end.
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section3}) .
     end . /* end_of for each buf_chk-discnt */
+    end . /* end_of if chk-discnt.discnt-type <> 23 or chk-discnt.discnt-value-pcnt <> 0 */
 
 
     /* section4 обязательность 0-1 */
