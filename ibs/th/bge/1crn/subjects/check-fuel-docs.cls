@@ -337,7 +337,7 @@ sw = insw .
       sw:write-data-element ("tnk-t3-fact" , if tt-rvs-line.state-temp-layer3 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer3)) no-error .
       sw:write-data-element ("tnk-flng-fact" , if tt-rvs-line.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line.state-cf-qnty)) no-error .
       
-      sw:write-data-element ("ms-dnsty" , string-mth(v-dnsty)) no-error .
+      sw:write-data-element ("ms-dnsty" , if v-dnsty = ? then "0" else string-mth(v-dnsty)) no-error .
       sw:write-data-element ("er-wght" , string-mth(v-wght)) no-error .
       sw:write-data-element ("abs-er-wght" , if (tt-rvs-line.state-measure-cli-qnty * v-wght / 100) = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty * v-wght / 100)) no-error .
       sw:write-data-element ("ex-df" , string-mth(v-ex-df)) no-error .
