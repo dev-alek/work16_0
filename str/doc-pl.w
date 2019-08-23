@@ -15,7 +15,26 @@ DEFINE BUFFER buf-obj_clients FOR ub.clients.
 DEFINE BUFFER buf_goods FOR ub.goods.
 DEFINE BUFFER buf_place FOR ub.place.
 DEFINE BUFFER buf_rvs-line FOR ub.rvs-line.
-DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO LIKE ub.doc-pl.
+DEFINE TEMP-TABLE loc-t-doc-pl NO-UNDO 
+field pl-code as integer format "99999999999"
+field whole-send-news like ub.doc-pl.whole-send-news
+field obj-type like ub.doc-pl.obj-type
+field obj-code like ub.doc-pl.obj-code
+field out-code like ub.doc-pl.out-code
+field fact-qnty like ub.doc-pl.fact-qnty
+field doc-qnty like ub.doc-pl.doc-qnty
+field gds-code like ub.doc-pl.gds-code
+field cli-qnty like ub.doc-pl.cli-qnty
+field cli-fact-qnty like ub.doc-pl.cli-fact-qnty
+field cli-doc-qnty like ub.doc-pl.cli-doc-qnty
+field rest-af-qnty like ub.doc-pl.rest-af-qnty
+field cli-rest-af-qnty like ub.doc-pl.cli-rest-af-qnty
+field rest-bf-qnty like ub.doc-pl.rest-bf-qnty
+field cli-rest-bf-qnty like ub.doc-pl.cli-rest-bf-qnty
+index pi obj-type obj-code pl-code out-code gds-code
+index doc out-code gds-code obj-code obj-type pl-code
+index gds-code gds-code
+.
 DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO like ub.doc-pl
     field pl-code2 like ub.doc-pl.pl-code
 .
@@ -53,7 +72,7 @@ define input  parameter p-upd-field                 as   character              
 define input  parameter p-upd-units                 as   character                  no-undo .
 define input  parameter p-doc-code                  like ub.trn-doc.doc-code        no-undo .
 define input  parameter p-gds-code                  like ub.goods.gds-code          no-undo .
-define input  parameter p-pl-code                   like ub.doc-pl.pl-code          no-undo .
+define input  parameter p-pl-code                   as   integer                    no-undo .
 define input  parameter p-doc-line-unit-cli         like ub.doc-line.unit-cli       no-undo .
 define input  parameter p-doc-line-cli-base-rate    like ub.doc-line.cli-base-rate  no-undo .
 define input  parameter p-doc-line-doc-density      like ub.doc-line.doc-density    no-undo .
