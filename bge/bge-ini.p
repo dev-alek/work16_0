@@ -42,16 +42,17 @@ define variable strDIR    as character    no-undo.
 &SCOP Slash ~\
 &endif
 
-GET-KEY-VALUE SECTION "" KEY "" VALUE strBGE. /* есть ли BGE-секция? */
-IF LOOKUP( "BGE", strBGE ) = 0
-THEN DO:        /* нет - создаем каталоги, секцию и ключ */
+strBGE = ibs.th.gbl.gbl-inipar:dirfrgAcc .
+if strBGE = ? then do : /* нет ключа */
+
      RUN makeFRGdir ( OUTPUT strDIR ). /* запросим место и сделаем попытку созданий дир */
      IF RETURN-VALUE = "OK"
      THEN DO:
-         PUT-KEY-VALUE SECTION "BGE" KEY "Dirfrg-acc" VALUE strDIR + "{&Slash}frg-acc" no-error.
-         if error-status :error
-         then do:
-             message
+       define variable v-err-message as character no-undo .
+       v-err-message = ibs.th.gbl.gbl-inipar:PutKeyValue("BGE", "Dirfrg-acc", "{&Slash}frg-acc") .
+       if v-err-message > "" then do:
+             message v-err-message
+                skip(1)
                      "Не удалось записать значение ключа"
                 skip "Dirfrg-acc в секции BGE ini-файла."
                 skip "Выгрузка данных невозможна."
@@ -68,29 +69,13 @@ THEN DO:        /* нет - создаем каталоги, секцию и ключ */
          RETURN "OK".
      END.
      ELSE RETURN "ERROR".
-END. /* of  IF LOOKUP("BGE", strBGE) = 0 ... */
-ELSE DO:    /* Секция есть; проверим есть ли ключ */
-    GET-KEY-VALUE SECTION "BGE" KEY "Dirfrg-acc" VALUE strBGE.
-    IF strBGE = ?
-    THEN DO:        /* нет ключа */
-        RUN makeFRGdir ( OUTPUT strDIR ).
-        IF RETURN-VALUE = "OK"
-        THEN DO:
-            PUT-KEY-VALUE SECTION "BGE" KEY "Dirfrg-acc" VALUE strDIR + "{&Slash}frg-acc".
-            assign
-                strFRG-ACC = strDIR + "{&Slash}frg-acc"
-            .
-            RETURN "OK".
-        END.
-        ELSE RETURN "ERROR".
-    END.
-    ELSE DO: /* есть ключ */
-        assign
-            strFRG-ACC = strBGE
-        .
-        RETURN "OK".
-    END.
-END.
+     
+end .
+else do : /* есть ключ */
+  strFRG-ACC = strBGE .
+  RETURN "OK".
+end .
+
 
 PROCEDURE makeFRGdir :
     /* Запросить место и создать 4 каталога; OK - удача */
