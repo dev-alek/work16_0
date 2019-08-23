@@ -23,7 +23,7 @@ USING ibs.th.gbl.curdburt from propath.
 class ibs.th.bge.1crn.import.impbank-accounts implements ibs.th.bge.1crn.import.iimpsubject: 
   
   { cmp/str-glbl.i class }
-  { cmp/str-glbl.i }
+/*  { cmp/str-glbl.i }*/
   
   
   define property Msg as character no-undo
@@ -51,27 +51,67 @@ class ibs.th.bge.1crn.import.impbank-accounts implements ibs.th.bge.1crn.import.
     define variable v-mode-bank       as character no-undo .
     define variable v-doc-rec         as recid     no-undo .
     define variable v-host-code       as integer   no-undo .
+    define variable v-obj-code        as integer   no-undo .
+    define variable v-status_         as character no-undo .
     define variable objBank-Accounts  as class     bank-accounts      no-undo.
     define variable objBank           as class     bank-accounts_bank no-undo .
     
     
     objBank-Accounts = cast (subjectObj, bank-accounts).
+    if objBank-Accounts:del-f > 0 then do:
+      Msg = "физическое удаление банковских счетов не предусмотрено".
+      return false.
+    end.
+
+    find first sysconf no-lock no-error.
+    if AVAILABLE (sysconf) then v-host-code = sysconf.host-code .
+    else do:
+      Msg = "Не найдена фирма" .
+      return false.
+    end.  
+
+    v-obj-code = integer(objBank-Accounts:cont-code) no-error .
+    if error-status:error then do :
+      Msg = substitute("ошибка преобразования в число значения cont-code = &1", objBank-Accounts:cont-code) .
+      return false.
+    end .
+    
+    if objBank-Accounts:del-l > 0 then do:
+      find first buf_fin-schet EXCLUSIVE-LOCK
+           where buf_fin-schet.r-schet   = objBank-Accounts:r-schet
+             and buf_fin-schet.cli-code  = v-obj-code
+              and buf_fin-schet.cli-type = {&cmp} no-error .
+      /* !! отсутствует уникальный индекс на сочетание полей r-schet + cli-code + cli-type */
+      if available (buf_fin-schet) then do :
+        v-status_ = {&deleted-status} .
+        run ref/finscht2.p (
+          input recid(buf_fin-schet)
+         ,input yes /*p-silent*/
+         ,input ''
+         ,input-output v-status_
+        ) no-error .
+        if error-status:error then do :
+          Msg = return-value .
+          return false .
+        end .
+        else return true .
+      end .
+      else do :
+        Msg = substitute("отсутствует счёт &1 у держателя с кодом cont-code = &2", objBank-Accounts:r-schet, objBank-Accounts:cont-code) .
+        return false.
+      end .
+    end.
+
+    
     objBank  = objBank-Accounts:bank .
             
-    find first X_schet-clients no-lock where X_schet-clients.obj-code = integer(objBank-Accounts:cont-code) and
+    find first X_schet-clients no-lock where X_schet-clients.obj-code = v-obj-code and
       X_schet-clients.obj-type = {&cmp} no-error .
     if not available X_schet-clients then 
     do:
       Msg = "Не найден держатель счета в справочнике клиентов с кодом:" + string(objBank-Accounts:cont-code) .
       return error.
     end.
-      find first sysconf no-lock no-error.
-      if AVAILABLE (sysconf) then v-host-code = sysconf.host-code .
-      else 
-      do:
-        Msg = "Не найдена фирма" .
-        return error Msg.
-      end.  
   
     find first buf_fin-bank no-LOCK where buf_fin-bank.bik = objBank:bik
       and buf_fin-bank.host-code = v-host-code no-error . 
@@ -159,6 +199,19 @@ class ibs.th.bge.1crn.import.impbank-accounts implements ibs.th.bge.1crn.import.
       do:
         v-mode = {&update} .
         ri = recid(buf_fin-schet) .
+        if (objBank-Accounts:del-l = 0) and (buf_fin-schet.status_ <> {&current-status}) then do : 
+          v-status_ = {&current-status} .
+          run ref/finscht2.p (
+          input ri
+         ,input yes /*p-silent*/
+         ,input ''
+         ,input-output v-status_
+          ) no-error .
+          if error-status:error then do :
+            Msg = return-value .
+            return false .
+          end .
+        end .
       end.
       else 
       do:
