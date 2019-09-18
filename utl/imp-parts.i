@@ -1,3 +1,5 @@
+/* @NOTE логических полей избегать, иначе при импорте пустого значения ';;;' будет ошибка:
+         логическое поле может быть только yes/no */
 define temp-table tt-imp-parts no-undo // скопировано из utl/imp-doc4.p
   /* 01 */ field artic         as character
            field f02           as character

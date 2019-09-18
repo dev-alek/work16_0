@@ -238,6 +238,7 @@ define variable p-from-version as character initial {&thth150-from-version} no-u
 /* ----- перекодировка их xxx-15_0 в наш xxx_16_0 ----- */
 define stream fosnid.
 define temp-table w-osn no-undo
+  field supp-type-15_0 as character
   field supp-code-15_0 as integer
   field supp-code-16_0 as integer
 .
@@ -259,13 +260,21 @@ define temp-table w-gds no-undo
   end .
 input stream fosnid from value (p-osn-fname).
 repeat:
+  define variable v-osn-15 as character no-undo .
+  define variable v-osn-16 as integer no-undo .
+  import stream fosnid delimiter ';' v-osn-15 v-osn-16.
   create w-osn.
-  import stream fosnid delimiter ';' w-osn.
+  assign
+    w-osn.supp-type-15_0 =         substring(v-osn-15, 1, 3)
+    w-osn.supp-code-15_0 = integer(substring(v-osn-15, 4))
+    w-osn.supp-code-16_0 =                   v-osn-16
+  .
 end.
 input stream fosnid close.
-// последн€€ пуста€ строка в импортируемом файле:
+/* дл€ импорта напр€мую в w-osn последн€€ пуста€ строка в импортируемом файле:
 find w-osn where w-osn.supp-code-16_0 = 0 and w-osn.supp-code-15_0 = 0 no-error.
 if available w-osn then delete w-osn.
+*/
 
 /* ----- коды товаров ----- */
 &scop my-message substitute("чтение файла соответстви€ товаров &1", p-art-fname)
@@ -453,8 +462,9 @@ define buffer new_clients  for ub.clients .
         v-is-supp-err = true
       .
       else do :
-        /* поиск соответстви€ старого cli-code p-from-version версии в 16.0 */
-        find first w-osn where w-osn.supp-code-15_0 = buf_tt-parts.supp-code no-error .
+        /* поиск соответстви€ старого cli-type+cli-code p-from-version версии в 16.0 */
+        find first w-osn where w-osn.supp-code-15_0 = buf_tt-parts.supp-code
+                           and w-osn.supp-type-15_0 = buf_tt-parts.supp-type no-error .
         if available w-osn then do:
           assign
             new_cli-type = {&cmp} /*            new_cli-type = buf_tt-parts.supp-type*/
@@ -466,7 +476,8 @@ define buffer new_clients  for ub.clients .
           if v-is-supp-err then v-my-message = substitute("ошибка (новый клиент &1 &2)", new_cli-type , new_cli-code) .
         end .
         else assign
-          v-my-message  = substitute ("ќтсутствует код поставщика &1 в файле соответстви€ &2", buf_tt-parts.supp-code, p-osn-fname )
+          v-my-message  = substitute ( "ќтсутствует код поставщика &1 &2 в файле соответстви€ &3"
+                                     , buf_tt-parts.supp-type, buf_tt-parts.supp-code, p-osn-fname )
           v-is-supp-err = true
         .
       end .
@@ -644,6 +655,8 @@ define buffer new_clients  for ub.clients .
 
       temp_parts.supp-code  = new_cli-code
       temp_parts.supp-type  = new_cli-type
+      temp_parts.new-cli-type = new_cli-type
+      temp_parts.new-cli-code = new_cli-code
       temp_parts.contract-code = v-contract-code
 //  field cont-prn-code like ub.contract.contract-prn-code
 
@@ -662,8 +675,6 @@ define buffer new_clients  for ub.clients .
       temp_parts.last-date  = v-last-date
       temp_parts.cli-base-rate = temp_parts.fact-qnty1 / temp_parts.cli-qnty1
       temp_parts.pl-code = ub.place.pl-code
-      temp_parts.new-cli-type = new_cli-type
-      temp_parts.new-cli-code = new_cli-code
     .
     end .
   /*
