@@ -299,7 +299,6 @@ run write-log  in p-log-handle (
       v-err-message = trim(parseSubObj:Msg, ";") .
       v-err-message = trim(v-err-message) .
       v-err-message = trim(v-err-message, ";") .
-      message view-as alert-box.
       run rul/send-ack_1c.p ( input v-sender-id
                             , input v-pack-num
                               ,input 4
