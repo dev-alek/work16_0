@@ -1955,7 +1955,7 @@ end.
       {&create-thbj-attr}.
     end.
     when {&attr-dc-ref} then do:
-      v-prop-code = "{&bef-attr-dc-ref_l-zeros}".
+      v-prop-code = "{&bef-attr-dc-ref_l-zeros},{&bef-attr-dc-ref_l-mask}".
       do v-ii = 1 to num-entries(v-prop-code):
 &scop ptype logical
 &scop prop-value no

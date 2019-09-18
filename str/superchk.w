@@ -7,7 +7,7 @@
 &Scoped-define FRAME-NAME Dialog-Frame
 
 
-/* Temp-Table and Buffer definitions                                    */
+/* Temp-Table and Buffer deftions                                    */
 DEFINE BUFFER buf_cash-desk FOR cash-desk.
 DEFINE BUFFER buf_cashier FOR clients.
 DEFINE BUFFER buf_clients FOR clients.
@@ -97,7 +97,7 @@ define variable hnum as logical no-undo init no.
 define variable ibmgroup as logical no-undo init yes.
 define variable lll as int no-undo initial 0. /*счетчик принятых чеков*/
 define variable v-is-top as logical no-undo . /*есть ли бензоколонки*/
-
+define variable v-src-d-card  like ub.chk-doc.src-d-card no-undo .
 /*текущая смена*/
 DEFINE VARIABLE v-shift-date as date no-undo.
 DEFINE VARIABLE v-shift-num as integer no-undo.
@@ -127,6 +127,16 @@ define variable v-OVDtax-type as character no-undo label "Вид налога ОФД" FORMAT
 define variable v-corr-osnov as character no-undo view-as fill-in size 50 by 1 label "Основание" .
 define variable v-corr-type as character no-undo view-as fill-in size 20 by 1 label "Тип коррекции" .
 define buffer buf_shop for ub.shop.
+
+define variable v-value-character as character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
+define variable v-tth as handle no-undo .
+define variable par-l-mask  as logical no-undo .
+define variable v-param-type as character no-undo .
+
 define variable p-view-log as logical no-undo.
 { str/get-chkc.i def  update }
 { gbl/gbclcode.i }
@@ -800,7 +810,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "П."
           VIEW-AS FILL-IN 
           SIZE 4.13 BY 1
-     tt-chk-doc.src-d-card AT ROW 9 COL 36 COLON-ALIGNED
+     v-src-d-card AT ROW 9 COL 36 COLON-ALIGNED
           LABEL "ДК в чеке"
           VIEW-AS FILL-IN 
           SIZE 19 BY 1
@@ -1823,6 +1833,25 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME tt-chk-doc.src-d-card
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-chk-doc.src-d-card Dialog-Frame
+ON LEAVE OF v-src-d-card IN FRAME Dialog-Frame /* ДК в чеке */
+DO:
+
+  assign
+  v-src-d-card .
+  
+  tt-chk-doc.src-d-card = v-src-d-card .
+  if par-l-mask and tt-chk-doc.src-d-card <> "" then v-src-d-card = substring(tt-chk-doc.src-d-card,1,6) + "XXXXXX" + substring (tt-chk-doc.src-d-card,13,4).
+  else v-src-d-card = tt-chk-doc.src-d-card .
+      display
+      v-src-d-card
+      with frame {&frame-name} .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME tt-chk-doc.d-card
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-chk-doc.d-card Dialog-Frame
@@ -2338,7 +2367,6 @@ run diasize_init in this-procedure .
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 
-
 on F9 of frame {&frame-name} anywhere do:
 define buffer buf_bar-code  for ub.bar-code.
 if not available tt-chk-gds then return no-apply.
@@ -2408,6 +2436,7 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
           return no-apply.
         end.
       end.
+      
       assign
       tt-chk-gds.b-code = integer(tt-chk-gds.b-code:screen-value in browse br-gds)
       tt-chk-gds.src-code = tt-chk-gds.src-code:screen-value in browse br-gds
@@ -3398,7 +3427,7 @@ PROCEDURE enable_UI :
           tt-chk-doc.pay-desk tt-chk-doc.doc-num tt-chk-doc.doc-num2 
           tt-chk-doc.chk-num tt-chk-doc.z-number tt-chk-doc.src-d-pcnt 
           tt-chk-doc.src-shift-date tt-chk-doc.cash-rate tt-chk-doc.cash-scale 
-          tt-chk-doc.shift-name tt-chk-doc.shift-num tt-chk-doc.src-d-card 
+          tt-chk-doc.shift-name tt-chk-doc.shift-num v-src-d-card 
           tt-chk-doc.PS tt-chk-doc.tot-doc tt-chk-doc.discnt 
           tt-chk-doc.sub-discnt tt-chk-doc.netto tt-chk-doc.d-pcnt 
           tt-chk-doc.shift-date 
@@ -3409,7 +3438,7 @@ PROCEDURE enable_UI :
          B-card tt-chk-doc.pay-desk b-cd tt-chk-doc.doc-num tt-chk-doc.doc-num2 
          tt-chk-doc.chk-num tt-chk-doc.z-number tt-chk-doc.src-d-pcnt 
          tt-chk-doc.src-shift-date tt-chk-doc.cash-rate tt-chk-doc.cash-scale 
-         tt-chk-doc.shift-name tt-chk-doc.shift-num tt-chk-doc.src-d-card 
+         tt-chk-doc.shift-name tt-chk-doc.shift-num v-src-d-card 
          b-addbonus B-adddiscnt B-addgds BR-gds BR-discnt BR-pay tt-chk-doc.PS 
          B-addpay b-cf F-cashier tt-chk-doc.tot-doc F-salesman 
          tt-chk-doc.discnt tt-chk-doc.sub-discnt f-cli-name tt-chk-doc.netto 
@@ -3533,8 +3562,10 @@ IF par-mode = {&add-def} then do:
       tt-chk-doc.z-number = 0
       tt-chk-doc.PS = "!"
       .
+      
       create locked_chk-doc.
       buffer-copy tt-chk-doc to locked_chk-doc.
+      
     END.
     FIND FIRST buf_obj No-LOCK WHERe
                 buf_obj.obj-type = shop-type AND
@@ -3613,8 +3644,10 @@ else do:
     undo, return error .
   end.
   if not v-updated then undo, return error .
+  
   create tt-chk-doc.
   buffer-copy locked_chk-doc to tt-chk-doc.
+  
     FIND FIRST buf_obj No-LOCK WHERe
                 buf_obj.obj-type = tt-chk-doc.obj-type AND
                 buf_obj.obj-code = tt-chk-doc.obj-code No-ERROR.
@@ -4376,6 +4409,33 @@ assign
 is-prt = no
 .
 
+run adm/shattri.p (
+      input "get":U
+    ,input  p-obj-type
+    ,input  p-obj-code
+    ,input  {&attr-dc-ref}
+    ,input  {&attr-dc-ref_l-mask} /*p-param-code*/
+    ,output v-value-character
+    ,output v-value-date
+    ,output v-value-decimal
+    ,output v-value-integer
+    ,output par-l-mask
+    ,output v-param-type
+    ,INPUT-OUTPUT table-handle v-tth
+    ) no-error .
+
+for each thbjattr_thbj-attr where
+       thbjattr_thbj-attr.obj-type = p-obj-type
+   and thbjattr_thbj-attr.obj-code = p-obj-code
+   and thbjattr_thbj-attr.upper-prop-code = {&attr-dc-ref}
+on error undo, return error return-value :
+  case thbjattr_thbj-attr.prop-code:
+    when {&attr-dc-ref_l-mask} then do:
+      assign
+      par-l-mask = thbjattr_thbj-attr.property-value-logical.
+    end.
+  end case.
+end.
 if get-chkc_context.shift-on and not get-chkc_context.cas-shft then do:
   message
   "Внимание! На текущем объекте требуется использование смен," skip
@@ -4775,6 +4835,7 @@ DO while valid-handle(v-h) :
     v-h = v-h:NEXT-COLUMN.
   END.
 END.
+
 assign
 cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  (if par-mode = {&lookup}
                                                         then {&receipt-codes-combo}
@@ -4835,12 +4896,14 @@ and dflt-cd <> {&cd-type-IBM-XML} then do:
     .
 end.
 
+if par-l-mask and tt-chk-doc.src-d-card <> "" then v-src-d-card = substring(tt-chk-doc.src-d-card,1,6) + "XXXXXX" + substring (tt-chk-doc.src-d-card,13,4).
+else v-src-d-card = tt-chk-doc.src-d-card .
 
   DISPLAY cb-chk-type fhour fmin fsec F-cashier F-salesman f-cli-name
   WITH FRAME {&frame-name} .
   IF AVAILABLE tt-chk-doc THEN
     DISPLAY tt-chk-doc.chk-date tt-chk-doc.cashier tt-chk-doc.sales-man
-          tt-chk-doc.obj-code tt-chk-doc.d-card tt-chk-doc.src-d-card tt-chk-doc.pay-desk
+          tt-chk-doc.obj-code tt-chk-doc.d-card v-src-d-card tt-chk-doc.pay-desk
           tt-chk-doc.chk-num tt-chk-doc.z-number tt-chk-doc.src-d-pcnt
           tt-chk-doc.src-shift-date tt-chk-doc.shift-date tt-chk-doc.cash-scale
           tt-chk-doc.cash-rate tt-chk-doc.shift-num tt-chk-doc.shift-name tt-chk-doc.PS
@@ -4864,7 +4927,7 @@ case PAR-MODE:
     fsec
     tt-chk-doc.sales-man
     tt-chk-doc.d-card
-    tt-chk-doc.src-d-card
+    v-src-d-card
     tt-chk-doc.pay-desk tt-chk-doc.chk-num tt-chk-doc.z-number
     tt-chk-doc.src-d-pcnt
     tt-chk-doc.cash-scale when get-chkc_context.r-b = {&r-b-base} and get-chkc_context.base-code <> 0

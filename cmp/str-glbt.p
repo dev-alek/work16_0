@@ -310,10 +310,9 @@ attr-gds-ref_obj
 
 
 { cmp/cr-prepc.i 1 prop-list-attr-dc-ref
-"l-zeros"
+"l-zeros,l-mask"
 attr-dc-ref
 }
-
 
 /*набор опций работы со справочником клиентов*/
 { cmp/cr-prep.i 1 attr-cli-all                 cli-all                  " " cli-all }

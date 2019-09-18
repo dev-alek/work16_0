@@ -3136,19 +3136,19 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-dc-ref true
 &scop output-display-attr-dc-ref false
 &scop other-attr-dc-ref 'spr-ext=adm\shattr38.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-dc-ref 'logical'
+&scop prop-type-list-attr-dc-ref 'logical,logical'
 &scop prop-label-list-attr-dc-ref '~
 Разрешено добавление ДК с лидирующими нулями~
+,Маскирование ДК~
 '
 &scop global-attr-dc-ref true
 &scop host-attr-dc-ref false
-&scop shop-attr-dc-ref false
+&scop shop-attr-dc-ref true
 &scop store-attr-dc-ref false
 &scop db-attr-dc-ref false
 &scop batch-edit-attr-dc-ref  0
-&scop level-way-attr-dc-ref ",,global"
-&scop up-way-attr-dc-ref ",,dc-ref"
-
+&scop level-way-attr-dc-ref "obj,,global"
+&scop up-way-attr-dc-ref "dc-ref,,dc-ref"
 
 /*Набор опций работы со справочником клиентов*/
 &scop label-attr-cli-all "Набор опций работы со справочником клиентов"
