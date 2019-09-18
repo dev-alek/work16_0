@@ -89,6 +89,7 @@ define variable v-custom-pack-name  as character no-undo .
 define variable v-custom-pack-flag  as logical   no-undo .
 define variable v-msg-templ-start   as character no-undo .
 define variable v-msg-templ-finish  as character no-undo .
+define variable v-return-message    as character no-undo .
 define variable v-take-count        as integer no-undo .
 define variable v-analys-count      as integer no-undo .
 define variable v-analys-ack        as integer no-undo .
@@ -181,10 +182,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       v-msg-templ-finish = "Завершен прием и разбор пакетов данных из ВС '&1'" .
     end.
     otherwise do:
-                message vss-workfile vss-revision vss-description skip
-                        substitute( "Не предусмотрена операция &1", v-action )
-                        view-as alert-box error.
-                return error.
+      v-return-message = substitute( "Не предусмотрена операция &1", v-action ) .
+      return error v-return-message.
     end.
   end case.
 
@@ -946,6 +945,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                         ,input buf_ext-system.db-num
                                         ,input v-cur-db-num
                                         ,input v-full-path
+                                        ,input v-file-name
                                         ,input v-pack-data
                                         ,input v-espr-pack-num
                                         ,input add-log-file-name

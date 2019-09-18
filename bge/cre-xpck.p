@@ -61,8 +61,13 @@ define variable vss-description as character no-undo init "Подготовка пакета(ов)
   define buffer buf_esys-all-attr for ub.esys-all-attr.
 
   define variable esys-attr-value  as character no-undo .
-  define variable esys-attr-type   as character no-undo .
+/*  define variable esys-attr-type   as character no-undo . */
   define variable esys-attr-exist  as logical   no-undo .
+
+  /* упреждающее чтение аттрибутов для подстановки в цикле */
+  define variable db-esys-attr-exist as logical   no-undo .
+  define variable db-esys-attr-value as character no-undo .
+  define variable db-esys-attr-type  as character no-undo .
 
   define variable v-gen-new-xpack as logical   no-undo .
 
@@ -153,6 +158,37 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       p-esys-id :screen-value   = string( p-esys-id, p-esys-id :format)
     .
   end.
+  
+      run ext-system-attr-exist (
+                          input p-esys-id
+                          ,input p-db-num
+                          ,input {&attr-need-gen-new-xpack}
+                          ,output db-esys-attr-exist
+                        ) no-error.
+      if error-status :error then do:
+        run write-to-log( substitute("&1. Ошибка при определении наличия атрибута формирования нового пакета для ВС &2"
+                                    ,vss-workfile
+                                    ,p-esys-id
+                                    )
+                        ) .
+        undo, return error.
+      end.
+      run ext-system-attr-value (
+                          input p-esys-id
+                          ,input p-db-num
+                          ,input {&attr-need-gen-new-xpack}
+                          ,output db-esys-attr-value
+                          ,output db-esys-attr-type
+                        ) no-error.
+      if error-status :error then do:
+        run write-to-log( substitute("&1. Ошибка при чтении атрибута формирования нового пакета для ВС &2"
+                                    ,vss-workfile
+                                    ,p-esys-id
+                                    )
+                        ) .
+        undo, return error.
+      end.
+  
   gen-pack:
   do while p-err-gen-pack = 0
   on error undo, return error
@@ -173,35 +209,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       esys-attr-value = "yes":U.
     end.
     else do:
-      run ext-system-attr-exist (
-                          input p-esys-id
-                          ,input p-db-num
-                          ,input {&attr-need-gen-new-xpack}
-                          ,output esys-attr-exist
-                        ) no-error.
-      if error-status :error then do:
-        run write-to-log( substitute("&1. Ошибка при определении наличия атрибута формирования нового пакета для ВС &2"
-                                    ,vss-workfile
-                                    ,p-esys-id
-                                    )
-                        ) .
-        undo, return error.
-      end.
-      run ext-system-attr-value (
-                          input p-esys-id
-                          ,input p-db-num
-                          ,input {&attr-need-gen-new-xpack}
-                          ,output esys-attr-value
-                          ,output esys-attr-type
-                        ) no-error.
-      if error-status :error then do:
-        run write-to-log( substitute("&1. Ошибка при чтении атрибута формирования нового пакета для ВС &2"
-                                    ,vss-workfile
-                                    ,p-esys-id
-                                    )
-                        ) .
-        undo, return error.
-      end.
+      esys-attr-exist = db-esys-attr-exist .
+      esys-attr-value = db-esys-attr-value .
     end.
     v-custom-pack-name = ''.
     if ( available buf_esys-route
@@ -254,7 +263,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.
       leave gen-pack .
     end.
-    run bge/espcknum.p // 28/X-2018 - v-source-dir и v-target-dir не используются
+    run bge/espcknum.p // 28/X-2018 - v-source-dir и v-target-dir не используются;
+                       // 12/VIII-2019 - v-temp-dir, v-log-file-name, v-list-file-name не используются
       ( input "put":U
        ,input p-esys-id
        ,input p-db-num
