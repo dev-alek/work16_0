@@ -698,7 +698,7 @@ DEFINE FRAME d-gds-form
           BGCOLOR 3 FGCOLOR 15
      r-prod at row 5.54 col 31.25
      ub.goods.gds-name at row 6.58 col 13 COLON-ALIGNED
-          LABEL "Название" FORMAT "X(70)"
+          LABEL "Название" FORMAT "X(112)"
           VIEW-AS FILL-IN
           size 66.38 by 1
           BGCOLOR 3 FGCOLOR 15
@@ -717,12 +717,12 @@ DEFINE FRAME d-gds-form
      rect-label-name-1 at row 7.63 col 40.38
      rect-label-name-2 at row 7.63 col 65.38
      goods.label-name at row 8.79 col 13.13 COLON-ALIGNED
-          LABEL "Этикетка" FORMAT "X(80)"
+          LABEL "Этикетка" FORMAT "X(112)"
           VIEW-AS FILL-IN
           size 84.38 by 0.96
           FGCOLOR 4
      goods.chk-name at row 9.92 col 13.13 COLON-ALIGNED
-           LABEL "На  чеке" FORMAT "X(128)"
+           LABEL "На  чеке" FORMAT "X(122)"
           VIEW-AS FILL-IN
           size 50.5 by 0.96
           FGCOLOR 4
