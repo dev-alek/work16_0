@@ -259,14 +259,13 @@ DO:
     define variable v_os-file   AS CHAR NO-UNDO INIT "":U.
     define variable ll_commit AS LOG    NO-UNDO INIT NO.
 
-    SYSTEM-DIALOG GET-FILE v_os-file
+    SYSTEM-DIALOG GET-DIR v_os-file
         TITLE      "Выберите каталог для архива"
-        USE-FILENAME
         UPDATE ll_commit.
 
     IF ll_commit <> YES THEN RETURN NO-APPLY.
-    ASSIGN dirname = substring(v_os-file, 1, length(v_os-file) -
-length(entry(num-entries(v_os-file,"\"), v_os-file, "\"))).
+    ASSIGN dirname = v_os-file + "\" .
+
     DISP dirname WITH FRAME {&FRAME-NAME}.
 END.
 
