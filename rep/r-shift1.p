@@ -513,7 +513,7 @@ on error undo, return error return-value
       pol5 = 0
       pol6 = 0
       pol5 = integer(entry(1,buf_rvs-line-attr.attr-value, ";"))      when avail buf_rvs-line-attr
-      pol6 = integer(entry(1,buf_prev-rvs-line-attr.attr-value, ";")) when avail buf_rvs-line-attr
+      pol6 = integer(entry(1,buf_prev-rvs-line-attr.attr-value, ";")) when avail buf_prev-rvs-line-attr
       pol7 = pol5 - pol6.
       
       display stream PrnLibstream
@@ -541,7 +541,7 @@ on error undo, return error return-value
       pol2 = 0
       pol15 = 0
       pol2 = integer(entry(2,buf_prev-rvs-line-attr.attr-value, ";")) when Avail buf_prev-rvs-line-attr
-      pol15 = integer(entry(2,buf_rvs-line-attr.attr-value, ";"))     when Avail buf_prev-rvs-line-attr .
+      pol15 = integer(entry(2,buf_rvs-line-attr.attr-value, ";"))     when Avail buf_rvs-line-attr .
       
       display stream PrnLibstream
       {&All-sym}
@@ -575,7 +575,7 @@ on error undo, return error return-value
       pol1 = "Tâõ - CH4 °C"
       pol2 = 0
       pol15 = 0
-      pol2 = integer(entry(3,buf_prev-rvs-line-attr.attr-value, ";")) when Avail buf_rvs-line-attr
+      pol2 = integer(entry(3,buf_prev-rvs-line-attr.attr-value, ";")) when Avail buf_prev-rvs-line-attr
       pol15 = integer(entry(3,buf_rvs-line-attr.attr-value, ";"))     when Avail buf_rvs-line-attr.
       
       display stream PrnLibstream

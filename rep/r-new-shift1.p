@@ -566,10 +566,13 @@ on error undo, return error return-value
       /* Первая строчка для газа */
       
       assign
-      pol1 = "Метан (КПГ)"
-      pol2 = previous-rvs-line.state-level-total
-      pol5 = temp-rvs-line.state-level-petrol
-      pol6 = previous-rvs-line.state-level-petrol
+      pol1 = "Метан (КПГ)" .
+      
+      if available (previous-rvs-line) then pol2 = previous-rvs-line.state-level-total. else pol2 = 0 .  
+      pol5 = temp-rvs-line.state-level-petrol .
+      
+      if available (previous-rvs-line) then pol6 = previous-rvs-line.state-level-petrol. else pol6 = 0 .
+      assign
       pol7 = pol5 - pol6
       pol9 = temp-rvs-line.state-level-total.
 
@@ -612,9 +615,9 @@ on error undo, return error return-value
       /* Вторая строчка для газа */
       
       assign
-      pol1 = "CH4 м3"
-      pol5 = integer(entry(1,buf_rvs-line-attr.attr-value, ";"))
-      pol6 = integer(entry(1,buf_prev-rvs-line-attr.attr-value, ";"))
+      pol1 = "CH4 м3" .
+      if available (buf_rvs-line-attr) then pol5 = integer(entry(1,buf_rvs-line-attr.attr-value, ";")) . else pol5 = 0 .
+      if available (buf_prev-rvs-line-attr) then pol6 = integer(entry(1,buf_prev-rvs-line-attr.attr-value, ";")) . else pol6 = 0 .
       pol7 = pol5 - pol6.
       
        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
@@ -653,9 +656,9 @@ on error undo, return error return-value
     output stream OutStr-html close.       
       /* Третья строчка для газа */
       assign
-      pol1 = "Pвх-CH4 кгс/см2"
-      pol2 = integer(entry(2,buf_prev-rvs-line-attr.attr-value, ";"))
-      pol15 = integer(entry(2,buf_rvs-line-attr.attr-value, ";")).
+      pol1 = "Pвх-CH4 кгс/см2" .
+      if available (buf_prev-rvs-line-attr) then pol2 = integer(entry(2,buf_prev-rvs-line-attr.attr-value, ";")). else pol2 = 0 .  
+      if available (buf_rvs-line-attr) then pol15 = integer(entry(2,buf_rvs-line-attr.attr-value, ";")). else pol15 = 0 .
       
        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
         put stream OutStr-html unformatted
@@ -693,9 +696,9 @@ on error undo, return error return-value
       /* Четвертая строчка для газа */
 
       assign
-      pol1 = "Tвх - CH4 °C"
-      pol2 = integer(entry(3,buf_prev-rvs-line-attr.attr-value, ";"))
-      pol15 = integer(entry(3,buf_rvs-line-attr.attr-value, ";")).
+      pol1 = "Tвх - CH4 °C" .
+      if available (buf_prev-rvs-line-attr) then pol2 = integer(entry(3,buf_prev-rvs-line-attr.attr-value, ";")). else pol2 = 0 .  
+      if available (buf_rvs-line-attr) then pol15 = integer(entry(3,buf_rvs-line-attr.attr-value, ";")). else pol15 = 0 .
       
        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
         put stream OutStr-html unformatted
