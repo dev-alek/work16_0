@@ -60,29 +60,9 @@ FUNCTION nws-db-format returns character ( input p-db-num as integer):
   return v-nws-db-format.
 END FUNCTION.
 */
-/* 12/IX-2018 - повторный поиск ext-system не используется
-function first-pack-num returns integer (  input p-esys-id as integer,
-                                           input p-db-num  as integer  ) :
-  define variable v-pack-num as integer no-undo .
-  // @FUTU параметр p-delivery-method скорее всего взят с искомого buf_ext-system.delivery-method
-  define buffer buf_ext-system for ub.ext-system .
-  find first buf_ext-system no-lock
-       where buf_ext-system.esys-id = p-esys-id
-         and buf_ext-system.db-num = p-db-num no-error .
-  if available buf_ext-system then
-    v-pack-num = (if buf_ext-system.delivery-method = integer({&esys-dm-nn})
-                  or buf_ext-system.delivery-method = integer({&esys-dm-nnold})
-                  or buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail})
-                  then 1
-                  else 0)
-  .
-  else v-pack-num = 0 .
-  return v-pack-num .
-end function .
-*/
 
   define buffer buf_esys-pck-sent for ub.esys-pck-sent .
-  define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd .
+//  define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd .
   define buffer buf_esys-pck-keys for ub.esys-pck-keys .
   define buffer buf_esys-all-attr for ub.esys-all-attr.
   define buffer buf_temp-filelist for temp-filelist.
@@ -116,6 +96,38 @@ on error undo, return error
                       ,output p-temp-dir
                       ,output p-log-file-name
                      ) .
+
+  /* если каталога source-dir нет, то создадим его */
+  file-info:file-name = p-source-dir .
+  if file-info:file-type begins "D":U then . else do :
+    os-create-dir value( p-source-dir ).
+    if os-error <> 0 then do:
+      run gbl/os-errnm.p ( input os-error, output v-mess ).
+      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
+                             ,vss-workfile
+                             ,p-source-dir
+                             ,{&new-line}
+                             ,v-mess
+                           ).
+
+    end.
+  end.
+  
+  /* если каталога target-dir нет, то создадим его */
+  file-info:file-name = p-target-dir .
+  if file-info:file-type begins "D":U then . else do :
+    os-create-dir value( p-target-dir ).
+    if os-error <> 0 then do:
+      run gbl/os-errnm.p ( input os-error, output v-mess ) .
+      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
+                             ,vss-workfile
+                             ,p-target-dir
+                             ,{&new-line}
+                             ,v-mess
+                           ).
+    end.
+  end.
+
   /* 01/III-2019 - фармирование имени деректории выделено в bge/esdirnam.p
   assign
     v-esysid-str = esys-id-format( p-esys-id )
@@ -161,8 +173,13 @@ on error undo, return error
   */
 
   /* 2. номер пакета */
+
   if p-pack-num = -1 then do:
+    run findPackNum in this-procedure (p-action, p-esys-id, p-db-num, p-delivery-method,
+                                       output p-pack-num) no-error .
+    if error-status:error then return error return-value .                                       
     v-new-pack = yes.
+/* 23/VII-2019 локализован поиск номера пакета  
     case p-action :
       when "get":U then do:
 
@@ -175,7 +192,6 @@ on error undo, return error
           p-pack-num = buf_esys-pck-rcvd.espr-pack-num + 1 .
         end.
         else do:  /* не было ни одного пакета */
-          // p-pack-num = first-pack-num ( input p-esys-id, input p-db-num ) . 12/IX-2018 - не используется
           p-pack-num = (if p-delivery-method = integer({&esys-dm-nn})
                         or p-delivery-method = integer({&esys-dm-nnold})
                         or p-delivery-method = integer({&esys-dm-oracle-retail})
@@ -235,43 +251,13 @@ on error undo, return error
                            ).
       end.
     end case.
+*/  
   end. /*if p-pack-num = -1 then do:*/
   if p-pack-num < 0 then do:
     v-new-pack = yes.
     p-pack-num = abs(p-pack-num).
   end.
   p-list-file-name =  oxml-heap-dir + {&back-slash-char} + "lst":U + string( p-pack-num, "999999999") + ".":U .
-
-  /* если каталога source-dir нет, то создадим его */
-  file-info:file-name = p-source-dir .
-  if file-info:file-type begins "D":U then . else do :
-    os-create-dir value( p-source-dir ).
-    if os-error <> 0 then do:
-      run gbl/os-errnm.p ( input os-error, output v-mess ).
-      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
-                             ,vss-workfile
-                             ,p-source-dir
-                             ,{&new-line}
-                             ,v-mess
-                           ).
-
-    end.
-  end.
-  
-  /* если каталога target-dir нет, то создадим его */
-  file-info:file-name = p-target-dir .
-  if file-info:file-type begins "D":U then . else do :
-    os-create-dir value( p-target-dir ).
-    if os-error <> 0 then do:
-      run gbl/os-errnm.p ( input os-error, output v-mess ) .
-      return error substitute("&1 Каталог &2 отсутствует, а создать его не удалось.&3&4"
-                             ,vss-workfile
-                             ,p-target-dir
-                             ,{&new-line}
-                             ,v-mess
-                           ).
-    end.
-  end.
 
 
   /* 3. имя файла */
@@ -405,5 +391,66 @@ on error undo, return error
 
 
 end.
+
+procedure findPackNum private :
+define input  parameter p-action   as character no-undo .
+define input  parameter p-esys-id  as integer no-undo .
+define input  parameter p-db-num   as integer no-undo .
+define input  parameter p-delivery-method as integer no-undo .
+define output parameter p-pack-num as integer no-undo .
+define variable v-cr-db-num as integer no-undo .
+define variable v-s-method  as character no-undo .
+define buffer buf_esys-pck-rcvd for ub.esys-pck-rcvd .
+define buffer buf_esys-pck-sent for ub.esys-pck-sent .
+
+  assign
+    v-cr-db-num = ibs.th.gbl.gbl-var:g#db-num
+    v-s-method  = string(p-delivery-method)
+  no-error.
+  case p-action :
+    
+    when "get":U then do:
+      find last buf_esys-pck-rcvd no-lock
+          where buf_esys-pck-rcvd.esys-id = p-esys-id
+            and buf_esys-pck-rcvd.db-num  = p-db-num
+            and buf_esys-pck-rcvd.espr-cr-db-num = v-cr-db-num
+          use-index pi no-error .
+      if available buf_esys-pck-rcvd then
+        p-pack-num = buf_esys-pck-rcvd.espr-pack-num + 1 .
+      else /* "первый", он же - "нулевой" пакет */
+        p-pack-num = (if v-s-method = {&esys-dm-nn}
+                      or v-s-method = {&esys-dm-nnold}
+                      or v-s-method = {&esys-dm-oracle-retail} then 1 else 0) .
+    end. /* end_of "get":U */
+    when "fget":U then do:
+      p-pack-num = 0.
+    end.
+
+    when "put":U then do:
+      find last buf_esys-pck-sent no-lock
+          where buf_esys-pck-sent.esys-id = p-esys-id
+            and buf_esys-pck-sent.db-num  = p-db-num
+            and buf_esys-pck-sent.esps-cr-db-num = v-cr-db-num
+          use-index pi no-error .
+      if available buf_esys-pck-sent then
+        p-pack-num = buf_esys-pck-sent.esps-pack-num + 1 .
+      else /* "первый", он же - "нулевой" пакет */
+        p-pack-num = (if v-s-method = {&esys-dm-erp-1C-RN} then 1 else 0) .
+    end. /* end_of "put":U */
+    when "fput" then do:
+        /*экспорт файла*/
+        p-pack-num = (if v-s-method = {&esys-dm-erp-1C-RN} then 1 else 0) .
+    end.
+
+    otherwise do:
+      return error substitute("&1 &2 &3&4Не предусмотрена операция &5 для &1&4"
+                             ,vss-workfile, vss-revision, vss-description 
+                             ,{&new-line}
+                             ,p-action
+                           ).
+    end.
+  end case . /* end_of case_p_action */
+  
+end procedure . /* end_of findPackNum */
 
 /* $Workfile$ end */
