@@ -65,6 +65,7 @@ define variable v-value-decimal as decimal no-undo .
 define variable v-value-integer as INTEGER no-undo .
 define variable v-noanshftstaff as logical no-undo .
 define variable v-tth as handle no-undo .
+define variable v-close as logical no-undo .
 
 define variable par-type as character no-undo .
 define variable par-is-cctv as character no-undo .
@@ -948,8 +949,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 use-index pi NO-ERROR.
   /*если следующая смена ожидаемая то она не должна влиять на персонал*/
   if avail next-shift-obj then do:
-    if next-shift-obj.status_ = {&sht-expected} then release next-shift-obj.
-    else if next-shift-obj.status_ = {&sht-closed} then
+    if next-shift-obj.status_ = {&sht-expected} then release next-shift-obj. 
+    else if next-shift-obj.status_ = {&sht-closed} or next-shift-obj.status_ = {&sht-current} then
     bttns = replace(bttns, "b-add-next", "").
   end.
   run adm/shattri.p (
@@ -1194,9 +1195,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE B-exit b-quit B-Help RECT-1 RECT-2 B-add B-del B-chg B-mng BR-staff 
+  ENABLE b-quit B-Help RECT-1 RECT-2 B-add B-del B-chg B-mng BR-staff 
          B-add-next B-del-next B-chg-next BR-staff-next 
       WITH FRAME PERS-Frame.
+  Display B-exit with frame PERS-Frame .      
   VIEW FRAME PERS-Frame.
   {&OPEN-BROWSERS-IN-QUERY-PERS-Frame}
 END PROCEDURE.
@@ -1544,8 +1546,8 @@ else do:
 end.
 
 ENABLE
-B-exit
-b-quit
+B-exit 
+b-quit 
 B-Help
 RECT-1
 RECT-2

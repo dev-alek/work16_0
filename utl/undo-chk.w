@@ -334,11 +334,11 @@ ii-ok = 0
               import stream imp-str t-name v-inkas-code v-doc-code.
             end.
             case t-name:
-                { utl/imp-chk.i "ub.chk-doc" }
-                { utl/imp-chk.i "ub.chk-pay" }
-                { utl/imp-chk.i "ub.chk-gds" }
-                { utl/imp-chk.i "ub.chk-discnt" }
-                { utl/imp-chk.i "ub.chk-doc-attr" }
+                { utl/imp-chk.i "chk-doc" }
+                { utl/imp-chk.i "chk-pay" }
+                { utl/imp-chk.i "chk-gds" }
+                { utl/imp-chk.i "chk-discnt" }
+                { utl/imp-chk.i "chk-doc-attr" }
             end case.
         end.
     end.

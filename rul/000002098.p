@@ -292,14 +292,16 @@ run write-log  in p-log-handle (
     &scop my-message substitute("создан ack_ со статусом Ok в exch &1 - ES &2 по пакету N&3", g#db-num, buf_ext-system.esys-id, v-pack-num)
     {&display-message}.
 
+    v-err-message = "" .
     catch exAppErrors as class Progress.Lang.AppError :
+      /* 09/VIII-2019 - исключаем дублирование вывода сообщений об ошибке
       &scop my-message substitute("Ошибка при сохранении данных по пакету &4 файл &5 1С (РОСНФЕТЬ) из ВС:&1&2&1&3", {&new-line}, parseSubObj:Msg , error-status:get-message(1), v-pack-num, file-name  )
       v-err-message = {&my-message} .
       {&display-message}.
+      */
       v-err-message = trim(parseSubObj:Msg, ";") .
       v-err-message = trim(v-err-message) .
       v-err-message = trim(v-err-message, ";") .
-      message view-as alert-box.
       run rul/send-ack_1c.p ( input v-sender-id
                             , input v-pack-num
                               ,input 4
@@ -315,7 +317,6 @@ run write-log  in p-log-handle (
       v-err-message = {&my-message} .
       {&display-message}.
       end .
-      undo, throw exAppErrors .
     end catch .
     catch exProErrors as class Progress.Lang.ProError :
       undo, throw exProErrors .
@@ -328,6 +329,7 @@ run write-log  in p-log-handle (
       delete object parseSubObj no-error.
       delete object impSubObj no-error.
       if valid-object(v-pkcs) then delete object v-pkcs .
+      if v-err-message > "" then return error v-err-message .
     end finally .
   end.
 

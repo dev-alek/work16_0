@@ -89,6 +89,7 @@ define variable v-custom-pack-name  as character no-undo .
 define variable v-custom-pack-flag  as logical   no-undo .
 define variable v-msg-templ-start   as character no-undo .
 define variable v-msg-templ-finish  as character no-undo .
+define variable v-return-message    as character no-undo .
 define variable v-take-count        as integer no-undo .
 define variable v-analys-count      as integer no-undo .
 define variable v-analys-ack        as integer no-undo .
@@ -181,10 +182,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       v-msg-templ-finish = "Завершен прием и разбор пакетов данных из ВС '&1'" .
     end.
     otherwise do:
-                message vss-workfile vss-revision vss-description skip
-                        substitute( "Не предусмотрена операция &1", v-action )
-                        view-as alert-box error.
-                return error.
+      v-return-message = substitute( "Не предусмотрена операция &1", v-action ) .
+      return error v-return-message.
     end.
   end case.
 
@@ -444,7 +443,11 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
             if buf_ext-system.delivery-method = integer({&esys-dm-contour-edi})
             or buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
             then do:
-              // 16/X-2018 из всей директории в tt-espcknum лягут только файлы пакетов с номерами выше v-espr-pack-num
+              /* 16/X-2018 из всей директории в tt-espcknum лягут только файлы пакетов
+                           с номерами выше v-espr-pack-num
+                           Пакеты с уже существующими номерами могут оставаться в директории heap,
+                           но в tt-espcknum для обработки они не попадают.
+              */
               run get-num-namepack in this-procedure
                 ( input v-target-dir
                 , input buf_Ext-system.esys-id
@@ -453,21 +456,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 ) 
               no-error.
               if error-status:error then do:
-                /* 16/X-2018 такая ошибка не вернётся:
-                             пакеты с уже существующими номерами могут оставаться в директории heap,
-                             но в tt-espcknum для обработки они не попадают.
-                if return-value begins "№"
-                then do:
-                  run write-log in p-log-handle (
-                                                  input 2
-                                                , substitute("Пакет &1 уже существует, прием остановлен. &2"
-                                                              ,return-value
-                                                              ,vss-workfile
-                                                            )
-                                  ) .
-                end.
-                else do:
-                */  
                   run write-log in p-log-handle (
                                                   input 2
                                                 , substitute("&1 Ошибка при создание списка пакетов для приема. &2&3&2&4"
@@ -477,7 +465,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                                             ,substitute( "&1", return-value )
                                                             )
                                   ) .
-                // end.
                 undo _ext-system, next _ext-system.
               end.
             end.
@@ -518,25 +505,17 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                   end.
                 end.
 
-                /* оставляем только файлы, подлежащие обработке */
+                /* оставляем только файлы, подлежащие обработке
+                23/VII-2019 чистка файлов выполнена внутри get-num-namepack()
                 for each temp-filelist :
                   if  num-entries(temp-filelist.file-name, "_") = 4
                   or (num-entries(temp-filelist.file-name, "_") = 5 and temp-filelist.file-name begins "ack")
                   then . /* пакеты и аски оставляем */
                   else do :
-                    /* прочие файлы игнорируем:
-                       - where temp-filelist.file-name begins "err_"
-                       - исключаем файлы с электронной подисью (такая же стоит в bge/espcknum.p):
-                         if (v-sign-fileext > "") and (temp-filelist.file-extension = v-sign-fileext)
-                       - ещё электронная подпись, связанная с bge/espcknum.p и bge/oxmlspci.w:
-                         if can-do("p7s,p7c", temp-filelist.file-extension)
-                       - в директорию импорта стали попадать файлы иконок, сслылок, и прочего,
-                         у которых другая структура имени и потом они ругаются на entry(3, ...):
-                         if num-entries(temp-filelist.file-name, "_") > 2 then . else delete temp-filelist .
-                    */
                     delete temp-filelist.
                   end.
                 end.
+                */
                 
                 /* 21/XII-2018  Перестали приниматься ack_ с подтверждениями на отправленные нами пакеты.
                                 Сначала обрабатываем все ack_ с подтверждениями на отправленные нами пакеты,
@@ -650,7 +629,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                       v-one-pack-num = integer (v-ack-err) no-error .
                       if v-one-pack-num > 0 then do :
                         run write-log in p-log-handle (input 2 ,
-                        substitute ("Обработано подтверждение на пакет номер &1. Статус: 1 - отсутствует пакет, следующий за последним принятым. Запрошена повторная отправка пакета [&2]."
+                        substitute ("Подтверждение на пакет номер &1 обработано. Статус: 1 - отсутствует пакет, следующий за последним принятым. Запрошена повторная отправка пакета [&2]."
                               , v-ack-snum_pack 
                               , v-ack-err
                                )
@@ -685,11 +664,22 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                                 ) .
                       end .                      
                     end .
+                    when 4 then do : // прочие ошибки (приходит после возникновения различных run-time ошибок в 1с)
+                      /* 30/VII-2019  Удалить файл и один раз отобразить сообщение в логе.
+                                      Повторная информация об ошибках в тексте программы 1с не требуется. */
+                      os-delete value(v-full-path) .
+                      run write-log in p-log-handle (input 2 ,
+                        substitute ("Подтверждение на пакет номер &1 обработано. Статус: 4 - прочие ошибки. Текст ошибки: &2. Файл &3 успешно удалён."
+                              , v-ack-snum_pack
+                              , v-ack-err
+                              , v-full-path
+                                    )
+                                                ) .
+                    end . 
                     otherwise do :
                       /* коды ошибок, отличные от 1, игнорируем:
                          2 – несоответствие файла данных и ЭП;
                          3 – ошибка формата файла данных; 
-                         4 – прочие ошибки. 
                       */
                       run write-log in p-log-handle (input 2 ,
                         substitute ("Подтверждение на пакет номер &1 обработано. Статус: &2. Текст ошибки: &3. Файл &4 оставлен без удаления."
@@ -831,15 +821,17 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 end.
                 v-err-type = ''.
                 v-return-error = 0.
+/*
                 if v-file-name begins "ack_"
                 and buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
                 then do :
-/* 21/XII-2018  приём подтверждений перенесён выше, до импорта пакетов.
+ 21/XII-2018  приём подтверждений перенесён выше, до импорта пакетов.
                 Сначала принимаем подтверждения, потом проверяем номер пакета и,
-                если есть пакет с ожидаемым номером - переходим к приёму пакета.                  
-*/
+                если есть пакет с ожидаемым номером - переходим к приёму пакета.
                 end.
-                else do :
+                else                                  
+*/
+                do :
                   /* 24/VIII-2018  файл с данными и файл с подписью могут придти в произвольном порядке;
                                    на то время, пока в bge/espcknum.p вставлен костыль, файлы с подписью
                                    из него приходить не будут вообще */
@@ -938,6 +930,13 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                         и парсится, теперь уже по настоящему.
                   */
                   if v-return-error = 0 then do :
+                    /* внутри bge/cmdeigen.p зачем-то выполнялась проверка активной транзакции */
+                    if transaction then do:
+                      message vss-workfile vss-revision vss-description skip
+                        substitute("Вызов процедуры в действующей транзакции недопустим") skip
+                      view-as alert-box error .
+                      return error substitute( "&1. Вызов процедуры в действующей транзакции недопустим", vss-workfile ) .
+                    end.
                   run bge/cmdeigen.p (
                                         input parparentproc
                                         ,input this-procedure:handle
@@ -946,6 +945,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                         ,input buf_ext-system.db-num
                                         ,input v-cur-db-num
                                         ,input v-full-path
+                                        ,input v-file-name
                                         ,input v-pack-data
                                         ,input v-espr-pack-num
                                         ,input add-log-file-name
@@ -1198,6 +1198,7 @@ define input parameter p-esys-id as integer no-undo .
 define input parameter p-db-num as integer no-undo .
 define input parameter p-ext-sys-met as integer no-undo .
 
+define variable v-file-pack-num as integer no-undo .
 define variable datestr as character no-undo.
 define variable timestr as character no-undo.
 
@@ -1216,6 +1217,7 @@ on error undo, return error
      1. Нам надо забирать из EXCH только нужные расширения,
      2. и в разбор тоже надо брать только нужные файлы.
      Вызывается только для &esys-dm-contour-edi и для &esys-dm-erp-1C-RN
+     3. и только файлы рассматриваемой внешней системы
   */
   case p-ext-sys-met :
     when {&bef-esys-dm-erp-1C-RN} then do :
@@ -1231,24 +1233,48 @@ on error undo, return error
       end.
       
       for each temp-filelist:
-        if  num-entries(temp-filelist.file-name, "_") = 4
-        or (num-entries(temp-filelist.file-name, "_") = 5 and temp-filelist.file-name begins "ack")
-        then . /* пакеты и аски оставляем */
+        /* пакеты и аски оставляем;
+           прочие файлы игнорируем:
+           - where temp-filelist.file-name begins "err_"
+           - исключаем файлы с электронной подисью (такая же стоит в bge/espcknum.p):
+             if (v-sign-fileext > "") and (temp-filelist.file-extension = v-sign-fileext)
+           - ещё электронная подпись, связанная с bge/espcknum.p и bge/oxmlspci.w:
+             if can-do("p7s,p7c", temp-filelist.file-extension)
+           - в директорию импорта стали попадать файлы иконок, сслылок, и прочего,
+             у которых другая структура имени и потом они ругаются на entry(3, ...):
+             if num-entries(temp-filelist.file-name, "_") > 2 then . else delete temp-filelist .
+        */
+        if  num-entries(temp-filelist.file-name, "_") = 4 then do :
+         /* if p-esys-id = integer (entry (2, temp-filelist.file-name-no-ext, "_")) then .
+          else do :
+            delete temp-filelist.
+            next .  
+          end . */
+          v-file-pack-num = integer (entry (3, temp-filelist.file-name-no-ext, "_")) no-error .
+          if error-status:error then do:
+            /* ошибка возникнет при присвоении, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
+            delete temp-filelist.
+            next .  
+          end.
+          if v-espr-pack-num > v-file-pack-num then next .  
+          create tt-espcknum.
+          assign
+            tt-espcknum.tt-espr-pack-name = temp-filelist.file-name
+            tt-espcknum.tt-espr-pack-num  = v-file-pack-num
+          .
+        end .
+        else if (  num-entries(temp-filelist.file-name, "_") = 5
+                   and temp-filelist.file-name begins "ack"  ) then do :
+          if p-esys-id = integer (entry (3, temp-filelist.file-name-no-ext, "_")) then .
+          else do :
+            delete temp-filelist.
+            next .  
+          end .
+        end .
         else do :
           /* прочие файлы игнорируем */
           delete temp-filelist.
           next.
-        end.
-        if v-espr-pack-num > integer (entry (3, temp-filelist.file-name-no-ext, "_")) then next .  
-           
-        create tt-espcknum.
-        assign
-          tt-espcknum.tt-espr-pack-name = temp-filelist.file-name
-          tt-espcknum.tt-espr-pack-num  = integer (entry (3, temp-filelist.file-name-no-ext, "_"))
-        no-error.
-        if error-status:error then do:
-          /* ошибка возникнет при присвоение, если неверное имя пакета - например начинается не с номера пакета, пропускаем идем дальше.*/
-          delete tt-espcknum .
         end.
       end. /* end_of for_each temp-filelist */
 
@@ -1299,22 +1325,6 @@ on error undo, return error
   end case .
 
   
-  for each temp-filelist where temp-filelist.file-name begins "ORDRSP" :
-    ii = ii + 1.
-    create tt-espcknum.
-    assign
-      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
-      tt-espcknum.tt-espr-pack-num = ii
-    no-error.
-  end.
-  for each temp-filelist where temp-filelist.file-name begins "DESADV" :
-    ii = ii + 1.
-    create tt-espcknum.
-    assign
-      tt-espcknum.tt-espr-pack-name = temp-filelist.file-name + "."
-      tt-espcknum.tt-espr-pack-num = ii
-    no-error.            
-  end.
 
 /* 04/III-2019 - не используется
   if v-l-err then

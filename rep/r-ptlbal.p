@@ -70,9 +70,9 @@ else do:
 end.
 
 /* ширина отчета */
-&scop report-width        198
-&scop report-width-frame  200
-&scop report-width-25     180
+&scop report-width        200
+&scop report-width-frame  202
+&scop report-width-25     182
 
 define buffer bef-rvs-doc         for ub.rvs-doc.
 define buffer buf_rvs-doc         for ub.rvs-doc .
@@ -235,11 +235,11 @@ else
 
 put stream PrnLibStream unformatted
   v-line skip
-  STRING(":           ", "X(12)") STRING(":         ", "X(10)") STRING(":         ", "X(12)") STRING(":          ", "X(11)") STRING(": Остаток  ", "X(11)") STRING(":          ", "X(11)") STRING("   Внешний ", "X(11)") STRING(" приход    ", "X(11)") STRING("           ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":        :", "X(10)") skip
-  STRING(":   Номер   ", "X(12)") STRING(": № резер-", "X(10)") STRING(":   Вид   ", "X(12)") STRING(": Остаток  ", "X(11)") STRING(":на начало ", "X(11)") STRING(":__________", "X(11)") STRING("___________", "X(11)") STRING("___________", "X(11)") STRING("___________", "X(11)") STRING(": Расход   ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":Остаток на", "X(11)") STRING(":Остаток на", "X(11)") STRING(": Баланс :", "X(10)") skip
-  STRING(":   смены   ", "X(12)") STRING(":  вуара  ", "X(10)") STRING(":  нефте  ", "X(12)") STRING(":на начало ", "X(11)") STRING(":расчетно- ", "X(11)") STRING(":          ", "X(11)") STRING(":    По    ", "X(11)") STRING(":          ", "X(11)") STRING(":Отклонение", "X(11)") STRING(":по данным ", "X(11)") STRING(": Списание ", "X(11)") STRING(": Инвентари", "X(11)") STRING(": Расход   ", "X(11)") STRING(": Возврат  ", "X(11)") STRING(":Остальное ", "X(11)") STRING(":  конец   ", "X(11)") STRING(":  конец   ", "X(11)") STRING(":+излишки:", "X(10)") skip
-  STRING(": и дата ее ", "X(12)") STRING(":         ", "X(10)") STRING(": продукта", "X(12)") STRING(":   факт   ", "X(11)") STRING(": книжный  ", "X(11)") STRING(": По ТТН   ", "X(11)") STRING(":измер-ию в", "X(11)") STRING(":По факту  ", "X(11)") STRING(":от принят.", "X(11)") STRING(": с касс   ", "X(11)") STRING(":          ", "X(11)") STRING(":  зация   ", "X(11)") STRING(": внешний  ", "X(11)") STRING(":поставщику", "X(11)") STRING(":          ", "X(11)") STRING(":фактически", "X(11)") STRING(":расчетно- ", "X(11)") STRING(":-недост.:", "X(10)") skip
-  STRING(":  начала   ", "X(12)") STRING(":         ", "X(10)") STRING(":         ", "X(12)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":резервуаре", "X(11)") STRING(":          ", "X(11)") STRING(":количества", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(": книжный  ", "X(11)") STRING(":        :", "X(10)") skip
+  STRING(":           ", "X(12)") STRING(":           ", "X(12)") STRING(":         ", "X(12)") STRING(":          ", "X(11)") STRING(": Остаток  ", "X(11)") STRING(":          ", "X(11)") STRING("   Внешний ", "X(11)") STRING(" приход    ", "X(11)") STRING("           ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":        :", "X(10)") skip
+  STRING(":   Номер   ", "X(12)") STRING(":  № резер- ", "X(12)") STRING(":   Вид   ", "X(12)") STRING(": Остаток  ", "X(11)") STRING(":на начало ", "X(11)") STRING(":__________", "X(11)") STRING("___________", "X(11)") STRING("___________", "X(11)") STRING("___________", "X(11)") STRING(": Расход   ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":Остаток на", "X(11)") STRING(":Остаток на", "X(11)") STRING(": Баланс :", "X(10)") skip
+  STRING(":   смены   ", "X(12)") STRING(":    вуара  ", "X(12)") STRING(":  нефте  ", "X(12)") STRING(":на начало ", "X(11)") STRING(":расчетно- ", "X(11)") STRING(":          ", "X(11)") STRING(":    По    ", "X(11)") STRING(":          ", "X(11)") STRING(":Отклонение", "X(11)") STRING(":по данным ", "X(11)") STRING(": Списание ", "X(11)") STRING(": Инвентари", "X(11)") STRING(": Расход   ", "X(11)") STRING(": Возврат  ", "X(11)") STRING(":Остальное ", "X(11)") STRING(":  конец   ", "X(11)") STRING(":  конец   ", "X(11)") STRING(":+излишки:", "X(10)") skip
+  STRING(": и дата ее ", "X(12)") STRING(":           ", "X(12)") STRING(": продукта", "X(12)") STRING(":   факт   ", "X(11)") STRING(": книжный  ", "X(11)") STRING(": По ТТН   ", "X(11)") STRING(":измер-ию в", "X(11)") STRING(":По факту  ", "X(11)") STRING(":от принят.", "X(11)") STRING(": с касс   ", "X(11)") STRING(":          ", "X(11)") STRING(":  зация   ", "X(11)") STRING(": внешний  ", "X(11)") STRING(":поставщику", "X(11)") STRING(":          ", "X(11)") STRING(":фактически", "X(11)") STRING(":расчетно- ", "X(11)") STRING(":-недост.:", "X(10)") skip
+  STRING(":  начала   ", "X(12)") STRING(":           ", "X(12)") STRING(":         ", "X(12)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":резервуаре", "X(11)") STRING(":          ", "X(11)") STRING(":количества", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(": книжный  ", "X(11)") STRING(":        :", "X(10)") skip
   v-line
   .
 
@@ -280,7 +280,7 @@ assign
 assign
   Sheetf.MergeCellsH = "6:9"
   Sheetf.MergeCellsV = "1=1:2/2=1:2/3=1:2/4=1:2/5=1:2/10=1:2/11=1:2/12=1:2/13=1:2/14=1:2/15=1:2/16=1:2/17=1:2/18=1:2"
-  Sheetf.Sizes       = "10,9,6,11,11,10,11,10,8,11,11,11,11,11,11,11,11,11"
+  Sheetf.Sizes       = "10,11,6,11,11,10,11,10,8,11,11,11,11,11,11,11,11,11"
   Sheetf.Excel-Column-Lable = "Номер смены и дата ее начала"       + {&comma-char} +
                               "N резервуара"                       + {&comma-char} +
                               "Вид нефтепродукта"                  + {&comma-char} +
@@ -343,7 +343,7 @@ run rep/extitle.p  ( input 1 ) no-error.
 
 &scop frm-clmn-01 format "x(11)"
 &scop lb-clmn-01  column-label "1":C10
-&scop frm-clmn-02 format "999999999"
+&scop frm-clmn-02 format "99999999999"
 &scop lb-clmn-02  column-label "2":C8
 &scop frm-clmn-03 format "x(10)"
 &scop lb-clmn-03  column-label "3":C11

@@ -180,6 +180,7 @@ else  do:
   .
 end.
 if p-unit-base <> p-unit-cli then do:
+  if length (chk_name) > 109 then chk_name = substring (chk_name,1,109) .
   assign
   chk_name = string(substr(chk_name
                             ,1

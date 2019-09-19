@@ -201,6 +201,8 @@ if not paronly-b-code then do:
       end.
       if varpovtor then do:
         /* выбор правильного или отказ */
+        define variable varrid1 as recid no-undo .
+        varrid1 = varrid .
           run ref/bc-rcnz.w (input parparentproc,
                         input parobj-type,
                         input parobj-code,
@@ -209,8 +211,9 @@ if not paronly-b-code then do:
                         input "choose",
                         input-output varrid).
         /* bc-rcnz.w может вернуть ?, если не подходит ни один из повторных */
-        end.
       end.
+    end.
+    if varrid = ? then varrid = varrid1 .
     find bf_prod-bc where recid (bf_prod-bc) = varrid no-lock no-error.
     if available bf_prod-bc then do:
       assign

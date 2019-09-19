@@ -49,6 +49,7 @@ FIELD gds-code as integer
 FIELD supp-name like ub.clients.obj-name FORMAT "X(18)"
 FIELD supp-type like ub.clients.obj-type
 FIELD supp-code like ub.clients.obj-code FORMAT ">>>>>>>>9"
+FIELD doc-code-trn  like ub.trn-doc.doc-code
 FIELD doc-code  like ub.trn-doc.doc-code
 FIELD qnty1 as decimal FORMAT "->>>>9.99"
 FIELD qnty2 as decimal FORMAT "->>>>9.99"
@@ -59,7 +60,7 @@ FIELD is-fact as logical
 FIELD ii as integer
 INDEX pi IS UNIQUE PRIMARY
       gds-code
-      doc-code
+      doc-code-trn
       supp-code
 INDEX vi IS UNIQUE
       gds-code

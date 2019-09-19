@@ -824,14 +824,16 @@ for each buf_doc-line no-lock
       skip (2)
       space ({&left-margin}) "Погрешность измерений "
     .
-    if lookup( varstfactpl, "inv" ) > 0 then do:
-      /* assign v-mass-pogresh = v-tank-weight-dec * pogresh. */ /* вычисление по методу Тесленко Н.Ф. */
-      assign v-mass-pogresh = buf_doc-line.doc-qnty * buf_doc-line.doc-density * pogresh. /* по методу Жуковой С.А. */
-      /* Кто еще? */
-    end.
-    else do:
-      assign v-mass-pogresh = buf_doc-line.doc-qnty * buf_doc-line.doc-density * pogresh.
-    end.
+
+    assign v-mass-pogresh = v-InfoSectionsTotal:TankWeightTotal * pogresh.
+/*    if lookup( varstfactpl, "inv" ) > 0 then do:                                                                                 */
+/*      /* assign v-mass-pogresh = v-tank-weight-dec * pogresh. */ /* вычисление по методу Тесленко Н.Ф. */                        */
+/*      assign v-mass-pogresh = v-InfoSectionsTotal:TankVolTotal * buf_doc-line.doc-density * pogresh. /* по методу Жуковой С.А. */*/
+/*      /* Кто еще? */                                                                                                             */
+/*    end.                                                                                                                         */
+/*    else do:                                                                                                                     */
+/*      assign v-mass-pogresh = v-InfoSectionsTotal:TankVolTotal * buf_doc-line.doc-density * pogresh.                             */
+/*    end.                                                                                                                         */
     if v-mass-pogresh = ? then assign v-mass-pogresh = 0 .
     put stream out-stream
       v-mass-pogresh        format "zzz,zzz,zz9.999"  at right-field( {&tab-stop3}, 15)   " кг"

@@ -229,6 +229,7 @@ define variable p-from-version as character initial {&thth150-from-version} no-u
 /* ----- перекодировка их xxx-15_0 в наш xxx_16_0 ----- */
 define stream fosnid.
 define temp-table w-osn no-undo
+  field supp-type-15_0 as character
   field supp-code-15_0 as integer
   field supp-code-16_0 as integer
 .
@@ -250,13 +251,25 @@ define temp-table w-gds no-undo
   end .
 input stream fosnid from value (p-osn-fname).
 repeat:
+  /* в версии 15.0 файл соответствия пишется двумя полями:
+     орг10026455;00000023
+     т.е. поле <тип_поставщика_15_0> не отделяется от поля <код_поставщика_15_0>
+     Для совместимости импорт производится в промежуточные переменные. */
+  define variable v-osn-15 as character no-undo .
+  define variable v-osn-16 as integer no-undo .
+  import stream fosnid delimiter ';' v-osn-15 v-osn-16.
   create w-osn.
-  import stream fosnid delimiter ';' w-osn.
+  assign
+    w-osn.supp-type-15_0 =         substring(v-osn-15, 1, 3)
+    w-osn.supp-code-15_0 = integer(substring(v-osn-15, 4))
+    w-osn.supp-code-16_0 =                   v-osn-16
+  .
 end.
 input stream fosnid close.
-// последняя пустая строка в импортируемом файле:
+/* для импорта напрямую в w-osn последняя пустая строка в импортируемом файле:
 find w-osn where w-osn.supp-code-16_0 = 0 and w-osn.supp-code-15_0 = 0 no-error.
 if available w-osn then delete w-osn.
+*/
 
 /* ----- коды товаров ----- */
 &scop my-message substitute("чтение файла соответствия товаров &1", p-art-fname)
@@ -426,22 +439,30 @@ define buffer new_clients  for ub.clients .
         v-is-supp-err = no.
       /* Если у партии не указан код поставщика - такую строку считать ошибочной и не обрабатывать.
          Код фиктивного контрагента не использовать. */
-         
-         
-         
       if buf_tt-parts.supp-type = ""
+      /* 30/VII-2019  пробуем разрешать переносить партии, поставщиком которых является внутренниё объект
       or buf_tt-parts.supp-type = {&stock}
-      or buf_tt-parts.supp-type = {&shop} then assign
+      or buf_tt-parts.supp-type = {&shop}
+      */
+      then assign
         v-my-message  = substitute ("Фиктивный контрагент &1 &2", buf_tt-parts.supp-type, buf_tt-parts.supp-code )
         v-is-supp-err = true
       .
       else do :
           
-        /* поиск соответствия старого cli-code p-from-version версии в 16.0 */
-        find first w-osn where w-osn.supp-code-15_0 = buf_tt-parts.supp-code no-error .
+        /* поиск соответствия старого cli-type+cli-code p-from-version версии в 16.0:
+           в 15.0 коды выгружаемых поставщиков могут совпадать у поставщиков с разными типами;
+           в 16.0 все поставщики описаны как организации.
+           Пример:
+             чел 1001 -> 2002
+             орг 1001 -> 2003
+           В версии 16.0 2002 и 2003 всегда имеют тип 'орг'.
+        */
+        find first w-osn where w-osn.supp-code-15_0 = buf_tt-parts.supp-code
+                           and w-osn.supp-type-15_0 = buf_tt-parts.supp-type no-error .
         if available w-osn then do:
           assign
-            new_cli-type = {&cmp} /* buf_tt-parts.supp-type */
+            new_cli-type = {&cmp} /* buf_tt-parts.supp-type - в 16.0 только 'орг' */
             new_cli-code = w-osn.supp-code-16_0
           .
           v-is-supp-err = not can-find (first new_clients no-lock
@@ -450,7 +471,8 @@ define buffer new_clients  for ub.clients .
           if v-is-supp-err then v-my-message = substitute("ошибка (новый клиент &1 &2)", new_cli-type , new_cli-code) .
         end .
         else assign
-          v-my-message  = substitute ("Отсутствует код поставщика &1 в файле соответствия &2", buf_tt-parts.supp-code, p-osn-fname )
+          v-my-message  = substitute ( "Отсутствует код поставщика &1 &2 в файле соответствия &3"
+                                     , buf_tt-parts.supp-type, buf_tt-parts.supp-code, p-osn-fname )
           v-is-supp-err = true
         .
       end . 
@@ -462,7 +484,6 @@ define buffer new_clients  for ub.clients .
       end .
     end . /* end_of first_of_tt-parts.supp-code */
     if v-is-supp-err then do :
-/*        message v-is-supp-err 'v-is-supp-err ' v-my-message view-as alert-box.*/
       /* @NOTE надо отсечь все строки с этим поставщиком, а не только первую */
       if buf_tt-parts.imp-row > "" then 
         put stream f-err-lines unformatted buf_tt-parts.imp-row skip .
@@ -596,8 +617,14 @@ define buffer new_clients  for ub.clients .
       temp_parts.obj-code   = p-obj-code
       temp_parts.host-code  = p-host-code 
 
-      temp_parts.supp-code  = buf_tt-parts.supp-code
-      temp_parts.supp-type  = buf_tt-parts.supp-type
+      temp_parts.supp-code  = new_cli-code /* buf_tt-parts.supp-code */
+      temp_parts.supp-type  = new_cli-type /* buf_tt-parts.supp-type */
+      /* следующий перебор таблицы temp_parts идёт по полям supp-type+supp-code,
+         в тоже время поля таблицы, производной из temp_parts, заполняются из new-cli-type и new_cli-code.
+         ? 17/IV-2019 сделать перебор тоже по new-cli-type и new_cli-code ?
+      */
+      temp_parts.new-cli-type = new_cli-type
+      temp_parts.new-cli-code = new_cli-code
       temp_parts.contract-code = v-contract-code
 //  field cont-prn-code like ub.contract.contract-prn-code
 
@@ -613,9 +640,6 @@ define buffer new_clients  for ub.clients .
       temp_parts.VAT-pc     = buf_tt-parts.vat-tax-value
       temp_parts.cst-code   = buf_tt-parts.name-gtd
       temp_parts.last-date  = v-last-date
-      
-      temp_parts.new-cli-type = new_cli-type
-      temp_parts.new-cli-code = new_cli-code
     .
     end .
   /*

@@ -13,15 +13,40 @@ $Archive$
 Author: Bakhtadze Natalya
 Creation date: 12/23/07
 
+Вызывается ТОЛЬКО из bge/oxmlinx.p .
+В параметре p-pack-data лежит файл, прочитанный из p-xml-file-name .
+Требуется передать p-pack-data в машину правил, чтобы исключить
+повторное чтение файла p-xml-file-name внутри 000002098.p 
+*/
+define input parameter parparentproc as handle no-undo .
+/* самостоятельно не используется; передаётся в:
+  str/saledc.p
+  str/cgrprum.p
+  str/clisrum.p
+  str/edocrum.p
+  ref/threfrum.p
+  str/ggrprum.p
+  str/goodsrum.p
+  и в виде &imp2cd_parparentproc в
+  str/diallog.w
 */
 
-define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle as handle no-undo .
 define input parameter p-log-handle  as handle no-undo .
-define input parameter p-esys-id as integer   no-undo .
-define input parameter p-db-num as integer   no-undo .
+
+/* @NOTE вместе с p-esys-id и p-db-num из buf_ext-system здесь используются:
+  - buf_ext-system.esys-name
+  - buf_ext-system.delivery-method
+  - buf_ext-system.imp-conf-send
+  ! buf_ext-system.db-num используется только для повторного поиска записи в buf_ext-system
+    и больше не применяется
+*/
+define input parameter p-esys-id as integer   no-undo . /* = input buf_ext-system.esys-id */
+define input parameter p-db-num  as integer   no-undo . /* = input buf_ext-system.db-num  */
+
 define input parameter p-cr-db-num as integer no-undo .
-define input parameter p-xml-file-name as character no-undo .
+define input parameter p-xml-file-name as character no-undo . /* = v-full-path from filename.p */
+define input parameter p-file-name as character no-undo .     /* = v-file-name from filename.p */
 define input parameter p-pack-data as memptr no-undo . // с 23/VIII-2018 xml-файл читается из memptr, а не из файла 
 define input parameter p-pack-num as integer   no-undo .
 define input parameter p-log-file-name as character no-undo .
@@ -40,7 +65,6 @@ define variable vss-description as character no-undo init "Импорт файла XML из в
 { rul/tempcxml.i "NEW SHARED" }
 /*должно быть шаред чтобы был доступ к temp-xml-tables глубоко внизу*/
 { gbl/gate-clb.i }
-// { bge/tmpcxmlh.i } 23/VIII-2018 - подключается в составе getoxmlh.i
 { rul/xmlischn.i shared }
 { bge/impxcbsh.i }
 { bge/getoxmlh.i }
@@ -73,11 +97,13 @@ define variable v-clob-db-num as integer no-undo .
 define variable v-int64-id as int64 no-undo .
 define variable v-prev-crc as character no-undo .
 define variable v-import-prev-crc as character no-undo .
+/*
 define variable v-path                    as character                no-undo .
-DEFINE VARIABLE v-full-path               as character                no-undo .
-DEFINE VARIABLE v-file-name               as character                no-undo .
+DEFINE VARIABLE v-full-path               as character                no-undo . 12/VIII-2019 не используется. Заменён на p-xml-file-name
+DEFINE VARIABLE v-file-name               as character                no-undo . 12/VIII-2019 не используется. Заменён на p-file-name
 DEFINE VARIABLE v-file-name-no-ext        as character                no-undo .
 DEFINE VARIABLE v-file-name-ext           as character                no-undo .
+*/
 define variable v-pck-num                 as integer                  no-undo .
 define variable v-header-obj-type as character no-undo .
 define variable v-header-obj-code as integer no-undo .
@@ -89,6 +115,7 @@ define variable v-header-name as character no-undo .
 define variable v-header-rec as character no-undo .
 define variable v-process as character no-undo .
 define variable v-insert-header as logical   no-undo .
+define variable v-my-message as character no-undo .
 
 define buffer buf_temp-xml-tables for temp-xml-tables.
 define buffer buf_temp-esys-pck-rcvd for THpck-rcvd.
@@ -104,9 +131,7 @@ define buffer buf_esys-pck-sent for ub.esys-pck-sent.
 define buffer buf_temp_xmllib_rec for temp_xmllib_rec.
 define buffer buf_temp_xmllib_rec-fld for temp_xmllib_rec-fld.
 
-&glob display-message  run write-log in p-log-handle ( ~
-          input 2 ~
-        , input ~{&my-message~} ) ~
+&glob display-message  run write-log in p-log-handle ( input 2, input ~{&my-message~} )
 
 define frame imp-pck
 p-esys-id        label "ВС" skip
@@ -116,20 +141,19 @@ v-rec-cnt       label "Основных записей" format ">>>>>>>>>9" skip
 with view-as dialog-box side-labels 1 columns three-d title "** Разбор пакета"
 .
 
-// @FUTU вызывается ТОЛЬКО из bge/oxmlinx.p; проверку активной транзакции можно вынести наружу.
-if transaction then do:
-  message
-    vss-workfile vss-revision vss-description skip
-    substitute("Вызов процедуры в действующей транзакции недопустим") skip
-    view-as alert-box error .
-  return error substitute( "&1. Вызов процедуры в действующей транзакции недопустим", vss-workfile ) .
-end.
-
 main-block:
 do
 on error undo, return error return-value
 :
 
+  find first buf_ext-system no-lock where
+            buf_ext-system.esys-id = p-esys-id
+       and buf_ext-system.db-num = p-db-num
+            no-error.
+  if not available buf_ext-system then do:
+
+  end.
+  
   assign
   v-xmlh = buffer buf_temp-xml-tables:handle
   v-pckrcvd = buffer buf_temp-esys-pck-rcvd:handle
@@ -147,31 +171,7 @@ on error undo, return error return-value
     delete curr_temp-esys-pck-sent.
   end.
 
-  find first buf_ext-system no-lock where
-            buf_ext-system.esys-id = p-esys-id
-       and buf_ext-system.db-num = p-db-num
-            no-error.
-  if not available buf_ext-system then do:
 
-  end.
-
-  run gbl/filename.p (
-                  input p-xml-file-name
-                ,output v-full-path
-                ,output v-path
-                ,output v-file-name
-                ,output v-file-name-no-ext
-                ,output v-file-name-ext
-                ) no-error .
-
-  if error-status :error then do:
-    &scop my-message substitute("Файл пакета &1 для ВС '&2' не найден" ~
-                                 , p-xml-file-name ~
-                                 ,buf_ext-system.esys-name )
-
-    {&display-message}.
-    undo, return error.
-  end.
   /* будем искать имя схемы*/
   case buf_ext-system.delivery-method:
     when integer({&esys-dm-oracle-retail}) then do:
@@ -210,14 +210,14 @@ on error undo, return error return-value
                                             ,output v-header-th
                                             ) no-error.
   if error-status:error then do:
-    &scop my-message substitute("Ошибка при создании структуры заголовка пакета согласно гейту:&1&2&3&2&4" ~
-                               , v-header-rec ~
-                               , ~{&new-line~} ~
-                               , error-status:get-message(1) ~
-                               , return-value  )
-    {&display-message}.
+    v-my-message = substitute("Ошибка при создании структуры заголовка пакета согласно гейту:&1&2&3&2&4"
+                               , v-header-rec
+                               , {&new-line}
+                               , error-status:get-message(1)
+                               , return-value  ) .
+    /* {&display-message}. 09/VIII-2019 */
     delete object v-header-th no-error.
-    undo, return error '':U.
+    undo, return error v-my-message.
   end.
   v-headerh = v-header-th:default-buffer-handle.
   end. /*if v-header-name <> '' then do:*/
@@ -225,13 +225,17 @@ on error undo, return error return-value
                                                  input p-log-handle
                                                 ,input "write-to-log"
                                                  ).
-  run getoxmlh in this-procedure ( input v-full-path
+  run getoxmlh in this-procedure ( input p-xml-file-name
                                   ,input p-pack-data
                                   ,input v-headerh
                                   ,input buf_ext-system.delivery-method
                                   ) no-error.
+
+
 define buffer buf_rec for temp_xmllib_rec.
 define buffer buf_rec-fld for temp_xmllib_rec-fld.
+
+
   find first buf_esys-pck-rcvd no-lock
     where buf_esys-pck-rcvd.esys-id = p-esys-id
       and buf_esys-pck-rcvd.db-num   = p-db-num
@@ -257,23 +261,33 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
       if not available buf_temp_xmllib_rec
       or lookup(buf_temp_xmllib_rec.recname, "ORDRSP_,DESADV_,STATUS__") = 0
       then do:
-        &scop my-message substitute("Неверный тип пакета &1" ~
-                                    , p-pack-num ~
-                                    , (if available buf_temp_xmllib_rec ~
-                                       then buf_temp_xmllib_rec.recname ~
-                                       else '') ~
-                                       )
-        {&display-message}.
+        v-my-message = substitute("Неверный тип пакета &1"
+                                    , p-pack-num
+      , (if available buf_temp_xmllib_rec then buf_temp_xmllib_rec.recname else '')
+                                  ) .
+        /* {&display-message}. 09/VIII-2019 */
         delete object v-header-th no-error.
-        return error.
+        return error v-my-message.
       end.
       v-schema-name = substitute("exe/&1.xsd",buf_temp_xmllib_rec.recname).
     end.
     when integer({&esys-dm-contour-edi}) then do:
       /*ищем первую запись*/
-      v-schema-name = entry (1, v-file-name, "_").
+      v-schema-name = entry (1, p-file-name, "_").
+      if not can-find(first ub.clients
+                      where ub.clients.obj-type = v-header-obj-type
+                        and ub.clients.obj-code = v-header-obj-code
+                        and ub.clients.db-num   = ibs.th.gbl.gbl-var:g#db-num)
+      then do:
+        v-my-message = substitute("Адресат пакета &1 (&2&3) НЕИЗВЕСТЕН", p-pack-num, v-header-obj-type, v-header-obj-code) .
+        /* {&display-message}. 09/VIII-2019 */
+        delete object v-header-th no-error.
+        return error v-my-message .
+      end.
+      v-pck-num = p-pack-num.
     end.
     when integer({&esys-dm-erp-1C-RN}) then do:
+      v-pck-num = integer(entry(3, p-file-name, "_"))  no-error.
       find first buf_temp_xmllib_rec where
               buf_temp_xmllib_rec.recLevel = 0 no-error.
       /*ищем первую запись*/
@@ -282,20 +296,18 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     end.
     when integer({&esys-dm-oracle-retail}) then do:
       v-esys-id = buf_ext-system.esys-id.
-      find first buf_temp_xmllib_rec where
-              buf_temp_xmllib_rec.recname = "Oracle_Retail" no-error.
+      find first buf_temp_xmllib_rec
+           where buf_temp_xmllib_rec.recname = "Oracle_Retail" no-error.
       if not available buf_temp_xmllib_rec then do:
-        &scop my-message substitute("Неверный тип пакета &1" ~
-                                    , p-pack-num ~
-                                    , v-header-obj-code)
-        {&display-message}.
+        v-my-message = substitute("Неверный тип пакета &1", p-pack-num, v-header-obj-code) .
+        /* {&display-message}. 09/VIII-2019 */
         delete object v-header-th no-error.
-        return error.
+        return error v-my-message.
       end.
-      for first buf_temp_xmllib_rec where
-              buf_temp_xmllib_rec.recname = "header_",
-            each buf_temp_xmllib_rec-fld where
-            buf_temp_xmllib_rec-fld.rec-key = buf_temp_xmllib_rec.rec-key:
+      for first buf_temp_xmllib_rec
+          where buf_temp_xmllib_rec.recname = "header_",
+           each buf_temp_xmllib_rec-fld
+          where buf_temp_xmllib_rec-fld.rec-key = buf_temp_xmllib_rec.rec-key:
         case buf_temp_xmllib_rec-fld.fldname:
           when "obj-type" then do:
             v-header-obj-type = buf_temp_xmllib_rec-fld.fldvalue.
@@ -313,7 +325,18 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           end.
         end case.
       end.
-    end.
+      if not can-find (first ub.clients
+                       where ub.clients.obj-type = v-header-obj-type
+                         and ub.clients.obj-code = v-header-obj-code
+                         and ub.clients.db-num   = ibs.th.gbl.gbl-var:g#db-num)
+      then do:
+        v-my-message = substitute("Адресат пакета &1 (&2&3) НЕИЗВЕСТЕН", p-pack-num, v-header-obj-type, v-header-obj-code) .
+        /* {&display-message}. 09/VIII-2019 */
+        delete object v-header-th no-error.
+        return error v-my-message.
+      end.
+      v-pck-num = p-pack-num.
+    end. /* end_of esys-dm-oracle-retail */
     otherwise do:
   for first buf_temp_xmllib_rec where
           buf_temp_xmllib_rec.recname = "THheader",
@@ -338,6 +361,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
   end.
     end.
   end case.
+  /* 14/II-2019 экземпляры для oracle-retail и для contour-edi перенесёны в вышестоящий case  
   if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail})
     or buf_ext-system.delivery-method = integer({&esys-dm-contour-edi}) then do:
     v-pck-num = p-pack-num.
@@ -355,42 +379,38 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
       return error.
     end.
   end.
+  */
   if buf_ext-system.delivery-method = integer({&esys-dm-exite-edi})
      or buf_ext-system.delivery-method = integer({&esys-dm-contour-edi})
   then do:
     v-pck-num = p-pack-num.
   end.
-  if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
-  then do :
-    v-pck-num = integer(entry(3, v-file-name-no-ext, "_"))  no-error.
-  end.
   if v-pck-num <> p-pack-num
   and not (buf_ext-system.delivery-method = integer({&esys-dm-nnold}))
   then do:
-    &scop my-message substitute("Номер пакета &1 в заголовке файла &2&5 не совпадает с номером пакета &3 для вн.системы '&4'" ~
-                                 , v-pck-num ~
-                                 , p-xml-file-name ~
-                                 , p-pack-num ~
-                                 ,buf_ext-system.esys-name ~
-                                 , ~{&new-line~})
-
-    {&display-message}.
+    v-my-message = substitute("Номер пакета &1 в заголовке файла &2&5 не совпадает с номером пакета &3 для вн.системы '&4'"
+                                 , v-pck-num
+                                 , p-xml-file-name
+                                 , p-pack-num
+                                 ,buf_ext-system.esys-name
+                                 , {&new-line}) .
+    /* {&display-message}. 09/VIII-2019 */
     delete object v-header-th no-error.
-    return error.
+    return error v-my-message.
   end.
   if buf_ext-system.imp-conf-send > 0  then do:
     if v-import-prev-crc <> v-prev-crc then do:
-      &scop my-message  substitute("&1. Ошибка приема! Пакет &2 сформирован в некорректной ВС&3" + ~
-                                  "Ключ предыдущего пакета в файле (&4)&3не совпадает с ключом предыдущего пакета в БД (&5)" ~
-                                  , vss-workfile ~
-                                  , v-pck-num    ~
-                                  , ~{&new-line~} ~
-                                  ,v-import-prev-crc ~
-                                  , v-prev-crc ~
-                                  )
-      {&display-message}.
+      v-my-message = substitute("&1. Ошибка приема! Пакет &2 сформирован в некорректной ВС&3" +
+                                  "Ключ предыдущего пакета в файле (&4)&3не совпадает с ключом предыдущего пакета в БД (&5)"
+                                  , vss-workfile
+                                  , v-pck-num    
+                                  , {&new-line} 
+                                  ,v-import-prev-crc
+                                  , v-prev-crc 
+                                  ) .
+      /* {&display-message}. 09/VIII-2019 */
       delete object v-header-th no-error.
-      undo, return error.
+      undo, return error v-my-message.
     end.
   end. /* buf_ext-system.imp-conf-wait > 0*/
   if buf_ext-system.delivery-method <> integer({&esys-dm-exite-edi})
@@ -407,15 +427,15 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
             buf_temp-param-name.esys-id = -1)
        no-error.
   if not available buf_temp-param-name then do:
-    &scop my-message substitute("Не настроена обработка данных по схеме &1 для вн.системы &2" ~
-                                 , v-schema-name ~
-                                 ,buf_ext-system.esys-name )
-
-    {&display-message}.
+    v-my-message = substitute("Не настроена обработка данных по схеме &1 для вн.системы &2"
+                                 , v-schema-name
+                                 ,buf_ext-system.esys-name ) .
+    /* {&display-message}. 09/VIII-2019 */
     delete object v-header-th no-error.
-    return '':U.
+    return error v-my-message.
   end.
-    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
+    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi})
+     and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
       run get-gate-rec in this-procedure ( v-schema-name
                                           ,output v-gate-rec) no-error.
       if error-status:error then do:
@@ -429,14 +449,14 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
                                             ,input-output v-longchar
                                             ) no-error.
       if error-status:error then do:
-        &scop my-message substitute("Ошибка при создании структуры маршрутизируемых данных согласно гейту:&1&2&3&2&4" ~
-                                  , v-gate-rec ~
-                                  , ~{&new-line~} ~
-                                  , error-status:get-message(1) ~
-                                  , return-value )
-        {&display-message}.
+        v-my-message = substitute("Ошибка при создании структуры маршрутизируемых данных согласно гейту:&1&2&3&2&4"
+                                  , v-gate-rec
+                                  , {&new-line}
+                                  , error-status:get-message(1)
+                                  , return-value ) .
+        /* {&display-message}. 09/VIII-2019 */
         delete object v-header-th no-error.
-        undo, return error '':U.
+        undo, return error v-my-message.
       end.
     end.
     if v-header-name <> '' then do:
@@ -516,10 +536,10 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
    if error-status:error
    or not glog
    then do:
-      &scop my-message substitute("Ошибка при создании заголовка XML файла:&1&2", ~{&new-line~}, error-status:get-message(1) )
-      {&display-message}.
+      v-my-message = substitute("Ошибка при создании заголовка XML файла:&1&2", {&new-line}, error-status:get-message(1) ) .
+      /* {&display-message}. 09/VIII-2019 */
       run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-      undo, return error '':U.
+      undo, return error v-my-message.
     end.
   end.
   run tmpreldf_set-relations in this-procedure ( input v_dataseth, input v_dataseth).
@@ -536,18 +556,19 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
                                     , no /*lMinSchema*/
                                    ) no-error .
   if error-status :error then do:
-        &scop my-message substitute("Ошибка при создании временного файла xsd со схемой &1:&2&3" ~
-                                    , v_dataseth:name ~
-                                    , ~{&new-line~}   ~
-                                    , error-status:get-message(1) )
-    {&display-message}.
+        v-my-message = substitute("Ошибка при создании временного файла xsd со схемой &1:&2&3"
+                                    , v_dataseth:name
+                                    , {&new-line}  
+                                    , error-status:get-message(1) ) .
+    /* {&display-message}. 09/VIII-2019 */
     run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-    undo, return error '':U.
+    undo, return error v-my-message.
   end.
 
   end. /*  if v-insert-header = yes then do:*/
   else do:
-    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN})then do:
+    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi})
+     and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN})then do:
         run gbl/_tmpfile.p (
                             input ""
                           , input "xml"
@@ -559,17 +580,18 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
         NO-ERROR .
         v-longchar = ''.
         if error-status :error then do:
-            &scop my-message substitute("Ошибка при создании временного файла xsd со схемой &1:&2&3" ~
-                                        , v_dataseth:name ~
-                                        , ~{&new-line~}   ~
-                                        , error-status:get-message(1) )
-          {&display-message}.
+            v-my-message = substitute("Ошибка при создании временного файла xsd со схемой &1:&2&3"
+                                        , v_dataseth:name
+                                        , {&new-line}  
+                                        , error-status:get-message(1) ) .
+          /* {&display-message}. 09/VIII-2019 */
           run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
-          undo, return error '':U.
+          undo, return error v-my-message.
         end.
       end.
     end.
-    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
+    if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi})
+     and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
       assign
       v-rec-cnt = 0
       .
@@ -584,33 +606,33 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
                                 ) no-error .
       if error-status:error
       then do:
-          &scop my-message substitute("Ошибка при чтении XML файла &1 данными через гейт &2:&3&4" ~
-                                        , p-xml-file-name ~
-                                        , v_dataseth:name ~
-                                        , ~{&new-line~}   ~
-                                        , error-status:get-message(1))
+        v-my-message = substitute("Ошибка при чтении XML файла &1 данными через гейт &2:&3&4"
+                                        , p-xml-file-name
+                                        , v_dataseth:name
+                                        , {&new-line}
+                                        , error-status:get-message(1)) .
 
-        {&display-message}.
+        /* {&display-message}. 09/VIII-2019 */
         run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
         if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail}) then do:
           run set-err-type in p-parent-handle ( input {&ora-err-type-structure}) no-error.
         end.
-        undo, return error '':U.
+        undo, return error v-my-message.
       end.
        if not glog then do:
-          &scop my-message substitute("Не прошел верификацию с помощью схемы &1 XML файл &2:&3&4&3&5" ~
-                                        , v_dataseth:name ~
-                                        , p-xml-file-name ~
-                                        , ~{&new-line~}   ~
-                                        , error-status:get-message(1) ~
-                                        , error-status:get-message(2) )
-       {&display-message}.
+          v-my-message = substitute("Не прошел верификацию с помощью схемы &1 XML файл &2:&3&4&3&5"
+                                        , v_dataseth:name
+                                        , p-xml-file-name
+                                        , {&new-line}
+                                        , error-status:get-message(1)
+                                        , error-status:get-message(2) ) .
+       /* {&display-message}. 09/VIII-2019 */
         run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
         os-delete value(v-schema-tmp-file).
         if buf_ext-system.delivery-method = integer({&esys-dm-oracle-retail}) then do:
           run set-err-type in p-parent-handle ( input {&ora-err-type-structure}) no-error.
         end.
-        undo, return error '':U.
+        undo, return error v-my-message.
       end.
     end.
   if buf_ext-system.delivery-method <>  integer({&esys-dm-exite-edi})
@@ -632,29 +654,27 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     end.
   end case.
   if not available buf_temp-xml-tables then do:
-     &scop my-message substitute("Не найден THHEADER или Header_ в XML файлe &1:&2&3" ~
-                                    , p-xml-file-name ~
-                                    , ~{&new-line~}   ~
-                                    , error-status:get-message(1))
-
-    {&display-message}.
+     v-my-message = substitute("Не найден THHEADER или Header_ в XML файлe &1:&2&3"
+                                    , p-xml-file-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)) .
+    /* {&display-message}. 09/VIII-2019 */
     run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
     os-delete value(v-schema-tmp-file).
-    undo, return error '':U.
+    undo, return error v-my-message.
   end.
   glog = buf_temp-xml-tables.tbl-handle_:find-first( "where true") no-error.
   if error-status:error
   or not glog
   or buf_temp-xml-tables.tbl-handle_:available = no then do:
-     &scop my-message substitute("Не найдена запись THHEADER или Header_ в XML файлe &1:&2&3" ~
-                                    , p-xml-file-name ~
-                                    , ~{&new-line~}   ~
-                                    , error-status:get-message(1))
-
-    {&display-message}.
+     v-my-message = substitute("Не найдена запись THHEADER или Header_ в XML файлe &1:&2&3"
+                                    , p-xml-file-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)) .
+    /* {&display-message}. 09/VIII-2019 */
     run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
     os-delete value(v-schema-tmp-file).
-    undo, return error '':U.
+    undo, return error v-my-message.
   end.
   else do:
     case buf_ext-system.delivery-method:
@@ -688,15 +708,14 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
                                      ,output v-rec-cnt
                                    ) no-error.
     if error-status :error then do:
-     &scop my-message substitute("Ошибка при принятии подтверждений из ВС:&1&2&1&3" ~
-                                 , ~{&new-line~} ~
-                                 , error-status:get-message(1) ~
-                                 , return-value )
-
-     {&display-message}.
+     v-my-message = substitute("Ошибка при принятии подтверждений из ВС:&1&2&1&3"
+                                 , {&new-line}
+                                 , error-status:get-message(1)
+                                 , return-value ) .
+     /* {&display-message}. 09/VIII-2019 */
      run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
      os-delete value(v-schema-tmp-file).
-     undo, return error '':U.
+     undo, return error v-my-message.
     end.
   end. /*if buf_ext-system.imp-conf-wait > 0  then do:*/
   assign
@@ -714,9 +733,12 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
     end.
   end.
   */
-  if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi}) and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
+  if buf_ext-system.delivery-method <> integer({&esys-dm-contour-edi})
+   and buf_ext-system.delivery-method <> integer({&esys-dm-erp-1C-RN}) then do:
     os-delete value(v-schema-tmp-file).
   end.
+
+  &scop my-message v-my-message                            
   _rule-profile:
   for each buf_temp-param-name WHERE
          (buf_temp-param-name.esys-id = p-esys-id
@@ -781,13 +803,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          &scop my-message substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5" ~
-                                      ,buf_temp-param-name.profile_id  ~
-                                      ,v-schema-name ~
-                                      ,~{&new-line~} ~
-                                      , error-status:get-message(1)  ~
-                                      , return-value ~
-                                      )
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5"
+                                      ,buf_temp-param-name.profile_id 
+                                      ,v-schema-name
+                                      ,{&new-line}
+                                      , error-status:get-message(1)
+                                      , return-value
+                                      ) .
           {&display-message}.
           if buf_temp-param-name.ruleset_id = 2 then do:
             /*buf_esys-pck-keys должны быть заполнены выше*/
@@ -828,13 +850,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          &scop my-message substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5" ~
-                                      ,buf_temp-param-name.profile_id  ~
-                                      ,v-schema-name ~
-                                      ,~{&new-line~} ~
-                                      , error-status:get-message(1)  ~
-                                      , return-value ~
-                                      )
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5"
+                                      ,buf_temp-param-name.profile_id
+                                      ,v-schema-name
+                                      ,{&new-line}
+                                      , error-status:get-message(1)
+                                      , return-value
+                                      ) .
           {&display-message}.
           if buf_temp-param-name.ruleset_id = 5 then do:
             /*еще нет такого ruleset*/
@@ -876,13 +898,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          &scop my-message substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5" ~
-                                      ,buf_temp-param-name.profile_id  ~
-                                      ,v-schema-name ~
-                                      ,~{&new-line~} ~
-                                      , error-status:get-message(1)  ~
-                                      , return-value ~
-                                      )
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5"
+                                      ,buf_temp-param-name.profile_id
+                                      ,v-schema-name
+                                      ,{&new-line}
+                                      , error-status:get-message(1)
+                                      , return-value
+                                      ) .
           {&display-message}.
           if buf_temp-param-name.ruleset_id = 5 then do:
             /*еще нет такого ruleset*/
@@ -957,13 +979,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          &scop my-message substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5" ~
-                                      ,buf_temp-param-name.profile_id  ~
-                                      ,v-schema-name ~
-                                      ,~{&new-line~} ~
-                                      , error-status:get-message(1)  ~
-                                      , return-value ~
-                                      )
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5"
+                                      ,buf_temp-param-name.profile_id
+                                      ,v-schema-name
+                                      ,{&new-line}
+                                      , error-status:get-message(1)
+                                      , return-value
+                                      ) .
           {&display-message}.
           if buf_temp-param-name.ruleset_id = 5 then do:
             /*еще нет такого ruleset*/
@@ -995,7 +1017,7 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input buf_temp-param-name.call_id
           ,input (
                  string(p-esys-id) + {&delim-par} +
-                 v-file-name + {&delim-par} +
+                 p-file-name + {&delim-par} +
                  (if string(v_dataseth) = ? then p-xml-file-name else string(v_dataseth)) + {&delim-par} +
                  string(v-pck-num) + {&delim-par} +
                  p-log-file-name + {&delim-par} +
@@ -1005,13 +1027,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          &scop my-message substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5" ~
-                                      ,buf_temp-param-name.profile_id  ~
-                                      ,v-schema-name ~
-                                      ,~{&new-line~} ~
-                                      , error-status:get-message(1)  ~
-                                      , return-value ~
-                                      )
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5"
+                                      ,buf_temp-param-name.profile_id
+                                      ,v-schema-name
+                                      ,{&new-line}
+                                      , error-status:get-message(1)
+                                      , return-value
+                                      ) .
           {&display-message}.
           if buf_temp-param-name.ruleset_id = 5 then do:
             /*еще нет такого ruleset*/
@@ -1053,13 +1075,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          &scop my-message substitute("Ошибка при импорте данных по схеме &2:&3профайл правил &1&3&4&3&5" ~
-                                      ,buf_temp-param-name.profile_id  ~
-                                      ,v-schema-name ~
-                                      ,~{&new-line~} ~
-                                      , error-status:get-message(1)  ~
-                                      , return-value ~
-                                      )
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3профайл правил &1&3&4&3&5"
+                                      ,buf_temp-param-name.profile_id
+                                      ,v-schema-name
+                                      ,{&new-line}
+                                      , error-status:get-message(1)
+                                      , return-value
+                                      ) .
           {&display-message}.
           if buf_temp-param-name.ruleset_id = 5 then do:
             /*еще нет такого ruleset*/
@@ -1101,13 +1123,13 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          &scop my-message substitute("Ошибка при импорте данных по схеме &2:&3профайл правил &1&3&4&3&5" ~
-                                      ,buf_temp-param-name.profile_id  ~
-                                      ,v-schema-name ~
-                                      ,~{&new-line~} ~
-                                      , error-status:get-message(1)  ~
-                                      , return-value ~
-                                      )
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3профайл правил &1&3&4&3&5"
+                                      ,buf_temp-param-name.profile_id
+                                      ,v-schema-name
+                                      ,{&new-line}
+                                      , error-status:get-message(1)
+                                      , return-value
+                                      ) .
           {&display-message}.
           if buf_temp-param-name.ruleset_id = 5 then do:
             /*еще нет такого ruleset*/
@@ -1126,10 +1148,10 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
         end.
       end. /*when {&table_goods} then do:*/
       otherwise do:
-        &scop my-message substitute("Неизвестный тип &1  профайла &2 для обработки данных по схеме &3" ~
-                                      ,buf_temp-param-name.profile-type ~
-                                    ,buf_temp-param-name.profile_id  ~
-                                    , v-schema-name)
+        v-my-message = substitute("Неизвестный тип &1  профайла &2 для обработки данных по схеме &3"
+                                      ,buf_temp-param-name.profile-type
+                                    ,buf_temp-param-name.profile_id
+                                    , v-schema-name) .
         {&display-message}.
         next _rule-profile.
       end.
@@ -1176,18 +1198,16 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
   if v-headerh:available
   and v-headerh:table = "THheader"
   and v-headerh::THtotal-recs <> v-rec-cnt then do:
-    &scop my-message  substitute("Не совпадает количество считанных записей и ожидаемое количество :&1" +  ~
-                                 "принято: &2&1"  +  ~
-                                 "должно быть: &3" ~
-                                 ,~{&new-line~}  ~
-                                 ,v-rec-cnt  ~
-                                ,v-headerh::THtotal-recs)
-
-
-    {&display-message}.
+    v-my-message = substitute("Не совпадает количество считанных записей и ожидаемое количество :&1" + 
+                                 "принято: &2&1"  + 
+                                 "должно быть: &3" 
+                                 ,{&new-line}
+                                 ,v-rec-cnt
+                                ,v-headerh::THtotal-recs) .
+    /* {&display-message}. 09/VIII-2019 */
     run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
     os-delete value(v-schema-tmp-file).
-    undo, return error '':U.
+    undo, return error v-my-message.
   end.
 end.
   if v-task = v-task-ok then do:
@@ -1205,15 +1225,14 @@ end.
                                       ,output v-rec-cnt
                                     ) no-error.
       if error-status :error then do:
-      &scop my-message substitute("Ошибка при принятии подтверждений из ВС:&1&2&1&3" ~
-                                  , ~{&new-line~} ~
-                                  , error-status:get-message(1) ~
-                                  , return-value )
-
-      {&display-message}.
+        v-my-message = substitute("Ошибка при принятии подтверждений из ВС:&1&2&1&3"
+                                  , {&new-line}
+                                  , error-status:get-message(1)
+                                  , return-value ) .
+      /* {&display-message}. 09/VIII-2019 */
       run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
       os-delete value(v-schema-tmp-file).
-      undo, return error '':U.
+      undo, return error v-my-message.
       end.
     end. /*if buf_ext-system.delivery-method = integer({&esys-dm-exite-edi})  then do:*/
     if buf_ext-system.imp-conf-send  = integer({&openxml-imp-conf-send})
@@ -1230,18 +1249,18 @@ end.
                                       ,buffer curr_temp-esys-pck-sent
                                     ) no-error.
     if error-status :error then do:
-      &scop my-message substitute("Ошибка при выставлении подтверждений:&1&2&1&3" ~
-                                  , ~{&new-line~} ~
-                                  , error-status:get-message(1) ~
-                                  , return-value )
-
-      {&display-message}.
+      v-my-message = substitute("Ошибка при выставлении подтверждений:&1&2&1&3"
+                                  , {&new-line}
+                                  , error-status:get-message(1)
+                                  , return-value ) .
+      /* {&display-message}. 09/VIII-2019 */
       run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
       os-delete value(v-schema-tmp-file).
-      undo, return error '':U.
+      undo, return error v-my-message.
     end.
     end.
     else do:
+      /* get-xcnf_set0xcnf вызывается только отсюда; get-short-pack-name вызывается отсюда и из espcknum.p */
       run get-xcnf_set0xcnf in this-procedure (
                                        input p-esys-id
                                       ,input p-db-num
@@ -1253,15 +1272,14 @@ end.
                                       )  no-error.
 
       if error-status :error then do:
-        &scop my-message substitute("Ошибка при выставлении подтверждений:&1&2&1&3" ~
-                                  , ~{&new-line~} ~
-                                  , error-status:get-message(1) ~
-                                  , return-value )
-
-        {&display-message}.
+        v-my-message = substitute("Ошибка при выставлении подтверждений:&1&2&1&3"
+                                  , {&new-line} 
+                                  , error-status:get-message(1)
+                                  , return-value ) .
+        /* {&display-message}. 09/VIII-2019 */
         run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
         os-delete value(v-schema-tmp-file).
-        undo, return error '':U.
+        undo, return error v-my-message.
       end.
     end.
   end. /*if v-task = v-task-ok then do:*/

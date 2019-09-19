@@ -239,7 +239,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
         if available tt_places then do:
           put stream out-stream unformatted
-            tt_places.qnty format ">>>>>>>>>>9.999"
+            tt_places.qnty format "->>>>>>>>>9.999"
             .
         end.
         else do:

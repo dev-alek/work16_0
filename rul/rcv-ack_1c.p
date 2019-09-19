@@ -19,6 +19,7 @@ define output parameter p-status_   as integer no-undo .
 define output parameter p-error     as character no-undo .
 
 { cmp/trg-def.i }
+{ gbl/cur-time.i }
 
 define variable v-num   as integer no-undo .
 define variable v-sender-id as character no-undo .
@@ -28,6 +29,8 @@ define variable hDoc as handle no-undo.
 define variable hRoot as handle no-undo.
 
 define variable log_         as logical   no-undo.
+define variable v-today            as date      no-undo .
+define variable v-time             as integer   no-undo .
 
 define buffer buf_sent for ub.esys-pck-sent .
 define buffer buf_route for ub.esys-route .
@@ -66,11 +69,15 @@ then do :
         
     end.
     else do :
+      run cur-time in this-procedure
+          ( output v-today
+           ,output v-time
+          ) no-error .
       assign
         buf_sent.esps-rcvd = yes
-        buf_sent.esps-rcvdDate = today
-        buf_sent.esps-rcvdtime = string(time, "HH:MM:SS")
-        buf_sent.esps-rcvdtimeint = time
+        buf_sent.esps-rcvdDate = v-today
+        buf_sent.esps-rcvdtime = string(v-time, "HH:MM:SS")
+        buf_sent.esps-rcvdtimeint = v-time
       .
       for each buf_route exclusive-lock where buf_route.esys-id = buf_sent.esys-id
                                           and buf_route.db-num = buf_sent.db-num

@@ -2432,7 +2432,7 @@ procedure local-add :
             message
               vss-workfile vss-revision vss-description skip
               substitute("Ошибка при добавлении строки инвентаризации.") skip
-              substitute("Запрещено добовалять нетопливный товар вместе с топливными.") skip
+              substitute("Запрещено добавлять не топливный товар вместе с топливными.") skip
               return-value skip
               view-as alert-box error .
             undo tr, next tr.
@@ -2441,7 +2441,7 @@ procedure local-add :
             message
               vss-workfile vss-revision vss-description skip
               substitute("Ошибка при добавлении строки инвентаризации.") skip
-              substitute("Запрещено добовалять топливный товар вместе с нетопливными.") skip
+              substitute("Запрещено добавлять топливный товар вместе с не топливными.") skip
               return-value skip
               view-as alert-box error .
             undo tr, next tr.

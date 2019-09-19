@@ -32,6 +32,9 @@ define variable vss-description as character no-undo init "Отчет по продажам в р
 { gbl/prn-lib.i }
 { gbl/waitfram.i }
 { gbl/cur-time.i }
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
+{ gbl/thbj-def.i }
 
 define temp-table temp-cpych no-undo
 field pay-card as character
@@ -119,6 +122,7 @@ define variable v-base-code as integer no-undo .
 define variable Line            as character no-undo.
 define variable date_string     as character no-undo.
 define variable v-pay-card      as character no-undo .
+define variable v-pay-card-itog      as character no-undo .
 define variable v-chk-date-time as character no-undo .
 define variable v-sum-tot as decimal no-undo .
 define variable v-discnt-name as character no-undo .
@@ -128,7 +132,14 @@ define variable num-objs as integer no-undo .
 define variable ii-excel as integer no-undo .
 define variable ii-page as integer no-undo init 1.
 define variable v-qnty-2 as decimal no-undo .
-
+define variable v-value-character as character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
+define variable v-tth as handle no-undo .
+define variable par-l-mask  as logical no-undo .
+define variable v-param-type as character no-undo .
 
 DEFINE shared TEMP-TABLE tt-cash-pay  no-undo LIKE ub.cash-pay.
 define buffer buf1_sheetf for sheetf.
@@ -177,6 +188,33 @@ define buffer buf_inkas for ub.inkas.
 
 run waitfram-show in this-procedure ("Ждите...").
 
+run adm/shattri.p (
+      input "get":U
+    ,input  v-cntxt-obj-type
+    ,input  v-cntxt-obj-code
+    ,input  {&attr-dc-ref}
+    ,input  {&attr-dc-ref_l-mask} /*p-param-code*/
+    ,output v-value-character
+    ,output v-value-date
+    ,output v-value-decimal
+    ,output v-value-integer
+    ,output par-l-mask
+    ,output v-param-type
+    ,INPUT-OUTPUT table-handle v-tth
+    ) no-error .
+
+for each thbjattr_thbj-attr where
+       thbjattr_thbj-attr.obj-type = v-cntxt-obj-type
+   and thbjattr_thbj-attr.obj-code = v-cntxt-obj-code
+   and thbjattr_thbj-attr.upper-prop-code = {&attr-dc-ref}
+on error undo, return error return-value :
+  case thbjattr_thbj-attr.prop-code:
+    when {&attr-dc-ref_l-mask} then do:
+      assign
+      par-l-mask = thbjattr_thbj-attr.property-value-logical.
+    end.
+  end case.
+end.
 /*соберем данные*/
 for each buf_temp-inkas:
   delete buf_temp-inkas.
@@ -339,8 +377,6 @@ FORM with FRAME OutFrame.
 VIEW STREAM PrnLibStream FRAME BottomFrame .
 VIEW STREAM PrnLibStream FRAME OutFrame .
 
-
-
 for each obj-list
 break
 by obj-list.obj-type
@@ -493,9 +529,12 @@ by obj-list.obj-code
     all_temp-cpych.sum-netto  = all_temp-cpych.sum-netto + buf_temp-cpych.sum-netto
     all_temp-cpych.discnt-sum  = all_temp-cpych.discnt-sum + buf_temp-cpych.discnt * buf_temp-cpych.doc-qnty
     .
+    
     v-pay-card = if first-of(buf_temp-cpych.fpay-card)
                   then buf_temp-cpych.fpay-card
                   else ''.
+    if par-l-mask and v-cntxt-db-num <> 0 and v-pay-card <> "" then v-pay-card = substring(v-pay-card,1,6) + "XXXXXX" + substring (v-pay-card,13,4).
+
     if first-of(buf_temp-cpych.fpay-card) then do:
       {&page-excel-block}.
     end.
@@ -649,6 +688,8 @@ by obj-list.obj-code
     if last-of(buf_temp-cpych.fpay-card)
     /*and num-objs = 1*/
     then do:
+      if par-l-mask and v-cntxt-db-num <> 0 and buf_temp-cpych.fpay-card <> "" then v-pay-card-itog = substring(buf_temp-cpych.fpay-card,1,6) + "XXXXXX" + substring (buf_temp-cpych.fpay-card,13,4).
+      else v-pay-card-itog = buf_temp-cpych.fpay-card .
       find first card-obj_temp-cpych where
                 card-obj_temp-cpych.obj-type = obj-list.obj-typ
             and card-obj_temp-cpych.obj-code = obj-list.obj-code
@@ -657,7 +698,7 @@ by obj-list.obj-code
       display stream prnlibstream
       '' @ v-pay-card
       "Итого по карте" @ v-chk-date-time
-      buf_temp-cpych.fpay-card  @ buf_chk-gds.doc-code
+      v-pay-card-itog  @ buf_chk-gds.doc-code
       '' @ buf_goods.artic
       'чеков:' @ buf_goods.gds-name
       card-obj_temp-cpych.num-chk @ buf_chk-gds.price-base
@@ -672,7 +713,7 @@ by obj-list.obj-code
       {&PutExcel}
       '' {&tabulation}
       "Итого по карте" {&tabulation}
-      buf_temp-cpych.fpay-card  {&tabulation}
+      v-pay-card-itog  {&tabulation}
       '' {&tabulation}
       'чеков:' {&tabulation}
       card-obj_temp-cpych.num-chk {&tabulation}
@@ -1171,7 +1212,7 @@ by  buf_chk-pay.doc-code           :
       create card-obj_temp-cpych.
       assign
       card-obj_temp-cpych.pay-card = buf_chk-pay.pay-card
-      card-obj_temp-cpych.fpay-card = fill( {&space-char} , 19 - length(buf_chk-pay.pay-card)) + buf_chk-pay.pay-card
+      card-obj_temp-cpych.fpay-card = fill( {&space-char} , 16 - length(buf_chk-pay.pay-card)) + buf_chk-pay.pay-card
       card-obj_temp-cpych.chk-date  = ?
       card-obj_temp-cpych.chk-time = 0
       card-obj_temp-cpych.doc-code = ''
@@ -1192,7 +1233,7 @@ by  buf_chk-pay.doc-code           :
       create card_temp-cpych.
       assign
       card_temp-cpych.pay-card = buf_chk-pay.pay-card
-      card_temp-cpych.fpay-card = fill( {&space-char} , 19 - length(buf_chk-pay.pay-card)) + buf_chk-pay.pay-card
+      card_temp-cpych.fpay-card = fill( {&space-char} , 16 - length(buf_chk-pay.pay-card)) + buf_chk-pay.pay-card
       card_temp-cpych.chk-date  = ?
       card_temp-cpych.chk-time = 0
       card_temp-cpych.doc-code = ''
@@ -1267,7 +1308,7 @@ by  buf_chk-pay.doc-code           :
           create buf_temp-cpych.
           assign
           buf_temp-cpych.pay-card = buf_chk-pay.pay-card
-          buf_temp-cpych.fpay-card = fill( {&space-char} , 19 - length(buf_chk-pay.pay-card)) + buf_chk-pay.pay-card
+          buf_temp-cpych.fpay-card = fill( {&space-char} , 16 - length(buf_chk-pay.pay-card)) + buf_chk-pay.pay-card
           buf_temp-cpych.chk-date  = buf_chk-doc.chk-date
           buf_temp-cpych.chk-time = buf_chk-doc.chk-time
           buf_temp-cpych.doc-code = buf_chk-doc.doc-code

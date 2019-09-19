@@ -115,6 +115,7 @@ for each buf_dis-card-mask no-lock where
      &if "{1}" eq ""
      &then              
     { str/cash-c-i.i "mask" }
+     &endif
     if buf_dis-card-mask.cli-code  = 0 then do:
       find first cash-cli no-lock where
                 cash-cli.cli-type = buf_dis-card-mask.cli-type
@@ -125,6 +126,9 @@ for each buf_dis-card-mask no-lock where
                 cash-cli.d-card = buf_dis-card-mask.mask
              no-error .
     end.
+     &if "{1}" eq ""
+     &then              
+
     if available cash-cli then do:
  
         RUN putc-2 in this-procedure ( buffer buf_cash-desk

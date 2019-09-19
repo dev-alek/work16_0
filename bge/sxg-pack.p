@@ -60,7 +60,10 @@ DEFINE VARIABLE v-time as integer no-undo .
   define variable v-filename         as character no-undo .
   define variable v-fullfilename     as character no-undo .
   define variable v-filetype         as character no-undo .
-  define variable v-num-name-parts   as integer no-undo .
+//  define variable v-num-name-parts   as integer no-undo . 23/VII-2019
+  define variable v-r-index          as integer no-undo .
+  define variable v-fileext          as character no-undo .
+  define variable v-filenamenoext    as character no-undo .
   define variable v-current-pack-num as integer no-undo .
   define variable v-ftp-ip as character no-undo .
   define variable v-ftp-login as character no-undo .
@@ -114,6 +117,17 @@ on error undo, return error
     then do:
       return error substitute( "&1. Исходный файл &2 не найден.", vss-workfile, v-fullfilename ).
     end.
+    /* 23/VII-2019  добавлена имени файла без расширения и расширения файла отдельно в file-s-g(). */
+    v-r-index = r-index(p0-file-name, '.':u) .
+    if v-r-index > 0 then assign
+      v-filenamenoext = substring( p0-file-name, 1, v-r-index - 1 )
+      v-fileext       = substring( p0-file-name, v-r-index + 1 )
+    .
+    else assign
+      v-filenamenoext = p0-file-name
+      v-fileext       = "":U
+    .
+    
     run ext-system-attr-value in this-procedure (
                                       input  p-esys-id
                                      ,input  p-db-num
@@ -125,6 +139,8 @@ on error undo, return error
                   ,input p0-arch
                   ,input p0-file-name
                   ,input v-fullfilename
+                  ,input v-filenamenoext
+                  ,input v-fileext
                   ,input p0-source-dir
                   ,input p0-target-dir
                   ,input p0-temp-dir
@@ -242,10 +258,18 @@ on error undo, return error
     :
       import stream FLStream v-filename v-fullfilename v-filetype.
       
-      v-num-name-parts = num-entries( v-filename, "." ) .
+      v-r-index = r-index(v-filename, '.':u) .
+      if v-r-index > 0 then assign
+        v-filenamenoext = substring( v-filename, 1, v-r-index - 1 )
+        v-fileext       = substring( v-filename, v-r-index + 1 )
+      .
+      else assign
+        v-filenamenoext = v-filename
+        v-fileext       = "":U
+      .
       if v-filetype begins "F"
-        and v-num-name-parts > 1
-        and lookup(  entry(v-num-name-parts, v-filename, "."),  "$$$"  ) = 0
+        and v-r-index > 0
+        and lookup(  v-fileext,  "$$$"  ) = 0
       then do:
         assign
           file-info:file-name = v-fullfilename
@@ -262,6 +286,8 @@ on error undo, return error
                         ,input p0-arch
                         ,input v-filename
                         ,input v-fullfilename
+                        ,input v-filenamenoext
+                        ,input v-fileext
                         ,input p0-source-dir
                         ,input p0-target-dir
                         ,input p0-temp-dir
@@ -294,7 +320,9 @@ procedure file-s-g private :
   define input parameter p-action     as character no-undo .
   define input parameter p-arch       as logical   no-undo .
   define input parameter p-file-name  as character no-undo .
-  define input parameter p-fullfile-name  as character no-undo .
+  define input parameter p-fullfile-name    as character no-undo .
+  define input parameter p-file-name-no-ext as character no-undo .
+  define input parameter p-file-ext   as character no-undo .
   define input parameter p-source-dir as character no-undo .
   define input parameter p-target-dir as character no-undo .
   define input parameter p-temp-dir   as character no-undo .
@@ -314,10 +342,11 @@ procedure file-s-g private :
     define variable v-log-file-source-arj  as character no-undo .
     define variable v-log-file-temp        as character no-undo .
     define variable v-log-file-target      as character no-undo .
-
+/* 23/VII-2019
     define variable v-r-index          as integer no-undo .
     define variable v-file-name-no-ext as character no-undo .
     define variable v-ext-name         as character no-undo .
+*/    
     define variable v-zip-command      as character no-undo .
 
     define variable v-unzip-command    as character no-undo .
@@ -330,6 +359,7 @@ procedure file-s-g private :
   on error undo, return error
   :
 
+/* 23/VII-2019 - вынесено на верхний уровень
     v-r-index = r-index(p-file-name, '.':u) .
     if v-r-index > 0 then assign
       v-file-name-no-ext = substring( p-file-name, 1, v-r-index - 1 )
@@ -339,6 +369,7 @@ procedure file-s-g private :
       v-file-name-no-ext = p-file-name
       v-ext-name         = "":U
     .
+*/    
     assign
 /* 11/I-2019 - вместо v-file-source используется p-fullfile-name
       v-file-source     = p-source-dir + {&back-slash-char} + p-file-name*/
@@ -369,12 +400,12 @@ procedure file-s-g private :
       v-arh-name = search('exe/pkzipc.exe':U).
       v-arh-type = "zip".
       if p-action = "put" then do :
-            if search(p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG") <> ? then do:
+            if search(p-source-dir + {&back-slash-char} + p-file-name-no-ext + ".LOG") <> ? then do:
               v-send-log = yes.
               assign
-              v-log-file-source     = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG"
-              v-log-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".LOG"
-              v-log-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG"
+              v-log-file-source     = p-source-dir + {&back-slash-char} + p-file-name-no-ext + ".LOG"
+              v-log-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name-no-ext + ".LOG"
+              v-log-file-target     = p-target-dir + {&back-slash-char} + p-file-name-no-ext + ".LOG"
               .
             end.
       end . /* end_of put */
@@ -391,7 +422,7 @@ procedure file-s-g private :
       else do :
                                v-arh-name = search('exe/pkzipc.exe':U).
       end .
-      if v-ext-name = "zip" then do :
+      if p-file-ext = "zip" then do :
         if p-action = "get" then do :
           if v-arh-name = ? then
             return error substitute( "&1. Программа архиватор не найдена", vss-workfile ).
@@ -404,7 +435,7 @@ procedure file-s-g private :
            1. Нам надо забирать из EXCH только нужные расширения,
            2. и в разбор тоже надо брать только нужные файлы.
         */
-          if not can-do ("xml,p7s,p7c", v-ext-name) then return .
+          if not can-do ("xml,p7s,p7c", p-file-ext) then return .
           v-arch = false .
         end .
       end .
@@ -416,7 +447,20 @@ procedure file-s-g private :
       v-arh-type = "arj".
     end .
   end case .
-
+  if p-action = "get" or p-action = "fget" then do:
+    if lookup( p-file-ext, "arj") <> 0
+    or lookup( p-file-ext, "zip") <> 0 then do:
+      run write-to-log in p-parent-handle ( substitute( "Прием файла &1 (&2)", p-fullfile-name, v-arh-name ) ) .
+      if v-arh-name = ? then
+         return error substitute( "&1. Программа архиватор не найдена!", vss-workfile ).
+      v-arch = true .
+    end.
+    else do:
+      run write-to-log in p-parent-handle ( substitute( "Прием файла &1 (copy)", p-fullfile-name ) ) .
+      v-arch = false .
+    end.
+  end .
+  
     
     case p-action :
       when "fput" or
@@ -450,7 +494,7 @@ procedure file-s-g private :
           .
         end.
         if p-delivery-method = integer({&esys-dm-oracle-retail}) then do:
-          buf_esys-all-attr.attr-value = v-file-name-no-ext + ".DAT".
+          buf_esys-all-attr.attr-value = p-file-name-no-ext + ".DAT".
         end.
         else do:
           buf_esys-all-attr.attr-value = p-file-name.
@@ -471,9 +515,9 @@ procedure file-s-g private :
 
         if v-arh-type = "arj" then do:
         assign
-          v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".arj":U
-          v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".arj":U
-          v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".arj":U
+          v-file-source-arj = p-source-dir + {&back-slash-char} + p-file-name-no-ext + ".arj":U
+          v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name-no-ext + ".arj":U
+          v-file-target     = p-target-dir + {&back-slash-char} + p-file-name-no-ext + ".arj":U
         .
         // @FUTU в зависимости от параметра запаковать или только файл, или файл вместе с цифровой подписью
         os-command silent
@@ -487,15 +531,21 @@ procedure file-s-g private :
           case p-delivery-method:
             when integer({&esys-dm-oracle-retail}) then do:
               assign
+                /* 23/VII-2019  сумма v-file-name-no-ext + "." + v-ext-name есть p-file-name,
+                                из которого они были получены снаружи  
                 v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + "." + v-ext-name + ".zip":U
                 v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + "." + v-ext-name + ".zip":U
                 v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + "." + v-ext-name + ".zip":U
+                */
+                v-file-source-arj = p-source-dir + {&back-slash-char} + p-file-name + ".zip":U
+                v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name + ".zip":U
+                v-file-target     = p-target-dir + {&back-slash-char} + p-file-name + ".zip":U
               .
               if v-send-log then do:
                 assign
-                  v-log-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG" + ".zip":U
-                  v-log-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".LOG" + ".zip":U
-                  v-log-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".LOG" + ".zip":U
+                  v-log-file-source-arj = p-source-dir + {&back-slash-char} + p-file-name-no-ext + ".LOG" + ".zip":U
+                  v-log-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name-no-ext + ".LOG" + ".zip":U
+                  v-log-file-target     = p-target-dir + {&back-slash-char} + p-file-name-no-ext + ".LOG" + ".zip":U
                 .
               end.
               os-command silent
@@ -515,9 +565,9 @@ procedure file-s-g private :
             end.
             when integer({&esys-dm-erp-1C-RN}) then do:
               assign
-                v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-                v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-                v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
+                v-file-source-arj = p-source-dir + {&back-slash-char} + p-file-name-no-ext + ".zip":U
+                v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name-no-ext + ".zip":U
+                v-file-target     = p-target-dir + {&back-slash-char} + p-file-name-no-ext + ".zip":U
               .
               /* в зависимости от параметра запаковать или только файл, или файл вместе с цифровой подписью */
               v-zip-command =
@@ -526,7 +576,7 @@ procedure file-s-g private :
                    , v-arh-name
                    , v-file-source-arj
                    , p-fullfile-name
-                   , p-source-dir, {&back-slash-char} , v-file-name-no-ext
+                   , p-source-dir, {&back-slash-char} , p-file-name-no-ext
                  )
               else
                  substitute( "&1 a -tzip -y &2 &3":U, v-arh-name, v-file-source-arj, p-fullfile-name )
@@ -547,10 +597,10 @@ procedure file-s-g private :
             end.
             otherwise do:
               assign
-                v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-                v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-                v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + ".zip":U
-                v-file-source-all = p-source-dir + {&back-slash-char} + v-file-name-no-ext + ".*":U
+                v-file-source-arj = p-source-dir + {&back-slash-char} + p-file-name-no-ext + ".zip":U
+                v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name-no-ext + ".zip":U
+                v-file-target     = p-target-dir + {&back-slash-char} + p-file-name-no-ext + ".zip":U
+                v-file-source-all = p-source-dir + {&back-slash-char} + p-file-name-no-ext + ".*":U
               .
               
               os-command silent
@@ -576,9 +626,15 @@ procedure file-s-g private :
       end. /*if p-arch = true then do:*/
       else do:
         assign
+        /* 23/VII-2019  сумма v-file-name-no-ext + "." + v-ext-name есть p-file-name,
+                        из которого они были получены снаружи  
         v-file-source-arj = p-source-dir + {&back-slash-char} + v-file-name-no-ext + "." + v-ext-name
         v-file-temp       = p-temp-dir   + {&back-slash-char} + v-file-name-no-ext + "." + v-ext-name
         v-file-target     = p-target-dir + {&back-slash-char} + v-file-name-no-ext + "." + v-ext-name
+        */
+        v-file-source-arj = p-source-dir + {&back-slash-char} + p-file-name
+        v-file-temp       = p-temp-dir   + {&back-slash-char} + p-file-name
+        v-file-target     = p-target-dir + {&back-slash-char} + p-file-name
         .
         run write-to-log in p-parent-handle ( substitute( "Отправка файла &1 (copy)", p-fullfile-name ) ).
         assign
@@ -656,13 +712,10 @@ procedure file-s-g private :
         end.
       end.
       if p-action = "put"
-      and (p-delivery-method = integer({&esys-dm-nn})
-          OR
-          p-delivery-method = integer({&esys-dm-nnold})
-          OR
-          p-delivery-method = integer({&esys-dm-exite-edi})
-          OR
-          p-delivery-method = integer({&esys-dm-contour-edi})
+      and (  p-delivery-method = integer({&esys-dm-nn})
+          OR p-delivery-method = integer({&esys-dm-nnold})
+          OR p-delivery-method = integer({&esys-dm-exite-edi})
+          OR p-delivery-method = integer({&esys-dm-contour-edi})
           )
       then do:
         run ext-system-attr-value in this-procedure ( input p-esys-id
@@ -754,43 +807,26 @@ procedure file-s-g private :
     if p-action = "get"
     or p-action = "fget"
     then do:
-      if lookup( v-ext-name, "arj") <> 0
-      or lookup( v-ext-name, "zip") <> 0
-      then do:
-        run write-to-log in p-parent-handle ( substitute( "Прием файла &1 (&2)", p-fullfile-name, v-arh-name ) ) .
-          if v-arh-name = ? then do:
-            return error substitute( "&1. Программа архиватор не найдена!", vss-workfile ).
-          end.
-          assign
-            v-arch = true
-          .
-      end.
-      else do:
-        run write-to-log in p-parent-handle ( substitute( "Прием файла &1 (copy)", p-fullfile-name ) ) .
-          assign
-            v-arch = false
-          .
-      end.
 
         
       /* 11/I-2019  для импорта из 1с распаковка файлов выполняется без копирования архива */
       if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
         if v-arch then do:
-          if lookup( v-ext-name, "zip") <> 0 then v-unzip-command =
+          if lookup( p-file-ext, "zip") <> 0 then v-unzip-command =
             substitute("&1 -extract -silent -over=all &2 &3":U
                       , v-arh-name
                       , p-fullfile-name
                       , p-target-dir
                       ) .
           else
-          if lookup( v-ext-name, "arj") <> 0 then v-unzip-command =
+          if lookup( p-file-ext, "arj") <> 0 then v-unzip-command =
             substitute("&1 e -y &2 &3":U
                       , v-arh-name
                       , p-fullfile-name
                       , p-target-dir
                       ) .
           run write-to-log in p-parent-handle ( substitute("Команда на распаковку &1: &2"
-                                                          , v-ext-name, v-unzip-command)  ) .
+                                                          , p-file-ext, v-unzip-command)  ) .
           os-command silent value( v-unzip-command ) .
 
           /* @FUTU обосновать, что удаление архива произойдёт только после удачной распаковки */
@@ -834,7 +870,7 @@ procedure file-s-g private :
         end.
 
         if v-arch then do:
-        if lookup( v-ext-name, "zip") <> 0 then do:
+        if lookup( p-file-ext, "zip") <> 0 then do:
           v-unzip-command = substitute("&1 -extract -silent -over=all &2 &3":U
                                       , v-arh-name
                                       , v-file-target
@@ -842,27 +878,15 @@ procedure file-s-g private :
                                       ) .
         end.
         else
-        if lookup( v-ext-name, "arj") <> 0 then do:
+        if lookup( p-file-ext, "arj") <> 0 then do:
           v-unzip-command = substitute("&1 e -y &2 &3":U
                                       , v-arh-name
                                       , v-file-target
                                       , p-target-dir
                                       ) .
         end.
-        if lookup( v-ext-name, "zip") <> 0 then do:
-          run write-to-log in p-parent-handle (  substitute("Команда на распаковку zip: &1", v-unzip-command)  ) .
+          run write-to-log in p-parent-handle (  substitute("Команда на распаковку &1: &2", p-file-ext, v-unzip-command)  ) .
           os-command silent value( v-unzip-command ) .
-        end.
-        if lookup( v-ext-name, "arj") <> 0 then do:
-          /* 11/I-2019 строка запуска формируется заранее
-          os-command silent 
-            value( v-arh-name )
-            value( "e -y":U )
-            value( v-file-target )
-            value( p-target-dir )
-          . */
-          os-command silent value( v-unzip-command ) .
-        end.
         
           run del-file ( input v-file-target ) no-error .
           if error-status :error then do:

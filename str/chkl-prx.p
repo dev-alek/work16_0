@@ -82,10 +82,18 @@ define buffer buf_goods for ub.goods.
 define buffer buf_clients for ub.clients.
 define buffer buf1_sheetf for sheetf.
 define buffer buf_sheetf for sheetf.
+define variable v-value-character as character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
+define variable v-tth as handle no-undo .
+define variable par-l-mask  as logical no-undo .
+define variable v-param-type as character no-undo .
 
 { gbl/hostcode.i p-curr-obj-type p-curr-obj-code v-host-code }
 
-
+{ gbl/thbj-def.i }
 { gbl/curr-r-b.i v-curr-r-b }
 { str/chkdocfi.i  }
 
@@ -242,6 +250,33 @@ sheetf.sizes = ubflt.filter.Where-ysl
 run waitfram-show in this-procedure ("Экспорт в EXCEL. Ждите ...").
 run rep/extitle.p (1).
 
+run adm/shattri.p (
+      input "get":U
+    ,input  p-curr-obj-type
+    ,input  p-curr-obj-code
+    ,input  {&attr-dc-ref}
+    ,input  {&attr-dc-ref_l-mask} /*p-param-code*/
+    ,output v-value-character
+    ,output v-value-date
+    ,output v-value-decimal
+    ,output v-value-integer
+    ,output par-l-mask
+    ,output v-param-type
+    ,INPUT-OUTPUT table-handle v-tth
+    ) no-error .
+
+for each thbjattr_thbj-attr where
+       thbjattr_thbj-attr.obj-type = p-curr-obj-type
+   and thbjattr_thbj-attr.obj-code = p-curr-obj-code
+   and thbjattr_thbj-attr.upper-prop-code = {&attr-dc-ref}
+on error undo, return error return-value :
+  case thbjattr_thbj-attr.prop-code:
+    when {&attr-dc-ref_l-mask} then do:
+      assign
+      par-l-mask = thbjattr_thbj-attr.property-value-logical.
+    end.
+  end case.
+end.
 
 iColumn = 0.  /* Начинаем писать со второй строки, 1-я - заголовок */
 FOR EACH buf_chk-list No-LOCK
@@ -310,6 +345,9 @@ BY buf_chk-list.doc-code :
                           ,INPUT-OUTPUT f-value
                           )  NO-ERROR .
         end. /*else if index(v-dop0, "{&delim-flt}":U) > 0 then do:*/
+        if par-l-mask and entry(jj, f-name) = "chk-doc.src-d-card" then 
+        f-value = substring(f-value,1,6) + "XXXXXX" + substring (f-value,13,4).
+        
         {&PutExcel}
         string(f-value, substitute("X(&1)", entry(jj, ubflt.filter.Where-ysl)))
         (if jj < j-n

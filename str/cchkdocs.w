@@ -73,6 +73,8 @@ define variable vss-description AS CHAR NO-UNDO INIT "Список истории чеков":U.
 { cmp/mrk-strf.i }
 { gbl/usrfulnf.i }
 { gbl/fltopend.i defproc }
+{ gbl/thbj-def.i }
+
 define variable filter-label as character no-undo init "Список истории чеков" .
 define variable filter-label0 as character no-undo init "Список истории чеков" .
 define variable filter-point as character no-undo init "cchkdocs" .
@@ -87,6 +89,16 @@ define variable v-base-type like ub.currency.curr-abbr no-undo .
 define variable glog as logical no-undo .
 define variable v-doc-rec as recid no-undo .
 define variable v-rid-list as character no-undo .
+
+define variable v-value-character as character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
+define variable v-tth as handle no-undo .
+define variable par-l-mask  as logical no-undo .
+define variable v-param-type as character no-undo .
+define variable v_d-card  as character no-undo .
 
 { str/paycardv.i }
 
@@ -124,7 +136,7 @@ END FUNCTION.
 
 
 /* Definitions for BROWSE BR-docs                                       */
-&Scoped-define FIELDS-IN-QUERY-BR-docs mark-string(RECID( X_c-chk-doc), v-rid-list) X_c-chk-doc.corr-date string(X_c-chk-doc.corr-time, "HH:MM") X_c-chk-doc.corr-user-db-num usrfulnf(X_c-chk-doc.corr-user-name) X_c-chk-doc.office X_c-chk-doc.is-add X_c-chk-doc.is-del X_c-chk-doc.doc-code X_c-chk-doc.chk-num X_c-chk-doc.chk-date X_c-chk-doc.shift-date shift-name-no-err(buffer X_c-chk-doc) (string (X_c-chk-doc.chk-time, "HH:MM")) X_c-chk-doc.netto X_c-chk-doc.tot-doc X_c-chk-doc.discnt X_c-chk-doc.sub-discnt X_c-chk-doc.pay-desk X_c-chk-doc.cashier X_c-chk-doc.sales-man X_c-chk-doc.out-code X_c-chk-doc.d-card   
+&Scoped-define FIELDS-IN-QUERY-BR-docs mark-string(RECID( X_c-chk-doc), v-rid-list) X_c-chk-doc.corr-date string(X_c-chk-doc.corr-time, "HH:MM") X_c-chk-doc.corr-user-db-num usrfulnf(X_c-chk-doc.corr-user-name) X_c-chk-doc.office X_c-chk-doc.is-add X_c-chk-doc.is-del X_c-chk-doc.doc-code X_c-chk-doc.chk-num X_c-chk-doc.chk-date X_c-chk-doc.shift-date shift-name-no-err(buffer X_c-chk-doc) (string (X_c-chk-doc.chk-time, "HH:MM")) X_c-chk-doc.netto X_c-chk-doc.tot-doc X_c-chk-doc.discnt X_c-chk-doc.sub-discnt X_c-chk-doc.pay-desk X_c-chk-doc.cashier X_c-chk-doc.sales-man X_c-chk-doc.out-code v_d-card   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-docs X_c-chk-doc.cashier   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-docs X_c-chk-doc
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-docs X_c-chk-doc
@@ -246,7 +258,7 @@ DEFINE BROWSE BR-docs
       X_c-chk-doc.cashier FORMAT "99999":U
       X_c-chk-doc.sales-man COLUMN-LABEL "Прод-w" FORMAT "99999":U
       X_c-chk-doc.out-code COLUMN-LABEL "Номер_РН" FORMAT "X(14)":U
-      X_c-chk-doc.d-card COLUMN-LABEL "N_диск._карты" FORMAT "X(19)":U
+      v_d-card COLUMN-LABEL "N_диск._карты" FORMAT "X(19)":U
   ENABLE
       X_c-chk-doc.cashier
 /* _UIB-CODE-BLOCK-END */
@@ -601,6 +613,33 @@ end.
       end.
       v-doc-rec = integer(entry(1, v-rid-list)).
   end.
+  run adm/shattri.p (
+      input "get":U
+    ,input  p-obj-type
+    ,input  p-obj-code
+    ,input  {&attr-dc-ref}
+    ,input  {&attr-dc-ref_l-mask} /*p-param-code*/
+    ,output v-value-character
+    ,output v-value-date
+    ,output v-value-decimal
+    ,output v-value-integer
+    ,output par-l-mask
+    ,output v-param-type
+    ,INPUT-OUTPUT table-handle v-tth
+    ) no-error .
+
+for each thbjattr_thbj-attr where
+       thbjattr_thbj-attr.obj-type = p-obj-type
+   and thbjattr_thbj-attr.obj-code = p-obj-code
+   and thbjattr_thbj-attr.upper-prop-code = {&attr-dc-ref}
+on error undo, return error return-value :
+  case thbjattr_thbj-attr.prop-code:
+    when {&attr-dc-ref_l-mask} then do:
+      assign
+      par-l-mask = thbjattr_thbj-attr.property-value-logical.
+    end.
+  end case.
+end.
   run MyEnable in this-procedure .
   RUn OpenBR in this-procedure ( input yes, input no, input '':U).
   HIDE mark-num in frame {&frame-name} .
@@ -1414,7 +1453,7 @@ X_c-chk-doc.pay-desk      column-label "Касса"
 X_c-chk-doc.cashier         column-label "Кассир"       format ">>>>9"
 X_c-chk-doc.sales-man    column-label "Прод-ц"       format ">>>>9"
 X_c-chk-doc.out-code       column-label "Номер_РН"
-X_c-chk-doc.d-card           column-label "Номер_диск._карты"              space(0)
+v_d-card           column-label "Номер_диск._карты"              space(0)
 HEADER  date_string AT 5 format "X(35)"
 v-header-base-curr        format "X(20)" AT 42
 string( "Страница " ) format "X(9)" AT 115 PAGE-NUMBER(PrnLibStream) AT 125 FORMAT ">>>>9" SKIP
@@ -1448,6 +1487,9 @@ FORM with FRAME Chk-List  .
 run waitfram-show in this-procedure ( input "Ждите...").
 GET next br-docs.
 DO WHILE available X_c-chk-doc :
+  if par-l-mask then v_d-card = substring(X_c-chk-doc.d-card,1,6) + "XXXXXX" + substring (X_c-chk-doc.d-card,13,4).
+  else v_d-card = X_c-chk-doc.d-card .
+  
   Display STREAM PrnLibStream
   X_c-chk-doc.corr-date
   string(X_c-chk-doc.corr-time, "HH:MM") @ v-time
@@ -1467,8 +1509,9 @@ DO WHILE available X_c-chk-doc :
   X_c-chk-doc.cashier
   X_c-chk-doc.sales-man
   if X_c-chk-doc.out-code <> ? then X_c-chk-doc.out-code else "" @ X_c-chk-doc.out-code
-  X_c-chk-doc.d-card
+  v_d-card
   with FRAME Chk-List .
+  
 DOWN STREAM PrnLibStream 1 with FRAME CHk-List  .
 assign
 accum-count = accum-count + 1
@@ -1494,7 +1537,7 @@ X_c-chk-doc.pay-desk
 X_c-chk-doc.cashier
 X_c-chk-doc.sales-man
 X_c-chk-doc.out-code
-X_c-chk-doc.d-card
+v_d-card
 
 with FRAME Chk-List .
 DISPLAY STREAM PrnLibStream

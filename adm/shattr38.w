@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,14 +8,14 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_thbj-attr FOR ub.thbj-attr.
-DEFINE BUFFER X_shop FOR ub.shop.
-DEFINE BUFFER X_store FOR ub.store.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
+DEFINE BUFFER X_shop FOR shop.
+DEFINE BUFFER X_store FOR store.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -64,6 +64,7 @@ DEFINE VARIABLE v-tab-order AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-to-create AS logical NO-UNDO.
 DEFINE BUFFER cli-buf FOR ub.clients .
 define variable fixed-l-zeros as logical no-undo .
+define variable fixed-l-mask as logical no-undo .
 define variable v-tth as handle no-undo .
 assign
 v-tth = buffer thbjattr_thbj-attr:table-handle .
@@ -72,7 +73,7 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -83,12 +84,12 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help t-l-zeros
-&Scoped-Define DISPLAYED-OBJECTS t-l-zeros
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help t-l-zeros t-l-mask 
+&Scoped-Define DISPLAYED-OBJECTS t-l-zeros t-l-mask 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
-&Scoped-define List-1 t-l-zeros
+&Scoped-define List-1 t-l-zeros t-l-mask 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -100,23 +101,28 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE t-l-zeros AS LOGICAL INITIAL no
-     LABEL "Разрешено добавление номеров ДК, совпадающих с имеющимися с точностью до лидир. нулей"
+DEFINE VARIABLE t-l-mask AS LOGICAL INITIAL no 
+     LABEL "Маскирование ДК" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 94 BY 1 NO-UNDO.
+
+DEFINE VARIABLE t-l-zeros AS LOGICAL INITIAL no 
+     LABEL "Разрешено добавление номеров ДК, совпадающих с имеющимися с точностью до лидир. нулей" 
      VIEW-AS TOGGLE-BOX
      SIZE 94 BY 1 NO-UNDO.
 
@@ -128,9 +134,10 @@ DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 95
      t-l-zeros AT ROW 2.1 COL 2
-     SPACE(3.24) SKIP(20.48)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     t-l-mask AT ROW 3.38 COL 2 WIDGET-ID 2
+     SPACE(3.24) SKIP(19.20)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Набор опций работы со справочником ДК"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -157,16 +164,18 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+/* SETTINGS FOR TOGGLE-BOX t-l-mask IN FRAME Dialog-Frame
+   1                                                                    */
 /* SETTINGS FOR TOGGLE-BOX t-l-zeros IN FRAME Dialog-Frame
    1                                                                    */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -197,7 +206,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -223,14 +232,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       VIEW-AS ALERT-BOX ERROR.
       UNDO, RETURN ERROR.
   END.
-  IF  p-obj-type <> '':U
-  THEN DO:
-      MESSAGE
-      vss-workfile vss-revision vss-description skip
-      "Неверное значение параметра p-obj-type" p-obj-type
-      VIEW-AS ALERT-BOX ERROR.
-      UNDO, RETURN ERROR.
-  END.
+/*  IF  p-obj-type <> '':U                                 */
+/*  THEN DO:                                               */
+/*      MESSAGE                                            */
+/*      vss-workfile vss-revision vss-description skip     */
+/*      "Неверное значение параметра p-obj-type" p-obj-type*/
+/*      VIEW-AS ALERT-BOX ERROR.                           */
+/*      UNDO, RETURN ERROR.                                */
+/*  END.                                                   */
   if p-obj-type = '':U then do:
     if v-cntxt-db-num <> 0
     and p-mode <> {&lookup}
@@ -290,7 +299,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -309,12 +318,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-l-zeros
+  DISPLAY t-l-zeros t-l-mask 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help t-l-zeros
+  ENABLE B-exit b-quit B-Help t-l-zeros t-l-mask 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -323,7 +332,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 DEFINE VARIABLE ii AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-entry AS CHARACTER NO-UNDO.
@@ -375,6 +384,13 @@ FOR EACH thbjattr_thbj-attr:
     fixed-l-zeros = t-l-zeros
     .
   END.
+  IF v-entry = {&attr-dc-ref_l-mask} THEN DO:
+    ASSIGN
+    t-l-mask = thbjattr_thbj-attr.property-value-logical
+    t-l-mask:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+    fixed-l-mask = t-l-mask
+    .
+  END.
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 END.
@@ -383,7 +399,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 if p-obj-type = {&shop}
 or p-obj-type = {&stock} then do:
@@ -395,18 +411,31 @@ or p-obj-type = {&stock} then do:
   .
 end.
 
-v-tab-order = "t-l-zeros" .
+v-tab-order = "t-l-zeros,t-l-mask" .
 
-
-DISPLAY
-t-l-zeros
-WITH FRAME {&frame-name}.
 ENABLE
 B-exit WHEN p-mode = {&UPDATE}
 b-quit
 B-Help
+WITH FRAME {&frame-name}.
+
+
+DISPLAY
+t-l-mask
+WITH FRAME {&frame-name}.
+enable
+t-l-mask WHEN p-mode = {&UPDATE}
+WITH FRAME {&frame-name}.
+  
+if p-obj-type = "" then do:
+DISPLAY
+t-l-zeros
+WITH FRAME {&frame-name}.
+enable
 t-l-zeros WHEN p-mode = {&UPDATE}
 WITH FRAME {&frame-name}.
+end.  
+
 VIEW FRAME {&frame-name}.
 IF p-mode = {&LOOKUP} THEN DO:
     HIDE
@@ -423,7 +452,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -442,6 +471,7 @@ IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 ASSIGN
 FRAME {&FRAME-NAME}
 t-l-zeros
+t-l-mask
 .
 if fixed-l-zeros <> t-l-zeros then do:
   case t-l-zeros:
@@ -536,3 +566,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
