@@ -1265,11 +1265,11 @@ on error undo, return error
         end .
         else if (  num-entries(temp-filelist.file-name, "_") = 5
                    and temp-filelist.file-name begins "ack"  ) then do :
-          if p-esys-id = integer (entry (3, temp-filelist.file-name-no-ext, "_")) then .
+          /*if p-esys-id = integer (entry (3, temp-filelist.file-name-no-ext, "_")) then .
           else do :
             delete temp-filelist.
             next .  
-          end .
+          end .*/
         end .
         else do :
           /* прочие файлы игнорируем */
