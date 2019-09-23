@@ -314,6 +314,8 @@ DO:
     i-year
     dirname
     t-del.
+  dirname = right-trim(dirname, "\").
+  dirname = dirname + "\".
   find clients where clients.obj-type = {&shop} and clients.obj-code = i-obj-code no-lock no-error.
   if not available clients then do:
     message "Неправильно задан объект" view-as alert-box error.
