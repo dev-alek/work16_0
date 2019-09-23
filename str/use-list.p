@@ -152,8 +152,8 @@ do transaction on error undo fill-doc, return error return-value :
         then do:
           message
             vss-workfile vss-revision vss-description skip
-            substitute("Ошибка при добавлении строки инвентаризации.") skip
-            substitute("Запрещено добовалять нетопливный товар вместе с топливными.") skip
+              substitute("Ошибка при добавлении строки инвентаризации.") skip
+              substitute("Запрещено добавлять не топливный товар вместе с топливными.") skip
             return-value skip
             view-as alert-box error .
           undo gds-lst_, next gds-lst_.
@@ -161,8 +161,8 @@ do transaction on error undo fill-doc, return error return-value :
         else do:
           message
             vss-workfile vss-revision vss-description skip
-            substitute("Ошибка при добавлении строки инвентаризации.") skip
-            substitute("Запрещено добовалять топливный товар вместе с нетопливными.") skip
+              substitute("Ошибка при добавлении строки инвентаризации.") skip
+              substitute("Запрещено добавлять топливный товар вместе с не топливными.") skip
             return-value skip
             view-as alert-box error .
           undo gds-lst_, next gds-lst_.
