@@ -63,7 +63,7 @@ CLASS Ibs.Th.Gbl.ProgressBar
     define protected variable v-is-canceled       as logical    no-undo.
 
     define rectangle r-complete
-        size-chars 50 by 1
+        size-chars 78 by 1
         bgcolor 8.
 
     define rectangle r-progress
