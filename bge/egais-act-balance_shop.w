@@ -134,6 +134,8 @@ define new shared temp-table tt-marks
     field impor-full-name     as character            LABEL "Импортер"       FORMAT "X(130)" 
     field prod-full-name      as character            LABEL "Производитель"  FORMAT "X(130)" 
     field flag                as logical              label "T"
+    field reserv              as integer              label "R"
+    field parts               as character            label "Партия"         format "X(130)"
     index pi as primary unique
         mark
 .
@@ -1005,6 +1007,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         to  file 'temp.xml'
         no-convert
         no-error .
+        empty temp-table tt-marks no-error .
         run parseXML in this-procedure .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
         if p-mode = {&update} then enable  tt-act-header.type_ with frame {&FRAME-NAME}.

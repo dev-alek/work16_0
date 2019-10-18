@@ -1019,6 +1019,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         to  file 'temp.xml'
         no-convert
         no-error .
+        empty temp-table tt-marks no-error .
         run parseXML in this-procedure .
         display tt-act-header.num tt-act-header.date_ with frame {&FRAME-NAME}.
         if egais:VerXSD = "2" then do :

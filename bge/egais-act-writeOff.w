@@ -227,7 +227,7 @@ DEFINE FRAME Dialog-Frame
     tt-act-header.num at row 2.5 col 2 format "X(22)"
     tt-act-header.date_ at row 2.5 col 34
     tt-act-header.type_ at row 2.5 col 62
-        view-as combo-box inner-lines 7
+        view-as combo-box inner-lines 10
         list-items "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест"
         DROP-DOWN-LIST
     b-mark AT ROW 4 COL 2
@@ -326,12 +326,14 @@ DO:
   assign tt-act-header.type_.
   if tt-act-header.type_ = "Проверки"
   or tt-act-header.type_ = "Арест"
+  or tt-act-header.type_ = "Реализация"
   then do :
       enable b-marks with frame {&FRAME-NAME} .
   end.
   else do :
       disable b-marks with frame {&FRAME-NAME} .
   end.
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -770,8 +772,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         nn = 0
         tt-act-header.type_:list-items = "Пересортица,Недостача,Уценка,Порча,Потери,Проверки,Арест"
     .
-    if egais:VerXSD = "2" then
-        tt-act-header.type_:list-items = tt-act-header.type_:list-items + ",Иные цели,Реализация" .
+    if egais:VerXSD <> "1" then
+        tt-act-header.type_:list-items = tt-act-header.type_:list-items + ",Иные цели,Реализация,Производственные потери" .
     
     if p-mode = {&add-def} then do :
         v-date = substitute ("&1&2&3", string (day (now), "99"), string (month (now), "99"),substring (string(year (now)), 3,2)).        
@@ -797,6 +799,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         no-convert
         no-error .
         run waitfram-show in this-procedure ("Ждите...") .
+        empty temp-table tt-marks no-error .
         run parseXML in this-procedure (input "temp.xml") .
         run waitfram-hide in this-procedure .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
