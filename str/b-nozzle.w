@@ -38,12 +38,19 @@ def var vss-description as character no-undo init "Smart browser общения с писто
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { cmp/showinf.i }
+{ gbl/getcntxt.i def }
 { str/ptrlv.i def }
 { str/nozzledv.i }
 { str/chkcsptr.i }
 /* Parameters Definitions ---                                           */
 /* Local Variable Definitions ---                                       */
-
+      define variable v-chk-act-host-code as integer   no-undo .
+      define variable glog                as logical   no-undo .
+      define variable v-userid            as character no-undo .
+      define variable v-db-num            as integer   no-undo .
+      define variable v-host-code         as integer   no-undo .
+      define variable v-obj-type          as character no-undo .
+      define variable v-obj-code          as integer   no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -272,6 +279,22 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.nozzle WHERE ub.nozzle.obj-type = varobj-typ
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add B-table-Win
 ON CHOOSE OF b-add IN FRAME F-Main /* Добавить */
 DO:
+  { gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.  
 { str/ptrlv.i "cadd" "nozzle" "{&browse-name}"}
 END.
 
@@ -283,6 +306,22 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-del B-table-Win
 ON CHOOSE OF B-del IN FRAME F-Main /* Удалить */
 DO:
+  { gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.  
 if available ub.nozzle then do:
    assign varmes-log = no.
    message "Вы хотите удалить запись <<пистолет ТРК>> с номером " ub.nozzle.nozzle-code " ?" skip
@@ -475,6 +514,14 @@ PROCEDURE local-initialize :
   /* Dispatch standard ADM method.                             */
   { str/ptrlv.i "rc" "{&frame-name}"}
   RUN dispatch IN THIS-PROCEDURE ( INPUT 'initialize':U ) .
+    { gbl/getcntxt.i get }
+      assign
+        v-db-num    = v-cntxt-db-num 
+        v-host-code = v-cntxt-host-code-obj
+        v-obj-code  = v-cntxt-obj-code
+        v-obj-type  = v-cntxt-obj-type
+        v-userid    = v-cntxt-userid
+        .  
   if available ub.nozzle then do:
      assign varps     = ub.nozzle.ps.
      display varps with frame {&frame-name}.

@@ -40,23 +40,31 @@ define variable vss-description as character no-undo init "Smart browser общения
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { cmp/showinf.i }
+{ gbl/getcntxt.i def }
 { str/ptrlv.i def }
 { str/nzpl-spl.i }
 { str/plpmnzdv.i }
 { str/chkcsptr.i }
-/* Parameters Definitions ---                                           */
+      /* Parameters Definitions ---                                           */
 
-/* Local Variable Definitions ---                                       */
+      /* Local Variable Definitions ---                                       */
 
 
-define variable varartic like ub.goods.artic no-undo.
-define variable varname like ub.goods.gds-name no-undo.
-define variable varstatus as character no-undo.
-define variable varloc1 as character no-undo.
-define variable varpetcode like ub.prod-bc.b-str no-undo.
-define variable vargds-code like ub.goods.gds-code no-undo.
-define variable vargds-recid AS recid no-undo.
-define variable gds-rec AS recid no-undo.
+      define variable varartic            like ub.goods.artic no-undo.
+      define variable varname             like ub.goods.gds-name no-undo.
+      define variable varstatus           as character no-undo.
+      define variable varloc1             as character no-undo.
+      define variable varpetcode          like ub.prod-bc.b-str no-undo.
+      define variable vargds-code         like ub.goods.gds-code no-undo.
+      define variable vargds-recid        AS recid     no-undo.
+      define variable gds-rec             AS recid     no-undo.
+      define variable v-chk-act-host-code as integer   no-undo .
+      define variable glog                as logical   no-undo .
+      define variable v-userid            as character no-undo .
+      define variable v-db-num            as integer   no-undo .
+      define variable v-host-code         as integer   no-undo .
+      define variable v-obj-type          as character no-undo .
+      define variable v-obj-code          as integer   no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -329,6 +337,22 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.pl-pump-nozzle WHERE ub.pl-pump-nozzle.obj-t
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add B-table-Win
 ON CHOOSE OF b-add IN FRAME F-Main /* Добавить */
 DO:
+  { gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.
   { str/ptrlv.i "cadd" "plpmnz" "{&browse-name}"}
 END.
 
@@ -340,6 +364,22 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del B-table-Win
 ON CHOOSE OF b-del IN FRAME F-Main /* Удалить */
 DO:
+    { gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.
 if available ub.pl-pump-nozzle then do:
    assign varmes-log = no.
    message "Вы хотите удалить запись <<резервуар-ТРК-пистолета>> с номером резервуара" ub.pl-pump-nozzle.pl-code
@@ -461,8 +501,10 @@ END.
 
 { gbl/app_help.i &disable_diasize=true }
 { gbl/f2.i br_table goods-recid get-gds-recid }
+
 &IF DEFINED(UIB_IS_RUNNING) <> 0 &THEN
 RUN dispatch IN THIS-PROCEDURE ('initialize':U).
+
 &ENDIF
 
 /* _UIB-CODE-BLOCK-END */
@@ -549,6 +591,14 @@ PROCEDURE local-initialize :
   /* Dispatch standard ADM method.                             */
   { str/ptrlv.i "rc" "{&frame-name}"}
   RUN dispatch IN THIS-PROCEDURE ( INPUT 'initialize':U ) .
+  { gbl/getcntxt.i get }
+      assign
+        v-db-num    = v-cntxt-db-num 
+        v-host-code = v-cntxt-host-code-obj
+        v-obj-code  = v-cntxt-obj-code
+        v-obj-type  = v-cntxt-obj-type
+        v-userid    = v-cntxt-userid
+        .  
   if available ub.pl-pump-nozzle then do:
      assign varps     = ub.pl-pump-nozzle.ps.
      display varps with frame {&frame-name}.
