@@ -526,13 +526,20 @@ PROCEDURE proc-save :
       GuidMercsubsObj = gdsmercstrObj:getguidmercs(f-guid). /*исправить на GUID*/
       if VALID-OBJECT (GuidMercsubsObj:GdsMercsubsCurr) then 
       do:
+/*        message                                                   */
+/*          "Уже есть товар с таким GUID, продолжить?"              */
+/*          view-as alert-box QUestion buttons yes-no update choice.*/
+/*        if not choice then                                        */
+/*        do:                                                       */
+/*          RETURN NO-APPLY .                                       */
+/*        end.                                                      */
+
+      if GuidMercsubsObj:iCounter >= 1 then do:        
         message
-          "Уже есть товар с таким GUID, продолжить?"
-          view-as alert-box QUestion buttons yes-no update choice.
-        if not choice then 
-        do:
+          "Товар с таким GUID уже есть"
+          view-as alert-box.
           RETURN NO-APPLY .
-        end.  
+        end.
       end.
     
       /*отправляем запрос*/
