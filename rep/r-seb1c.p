@@ -213,6 +213,24 @@ run dbflib-add-field in this-procedure (
                     ).
 i = 0 .
 for each tt-seb no-lock where tt-seb.KODVO <> "spi-prvo" break by tt-seb.DATAS by tt-seb.AZS by tt-seb.KODVO by tt-seb.TOVAR :
+  find first buf_goods no-lock where buf_goods.gds-code = integer(tt-seb.TOVAR) .
+  find first obj-list no-lock where obj-list.obj-name = tt-seb.NAMEA .
+  find first ub.recipe no-lock where
+             ub.recipe.prod-type = buf_goods.prod-type
+         and ub.recipe.prod-code = buf_goods.prod-code
+         and ub.recipe.artic     = buf_goods.artic
+         and
+           (
+           ( ub.recipe.obj-type  = obj-list.obj-type
+         and ub.recipe.obj-code  = obj-list.obj-code
+           )
+          or
+           ( ub.recipe.obj-type  = "":U
+         and ub.recipe.obj-code  = 0
+           )
+           )
+         no-error.
+  if available ub.recipe then next .
   i = i + 1.
   run dbflib-add-data in this-procedure (
                           input 1
