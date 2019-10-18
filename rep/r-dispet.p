@@ -446,7 +446,7 @@ on error undo, return error
               v-min-qnty = decimal(v-value).
           end.  
 
-          for first buf_rvs-line-attr EXCLUSIVE-LOCK where buf_rvs-line-attr.attr-code = "income"
+          for first buf_rvs-line-attr no-LOCK where buf_rvs-line-attr.attr-code = "income"
                                  and buf_rvs-line-attr.rvs-code = buf_rvs-doc.rvs-code
                                  and buf_rvs-line-attr.obj-code = buf_place.obj-code
                                  and buf_rvs-line-attr.obj-type = buf_place.obj-type
@@ -455,7 +455,7 @@ on error undo, return error
             v-income = DECIMAL (buf_rvs-line-attr.attr-value) .
           end.                                   
 
-          for first buf_rvs-line-attr EXCLUSIVE-LOCK where buf_rvs-line-attr.attr-code = "current-sale"
+          for first buf_rvs-line-attr no-LOCK where buf_rvs-line-attr.attr-code = "current-sale"
                                  and buf_rvs-line-attr.rvs-code = buf_rvs-doc.rvs-code
                                  and buf_rvs-line-attr.obj-code = buf_place.obj-code
                                  and buf_rvs-line-attr.obj-type = buf_place.obj-type
