@@ -57,7 +57,7 @@ define variable vss-description as character no-undo init "Сохранение изменений 
 { gbl/clntattr.i }
 { gbl/tpsi-obj.i }
 { gbl/thbjattr.i }
-
+{ gbl/cd-attr.i }
 define variable v-db-num like ub.db.db-num no-undo .
 define variable l-shift-on as logical no-undo .
 define variable ans as logical no-undo .
@@ -1207,33 +1207,40 @@ ON STOP UNDO, RETURN ERROR return-value :
 
   /* признак какая это касса: ТСО, обычная касса или мобильная */
   define buffer buf_cash-desk-attr for ub.cash-desk-attr .
-  if p-device-kind <> ? then do :
-    find first buf_cash-desk-attr exclusive-lock
-         where buf_cash-desk-attr.db-num   = p-db-num
-           and buf_cash-desk-attr.obj-code = p-obj-code
-           and buf_cash-desk-attr.pos-type = p-pos-type
-           and buf_cash-desk-attr.cash-num = p-cash-num
-           and buf_cash-desk-attr.upper-attr-code = p-pos-type + "_operative":U
-           and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
-    if available buf_cash-desk-attr then do :
-      if p-device-kind = 0 then delete buf_cash-desk-attr .
-      else assign
-        buf_cash-desk-attr.attr-value-integer = p-device-kind when
-        buf_cash-desk-attr.attr-value-integer <> p-device-kind
-      .
-    end . 
-    else if p-device-kind > 0 then do :
-      create buf_cash-desk-attr .
-      assign
-        buf_cash-desk-attr.db-num   = p-db-num
-        buf_cash-desk-attr.obj-code = p-obj-code
-        buf_cash-desk-attr.pos-type = p-pos-type
-        buf_cash-desk-attr.cash-num = p-cash-num
-        buf_cash-desk-attr.upper-attr-code    = p-pos-type + "_operative":U
-        buf_cash-desk-attr.attr-code          = "device-kind":U
-        buf_cash-desk-attr.attr-value-integer = p-device-kind
-      .
-    end .
+  if     p-device-kind <> ? 
+     and p-device-kind <> 0 
+  then do :
+      run cd-attr-write in this-procedure (        input p-db-num
+                                                  ,input p-obj-code
+                                                  ,input p-pos-type
+                                                  ,input p-cash-num
+                                                  ,input  p-pos-type + "_operative":U
+                                                  ,input "device-kind":U
+                                                  ,input ""
+                                                  ,input ? /*p-date*/
+                                                  ,input 0 /*p-decimal*/
+                                                  ,input p-device-kind /*p-integer*/
+                                                  ,input no /*p-logical*/
+                                                  ) no-error.
+       if error-status:error
+       then 
+          return error return-value.
+  end .
+  else do:
+      define variable loc#log as logical no-undo.
+      run cd-attr-delete in this-procedure (
+                                         input p-db-num
+                                        ,input p-obj-code
+                                        ,input p-pos-type
+                                        ,input p-cash-num
+                                        ,input p-pos-type + "_operative":U
+                                        ,input "device-kind":U
+                                        ,output loc#log) no-error .
+       if error-status:error or not loc#log
+       then 
+          return error return-value .
+    
+    
   end . /* end_of device-kind */
   
   
