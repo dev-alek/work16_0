@@ -234,6 +234,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_cash-desk-attr for ub.cash-desk-attr .
     define buffer buf_clients      for ub.clients .
     define buffer buf_cash-desk    for ub.cash-desk .
+    define buffer buf_doc-line     for ub.doc-line .
     define variable v-is-petrolium as logical no-undo . /* true = топливо */
     define variable v-price-azs    as decimal no-undo .
     define variable v-is-pieces    as logical no-undo .
@@ -459,6 +460,23 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           else  left-trim( string(buf_chk-gds.sum-base, "->>>>>>>>9.99") )
         ) . /* Сумма (Число 15,2) */
         
+        if available buf_goods
+        then do :
+          find first buf_doc-line no-lock where buf_doc-line.doc-code   = p-buf_chk-doc.out-code
+                                            and buf_doc-line.artic      = buf_goods.artic
+                                            and buf_doc-line.prod-code  = buf_goods.prod-code
+                                            and buf_doc-line.prod-type  = buf_goods.prod-type
+                                            no-error .
+          if available buf_doc-line
+          then do :
+            insw:write-data-element (  "sum-s",
+              left-trim( string(buf_chk-gds.doc-qnty * buf_doc-line.price-rubl, "->>>>>>>>9.99") )
+            ) . 
+          end.
+          else do :
+            insw:write-empty-element ( "sum-s" ) .
+          end.
+        end. /* Себестоимость (Число 15,2) */
         
         /* далее обязательность 0-1 */
 
