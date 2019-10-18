@@ -257,9 +257,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     insw:write-data-element (  "cb-num":U,          string(p-buf_chk-doc.pay-desk)    ). /* Номер кассы (Число) */
     insw:write-data-element (  "chk-id":U,                 p-buf_chk-doc.doc-code     ). /* Номер чека в GC (Строка) */
     
-    /* 29/III-2019  признак какая это касса: ТСО, обычная касса или мобильная
-       18/IV-2019   1С опять не готов принять наши типы касс в чеках
-                    Потом как Техносерв будет готов мы опять включим тэг.
+    /* 29/III-2019  признак какая это касса: ТСО, обычная касса или мобильная*/
     define variable v-c-type as integer no-undo .
     v-c-type = 0 .
     find first buf_clients no-lock
@@ -285,7 +283,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       end .
     end .
     insw:write-data-element (  "c-type":U,  string(v-c-type)  ). /* признак какая это касса */
-    */
+    
     
     
     /* обязательность 0-1 для del-l, ext-num, direct-chk-num */
