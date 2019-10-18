@@ -37,83 +37,88 @@ define variable logdir as character no-undo.
 define variable v-sys-key   as character         no-undo.
 define variable varpar-type as character no-undo.
 function put-log returns character (input itext as character ) forward. 
+define temp-table tempUserCopy no-undo like _User.
  
-{ gbl/currsysk.i
-   v-sys-key
-   no-error
-}
-if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos" 
-then do: 
-   get-key-value section "rep-sets" key "logDir"    value logDir .
-   if logDir = ?
-   then do :
-      logDir = ".\" .
-   end .
-   else do :
-      logDir = right-trim(logDir, "\") .
-      logDir = right-trim(logDir, "/") .
-      logDir = logDir + "\" .
-   end.
-      
-      
-   find first _user no-lock
-                 where _user._userid    = "{&login}"
-                 no-error
-                 .
-                 
-   if not available _user 
-   then do trans:
-      create _user .
-      assign
-         _user._userid    = "{&login}"
-         _user._password  = encode("{&paswordnew}")
-      .
-   end.
-   else do:
-      define temp-table tempUserCopy no-undo like _User.
-      if _User._Password eq encode("{&paswordnew}")
-      then do:
-         put-log("Cмена пароля пользователя {&login} не требуется.").
-         return.
+procedure SetPwdsysadm :
+   { gbl/currsysk.i
+      v-sys-key
+      no-error
+   }
+   if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos" 
+   then do: 
+      get-key-value section "rep-sets" key "logDir"    value logDir .
+      if logDir = ?
+      then do :
+         logDir = ".\" .
+      end .
+      else do :
+         logDir = right-trim(logDir, "\") .
+         logDir = right-trim(logDir, "/") .
+         logDir = logDir + "\" .
+      end.
+         
+         
+      find first _user no-lock
+                    where _user._userid    = "{&login}"
+                    no-error
+                    .
+                    
+      if not available _user 
+      then do trans:
+         create _user .
+         assign
+            _user._userid    = "{&login}"
+            _user._password  = encode("{&paswordnew}")
+         .
       end.
       else do:
-         put-log("Начинаем смену пароля {&login}.").
+         
+         if _User._Password eq encode("{&paswordnew}")
+         then do:
+            put-log("Cмена пароля пользователя {&login} не требуется.").
+            return.
+         end.
+         else do:
+            put-log("Начинаем смену пароля {&login}.").
+         end.
+         if _User._Password eq encode("{&paswordold}")
+         then do:
+            put-log("Подключаемся пользователем {&login} и меняем свой пароль.").
+            mProwin32FileName =  search ("bin/prowin32.exe").
+            mRunProcFile = search ("utl/setmypwd.r").
+            if mRunProcFile <> ?
+            then 
+               isRcode = true.
+            else 
+               mRunProcFile = search ("utl/setmypwd.p").
+            get-key-value section "REP-SETS" key "ConPar" value mConPar.
+               
+            mConPar = substitute(mConPar, "-U {&login} -P {&paswordold}":U).
+            if isRcode
+            then mCMD = substitute ("&1 &2  -rx -p &3 -b -param &4",mprowin32FileName, mConPar, mRunProcFile, "{&paswordnew}").
+            else mCMD = substitute ("&1 &2      -p &3 -b -param &4",mprowin32FileName, mConPar, mRunProcFile, "{&paswordnew}").
+               
+            os-command silent value (mcmd).
+         end.
+         if _User._Password eq encode("{&paswordnew}")
+         then do:
+            put-log("У пользователя {&login} Установлен новый пароль.").
+         end.
+         else do trans:
+            find first _user exclusive-lock
+                 where _user._userid    = "{&login}"
+            no-error.     
+            buffer-copy _User except _User._TenantId _User._Password to tempUserCopy assign tempUserCopy._Password = encode("{&paswordnew}").
+            delete _User.
+            create _User.
+            buffer-copy tempUserCopy except tempUserCopy._TenantId to _User.
+            put-log("У пользователя {&login} установлен новый пароль.").
+         end. 
       end.
-      if _User._Password eq encode("{&paswordold}")
-      then do:
-         put-log("Подключаемся пользователем {&login} и меняем свой пароль.").
-         mProwin32FileName =  search ("bin/prowin32.exe").
-         mRunProcFile = search ("utl/setmypwd.r").
-         if mRunProcFile <> ?
-         then 
-            isRcode = true.
-         else 
-            mRunProcFile = search ("utl/setmypwd.p").
-         get-key-value section "REP-SETS" key "ConPar" value mConPar.
-            
-         mConPar = substitute(mConPar, "-U {&login} -P {&paswordold}":U).
-         if isRcode
-         then mCMD = substitute ("&1 &2  -rx -p &3 -b -param &4",mprowin32FileName, mConPar, mRunProcFile, "{&paswordnew}").
-         else mCMD = substitute ("&1 &2      -p &3 -b -param &4",mprowin32FileName, mConPar, mRunProcFile, "{&paswordnew}").
-            
-         os-command silent value (mcmd).
-      end.
-      if _User._Password eq encode("{&paswordnew}")
-      then do:
-         put-log("У пользователя {&login} Установлен новый пароль.").
-      end.
-      else do trans:
-         find first _user exclusive-lock
-              where _user._userid    = "{&login}"
-         no-error.     
-         buffer-copy _User except _User._TenantId _User._Password to tempUserCopy assign tempUserCopy._Password = encode("{&paswordnew}").
-         delete _User.
-         create _User.
-         buffer-copy tempUserCopy except tempUserCopy._TenantId to _User.
-         put-log("У пользователя {&login} установлен новый пароль.").
-      end. 
    end.
 end.
+
+run SetPwdsysadm .
 
 find first sys-ctrl  no-lock.
 run  procedure-user-login-change-password in this-procedure (sys-ctrl.db-num,userid ("ub")).
