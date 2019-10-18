@@ -858,9 +858,15 @@ ON return OF loc-code IN FRAME {&frame-name} do:
         else do :
             assign tt-row2 = rowid(tt-gds-rests_shop) .
             find first tt-gds-list no-lock where tt-gds-list.alc-code = tt-gds-rests_shop.alc-code
-                                             and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code .
-            assign tt-row = rowid(tt-gds-list) .
-            reposition br-rests_shop to rowid tt-row, tt-row2 .
+                                             and tt-gds-list.gds-code = tt-gds-rests_shop.gds-code no-error.
+            if not available tt-gds-list
+            then do :
+                message "¬ данной выборке не найден товар с кодом " + loc-code view-as alert-box warning .
+            end.
+            else do :                                 
+                assign tt-row = rowid(tt-gds-list) .
+                reposition br-rests_shop to rowid tt-row, tt-row2 .
+            end.    
         end.
     end.
 end.
@@ -2671,20 +2677,8 @@ procedure CompareRests :
                 assign tt-compare-rests.TH-qnty = tt-compare-rests.TH-qnty + buf_parts.qnty .
             end.    
         end.  /* buf_parts */
-/*        for each tt-gds-rests no-lock :                                                                                  */
-/*            find first tt-compare-rests exclusive-lock where tt-compare-rests.alc-code = tt-gds-rests.alc-code no-error .*/
-/*            if not available tt-compare-rests then do :                                                                  */
-/*                create tt-compare-rests .                                                                                */
-/*                assign                                                                                                   */
-/*                    tt-compare-rests.alc-code   = tt-gds-rests.alc-code                                                  */
-/*                    tt-compare-rests.gds-code   = tt-gds-rests.gds-code                                                  */
-/*                    tt-compare-rests.gds-name   = tt-gds-rests.gds-name                                                  */
-/*                    tt-compare-rests.alc-type-code = tt-gds-rests.alc-type-code                                          */
-/*                .                                                                                                        */
-/*            end.                                                                                                         */
-/*            assign tt-compare-rests.stock-qnty = tt-compare-rests.stock-qnty + tt-gds-rests.egais-qnty .                 */
-/*        end. /* tt-gds-rests */                                                                                          */
-        for each tt-gds-rests_shop no-lock :
+        for each tt-gds-rests_shop no-lock where tt-gds-rests_shop.gds-code = string(buf_goods.gds-code)
+                                              or num-entries(tt-gds-rests_shop.gds-code) > 1 :
             find first tt-compare-rests exclusive-lock where tt-compare-rests.alc-code = tt-gds-rests_shop.alc-code no-error .
             if not available tt-compare-rests then do :
                 create tt-compare-rests .
@@ -2696,8 +2690,21 @@ procedure CompareRests :
                 .
             end.
             assign tt-compare-rests.shop-qnty = tt-gds-rests_shop.egais-qnty .
-            assign tt-compare-rests.stock-qnty = tt-gds-rests_shop.egais-qnty_stock .
+/*            assign tt-compare-rests.stock-qnty = tt-gds-rests_shop.egais-qnty_stock .*/
         end. /* tt-gds-rests_shop */
+        for each tt-gds-rests no-lock where tt-gds-rests.gds-code = buf_goods.gds-code :
+            find first tt-compare-rests exclusive-lock where tt-compare-rests.alc-code = tt-gds-rests.alc-code no-error .
+            if not available tt-compare-rests then do :
+                create tt-compare-rests .
+                assign
+                    tt-compare-rests.alc-code   = tt-gds-rests.alc-code
+                    tt-compare-rests.gds-code   = string(tt-gds-rests.gds-code)
+                    tt-compare-rests.gds-name   = tt-gds-rests.gds-name
+                    tt-compare-rests.alc-type-code = tt-gds-rests.alc-type-code
+                .
+            end.
+            assign tt-compare-rests.stock-qnty = tt-compare-rests.stock-qnty + tt-gds-rests.egais-qnty .
+        end. /* tt-gds-rests */
     end.  /* for first buf_goods */  
     end. /* _ii_ */
     
