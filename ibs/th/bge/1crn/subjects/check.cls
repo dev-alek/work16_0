@@ -364,6 +364,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       end .
     end .
 
+    /* 25/IV-2019 ФПД необходимо выгрузить в чеках в обмене с 1C ERP. Обязательность 0-1 */
+    find first buf_chk-doc-attr no-lock
+         where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
+           and buf_chk-doc-attr.attr-code eq "CHFiscalDocSign" no-error .
+    if available buf_chk-doc-attr then
+      insw:write-data-element (  "fpd":U,  buf_chk-doc-attr.attr-value     ). /* Фискальный признак документа (Строка) */
+
 
     /* section1 обязательность 1-1 */
     /* 21/XII-2018 несмотря на обязательность секции с товарами,
