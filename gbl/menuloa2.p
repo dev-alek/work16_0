@@ -318,6 +318,17 @@ define variable vss-description as character no-undo init "".
 /* -------------------------------------------------------------------------- */
 
 
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Сменный отчет (Старый формат)'"
+  "'rep/g-shift.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 {gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Общая сличительная ведомость '"

@@ -19,8 +19,8 @@ Creation date: 08/09/07
 */
 
 define input parameter parparentproc as widget-handle no-undo .
-define input parameter custom-par    as character     no-undo .
-
+/*define input parameter custom-par    as character     no-undo .*/
+define variable custom-par as character no-undo .
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
