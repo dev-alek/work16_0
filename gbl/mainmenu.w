@@ -1453,8 +1453,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable v-cntxt-valid         as logical   no-undo .
   define variable v-cntxt-error-message as character no-undo .
   define variable v-cur-date-error-code as integer      no-undo.
-
-   run gbl/actn-upd.p
+  run gbl/actn-upd.p
       (input this-procedure /* parparentproc */
       ) no-error .
    if error-status :error
