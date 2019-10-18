@@ -230,7 +230,9 @@ procedure proc-main :
     define buffer buf_gds-prt     for ub.gds-prt.
     define buffer buf_goods       for ub.goods.
     define buffer buf_ext-artic   for ub.ext-artic.
-
+    define variable v-sht-status     as character no-undo .
+define variable v-fld-sht-status as handle no-undo .
+    
     define buffer buf_ext-system  for ub.ext-system.  
 
       define variable expObj as class expsubject no-undo .
@@ -238,12 +240,17 @@ procedure proc-main :
   
     /* ------------------------- &end-hn-option& -----------------------------------*/
     /*править здесь*/
+    
     if v-has-newbh then 
     do:
       /*    v-price-doc-obj-type = v-newbh::obj-type.*/
       /*    v-price-doc-obj-code = v-newbh::obj-code.*/
       v-doc-num  = v-newbh:buffer-field("fin-doc-code"):buffer-value.
       v-del      = 0 .
+      v-fld-sht-status = v-newbh:BUFFER-FIELD ("status_") .
+      if not valid-handle(v-fld-sht-status) then undo _main, return error "не найдено поле shift-obj.status_" .
+      v-sht-status = v-fld-sht-status:BUFFER-VALUE ( ) .
+      
     end.
     else 
     do:
@@ -251,8 +258,11 @@ procedure proc-main :
       /*    v-price-doc-obj-code = v-oldbh::obj-code.*/
       v-doc-num  = v-oldbh:buffer-field("fin-doc-code"):buffer-value.
       v-del      = 1 .
+      v-fld-sht-status = v-oldbh:BUFFER-FIELD ("status_") .
+      if not valid-handle(v-fld-sht-status) then undo _main, return error "не найдено поле shift-obj.status_" .
+      v-sht-status = v-fld-sht-status:BUFFER-VALUE ( ) .
     end.
-
+if v-sht-status = {&fact} then do:
     IF  context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  THEN 
     do:
       undo _main, return error v-last-error-message .
@@ -263,8 +273,11 @@ procedure proc-main :
     subCash:fin-doc = v-doc-num.
     subCash:del_f   = v-del .
     
-    expObj:GetContent(subCash).
-        
+    expObj:GetContent(subCash) no-error.
+    if error-status:error
+    then
+       undo _main, return error return-value  .
+    
     IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag)) = false  THEN 
     do:
       undo _main, return error v-last-error-message .
@@ -300,6 +313,7 @@ procedure proc-main :
 /*        leave _stroka.                                              */
 /*      end. /*if v-stop*/*/
 /*    end. /*else if retry*/*/
+  end.  
     &scop release_1 clear-data ( )
     ExpData1:Route-data_{&release_1} .
   
