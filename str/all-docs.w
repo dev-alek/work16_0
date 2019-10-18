@@ -123,6 +123,8 @@ define variable v-sale             as   logical               no-undo.
 { str/all-doca.i {&bef-trdcattr-oldsuppcntr    } }
 { str/all-doca.i {&bef-trdcattr-nosn           } }
 { str/all-doca.i {&bef-trdcattr-acc-ship       } }
+{ str/all-doca.i {&bef-trdcattr-delivery-date  } }
+
 
 define variable p-par as character no-undo .
 define new shared buffer t-doc for ub.trn-doc.
@@ -959,6 +961,12 @@ define new shared query br-docs for t-doc except  , temp-trn-doc scrolling.
 &scop attr-n 98
 &scop label-clmn_98-br-dtl 'Закрыт задним числом'
 &scop sort-clmn_98-br-dtl closed-backdated (recid(t-doc))
+&scop attr-code trdcattr-delivery-date
+&scop attr-n 99
+&scop format-clmn_{&attr-n}  {&fillin_width-{&attr-code}}
+&scop label-clmn_{&attr-n}-br-dtl {&label-{&attr-code}}
+&scop sort-clmn_{&attr-n}-br-dtl  f-{&bef-{&attr-code}}  (recid(t-doc))
+&scop dyn_sort-clmn_{&attr-n}-br-dtl  substitute('dynamic-function( &1f-&2&1 , (recid(t-doc)))' ,  ~{&double-quote~} , '{&bef-{&attr-code}}')
 
  define variable head-col as character no-undo .
 head-col =
@@ -1059,7 +1067,8 @@ head-col =
    {&label-clmn_95-br-dtl}  + '#' +
    {&label-clmn_96-br-dtl}  + '#' +
    {&label-clmn_97-br-dtl}  + '#' +
-   {&label-clmn_98-br-dtl}
+   {&label-clmn_98-br-dtl}  + '#' +
+   {&label-clmn_99-br-dtl}
   .
 
 define browse br-docs query br-docs no-lock display
@@ -1161,6 +1170,7 @@ define browse br-docs query br-docs no-lock display
       {&sort-clmn_96-br-dtl} column-label {&label-clmn_96-br-dtl}
       {&sort-clmn_97-br-dtl} column-label {&label-clmn_97-br-dtl} format "x({&format-clmn_97})"
       {&sort-clmn_98-br-dtl} column-label {&label-clmn_98-br-dtl}
+      {&sort-clmn_99-br-dtl} column-label {&label-clmn_99-br-dtl} format "9999/99/99"
 
     enable {&sort-clmn_32-br-dtl} with size 98.5 by 13.5 separators.
 
@@ -2242,7 +2252,7 @@ do on error   undo main-block, leave main-block
 
 run init-browse-p  in this-procedure .
 { gbl/mv-clmn.i
- &ext-col = 98
+ &ext-col = 99
  &frame-name = "{&frame-name}"
  &browse-name = "{&browse-name}"
  &table-name = "t-doc"
