@@ -66,11 +66,9 @@ define variable v-obj-counter as integer no-undo.
 define variable v-obj-type    as character no-undo.
 define variable v-obj-code    as integer no-undo.
 
-
-for each temp-obj    :
+  for each temp-obj :
     delete temp-obj.
-end.
-
+  end.
   case v-obj-range:
     when 2 then do: /* по фирме */
       run init-temphost.
@@ -171,18 +169,20 @@ do:
             if available chk-pay-attr then 
             do:
                 put stream f1 unformatted
-                    ";" chk-pay-attr.attr-value  ";"
+                    ";" chk-pay-attr.attr-value  ";" skip
                     .
             end.
             else 
             do:
                 put stream f1 unformatted
-                    ";" ";"
+                    ";" ";" skip
                     .
             end.
+            /*
             put stream f1 unformatted
                 chk-pay.pay-card skip
-                .                                    
+                .
+                */                                    
         end.
     end.
     /*        end.*/
@@ -192,7 +192,7 @@ end.
 
 if v-active = yes then 
 do:
-       file_name-active = p-directory + "BPAGSP" + v-code_pnpo + "-" +  v-time + "." +  string(v-ul-day) .
+       file_name-active = p-directory + "BPAGSP" + v-code_pnpo +  v-time + "." +  string(v-ul-day) .
         output stream f2 to value(file_name-active).
     for each temp-obj : 
 
@@ -209,4 +209,4 @@ do:
     output stream f2 close.
 
 end.
-
+            
