@@ -79,6 +79,17 @@ then do:
          view-as alert-box.
          return.                                 
       end.
+      output to value( search("cmp/str-glbl.i")).
+            put "удален" skip.
+      output close.
+      /*os-delete value( search("cmp/str-glbl.i")).
+      if search("cmp/str-glbl.i") ne ? 
+      then do:
+         message "Неудается удаллить файл str-glbl.i попробуйте удалить его в ручную." skip
+            search("cmp/str-glbl.i") 
+         view-as alert-box.
+         return.                                 
+      end.*/
       changstr = yes.
       run utl/mkstrglb.p.
       

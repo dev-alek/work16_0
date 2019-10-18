@@ -690,11 +690,11 @@ cda-IBM-XML_general
 
 /* Параметры последнего принятого чека */
 { cmp/cr-prepc.i 1 prop-list-cda-AUTOTANK_operative
-"last-check-params,fo-version"
+"last-check-params,fo-version,device-kind"
 cda-AUTOTANK_operative
 }
 
-
+ 
 /* Оперативные MARIA*/
 
 { cmp/cr-prep.i 1 cda-MARIA_operative                 MARIA_operative                  " " MARIA_operative }
