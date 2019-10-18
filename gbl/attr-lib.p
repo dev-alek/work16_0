@@ -8361,7 +8361,7 @@ false~
 ,false'
 &scop from-ubd-cda-AUTOTANK_operative '~
 true~
-,false~
+,true~
 ,true'
 &scop hist-cda-AUTOTANK_operative '~
 false~
