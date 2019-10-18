@@ -235,6 +235,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_clients      for ub.clients .
     define buffer buf_cash-desk    for ub.cash-desk .
     define buffer buf_doc-line     for ub.doc-line .
+    define buffer buf_parts        for ub.parts .
     define variable v-is-petrolium as logical no-undo . /* true = топливо */
     define variable v-price-azs    as decimal no-undo .
     define variable v-is-pieces    as logical no-undo .
@@ -460,19 +461,19 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         
         if available buf_goods
         then do :
-          find first buf_doc-line no-lock where buf_doc-line.doc-code   = p-buf_chk-doc.out-code
-                                            and buf_doc-line.artic      = buf_goods.artic
-                                            and buf_doc-line.prod-code  = buf_goods.prod-code
-                                            and buf_doc-line.prod-type  = buf_goods.prod-type
-                                            no-error .
-          if available buf_doc-line
+          find first buf_parts no-lock where buf_parts.out-code   = p-buf_chk-doc.out-code
+                                         and buf_parts.artic      = buf_goods.artic
+                                         and buf_parts.prod-code  = buf_goods.prod-code
+                                         and buf_parts.prod-type  = buf_goods.prod-type
+                                         no-error .
+          if available buf_parts
           then do :
             insw:write-data-element (  "sum-s",
-              left-trim( string(buf_chk-gds.doc-qnty * buf_doc-line.price-rubl / (1 + (buf_doc-line.VAT-pc / 100)), "->>>>>>>>9.99") )
+              left-trim( string(buf_chk-gds.doc-qnty * buf_parts.price-rubl / (1 + (buf_parts.VAT-pc / 100)), "->>>>>>>>9.99") )
             ) . 
           end.
           else do :
-            insw:write-empty-element ( "sum-s" ) .
+            insw:write-data-element (  "sum-s", "0" ) .
           end.
         end. /* Себестоимость (Число 15,2) */
         
