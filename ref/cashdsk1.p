@@ -1236,7 +1236,7 @@ ON STOP UNDO, RETURN ERROR return-value :
                                         ,input p-pos-type + "_operative":U
                                         ,input "device-kind":U
                                         ,output loc#log) no-error .
-       if error-status:error or not loc#log
+       if error-status:error 
        then 
           return error return-value .
     
