@@ -64,6 +64,8 @@ class ibs.th.gbl.storage.vsdtostorage:
 
   method public void insertDB( input vsdsubObj as vsdsub  ):
     
+    def buffer bf_vsd_chk for ub.vsd.
+    
     create buf_vsd.
     find first ub.sys-ctrl no-lock.
     assign
@@ -72,8 +74,17 @@ class ibs.th.gbl.storage.vsdtostorage:
     no-error.
     if error-status:error
     then do:
+      find last bf_vsd_chk no-lock where bf_vsd_chk.db-num = ub.sys-ctrl.db-num use-index pi.
+      current-value (s-vsd-id, ub) = bf_vsd_chk.id.
+      assign
+        buf_vsd.id     = next-value (s-vsd-id, ub)
+        buf_vsd.db-num = ub.sys-ctrl.db-num
+      no-error.
+      if error-status:error
+      then do:
       exception(error-status, vsdsubObj, buffer buf_vsd:handle).
       return.
+    end.
     end.
     
     setDataStorage(input vsdsubObj, buffer buf_vsd).
@@ -191,7 +202,7 @@ class ibs.th.gbl.storage.vsdtostorage:
     return vsdsubsObj.
   end method.
   
-  method public class vsdsubs getVSDsubs ( objTHObj as class clisub ):
+  method public class vsdsubs getVSDsubs (input objTHObj as class clisub ):
     
     define variable vsdsubsObj as class vsdsubs.
     vsdsubsObj = new vsdsubs ().
@@ -792,10 +803,10 @@ class ibs.th.gbl.storage.vsdtostorage:
     find first buf_vsd no-lock where recid (buf_vsd) <> inVsdSubObj:VsdRecid and buf_vsd.UUID = inVsdSubObj:UUID no-error.
     if available (buf_vsd)
     then do:
+      trnDoc = entry (8,buf_vsd.part-key, {&delim-key}) no-error.
       if can-find (first ub.trn-doc no-lock where ub.trn-doc.doc-code = trnDoc)
         then isExsistTRN = true.
         else isExsistTRN = false.
-      trnDoc = entry (7,buf_vsd.part-key, {&delim-key}) no-error.
       Msg = substitute ("ВСД UUID &1 уже заведен в системе. Документ - &2. Товар - &3.", buf_vsd.UUID, trnDoc, buf_vsd.gds-code ).
       inVsdSubObj:setStatusErr(true).
       inVsdSubObj:MsgErr = Msg.
