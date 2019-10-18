@@ -170,6 +170,8 @@ define variable  stk-sum-rubl as decimal no-undo.
 define variable  stk-vat-rubl as decimal no-undo.
 define variable  v-real-uc    as decimal no-undo.
 
+define variable VAT-p  like ub.tax-rate-value.rate-value no-undo.
+define variable v-host-code like ub.sysconf.host-code no-undo .
 
 run waitfram-show in this-procedure ("Æäèòå...").
 
@@ -448,7 +450,8 @@ DO   /*  for each goods/gds-list no-lock  */
                             :
                               tt-obj-inv.inv   = true.
                               if buf_doc-line-sum.cost-sum-rubl > 0 then do :
-                                  if (buf_doc-line-sum.sale-vat-rubl / (buf_doc-line-sum.sale-sum-rubl - buf_doc-line-sum.sale-vat-rubl)) * 100 = 10 then
+                                  if (buf_doc-line-sum.sale-vat-rubl / (buf_doc-line-sum.sale-sum-rubl - buf_doc-line-sum.sale-vat-rubl)) * 100 > 9 and 
+                                  (buf_doc-line-sum.sale-vat-rubl / (buf_doc-line-sum.sale-sum-rubl - buf_doc-line-sum.sale-vat-rubl)) * 100 < 11 then
                                       assign
                                             tt-gds-inv.izl-rc10 = tt-gds-inv.izl-rc10 + (buf_doc-line-sum.sale-sum-rubl - buf_doc-line-sum.sale-vat-rubl)
 
@@ -469,8 +472,14 @@ DO   /*  for each goods/gds-list no-lock  */
                                             tt-obj-inv.izl-uc = tt-obj-inv.izl-uc + (buf_doc-line-sum.cost-sum-rubl - buf_doc-line-sum.cost-vat-rubl)
                                             tt-obj-inv.izl-rc = tt-obj-inv.izl-rc + (buf_doc-line-sum.sale-sum-rubl - buf_doc-line-sum.sale-vat-rubl).
                               end.
-                              else do:
-                                  if (buf_doc-line-sum.cost-vat-rubl / (buf_doc-line-sum.cost-sum-rubl - buf_doc-line-sum.cost-vat-rubl)) * 100 = 10 then
+                              else do :
+                                  if buf_doc-line-sum.cost-vat-rubl = 0 then do:
+                                    { gbl/hostcode.i obj-list.obj-type obj-list.obj-code v-host-code }
+                                    { gbl/pftxvalg.i p-gds-code {&vat-tax-code} ? v-host-code obj-list.obj-type obj-list.obj-code vat-p no-error }
+                                  end.  
+                                  if VAT-p < 11 and VAT-p > 9 then VAT-p = 10 .
+                                  if ((buf_doc-line-sum.cost-vat-rubl / (buf_doc-line-sum.cost-sum-rubl - buf_doc-line-sum.cost-vat-rubl)) * 100 > 9 and 
+                                  (buf_doc-line-sum.cost-vat-rubl / (buf_doc-line-sum.cost-sum-rubl - buf_doc-line-sum.cost-vat-rubl)) * 100 < 11) or vat-p = 10 then
                                       assign
                                             tt-gds-inv.nst-uc10  = tt-gds-inv.nst-uc10  + abs(buf_doc-line-sum.cost-sum-rubl - buf_doc-line-sum.cost-vat-rubl)
                                             tt-gds-inv.nst-vat10 = tt-gds-inv.nst-vat10 + abs(buf_doc-line-sum.cost-vat-rubl)
@@ -535,7 +544,7 @@ DO   /*  for each goods/gds-list no-lock  */
                       v-real-uc = v-real-uc - abs(buf_stk-line.sum-rubl - buf_stk-line.vat-rubl)
                     .
 
-          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 = 10 then
+          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 > 9 and (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 < 11 then
             tt-gds-inv.real-uc10 = tt-gds-inv.real-uc10 + v-real-uc
           .
           else
@@ -581,7 +590,7 @@ DO   /*  for each goods/gds-list no-lock  */
                       v-real-uc = v-real-uc - abs(buf_stk-line.sum-rubl - buf_stk-line.vat-rubl)
                     .
 
-          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 = 10 then
+          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 > 9 and (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 < 11 then
             tt-gds-inv.real-uc10 = tt-gds-inv.real-uc10 + v-real-uc
           .
           else
@@ -627,7 +636,7 @@ DO   /*  for each goods/gds-list no-lock  */
                       v-real-uc = v-real-uc - abs(buf_stk-line.sum-rubl - buf_stk-line.vat-rubl)
                     .
 
-          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 = 10 then
+          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 > 9 and (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 < 11 then
             tt-gds-inv.real-uc10 = tt-gds-inv.real-uc10 - v-real-uc
           .
           else
@@ -673,7 +682,7 @@ DO   /*  for each goods/gds-list no-lock  */
                       v-real-uc = v-real-uc - abs(buf_stk-line.sum-rubl - buf_stk-line.vat-rubl)
                     .
 
-          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 = 10 then
+          if (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 > 9 and (stk-vat-rubl / (stk-sum-rubl - stk-vat-rubl)) * 100 < 11 then
             tt-gds-inv.real-uc10 = tt-gds-inv.real-uc10 - v-real-uc
           .
           else
