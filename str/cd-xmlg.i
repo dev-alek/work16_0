@@ -246,12 +246,14 @@ for each temp-cash-desk:
                                         ,input p-pos-type
                                         ,input temp-cash-desk.cash-num
                                         ,input (if buf_cash-desk.pos-type = {&cd-type-ibm-xml}
-                                                or buf_cash-desk.pos-type = {&cd-type-autotank}
                                                 then {&cda-ibm-xml_operative}
+                                                else if  buf_cash-desk.pos-type = {&cd-type-autotank}
+                                                then {&cda-autotank_operative}
                                                 else {&cda-magia-xml_operative})
                                         ,input (if buf_cash-desk.pos-type = {&cd-type-ibm-xml}
-                                               or buf_cash-desk.pos-type = {&cd-type-autotank}
                                                 then {&cda-ibm-xml_operative_last-check-params}
+                                                else if  buf_cash-desk.pos-type = {&cd-type-autotank}
+                                                then {&cda-autotank_operative_last-check-params}
                                                 else {&cda-magia-xml_operative_last-check-date-time}
                                                )
                                         ,input (cd-attr-CD-DatetoString (temp-cash-desk.last-date) + {&space-char}  +  string(temp-cash-desk.last-time, "HH:MM:SS":U)

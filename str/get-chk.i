@@ -182,8 +182,12 @@ define buffer buf_c-cash-desk for ub.c-cash-desk.
                                                 ,input p-obj-code
                                                 ,input p-pos-type
                                                 ,input p-cash-num
-                                                ,input {&cda-ibm-xml_operative}
-                                                ,input {&cda-ibm-xml_operative_last-check-params}
+                                                ,input if p-pos-type eq {&cd-type-ibm-xml}
+                                                       then {&cda-ibm-xml_operative}
+                                                       else {&cda-autotank_operative}
+                                                ,input if p-pos-type = {&cd-type-ibm-xml}
+                                                       then {&cda-ibm-xml_operative_last-check-params}
+                                                       else {&cda-autotank_operative_last-check-params}
                                                 ,output v-character
                                                 ,output v-date
                                                 ,output v-decimal
