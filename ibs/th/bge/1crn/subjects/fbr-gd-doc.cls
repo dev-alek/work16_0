@@ -192,7 +192,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
             write-data-element ("qnty", string-mth (round ((buf_fbr-line.fact-qnty) , 3))).
             write-data-element ("u-price", string-mth (round ((buf_fbr-line.price-rubl) , 2))).
             write-data-element ("p-price", string-mth (round ((buf_fbr-line.price-sale) , 2))).
-            write-data-element ("u-price-s", string-mth (round ((buf_fbr-line.fact-qnty * buf_fbr-line.price-rubl) , 2))).
+            write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
             write-data-element ("rcp-code", buf_fbr-line.recipe-code).
           sw:end-element ("dish").
 
@@ -232,7 +232,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
         write-data-element ("qnty-p", string-mth (round ((brutto - netto), 3))).
         write-data-element ("perc-p", string-mth (round ((buf_fbr-line.coeff-value), 2))).
         write-data-element ("u-price",string-mth (round ((buf_fbr-line.price-rubl), 2))).
-        write-data-element ("u-price-s", string-mth (round ((buf_fbr-line.fact-qnty * buf_fbr-line.price-rubl) , 2))).
+        write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
       sw:end-element ("ingr").
           
     end.

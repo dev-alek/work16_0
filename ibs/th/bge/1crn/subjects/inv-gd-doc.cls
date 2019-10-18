@@ -615,7 +615,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
                  bf_doc-line-sum.gds-code = local-goods.gds-code and
                  bf_doc-line-sum.sum-type = {&sum-before-doc}.
       assign
-        varreturn = bf_doc-line-sum.cost-sum-rubl
+        varreturn = bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl
       .
     end.
     else do:
@@ -635,7 +635,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
                  bf_doc-line-sum.doc-code = local-doc-line.doc-code and
                  bf_doc-line-sum.gds-code = local-goods.gds-code and
                  bf_doc-line-sum.sum-type = {&sum-after-doc}.
-      return bf_doc-line-sum.cost-sum-rubl.
+      return bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl.
     end.
     else do:
       return 0.00.
