@@ -81,7 +81,7 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
                      , INPUT  ""             /* p-name */
                      , INPUT  v-user-adm
                      , INPUT  lock_user-login.user-password-encoded
-                     , no
+                     , yes
                      , OUTPUT v-password
                      , output v-nextcon 
                      ) NO-ERROR.
