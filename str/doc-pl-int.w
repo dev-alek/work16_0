@@ -35,7 +35,7 @@ index doc out-code gds-code obj-code obj-type pl-code
 index gds-code gds-code
 .
 
-DEFINE TEMP-TABLE tt-doc-pl NO-UNDO 
+DEFINE SHARED TEMP-TABLE tt-doc-pl NO-UNDO 
 field pl-code as integer format "99999999999"
 field pl-code2 as integer format "99999999999"
 field whole-send-news like ub.doc-pl.whole-send-news
