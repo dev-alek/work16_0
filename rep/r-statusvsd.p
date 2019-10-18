@@ -215,7 +215,7 @@ DO:
         '    <td style="width: 60px;"></td>'    SKIP /*  "Артикул товара"         "X(20)" */
         '    <td style="width: 200px;"></td>'    SKIP /*  "Наименование товара"    "X(30)" */
         '    <td style="width: 200px;"></td>'    SKIP /*  "Производитель"          "X(20)" */
-        '    <td style="width: 53px;"></td>'    SKIP /*  "Кол-во факт"            "X(15)" */
+        '    <td style="width: 53px;"></td>'    SKIP /*  "Кол-во по ВСД"            "X(15)" */
         '    <td style="width: 53px;"></td>'    SKIP /*  "Ед.изм."                "X(6)" */
         '    <td style="width: 100px;"></td>'    SKIP /*  "Тип"             "X(20)" */
         '    <td style="width: 300px;"></td>'    SKIP /*  "Номер ВСД"              "X(40)" */
@@ -245,7 +245,7 @@ DO:
         '    <th>Артикул товара</th>'           SKIP
         '    <th>Наименование товара</th>'      SKIP
         '    <th>Производитель</th>'            SKIP
-        '    <th>Кол-во факт</th>'              SKIP
+        '    <th>Кол-во по ВСД</th>'            SKIP
         '    <th>Ед.изм.</th>'                  SKIP
         '    <th>Тип</th>'                      SKIP
         '    <th>Номер ВСД</th>'                SKIP
@@ -267,7 +267,7 @@ DO:
                 SUBSTITUTE('      <td>&1</td>',                 ttvsd.artic)                 SKIP /*Артикул товара*/
                 SUBSTITUTE('      <td text_wrap="true">&1</td>',ttvsd.gdsname)               SKIP /*Наименование товара*/
                 SUBSTITUTE('      <td text_wrap="true">&1</td>',ttvsd.prod-code)             SKIP /*Производитель*/
-                SUBSTITUTE('      <td>&1</td>',          STRING(ttvsd.COLobj))               SKIP /*Кол-во факт*/
+                SUBSTITUTE('      <td>&1</td>',       trim( STRING(ttvsd.COLobj,">>>>>>9.999")))               SKIP /*Кол-во факт*/
                 SUBSTITUTE('      <td num="0" val="&1">&1</td>',ttvsd.unit-cli)              SKIP /*Ед.изм.*/
                 SUBSTITUTE('      <td text_wrap="true">&1</td>',ttvsd.vsdtypelbl )           SKIP /*Тип*/
                 SUBSTITUTE('      <td>&1</td>',                 ttvsd.UUID)                  SKIP /*Номер ВСД*/

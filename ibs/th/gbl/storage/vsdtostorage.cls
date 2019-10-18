@@ -164,7 +164,7 @@ class ibs.th.gbl.storage.vsdtostorage:
       for each buf_vsd where buf_vsd.obj-type eq inObjType
                          and buf_vsd.obj-code eq inObjCode
                          and can-do(inStatusList,string (buf_vsd.status_))
-      no-lock:
+      no-lock by buf_vsd.fact-datetime :
           vsdsubsObj:AddItem(getDataStorage (BUFFER buf_vsd)).
       end. 
       return vsdsubsObj.
@@ -810,60 +810,52 @@ class ibs.th.gbl.storage.vsdtostorage:
   method public logical exsistvsd (buffer inbf_dl for ub.doc-line):
     
     define variable keyrecObj as class keyrec no-undo.
-    define variable keyrec as character no-undo.
+    define variable keyrec    as character no-undo.
+    define variable vOk       as logical no-undo.
     define buffer buf_parts for ub.parts.
     
     keyrecObj = new keyrec ().
-
-    find first buf_parts no-lock where buf_parts.out-code = inbf_dl.doc-code
-      and buf_parts.artic = inbf_dl.artic
-      and buf_parts.prod-type = inbf_dl.prod-type
-      and buf_parts.prod-code = inbf_dl.prod-code no-error.
-    if not available (buf_parts)
-      then return false.
-    for each buf_parts no-lock where buf_parts.out-code = inbf_dl.doc-code 
-      and buf_parts.artic = inbf_dl.artic
-      and buf_parts.prod-type = inbf_dl.prod-type
-      and buf_parts.prod-code = inbf_dl.prod-code:
-      
+    
+    block-part:
+    for each buf_parts no-lock where buf_parts.out-code  = inbf_dl.doc-code 
+                                 and buf_parts.obj-type  = inbf_dl.obj-type
+                                 and buf_parts.obj-code  = inbf_dl.obj-code
+                                 and buf_parts.artic     = inbf_dl.artic
+                                 and buf_parts.prod-type = inbf_dl.prod-type
+                                 and buf_parts.prod-code = inbf_dl.prod-code:
       keyrecObj:GenKeyRec({&table_parts}, buffer buf_parts:handle, output keyrec).
-      
-      find first buf_vsd no-lock where buf_vsd.part-key = keyrec and buf_vsd.UUID <> "" and buf_vsd.UUID <> ? no-error.
-      if not available (buf_vsd) 
-        then return false.
+      vok = can-find (first buf_vsd where buf_vsd.part-key = keyrec and buf_vsd.UUID <> "" and buf_vsd.UUID <> ?) .
+      if not vok then leave block-part.
     end.
     delete object keyrecObj.    
-    return true.
+    return vok.
     
   end.
 
   method public logical exsistvsd (buffer inbf_gd-dtl for ub.gds-dtl):
     
     define variable keyrecObj as class keyrec no-undo.
-    define variable keyrec as character no-undo.
+    define variable keyrec    as character no-undo.
+    define variable vOk       as logical no-undo.
     define buffer buf_parts for ub.parts.
     
     keyrecObj = new keyrec ().
-
-    find first buf_parts no-lock where buf_parts.out-code = inbf_gd-dtl.doc-code
-      and buf_parts.artic = inbf_gd-dtl.artic
-      and buf_parts.prod-type = inbf_gd-dtl.prod-type
-      and buf_parts.prod-code = inbf_gd-dtl.prod-code no-error.
-    if not available (buf_parts)
-      then return false.
-    for each buf_parts no-lock where buf_parts.out-code = inbf_gd-dtl.doc-code 
-      and buf_parts.artic = inbf_gd-dtl.artic
-      and buf_parts.prod-type = inbf_gd-dtl.prod-type
-      and buf_parts.prod-code = inbf_gd-dtl.prod-code:
+    
+    block-part:
+    for each buf_parts no-lock where buf_parts.out-code  = inbf_gd-dtl.doc-code 
+                                 and buf_parts.obj-type  = inbf_gd-dtl.obj-type
+                                 and buf_parts.obj-code  = inbf_gd-dtl.obj-code
+                                 and buf_parts.artic     = inbf_gd-dtl.artic
+                                 and buf_parts.prod-type = inbf_gd-dtl.prod-type
+                                 and buf_parts.prod-code = inbf_gd-dtl.prod-code:
       
       keyrecObj:GenKeyRec({&table_parts}, buffer buf_parts:handle, output keyrec).
       
-      find first buf_vsd no-lock where buf_vsd.part-key = keyrec and buf_vsd.UUID <> "" and buf_vsd.UUID <> ? no-error.
-      if not available (buf_vsd) 
-        then return false.
+      vok = can-find ( first buf_vsd where buf_vsd.part-key = keyrec and buf_vsd.UUID <> "" and buf_vsd.UUID <> ?) .
+      if not vok then leave block-part.
     end.
     delete object keyrecObj.    
-    return true.
+    return vok.
     
   end.
 
