@@ -121,7 +121,9 @@ end.
 run SetPwdsysadm .
 
 find first sys-ctrl  no-lock.
-run  procedure-user-login-change-password in this-procedure (sys-ctrl.db-num,userid ("ub")).
+run  procedure-user-login-change-password in this-procedure (sys-ctrl.db-num,userid ("ub")) no-error.
+if error-status:error
+then return error return-value.
 &if "{&mylogin}" ne ""
 &then
 do trans:
@@ -203,19 +205,14 @@ procedure procedure-user-login-change-password :
    define input parameter p-db-num         as integer          no-undo.
    define input parameter p-user-id        as character        no-undo.
    
-   define variable v-can-edit     as logical   no-undo .
-   define variable v-encoded-pass as character no-undo .
-   define variable v-encoded-pass-def as character no-undo .
+   define variable v-can-edit         as logical   no-undo .
+   define variable v-encoded-pass     as character no-undo .
+   define variable v-encoded-pass-old as character no-undo .
+   define variable v-nextcon          as logical   no-undo .
    
    define buffer buf_lock_user-login for user-login.
    define buffer buf_init_user-account for user-account.
    
-   run adm/pswd-enc.p ( input  encode( "{&defaultPas}" )
-                      , output v-encoded-pass-def
-                       ) .
-   assign
-      v-encoded-pass-def = encode( v-encoded-pass-def )
-   .
    define variable vHidn as logical no-undo.
    vHidn = current-window:hidden.
       current-window:hidden = yes.
@@ -223,74 +220,101 @@ procedure procedure-user-login-change-password :
         where _user._userid    = p-user-id
         no-error
         .
-   if _User._Password = v-encoded-pass-def
+   if available  _User
    then do:
       find first buf_lock_user-login where buf_lock_user-login.user-login eq p-user-id
                                        and buf_lock_user-login.db-num     eq p-db-num
       no-lock.
-      find first buf_init_user-account where buf_init_user-account.user-id = buf_lock_user-login.user-id
-      no-lock.
-      v-encoded-pass = v-encoded-pass-def.
       
-      
-         
-      do while v-encoded-pass = v-encoded-pass-def or v-encoded-pass eq ?:
-         v-encoded-pass = v-encoded-pass-def. 
-      
-         
-         run adm/chg-pswd.w ( input  this-procedure
-                            , input  p-db-num
-                            , input  _user._userid
-                            , input  substitute('&1 &2 &3':U, buf_init_user-account.last-name
-                                                            , buf_init_user-account.first-name
-                                                            , buf_init_user-account.second-name
-                                   )
-                            , input  yes
-                            , input  buf_lock_user-login.user-password-encoded
-                            , output v-encoded-pass
-                            ) no-error .
-                          
-         if    v-encoded-pass = v-encoded-pass-def
-            or v-encoded-pass eq ?
-         then do:
-             message
-                vss-workfile vss-revision vss-description skip
-                "Пароль не может быть изменен на пароль поумолчани. Смените пароль.":U skip
-                error-status :get-message(1) skip
-                return-value skip
-                view-as alert-box error .
+      find first user-login-attr where user-login-attr.user-id      eq buf_lock_user-login.user-id
+                                       and user-login-attr.db-num   eq buf_lock_user-login.db-num
+                                       and user-login-attr.attr-code = "ChangPwdNextConect"
+      no-lock no-error.
+      define variable vfl as logical no-undo.
+      vfl = logical(user-login-attr.attr-value) no-error. 
+      if vfl eq yes
+      then do: 
+          find first buf_init_user-account where buf_init_user-account.user-id = buf_lock_user-login.user-id
+          no-lock.
+          assign
+          v-encoded-pass-old = buf_lock_user-login.user-password-encoded
+          v-encoded-pass     = buf_lock_user-login.user-password-encoded.
+          
+          
              
-         end.   
-      end.  
+          do while v-encoded-pass = v-encoded-pass-old or v-encoded-pass eq ?:
+             v-encoded-pass = v-encoded-pass-old. 
+          
+             
+             run adm/chg-pswd.w ( input  this-procedure
+                                , input  p-db-num
+                                , input  _user._userid
+                                , input  substitute('&1 &2 &3':U, buf_init_user-account.last-name
+                                                                , buf_init_user-account.first-name
+                                                                , buf_init_user-account.second-name
+                                       )
+                                , input  yes
+                                , input  buf_lock_user-login.user-password-encoded
+                                , yes 
+                                , output v-encoded-pass
+                                , output v-nextcon
+                                ) no-error .
+            if error-status :error
+            then do:
+              message
+                 vss-workfile vss-revision vss-description skip
+                 "Ошибка при вызове процедуры" 'adm/chg-pswd.w':U skip
+                 error-status :get-message(1) skip
+                 return-value skip
+                 view-as alert-box error .
+                 current-window:hidden = vHidn.
+              undo, return error return-value .
+             end.                 
+             if    v-encoded-pass = v-encoded-pass-old
+                
+             then do:
+                 message
+                    vss-workfile vss-revision vss-description skip
+                    "Старый пароль и новый равны. Смените пароль.":U skip
+                    error-status :get-message(1) skip
+                    return-value skip
+                    view-as alert-box error .
+                 
+             end.
+             else if v-encoded-pass eq ?
+             then do:
+                message  "Отказ от смены пароля. Работа дальше не возможна"
+                view-as alert-box error. 
+                return error "Отказ от смены пароля. Работа дальше не возможна".
+             end.   
+          end.  
                          
-      if error-status :error
-      then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при вызове процедуры" 'adm/chg-pswd.w':U skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        current-window:hidden = vHidn.
-        undo, return error return-value .
-      end.
-      if v-encoded-pass <> ? then
-      do trans:
-         run gbl/set-gbl.p (no,buf_lock_user-login.user-login,buf_lock_user-login.user-password-encoded).
-         find current buf_lock_user-login
-               exclusive-lock
-            .
-         assign
-            buf_lock_user-login.user-password-encoded = v-encoded-pass
-         .
-         release buf_lock_user-login .
-   
-         message
-            "Пароль успешно изменен"
-            view-as alert-box information
-         .
-      end.
-     
+          
+          if v-encoded-pass <> ? then
+          do trans:
+             run gbl/set-gbl.p (no,buf_lock_user-login.user-login,buf_lock_user-login.user-password-encoded).
+             find current buf_lock_user-login
+                   exclusive-lock
+                .
+             assign
+                buf_lock_user-login.user-password-encoded = v-encoded-pass
+             .
+             
+             find first user-login-attr where user-login-attr.user-id   eq buf_lock_user-login.user-id
+                                          and user-login-attr.db-num    eq buf_lock_user-login.db-num
+                                          and user-login-attr.attr-code eq "ChangPwdNextConect"
+             exclusive-lock no-error.
+             if available user-login-attr
+             then
+                delete user-login-attr.
+             release buf_lock_user-login .
+             message
+                "Пароль успешно изменен"
+                view-as alert-box information
+             .
+             
+          end.
+       end.  
    end.   
    /*current-window:hidden = vHidn.*/
 
