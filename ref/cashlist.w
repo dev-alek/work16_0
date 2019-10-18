@@ -133,7 +133,7 @@ define variable v-rid-list as character no-undo .
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel B-add B-chg B-del B-on ~
 B-shft B-attr B-print B-hist B-sch B-Help mark-num Rs-object Rs-del ~
-B-cli-attr B-attr-2 b-version BR-cash-desk
+B-cli-attr B-attr-2 b-version BR-cash-desk b-tso
 &Scoped-Define DISPLAYED-OBJECTS mark-num Rs-object Rs-del
 
 /* Custom List Definitions                                              */
@@ -154,7 +154,7 @@ FUNCTION cash-desk-auto RETURNS CHARACTER
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-fo-version Dialog-Frame
 FUNCTION get-fo-version RETURNS CHARACTER
-   ( INPUT p-db-num AS INTEGER
+  ( INPUT p-db-num AS INTEGER
    ,INPUT p-obj-code AS INTEGER
     ,INPUT p-pos-type AS CHARACTER
     ,INPUT  p-cash-num AS INTEGER)  FORWARD.
@@ -243,6 +243,10 @@ DEFINE BUTTON B-shft
 DEFINE BUTTON b-version
      LABEL "Версия?"
      SIZE 10 BY 1.
+     
+DEFINE BUTTON b-tso
+     LABEL "Управление ТСО"
+     SIZE 15 BY 1.
 
 DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN
@@ -317,11 +321,12 @@ DEFINE FRAME Dialog-Frame
      B-sch AT ROW 1 COL 92
      B-Help AT ROW 1 COL 95
      mark-num AT ROW 2 COL 1 NO-LABEL
-     Rs-object AT ROW 2 COL 10.5 NO-LABEL
-     Rs-del AT ROW 2 COL 31.5 NO-LABEL
+     Rs-object AT ROW 2 COL 5 NO-LABEL
+     Rs-del AT ROW 2 COL 21.5 NO-LABEL
      B-cli-attr AT ROW 2 COL 54
      B-attr-2 AT ROW 2 COL 74 WIDGET-ID 4
      b-version AT ROW 2 COL 84 WIDGET-ID 2
+     b-tso AT ROW 2 COL 39
      BR-cash-desk AT ROW 3.43 COL 1
      SPACE(0.24) SKIP(0.30)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -474,6 +479,7 @@ DO:
   end.
   IF attr-option = {&UPDATE} THEN DO:
     define variable v-cash-desk-host-code as integer no-undo .
+    
     { gbl/hostcode.i
       {&shop}
       X_cash-desk.obj-code
@@ -1069,6 +1075,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-tso
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-tso Dialog-Frame
+ON CHOOSE OF b-tso IN FRAME Dialog-Frame /* Управление ТСО */
+DO:
+  run ref/tso-ctrl.w (input parparentproc,
+                      input parref-mode) .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define BROWSE-NAME BR-cash-desk
 &Scoped-define SELF-NAME BR-cash-desk
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-cash-desk Dialog-Frame
@@ -1371,7 +1389,7 @@ PROCEDURE enable_UI :
       WITH FRAME Dialog-Frame.
   ENABLE b-quit B-mark b-sel B-add B-chg B-del B-on B-shft B-attr B-print
          B-hist B-sch B-Help mark-num Rs-object Rs-del B-cli-attr B-attr-2
-         b-version BR-cash-desk
+         b-version BR-cash-desk b-tso
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1410,6 +1428,7 @@ B-chg when lookup('b-add':U, bttns) >0 and parref-mode <> {&all} AND NOT TRANSAC
 B-del when lookup('b-add':U, bttns) >0 and parref-mode <> {&all} AND NOT TRANSACTION
 B-on when lookup('b-on':U, bttns) >0 and parref-mode <> {&all} AND NOT TRANSACTION
 B-version when lookup('b-add':U, bttns) >0 and parref-mode <> {&all} AND NOT TRANSACTION
+b-tso
 b-attr
 b-attr-2
 b-cli-attr
@@ -1589,7 +1608,7 @@ define variable sym10 as char init ":"   no-undo.
 define variable Line                    as char         no-undo.
 
 define variable ii      as integer   no-undo.
-define variable StartRecid      as integer   no-undo.
+define variable StartRecid    as integer   no-undo.
 define variable v-fo-version  as CHARACTER no-undo.
 DEFINE FRAME List
 sym1 column-label ":" format "x(1)"
@@ -1793,7 +1812,7 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-fo-version Dialog-Frame
 FUNCTION get-fo-version RETURNS CHARACTER
-   ( INPUT p-db-num AS INTEGER
+  ( INPUT p-db-num AS INTEGER
    ,INPUT p-obj-code AS INTEGER
     ,INPUT p-pos-type AS CHARACTER
     ,INPUT  p-cash-num AS INTEGER) :
@@ -1816,6 +1835,7 @@ run cd-attr-value in this-procedure (
                                     ,output v-integer
                                     ,output v-logical
                                     ,output v-dop) no-error.
+
 RETURN v-fo-version.   /* Function return value. */
 
 END FUNCTION.
