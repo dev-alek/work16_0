@@ -470,7 +470,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           if available buf_doc-line
           then do :
             insw:write-data-element (  "sum-s",
-              left-trim( string(buf_chk-gds.doc-qnty * buf_doc-line.price-rubl, "->>>>>>>>9.99") )
+              left-trim( string(buf_chk-gds.doc-qnty * buf_doc-line.price-rubl / (1 + (buf_doc-line.VAT-pc / 100)), "->>>>>>>>9.99") )
             ) . 
           end.
           else do :
