@@ -139,6 +139,7 @@ CLASS ibs.th.str.impdoc4dlg INHERITS Form :
       fi-file-name   = file_name:Text
       fi-obj-type    = {&shop}
       fi-obj-code    = integer(code_obj:Text)
+      is-doc-close   = cbCloseFact:Checked
     no-error .
     if fi-file-name = "" then do:
       message "Не задан файл импорта" view-as alert-box error .
