@@ -850,6 +850,7 @@ cda-IBS-TH-MOB_rec-print
 ,{&bef-cda-IBS-TH_interface}~
 ,{&bef-cda-IBS-TH-MOB_main}~
 ,{&bef-cda-IBS-TH-MOB_rec-print}~
+,{&bef-cda-AUTOTANK_operative}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-list {&cd-attr-list}" ).
 
