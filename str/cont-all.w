@@ -108,6 +108,20 @@ DEFINE VARIABLE cTmp-Mode-W        AS CHARACTER NO-UNDO INITIAL "".
 DEFINE VARIABLE i-Cont-Ret         AS INTEGER   NO-UNDO INITIAL 0 EXTENT 3.
 DEFINE VARIABLE iTmp               AS INTEGER   NO-UNDO INITIAL 0.
 
+/* для импорта цен поставки к задаче 4826 */
+define temp-table t-imp-price no-undo
+  field contract-code as integer /* A1 = Номер договора в ТН (системный код) */
+  field firm-code     as integer /* B1 = Код контрагента (системный код) */
+  field gds-code      as integer /* С1 = Код товара в ТН */
+  field price-rubl    as decimal /* D1 = Цена товара с НДС */
+  field vat-pc        as decimal /* E1 = Ставка НДС */
+  field prc-up        as decimal /* F1 = % отклонения в большую сторону */
+  field prc-dn        as decimal /* G1 = % отклонения в меньшую сторону */
+  field gds-name      as character /* H1 = Наименование товара */
+  field firm-name     as character /* I1 = Наименование контрагента */
+  field line-num      as integer /* номер строки в импортируемом excel-файле */
+.
+define stream f-log-imp .
 
 /*  */
 /* Переменная определяющая дополнительный фильтр контрактов
@@ -291,6 +305,13 @@ FUNCTION get-agent RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD func-char-to-dec Dialog-Frame
+FUNCTION func-char-to-dec RETURNS DECIMAL
+  ( input iCh AS CHARACTER) forward .
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-currency Dialog-Frame
 FUNCTION get-currency RETURNS CHARACTER
   ( input curr-code as integer )  FORWARD.
@@ -336,6 +357,10 @@ DEFINE BUTTON B-fin-doc
 
 DEFINE BUTTON B-exp
      LABEL "&Экспорт"
+     SIZE 10 BY 1.
+
+DEFINE BUTTON B-imp
+     LABEL "Импорт"
      SIZE 10 BY 1.
 
 DEFINE BUTTON B-fin-ob
@@ -482,9 +507,10 @@ DEFINE FRAME Dialog-Frame
      B-fin-ob  AT ROW 2 COL 51
      B-fin-doc AT ROW 2 COL 61
      b-exp     AT ROW 2 COL 71
-     b-sch     AT ROW 2 COL 81
-     b-SlaveContract AT ROW 2 COL 81  /* Подчиненные договоры */
-     b-hist    AT ROW 2 COL 91
+     b-imp     AT ROW 2 COL 81
+     b-sch     AT ROW 2 COL 91
+     b-SlaveContract AT ROW 2 COL 91  /* Подчиненные договоры */
+     b-hist    AT ROW 2 COL 101
 
      Contr-List AT ROW 3 COL 1.25
      sch-code AT ROW 21 COL 23.25 COLON-ALIGNED
@@ -820,6 +846,18 @@ DO:
   }
   if not g-log then  return .
   RUN proc-b-exp IN THIS-PROCEDURE NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-imp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-imp Dialog-Frame
+ON CHOOSE OF B-imp IN FRAME Dialog-Frame /* Импорт */
+DO:
+  RUN proc-b-imp IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
 END.
 
@@ -1750,7 +1788,7 @@ PROCEDURE enable_UI :
   DISPLAY sch-code sch-date Cli-Types Agnt-Types Cli-Status mark-num
       WITH FRAME Dialog-Frame.
   ENABLE b-quit RECT-status B-mark B-sel b-gen b-sch b-SlaveContract b-spec b-specgrp B-Help B-lkp b-chg b-del
-         b-open b-trn-doc B-fin-ob B-fin-doc b-hist b-exp B-add Contr-List sch-code sch-date
+         b-open b-trn-doc B-fin-ob B-fin-doc b-hist b-exp b-imp B-add Contr-List sch-code sch-date
          Cli-Types Agnt-Types Cli-Status mark-num b-order
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
@@ -2277,6 +2315,7 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-del Dialog-Frame
 procedure proc-del :
   /*  */
   DEFINE VARIABLE v-cError as CHARACTER NO-UNDO INITIAL "".
@@ -2388,25 +2427,15 @@ procedure proc-del :
           END.
        END.
 
-/*
-Убрали в тригер contrw.p
-      if available contract then do:
-        define buffer buf_c-contract for c-contract.
-        create buf_c-contract .
-        BUFFER-COPY buf_contract TO buf_c-contract .
-        assign
-          buf_c-contract.chip-num         = next-value (s-corr-chip, {&db-name_schema})
-          buf_c-contract.corr-user-db-num = buf_contract.user-db-num
-          buf_c-contract.corr-user-name   = buf_contract.user-name
-          buf_c-contract.corr-date        = p-sys-date
-          buf_c-contract.corr-time        = p-sys-time-int
-        .
-*/
     end.
   end.
 end procedure. /* proc-del */
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-sel-agent Dialog-Frame
 procedure proc-sel-agent :
   do on error undo, return error return-value :
     run ref/cli-all.w ( parParentProc, "b-sel", {&prs}, {&all}, {&current}, ?, ",,,,,,NO,,":u, "without-obj":U, output agnt-list ) .
@@ -2422,11 +2451,13 @@ procedure proc-sel-agent :
       .
     end.
   end.
-end procedure. /* proc-del */
+end procedure. /* proc-sel-agent */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 
-
-
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-open Dialog-Frame
 procedure proc-open :
   /*  */
   DEFINE VARIABLE v-cError    as CHARACTER NO-UNDO INITIAL "".
@@ -2552,28 +2583,14 @@ procedure proc-open :
           END.
        END.
 
-
-/*
-Убрали в тригер contrw.p
-        define buffer buf_c-contract for c-contract.
-        create buf_c-contract .
-        BUFFER-COPY buf_contract TO buf_c-contract .
-        assign
-          buf_c-contract.chip-num         = next-value (s-corr-chip, {&db-name_schema})
-          buf_c-contract.corr-user-db-num = buf_contract.user-db-num
-          buf_c-contract.corr-user-name   = buf_contract.user-name
-          buf_c-contract.corr-date        = p-sys-date
-          buf_c-contract.corr-time        = p-sys-time-int
-        .
-
-*/
-
       end.
     end.
 
   end.
 end procedure. /* proc-open */
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-exp Dialog-Frame
@@ -2614,6 +2631,465 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-imp Dialog-Frame
+PROCEDURE proc-b-imp :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+/* 1. открыть файл Excel */
+define variable mFileName         as character        no-undo.
+define variable vFileName         as character no-undo.
+define variable v-log-file-name   as character no-undo .
+define variable v-last-slash-pos  as integer no-undo .
+define variable varlog            as logical   no-undo.
+define variable mExcelApplication as component-handle no-undo. /* ССЫЛКА НА ПРИЛОЖЕНИЕ */
+define variable mWorkBook         as component-handle no-undo. /* ССЫЛКА НА РАБОЧУЮ КНИГУ */
+define variable mWorkSheet        as component-handle no-undo. /* ССЫЛКА НА РАБОЧИЙ ЛИСТ */
+define variable mRange            as component-handle no-undo . /* область для чтения */
+
+  system-dialog get-file mFileName title "Выберите файл с ценами поставки"
+    filters "MS Excel (*.xls,*.xlsx)" "*.xls,*.xlsx",
+            "Все файлы" "*.*"
+    initial-filter 1
+    must-exist             
+    update varlog.
+  if not varlog then return error "Отказ от импорта" .
+
+  ASSIGN
+    FILE-INFO:FILE-NAME = mFileName
+    vFilename           = FILE-INFO:FULL-PATHNAME
+  .
+  IF LENGTH(vFileName) > 0 THEN .
+  ELSE RETURN ERROR SUBSTITUTE("Не найден файл &1", mFileName).
+/*
+ Формулировки ТЗ "импорта цен поставки для всех договоров в АСУ GAS Complex System":
+
+В случае неуспешного импорта лог-файл должен формироваться в директорию указанную в ini-файле в секции log-dir.
+(@NOTE параметр logDir секции [REP-SETS] доступен только в версии 16.0)
+В случае отсутствия секции лог-файл сохраняется в рабочую директорию.
+*/
+
+  v-last-slash-pos = max (
+    r-index(vFilename, "/"),
+    r-index(vFilename, "\")
+                         ) .
+  v-log-file-name  = substitute("&1&2.log"
+    , ibs.th.gbl.gbl-inipar:logDir
+    , entry(1, substring(vFileName, v-last-slash-pos + 1), ".")
+                                ) .
+
+  empty temp-table t-imp-price .
+
+  create "Excel.Application":U mExcelApplication.
+  assign
+    mExcelApplication:DisplayAlerts = no
+    mWorkbook                       = mExcelApplication:WorkBooks:Add(vFileName)
+    mWorkSheet                      = mWorkbook:Sheets:Item(1)
+  .
+
+/* 2. прочесть файл во временную таблицу */
+  define variable vLine   as integer   no-undo.
+  define variable vsContractCode as character no-undo . /* A1 = Номер договора в ТН (системный код) */
+  define variable vContractCode  as integer no-undo .
+  define variable vsFirmCode     as character no-undo . /* B1 = Код контрагента (системный код) */
+  define variable vFirmCode      as integer no-undo .
+  define variable vsGdsCode      as character no-undo . /* С1 = Код товара в ТН */
+  define variable vGdsCode       as integer no-undo .
+  define variable vsPriceRubl    as character no-undo . /* D1 = Цена товара с НДС */
+  define variable vPriceRubl     as decimal no-undo .
+  define variable vsVatPc        as character no-undo . /* E1 = Ставка НДС */
+  define variable vVatPc         as decimal no-undo .
+  define variable vsPrcUp        as character no-undo . /* F1 = % отклонения в большую сторону */
+  define variable vPrcUp         as decimal no-undo .
+  define variable vsPrcDn        as character no-undo . /* G1 = % отклонения в меньшую сторону */
+  define variable vPrcDn         as decimal no-undo .
+  define variable vsGdsName      as character no-undo . /* H1 = Наименование товара */
+  define variable vsFirmName     as character no-undo . /* I1 = Наименование контрагента */
+&scoped-define decimal-zerro 0.00000000005
+  
+  loopbl:
+  do vLine = 2 to 1000000:
+    
+    mRange = mWorkSheet:Range(  substitute("A&1":U, vLine)  ) .
+    vsContractCode = mRange:formula .
+    mRange = mWorkSheet:Range(  substitute("B&1":U, vLine)  ) .
+    vsFirmCode     = mRange:formula .
+    mRange = mWorkSheet:Range(  substitute("C&1":U, vLine)  ) .
+    vsGdsCode      = mRange:formula .
+    assign
+      vContractCode = integer (vsContractCode)
+      vFirmCode     = integer (vsFirmCode)
+      vGdsCode      = integer (vsGdsCode)
+    no-error .
+    if (not error-status:error) and (vContractCode > 0) and (vFirmCode > 0) and (vGdsCode > 0) then .
+    else leave loopbl.                
+
+    mRange = mWorkSheet:Range(  substitute("D&1":U, vLine)  ) .
+    vPriceRubl     = mRange:value no-error .
+    if vPriceRubl = ? then assign
+      vsPriceRubl = mRange:formula
+      vPriceRubl  = func-char-to-dec( vsPriceRubl )
+    .
+    mRange = mWorkSheet:Range(  substitute("E&1":U, vLine)  ) .
+    vVatPc         = mRange:value no-error .
+    if vVatPc = ? then assign
+      vsVatPc = mRange:formula
+      vVatPc  = func-char-to-dec( vsVatPc )
+    .
+    mRange = mWorkSheet:Range(  substitute("F&1":U, vLine)  ) .
+    vPrcUp         = mRange:value no-error .
+    if vPrcUp = ? then assign
+      vsPrcUp = mRange:formula
+      vPrcUp  = func-char-to-dec( vsPrcUp )
+    .
+    mRange = mWorkSheet:Range(  substitute("G&1":U, vLine)  ) .
+    vPrcDn         = mRange:value no-error .
+    if vPrcDn = ? then assign
+      vsPrcDn = mRange:formula
+      vPrcDn  = func-char-to-dec( vsPrcDn )
+    .
+    mRange = mWorkSheet:Range(  substitute("H&1":U, vLine)  ) .
+    vsGdsName = mRange:formula .
+    mRange = mWorkSheet:Range(  substitute("I&1":U, vLine)  ) .
+    vsFirmName = mRange:formula .
+   
+    create t-imp-price .
+    assign
+      t-imp-price.contract-code = vContractCode
+      t-imp-price.firm-code     = vFirmCode
+      t-imp-price.gds-code      = vGdsCode
+      t-imp-price.price-rubl    = (if vPriceRubl > {&decimal-zerro} then vPriceRubl else 0)
+      t-imp-price.vat-pc        = (if vVatPc     > {&decimal-zerro} then vVatPc     else 0)
+      t-imp-price.prc-up        = (if vPrcUp     > {&decimal-zerro} then vPrcUp     else 0)
+      t-imp-price.prc-dn        = (if vPrcDn     > {&decimal-zerro} then vPrcDn     else 0)
+      t-imp-price.gds-name      = vsGdsName
+      t-imp-price.firm-name     = vsFirmName
+      t-imp-price.line-num      = vLine
+    no-error .
+    if error-status:error then leave loopbl.                
+  end.   
+
+/* 3. закрыть файл Excel */
+  mWorkbook:Close(true) no-error.
+  release object mWorkSheet no-error.
+  release object mWorkbook no-error.
+  mExcelApplication:QUIT() no-error.
+  release object mExcelApplication no-error.
+  
+/* 4. записать временную таблицу в БД
+      Уникальность в договорах = host-code + contract-code.
+      Поэтому загружем только часть, относящуюся к фирме текущего объекта.
+
+      Сопоставление проводится по трём полям:
+      - № договора в Trade House (системный код);
+      - код контрагента (системный код);
+      - код товара.
+
+      Формулировки ТЗ "импорта цен поставки для всех договоров в АСУ GAS Complex System":
+        
+Проверке подлежат только текущие на момент загрузки договоры,
+  исключая закрытие и договоры с истекшим сроком действия.
+Если в процессе загрузки для одной из строк не найдено полного соответствия,
+  то для такой строки изменений не производится, но продолжается проверка по другим строкам.
+Если в Системе найдена запись, в которой все три поля совпадают,
+... но значение цены товара с НДС равно нулю либо не указано значение в соответствии с файлом,
+    то для такой строки изменений не производится, проверка продолжается по другим строкам.
+... но значение допустимого процента отклонения в соответствии с файлом равно нулю,
+    то для такой строки производится изменение
+    - цены поставки,
+    - ставки НДС в соответствии со значениями из файла,
+    - значение допустимого процента отклонения остаётся в соответствии со значением в спецификации,
+    проверка продолжается по другим строкам.
+... (если никаких "но")
+    то в спецификации к договору производится изменение
+    - цены поставки,
+    - ставки НДС и
+    - процента отклонения в соответствии со значениями из файла.
+
+Форматы сообщений в лог-файле:
+(1) если в Системе не найден текущий договор с указанным в файле номером
+- «Ошибка в строке №_. В Системе не найдено текущего договора с № – (номер договора из файла)»;
+(2) если в Системе не найден контрагент с указанным в файле кодом
+- «Ошибка в строке № _. В Системе отсутствует контрагент с кодом – (код контрагента из файла)»;
+(3) если в Системе не найден товар с кодом
+- «Ошибка в строке №_. В Системе отсут-ствует товар с кодом – (код товара из файла)»;
+(4) если для указанного в файле договора в Системе найден другой код контрагента
+– «Ошибка в строке №_. Для договора (№ договора из файла) указан некорректный контрагент (код контрагента из файла)»;
+(5) если в указанном в файле договоре не найден товар
+– «Ошибка в строке №. Данный товар не привязан к договору (№ договора из файла)»;
+(6) если в указанном файле цена товара с НДС не указана либо равна нулю
+- «Ошибка в строке №  . Не указана/ Равна нулю цена товара с НДС»;
+(7) если в указанном файле процент отклонения равен нулю
+- «Ошибка в строке №  . Допустимый % отклонения равен нулю».
+*/
+/*define variable v-is-contr   as logical no-undo .*/
+/*define variable v-is-contr0  as logical no-undo .*/
+/*define variable v-is-contr1  as logical no-undo .*/
+/*define variable v-is-contr2  as logical no-undo .*/
+/*define variable v-is-contr3  as logical no-undo .*/
+define variable v-today      as date no-undo .
+define variable v-i-retry    as integer no-undo .
+/*define variable v-prc-max    as decimal no-undo .*/
+define variable v-prc-min    as decimal no-undo .
+define variable v-num-passed as integer no-undo .
+define variable v-num-count  as integer no-undo .
+define variable v-has-errors as logical no-undo .
+define variable v-is-firm    as logical no-undo .
+define variable v-host-code  as integer no-undo .
+define variable v-contract-code as integer no-undo .
+define buffer imp_buf_contract             for ub.contract .
+define buffer imp_buf_contract-specif      for ub.contract-specif .
+define buffer imp_buf_contract-specif-attr for ub.contract-specif-attr .
+/*define buffer imp_buf_clients              for ub.clients .*/
+define buffer imp_buf_goods                for ub.goods .
+
+  assign
+    v-today      = today
+    v-num-passed = 0
+    v-num-count  = 0
+    v-has-errors = false
+  .
+  output stream f-log-imp to value (v-log-file-name) .
+  for each t-imp-price by t-imp-price.line-num :
+/* 18/XII-2018
+  break by t-imp-price.contract-code : - пришлось отказаться от группировки по номеру договора:
+  - в логе ошибка по строке с меньшим номером должна быть выше, чем ошибка по строке с большим номером
+*/
+    v-num-count = v-num-count + 1 .
+   
+    if t-imp-price.price-rubl > 0 then . else do :
+      put stream f-log-imp unformatted
+        /* (6) */ substitute("Ошибка в строке №&1. Не указана/ Равна нулю цена товара с НДС",
+                     t-imp-price.line-num)
+        skip
+      .
+      v-has-errors = true .
+      next .  
+    end .
+    if not can-find (first imp_buf_goods where imp_buf_goods.gds-code = t-imp-price.gds-code) then do :
+      put stream f-log-imp unformatted
+        /* (3) */ substitute("Ошибка в строке №&1. В Системе отсутствует товар с кодом &2",
+                   t-imp-price.line-num, t-imp-price.gds-code)
+        skip
+      .
+      v-has-errors = true .
+      next .  
+    end .
+      
+    find first imp_buf_contract no-lock
+         where imp_buf_contract.host-code     = p-host-code
+           and imp_buf_contract.contract-code = t-imp-price.contract-code no-error .
+    if not available imp_buf_contract then do :
+      put stream f-log-imp unformatted
+        /* (1) */ substitute("Ошибка в строке №&1. В Системе не найдено текущего договора с № &2",
+                   t-imp-price.line-num, t-imp-price.contract-code)
+        skip
+      .
+      v-has-errors = true .
+      next .  
+    end .
+    else do :
+      v-host-code     = imp_buf_contract.host-code .
+      v-contract-code = imp_buf_contract.contract-code .
+    end .
+    
+    /* если бы использовался первичный индекс:
+    find first imp_buf_clients no-lock
+         where imp_buf_clients.obj-type = imp_buf_contract.cli-type
+           and imp_buf_clients.obj-code = imp_buf_contract.cli-code no-error .
+       ... но т.к. тип контрагента в файле импорта отсутствует - используем половинку первичного индекса.
+    */       
+    if not can-find (first clients where clients.obj-code = t-imp-price.firm-code) then do :
+      put stream f-log-imp unformatted
+        /* (2) */ substitute("Ошибка в строке №&1. В Системе отсутствует контрагент с кодом &2",
+                   t-imp-price.line-num, t-imp-price.firm-code)
+        skip
+      .
+      v-has-errors = true .
+      next .  
+    end .
+    
+    if imp_buf_contract.cli-code <> t-imp-price.firm-code then do :
+      put stream f-log-imp unformatted
+        /* (4) */ substitute("Ошибка в строке №&1. Для договора &2 указан некорректный контрагент &3",
+                   t-imp-price.line-num, t-imp-price.contract-code, t-imp-price.firm-code)
+        skip
+      .
+      v-has-errors = true .
+      next .  
+    end .
+    /* есть требование рассматривать только текущие непросроченные договоры,
+       но нет формата ошибки, если договор найден, но он не текущий, либо просроченный:
+       "Проверке подлежат только текущие на момент загрузки договоры,
+        исключая закрытие и договоры с истекшим сроком действия."
+    */
+    if imp_buf_contract.status_ <> {&current-contr} then do :
+      put stream f-log-imp unformatted
+        /* (-) */ substitute("Ошибка в строке №&1. Договор &2 закрыт и не подлежит изменению.",
+                   t-imp-price.line-num, t-imp-price.contract-code)
+        skip
+      .
+      v-has-errors = true .
+      next .  
+    end .
+    if imp_buf_contract.contract-date-end < v-today then do :
+      put stream f-log-imp unformatted
+        /* (-) */ substitute("Ошибка в строке №&1. У договора &2 истёк срок действия &3.",
+                   t-imp-price.line-num, t-imp-price.contract-code, imp_buf_contract.contract-date-end)
+        skip
+      .
+      v-has-errors = true .
+      next .  
+    end .
+    
+    /* после выполнения заголовочных проверок пытаемся обновить запись,
+       и выполняем проверки, связанные с обновляемой строкой спецификации */
+    v-i-retry = 0 .
+do transaction :  
+    repeat :
+      find first imp_buf_contract-specif exclusive-lock
+           where imp_buf_contract-specif.host-code    = v-host-code
+             and imp_buf_contract-specif.contract-num = v-contract-code
+             and imp_buf_contract-specif.gds-code     = t-imp-price.gds-code no-error no-wait .
+      if available imp_buf_contract-specif then do :
+        if (t-imp-price.prc-dn > 0) then do :
+          find first imp_buf_contract-specif-attr exclusive-lock
+               where imp_buf_contract-specif-attr.host-code    = v-host-code
+                 and imp_buf_contract-specif-attr.contract-num = v-contract-code
+                 and imp_buf_contract-specif-attr.gds-code     = t-imp-price.gds-code
+                 and imp_buf_contract-specif-attr.attr-code    = {&contract-specif-prc-min} no-error .
+          if locked imp_buf_contract-specif-attr then do :
+            v-i-retry = v-i-retry + 1 .
+            if v-i-retry > 5 then leave .
+            pause 1 no-message .
+            next .
+          end .
+        end .
+        /* 18/XII-2018 - пока не заказывали
+        if imp_buf_contract-specif.price-rubl > 0 then do :
+            ...
+        end .
+        else do :
+            put stream f-log-imp unformatted
+              /* (-) */ substitute("Ошибка в строке №&1. Товар &2. Значение цены товара с НДС в спецификации договора равно нулю.",
+                         t-imp-price.line-num, t-imp-price.gds-code)
+              skip
+            .
+            v-has-errors = true .
+        end .
+        */
+        if (t-imp-price.prc-up > 0) and (t-imp-price.prc-dn > 0) then . else do :
+          put stream f-log-imp unformatted
+            /* (7) */ substitute("Ошибка в строке №&1. Допустимый % отклонения равен нулю и остается прежним в Системе.",
+                       t-imp-price.line-num)
+            skip
+          .
+          v-has-errors = true .
+          /* отклонение цены не сохраняем, остальные поля сохраняем */
+        end .
+        if imp_buf_contract-specif.price-cli <> t-imp-price.price-rubl then assign
+           imp_buf_contract-specif.price-cli  = t-imp-price.price-rubl
+           imp_buf_contract-specif.sum-cli    = imp_buf_contract-specif.price-cli * imp_buf_contract-specif.qnty 
+        .
+        assign
+          imp_buf_contract-specif.VAT-pc      = t-imp-price.vat-pc
+    when (imp_buf_contract-specif.VAT-pc     <> t-imp-price.vat-pc)
+          imp_buf_contract-specif.prc         = t-imp-price.prc-up
+    when (
+         (t-imp-price.prc-up > 0) and 
+         (imp_buf_contract-specif.prc        <> t-imp-price.prc-up)
+         )
+          v-num-passed = v-num-passed + 1   
+        .
+        if (t-imp-price.prc-dn > 0) and (available imp_buf_contract-specif-attr) then do :
+          v-prc-min = decimal (imp_buf_contract-specif-attr.attr-value) no-error .
+          assign
+            imp_buf_contract-specif-attr.attr-value = string(t-imp-price.prc-dn)
+              when ( v-prc-min <> t-imp-price.prc-dn )
+          .
+        end .
+        leave .
+      end . /* end_of_available_imp_buf_contract-specif */
+      else if locked imp_buf_contract-specif then do :
+        v-i-retry = v-i-retry + 1 .
+        if v-i-retry > 5 then leave .
+        pause 1 no-message .
+        next .
+      end .
+      else do :
+        put stream f-log-imp unformatted
+          /* (5) */ substitute("Ошибка в строке №&1. Товар &2 не привязан к договору &3",
+                     t-imp-price.line-num, t-imp-price.gds-code, t-imp-price.contract-code)
+          skip
+        .
+        v-has-errors = true .
+        leave .
+      end .
+    end . /* end_of_repeat */
+end . /* end_of_transaction */
+    
+  end . /* end_of for_each_timpprice */
+  output stream f-log-imp close .
+  
+/* 5. посмотреть результаты вывода в разном формате
+
+ Формулировки ТЗ "импорта цен поставки для всех договоров в АСУ GAS Complex System":
+
+Для пользователя предлагается вывод отчета на просмотр с последующим сохранением в текстовом формате.
+
+После окончания импорта пользователю в диалоговом окне выводится
+- статус загрузки
+- сообщение о количестве обработанных и загруженных в систему строк из файла импорта.
+
+*/
+
+define variable v-user-action as character no-undo .
+define variable v-printed     as logical no-undo .
+define variable r-var1        as character no-undo initial "прочитайте" . /* действие_с_файлом */
+define variable r-var2        as character no-undo initial "!!!" .        /* важность_действия */
+define variable v-global-panic as character no-undo initial "" .
+if (v-num-passed < v-num-count) or v-has-errors then do :
+    case r-var1 :
+      when "прочитайте" then do :
+    v-global-panic = "При проверке информации произошли ошибки" + r-var2 + {&new-line} +
+            r-var2 + "Внимательно " + r-var1 + " Log-file" + r-var2 .
+      end .
+      when "съешьте" then do :
+    v-global-panic = "При проверке информации произошли ошибки" + r-var2 + {&new-line} +
+            r-var2 + "Аккуратно " + r-var1 + " Log-file" + r-var2 .
+      end .
+      otherwise do :
+        /* ой... */
+      end .
+    end case .
+end .
+    
+message
+ "Статус загрузки - завершена." skip
+ substitute ("Обработанно &1 строк из файла импорта, загруженно в систему &2 строк.",
+             v-num-count, v-num-passed) skip(1)
+ v-global-panic             
+view-as alert-box .
+
+if (v-num-passed < v-num-count) or v-has-errors then do :
+    run gbl/prnfilen.w (
+          input "Ошибки, возникшие при проверке импортируемого файла":U
+        , input 7   /* if DisabledOptions >= 8 then v-landscape = true else v-landscape = false . */
+        , input v-log-file-name
+        , input 7
+        , output v-user-action
+        , output v-printed
+    ).
+end .
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 /* ************************  Function Implementations ***************** */
 
@@ -2629,6 +3105,36 @@ define buffer buf_clients for ub.clients.
   find first buf_clients no-lock where buf_clients.obj-type = {&prs} and buf_clients.obj-code = agnt-code no-error .
   if available buf_clients then assign var-cli-name = STRING (agnt-code) + "   " + TRIM (buf_clients.obj-name) .
 RETURN var-cli-name.   /* Function return value. */
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION func-char-to-dec Dialog-Frame
+FUNCTION func-char-to-dec RETURNS DECIMAL (iCh AS CHARACTER):
+    /* Строка в число; скопировано из bge/clb-xlsigetxml.p */
+    DEFINE VARIABLE vI       AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE vCh      AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vNumeric AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vResult  AS DECIMAL   NO-UNDO.
+    IF LENGTH(iCh) > 0 THEN
+    DO:
+        DO vI = 1 TO LENGTH(iCh):
+            vCh = SUBSTRING(iCh, vI, 1).
+            IF INDEX("-+0123456789,.":U, vCh) > 0 THEN 
+                vNumeric = vNumeric + vCh.
+        END.
+        ASSIGN
+            vNumeric = REPLACE(vNumeric, 
+                                SESSION:NUMERIC-SEPARATOR,
+                                SESSION:NUMERIC-DECIMAL-POINT)
+            vResult  = DECIMAL(vNumeric)
+            NO-ERROR.
+    END.
+    ELSE vResult = 0.
+    
+    RETURN vResult.
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */

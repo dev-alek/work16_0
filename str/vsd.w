@@ -795,7 +795,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE hide-disp-page Dialog-Frame 
 PROCEDURE hide-disp-page :
-find first ub.sys-ctrl.
+
   if v-isManualVcd = true and p-mode = {&update} 
     and vsdsubCurr:Status_ = vsdSts:IsNeedCheck
     and
@@ -806,9 +806,6 @@ find first ub.sys-ctrl.
   else do:
     disable UUID_VSD with frame {&frame-name}.
   end.
-/*  if vsdsubCurr:DBNum <> ub.sys-ctrl.db-num        */
-/*    then disable UUID_VSD with frame {&frame-name}.*/
-  
   if vsdsubCurr:Status_ = vsdSts:isNeedCheck
   then do:
     hide

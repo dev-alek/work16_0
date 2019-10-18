@@ -472,11 +472,19 @@ CLASS ibs.th.ref.journal_vsd_trg:
                                            THEN clients.obj-name
                         ELSE ""                     /*  "Производитель"          "X(20)" */
                         
-                        ttVSD.unit-cli   = goods.unit-cli              /*  "Ед.изм."                "X(6)" */
-                        ttVSD.unit-base  = goods.unit-base              /*  "Ед.изм."                "X(6)" */
+/*                        ttVSD.unit-cli   = goods.unit-cli              /*  "Ед.изм."                "X(6)" */ */
+/*                        ttVSD.unit-base  = goods.unit-base              /*  "Ед.изм."                "X(6)" */*/
                         ttVSD.ojd        = vojd                             /*  "Ожидает гашения"        "X(20)" */
                     
                         .
+                    
+                    if vsdsTHObj:VsdObjCurr:UnitGuid <> "" and vsdsTHObj:VsdObjCurr:UnitGuid <> ?
+                    then do :
+                      for first units-attr no-lock where units-attr.attr-code = "MercGuid"
+                                                     and units-attr.attr-value = vsdsTHObj:VsdObjCurr:UnitGuid :
+                        ttVSD.unit-cli = units-attr.unit-name .
+                      end. 
+                    end.  
                         
                     RUN gbl/trdcat-v.p
                         ( INPUT trn-doc.doc-code

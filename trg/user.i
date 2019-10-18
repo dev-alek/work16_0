@@ -62,6 +62,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
                                         ,{1}.user-account.second-name
                                         )
       .
+      release _user.
     end.
 
 /* $Workfile$ e n d */

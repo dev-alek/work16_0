@@ -577,7 +577,10 @@ define variable v-old as character no-undo .
 define variable v-step as integer   no-undo .
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_chk-doc for ub.chk-doc.
-define variable vCHNumberKKT as character no-undo.
+define variable vCHNumberKKT       as character no-undo.
+define variable vCHFiscalDocSign   as character no-undo . /* Фискальный признак документа. Тег 1077. Строка из 6 символов. */
+define variable vCHFiscalDocNumber as integer no-undo .   /* Номер фискального документа. Тег 1040. Целое число, порядковый номер ФД с момента регистрации (перерегистрации) ККТ. */
+
 do
 on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
 :
@@ -774,11 +777,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           no-error .
         end.
         when "CHNumberKKT":U then do:
-          
-          assign
-          vCHNumberKKT = buf_temp-temp.field-value
-          no-error .
+          vCHNumberKKT = buf_temp-temp.field-value no-error .
         end.
+        when "CHFiscalDocSign":U then do :
+          vCHFiscalDocSign = buf_temp-temp.field-value no-error .
+        end .
+        when "CHFiscalDocNumber":U then do :
+          vCHFiscalDocNumber = integer(buf_temp-temp.field-value) no-error .
+        end .
         /*    todo
         when "CHSEnd":U then do:
         end.
@@ -974,7 +980,24 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-code  = "CHNumberKKT"
            chk-doc-attr.attr-value = vCHNumberKKT
         .
-      end.  
+      end.
+      if vCHFiscalDocSign > "" then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHFiscalDocSign"
+           chk-doc-attr.attr-value = vCHFiscalDocSign
+        .
+      end.
+      if vCHFiscalDocNumber > 0 then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHFiscalDocNumber"
+           chk-doc-attr.attr-value = string(vCHFiscalDocNumber)
+        .
+      end.
+        
       mc-prev-code = ub.chk-doc.doc-code.
     end. /* not(can-find) */
     else
@@ -1151,7 +1174,23 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-code  = "CHNumberKKT"
            chk-doc-attr.attr-value = vCHNumberKKT
         .
-      end. 
+      end.
+      if vCHFiscalDocSign > "" then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHFiscalDocSign"
+           chk-doc-attr.attr-value = vCHFiscalDocSign
+        .
+      end.
+      if vCHFiscalDocNumber > 0 then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHFiscalDocNumber"
+           chk-doc-attr.attr-value = string(vCHFiscalDocNumber)
+        .
+      end.
       if ub.chk-doc.chk-type = integer({&income-corr}) or ub.chk-doc.chk-type = integer({&expense-corr})
       then do :
         assign

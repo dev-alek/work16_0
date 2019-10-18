@@ -43,6 +43,7 @@ define variable vss-description as character no-undo init "Сохранение записи во 
 { gbl/key-rec.i }
 { ref/extclass.i }
 { ref/dc-prop.i }
+{ gbl/getcntxt.i def }
 
 define variable v-mess as character no-undo .
 define variable v-field-list as character no-undo .
@@ -63,9 +64,10 @@ define variable v-guid2_     as character no-undo .
 define buffer buf_ext-classif for ub.ext-classif.
 define buffer buf_ext-system for ub.ext-system.
 define variable choice         as LOGICAL   NO-UNDO .
+define buffer bf_ext-system   for ub.ext-system.
 define buffer buf2_ext-classif for ub.ext-classif.
 define buffer buf2_ext-system for ub.ext-system.
-
+define buffer bf_ext-classif  for ub.ext-classif.
 
 if p-mode <> {&add-def}
 AND p-mode <> {&update} then do:
@@ -165,6 +167,68 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                 run err-mess in this-procedure ( input-output v-mess).
                 undo _main, return error (if p-silent = yes then v-mess else '':U).
               end.
+/*Проверка, есть ли уже объект с такой внешней системой*/              
+    find first buf_ext-classif no-lock where
+              buf_ext-classif.classif-subject = p-classif-subject
+          and buf_ext-classif.classif-name = p-classif-name
+          and buf_ext-classif.db-num = p-db-num
+          and buf_ext-classif.uniq-key-rec  = p-uniq-key-rec
+          and buf_ext-classif.key#_one = p-key#_one
+          and buf_ext-classif.nonunique = p-nonunique
+          and buf_ext-system.esys-type <> integer({&openxml-type-mercury})  no-error.
+    if available buf_ext-classif then do:
+      
+     v-mess = substitute("Вн.система &1 с таким объектом/контрагентом &2 &3 уже существует", buf_ext-system.esys-name, string(ENTRY(2, p-uniq-key-rec, {&delim-key})), string(ENTRY(3, p-uniq-key-rec, {&delim-key}))).
+      run err-mess in this-procedure ( input-output v-mess).
+      undo _main, return error (if p-silent = yes then v-mess else '':U).
+    end.
+
+/*Проверка для внешней системы Меркурий, по GUID*/
+
+    if buf_ext-system.esys-type = integer({&openxml-type-mercury}) then do:
+    for each buf_ext-classif no-lock where
+              buf_ext-system.esys-type = integer({&openxml-type-mercury})
+          and buf_ext-classif.classif-subject = p-classif-subject
+          and buf_ext-classif.classif-name = p-classif-name
+          and buf_ext-classif.db-num = p-db-num
+          and buf_ext-classif.key#_one = p-key#_one
+          and buf_ext-classif.key#_two = p-key#_two
+          and buf_ext-classif.nonunique = p-nonunique  :
+    
+      v-guid1 = entry(1,buf_ext-classif.charkey_two,{&delim-cmd}) .
+      v-guid2 = entry(2,buf_ext-classif.charkey_two,{&delim-cmd}) .
+      
+      v-guid1_ = entry(1,p-charkey_two,{&delim-cmd}) . 
+      v-guid2_ = entry(2,p-charkey_two,{&delim-cmd}) .
+
+      if entry(2,p-uniq-key-rec,{&delim-key}) = {&cmp} then do:
+        find first bf_ext-classif no-lock where
+              bf_ext-classif.classif-subject = p-classif-subject
+          and bf_ext-classif.classif-name = p-classif-name
+          and bf_ext-classif.db-num = p-db-num
+          and bf_ext-classif.uniq-key-rec  = p-uniq-key-rec
+          and bf_ext-classif.key#_one = p-key#_one
+          and bf_ext-classif.nonunique = p-nonunique
+          and buf_ext-system.esys-type = integer({&openxml-type-mercury})  no-error.
+        if available (bf_ext-classif) then do:
+          if bf_ext-classif.CharKey_Two <> "" and entry(2,bf_ext-classif.charkey_two,{&delim-cmd}) = "" then do:
+            v-mess = substitute("Уже есть запись c GUID хоз Субъекта для этой фирмы").
+            run err-mess in this-procedure ( input-output v-mess).
+            undo _main, return error (if p-silent = yes then v-mess else '':U).
+          end.  
+        end.    
+      end.  
+      if v-guid1 <> "" and v-guid1 = v-guid1_ and v-guid2 = v-guid2_ and v-guid2 <> "" 
+      then do:
+/*      if (v-guid1 <> "" and v-guid1 = v-guid1_ ) or (v-guid2 <> "" and v-guid2 = v-guid2_)  then do:*/
+/*        v-mess = substitute("Уже запись c таким GUID-ом").*/
+        v-mess = substitute("Уже есть запись c GUID хоз Субъекта: &1 и GUID площадки: &2", v-guid1, v-guid2).
+        run err-mess in this-procedure ( input-output v-mess).
+        undo _main, return error (if p-silent = yes then v-mess else '':U).
+      end.
+    end.
+    end.
+
           end.
                 
           if not available buf_ext-system then do:
@@ -545,51 +609,6 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     end.
   end case. /*case p-classif-subject:*/
   if p-mode = {&add-def} then do:
-    find first buf_ext-classif no-lock where
-              buf_ext-classif.classif-subject = p-classif-subject
-          and buf_ext-classif.classif-name = p-classif-name
-          and buf_ext-classif.db-num = p-db-num
-          and buf_ext-classif.key#_one = p-key#_one
-          and buf_ext-classif.key#_two = p-key#_two
-          and buf_ext-classif.key#_three = p-key#_three
-          and buf_ext-classif.charkey_one = p-charkey_one
-          and buf_ext-classif.charkey_two = p-charkey_two
-          and buf_ext-classif.charkey_three = p-charkey_three
-          and buf_ext-classif.nonunique = p-nonunique  no-error.
-    if available buf_ext-classif then do:
-      v-mess = substitute("Уже есть такая запись").
-      run err-mess in this-procedure ( input-output v-mess).
-      undo _main, return error (if p-silent = yes then v-mess else '':U).
-    end.
-
-    for each buf_ext-classif no-lock where
-              buf_ext-classif.classif-subject = p-classif-subject
-          and buf_ext-classif.classif-name = p-classif-name
-          and buf_ext-classif.db-num = p-db-num
-          and buf_ext-classif.key#_one = p-key#_one
-          and buf_ext-classif.key#_two = p-key#_two
-          and buf_ext-classif.nonunique = p-nonunique  :
-    
-      v-guid1 = entry(1,buf_ext-classif.charkey_two,{&delim-cmd}) .
-      v-guid2 = entry(2,buf_ext-classif.charkey_two,{&delim-cmd}) .
-      
-      v-guid1_ = entry(1,p-charkey_two,{&delim-cmd}) . 
-      v-guid2_ = entry(2,p-charkey_two,{&delim-cmd}) .
-  
-      if (v-guid1 <> "" and v-guid1 = v-guid1_ ) or (v-guid2 <> "" and v-guid2 = v-guid2_)  then do:
-      message
-        "Уже есть запись с таким GUID-ом, продолжить?"
-        view-as alert-box QUestion buttons yes-no update choice.
-      if not choice then 
-      do:
-        RETURN NO-APPLY .
-      end.
-/*        v-mess = substitute("Уже запись c таким GUID-ом").                 */
-/*/*        run err-mess in this-procedure ( input-output v-mess).*/         */
-/*        undo _main, return error (if p-silent = yes then v-mess else '':U).*/
-      end.
-    end.
-    
     create buf_ext-classif.
     assign
     buf_ext-classif.classif-subject = p-classif-subject
@@ -601,7 +620,12 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
     buf_ext-classif.charkey_one = p-charkey_one
     buf_ext-classif.charkey_two = p-charkey_two
     buf_ext-classif.charkey_three = p-charkey_three
-    buf_ext-classif.nonunique = p-nonunique.
+    buf_ext-classif.nonunique = p-nonunique no-error.
+    if error-status:error then do:
+      message "Ошибка добавления записи в справочник!" view-as alert-box .
+      buf_ext-classif.db-num = p-db-num .
+      return no-apply .
+    end.  
   end. /*if p-mode = {&add-def} then do:*/
   if p-mode = {&update} then do:
     find first buf_ext-classif exclusive-lock where

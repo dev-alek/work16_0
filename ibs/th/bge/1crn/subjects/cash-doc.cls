@@ -78,8 +78,8 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       end.
       else 
       do:
-        Msg = "Ќет финансового документа с номером" + fin-doc .
-        return error.
+        Msg = "Ќет финансового документа с номером " + fin-doc .
+        return error Msg.
       end.
     
     end.    

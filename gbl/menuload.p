@@ -311,6 +311,17 @@ define variable vss-description as character no-undo init "Информация об объекте
 "yes"
 }
 
+{gbl/menuload.i
+{&bef-menuload_adm_function}
+"'Изменение статуса сверки'"
+"'utl/cor-rvs_status.w'"
+" "
+" "
+" "
+" "
+"yes"
+}
+
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Единицы измерения по списку товаров'"

@@ -498,8 +498,14 @@ class ibs.th.str.InfoSectionsTotal:
     .
     do ii = 1 to SectionNum :
       GetInfoSectionProp (ii).
+      if not CliQntyInput
+      then do:
+        InfoSectionCurr:CliQnty = InfoSectionCurr:DocDensity * InfoSectionCurr:DocQnty.
+      end.
+      else do:
+        InfoSectionCurr:DocDensity = InfoSectionCurr:DocQnty / InfoSectionCurr:CliQnty.
+      end.
       assign
-        InfoSectionCurr:CliQnty = InfoSectionCurr:DocDensity * InfoSectionCurr:DocQnty
         CarVolTotal = InfoSectionCurr:CarVol + CarVolTotal
         TankVolTotal = InfoSectionCurr:TankVol + TankVolTotal
         TankWaterVolTotal = InfoSectionCurr:TankWater + TankWaterVolTotal
@@ -1450,7 +1456,7 @@ class ibs.th.str.InfoSectionsTotal:
             .
             v-mm:Exec() .
             output stream outstream to value ("pomi.log") append.
-            put stream outstream
+            put stream outstream unformatted
               {&new-line}
               "-----------------------------------------------"
               {&new-line}

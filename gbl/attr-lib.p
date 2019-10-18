@@ -8336,32 +8336,40 @@ true~
 &scop output-display-cda-AUTOTANK_operative true
 &scop user-can-edit-list-cda-AUTOTANK_operative '~
 true~
+,false~
 ,false'
 &scop output-display-list-cda-AUTOTANK_operative '~
 true~
+,true~
 ,true'
 &scop other-cda-AUTOTANK_operative 'spr=cd-attr-last-check-params,'
-&scop prop-type-list-cda-AUTOTANK_operative 'character,character'
-&scop prop-format-list-cda-AUTOTANK_operative 'X(19)|X(255)'
+&scop prop-type-list-cda-AUTOTANK_operative 'character,character,integer'
+&scop prop-format-list-cda-AUTOTANK_operative 'X(19)|X(255)|9'
 &scop prop-label-list-cda-AUTOTANK_operative '~
 Параметры последнего принятого чека/док-та~
-,Версия кассовой программы'
-&scop manual-edit-cda-AUTOTANK_operative  '1,0'
-&scop batch-edit-cda-AUTOTANK_operative  '0,0'
+,Версия кассовой программы~
+,Признак исполнения кассы'
+&scop manual-edit-cda-AUTOTANK_operative  '1,0,0'
+&scop batch-edit-cda-AUTOTANK_operative  '0,0,0'
 &scop news-cda-AUTOTANK_operative '~
 false~
+,true~
 ,true'
 &scop from-gbd-cda-AUTOTANK_operative '~
 false~
+,false~
 ,false'
 &scop from-ubd-cda-AUTOTANK_operative '~
 true~
-,false'
+,true~
+,true'
 &scop hist-cda-AUTOTANK_operative '~
 false~
+,true~
 ,true'
 &scop send-param-cda-AUTOTANK_operative  '~
 false~
+,false~
 ,false'
 /**/
 

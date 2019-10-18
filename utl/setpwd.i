@@ -5,6 +5,25 @@
 &glob xpaswordcur "{&paswordold}":U
 &glob paswordcur if pasold() eq 1 then "sysadm":U else if pasold() eq 2 then "{&paswordold}":U else "{&paswordnew}":U
 
+&glob xmylogin daru
+
+&glob defaultPas *
+
+/*
+$Revision:$
+$Author:$
+$Date:$
+$Workfile:$
+$Archive:$
+
+Автор: Рубан Дмитрий Андреевич 
+Дата создания: 29 апр. 2019 г.
+Author:  Ruban Dmitriy Andreevich
+Creation date: 29 апр. 2019 г.
+
+*/
+
+
 &if "{1}" = "class" &then
 method private integer pasold ():
 &else

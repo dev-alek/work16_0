@@ -38,6 +38,7 @@ define variable vss-description as character no-undo init "Smart browser общения
 { cmp/vssrevis.i  }
 { cmp/trg-def.i   }
 { cmp/showinf.i }
+{ gbl/getcntxt.i def }
 { str/ptrlv.i def }
 { str/pumpnzdv.i  }
 { str/chkcsptr.i  }
@@ -47,7 +48,14 @@ define variable vss-description as character no-undo init "Smart browser общения
 define variable is-ef-chr as character no-undo .
 define variable var-type as character no-undo .
 define variable is-ef as logical no-undo .
-
+define variable gds-rec             AS recid     no-undo.
+define variable v-chk-act-host-code as integer   no-undo .
+define variable glog                as logical   no-undo .
+define variable v-userid            as character no-undo .
+define variable v-db-num            as integer   no-undo .
+define variable v-host-code         as integer   no-undo .
+define variable v-obj-type          as character no-undo .
+define variable v-obj-code          as integer   no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -293,6 +301,22 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.pump-nozzle WHERE ub.pump-nozzle.obj-type = 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add B-table-Win
 ON CHOOSE OF b-add IN FRAME F-Main /* Добавить */
 DO:
+{ gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.
   { str/ptrlv.i "cadd" "pumpnz" "{&browse-name}" }
   if available ub.pump-nozzle then do:
      assign
@@ -314,6 +338,22 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del B-table-Win
 ON CHOOSE OF b-del IN FRAME F-Main /* Удалить */
 DO:
+  { gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.  
 if available ub.pump-nozzle then do:
    assign varmes-log = no.
    message "Вы хотите удалить запись <<ТРК-пистолет>> с номером ТРК " ub.pump-nozzle.pump-code
@@ -454,6 +494,27 @@ END.
 ON VALUE-CHANGED OF varis-meas IN FRAME F-Main /* Измеряется */
 DO:
   define buffer bf_pumpnz for ub.pump-nozzle.
+  { gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then do:
+    assign 
+      varis-meas = ub.pump-nozzle.is-meas.
+    display varis-meas with frame {&frame-name}.
+    return no-apply.  
+  end.
   if available ub.pump-nozzle then do:
      if ub.pump-nozzle.is-meas <> input frame {&frame-name} varis-meas then do:
         assign varmes-log = yes.
@@ -619,7 +680,14 @@ PROCEDURE local-initialize :
     HIDE
     varef-nid IN frame {&FRAME-NAME}.
   END.
-
+  { gbl/getcntxt.i get }
+      assign
+        v-db-num    = v-cntxt-db-num 
+        v-host-code = v-cntxt-host-code-obj
+        v-obj-code  = v-cntxt-obj-code
+        v-obj-type  = v-cntxt-obj-type
+        v-userid    = v-cntxt-userid
+        .  
   if available ub.pump-nozzle then do:
      assign
        varis-meas = ub.pump-nozzle.is-meas

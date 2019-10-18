@@ -72,12 +72,11 @@ define variable vss-description as character no-undo init "Список пользователей 
 { gbl/getcntxt.i def }
 { gbl/sys-time.i }
 { cmp/showinf.i  }
-{ gbl/usr-flt.i }
+{ gbl/usr-flt.i  }
 { gbl/prn-lib.i }
-
-&scoped-define current-position-rowid "users-rowid":U
-&scoped-define current-position-focus "users-focus":U
-&scoped-define current-position-db "users-db":U
+&scoped-define current-position-rowid  "users-rowid":U
+&scoped-define current-position-focus  "users-focus":U
+&scoped-define current-position-db     "users-db":U
 &scoped-define current-position-status "users-status":U
 
 define variable v-users-name-filter     as character    no-undo.
@@ -3779,9 +3778,10 @@ define input parameter p-user-id        as character        no-undo.
 
 define variable v-can-edit     as logical   no-undo .
 define variable v-encoded-pass as character no-undo .
+DEFINE VARIABLE v-nextcon         AS logical   NO-UNDO .
 
 define buffer buf_lock_user-login for user-login.
-
+define buffer user-login-attr for ub.user-login-attr .
 do
 for buf_lock_user-login
 on error   undo, return error return-value
@@ -3831,7 +3831,9 @@ on end-key undo, return error return-value
                                 )
                          , input  yes
                          , input  buf_lock_user-login.user-password-encoded
+                         , no
                          , output v-encoded-pass
+                         , output v-nextcon
                          ) no-error .
       if error-status :error
       then do:
@@ -3853,6 +3855,24 @@ on end-key undo, return error return-value
          assign
             buf_lock_user-login.user-password-encoded = v-encoded-pass
          .
+         if v-nextcon ne ?
+        then do:
+            find first user-login-attr where user-login-attr.db-num    = buf_lock_user-login.db-num
+                                         and user-login-attr.user-id   = buf_lock_user-login.user-id
+                                         and user-login-attr.attr-code = "ChangPwdNextConect"
+                 exclusive-lock no-error.
+            if not available user-login-attr
+            then do:
+                create user-login-attr.
+                assign
+                    user-login-attr.db-num    = buf_lock_user-login.db-num
+                    user-login-attr.user-id   = buf_lock_user-login.user-id
+                    user-login-attr.attr-code = "ChangPwdNextConect"
+                 .
+            end.
+            user-login-attr.attr-value = string(v-nextcon ).
+        end.
+         release user-login-attr. 
          release buf_lock_user-login .
 
          message
@@ -4017,9 +4037,11 @@ define output parameter p-created   as logical          no-undo.
     define variable v-max-discnt            as decimal      no-undo .
     define variable v-quest-print           as logical      no-undo .
     define variable v-encoded-pass          as character    no-undo .
+    DEFINE VARIABLE v-nextcon         AS logical   NO-UNDO .
 
     define buffer buf_user-login        for user-login.
     define buffer buf_user-account      for user-account.
+    define buffer user-login-attr for ub.user-login-attr .
 do
 for buf_user-login
   , buf_user-account
@@ -4059,7 +4081,9 @@ on error undo, return error
                         )
                 , input yes
                 , input ""
+                , no
                 , output v-encoded-pass
+                , output v-nextcon
             ) no-error .
             if error-status :error
             then do:
@@ -4101,6 +4125,23 @@ on error undo, return error
                 buf_user-login.status_            = {&bef-user-status-normal}
                 buf_user-login.user-password-encoded = v-encoded-pass
             .
+            if v-nextcon ne ?
+            then do:
+                find first user-login-attr where user-login-attr.db-num    = buf_user-login.db-num
+                                             and user-login-attr.user-id   = buf_user-login.user-id
+                                             and user-login-attr.attr-code = "ChangPwdNextConect"
+                     exclusive-lock no-error.
+                if not available user-login-attr
+                then do:
+                    create user-login-attr.
+                    assign
+                        user-login-attr.db-num    = buf_user-login.db-num
+                        user-login-attr.user-id   = buf_user-login.user-id
+                        user-login-attr.attr-code = "ChangPwdNextConect"
+                     .
+                end.
+                user-login-attr.attr-value = string(v-nextcon ).
+            end.
         end.
     end.
 end.
@@ -4475,8 +4516,8 @@ PROCEDURE procedure-user-login-user-host :
 define input parameter p-db-num         as integer          no-undo.
 define input parameter p-user-id        as character        no-undo.
 
-    define variable v-current-host-code    as integer      no-undo.
-    define variable v-user-select      as logical   no-undo .
+  define variable v-current-host-code    as integer      no-undo.
+  define variable v-user-select      as logical   no-undo .
   /* Для совместимости - список выбранных host-code  */
   DEFINE VARIABLE v-List-select-host-code AS CHARACTER NO-UNDO INITIAL "".
 

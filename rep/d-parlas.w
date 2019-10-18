@@ -1583,6 +1583,23 @@ PROCEDURE save-data :
           .
         end.
       end.
+      define variable conf-par as character no-undo.
+      define variable mode-erprn as logical no-undo.
+      define variable par-type as character no-undo.
+        { gbl/conf-rd.i
+        "'is-erpRN'"
+        0
+        "''"
+        0
+        "''"
+        "''"
+        "''"
+        NO
+        conf-par
+        par-type
+        no-error
+        }
+        IF not error-status:error and conf-par = "yes":U then v-send-news = false.
 
       /* отправляем команду об изменении */
       if v-send-news = true

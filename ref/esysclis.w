@@ -902,7 +902,7 @@ run ref/extclas1.p ( INPUT {&add-def}
                     ,input 0 /*p-nonunique */
                     ,input v-uniq-key-rec ) no-error.
 if error-status:error then do:
-  message error-status:get-message(1) view-as alert-box .
+ /* message error-status:get-message(1) view-as alert-box .*/
   undo, return error .
 end.
 if v-rid <> ? then do:

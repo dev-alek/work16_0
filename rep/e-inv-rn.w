@@ -50,6 +50,8 @@ define variable parParentProc as widget-handle no-undo .
 assign parParentProc = my-handle .
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
+{ trg/factord.i  }
+{ gbl/clntattr.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -468,6 +470,86 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-report s-object 
 PROCEDURE my-report :
+
+/*Расчет архив*/
+      define variable v-db-num as integer   no-undo .
+      define buffer buf_db  for ub.db .
+      define buffer buf_clients for ub.clients .
+      define variable v-recalc-date as date no-undo .
+      
+      { gbl/curdbnum.i
+        v-db-num
+      }
+
+      for each buf_db no-lock
+        where v-db-num = 0
+           or (v-db-num <> 0
+               and buf_db.db-num = v-db-num
+              )
+      on error undo, return error
+      :
+        for each buf_clients no-lock
+          where buf_clients.db-num = buf_db.db-num
+        on error undo, return error
+        :
+          /* проверка СМЕННЫЙ объект должен иметь открытую смену (или закрытую после даты) */
+          define buffer lock_shift-obj for ub.shift-obj .
+          run factord-lock-shift in this-procedure
+            (input  buf_clients.obj-type
+            ,input  buf_clients.obj-code
+            ,input  0
+            ,buffer lock_shift-obj
+            ) no-error .
+          if error-status :error  then do:
+            next.
+          end.
+
+          define variable v-attr-arh-del-chr  as character no-undo .
+          define variable v-attr-arh-del-type as character no-undo .
+          define variable v-attr-arh-del      as logical   no-undo .
+
+          run clntattr-value in this-procedure
+            (input  buf_clients.obj-type
+            ,input  buf_clients.obj-code
+            ,input  {&attr-arh-del}
+            ,output v-attr-arh-del-chr
+            ,output v-attr-arh-del-type
+            ).
+          assign
+            v-attr-arh-del = lookup(v-attr-arh-del-chr, 'yes,true':u) > 0
+          .
+
+          if  v-attr-arh-del <> true
+          and buf_clients.stts = 0
+          then do:
+            run trg/calcarh.p
+              (input buf_clients.obj-type /* p-obj-type       */
+              ,input buf_clients.obj-code /* p-obj-code       */
+              ,input ?                 /* p-check-doc     Если дата пересчета не задана, то надо будет ее найти */
+              ,input false                /* p-message-on     */
+              ,input inv-date-end        /* p-last-fact-date */
+              ,input true                 /* p-check-act         */
+              ,input v-cntxt-db-num       /* p-check-act-db-num  */
+              ,input v-cntxt-userid       /* p-check-act-user-id */
+              ) no-error .
+            if error-status :error
+            then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при расчете складского архива по товарам" skip
+                "Объект" buf_clients.obj-type buf_clients.obj-code skip
+                "Информацию о рассчитанных объектах можно посмотреть в файле"
+                "objarh.log" skip
+                "или в АРМ Администратор" skip
+                "Утилиты/Работа с архивами/Информация о складских архивах" skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+              undo, return error .
+            end.
+          end.
+        end.
+      end.
 run rep/r-inv-RN.p (input my-handle, input tog-only-itog, input inv-date-start, input inv-date-end, input inv-shift-start, input inv-shift-end) .
 
 END PROCEDURE.

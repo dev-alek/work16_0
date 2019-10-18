@@ -216,6 +216,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("sum-izl", string-mth (round (fncextra-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-ned", string-mth (round (fncmiss-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-b-s", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-a-s", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
       sw:end-element ("gd").
     end.
     sw:end-element ("gds").
@@ -228,6 +230,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
     define variable dAddQnty          as decimal   no-undo .
     define variable v-sum-b           as decimal   no-undo .
     define variable v-sum-a           as decimal   no-undo .
+    define variable v-sum-b-s         as decimal   no-undo .
+    define variable v-sum-a-s         as decimal   no-undo .
     define variable v-sum-df          as decimal   no-undo .
 
 
@@ -259,11 +263,13 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
             dAddQnty  = bf_rvs-line.state-add-qnty.
     
         assign
-          v-sum-b = fncbefore-rubl( buffer buf_doc-line, buffer buf_gds) / (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty) * buf_doc-pl.rest-bf-qnty
-          v-sum-a = fncafter-rubl( buffer buf_doc-line, buffer buf_gds) / buf_doc-line.doc-qnty * buf_doc-pl.rest-af-qnty
+          v-sum-b-s = fncbefore-rubl( buffer buf_doc-line, buffer buf_gds)
+          v-sum-a-s = fncafter-rubl( buffer buf_doc-line, buffer buf_gds)
+          v-sum-b = v-sum-b-s / (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty) * buf_doc-pl.rest-bf-qnty
+          v-sum-a = v-sum-a-s / buf_doc-line.doc-qnty * buf_doc-pl.rest-af-qnty
           v-sum-df = v-sum-a - v-sum-b
         .
-    
+
         find first buf_units where buf_units.unit-name = buf_gds.unit-base.
         sw:start-element ("gd").
           write-data-element ("tank-num", string-mth (buf_doc-pl.pl-code)).
@@ -558,6 +564,45 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
     end.
   end.
 
+  method private decimal fncbefore-sale-rubl ( buffer local-doc-line for ub.doc-line ,
+                                          buffer local-goods for ub.goods) :
+    define variable varreturn as decimal no-undo.
+  
+    define buffer bf_doc-line-sum for ub.doc-line-sum.
+  
+    if varinvclcbef = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-before-doc}.
+      assign
+        varreturn = bf_doc-line-sum.sale-sum-rubl
+      .
+    end.
+    else do:
+      assign
+        varreturn = 0.00
+      .
+    end.
+    return varreturn.
+  end.
+
+  method private decimal fncafter-sale-rubl ( buffer local-doc-line for ub.doc-line,
+                                         buffer local-goods for ub.goods ) :
+    define buffer bf_doc-line-sum for ub.doc-line-sum.
+  
+    if varinvclcas = yes then do:
+      find first bf_doc-line-sum no-lock where
+                 bf_doc-line-sum.doc-code = local-doc-line.doc-code and
+                 bf_doc-line-sum.gds-code = local-goods.gds-code and
+                 bf_doc-line-sum.sum-type = {&sum-after-doc}.
+      return bf_doc-line-sum.sale-sum-rubl.
+    end.
+    else do:
+      return 0.00.
+    end.
+  end.
+
   method private decimal fncbefore-rubl ( buffer local-doc-line for ub.doc-line ,
                                           buffer local-goods for ub.goods) :
     define variable varreturn as decimal no-undo.
@@ -570,7 +615,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
                  bf_doc-line-sum.gds-code = local-goods.gds-code and
                  bf_doc-line-sum.sum-type = {&sum-before-doc}.
       assign
-        varreturn = bf_doc-line-sum.cost-sum-rubl
+        varreturn = bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl
       .
     end.
     else do:
@@ -590,7 +635,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
                  bf_doc-line-sum.doc-code = local-doc-line.doc-code and
                  bf_doc-line-sum.gds-code = local-goods.gds-code and
                  bf_doc-line-sum.sum-type = {&sum-after-doc}.
-      return bf_doc-line-sum.cost-sum-rubl.
+      return bf_doc-line-sum.cost-sum-rubl - bf_doc-line-sum.cost-VAT-rubl.
     end.
     else do:
       return 0.00.
@@ -607,7 +652,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
                  bf_doc-line-sum.gds-code = local-goods.gds-code and
                  bf_doc-line-sum.sum-type = {&sum-general-doc}.
       if bf_doc-line-sum.cost-sum-rubl > 0 then do:
-        return bf_doc-line-sum.cost-sum-rubl.
+        return bf_doc-line-sum.sale-sum-rubl.
       end.
       else do:
         return 0.00.
@@ -629,7 +674,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
                  bf_doc-line-sum.gds-code = local-goods.gds-code and
                  bf_doc-line-sum.sum-type = {&sum-general-doc}.
       if bf_doc-line-sum.cost-sum-rubl < 0 then do:
-        return - bf_doc-line-sum.cost-sum-rubl.
+        return - bf_doc-line-sum.sale-sum-rubl.
       end.
       else do:
         return 0.00.

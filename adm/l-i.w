@@ -466,7 +466,12 @@ then
 DO2:
 do
 :
-  run utl/chgpsw.p . 
+  run utl/chgpsw.p no-error.
+  if error-status:error
+  then do:
+     disconnect ub no-error . 
+     quit.
+  end.
   run adm/unloaddb.w
     (input  name
     ,input  password

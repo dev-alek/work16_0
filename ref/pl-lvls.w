@@ -39,6 +39,7 @@ define variable vss-description as character no-undo init "Градуировочная таблиц
 { cmp/library.i  }
 { cmp/showinf.i  }
 { gbl/waitfram.i }
+{ gbl/getcntxt.i def }
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc   as widget-handle  no-undo .
 define input parameter p-obj-type      as character      no-undo .
@@ -48,6 +49,8 @@ define input parameter p-pl-code       as integer        no-undo .
 define buffer buf_pl-level for ub.pl-level .
 define buffer buf_place    for ub.place .
 define VARIABLE v-ok-level as logical no-undo INIT no .
+define variable v-chk-act-host-code as integer   no-undo .
+define variable glog                as logical   no-undo .
 /* Local Variable Definitions ---                                       */
 
 /* _UIB-CODE-BLOCK-END */
@@ -234,6 +237,24 @@ ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
     DO:
         define variable v-level as integer no-undo.
         define variable v-ok    as logical no-undo.
+        
+        { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_place-reference_work':U
+        {&cntxt-object}
+        v-chk-act-host-code
+        p-obj-type
+        p-obj-code
+        0
+        0
+        0
+        true
+        glog
+        }
+        if NOT glog then return no-apply.
+        
         assign
             v-level = ?
             .
@@ -271,6 +292,23 @@ ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
     DO:
         define variable v-level as integer no-undo.
         define variable v-ok    as logical no-undo.
+        { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_place-reference_work':U
+        {&cntxt-object}
+        v-chk-act-host-code
+        p-obj-type
+        p-obj-code
+        0
+        0
+        0
+        true
+        glog
+        }
+        if NOT glog then return no-apply.
+        
         if available buf_pl-level then 
         do:
             assign
@@ -309,6 +347,23 @@ ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
     DO:
+        { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_place-reference_work':U
+        {&cntxt-object}
+        v-chk-act-host-code
+        p-obj-type
+        p-obj-code
+        0
+        0
+        0
+        true
+        glog
+        }
+        if NOT glog then return no-apply.
+      
         if available buf_pl-level then 
         do:
             run del-pl-level in this-procedure no-error.
@@ -337,6 +392,22 @@ ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-delete Dialog-Frame
 ON CHOOSE OF b-delete IN FRAME Dialog-Frame /* Очистить */
     DO:
+        { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_place-reference_work':U
+        {&cntxt-object}
+        v-chk-act-host-code
+        p-obj-type
+        p-obj-code
+        0
+        0
+        0
+        true
+        glog
+        }
+        if NOT glog then return no-apply.
    
         define variable v-delete as logical no-undo.
         if available buf_pl-level then 
@@ -466,6 +537,22 @@ ON CHOOSE OF b-load IN FRAME Dialog-Frame /* Загрузить */
         define variable v-file-name as character no-undo.
         define variable v-dir-name  as character no-undo.
         define variable v-ok        as logical   no-undo.
+        { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_place-reference_work':U
+        {&cntxt-object}
+        v-chk-act-host-code
+        p-obj-type
+        p-obj-code
+        0
+        0
+        0
+        true
+        glog
+        }
+        if NOT glog then return no-apply.
 
         run gbl/d-file.p  ( input-output v-file-name
             , input-output v-dir-name
@@ -528,7 +615,7 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-
+{ gbl/getcntxt.i get }
     find first buf_place
         where buf_place.obj-type = p-obj-type
         and buf_place.obj-code = p-obj-code

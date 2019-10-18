@@ -45,13 +45,20 @@ def var vss-description as character no-undo init "Smart browser общения с ТРК".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 { cmp/showinf.i }
+{ gbl/getcntxt.i def }
 { str/ptrlv.i def }
 { str/pumpdv.i   }
 { str/chkcsptr.i }
 /* Parameters Definitions ---                                           */
 
 /* Local Variable Definitions ---                                       */
-
+      define variable v-chk-act-host-code as integer   no-undo .
+      define variable glog                as logical   no-undo .
+      define variable v-userid            as character no-undo .
+      define variable v-db-num            as integer   no-undo .
+      define variable v-host-code         as integer   no-undo .
+      define variable v-obj-type          as character no-undo .
+      define variable v-obj-code          as integer   no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -280,6 +287,22 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.pump WHERE ub.pump.obj-type = varobj-type an
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add B-table-Win
 ON CHOOSE OF b-add IN FRAME F-Main /* Добавить */
 DO:
+{ gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.
   { str/ptrlv.i "cadd" "pump" "{&browse-name}"}
 END.
 
@@ -291,6 +314,22 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del B-table-Win
 ON CHOOSE OF b-del IN FRAME F-Main /* Удалить */
 DO:
+{ gbl/chk-actg.i
+  v-db-num
+  v-userid
+  {&action-head-code-main}
+  'actn_pump-reference_work':U
+  {&cntxt-object}
+  v-host-code
+  v-obj-type
+  v-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+  if NOT glog then return no-apply.
 if available ub.pump then do:
    assign varmes-log = no.
    message "Вы хотите удалить запись <<ТРК>> с номером " ub.pump.pump-code " ?" skip
@@ -487,6 +526,14 @@ PROCEDURE local-initialize :
   /* Dispatch standard ADM method.                             */
   { str/ptrlv.i "rc" "{&frame-name}"}
   RUN dispatch IN THIS-PROCEDURE ( INPUT 'initialize':U ) .
+    { gbl/getcntxt.i get }
+      assign
+        v-db-num    = v-cntxt-db-num 
+        v-host-code = v-cntxt-host-code-obj
+        v-obj-code  = v-cntxt-obj-code
+        v-obj-type  = v-cntxt-obj-type
+        v-userid    = v-cntxt-userid
+        .  
   RUN state-recid-pump.
 
   /* Code placed here will execute AFTER standard behavior.    */

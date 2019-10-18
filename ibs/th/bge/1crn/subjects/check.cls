@@ -234,6 +234,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_cash-desk-attr for ub.cash-desk-attr .
     define buffer buf_clients      for ub.clients .
     define buffer buf_cash-desk    for ub.cash-desk .
+    define buffer buf_doc-line     for ub.doc-line .
+    define buffer buf_parts        for ub.parts .
     define variable v-is-petrolium as logical no-undo . /* true = топливо */
     define variable v-price-azs    as decimal no-undo .
     define variable v-is-pieces    as logical no-undo .
@@ -256,9 +258,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     insw:write-data-element (  "cb-num":U,          string(p-buf_chk-doc.pay-desk)    ). /* Номер кассы (Число) */
     insw:write-data-element (  "chk-id":U,                 p-buf_chk-doc.doc-code     ). /* Номер чека в GC (Строка) */
     
-    /* 29/III-2019  признак какая это касса: ТСО, обычная касса или мобильная
-       18/IV-2019   1С опять не готов принять наши типы касс в чеках
-                    Потом как Техносерв будет готов мы опять включим тэг.
+    /* 29/III-2019  признак какая это касса: ТСО, обычная касса или мобильная*/
     define variable v-c-type as integer no-undo .
     v-c-type = 0 .
     find first buf_clients no-lock
@@ -284,7 +284,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       end .
     end .
     insw:write-data-element (  "c-type":U,  string(v-c-type)  ). /* признак какая это касса */
-    */
+    
     
     
     /* обязательность 0-1 для del-l, ext-num, direct-chk-num */
@@ -363,6 +363,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
         leave .
       end .
     end .
+
+    /* 25/IV-2019 ФПД необходимо выгрузить в чеках в обмене с 1C ERP. Обязательность 0-1 */
+    find first buf_chk-doc-attr no-lock
+         where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
+           and buf_chk-doc-attr.attr-code eq "CHFiscalDocSign" no-error .
+    if available buf_chk-doc-attr then
+      insw:write-data-element (  "fpd":U,  buf_chk-doc-attr.attr-value     ). /* Фискальный признак документа (Строка) */
 
 
     /* section1 обязательность 1-1 */
@@ -452,6 +459,23 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           else  left-trim( string(buf_chk-gds.sum-base, "->>>>>>>>9.99") )
         ) . /* Сумма (Число 15,2) */
         
+        if available buf_goods
+        then do :
+          find first buf_parts no-lock where buf_parts.out-code   = p-buf_chk-doc.out-code
+                                         and buf_parts.artic      = buf_goods.artic
+                                         and buf_parts.prod-code  = buf_goods.prod-code
+                                         and buf_parts.prod-type  = buf_goods.prod-type
+                                         no-error .
+          if available buf_parts
+          then do :
+            insw:write-data-element (  "sum-s",
+              left-trim( string(buf_chk-gds.doc-qnty * buf_parts.price-rubl / (1 + (buf_parts.VAT-pc / 100)), "->>>>>>>>9.99") )
+            ) . 
+          end.
+          else do :
+            insw:write-data-element (  "sum-s", "0" ) .
+          end.
+        end. /* Себестоимость (Число 15,2) */
         
         /* далее обязательность 0-1 */
 

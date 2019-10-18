@@ -23,7 +23,9 @@ class ibs.th.gbl.keyrec:
   define property ReturnMsg as character no-undo
     get.
     private set.
-
+  define property Err as logical  no-undo
+    get.
+    private set.
   define variable hndl-proc-key-rec as handle.
  
   constructor public keyrec ():
@@ -43,7 +45,8 @@ class ibs.th.gbl.keyrec:
     
     if error-status:error
     then do:
-      
+      ReturnMsg = return-value.
+      Err = true.
     end.
     
   end.
@@ -68,7 +71,8 @@ class ibs.th.gbl.keyrec:
     
     if error-status:error
     then do:
-      
+      ReturnMsg = return-value.
+      Err = true.
     end.
                                         
   end.
@@ -85,7 +89,8 @@ class ibs.th.gbl.keyrec:
 
     if error-status:error
     then do:
-      
+      ReturnMsg = return-value.
+      Err = true.
     end.
     
   end.
@@ -96,7 +101,8 @@ class ibs.th.gbl.keyrec:
     
     if error-status:error
     then do:
-      
+      ReturnMsg = return-value.
+      Err = true.
     end.
     
   end destructor.

@@ -42,8 +42,10 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
   define variable v-user-adm as logical   no-undo .
   DEFINE VARIABLE v-encode-password AS CHARACTER NO-UNDO .
   DEFINE VARIABLE v-password        AS CHARACTER NO-UNDO .
+  DEFINE VARIABLE v-nextcon         AS logical   NO-UNDO .
 
   define buffer lock_user-login for ub.user-login .
+  define buffer user-login-attr for ub.user-login-attr .
 
   { gbl/user-adm.i
     v-cntxt-db-num
@@ -79,7 +81,9 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
                      , INPUT  ""             /* p-name */
                      , INPUT  v-user-adm
                      , INPUT  lock_user-login.user-password-encoded
+                     , yes
                      , OUTPUT v-password
+                     , output v-nextcon 
                      ) NO-ERROR.
   IF ERROR-STATUS:ERROR
   then do:
@@ -106,6 +110,24 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
     ASSIGN
       lock_user-login.user-password-encoded = v-password
     .
+    if v-nextcon ne ?
+    then do:
+        find first user-login-attr where user-login-attr.db-num    = lock_user-login.db-num
+                                     and user-login-attr.user-id   = lock_user-login.user-id
+                                     and user-login-attr.attr-code = "ChangPwdNextConect"
+             exclusive-lock no-error.
+        if not available user-login-attr
+        then do:
+            create user-login-attr.
+            assign
+                user-login-attr.db-num    = lock_user-login.db-num
+                user-login-attr.user-id   = lock_user-login.user-id
+                user-login-attr.attr-code = "ChangPwdNextConect"
+             .
+        end.
+        user-login-attr.attr-value = string(v-nextcon ).
+    end.
+    release user-login-attr.
     RELEASE lock_user-login .
   END.
 

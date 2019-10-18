@@ -277,7 +277,7 @@ define variable v-n-ptr      as System.IntPtr no-undo .
   v-mptr-size = get-size(p-memptr).
   v-int-size  = integer(v-mptr-size) .
   v-byte-array = new "System.Byte[]" (v-int-size) .
-  v-n-ptr      = new System.IntPtr(GET-POINTER-VALUE(p-memptr)).
+  v-n-ptr      = new System.IntPtr(get-pointer-value(p-memptr)).
   System.Runtime.InteropServices.Marshal:Copy(v-n-ptr, v-byte-array, 0, v-int-size).
   
   return v-byte-array .
@@ -341,7 +341,8 @@ define variable v-err-descr    as character no-undo .
   // detached signature = The original content is not included in this byte array.
   v-signed-cms   = new System.Security.Cryptography.Pkcs.SignedCms (p-content-info, p-is-detached) .
   
-  v-cms-signer   = new System.Security.Cryptography.Pkcs.CmsSigner (p-cert) .
+  v-cms-signer = new System.Security.Cryptography.Pkcs.CmsSigner (p-cert).
+  v-cms-signer:IncludeOption = System.Security.Cryptography.X509Certificates.X509IncludeOption:EndCertOnly.
   // X509Chain.aspx Ч позвол€ет строить и провер€ть цепочку сертификатов.
   
   do on error undo, throw:

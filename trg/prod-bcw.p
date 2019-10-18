@@ -73,7 +73,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   define variable vB-Str-Int         as integer no-undo.
   vB-Str-Int = int( ub.prod-bc.b-str) no-error.
   if     not error-status:error
-     and vB-Str-Int ne 0 
+     and vB-Str-Int ne 0
+     and not ub.prod-bc.b-str begins "0"
   then do:
      find buf_bar-code where buf_bar-code.b-code = vB-Str-Int no-lock no-error.
      if available buf_bar-code

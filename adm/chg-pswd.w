@@ -32,7 +32,10 @@ define input  parameter p-user-id      as character no-undo .
 define input  parameter p-user-Name    as character no-undo .
 define input  parameter p-user-adm     as logical   no-undo .
 define input  parameter p-old-password as character no-undo .
-DEFINE OUTPUT PARAMETER p-password     as character no-undo INITIAL ? .
+define input  parameter p-login        as logical   no-undo .
+
+define output parameter p-password     as character no-undo initial ? .
+define output parameter ochgpdwnextcon as logical   no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -44,6 +47,7 @@ define variable vss-description as character no-undo init "Диалог задания пароля
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { cmp/showinf.i  }
+{ utl/setpwd.i}
 
 define variable v-param-type as character no-undo .
 define variable v-value-character AS character no-undo .
@@ -71,9 +75,9 @@ define variable v-tth as handle no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help fi-new-password ~
-fi-new-password-2 fi-db fi-userid fi-username
-&Scoped-Define DISPLAYED-OBJECTS fi-new-password fi-new-password-2 fi-db ~
-fi-userid fi-username
+fi-new-password-2 chgpwdextcon fi-db fi-userid fi-username 
+&Scoped-Define DISPLAYED-OBJECTS fi-new-password fi-new-password-2 ~
+chgpwdextcon fi-db fi-userid fi-username 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -135,7 +139,9 @@ DEFINE VARIABLE fi-username AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT
      SIZE 40.5 BY .67
      FGCOLOR 4  NO-UNDO.
-
+DEFINE VARIABLE chgpwdextcon AS logical init yes
+      LABEL "Сменить пароль при следующем входе в систему"
+      VIEW-AS TOGGLE-BOX.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -143,15 +149,16 @@ DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 61
-     fi-old-password AT ROW 7.75 COL 22.5 COLON-ALIGNED WIDGET-ID 6 PASSWORD-FIELD
-     fi-new-password AT ROW 9.25 COL 22.5 COLON-ALIGNED WIDGET-ID 8 PASSWORD-FIELD
-     fi-new-password-2 AT ROW 10.5 COL 2.62 WIDGET-ID 10 PASSWORD-FIELD
+     fi-old-password AT ROW 7.75 COL 22.5 COLON-ALIGNED WIDGET-ID 6 PASSWORD-FIELD 
+     fi-new-password AT ROW 9.25 COL 22.5 COLON-ALIGNED WIDGET-ID 8 PASSWORD-FIELD 
+     fi-new-password-2 AT ROW 10.5 COL 2.5 WIDGET-ID 10 PASSWORD-FIELD 
+     chgpwdextcon AT ROW 11.75 COL 3 WIDGET-ID 14
      fi-db AT ROW 3.25 COL 22.5 COLON-ALIGNED WIDGET-ID 12
      fi-userid AT ROW 4.75 COL 22.5 COLON-ALIGNED WIDGET-ID 2
      fi-username AT ROW 6.25 COL 22.5 COLON-ALIGNED WIDGET-ID 4
-     SPACE(7.99) SKIP(5.36)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     SPACE(7.99) SKIP(6.49)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Изменение пароля"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit WIDGET-ID 100.
 
@@ -208,8 +215,6 @@ function check_alphanumeric returns logical (input pass as character):
 end function.
 
 
-
-
 /* ************************  Control Triggers  ************************ */
 
 &Scoped-define SELF-NAME Dialog-Frame
@@ -222,6 +227,7 @@ DO:
   then do:
     ASSIGN
       p-password = ?
+      ochgpdwnextcon = ?
     .
     return no-apply .
   end.
@@ -247,6 +253,8 @@ ON CHOOSE OF b-quit IN FRAME Dialog-Frame /* Отмена */
 DO:
     assign
         p-password = ?
+        ochgpdwnextcon = ?
+        
     .
 END.
 
@@ -419,7 +427,7 @@ PROCEDURE change-password :
         ,output v-value-decimal
         ,output v-value-integer
         ,output v-obyznumbukv
-        ,output v-param-type
+        ,output v-param-type 
         ,INPUT-OUTPUT table-handle v-tth
         )  .
     
@@ -458,7 +466,9 @@ PROCEDURE change-password :
       ,output v-encode-value
       ).
     assign
+      chgpwdextcon
       p-password = encode(v-encode-value)
+      ochgpdwnextcon = chgpwdextcon
     .
   end.
 
@@ -522,11 +532,13 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY fi-new-password fi-new-password-2 fi-db fi-userid fi-username
+  DISPLAY fi-new-password fi-new-password-2 chgpwdextcon fi-db fi-userid 
+          fi-username 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-quit b-help fi-new-password fi-new-password-2 fi-db fi-userid
-         fi-username
+  ENABLE b-exit b-quit b-help fi-new-password fi-new-password-2 chgpwdextcon 
+         fi-db fi-userid fi-username 
       WITH FRAME Dialog-Frame.
+  chgpwdextcon:visible = not p-login.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.

@@ -690,11 +690,11 @@ cda-IBM-XML_general
 
 /* Параметры последнего принятого чека */
 { cmp/cr-prepc.i 1 prop-list-cda-AUTOTANK_operative
-"last-check-params,fo-version"
+"last-check-params,fo-version,device-kind"
 cda-AUTOTANK_operative
 }
 
-
+ 
 /* Оперативные MARIA*/
 
 { cmp/cr-prep.i 1 cda-MARIA_operative                 MARIA_operative                  " " MARIA_operative }
@@ -850,6 +850,7 @@ cda-IBS-TH-MOB_rec-print
 ,{&bef-cda-IBS-TH_interface}~
 ,{&bef-cda-IBS-TH-MOB_main}~
 ,{&bef-cda-IBS-TH-MOB_rec-print}~
+,{&bef-cda-AUTOTANK_operative}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-list {&cd-attr-list}" ).
 

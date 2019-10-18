@@ -70,6 +70,7 @@ define variable vss-description as character no-undo init "Товары на складских м
 { gbl/fltfield.i }
 { gbl/waitfram.i }
 { cmp/mrk-strf.i }
+{ gbl/getcntxt.i def }
 { gbl/fltopend.i defproc }
 define variable filter-point  as character no-undo init "pl-gdss" .
 define variable filter-point0 as character no-undo init "pl-gdss" .
@@ -77,13 +78,15 @@ define variable filter-label  as character no-undo init "Товар-Склд. место" .
 define variable filter-label0 as character no-undo init "Товар-Склд. место" .
 define buffer b-goods for goods.
 define buffer b-place for place.
-define VARIABLE shop-type        as char      no-undo .
-define VARIABLE shop-code        as integer   no-undo .
-define VARIABLE gdscode          as integer   no-undo .
-define VARIABLE plcode           as integer   no-undo .
-define variable sort-column-name as character no-undo .
-define variable v-rid-list       as character no-undo .
-define variable v-ok-mode        as character no-undo .
+define VARIABLE shop-type           as char      no-undo .
+define VARIABLE shop-code           as integer   no-undo .
+define VARIABLE gdscode             as integer   no-undo .
+define VARIABLE plcode              as integer   no-undo .
+define variable sort-column-name    as character no-undo .
+define variable v-rid-list          as character no-undo .
+define variable v-ok-mode           as character no-undo .
+define variable v-chk-act-host-code as integer   no-undo .
+define variable glog                as logical   no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -141,84 +144,84 @@ B-sch B-Help RECT-tolerance BR-pl-gds mark-num
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON B-add
-    LABEL "&Добавить"
-    SIZE 10 BY 1.
+  LABEL "&Добавить"
+  SIZE 10 BY 1.
 
 DEFINE BUTTON B-chg
-    LABEL "&Изменить"
-    SIZE 10 BY 1.
+  LABEL "&Изменить"
+  SIZE 10 BY 1.
 
 DEFINE BUTTON B-del
-    LABEL "&Удалить"
-    SIZE 10 BY 1.
+  LABEL "&Удалить"
+  SIZE 10 BY 1.
 
 DEFINE BUTTON B-exit AUTO-GO
-    LABEL "&Выход"
-    SIZE 10 BY 1
-    BGCOLOR 8 .
+  LABEL "&Выход"
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON B-Help
-    LABEL "Помо&щь"
-    SIZE 3 BY 1
-    BGCOLOR 8 .
+  LABEL "Помо&щь"
+  SIZE 3 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON B-hist
-    LABEL "Ис&тория"
-    SIZE 3 BY 1.
+  LABEL "Ис&тория"
+  SIZE 3 BY 1.
 
 DEFINE BUTTON B-mark
-    LABEL "*"
-    SIZE 3 BY 1.
+  LABEL "*"
+  SIZE 3 BY 1.
 
 DEFINE BUTTON B-sch
-    LABEL "&Фильтр"
-    SIZE 3 BY 1.
+  LABEL "&Фильтр"
+  SIZE 3 BY 1.
 
 DEFINE BUTTON B-sel AUTO-GO
-    LABEL "Вы&бор"
-    SIZE 10 BY 1.
+  LABEL "Вы&бор"
+  SIZE 10 BY 1.
 
 DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>>9":U INITIAL 0
-    VIEW-AS TEXT
-    SIZE 6.25 BY .67
-    FGCOLOR 4 NO-UNDO.
+  VIEW-AS TEXT
+  SIZE 6.25 BY .67
+  FGCOLOR 4 NO-UNDO.
 
 DEFINE RECTANGLE RECT-tolerance
-    EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-    SIZE 10.13 BY 1.13
-    BGCOLOR 8 .
+  EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+  SIZE 10.13 BY 1.13
+  BGCOLOR 8 .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BR-pl-gds FOR
-    X_pl-gds,
-    X_goods,
-    X_place SCROLLING.
+  X_pl-gds,
+  X_goods,
+  X_place SCROLLING.
 
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BR-pl-gds
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-pl-gds Dialog-Frame _FREEFORM
-    QUERY BR-pl-gds NO-LOCK DISPLAY
-    mark-string(RECID(X_pl-gds), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
-    X_pl-gds.pl-code COLUMN-LABEL "Склд.место" FORMAT ">>>>>>>>>>9":U
-    X_place.pl-name FORMAT "X(40)":U
-    X_place.loc1 FORMAT "X(8)":U
-    X_place.loc2 FORMAT "X(8)":U
-    X_place.loc3 FORMAT "X(8)":U
-    X_place.loc4 FORMAT "X(8)":U
-    X_pl-gds.gds-code FORMAT "99999999999":U
-    X_goods.artic FORMAT "X(16)":U
-    X_goods.gds-name FORMAT "X(48)":U
-    X_goods.prod-type FORMAT "X(3)":U
-    X_goods.prod-code FORMAT ">>>>>>>>9":U
-    X_pl-gds.free-qnty FORMAT "->>,>>>,>>9.999":U
-    X_pl-gds.fact-qnty FORMAT "->>,>>>,>>9.999":U
-    X_pl-gds.cli-free-qnty FORMAT "->>,>>>,>>9.999":U
-    X_pl-gds.cli-fact-qnty FORMAT "->>,>>>,>>9.999":U
-    X_pl-gds.tolerance COLUMN-LABEL "Допуст.отклонение" FORMAT "->>,>>>,>>9.<<<":U
-    X_pl-gds.status_ FORMAT "X(8)":U
+  QUERY BR-pl-gds NO-LOCK DISPLAY
+  mark-string(RECID(X_pl-gds), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
+  X_pl-gds.pl-code COLUMN-LABEL "Склд.место" FORMAT ">>>>>>>>>>9":U
+  X_place.pl-name FORMAT "X(40)":U
+  X_place.loc1 FORMAT "X(8)":U
+  X_place.loc2 FORMAT "X(8)":U
+  X_place.loc3 FORMAT "X(8)":U
+  X_place.loc4 FORMAT "X(8)":U
+  X_pl-gds.gds-code FORMAT "99999999999":U
+  X_goods.artic FORMAT "X(16)":U
+  X_goods.gds-name FORMAT "X(48)":U
+  X_goods.prod-type FORMAT "X(3)":U
+  X_goods.prod-code FORMAT ">>>>>>>>9":U
+  X_pl-gds.free-qnty FORMAT "->>,>>>,>>9.999":U
+  X_pl-gds.fact-qnty FORMAT "->>,>>>,>>9.999":U
+  X_pl-gds.cli-free-qnty FORMAT "->>,>>>,>>9.999":U
+  X_pl-gds.cli-fact-qnty FORMAT "->>,>>>,>>9.999":U
+  X_pl-gds.tolerance COLUMN-LABEL "Допуст.отклонение" FORMAT "->>,>>>,>>9.<<<":U
+  X_pl-gds.status_ FORMAT "X(8)":U
 ENABLE
 X_pl-gds.tolerance
 /* _UIB-CODE-BLOCK-END */
@@ -229,23 +232,23 @@ X_pl-gds.tolerance
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-    B-exit AT ROW 1 COL 1.13
-    B-sel AT ROW 1 COL 11
-    B-mark AT ROW 1 COL 21
-    B-add AT ROW 1 COL 31
-    B-chg AT ROW 1 COL 41
-    B-del AT ROW 1 COL 51
-    B-hist AT ROW 1 COL 89
-    B-sch AT ROW 1 COL 92
-    B-Help AT ROW 1 COL 95
-    BR-pl-gds AT ROW 3.96 COL 1
-    mark-num AT ROW 1.17 COL 22.5 COLON-ALIGNED NO-LABEL
-    RECT-tolerance AT ROW 1 COL 41
-    SPACE(47.87) SKIP(19.99)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-    TITLE "Товары на складских местах"
-    DEFAULT-BUTTON B-exit.
+  B-exit AT ROW 1 COL 1.13
+  B-sel AT ROW 1 COL 11
+  B-mark AT ROW 1 COL 21
+  B-add AT ROW 1 COL 31
+  B-chg AT ROW 1 COL 41
+  B-del AT ROW 1 COL 51
+  B-hist AT ROW 1 COL 89
+  B-sch AT ROW 1 COL 92
+  B-Help AT ROW 1 COL 95
+  BR-pl-gds AT ROW 3.96 COL 1
+  mark-num AT ROW 1.17 COL 22.5 COLON-ALIGNED NO-LABEL
+  RECT-tolerance AT ROW 1 COL 41
+  SPACE(47.87) SKIP(19.99)
+  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
+  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+  TITLE "Товары на складских местах"
+  DEFAULT-BUTTON B-exit.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -271,11 +274,11 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BR-pl-gds RECT-tolerance Dialog-Frame */
 ASSIGN
-    FRAME Dialog-Frame:SCROLLABLE = FALSE
-    FRAME Dialog-Frame:HIDDEN     = TRUE.
+  FRAME Dialog-Frame:SCROLLABLE = FALSE
+  FRAME Dialog-Frame:HIDDEN     = TRUE.
 
 ASSIGN
-    BR-pl-gds:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 1.
+  BR-pl-gds:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame = 1.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -312,9 +315,9 @@ DEFINE QUERY BR-pl-gds FOR
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON GO OF FRAME Dialog-Frame /* Товары на складских местах */
-    DO:
-        p-rid-list = v-rid-list.
-    END.
+  DO:
+    p-rid-list = v-rid-list.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -322,62 +325,62 @@ ON GO OF FRAME Dialog-Frame /* Товары на складских местах */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Товары на складских местах */
-    DO:
-        APPLY "END-ERROR":U TO SELF.
-    END.
+  DO:
+    APPLY "END-ERROR":U TO SELF.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Выход */
-    DO:
-        if v-ok-mode <> "" then 
-        do:
-            case v-ok-mode:
-                when {&add-def} then 
-                    do:
-                        run trg/userlog.p (
-                            input {&nwsdochs_action_create}
-                            , input {&table_pl-gds}
-                            , input ( buffer X_pl-gds :handle )
-                            , input ?
-                            , input ""
-                            ) no-error.
-                        if error-status :error
-                            then
-                        do:
-                            undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
-                                , {&new-line}
-                                , vss-workfile
-                                , return-value
-                                , error-status :get-message ( 1 ) ).
-                        end.
+  DO:
+    if v-ok-mode <> "" then 
+    do:
+      case v-ok-mode:
+        when {&add-def} then 
+          do:
+            run trg/userlog.p (
+              input {&nwsdochs_action_create}
+              , input {&table_pl-gds}
+              , input ( buffer X_pl-gds :handle )
+              , input ?
+              , input ""
+              ) no-error.
+            if error-status :error
+              then
+            do:
+              undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+            end.
 
-                    end.
-                when {&update} then 
-                    do:
-                        run trg/userlog.p (
-                            input {&nwsdochs_action_update}
-                            , input {&table_pl-gds}
-                            , input ( buffer X_pl-gds :handle )
-                            , input ?
-                            , input ""
-                            ) no-error.
-                        if error-status :error
-                            then
-                        do:
-                            undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
-                                , {&new-line}
-                                , vss-workfile
-                                , return-value
-                                , error-status :get-message ( 1 ) ).
-                        end.
-                    end.
-            end case.
-        end.  
+          end.
+        when {&update} then 
+          do:
+            run trg/userlog.p (
+              input {&nwsdochs_action_update}
+              , input {&table_pl-gds}
+              , input ( buffer X_pl-gds :handle )
+              , input ?
+              , input ""
+              ) no-error.
+            if error-status :error
+              then
+            do:
+              undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+            end.
+          end.
+      end case.
+    end.  
 
-    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -386,134 +389,150 @@ ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Выход */
 &Scoped-define SELF-NAME B-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-add Dialog-Frame
 ON CHOOSE OF B-add IN FRAME Dialog-Frame /* Добавить */
-    DO:
-        define variable loc-rid-list as char    no-undo.
-        define variable ii           as integer no-undo.
-        define variable kk           as integer no-undo.
-        define variable glog         as logical no-undo .
-        /*характеристика скл места по бензину - нельзя два бензина в один бак*/
-        define variable individ      as logical no-undo.
-        define buffer buf_pl-gds for ub.pl-gds .
-        define buffer buf_goods  for ub.goods.
-        define buffer buf_units  for ub.units.
-        run ref/gds-ref.p (
-            input parparentproc
-            ,input "b-sel,b-add"
-            ,input ?             /*p-stat */
-            ,input ?             /*p-list  */
-            ,input ?             /*p-cond  */
-            ,input ?             /*p-rec   */
-            ,input ?             /*p-grp   */
-            ,input ?             /*p-cli-type */
-            ,input ?             /*p-cli-code  */
-            ,input p-obj-type    /*p-obj-type  */
-            ,input p-obj-code    /*p-obj-code  */
-            ,input ?             /*p-other     */
-            ,output loc-rID-list).
-        apply "entry" to br-pl-gds in frame {&frame-name}.
-        if loc-rid-list = "" then
-            return no-apply.
-        /* выбран товар */
-        run waitfram-show in this-procedure ( input "Ждите...").
-        _ii:
-        do ii = 1 to num-entries(loc-rid-list):
-            find buf_goods where recid (buf_goods) = integer (ENTRY(ii, loc-rid-list)) no-lock.
-            if avail buf_goods then 
+  DO:
+    define variable loc-rid-list as char    no-undo.
+    define variable ii           as integer no-undo.
+    define variable kk           as integer no-undo.
+    define variable glog         as logical no-undo .
+    /*характеристика скл места по бензину - нельзя два бензина в один бак*/
+    define variable individ      as logical no-undo.
+    define buffer buf_pl-gds for ub.pl-gds .
+    define buffer buf_goods  for ub.goods.
+    define buffer buf_units  for ub.units.
+    { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_place-reference_work':U
+  {&cntxt-object}
+  v-chk-act-host-code
+  p-obj-type
+  p-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+    if NOT glog then return no-apply.
+    run ref/gds-ref.p (
+      input parparentproc
+      ,input "b-sel,b-add"
+      ,input ?             /*p-stat */
+      ,input ?             /*p-list  */
+      ,input ?             /*p-cond  */
+      ,input ?             /*p-rec   */
+      ,input ?             /*p-grp   */
+      ,input ?             /*p-cli-type */
+      ,input ?             /*p-cli-code  */
+      ,input p-obj-type    /*p-obj-type  */
+      ,input p-obj-code    /*p-obj-code  */
+      ,input ?             /*p-other     */
+      ,output loc-rID-list).
+    apply "entry" to br-pl-gds in frame {&frame-name}.
+    if loc-rid-list = "" then
+      return no-apply.
+    /* выбран товар */
+    run waitfram-show in this-procedure ( input "Ждите...").
+    _ii:
+    do ii = 1 to num-entries(loc-rid-list):
+      find buf_goods where recid (buf_goods) = integer (ENTRY(ii, loc-rid-list)) no-lock.
+      if avail buf_goods then 
+      do:
+        /*если бензин то заливать в один бак два бензина нельзя!*/
+        FIND FIRST buf_units No-LOCK where
+          buf_units.unit-name = buf_goods.unit-base No-ERROR.
+        if not avail buf_units then NEXT.
+        if LOOKUP({&petrolium}, buf_units.type) > 0  and lookup({&divisional}, buf_units.type) > 0
+          then
+          assign
+            individ = yes.
+        else
+          assign
+            individ = no.
+        do transaction on error undo, next :
+          find first buf_pl-gds no-lock
+            where buf_pl-gds.obj-type = shop-type
+            and buf_pl-gds.obj-code = shop-code
+            and buf_pl-gds.pl-code  = plcode
+            and buf_pl-gds.gds-code = buf_goods.gds-code no-error.
+          if not available buf_pl-gds then 
+          do:
+            /*нет еще такой связки товар-место*/
+            if lookup({&petrolium}, buf_units.type) > 0
+              and lookup({&divisional}, buf_units.type) > 0 then 
             do:
-                /*если бензин то заливать в один бак два бензина нельзя!*/
-                FIND FIRST buf_units No-LOCK where
-                    buf_units.unit-name = buf_goods.unit-base No-ERROR.
-                if not avail buf_units then NEXT.
-                if LOOKUP({&petrolium}, buf_units.type) > 0  and lookup({&divisional}, buf_units.type) > 0
-                    then
-                    assign
-                        individ = yes.
-                else
-                    assign
-                        individ = no.
-                do transaction on error undo, next :
-                    find first buf_pl-gds no-lock
-                        where buf_pl-gds.obj-type = shop-type
-                        and buf_pl-gds.obj-code = shop-code
-                        and buf_pl-gds.pl-code  = plcode
-                        and buf_pl-gds.gds-code = buf_goods.gds-code no-error.
-                    if not available buf_pl-gds then 
-                    do:
-                        /*нет еще такой связки товар-место*/
-                        if lookup({&petrolium}, buf_units.type) > 0
-                            and lookup({&divisional}, buf_units.type) > 0 then 
-                        do:
-                            /*топливо*/
-                            run trg/plgdpmvc.p (
-                                input  shop-type,
-                                input  shop-code,
-                                input  plcode,
-                                input  buf_goods.gds-code,
-                                output glog) no-error.
-                            if error-status:error then 
-                            do:
-                                message
-                                    "Ошибка при привязке товара к резервуару." skip
-                                    return-value skip
-                                    error-status:get-message(1)
-                                    view-as alert-box error.
-                                undo, next.
-                            end.
-                            if not glog then 
-                            do:
-                                if return-value <> "" then
-                                    message return-value view-as alert-box ERROR.
-                                undo , next .
-                            end.
-                            if glog then kk = kk + 1.
-                        END.
-                        else 
-                        do:
-                            /*нетопливо*/
-                            run trg/plgdpmv0.p (
-                                input shop-type,
-                                input shop-code,
-                                input plcode,
-                                input buf_goods.gds-code,
-                                output glog) no-error.
-                            if error-status:error then 
-                            do:
-                                undo, next.
-                            end.
-                            if not glog then 
-                            do:
-                                if return-value <> "" then
-                                    message return-value view-as alert-box ERROR.
-                                undo , next .
-                            end.
-                            if glog then kk = kk + 1.
-                        end.
-                    end.
-                    else 
-                    do:
-                        message
-                            "Уже есть привязка резервуара " buf_pl-gds.pl-code
-                            " с товаром " buf_goods.artic " " buf_goods.prod-type " " buf_goods.prod-code " " buf_goods.gds-name " ."
-                            view-as alert-box error.
-                        next.
-                    end.
-                end. /*fo transact*/
-            end. /*avail goods*/
-        end. /*do ii = 1 to */
-        run waitfram-hide in this-procedure .
-        if kk < num-entries(loc-rid-list) then 
-        do:
+              /*топливо*/
+              run trg/plgdpmvc.p (
+                input  shop-type,
+                input  shop-code,
+                input  plcode,
+                input  buf_goods.gds-code,
+                output glog) no-error.
+              if error-status:error then 
+              do:
+                message
+                  "Ошибка при привязке товара к резервуару." skip
+                  return-value skip
+                  error-status:get-message(1)
+                  view-as alert-box error.
+                undo, next.
+              end.
+              if not glog then 
+              do:
+                if return-value <> "" then
+                  message return-value view-as alert-box ERROR.
+                undo , next .
+              end.
+              if glog then kk = kk + 1.
+            END.
+            else 
+            do:
+              /*нетопливо*/
+              run trg/plgdpmv0.p (
+                input shop-type,
+                input shop-code,
+                input plcode,
+                input buf_goods.gds-code,
+                output glog) no-error.
+              if error-status:error then 
+              do:
+                undo, next.
+              end.
+              if not glog then 
+              do:
+                if return-value <> "" then
+                  message return-value view-as alert-box ERROR.
+                undo , next .
+              end.
+              if glog then kk = kk + 1.
+            end.
+          end.
+          else 
+          do:
             message
-                "Из выбранных " num-entries(loc-rid-list) " товаров " skip
-                "к данному складскому месту удалось привязать "
-                kk " товаров " view-as alert-box
-                WARNING.
-        end.
-        v-ok-mode = {&add-def} .
-        run OpenBr in this-procedure ( input yes, input no, input '':U).
-        APPLY "ENTRY" to br-pl-gds.
+              "Уже есть привязка резервуара " buf_pl-gds.pl-code
+              " с товаром " buf_goods.artic " " buf_goods.prod-type " " buf_goods.prod-code " " buf_goods.gds-name " ."
+              view-as alert-box error.
+            next.
+          end.
+        end. /*fo transact*/
+      end. /*avail goods*/
+    end. /*do ii = 1 to */
+    run waitfram-hide in this-procedure .
+    if kk < num-entries(loc-rid-list) then 
+    do:
+      message
+        "Из выбранных " num-entries(loc-rid-list) " товаров " skip
+        "к данному складскому месту удалось привязать "
+        kk " товаров " view-as alert-box
+        WARNING.
+    end.
+    v-ok-mode = {&add-def} .
+    run OpenBr in this-procedure ( input yes, input no, input '':U).
+    APPLY "ENTRY" to br-pl-gds.
 
-    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -522,22 +541,38 @@ ON CHOOSE OF B-add IN FRAME Dialog-Frame /* Добавить */
 &Scoped-define SELF-NAME B-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-chg Dialog-Frame
 ON CHOOSE OF B-chg IN FRAME Dialog-Frame /* Изменить */
-    DO:
-        assign
-            X_pl-gds.tolerance :read-only in browse {&BROWSE-NAME} = NOT
+  DO:
+        { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_place-reference_work':U
+  {&cntxt-object}
+  v-chk-act-host-code
+  p-obj-type
+  p-obj-code
+  0
+  0
+  0
+  true
+  glog
+}
+    if NOT glog then return no-apply.
+    assign
+      X_pl-gds.tolerance :read-only in browse {&BROWSE-NAME} = NOT
   X_pl-gds.tolerance :read-only in browse {&BROWSE-NAME} .
-        APPLY "ENTRY" to browse {&BROWSE-NAME}.
-        IF  X_pl-gds.tolerance :read-only in browse {&BROWSE-NAME} = FALSE THEN 
-        do:
-            RECT-tolerance:BGCOLOR = GREEN_COLOR.
-            APPLY "ENTRY" to X_pl-gds.tolerance in browse {&BROWSE-NAME}.
-        end.
-        else 
-        do:
-            RECT-tolerance:BGCOLOR = GREY_COLOR.
-        end.
-        v-ok-mode = {&update} .
-    END.
+    APPLY "ENTRY" to browse {&BROWSE-NAME}.
+    IF  X_pl-gds.tolerance :read-only in browse {&BROWSE-NAME} = FALSE THEN 
+    do:
+      RECT-tolerance:BGCOLOR = GREEN_COLOR.
+      APPLY "ENTRY" to X_pl-gds.tolerance in browse {&BROWSE-NAME}.
+    end.
+    else 
+    do:
+      RECT-tolerance:BGCOLOR = GREY_COLOR.
+    end.
+    v-ok-mode = {&update} .
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -546,33 +581,49 @@ ON CHOOSE OF B-chg IN FRAME Dialog-Frame /* Изменить */
 &Scoped-define SELF-NAME B-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-del Dialog-Frame
 ON CHOOSE OF B-del IN FRAME Dialog-Frame /* Удалить */
-    DO:
-        define buffer b-pl-gds for pl-gds.
-        if available X_pl-gds then 
+  DO:
+    define buffer b-pl-gds for pl-gds.
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_place-reference_work':U
+  {&cntxt-object}
+  v-chk-act-host-code
+  p-obj-type
+  p-obj-code
+  0
+  0
+  0
+  true
+  glog
+  }
+    if NOT glog then return no-apply.
+    if available X_pl-gds then 
+    do:
+      _tr:
+      do transaction
+        on error undo, return no-apply :
+        find first b-pl-gds exclusive-lock
+          where rowid(b-pl-gds) = rowid(X_pl-gds) .
+        delete b-pl-gds no-error.
+        if error-status :error then 
         do:
-            _tr:
-            do transaction
-                on error undo, return no-apply :
-                find first b-pl-gds exclusive-lock
-                    where rowid(b-pl-gds) = rowid(X_pl-gds) .
-                delete b-pl-gds no-error.
-                if error-status :error then 
-                do:
-                    message
-                        substitute("Ошибка при удалении привязки товара") skip
-                        error-status :get-message(1) skip
-                        return-value skip
-                        view-as alert-box error .
-                    return no-apply.
-                end.
-            end. /*transaction*/
-
-            v-ok-mode = {&deleted} .
-            run openbr in this-procedure ( input yes, input no, input '':U).
-            apply "entry" to br-pl-gds.
-            
+          message
+            substitute("Ошибка при удалении привязки товара") skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+          return no-apply.
         end.
+      end. /*transaction*/
+
+      v-ok-mode = {&deleted} .
+      run openbr in this-procedure ( input yes, input no, input '':U).
+      apply "entry" to br-pl-gds.
+            
     end.
+  end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -581,29 +632,29 @@ ON CHOOSE OF B-del IN FRAME Dialog-Frame /* Удалить */
 &Scoped-define SELF-NAME B-hist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist Dialog-Frame
 ON CHOOSE OF B-hist IN FRAME Dialog-Frame /* История */
+  DO:
+    DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
+    IF AVAILABLE X_pl-gds  THEN 
     DO:
-        DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
-        IF AVAILABLE X_pl-gds  THEN 
-        DO:
 
-            run ref/cplchist.w (
-                INPUT parParentProc
-                , input p-obj-type
-                , input p-obj-code
-                , input "":U /*bttns  */
-                , input "subject":U /*p-mode*/
-                , input X_pl-gds.obj-type
-                , input X_pl-gds.obj-code
-                , input X_pl-gds.pl-code
-                , input X_pl-gds.gds-code /*p-gds-code*/
-                , input 0 /*p-pump-code*/
-                , input 0 /*p-nozzle-code*/
-                , input {&table_pl-gds} /*p-subject*/
-                , input-output v-rid-list
-                ) no-error .
+      run ref/cplchist.w (
+        INPUT parParentProc
+        , input p-obj-type
+        , input p-obj-code
+        , input "":U /*bttns  */
+        , input "subject":U /*p-mode*/
+        , input X_pl-gds.obj-type
+        , input X_pl-gds.obj-code
+        , input X_pl-gds.pl-code
+        , input X_pl-gds.gds-code /*p-gds-code*/
+        , input 0 /*p-pump-code*/
+        , input 0 /*p-nozzle-code*/
+        , input {&table_pl-gds} /*p-subject*/
+        , input-output v-rid-list
+        ) no-error .
 
-        END.
     END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -612,25 +663,25 @@ ON CHOOSE OF B-hist IN FRAME Dialog-Frame /* История */
 &Scoped-define SELF-NAME B-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-mark Dialog-Frame
 ON CHOOSE OF B-mark IN FRAME Dialog-Frame /* * */
-    DO:
-        define variable glog as logical no-undo .
-        if available X_pl-gds then 
-        do:
-            { gbl/markstrn.i X_pl-gds v-rid-list }
-            br-pl-gds:refresh().
-            if last-event:function <> "MOUSE-SELECT-DBLCLICK" then  
-            do:
-                glog = br-pl-gds:select-next-row ().
-                apply "iteration-changed" to br-pl-gds in frame {&frame-name}.
-            end.
-            if num-entries( v-rid-list ) = 0 then
-                hide mark-num in frame {&frame-name}.
-            else
-                disp num-entries( v-rid-list ) @ mark-num with frame {&frame-name}.
-        end.
-        apply "entry" to br-pl-gds in frame {&frame-name}.
+  DO:
+    define variable glog as logical no-undo .
+    if available X_pl-gds then 
+    do:
+      { gbl/markstrn.i X_pl-gds v-rid-list }
+      br-pl-gds:refresh().
+      if last-event:function <> "MOUSE-SELECT-DBLCLICK" then  
+      do:
+        glog = br-pl-gds:select-next-row ().
+        apply "iteration-changed" to br-pl-gds in frame {&frame-name}.
+      end.
+      if num-entries( v-rid-list ) = 0 then
+        hide mark-num in frame {&frame-name}.
+      else
+        disp num-entries( v-rid-list ) @ mark-num with frame {&frame-name}.
+    end.
+    apply "entry" to br-pl-gds in frame {&frame-name}.
 
-    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -639,46 +690,46 @@ ON CHOOSE OF B-mark IN FRAME Dialog-Frame /* * */
 &Scoped-define SELF-NAME B-sch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-sch Dialog-Frame
 ON CHOOSE OF B-sch IN FRAME Dialog-Frame /* Фильтр */
-    DO:
-        assign
-            tbl      = 'pl-gds':U
-            join-tbl = 'X_pl-gds':U
-            fld      = '':U
-            lab      = '':U
-            spr      = '':U
-            dim      = '0':U
-            .
+  DO:
+    assign
+      tbl      = 'pl-gds':U
+      join-tbl = 'X_pl-gds':U
+      fld      = '':U
+      lab      = '':U
+      spr      = '':U
+      dim      = '0':U
+      .
 
-        run fltfield-add in this-procedure('gds-code', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('obj-code', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('obj-type', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('pl-code', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('status_', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('fact-qnty', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('free-qnty', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('cli-fact-qnty', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        run fltfield-add in this-procedure('cli-free-qnty', '', '',
-            input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-        DO on stop undo, leave:
-            run gbl/filter.w ( input parparentproc
-                ,input (filter-point + {&delim-par} + filter-label)
-                ,input tbl
-                ,input join-tbl
-                ,input fld
-                ,input lab
-                ,input spr
-                ,input dim).
-            RUN OpenBr in this-procedure ( input yes, input no, input '':U).
-        END .
-    END.
+    run fltfield-add in this-procedure('gds-code', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('obj-code', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('obj-type', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('pl-code', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('status_', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('fact-qnty', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('free-qnty', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('cli-fact-qnty', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    run fltfield-add in this-procedure('cli-free-qnty', '', '',
+      input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+    DO on stop undo, leave:
+      run gbl/filter.w ( input parparentproc
+        ,input (filter-point + {&delim-par} + filter-label)
+        ,input tbl
+        ,input join-tbl
+        ,input fld
+        ,input lab
+        ,input spr
+        ,input dim).
+      RUN OpenBr in this-procedure ( input yes, input no, input '':U).
+    END .
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -687,11 +738,11 @@ ON CHOOSE OF B-sch IN FRAME Dialog-Frame /* Фильтр */
 &Scoped-define SELF-NAME B-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-sel Dialog-Frame
 ON CHOOSE OF B-sel IN FRAME Dialog-Frame /* Выбор */
-    DO:
-        if ( available X_pl-gds AND v-rid-list = "" ) then
-            v-rid-list = string( recid( X_pl-gds ) ) .
+  DO:
+    if ( available X_pl-gds AND v-rid-list = "" ) then
+      v-rid-list = string( recid( X_pl-gds ) ) .
 
-    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -701,9 +752,9 @@ ON CHOOSE OF B-sel IN FRAME Dialog-Frame /* Выбор */
 &Scoped-define SELF-NAME BR-pl-gds
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-pl-gds Dialog-Frame
 ON MOUSE-SELECT-DBLCLICK OF BR-pl-gds IN FRAME Dialog-Frame
-    DO:
-        if lookup("b-sel", bttns) > 0 then APPLY "CHOOSE" to b-sel.
-    END.
+  DO:
+    if lookup("b-sel", bttns) > 0 then APPLY "CHOOSE" to b-sel.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -711,9 +762,9 @@ ON MOUSE-SELECT-DBLCLICK OF BR-pl-gds IN FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-pl-gds Dialog-Frame
 ON RETURN OF BR-pl-gds IN FRAME Dialog-Frame
-    DO:
-        if lookup("b-sel", bttns) > 0 then APPLY "CHOOSE" to b-sel.
-    END.
+  DO:
+    if lookup("b-sel", bttns) > 0 then APPLY "CHOOSE" to b-sel.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -728,7 +779,7 @@ ON RETURN OF BR-pl-gds IN FRAME Dialog-Frame
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-    THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+  THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 { gbl/app_help.i }
 
 { gbl/srt-clmd.i
@@ -750,20 +801,20 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 }
 
 { gbl/setfltnm.i }
-
+{ gbl/getcntxt.i get }
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-    v-rid-list = p-rid-list.
-    assign
-        X_pl-gds.tolerance:read-only in browse {&BROWSE-NAME} = true.
+  ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  v-rid-list = p-rid-list.
+  assign
+    X_pl-gds.tolerance:read-only in browse {&BROWSE-NAME} = true.
 
-    RUN MyENable.
-    RUN OpenBR in this-procedure  ( input yes, input no, input '':U).
-    { gbl/mv-clmn.i
+  RUN MyENable.
+  RUN OpenBR in this-procedure  ( input yes, input no, input '':U).
+  { gbl/mv-clmn.i
 &browse-name = "br-pl-gds"
 &frame-name = "{&frame-name}"
   &start-column = "br-pl-gds:num-locked-columns in frame {&frame-name} "
@@ -778,8 +829,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   &ext-col = 18
 
 }
-    APPLY "ENTRY" to br-pl-gds.
-    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  APPLY "ENTRY" to br-pl-gds.
+  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
 
@@ -791,16 +842,16 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     DISABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we clean-up the user-interface by deleting
-                   dynamic widgets we have created and/or hide
-                   frames.  This procedure is usually called when
-                   we are ready to "clean-up" after running.
-    ------------------------------------------------------------------------------*/
-    /* Hide all frames. */
-    HIDE FRAME Dialog-Frame.
+  /*------------------------------------------------------------------------------
+    Purpose:     DISABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we clean-up the user-interface by deleting
+                 dynamic widgets we have created and/or hide
+                 frames.  This procedure is usually called when
+                 we are ready to "clean-up" after running.
+  ------------------------------------------------------------------------------*/
+  /* Hide all frames. */
+  HIDE FRAME Dialog-Frame.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -808,22 +859,22 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     ENABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we display/view/enable the widgets in the
-                   user-interface.  In addition, OPEN all queries
-                   associated with each FRAME and BROWSE.
-                   These statements here are based on the "Other
-                   Settings" section of the widget Property Sheets.
-    ------------------------------------------------------------------------------*/
-    DISPLAY mark-num
-        WITH FRAME Dialog-Frame.
-    ENABLE B-exit B-sel B-mark B-add B-chg B-del B-hist B-sch B-Help
-        RECT-tolerance BR-pl-gds mark-num
-        WITH FRAME Dialog-Frame.
-    VIEW FRAME Dialog-Frame.
-    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  /*------------------------------------------------------------------------------
+    Purpose:     ENABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we display/view/enable the widgets in the
+                 user-interface.  In addition, OPEN all queries
+                 associated with each FRAME and BROWSE.
+                 These statements here are based on the "Other
+                 Settings" section of the widget Property Sheets.
+  ------------------------------------------------------------------------------*/
+  DISPLAY mark-num
+    WITH FRAME Dialog-Frame.
+  ENABLE B-exit B-sel B-mark B-add B-chg B-del B-hist B-sch B-Help
+    RECT-tolerance BR-pl-gds mark-num
+    WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -831,36 +882,36 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable Dialog-Frame
 PROCEDURE Myenable :
-    /*------------------------------------------------------------------------------
-      Purpose:
-      Parameters:  <none>
-      Notes:
-    ------------------------------------------------------------------------------*/
-    ASSIGN
-        br-pl-gds:NUM-LOCKED-COLUMNS IN FRAME {&frame-name} = 1.
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  ASSIGN
+    br-pl-gds:NUM-LOCKED-COLUMNS IN FRAME {&frame-name} = 1.
 
-    DISPLAY
-        mark-num
-        WITH FRAME Dialog-Frame.
-    ENABLE
-        B-exit
-        B-sel 
-        when lookup("b-sel", bttns) > 0
-        B-mark 
-        when lookup("b-mark", bttns) > 0
-        b-add 
-        when lookup("b-add", bttns) > 0 and p-mode = {&place}
-        b-del 
-        when lookup("b-add", bttns) > 0 and p-mode = {&place}
-        b-chg 
-        when lookup("b-add", bttns) > 0 and p-mode = {&place}
-        B-sch
-        B-Help
-        b-hist
-        BR-pl-gds
-        WITH FRAME {&frame-name} .
-    VIEW FRAME {&frame-name} .
-    HIDE mark-num IN FRAME {&frame-name}.
+  DISPLAY
+    mark-num
+    WITH FRAME Dialog-Frame.
+  ENABLE
+    B-exit
+    B-sel 
+    when lookup("b-sel", bttns) > 0
+    B-mark 
+    when lookup("b-mark", bttns) > 0
+    b-add 
+    when lookup("b-add", bttns) > 0 and p-mode = {&place}
+    b-del 
+    when lookup("b-add", bttns) > 0 and p-mode = {&place}
+    b-chg 
+    when lookup("b-add", bttns) > 0 and p-mode = {&place}
+    B-sch
+    B-Help
+    b-hist
+    BR-pl-gds
+    WITH FRAME {&frame-name} .
+  VIEW FRAME {&frame-name} .
+  HIDE mark-num IN FRAME {&frame-name}.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -868,29 +919,29 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
 PROCEDURE OpenBr :
-    define input  parameter p-open-query     as logical   no-undo .
-    define input  parameter p-find-next      as logical   no-undo .
-    define input  parameter p-find-condition as character no-undo .
-    define variable sort-column-phrase as character no-undo .
-    define variable l-query-was-opened as logical   no-undo .
-    define buffer buf_clients for ub.clients.
+  define input  parameter p-open-query     as logical   no-undo .
+  define input  parameter p-find-next      as logical   no-undo .
+  define input  parameter p-find-condition as character no-undo .
+  define variable sort-column-phrase as character no-undo .
+  define variable l-query-was-opened as logical   no-undo .
+  define buffer buf_clients for ub.clients.
 
-    run waitfram-show in this-procedure ( input "Ждите...").
+  run waitfram-show in this-procedure ( input "Ждите...").
 
-    case sort-column-name :
-        when "" then 
-            do:
-                assign
-                    sort-column-phrase = ""
-                    .
-            end.
-        otherwise 
-        do:
-            assign
-                sort-column-phrase = "by " + sort-column-name
-                .
-        end.
-    end case.
+  case sort-column-name :
+    when "" then 
+      do:
+        assign
+          sort-column-phrase = ""
+          .
+      end.
+    otherwise 
+    do:
+      assign
+        sort-column-phrase = "by " + sort-column-name
+        .
+    end.
+  end case.
 
 
 
@@ -921,33 +972,33 @@ PROCEDURE OpenBr :
 
 &scop flt-open-waitfram yes
 
-    CASE p-mode:
-        when {&g___object} then 
-            do:
-                FIND FIRST buf_clients NO-LOCK WHERE
-                    BUF_clients.obj-type = p-obj-type
-                    AND BUF_clients.obj-code = p-obj-code NO-ERROR.
-                ASSIGN 
-                    frame
+  CASE p-mode:
+    when {&g___object} then 
+      do:
+        FIND FIRST buf_clients NO-LOCK WHERE
+          BUF_clients.obj-type = p-obj-type
+          AND BUF_clients.obj-code = p-obj-code NO-ERROR.
+        ASSIGN 
+          frame
         {&frame-name}:TITLE = substitute("Товары на складских местах &1", BUF_clients.obj-name)
-                    filter-point                       = filter-point0  + p-mode
-                    filter-label                       = substitute("&1", filter-label0)
-                    shop-type                          = p-obj-type
-                    shop-code                          = p-obj-code
-                    .
-                { gbl/fltopend.i
+          filter-point                       = filter-point0  + p-mode
+          filter-label                       = substitute("&1", filter-label0)
+          shop-type                          = p-obj-type
+          shop-code                          = p-obj-code
+          .
+        { gbl/fltopend.i
             &where-cond = " x_pl-gds.obj-type = shop-type AND X_pl-gds.obj-code = shop-code "
             &dyn_where-cond = " substitute('x_pl-gds.obj-type = &1&2&1 AND X_pl-gds.obj-code = &3 ', ~{&double-quote~}, shop-type, shop-code)"
             &use-ind = "  "
             &by = "  "
           }
-            end.
-        when {&goods} or 
-        when {&petrolium} then 
-            do:
-                FIND FIRST b-goods NO-LOCK WHERE recid(b-goods) = p-gds-rec No-ERROR.
-                ASSIGN
-                    frame {&frame-name}:TITLE = (if p-mode = {&goods}
+      end.
+    when {&goods} or 
+    when {&petrolium} then 
+      do:
+        FIND FIRST b-goods NO-LOCK WHERE recid(b-goods) = p-gds-rec No-ERROR.
+        ASSIGN
+          frame {&frame-name}:TITLE = (if p-mode = {&goods}
                                                                       then ("Товар "   +
                                                                                b-goods.artic + " " + b-goods.prod-type +
                                                                                 " " + string(b-goods.prod-code) +
@@ -959,42 +1010,42 @@ PROCEDURE OpenBr :
                                                                                 " в танках:"
                                                                               )
                                                                       )
-                    filter-point              = filter-point0 + p-mode
-                    filter-label              = substitute("&1", filter-label0)
-                    shop-type                 = p-obj-type
-                    shop-code                 = p-obj-code
-                    gdscode                   = b-goods.gds-code.
-                { gbl/fltopend.i
+          filter-point              = filter-point0 + p-mode
+          filter-label              = substitute("&1", filter-label0)
+          shop-type                 = p-obj-type
+          shop-code                 = p-obj-code
+          gdscode                   = b-goods.gds-code.
+        { gbl/fltopend.i
            &where-cond = " X_pl-gds.obj-type = shop-type AND X_pl-gds.obj-code = shop-code AND X_pl-gds.gds-code = gdscode "
            &dyn_where-cond = " substitute('X_pl-gds.obj-type = &1&2&1 AND X_pl-gds.obj-code = &3 AND X_pl-gds.gds-code = &4 ', ~{&double-quote~}, shop-type, shop-code, gdscode)"
            &use-ind = "  "
            &by = "  "
           }
-            end.
-        when {&place} then 
-            do:
-                FIND FIRST b-place NO-LOCK WHERE recid(b-place) = p-doc-rec No-ERROR.
-                ASSIGN
-                    frame {&frame-name}:TITLE = "Товары на складском месте " +
+      end.
+    when {&place} then 
+      do:
+        FIND FIRST b-place NO-LOCK WHERE recid(b-place) = p-doc-rec No-ERROR.
+        ASSIGN
+          frame {&frame-name}:TITLE = "Товары на складском месте " +
                                             string(b-place.pl-code) + " " +
                                             b-place.pl-name
-                    filter-point              = "Товар-Склд. место " + p-mode
-                    filter-label              = substitute("&1", filter-label0)
-                    shop-type                 = p-obj-type
-                    shop-code                 = p-obj-code
-                    plcode                    = b-place.pl-code.
-                { gbl/fltopend.i
+          filter-point              = "Товар-Склд. место " + p-mode
+          filter-label              = substitute("&1", filter-label0)
+          shop-type                 = p-obj-type
+          shop-code                 = p-obj-code
+          plcode                    = b-place.pl-code.
+        { gbl/fltopend.i
            &where-cond = " X_pl-gds.obj-type = shop-type AND X_pl-gds.obj-code = shop-code AND X_pl-gds.pl-code = plcode "
            &dyn_where-cond = " substitute('X_pl-gds.obj-type = &1&2&1 AND X_pl-gds.obj-code = &3 AND X_pl-gds.pl-code = &4 ', ~{&double-quote~}, shop-type, shop-code, plcode)"
            &use-ind = "  "
            &by = "  "
           }
-            end.
-    END CASE.
+      end.
+  END CASE.
 
-    if avail X_pl-gds then
-        APPLY "VALUE-CHANGED":U to br-pl-gds.
-    run waitfram-hide in this-procedure .
+  if avail X_pl-gds then
+    APPLY "VALUE-CHANGED":U to br-pl-gds.
+  run waitfram-hide in this-procedure .
 
 END PROCEDURE.
 

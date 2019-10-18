@@ -52,7 +52,7 @@ define temp-table tt-gds-act
     field A-bottleDate  as date                     label "Дата розлива"
     field A-ttnNumber   as character                label "№ ТТН справки А"         format "X(15)"
     field A-ttnDate     as date                     label "Дата"
-    field A-fixNumber   as character                label "№ фиксации в ЕГАИС"      format "X(15)"
+    field A-fixNumber   as character                label "№ фиксации в ЕГАИС"      format "X(20)"
     field A-fixDate     as date                     label "Дата фикс."
     field inform-B      as character                label "Справка Б"               format "X(20)"
     field marks-qnty    as integer                  label "Кол-во марок"
