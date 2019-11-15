@@ -503,7 +503,7 @@ class ibs.th.str.InfoSectionsTotal:
         InfoSectionCurr:CliQnty = InfoSectionCurr:DocDensity * InfoSectionCurr:DocQnty.
       end.
       else do:
-        InfoSectionCurr:DocDensity = InfoSectionCurr:DocQnty / InfoSectionCurr:CliQnty.
+        InfoSectionCurr:DocDensity = InfoSectionCurr:CliQnty / InfoSectionCurr:DocQnty.
       end.
       assign
         CarVolTotal = InfoSectionCurr:CarVol + CarVolTotal
@@ -1317,6 +1317,7 @@ class ibs.th.str.InfoSectionsTotal:
     define variable error-string            as character no-undo.
     define variable v-mm as com-handle.
     define variable v-proc as character no-undo.
+    define variable v-TankVol-m3            as decimal decimals 10 no-undo .
   /*  define buffer buf_clob-bind    for ub.clob-bind.*/
     define buffer buf_sr-izmerenia    for ub.sr-izmerenia .
 /*    run save-page.*/
@@ -1436,8 +1437,9 @@ class ibs.th.str.InfoSectionsTotal:
 /*              apply "entry" to f-tank-density in frame {&frame-name} .*/
 /*              undo _trpomi, return no-apply  .                        */
             end.
+            v-TankVol-m3 = (InfoSectionCurr:CarVol / 1000) .
             assign
-              v-mm:V_real                 = InfoSectionCurr:CarVol
+              v-mm:V_real                 = v-TankVol-m3
               v-mm:DeltaH                 = InfoSectionCurr:ABTarir
               v-mm:Dgor                   = Dgor
               v-mm:NeckType               = NeckType 
@@ -1464,7 +1466,7 @@ class ibs.th.str.InfoSectionsTotal:
               'Номер документа:'         TrnDocNum              skip
               'Секция:'                  InfoSectionCurr:SectionName         skip
               'Процедура'                v-proc                  skip
-              'V_real                 =' InfoSectionCurr:TankVol skip
+              'V_real                 =' v-TankVol-m3 skip
               'DeltaH                 =' InfoSectionCurr:ABTarir skip
               'Dgor                   =' Dgor                    skip
               'NeckType               =' NeckType                skip 
@@ -1513,8 +1515,8 @@ class ibs.th.str.InfoSectionsTotal:
             else do :
               assign
                 InfoSectionCurr:TankDensityPomi    = decimal(v-mm:Rcy) / 1000
-                InfoSectionCurr:TankVolPomi        = v-mm:Vcy 
-                InfoSectionCurr:TankWeight     = v-mm:Mcy
+                InfoSectionCurr:TankVolPomi        = v-mm:Vcy * 1000 
+                InfoSectionCurr:TankWeight     = v-mm:Mcy * 1000
                 InfoSectionCurr:AccPomi = round (v-mm:DeltaOtn_M, 3)
               .
 /*              display                  */

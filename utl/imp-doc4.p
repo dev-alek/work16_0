@@ -190,7 +190,7 @@ do on error undo, throw:
         buf_tt-parts.artic         = substring(  entry( 1, v-imp-row, ';'),  7  ) // отрезаем начальное "PART: &1;"
         buf_tt-parts.part-code     =      trim(  entry( 3, v-imp-row, ';')  )
         buf_tt-parts.in-code       =      trim(  entry( 4, v-imp-row, ';')  )
-        buf_tt-parts.gds-code      =   integer(  entry( 5, v-imp-row, ';')  )
+        buf_tt-parts.gds-code      =     int64(  entry( 5, v-imp-row, ';')  )
         buf_tt-parts.price-rubl    =   decimal(  entry( 6, v-imp-row, ';')  )
         buf_tt-parts.fact-qnty     =   decimal(  entry( 7, v-imp-row, ';')  )
         buf_tt-parts.vat-tax-value =   decimal(  entry(11, v-imp-row, ';')  )

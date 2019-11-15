@@ -213,6 +213,8 @@ define variable v-error-attr  as character no-undo .
 define variable is-fuel          as   character            no-undo.
 def var isFuel as logical no-undo init false.
 define variable parisfueltype    as   character            no-undo.
+define variable v-valuetype    as   character            no-undo.
+define variable v-value        as   character            no-undo.
 define variable v-show-str       as character no-undo .
 define variable v-add-nat-gas    as logical no-undo .
 define variable var-is-auto-trn  as logical no-undo .
@@ -288,12 +290,16 @@ then do:
   end.
 end.
 
-var-is-auto-trn = yes.
-{ str/tdat-wrt.i                                    
+var-is-auto-trn = false.
+{ str/tdat-val.i                                    
    bf_trn-doc.doc-code
    {&trdcattr-is-auto-trn}
-   "yes" 
-no-error}
+   v-value 
+   v-valuetype no-error}
+
+assign
+  var-is-auto-trn = yes when v-value = "yes".
+
 
 
 /* Получим из ТПЛ автопереоценок нужные переменные */

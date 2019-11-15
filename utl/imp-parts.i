@@ -5,7 +5,7 @@ define temp-table tt-imp-parts no-undo // скопировано из utl/imp-doc4.p
            field f02           as character
   /* 03 */ field part-code     as character
   /* 04 */ field in-code       like ub.parts.in-code
-  /* 05 */ field gds-code      as integer
+  /* 05 */ field gds-code      as int64
   /* 06 */ field price-rubl    like ub.parts.price-rubl
   /* 07 */ field fact-qnty     like ub.parts.fact-qnty
            field f08           as character

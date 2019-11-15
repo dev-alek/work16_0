@@ -159,6 +159,7 @@ assortment-matrix~
 ,delivery-type-subject~
 ,c-delivery-type-subject~
 ,dis-card-mask~
+,dis-card-mask-attr~
 ,dis-card-type~
 ,dis-card-type-attr~
 ,dis-dct-rule~

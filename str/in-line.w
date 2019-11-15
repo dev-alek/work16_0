@@ -1529,6 +1529,7 @@ do:
     v-new-density       = tt-fr-doc-line.fact-density
     v-new-cli-fact-qnty = tt-fr-doc-line.fact-qnty-kg
   .
+  if parline-mode <> {&add-def} then infoSectionsTotal:GetDBAllAttr().
   tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
   wait-for tanksForm:ShowDialog().
 
