@@ -676,6 +676,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 create dst.code-range.
                 buffer-copy src.code-range to dst.code-range .
         end.    
+        for each src.code-range where src.code-range.db-num = p-db-num and          
+            src.code-range.range-type =  {&gbl-ca-code} :           
+                create dst.code-range.
+                buffer-copy src.code-range to dst.code-range .
+        end. 
      end. 
   end.
 
