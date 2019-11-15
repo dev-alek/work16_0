@@ -3042,7 +3042,7 @@ define variable p-prev-rvs-date as logical no-undo.
   define buffer bf-prp_goods      for ub.goods.
   define buffer bf-prp_pl-gds     for ub.pl-gds.
   define buffer bf_rvs-line       for ub.rvs-line.
-  define buffer buf_rvs-line-attr for ub.rvs-line-attr .
+  define buffer buf_doc-line-attr for ub.doc-line-attr .
 
   define variable v-qnty    as decimal      no-undo.
 
@@ -3050,17 +3050,17 @@ define variable p-prev-rvs-date as logical no-undo.
     where recid( bf_rvs-line ) = p-rec-line
   .
 
-  find first buf_rvs-line-attr
-    where buf_rvs-line-attr.rvs-code   = bf_rvs-line.rvs-code
-      and buf_rvs-line-attr.gds-code   = bf_rvs-line.gds-code
-      and buf_rvs-line-attr.attr-code  = substitute("rvs-&1",bf_rvs-line.pl-code)
+  find first buf_doc-line-attr
+    where buf_doc-line-attr.doc-code   = bf_rvs-line.rvs-code
+      and buf_doc-line-attr.gds-code   = bf_rvs-line.gds-code
+      and buf_doc-line-attr.attr-code  = substitute("rvs-&1",bf_rvs-line.pl-code)
     no-error.
-  if not available buf_rvs-line-attr then do:
+  if not available buf_doc-line-attr then do:
     return error substitute ( 'Ошибка. Данные по документам не заполнены по месту хранения &1.', p-pl-code ).
   end.
   else do:
     assign
-      v-qnty = decimal(entry(1, buf_rvs-line-attr.attr-value, {&delim-par}))
+      v-qnty = decimal(entry(1, buf_doc-line-attr.attr-value, {&delim-par}))
     .
   end.
 
