@@ -61,6 +61,7 @@ FIELD ii as integer
 INDEX pi IS UNIQUE PRIMARY
       gds-code
       doc-code-trn
+      doc-code
       supp-code
 INDEX vi IS UNIQUE
       gds-code
