@@ -430,14 +430,14 @@ class ibs.th.str.InfoSection:
         do:
           assign
             FactQnty = decimal (inAttrValue) 
-            CliQnty = DocDensity * FactQnty 
+            CliQnty = DocDensity * DocQnty 
             FactKgQnty = FactQnty * FactDensity no-error.
         end.
       when 'doc-dens' then 
         do:
           assign
             DocDensity = decimal (inAttrValue) 
-            CliQnty = DocDensity * FactQnty no-error.
+            CliQnty = DocDensity * DocQnty no-error.
         end.
       when 'fact-dens' then 
         do:

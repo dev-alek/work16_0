@@ -503,7 +503,7 @@ class ibs.th.str.InfoSectionsTotal:
         InfoSectionCurr:CliQnty = InfoSectionCurr:DocDensity * InfoSectionCurr:DocQnty.
       end.
       else do:
-        InfoSectionCurr:DocDensity = InfoSectionCurr:DocQnty / InfoSectionCurr:CliQnty.
+        InfoSectionCurr:DocDensity = InfoSectionCurr:CliQnty / InfoSectionCurr:DocQnty.
       end.
       assign
         CarVolTotal = InfoSectionCurr:CarVol + CarVolTotal
