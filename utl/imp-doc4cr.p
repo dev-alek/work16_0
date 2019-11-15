@@ -235,7 +235,7 @@ define temp-table w-osn no-undo
 .
 // 19/IX-2018 сопоставление товаров потребовалось переделать с артикулов на коды товаров 
 define temp-table w-gds no-undo
-  field gds-code-15_0 as integer
+  field gds-code-15_0 as int64
   field gds-code-16_0 as integer
 .
 
