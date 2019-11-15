@@ -194,7 +194,8 @@ class ibs.th.bge.1crn.import.impbank-accounts implements ibs.th.bge.1crn.import.
       end.     
       find first buf_fin-schet EXCLUSIVE-LOCK where buf_fin-schet.r-schet = objBank-Accounts:r-schet
         and buf_fin-schet.cli-code = X_schet-clients.obj-code
-        and buf_fin-schet.cli-type = X_schet-clients.obj-type no-error .
+        and buf_fin-schet.cli-type = X_schet-clients.obj-type 
+        and buf_fin-schet.code-bank = v-code-bank-schet no-error .
       if AVAILABLE buf_fin-schet then 
       do:
         v-mode = {&update} .
