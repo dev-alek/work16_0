@@ -6373,7 +6373,28 @@ if fnc = "enable" then do:
           undo, return error return-value .
         end.
       end case .
-
+      if t-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+      then do:
+        def var conf-par as character no-undo.
+        def var par-type as character no-undo.
+        { gbl/conf-rd.i
+          "'is-erpRN'"
+          0
+          "''"
+          0
+          "''"
+          "''"
+          "''"
+          NO
+          conf-par
+          par-type
+          no-error
+          }
+        if not error-status:error and conf-par = "yes":U 
+        then do:
+          enable t-doc.shift-date t-doc.shift-num t-doc.shift-name r-sht with frame {&frame-name}.
+        end.
+      end.
       if (t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}           or
           t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}        or
           t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}       or
