@@ -176,7 +176,7 @@ DEFINE BROWSE br-c-contract
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-c-contract Dialog-Frame _FREEFORM
   QUERY br-c-contract NO-LOCK DISPLAY
       ub.c-contract-specif.contract-num
-      ub.c-contract-specif.host-code
+      ub.c-contract-specif.host-code format ">>>>>>>>>>>>9":U
       ub.c-contract-specif.chip-num  COLUMN-LABEL "Щепка!изменения"
       ub.c-contract-specif.corr-user-db-num  COLUMN-LABEL "БД!изменения"
       ub.c-contract-specif.corr-date COLUMN-LABEL "Дата!изменения" FORMAT "99/99/99":U      WIDTH 9
