@@ -231,7 +231,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             
         for each chk-doc-attr
                 where chk-doc-attr.doc-code = p-code no-lock:
-   
+        if chk-doc-attr.attr-code begins "corr-" then next.          
                 create tt-chk-attr.
                 assign
                 tt-chk-attr.attr-value = chk-doc-attr.attr-value

@@ -4634,7 +4634,7 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run ref/codelay.p ( "", "platsys", "Платежные системы") no-error.
+    run ref/codelay.p ("", "", "platsys", "Платежные системы") no-error.
     
   end.
 
@@ -4646,7 +4646,7 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run ref/codelay.p ( "", "OsnovCorr", "Основание коррекции") no-error.
+    run ref/codelay.p ( "", "", "OsnovCorr", "Основание коррекции") no-error.
     
   end.
 
