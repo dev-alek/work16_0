@@ -401,6 +401,8 @@ abc-analysis~
 ,c-dis-card-long~
 ,dis-card-mask~
 ,c-dis-card-mask~
+,dis-card-mask-attr~
+,c-dis-card-mask-attr~
 ,dis-card-property~
 ,c-dis-card-property~
 ,dis-card-type~
@@ -759,6 +761,7 @@ abc-analysis~
 ,c-promo-schedule~
 ,c-promo-schedule-week~
 ,c-PromoAction~
+,c-PromoAttr~
 ,c-PromoCriterion~
 ,c-PromoGift~
 ,c-PromoGoods~
@@ -773,6 +776,26 @@ abc-analysis~
 ,PromoObject~
 ,tech-prol-pwd~
 ,c-tech-prol-pwd~
+,c-CashBook~
+,c-CashBookAttr~
+,c-CashBookRule~
+,c-CashBookRuleAttr~
+,c-OperServ~
+,c-operServAttr~
+,CashBook~
+,CashBookAttr~
+,CashBookRule~
+,CashBookRuleAttr~
+,OperServ~
+,OperServAttr~
+,c-counter~
+,counter~
+,c-cashbook-head~
+,c-goods-attr-any~
+,c-promo-head~
+,code~
+,devisPC~
+,devisPC-attr~
 ':U .
 
 
@@ -992,7 +1015,6 @@ abc-analysis-doc-attr~
 ,c-delivery-type-attr~
 ,c-delivery-type-subject-attr~
 ,c-dis-card-long-attr~
-,c-dis-card-mask-attr~
 ,c-dis-rule-attr~
 ,c-fbr-gds-obj-attr~
 ,c-fin-bank-attr~
@@ -1056,7 +1078,6 @@ abc-analysis-doc-attr~
 ,delivery-type-attr~
 ,delivery-type-subject-attr~
 ,dis-card-long-attr~
-,dis-card-mask-attr~
 ,dis-cfg-rule-attr~
 ,dis-cp-rule-attr~
 ,dis-dc-rule-attr~

@@ -56,7 +56,7 @@ define variable vss-description as character no-undo initial "Объект акция.".
 /*      end.                   */
     end.
     
-    define property db-num as integer no-undo
+    define property db-num as integer no-undo init ?
     get.
     set(arg as integer):
       if arg <> db-num
@@ -218,6 +218,12 @@ define variable vss-description as character no-undo initial "Объект акция.".
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
      &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:promoSet,db-num) }
+     
+     {ibs/th/ref/promo/propertyclass.i
+     &Obj       = CardsBin
+     &ObjClass  = promogoodssubs
+     &StorClass = promoGoodsStorage
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:bin,db-num) }
    
     {ibs/th/ref/promo/propertyclass.i
      &Obj       = Criterion
@@ -293,13 +299,15 @@ define variable vss-description as character no-undo initial "Объект акция.".
     set.
     
   method public void Clean():
-     if valid-object(THIS-OBJECT:Criterion)  then delete object THIS-OBJECT:Criterion no-error.
-     if valid-object(THIS-OBJECT:Gifts)      then delete object THIS-OBJECT:Gifts no-error.
-     if valid-object(THIS-OBJECT:GoodsAppl)  then delete object THIS-OBJECT:GoodsAppl no-error.
-     if valid-object(THIS-OBJECT:GoodsCrits) then delete object THIS-OBJECT:GoodsCrits no-error.
-     if valid-object(this-object:Objects   ) then delete object this-object:Objects no-error.
-     if valid-object(THIS-OBJECT:Schedule)     then delete object THIS-OBJECT:Schedule no-error.
+     if valid-object(THIS-OBJECT:Criterion)    then delete object THIS-OBJECT:Criterion    no-error.
+     if valid-object(THIS-OBJECT:Gifts)        then delete object THIS-OBJECT:Gifts        no-error.
+     if valid-object(THIS-OBJECT:GoodsAppl)    then delete object THIS-OBJECT:GoodsAppl    no-error.
+     if valid-object(THIS-OBJECT:GoodsCrits)   then delete object THIS-OBJECT:GoodsCrits   no-error.
+     if valid-object(this-object:Objects   )   then delete object this-object:Objects      no-error.
+     if valid-object(THIS-OBJECT:Schedule)     then delete object THIS-OBJECT:Schedule     no-error.
      if valid-object(THIS-OBJECT:ScheduleWeek) then delete object THIS-OBJECT:ScheduleWeek no-error.
+     if valid-object(THIS-OBJECT:CardsBin)      then delete object THIS-OBJECT:CardsBin     no-error.
+     
      
   end.
   method public void refreshChildObj():
@@ -312,6 +320,7 @@ define variable vss-description as character no-undo initial "Объект акция.".
      THIS-OBJECT:Criterion no-error.
      THIS-OBJECT:Gifts no-error.
      THIS-OBJECT:GoodsAppl no-error.
+     THIS-OBJECT:CardsBin no-error.
      THIS-OBJECT:Promoset no-error.
      THIS-OBJECT:GoodsCrits no-error.
      this-object:Objects no-error.

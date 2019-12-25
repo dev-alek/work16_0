@@ -151,32 +151,32 @@ do on error undo, return error substitute ("Ошибка при вызове программы findgraf
                              ).
   end.
 
-  define variable v-log as logical no-undo .
-  define variable v-out-mess as character no-undo .
-  define variable v-cash-book-place as character no-undo .
-  v-cash-book-place = buf_fin-doc.trn-doc-code.
-  { str/finchkdb.i
-    buf_fin-doc.host-code
-    buf_fin-doc.fin-doc-code
-    buf_fin-doc.obj-type
-    buf_fin-doc.obj-code
-    buf_fin-doc.fin-ext-doc-type
-    v-cash-book-place
-    ?
-    v-log
-    v-out-mess
-    no-error }
-  if error-status:error then do:
-    undo, return error  substitute("Ошибка при проверке корректности создания документа в данной БД &1&2&1&3"
-                                                , {&new-line}
-                                                , error-status:get-message(1)
-                                                , return-value
-                                                ).
-
-  end.
-  if not v-log then do:
-    undo, return error substitute("Невозможно создать/изменить документ в данной БД:&1&2", {&new-line}, v-out-mess).
-  end.
+/*  define variable v-log as logical no-undo .                                                                        */
+/*  define variable v-out-mess as character no-undo .                                                                 */
+/*  define variable v-cash-book-place as character no-undo .                                                          */
+/*  v-cash-book-place = buf_fin-doc.trn-doc-code.                                                                     */
+/*  { str/finchkdb.i                                                                                                  */
+/*    buf_fin-doc.host-code                                                                                           */
+/*    buf_fin-doc.fin-doc-code                                                                                        */
+/*    buf_fin-doc.obj-type                                                                                            */
+/*    buf_fin-doc.obj-code                                                                                            */
+/*    buf_fin-doc.fin-ext-doc-type                                                                                    */
+/*    v-cash-book-place                                                                                               */
+/*    ?                                                                                                               */
+/*    v-log                                                                                                           */
+/*    v-out-mess                                                                                                      */
+/*    no-error }                                                                                                      */
+/*  if error-status:error then do:                                                                                    */
+/*    undo, return error  substitute("Ошибка при проверке корректности создания документа в данной БД &1&2&1&3"       */
+/*                                                , {&new-line}                                                       */
+/*                                                , error-status:get-message(1)                                       */
+/*                                                , return-value                                                      */
+/*                                                ).                                                                  */
+/*                                                                                                                    */
+/*  end.                                                                                                              */
+/*  if not v-log then do:                                                                                             */
+/*    undo, return error substitute("Невозможно создать/изменить документ в данной БД:&1&2", {&new-line}, v-out-mess).*/
+/*  end.                                                                                                              */
 
 
 

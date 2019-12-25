@@ -1115,13 +1115,13 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-EI-pack true
 &glob sort-trdcattr-EI-pack 190
 
-/* Нефтебаза */
+/* Нефтебаза/ГНС */
 &glob fillin_width-trdcattr-ptbobj 20
 &glob fillin_height-trdcattr-ptbobj 1
 &glob type-trdcattr-ptbobj {&type-char}
 &glob format-trdcattr-ptbobj "X(20)"
-&glob label-trdcattr-ptbobj "Нефтебаза"
-&glob tooltip-trdcattr-ptbobj "Нефтебаза"
+&glob label-trdcattr-ptbobj "Нефтебаза/ГНС"
+&glob tooltip-trdcattr-ptbobj "Нефтебаза/ГНС"
 &glob user-can-edit-trdcattr-ptbobj true
 &glob output-display-trdcattr-ptbobj true
 &glob other-trdcattr-ptbobj '':u
@@ -1299,6 +1299,32 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-time-pour true
 &glob sort-trdcattr-time-pour 190
 
+/* Время начала слива */
+&glob fillin_width-trdcattr-time-start 20
+&glob fillin_height-trdcattr-time-start 1
+&glob type-trdcattr-time-start {&type-char}
+&glob format-trdcattr-time-start "X(20)"
+&glob label-trdcattr-time-start "Время начала слива"
+&glob tooltip-trdcattr-time-start "Время начала слива"
+&glob user-can-edit-trdcattr-time-start true
+&glob output-display-trdcattr-time-start true
+&glob other-trdcattr-time-start '':u
+&glob news-trdcattr-time-start true
+&glob sort-trdcattr-time-start 190
+
+/* Время конца слива */
+&glob fillin_width-trdcattr-time-end 20
+&glob fillin_height-trdcattr-time-end 1
+&glob type-trdcattr-time-end {&type-char}
+&glob format-trdcattr-time-end "X(20)"
+&glob label-trdcattr-time-end "Время конца слива"
+&glob tooltip-trdcattr-time-end "Время конца слива"
+&glob user-can-edit-trdcattr-time-end true
+&glob output-display-trdcattr-time-end true
+&glob other-trdcattr-time-end '':u
+&glob news-trdcattr-time-end true
+&glob sort-trdcattr-time-end 190
+
 
 /* Топливная накладная */
 &glob fillin_width-trdcattr-is-fuel 3
@@ -1338,6 +1364,72 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob other-trdcattr-is-auto-trn '':u
 &glob news-trdcattr-is-auto-trn true
 &glob sort-trdcattr-is-auto-trn 100
+
+/* СУГ */
+&glob fillin_width-trdcattr-is-lgas 3
+&glob fillin_height-trdcattr-is-lgas 1
+&glob type-trdcattr-is-lgas {&type-log}
+&glob format-trdcattr-is-lgas "yes/no"
+&glob label-trdcattr-is-lgas "Документ прихода СУГ"
+&glob tooltip-trdcattr-is-lgas "Документ прихода СУГ"
+&glob user-can-edit-trdcattr-is-lgas false
+&glob output-display-trdcattr-is-lgas true
+&glob other-trdcattr-is-lgas '':u
+&glob news-trdcattr-is-lgas true
+&glob sort-trdcattr-is-lgas 100
+
+/* Корр. Суг */
+&glob fillin_width-trdcattr-is-lgas-corr 3
+&glob fillin_height-trdcattr-is-lgas-corr 1
+&glob type-trdcattr-is-lgas-corr {&type-log}
+&glob format-trdcattr-is-lgas-corr "yes/no"
+&glob label-trdcattr-is-lgas-corr "Документ корректировки СУГ"
+&glob tooltip-trdcattr-is-lgas-corr "Документ корректировки СУГ"
+&glob user-can-edit-trdcattr-is-lgas-corr false
+&glob output-display-trdcattr-is-lgas-corr true
+&glob other-trdcattr-is-lgas-corr '':u
+&glob news-trdcattr-is-lgas-corr true
+&glob sort-trdcattr-is-lgas-corr 100
+
+/* Документ источник для корр. СУГ */
+&glob fillin_width-trdcattr-trn-lgas-corr 3
+&glob fillin_height-trdcattr-trn-lgas-corr 1
+&glob type-trdcattr-trn-lgas-corr {&type-char}
+&glob format-trdcattr-trn-lgas-corr "X(20)"
+&glob label-trdcattr-trn-lgas-corr "Документ источник для корр. СУГ"
+&glob tooltip-trdcattr-trn-lgas-corr " Документ источник для корр. СУГ"
+&glob user-can-edit-trdcattr-trn-lgas-corr false
+&glob output-display-trdcattr-trn-lgas-corr true
+&glob other-trdcattr-trn-lgas-corr '':u
+&glob news-trdcattr-trn-lgas-corr true
+&glob sort-trdcattr-trn-lgas-corr 100
+
+
+/* Дата начала слива */
+&glob fillin_width-trdcattr-date-start 11
+&glob fillin_height-trdcattr-date-start 1
+&glob type-trdcattr-date-start {&type-date}
+&glob format-trdcattr-date-start "99/99/9999"
+&glob label-trdcattr-date-start "Дата начала слива"
+&glob tooltip-trdcattr-date-start "Дата начала слива"
+&glob user-can-edit-trdcattr-date-start true
+&glob output-display-trdcattr-date-start true
+&glob other-trdcattr-date-start 'nws':u
+&glob news-trdcattr-date-start true
+&glob sort-trdcattr-date-start 100
+
+/* Дата конца слива */
+&glob fillin_width-trdcattr-date-end 11
+&glob fillin_height-trdcattr-date-end 1
+&glob type-trdcattr-date-end {&type-date}
+&glob format-trdcattr-date-end "99/99/9999"
+&glob label-trdcattr-date-end "Дата конца слива"
+&glob tooltip-trdcattr-date-end "Дата конца слива"
+&glob user-can-edit-trdcattr-date-end true
+&glob output-display-trdcattr-date-end true
+&glob other-trdcattr-date-end 'nws':u
+&glob news-trdcattr-date-end true
+&glob sort-trdcattr-date-end 100
 
 &if "{1}" = "class" &then
 &else

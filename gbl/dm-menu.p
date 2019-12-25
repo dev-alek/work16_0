@@ -3264,6 +3264,17 @@ procedure m_action-role :
 
 end procedure. /* m_action-role */
 
+procedure m-smart-ref :
+  do
+  on error undo, return error
+  :
+    
+  run ref/codelay.p ( "", "", "SpravAttrSmart", "Справочник атрибутов SMART") no-error.
+  
+  end.
+
+end procedure. /* m-hdd-ref */
+
 procedure m_action-item :
 
   define variable v-rid-list         as character no-undo .
@@ -4524,6 +4535,20 @@ define input parameter p-action as character no-undo .
   ) no-error.
 end procedure. /* run-2cashpay */
 
+procedure bpasend :
+define input parameter p-pos-type as character no-undo .
+define input parameter p-action as character no-undo .
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/bpasend.p":U
+      , input (p-pos-type + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + p-action)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка справочника ОСС на кассы &1", p-pos-type, {&cd-type-IBm-XML})
+  ) no-error.
+end procedure. /* bpasend */
+
 procedure run-2cashpay :
 define input parameter p-pos-type as character no-undo .
 define input parameter p-action as character no-undo .
@@ -4561,6 +4586,19 @@ procedure m-promo-u-exe :
   end.
 
 end procedure. /* m-cash-pay-exe */
+procedure m-catalog-corr-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/sendcorr.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка данных по справочнику ОСС ")
+  ) no-error.
+
+end procedure. /* m-catalog-oss-exe */
 
 procedure m-promo-d-exe :
 
@@ -4572,6 +4610,26 @@ procedure m-promo-d-exe :
 
 end procedure. /* m-cash-pay-exe */
 
+procedure m-bpa-u-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run bpasend in this-procedure ({&cd-type-IBm-XML}, 'U':U) .
+  end.
+
+end procedure. /* m-bpa-u-exe */
+
+procedure m-bpa-d-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run bpasend in this-procedure ({&cd-type-IBm-XML}, 'D':U) .
+  end.
+
+end procedure. /* m-bpa-d-exe */
+
 procedure m-gds-ef-exe :
 define variable v-rid-list as character no-undo .
 
@@ -4582,6 +4640,30 @@ define variable v-rid-list as character no-undo .
   end.
 
 end procedure. /* m_gds-ef-exe */
+
+procedure m-platsys-exe :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run ref/codelay.p ("", "", "platsys", "Платежные системы") no-error.
+    
+  end.
+
+end procedure. /* m-platsys-exe */
+
+procedure m-corrsys-exe :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run ref/codelay.p ( "", "", "OsnovCorr", "Основание коррекции") no-error.
+    
+  end.
+
+end procedure. /* m-platsys-exe */
 
 
 procedure m-cash-wthser-del-exe :
@@ -4597,20 +4679,6 @@ define input parameter p-action as character no-undo .   */
       , input substitute("Отсылка данных по маскам серийных МЦ на кассы ")
   ) no-error.
 end procedure. /* run-2cashpay */
-
-procedure m-catalog-oss-exe :
-
- run str/diallog.w (
-        input parparentproc
-      , input this-procedure
-      , input "str/sendcoss.p":U
-      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U)
-      , input no /*p-auto-go*/
-      , input "":U
-      , input substitute("Отсылка данных по справочнику ОСС ")
-  ) no-error.
-
-end procedure. /* m-catalog-oss-exe */
 
 procedure m-cash-dept-exe :
   define variable v-obj-db-num  as integer   no-undo initial ? .
@@ -8641,6 +8709,7 @@ procedure m-obj-rvinv-exe :
 
 end procedure. /* m-obj-rvinv-exe */
 
+/* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
 procedure m-oss-ref :
     define variable v-rid-list as character no-undo.
     define variable v-mode as character no-undo.
@@ -8659,6 +8728,44 @@ procedure m-oss-ref :
   end.
 
 end procedure. /* m-oss-exe */
+*/
+
+procedure m-bpa-ref :
+define variable v-rid-list as character no-undo .
+define variable v-mode     as character no-undo .
+define variable v-value    as character no-undo .
+define variable v-type     as character no-undo .
+  do
+  on error undo, return error
+  :
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    
+    if v-value = "no" then do:
+    if v-cntxt-db-num > 0 then v-mode = {&lookup}. else v-mode = {&update} .
+    end.
+    else v-mode = {&lookup} .
+    run ref/bpa.p ( input parparentproc, input v-mode, output v-rid-list) no-error.
+  end.
+
+end procedure. /* m_gds-ef-exe */
+
+procedure m-cashbook-ref :
+define variable v-rid-list as character no-undo .
+define variable v-mode     as character no-undo .
+define variable v-value    as character no-undo .
+define variable v-type     as character no-undo .
+  do
+  on error undo, return error
+  :
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    
+    if v-value = "no"
+    then v-mode = {&update} .
+    else v-mode = {&lookup} .
+    run ref/cashbook.p ( input parparentproc, input v-mode ) no-error.
+  end.
+
+end procedure.
 
 procedure m_autopush-exe :
 
@@ -13532,6 +13639,7 @@ procedure chk-is-pharm :
     end.
   end.
 end procedure.
+/* 04/III-2019 не используется. Работа с кассовыми книгами перенесена в БПА
 procedure chk-cash-book :
 
   define output parameter p-enable-item as logical   no-undo .
@@ -13588,7 +13696,7 @@ procedure chk-cash-book :
   end.
 
 end procedure. /* chk-cash-book */
-
+*/
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE image-procedure-pharm W-Win
 PROCEDURE image-procedure-pharm :

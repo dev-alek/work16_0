@@ -41,7 +41,7 @@ define var v-doc-code as char no-undo.
 DEFINE FRAME frame1
   v-doc-code format "x(15)"
   with view-as dialog-box
-  title "¬ведите номер сверки"
+  title "¬ведите номер фин.документа"
 .
 
 update v-doc-code with frame frame1.

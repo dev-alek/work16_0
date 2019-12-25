@@ -66,6 +66,8 @@ define temp-table temp_line-data no-undo
     field add-qnty        as character
     field sale-qnty-7     as character
     field curr-qnty       as character
+    field level-water     as character
+    field volume-water    as character
     field doc-qnty       as character
     field curr-date       as character
     field curr-time       as character
@@ -105,15 +107,15 @@ ON ERROR UNDO, RETURN ERROR
    ).
    RUN disp-xl-write-cell-data IN THIS-PROCEDURE (
          INPUT {&disp-xl-columnList}
-      , INPUT "obj_number,obj_address,obj_phone,gds_name,loc1,max_qnty,add_qnty,sale_qnty_7,curr_qnty,doc_qnty,curr_date,curr_time,sale_qnty_1":U
+      , INPUT "obj_number,obj_address,obj_phone,gds_name,loc1,max_qnty,add_qnty,sale_qnty_7,curr_qnty,doc_qnty,level_water,volume_water,curr_date,curr_time,sale_qnty_1":U
    ).
    RUN disp-xl-write-cell-data IN THIS-PROCEDURE (
          INPUT {&disp-xl-columnType}
-      , INPUT "S,S,S,S,S,S,S,S,S,S,S,S":U
+      , INPUT "S,S,S,S,S,S,S,S,S,S,S,S,S,S,S":U
    ).
    RUN disp-xl-write-cell-data IN THIS-PROCEDURE (
          INPUT {&disp-xl-columnAmount}
-      , INPUT "12":U
+      , INPUT "15":U
    ).
 
 END.
@@ -180,6 +182,8 @@ DEFINE INPUT PARAMETER p-max-qnty    AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-add-qnty    AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-sale-qnty-7 AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-curr-qnty   AS CHARACTER NO-UNDO.
+DEFINE INPUT PARAMETER p-level-water AS CHARACTER NO-UNDO.
+DEFINE INPUT PARAMETER p-volume-water AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-doc-qnty    AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-curr-date   AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER p-curr-time   AS CHARACTER NO-UNDO.
@@ -213,7 +217,9 @@ ON ERROR UNDO, RETURN ERROR
         buf_temp_line-data.add-qnty      = p-add-qnty
         buf_temp_line-data.sale-qnty-7   = p-sale-qnty-7
         buf_temp_line-data.curr-qnty     = p-curr-qnty
-        buf_temp_line-data.doc-qnty      = p-doc-qnty
+        buf_temp_line-data.level-water   = p-level-water
+        buf_temp_line-data.volume-water  = p-volume-water
+/*        buf_temp_line-data.doc-qnty      = p-doc-qnty*/
         buf_temp_line-data.curr-date     = p-curr-date
         buf_temp_line-data.curr-time     = p-curr-time
         buf_temp_line-data.sale-qnty-1   = p-sale-qnty-1
@@ -231,6 +237,8 @@ ON ERROR UNDO, RETURN ERROR
         {&tabulation}   p-sale-qnty-7
         {&tabulation}   p-curr-qnty
         {&tabulation}   p-doc-qnty
+        {&tabulation}   p-level-water
+        {&tabulation}   p-volume-water
         {&tabulation}   p-curr-date
         {&tabulation}   p-curr-time
         {&tabulation}   p-sale-qnty-1

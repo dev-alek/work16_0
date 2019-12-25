@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,18 +8,18 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_fin-doc FOR ub.fin-doc.
-DEFINE TEMP-TABLE tt-fin-doc NO-UNDO LIKE ub.fin-doc.
-DEFINE TEMP-TABLE tt0-fin-doc-attr NO-UNDO LIKE ub.fin-doc-attr.
-DEFINE TEMP-TABLE tt0-fin-doc-tax NO-UNDO LIKE ub.fin-doc-tax.
-DEFINE TEMP-TABLE tt0-payment NO-UNDO LIKE ub.payment.
-DEFINE BUFFER X_clients-host FOR ub.clients.
-DEFINE BUFFER X_firm FOR ub.firm.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER locked_fin-doc FOR fin-doc.
+DEFINE TEMP-TABLE tt-fin-doc NO-UNDO LIKE fin-doc.
+DEFINE TEMP-TABLE tt0-fin-doc-attr NO-UNDO LIKE fin-doc-attr.
+DEFINE TEMP-TABLE tt0-fin-doc-tax NO-UNDO LIKE fin-doc-tax.
+DEFINE TEMP-TABLE tt0-payment NO-UNDO LIKE payment.
+DEFINE BUFFER X_clients-host FOR clients.
+DEFINE BUFFER X_firm FOR firm.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -77,7 +77,8 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Карточка редактирования расходного ордера".
 { cmp/vssrevis.i }
-
+/*{ cmp/library.i }*/
+/*{ gbl/db-attr.i }*/
 define variable v-db-num like ub.db.db-num no-undo.
 define variable v-view as character no-undo init "full":U.
 define variable v-not-uf-set as logical no-undo.
@@ -91,9 +92,9 @@ define variable v-baseratef     as logical no-undo .
 define variable v-contractf     as logical no-undo .
 define variable v-contractratef as logical no-undo .
 define variable v-limit-access  as integer no-undo .
-
-
-
+define variable mprn-doc-code-old as character no-undo. 
+define variable current-pko-rko as character no-undo.
+define variable current-ruleID  as character no-undo. 
 
 define buffer X_fin-code-cor-acc for ub.fin-code-cor-acc.
 define buffer X_fin-code-an-uchet for ub.fin-code-an-uchet.
@@ -139,6 +140,7 @@ define variable v-sum-doc-tab-order  as character no-undo init "sum-doc,curr-cod
 { gbl/color.i    }
 { gbl/getcntxt.i def }
 { gbl/usrfulnf.i }
+{ gbl/key-rec.i }
 { ref/findocip.i &action="define" &doc-type="expense-cash" }
 { ref/fd-attr.i " " tt0-fin-doc-attr }
 
@@ -183,7 +185,7 @@ end.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -216,13 +218,14 @@ tt-fin-doc.sum-base tt-fin-doc.contract-rate tt-fin-doc.contract-scale ~
 tt-fin-doc.sum-contr tt-fin-doc.receiver-type tt-fin-doc.receiver-code ~
 tt-fin-doc.receiver-name tt-fin-doc.naznach-plat ~
 tt-fin-doc.receiver-passport tt-fin-doc.enclosure tt-fin-doc.PS ~
-tt-fin-doc.payer-sign1 tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3
+tt-fin-doc.payer-sign1 tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3 
 &Scoped-define ENABLED-TABLES tt-fin-doc
 &Scoped-define FIRST-ENABLED-TABLE tt-fin-doc
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit r-sht B-tax B-print B-hist ~
-B-Help RS-view B-obj B-payer-view B-cor-acc B-an-uchet f-contract-curr-abbr ~
-B-contract-view B-cel-nazn B-cor-acc1 f-rest-con-sum B-currency B-calc ~
-B-receiver B-receiver-view
+B-Help RS-view f-cashbook B-cashbook B-pre-vedom B-obj B-payer-view ~
+B-cor-acc B-an-uchet f-contract-curr-abbr B-contract-view B-cel-nazn ~
+B-cor-acc1 f-rest-con-sum B-currency B-calc B-receiver B-receiver-view ~
+l-cashbook 
 &Scoped-Define DISPLAYED-FIELDS tt-fin-doc.shift-date tt-fin-doc.shift-name ~
 tt-fin-doc.shift-num tt-fin-doc.prn-doc-code tt-fin-doc.fin-doc-code ~
 tt-fin-doc.perm-date tt-fin-doc.user-name-perm tt-fin-doc.doc-date ~
@@ -238,13 +241,13 @@ tt-fin-doc.sum-base tt-fin-doc.contract-rate tt-fin-doc.contract-scale ~
 tt-fin-doc.sum-contr tt-fin-doc.receiver-type tt-fin-doc.receiver-code ~
 tt-fin-doc.receiver-name tt-fin-doc.naznach-plat ~
 tt-fin-doc.receiver-passport tt-fin-doc.enclosure tt-fin-doc.PS ~
-tt-fin-doc.payer-sign1 tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3
+tt-fin-doc.payer-sign1 tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3 
 &Scoped-define DISPLAYED-TABLES tt-fin-doc
 &Scoped-define FIRST-DISPLAYED-TABLE tt-fin-doc
-&Scoped-Define DISPLAYED-OBJECTS RS-view f-cor-acc-descr f-an-uchet-descr ~
-f-contract-curr-abbr f-contract-prn-code f-contract-date f-contract-type ~
-f-cel-nazn-descr f-cor-acc1-descr f-rest-con-sum F-curr-abbr F-debet ~
-F-credit
+&Scoped-Define DISPLAYED-OBJECTS RS-view f-cashbook f-cor-acc-descr ~
+f-an-uchet-descr f-contract-curr-abbr f-contract-prn-code f-contract-date ~
+f-contract-type f-cel-nazn-descr f-cor-acc1-descr f-rest-con-sum ~
+F-curr-abbr l-cashbook F-debet F-credit 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -259,165 +262,186 @@ F-credit
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-an-uchet
+DEFINE BUTTON B-an-uchet 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-calc
-     LABEL "Расчет сумм и курсов"
+DEFINE BUTTON B-calc 
+     LABEL "Расчет сумм и курсов" 
      SIZE 22 BY 1.
 
-DEFINE BUTTON B-cel-nazn
+DEFINE BUTTON B-cashbook 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "" 
+     SIZE 3 BY 1
+     FGCOLOR 4 .
+
+DEFINE BUTTON B-cel-nazn 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-contract-view
-     LABEL "&Договор"
+DEFINE BUTTON B-contract-view 
+     LABEL "&Договор" 
      SIZE 12 BY 1
      FGCOLOR 4 .
 
-DEFINE BUTTON B-cor-acc
+DEFINE BUTTON B-cor-acc 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-cor-acc1
+DEFINE BUTTON B-cor-acc1 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-currency
+DEFINE BUTTON B-currency 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-hist
-     LABEL "&История"
+DEFINE BUTTON B-hist 
+     LABEL "&История" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-obj
+DEFINE BUTTON B-obj 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-payer-view
-     LABEL "П&лательщик"
+DEFINE BUTTON B-payer-view 
+     LABEL "П&лательщик" 
      SIZE 12 BY 1
      FGCOLOR 4 .
 
-DEFINE BUTTON B-print
-     LABEL "Пе&чать"
+DEFINE BUTTON B-pre-vedom 
+     LABEL "&Препровод. ведомость" 
+     SIZE 25 BY 1.
+
+DEFINE BUTTON B-print 
+     LABEL "Пе&чать" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-receiver
+DEFINE BUTTON B-receiver 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-receiver-view
-     LABEL "П&олучатель"
+DEFINE BUTTON B-receiver-view 
+     LABEL "П&олучатель" 
      SIZE 12 BY 1.
 
-DEFINE BUTTON B-tax
-     LABEL "&Налоги"
+DEFINE BUTTON B-tax 
+     LABEL "&Налоги" 
      SIZE 8 BY 1.
 
-DEFINE BUTTON r-sht
+DEFINE BUTTON r-sht 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
-     SIZE 2 BY 1.07.
+     LABEL "Btn 1" 
+     SIZE 2 BY 1.08.
 
-DEFINE VARIABLE f-an-uchet-descr AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-an-uchet-descr AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 60 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-cel-nazn-descr AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-cashbook AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 40 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-cel-nazn-descr AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 60 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-contract-curr-abbr AS CHARACTER FORMAT "X(3)":U INITIAL "0"
-     VIEW-AS FILL-IN
-     SIZE 6.3 BY 1 NO-UNDO.
+DEFINE VARIABLE f-contract-curr-abbr AS CHARACTER FORMAT "X(3)":U INITIAL "0" 
+     VIEW-AS FILL-IN 
+     SIZE 6.25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-contract-date AS DATE FORMAT "99/99/9999":U
-     LABEL "от"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-contract-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "от" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-contract-prn-code AS CHARACTER FORMAT "X(16)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-contract-prn-code AS CHARACTER FORMAT "X(16)":U 
+     VIEW-AS FILL-IN 
      SIZE 20 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-contract-type AS CHARACTER FORMAT "X(23)":U
-     LABEL "тип дог-ра"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-contract-type AS CHARACTER FORMAT "X(23)":U 
+     LABEL "тип дог-ра" 
+     VIEW-AS FILL-IN 
      SIZE 25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-cor-acc-descr AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-cor-acc-descr AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 60 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-cor-acc1-descr AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-cor-acc1-descr AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 60 BY 1 NO-UNDO.
 
-DEFINE VARIABLE F-credit AS CHARACTER FORMAT "X(256)":U INITIAL "Кредит"
-      VIEW-AS TEXT
-     SIZE 7.3 BY .67
+DEFINE VARIABLE F-credit AS CHARACTER FORMAT "X(256)":U INITIAL "Кредит" 
+      VIEW-AS TEXT 
+     SIZE 7.25 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE F-curr-abbr AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE F-curr-abbr AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 4 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE F-debet AS CHARACTER FORMAT "X(256)":U INITIAL "Дебет"
-      VIEW-AS TEXT
-     SIZE 6.3 BY .67
+DEFINE VARIABLE F-debet AS CHARACTER FORMAT "X(256)":U INITIAL "Дебет" 
+      VIEW-AS TEXT 
+     SIZE 6.25 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE f-rest-con-sum AS DECIMAL FORMAT "->,>>>,>>>,>>>,>>9.99" INITIAL 0
-     LABEL "Своб.ост.(в.д.)"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-rest-con-sum AS DECIMAL FORMAT "->,>>>,>>>,>>>,>>9.99" INITIAL 0 
+     LABEL "Своб.ост.(в.д.)" 
+     VIEW-AS FILL-IN 
      SIZE 25 BY 1
      FGCOLOR 9  NO-UNDO.
 
-DEFINE VARIABLE RS-view AS CHARACTER
+DEFINE VARIABLE l-cashbook AS CHARACTER FORMAT "X(256)":U INITIAL "Кассовая книга:" 
+      VIEW-AS TEXT 
+     SIZE 15 BY .67
+     FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE RS-view AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "1",
 "Item 2", "2",
 "Item 3", "3"
@@ -426,7 +450,7 @@ DEFINE VARIABLE RS-view AS CHARACTER
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY Dialog-Frame FOR
+DEFINE QUERY Dialog-Frame FOR 
       locked_fin-doc SCROLLING.
 &ANALYZE-RESUME
 
@@ -437,245 +461,257 @@ DEFINE FRAME Dialog-Frame
      b-quit AT ROW 1 COL 11
      tt-fin-doc.shift-date AT ROW 1 COL 45 COLON-ALIGNED WIDGET-ID 4
           LABEL "См"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 11 BY 1
      tt-fin-doc.shift-name AT ROW 1 COL 60 COLON-ALIGNED WIDGET-ID 6
           LABEL "№"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 3 BY 1
      tt-fin-doc.shift-num AT ROW 1 COL 67 COLON-ALIGNED WIDGET-ID 8
           LABEL "П"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 3 BY 1
      r-sht AT ROW 1 COL 72 WIDGET-ID 10
      B-tax AT ROW 1 COL 74
      B-print AT ROW 1 COL 90
      B-hist AT ROW 1 COL 93
      B-Help AT ROW 1 COL 96
-     RS-view AT ROW 1.07 COL 21 NO-LABEL
-     tt-fin-doc.prn-doc-code AT ROW 2 COL 16.5 COLON-ALIGNED
-          LABEL "Номер документа"
-          VIEW-AS FILL-IN
+     RS-view AT ROW 1.08 COL 21 NO-LABEL
+     f-cashbook AT ROW 2 COL 15 COLON-ALIGNED NO-LABEL
+     B-cashbook AT ROW 2 COL 59
+     B-pre-vedom AT ROW 2 COL 74 WIDGET-ID 20
+     tt-fin-doc.prn-doc-code AT ROW 3 COL 16.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
-          FGCOLOR 4
-     tt-fin-doc.fin-doc-code AT ROW 2 COL 46 COLON-ALIGNED
+          FGCOLOR 4 
+     tt-fin-doc.fin-doc-code AT ROW 3 COL 46 COLON-ALIGNED
           LABEL "Внутр. №"
-          VIEW-AS FILL-IN
-          SIZE 10.4 BY 1
-     tt-fin-doc.perm-date AT ROW 2 COL 71.5 COLON-ALIGNED
-          LABEL "Дата разр"
-          VIEW-AS FILL-IN
-          SIZE 11 BY 1
-     tt-fin-doc.user-name-perm AT ROW 2 COL 82.8 COLON-ALIGNED NO-LABEL FORMAT "X(14)"
-          VIEW-AS FILL-IN
-          SIZE 14.5 BY 1
-     tt-fin-doc.doc-date AT ROW 3 COL 11 COLON-ALIGNED
-          LABEL "Дата сост."
-          VIEW-AS FILL-IN
-          SIZE 11 BY 1
-          FGCOLOR 4
-     tt-fin-doc.user-name-doc AT ROW 3 COL 22.4 COLON-ALIGNED NO-LABEL FORMAT "X(14)"
-          VIEW-AS FILL-IN
-          SIZE 14.5 BY 1
-     tt-fin-doc.obj-type AT ROW 3 COL 39.4 NO-LABEL
-          VIEW-AS RADIO-SET HORIZONTAL
-          RADIO-BUTTONS
-                    "Item 1", "1":U
-          SIZE 12.6 BY 1
-     tt-fin-doc.obj-code AT ROW 3 COL 50.5 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 6.5 BY 1
+          VIEW-AS FILL-IN 
+          SIZE 10.38 BY 1
      B-obj AT ROW 3 COL 59
-     tt-fin-doc.fact-date AT ROW 3 COL 71.5 COLON-ALIGNED
-          LABEL "Дата факт"
-          VIEW-AS FILL-IN
+     tt-fin-doc.perm-date AT ROW 3 COL 71.5 COLON-ALIGNED
+          LABEL "Дата разр"
+          VIEW-AS FILL-IN 
           SIZE 11 BY 1
-     tt-fin-doc.user-name-fact AT ROW 3 COL 82.8 COLON-ALIGNED NO-LABEL FORMAT "X(14)"
-          VIEW-AS FILL-IN
+     tt-fin-doc.user-name-perm AT ROW 3 COL 82.75 COLON-ALIGNED NO-LABEL FORMAT "X(14)"
+          VIEW-AS FILL-IN 
           SIZE 14.5 BY 1
-     tt-fin-doc.payer-type AT ROW 4 COL 1.8 NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 4 BY 1
-     tt-fin-doc.payer-code AT ROW 4 COL 4.3 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 6 BY 1
-     tt-fin-doc.payer-okpo AT ROW 4 COL 17.3 COLON-ALIGNED
-          LABEL "ОКПО" FORMAT "X(10)"
-          VIEW-AS FILL-IN
+     tt-fin-doc.doc-date AT ROW 4 COL 11 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 11 BY 1
-          FGCOLOR 4
-     tt-fin-doc.payer-name AT ROW 4 COL 28.3 COLON-ALIGNED NO-LABEL FORMAT "X(130)"
-          VIEW-AS FILL-IN
-          SIZE 50 BY 1
-          FGCOLOR 4
-     B-payer-view AT ROW 4 COL 87
-     tt-fin-doc.str-podr-type AT ROW 5 COL 1.3
-          LABEL "Структ.подразд."
-          VIEW-AS FILL-IN
-          SIZE 4 BY 1
-          FGCOLOR 4
-     tt-fin-doc.str-podr-code AT ROW 5 COL 20.5 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 11 BY 1
-          FGCOLOR 4
-     tt-fin-doc.str-podr-name AT ROW 5 COL 53.9 COLON-ALIGNED
-          VIEW-AS FILL-IN
-          SIZE 43 BY 1
-          FGCOLOR 4
-     tt-fin-doc.cor-acc-value AT ROW 6 COL 16.3 COLON-ALIGNED
-          LABEL "Корсчет"
-          VIEW-AS FILL-IN
-          SIZE 14 BY 1
-          FGCOLOR 4
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
-
-/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
-DEFINE FRAME Dialog-Frame
-     B-cor-acc AT ROW 6 COL 33.1
-     f-cor-acc-descr AT ROW 6 COL 35.8 COLON-ALIGNED NO-LABEL
-     tt-fin-doc.an-uchet-value AT ROW 7 COL 5.3
-          LABEL "Код ан. уч."
-          VIEW-AS FILL-IN
-          SIZE 14 BY 1
-          FGCOLOR 4
-     B-an-uchet AT ROW 7 COL 33.1
-     f-an-uchet-descr AT ROW 7 COL 35.8 COLON-ALIGNED NO-LABEL
-     f-contract-curr-abbr AT ROW 7.47 COL 53.3 COLON-ALIGNED NO-LABEL
-     B-contract-view AT ROW 7.5 COL 1
-     f-contract-prn-code AT ROW 7.5 COL 12 COLON-ALIGNED NO-LABEL
-     f-contract-date AT ROW 7.5 COL 36.6 COLON-ALIGNED
-     tt-fin-doc.contract-curr AT ROW 7.5 COL 49.1 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 4 BY 1
-     f-contract-type AT ROW 7.5 COL 72 COLON-ALIGNED
-     tt-fin-doc.cel-nazn-value AT ROW 8 COL 16.3 COLON-ALIGNED
-          LABEL "Код цел.назн."
-          VIEW-AS FILL-IN
-          SIZE 14 BY 1
-          FGCOLOR 4
-     B-cel-nazn AT ROW 8 COL 33.1
-     f-cel-nazn-descr AT ROW 8 COL 35.8 COLON-ALIGNED NO-LABEL
-     tt-fin-doc.cor-acc1-value AT ROW 9 COL 16.3 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 14 BY 1
-          FGCOLOR 4
-     B-cor-acc1 AT ROW 9 COL 33.1
-     f-cor-acc1-descr AT ROW 9 COL 35.8 COLON-ALIGNED NO-LABEL
-     tt-fin-doc.sum-doc AT ROW 10 COL 6 COLON-ALIGNED
-          LABEL "Сумма" FORMAT ">,>>>,>>>,>>>,>>9.99"
-          VIEW-AS FILL-IN
-          SIZE 24.4 BY 1
-          FGCOLOR 4
-     f-rest-con-sum AT ROW 10 COL 72.3 COLON-ALIGNED
-     tt-fin-doc.curr-code AT ROW 10.03 COL 41.9 COLON-ALIGNED
-          LABEL "Вал"
-          VIEW-AS FILL-IN
-          SIZE 4 BY 1
-     B-currency AT ROW 10.03 COL 48.9
-     F-curr-abbr AT ROW 10.03 COL 50.9 COLON-ALIGNED NO-LABEL
-     B-calc AT ROW 11 COL 1.5
-     tt-fin-doc.exch-rate AT ROW 11 COL 34.5 COLON-ALIGNED
-          LABEL "Курс пл-жа"
-          VIEW-AS FILL-IN
-          SIZE 10 BY 1
-     tt-fin-doc.exch-scale AT ROW 11 COL 44.8 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 5.6 BY 1
-     tt-fin-doc.sum-rubl AT ROW 11 COL 72.3 COLON-ALIGNED
-          LABEL "abbr_rubli_firstshift"
-          VIEW-AS FILL-IN
-          SIZE 25 BY 1
-     tt-fin-doc.base-rate AT ROW 12 COL 34.5 COLON-ALIGNED
-          LABEL "Курс б.в."
-          VIEW-AS FILL-IN
-          SIZE 10 BY 1
-     tt-fin-doc.base-scale AT ROW 12 COL 44.8 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 5.6 BY 1
-     tt-fin-doc.sum-base AT ROW 12 COL 72.1 COLON-ALIGNED
-          LABEL "Б.в."
-          VIEW-AS FILL-IN
-          SIZE 25 BY 1
-     tt-fin-doc.contract-rate AT ROW 13 COL 34.5 COLON-ALIGNED
-          LABEL "Курс дог."
-          VIEW-AS FILL-IN
-          SIZE 10 BY 1
-     tt-fin-doc.contract-scale AT ROW 13 COL 44.8 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
-          SIZE 5.6 BY 1
-     tt-fin-doc.sum-contr AT ROW 13 COL 72.3 COLON-ALIGNED
-          LABEL "в.дог-ра"
-          VIEW-AS FILL-IN
-          SIZE 25 BY 1
-     B-receiver AT ROW 13.97 COL 27.4
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
-
-/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
-DEFINE FRAME Dialog-Frame
-     tt-fin-doc.receiver-type AT ROW 14 COL 1 NO-LABEL
+          FGCOLOR 4 
+     tt-fin-doc.user-name-doc AT ROW 4 COL 22.38 COLON-ALIGNED NO-LABEL FORMAT "X(14)"
+          VIEW-AS FILL-IN 
+          SIZE 14.5 BY 1
+     tt-fin-doc.obj-type AT ROW 4 COL 39.38 NO-LABEL
           VIEW-AS RADIO-SET HORIZONTAL
-          RADIO-BUTTONS
+          RADIO-BUTTONS 
+                    "Item 1", "1":U
+          SIZE 12.63 BY 1
+     tt-fin-doc.obj-code AT ROW 4 COL 50.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 6.5 BY 1
+     tt-fin-doc.fact-date AT ROW 4 COL 71.5 COLON-ALIGNED
+          LABEL "Дата факт"
+          VIEW-AS FILL-IN 
+          SIZE 11 BY 1
+     tt-fin-doc.user-name-fact AT ROW 4 COL 82.75 COLON-ALIGNED NO-LABEL FORMAT "X(14)"
+          VIEW-AS FILL-IN 
+          SIZE 14.5 BY 1
+     tt-fin-doc.payer-type AT ROW 5 COL 1.75 NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 4 BY 1
+     tt-fin-doc.payer-code AT ROW 5 COL 4.25 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 6 BY 1
+     tt-fin-doc.payer-okpo AT ROW 5 COL 17.25 COLON-ALIGNED
+          LABEL "ОКПО" FORMAT "X(10)"
+          VIEW-AS FILL-IN 
+          SIZE 11 BY 1
+          FGCOLOR 4 
+     tt-fin-doc.payer-name AT ROW 5 COL 28.25 COLON-ALIGNED NO-LABEL FORMAT "X(130)"
+          VIEW-AS FILL-IN 
+          SIZE 50 BY 1
+          FGCOLOR 4 
+     B-payer-view AT ROW 5 COL 87
+     tt-fin-doc.str-podr-type AT ROW 6 COL 1.25
+          LABEL "Структ.подразд."
+          VIEW-AS FILL-IN 
+          SIZE 4 BY 1
+          FGCOLOR 4 
+     tt-fin-doc.str-podr-code AT ROW 6 COL 20.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 11 BY 1
+          FGCOLOR 4 
+     tt-fin-doc.str-podr-name AT ROW 6 COL 53.88 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 43 BY 1
+          FGCOLOR 4 
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
+
+/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
+DEFINE FRAME Dialog-Frame
+     tt-fin-doc.cor-acc-value AT ROW 7 COL 16.25 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 14 BY 1
+          FGCOLOR 4 
+     B-cor-acc AT ROW 7 COL 33.13
+     f-cor-acc-descr AT ROW 7 COL 35.75 COLON-ALIGNED NO-LABEL
+     tt-fin-doc.an-uchet-value AT ROW 8 COL 5.25
+          LABEL "Код ан. уч."
+          VIEW-AS FILL-IN 
+          SIZE 14 BY 1
+          FGCOLOR 4 
+     B-an-uchet AT ROW 8 COL 33.13
+     f-an-uchet-descr AT ROW 8 COL 35.75 COLON-ALIGNED NO-LABEL
+     f-contract-curr-abbr AT ROW 8.46 COL 53.25 COLON-ALIGNED NO-LABEL
+     B-contract-view AT ROW 8.5 COL 1
+     f-contract-prn-code AT ROW 8.5 COL 12 COLON-ALIGNED NO-LABEL
+     f-contract-date AT ROW 8.5 COL 36.63 COLON-ALIGNED
+     tt-fin-doc.contract-curr AT ROW 8.5 COL 49.13 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 4 BY 1
+     f-contract-type AT ROW 8.5 COL 72 COLON-ALIGNED
+     tt-fin-doc.cel-nazn-value AT ROW 9 COL 16.25 COLON-ALIGNED
+          LABEL "Код цел.назн."
+          VIEW-AS FILL-IN 
+          SIZE 14 BY 1
+          FGCOLOR 4 
+     B-cel-nazn AT ROW 9 COL 33.13
+     f-cel-nazn-descr AT ROW 9 COL 35.75 COLON-ALIGNED NO-LABEL
+     tt-fin-doc.cor-acc1-value AT ROW 10 COL 16.25 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 14 BY 1
+          FGCOLOR 4 
+     B-cor-acc1 AT ROW 10 COL 33.13
+     f-cor-acc1-descr AT ROW 10 COL 35.75 COLON-ALIGNED NO-LABEL
+     tt-fin-doc.sum-doc AT ROW 11 COL 6 COLON-ALIGNED NO-LABEL FORMAT ">,>>>,>>>,>>>,>>9.99"
+          VIEW-AS FILL-IN 
+          SIZE 24.38 BY 1
+          FGCOLOR 4 
+     f-rest-con-sum AT ROW 11 COL 72.25 COLON-ALIGNED
+     tt-fin-doc.curr-code AT ROW 11.04 COL 41.88 COLON-ALIGNED
+          LABEL "Вал"
+          VIEW-AS FILL-IN 
+          SIZE 4 BY 1
+     B-currency AT ROW 11.04 COL 48.88
+     F-curr-abbr AT ROW 11.04 COL 50.88 COLON-ALIGNED NO-LABEL
+     B-calc AT ROW 12 COL 1.5
+     tt-fin-doc.exch-rate AT ROW 12 COL 34.5 COLON-ALIGNED
+          LABEL "Курс пл-жа"
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+     tt-fin-doc.exch-scale AT ROW 12 COL 44.75 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 5.63 BY 1
+     tt-fin-doc.sum-rubl AT ROW 12 COL 72.25 COLON-ALIGNED
+          LABEL "abbr_rubli_firstshift"
+          VIEW-AS FILL-IN 
+          SIZE 25 BY 1
+     tt-fin-doc.base-rate AT ROW 13 COL 34.5 COLON-ALIGNED
+          LABEL "Курс б.в."
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+     tt-fin-doc.base-scale AT ROW 13 COL 44.75 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 5.63 BY 1
+     tt-fin-doc.sum-base AT ROW 13 COL 72.13 COLON-ALIGNED
+          LABEL "Б.в."
+          VIEW-AS FILL-IN 
+          SIZE 25 BY 1
+     tt-fin-doc.contract-rate AT ROW 14 COL 34.5 COLON-ALIGNED
+          LABEL "Курс дог."
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+     tt-fin-doc.contract-scale AT ROW 14 COL 44.75 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
+          SIZE 5.63 BY 1
+     tt-fin-doc.sum-contr AT ROW 14 COL 72.25 COLON-ALIGNED
+          LABEL "в.дог-ра"
+          VIEW-AS FILL-IN 
+          SIZE 25 BY 1
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
+
+/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
+DEFINE FRAME Dialog-Frame
+     B-receiver AT ROW 14.96 COL 27.38
+     tt-fin-doc.receiver-type AT ROW 15 COL 1 NO-LABEL
+          VIEW-AS RADIO-SET HORIZONTAL
+          RADIO-BUTTONS 
                     "Item 1", "1":U,
 "Item 1", "2":U
           SIZE 13.5 BY 1
-     tt-fin-doc.receiver-code AT ROW 14 COL 13.5 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+     tt-fin-doc.receiver-code AT ROW 15 COL 13.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 11 BY 1
-     tt-fin-doc.receiver-name AT ROW 14 COL 30.3 COLON-ALIGNED NO-LABEL FORMAT "X(130)"
-          VIEW-AS FILL-IN
+     tt-fin-doc.receiver-name AT ROW 15 COL 30.25 COLON-ALIGNED NO-LABEL FORMAT "X(130)"
+          VIEW-AS FILL-IN 
           SIZE 53 BY 1
-          FGCOLOR 4
-     B-receiver-view AT ROW 14 COL 87
-     tt-fin-doc.naznach-plat AT ROW 16 COL 1 NO-LABEL
+          FGCOLOR 4 
+     B-receiver-view AT ROW 15 COL 87
+     tt-fin-doc.naznach-plat AT ROW 17 COL 1 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 48 BY 1.5 TOOLTIP "Основание платежа"
-          FGCOLOR 4
-     tt-fin-doc.receiver-passport AT ROW 16 COL 50.5 NO-LABEL
+          FGCOLOR 4 
+     tt-fin-doc.receiver-passport AT ROW 17 COL 50.5 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 48 BY 1.5
-          FGCOLOR 4
-     tt-fin-doc.enclosure AT ROW 18.5 COL 1 NO-LABEL
+          FGCOLOR 4 
+     tt-fin-doc.enclosure AT ROW 19.5 COL 1 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 48 BY 1.5
-          FGCOLOR 4
-     tt-fin-doc.PS AT ROW 18.5 COL 50.5 NO-LABEL
+          FGCOLOR 4 
+     tt-fin-doc.PS AT ROW 19.5 COL 50.5 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 48 BY 1.5 TOOLTIP "Дополнительная информация, не печатающаяся в ордере"
-     tt-fin-doc.payer-sign1 AT ROW 20 COL 54
+     tt-fin-doc.payer-sign1 AT ROW 21 COL 54
           LABEL "Рук. орг-ции" FORMAT "X(37)"
-          VIEW-AS FILL-IN
-          SIZE 30.9 BY 1
-          FGCOLOR 4
-     tt-fin-doc.payer-sign2 AT ROW 21 COL 6
+          VIEW-AS FILL-IN 
+          SIZE 30.88 BY 1
+          FGCOLOR 4 
+     tt-fin-doc.payer-sign2 AT ROW 22 COL 6
           LABEL "Гл. бух."
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 33 BY 1
-          FGCOLOR 4
-     tt-fin-doc.payer-sign3 AT ROW 21 COL 60
+          FGCOLOR 4 
+     tt-fin-doc.payer-sign3 AT ROW 22 COL 60
           LABEL "Кассир"
-          VIEW-AS FILL-IN
-          SIZE 30.9 BY 1
-          FGCOLOR 4
-     F-debet AT ROW 6.13 COL 1.9 NO-LABEL
-     F-credit AT ROW 9.3 COL 8.9 NO-LABEL
-     "Приложение" VIEW-AS TEXT
-          SIZE 19.4 BY 1 AT ROW 17.5 COL 1
-          FGCOLOR 4
-     "(Примечание (доп.информация, не печатается))" VIEW-AS TEXT
-          SIZE 47.1 BY 1 AT ROW 17.5 COL 51
-     "Основание платежа" VIEW-AS TEXT
-          SIZE 19.4 BY 1 AT ROW 15 COL 1.3
-          FGCOLOR 4
+          VIEW-AS FILL-IN 
+          SIZE 30.88 BY 1
+          FGCOLOR 4 
+     l-cashbook AT ROW 2.21 COL 1.38 NO-LABEL
+     F-debet AT ROW 7.13 COL 1.88 NO-LABEL
+     F-credit AT ROW 10.29 COL 8.88 NO-LABEL
+     "Сумма:" VIEW-AS TEXT
+          SIZE 6.5 BY .67 AT ROW 11.13 COL 1.25 WIDGET-ID 14
+          FGCOLOR 4 
+     "Корсчет:" VIEW-AS TEXT
+          SIZE 8 BY .67 AT ROW 7.17 COL 9 WIDGET-ID 12
+          FGCOLOR 4 
      "Документ, удостоверяющий личность" VIEW-AS TEXT
-          SIZE 43.5 BY 1 AT ROW 15 COL 50.5
-          FGCOLOR 4
-     SPACE(5.30) SKIP(6.04)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 43.5 BY 1 AT ROW 16 COL 50.5
+          FGCOLOR 0 
+     "Основание платежа" VIEW-AS TEXT
+          SIZE 19.38 BY 1 AT ROW 16 COL 1.25
+          FGCOLOR 4 
+     "(Примечание (доп.информация, не печатается))" VIEW-AS TEXT
+          SIZE 47.13 BY 1 AT ROW 18.5 COL 51
+     "Приложение" VIEW-AS TEXT
+          SIZE 19.38 BY 1 AT ROW 18.5 COL 1
+          FGCOLOR 0 
+     "Дата сост.:" VIEW-AS TEXT
+          SIZE 11 BY .67 AT ROW 4.13 COL 1.38 WIDGET-ID 18
+          FGCOLOR 4 
+     "Номер документа:" VIEW-AS TEXT
+          SIZE 16.5 BY .67 AT ROW 3.17 COL 1.38 WIDGET-ID 16
+          FGCOLOR 4 
+     SPACE(81.42) SKIP(19.20)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Расходный кассовый ордер - Плательщик"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -706,7 +742,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -738,6 +774,9 @@ ASSIGN
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN f-an-uchet-descr IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
+ASSIGN 
+       f-cashbook:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+
 /* SETTINGS FOR FILL-IN f-cel-nazn-descr IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-contract-date IN FRAME Dialog-Frame
@@ -760,6 +799,8 @@ ASSIGN
    NO-ENABLE EXP-LABEL                                                  */
 /* SETTINGS FOR FILL-IN tt-fin-doc.fin-doc-code IN FRAME Dialog-Frame
    NO-ENABLE EXP-LABEL                                                  */
+/* SETTINGS FOR FILL-IN l-cashbook IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN tt-fin-doc.obj-code IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-fin-doc.payer-code IN FRAME Dialog-Frame
@@ -822,7 +863,7 @@ ASSIGN
 */  /* DIALOG-BOX Dialog-Frame */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -832,7 +873,21 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Расходный кассовый ордер - Плательщик */
 DO:
-  APPLY "END-ERROR":U TO SELF.
+    /*Запуск интерфейса препроводительной ведомости*/
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-pre-vedom
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-pre-vedom Dialog-Frame
+ON CHOOSE OF B-pre-vedom IN FRAME Dialog-Frame /* Препровод. ведомость */
+DO:
+  find first tt-fin-doc no-error .
+  if available (tt-fin-doc) then do:
+  run ref/cover_sheet.p (input parParentProc, input p-host-code, input tt-fin-doc.fin-doc-code, input tt-fin-doc.CashBookId, input tt-fin-doc.sum-doc, input p-mode) no-error .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -878,7 +933,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -949,7 +1004,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-view Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-view Dialog-Frame 
 PROCEDURE change-view :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1091,6 +1146,7 @@ IF AVAILABLE tt-fin-doc THEN
 ENABLE
 b-quit
 B-tax
+B-pre-vedom
 B-print when p-mode <> {&add-def}
 B-hist when p-mode <> {&add-def}
 B-Help
@@ -1101,6 +1157,8 @@ WITH FRAME Dialog-Frame.
 if p-mode <> {&lookup} and not is-fact-and-edit() then do:
   ENABLE
   B-exit
+  B-cashbook
+  f-cashbook
   tt-fin-doc.prn-doc-code
   tt-fin-doc.doc-date when v-limit-access = 0
   b-obj   when not v-is-auto-obj
@@ -1187,6 +1245,8 @@ CASE p-view:
     f-an-uchet-descr
     tt-fin-doc.cel-nazn-value
     f-cel-nazn-descr
+    l-cashbook
+    f-cashbook
     with frame {&frame-name}
     .
     if not is-fact-and-edit() then
@@ -1250,7 +1310,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1269,52 +1329,54 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY RS-view f-cor-acc-descr f-an-uchet-descr f-contract-curr-abbr
-          f-contract-prn-code f-contract-date f-contract-type f-cel-nazn-descr
-          f-cor-acc1-descr f-rest-con-sum F-curr-abbr F-debet F-credit
+  DISPLAY RS-view f-cashbook f-cor-acc-descr f-an-uchet-descr 
+          f-contract-curr-abbr f-contract-prn-code f-contract-date 
+          f-contract-type f-cel-nazn-descr f-cor-acc1-descr f-rest-con-sum 
+          F-curr-abbr l-cashbook F-debet F-credit 
       WITH FRAME Dialog-Frame.
-  IF AVAILABLE tt-fin-doc THEN
-    DISPLAY tt-fin-doc.shift-date tt-fin-doc.shift-name tt-fin-doc.shift-num
-          tt-fin-doc.prn-doc-code tt-fin-doc.fin-doc-code tt-fin-doc.perm-date
-          tt-fin-doc.user-name-perm tt-fin-doc.doc-date tt-fin-doc.user-name-doc
-          tt-fin-doc.obj-type tt-fin-doc.obj-code tt-fin-doc.fact-date
-          tt-fin-doc.user-name-fact tt-fin-doc.payer-type tt-fin-doc.payer-code
-          tt-fin-doc.payer-okpo tt-fin-doc.payer-name tt-fin-doc.str-podr-type
-          tt-fin-doc.str-podr-code tt-fin-doc.str-podr-name
-          tt-fin-doc.cor-acc-value tt-fin-doc.an-uchet-value
-          tt-fin-doc.contract-curr tt-fin-doc.cel-nazn-value
-          tt-fin-doc.cor-acc1-value tt-fin-doc.sum-doc tt-fin-doc.curr-code
-          tt-fin-doc.exch-rate tt-fin-doc.exch-scale tt-fin-doc.sum-rubl
-          tt-fin-doc.base-rate tt-fin-doc.base-scale tt-fin-doc.sum-base
-          tt-fin-doc.contract-rate tt-fin-doc.contract-scale
-          tt-fin-doc.sum-contr tt-fin-doc.receiver-type tt-fin-doc.receiver-code
-          tt-fin-doc.receiver-name tt-fin-doc.naznach-plat
-          tt-fin-doc.receiver-passport tt-fin-doc.enclosure tt-fin-doc.PS
-          tt-fin-doc.payer-sign1 tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3
+  IF AVAILABLE tt-fin-doc THEN 
+    DISPLAY tt-fin-doc.shift-date tt-fin-doc.shift-name tt-fin-doc.shift-num 
+          tt-fin-doc.prn-doc-code tt-fin-doc.fin-doc-code tt-fin-doc.perm-date 
+          tt-fin-doc.user-name-perm tt-fin-doc.doc-date tt-fin-doc.user-name-doc 
+          tt-fin-doc.obj-type tt-fin-doc.obj-code tt-fin-doc.fact-date 
+          tt-fin-doc.user-name-fact tt-fin-doc.payer-type tt-fin-doc.payer-code 
+          tt-fin-doc.payer-okpo tt-fin-doc.payer-name tt-fin-doc.str-podr-type 
+          tt-fin-doc.str-podr-code tt-fin-doc.str-podr-name 
+          tt-fin-doc.cor-acc-value tt-fin-doc.an-uchet-value 
+          tt-fin-doc.contract-curr tt-fin-doc.cel-nazn-value 
+          tt-fin-doc.cor-acc1-value tt-fin-doc.sum-doc tt-fin-doc.curr-code 
+          tt-fin-doc.exch-rate tt-fin-doc.exch-scale tt-fin-doc.sum-rubl 
+          tt-fin-doc.base-rate tt-fin-doc.base-scale tt-fin-doc.sum-base 
+          tt-fin-doc.contract-rate tt-fin-doc.contract-scale 
+          tt-fin-doc.sum-contr tt-fin-doc.receiver-type tt-fin-doc.receiver-code 
+          tt-fin-doc.receiver-name tt-fin-doc.naznach-plat 
+          tt-fin-doc.receiver-passport tt-fin-doc.enclosure tt-fin-doc.PS 
+          tt-fin-doc.payer-sign1 tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit tt-fin-doc.shift-date tt-fin-doc.shift-name
-         tt-fin-doc.shift-num r-sht B-tax B-print B-hist B-Help RS-view
-         tt-fin-doc.prn-doc-code tt-fin-doc.doc-date tt-fin-doc.user-name-doc
-         tt-fin-doc.obj-type tt-fin-doc.obj-code B-obj tt-fin-doc.payer-name
-         B-payer-view tt-fin-doc.str-podr-type tt-fin-doc.str-podr-code
-         tt-fin-doc.str-podr-name tt-fin-doc.cor-acc-value B-cor-acc
-         tt-fin-doc.an-uchet-value B-an-uchet f-contract-curr-abbr
-         B-contract-view tt-fin-doc.contract-curr tt-fin-doc.cel-nazn-value
-         B-cel-nazn tt-fin-doc.cor-acc1-value B-cor-acc1 tt-fin-doc.sum-doc
-         f-rest-con-sum tt-fin-doc.curr-code B-currency B-calc
-         tt-fin-doc.exch-rate tt-fin-doc.exch-scale tt-fin-doc.sum-rubl
-         tt-fin-doc.sum-base tt-fin-doc.contract-rate tt-fin-doc.contract-scale
-         tt-fin-doc.sum-contr B-receiver tt-fin-doc.receiver-type
-         tt-fin-doc.receiver-code tt-fin-doc.receiver-name B-receiver-view
-         tt-fin-doc.naznach-plat tt-fin-doc.receiver-passport
-         tt-fin-doc.enclosure tt-fin-doc.PS tt-fin-doc.payer-sign1
-         tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3
+  ENABLE B-exit b-quit tt-fin-doc.shift-date tt-fin-doc.shift-name 
+         tt-fin-doc.shift-num r-sht B-tax B-print B-hist B-Help RS-view 
+         f-cashbook B-cashbook B-pre-vedom tt-fin-doc.prn-doc-code B-obj 
+         tt-fin-doc.doc-date tt-fin-doc.user-name-doc tt-fin-doc.obj-type 
+         tt-fin-doc.obj-code tt-fin-doc.payer-name B-payer-view 
+         tt-fin-doc.str-podr-type tt-fin-doc.str-podr-code 
+         tt-fin-doc.str-podr-name tt-fin-doc.cor-acc-value B-cor-acc 
+         tt-fin-doc.an-uchet-value B-an-uchet f-contract-curr-abbr 
+         B-contract-view tt-fin-doc.contract-curr tt-fin-doc.cel-nazn-value 
+         B-cel-nazn tt-fin-doc.cor-acc1-value B-cor-acc1 tt-fin-doc.sum-doc 
+         f-rest-con-sum tt-fin-doc.curr-code B-currency B-calc 
+         tt-fin-doc.exch-rate tt-fin-doc.exch-scale tt-fin-doc.sum-rubl 
+         tt-fin-doc.sum-base tt-fin-doc.contract-rate tt-fin-doc.contract-scale 
+         tt-fin-doc.sum-contr B-receiver tt-fin-doc.receiver-type 
+         tt-fin-doc.receiver-code tt-fin-doc.receiver-name B-receiver-view 
+         tt-fin-doc.naznach-plat tt-fin-doc.receiver-passport 
+         tt-fin-doc.enclosure tt-fin-doc.PS tt-fin-doc.payer-sign1 
+         tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3 l-cashbook
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1323,7 +1385,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-main-table Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-main-table Dialog-Frame 
 PROCEDURE fill-main-table :
 { gbl/curdbnum.i v-db-num }
 { gbl/basecode.i p-host-code v-base-code }
@@ -1405,6 +1467,7 @@ then do:
     payer-sign1
     payer-sign2
     payer-sign3
+    CashBookId
     to tt-fin-doc
     assign
     tt-fin-doc.host-code = p-host-code
@@ -1441,6 +1504,7 @@ or p-mode = {&add-copy} then do:
                 ,input p-cor-acc1
                 ,input p-an-uchet-code
                 ,input p-cel-nazn-code
+                ,input (if available tt-fin-doc then tt-fin-doc.CashBookId else 0)
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,output table tt0-fin-doc-attr
@@ -1472,6 +1536,7 @@ else do:
                 ,input tt-fin-doc.cor-acc1
                 ,input tt-fin-doc.an-uchet-code
                 ,input tt-fin-doc.cel-nazn-code
+                ,input tt-fin-doc.CashBookId
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,output table tt0-fin-doc-attr
@@ -1501,7 +1566,34 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterCurr Dialog-Frame 
+PROCEDURE MycounterCurr :
+define input  parameter iFileName as character no-undo.
+define input  parameter ikey      as character no-undo.
+define input  parameter icode     as character no-undo.
+define output parameter oCount    as int64 no-undo.
+ define variable mCounterStor as class ibs.th.ref.counter.counterstorage.
+ mCounterStor = new ibs.th.ref.counter.counterstorage().
+ oCount = mCounterStor:GetCountValue(G#db-num,"cashbookrule", current-ruleID, current-pko-rko ) + 1.
+ delete object mCounterStor.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterNext Dialog-Frame 
+PROCEDURE MycounterNext :
+define input  parameter iFileName as character no-undo.
+define input  parameter ikey      as character no-undo.
+define input  parameter icode     as character no-undo.
+define output parameter oCount    as int64 no-undo.
+ run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko  ,output oCount    ).
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable Dialog-Frame 
 PROCEDURE Myenable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1577,6 +1669,7 @@ v-head-position = (if num-entries(tt-fin-doc.payer-sign1, {&delim-par}) > 1
                     else "":U)
 .
 if p-mode = {&add-def} and tt-fin-doc.contract-code = 0 then do:
+ 
   assign
   tt-fin-doc.receiver-type = (if tt-fin-doc.receiver-type = "":U then {&cmp} else tt-fin-doc.receiver-type)
   tt-fin-doc.payer-sign1:label  = tt-fin-doc.payer-sign1:label  +
@@ -1597,6 +1690,7 @@ else do: /* <> {&add-def} */
                                     else entry(1, tt-fin-doc.payer-sign1, {&delim-par}))
 
   .
+  
 end.
 if p-mode = {&lookup} then do:
     run proc-color-widgets in this-procedure({&not-in-form-list}, no, yes, ?, ?).
@@ -1621,6 +1715,14 @@ tt-fin-doc.shift-num  when tt-fin-doc.shift-flag = integer({&fin-flag-shift})
 tt-fin-doc.shift-name when tt-fin-doc.shift-flag = integer({&fin-flag-shift})
 with frame {&frame-name}
 .
+find first ub.cashbook no-lock where ub.cashbook.id = tt-fin-doc.CashBookId no-error.
+if available ub.cashbook
+then do :
+  f-cashbook = ub.CashBook.CashBookName .
+  display
+    f-cashbook
+  with frame {&frame-name} .
+end.
 if tt-fin-doc.shift-flag <> integer({&fin-flag-shift})  then do:
   hide
   tt-fin-doc.shift-date
@@ -1639,6 +1741,9 @@ if tt-fin-doc.contract-code <> 0 then do:
     f-contract-curr-abbr = X_contract-currency.curr-abbr
     .
 end.
+if p-mode eq {&add-def}
+then 
+   run update_prc-doc-code-mask (no).
 run change-view in this-procedure(rs-view).
 VIEW FRAME Dialog-Frame.
 if p-mode <> {&lookup} then APPLY "ENTRY" to tt-fin-doc.prn-doc-code.
@@ -1648,7 +1753,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1659,6 +1764,31 @@ define input parameter p-save as logical no-undo .
 if p-mode = {&lookup} or not available tt-fin-doc then do:
     return error.
 end.
+
+if ub.CashBook.CorrRko <> "" and (tt-fin-doc.cor-acc = 0 or tt-fin-doc.cor-acc = ?) then do:
+      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+      end. 
+end.
+else do: 
+  if tt-fin-doc.cor-acc = ? or tt-fin-doc.cor-acc = 0 then do:      
+  for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = "57.01"
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+  end. 
+  end.
+end.        
+
+if ub.CashBook.OsnAcct <> "" and (tt-fin-doc.cor-acc1 = ? or tt-fin-doc.cor-acc1 = 0) then do:      
+      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc1-value = ub.fin-code-cor-acc.code-value .
+      end. 
+end.      
 assign
 tt-fin-doc.prn-doc-code frame {&frame-name}
 tt-fin-doc.doc-date
@@ -1669,18 +1799,19 @@ tt-fin-doc.payer-name
 tt-fin-doc.str-podr-type
 tt-fin-doc.str-podr-code
 tt-fin-doc.str-podr-name
-tt-fin-doc.cor-acc1 = (if available X_fin-code-cor-acc1
-                       then X_fin-code-cor-acc1.fin-code
-                       else 0)
-tt-fin-doc.cor-acc1-value = (if available X_fin-code-cor-acc1
-                       then X_fin-code-cor-acc1.code-value
-                       else "":U)
-tt-fin-doc.cor-acc  = (if available X_fin-code-cor-acc
-                       then X_fin-code-cor-acc.fin-code
-                       else 0)
-tt-fin-doc.cor-acc-value  = (if available X_fin-code-cor-acc
-                       then X_fin-code-cor-acc.code-value
-                       else "":U)
+
+/*tt-fin-doc.cor-acc1 = (if available X_fin-code-cor-acc1 */
+/*                       then X_fin-code-cor-acc1.fin-code*/
+/*                       else 0)                          */
+/*tt-fin-doc.cor-acc1-value = (if available X_fin-code-cor-acc1*/
+/*                       then X_fin-code-cor-acc1.code-value   */
+/*                       else "":U)                            */
+/*tt-fin-doc.cor-acc  = (if available X_fin-code-cor-acc */
+/*                       then X_fin-code-cor-acc.fin-code*/
+/*                       else 0)                         */
+/*tt-fin-doc.cor-acc-value  = (if available X_fin-code-cor-acc*/
+/*                       then X_fin-code-cor-acc.code-value   */
+/*                       else "":U)                           */
 tt-fin-doc.an-uchet-code  = (if available X_fin-code-an-uchet
                         then X_fin-code-an-uchet.fin-code
                         else 0)
@@ -1715,7 +1846,9 @@ tt-fin-doc.doc-author = (if p-mode = {&add-def} then {&manual} else tt-fin-doc.d
 if not p-save then return.
 run check-sums-rate in this-procedure no-error.
 if error-status:error then return error.
-
+if p-mode eq {&add-def}
+then 
+   run update_prc-doc-code-mask(yes).
 &scop prfx tt-fin-doc.
 
 
@@ -1740,3 +1873,65 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE update_prc-doc-code-mask Dialog-Frame 
+PROCEDURE update_prc-doc-code-mask :
+define variable vCashBook as class ibs.th.ref.cashbookstorage no-undo.
+  define input  parameter IFlagSave as logical no-undo. 
+  define variable vMask     as character no-undo.
+  define variable v-key     as character no-undo.
+  define variable vValue    as character no-undo.
+  if tt-fin-doc.prn-doc-code:screen-value in frame Dialog-Frame ne "" and IFlagSave
+  then 
+     if tt-fin-doc.prn-doc-code:screen-value in frame Dialog-Frame ne mprn-doc-code-old
+         
+     then do:
+        return.
+     end. 
+  vCashBook = new ibs.th.ref.cashbookstorage () .
+      
+  vmask = vCashBook:getSinglRule(tt-fin-doc.cashbookId, p-obj-type,p-obj-code, "RkoMask") .
+
+  
+  delete object vCashBook no-error .
+  
+  if vmask > ""
+  then.
+  else vmask = "[NNNN]/[obj-code]" .
+  find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+                                              and ub.CashBookRule.Obj-type = p-obj-type
+                                              and ub.CashBookRule.Obj-code = p-obj-code
+                                           and ub.CashBookRule.Code = "currRko"
+                                           no-error .
+  if not available ub.CashBookRule
+  then do :
+     create ub.CashBookRule .
+     assign
+        ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+        ub.CashBookRule.Obj-type = p-obj-type    
+        ub.CashBookRule.Obj-code = p-obj-code    
+        ub.CashBookRule.Code = "currRko"    
+        ub.CashBookRule.Status_ = 0
+        ub.CashBookRule.RuleValue = "1"                       
+     .
+      end.  
+      run gen-key-rec in this-procedure ( input {&table_CashBookRule}
+                                         ,input (buffer CashBookRule:handle)
+                                         ,output v-key).
+                                         
+  subscribe   to "getCounter" anywhere run-procedure if IFlagSave then "Mycounternext" else "MycounterCurr".
+   
+  assign
+        current-pko-rko = "currRKO" 
+        current-ruleID = v-key
+      .
+      run utl/maskproc.p(parparentproc, vmask, "cashbook", tt-fin-doc.cashbookId, output vValue).
+      mprn-doc-code-old =  vValue.
+      tt-fin-doc.prn-doc-code = vValue.
+      display  tt-fin-doc.prn-doc-code with frame Dialog-Frame.
+   unsubscribe to "getCounter".
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+

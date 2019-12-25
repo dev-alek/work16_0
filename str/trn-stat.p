@@ -69,9 +69,13 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
+define buffer bf2_trn-doc     for ub.trn-doc.
 define buffer exp_trn-doc     for ub.trn-doc.
+define buffer in_trn-doc      for ub.trn-doc.
 define buffer bf_goods        for ub.goods.
 define buffer bf_doc-line     for ub.doc-line.
+define buffer bf2_doc-line    for ub.doc-line.
+define buffer in_doc-line     for ub.doc-line.
 define buffer bf_inv-line     for ub.inv-line.
 define buffer bf_clients      for ub.clients.
 define buffer bf_pay-type     for ub.pay-type.
@@ -82,6 +86,7 @@ define buffer bf_parts        for ub.parts.
 define buffer bf-cst_parts    for ub.parts.
 define buffer bf_gds-prt      for ub.gds-prt.
 define buffer bf_dis-card     for ub.dis-card.
+define buffer bf_rvs-doc      for ub.rvs-doc.
 define buffer bf_rvs-line     for ub.rvs-line.
 define buffer bf_store        for ub.store.
 define buffer bf_contract     for ub.contract.
@@ -179,6 +184,7 @@ define variable v-kol-doc as integer   no-undo .
 define variable v-is-add-doc as logical   no-undo init false  .
 define variable v-reasonm as logical   no-undo init false .
 define variable v-reasonme as character no-undo .
+define variable v-reasons-for-return as character no-undo . 
 define variable v-attr-mandat-wayb  as character no-undo .
 define variable v-attr-dop-info  as character no-undo .
 define variable v-is-ord-doc as logical   no-undo init false .
@@ -218,6 +224,7 @@ define variable v-value        as   character            no-undo.
 define variable v-show-str       as character no-undo .
 define variable v-add-nat-gas    as logical no-undo .
 define variable var-is-auto-trn  as logical no-undo .
+define variable v-return-qnty    as decimal no-undo .
 
 
 define stream str-err.
@@ -377,6 +384,7 @@ for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonm}   then v-reasonm      = thbjattr_thbj-attr.property-value-logical .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonme}  then v-reasonme     = thbjattr_thbj-attr.property-value-character .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_inv-ship}  then inv-shipvalue  = thbjattr_thbj-attr.property-value-logical .
+    if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasons-for-return}  then v-reasons-for-return     = thbjattr_thbj-attr.property-value-character .
     if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} 
     then do:
       if isFuel 
@@ -622,11 +630,10 @@ if ((varstatus = {&wayb} and varflag) or varstatus = {&fact}) and varauto-tank =
 then do:
   
   for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code and bf_doc-line-attr.attr-code = "n":
-    
+    def var infoSectionObj as class InfoSection no-undo.
     infoSectionsTotal = new InfoSectionsTotal().
     infoSectionsTotal:Initialization(bf_trn-doc.doc-code, bf_doc-line-attr.gds-code).
     infoSectionsTotal:GetDBAllAttr().
-    
     infoSectionsTotal:CalculateTotal().
     find first bf_goods no-lock where bf_goods.gds-code = bf_doc-line-attr.gds-code. 
     find first bf_doc-line no-lock where
@@ -634,77 +641,92 @@ then do:
                            and bf_goods.artic= bf_doc-line.artic
                            and bf_goods.prod-code = bf_doc-line.prod-code
                            and bf_goods.prod-type = bf_doc-line.prod-type no-error.
-    
-    if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.01
-      or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.01
-      or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.01
-    then do:
-      v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8",
-                                      {&new-line}, 
-                                      bf_doc-line.artic,
-                                      bf_doc-line.doc-qnty,
-                                      bf_doc-line.doc-density,
-                                      bf_doc-line.cli-qnty,
-                                      infoSectionsTotal:DocQntyTotal,
-                                      infoSectionsTotal:DocDensityAvg,
-                                      infoSectionsTotal:CliQntyTotal
-                                      ).
-      delete object infoSectionsTotal.
-      undo, return error v-mess.
+
+    run gds-attr-value in this-procedure
+      (  input bf_doc-line-attr.gds-code
+        ,input {&attr-fuel-type}
+        ,output v-attr-value
+        ,output v-attr-type
+       ) .
+    if v-attr-value = "lgas" then 
+    do:
+      infoSectionObj = infoSectionsTotal:GetInfoSectionProp(1).
+      infoSectionObj:FactKgQnty = bf_doc-line.fact-qnty * bf_doc-line.fact-density.
+      infoSectionObj:FactQnty = bf_doc-line.fact-qnty.
+      infoSectionObj:FactDensity = bf_doc-line.fact-density.
+      infoSectionsTotal:SaveDB().
     end.
-    if varstatus = {&fact} then do:
-      if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
-         or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.01)
-      then do:
-        v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6",
-                                        {&new-line}, 
-                                        bf_doc-line.artic,
-                                        bf_doc-line.fact-qnty,
-                                        bf_doc-line.fact-density * bf_doc-line.fact-qnty,
-                                        infoSectionsTotal:FactQntyTotal,
-                                        infoSectionsTotal:FactKgQntyTotal
-                                        ).
+    else do:
+      if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.01
+        or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.01
+        or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.01
+        then do:
+          v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8",
+                                          {&new-line}, 
+                                          bf_doc-line.artic,
+                                          bf_doc-line.doc-qnty,
+                                          bf_doc-line.doc-density,
+                                          bf_doc-line.cli-qnty,
+                                          infoSectionsTotal:DocQntyTotal,
+                                          infoSectionsTotal:DocDensityAvg,
+                                          infoSectionsTotal:CliQntyTotal
+                                          ).
+          delete object infoSectionsTotal.
+          undo, return error v-mess.
+        end.
+        if varstatus = {&fact} then do:
+          if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
+           or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.01)
+          then do:
+            v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6",
+                                            {&new-line}, 
+                                            bf_doc-line.artic,
+                                            bf_doc-line.fact-qnty,
+                                            bf_doc-line.fact-density * bf_doc-line.fact-qnty,
+                                            infoSectionsTotal:FactQntyTotal,
+                                            infoSectionsTotal:FactKgQntyTotal
+                                            ).
+            delete object infoSectionsTotal.
+            undo, return error v-mess.
+          end.
+        end.
+        v-iskp = false.
+        do ii = 1 to infoSectionsTotal:SectionNum : 
+          infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii).
+          if not v-iskp 
+          then do:
+            v-iskp = infoSectionObj:IsKP.
+          end.
+        end.
+      
+        
         delete object infoSectionsTotal.
-        undo, return error v-mess.
+        
+        if v-iskp
+        then do:
+          { gbl/chk-actg.i
+            v-curr-db-num
+            v-curr-userid
+            {&action-head-code-main}
+            'actn_inventory_fact_not-peresort':U
+            {&cntxt-object}
+            bf_trn-doc.host-code
+            bf_trn-doc.obj-type
+            bf_trn-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+          
+          if not varlog
+          then do:
+            undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').
+          end.
+          
+        end.
       end.
-    end.
-    v-iskp = false.
-    do ii = 1 to infoSectionsTotal:SectionNum : 
-      def var infoSectionObj as class InfoSection no-undo.
-      infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii).
-      if not v-iskp 
-      then do:
-        v-iskp = infoSectionObj:IsKP.
-      end.
-   end.
-    
-    
-    delete object infoSectionsTotal.
-    
-    if v-iskp
-    then do:
-      { gbl/chk-actg.i
-        v-curr-db-num
-        v-curr-userid
-        {&action-head-code-main}
-        'actn_inventory_fact_not-peresort':U
-        {&cntxt-object}
-        bf_trn-doc.host-code
-        bf_trn-doc.obj-type
-        bf_trn-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
-      
-      if not varlog
-      then do:
-        undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').
-      end.
-      
-    end.
     
   end.
 end.
@@ -885,6 +907,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end.
   end.
   /*проверка на заполнение обязательных атрибутов в накладной*/
+  
   if not var-is-auto-trn and not v-add-nat-gas and not vartechproliv and v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
       v-error-attr = "" .
       if not can-find (first buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code 
@@ -945,20 +968,99 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     
   if bf_trn-doc.status_ <> {&inquiry}  then do:
   /* */
-  define variable v-reasonm-type-n as character no-undo.
-
-
+    define variable v-reasonm-type-n as character no-undo.
 
     if v-reasonm and
              lookup( bf_trn-doc.ext-doc-type ,v-reasonme) = 0 and
              lookup( bf_trn-doc.ext-doc-type ,{&TDEDT_List-not-ver-reason}) = 0
-     then do:
-        if bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ? then do:
+    then do:
+      if bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ? then do:
                 run waitfram-hide in this-procedure no-error.
                 undo, return error "Не задано поле ПРИЧИНА СОЗДАНИЯ ДОКУМЕНТА.".
-         end.
-     end.
-  end.
+      end.
+    end.
+    
+    if lookup( string(bf_trn-doc.reason-code), v-reasons-for-return) > 0
+    then do : 
+      /*Возврат через расход*/
+      find first in_trn-doc no-lock where in_trn-doc.doc-code = bf_trn-doc.out-code no-error .
+      if not available in_trn-doc
+      then do :
+        run waitfram-hide in this-procedure no-error.
+        undo, return error "Не задано поле Источник.".
+      end.
+      else do :
+        if in_trn-doc.cli-type <> bf_trn-doc.cli-type
+        or in_trn-doc.cli-code <> bf_trn-doc.cli-code
+        then do :
+          run waitfram-hide in this-procedure no-error.
+          undo, return error ("Поставщик не совпадает с поставщиком из источника (ПН " + in_trn-doc.doc-code + ").").
+        end.
+        for each bf_doc-line no-lock where bf_doc-line.doc-code = bf_trn-doc.doc-code,
+        first ub.goods no-lock where  ub.goods.artic      = bf_doc-line.artic
+                                  and ub.goods.prod-type  = bf_doc-line.prod-type
+                                  and ub.goods.prod-code  = bf_doc-line.prod-code :
+          find first in_doc-line no-lock where in_doc-line.doc-code   = in_trn-doc.doc-code
+                                           and in_doc-line.artic      = bf_doc-line.artic
+                                           and in_doc-line.prod-type  = bf_doc-line.prod-type
+                                           and in_doc-line.prod-code  = bf_doc-line.prod-code
+                                           no-error.
+          if not available in_doc-line
+          then do :
+            run waitfram-hide in this-procedure no-error.
+            undo, return error ("Товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " нет в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
+          end. 
+          else do :
+            find first bf_gds-dtl no-lock where bf_gds-dtl.doc-code   = bf_doc-line.doc-code
+                                            and bf_gds-dtl.artic      = bf_doc-line.artic  
+                                            and bf_gds-dtl.prod-type  = bf_doc-line.prod-type
+                                            and bf_gds-dtl.prod-code  = bf_doc-line.prod-code
+                                            no-error .
+            if not available bf_gds-dtl
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("Отсутствет детализация по товару с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name ) .
+            end.                                
+            if in_doc-line.price-rubl <> bf_gds-dtl.price-rubl
+            or in_doc-line.price-base <> bf_gds-dtl.price-base
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("У товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " цена не совпадает с ценой в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
+            end.
+            if in_doc-line.fact-qnty < bf_doc-line.fact-qnty
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("У товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " количество превышает количество в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
+            end.
+            
+            assign v-return-qnty = 0 .
+            for each bf2_trn-doc no-lock where bf2_trn-doc.out-code = bf_trn-doc.out-code
+                                           and bf2_trn-doc.status_  = {&fact} :
+              if lookup( string(bf2_trn-doc.reason-code), v-reasons-for-return) > 0
+              then do :
+                for each bf2_doc-line no-lock where bf2_doc-line.doc-code   = bf2_trn-doc.doc-code
+                                                and bf2_doc-line.artic      = bf_doc-line.artic
+                                                and bf2_doc-line.prod-type  = bf_doc-line.prod-type
+                                                and bf2_doc-line.prod-code  = bf_doc-line.prod-code :
+                  assign v-return-qnty = v-return-qnty + bf2_doc-line.fact-qnty .                               
+                end.
+              end.                               
+            end.     /* for each bf2_trn-doc */
+            if in_doc-line.fact-qnty < (bf_doc-line.fact-qnty + v-return-qnty)
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("Товар с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + {&new-line} +
+                                  "Общее количество уже возвращенного товара по ПН " + in_trn-doc.doc-code + ":  " + string(v-return-qnty) + {&new-line} +
+                                  "Количество в ПН:  " + string(in_doc-line.fact-qnty) + {&new-line} +
+                                  "Максимальное количество, которое можно указать для возврата:  " + string(in_doc-line.fact-qnty - v-return-qnty) + {&new-line} +
+                                  "Вы указали:  " + string(bf_doc-line.fact-qnty)
+                                   ) .
+            end. 
+          end. /* available in_doc-line */
+        end. /* for each bf_doc-line, goods */
+      end. /* available in_trn-doc */
+    end. /*Возврат через расход*/
+  end. 
 
   if bf_trn-doc.status_ <> {&inquiry}                           and
         not (bf_trn-doc.status_  = {&wayb}   and
@@ -1366,6 +1468,106 @@ vartechproliv = no
           run waitfram-hide in this-procedure no-error.
           undo, return error "Закрыть накладную по ФАКТУ можно только для объекта своей базы данных или пассивного объекта.".
         end.
+        
+        
+         { str/tdat-val.i
+            bf_trn-doc.doc-code
+            {&trdcattr-is-lgas}
+            v-attr-value
+            v-attr-type
+            no-error 
+         }
+        if not v-attr-value = "yes"
+        then do:
+         { str/tdat-val.i
+            bf_trn-doc.doc-code
+            {&trdcattr-is-lgas}
+            v-attr-value
+            v-attr-type
+            no-error 
+         }
+        end.
+        
+        if v-attr-value = "yes"
+        then do:
+          
+          { str/tdat-val.i
+              bf_trn-doc.doc-code
+              {&trdcattr-date-start}
+              v-attr-value
+              v-attr-type
+              no-error 
+          }
+          
+          if v-attr-value = "" or v-attr-value = ? or error-status:error
+          then do:
+            find first bf_rvs-doc exclusive-lock
+              where bf_rvs-doc.rvs-type = {&rvs-before-doc}
+                and bf_rvs-doc.out-code = bf_trn-doc.doc-code
+              no-error .
+            
+            for first bf_rvs-line no-lock
+              where bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code
+                and bf_rvs-line.obj-type = bf_rvs-doc.obj-type
+                and bf_rvs-line.obj-code = bf_rvs-doc.obj-code
+                by bf_rvs-line.real-date
+                by bf_rvs-line.real-time:
+              
+              if bf_rvs-line.real-date <> ?
+              then do:
+              
+                v-attr-value = string (bf_rvs-line.real-date).
+                
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-date-start}
+                    v-attr-value
+                    no-error
+                }
+                v-attr-value = string (bf_rvs-line.real-time, "HH:MM").
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-time-start}
+                    v-attr-value
+                    no-error
+                }
+              end.
+            end.
+            find first bf_rvs-doc exclusive-lock
+              where bf_rvs-doc.rvs-type = {&rvs-after-doc}
+                and bf_rvs-doc.out-code = bf_trn-doc.doc-code
+              no-error .
+            for last bf_rvs-line no-lock
+              where bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code
+                and bf_rvs-line.obj-type = bf_rvs-doc.obj-type
+                and bf_rvs-line.obj-code = bf_rvs-doc.obj-code
+                by bf_rvs-line.real-date
+                by bf_rvs-line.real-time:
+                  
+              if bf_rvs-line.real-date <> ?
+              then do:
+              
+                v-attr-value = string (bf_rvs-line.real-date).
+                
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-date-end}
+                    v-attr-value
+                    no-error
+                }
+                v-attr-value = string (bf_rvs-line.real-time, "HH:MM").
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-time-end}
+                    v-attr-value
+                    no-error
+                }
+              end.
+            end.
+          end.
+        end.
+      
+        
         /* проверяем по строчкам */
         if bf_trn-doc.status_ <> {&inquiry}
         then do:

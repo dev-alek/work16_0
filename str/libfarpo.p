@@ -4824,6 +4824,7 @@ define input parameter parfact-date               like ub.fin-doc.fact-date     
 define input parameter parshift-date              like ub.fin-doc.shift-date        no-undo.
 define input parameter parshift-num               like ub.fin-doc.shift-num         no-undo.
 define input parameter parcurr-code               like ub.fin-doc.curr-code         no-undo.
+define input parameter parcashbookid              like ub.fin-doc.cashbookid        no-undo.
 define input parameter parbase-code               like ub.sysconf.base-code         no-undo.
 define input parameter parsum-doc                 as   decimal                      no-undo.
 define input parameter parsum-rubl                as   decimal                      no-undo.
@@ -4872,6 +4873,7 @@ if parmode = "close":u then do:
                                                  bops_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type   and
                                                  bops_arh-fin-doc-schet-nal-obj.calc-curr-code   = parcurr-code          and
                                                  bops_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type           and
+                                                 bops_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid         and
                                                  bops_arh-fin-doc-schet-nal-obj.fact-order       < parfact-order         use-index pi no-error.
   create bfps_arh-fin-doc-schet-nal-obj.
   assign
@@ -4892,6 +4894,7 @@ if parmode = "close":u then do:
     bfps_arh-fin-doc-schet-nal-obj.shift-date       = parshift-date
     bfps_arh-fin-doc-schet-nal-obj.shift-num        = parshift-num
     bfps_arh-fin-doc-schet-nal-obj.curr-code        = parcurr-code
+    bfps_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid
     bfps_arh-fin-doc-schet-nal-obj.income           = (if available bops_arh-fin-doc-schet-nal-obj then bops_arh-fin-doc-schet-nal-obj.income      else 0)
     bfps_arh-fin-doc-schet-nal-obj.income-vat       = (if available bops_arh-fin-doc-schet-nal-obj then bops_arh-fin-doc-schet-nal-obj.income-vat  else 0)
     bfps_arh-fin-doc-schet-nal-obj.income-slt       = (if available bops_arh-fin-doc-schet-nal-obj then bops_arh-fin-doc-schet-nal-obj.income-slt  else 0)
@@ -4911,6 +4914,7 @@ else do:
                                                   bfps_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type   and
                                                   bfps_arh-fin-doc-schet-nal-obj.calc-curr-code   = parcurr-code          and
                                                   bfps_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type           and
+                                                  bfps_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid         and
                                                   bfps_arh-fin-doc-schet-nal-obj.fact-order       = parfact-order         exclusive-lock.
 end.
 for each rbfps_arh-fin-doc-schet-nal-obj where rbfps_arh-fin-doc-schet-nal-obj.host-code        = bfps_arh-fin-doc-schet-nal-obj.host-code        and
@@ -4923,6 +4927,7 @@ for each rbfps_arh-fin-doc-schet-nal-obj where rbfps_arh-fin-doc-schet-nal-obj.h
                                                rbfps_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = bfps_arh-fin-doc-schet-nal-obj.fin-ext-doc-type and
                                                rbfps_arh-fin-doc-schet-nal-obj.calc-curr-code   = bfps_arh-fin-doc-schet-nal-obj.calc-curr-code   and
                                                rbfps_arh-fin-doc-schet-nal-obj.sum-type         = bfps_arh-fin-doc-schet-nal-obj.sum-type         and
+                                               rbfps_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid                                   and
                                                rbfps_arh-fin-doc-schet-nal-obj.fact-order       > bfps_arh-fin-doc-schet-nal-obj.fact-order       use-index pi exclusive-lock on error undo, return error return-value :
   assign
     rbfps_arh-fin-doc-schet-nal-obj.expense     = rbfps_arh-fin-doc-schet-nal-obj.expense     + parsum-doc
@@ -4943,6 +4948,7 @@ if parmode = "close":u then do:
                                                  bors_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type      and
                                                  bors_arh-fin-doc-schet-nal-obj.calc-curr-code   = parcurr-code             and
                                                  bors_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type              and
+                                                 bors_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid            and
                                                  bors_arh-fin-doc-schet-nal-obj.fact-order       < parfact-order            use-index pi no-error.
   create bfrs_arh-fin-doc-schet-nal-obj.
   assign
@@ -4963,6 +4969,7 @@ if parmode = "close":u then do:
     bfrs_arh-fin-doc-schet-nal-obj.fin-doc-code     = parfin-doc-code
     bfrs_arh-fin-doc-schet-nal-obj.fact-date        = parfact-date
     bfrs_arh-fin-doc-schet-nal-obj.curr-code        = parcurr-code
+    bfrs_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid
   .
   assign
     bfrs_arh-fin-doc-schet-nal-obj.expense          = (if available bors_arh-fin-doc-schet-nal-obj then bors_arh-fin-doc-schet-nal-obj.expense     else 0)
@@ -4984,6 +4991,7 @@ else do:
                                                   bfrs_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type      and
                                                   bfrs_arh-fin-doc-schet-nal-obj.calc-curr-code   = parcurr-code             and
                                                   bfrs_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type              and
+                                                  bfrs_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid            and
                                                   bfrs_arh-fin-doc-schet-nal-obj.fact-order       = parfact-order            exclusive-lock.
 end.
 for each rbfrs_arh-fin-doc-schet-nal-obj where rbfrs_arh-fin-doc-schet-nal-obj.host-code        = bfrs_arh-fin-doc-schet-nal-obj.host-code        and
@@ -4996,6 +5004,7 @@ for each rbfrs_arh-fin-doc-schet-nal-obj where rbfrs_arh-fin-doc-schet-nal-obj.h
                                                rbfrs_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = bfrs_arh-fin-doc-schet-nal-obj.fin-ext-doc-type and
                                                rbfrs_arh-fin-doc-schet-nal-obj.calc-curr-code   = bfrs_arh-fin-doc-schet-nal-obj.calc-curr-code   and
                                                rbfrs_arh-fin-doc-schet-nal-obj.sum-type         = bfrs_arh-fin-doc-schet-nal-obj.sum-type         and
+                                               rbfrs_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid                                   and
                                                rbfrs_arh-fin-doc-schet-nal-obj.fact-order       > bfrs_arh-fin-doc-schet-nal-obj.fact-order       use-index pi exclusive-lock on error undo, return error return-value :
   assign
     rbfrs_arh-fin-doc-schet-nal-obj.income     = rbfrs_arh-fin-doc-schet-nal-obj.income     + parsum-doc
@@ -5025,6 +5034,7 @@ if parcurr-code <> 0 then do:
                                                    bopr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type   and
                                                    bopr_arh-fin-doc-schet-nal-obj.calc-curr-code   = 0                     and
                                                    bopr_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type           and
+                                                   bopr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid         and
                                                    bopr_arh-fin-doc-schet-nal-obj.fact-order       < parfact-order         use-index pi no-error.
     create bfpr_arh-fin-doc-schet-nal-obj.
     assign
@@ -5045,6 +5055,7 @@ if parcurr-code <> 0 then do:
       bfpr_arh-fin-doc-schet-nal-obj.shift-date       = parshift-date
       bfpr_arh-fin-doc-schet-nal-obj.shift-num        = parshift-num
       bfpr_arh-fin-doc-schet-nal-obj.curr-code        = parcurr-code
+      bfpr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid
       bfpr_arh-fin-doc-schet-nal-obj.income           = (if available bopr_arh-fin-doc-schet-nal-obj then bopr_arh-fin-doc-schet-nal-obj.income      else 0)
       bfpr_arh-fin-doc-schet-nal-obj.income-vat       = (if available bopr_arh-fin-doc-schet-nal-obj then bopr_arh-fin-doc-schet-nal-obj.income-vat  else 0)
       bfpr_arh-fin-doc-schet-nal-obj.income-slt       = (if available bopr_arh-fin-doc-schet-nal-obj then bopr_arh-fin-doc-schet-nal-obj.income-slt  else 0)
@@ -5064,6 +5075,7 @@ if parcurr-code <> 0 then do:
                                                     bfpr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type   and
                                                     bfpr_arh-fin-doc-schet-nal-obj.calc-curr-code   = 0                     and
                                                     bfpr_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type           and
+                                                    bfpr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid         and
                                                     bfpr_arh-fin-doc-schet-nal-obj.fact-order       = parfact-order         exclusive-lock.
   end.
   for each rbfpr_arh-fin-doc-schet-nal-obj where rbfpr_arh-fin-doc-schet-nal-obj.host-code        = bfpr_arh-fin-doc-schet-nal-obj.host-code        and
@@ -5076,6 +5088,7 @@ if parcurr-code <> 0 then do:
                                                  rbfpr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = bfpr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type and
                                                  rbfpr_arh-fin-doc-schet-nal-obj.calc-curr-code   = bfpr_arh-fin-doc-schet-nal-obj.calc-curr-code   and
                                                  rbfpr_arh-fin-doc-schet-nal-obj.sum-type         = bfpr_arh-fin-doc-schet-nal-obj.sum-type         and
+                                                 rbfpr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid                                   and
                                                  rbfpr_arh-fin-doc-schet-nal-obj.fact-order       > bfpr_arh-fin-doc-schet-nal-obj.fact-order       use-index pi exclusive-lock on error undo, return error return-value :
     assign
       rbfpr_arh-fin-doc-schet-nal-obj.expense     = rbfpr_arh-fin-doc-schet-nal-obj.expense     + parsum-rubl
@@ -5096,6 +5109,7 @@ if parcurr-code <> 0 then do:
                                                    borr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type      and
                                                    borr_arh-fin-doc-schet-nal-obj.calc-curr-code   = 0                        and
                                                    borr_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type              and
+                                                   borr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid            and
                                                    borr_arh-fin-doc-schet-nal-obj.fact-order       < parfact-order            use-index pi no-error.
     create bfrr_arh-fin-doc-schet-nal-obj.
     assign
@@ -5116,6 +5130,7 @@ if parcurr-code <> 0 then do:
       bfrr_arh-fin-doc-schet-nal-obj.fin-doc-code     = parfin-doc-code
       bfrr_arh-fin-doc-schet-nal-obj.fact-date        = parfact-date
       bfrr_arh-fin-doc-schet-nal-obj.curr-code        = parcurr-code
+      bfrr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid
     .
     assign
       bfrr_arh-fin-doc-schet-nal-obj.expense          = (if available borr_arh-fin-doc-schet-nal-obj then borr_arh-fin-doc-schet-nal-obj.expense     else 0)
@@ -5137,6 +5152,7 @@ if parcurr-code <> 0 then do:
                                                     bfrr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type      and
                                                     bfrr_arh-fin-doc-schet-nal-obj.calc-curr-code   = 0                        and
                                                     bfrr_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type              and
+                                                    bfrr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid            and
                                                     bfrr_arh-fin-doc-schet-nal-obj.fact-order       = parfact-order            exclusive-lock.
   end.
   for each rbfrr_arh-fin-doc-schet-nal-obj where rbfrr_arh-fin-doc-schet-nal-obj.host-code        = bfrr_arh-fin-doc-schet-nal-obj.host-code        and
@@ -5149,6 +5165,7 @@ if parcurr-code <> 0 then do:
                                                  rbfrr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = bfrr_arh-fin-doc-schet-nal-obj.fin-ext-doc-type and
                                                  rbfrr_arh-fin-doc-schet-nal-obj.calc-curr-code   = bfrr_arh-fin-doc-schet-nal-obj.calc-curr-code   and
                                                  rbfrr_arh-fin-doc-schet-nal-obj.sum-type         = bfrr_arh-fin-doc-schet-nal-obj.sum-type         and
+                                                 rbfrr_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid                                   and
                                                  rbfrr_arh-fin-doc-schet-nal-obj.fact-order       > bfrr_arh-fin-doc-schet-nal-obj.fact-order       use-index pi exclusive-lock on error undo, return error return-value :
     assign
       rbfrr_arh-fin-doc-schet-nal-obj.income     = rbfrr_arh-fin-doc-schet-nal-obj.income     + parsum-doc
@@ -5180,6 +5197,7 @@ if parbase-code <> parcurr-code and
                                                    bopb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type   and
                                                    bopb_arh-fin-doc-schet-nal-obj.calc-curr-code   = parbase-code          and
                                                    bopb_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type           and
+                                                   bopb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid         and
                                                    bopb_arh-fin-doc-schet-nal-obj.fact-order       < parfact-order         use-index pi no-error.
     create bfpb_arh-fin-doc-schet-nal-obj.
     assign
@@ -5200,6 +5218,7 @@ if parbase-code <> parcurr-code and
       bfpb_arh-fin-doc-schet-nal-obj.fin-doc-code     = parfin-doc-code
       bfpb_arh-fin-doc-schet-nal-obj.fact-date        = parfact-date
       bfpb_arh-fin-doc-schet-nal-obj.curr-code        = parcurr-code
+      bfpb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid
       bfpb_arh-fin-doc-schet-nal-obj.income           = (if available bopb_arh-fin-doc-schet-nal-obj then bopb_arh-fin-doc-schet-nal-obj.income      else 0)
       bfpb_arh-fin-doc-schet-nal-obj.income-vat       = (if available bopb_arh-fin-doc-schet-nal-obj then bopb_arh-fin-doc-schet-nal-obj.income-vat  else 0)
       bfpb_arh-fin-doc-schet-nal-obj.income-slt       = (if available bopb_arh-fin-doc-schet-nal-obj then bopb_arh-fin-doc-schet-nal-obj.income-slt  else 0)
@@ -5219,6 +5238,7 @@ if parbase-code <> parcurr-code and
                                                     bfpb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type   and
                                                     bfpb_arh-fin-doc-schet-nal-obj.calc-curr-code   = parbase-code          and
                                                     bfpb_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type           and
+                                                    bfpb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid         and
                                                     bfpb_arh-fin-doc-schet-nal-obj.fact-order       = parfact-order         exclusive-lock.
   end.
   for each rbfpb_arh-fin-doc-schet-nal-obj where rbfpb_arh-fin-doc-schet-nal-obj.host-code        = bfpb_arh-fin-doc-schet-nal-obj.host-code        and
@@ -5231,6 +5251,7 @@ if parbase-code <> parcurr-code and
                                                  rbfpb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = bfpb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type and
                                                  rbfpb_arh-fin-doc-schet-nal-obj.calc-curr-code   = bfpb_arh-fin-doc-schet-nal-obj.calc-curr-code   and
                                                  rbfpb_arh-fin-doc-schet-nal-obj.sum-type         = bfpb_arh-fin-doc-schet-nal-obj.sum-type         and
+                                                 rbfpb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid                                   and
                                                  rbfpb_arh-fin-doc-schet-nal-obj.fact-order       > bfpb_arh-fin-doc-schet-nal-obj.fact-order       use-index pi exclusive-lock on error undo, return error return-value :
     assign
       rbfpb_arh-fin-doc-schet-nal-obj.expense     = rbfpb_arh-fin-doc-schet-nal-obj.expense     + parsum-base
@@ -5251,6 +5272,7 @@ if parbase-code <> parcurr-code and
                                                    borb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type      and
                                                    borb_arh-fin-doc-schet-nal-obj.calc-curr-code   = parbase-code             and
                                                    borb_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type              and
+                                                   borb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid            and
                                                    borb_arh-fin-doc-schet-nal-obj.fact-order       < parfact-order            use-index pi no-error.
     create bfrb_arh-fin-doc-schet-nal-obj.
     assign
@@ -5271,6 +5293,7 @@ if parbase-code <> parcurr-code and
       bfrb_arh-fin-doc-schet-nal-obj.fin-doc-code     = parfin-doc-code
       bfrb_arh-fin-doc-schet-nal-obj.fact-date        = parfact-date
       bfrb_arh-fin-doc-schet-nal-obj.curr-code        = parcurr-code
+      bfrb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid
     .
     assign
       bfrb_arh-fin-doc-schet-nal-obj.expense          = (if available borb_arh-fin-doc-schet-nal-obj then borb_arh-fin-doc-schet-nal-obj.expense     else 0)
@@ -5292,6 +5315,7 @@ if parbase-code <> parcurr-code and
                                                     bfrb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = parfin-ext-doc-type      and
                                                     bfrb_arh-fin-doc-schet-nal-obj.calc-curr-code   = parbase-code             and
                                                     bfrb_arh-fin-doc-schet-nal-obj.sum-type         = parsum-type              and
+                                                    bfrb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid            and
                                                     bfrb_arh-fin-doc-schet-nal-obj.fact-order       = parfact-order            exclusive-lock.
   end.
   for each rbfrb_arh-fin-doc-schet-nal-obj where rbfrb_arh-fin-doc-schet-nal-obj.host-code        = bfrb_arh-fin-doc-schet-nal-obj.host-code        and
@@ -5304,6 +5328,7 @@ if parbase-code <> parcurr-code and
                                                  rbfrb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type = bfrb_arh-fin-doc-schet-nal-obj.fin-ext-doc-type and
                                                  rbfrb_arh-fin-doc-schet-nal-obj.calc-curr-code   = bfrb_arh-fin-doc-schet-nal-obj.calc-curr-code   and
                                                  rbfrb_arh-fin-doc-schet-nal-obj.sum-type         = bfrb_arh-fin-doc-schet-nal-obj.sum-type         and
+                                                 rbfrb_arh-fin-doc-schet-nal-obj.cashbookid       = parcashbookid                                   and
                                                  rbfrb_arh-fin-doc-schet-nal-obj.fact-order       > bfrb_arh-fin-doc-schet-nal-obj.fact-order       use-index pi exclusive-lock on error undo, return error return-value :
     assign
       rbfrb_arh-fin-doc-schet-nal-obj.income     = rbfrb_arh-fin-doc-schet-nal-obj.income     + parsum-base

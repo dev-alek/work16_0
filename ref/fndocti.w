@@ -839,26 +839,26 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       undo, return error.
     end.
   end.
-  if LOOKUP({&lookup} , p-mode, {&delim-par}) = 0  then do:
-    define variable v-ok as logical no-undo .
-    define variable v-mess as character no-undo .
-    { str/finchkdb.i
-      p-host-code
-      p-fin-doc-code
-      p-obj-type
-      p-obj-code
-      p-fin-ext-doc-type
-      p-cash-book-place
-      ?
-      v-ok
-      v-mess
-    no-error }
-    if not v-ok then do:
-      message v-mess
-      view-as alert-box error .
-      undo main-block, return error .
-    end.
-  end.
+/*  if LOOKUP({&lookup} , p-mode, {&delim-par}) = 0  then do:*/
+/*    define variable v-ok as logical no-undo .              */
+/*    define variable v-mess as character no-undo .          */
+/*    { str/finchkdb.i                                       */
+/*      p-host-code                                          */
+/*      p-fin-doc-code                                       */
+/*      p-obj-type                                           */
+/*      p-obj-code                                           */
+/*      p-fin-ext-doc-type                                   */
+/*      p-cash-book-place                                    */
+/*      ?                                                    */
+/*      v-ok                                                 */
+/*      v-mess                                               */
+/*    no-error }                                             */
+/*    if not v-ok then do:                                   */
+/*      message v-mess                                       */
+/*      view-as alert-box error .                            */
+/*      undo main-block, return error .                      */
+/*    end.                                                   */
+/*  end.                                                     */
 
   if p-mode = ({&lookup} + {&delim-par} + "history":U)
   then do:

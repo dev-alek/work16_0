@@ -31,7 +31,7 @@ class ibs.th.ref.promo.promo_trg :
   { cmp/str-glbl.i class } 
   { gbl/getcntxt.i def }
   { cmp/library.i class}
-  { bge/ds-promo.i}
+  { bge/ds-promo.i} 
   //{gbl/userobjs.i}
   define temp-table tt-query
       field NameQuery as character 
@@ -433,6 +433,14 @@ end . /* end_of низ таблицы и html-файла */
                                                  "where tt-PromoGoodsAppl.idaction eq " + string(tt-promoaction-one.id)  +
                                                  "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
                                              )).
+                    end.
+                    when "PromoCardsBin" 
+                    then do:
+                        hQuery:set-buffers(buffer tt-PromoCardsBin:HANDLE). 
+                        hQuery:query-prepare("FOR EACH tt-PromoCardsBin " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoCardsBin.idaction eq " + string(tt-promoaction-one.id)  +
+                                                 "  and tt-PromoCardsBin.mode ne {&h-delete}"
+                                             )). 
                     end.
                     when "PromoGoodsCrit" 
                     then do:
@@ -911,33 +919,34 @@ end . /* end_of низ таблицы и html-файла */
       
       //if ModeView then p-mode = {&lookup}. 
       do trans:
-      dialog1 = new ibs.th.ref.promo.dPromoActions(p-mode, this-object).
-      dialog1:viewpage6(tt-promoaction-one.methodCalc ne 7).
-      dialog1:prepareobj(). //input-output dataset ds-promoaction-one by-reference) .
+         dialog1 = new ibs.th.ref.promo.dPromoActions(p-mode, this-object).
+         dialog1:viewpage6(tt-promoaction-one.methodCalc ne 7 and not tt-PromoAction-one.TypeDiscontvisa).
+         dialog1:prepareobj(). //input-output dataset ds-promoaction-one by-reference) .
       
       // для просмотра убрать кнопку "Ок", написать гашение полей, сравнить активность полей для создания и для редактирования
-      dialog1:ShowModalDialog().
-      if dialog1:DialogResult = System.Windows.Forms.DialogResult:Ok then do:
+         dialog1:ShowModalDialog().
+         if dialog1:DialogResult = System.Windows.Forms.DialogResult:Ok then do:
         // изменённый dataset с описанием акции из v-dialog1 хранится тут;  
         // перенести значение из таблиц DataSet'а в классы описания акции
-        if p-mode ne {&lookup}
-        then
-           updateObjForAction(). // - обновляет класс в tt-PromoAction-one.sub
-        
+           if p-mode ne {&lookup}
+           then
+              updateObjForAction(). // - обновляет класс в tt-PromoAction-one.sub
         // и передать класс(ы) в storage на insert-row, и затем на update-row
-        v-sub = cast(tt-PromoAction-one.sub, promoActionSub) .
+              v-sub = cast(tt-PromoAction-one.sub, promoActionSub) .
         
         /*if v-sub:Changed then*/ do:
-          if v-sub:ID > 0 then m-storage:updateDB(v-sub) .
-                          else m-storage:insertDB(v-sub) .
-        end .
-        refOnePromo().
+            if v-sub:ID > 0 then m-storage:updateDB(v-sub) .
+                            else m-storage:insertDB(v-sub) .
+         end .
+         if p-mode ne {&add-def}
+         then
+            refOnePromo().
       end .
       if p-mode eq {&add-def}
       then
-          delete object v-sub.
-      end.
-    return.   
+         delete object v-sub.
+   end.
+  return.   
   define variable v-err-msg as character no-undo .  
   catch exAppErrors as class Progress.Lang.AppError :
     v-err-msg = exAppErrors:ReturnValue .
@@ -950,11 +959,11 @@ end . /* end_of низ таблицы и html-файла */
   catch exProErrors as class Progress.Lang.ProError :
     v-err-msg = exProErrors:GetMessage(1) . 
     if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
-    message "ProError" skip(1) v-err-msg /*skip exProErrors:CallStack*/ view-as alert-box.
+    message "ProError" skip(1) v-err-msg skip exProErrors:CallStack view-as alert-box.
   end catch .
   catch exAnyErrors as class Progress.Lang.Error:
     v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
-    message "LangError" skip(1) v-err-msg /*skip exAnyErrors:CallStack*/ view-as alert-box.
+    message "LangError" skip(1) v-err-msg skip exAnyErrors:CallStack view-as alert-box.
   end catch .
   finally:
       // оставлять диалог пока не получается: при повторном запуске указатель валидный, но сам объект disposed
@@ -1029,7 +1038,11 @@ end . /* end_of низ таблицы и html-файла */
        tt-PromoAction-one.promosched-id  = p-sub:promosched-id
        tt-PromoAction-one.typecondlbl    = p-sub:typecondLbl
        tt-PromoAction-one.status_lbl     = p-sub:status_lbl
-       tt-PromoAction-one.TypeDiscontlog = if p-sub:TypeDiscont eq 1 then true else false
+       tt-PromoAction-one.TypeDiscontSolo = if p-sub:TypeDiscont eq 1 then true else false
+       tt-PromoAction-one.TypeDiscontCombo = if p-sub:TypeDiscont eq 2 then true else false
+       tt-PromoAction-one.TypeDiscontvisa = if p-sub:TypeDiscont eq 3 then true else false
+       
+       
        tt-PromoAction-one.sub            = cast(p-sub,Progress.Lang.Object)
     no-error.
     if p-mode = {&add-def} then tt-PromoAction-one.mode = {&h-create}.
@@ -1063,6 +1076,7 @@ end . /* end_of низ таблицы и html-файла */
      //if p-mode = {&update} then temp-table tt-promoaction-one:tracking-changes = true .
      CreateTableForGoodsCrits(p-mode, p-sub:GoodsCrits).
      CreateTableForGoodsAppl (p-mode, p-sub:GoodsAppl ).
+     CreateTableForCardsBin  (p-mode, p-sub:CardsBin ).
      CreateTableForPromoSet  (p-mode, p-sub:PromoSet ).
      CreateTableForCrite     (p-mode, p-sub:Criterion ).
      CreateTableForGift      (p-mode, p-sub:Gifts     ).
@@ -1211,6 +1225,42 @@ end . /* end_of низ таблицы и html-файла */
      end.
      if {&promoTrackingChanges} p-mode = {&update} then temp-table tt-PromoSet:tracking-changes = true .
   end method. // end_of_CreateTableForPromoSet
+  
+   method public void CreateTableForCardsbin
+  ( input  p-mode as character
+  , input  p-subs  as class promogoodssubs
+  ) :
+    define variable vI as int no-undo.
+    define variable p-sub as class promogoodssub no-undo.
+   
+    if {&promoTrackingChanges} p-mode = {&add-def} then temp-table tt-PromoCardsbin:tracking-changes = true . 
+    do vi = 1 to p-subs:GetItem(vI):  
+        p-sub = p-subs:promoGoodsObjCurr.
+        
+        create tt-PromoCardsbin.
+        assign
+           tt-PromoCardsbin.id             = p-sub:ID
+           tt-PromoCardsbin.idAction    = p-sub:idAction
+           tt-PromoCardsbin.gds-code       = p-sub:GdsCode
+           tt-PromoCardsbin.type           = p-sub:type
+           tt-PromoCardsbin.sub            = p-subs:SubjectObjCurr
+           tt-PromoCardsbin.mode           = p-sub:Mode
+           tt-PromoCardsbin.db-num         = p-sub:db-num
+           tt-PromoCardsbin.idSet          = p-sub:idSet
+           tt-PromoCardsbin.price          = p-sub:price
+           tt-PromoCardsbin.qnty           = p-sub:qnty
+           tt-PromoCardsbin.NameSet        = p-sub:NameSet
+         .
+         
+         if p-mode = {&add-def} 
+         then do:
+         tt-PromoCardsbin.mode = {&h-create}.
+         tt-PromoCardsbin.idAction = tt-PromoAction-one.id.
+         end.
+          
+     end.
+     if {&promoTrackingChanges} p-mode = {&update} then temp-table tt-PromoCardsbin:tracking-changes = true .
+  end method. // end_of_CreateTableForCardsbin
   
   method public void CreateTableForPromoSetGoods
   ( input  p-mode as character
@@ -1427,19 +1477,19 @@ end . /* end_of низ таблицы и html-файла */
       */
       tt-promo-schedule-week.dtime-beg = datetime (today, 0)
       tt-promo-schedule-week.dtime-end = datetime (today, 86340 * 1000) // 86340 = 23:59
-      tt-promo-schedule-week.wdaylist = "1,2,3,4,5,6,7"
+      tt-promo-schedule-week.wdaylist = "0"
     .
   end .
   
     assign
       tt-promo-schedule-week.id        = tt-promo-schedule-week.promosched-id
-      tt-promo-schedule-week.isday_mon = can-do(tt-promo-schedule-week.wdaylist, "1")
-      tt-promo-schedule-week.isday_tue = can-do(tt-promo-schedule-week.wdaylist, "2")
-      tt-promo-schedule-week.isday_wed = can-do(tt-promo-schedule-week.wdaylist, "3")
-      tt-promo-schedule-week.isday_thu = can-do(tt-promo-schedule-week.wdaylist, "4")
-      tt-promo-schedule-week.isday_fri = can-do(tt-promo-schedule-week.wdaylist, "5")
-      tt-promo-schedule-week.isday_sat = can-do(tt-promo-schedule-week.wdaylist, "6")
-      tt-promo-schedule-week.isday_sun = can-do(tt-promo-schedule-week.wdaylist, "7")
+      tt-promo-schedule-week.isday_mon = can-do(tt-promo-schedule-week.wdaylist, "1") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_tue = can-do(tt-promo-schedule-week.wdaylist, "2") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_wed = can-do(tt-promo-schedule-week.wdaylist, "3") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_thu = can-do(tt-promo-schedule-week.wdaylist, "4") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_fri = can-do(tt-promo-schedule-week.wdaylist, "5") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_sat = can-do(tt-promo-schedule-week.wdaylist, "6") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_sun = can-do(tt-promo-schedule-week.wdaylist, "7") or can-do(tt-promo-schedule-week.wdaylist, "0")
     .
     // if p-mode = {&update} then temp-table tt-PromoGift:tracking-changes = true .
   end method. // end_of_CreateTableForSchedw0
@@ -1547,7 +1597,7 @@ end . /* end_of низ таблицы и html-файла */
            p-sub:NameAction      = tt-PromoAction-one.nameAction      
            p-sub:promosched-id   = tt-PromoAction-one.promosched-id   
            p-sub:typecondlbl     = tt-PromoAction-one.typecondlbl        
-           p-sub:TypeDiscont     = if tt-PromoAction-one.TypeDiscontlog then 1 else 2
+           p-sub:TypeDiscont     = if tt-PromoAction-one.TypeDiscontsolo then 1 else if tt-PromoAction-one.TypeDiscontcombo then 2 else 3
            p-sub:CritgoodsFl     = tt-PromoAction-one.CritgoodsFl     
            v-sched-sub           = p-sub:Schedule
            
@@ -1572,6 +1622,7 @@ end . /* end_of низ таблицы и html-файла */
          updateObjForGift      (p-sub:Gifts,0).
          updateObjForObject    (p-sub:Objects).
          updateObjForSET       (p-sub:PromoSet ).
+         updateObjForCards     (p-sub:CardsBin ).
          // ... а вот p-sub:ScheduleWeek могло и не быть. Особенно, если в акции отсутствовало расписание.
          if v-sched-sub:schedType = 0 then UpdateObjForSchedw0 (p-sub:ScheduleWeek).
                                       else UpdateObjForSchedw1 (p-sub:ScheduleWeek).
@@ -1746,6 +1797,32 @@ end . /* end_of низ таблицы и html-файла */
         updateObjForSetGoods(v-sub:promoSetGoods,v-sub:ID).
      end.    
   end method. // end_of_updateObjForSet
+  
+  method public void updateObjForCards
+    ( input  p-subs  as class promogoodssubs
+     ) :
+      
+    define variable v-sub as class PromoGoodsSub no-undo.
+    for each tt-PromoCardsBin:
+        if not valid-object(tt-PromoCardsBin.sub)
+        then do:
+           v-sub = new PromoGoodsSub(). 
+           tt-PromoCardsBin.sub = cast(v-sub,Progress.Lang.Object).
+           p-subs:AddItem(tt-PromoCardsBin.sub).
+           v-sub:refreshChildObj().
+        end.
+        else
+           v-sub = cast(tt-PromoCardsBin.sub,promogoodssub).
+               
+        assign
+           v-sub:ID       = tt-PromoCardsBin.id              
+           v-sub:idAction = tt-PromoCardsBin.idAction        
+           v-sub:Mode     = tt-PromoCardsBin.mode 
+          v-sub:NameSet  = tt-PromoCardsBin.nameset          
+        .
+        
+     end.    
+  end method. // end_of_updateObjForCards
   method public void updateObjForSetGoods
     ( input  p-subs  as class promogoodssubs,
       input  pIdset  as int64
@@ -1807,6 +1884,8 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
         v-days = v-days + ",7" when tt-promo-schedule-week.isday_sun
       .
       v-days = substring(v-days, 2) .
+      if v-days eq "1,2,3,4,5,6,7"
+      then v-days = "0".
       
       roundDtime (0, tt-promo-schedule-week.dtime-beg, tt-promo-schedule-week.dtime-end,
            output v-temp-id,
@@ -1836,7 +1915,7 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
       end .
       else do :
         // если расписания не было - то пишем его только если что-нибудь поменялось
-        if (v-days <> "1,2,3,4,5,6,7") or (v-itimebeg <> 0) or (v-itimeend <> 86340) then do :
+       // if (v-days <> "0") or (v-itimebeg <> 0) or (v-itimeend <> 86340) then do :
           v-sub = new promoSchedwSub().
           assign
             v-sub:timebeg  = v-itimebeg 
@@ -1846,7 +1925,7 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
           .
           p-subs = new promoSchedwSubs().
           p-subs:AddItem(v-sub).
-        end .
+       // end .
       end .
       
     end.
@@ -2113,7 +2192,15 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
              delete tt-PromoSet.
           else 
              tt-PromoSet.mode = {&h-delete}.
-       end. 
+       end.
+       when "PromoCardsBin"
+       then do:
+          if  tt-PromoCardsBin.mode eq {&h-create}
+          then 
+             delete tt-PromoCardsBin.
+          else 
+             tt-PromoSet.mode = {&h-delete}.
+       end.  
        when "PromoSetGoods"
        then do:
           if  tt-PromoSetGoods.mode eq {&h-create}
@@ -2150,7 +2237,17 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
           else 
              tt-PromoGift.mode = {&h-delete}.
           
-       end. 
+       end.
+       when "PromoCardsBin"
+       then do:
+         if  tt-PromoCardsBin.mode eq {&h-create}
+          then 
+             delete tt-PromoCardsBin.
+          else 
+             tt-PromoCardsBin.mode = {&h-delete}.
+          
+       end.
+        
                     
     end case.
   end.                                      
@@ -2159,7 +2256,8 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
     define variable vI as integer no-undo.
     /* when "PromoObject"
        when "PromoPay" */
-    if iname eq "promoset"
+    if    iname eq "promoset"
+       
     then do:
        create tt-PromoSet.
        assign
@@ -2168,7 +2266,17 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
           m-local-sec          = m-local-sec - 1
           tt-PromoSet.mode     = {&h-create}
         .
-    end.  
+    end.
+    else if  iname eq "PromoCardsBin"
+    then do:
+       create tt-PromoCardsBin.
+       assign
+          tt-PromoCardsBin.idAction = tt-promoaction-one.id
+          tt-PromoCardsBin.id       = m-local-sec
+          m-local-sec          = m-local-sec - 1
+          tt-PromoCardsBin.mode     = {&h-create}
+        .
+    end.
     else if iname eq "PromoCriterion"
     then do:
        create tt-PromoCriterion.
@@ -2420,6 +2528,17 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
          end.
        end.  
        return Vflag.    
-    end.        
+    end.
+    
+    method public void saveTypediscont(isolo  as logical,
+                                        iCombo as logical,
+                                        ivisa  as logical):
+       if available tt-promoaction-one
+       then assign
+          tt-promoaction-one.TypeDiscontsolo  = isolo
+          tt-promoaction-one.TypeDiscontcombo = icombo
+          tt-promoaction-one.TypeDiscontvisa  = ivisa
+       .
+    end.
     
 end class .

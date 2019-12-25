@@ -72,7 +72,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-objlist8       as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:promoset:ps-sections:ps-section:gds[]
     define variable v-promoset-gd    as class ibs.th.bge.1crn.subjects.promotion_gd no-undo .
     define variable v-objlist9       as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:gifts[]
-
+    define variable v-PaymentSystems as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:payment-systems[]
+    define variable v-PaymentSystem  as class ibs.th.bge.1crn.subjects.payment-system no-undo . // imp:payment-systems:payment-system[]
+    define variable v-bins-tokens    as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:payment-systems:payment-system:bins-tokens[]
+    define variable v-bin-token      as class ibs.th.bge.1crn.subjects.bin-token no-undo . // imp:payment-systems:payment-system:bins-tokens:bin-token[]
+    
     define variable v-promotion-code as character no-undo . /* like ub.PromoAction.ext-code */
     define variable v-schedule-code  as character no-undo . /* like ub.promo-schedule.ext-code-sched */
     define variable v-promo-delete   as class ibs.th.ref.promo.promoactionsub no-undo .
@@ -138,6 +142,7 @@ do: // заголок промо-акции
       assign
         v-promo-delete:ID     = buf_PromoAction.id
         v-promo-delete:db-num = buf_PromoAction.db-num
+        v-promo-delete:promosched-id = buf_PromoAction.promosched-id
         v-promo-action:ID     = buf_PromoAction.id
       .
     /* отключено на время работы сценария "создать-удалить"
@@ -169,8 +174,8 @@ do: // заголок промо-акции
         v-promo-action:NameAction  = objImp:name_
      // обработка enum при взаимодействии со справочниками реализована в обход
      // v-promo-action:TypeDiscont = objImp:dscnt-type
-        v-promo-action:TypeDiscontenum = objImp:dscnt-type
-        v-promo-action:methodCalc  = objImp:dscnt-value-type
+        v-promo-action:TypeDiscontenum = if objImp:dscnt-value-type eq 8 then enum-type-discount:enVISA else objImp:dscnt-type
+        v-promo-action:methodCalc      = if objImp:dscnt-value-type eq 8 then 7                         else objImp:dscnt-value-type
      // v-promo-action:status_     = getPromoStatus(objImp:status_)
         v-promo-action:status_enum = getPromoStatus(objImp:status_)
         v-promo-action:priority    = objImp:priority
@@ -239,10 +244,12 @@ define variable v-txt-error         as character no-undo .
           v-txt-typedisc[v-promo-action:TypeDiscontenum:GetValue()]
         ) .
       end. // end_of_encombo
+      when enum-type-discount:enVISA then do:
+      END.
       otherwise v-txt-error = substitute("Тип скидки [&1] не поддерживается.", v-promo-action:TypeDiscontenum:GetValue()) .
     end case .
     
-    if v-txt-error = "" then v-promo-action:typecond = objImp:threshold-type .
+    /* if v-txt-error = "" then */ v-promo-action:typecond = objImp:threshold-type .
     /* 
        else undo, throw new Progress.Lang.AppError(v-txt-error) .
        09/VIII-2018 
@@ -267,6 +274,7 @@ end. // end_of заголовок_промоакции
       v-objlist5 = objImp:gds-addcond
       v-promoset = objImp:promoset
       v-objlist9 = objImp:gifts
+      v-PaymentSystems = objImp:Payment-Systems
     .
 
 
@@ -357,6 +365,28 @@ if valid-object (v-schedule) then do: // schedule - расписание
     end . // end_of дни расписания
     
 end. // end_of расписание
+else do :
+
+    v-promo-sched  = new ibs.th.ref.promo.promoSchedsub () .
+    assign
+      v-promo-sched:Mode         = {&h-create}      
+      v-promo-sched:status_      = getSchedStatus (v-promo-action:status_enum) // обработка enum при взаимодействии со справочниками реализована в обход
+      v-promo-sched:dispname     = "Расписание для акции " + string(v-promo-action:ID)
+      v-promo-sched:schedType    = 0
+    .
+    v-promo-action:Schedule     = v-promo-sched .
+    
+    v-promo-schdws = v-promo-action:ScheduleWeek . // создаётся пустая коллекция дней расписания
+    v-promo-schdw = new ibs.th.ref.promo.promoSchedwsub () .
+    assign
+       v-promo-schdw:wdaylist = "0"
+       v-promo-schdw:timebeg  = 0
+       v-promo-schdw:timeend  = 86399
+       v-promo-schdw:Mode     = {&h-create}      
+    .
+    v-promo-schdws:AddItem (v-promo-schdw) .
+    
+end.
 
     
 if valid-object(v-objlist2) then do: // threshold - пороговые значения
@@ -437,27 +467,52 @@ end. // end_of_gds
 
         
 if valid-object(v-objlist5) then do: // gds-addcond - товары для независимых условий
-    v-promo-goods = v-promo-action:GoodsCrits .
-    v-i-counter = v-objlist5:iCounter .
-    do v-i-num = 1 to v-i-counter :
+  
+   v-promo-goods = v-promo-action:GoodsCrits .
+   v-i-counter = v-objlist5:iCounter .
+   do v-i-num = 1 to v-i-counter :
       v-stub = v-objlist5:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
       v-addcond-gd = cast(v-objlist5:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_gd) .
       assign
-        v-promo-good = new ibs.th.ref.promo.promogoodssub ()
-        v-gds-code   = integer(v-addcond-gd:gd-code)
+         v-promo-good = new ibs.th.ref.promo.promogoodssub ()
+         v-gds-code   = integer(v-addcond-gd:gd-code)
       .
       if not can-find (first buf_goods where buf_goods.gds-code = v-gds-code) then
-      undo, throw new Progress.Lang.AppError( substitute(
-        "Код товара [&1] из промо-акции [&2] отсутствует в справочнике товаров."
-        , v-gds-code, objImp:name_
-      ) ) .
+         undo, throw new Progress.Lang.AppError( substitute(
+           "Код товара [&1] из промо-акции [&2] отсутствует в справочнике товаров."
+           , v-gds-code, objImp:name_
+        ) ) .
       assign
-        v-promo-good:GdsCode = v-gds-code
-        v-promo-good:Mode    = {&h-create}
+         v-promo-good:GdsCode = v-gds-code
+         v-promo-good:Mode    = {&h-create}
       .
       v-promo-goods:AddItem (v-promo-good) .
-    end . // end_of_objImp:gds-addcond[]
+   end . // end_of_objImp:gds-addcond[]
+   
 end. // end_of_gds-addcond
+
+if valid-object(v-paymentsystems) then do: // gds-addcond - товары для независимых условий
+   v-promo-goods = v-promo-action:CardsBin.
+   v-i-counter = v-paymentsystems:iCounter .
+   do v-i-num = 1 to v-i-counter :
+      v-stub = v-paymentsystems:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
+      v-paymentsystem = cast(v-paymentsystems:SubjectObjCurr, ibs.th.bge.1crn.subjects.payment-system) .
+      v-bins-tokens = v-paymentsystem:bins-tokens. 
+      v-j-counter = v-bins-tokens:iCounter .
+      do v-j-num = 1 to v-j-counter :
+         v-stub = v-bins-tokens:Get(v-j-num) .
+         v-bin-token = cast(v-bins-tokens:SubjectObjCurr, ibs.th.bge.1crn.subjects.bin-token) .
+         assign
+           v-promo-good = new ibs.th.ref.promo.promogoodssub ()
+           v-promo-good:NameSet = v-bin-token:code_
+           v-promo-good:Mode    = {&h-create}
+         .
+         v-promo-goods:AddItem (v-promo-good) .
+      end . // end_of_objImp:gds-addcond[]
+      
+   end.
+end.
+   
 
 
 if valid-object(v-promoset) then do: // promoset - промо-набор
@@ -545,7 +600,15 @@ end. // end_of_gifts
     v-storage = new ibs.th.gbl.storage.promoactionstorage () .
     // если прочитанная акция ранее присутствовала в БД - сначала удаляем её, затем - создаём;
     // если прочитанная акция пришла впервые - создаём её как новую
-    if valid-object(v-promo-delete) then v-storage:deleteDB(v-promo-delete) .
+    if valid-object(v-promo-delete) 
+    then do:
+       define variable mStorsed as class ibs.th.gbl.storage.promoSchedstorage NO-UNDO.
+       mstorsed = new ibs.th.gbl.storage.promoSchedstorage().
+       v-promo-delete:refreshChildObj().
+       mstorsed:deleteDB(v-promo-delete:Schedule) .
+       delete object  mStorsed.
+       v-storage:deleteDB(v-promo-delete) .
+    end.
     v-storage:insertDB(v-promo-action) .
     // акции с датой досрочного завершения отправляются на кассу тутже
     if v-promo-action:changeDate <> ? then do :

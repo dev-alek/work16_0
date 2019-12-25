@@ -870,11 +870,23 @@ end.
 &scop manual-edit-attr-supp-np   1
 &scop batch-edit-attr-supp-np   1
 
-/* Атрибут клиента - является нефтебазой для:*/
+/* Атрибут клиента - Поставщик СУГ   */
+&scop type-attr-supp-lgas  {&type-log}
+&scop format-attr-supp-lgas  "+/"
+&scop label-attr-supp-lgas  "Поставщик СУГ"
+&scop tooltip-attr-supp-lgas  "Поставщик СУГ"
+&scop user-can-edit-attr-supp-lgas   true
+&scop output-display-attr-supp-lgas  true
+&scop other-attr-supp-lgas  '':u
+&scop news-attr-supp-lgas  true
+&scop manual-edit-attr-supp-lgas   1
+&scop batch-edit-attr-supp-lgas   1
+
+/* Атрибут клиента - является нефтебазой/ГНС для:*/
 &scop type-attr-tank-farm-for {&type-char}
 &scop format-attr-tank-farm-for "X(255)"
-&scop label-attr-tank-farm-for "Является нефтебазой для:"
-&scop tooltip-attr-tank-farm-for "Является нефтебазой для:"
+&scop label-attr-tank-farm-for "Является нефтебазой/ГНС для:"
+&scop tooltip-attr-tank-farm-for "Является нефтебазой/ГНС для:"
 &scop user-can-edit-attr-tank-farm-for  true
 &scop output-display-attr-tank-farm-for  true
 &scop other-attr-tank-farm-for 'spr=clntattr-tank-farm-for':u
@@ -1106,6 +1118,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-supp-np
       {&attr-temp-full-code}
+      &scop attr-code attr-supp-lgas
+      {&attr-temp-full-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-full-code}
       &scop attr-code attr-auto-tank-for
@@ -1254,6 +1268,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-division-code
       {&attr-temp-code}
       &scop attr-code attr-supp-np
+      {&attr-temp-code}
+      &scop attr-code attr-supp-lgas
       {&attr-temp-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-code}
@@ -1610,6 +1626,8 @@ procedure clntattr-news :
       &scop attr-code attr-division-code
       {&attr-news-code}
       &scop attr-code attr-supp-np
+      {&attr-news-code}
+      &scop attr-code attr-supp-lgas
       {&attr-news-code}
       &scop attr-code attr-tank-farm-for
       {&attr-news-code}
@@ -2165,6 +2183,8 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-supp-np
       {&attr-manual-edit-code}
+      &scop attr-code attr-supp-lgas
+      {&attr-manual-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-manual-edit-code}
       &scop attr-code attr-auto-tank-for
@@ -2227,6 +2247,8 @@ procedure clntattr-batch-edit :
       &scop attr-code attr-division-code
       {&attr-batch-edit-code}
       &scop attr-code attr-supp-np
+      {&attr-batch-edit-code}
+      &scop attr-code attr-supp-lgas
       {&attr-batch-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-batch-edit-code}
@@ -2876,7 +2898,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop level-way-attr-fin-global ",,global"
 &scop up-way-attr-fin-global ",,fin-global"
 
-/* Объектные параметры по ФИн документам */
+/* Объектные параметры по ФИн документам
+26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 &scop type-attr-fin-doc            {&type-char}
 &scop format-attr-fin-doc          "x(40)"
 &scop label-attr-fin-doc           "Настройки для Фин.документов"
@@ -2910,7 +2933,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 '
 &scop level-way-attr-fin-doc "obj,,"
 &scop up-way-attr-fin-doc "fin-doc,,"
-
+*/
 
 
 /* Общие параметры по Накладным и договорам  */
@@ -2946,7 +2969,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-nakl_par   true
 &scop output-display-attr-nakl_par  true
 &scop other-attr-nakl_par           'spr-ext=gbl\naklpa1.w':U
-&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,character,character,character,logical':U
+&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,character,character,character,logical,character':U
 &scop prop-label-list-attr-nakl_par 'Дата закрытия периода~
 ,Дата факт = Дате документа (для внешних ПН РН и МФ )~
 ,Тип заведения НДС по умолчанию~
@@ -2973,8 +2996,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 ,Возврат поставщику товары~
 ,Расход внешний товары~
 ,Разрешено вводить фактическое количество в статусе Накл-~
+,Основания для возврата~
 '
-&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb'
+&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return'
 &scop global-attr-nakl_par true
 &scop host-attr-nakl_par   true
 &scop shop-attr-nakl_par   true
@@ -3007,6 +3031,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-nakl_par_attr-mandatory-gds-ret-wayb_tooltip (attr-mandatory-gds-ret-wayb) Обязательные атрибуты накладной возврат поставщику товары
 &scop attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip (attr-mandatory-gds-exp-wayb) Обязательные атрибуты накладной расход внешний товары
 &scop attr-nakl_par_edit-fact-wayb_tooltip (edit-fact-wayb) Разрешено вводить фактическое количество в статусе Накл-
+&scop attr-nakl_par_reasons-for-return_tooltip (reasons-for-return) Основания для внешнего расхода по которым будет определяться что делаем возврат поставщику
 &scop prop-tooltip-list-attr-nakl_par {&attr-nakl_par_date-close-period_tooltip},~
 {&attr-nakl_par_stfactdt_tooltip},~
 {&attr-nakl_par_type-vat_tooltip},~
@@ -3032,7 +3057,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 {&attr-nakl_par_attr-mandatory-gds-in-wayb_tooltip},~
 {&attr-nakl_par_attr-mandatory-gds-ret-wayb_tooltip},~
 {&attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip},~
-{&attr-nakl_par_edit-fact-wayb_tooltip_tooltip}
+{&attr-nakl_par_edit-fact-wayb_tooltip},~
+{&attr-nakl_par_reasons-for-return_tooltip}
 &scop level-way-attr-nakl_par "obj,host,global"
 &scop up-way-attr-nakl_par "nakl_par,nakl_par,nakl_par"
 
@@ -3112,7 +3138,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-gds-ref_obj true
 &scop output-display-attr-gds-ref_obj false
 &scop other-attr-gds-ref_obj 'spr-ext=adm\shattr22.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-gds-ref_obj 'integer,character,logical'
+&scop prop-type-list-attr-gds-ref_obj 'integer,character,logical,character'
 &scop prop-label-list-attr-gds-ref_obj '~
 Гр.товаров по умолч.~
 ,Заказные поля в экране покупателя~
@@ -4805,8 +4831,10 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-fin-plan
       {&attr-temp-full-code}
+      /* 26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
       &scop attr-code attr-fin-doc
       {&attr-temp-full-code}
+      */
       &scop attr-code attr-rt-trn-doc
       {&attr-temp-full-code}
       &scop attr-code attr-gds-ref
@@ -4961,8 +4989,12 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-fin-plan
     {&attr-temp-code}
+    
+    /* 26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
     &scop attr-code attr-fin-doc
     {&attr-temp-code}
+    */
+    
     &scop attr-code attr-gds-ref
     {&attr-temp-code}
     &scop attr-code attr-gds-ref_obj
@@ -5670,8 +5702,12 @@ on error undo, return error return-value
     {&attr-legacy-code}
     &scop attr-code attr-fin-plan
     {&attr-legacy-code}
+    
+    /* 26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
     &scop attr-code attr-fin-doc
     {&attr-legacy-code}
+    */
+    
     &scop attr-code attr-gds-ref
     {&attr-legacy-code}
     &scop attr-code attr-gds-ref_obj
@@ -5932,6 +5968,30 @@ end procedure.
 &scop manual-edit-attr-item-matter-mark 1
 &scop batch-edit-attr-item-matter-mark  1
 
+&scop type-attr-cash-book-id {&type-int}
+&scop format-attr-cash-book-id  ">>>>>>>>9"
+&scop label-attr-cash-book-id   "Кассовая книга"
+&scop tooltip-attr-cash-book-id   "Кассовая книга"
+&scop user-can-edit-attr-cash-book-id  true
+&scop output-display-attr-cash-book-id  true
+&scop other-attr-cash-book-id "" /*"spr-ext=ref\gds-imm.w/spr-param=item-matter-mark/check=gds-attr_check-item-matter-mark"*/
+&scop news-attr-cash-book-id true
+&scop copy-attr-cash-book-id  true
+&scop manual-edit-attr-cash-book-id 1
+&scop batch-edit-attr-cash-book-id  1
+
+&scop type-attr-oper-serv-id {&type-int}
+&scop format-attr-oper-serv-id  ">>>>>>>>9"
+&scop label-attr-oper-serv-id   "Платежный агент"
+&scop tooltip-attr-oper-serv-id  "Платежный агент"
+&scop user-can-edit-attr-oper-serv-id  true
+&scop output-display-attr-oper-serv-id  true
+&scop other-attr-oper-serv-id  ""  /*"spr-ext=ref\gds-imm.w/spr-param=item-matter-mark/check=gds-attr_check-item-matter-mark"*/
+&scop news-attr-oper-serv-id true
+&scop copy-attr-oper-serv-id  true
+&scop manual-edit-attr-oper-serv-id 1
+&scop batch-edit-attr-oper-serv-id  1
+
 &scop type-attr-is-oss-payment {&type-log}
 &scop format-attr-is-oss-payment  "+/ "
 &scop label-attr-is-oss-payment   "Платеж ОСС"
@@ -5959,8 +6019,8 @@ end procedure.
 
 &scop type-attr-ban-bonus {&type-log}
 &scop format-attr-ban-bonus  "+/ "
-&scop label-attr-ban-bonus   "Запрет на участие в бонусных программах"
-&scop tooltip-attr-ban-bonus   "Запрет на участие в бонусных программах"
+&scop label-attr-ban-bonus   "Запрет на участие в бонусных программах\участие в скидке на итог"
+&scop tooltip-attr-ban-bonus   "Запрет на участие в бонусных программах\участие в скидке на итог"
 &scop user-can-edit-attr-ban-bonus  true
 &scop output-display-attr-ban-bonus  true
 &scop other-attr-ban-bonus  ""
@@ -6389,6 +6449,10 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-item-matter-mark
       {&attr-temp-full-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-temp-full-code}
+      &scop attr-code attr-oper-serv-id
+      {&attr-temp-full-code}
       &scop attr-code attr-group-np
       {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
@@ -6486,6 +6550,10 @@ do
       &scop attr-code attr-mark-type
       {&attr-temp-code}      
       &scop attr-code attr-item-matter-mark
+      {&attr-temp-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-temp-code}
+      &scop attr-code attr-oper-serv-id
       {&attr-temp-code}
       &scop attr-code attr-group-np
       {&attr-temp-code}
@@ -6652,7 +6720,9 @@ procedure gds-attr-write :
     assign
     buf_goods-attr.attr-value = p-value no-error
     .
-
+    if error-status :error then do:
+      undo, return error return-value .
+    end.
   end.
 
 end procedure.
@@ -6818,6 +6888,10 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-item-matter-mark
       {&attr-news-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-news-code}
+      &scop attr-code attr-oper-serv-id
+      {&attr-news-code}
       &scop attr-code attr-group-np
       {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
@@ -6909,6 +6983,10 @@ procedure gds-attr-copy :
       &scop attr-code attr-mark-type
       {&attr-copy-code}
       &scop attr-code attr-item-matter-mark
+      {&attr-copy-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-copy-code}
+      &scop attr-code attr-oper-serv-id
       {&attr-copy-code}
       &scop attr-code attr-group-np
       {&attr-copy-code}
@@ -7205,7 +7283,10 @@ do
 on error undo, return error return-value
 :
   CASE p-mode:
-    when {&add-def} then do:
+    when {&add-def} 
+    or
+    when {&update}
+    then do:
       
       if    lookup(p-value, {&prop-list-attr-item-matter-mark}) = 0  
       then do:
@@ -7219,6 +7300,82 @@ on error undo, return error return-value
 end.
 assign
 p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-cash-book-id :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+   define variable VValue as integer no-undo.
+   do
+   on error undo, return error return-value
+   :
+     CASE p-mode:
+       when {&add-def} 
+       or
+       when {&update}
+       then do:
+          VValue = int64(p-value) no-error.
+          if     p-value ne ""
+             and VValue eq 0
+        then
+           p-error-code = "Значение не может быть 0".
+        else do:
+            find first cashbook where CashBook.id eq VValue no-lock no-error.
+            if not available  cashbook
+            then
+               p-error-code = "Не существует кассоdая книга с номером " + string( VValue).
+        end.
+        if p-error-code <> "" then
+           return p-error-code.
+       end.
+     END CASE.
+   end.
+   assign
+   p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-oper-serv-id :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+   define variable VValue as integer no-undo.
+   do
+   on error undo, return error return-value
+   :
+     CASE p-mode:
+       when {&add-def} 
+       or
+       when {&update}
+       then do:
+          VValue = int64(p-value) no-error.
+          if     p-value ne ""
+             and VValue eq 0
+        then
+           p-error-code = "Значение не может быть 0".
+        else do:
+            find first operserv where operserv.id eq VValue no-lock no-error.
+            if not available  operserv
+            then
+               p-error-code = "Не существует оператора с номером " + string( VValue).
+        end.
+        if p-error-code <> "" then
+           return p-error-code.
+       end.
+     END CASE.
+   end.
+   assign
+   p-correct = yes.
 end procedure.
 
 procedure gds-attr_check-group-np :
@@ -7510,6 +7667,10 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-item-matter-mark
       {&attr-manual-edit-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-manual-edit-code}
+      &scop attr-code attr-oper-serv-id
+      {&attr-manual-edit-code}
       &scop attr-code attr-group-np
       {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
@@ -7602,6 +7763,10 @@ do
       &scop attr-code attr-mark-type
       {&attr-batch-edit-code}
       &scop attr-code attr-item-matter-mark
+      {&attr-batch-edit-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-batch-edit-code}
+      &scop attr-code attr-oper-serv-id
       {&attr-batch-edit-code}
       &scop attr-code attr-group-np
       {&attr-batch-edit-code}
@@ -10685,6 +10850,7 @@ end procedure.
 &scop manual-edit-attr-no-envd-h  1
 &scop batch-edit-attr-no-envd-h  1
 
+/* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
 &glob type-attr-oss-props-h {&type-char}
 &glob format-attr-oss-props-h   "X(256)"
 &glob label-attr-oss-props-h   "Настройки платежа ОСС"
@@ -10696,7 +10862,7 @@ end procedure.
 &glob copy-attr-oss-props-h  true
 &scop manual-edit-attr-oss-props-h  0
 &scop batch-edit-attr-oss-props-h  0
-
+*/
 
 &scop attr-temp-code ~
   when ~{&~{&attr-code~}~} then do: ~
@@ -10755,8 +10921,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-temp-full-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-temp-full-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -10782,8 +10951,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-temp-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-temp-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -11065,8 +11237,11 @@ procedure gdshattr-news :
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-news-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-news-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -11087,8 +11262,11 @@ procedure gdshattr-copy :
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-copy-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-copy-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -11110,8 +11288,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-manual-edit-code }
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-manual-edit-code}
+      */
 
 
       /* сюда добавлять новые параметры */
@@ -11135,8 +11316,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-batch-edit-code }
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-batch-edit-code}
+      */
 
 
             /* сюда добавлять новые параметры */
@@ -13299,6 +13483,42 @@ end procedure.
 &scop manual-edit-attr-int-point 0
 &scop batch-edit-attr-int-point 0
 
+ /* Версия справочников */
+&scop type-attr-ver-code {&type-int}
+&scop format-attr-ver-code "999999999"
+&scop label-attr-ver-code "Версия справочников"
+&scop tooltip-attr-ver-code "Версия справочников"
+&scop user-can-edit-attr-ver-code false
+&scop output-display-attr-ver-code true
+&scop other-attr-ver-code '':u
+&scop news-attr-ver-code no
+&scop manual-edit-attr-ver-code 0
+&scop batch-edit-attr-ver-code 0
+
+/* Исторический код объекта */
+&scop type-attr-hist-code {&type-char}
+&scop format-attr-hist-code "x(50)"
+&scop label-attr-hist-code "Исторический код объекта"
+&scop tooltip-attr-hist-code "Исторический код объекта"
+&scop user-can-edit-attr-hist-code false
+&scop output-display-attr-hist-code true
+&scop other-attr-hist-code '':u
+&scop news-attr-hist-code yes
+&scop manual-edit-attr-hist-code 0
+&scop batch-edit-attr-hist-code 0
+
+/* Историческое наименование объекта */
+&scop type-attr-hist-name {&type-char}
+&scop format-attr-hist-name "x(50)"
+&scop label-attr-hist-name "Историческое наименование объекта"
+&scop tooltip-attr-hist-name "Историческое наименование объекта"
+&scop user-can-edit-attr-hist-name false
+&scop output-display-attr-hist-name true
+&scop other-attr-hist-name '':u
+&scop news-attr-hist-name yes
+&scop manual-edit-attr-hist-name 0
+&scop batch-edit-attr-hist-name 0
+
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -13399,6 +13619,12 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-int-point
       {&attr-temp-full-code}
+      &scop attr-code attr-ver-code
+      {&attr-temp-full-code}
+      &scop attr-code attr-hist-code
+      {&attr-temp-full-code}
+      &scop attr-code attr-hist-name
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13462,6 +13688,12 @@ procedure db-attr-tooltip :
       &scop attr-code attr-mess-id-video
       {&attr-temp-code}
       &scop attr-code attr-int-point
+      {&attr-temp-code}
+      &scop attr-code attr-ver-code
+      {&attr-temp-code}
+      &scop attr-code attr-hist-code
+      {&attr-temp-code}
+      &scop attr-code attr-hist-name
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13715,7 +13947,10 @@ procedure db-attr-news :
       {&attr-news-code}
       &scop attr-code attr-int-point
       {&attr-news-code}
-
+      &scop attr-code attr-hist-code
+      {&attr-news-code}
+      &scop attr-code attr-hist-name
+      {&attr-news-code}
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут БД &1", p-code) .
@@ -14243,6 +14478,8 @@ procedure ext-system-attr-news :
       &scop attr-code attr-esys-cert-sign-issuer
       {&attr-news-code}
       &scop attr-code attr-esys-cert-file-ext
+      {&attr-news-code}
+       &scop attr-code attr-ver-code
       {&attr-news-code}
 
 

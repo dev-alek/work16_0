@@ -19,7 +19,7 @@ define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "смена своего пароля".
 
 
-find first _user
+find first _user exclusive-lock
            where _user._userid    = userid ("ub")
            no-error
            .

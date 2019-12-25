@@ -51,6 +51,8 @@ field doc-qnty as decimal
 field sale-qnty-1 as decimal
 field curr-date as date
 field curr-time-str as character
+field level-water as decimal
+field volume-water  as decimal
 /*
 index pi is unique primary
 obj-type

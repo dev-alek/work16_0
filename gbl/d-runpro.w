@@ -52,7 +52,7 @@ define temp-table temp-param no-undo
 .
 
 define stream runpr.
-
+define stream sReadfile.
 define variable v-store-file-name as character no-undo initial "d-runpro.txt" .
 
 /* _UIB-CODE-BLOCK-END */
@@ -586,7 +586,14 @@ PROCEDURE run-procedure :
         end.
       end.
     end.
-
+    if search(v-proc-name) = ?
+    then do:
+       message
+          substitute("Не найдена процедура &1", v-proc-name) 
+       view-as alert-box.
+       return no-apply.
+       
+    end.
     /* запоминаем параметры вызываемой процедуры */
     find first temp-param
       where temp-param.run-name = v-proc-name
@@ -621,162 +628,484 @@ PROCEDURE run-procedure :
     on stop   undo, return error substitute( "&1. stop", vss-workfile )
     on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     :
-      if can-do("true,yes", t-persistent :screen-value)
-      then do:
-        case v-num-parameters :
-          when 0
+       define variable vKey as integer no-undo.
+       define variable vCheksum as character no-undo.
+       define variable vlogfile as character no-undo.
+       define variable vText as character no-undo.
+       define variable vError as logical no-undo init yes.
+       define variable VRcode as logical no-undo.
+       define variable vParamlist as character no-undo.
+       VRcode = search("gbl/d-runpro.r") ne ?.
+       if VRcode
+       then do:
+          vKey = random(1,999999999).
+          define variable vFileHelper as class ibs.th.file.filehelperth no-undo.
+          vFileHelper = new ibs.th.file.filehelperth().
+          vFileHelper:user-passwd = "".
+          vFileHelper:MyBachMode = no.
+          vFileHelper:AsyncProc("utl/proc-chekproc", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U + {&delim-par} + "&4":U + {&delim-par} + "&5":U + {&delim-par} + "&6":U + {&delim-par} + "&7":U  + {&delim-par} + "&9":U 
+                                                                       , search(v-proc-name) ,v-num-parameters, t-parparentproc :checked, vKey,v-parameter1,v-parameter2,v-parameter3 ),1).
+          vFileHelper:myTimeOut = 300.
+          
+          vFileHelper:WaitFor("proc-chekproc", 1,"Проверка процедуры.").
+          vtext = "Процедура имеет не правильную подпись.".
+          vlogfile = vFileHelper:myWorkDir + "proc-chekprocerror.log".
+          if vFileHelper:FileExists(vlogfile)
           then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name) persistent set h-proc-handle
-                (input parparentproc
-                ) .
-            end.
-            else do:
-              run value (v-proc-name) persistent set h-proc-handle .
-            end.
-          end.
-          when 1
-          then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name) persistent set h-proc-handle
-                (input parparentproc
-                ,input v-parameter1
-                ) .
-            end.
-            else do:
-              run value (v-proc-name) persistent set h-proc-handle
-                (input v-parameter1
-                ) .
-            end.
-          end.
-          when 2
-          then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name) persistent set h-proc-handle
-                (input parparentproc
-                ,input v-parameter1
-                ,input v-parameter2
-                ) .
-            end.
-            else do:
-              run value (v-proc-name) persistent set h-proc-handle
-                (input v-parameter1
-                ,input v-parameter2
-                ) .
-            end.
-          end.
-          when 3
-          then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name) persistent set h-proc-handle
-                (input parparentproc
-                ,input v-parameter1
-                ,input v-parameter2
-                ,input v-parameter3
-                ) .
-            end.
-            else do:
-              run value (v-proc-name) persistent set h-proc-handle
-                (input v-parameter1
-                ,input v-parameter2
-                ,input v-parameter3
-                ) .
-            end.
-          end.
-        end case .
-        message
-          "Процедура запущена" skip
-          "Указатель процедуры" h-proc-handle skip
-          view-as alert-box .
-      end.
-      else do:
-        case v-num-parameters :
-          when 0
-          then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name)
-                (input parparentproc
-                ) .
-            end.
-            else do:
-              run value (v-proc-name)
+             input stream sReadfile FROM  VALUE(vlogfile).
+             repeat:
+                import stream sReadfile unformatted vText.
+                if vtext begins "error" 
+                then assign
+                   vtext = substring(vtext,7)
+/*                   vError = yes*/
                 .
-            end.
+                else do: 
+                   vCheksum = vText.
+                   
+                   if (vCheksum ne {utl/chekproc.i vKey})
+                   then assign
+                      vtext = "Процедура имеет не правильную подпись."
+/*                      vError = yes*/
+                   .
+                   else
+                      vError = no.
+                end.    
+             end.
+             input stream sReadfile close  .
+             os-delete value(vlogfile).
           end.
-          when 1
+          else assign
+              vtext = "Не получен результат проверки."
+              vError = yes.
+            
+          vFileHelper:delworkdir().
+          delete object vFileHelper.
+       end.
+       else
+          vError = no.
+       if vError
+       then do:
+          run trg/userlog.p (
+                input 'run-proc'
+                , input (substitute( "&1. Не прошла проверка подписи. &2", vss-workfile, vtext)  + {&delim-key} + v-proc-name )
+                , input ?
+                , input ?
+                , input "") no-error.
+          undo, return error substitute( "&1. Не прошла проверка подписи. &2", vss-workfile, vtext) .
+       end.
+       else do:
+          if can-do("true,yes", t-persistent :screen-value)
           then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name)
-                (input parparentproc
-                ,input v-parameter1
-                ).
-            end.
-            else do:
-              run value (v-proc-name)
-                (input v-parameter1
-                ).
-            end.
+              case v-num-parameters :
+                when 0
+                then do:
+                   vParamlist = "".
+                end.
+                when 1
+                then do:
+                   vParamlist = v-parameter1.
+                end.
+                when 2
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2.
+                end.
+                when 3
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2 + "|" + v-parameter3.
+                end.
+             end.
+             run trg/userlog.p (
+                input 'run-proc'
+                , input ("Начато выполнение процедуры "  + {&delim-key} + v-proc-name  + {&delim-key} + vParamlist)
+                , input ?
+                , input ?
+                , input "") no-error.
+             case v-num-parameters :
+                when 0
+                then do:
+                   vParamlist = "".
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                       ) no-error .
+                   end.
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle 
+                          (input vkey
+                          ,output vCheksum 
+                           )no-error.
+                   end.
+                end.
+                when 1
+                then do:
+                   vParamlist = v-parameter1.
+                   if parparentproc <> ?
+                   and valid-handle(parparentproc)
+                   and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                         ,input v-parameter1
+                         )no-error.
+                   end.
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input vkey
+                         ,output vCheksum 
+                         ,input v-parameter1
+                         ) no-error .
+                   end.
+                end.
+                when 2
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2.
+                   if parparentproc <> ?
+                   and valid-handle(parparentproc)
+                   and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ) no-error.
+                   end.
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input vkey
+                         ,output vCheksum 
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ) no-error.
+                   end.
+                end.
+                when 3
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2 + "|" + v-parameter3.
+                   
+                   if parparentproc <> ?
+                   and valid-handle(parparentproc)
+                   and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         ) no-error.
+                   end.
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input vkey
+                         ,output vCheksum 
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         ) no-error.
+                   end.
+                end.
+             end case .
+             if not error-status:error
+             then
+                message
+                   "Процедура запущена" skip
+                   "Указатель процедуры" h-proc-handle skip
+                   view-as alert-box .
           end.
-          when 2
+          else do:
+             case v-num-parameters :
+                when 0
+                then do:
+                   vParamlist = "".
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                         ) no-error .
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ) no-error.
+                   end.
+                end.
+                when 1
+                then do:
+                   vParamlist = v-parameter1.
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                         ,input v-parameter1
+                         )no-error.
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ,input v-parameter1
+                         )no-error.
+                   end.
+                end.
+                when 2
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2 .
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         )no-error.
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         )no-error.
+                   end.
+                end.
+                when 3
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2 + "|" + v-parameter3.
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ,input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         )no-error.
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         (input vkey
+                         ,output vCheksum 
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         )no-error.
+                   end.
+                end.
+             end case.
+          end.
+          if not error-status :error
           then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name)
-                (input parparentproc
-                ,input v-parameter1
-                ,input v-parameter2
-                ).
-            end.
-            else do:
-              run value (v-proc-name)
-                (input v-parameter1
-                ,input v-parameter2
-                ).
-            end.
+             run trg/userlog.p (
+                input 'run-proc'
+                , input ("Завершено выполнение процедуры без ошибок "  + {&delim-key} + v-proc-name  + {&delim-key} + vParamlist)
+                , input ?
+                , input ?
+                , input "") no-error.
+             return.
           end.
-          when 3
+          else if  vrcode
           then do:
-            if parparentproc <> ?
-            and valid-handle(parparentproc)
-            and t-parparentproc :checked
-            then do:
-              run value (v-proc-name)
-                (input parparentproc
-                ,input v-parameter1
-                ,input v-parameter2
-                ,input v-parameter3
-                ).
-            end.
-            else do:
-              run value (v-proc-name)
-                (input v-parameter1
-                ,input v-parameter2
-                ,input v-parameter3
-                ).
-            end.
+             run trg/userlog.p (
+                input 'run-proc'
+                , input ("Завершено выполнение процедуры с ошибками "  + {&delim-key} + v-proc-name + {&delim-key} + vParamlist)
+                , input ?
+                , input ?
+                , input "") no-error.
+             undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) ).
           end.
-        end case.
-      end.
+          message "Данная процедура не запустится у клиент."
+             view-as alert-box warning . 
+         /*-----Только для разработки-----------------------*/
+          if can-do("true,yes", t-persistent :screen-value)
+          then do:
+             case v-num-parameters :
+                when 0
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input parparentproc
+                         ) .
+                   end.
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle .
+                   end.
+                end.
+                when 1
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input parparentproc
+                         ,input v-parameter1
+                         ) .
+                   end. 
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input v-parameter1
+                         ) .
+                   end.
+                end.
+                when 2
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ) .
+                   end.
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input v-parameter1
+                         ,input v-parameter2
+                         ) .
+                   end.
+                end.
+                when 3
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         ) .
+                   end.
+                   else do:
+                      run value (v-proc-name) persistent set h-proc-handle
+                         (input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         ) .
+                   end.
+                end.
+             end case .
+             message
+                "Процедура запущена" skip
+                "Указатель процедуры" h-proc-handle skip
+                view-as alert-box .
+          end.
+          else do:
+             case v-num-parameters :
+                when 0
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input parparentproc
+                         ) .
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         .
+                   end.
+                end.
+                when 1
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input parparentproc
+                         ,input v-parameter1
+                         ).
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         (input v-parameter1
+                         ).
+                   end.
+                end.
+                when 2
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ).
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         (input v-parameter1
+                         ,input v-parameter2
+                         ).
+                   end.
+                end.
+                when 3
+                then do:
+                   if parparentproc <> ?
+                  and valid-handle(parparentproc)
+                  and t-parparentproc :checked
+                   then do:
+                      run value (v-proc-name)
+                         (input parparentproc
+                         ,input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         ).
+                   end.
+                   else do:
+                      run value (v-proc-name)
+                         (input v-parameter1
+                         ,input v-parameter2
+                         ,input v-parameter3
+                         ).
+                   end.
+                end.
+             end case.
+             run trg/userlog.p (
+                input 'run-proc'
+                , input ("Выполнена процедура"  + {&delim-key} + v-proc-name + {&delim-key} + vParamlist)
+                , input ?
+                , input ?
+                , input "") no-error.
+          end. 
+         
+       end.
     end.
   end. /* do with frame */
 

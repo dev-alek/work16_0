@@ -31,7 +31,12 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
     private set.
   define property cor-acc     as character    no-undo get. 
     private set.
-
+  define property qr-rule     as integer      no-undo get. 
+    private set.
+  define property bank-resive-debit as character    no-undo get. 
+    private set.    
+  define property bank-deposit-kredit as character    no-undo get. 
+    private set.    
   define override property InitTag as character no-undo init "bank"
     get. 
 
@@ -56,6 +61,21 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
         do:
           assign 
             cor-acc = inValue .
+        end.
+      when "qr-rule" then 
+        do:
+          assign 
+            qr-rule = integer(inValue) .
+        end.              
+      when "bank-resive-debit" then 
+        do:
+          assign 
+            bank-resive-debit = inValue .
+        end.      
+      when "bank-deposit-kredit" then 
+        do:
+          assign 
+            bank-deposit-kredit = inValue .
         end.      
     end case.
   end.
@@ -73,6 +93,12 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       when bank-city = ?
       v-str = v-str + ",cor-acc" 
       when cor-acc = ?
+      v-str = v-str + ",qr-rule" 
+      when qr-rule = ?
+      v-str = v-str + ",bank-resive-debit" 
+      when bank-resive-debit = ?
+      v-str = v-str + ",bank-deposit-kredit" 
+      when bank-deposit-kredit = ?
       .
     v-str = trim (v-str, ",").
     if v-str > ''
@@ -87,6 +113,9 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       cor-acc   = ?
       bank-city = ?
       bik       = ?
+      qr-rule   = ?
+      bank-resive-debit = ?
+      bank-deposit-kredit = ?
       .
   end.
   

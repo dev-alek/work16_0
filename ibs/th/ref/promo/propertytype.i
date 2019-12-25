@@ -10,7 +10,11 @@ define property {&PropertyName} as integer no-undo
     
     define property {&PropertyName}lbl as character  no-undo
     get():
+         if valid-object({&ObjType})
+         then
          return  {&ObjType}:typeLbl ("{&PropertyName}", {&PropertyName}).
+         else
+         return "".
     end.    
     set(arg as character):
         {&PropertyName} =  {&ObjType}:typeint("{&PropertyName}",arg).

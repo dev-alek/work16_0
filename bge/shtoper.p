@@ -2302,6 +2302,7 @@ procedure export-stk-den :
 
     ,input   yes /*xTog-obj*/
     ,input   0 /*p-curr-code*/
+    ,input   0
     ,output  v-ost-begin
     ,output  Fact-order-1
     ) no-error .
@@ -2320,6 +2321,7 @@ procedure export-stk-den :
     
     ,input   yes /*xTog-obj*/
     ,input   0 /*p-curr-code*/
+    ,input   0
     ,output  v-ost-end
     ,output  Fact-order-2
     ) no-error .

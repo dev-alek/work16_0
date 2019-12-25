@@ -127,7 +127,7 @@ on error undo, return error
          no-error.      
         return.
     end.
-    if p-action = 'tech-prol-pwd':U then do:      
+    if   p-action = 'tech-prol-pwd':U then do:      
         run cur-time in this-procedure(output v-corr-date, output v-corr-time).
         create buf_c-user-log.
         assign
@@ -139,12 +139,75 @@ on error undo, return error
             buf_c-user-log.corr-user-name   = g#userid 
             buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
             buf_c-user-log.have-screen      = yes
-            buf_c-user-log.head-table-key   = 'tech-prol-pwd':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key})
+            buf_c-user-log.head-table-key   = 'tech-prol-pwd:':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key})
             buf_c-user-log.head-table       = 'tech-prol-pwd':U
-            buf_c-user-log.uniq-key-rec     = 'tech-prol-pwd':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key})
+            buf_c-user-log.uniq-key-rec     = 'tech-prol-pwd:':U + {&delim-key} + entry(2,p-tbl-name,{&delim-key})
          no-error.      
         return.
     end.
+    if   p-action = 'run-proc':U then do:
+       define variable mproc as character no-undo.
+       define variable mparam as character no-undo.
+       mparam = ";" + entry(3,p-tbl-name,{&delim-key}) no-error.
+        mproc = entry(2,p-tbl-name,{&delim-key}).
+        if search (mproc)  ne ?
+        then
+           mproc = search (mproc).
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid 
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = mproc + mparam
+            buf_c-user-log.head-table       = 'run-proc':U
+            buf_c-user-log.uniq-key-rec     = mproc + mparam
+         no-error.      
+        return.
+    end.
+    if   p-action = 'sysadm-pwd':U then do:      
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid 
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key})
+            buf_c-user-log.head-table       = 'sysadm-pwd':U
+            buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key})
+         no-error.      
+        return.
+    end.
+    
+    if   p-action = 'one-pwd':U then do:      
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid 
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key})
+            buf_c-user-log.head-table       = 'one-pwd':U
+            buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key})
+         no-error.      
+        return.
+    end.
+    
     case p-action :
         when {&nwsdochs_action_delete}      then v-action-type = "Удаление" .
         when {&nwsdochs_action_create}      then v-action-type = "Создание" .

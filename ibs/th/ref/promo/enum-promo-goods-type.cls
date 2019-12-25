@@ -17,9 +17,10 @@ Creation date: 11/07/18
 
 enum ibs.th.ref.promo.enum-promo-goods-type:
   define enum
-    Appl      = 1     /* товары применения*/
-    criterion = 2     /* независимые условия */
-    PromoSet = 3      /* промо-набор */
-    PromoSetGoods = 4 /* товары прома-набора */
+    Appl          = 1  /* товары применения*/
+    criterion     = 2  /* независимые условия */
+    PromoSet      = 3  /* промо-набор */
+    PromoSetGoods = 4  /* товары прома-набора */
+    Bin           = 5  /* Бины катр */
   .
 end enum .

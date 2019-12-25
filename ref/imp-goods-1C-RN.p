@@ -16,6 +16,7 @@
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+using ibs.th.gbl.*.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -66,6 +67,10 @@ define buffer first_gds-grp for ub.gds-grp.
 define buffer base-bar-code for ub.bar-code.
 define buffer buf_bar-code for ub.bar-code.
 define buffer buf_prod-bc for ub.prod-bc.
+define buffer buf_tax-rate-attr for ub.tax-rate-attr .
+
+define buffer buf_gds-season for ub.gds-season .
+define buffer buf_blob-bind for ub.blob-bind .
 
 define variable v-barcode as class goods_barcode .
 define variable v-barcodes as class subjects .
@@ -105,6 +110,27 @@ define variable v-neu-storage-z as decimal   no-undo .
 define variable v-unit-spl-code as character no-undo .
 define variable v-is-petrl      as logical   no-undo .
 define variable v-barcode-list  as longchar  no-undo .
+
+define variable keyrecObj as class keyrec no-undo.
+define variable keyrec as character no-undo.
+define variable v-dir-name as character no-undo .
+define variable v-dir1-name as character no-undo .
+define variable v-file-name as character no-undo .
+
+define variable v-param-type as character no-undo .
+define variable v-value-character as character no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-decimal as decimal no-undo .
+define variable v-value-integer as INTEGER no-undo .
+define variable v-value-logical AS LOGICAL no-undo .
+define variable v-tth as handle no-undo .
+
+define variable v-part-num as integer   no-undo .
+define variable v-blob-db-num as integer   no-undo .
+define variable v-int64-id as int64 no-undo .
+
+define variable mem1    as memptr no-undo .
+define variable v-size  as integer no-undo .
 
   define variable v-cntxt-db-num        as integer   no-undo . /* текущая БД            */
   define variable v-cntxt-userid        as character no-undo . /* текущий пользователь  */
@@ -184,13 +210,38 @@ define variable v-barcode-list  as longchar  no-undo .
 /*  then do :                                                                                            */
 /*      undo, return error ("Нет единицы измерения с кодом ОКЕИ " + string(p-GdsObj:unit-spl-code)) .    */
 /*  end.                                                                                                 */
-  
-  find last ub.tax-rate-value no-lock where ub.tax-rate-value.rate-value = p-GdsObj:nds-code
-                                      and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
-                                      and ub.tax-rate-value.status_ = {&current-status}
-                                      use-index i-status no-error .
-  if available ub.tax-rate-value then v-nds-rate-code = ub.tax-rate-value.rate-code .
-  
+v-nds-rate-code = ? .
+if p-GdsObj:nds-code = -1 then 
+do:
+  for each buf_tax-rate-attr no-lock where buf_tax-rate-attr.tax-code = integer({&vat-tax-code})
+    and buf_tax-rate-attr.attr-code = "envd": 
+    find last ub.tax-rate-value no-lock where ub.tax-rate-value.rate-code = buf_tax-rate-attr.rate-code
+      and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
+      and ub.tax-rate-value.status_ <> {&deleted-status} 
+      use-index i-status no-error .                                    
+    if available ub.tax-rate-value and v-nds-rate-code = ? then v-nds-rate-code = ub.tax-rate-value.rate-code .   
+  end.     
+end.  
+else 
+do:
+  for each ub.tax-rate-value no-lock where ub.tax-rate-value.rate-value = p-GdsObj:nds-code
+    and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
+    and ub.tax-rate-value.status_ <> {&deleted-status}
+    use-index i-status by ub.tax-rate-value.corr-date desc:                
+    if available ub.tax-rate-value then 
+    do:
+      if p-GdsObj:nds-code <> 0 and v-nds-rate-code = ? then 
+      do:
+        v-nds-rate-code = ub.tax-rate-value.rate-code .
+      end.
+      else do:
+        find first buf_tax-rate-attr no-lock where buf_tax-rate-attr.tax-code = integer({&vat-tax-code})
+        and buf_tax-rate-attr.attr-code = "envd" and buf_tax-rate-attr.rate-code = ub.tax-rate-value.rate-code no-error .
+        if not available (buf_tax-rate-attr) and v-nds-rate-code = ? then v-nds-rate-code = ub.tax-rate-value.rate-code . 
+      end.  
+    end.
+  end.
+end.  
     for each tt-tax:
       delete tt-tax.
     end.
@@ -259,7 +310,7 @@ define variable v-barcode-list  as longchar  no-undo .
                   , input 0 /*par-alt-bc-mode as integer нужно ли вводить ДОП БК вместе с товаром*/
                   , input no /*par-manual as logical мз карточки товара - yes*/
                   , input yes /*par-silence as logical  ругаемся вслух или ?*/
-                  , input no /* import */
+                  , input yes /* import */
                   , input no /*par-file as logical идет импоррт из файла - из карточки товара*/
                   , input no /*par-single-record as logical надо сохранить только одну запись - потом выход в справ*/
                   , input ub.clients.host-code /*par-host-code like ub.sysconf.host-code */
@@ -334,15 +385,18 @@ define variable v-barcode-list  as longchar  no-undo .
   end.
   
   if v-nbc = 0 or v-nbc = ? then v-nbc = v-gds-code .
-  
-  case p-GdsObj:fuel-type :
-    when "1" then v-fuel-type = "petrol".
-    when "2" then v-fuel-type = "diesel-sum" .
-    when "3" then v-fuel-type = "diesel-wint" . 
-    when "4" then v-fuel-type = "metan" .
-    when "5" then v-fuel-type = "propan" .
-    otherwise v-fuel-type = ? .
-  end case.
+  if p-GdsObj:fuel-type eq "" or p-GdsObj:fuel-type eq ? or p-GdsObj:fuel-type eq "0"
+  then v-fuel-type = ? .
+  else do:
+     v-fuel-type = entry(int(p-GdsObj:fuel-type),{&prop-list-attr-fuel-type}) no-error.
+     if error-status :error then do:
+     v-err-mess = substitute("Ошибка при сохранении goods &1&2 Неизвестный тип топлива &3"
+                                , p-GdsObj:code_
+                                , {&new-line}
+                                ,p-GdsObj:fuel-type ).
+      undo, return error v-err-mess .
+  end.
+  end.
   
   if v-fuel-type <> ?
   then do :
@@ -782,6 +836,194 @@ define variable v-barcode-list  as longchar  no-undo .
   then do :
     RUN gds-attr-delete (v-nbc, {&attr-ban-bonus}, output v-attr-del).     
   end.
+  
+  /* Картинки */
+  if trim(p-GdsObj:img) > ''
+  then do :
+    find base-bar-code no-lock where
+         base-bar-code.b-code = v-nbc.
+    find ub.goods no-lock where
+         ub.goods.gds-code = base-bar-code.gds-code.
+           
+    delete object v-tth no-error.
+    run adm/shattri.p (
+           input "get":U
+          ,input ub.clients.obj-type
+          ,input ub.clients.obj-code
+          ,input {&attr-gds-ref_obj}
+          ,input {&attr-gds-ref_obj_image-dir}
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-value-logical
+          ,output v-param-type
+          ,INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+    delete object v-tth no-error.
+    if trim(v-value-character) > ""
+    then do :
+      v-dir1-name = trim(v-value-character, "\") .
+      v-dir1-name = trim(v-dir1-name, "/") .
+      v-dir1-name = v-dir1-name + "\" .
+      v-dir-name = v-dir1-name + "gds\" .
+    end.
+    else do :
+      v-dir1-name = "C:\TB-image\" .
+      v-dir-name = "C:\TB-image\gds\" .
+    end.
+    
+    file-info:file-name = v-dir1-name .
+    if file-info:full-pathname = ?
+    then do :
+      os-create-dir value(right-trim(v-dir1-name, "\")) .
+      if os-error <> 0 then do:
+        v-err-mess = substitute("Невозможно создать директорию &1 для изображений &2&3&2&4"
+                                    , v-dir1-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)
+                                    , return-value ).
+        undo, return error v-err-mess .
+      end.
+    end.
+    
+    file-info:file-name = v-dir-name .
+    if file-info:full-pathname = ?
+    then do :
+      os-create-dir value(right-trim(v-dir-name, "\")) .
+      if os-error <> 0 then do:
+        v-err-mess = substitute("Невозможно создать директорию &1 для изображений &2&3&2&4"
+                                    , v-dir-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)
+                                    , return-value ).
+        undo, return error v-err-mess .
+      end.
+    end.
+    
+    v-file-name = v-dir-name + string(ub.goods.gds-code) + ".png" .
+    
+    v-size = length(p-GdsObj:img) .
+    set-size(mem1) = integer(8 / 6 * v-size) + 1.
+    mem1 = BASE64-DECODE(p-GdsObj:img).
+    
+    copy-lob from mem1 to file v-file-name no-convert no-error .
+    if error-status:error
+    then do :
+      os-delete value(v-file-name) .
+      if os-error <> 0
+      then do :
+        v-err-mess = substitute("Не могу обновить изображение &1&2&3&2&4"
+                                    , v-file-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)
+                                    , return-value ).
+        undo, return error v-err-mess .
+      end.
+      copy-lob from mem1 to file v-file-name no-convert no-error .
+      if error-status:error
+      then do :
+        v-err-mess = substitute("Не могу сохранить изображение &1&2&3&2&4"
+                                    , v-file-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)
+                                    , return-value ).
+        undo, return error v-err-mess .
+      end.
+    end .
+    
+    keyrecObj = new keyrec ().
+    keyrecObj:GenKeyRec({&table_goods}, buffer ub.goods:handle, output keyrec).
+    delete object keyrecObj.
+    
+    find first buf_blob-bind exclusive-lock where buf_blob-bind.uniq-key-rec = keyrec
+                                              and buf_blob-bind.field-name_  = {&blob-gds-collec-image}
+                                              no-error .
+    if available buf_blob-bind
+    then do :
+      v-blob-db-num = buf_blob-bind.db-num .
+      v-int64-id = buf_blob-bind.int64-id .
+      v-part-num = buf_blob-bind.part-num .
+
+      run gbl/file2blb.p ( input {&update}
+                          ,input  "override"
+                          ,input (buffer ub.goods:handle)
+                          ,input keyrec
+                          ,input {&blob-gds-collec-image} /*p-field-*/
+                          ,input {&blob-gds-collec-image}
+                          ,input-output v-part-num
+                          ,input {&lob-res-data} /*p-resource-type*/
+                          ,input-output v-blob-db-num
+                          ,input-output v-int64-id
+                          ,input v-file-name
+                          ) no-error .
+      if error-status :error then do:
+        v-err-mess = substitute("Не могу обновить изображение &1 в базе &2&3&2&4"
+                                    , v-file-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)
+                                    , return-value ).
+        undo, return error v-err-mess .
+      end.
+    end.
+    else do :
+      v-blob-db-num = ? .
+      v-int64-id = 0 .
+
+      run gbl/file2blb.p ( input {&add-def}
+                          ,input  "yes"
+                          ,input (buffer ub.goods:handle)
+                          ,input keyrec
+                          ,input {&blob-gds-collec-image} /*p-field-*/
+                          ,input {&blob-gds-collec-image}
+                          ,input-output v-part-num
+                          ,input {&lob-res-data} /*p-resource-type*/
+                          ,input-output v-blob-db-num
+                          ,input-output v-int64-id
+                          ,input v-file-name
+                          ) no-error .
+      if error-status :error then do:
+        v-err-mess = substitute("Не могу сохранить изображение &1 в базу &2&3&2&4"
+                                    , v-file-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)
+                                    , return-value ).
+        undo, return error v-err-mess .
+      end.
+    end.
+    
+    v-blob-db-num = ? .
+    v-int64-id = 0 .
+
+    run gbl/file2blb.p ( input {&add-def}
+                        ,input  "yes"
+                        ,input (buffer ub.goods:handle)
+                        ,input keyrec
+                        ,input {&blob-gds-collec-image} /*p-field-*/
+                        ,input {&blob-gds-collec-image}
+                        ,input-output v-part-num
+                        ,input {&lob-res-data} /*p-resource-type*/
+                        ,input-output v-blob-db-num
+                        ,input-output v-int64-id
+                        ,input v-file-name
+                        ) no-error .
+    if error-status :error then do:
+      v-err-mess = substitute("Не могу сохранить изображение &1 в базу &2&3&2&4"
+                                    , v-file-name
+                                    , {&new-line}
+                                    , error-status:get-message(1)
+                                    , return-value ).
+      undo, return error v-err-mess .
+    end.
+    
+    find first buf_gds-season no-lock where buf_gds-season.db-num = ibs.th.gbl.gbl-var:g#db-num
+                                        and buf_gds-season.gds-code = ub.goods.gds-code
+                                        no-error .
+    if not available buf_gds-season
+    then do :
+      os-delete value(v-file-name) no-error .
+    end .                                    
+  end .
   
   
   procedure mainmenu_getcntxt :

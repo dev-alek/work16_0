@@ -568,39 +568,28 @@ do on error undo, return error return-value  :
    END.
 
 /* Взято из finfnoco.p, узнается фио и должность руководителя */
+      define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
+      mCashBook = new ibs.th.ref.cashbookstorage () .
+      o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, "ManagerPosition") .
+      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, "ManagerFIO") .
+/*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BuhFIO") .*/
+      delete object mCashBook no-error .
 
-       for each buf_thbj-attr where
-                buf_thbj-attr.obj-type = This_Object.obj-type
-            and buf_thbj-attr.obj-code = This_Object.obj-code
-            and buf_thbj-attr.upper-prop-code = {&attr-fin-doc}
-      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
-        case buf_thbj-attr.prop-code: 
-          when {&attr-fin-doc_head-position} then do:
-            o-head-position = buf_thbj-attr.property-value-character.
-          end.
-          when {&attr-fin-doc_director} then do:
-            o-director = buf_thbj-attr.property-value-character.
-          end.
-        end case.
-      end. /*for each thbj-attr where*/
       case o-head-position:
-        when 'director':U then do:
+        when '1':U then do:
           v-head-position = "Директор".
         end.
-        when 'zavsklad':U then do:
-          v-head-position = "Зав.складом".
-        end.
-        when 'upravl':U then do:
+        when '2':U then do:
           v-head-position = "Управляющий".
         end.
-        when 'ruk_firm':U then do:
+        when '0':U then do:
             for first buf_sysconf where buf_sysconf.host-code = This_Object.host-code:
             v-head-position = buf_sysconf.head-position.
             end.
         end.
       end case.
       case o-director:
-        when 'dir_obj':U then do:
+        when '1':U then do:
           if This_Object.obj-type = {&shop} then do:
             find first buf_shop no-lock where
                       buf_shop.obj-code = This_Object.obj-code no-error .
@@ -616,7 +605,7 @@ do on error undo, return error return-value  :
             end.
           end.
         end. /*when 'dir_obj' then do:*/
-        when 'ruk_firm':U then do:
+        when '0':U then do:
           v-director = buf_firm.director.
         end.
       end case.

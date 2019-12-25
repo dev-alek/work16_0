@@ -1,3 +1,4 @@
+/* 04/III-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -383,23 +384,23 @@ f-current-pko
 f-current-rko
 .
 /*посмотрим можем менять счетчик - можем если */
-if not ((
-        (v-cntxt-db-num = v-firm-db-num and v-cash-book = integer({&cash-book-firm}))
-        or
-        (v-cntxt-db-num = v-obj-db-num and v-cash-book = integer({&cash-book-object}))
-       ) or v-to-create
-       )
-then do:
-  message
-  substitute("Внимание!!! Значение текущего номера ПКО/РКО в данной БД изменить невозможно,&1"  +
-             "так как кассовая книга ведется в &2 (БД &3)"
-             , {&new-line}
-             , (if v-cash-book = integer({&cash-book-firm}) then "главной БД фирмы" else "БД объекта")
-             , (if v-cash-book = integer({&cash-book-firm}) then v-firm-db-num else v-obj-db-num )
-             )
-  view-as alert-box warning.
-  v-no-save-counters = yes.
-end.
+/*if not ((                                                                                             */
+/*        (v-cntxt-db-num = v-firm-db-num and v-cash-book = integer({&cash-book-firm}))                 */
+/*        or                                                                                            */
+/*        (v-cntxt-db-num = v-obj-db-num and v-cash-book = integer({&cash-book-object}))                */
+/*       ) or v-to-create                                                                               */
+/*       )                                                                                              */
+/*then do:                                                                                              */
+/*  message                                                                                             */
+/*  substitute("Внимание!!! Значение текущего номера ПКО/РКО в данной БД изменить невозможно,&1"  +     */
+/*             "так как кассовая книга ведется в &2 (БД &3)"                                            */
+/*             , {&new-line}                                                                            */
+/*             , (if v-cash-book = integer({&cash-book-firm}) then "главной БД фирмы" else "БД объекта")*/
+/*             , (if v-cash-book = integer({&cash-book-firm}) then v-firm-db-num else v-obj-db-num )    */
+/*             )                                                                                        */
+/*  view-as alert-box warning.                                                                          */
+/*  v-no-save-counters = yes.                                                                           */
+/*end.                                                                                                  */
 
 
 assign
@@ -481,3 +482,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+*/

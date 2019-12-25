@@ -36,6 +36,7 @@ define variable v-time as integer no-undo .
 define variable v-manual-editing as integer no-undo .
 define buffer buf_goods for ub.goods.
 define buffer buf_c-goods-attr for ub.c-goods-attr.
+define buffer buf_c-goods-attr-any for ub.c-goods-attr-any.
 define buffer buf_c-gds-hist for ub.c-gds-hist.
 define buffer locked_goods-attr for ub.goods-attr.
 
@@ -131,6 +132,63 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                   )
     .
   end.
+      if    ub.goods-attr.attr-code eq "operservid"
+       or ub.goods-attr.attr-code eq "cashbookid"
+    then do:
+       if     ub.goods-attr.attr-value ne ""
+          and ub.goods-attr.attr-value ne ?
+       then do:
+          create buf_c-goods-attr-any.
+          buffer-copy goods-attr to buf_c-goods-attr-any
+          assign
+             buf_c-goods-attr-any.gds-code           = ub.goods-attr.gds-code
+             buf_c-goods-attr-any.Bush               = if ub.goods-attr.attr-code eq "operservid"
+                                                      then
+                                                         "operserv"
+                                                      else
+                                                         "cashbook"
+             buf_c-goods-attr-any.chip-num           = if ub.goods-attr.attr-code eq "operservid"
+                                                      then
+                                                         next-value (s-c-operserv-chip-num, {&db-name_schema})
+                                                      else
+                                                         next-value (s-c-cashbook-chip-num, {&db-name_schema})   
+             buf_c-goods-attr-any.attr-code          = ub.goods-attr.attr-code
+             buf_c-goods-attr-any.corr-time          = v-time
+             buf_c-goods-attr-any.corr-user-db-num   = g#db-num
+             buf_c-goods-attr-any.corr-user-name     = (if g#news
+                                            then {&nts-user}
+                                            else (if g#esys
+                                                  then {&esys-user}
+                                                  else g#userid)
+                                            )
+             buf_c-goods-attr-any.corr-date          = v-date
+             buf_c-goods-attr-any.action             = {&bef-hn-delete}
+          .
+          if ub.goods-attr.attr-code eq "cashbookid"
+          then do:
+             create c-cashbook-head.
+             buffer-copy  buf_c-goods-attr-any to c-cashbook-head
+             assign
+                c-cashbook-head.subject = "c-goods-attr-any"
+                c-cashbook-head.cashbookid     = int64(buf_c-goods-attr-any.attr-value)
+                c-cashbook-head.is-news = g#news
+                c-cashbook-head.source-type = (if g#news
+                                               then {&hn-source-db}
+                                               else (if g#esys
+                                               then {&hn-source-esys}
+                                               else "":U)
+                                              ) 
+                c-cashbook-head.source-ref = (if g#news
+                                              then string(g#news-source-db)
+                                              else (if g#esys
+                                              then string(g#esys-source-esys)
+                                              else "":U)
+                                             )
+
+             .
+          end.
+       end.
+    end.
   run gds-attr-news in this-procedure(input ub.goods-attr.attr-code,
                                       output p-news) no-error.
   if p-news then do:

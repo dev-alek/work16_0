@@ -17,7 +17,7 @@ Creation date: 11/07/18
 block-level on error undo, throw.
 
 &scoped-define main-tbl PromoAction
-TRIGGER PROCEDURE FOR DELETE OF ub.{&main-tbl}.
+trigger procedure for delete of ub.{&main-tbl}.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
@@ -25,50 +25,34 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер удаления {&main-tbl}". 
-{ cmp/vssrevis.i }
+{ trg/trghistnws.i 
+  &hist = yes 
+  &seqnamehist = "s-promo-chip"
+  &nws  = yes
+  &del  = yes
+}
 
-/* 14/VIII-2018 - не используется { cmp/trg-def.i  } */
-{ cmp/str-glbl.i } /* &db-name_schema, &hn-delete */
-{ gbl/cur-time.i } /* cur-time() */
-define buffer buf_c-{&main-tbl} for ub.c-{&main-tbl} .
-define variable v-date as date no-undo .
-define variable v-time as integer no-undo .
-
-
-  if not ibs.th.gbl.gbl-var:g#news then do :
-    run cur-time in this-procedure (output v-date, output v-time).
-
-    /* пишем историю */
-    create buf_c-{&main-tbl}.
-    buffer-copy ub.{&main-tbl} to buf_c-{&main-tbl}
-    assign
-      buf_c-{&main-tbl}.chip-num           = next-value (s-promo-chip, {&db-name_schema})
-      buf_c-{&main-tbl}.corr-date          = v-date
-      buf_c-{&main-tbl}.corr-time          = v-time
-      buf_c-{&main-tbl}.corr-user-db-num   = ibs.th.gbl.gbl-var:g#db-num
-      buf_c-{&main-tbl}.corr-user-name     = ibs.th.gbl.gbl-var:g#userid
-      // 14/VIII-2018 - поле отсутствует buf_c-{&main-tbl}.action             = {&hn-delete}
-      // 14/VIII-2018 - поле отсутствует buf_c-{&main-tbl}.is-del             = true
-    .
-  end. /* end_of not-g-news */
-
-
-
-   FOR EACH  ub.PromoCriterion WHERE ub.PromoCriterion.idAction EQ  ub.PromoAction.id
-   EXCLUSIVE-LOCK:
-       DELETE ub.PromoCriterion.
-   END.
+   for each  ub.PromoCriterion where ub.PromoCriterion.idAction eq  ub.PromoAction.id
+   exclusive-lock:
+       delete ub.PromoCriterion.
+   end.
    
-   FOR EACH  ub.PromoGift WHERE ub.PromoGift.idAction EQ  ub.PromoAction.id
-   EXCLUSIVE-LOCK:
-       DELETE ub.PromoGift.
-   END.     
+   for each  ub.PromoGift where ub.PromoGift.idAction eq  ub.PromoAction.id
+   exclusive-lock:
+       delete ub.PromoGift.
+   end.     
    
-   FOR EACH  ub.PromoGoods WHERE ub.PromoGoods.idAction EQ  ub.PromoAction.id
-   EXCLUSIVE-LOCK:
-       DELETE ub.PromoGoods.
-   END.
-   FOR EACH  ub.PromoObject WHERE ub.PromoObject.idAction EQ  ub.PromoAction.id
-   EXCLUSIVE-LOCK:
-       DELETE ub.PromoObject.
-   END.
+   for each  ub.PromoGoods where ub.PromoGoods.idAction eq  ub.PromoAction.id
+   exclusive-lock:
+       delete ub.PromoGoods.
+   end.
+   for each  ub.PromoObject where ub.PromoObject.idAction eq  ub.PromoAction.id
+   exclusive-lock:
+       delete ub.PromoObject.
+   end.
+   
+   for each  ub.PromoAttr where ub.PromoAttr.tablename eq "{&main-tbl}"
+                            and ub.PromoAttr.p-key     eq string(ub.{&main-tbl}.id) + {&delim-key} + string(ub.{&main-tbl}.db-num)
+   exclusive-lock:
+       delete ub.PromoAttr.
+   end.

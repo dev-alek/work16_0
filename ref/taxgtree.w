@@ -319,7 +319,7 @@ DEFINE BROWSE BR-tt-tax
       output-tax.to-cashdesk COLUMN-LABEL "Посылать!на кассу" FORMAT "+/":U
       output-tax.individual COLUMN-LABEL "Инд." FORMAT "+/":U
       output-tax.rate-code COLUMN-LABEL "Код!ставки"
-      output-tax.rate-value COLUMN-LABEL "Знач.!ставки"
+      output-tax.rate-value COLUMN-LABEL "Знач.!ставки" format "->>>9.99"
       output-tax.fact-date COLUMN-LABEL "Включена" FORMAT "99/99/9999":U
       usrfulnf(output-tax.corr-user-name) COLUMN-LABEL "Изменил" FORMAT "X(10)":U
       output-tax.corr-user-db-num COLUMN-LABEL "БД" FORMAT ">>>9":U

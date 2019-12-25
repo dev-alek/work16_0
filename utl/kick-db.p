@@ -102,6 +102,7 @@ disable triggers for load of DICTDB.pay-type .
 disable triggers for load of DICTDB.criterion-analysis .
 disable triggers for load of DICTDB.global-state .
 disable triggers for load of DICTDB.trn-reason .
+disable triggers for load of DICTDB.CashBook .
 
 define stream errstream.
 find first buf_sys-ctrl.
@@ -231,14 +232,18 @@ if p-sys-key <> "raimbek":U then do:
   run cre-tax-rate in this-procedure (1, 1, "НДС 1").
   run cre-tax-rate in this-procedure (1, 2, "НДС 2").
   run cre-tax-rate in this-procedure (1, 3, "НДС 3").
+  run cre-tax-rate in this-procedure (1, 4, "НДС 4").
 
   run cre-tax-rate-value in this-procedure (1, 1, 20, v-today, v-time).
   run cre-tax-rate-value in this-procedure (1, 2, 10, v-today, v-time).
   run cre-tax-rate-value in this-procedure (1, 3, 0,  v-today, v-time).
+  run cre-tax-rate-value in this-procedure (1, 4, 0,  v-today, v-time).
 end.
 
 run cre-tax-rate in this-procedure (2, 22, "НП 22").
 run cre-tax-rate-value in this-procedure (2, 22, 0, v-today, v-time).
+
+run cre-tax-rate-attr in this-procedure (1, 4).
 
 run waitfram-show in this-procedure ("Заполнение налогов на группу товаров").
 run add-tax-gds-grp in this-procedure  no-error .
@@ -415,8 +420,10 @@ run waitfram-show in this-procedure ("Заполнение справочника регионов РФ").
 run utl/reg-cre.p.
 end.
 
-run waitfram-hide in this-procedure .
+run waitfram-show in this-procedure ("Создание кассовой книги по основному виду деятельности.").
+run cre-CashBook in this-procedure .
 
+run waitfram-hide in this-procedure .
 message "Инициализация закончена.".
 
 procedure cre-unit:
@@ -665,6 +672,32 @@ define buffer buf_tax-rate-value    for DICTDB.tax-rate-value .
       .
   end.
 
+
+end procedure.
+
+procedure cre-tax-rate-attr:
+def input param taxcode  like DICTDB.tax.tax-code       no-undo.
+def input param ratecode like DICTDB.tax-rate.rate-code no-undo.
+define buffer buf_tax-rate-attr          for DICTDB.tax-rate-attr .
+
+  find buf_tax-rate-attr where buf_tax-rate-attr.rate-code = ratecode no-error.
+  if available buf_tax-rate-attr then do:
+    if NOT buf_tax-rate-attr.tax-code = taxcode then do:
+      message "Для ставки налога с кодом " buf_tax-rate-attr.rate-code "уже есть атрибут ЕНВД." skip
+      "Подставляем:" taxcode
+      view-as alert-box.
+                      .
+      buf_tax-rate-attr.tax-code = taxcode.
+    end.
+  end.
+  else do:
+    create buf_tax-rate-attr.
+    assign
+      buf_tax-rate-attr.tax-code = taxcode
+      buf_tax-rate-attr.rate-code = ratecode
+      buf_tax-rate-attr.attr-code = "envd"
+      .
+  end.
 
 end procedure.
 
@@ -1137,6 +1170,21 @@ define variable v-name as character no-undo .
       buf_firm.firm-code = 800000002
       buf_firm.ind       = 0
     .
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000008
+      buf_clients.obj-name = "Перемещение денежных средств"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000008
+      buf_firm.ind       = 0
+    .
+    
     /* Выставить атрибут Расходы отдельной строкой в yes */
     &scop proc-name clntattr-write
     {&run_proc_attr-lib}
@@ -1334,3 +1382,22 @@ define variable v-rid as recid initial ? no-undo .
   
   return .
 end procedure . /* end _of cre-trn-reason */
+
+procedure cre-CashBook private :
+define buffer buf_CashBook     for DICTDB.CashBook .
+define buffer buf_CashBookRule for DICTDB.CashBookRule .
+
+  create buf_CashBook .
+  assign
+    buf_CashBook.id           = 0
+    buf_CashBook.ext-code     = "0" /* Код/номер типа кассовой книги 0 */
+    buf_CashBook.CashBookName = "Основная деятельность" /* Наименование типа кассовой книги */  
+    buf_CashBook.RuleOsnPko   = "0" /* Значение для заполнения графы "Основание" (перечень cb-by-osnovanie в rul/rcps-67.w) */
+    buf_CashBook.RulePril     = "0"      /* Значение для заполнения графы "Приложение" (перечень cb-by-osnovanie в rul/rcps-67.w) */ 
+    buf_CashBook.FlagSepCash  = true /* Флаг «Отдельный ПКО для каждой кассы» */
+    buf_CashBook.FlagSepFull  = true /* Флаг «Раздельно НП и ТНП» */
+    buf_CashBook.CorrPko      = "90.01" /* Значение для заполнения поля «кредит» 90.01 */
+    buf_CashBook.OsnAcct      = "50.02" /* Значение для заполнения поля «дебит» 50.02 */
+  .
+
+end procedure . /* end_of cre-CashBook */

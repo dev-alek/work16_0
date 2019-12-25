@@ -30,6 +30,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     { str/rvsttdef.i rvs           }
     { ref/gds-attr.i }
     { str/is-gas.i }
+    { str/is-sug.i }
     { str/placelib.i }
     
     define variable infoSectionsTotal       as class InfoSectionsTotal no-undo.
@@ -304,6 +305,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define input parameter p-action      as   character           no-undo .
       define input parameter p-action-type as   character           no-undo .
       define input parameter p-rvs-type    like ub.rvs-doc.rvs-type no-undo .
+      define buffer buf_doc-line for ub.doc-line.
 
       block_tr:
       do transaction
@@ -333,6 +335,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-density         like ub.rvs-line.state-density          no-undo .
         define variable v-delta-mass-qnty as decimal   no-undo .
+        define variable v-attr-type           as character no-undo .
+        define variable v-attr-value          as character   no-undo .
         assign
           v-pl-code = ?
         .
@@ -678,14 +682,29 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             
             else do:
-            if p-rvs-type = {&rvs-before-doc}  then do:
-                if v-prt-start-real-date = ? then v-prt-start-real-date = today.
-                if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
-            end.
-            else do:
-                if v-prt-end-real-date = ? then v-prt-end-real-date = today.
-                if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
-            end.
+              if p-rvs-type = {&rvs-before-doc}  then do:
+                  if v-prt-start-real-date = ? then v-prt-start-real-date = today.
+                  if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
+              end.
+              else do:
+                  if v-prt-end-real-date = ? then v-prt-end-real-date = today.
+                  if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
+              end.
+              if available buf_goods
+              and is-sug(buf_goods.gds-code) then do:
+                 
+                  run str/rvs-lin-sug.w
+                    (input  parparentproc
+                    ,input  recid( buf_rvs-line )
+                    ,input  p-action
+                    ,input  substitute(" # &1 товар &2 &3 &4  складское место &5"
+                                      ,buf_rvs-doc.rvs-code
+                                      ,buf_goods.artic
+                                      ,buf_goods.prod-type
+                                      ,buf_goods.prod-code
+                                      ,v-pl-code)) no-error.
+              end.
+              else do :
                 run str/rvs-lin.w
                   (input  parparentproc
                   ,input  recid( buf_rvs-line )
@@ -696,6 +715,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                     ,buf_goods.prod-type
                                     ,buf_goods.prod-code
                                     ,v-pl-code)) no-error.
+              end.
             end.
             
             if error-status :error then do:
@@ -733,7 +753,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
         is-vir = if (v-ok and logical(v-value)) then true else false.
         
-        if not is-gas(buf_goods.gds-code) and not is-vir then do:
+        if not is-gas(buf_goods.gds-code)
+        and not is-vir then do:
         
             if p-action = {&update} then do:
               if p-action-type = "meas":U then do:
@@ -792,11 +813,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 if v-rvs-cli-qnty-after = ?
                   or v-rvs-cli-qnty-after = 0
                 then do:
-                  /* ругаемся на плотность потому что в строке редактирования сверки у нас открыто поле плотность */
-                  message
-                    "Не задана плотность в сверке <<после_док>>"
-                    "по резервуару" v-pl-code "."
-                    view-as alert-box error .
+                  if is-sug(buf_goods.gds-code)
+                  then do :
+                    message
+                      "Не задана масса в сверке <<после_док>>"
+                      "по резервуару" v-pl-code "."
+                      view-as alert-box error .
+                  end.
+                  else do :
+                    /* ругаемся на плотность потому что в строке редактирования сверки у нас открыто поле плотность */
+                    message
+                      "Масса не рассчитана. Не задана плотность в сверке <<после_док>>"
+                      "по резервуару" v-pl-code "."
+                      view-as alert-box error .
+                  end.
                   undo block_tr, return error .
                 end.
               end.
@@ -811,6 +841,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     substitute( "Ошибка по результатам сверки." ) skip
                     substitute( "Место хранения: &1 .", v-pl-code ) skip
                     substitute( "Количество залитого топлива: &1 (&2).", v-rvs-qnty-after - v-rvs-qnty-before, buf_goods.unit-base ) skip
+                    substitute( "Объем в сверке до: &1 ", v-rvs-qnty-before ) skip
+                    substitute( "Объем в сверке после: &1 ", v-rvs-qnty-after ) skip
                     view-as alert-box .
                   undo block_tr, return error .
                 end.
@@ -821,21 +853,69 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     substitute( "Ошибка по результатам сверки." ) skip
                     substitute( "Место хранения: &1 .", v-pl-code ) skip
                     substitute( "Количество залитого топлива: &1 (&2).", v-rvs-cli-qnty-after - v-rvs-cli-qnty-before, buf_goods.unit-cli ) skip
+                    substitute( "Масса в сверке до: &1 ", v-rvs-cli-qnty-before ) skip
+                    substitute( "Масса в сверке после: &1 ", v-rvs-cli-qnty-after ) skip
                     view-as alert-box .
                   undo block_tr, return error .
                 end.
     
-                assign
-                  v-rvs-density = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before) / (v-rvs-qnty-after - v-rvs-qnty-before)
-                .
-                if Valid-Density( v-rvs-density, (buf_goods.unit-base = buf_goods.unit-cli)  ) <> true then do:
-                  message
-                    substitute( "Ошибка по результатам сверки." ) skip
-                    substitute( "Место хранения: &1 .", v-pl-code ) skip
-                    substitute( "Плотность залитого топлива: &1.", v-rvs-density ) skip
-                    view-as alert-box .
-                  undo block_tr, return error .
+                if not is-sug(buf_goods.gds-code)
+                then do :
+                  assign
+                    v-rvs-density = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before) / (v-rvs-qnty-after - v-rvs-qnty-before)
+                  .
+                  if Valid-Density( v-rvs-density, (buf_goods.unit-base = buf_goods.unit-cli)  ) <> true then do:
+                    message
+                      substitute( "Ошибка по результатам сверки." ) skip
+                      substitute( "Место хранения: &1 .", v-pl-code ) skip
+                      substitute( "Плотность залитого топлива: &1.", v-rvs-density ) skip
+                      view-as alert-box .
+                    undo block_tr, return error .
+                  end.
                 end.
+                
+                if is-sug(buf_goods.gds-code) then 
+                do:
+                  def var dmdop as decimal no-undo.
+                  def var dM    as decimal no-undo.
+                  def var infoSectionObj as class infosection no-undo.
+                  find first buf_doc-line no-lock where buf_doc-line.doc-code = t-doc.doc-code
+                      and buf_goods.artic = buf_doc-line.artic
+                      and buf_goods.prod-type = buf_doc-line.prod-type
+                      and buf_goods.prod-code = buf_doc-line.prod-code no-error.
+                  dM = buf_doc-line.cli-qnty - (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
+                  dmdop = SQRT ((v-rvs-cli-qnty-after *  0.65) * (v-rvs-cli-qnty-after *  0.65) + (v-rvs-cli-qnty-before *  0.65) * (v-rvs-cli-qnty-before *  0.65)) / 100.
+/*                  message "dM - " dM "dmdop - " dmdop "v-rvs-cli-qnty-before - " v-rvs-cli-qnty-before "v-rvs-cli-qnty-after - " v-rvs-cli-qnty-after view-as alert-box.*/
+                  if absolute (dM) <= dmdop  
+                  then do:
+                    infoSectionObj = infoSectionsTotal:GetInfoSectionProp(1).
+                    infoSectionObj:AccPOMI = dmdop.
+                    infoSectionObj:FactKgQnty = buf_doc-line.doc-qnty * buf_doc-line.doc-density.
+                    infoSectionObj:FactQnty = (v-rvs-qnty-after - v-rvs-qnty-before).
+                    infoSectionObj:FactDensity = infoSectionObj:FactKgQnty / infoSectionObj:FactQnty.
+                    infoSectionsTotal:SaveDB().
+                    run correct-fact-qnty in this-procedure
+                      ( input buf_doc-line.doc-qnty
+                       ,input buf_doc-line.doc-density
+                      ) no-error .
+                  end.
+                  else do:
+                    infoSectionObj = infoSectionsTotal:GetInfoSectionProp(1).
+                    infoSectionObj:FactKgQnty = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
+                    infoSectionObj:FactQnty = (v-rvs-qnty-after - v-rvs-qnty-before).
+                    infoSectionObj:FactDensity = infoSectionObj:FactKgQnty / infoSectionObj:FactQnty.
+                    infoSectionsTotal:SaveDB().
+                    run correct-fact-qnty in this-procedure
+                      ( input infoSectionObj:FactQnty
+                       ,input infoSectionObj:FactDensity
+                      ) no-error.
+                    message
+                      substitute( "По результатам слива Газовоза фактическое кол-во товара изменяется на &1 (&2),", infoSectionObj:FactQnty, buf_goods.unit-base ) skip
+                      substitute( "фактическая плотность на &1.", infoSectionObj:FactDensity ) skip
+                      view-as alert-box information .
+                  end.
+                end.
+                
               end. /* v-rvs-qnty-after <> ? */
             end.
         end.
@@ -1403,9 +1483,21 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-edit-doc-pl     as integer   no-undo .
         define variable v-set-doc-pl      as integer   no-undo .
         define variable v-delta-mass-qnty as decimal   no-undo .
-
+        define variable v-attr-type       as character no-undo .
+        define variable v-attr-value      as character no-undo .
+        
         define buffer buf_goods for ub.goods .
-
+        run gds-attr-value in this-procedure
+          (  input p-gds-code
+            ,input {&attr-fuel-type}
+            ,output v-attr-value
+            ,output v-attr-type
+           ) .
+        if v-attr-value = "lgas" 
+        then do:
+          p-ok = true.
+          return.
+        end.
         find first buf_goods no-lock
           where buf_goods.gds-code = p-gds-code
           .

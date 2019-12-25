@@ -8,9 +8,9 @@ $Archive$
 
 Триггер на удаление истории пользователя.
 
-Автор: Белоусов Илья Александрович
+Автор: Гюнтнер Виктор Арнольдович
 Дата создания: 04/01/08
-Author: Ilia Belousov
+Author: Victor Guntner
 Creation date: 04/01/08
 
 Input:
@@ -18,20 +18,18 @@ Input:
 Output:
 
 */
-TRIGGER PROCEDURE FOR DELETE OF ub.c-user-log.
+&scoped-define main-tbl c-user-log
+trigger procedure for delete of {&main-tbl}.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Триггер на удаление истории пользователя.".
-{ cmp/vssrevis.i }
-{ cmp/str-glbl.i }
-{ cmp/library.i  }
+define variable vss-revision    as character no-undo initial "$Revision$":U .
+define variable vss-author      as character no-undo initial "$Author$":U .
+define variable vss-date        as character no-undo initial "$Date$":U .
+define variable vss-workfile    as character no-undo initial "$Workfile$":U .
+define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-description as character no-undo init "Тригер удаления {&main-tbl}". 
 
-do
-on error undo, return error
-:
-
-end.
+{ trg/trghistnws.i 
+  &nws  = yes
+  &del  = yes
+  &nobufhist = yes
+}

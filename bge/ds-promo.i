@@ -37,7 +37,9 @@ define temp-table tt-promoaction-one no-undo
   before-table tt-promoaction-one-before
   
   //field TypeDiscontlbl   as character
-  field TypeDiscontlog   as logical 
+  field TypeDiscontsolo   as logical 
+  field TypeDiscontCombo  as logical
+  field TypeDiscontVisa   as logical 
   field methodCalclbl    as character
   field typecondlbl      as character
   field scheduleName     as character
@@ -63,11 +65,11 @@ define temp-table tt-PromoGoodsCrite no-undo
   FIELD mode AS char */
   .  
 define temp-table tt-PromoSet no-undo
-  like ub.PromoGoods
+  like tt-PromoGoodsAppl
   
-  FIELD gdsName AS char  
+  /*FIELD gdsName AS char  
   field sub as class Progress.Lang.Object serialize-hidden
-  FIELD mode AS char
+  FIELD mode AS char*/
   .  
 define temp-table tt-PromoSetGoods no-undo
   like tt-PromoGoodsAppl
@@ -75,7 +77,10 @@ define temp-table tt-PromoSetGoods no-undo
   /* FIELD gdsName AS char 
   field sub as class Progress.Lang.Object serialize-hidden
   FIELD mode AS char */
-  .  
+  .
+  
+define temp-table tt-PromoCardsBin no-undo
+  like tt-PromoGoodsAppl.  
 define temp-table tt-PromoCriterion no-undo
   like ub.PromoCriterion
   field span as character  
@@ -152,6 +157,7 @@ define dataset ds-promoaction-one
   , tt-PromoSet
   , tt-PromoSetGoods
   , tt-PromoObject
+  ,tt-PromoCardsBin
 //  , tt-promo-schedule
   , tt-promo-schedule-week
   , tt-promo-schedule-week2

@@ -229,6 +229,7 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   ,input p-codex-id
   ,input p-ruleset-id
   ,input 2 /*отчет кассира а не вкладной лист*/
+  ,input 0
   ,input lookup({&output-type-plain-text}, p-output-type) > 0
   ,input lookup({&output-type-excel}, p-output-type) > 0
   ,input entry(1, v-dirs, {&vertical-line}) /*p-dir-txt*/

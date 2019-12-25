@@ -1509,7 +1509,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       undo, return no-apply return-value .
    end.
    release buf_sys-ctrl.
-
+   run gbl/code-upd.p  no-error .
+   if error-status :error
+   then do:
+      message
+         vss-workfile vss-revision vss-description skip
+         "Ошибка при обновлении справочников" skip
+         error-status :get-message(1) skip
+         return-value skip
+         view-as alert-box error .
+      undo, return no-apply return-value .
+   end.
 
   run get-last-context in this-procedure
     (output v-cntxt-db-num
@@ -1548,7 +1558,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          ) .
    end.
 
-
+   run gbl/verinfo.p.
+   run utl/chgpsw.p no-error.
+   if error-status:error
+   then do:
+      message return-value view-as alert-box.
+         undo, return no-apply return-value .
+   end.
   /* проверяем значения контекста */
 
   user-number:
@@ -5753,6 +5769,7 @@ PROCEDURE mainmenu-start-item :
 
   define buffer buf_menu-user-call for ubflt.menu-user-call .
   define buffer buf_temp-menu-item for temp-menu-item .
+  define buffer buf_menu-item      for ub.menu-item .
 
   do
   on error undo, return error return-value
@@ -5777,7 +5794,20 @@ PROCEDURE mainmenu-start-item :
         view-as alert-box error .
       return . /* --->>>--- */
     end.
-
+    define buffer buf_menu-group for ub.menu-group .    
+    find first buf_menu-group no-lock
+      where buf_menu-group.menu-code       = v-cntxt-menu-code
+        and buf_menu-group.menu-group-code = v-cntxt-menu-group-code
+      no-error .
+    if available buf_menu-group and buf_menu-group.menu-group-id eq "adm"
+    then 
+       run trg/userlog.p (
+                input 'run-proc'
+                , input ('Выбран пункт меню '   
+                + buf_temp-menu-item.full-name +  '"' + {&delim-key} + buf_temp-menu-item.item-procedure )
+                , input ?
+                , input ?
+                , input "") no-error.
     define variable v-sys-time-mjd as decimal   no-undo .
     define variable v-arm-title    as character no-undo .
 
@@ -5847,7 +5877,7 @@ PROCEDURE mainmenu-start-item :
     assign
       v-menu-user-call-rowid = rowid(buf_menu-user-call)
     .
-
+    
   end.
 
 END PROCEDURE.
@@ -5905,7 +5935,20 @@ PROCEDURE mainmenu-stop-item :
           view-as alert-box error .
         return . /* --->>>--- */
       end.
-
+   /*   define buffer buf_menu-group for ub.menu-group .    
+    find first buf_menu-group no-lock
+      where buf_menu-group.menu-code       = v-cntxt-menu-code
+        and buf_menu-group.menu-group-code = v-cntxt-menu-group-code
+      no-error .
+    if available buf_menu-group and buf_menu-group.menu-group-id eq "adm"
+    then 
+         run trg/userlog.p (
+                  input 'run-proc'
+                , input ('Завершено выполнение процедуры '  
+                  + buf_menu-user-call.full-name +  '"' + {&delim-key} + buf_menu-user-call.item-procedure )
+                , input ?
+                , input ?
+                , input "") no-error.*/
       run gbl/getustat.p
         (input  v-userio-id
         ,output v-sys-time-mjd

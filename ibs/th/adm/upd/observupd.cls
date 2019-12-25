@@ -50,7 +50,7 @@ class ibs.th.adm.upd.observupd:
 
   define property IsErr as logical no-undo
     get.
-    private set.
+    private set. 
 
   define property Msg as character no-undo
     get.
@@ -62,7 +62,7 @@ class ibs.th.adm.upd.observupd:
 
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 9
+  &scop NumWorkBase 17
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -73,12 +73,14 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/18102101.df"
             ,"cmp/18102102.df"
             ,"cmp/18112201.df"
-
-            /*,"up2.df"
-            ,"up3.df"
-            ,"proc:ibs/th/adm/upd/copytable.p;tax-rate-value"
-            ,"up4.df"*/
-            
+            ,"cmp/19022601.df"
+            ,'proc:ibs/th/adm/upd/copytable.p;"arh-fin-doc-contr-schet-nal|arh-fin-doc-schet-nal-obj|fin-doc"'
+            ,"cmp/19022602.df"
+            ,"cmp/19052201.df"
+            ,"cmp/19082001.df"
+            ,"cmp/19092301.df"
+            ,"cmp/19102401.df"
+            ,"cmp/19122301.df"
             ] 
      get.
   define public property m-upd-list-chk      as character extent {&NumWorkBase} no-undo
@@ -91,11 +93,14 @@ class ibs.th.adm.upd.observupd:
             ,"TABLE:tech-prol-pwd" 
             ,"FIELD:c-norm-loss.sec-vol1"
             ,"FIELD:tech-prol-pwd.f-cash-num"
-
-            /*,"TABLE:tax-rate-value_old"
-            ,"TABLE:tax-rate-value"
-            ,"proc:ibs/th/adm/upd/chkemptable.p;tax-rate-value_old"
-            ,""*/
+            ,"TABLE:arh-fin-doc-contr-schet-nal,TABLE:arh-fin-doc-contr-schet-nal_old,TABLE:arh-fin-doc-schet-nal-obj,TABLE:arh-fin-doc-schet-nal-obj_old,TABLE:fin-doc,TABLE:fin-doc_old"
+            ,"proc:ibs/th/adm/upd/chkemptable.p;arh-fin-doc-contr-schet-nal_old|arh-fin-doc-schet-nal-obj_old|fin-doc_old"
+            ,"TABLE:cashbook,TABLE:operserv"
+            ,"Initial:db.reserve1-char=13"
+            ,"TABLE:code"
+            ,"FIELD:cashbook.CorrRko"
+            ,"Table:devisPC"
+            ,"Initial:db.reserve1-char=17"
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
@@ -127,33 +132,33 @@ class ibs.th.adm.upd.observupd:
     
     define buffer buf_sys-ctrl for ub.sys-ctrl.
     define buffer buf_db for ub.db.
-    
+    define variable vVerStuct as integer no-undo.
+    define variable vVerDB    as integer no-undo.
     TargetDBShm = extent(m-upd-list-df).
+    
     find first buf_sys-ctrl no-lock no-error.
     if available buf_sys-ctrl
     then do:
        DbNum = buf_sys-ctrl.db-num. 
     
        find first buf_db no-lock where buf_db.db-num = DbNum no-error.
-       CurrDBShm = integer (buf_db.reserve1-char) no-error.
+       vVerStuct = integer (buf_db.reserve1-char) no-error.
     end.
-    if     error-status:error
-       or not available buf_db
-       or buf_db.reserve1-char eq ""
-    then do: find first _file no-lock where _file._file-name = "db"  no-error.
-        if available _file
-        then do:
-           find first _field of _file where _field._Field-Name =  "reserve1-char" no-lock no-error.
-           if available (_field)
-           then do:
-              CurrDBShm = integer (_field._initial) no-error.
+    find first _file no-lock where _file._file-name = "db"  no-error.
+    if available _file
+    then do:
+       find first _field of _file where _field._Field-Name =  "reserve1-char" no-lock no-error.
+       if available (_field)
+       then do:
+          vVerDB = integer (_field._initial) no-error.
               /* нужно если не происходит откат загрузки при ошибке */
               /*writeResult (CurrDBShm).*/
-              release _field.
-           end.
-           release _file.
-        end.
+          release _field.
+       end.
+       release _file.
     end.
+    
+    CurrDBShm = max(vVerDB,vVerStuct).
    /* CurrDBShm = 8.*/
     find first buf_db no-lock where buf_db.db-num = 0 no-error.
     CurrDB0Shm = integer (buf_db.reserve1-char) no-error.

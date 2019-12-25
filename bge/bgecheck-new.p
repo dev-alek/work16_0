@@ -445,6 +445,25 @@ end .
           leave .
         end .
         run wp-xmltagput   in this-procedure ( input 3, input "manual", v-manual-add, input 0 ). 
+        
+        for first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
+          and buf_chk-doc-attr.attr-code  = "corr-osnov" :
+          run wp-xmltagput   in this-procedure ( input 3, input "CorrOsnovName", buf_chk-doc-attr.attr-value , input 1 ).
+        end.
+
+        for first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
+          and buf_chk-doc-attr.attr-code  = "corr-date" :
+          run wp-xmltagput   in this-procedure ( input 3, input "CorrOsnovDate", buf_chk-doc-attr.attr-value, input 1 ).
+        end.
+
+        for first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
+          and buf_chk-doc-attr.attr-code  = "corr-num" :
+          run wp-xmltagput   in this-procedure ( input 3, input "CorrOsnovNum", buf_chk-doc-attr.attr-value, input 1 ).
+        end.
+        for first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
+          and buf_chk-doc-attr.attr-code  = "corr-cause" :
+          run wp-xmltagput   in this-procedure ( input 3, input "CorrOsnovCause", buf_chk-doc-attr.attr-value, input 1 ).
+        end.
         find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq buf_chk-doc.doc-code
                                       and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
              no-lock no-error.

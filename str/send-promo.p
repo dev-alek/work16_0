@@ -126,6 +126,8 @@ procedure putc-16 :
   define variable v-subShedW          as class     PromoSchedwSub                        no-undo .
   define variable v-subGood           as class     PromoGoodsSub                         no-undo .
   define variable v-subGdCrs          as class     promoGoodsSubs                        no-undo . 
+  define variable v-subCardBins       as class     promoGoodsSubs                        no-undo . 
+  define variable v-subCardBin        as class     promoGoodsSub                         no-undo .
   define variable v-subGdCr           as class     PromoGoodsSub                         no-undo .
   define variable v-subGoods          as class     promoGoodsSubs                        no-undo .      
   define variable v-subGDCrites       as class     promoCriterionSubs                    no-undo .

@@ -1486,19 +1486,36 @@ end procedure. /* restore-s-user-id */
 
 procedure restore-s-user-login-action-role :
   define input parameter p-curr-db-num as integer no-undo.
-
+  define buffer buf_global-state for ub.global-state .
+  define buffer buf_global-state-attr for ub.global-state-attr .
   do
   on error undo, return error
   :
-
-
     {&init-validation}
 
     &scoped-define sequence-name   s-user-login-action-role
 
     &scoped-define table-name      user-login-action-role
     &scoped-define seq-field-name  user-login-role-code
-    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+
+   FIND FIRST buf_global-state
+        exclusive-LOCK        .
+FIND FIRST buf_global-state-attr
+    WHERE buf_global-state-attr.gls-id = buf_global-state.gls-id
+    AND buf_global-state-attr.attr-code = "action-gbl"
+    EXCLUSIVE-LOCK
+    NO-error
+    .
+  IF not AVAILABLE buf_global-state-attr or buf_global-state-attr.attr-value <> "yes"
+    THEN
+  DO:
+         &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+
+  END.
+  else do:
+             &scoped-define not-include-in-seq-records .
+  end.  
+
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
     &undefine not-include-in-seq-records
@@ -5095,3 +5112,135 @@ procedure restore-{&sequence-name} :
     {&update-sequence}
   end.
 end procedure. /* restore-s-promosched-id */
+
+&scoped-define sequence-name s-c-cashbook-chip-num
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-cashbook
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-cashbookattr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-cashbookrule
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-cashbookruleattr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-c-cashbook-chip-num */
+
+&scoped-define sequence-name s-cashbook-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  id
+    
+    &scoped-define table-name      cashbook
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-cashbook-id */
+
+&scoped-define sequence-name s-c-operserv-chip-num
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-operserv
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-operservattr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-c-operserv-chip-num */
+
+
+
+&scoped-define sequence-name s-c-counter-chip-num
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-counter
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-c-operserv-chip-num */
+
+&scoped-define sequence-name s-operserv-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  id
+    
+    &scoped-define table-name      operserv
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-operserv-id */
+
+&scoped-define sequence-name s-devisPC-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  id
+    
+    &scoped-define table-name      devisPC
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-operserv-id */

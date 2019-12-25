@@ -2418,6 +2418,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   end.  
 
   method private void calc-weight-vol ( input sender as System.Object, input e as System.EventArgs ):
+    calc-weight-vol ().
+  end.
+
+  method private void calc-weight-vol ( ):
   
     define variable v-area as decimal no-undo.
 
@@ -2507,13 +2511,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     
     def var v-dec as decimal no-undo.
     def var v-str as character no-undo.
-    
     v-str = "Не заполенено обязательное поле ".
     
     if infoSecsObj:FlagTrn
     then do:
-      
-      
       if not infoSecsObj:RdcDnstvalue = "not"
       then do:
         v-dec = decimal (maskedTextBoxDiameter:Text) no-error.
@@ -2612,7 +2613,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         end.
 
       end.
-      
+      calc-weight-vol().
     end.
     else do:
 

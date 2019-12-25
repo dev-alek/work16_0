@@ -35,6 +35,7 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { str/hvrdtax.i  }
 { str/lib-trn.i  }
 { gbl/ptrlprop.i def }
+{ ref/gds-attr.i } 
 
 if valid-handle (g#lib-calc)
 and g#lib-calc <> this-procedure :handle
@@ -287,6 +288,8 @@ define variable varinv-set       as logical   no-undo initial no.
 
 define variable stfactplvalue    as character no-undo initial ?.
 define variable stfactpltype     as character no-undo initial ?.
+define variable varvalue         as character no-undo initial ?.
+define variable vartype          as character no-undo initial ?.
 
 define buffer bf_goods        for ub.goods.
 define buffer bf_units        for ub.units.
@@ -421,7 +424,18 @@ else do:
                 .
               end.
             end.
-
+            run gds-attr-value in this-procedure
+              (  input pargds-code
+              ,  input {&attr-fuel-type}
+              , output varvalue
+              , output vartype
+              ) no-error .
+            /*для типа топлива СУГ работаем через кг*/
+            if varvalue = 'lgas' then 
+            do:
+              ptrlprop-inpptrl = {&calc-petrol-weight}.
+            end.
+   
             if lookup( ptrlprop-inpptrl, "{&bef-calc-petrol-weight},{&bef-calc-petrol-weight-plus}":U ) > 0 then do:
               /* работаем через килограммы */
               assign

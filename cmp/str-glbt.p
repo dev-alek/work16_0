@@ -257,12 +257,13 @@ attr-fin-global }
 
 
 
-/* атрибут объектный -  Взаиморасчеты -Платежи */
+/* атрибут объектный -  Взаиморасчеты -Платежи
+04/III-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 { cmp/cr-prep.i 1 attr-fin-doc  fin-doc fin-doc fin-doc fin-doc  }
 { cmp/cr-prepc.i 1 prop-list-attr-fin-doc
 "suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code"
 attr-fin-doc }
-
+*/
 
 
 /* атрибут глобальный -  Договор в накладных */
@@ -274,7 +275,7 @@ attr-contr-in }
 /* атрибутЫ накладных от глобального к объекту  */
 { cmp/cr-prep.i 1 attr-nakl_par  nakl_par nakl_par nakl_par nakl_par  }
 { cmp/cr-prepc.i 1 prop-list-attr-nakl_par
-"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb"
+"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return"
 attr-nakl_par }
 
 /*Планируемые цифры */
@@ -301,7 +302,7 @@ attr-gds-ref
 { cmp/cr-prep.i 1 attr-gds-ref_obj                 gds-ref_obj                 " " gds-ref_obj }
 
 { cmp/cr-prepc.i 1 prop-list-attr-gds-ref_obj
-"dfltggrp,gdsscrvw,chg-bcod"
+"dfltggrp,gdsscrvw,chg-bcod,image-dir"
 attr-gds-ref_obj
 }
 
@@ -576,8 +577,8 @@ attr-egais-host }
 attr-mercur }
 /* сюда добавлять новые названия атрибутов объектов TH */
 
-run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn-vbrr,cpdoc':U" ) .
-run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-name 'РРН-ВБРР,Остальные':U" ) .
+run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn-vbrr,cpdoc,CPWithdrawal':U" ) .
+run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-name 'РРН-ВБРР,Остальные,Суммы для выдачи наличными':U" ) .
 
 
 /* список атрибутов объектов TH */

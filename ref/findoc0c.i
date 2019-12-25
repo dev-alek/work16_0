@@ -37,7 +37,9 @@ on error undo, return error
   find first buf_sysconf no-lock where
             buf_sysconf.host-code = p-host-code .
   if p-status_ = {&fin-permitted} then do:
-    if p-naznach-plat = "":U then do:
+    if p-naznach-plat = "":U
+    and p-CashBookId = 0
+    then do:
       assign
       p-err-mess = "Не заполнено основание платежа"
       .

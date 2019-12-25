@@ -48,6 +48,11 @@ define variable is-doc-hold as logical   no-undo init false .
 parext-doc-mode = doc-mode.
 parstat = g#stat .
 
+&global-define is-fuel 1
+&global-define is-lgas 2
+&global-define is-lgas-corr 3
+&global-define is-gds 0
+
 { cmp/vssrevis.i "substitute('&1|&2':u,parext-doc-type,paris-hold)" }
 { cmp/str-glbl.i     }
 { cmp/library.i  }
@@ -95,6 +100,7 @@ define new shared buffer bar-code for ub.bar-code.
 
 define variable  notes       as   character no-undo .
 define variable  lns-cnt     as   integer   no-undo .
+define variable trn-type as integer no-undo init 0.
 
 define variable g#host-name  as character no-undo .
 define variable g#host-code  as integer   no-undo .
@@ -723,7 +729,7 @@ on end-error of gds-dtl.fact-qnty in browse {&browse-name} do:
    return no-apply.
 end.
 /* общие триггеры и процедуры для РН и ПН */
-{ str/trn-tr.i out no }
+{ str/trn-tr.i out }
 
 on row-leave of browse {&browse-name} do:
 if available gds-dtl then do:

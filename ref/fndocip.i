@@ -127,8 +127,8 @@ define input parameter p-receiver-sign4               like ub.fin-doc.receiver-s
 define input parameter p-obj-type                  like ub.fin-doc.obj-type                  no-undo . ~
 define input parameter p-obj-code                  like ub.fin-doc.obj-code                  no-undo . ~
 define input parameter p-doc-author                like ub.fin-doc.doc-author                no-undo . ~
-define input parameter p-fact-author               like ub.fin-doc.fact-author               no-undo .
-
+define input parameter p-fact-author               like ub.fin-doc.fact-author               no-undo . ~
+define input parameter p-cashbookid               like ub.fin-doc.CashBookId                no-undo .
 
 
 &glob all-fin-doc-params-doc-status-transfer ~
@@ -241,7 +241,8 @@ define input parameter p-fact-author               like ub.fin-doc.fact-author  
 ,input ~{&prfx~}obj-type                   ~
 ,input ~{&prfx~}obj-code                   ~
 ,input ~{&prfx~}doc-author                 ~
-,input ~{&prfx~}fact-author
+,input ~{&prfx~}fact-author                ~
+,input ~{&prfx~}CashBookId
 
 
 /* $Workfile$ e n d */

@@ -53,6 +53,7 @@ define variable vss-description as character no-undo initial "Обработка документ
 { str/rvsttdef.i file }
 { ref/gds-attr.i      }
 { str/is-gas.i        }
+{ str/is-sug.i        }
 { str/placelib.i      }
 
 define buffer r-doc          for ub.rvs-doc.
@@ -286,7 +287,14 @@ function get-input-type return character (buffer local-rvs-line for ub.rvs-line 
                                      and rvs-line-attr.pl-code   = local-rvs-line.pl-code
                                      and rvs-line-attr.rvs-code  = local-rvs-line.rvs-code
                                      and rvs-line-attr.attr-code = "input-type" no-error. 
-   if available rvs-line-attr then return rvs-line-attr.attr-value .
+   if available rvs-line-attr
+   then do :
+     if length(rvs-line-attr.attr-value) = 2
+     then
+       return substring(rvs-line-attr.attr-value, 2 , 1) .
+     else 
+      return rvs-line-attr.attr-value .
+   end.
    else return "" .                                  
 end function.
 
@@ -1737,6 +1745,22 @@ else do:
     end.
     
     else do:
+      if available buf_goods
+      and is-sug(buf_goods.gds-code) then do:
+         
+          run str/rvs-lin-sug.w
+            (input  parparentproc
+            ,input  recid(ub.rvs-line)
+            ,input  {&update}
+            ,input  " # "     + r-doc.rvs-code +
+                    " товар " + buf_goods.artic     + " " +
+                                buf_goods.prod-type + " " +
+                                string(buf_goods.prod-code) +
+                    " складское место " + string(ub.rvs-line.pl-code)
+            ) no-error.
+         
+      end.
+      else do:
         run str/rvs-lin.w
         (input  parparentproc
         ,input  recid(ub.rvs-line)
@@ -1747,6 +1771,7 @@ else do:
                             string(buf_goods.prod-code) +
                 " складское место " + string(ub.rvs-line.pl-code)
         ) no-error.
+      end.
     end.
     
 end.
@@ -2061,6 +2086,7 @@ end procedure. /* proc-chg-pump */
 
 procedure proc_m-meas-3 :
 define buffer meas-place for ub.place.
+define buffer olddens_rvs-line-attr for ub.rvs-line-attr .
 
 if available ub.rvs-line then do:
    assign rvs-line-rec      = recid(ub.rvs-line)
@@ -2167,6 +2193,20 @@ if available ub.rvs-line then do:
       end.
       if varcur-rvs then rvs-line-attr.attr-value = 'а' .
       else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+      find first olddens_rvs-line-attr no-lock
+           where olddens_rvs-line-attr.obj-code  = ub.rvs-line.obj-code
+             and olddens_rvs-line-attr.obj-type  = ub.rvs-line.obj-type
+             and olddens_rvs-line-attr.gds-code  = ub.rvs-line.gds-code
+             and olddens_rvs-line-attr.pl-code   = ub.rvs-line.pl-code
+             and olddens_rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
+             and olddens_rvs-line-attr.attr-code = "is-olddens" no-error.
+      if available olddens_rvs-line-attr
+      and logical(olddens_rvs-line-attr.attr-value)
+      then do :
+        if rvs-line-attr.attr-value = 'а'
+        or rvs-line-attr.attr-value = 'ф'
+        then rvs-line-attr.attr-value = 'п' .
+      end.       
       release rvs-line-attr no-error .
       
       run waitfram-show in this-procedure ( input "Пересчитывем шапку" ).
@@ -2372,7 +2412,7 @@ if varlog <> yes then do: return error. end.
 find first buf_goods where buf_goods.gds-code = ub.rvs-line.gds-code no-lock.
 
 if not error-status :error 
-   and is-gas(buf_goods.gds-code) then do:
+and is-gas(buf_goods.gds-code) then do:
    
     run str/rvs-lin-mask.w
       (input  parparentproc
@@ -2386,7 +2426,22 @@ if not error-status :error
       ) no-error.
    
 end.
-
+else
+if not error-status :error 
+and is-sug(buf_goods.gds-code) then do:
+   
+    run str/rvs-lin-sug.w
+      (input  parparentproc
+      ,input  recid(ub.rvs-line)
+      ,input  {&lookup}
+      ,input  " # "     + r-doc.rvs-code +
+              " товар " + buf_goods.artic     + " " +
+                          buf_goods.prod-type + " " +
+                          string(buf_goods.prod-code) +
+              " складское место " + string(ub.rvs-line.pl-code)
+      ) no-error.
+   
+end.
 else do:
 
 run str/rvs-lin.w
@@ -2498,6 +2553,7 @@ procedure proc_m-meas-1:
                       ).
         case varnum:
         when 3 then do:
+          run waitfram-hide in this-procedure.
           undo tr, return no-apply.
         end.
         when 2 then do:

@@ -24,9 +24,11 @@ define variable mliststrfile as character no-undo.
 define variable mi           as integer   no-undo.
 define variable changstr     as logical   no-undo.
 define variable chancript    as logical   no-undo.
+define variable changmd5     as logical   no-undo.
 define variable mfilesize    as integer   no-undo.
 define variable msizeinfile  as integer   no-undo.
 define variable mverinfile   as integer   no-undo.
+define variable v-md5-signature  as character no-undo.
 
 define variable mfile        as character no-undo.
 define variable mfileNew     as character no-undo.
@@ -79,9 +81,12 @@ then do:
          view-as alert-box.
          return.                                 
       end.
-      output to value( search("cmp/str-glbl.i")).
-            put "удален" skip.
-      output close.
+      if search("cmp/str-glbl.i") ne ?
+      then do:
+         output to value( search("cmp/str-glbl.i")).
+               put "удален" skip.
+         output close.
+      end.
       /*os-delete value( search("cmp/str-glbl.i")).
       if search("cmp/str-glbl.i") ne ? 
       then do:
@@ -92,6 +97,48 @@ then do:
       end.*/
       changstr = yes.
       run utl/mkstrglb.p.
+      
+   end.
+   /* MD5*/
+   mliststrfile = "cmp/code.xml".
+   do mi = 1 to num-entries(mliststrfile):
+      
+      mfile = entry(mi,mliststrfile).
+      if search (mfile) eq ?
+      then
+         mfilesize = 0.
+      else do:
+         file-info:file-name = search (mfile).
+         mfilesize = file-info:file-size.
+      end.
+      create tt-file-ver.
+      assign
+         tt-file-ver.filename = entry(mi,mliststrfile)
+         tt-file-ver.filesize = mfilesize
+      .
+      if search ("{&fileparam}") ne ?
+      then do:
+         assign
+            msizeinfile = 0  
+            msizeinfile = int(getParam("{&fileparam}",mfile))
+         no-error.
+      end.
+      else
+         changmd5 = yes.
+       mfileNew = search (mfile).
+       entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
+      if    msizeinfile ne mfilesize
+         or search (mfilenew) eq ?
+      then do:
+         run gbl/md5.p(tt-file-ver.filename,output v-md5-signature).
+        
+         output to value(mfileNew).
+         put unformatted v-md5-signature.
+         output close.
+         
+         changmd5 = yes.
+      end.
+      
       
    end.
    mliststrfile = "cmp/actn.txt,cmp/menu.txt".
@@ -117,20 +164,29 @@ then do:
             or mverinfile  ne tt-file-ver.filever
          then do: 
             chancript = yes.
-            mfilenew = replace (mfile,".txt",".enc").
-            run utl/filecrypnodb.p ( input mfile
-                               , input "sysadm"
-                               , input yes
-                               , input mfileNew
-                              ) .
+            
          end.
       end.
       else
          chancript = yes.
+      mfilenew = replace (mfile,".txt",".enc").
+      if    msizeinfile ne tt-file-ver.filesize
+         or mverinfile  ne tt-file-ver.filever
+         or search(mfilenew) eq ?
+      then do:
+          
+          run utl/filecrypnodb.p ( input mfile
+                               , input "sysadm"
+                               , input yes
+                               , input mfileNew
+                              ) .
+      end.
+         
       
    end.
    if    changstr
       or chancript
+      or changmd5
    then do:
       output to "{&fileparam}".
       for each tt-file-ver:
@@ -141,7 +197,8 @@ then do:
             saveparam(tt-file-ver.filename + "|ver" ,string(tt-file-ver.filever)).
       end.
       output close.
-   end.   
+   end.
+   run utl/crpwd.p(no).   
 end.
 define stream sinp .
 procedure getverfile:

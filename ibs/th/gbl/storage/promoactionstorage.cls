@@ -149,6 +149,7 @@ class ibs.th.gbl.storage.promoactionstorage:
    if    valid-object (ipromoactionsubObj:GoodsCrits)
       or valid-object (ipromoactionsubObj:GoodsAppl)
       or valid-object (ipromoactionsubObj:PromoSet)
+      or valid-object (ipromoactionsubObj:CardsBin)
    then do :
       vStoragegoodsOBj = new promoGoodsStorage().
       if    valid-object (ipromoactionsubObj:GoodsCrits)
@@ -160,6 +161,9 @@ class ibs.th.gbl.storage.promoactionstorage:
       if valid-object (ipromoactionsubObj:PromoSet)
       then 
           vStoragegoodsOBj:updateDBAll(ipromoactionsubObj:PromoSet,buf_promoaction.ID,buf_promoaction.Db-num).
+      if valid-object (ipromoactionsubObj:CardsBin)
+      then 
+          vStoragegoodsOBj:updateDBAll(ipromoactionsubObj:CardsBin,buf_promoaction.ID,buf_promoaction.Db-num).    
    end.
    if valid-object(ipromoactionsubObj:Criterion)
     then do: 
@@ -357,71 +361,78 @@ class ibs.th.gbl.storage.promoactionstorage:
     getDataStorage (inpromoactionSubObj,buffer buf_promoaction).
   end.
   method public void CleanChildObj (inpromoactionSubObj as class promoactionsub):
-    case inpromoactionSubObj:methodCalc:
-    when 1 then do: //"Скидка процентом" 
-       IF inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:ensolo then // временная
-       DO:
-          if inpromoactionSubObj:typecond = 1 // "Количество по строке"  
-          then
-             this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no).
-          else IF inpromoactionSubObj:typecond = 2 // "Сумма по строке" 
-          then 
-             this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no).
-          IF inpromoactionSubObj:typecond = 3 // "Итог чека" 
-          then  
-             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no).
-       end.
-       ELSE
-          this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, yes, no).
-                
-       end .
-       when 2 then do: // абсолютная
-            this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no).
-       end.     
-       when 3 then do: // Скидка количеством
-          this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes).
-       end .
-       when 4 then do: //Скидка процентом за количество
-          this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes).
-       end .
-       when 5 then do: // Фиксированная цена
-          IF inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:ensolo 
-          then 
-             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, yes, no).
-          else 
-             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, no, yes).
-       end .
-       when 6 then do:
-          if    inpromoactionSubObj:typecond = 1 // "Количество по строке"  
-             or inpromoactionSubObj:typecond = 2 // "Сумма по строке"
-          then 
-             this-object:CleanChildObj(inpromoactionSubObj, yes, not inpromoactionSubObj:CritgoodsFl, yes, no, yes).
-          else if inpromoactionSubObj:typecond = 3 // "Итог чека"                       
-          then 
-             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, yes).
-       end .
-       when 7 then do:
-          if inpromoactionSubObj:typecond = 1 // "Количество по строке"  
-          then 
-             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, no).
-          else if inpromoactionSubObj:typecond = 2 // "Сумма по строке"   
-          then 
-             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, no).
-          else if inpromoactionSubObj:typecond = 3 // "Итог чека"  
-          then
-             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no).
-       end.
-              
-    end case.
-    
+    if inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:envisa 
+    then
+       this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, yes, no).
+    else do:
+       case inpromoactionSubObj:methodCalc:
+       when 1 then do: //"Скидка процентом" 
+          if  inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:ensolo then // временная
+          do:
+             if inpromoactionSubObj:typecond = 1 // "Количество по строке"  
+             then
+                this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no, yes).
+             else if inpromoactionSubObj:typecond = 2 // "Сумма по строке" 
+             then 
+                this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no, yes).
+             if inpromoactionSubObj:typecond = 3 // "Итог чека" 
+             then  
+                this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no, yes).
+          end.
+          else
+             this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, yes, no, yes).
+                   
+          end .
+          when 2 then do: // абсолютная
+               this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no, yes).
+          end.     
+          when 3 then do: // Скидка количеством
+             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes, yes).
+          end .
+          when 4 then do: //Скидка процентом за количество
+             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes, yes).
+          end .
+          when 5 then do: // Фиксированная цена
+             if inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:ensolo 
+             then 
+                this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, yes, no, yes).
+             else 
+                this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, no, yes, yes).
+          end .
+          when 6 then do:
+             if    inpromoactionSubObj:typecond = 1 // "Количество по строке"  
+                or inpromoactionSubObj:typecond = 2 // "Сумма по строке"
+             then 
+                this-object:CleanChildObj(inpromoactionSubObj, yes, not inpromoactionSubObj:CritgoodsFl, yes, no, yes, yes).
+             else if inpromoactionSubObj:typecond = 3 // "Итог чека"                       
+             then 
+                this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, yes, yes).
+          end .
+          when 7 then do:
+             if inpromoactionSubObj:typecond = 1 // "Количество по строке"  
+             then 
+                this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, no, yes).
+             else if inpromoactionSubObj:typecond = 2 // "Сумма по строке"   
+             then 
+                this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, no, yes).
+             else if inpromoactionSubObj:typecond = 3 // "Итог чека"  
+             then
+                this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no, yes).
+          end.
+                 
+       end case.
+    end.
   end.  
   method public void CleanChildObj (inpromoactionSubObj as class promoactionsub,
   input iCleanGoodsAppl as logical,
   input iCleanGoodsCrit as logical,
   input iCleanPromoSet  as logical,
   input iCleanCriterion  as logical,
-  input iCleanCriterionNotOne  as logical /*,
+  input iCleanCriterionNotOne  as logical, 
+  input iCleanPromoCardsBin as logical 
+  /*,
   input iCleanGiftNotMess  as logical */
+  
   ):
     define variable vGoods as class  promogoodssubs no-undo.
     define variable vGood  as class  promogoodssub no-undo.
@@ -509,6 +520,19 @@ class ibs.th.gbl.storage.promoactionstorage:
           else
              vCriterion:Mode = {&h-delete}.
         end.          
+      end.
+    end.
+    if iCleanPromoCardsBin 
+    then do: 
+      vGoods = inpromoactionSubObj:CardsBin.
+      do vi =  vGoods:GetItem(vi)  to 1 by -1 :
+        vGoods:GetItem(vi).
+        vGood = vGoods:promoGoodsObjCurr.
+        if vGood:Mode eq {&h-create}
+        then
+           vGoods:DeleteItem(vi).
+        else
+           vGood:Mode = {&h-delete}.     
       end.
     end.
   end.

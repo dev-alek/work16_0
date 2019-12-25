@@ -36,7 +36,7 @@ CONSTRUCTOR PUBLIC promoType(  ):
 end.    
 {ibs/th/ref/promo/promotype.i
     &NameType = TypeDiscont
-    &ListType = "Временная скидка,Промо-набор"
+    &ListType = "Временная скидка,Промо-набор,Карта Visa"
 }
 {ibs/th/ref/promo/promotype.i
     &NameType = methodCalc
@@ -83,6 +83,9 @@ method public void CangeTypeDiscont (input iTypeDiscont as int):
     if iTypeDiscont eq 1
     then
        methodCalclist = methodCalclistall.
+    else if iTypeDiscont eq 3
+    then
+       methodCalclist = "Подарок".
     else
        methodCalclist = "Скидка процентом,Фиксированная цена".   
     methodCalcRefresh().   
@@ -103,6 +106,10 @@ method public void CangeTypeDiscontAndMethodCalc (input iTypeDiscont as int,inpu
             TypeCondList = "Количество по строке,Сумма по строке". 
         else
             TypeCondList = "".     
+    end.
+    else if iTypeDiscont = 3
+    then do:
+       TypeCondList = "Сумма в документе".
     end.
     else
         TypeCondList = "".      

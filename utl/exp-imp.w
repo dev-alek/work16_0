@@ -279,8 +279,6 @@ END.
 ON CHOOSE OF B-dir IN FRAME Dialog-Frame
 DO:
 
-
-
     run gbl/dir-sel.p (output v_os-dir,
                 output v_os-dir-type,
                 output v_can-write) no-error.

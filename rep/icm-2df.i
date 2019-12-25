@@ -53,6 +53,7 @@ FIELD doc-code-trn  like ub.trn-doc.doc-code
 FIELD doc-code  like ub.trn-doc.doc-code
 FIELD qnty1 as decimal FORMAT "->>>>9.99"
 FIELD qnty2 as decimal FORMAT "->>>>9.99"
+FIELD qnty3 as decimal FORMAT "->>>>9.99"
 FIELD density as decimal FORMAT "9.999"
 FIELD temperature as decimal FORMAT ">9.99"
 FIELD naturalloss as decimal FORMAT ">9.99"

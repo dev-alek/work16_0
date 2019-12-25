@@ -127,6 +127,7 @@ for each buf_goods no-lock where buf_goods.gds-type = "ò" :
       end.
 end.
 
+
 empty temp-table tt-seb .
 
 
@@ -325,6 +326,7 @@ procedure make-tt :
 
   define buffer buf_trn-doc for ub.trn-doc.
   define buffer buf_doc-line for ub.doc-line.
+  define buffer buf2_doc-line for ub.doc-line.
   define buffer buf_chk-doc for ub.chk-doc.
   define buffer buf_chk-gds for ub.chk-gds.
   define buffer buf_chk-gds-pay for ub.chk-gds-pay.
@@ -332,8 +334,10 @@ procedure make-tt :
   define buffer buf_fbr-doc for ub.fbr-doc .
   define buffer buf_comp_fbr-line for ub.fbr-line.
   define buffer buf_ingr_fbr-line for ub.fbr-line.
+  define buffer buf_ot-line for ub.ot-line .
   
   define variable v-pay-code as character no-undo .
+  define variable v-vat-pc as decimal no-undo .
   
   for each buf_trn-doc no-lock where  buf_trn-doc.shift-date    >=  x-Date-Start
                                  and  buf_trn-doc.shift-date    <=  x-Date-End 
@@ -344,6 +348,7 @@ procedure make-tt :
   each buf_chk-doc no-lock where buf_chk-doc.out-code = buf_trn-doc.doc-code,
   each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code,                              
   each buf_chk-gds-pay no-lock where buf_chk-gds-pay.doc-code = buf_chk-gds.doc-code
+                                 and buf_chk-gds-pay.line-num = buf_chk-gds.line-num
                                  and buf_chk-gds-pay.b-code   = buf_chk-gds.b-code,
   first buf_bar-code no-lock where buf_bar-code.b-code  = buf_chk-gds-pay.b-code,
   first tt-gds-list no-lock where tt-gds-list.gds-code = buf_bar-code.gds-code:
@@ -379,7 +384,7 @@ procedure make-tt :
         tt-seb.NAMEP = ""
       .
     end. 
-    assign tt-seb.chk-qnty = tt-seb.chk-qnty + buf_chk-gds.doc-qnty .      
+    assign tt-seb.chk-qnty = tt-seb.chk-qnty + buf_chk-gds-pay.eff-doc-qnty . 
     
     find first buf_doc-line no-lock where buf_doc-line.doc-code   = buf_trn-doc.doc-code
                                       and buf_doc-line.artic      = tt-gds-list.artic
@@ -388,12 +393,20 @@ procedure make-tt :
                                       no-error .
     if available buf_doc-line
     then do :
+      find last buf_ot-line where  buf_ot-line.doc-code    = buf_trn-doc.doc-code       and
+                                    buf_ot-line.artic        =  buf_doc-line.artic                and
+                                    buf_ot-line.prod-code    =  buf_doc-line.prod-code            and
+                                    buf_ot-line.prod-type    =  buf_doc-line.prod-type            and
+                                    buf_ot-line.obj-code     =  obj-list.obj-code      and
+                                    buf_ot-line.obj-type     =  obj-list.obj-type      and
+                                    buf_ot-line.sum-type     = {&arh-cost} use-index pi no-lock no-error.
       assign
-        tt-seb.SUMMA = tt-seb.SUMMA + (buf_chk-gds.doc-qnty * buf_doc-line.price-rubl / (1 + (buf_doc-line.VAT-pc / 100)))
+        v-vat-pc = if available buf_ot-line then (buf_ot-line.vat-rubl / (buf_ot-line.sum-rubl - buf_ot-line.vat-rubl)) else 0 
+        tt-seb.SUMMA = tt-seb.SUMMA + (buf_chk-gds-pay.eff-doc-qnty * buf_doc-line.price-rubl / (1 + v-vat-pc))
       .
     end.
-  end.  
-    
+  end.
+  
   for each buf_trn-doc no-lock where  buf_trn-doc.shift-date    >=  x-Date-Start
                                  and  buf_trn-doc.shift-date    <=  x-Date-End 
                                  and  buf_trn-doc.obj-type      =   obj-list.obj-type
@@ -426,10 +439,17 @@ procedure make-tt :
       .
     end. 
     assign tt-seb.chk-qnty = tt-seb.chk-qnty + buf_doc-line.fact-qnty .
+    find last  buf_ot-line where buf_ot-line.doc-code    = buf_trn-doc.doc-code       and
+                                  buf_ot-line.artic        =  buf_doc-line.artic                and
+                                  buf_ot-line.prod-code    =  buf_doc-line.prod-code            and
+                                  buf_ot-line.prod-type    =  buf_doc-line.prod-type            and
+                                  buf_ot-line.obj-code     =  obj-list.obj-code      and
+                                  buf_ot-line.obj-type     =  obj-list.obj-type      and
+                                  buf_ot-line.sum-type     = {&arh-cost} use-index pi no-lock no-error.
     assign
-      tt-seb.SUMMA = tt-seb.SUMMA + (buf_doc-line.fact-qnty * buf_doc-line.price-rubl / (1 + (buf_doc-line.VAT-pc / 100)))
+      v-vat-pc = if available buf_ot-line then (buf_ot-line.vat-rubl / (buf_ot-line.sum-rubl - buf_ot-line.vat-rubl)) else 0 
+      tt-seb.SUMMA = tt-seb.SUMMA + (buf_doc-line.fact-qnty * buf_doc-line.price-rubl / (1 + v-vat-pc))
     .
-                                                               
   end.
   
   for each buf_trn-doc no-lock where  buf_trn-doc.shift-date    >=  x-Date-Start
@@ -463,10 +483,17 @@ procedure make-tt :
       .
     end. 
     assign tt-seb.chk-qnty = tt-seb.chk-qnty + buf_doc-line.fact-qnty .
+    find last buf_ot-line where  buf_ot-line.doc-code    = buf_trn-doc.doc-code       and
+                                  buf_ot-line.artic        =  buf_doc-line.artic                and
+                                  buf_ot-line.prod-code    =  buf_doc-line.prod-code            and
+                                  buf_ot-line.prod-type    =  buf_doc-line.prod-type            and
+                                  buf_ot-line.obj-code     =  obj-list.obj-code      and
+                                  buf_ot-line.obj-type     =  obj-list.obj-type      and
+                                  buf_ot-line.sum-type     = {&arh-cost} use-index pi no-lock no-error.
     assign
-      tt-seb.SUMMA = tt-seb.SUMMA + (buf_doc-line.fact-qnty * buf_doc-line.price-rubl / (1 + (buf_doc-line.VAT-pc / 100)))
+      v-vat-pc = if available buf_ot-line then (buf_ot-line.vat-rubl / (buf_ot-line.sum-rubl - buf_ot-line.vat-rubl)) else 0
+      tt-seb.SUMMA = tt-seb.SUMMA + (buf_doc-line.fact-qnty * buf_doc-line.price-rubl /(1 + v-vat-pc))
     .
-                                                               
   end.
   
   for each buf_fbr-doc no-lock where  buf_fbr-doc.shift-date    >=  x-Date-Start
@@ -533,12 +560,95 @@ procedure make-tt :
         tt-seb.NAMEP = ""
       .
     end. 
+    assign tt-seb.chk-qnty = tt-seb.chk-qnty + buf_doc-line.fact-qnty .
+    find last buf_ot-line where  buf_ot-line.doc-code    = buf_trn-doc.doc-code       and
+                                  buf_ot-line.artic        =  buf_doc-line.artic                and
+                                  buf_ot-line.prod-code    =  buf_doc-line.prod-code            and
+                                  buf_ot-line.prod-type    =  buf_doc-line.prod-type            and
+                                  buf_ot-line.obj-code     =  obj-list.obj-code      and
+                                  buf_ot-line.obj-type     =  obj-list.obj-type      and
+                                  buf_ot-line.sum-type     = {&arh-cost} use-index pi no-lock no-error.
     assign
-      tt-seb.SUMMA = tt-seb.SUMMA + (buf_doc-line.fact-qnty * buf_doc-line.price-rubl / (1 + (buf_doc-line.VAT-pc / 100)))
+      v-vat-pc = if available buf_ot-line then (buf_ot-line.vat-rubl / (buf_ot-line.sum-rubl - buf_ot-line.vat-rubl)) else 0
+      tt-seb.SUMMA = tt-seb.SUMMA + (buf_doc-line.fact-qnty * buf_doc-line.price-rubl / (1 + v-vat-pc))
     .
                                                                
-  end.        
+  end.    
   
+  for each buf_trn-doc no-lock where  buf_trn-doc.shift-date    >=  x-Date-Start
+                                 and  buf_trn-doc.shift-date    <=  x-Date-End 
+                                 and  buf_trn-doc.obj-type      =   obj-list.obj-type
+                                 and  buf_trn-doc.obj-code      =   obj-list.obj-code
+                                 and  buf_trn-doc.status_       =   {&fact}
+                                 and  buf_trn-doc.ext-doc-type  =   {&TDEDT_Peresort},
+  each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code
+                              and buf_doc-line.fact-qnty < 0,
+  first tt-gds-list no-lock where tt-gds-list.artic     = buf_doc-line.artic
+                              and tt-gds-list.prod-type = buf_doc-line.prod-type
+                              and tt-gds-list.prod-code = buf_doc-line.prod-code:
+    find first ub.recipe no-lock where
+               ub.recipe.prod-type = buf_doc-line.prod-type
+           and ub.recipe.prod-code = buf_doc-line.prod-code
+           and ub.recipe.artic     = buf_doc-line.artic
+           and
+             (
+             ( ub.recipe.obj-type  = obj-list.obj-type
+           and ub.recipe.obj-code  = obj-list.obj-code
+             )
+            or
+             ( ub.recipe.obj-type  = "":U
+           and ub.recipe.obj-code  = 0
+             )
+             )
+           no-error.
+    if available ub.recipe
+    then do :
+      find first ub.parts-root no-lock where ub.parts-root.doc-code = buf_trn-doc.doc-code
+                                         and ub.parts-root.orig-gds-code = tt-gds-list.gds-code
+                                         no-error .
+      if available ub.parts-root
+      then do :
+        for each buf_tt-seb exclusive-lock where buf_tt-seb.DATAS = x-Date-End
+                                             and buf_tt-seb.AZS   = string(obj-list.obj-code, "99999999999")
+                                             and buf_tt-seb.TOVAR = string(ub.parts-root.orig-gds-code, "99999999999") :
+          find first tt-seb exclusive-lock where  tt-seb.DATAS = x-Date-End
+                                             and  tt-seb.AZS   = string(obj-list.obj-code, "99999999999")
+                                             and  tt-seb.TOVAR = string(ub.parts-root.gds-code, "99999999999")
+                                             and  tt-seb.KODVO = buf_tt-seb.KODVO
+                                             no-error .      
+          if available tt-seb
+          then do :
+            find first ub.goods no-lock where ub.goods.gds-code = ub.parts-root.gds-code .
+            find first buf2_doc-line no-lock where buf2_doc-line.doc-code   = buf_doc-line.doc-code
+                                               and buf2_doc-line.artic      = ub.goods.artic
+                                               and buf2_doc-line.prod-type  = ub.goods.prod-type
+                                               and buf2_doc-line.prod-code  = ub.goods.prod-code
+                                               and buf2_doc-line.fact-qnty >= 0
+                                               no-error .
+            if available buf2_doc-line
+            then do :
+              find first ub.parts no-lock where ub.parts.artic      = buf2_doc-line.artic
+                                            and ub.parts.prod-type  = buf2_doc-line.prod-type
+                                            and ub.parts.prod-code  = buf2_doc-line.prod-code
+                                            and ub.parts.in-code    = buf_trn-doc.doc-code
+                                            and ub.parts.out-code   = {&output-code}
+                                            no-error .
+              if available ub.parts
+              then do :                              
+                assign
+                  buf_tt-seb.chk-qnty = buf_tt-seb.chk-qnty + ((abs(buf_doc-line.fact-qnty) / buf2_doc-line.fact-qnty) * ub.parts.fact-qnty)
+                  buf_tt-seb.SUMMA = buf_tt-seb.SUMMA + (tt-seb.SUMMA * (ub.parts.fact-qnty / tt-seb.chk-qnty))
+                  tt-seb.chk-qnty = tt-seb.chk-qnty - ub.parts.fact-qnty
+                  tt-seb.SUMMA = tt-seb.SUMMA - (tt-seb.SUMMA * (ub.parts.fact-qnty / tt-seb.chk-qnty))
+                .
+              end .
+            end .                                   
+          end .                                                  
+        end .                       
+      end .                                   
+    end .                         
+  end .                                  
+
   for each buf_tt-seb no-lock where buf_tt-seb.KODVO <> "spi-prvo" :
     for each tt-fbr no-lock where tt-fbr.comp-gds-code = integer(buf_tt-seb.TOVAR) :
       find first tt-seb exclusive-lock where  tt-seb.DATAS = x-Date-End
@@ -569,7 +679,7 @@ procedure make-tt :
       if available buf2_tt-seb
       then do :
         assign
-          tt-seb.SUMMA = tt-seb.SUMMA + (buf2_tt-seb.SUMMA * buf_tt-seb.chk-qnty / tt-fbr.comp-qnty)
+          tt-seb.SUMMA = tt-seb.SUMMA + (buf2_tt-seb.SUMMA * buf_tt-seb.chk-qnty / buf2_tt-seb.chk-qnty * (tt-fbr.inqr-qnty / tt-fbr.comp-qnty))
         .
       end.                                  
     end.

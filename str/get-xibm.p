@@ -19,7 +19,7 @@ Creation date: 10/13/05
 
 */
 
-define input parameter parparentproc as widget-handle no-undo .
+define input parameter parparentproc as handle no-undo . /* в тексте get-xibm.p не встречаетс€ */
 define input parameter p-log-handle  as handle no-undo .
 define input parameter p-obj-type like ub.clients.obj-type no-undo .
 define input parameter p-obj-code like ub.clients.obj-code no-undo .
@@ -53,7 +53,7 @@ define stream stmXMLOut.
 { str/magiachk.i }
 { str/magiachk.i -line " extent 2 "}
 { str/magiachk.i proc }
-{ gbl/thbj-def.i }
+/*{ gbl/thbj-def.i } 14/II-2019 - подключаетс€ внутри str/get-chkc.i */
 
 DEFINE VARIABLE n-entry                    as   char no-undo extent 20.
 DEFINE VARIABLE accept-types               as   character no-undo .
@@ -813,6 +813,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     . /* ѕредпологаем что уже есть в базе */
     return.
   end.
+  /* 14/II-2019 следущие три проверки выгл€д€т избыточными
   assign
   shift-date_ = (if cas-shft
                  then shift-date_
@@ -823,6 +824,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   shift-open-time_ = (if cas-shft
                      then shift-open-time_
                      else 0)
+  .
+  */
+  if cas-shft then . else assign
+    shift-date_      = chk-date_
+    shift-num_       = 0
+    shift-open-time_ = 0
   .
 
   find first temp-cash-desk where
@@ -870,12 +877,22 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           string(temp-cash-desk.last-z-count, "99999") +
           string(temp-cash-desk.last-chk-num, "-999999999")
   .
-   
+  define variable vTimestring as character no-undo.
+  Vtimestring = string(chk-time_, "HH:MM:SS").
+  entry(1,Vtimestring,":") = string(int(entry(1,Vtimestring,":")) - 1,"99") no-error. 
+  if    vTimestring begins "?"
+     or error-status:error
+  then do:
+     entry(1,Vtimestring,":") = "00".
+     chk-date_ = chk-date_ - 1. 
+  end.
+  else
+     chk-time_ = chk-time_ - 1 * 60 * 60. 
   assign
   v-new = string(year(chk-date_), "9999") +
           string(month(chk-date_), "99") +
           string(day(chk-date_), "99") +
-          string(chk-time_ - min(chk-time_,60), "HH:MM:SS") +    /* ¬ св€зи с тем, что стали по€вл€тьс€ запросы о том, что последний чек не всегда корректно закачиваетс€, сделаем так, чтобы врем€ последнего прин€того чека фиксировалось на минуту раньще*/ 
+          Vtimestring +    /* ¬ св€зи с тем, что стали по€вл€тьс€ запросы о том, что последний чек не всегда корректно закачиваетс€, сделаем так, чтобы врем€ последнего прин€того чека фиксировалось на час раньще, также надо обновить не завершенные чеки пришедшие с “—ќ */ 
           string(integer(shift-name_), "99") +
           string(z-num_, "99999") +
           string(chk-num_, "-999999999")
@@ -1822,10 +1839,12 @@ on error undo, return error
 
        return .
     end.
-    If cstype_ = 37 and (p-pos-type = {&cd-type-ibm-xml} OR p-pos-type = {&cd-type-Autotank}) then assign    /* ≈сли чек пополнени€, то считаем, что количество равно сумме при стоимости 1 руб */
+    If cstype_ = 37 and (p-pos-type = {&cd-type-ibm-xml} OR p-pos-type = {&cd-type-Autotank}) then for first ub.goods-attr no-lock where ub.goods-attr.gds-code = int(bc-buf)
+                            and ub.goods-attr.attr-code = {&attr-office-type} and ub.goods-attr.attr-value = {&attr-office-type_oss-pay}:
+         assign    /* ≈сли чек пополнени€, то считаем, что количество равно сумме при стоимости 1 руб */
         curr-string-qnty = sum-from-check
-        price-from-check = 1
-        .
+        price-from-check = 1.
+    end.
 
 
     CREATE chk-gds.
@@ -1924,7 +1943,7 @@ on error undo, return error
     define variable vCSTaxValue as decimal no-undo.*/
    // run proc-01-tax in this-procedure (output ub.chk-gds.VAT-pc, output ub.chk-gds.VAT-sum-rubl).
     
-    if v-oss-code <> ""then do:
+    if v-oss-code <> "" then do:
       case p-pos-type:
         when {&cd-type-autotank} then do:
           find first buf_ext-classif where buf_ext-classif.CharKey_One = v-oss-code no-error.
@@ -1944,6 +1963,17 @@ on error undo, return error
       .
       v-oss-code = "".
     end.
+    
+      
+      create ub.chk-gds-attr.
+      assign
+        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.line-num = ub.chk-gds.line-num
+        ub.chk-gds-attr.attr-code = "cstype"
+        ub.chk-gds-attr.attr-value =  string(cstype_)
+      .
+      
+    
     if price-old <> 0 then do:
      create ub.chk-gds-attr.
       assign
@@ -2044,7 +2074,6 @@ end procedure. /* proc-01 */
 procedure proc-02-gds :
 define variable v-attr-code as character no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
-
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_tt-sum-grp for tt-sum-grp.
 do

@@ -55,6 +55,35 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Импорт групп товаров'"
+  "'utl/imp-ggr.p'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Импорт (изменение) клиентов'"
+  "'utl/impcli.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Импорт договоров с поставщиками'"
+  "'bge/impcontract.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+  
+}
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
   "'Экспорт в формате импорта приходной накладной (ПН)'"
@@ -154,6 +183,17 @@ define variable vss-description as character no-undo init "".
    {&bef-menuload_service_impexp}
    "'Выгрузка в систему АТД'"
     " 'bge/p-exp-ATD.p' "
+    " "
+    " "
+    " "
+    " "
+    "yes"
+}
+
+{ gbl/menuload.i
+   {&bef-menuload_service_impexp}
+   "'Выгрузка ВБРР'"
+    " 'bge/e-help-road.p' "
     " "
     " "
     " "
@@ -374,7 +414,27 @@ define variable vss-description as character no-undo init "".
   "yes"
 }
 
+{gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Отчет по платежным системам '"
+  "'rep/g-paysys.p'"
+  " "
+  " "
+  " "
+  "'Yukos,Rosneft-*'"
+  "yes"
+}
 
+{gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Отчет для контроля возвратных операций'"
+  "'rep/g-vbbr_return.p'"
+  " "
+  " "
+  " "
+  "'Yukos,Rosneft-*'"
+  "yes"
+}
 
 { gbl/menuload.i
   {&bef-menuload_service_customs}
@@ -396,6 +456,17 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 
+}
+
+{gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Отчет для сверки ВБРР-Виза'"
+  "'rep/g-vbbr_viza.p'"
+  " "
+  " "
+  " "
+  "'Yukos,Rosneft-*'"
+  "yes"
 }
 
 { gbl/menuload.i
@@ -1829,7 +1900,7 @@ define variable vss-description as character no-undo init "".
   "'TopAukc'"
   "yes"
 }
-
+/* 04/III-2019 не используется. Работа с кассовыми книгами перенесена в БПА
 { gbl/menuload.i
   {&bef-menuload_service_utility}
   "'Изменение текущего номера ПКО/РКО'"
@@ -1840,7 +1911,7 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
-
+*/
 { gbl/menuload.i
   {&bef-menuload_service_utility}
   "'Мониторинг инкрементальной выгрузки в XML'"

@@ -25,7 +25,11 @@ define output parameter p-compilerVersion as character        no-undo.
 define output parameter p-date            as date             no-undo.
 define output parameter p-time            as integer          no-undo.
 define output parameter p-comment         as character        no-undo.
-
+define output parameter p-file-date       as date             no-undo.
+define output parameter p-file-time       as integer          no-undo.
+define output parameter o-Release         as integer          no-undo init ?.
+define output parameter o-patch           as integer          no-undo init ?.
+define output parameter o-branch          as integer          no-undo init ?.
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -43,7 +47,10 @@ define variable vss-description as character no-undo init "Получить версию и тэг
     define variable v-SVNRev-string     as character    no-undo.
     define variable v-date-string       as character    no-undo.
     define variable v-time-string       as character    no-undo.
-
+    define variable v-Release           as character    no-undo.
+    define variable v-patch             as character    no-undo.
+    define variable v-branch            as character    no-undo.
+  
 do
 on error undo, return error return-value
 :
@@ -55,6 +62,8 @@ on error undo, return error return-value
         p-date              = ?
         p-time              = 0
         p-comment           = "":U
+        p-file-date         = ?
+        p-file-time         = ?
     .
     assign
         v-enc-file = search( "cmp/vertag.enc":U )
@@ -64,6 +73,25 @@ on error undo, return error return-value
         /* Нет файла с параметрами версии. */
     end.
     else do:
+       file-info:file-name = v-enc-file.
+       p-file-date = file-info:file-create-date.
+       p-file-time = file-info:file-create-time.
+       if file-info:file-create-date eq file-info:file-mod-date
+       then assign
+          p-file-date = file-info:file-create-date
+          p-file-time = max(file-info:file-create-time, file-info:file-mod-time)
+       .
+       else if file-info:file-create-date < file-info:file-mod-date
+       then assign
+          p-file-date = file-info:file-mod-date
+          p-file-time = file-info:file-mod-time
+       .
+       else assign
+          p-file-date = file-info:file-create-date
+          p-file-time = file-info:file-create-time
+       .
+       
+       
         run gbl/_tmpfile.p ( input "cp":U  , input ".ver":U, output v-ver-file ).
         run utl/filecryp.p (
               input v-enc-file
@@ -85,9 +113,15 @@ on error undo, return error return-value
             run xmldom-read-unique in this-procedure ( input "TradeHouse":U, input "date":U            , output v-date-string        , output v-found   ).
             run xmldom-read-unique in this-procedure ( input "TradeHouse":U, input "time":U            , output v-time-string        , output v-found   ).
             run xmldom-read-unique in this-procedure ( input "TradeHouse":U, input "comment":U         , output p-comment            , output v-found   ).
-            assign
-                p-SVNRev = integer( v-SVNRev-string )
-            no-error.
+            run xmldom-read-unique in this-procedure ( input "TradeHouse":U, input "Release":U         , output v-Release            , output v-found   ).
+            run xmldom-read-unique in this-procedure ( input "TradeHouse":U, input "patch":U           , output v-patch              , output v-found   ).
+            run xmldom-read-unique in this-procedure ( input "TradeHouse":U, input "branch":U          , output v-branch             , output v-found   ).
+            
+            
+            o-Release = integer (v-Release)         no-error.
+            o-patch   = integer (v-patch)           no-error.
+            o-branch  = integer (v-branch)          no-error.
+            p-SVNRev  = integer ( v-SVNRev-string ) no-error.
             if error-status :error
             then do:
                 assign

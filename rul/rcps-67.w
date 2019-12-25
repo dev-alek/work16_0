@@ -1,3 +1,16 @@
+/*
+26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
+
+Вызывалась из настроек машины правил в adm/shattr26.w
+(строка 691 в триггере ON CHOOSE OF b-params IN FRAME Dialog-Frame /* Пар-ры */):
+
+      define variable v-param-form as character no-undo .
+      v-param-form = (if buf_rule-profile.custom-param-form > 0
+                      then  substitute("rul/rcps-&1.w", buf_rule-profile.profile_id)
+                      else "ref/rulercps.w")
+
+
+
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 /* Connected Databases
@@ -718,3 +731,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+*/

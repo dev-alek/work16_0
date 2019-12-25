@@ -2926,33 +2926,34 @@ procedure first-line-tog5-1-html :
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
+                        <td style="width:150px"></td>
                       </tr>
                        <tr>  
-                        <td colspan="8" >&1</td>
+                        <td colspan="7" >&1</td>
                       </tr>
                       <tr>
-                        <td colspan="8" >&2</td>
+                        <td colspan="7" >&2</td>
                       </tr>
                       <tr>
-                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                        <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                       </tr>
                       <tr>
-                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
+                        <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
                       </tr>
                       <tr>
-                        <td colspan="8"> Смены  с &3  по &4 </td>
+                        <td colspan="7"> Смены  с &3  по &4 </td>
                       </tr>
                       <tr>
-                        <td colspan="8"> Закрыта &5 </td>
+                        <td colspan="7"> Закрыта &5 </td>
                       </tr>
                       <tr>
-                        <td colspan="8"> Старший смены: &6 </td>
+                        <td colspan="7"> Старший смены: &6 </td>
                       </tr>
                       <tr>
-                        <td colspan="8"> Операторы: &7 </td>
+                        <td colspan="7"> Операторы: &7 </td>
                       </tr>
                       <tr>
-                       <td colspan="8" style="height:30px;"></td>
+                       <td colspan="7" style="height:30px;"></td>
                       </tr>       
                       </thead>'
             ,
@@ -3002,30 +3003,29 @@ procedure first-line-tog5-1-html :
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
-                        <td style="width:150px"></td>
                       </tr>
                     <tr>
-                      <td colspan="8"></td>
+                      <td colspan="7"></td>
                     </tr>
                     <tr>  
-                      <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&1</td>
+                      <td colspan="3" style="border-bottom: 1px solid black; text-align: center;">&1</td>
                       <td colspan="4"></td>
                     </tr>
                     <tr>
-                      <td colspan="4" style="font-size:10px; text-align: center;">наименование организации</td>
+                      <td colspan="3" style="font-size:10px; text-align: center;">наименование организации</td>
                       <td colspan="4"></td>
                     </tr>
                     <tr>
-                      <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ &2</td>
+                      <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ &2</td>
                     </tr>
                     <tr>
-                      <td colspan="8" style="text-align: center;"> от &3 </td>
+                      <td colspan="7" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="8"> Смена  с &4  по &5 </td>
+                      <td colspan="7"> Смена  с &4  по &5 </td>
                     </tr>
                     <tr>
-                      <td colspan="8"> </td>
+                      <td colspan="7"> </td>
                     </tr>'
             ,
             rep-shift-store-name,
@@ -3039,30 +3039,30 @@ procedure first-line-tog5-1-html :
         put stream OutStr-html unformatted
             substitute (
             '<tr> 
-            <td colspan="3" style="height:30px;"> Состав смены:</td>
+            <td colspan="2" style="height:30px;"> Состав смены:</td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&2</td>
           </tr>
           <tr> 
-            <td colspan="3"></td>
+            <td colspan="2"></td>
             <td colspan="2" style="font-size:10px; text-align: center;">должность</td>
             <td></td>
             <td colspan="2" style="font-size:10px; text-align: center;">инициалы, фамилия</td>
           <tr> 
-            <td colspan="3" style="height:30px;"></td>
+            <td colspan="2" style="height:30px;"></td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&3</td>
             <td></td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&4</td>
           </tr>
           <tr> 
-            <td colspan="3"></td>
+            <td colspan="2"></td>
             <td colspan="2" style="font-size:10px; text-align: center;">должность</td>
             <td></td>
             <td colspan="2" style="font-size:10px; text-align: center;">инициалы, фамилия</td>
           </tr>
           <tr>
-            <td colspan="8" style="height:30px;"></td>
+            <td colspan="7" style="height:30px;"></td>
           </tr>       
           </thead>'
             ,
@@ -3089,19 +3089,18 @@ procedure first-line-tog5-1-html :
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
-                        <td style="width:150px"></td>
                       </tr>
                       <tr>
-                        <td colspan="8" style="height:30px;"></td>
+                        <td colspan="7" style="height:30px;"></td>
                       </tr>                             
                       <tr>
-                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                        <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                       </tr>
                       <tr>
-                        <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
+                        <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
                       </tr>
                       <tr>
-                        <td colspan="8" style="height:30px;"></td>
+                        <td colspan="7" style="height:30px;"></td>
                       </tr>       
                       </thead>'
             ,       chr(123), chr(125)                  
@@ -4100,7 +4099,7 @@ procedure last-line-tog-html5-1 :
             '
               
                   <tr> <!--Подвал-->
-                    <td colspan="8"></td>
+                    <td colspan="9"></td>
                   </tr>
                     <tr> 
                     <td colspan="2" style="height:30px;"> Отчет составил и смену сдал:</td>
@@ -4109,7 +4108,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;">&2</td>
+                    <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&2</td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -4118,7 +4117,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="font-size:10px; text-align: center;">подпись</td>
                     <td></td>
-                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                    <td colspan="2" style="font-size:10px; text-align: center;">расшифровка подписи</td>
                   </tr>
                     <tr> 
                     <td colspan="2" style="height:30px;"> Смену принял:</td>
@@ -4127,7 +4126,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;">&4</td>
+                    <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&4</td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -4136,7 +4135,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="font-size:10px;  text-align: center;">подпись</td>
                     <td></td>
-                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                    <td colspan="2" style="font-size:10px; text-align: center;">расшифровка подписи</td>
                   </tr>
                     <tr>
                     <td colspan="2" style="height:30px;"> Отчет проверил:</td>
@@ -4145,7 +4144,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td colspan="2" style="border-bottom: 1px solid black; text-align: center;"></td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -4154,7 +4153,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="font-size:10px; text-align: center;">подпись</td>
                     <td></td>
-                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                    <td colspan="2" style="font-size:10px; text-align: center;">расшифровка подписи</td>
                   </tr>
         
             </tfoot>

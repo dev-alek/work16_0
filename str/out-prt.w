@@ -51,6 +51,7 @@ define buffer t-doc   for ub.trn-doc.
 define buffer g-d-b   for ub.gds-dtl.
 define buffer out-dtl for ub.gds-dtl. /* признак внутренней РН */
 define buffer bf_prod-bc for ub.prod-bc.
+define buffer in_doc-line for ub.doc-line.
 
 define new shared temp-table tt-doc-pl no-undo
 field pl-code as integer format "99999999999"
@@ -149,6 +150,8 @@ define variable v-old-fact-cli-qnty        like ub.gds-dtl.doc-qnty no-undo .
 define variable pr-naklvalue               as logical   no-undo .
 define variable pr-nakltype                as character initial ?         no-undo.
 define variable pr-genmrg                  as character initial ?         no-undo.
+
+define variable v-is-return                as logical   no-undo initial no  .
 
 define temp-table tt-parts-all   no-undo like ub.parts .
 define temp-table tt-parts-split no-undo like ub.parts
@@ -2133,6 +2136,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define buffer buf_doc-pl   for ub.doc-pl.
   define buffer buf_currency for ub.currency  .
   define buffer buf_doc-pl-attr for ub.doc-pl-attr .
+  
+  if num-entries(prt-mode, {&delim-par}) = 2
+  then do :
+    if entry(2, prt-mode, {&delim-par}) = "return" then v-is-return = true .
+    prt-mode = entry(1, prt-mode, {&delim-par}) .
+  end .
 
   assign
     v-undo-all = false
@@ -2449,6 +2458,19 @@ end.
       undo main-block, return error return-value.
     end.
     find ub.gds-prt no-lock where recid( ub.gds-prt ) = cur-rec.
+  end.
+  
+  if v-is-return and t-doc.out-code > ""
+  then do :
+    find first in_doc-line no-lock where in_doc-line.doc-code   = t-doc.out-code
+                                     and in_doc-line.artic      = ub.gds-dtl.artic
+                                     and in_doc-line.prod-type  = ub.gds-dtl.prod-type
+                                     and in_doc-line.prod-code  = ub.gds-dtl.prod-code .
+    assign
+      ub.gds-dtl.price-base = in_doc-line.price-base
+      ub.gds-dtl.price-rubl = in_doc-line.price-rubl
+      ub.gds-dtl.ov         = yes
+    .                                 
   end.
 
   assign
@@ -3828,12 +3850,16 @@ PROCEDURE proc-case :
             end.
             else do:
               if t-doc.print-rubl = true then do:
+                if not v-is-return
+                then
                 enable
                   ub.gds-dtl.price-rubl
                   with frame {&FRAME-NAME}
                 .
               end.
               else do:
+                if not v-is-return
+                then
                 enable
                   ub.gds-dtl.price-base
                   with frame {&FRAME-NAME}

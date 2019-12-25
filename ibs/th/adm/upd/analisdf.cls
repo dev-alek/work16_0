@@ -48,7 +48,7 @@ class ibs.th.adm.upd.analisdf final:
    end destructor.
 
  define stream sReadfile.
-  //define variable mMode as character no-undo. 
+/*  define variable mMode as character no-undo.*/
   define variable mBuffer     as handle    no-undo.
   define variable mBufferName as character no-undo.
   define variable mName       as character no-undo.
@@ -298,7 +298,6 @@ define temp-table {&prefixtt}INDEX
             delete object mBuffer.
             
          create buffer mBuffer for table "{&prefixtt}" + mBufferName no-error.
-         //mBuffer =  mBuffer:GET-BUFFER-HANDLE ("{&prefixtt}" + vBufferName) no-error.
          if error-status:error
          then do: 
             message "Не известный буфер " "{&prefixtt}" + mBufferName
@@ -316,7 +315,7 @@ define temp-table {&prefixtt}INDEX
          if    mBufferName eq "field"
             or mBufferName eq "index"
          then do:
-            vTableWhere = if vMode eq "rename" then entry(7,istr, " ") else entry(5 + vSdvig,istr, " ") no-error.
+            vTableWhere = if vMode eq "rename" then entry(5,istr, " ") else entry(5 + vSdvig,istr, " ") no-error.
             if error-status:error
             then do: 
                message "Ошибка структуре df файла не задан таблица для " mBufferName mName
@@ -339,9 +338,13 @@ define temp-table {&prefixtt}INDEX
                and mBuffer::{&prefixfil}mode eq "add"
             then do:
                if mbuffername eq "table"
-               then
+               then do:
                   ChangeTable(mBuffer::{&prefixfil}Name , entry(5,istr, " ")).
-               mBuffer::{&prefixfil}Name = entry(5,istr, " ").
+                  mBuffer::{&prefixfil}Name = entry(5,istr, " ").
+               end.
+               else
+                  mBuffer::{&prefixfil}Name = entry(7,istr, " ").
+                  return no.
             end.    
             else if      mBuffer::{&prefixfil}mode eq "rename" 
                       or (    vMode eq "rename"
@@ -349,7 +352,6 @@ define temp-table {&prefixtt}INDEX
             then do:
                vposih = mBuffer::{&prefixfil}localIndex + 1.
                mBuffer:buffer-release ().
-               //mBuffer::{&prefixfil}Name = entry(5,istr, " ").
             end.    
             else if vmode eq "add" 
             then do: 
@@ -373,7 +375,11 @@ define temp-table {&prefixtt}INDEX
             mBuffer::{&prefixfil}mode       = vmode.
             mBuffer::{&prefixfil}Name       = mName.
             mBuffer::{&prefixfil}localIndex = vposih.
-            if vMode eq "rename" then mBuffer::{&prefixfil}NewName = entry(5,istr, " ").
+            if vMode eq "rename" 
+            then 
+               mBuffer::{&prefixfil}NewName = if mbuffername eq "table"
+                                              then entry(5,istr, " ") 
+                                              else entry(7,istr, " ").
          end.
          if VPrimary 
          then
@@ -383,6 +389,7 @@ define temp-table {&prefixtt}INDEX
          then 
             mBuffer::{&prefixfil}table = vTableWhere.
          if    mBufferName eq "field"
+            and vMode ne "rename"
          then do: 
             mBuffer::{&prefixfil}Data-Type = entry(7,istr, " ") no-error.
             if     error-status:error
@@ -480,18 +487,18 @@ define temp-table {&prefixtt}INDEX
       do while vBuffer:available:
          
          vtxt = if vBuffer:name eq "{&prefixtt}field" 
-             then substitute ("&1 FIELD &2&3 OF &4 &5",
+             then substitute ("&1 FIELD &2 OF &3 &4&5",
                               vBuffer::{&prefixfil}mode,
                               vBuffer::{&prefixfil}name,
-                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}NewName else "",
                               vBuffer::{&prefixfil}table,
+                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}NewName else "",
                               if vBuffer::{&prefixfil}Data-Type ne "" then "AS " + vBuffer::{&prefixfil}Data-Type else "")
              else if vBuffer:name eq "{&prefixtt}index" 
              then substitute ("&1 INDEX &2&3 ON &4",
                               vBuffer::{&prefixfil}mode,
                               vBuffer::{&prefixfil}name,
-                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}NewName else "",
-                              vBuffer::{&prefixfil}table)
+                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}table  else "",
+                              if vBuffer::{&prefixfil}mode eq "rename" then vBuffer::{&prefixfil}NewName else vBuffer::{&prefixfil}table)
              else substitute ("&1 &2 &3&4",
                               vBuffer::{&prefixfil}mode,
                               substring(vBuffer:name,length("{&prefixtt}") + 1),
@@ -524,6 +531,8 @@ define temp-table {&prefixtt}INDEX
    output close.
 end method.
 method public logical CheckTable(ifile  as character):
+   /* message "!!!!!!"
+               view-as alert-box.*/
       define variable vOk as logical no-undo.
       define variable oOK as logical no-undo.
       oOK = CheckOneTable(temp-table {&prefixtt}Table:handle ).
@@ -555,7 +564,7 @@ method private logical CheckOneTable(iTable as  handle):
    define variable vBufferName as character no-undo.
    define variable vWhere      as character no-undo.
    define variable vOk     as logical no-undo.
-   define variable oOk     as logical no-undo.
+   define variable oOkl     as logical no-undo init yes.
    define variable verror  as logical no-undo.
    define variable vFlagEQ as logical no-undo.
    define variable vCheckField as logical no-undo.
@@ -595,7 +604,7 @@ method private logical CheckOneTable(iTable as  handle):
          vBufferName = "_Sequence".
       else
          return no.   
-     //    _field._Field-Name
+     
          
       create buffer vBufferDB for table  vBufferName no-error.
       vFieldPref = length("{&prefixfil}") + 1. 
@@ -654,8 +663,8 @@ method private logical CheckOneTable(iTable as  handle):
                   and vField:buffer-value ne "" 
                then do vj = 1 to if vField:buffer-value eq ? then 1 else num-entries(vField:buffer-value,{&delim-par}):
                   define variable vValuedb as character no-undo.
-                  vFieldValue = trim(trim(vField:buffer-value," "),'"').
-                  vValuedb = vBufferDB:buffer-field(vFieldName):buffer-value.
+                  vFieldValue = replace(trim(vField:buffer-value," "),'"','').
+                  vValuedb = replace(vBufferDB:buffer-field(vFieldName):buffer-value,'"','').
                   vFlagEQ = if vFieldValue eq "{&logicalfield}" 
                         then 
                            logical (vValuedb) eq yes
@@ -670,25 +679,30 @@ method private logical CheckOneTable(iTable as  handle):
             end.
              
          end.
+         else if     not vBufferDB:available
+                 and vBuffer::{&prefixfil}mode eq "drop"
+         then          
+            vOk = yes.
+           
          if vOk
          then
             vBuffer:buffer-delete ().
          else do:
-            oOk = no.
-            /*message "!!!!!!"
+            oOkl = no.
+           /* message "!!!!!!"
                view-as alert-box.*/
          end.    
          vQuery:get-next().
          
       end.
    end.
-   ook = not verror.
+   ookl = not verror and oOkl.
    vQuery:query-close().
 
    delete object vQuery.
    output close.
    finally:
-      return oOk.
+      return oOkl.
    end finally.   
 end method.
 method private void ChangeTable(OldName as character, NewName as character ):

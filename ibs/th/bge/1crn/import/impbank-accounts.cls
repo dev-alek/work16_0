@@ -148,6 +148,9 @@ class ibs.th.bge.1crn.import.impbank-accounts implements ibs.th.bge.1crn.import.
       ,input objBank:bank-name
       ,input objBank:bik
       ,input objBank:cor-acc
+      ,input objBank:qr-rule
+      ,input objBank:bank-resive-debit
+      ,input objBank:bank-deposit-kredit
       ,input if AVAILABLE buf_fin-bank then buf_fin-bank.e-mail else ""
       ,input if AVAILABLE buf_fin-bank then buf_fin-bank.fax else ""
       ,input if AVAILABLE buf_fin-bank then buf_fin-bank.inn else ""

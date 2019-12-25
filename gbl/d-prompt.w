@@ -346,6 +346,7 @@ DO:
             view-as alert-box error .
           return no-apply .
         end.
+        hFillIn:SCREEN-VALUE = string (date(hFillIn:SCREEN-VALUE), "99/99/9999").
       end.
       ASSIGN
         pValue = hFillIn:SCREEN-VALUE

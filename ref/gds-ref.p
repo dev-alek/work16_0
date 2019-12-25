@@ -116,6 +116,11 @@ then do:
   v-other      = entry(8, v-uf-List_, {&delim-par})
   no-error
   .
+  if v-list = "ptrl" or v-list = "lgas"
+  then do:
+    entry(2, v-uf-list_,  {&delim-par} ) = {&all}.
+    v-list =  {&all}. 
+  end.
   if num-entries(v-uf-Naim, {&delim-par}) >=4 then do:
     assign
     v-gds-name-width = decimal(entry(3, v-uf-naim,  {&delim-par}))

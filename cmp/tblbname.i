@@ -188,6 +188,11 @@ Creation date: 01/29/07
 &glob bef-table_c-cash-desk-attr c-cash-desk-attr
 &glob bef-table_c-cash-pay c-cash-pay
 &glob bef-table_c-cash-pay-attr c-cash-pay-attr
+&glob bef-table_c-CashBook c-CashBook
+&glob bef-table_c-cashbook-head c-cashbook-head
+&glob bef-table_c-CashBookAttr c-CashBookAttr
+&glob bef-table_c-CashBookRule c-CashBookRule
+&glob bef-table_c-CashBookRuleAttr c-CashBookRuleAttr
 &glob bef-table_c-cbr-bank c-cbr-bank
 &glob bef-table_c-cbr-bank-attr c-cbr-bank-attr
 &glob bef-table_c-cd-clu c-cd-clu
@@ -212,6 +217,7 @@ Creation date: 01/29/07
 &glob bef-table_c-contract c-contract
 &glob bef-table_c-contract-line c-contract-line
 &glob bef-table_c-contract-specif c-contract-specif
+&glob bef-table_c-counter c-counter
 &glob bef-table_c-country c-country
 &glob bef-table_c-country-attr c-country-attr
 &glob bef-table_c-curr-accnt c-curr-accnt
@@ -321,6 +327,7 @@ Creation date: 01/29/07
 &glob bef-table_c-global-state-attr c-global-state-attr
 &glob bef-table_c-goods c-goods
 &glob bef-table_c-goods-attr c-goods-attr
+&glob bef-table_c-goods-attr-any c-goods-attr-any
 &glob bef-table_c-group-period-validity c-group-period-validity
 &glob bef-table_c-group-period-validity-attr c-group-period-validity-attr
 &glob bef-table_c-grp-obj-price c-grp-obj-price
@@ -343,6 +350,8 @@ Creation date: 01/29/07
 &glob bef-table_c-nozzle-attr c-nozzle-attr
 &glob bef-table_c-nzl-hist c-nzl-hist
 &glob bef-table_c-obj-grp-obj-price c-obj-grp-obj-price
+&glob bef-table_c-OperServ c-OperServ
+&glob bef-table_c-OperServAttr c-OperServAttr
 &glob bef-table_c-ord-doc c-ord-doc
 &glob bef-table_c-ord-doc-attr c-ord-doc-attr
 &glob bef-table_c-ord-dtl c-ord-dtl
@@ -396,9 +405,11 @@ Creation date: 01/29/07
 &glob bef-table_c-prod-bc-attr c-prod-bc-attr
 &glob bef-table_c-prod-bc-db-attr c-prod-bc-db-attr
 &glob bef-table_c-profile-by-profile c-profile-by-profile
+&glob bef-table_c-promo-head c-promo-head
 &glob bef-table_c-promo-schedule c-promo-schedule
 &glob bef-table_c-promo-schedule-week c-promo-schedule-week
 &glob bef-table_c-PromoAction c-PromoAction
+&glob bef-table_c-PromoAttr c-PromoAttr
 &glob bef-table_c-PromoCriterion c-PromoCriterion
 &glob bef-table_c-PromoGift c-PromoGift
 &glob bef-table_c-PromoGoods c-PromoGoods
@@ -505,6 +516,10 @@ Creation date: 01/29/07
 &glob bef-table_cash-desk-attr cash-desk-attr
 &glob bef-table_cash-pay cash-pay
 &glob bef-table_cash-pay-attr cash-pay-attr
+&glob bef-table_CashBook CashBook
+&glob bef-table_CashBookAttr CashBookAttr
+&glob bef-table_CashBookRule CashBookRule
+&glob bef-table_CashBookRuleAttr CashBookRuleAttr
 &glob bef-table_cbr-bank cbr-bank
 &glob bef-table_cbr-bank-attr cbr-bank-attr
 &glob bef-table_cd-clu cd-clu
@@ -546,6 +561,7 @@ Creation date: 01/29/07
 &glob bef-table_clients-attr clients-attr
 &glob bef-table_clob-bind clob-bind
 &glob bef-table_clob-data clob-data
+&glob bef-table_Code Code
 &glob bef-table_code-range code-range
 &glob bef-table_condition-keeping condition-keeping
 &glob bef-table_condition-keeping-attr condition-keeping-attr
@@ -556,6 +572,7 @@ Creation date: 01/29/07
 &glob bef-table_contract-line-attr contract-line-attr
 &glob bef-table_contract-specif contract-specif
 &glob bef-table_contract-specif-attr contract-specif-attr
+&glob bef-table_counter counter
 &glob bef-table_country country
 &glob bef-table_country-attr country-attr
 &glob bef-table_criterion-analysis criterion-analysis
@@ -601,6 +618,8 @@ Creation date: 01/29/07
 &glob bef-table_delivery-type-attr delivery-type-attr
 &glob bef-table_delivery-type-subject delivery-type-subject
 &glob bef-table_delivery-type-subject-attr delivery-type-subject-attr
+&glob bef-table_devisPC devisPC
+&glob bef-table_devisPC-attr devisPC-attr
 &glob bef-table_dis-card dis-card
 &glob bef-table_dis-card-long dis-card-long
 &glob bef-table_dis-card-long-attr dis-card-long-attr
@@ -867,6 +886,8 @@ Creation date: 01/29/07
 &glob bef-table_obj-date obj-date
 &glob bef-table_obj-grp-obj-price obj-grp-obj-price
 &glob bef-table_obj-grp-obj-price-attr obj-grp-obj-price-attr
+&glob bef-table_OperServ OperServ
+&glob bef-table_OperServAttr OperServAttr
 &glob bef-table_ord-blank ord-blank
 &glob bef-table_ord-blank-attr ord-blank-attr
 &glob bef-table_ord-chain ord-chain

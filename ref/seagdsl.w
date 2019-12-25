@@ -59,6 +59,9 @@ define variable gds-rec    as recid     no-undo .
 define variable lns-cnt    as integer   no-undo .
 define variable g#log      as logical   no-undo .
 
+define variable v-value    as character no-undo .
+define variable v-type     as character no-undo .
+define variable is-erpRn   as logical no-undo .
 
 define temp-table tt-gds-list no-undo like ub.goods
     field nn as integer
@@ -968,6 +971,20 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     enable  s-artic with frame {&frame-name}.
     Hide      s-name  s-name-cnt in frame {&frame-name}.
     display s-artic with frame {&frame-name}.
+    
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    is-erpRN = logical(v-value) no-error .
+    if error-status:error then is-erpRN = false .
+    
+    if is-erpRN
+    then do :
+      disable
+        b-add
+        b-upd
+        b-del
+      with FRAME {&FRAME-NAME}.
+      menu-item m_item2:sensitive = false .
+    end.
 
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.

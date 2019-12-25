@@ -141,6 +141,10 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,gds-mercury~
 ,gds-mercury-attr~
 ,units-attr~
+,operserv~
+,operservattr~
+,cashbook~
+,cashbookattr~
 ":U.
 
 
@@ -284,6 +288,11 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,cd-event-log-attr~
 ,c-assortment-matrix-goods~
 ,c-gds-obj-prop~
+,upgrade~
+,upgrade-attr~
+,devisPC~
+,devisPC-attr~
+,c-user-log~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -387,6 +396,17 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,fin-code-cor-acc~
 ,thbj-attr~
 ,edi-status~
+,counter~
+,cashbookrule~
+,cashbookruleattr~
+,PromoAction~
+,PromoCriterion~
+,PromoGift~
+,PromoGoods~
+,PromoObject~
+,promo-schedule-week~
+,promo-schedule~
+
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -1177,6 +1197,20 @@ v-custom-except-list-erprn =
 ,dis-time-rule-attr~
 ,vsd~
 ,vsd-attr~
+,operserv~
+,operservattr~
+,cashbook~
+,cashbookattr~
+,cashbookrule~
+,cashbookruleattr~
+,PromoAction~
+,PromoCriterion~
+,PromoGift~
+,PromoGoods~
+,PromoObject~
+,PromoAttr~
+,promo-schedule~
+,promo-schedule-week~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/

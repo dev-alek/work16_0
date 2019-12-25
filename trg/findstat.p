@@ -41,7 +41,7 @@ define variable vss-description as character no-undo init "Перевод статусов для 
 { ref/fd-attr.i }
 { gbl/thbj-def.i }
 { gbl/thbjattr.i }
-
+{ gbl/key-rec.i }
 define variable v-date as date no-undo .
 define variable v-time as integer no-undo .
 define variable v-fact-order as decimal no-undo .
@@ -63,7 +63,16 @@ define variable v-fin-doc-type like ub.fin-doc.fin-doc-type no-undo .
 define variable v-line-rec as recid no-undo .
 define variable v-update-counter-flag as logical no-undo .
 define variable v-update-counter as integer no-undo .
+define variable mValue as character no-undo .
 
+define variable mask-pko as character no-undo .
+define variable mask-rko as character no-undo .
+define variable current-pko-rko as character no-undo .
+define variable current-ruleID as character no-undo .
+define variable v-current-num as integer no-undo .
+define variable v-prev-prn-doc-code as character no-undo .
+define variable v-matches as character no-undo .
+define variable v-key     as character no-undo.
 define buffer buf_fin-doc for ub.fin-doc.
 define buffer buf_fin-statement-line for ub.fin-statement-line.
 define buffer locked_fin-statement-line for ub.fin-statement-line.
@@ -791,22 +800,7 @@ END PROCEDURE.
 procedure auto-fill-prn-doc-code :
 define output parameter p-update-counter-flag as logical no-undo .
 define output parameter p-update-counter as integer no-undo .
-define variable v-value-character as character no-undo .
-define variable v-value-date as date no-undo .
-define variable v-value-decimal as decimal no-undo .
-define variable v-value-integer as INTEGER no-undo .
-define variable v-value-logical AS LOGICAL no-undo .
-define variable v-param-type as character no-undo .
-define variable v-tth as handle no-undo .
-define variable suffix-pko as character no-undo .
-define variable suffix-rko as character no-undo .
-define variable prefix-pko as character no-undo .
-define variable prefix-rko as character no-undo .
-define variable current-pko-rko as character no-undo .
-define variable v-current-num as integer no-undo .
-define variable v-prn-doc-code as character no-undo .
-define variable v-prev-prn-doc-code as character no-undo .
-define variable v-matches as character no-undo .
+
 define variable glog as logical no-undo .
 define variable choice as integer no-undo .
 define variable v-sl as integer no-undo .
@@ -814,9 +808,8 @@ define variable v-pl as integer no-undo .
 define variable v-loc-update-counter-flag as logical no-undo .
 define variable v-my-counter as integer no-undo .
 define variable v-obj-db-num as integer   no-undo .
+define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
 
-assign
-v-tth = buffer thbjattr_thbj-attr:table-handle .
 /*заполним сами если это auto */
 if buf_fin-doc.trn-doc-code <> ''
 and not (buf_fin-doc.obj-type = ''
@@ -824,233 +817,307 @@ and not (buf_fin-doc.obj-type = ''
           buf_fin-doc.obj-code = 0)
 then do:
   { gbl/objdbnum.i buf_fin-doc.obj-type buf_fin-doc.obj-code v-obj-db-num }
-  if v-obj-db-num <> g#db-num then do:
+  if    v-obj-db-num <> g#db-num 
+     or (buf_fin-doc.prn-doc-code <> "" and buf_fin-doc.prn-doc-code <> ?) 
+  then do:
     return.
   end .
-  run adm/shattri.p (
-      input "get":U
-      ,input  buf_fin-doc.obj-type
-      ,input  buf_fin-doc.obj-code
-      ,input  {&attr-fin-doc}
-      ,input  "":U /*p-param-code*/
-      ,output v-value-character
-      ,output v-value-date
-      ,output v-value-decimal
-      ,output v-value-integer
-      ,output v-value-logical
-      ,output v-param-type
-      ,INPUT-OUTPUT table-handle v-tth
-      ) no-error .
-  IF error-status:error then do:
-    &scop my-message  substitute("Ошибка при получении настроек фин.документов НА ОБЪЕКТЕ &1&2:&3&4 &5" ~
-            , buf_fin-doc.obj-type ~
-            , buf_fin-doc.obj-code ~
-            , ~{&new-line~}   ~
-            , error-status:get-message(1) ~
-            , return-value )
-
-  end.
-  for each  thbjattr_thbj-attr where
-            thbjattr_thbj-attr.obj-type = buf_fin-doc.obj-type
-        and thbjattr_thbj-attr.obj-code = buf_fin-doc.obj-code
-        and thbjattr_thbj-attr.upper-prop-code = {&attr-fin-doc}
-  on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
-    case thbjattr_thbj-attr.prop-code:
-      when {&attr-fin-doc_suffix-pko} then do:
-        suffix-pko = thbjattr_thbj-attr.property-value-character.
-      end.
-      when {&attr-fin-doc_suffix-rko} then do:
-        suffix-rko = thbjattr_thbj-attr.property-value-character.
-      end.
-      when {&attr-fin-doc_prefix-pko} then do:
-        prefix-pko = thbjattr_thbj-attr.property-value-character.
-      end.
-      when {&attr-fin-doc_prefix-rko} then do:
-        prefix-rko = thbjattr_thbj-attr.property-value-character.
-      end.
-    end case.
-  end. /*for each  thbjattr_thbj-attr where*/
+  
+  mCashBook = new ibs.th.ref.cashbookstorage () .
+      
+  mask-pko = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "PkoMask") .
+  mask-rko = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "RkoMask") .
+  
+  delete object mCashBook no-error .
+  
+  if mask-pko > ""
+  then.
+  else mask-pko = "[NNNN]/[obj-code]" .
+  if mask-rko > ""
+  then.
+  else mask-rko = "[NNNN]/[obj-code]" .
+/*  run adm/shattri.p (                                                                                                           */
+/*      input "get":U                                                                                                             */
+/*      ,input  buf_fin-doc.obj-type                                                                                              */
+/*      ,input  buf_fin-doc.obj-code                                                                                              */
+/*      ,input  {&attr-fin-doc}                                                                                                   */
+/*      ,input  "":U /*p-param-code*/                                                                                             */
+/*      ,output v-value-character                                                                                                 */
+/*      ,output v-value-date                                                                                                      */
+/*      ,output v-value-decimal                                                                                                   */
+/*      ,output v-value-integer                                                                                                   */
+/*      ,output v-value-logical                                                                                                   */
+/*      ,output v-param-type                                                                                                      */
+/*      ,INPUT-OUTPUT table-handle v-tth                                                                                          */
+/*      ) no-error .                                                                                                              */
+/*  IF error-status:error then do:                                                                                                */
+/*    &scop my-message  substitute("Ошибка при получении настроек фин.документов НА ОБЪЕКТЕ &1&2:&3&4 &5" ~                       */
+/*            , buf_fin-doc.obj-type ~                                                                                            */
+/*            , buf_fin-doc.obj-code ~                                                                                            */
+/*            , ~{&new-line~}   ~                                                                                                 */
+/*            , error-status:get-message(1) ~                                                                                     */
+/*            , return-value )                                                                                                    */
+/*                                                                                                                                */
+/*  end.                                                                                                                          */
+/*  for each  thbjattr_thbj-attr where                                                                                            */
+/*            thbjattr_thbj-attr.obj-type = buf_fin-doc.obj-type                                                                  */
+/*        and thbjattr_thbj-attr.obj-code = buf_fin-doc.obj-code                                                                  */
+/*        and thbjattr_thbj-attr.upper-prop-code = {&attr-fin-doc}                                                                */
+/*  on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):*/
+/*    case thbjattr_thbj-attr.prop-code:                                                                                          */
+/*      when {&attr-fin-doc_suffix-pko} then do:                                                                                  */
+/*        suffix-pko = thbjattr_thbj-attr.property-value-character.                                                               */
+/*      end.                                                                                                                      */
+/*      when {&attr-fin-doc_suffix-rko} then do:                                                                                  */
+/*        suffix-rko = thbjattr_thbj-attr.property-value-character.                                                               */
+/*      end.                                                                                                                      */
+/*      when {&attr-fin-doc_prefix-pko} then do:                                                                                  */
+/*        prefix-pko = thbjattr_thbj-attr.property-value-character.                                                               */
+/*      end.                                                                                                                      */
+/*      when {&attr-fin-doc_prefix-rko} then do:                                                                                  */
+/*        prefix-rko = thbjattr_thbj-attr.property-value-character.                                                               */
+/*      end.                                                                                                                      */
+/*    end case.                                                                                                                   */
+/*  end. /*for each  thbjattr_thbj-attr where*/                                                                                   */
+   
+  subscribe   to "getCounter" anywhere run-procedure "Mycounter". 
+   
   case buf_fin-doc.fin-ext-doc-type:
     when {&FDEDT_Income_Cash} then do:
+      find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
+                                           and ub.CashBookRule.Obj-type = buf_fin-doc.obj-type
+                                           and ub.CashBookRule.Obj-code = buf_fin-doc.obj-code
+                                           and ub.CashBookRule.Code = "currPko"
+                                           no-error .
+      if not available ub.CashBookRule
+      then do :
+        create ub.CashBookRule .
+        assign
+          ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
+          ub.CashBookRule.Obj-type = buf_fin-doc.obj-type    
+          ub.CashBookRule.Obj-code = buf_fin-doc.obj-code    
+          ub.CashBookRule.Code = "currPko"    
+          ub.CashBookRule.Status_ = 0
+          ub.CashBookRule.RuleValue = "1"                       
+        .
+      end.  
+      run gen-key-rec in this-procedure ( input {&table_CashBookRule}
+                                         ,input (buffer CashBookRule:handle)
+                                         ,output v-key).                                     
+                                        
       assign
-      current-pko-rko = {&attr-fin-doc_current-pko}.
+        current-pko-rko = "currPKO" 
+        current-ruleID = v-key
+      .
+      run utl/maskproc.p(parparentproc, mask-pko, "cashbook", buf_fin-doc.CashBookId, output mValue).
+      
     end.
     when {&FDEDT_expense_cash} then do:
+      find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
+                                           and ub.CashBookRule.Obj-type = buf_fin-doc.obj-type
+                                           and ub.CashBookRule.Obj-code = buf_fin-doc.obj-code
+                                           and ub.CashBookRule.Code = "currRko"
+                                           no-error .
+      if not available ub.CashBookRule
+      then do :
+        create ub.CashBookRule .
+        assign
+          ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
+          ub.CashBookRule.Obj-type = buf_fin-doc.obj-type    
+          ub.CashBookRule.Obj-code = buf_fin-doc.obj-code    
+          ub.CashBookRule.Code = "currRko"  
+          ub.CashBookRule.Status_ = 0 
+          ub.CashBookRule.RuleValue = "1"                         
+        .
+      end.
+      
+      run gen-key-rec in this-procedure ( input {&table_CashBookRule}
+                                         ,input (buffer CashBookRule:handle)
+                                         ,output v-key).                                     
       assign
-      current-pko-rko = {&attr-fin-doc_current-rko}.
+        current-pko-rko = "currRKO" 
+        current-ruleID = v-key
+      .
+      run utl/maskproc.p(parparentproc, mask-rko, "cashbook", buf_fin-doc.CashBookId, output mValue).
+      
     end.
   end case.
-
-  find first buf_thbj-attr exclusive-lock where
-          buf_thbj-attr.upper-prop-code = {&attr-fin-doc}
-      and buf_thbj-attr.prop-code = current-pko-rko
-      and buf_thbj-attr.obj-type = buf_fin-doc.obj-type
-      and buf_thbj-attr.obj-code = buf_fin-doc.obj-code no-error.
-  if not available buf_thbj-attr then do:
-    find first thbjattr_thbj-attr where
-        thbjattr_thbj-attr.obj-type = buf_fin-doc.obj-type
-    and thbjattr_thbj-attr.obj-code = buf_fin-doc.obj-code
-    and thbjattr_thbj-attr.upper-prop-code = {&attr-fin-doc}
-    and thbjattr_thbj-attr.prop-code = current-pko-rko.
-    run thbjattr_write in this-procedure (
-                                            input buf_fin-doc.obj-type
-                                          ,input buf_fin-doc.obj-code
-                                          ,input {&attr-fin-doc}
-                                          ,input current-pko-rko
-                                          ,input ''
-                                          ,input ?
-                                          ,input 0.0
-                                          ,input 0
-                                          ,input no ).
-    find first buf_thbj-attr exclusive-lock where
-            buf_thbj-attr.upper-prop-code = {&attr-fin-doc}
-        and buf_thbj-attr.prop-code = current-pko-rko
-        and buf_thbj-attr.obj-type = buf_fin-doc.obj-type
-        and buf_thbj-attr.obj-code = buf_fin-doc.obj-code .
-  end.
-  assign
-  v-current-num = buf_thbj-attr.property-value-integer.
-  case buf_fin-doc.fin-ext-doc-type:
-    when {&FDEDT_income_cash} then do:
-      assign
-      v-prn-doc-code = substitute("&1&2&3"
-                                  ,prefix-pko
-                                  ,v-current-num  + 1
-                                  ,suffix-pko
-                                  )
-      v-prev-prn-doc-code = substitute("&1&2&3"
-                              ,prefix-pko
-                              ,v-current-num
-                              ,suffix-pko
-                              )
-      v-matches = substitute("&1*&2"
-                                ,prefix-rko
-                                ,suffix-rko
-                                )
-      v-pl = length(prefix-pko)
-      v-sl = length(suffix-pko)
-      .
-    end.
-    when {&FDEDT_expense_cash} then do:
-      assign
-      current-pko-rko = {&attr-fin-doc_current-pko}.
-      assign
-      v-prn-doc-code = substitute("&1&2&3"
-                                  ,prefix-rko
-                                  ,v-current-num  + 1
-                                  ,suffix-rko
-                                  )
-      v-prev-prn-doc-code = substitute("&1&2&3"
-                              ,prefix-rko
-                              ,v-current-num
-                              ,suffix-rko
-       )
-       v-matches = substitute("&1*&2"
-                                  ,prefix-rko
-                                  ,suffix-rko
-                                  )
-      v-pl = length(prefix-rko)
-      v-sl = length(suffix-rko)
-      .
-    end.
-  end case.
+  
+  unsubscribe to "getCounter".
+  
+/*                                                                      */
+/*  find first buf_thbj-attr exclusive-lock where                       */
+/*          buf_thbj-attr.upper-prop-code = {&attr-fin-doc}             */
+/*      and buf_thbj-attr.prop-code = current-pko-rko                   */
+/*      and buf_thbj-attr.obj-type = buf_fin-doc.obj-type               */
+/*      and buf_thbj-attr.obj-code = buf_fin-doc.obj-code no-error.     */
+/*  if not available buf_thbj-attr then do:                             */
+/*    find first thbjattr_thbj-attr where                               */
+/*        thbjattr_thbj-attr.obj-type = buf_fin-doc.obj-type            */
+/*    and thbjattr_thbj-attr.obj-code = buf_fin-doc.obj-code            */
+/*    and thbjattr_thbj-attr.upper-prop-code = {&attr-fin-doc}          */
+/*    and thbjattr_thbj-attr.prop-code = current-pko-rko.               */
+/*    run thbjattr_write in this-procedure (                            */
+/*                                            input buf_fin-doc.obj-type*/
+/*                                          ,input buf_fin-doc.obj-code */
+/*                                          ,input {&attr-fin-doc}      */
+/*                                          ,input current-pko-rko      */
+/*                                          ,input ''                   */
+/*                                          ,input ?                    */
+/*                                          ,input 0.0                  */
+/*                                          ,input 0                    */
+/*                                          ,input no ).                */
+/*    find first buf_thbj-attr exclusive-lock where                     */
+/*            buf_thbj-attr.upper-prop-code = {&attr-fin-doc}           */
+/*        and buf_thbj-attr.prop-code = current-pko-rko                 */
+/*        and buf_thbj-attr.obj-type = buf_fin-doc.obj-type             */
+/*        and buf_thbj-attr.obj-code = buf_fin-doc.obj-code .           */
+/*  end.                                                                */
+/*  assign                                                              */
+/*  v-current-num = buf_thbj-attr.property-value-integer.               */
+  
+  v-prn-doc-code = mValue.
+/*  case buf_fin-doc.fin-ext-doc-type:                 */
+/*    when {&FDEDT_income_cash} then do:               */
+/*      assign                                         */
+/*      v-prn-doc-code = substitute("&1&2&3"           */
+/*                                  ,prefix-pko        */
+/*                                  ,v-current-num  + 1*/
+/*                                  ,suffix-pko        */
+/*                                  )                  */
+/*      v-prev-prn-doc-code = substitute("&1&2&3"      */
+/*                              ,prefix-pko            */
+/*                              ,v-current-num         */
+/*                              ,suffix-pko            */
+/*                              )                      */
+/*      v-matches = substitute("&1*&2"                 */
+/*                                ,prefix-rko          */
+/*                                ,suffix-rko          */
+/*                                )                    */
+/*      v-pl = length(prefix-pko)                      */
+/*      v-sl = length(suffix-pko)                      */
+/*      .                                              */
+/*    end.                                             */
+/*    when {&FDEDT_expense_cash} then do:              */
+/*      assign                                         */
+/*      current-pko-rko = {&attr-fin-doc_current-pko}. */
+/*      assign                                         */
+/*      v-prn-doc-code = substitute("&1&2&3"           */
+/*                                  ,prefix-rko        */
+/*                                  ,v-current-num  + 1*/
+/*                                  ,suffix-rko        */
+/*                                  )                  */
+/*      v-prev-prn-doc-code = substitute("&1&2&3"      */
+/*                              ,prefix-rko            */
+/*                              ,v-current-num         */
+/*                              ,suffix-rko            */
+/*       )                                             */
+/*       v-matches = substitute("&1*&2"                */
+/*                                  ,prefix-rko        */
+/*                                  ,suffix-rko        */
+/*                                  )                  */
+/*      v-pl = length(prefix-rko)                      */
+/*      v-sl = length(suffix-rko)                      */
+/*      .                                              */
+/*    end.                                             */
+/*  end case.                                          */
   if buf_fin-doc.doc-author = {&auto} then do:
     assign
     buf_fin-doc.prn-doc-code = v-prn-doc-code.
     p-update-counter-flag = yes.
-    p-update-counter = v-current-num + 1.
+/*    p-update-counter = v-current-num + 1.*/
   end.
-  if buf_fin-doc.doc-author = {&manual} then do:
-    if v-prn-doc-code <> buf_fin-doc.prn-doc-code then do:
-      if buf_fin-doc.prn-doc-code matches v-matches then do:
-        define variable v-dop as character no-undo .
-        v-dop = buf_fin-doc.prn-doc-code.
-        if v-pl > 0 then do:
-          v-dop = substring(buf_fin-doc.prn-doc-code, v-pl + 1).
-        end.
-        if v-sl > 0 then do:
-          v-dop = substring(v-dop, 1, length(v-dop) - v-sl)      .
-        end.
-        if trim(v-dop, "01234567890") = ""
-        and length(v-dop) < 9
-        then do:
-          v-loc-update-counter-flag = yes.
-          v-my-counter = integer(v-dop).
-        end.
-      end.
-      run gbl/d-askw.w (input "Уточнение"
-                      ,input  substitute("Введенный Вами НОМЕР платежа - &1&2" +
-                                            "номер предущего платежа - &3&2" +
-                                            "Какой НОМЕР назначить ПЛАТЕЖУ?"
-                                            , buf_fin-doc.prn-doc-code
-                                            , {&new-line}
-                                            , v-prn-doc-code
-                                            )
-                      ,input "|^"
-                      ,input substitute("&1|&1-->&3|&2-->|Отменить"
-                                      , buf_fin-doc.prn-doc-code
-                                      , v-prn-doc-code
-                                      , (if not v-loc-update-counter-flag then "^disable" else ""))
-                      ,input substitute("Оставить &1|Оставить &1 и соответственно сдвинуть счетчик|Следующий по порядку - &2 и сдвинуть счетчик номеров|Не закрывать платеж"
-                                        , buf_fin-doc.prn-doc-code
-                                        , v-prn-doc-code
-                                        )
-                      ,input 1
-                      ,input 4
-                      ,output choice) no-error.
-
-    if choice = 4 then do:
-        undo, return error .
-      end.
-      case choice:
-        when 1 then do:
-          /*ничего не надо делать*/
-        end.
-        when 2 then do:
-          p-update-counter-flag = yes.
-          p-update-counter = integer(v-dop).
-        end.
-        when 3 then do:
-          assign
-          buf_fin-doc.prn-doc-code = v-prn-doc-code
-          .
-          p-update-counter-flag = yes.
-          p-update-counter = v-current-num + 1.
-        end.
-      end case.
-    end.
-    else do:
-      run gbl/d-askw.w (input "Уточнение"
-                      ,input "Сдвинуть счетчик номеров документов?"
-                      ,input "|"
-                      ,input substitute("Да|Нет|Отменить")
-                      ,input substitute("Сдвинуть счетчик|Не сдвигать|Не закрывать платеж")
-                      ,input 1
-                      ,input 3
-                      ,output choice) no-error.
-    if choice = 4 then do:
-        undo, return error .
-      end.
-      case choice:
-        when 1 then do:
-          p-update-counter-flag = yes.
-          p-update-counter = v-current-num + 1.
-        end.
-      end case.
-    end.
-  end.
+/*  if buf_fin-doc.doc-author = {&manual} then do:                                                                                                                            */
+/*    if v-prn-doc-code <> buf_fin-doc.prn-doc-code then do:                                                                                                                  */
+/*      if buf_fin-doc.prn-doc-code matches v-matches then do:                                                                                                                */
+/*        define variable v-dop as character no-undo .                                                                                                                        */
+/*        v-dop = buf_fin-doc.prn-doc-code.                                                                                                                                   */
+/*        if v-pl > 0 then do:                                                                                                                                                */
+/*          v-dop = substring(buf_fin-doc.prn-doc-code, v-pl + 1).                                                                                                            */
+/*        end.                                                                                                                                                                */
+/*        if v-sl > 0 then do:                                                                                                                                                */
+/*          v-dop = substring(v-dop, 1, length(v-dop) - v-sl)      .                                                                                                          */
+/*        end.                                                                                                                                                                */
+/*        if trim(v-dop, "01234567890") = ""                                                                                                                                  */
+/*        and length(v-dop) < 9                                                                                                                                               */
+/*        then do:                                                                                                                                                            */
+/*          v-loc-update-counter-flag = yes.                                                                                                                                  */
+/*          v-my-counter = integer(v-dop).                                                                                                                                    */
+/*        end.                                                                                                                                                                */
+/*      end.                                                                                                                                                                  */
+/*      run gbl/d-askw.w (input "Уточнение"                                                                                                                                   */
+/*                      ,input  substitute("Введенный Вами НОМЕР платежа - &1&2" +                                                                                            */
+/*                                            "номер предущего платежа - &3&2" +                                                                                              */
+/*                                            "Какой НОМЕР назначить ПЛАТЕЖУ?"                                                                                                */
+/*                                            , buf_fin-doc.prn-doc-code                                                                                                      */
+/*                                            , {&new-line}                                                                                                                   */
+/*                                            , v-prn-doc-code                                                                                                                */
+/*                                            )                                                                                                                               */
+/*                      ,input "|^"                                                                                                                                           */
+/*                      ,input substitute("&1|&1-->&3|&2-->|Отменить"                                                                                                         */
+/*                                      , buf_fin-doc.prn-doc-code                                                                                                            */
+/*                                      , v-prn-doc-code                                                                                                                      */
+/*                                      , (if not v-loc-update-counter-flag then "^disable" else ""))                                                                         */
+/*                      ,input substitute("Оставить &1|Оставить &1 и соответственно сдвинуть счетчик|Следующий по порядку - &2 и сдвинуть счетчик номеров|Не закрывать платеж"*/
+/*                                        , buf_fin-doc.prn-doc-code                                                                                                          */
+/*                                        , v-prn-doc-code                                                                                                                    */
+/*                                        )                                                                                                                                   */
+/*                      ,input 1                                                                                                                                              */
+/*                      ,input 4                                                                                                                                              */
+/*                      ,output choice) no-error.                                                                                                                             */
+/*                                                                                                                                                                            */
+/*    if choice = 4 then do:                                                                                                                                                  */
+/*        undo, return error .                                                                                                                                                */
+/*      end.                                                                                                                                                                  */
+/*      case choice:                                                                                                                                                          */
+/*        when 1 then do:                                                                                                                                                     */
+/*          /*ничего не надо делать*/                                                                                                                                         */
+/*        end.                                                                                                                                                                */
+/*        when 2 then do:                                                                                                                                                     */
+/*          p-update-counter-flag = yes.                                                                                                                                      */
+/*          p-update-counter = integer(v-dop).                                                                                                                                */
+/*        end.                                                                                                                                                                */
+/*        when 3 then do:                                                                                                                                                     */
+/*          assign                                                                                                                                                            */
+/*          buf_fin-doc.prn-doc-code = v-prn-doc-code                                                                                                                         */
+/*          .                                                                                                                                                                 */
+/*          p-update-counter-flag = yes.                                                                                                                                      */
+/*          p-update-counter = v-current-num + 1.                                                                                                                             */
+/*        end.                                                                                                                                                                */
+/*      end case.                                                                                                                                                             */
+/*    end.                                                                                                                                                                    */
+/*    else do:                                                                                                                                                                */
+/*      run gbl/d-askw.w (input "Уточнение"                                                                                                                                   */
+/*                      ,input "Сдвинуть счетчик номеров документов?"                                                                                                         */
+/*                      ,input "|"                                                                                                                                            */
+/*                      ,input substitute("Да|Нет|Отменить")                                                                                                                  */
+/*                      ,input substitute("Сдвинуть счетчик|Не сдвигать|Не закрывать платеж")                                                                                 */
+/*                      ,input 1                                                                                                                                              */
+/*                      ,input 3                                                                                                                                              */
+/*                      ,output choice) no-error.                                                                                                                             */
+/*      if choice = 4 then do:                                                                                                                                                */
+/*        undo, return error .                                                                                                                                                */
+/*      end.                                                                                                                                                                  */
+/*      case choice:                                                                                                                                                          */
+/*        when 1 then do:                                                                                                                                                     */
+/*          p-update-counter-flag = yes.                                                                                                                                      */
+/*          p-update-counter = v-current-num + 1.                                                                                                                             */
+/*        end.                                                                                                                                                                */
+/*      end case.                                                                                                                                                             */
+/*    end.                                                                                                                                                                    */
+/*  end.                                                                                                                                                                      */
 end. /*if p-doc-author = {&auto}*/
 end procedure. /* auto-fill-prn-doc-code */
 
 procedure release-auto-fill-prn-doc-code :
 define input parameter p-update as logical no-undo .
 define input parameter p-counter as integer no-undo .
-if available buf_thbj-attr then do:
-  if p-update then do:
-    buf_thbj-attr.property-value-integer = p-counter.
-  end.
-  release buf_thbj-attr.
-end.
+/*if available buf_thbj-attr then do:                  */
+/*  if p-update then do:                               */
+/*    buf_thbj-attr.property-value-integer = p-counter.*/
+/*  end.                                               */
+/*  release buf_thbj-attr.                             */
+/*end.                                                 */
 end procedure. /* release-auto-fill-prn-doc-code */
 
 
@@ -1138,3 +1205,12 @@ do while true:
   end.
 end.
 end procedure. /* get-fact-num */
+
+procedure Mycounter:
+define input  parameter iFileName as character no-undo.
+define input  parameter ikey      as character no-undo.
+define input  parameter icode     as character no-undo.
+define output parameter oCount    as int64 no-undo.
+run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko  ,output oCount    ). 
+end procedure.
+

@@ -82,6 +82,9 @@ define variable v-list-attr-mandatory-gds-ret-wayb      as character no-undo.
 define variable v-list-attr-mandatory-gds-exp-wayb-full as character no-undo.
 define variable v-list-attr-mandatory-gds-exp-wayb      as character no-undo.
 
+define variable v-list-reasons-for-return-full  as character no-undo .
+define variable v-list-reasons-for-return       as character no-undo .
+
 
 assign
 v-tth  = buffer thbjattr_thbj-attr:table-handle .
@@ -605,6 +608,11 @@ DEFINE BUTTON B-25
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
+     
+DEFINE BUTTON B-26 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON B-ex 
      IMAGE-UP FILE "cmp/update.bmp":U
@@ -625,6 +633,11 @@ DEFINE BUTTON B-set_attr-mandatory-gds-ret-wayb
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
      SIZE 2.63 BY 1.08.
+     
+DEFINE BUTTON B-set_reasons-for-return 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.     
 
 DEFINE BUTTON B-set_attr-PN 
      IMAGE-UP FILE "cmp/update.bmp":U
@@ -642,6 +655,10 @@ DEFINE VARIABLE attr-mandatory-gds-in-wayb AS CHARACTER
 DEFINE VARIABLE attr-mandatory-gds-ret-wayb AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 35.5 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE reasons-for-return AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 35.5 BY 1 NO-UNDO.     
 
 DEFINE VARIABLE attr-PN AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
@@ -661,6 +678,10 @@ DEFINE VARIABLE v-attr-mandatory-gds-in-wayb AS CHARACTER FORMAT "X(256)":U
      SIZE 28 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-attr-mandatory-gds-ret-wayb AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 28 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE v-reasons-for-return AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 28 BY 1 NO-UNDO.
 
@@ -721,6 +742,10 @@ DEFINE IMAGE I-attr-mandatory-gds-in-wayb
      SIZE 3 BY 1.
 
 DEFINE IMAGE I-attr-mandatory-gds-ret-wayb
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+     
+DEFINE IMAGE I-reasons-for-return
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
@@ -873,6 +898,9 @@ DEFINE FRAME page-2
      B-25 AT ROW 16.75 COL 6.88 WIDGET-ID 520
      B-set_attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 39 WIDGET-ID 522
      attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 42 NO-LABEL WIDGET-ID 532
+     B-26 AT ROW 18.8 COL 2.88 WIDGET-ID 620
+     B-set_reasons-for-return AT ROW 18.8 COL 35 WIDGET-ID 622
+     reasons-for-return AT ROW 18.8 COL 38 NO-LABEL WIDGET-ID 632
      B-21 AT ROW 17.79 COL 2.88 WIDGET-ID 496
      edit-fact-wayb AT ROW 17.79 COL 6 WIDGET-ID 498
      v-reasonm AT ROW 1.13 COL 8.75 NO-LABEL WIDGET-ID 242
@@ -915,6 +943,8 @@ DEFINE FRAME page-2
      I-attr-mandatory-gds-in-wayb AT ROW 14.75 COL 5 WIDGET-ID 508
      I-attr-mandatory-gds-ret-wayb AT ROW 15.75 COL 5 WIDGET-ID 516
      I-attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 5 WIDGET-ID 524
+     v-reasons-for-return AT ROW 18.8 COL 4.5 COLON-ALIGNED NO-LABEL WIDGET-ID 626
+     I-reasons-for-return AT ROW 18.8 COL 1 WIDGET-ID 624
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.63 ROW 2.33
@@ -1172,6 +1202,9 @@ ASSIGN
 
 ASSIGN 
        attr-mandatory-gds-ret-wayb:READ-ONLY IN FRAME page-2        = TRUE.
+       
+ASSIGN 
+       reasons-for-return:READ-ONLY IN FRAME page-2        = TRUE.       
 
 ASSIGN 
        attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
@@ -1184,6 +1217,9 @@ ASSIGN
 
 ASSIGN 
        v-attr-mandatory-gds-ret-wayb:READ-ONLY IN FRAME page-2        = TRUE.
+       
+ASSIGN 
+       v-reasons-for-return:READ-ONLY IN FRAME page-2        = TRUE.
 
 ASSIGN 
        v-attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
@@ -1512,6 +1548,20 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-26
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-26 Dialog-Frame
+ON CHOOSE OF B-26 IN FRAME page-2
+DO:
+  run gbl/v-taobj.w
+      ({&attr-nakl_par},
+       "reasons-for-return"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define FRAME-NAME page-1
 &Scoped-define SELF-NAME B-3
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-3 Dialog-Frame
@@ -1658,18 +1708,33 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &Scoped-define SELF-NAME B-set_attr-mandatory-gds-ret-wayb
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_attr-mandatory-gds-ret-wayb Dialog-Frame
 ON CHOOSE OF B-set_attr-mandatory-gds-ret-wayb IN FRAME page-2
 DO:
-  run select-attr-mandat-wayb  in this-procedure
+  run select-attr-mandat-wayb in this-procedure
     ( input v-list-attr-mandatory-gds-ret-wayb,
       input v-list-attr-mandatory-gds-ret-wayb-full,
       input-output attr-mandatory-gds-ret-wayb
     )
     .
   assign attr-mandatory-gds-ret-wayb:screen-value = attr-mandatory-gds-ret-wayb.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-set_reasons-for-return
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_reasons-for-return Dialog-Frame
+ON CHOOSE OF B-set_reasons-for-return IN FRAME page-2
+DO:
+  run select-reasons-for-return  in this-procedure
+    ( input v-list-reasons-for-return,
+      input v-list-reasons-for-return-full,
+      input-output reasons-for-return
+    )
+    .
+  assign reasons-for-return:screen-value = reasons-for-return.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1762,6 +1827,15 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME I-reasons-for-return
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-reasons-for-return Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-reasons-for-return IN FRAME page-2
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME I-attr-PN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-attr-PN Dialog-Frame
@@ -2222,6 +2296,7 @@ define variable loc#log as logical   no-undo .
     run init-tt.
     RUN proc-init-EX.
     RUN proc-init-attr-PN.
+    RUN proc-init-reasons-for-return.
     run enable_UI.
     run init-proc.
     apply "choose" to button-1 .
@@ -2297,28 +2372,29 @@ PROCEDURE enable_UI :
   {&OPEN-BROWSERS-IN-QUERY-page-1}
   DISPLAY reasonm back-date not-ord neg-ask vat-goods inv-ship round-vat-sum 
           gtd-to-imp-prod exc-max-qnty attr-PN attr-mandatory-gds-in-wayb 
-          attr-mandatory-gds-ret-wayb attr-mandatory-gds-exp-wayb edit-fact-wayb 
+          attr-mandatory-gds-ret-wayb attr-mandatory-gds-exp-wayb reasons-for-return edit-fact-wayb 
           v-reasonm v-reasonme reasonme v-back-date v-not-ord v-neg-ask 
           v-vat-goods v-inv-ship v-round-vat-sum v-gtd-to-imp-prod 
           v-exc-max-qnty v-attr-PN v-attr-mandatory-gds-in-wayb 
           v-attr-mandatory-gds-ret-wayb v-attr-mandatory-gds-exp-wayb 
-          v-edit-fact-wayb 
+          v-edit-fact-wayb v-reasons-for-return
       WITH FRAME page-2.
   ENABLE I-reasonm I-back-date I-not-ord I-reasonme I-neg-ask I-vat-goods 
          I-inv-ship I-round-vat-sum I-gtd-to-imp-prod I-exc-max-qnty I-attr-PN 
-         I-edit-fact-wayb I-attr-mandatory-gds-in-wayb 
+         I-edit-fact-wayb I-attr-mandatory-gds-in-wayb I-reasons-for-return
          I-attr-mandatory-gds-ret-wayb I-attr-mandatory-gds-exp-wayb B-11 
          reasonm B-14 B-ex back-date B-12 B-13 not-ord B-15 neg-ask B-16 
          vat-goods B-17 inv-ship B-18 round-vat-sum B-19 gtd-to-imp-prod B-20 
          exc-max-qnty B-22 B-set_attr-PN attr-PN B-23 
          B-set_attr-mandatory-gds-in-wayb attr-mandatory-gds-in-wayb B-24 
          B-set_attr-mandatory-gds-ret-wayb attr-mandatory-gds-ret-wayb B-25 
+         B-set_reasons-for-return reasons-for-return B-26
          B-set_attr-mandatory-gds-exp-wayb attr-mandatory-gds-exp-wayb B-21 
          edit-fact-wayb v-reasonm v-reasonme reasonme v-back-date v-not-ord 
          v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum v-gtd-to-imp-prod 
          v-exc-max-qnty v-attr-PN v-attr-mandatory-gds-in-wayb 
          v-attr-mandatory-gds-ret-wayb v-attr-mandatory-gds-exp-wayb 
-         v-edit-fact-wayb 
+         v-edit-fact-wayb v-reasons-for-return
       WITH FRAME page-2.
   {&OPEN-BROWSERS-IN-QUERY-page-2}
 END PROCEDURE.
@@ -2609,6 +2685,11 @@ FOR EACH thbjattr_thbj-attr
 {&telo1}
 
 &scop n-page 2
+&scop pole reasons-for-return
+&scop type character
+{&telo1}
+
+&scop n-page 2
 &scop pole edit-fact-wayb
 &scop type logical
 {&telo1}
@@ -2757,6 +2838,9 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 {&telo2}
 
 &scop pole attr-mandatory-gds-exp-wayb
+{&telo2}
+
+&scop pole reasons-for-return
 {&telo2}
 
 &scop pole edit-fact-wayb
@@ -2911,6 +2995,7 @@ define variable v-found as decimal   no-undo .
   hide attr-mandatory-gds-in-wayb in frame page-2 .
   hide attr-mandatory-gds-ret-wayb in frame page-2 .
   hide attr-mandatory-gds-exp-wayb in frame page-2 .
+  hide reasons-for-return in frame page-2 .
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2923,6 +3008,31 @@ PROCEDURE init-tt :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-init-reasons-for-return Dialog-Frame 
+PROCEDURE proc-init-reasons-for-return :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define buffer buf_trn-reason for ub.trn-reason .
+
+for each buf_trn-reason no-lock :
+  assign
+    v-list-reasons-for-return       = v-list-reasons-for-return + string(buf_trn-reason.reason-code) + ","
+    v-list-reasons-for-return-full  = v-list-reasons-for-return-full + buf_trn-reason.reason-name + {&delim-flf}
+  .  
+end.
+assign
+  v-list-reasons-for-return     = trim(v-list-reasons-for-return, ",")
+  v-list-reasons-for-return-full = trim(v-list-reasons-for-return-full, {&delim-flf})
+. 
 
 END PROCEDURE.
 
@@ -3270,6 +3380,77 @@ else v-mode = 1 .
           p-attr-mandat-wayb = p-attr-mandat-wayb + temp_twowin_itemsSelected_col.itmExtKey + "," .
         end.
         p-attr-mandat-wayb = trim(p-attr-mandat-wayb, ",") .
+    end.
+end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-attr-mandat-wayb Dialog-Frame 
+PROCEDURE select-reasons-for-return :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define input  parameter p-list-reasons-for-return       as character no-undo.
+define input  parameter p-list-reasons-for-return-full  as character no-undo.
+define input-output parameter p-reasons-for-return      as character no-undo.
+
+define variable v-counter       as integer      no-undo.
+define variable v-label         as character    no-undo.
+define variable v-value         as character    no-undo.
+define variable v-list          as character    no-undo.
+define variable v-changed       as logical      no-undo.
+define variable v-accepted      as logical      no-undo.
+define variable V-EX            as logical      no-undo.
+define variable v-mode          as integer      no-undo.
+
+do
+with frame {&frame-name}
+on error undo, return error
+:
+if p-mode = {&lookup} then v-mode = 0 .
+else v-mode = 1 .
+
+    run twowin_clear in this-procedure.
+
+    do v-counter = 1 to num-entries( p-list-reasons-for-return-full, {&delim-flf})
+    on error undo, return error
+    :
+        assign
+            v-label = entry( v-counter, p-list-reasons-for-return-full, {&delim-flf} )
+            v-value = entry( v-counter, p-list-reasons-for-return )
+            v-ex = false
+        .
+           if  lookup (v-value , p-reasons-for-return ) > 0 then  v-ex = true .
+           else v-ex = false .
+        run twowin_add-item in this-procedure (
+              input v-value
+            , input v-label
+            , input substitute( "Основания: &1", v-VALUE)
+            , input  V-EX
+        ).
+    end.        /* do */
+    run gbl/twowin.w (
+          input ?
+        , input v-mode
+        , input "Выбор оснований для возврата":U
+        , input "":U
+        , input "&Тест"
+        , input table temp_twowin_items
+        , output table temp_twowin_itemsSelected_col
+        , output v-changed
+        , output v-accepted
+    ).
+    if v-changed then do:
+        p-reasons-for-return = "" .
+        for each temp_twowin_itemsSelected_col :
+          p-reasons-for-return = p-reasons-for-return + temp_twowin_itemsSelected_col.itmExtKey + "," .
+        end.
+        p-reasons-for-return = trim(p-reasons-for-return, ",") .
     end.
 end.
 

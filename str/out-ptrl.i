@@ -28,6 +28,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     { str/rvsttdef.i rvs           }
     { ref/gds-attr.i }
     { str/is-gas.i }
+    { str/is-sug.i }
     { str/placelib.i }
     
     define variable v-prt-car-num          as character    no-undo .
@@ -662,6 +663,21 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                and is-gas(buf_goods.gds-code) then do:
                
                 run str/rvs-lin-mask.w
+                  (input  parparentproc
+                  ,input  recid( buf_rvs-line )
+                  ,input  p-action
+                  ,input  substitute(" # &1 товар &2 &3 &4  складское место &5"
+                                    ,buf_rvs-doc.rvs-code
+                                    ,buf_goods.artic
+                                    ,buf_goods.prod-type
+                                    ,buf_goods.prod-code
+                                    ,v-pl-code)) no-error.
+            end.
+            else
+            if not error-status :error 
+            and is-sug(buf_goods.gds-code) then do:
+               
+                run str/rvs-lin-sug.w
                   (input  parparentproc
                   ,input  recid( buf_rvs-line )
                   ,input  p-action

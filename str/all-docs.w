@@ -125,7 +125,7 @@ define variable v-sale             as   logical               no-undo.
 { str/all-doca.i {&bef-trdcattr-acc-ship       } }
 { str/all-doca.i {&bef-trdcattr-delivery-date  } }
 
-
+define variable v-is-lgas as logical no-undo.
 define variable p-par as character no-undo .
 define new shared buffer t-doc for ub.trn-doc.
 
@@ -2508,62 +2508,72 @@ assign
 
 
 define variable l-open-query as logical   no-undo .
-if can-do ({&work} + "," + {&company} + "," + {&g___object} + "," + {&choose}, parlist-mode) then do:
-  run modes-1-a (
+if v-is-lgas then do:
+
+  run modes-lgas (
     p-open-query     ,
     p-find-next      ,
     p-find-condition ,
     fnc              ).
 end.
-else do:
-  if can-do ({&type} + "," + {&status} + "," + 'status-all' +  "," + 'status-all-hold' + "," + {&flag} + "," + {&in_} + "," + {&shipping} + "," + "invert":u, parlist-mode) then do:
-    run modes-1-b (
+  else do:
+  if can-do ({&work} + "," + {&company} + "," + {&g___object} + "," + {&choose}, parlist-mode) then do:
+    run modes-1-a (
       p-open-query     ,
       p-find-next      ,
       p-find-condition ,
       fnc              ).
   end.
   else do:
-    if can-do( {&invoice} + "-host," + {&invoice} + "-obj"  + ",no-def,yes-gen-incfo,yes-gen-expfo,yes-gen-fo,yes-gen-buyer" , parlist-mode ) then do:
-      run modes-2 (
+    if can-do ({&type} + "," + {&status} + "," + 'status-all' +  "," + 'status-all-hold' + "," + {&flag} + "," + {&in_} + "," + {&shipping} + "," + "invert":u, parlist-mode) then do:
+      run modes-1-b (
         p-open-query     ,
         p-find-next      ,
         p-find-condition ,
         fnc              ).
     end.
     else do:
-      if parlist-mode = "client-income":u then do:
-        if fnc = "open" then do:
-          assign
-            frame {&frame-name}:title = "Приходы от контрагента : " + sch-cli.obj-name
-            objects = 1
-          .
-          assign filter-point = parlist-mode + {&delim-par} + parlist-mode + {&delim-par} + "yes".
-
-
-          { gbl/fltopend.i
-            &where-cond = "t-doc.cli-type  = parschcli-type  ~
-                         and t-doc.cli-code  = parschcli-code ~
-                         and t-doc.host-code = par-host-code  ~
-                         and t-doc.ext-doc-type = parext-doc-type ~
-                           "
-            &dyn_where-cond = " substitute ( ' ~
-                             t-doc.cli-type  = &1&2&1  ~
-                         and t-doc.cli-code  = &3 ~
-                         and t-doc.host-code = &4  ~
-                         and t-doc.ext-doc-type = &1&5&1 ~
-                         ', ~{&double-quote~}, parschcli-type , parschcli-code, par-host-code , parext-doc-type  )"
-
-             &use-indFIRST = " use-index cli-date "
-            }
-        end.
-      end.
-      else do:
-        run modes-3 (
+      if can-do( {&invoice} + "-host," + {&invoice} + "-obj"  + ",no-def,yes-gen-incfo,yes-gen-expfo,yes-gen-fo,yes-gen-buyer" , parlist-mode ) then do:
+        run modes-2 (
           p-open-query     ,
           p-find-next      ,
           p-find-condition ,
           fnc              ).
+      end.
+      else do:
+        if parlist-mode = "client-income":u then do:
+          if fnc = "open" then do:
+            assign
+              frame {&frame-name}:title = "Приходы от контрагента : " + sch-cli.obj-name
+              objects = 1
+            .
+            assign filter-point = parlist-mode + {&delim-par} + parlist-mode + {&delim-par} + "yes".
+  
+  
+            { gbl/fltopend.i
+              &where-cond = "t-doc.cli-type  = parschcli-type  ~
+                           and t-doc.cli-code  = parschcli-code ~
+                           and t-doc.host-code = par-host-code  ~
+                           and t-doc.ext-doc-type = parext-doc-type ~
+                             "
+              &dyn_where-cond = " substitute ( ' ~
+                               t-doc.cli-type  = &1&2&1  ~
+                           and t-doc.cli-code  = &3 ~
+                           and t-doc.host-code = &4  ~
+                           and t-doc.ext-doc-type = &1&5&1 ~
+                           ', ~{&double-quote~}, parschcli-type , parschcli-code, par-host-code , parext-doc-type  )"
+  
+               &use-indFIRST = " use-index cli-date "
+              }
+          end.
+        end.
+        else do:
+          run modes-3 (
+            p-open-query     ,
+            p-find-next      ,
+            p-find-condition ,
+            fnc              ).
+        end.
       end.
     end.
   end.
@@ -3009,7 +3019,39 @@ if parlist-mode =   "yes-gen-incfo":u then do:
       end.
 end.
 
+procedure modes-lgas :
+define input parameter p-open-query     as logical   no-undo .
+define input parameter p-find-next      as logical   no-undo .
+define input parameter p-find-condition as character no-undo .
+define input parameter fnc              as character no-undo.
+  def var v-list-trn-doc-code as character no-undo.
+  def buffer d-a for ub.doc-attr.
+  
+  
+  for each d-a no-lock where d-a.attr-code = {&trdcattr-is-lgas}:
+    v-list-trn-doc-code = v-list-trn-doc-code + d-a.doc-code + {&delim-par}.
+  end.
+  
+  v-list-trn-doc-code = right-trim(v-list-trn-doc-code,{&delim-par}).
+  
+  if p-open-query then frame {&frame-name}:title = "Объект : " + par-obj-type + " " + string (par-obj-code).
+  objects = 2.
+  assign
+    filter-point = parlist-mode .
+  { gbl/fltopend.i
+    &where-cond = "t-doc.obj-type = par-obj-type and
+                    t-doc.obj-code = par-obj-code and t-doc.status_ = parstat and lookup (t-doc.doc-code, v-list-trn-doc-code, {&delim-par}) > 0 
+                     "
+    &dyn_where-cond = " substitute ( ' ~
+                        t-doc.obj-type = &1&2&1 and
+                        t-doc.obj-code = &3
+                     ', ~{&double-quote~}, par-obj-type , par-obj-code)"
 
+    &use-indFIRST = "use-index obj-date "
+  }
+
+
+end.
 
 procedure modes-1-a :
 define input parameter p-open-query     as logical   no-undo .
@@ -6976,6 +7018,9 @@ b-quit b-lkp b-print b-exp b-history b-sch b-help br-docs b-rep b-f-ed
 sch-code sch-date sch-fact sch-objtype sch-objcode sch-sum ed-notes b-uf b-filter-ext b-scaner
 b-akt WITH FRAME {&frame-name}.
 hide b-copy in FRAME {&frame-name}.
+
+assign
+  v-is-lgas = true when lookup({&trdcattr-is-lgas-corr}, bttns) > 0.
 
 /* НЕ ЗНАЮ КОГДА ОН ВИДЕН */
 run make-sf-button.

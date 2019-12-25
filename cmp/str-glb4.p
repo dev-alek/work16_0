@@ -350,6 +350,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 /* Атрибут клиента - Выведен из эксплуатации:*/
 { cmp/cr-prep.i 1 attr-cli-decommissioned cli-decommissioned " " cli-decommissioned }
 
+/* Атрибут клиента - Поставщик СУГ   */
+{ cmp/cr-prep.i 1 attr-supp-lgas supp-lgas " " supp-lgas }
+
 /* сюда добавлять новые названия атрибутов клиентов */
 
 /* список атрибутов клиентов */
@@ -397,6 +400,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 ,{&bef-attr-requisite-alc-decl}~
 ,{&bef-attr-division-code}~
 ,{&bef-attr-supp-np}~
+,{&bef-attr-supp-lgas}~
 ,{&bef-attr-tank-farm-for}~
 ,{&bef-attr-auto-tank-for}~
 ,{&bef-attr-cli-for-close-fo}~
@@ -471,7 +475,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Перечисление в систему лояльности */
 { cmp/cr-prep.i 1 attr-is-loyalty-payment is-loyalty-payment " " is-loyalty-payment }
 
-/* Запрет на участие в бонусных программах */
+/* Запрет на участие в бонусных программах\участие в скидке на итог */
 { cmp/cr-prep.i 1 attr-ban-bonus ban-bonus " " ban-bonus }
 
 /* Разрешена нулевая цена */
@@ -638,7 +642,7 @@ attr-group-np
 
 /* типы топлива */
 { cmp/cr-prepc.i 1 prop-list-attr-fuel-type
-"petrol,diesel-sum,diesel-wint,metan"
+"petrol,diesel-sum,diesel-wint,metan,propan,lgas"
 attr-fuel-type
 }
 
@@ -948,8 +952,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdsoattr-
 /*Не попадает под действие ЕНВД*/
 { cmp/cr-prep.i 1 attr-no-envd-h                   no-envd                " " no-envd           }
 
-/*Настройки платежа ОСС*/
+/*Настройки платежа ОСС
+04/III-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 { cmp/cr-prep.i 1 attr-oss-props-h                 oss-props              " " oss-props          }
+*/
 
 &glob gdshattr-list '{&bef-attr-no-envd-h}~
 ,{&bef-attr-oss-props-h}~
@@ -1028,6 +1034,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Номер точки интеграции для ERPRN */
 { cmp/cr-prep.i 1 attr-int-point              int-point             " " int-point            }
 
+/* Номер точки интеграции для ERPRN */
+{ cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code            }
 /* сюда добавлять новые названия атрибутов баз данных */
 
 &glob db-attr-list '~
@@ -1075,6 +1083,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-cert-sign-issuer   cert-sign-issuer     " " cert-sign-issuer  }
 { cmp/cr-prep.i 1 attr-esys-cert-file-ext      cert-file-ext        " " cert-file-ext     }
 
+
+/* исторический код */
+{ cmp/cr-prep.i 1 attr-hist-code               hist-code              " " hist-code            }
+
+/* Историческое наименование */
+{ cmp/cr-prep.i 1 attr-hist-name              hist-name               " " hist-name            }
 
 /* сюда добавлять новые названия атрибутов баз данных */
 
@@ -1300,6 +1314,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Время налива */
 { cmp/cr-prep.i 1 trdcattr-date-pour "date-pour" " " "date-pour" }
 
+/* Время начала слива */
+{ cmp/cr-prep.i 1 trdcattr-time-start "time-start" " " "time-start" }
+
+/* Время конца слива */
+{ cmp/cr-prep.i 1 trdcattr-time-end "time-end" " " "time-end" }
+
 /* Свидетельство о проверке */
 { cmp/cr-prep.i 1 trdcattr-inspection-cert "inspection-cert" " " "inspection-cert" }
 
@@ -1318,8 +1338,23 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Список не предоставленных документов */
 { cmp/cr-prep.i 1 trdcattr-spisok-not-doc "spisok-not-doc" " " "spisok-not-doc" }
 
-/* Признак топливной накладной */
+/* Топливная накладная */
 { cmp/cr-prep.i 1 trdcattr-is-fuel "is-fuel" " " "is-fuel" }
+
+/* Приход СУГ */
+{ cmp/cr-prep.i 1 trdcattr-is-lgas "is-lgas" " " "is-lgas" }
+
+/* Корр. СУГ */
+{ cmp/cr-prep.i 1 trdcattr-is-lgas-corr "is-lgas-corr" " " "is-lgas-corr" }
+
+/* Документ источник для корр. СУГ */
+{ cmp/cr-prep.i 1 trdcattr-trn-lgas-corr "trn-lgas-corr" " " "trn-lgas-corr" }
+
+/* Дата начала слива */
+{ cmp/cr-prep.i 1 trdcattr-date-start "trdcattr-date-start" " " "trdcattr-date-start" }
+
+/* Дата конца слива */
+{ cmp/cr-prep.i 1 trdcattr-date-end "trdcattr-date-end" " " "trdcattr-date-end" }
 
 /* Признак накладной технологического пролива */
 { cmp/cr-prep.i 1 trdcattr-techpass "techpass" " " "techpass" }
@@ -1417,6 +1452,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-doc-not}~
 ,{&bef-trdcattr-spisok-not-doc}~
 ,{&bef-trdcattr-is-fuel}~
+,{&bef-trdcattr-is-lgas}~
+,{&bef-trdcattr-is-lgas-corr}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 
@@ -2191,7 +2228,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define hn-subjec
 /*27=NCR-GM,NCR-AS@R*/
 { cmp/cr-prep.i 1 dgr-pcnt-date           pcnt-date   "Скидка по дате"        pcnt-date "Date discount"   }
 /*55=NCR-GSM,NCR-AS@R,IBM-XML*/
-{ cmp/cr-prep.i 1 dgr-without-disc        without-disc  "Запрет на участие в скидке на итог" without-disc "Exclude from Subtot Discount" }
+{ cmp/cr-prep.i 1 dgr-without-disc        without-disc  "Запрет на участие в бонусных программах\участие в скидке на итог" without-disc "Exclude from Subtot Discount" }
 /*56=IBM-XML*/
 { cmp/cr-prep.i 1 dgr-without-gds-disc    without-gds-disc  "Запрет скидки на товар" without-gds-disc "Discount prohibition"   }
 /*66=*/

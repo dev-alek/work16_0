@@ -50,10 +50,15 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define variable v-dnsty     as decimal   no-undo .
   define variable v-wght      as decimal   no-undo .
   define variable v-ex-df     as decimal   no-undo .
+  define variable v-dens-sug  as decimal   no-undo .
+  define variable v-pres-sug  as decimal   no-undo .
+  define variable v-dens-sug-fact  as decimal   no-undo .
+  define variable v-pres-sug-fact  as decimal   no-undo .
   define variable v-line-input-type as character no-undo .
   define variable v-doc-input-type as character no-undo .
   define variable v-input-type-list as character no-undo .
   define variable er-wght-pipeline as decimal   no-undo .
+  
 
   define property Msg as character no-undo
     get.
@@ -283,8 +288,26 @@ sw = insw .
             do:
               v-line-input-type = buf_rvs-line-attr.attr-value .
             end.
+          when "dens-pf-sug" then
+            do:
+              v-dens-sug = decimal(buf_rvs-line-attr.attr-value) .
+            end.
+          when "pressure-sug" then
+            do:
+              v-pres-sug = decimal(buf_rvs-line-attr.attr-value) .
+            end.
+          when "state-dens-pf-sug" then
+            do:
+              v-dens-sug-fact = decimal(buf_rvs-line-attr.attr-value) .
+            end.
+          when "state-pressure-sug" then
+            do:
+              v-pres-sug-fact = decimal(buf_rvs-line-attr.attr-value) .
+            end.
         end case .
       end.
+      if v-dens-sug-fact = 0 or v-dens-sug-fact = ? then v-dens-sug-fact = v-dens-sug .
+      if v-pres-sug-fact = 0 or v-pres-sug-fact = ? then v-pres-sug-fact = v-pres-sug .
       find first buf_place-attr no-lock where buf_place-attr.attr-code   = "place-error-mass"
                                           and buf_place-attr.obj-code    = tt-rvs-line.obj-code
                                           and buf_place-attr.obj-type    = tt-rvs-line.obj-type
@@ -316,6 +339,8 @@ sw = insw .
       sw:write-data-element ("tnk-t2" , if tt-rvs-line.temp-layer2 = ? then "0" else string-mth(tt-rvs-line.temp-layer2)) no-error .
       sw:write-data-element ("tnk-t3" , if tt-rvs-line.temp-layer3 = ? then "0" else string-mth(tt-rvs-line.temp-layer3)) no-error .
       sw:write-data-element ("tnk-flng" , if tt-rvs-line.meas-cf-qnty = ? then "0" else string-mth(tt-rvs-line.meas-cf-qnty)) no-error .
+      if v-dens-sug <> ? and v-dens-sug <> 0 then sw:write-data-element ("tnk-dens-sug" , string-mth(v-dens-sug)) no-error .
+      if v-pres-sug <> ? and v-pres-sug <> 0 then sw:write-data-element ("tnk-pres-sug" , string-mth(v-pres-sug)) no-error .
       sw:write-data-element ("tank-ost-fact" , if tt-rvs-line.state-measure-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-qnty)) no-error .
       sw:write-data-element ("tank-ost-tc-fact" , if tt-rvs-line.state-measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-tc-qnty)) no-error .
       sw:write-data-element ("tank-dnst-fact" , if tt-rvs-line.state-density = ? then "0" else string-mth(tt-rvs-line.state-density)) no-error .
@@ -336,6 +361,8 @@ sw = insw .
       sw:write-data-element ("tnk-t2-fact" , if tt-rvs-line.state-temp-layer2 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer2)) no-error .
       sw:write-data-element ("tnk-t3-fact" , if tt-rvs-line.state-temp-layer3 = ? then "0" else string-mth(tt-rvs-line.state-temp-layer3)) no-error .
       sw:write-data-element ("tnk-flng-fact" , if tt-rvs-line.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line.state-cf-qnty)) no-error .
+      if v-dens-sug-fact <> ? and v-dens-sug-fact <> 0 then sw:write-data-element ("tnk-dens-sug-fact" , string-mth(v-dens-sug-fact)) no-error .
+      if v-pres-sug-fact <> ? and v-pres-sug-fact <> 0 then sw:write-data-element ("tnk-pres-sug-fact" , string-mth(v-pres-sug-fact)) no-error .
       
       sw:write-data-element ("ms-dnsty" , if v-dnsty = ? then "0" else string-mth(v-dnsty)) no-error .
       sw:write-data-element ("er-wght" , string-mth(v-wght)) no-error .

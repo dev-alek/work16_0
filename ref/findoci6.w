@@ -293,6 +293,13 @@ DEFINE BUTTON B-currency
      LABEL "Btn 1"
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-cashbook
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL ""
+     SIZE 3 BY 1.
+
 DEFINE BUTTON B-exit AUTO-GO
      LABEL "&Ввод"
      SIZE 10 BY 1
@@ -391,6 +398,15 @@ DEFINE VARIABLE F-debet AS CHARACTER FORMAT "X(256)":U INITIAL "Дебет"
       VIEW-AS TEXT
      SIZE 6.3 BY .67
      FGCOLOR 4  NO-UNDO.
+
+DEFINE VARIABLE l-cashbook AS CHARACTER FORMAT "X(256)":U INITIAL "Кассовая книга:"
+      VIEW-AS TEXT
+     SIZE 15 BY .67
+     NO-UNDO.
+     
+DEFINE VARIABLE f-cashbook AS CHARACTER FORMAT "X(256)":U
+     VIEW-AS FILL-IN
+     SIZE 40 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-rest-con-sum AS DECIMAL FORMAT "->,>>>,>>>,>>>,>>9.99" INITIAL 0
      LABEL "Своб.ост.(в.д.)"
@@ -617,6 +633,9 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN
           SIZE 30.9 BY 1
           FGCOLOR 4
+     l-cashbook at row 22.2 col 1 no-label
+     f-cashbook at row 22 col 19 no-label
+     b-cashbook at row 22 col 61 FGCOLOR 4
      F-debet AT ROW 6.13 COL 1.9 NO-LABEL
      F-credit AT ROW 8 COL 1 NO-LABEL
      "(Примечание (доп.информация, не печатается))" VIEW-AS TEXT
@@ -1296,6 +1315,7 @@ then do:
     str-podr-name
     str-podr-type
     sum-doc
+    CashBookId
     to tt-fin-doc
     assign
     tt-fin-doc.host-code = p-host-code
@@ -1332,6 +1352,7 @@ or p-mode = {&add-copy} then do:
                 ,input p-cor-acc1
                 ,input p-an-uchet-code
                 ,input p-cel-nazn-code
+                ,input (if available tt-fin-doc then tt-fin-doc.CashBookId else 0)
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,output table tt0-fin-doc-attr
@@ -1363,6 +1384,7 @@ else do:
                 ,input tt-fin-doc.cor-acc1
                 ,input tt-fin-doc.an-uchet-code
                 ,input tt-fin-doc.cel-nazn-code
+                ,input tt-fin-doc.CashBookId
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,output table tt0-fin-doc-attr

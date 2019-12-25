@@ -1,3 +1,6 @@
+/*
+26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
+
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 
@@ -975,3 +978,4 @@ end function.
 &ENDIF
 
 
+*/

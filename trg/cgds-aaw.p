@@ -1,0 +1,1 @@
+TRIGGER PROCEDURE FOR WRITE OF c-goods-attr-any.

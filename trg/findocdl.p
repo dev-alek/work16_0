@@ -90,37 +90,37 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       view-as alert-box error .
     undo main-block, return error .
   end.
-  define variable v-log as logical no-undo .
-  define variable v-out-mess as character no-undo .
-  define variable v-cash-book-place as character no-undo .
-  v-cash-book-place = buf_fin-doc.trn-doc-code.
-  if not g#news then do:
-  { str/finchkdb.i
-    buf_fin-doc.host-code
-    buf_fin-doc.fin-doc-code
-    buf_fin-doc.obj-type
-    buf_fin-doc.obj-code
-    buf_fin-doc.fin-ext-doc-type
-    v-cash-book-place
-    ?
-    v-log
-    v-out-mess
-    no-error }
-  if error-status:error then do:
-    v-mes =  substitute("Ошибка при проверке возможности удаления документа в данной БД &1&2&1&3"
-                                                , {&new-line}
-                                                , error-status:get-message(1)
-                                                , return-value
-                                                ).
-    run err-mess in this-procedure (  input v-mes, output v-ret-mess).
-    undo main-block, return error v-ret-mess.
-  end.
-  if not v-log then do:
-    v-mes = substitute("Невозможно удалить документ в данной БД:&1&2", {&new-line}, v-out-mess).
-    run err-mess in this-procedure (  input v-mes, output v-ret-mess).
-    undo main-block, return error v-ret-mess.
-  end.
-  end.
+/*  define variable v-log as logical no-undo .                                                     */
+/*  define variable v-out-mess as character no-undo .                                              */
+/*  define variable v-cash-book-place as character no-undo .                                       */
+/*  v-cash-book-place = buf_fin-doc.trn-doc-code.                                                  */
+/*  if not g#news then do:                                                                         */
+/*  { str/finchkdb.i                                                                               */
+/*    buf_fin-doc.host-code                                                                        */
+/*    buf_fin-doc.fin-doc-code                                                                     */
+/*    buf_fin-doc.obj-type                                                                         */
+/*    buf_fin-doc.obj-code                                                                         */
+/*    buf_fin-doc.fin-ext-doc-type                                                                 */
+/*    v-cash-book-place                                                                            */
+/*    ?                                                                                            */
+/*    v-log                                                                                        */
+/*    v-out-mess                                                                                   */
+/*    no-error }                                                                                   */
+/*  if error-status:error then do:                                                                 */
+/*    v-mes =  substitute("Ошибка при проверке возможности удаления документа в данной БД &1&2&1&3"*/
+/*                                                , {&new-line}                                    */
+/*                                                , error-status:get-message(1)                    */
+/*                                                , return-value                                   */
+/*                                                ).                                               */
+/*    run err-mess in this-procedure (  input v-mes, output v-ret-mess).                           */
+/*    undo main-block, return error v-ret-mess.                                                    */
+/*  end.                                                                                           */
+/*  if not v-log then do:                                                                          */
+/*    v-mes = substitute("Невозможно удалить документ в данной БД:&1&2", {&new-line}, v-out-mess). */
+/*    run err-mess in this-procedure (  input v-mes, output v-ret-mess).                           */
+/*    undo main-block, return error v-ret-mess.                                                    */
+/*  end.                                                                                           */
+/*  end.                                                                                           */
   if p-fact-delete = yes then do:
     find first buf_fin-connect NO-LOCK
       where buf_fin-connect.host-code = buf_fin-doc.host-code

@@ -60,6 +60,7 @@ define input parameter x-shift-start as integer     no-undo.
 define input parameter x-shift-end   as integer     no-undo.
 define input parameter xTog-obj   as logical no-undo.
 define input parameter p-curr-code as integer no-undo .
+define input parameter p-cashbookid as integer  no-undo .
 
 define output parameter sum       as decimal   no-undo.
 define output parameter Fact-order  as decimal  no-undo.
@@ -101,6 +102,7 @@ and ~{&arh-name~}.obj-code = obj-list.obj-code ~
 and ~{&arh-name~}.cli-code          = p-host-code ~
 and ~{&arh-name~}.cli-type          = {&cmp} ~
 and ~{&arh-name~}.calc-curr-code    = p-curr-code ~
+and ~{&arh-name~}.cashbookid    = p-cashbookid ~
 and ~{&arh-name~}.curr-code    = p-curr-code ~
 and ~{&arh-name~}.sum-type = x-sum-type and
 

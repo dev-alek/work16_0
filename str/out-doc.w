@@ -91,6 +91,11 @@ define variable vss-description as character no-undo initial "Обработка РН (заве
 {ref/imagelist.i}
 { gbl/color.i }
 
+&global-define is-fuel 1
+&global-define is-lgas 2
+&global-define is-lgas-corr 3
+&global-define is-gds 0
+
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
 
@@ -180,6 +185,9 @@ define variable work-mode as character                 no-undo.
 define variable varhold   as character                 no-undo.
 define variable varhold-type as character              no-undo.
 define variable bcvalue   as character initial ?       no-undo.
+define variable v-reasonm as logical   no-undo init false .
+define variable v-reasonme as character no-undo .
+define variable v-reasons-for-return as character no-undo .
 define variable bctype         as character initial ? no-undo.
 define variable prtvalue       as character initial ? no-undo.
 define variable prttype        as character initial ? no-undo.
@@ -224,7 +232,7 @@ define variable bcol as handle extent no-undo.
 define variable hBrowse as handle no-undo.
 define variable ii as integer no-undo.
 define variable ch-vsd as character no-undo .
-
+define variable trn-type as integer no-undo init 0.
 
 define new shared temp-table tt-doc-pl no-undo
 field pl-code as integer format "99999999999"
@@ -364,6 +372,17 @@ define menu m-print
 define temp-table t-d-b-doc-line no-undo like lib-trn_ret-line.
 define temp-table t-d-b-gds-dtl  no-undo like ub.gds-dtl.
 define temp-table t-d-b-parts    no-undo like ub.parts.
+
+/*define new shared temp-table tt-gds-for-return no-undo like ub.goods*/
+/*  field qnty   as decimal                                           */
+/*  field to-del as logical                                           */
+/*  field order-num as integer                                        */
+/*  field to-sel as logical                                           */
+/*  index art  is primary unique artic prod-type prod-code            */
+/*  index code is         unique gds-code                             */
+/*  index oi order-num                                                */
+/*  index isel to-sel                                                 */
+/*.                                                                   */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1360,17 +1379,34 @@ define variable v-recid as recid no-undo .
       and ub.doc-line.prod-type = ub.gds-dtl.prod-type
       and ub.doc-line.prod-code = ub.gds-dtl.prod-code
     .
-  run str/out-add.p
-    ( input parparentproc
-    ,input recid(t-doc)
-    ,input recid(ub.doc-line)
-    ,input recid(ub.gds-dtl)
-    ,input recid (ub.goods)
-    ,input varline-mode
-    ,input ?
-    ) no-error.
-  if error-status :error then do:
-    return no-apply.
+  if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  then do :
+    run str/out-add.p
+      ( input parparentproc
+      ,input recid(t-doc)
+      ,input recid(ub.doc-line)
+      ,input recid(ub.gds-dtl)
+      ,input recid (ub.goods)
+      ,input varline-mode + {&delim-par} + "return"
+      ,input ?
+      ) no-error.
+    if error-status :error then do:
+      return no-apply.
+    end.
+  end.
+  else do :
+    run str/out-add.p
+      ( input parparentproc
+      ,input recid(t-doc)
+      ,input recid(ub.doc-line)
+      ,input recid(ub.gds-dtl)
+      ,input recid (ub.goods)
+      ,input varline-mode
+      ,input ?
+      ) no-error.
+    if error-status :error then do:
+      return no-apply.
+    end.
   end.
   run ui-on in this-procedure
     ( input "line"
@@ -1650,14 +1686,27 @@ find first ub.goods where ub.goods.artic     = ub.gds-dtl.artic     and
                        ub.goods.prod-type = ub.gds-dtl.prod-type and
                        ub.goods.prod-code = ub.gds-dtl.prod-code no-lock.
 
-run str/out-add.p (parparentproc,
-               recid(t-doc),
-               recid(ub.doc-line),
-               recid(ub.gds-dtl),
-               recid (ub.goods),
-               work-mode,
-               ?) no-error.
-if error-status :error then return no-apply.
+if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+then do :
+  run str/out-add.p (parparentproc,
+                 recid(t-doc),
+                 recid(ub.doc-line),
+                 recid(ub.gds-dtl),
+                 recid (ub.goods),
+                 work-mode + {&delim-par} + "return",
+                 ?) no-error.
+  if error-status :error then return no-apply.
+end.
+else do :
+  run str/out-add.p (parparentproc,
+                 recid(t-doc),
+                 recid(ub.doc-line),
+                 recid(ub.gds-dtl),
+                 recid (ub.goods),
+                 work-mode,
+                 ?) no-error.
+  if error-status :error then return no-apply.
+end.
 if varprt-mode = {&prt-def} then run ui-on ("line").
 apply "entry" to br-dtl in frame {&frame-name} .
 reposition br-dtl to recid prt-rec no-error.
@@ -2204,7 +2253,7 @@ on end-error of ub.gds-dtl.fact-qnty in browse {&browse-name} do:
 end.
 
 /* общие триггеры и процедуры для РН и ПН */
-{ str/trn-tr.i out no }
+{ str/trn-tr.i out }
 on return, leave of t-doc.tot-calc in frame {&frame-name} do:
 if input frame {&frame-name} t-doc.tot-calc <> t-doc.tot-calc then do:
   assign t-doc.tot-calc = input frame {&frame-name} t-doc.tot-calc.
@@ -2249,11 +2298,43 @@ if not b-add:sensitive in frame {&frame-name} then do:
 end.
 /*Не убирать. Иначе не обновляются поля в updateble browse*/
 apply "row-leave" to browse {&browse-name}.
-/* Список документов по объекту */
-run local-m-outs-1 no-error.
-if error-status :error then undo, return no-apply.
-if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}  then do:
-   run str/ep-corrp.p (input parparentproc, input t-doc.doc-code ) no-error.
+if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+then do :
+  if t-doc.reason-code <> ?
+  and t-doc.reason-code > 0
+  then do :
+    if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    then do :
+      /*Возврат*/
+      run local-m-outs-1-ret no-error.
+      if error-status :error then undo, return no-apply.
+    end.
+    else do :
+      run local-m-outs-1 no-error.
+      if error-status :error then undo, return no-apply.
+    end.
+  end.
+  else do :
+    if v-reasonm and
+    lookup( t-doc.ext-doc-type, v-reasonme) = 0 and
+    lookup( t-doc.ext-doc-type, {&TDEDT_List-not-ver-reason}) = 0
+    then do:
+      message "Сначала укажите Основание" view-as alert-box .
+      apply "choose" to r-reas in frame {&frame-name}.
+    end.
+    else do :
+      run local-m-outs-1 no-error.
+      if error-status :error then undo, return no-apply.
+    end.
+  end.
+end.
+else do :
+  /* Список документов по объекту */
+  run local-m-outs-1 no-error.
+  if error-status :error then undo, return no-apply.
+  if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}  then do:
+     run str/ep-corrp.p (input parparentproc, input t-doc.doc-code ) no-error.
+  end.
 end.
 run ui-on ("line").
 apply "entry" to br-dtl in frame {&frame-name}.
@@ -2730,7 +2811,6 @@ main-block:
 do on error   undo main-block, leave main-block :
 assign 
    {&browse-name}:column-resizable in frame {&frame-name} = true.  
-  
 if available t-doc then do:
   find ub.sysconf where ub.sysconf.host-code = t-doc.host-code no-lock.
 end.
@@ -2743,6 +2823,12 @@ end.
 { gbl/getsect.i run "''" 0 {&attr-nakl-glob} }
 for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = 'is-bcdoc' then bcvalue = string(thbjattr_thbj-attr.property-value-logical) .
+end.
+{ gbl/getsect.i run v-cntxt-obj-type v-cntxt-obj-code {&attr-nakl_par} }
+for each thbjattr_thbj-attr :
+    if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonm}   then v-reasonm      = thbjattr_thbj-attr.property-value-logical .
+    if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonme}  then v-reasonme     = thbjattr_thbj-attr.property-value-character .
+    if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasons-for-return}  then v-reasons-for-return = thbjattr_thbj-attr.property-value-character .
 end.
 { gbl/conf-rd.i "'is-pharm'" v-cntxt-host-code-obj v-cntxt-obj-type v-cntxt-obj-code "''" "''" "''" no  v-is-pharm    v-is-pharm-type no-error }
 
@@ -4717,8 +4803,32 @@ if error-status :error then do:
 end.
 .
 
+if t-doc.reason-code <> ?
+and t-doc.reason-code > 0
+then do :
+  if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  then do :
+    /*Возврат*/
+    v-choice = 5.
+  end.
+  else do :
+    v-choice = 0.
+  end.
+end.
+else do :
   v-choice = 0.
-if t-doc.contract-code <> 0 then do:
+  if v-reasonm and
+  lookup( t-doc.ext-doc-type, v-reasonme) = 0 and
+  lookup( t-doc.ext-doc-type, {&TDEDT_List-not-ver-reason}) = 0
+  then do:
+    message "Сначала укажите Основание" view-as alert-box .
+    apply "choose" to r-reas in frame {&frame-name}.
+    return .
+  end.
+end.
+
+  
+if t-doc.contract-code <> 0 and v-choice <> 5 then do:
      {str/cont-slave-inc.i
           &FIND_FIRST = YES
           &BUFFER_SPECIF   = bf_contract-specif
@@ -4834,7 +4944,18 @@ end.
                     , input t-doc.ext-doc-type
                     , input-output varschartic
                     , output varnotes) no-error.
-end.
+    end.
+    
+    when 5 then do: /* из документа прихода (для оформления возврата через расход) */
+      if t-doc.out-code = ?
+      or t-doc.out-code = ""
+      or not can-find(ub.trn-doc no-lock where ub.trn-doc.doc-code = t-doc.out-code)
+      then do :
+        message "Сначала выберите корректный источник (ПН)" view-as alert-box .
+        return.
+      end.
+      run ref/nakl-gds-ch.w (input t-doc.out-code, output varnotes) .
+    end.
   end case.
 
 if varnotes = '' then return.
@@ -4869,18 +4990,32 @@ do while varlns-cnt <= num-entries (varnotes):
     }
      if var_is-petrol = true then return error "Топливо нельзя продавать через ЗАПРОС ! " .
   end.
-
+  
+  if v-choice = 5
+  then do :
     run str/out-add.p (parparentproc,
-                 recid(t-doc),
-                 ?,
-                 ?,
-                 gds-rec,
-                 {&add-def},
-                 v-param) no-error.
-  if error-status :error then do:
-    next.
+                   recid(t-doc),
+                   ?,
+                   ?,
+                   gds-rec,
+                   {&add-def} + {&delim-par} + "return",
+                   v-param) no-error.
+    if error-status :error then do:
+      next.
+    end.
+  end .
+  else do : 
+    run str/out-add.p (parparentproc,
+                   recid(t-doc),
+                   ?,
+                   ?,
+                   gds-rec,
+                   {&add-def},
+                   v-param) no-error.
+    if error-status :error then do:
+      next.
+    end.
   end.
-
 end.
 /* в ui-on давятся пустые ub.doc-line */
 run ui-on ("line").
@@ -5096,17 +5231,34 @@ define variable v-host-code     like ub.sysconf.host-code  no-undo.
        if parwith-tax <> 3 then do:
          { str/pr-99.i varnew-price round-method round-base}
        end.
-       run str/out-add.p (parparentproc,
-                      recid(t-doc),
-                      recid(cur-doc-line),
-                      recid(cur-gds-dtl),
-                      recid(cur-goods),
-                      "update-sale-price",
-                      string(varnew-price)) no-error.
-       if error-status :error then do:
-          message "Ошибка при вызове программы out-add.p" view-as alert-box.
-          run waitfram-hide in this-procedure .
-          undo tr, return error.
+       if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+       then do :
+         run str/out-add.p (parparentproc,
+                        recid(t-doc),
+                        recid(cur-doc-line),
+                        recid(cur-gds-dtl),
+                        recid(cur-goods),
+                        "update-sale-price" + {&delim-par} + "return",
+                        string(varnew-price)) no-error.
+         if error-status :error then do:
+            message "Ошибка при вызове программы out-add.p" view-as alert-box.
+            run waitfram-hide in this-procedure .
+            undo tr, return error.
+         end.
+       end.
+       else do :  
+         run str/out-add.p (parparentproc,
+                        recid(t-doc),
+                        recid(cur-doc-line),
+                        recid(cur-gds-dtl),
+                        recid(cur-goods),
+                        "update-sale-price",
+                        string(varnew-price)) no-error.
+         if error-status :error then do:
+            message "Ошибка при вызове программы out-add.p" view-as alert-box.
+            run waitfram-hide in this-procedure .
+            undo tr, return error.
+         end.
        end.
        if parwith-tax = 3 then do:
          assign
@@ -5203,14 +5355,27 @@ do on stop undo, return error:
     find ub.goods where ub.goods.prod-code = ub.gds-dtl.prod-code
                  and ub.goods.prod-type = ub.gds-dtl.prod-type
                  and ub.goods.artic     = ub.gds-dtl.artic no-lock.
-    run str/out-add.p (parparentproc,
-                   recid(t-doc),
-                   recid(ub.doc-line),
-                   recid(ub.gds-dtl),
-                   recid (ub.goods),
-                   "delete",
-                   ?) no-error.
-    if error-status :error then return error.
+    if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    then do :
+      run str/out-add.p (parparentproc,
+                     recid(t-doc),
+                     recid(ub.doc-line),
+                     recid(ub.gds-dtl),
+                     recid (ub.goods),
+                     "delete" + {&delim-par} + "return",
+                     ?) no-error.
+      if error-status :error then return error.
+    end.
+    else do :
+      run str/out-add.p (parparentproc,
+                     recid(t-doc),
+                     recid(ub.doc-line),
+                     recid(ub.gds-dtl),
+                     recid (ub.goods),
+                     "delete",
+                     ?) no-error.
+      if error-status :error then return error.
+    end.
   end.
 end. /* on stop */
 
@@ -5301,6 +5466,78 @@ display t-d-b.doc-code @ t-doc.out-code with frame {&frame-name}.
 
 run ask-copy in this-procedure no-error .
 if error-status :error then return error return-value .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-m-outs-1-ret d-out-doc
+PROCEDURE local-m-outs-1-ret :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+
+define variable loc-ref-list     as character no-undo .
+define variable v-hold           as logical   no-undo .
+define variable v-ext-doc-type   as character no-undo .
+define variable v-doc-rec        as recid     no-undo .
+define variable v-stat           as character no-undo .
+define variable v-type           as character no-undo .
+define variable v-internal       as logical   no-undo .
+define variable v-list-mode      as character no-undo .
+
+find first ub.clients no-lock where ub.clients.obj-type = t-doc.cli-type
+                                and ub.clients.obj-code = t-doc.cli-code .
+
+assign
+  v-list-mode = "client-income":u
+  v-stat = {&fact}
+  v-type = ?
+  v-internal = ?
+  v-doc-rec = recid(ub.clients)
+  v-hold = ?
+  v-ext-doc-type = {&TDEDT_Pri_Vnesh}
+.
+
+run str/all-docs.w
+    ( input parparentproc,
+      input t-doc.host-code ,
+      input t-doc.obj-type ,
+      input t-doc.obj-code ,
+      input v-list-mode,
+      input v-stat     ,
+      input v-type     ,
+      input     ?      ,
+      input v-internal ,
+      input "b-sel":u,
+      input v-ext-doc-type,
+      input v-hold,
+      input v-doc-rec,
+      output loc-ref-list).
+
+find first t-d-b where recid (t-d-b) = integer (loc-ref-list) no-lock no-error.
+if not available t-d-b then do:
+  display ? @ t-doc.out-code with frame {&frame-name}.
+  apply "entry" to b-add in frame {&frame-name}.
+  return error.
+end.
+assign t-doc.out-code = t-d-b.doc-code .
+display t-doc.out-code with frame {&frame-name}.
+
+/*empty temp-table tt-gds-for-return .                                     */
+/*for each ub.doc-line no-lock where ub.doc-line.doc-code = t-d-b.doc-code,*/
+/*first ub.goods no-lock where ub.goods.artic     = ub.doc-line.artic      */
+/*                         and ub.goods.prod-type = ub.doc-line.prod-type  */
+/*                         and ub.goods.prod-code = ub.doc-line.prod-code :*/
+/*  create tt-gds-for-return .                                             */
+/*  buffer-copy ub.goods to tt-gds-for-return                              */
+/*  assign                                                                 */
+/*    tt-gds-for-return.qnty = ub.doc-line.fact-qnty                       */
+/*  .                                                                      */
+/*end .                                                                    */
 
 END PROCEDURE.
 
@@ -5421,15 +5658,29 @@ do
         work-mode = "update-parts":U
       .
     end.
-    run str/out-add.p
-      ( input parparentproc
-       ,input recid(t-doc)
-       ,input recid(ub.doc-line)
-       ,input recid(ub.gds-dtl)
-       ,input recid (ub.goods)
-       ,input work-mode
-       ,input ?
-      ).
+    if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    then do :
+      run str/out-add.p
+        ( input parparentproc
+         ,input recid(t-doc)
+         ,input recid(ub.doc-line)
+         ,input recid(ub.gds-dtl)
+         ,input recid (ub.goods)
+         ,input work-mode + {&delim-par} + "return"
+         ,input ?
+        ).
+    end.
+    else do :
+      run str/out-add.p
+        ( input parparentproc
+         ,input recid(t-doc)
+         ,input recid(ub.doc-line)
+         ,input recid(ub.gds-dtl)
+         ,input recid (ub.goods)
+         ,input work-mode
+         ,input ?
+        ).
+    end.
     if var_is-petrol = true
       and var_is-pieces = false
       and work-mode <> "lookup-parts"
@@ -5694,6 +5945,13 @@ PROCEDURE select-reason :
     assign  rsn-name          = ub.trn-reason.reason-name
             t-doc.reason-code = ub.trn-reason.reason-code.
     display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
+  end.
+  if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  then do :
+    disable b-cur with frame {&frame-name}.
+  end.
+  else do:
+    enable b-cur with frame {&frame-name}.
   end.
 
 END PROCEDURE.
@@ -5963,7 +6221,8 @@ if fnc = "enable" then do:
         if t-doc.ext-doc-type <> {&TDEDT_Ras_Vnesh_VP}    and
          t-doc.status_  = {&wayb}                         and
          not t-doc.flag_                                  and
-         varlog = yes
+         varlog = yes                                     and
+         lookup( string(t-doc.reason-code), v-reasons-for-return) = 0
          then do:
            enable b-cur with frame {&frame-name}.
          end.
@@ -6114,7 +6373,28 @@ if fnc = "enable" then do:
           undo, return error return-value .
         end.
       end case .
-
+      if t-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+      then do:
+        def var conf-par as character no-undo.
+        def var par-type as character no-undo.
+        { gbl/conf-rd.i
+          "'is-erpRN'"
+          0
+          "''"
+          0
+          "''"
+          "''"
+          "''"
+          NO
+          conf-par
+          par-type
+          no-error
+          }
+        if not error-status:error and conf-par = "yes":U 
+        then do:
+          enable t-doc.shift-date t-doc.shift-num t-doc.shift-name r-sht with frame {&frame-name}.
+        end.
+      end.
       if (t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}           or
           t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}        or
           t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}       or

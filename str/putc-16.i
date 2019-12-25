@@ -63,19 +63,34 @@ v-lengthSh = v-subShedWs:iCounter .
 do v-i = 1 to v-lengthSh:
   v-size = v-subShedWs:GetItem(v-i) .
   v-subShedW = v-subShedWs:promoSchedwObjCurr .
-
   do v-ii = 1 to num-entries(v-subShedW:wdaylist):
-    run bgelib-tag-open in this-procedure ( input 3, input "PASched","").
-  run bgelib-tag-put in this-procedure ( input 4, input "PASId":U
-    , input string(v-promo-action:id), input 1 ).
-  
-    run bgelib-tag-put in this-procedure ( input 4, input "PASDay":U
-      , input string(entry(v-ii,v-subShedW:wdaylist)), input 1 ).
-    run bgelib-tag-put in this-procedure ( input 4, input "PASBeg":U
-      , input Xml-CD-DateTimetoString(12/31/1989,v-subShedW:timebeg), input 1 ).
-    run bgelib-tag-put in this-procedure ( input 4, input "PASEnd":U
-      , input Xml-CD-DateTimetoString({&end-of-age},v-subShedW:timeend), input 1 ).
-    run bgelib-tag-close in this-procedure ( input 3, input "PASched").
+     if v-subShedW:wdaylist = "0"
+     then do v-j = 1 to 7:
+        run bgelib-tag-open in this-procedure ( input 3, input "PASched","").
+        run bgelib-tag-put in this-procedure ( input 4, input "PASId":U
+        , input string(v-promo-action:id), input 1 ).
+     
+        run bgelib-tag-put in this-procedure ( input 4, input "PASDay":U
+          , input string(v-j), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 4, input "PASBeg":U
+          , input Xml-CD-DateTimetoString(12/31/1989,v-subShedW:timebeg), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 4, input "PASEnd":U
+          , input Xml-CD-DateTimetoString({&end-of-age},v-subShedW:timeend), input 1 ).
+        run bgelib-tag-close in this-procedure ( input 3, input "PASched").
+    end.
+    else do: 
+       run bgelib-tag-open in this-procedure ( input 3, input "PASched","").
+       run bgelib-tag-put in this-procedure ( input 4, input "PASId":U
+       , input string(v-promo-action:id), input 1 ).
+     
+       run bgelib-tag-put in this-procedure ( input 4, input "PASDay":U
+         , input string(entry(v-ii,v-subShedW:wdaylist)), input 1 ).
+       run bgelib-tag-put in this-procedure ( input 4, input "PASBeg":U
+         , input Xml-CD-DateTimetoString(12/31/1989,v-subShedW:timebeg), input 1 ).
+       run bgelib-tag-put in this-procedure ( input 4, input "PASEnd":U
+         , input Xml-CD-DateTimetoString({&end-of-age},v-subShedW:timeend), input 1 ).
+       run bgelib-tag-close in this-procedure ( input 3, input "PASched").
+    end.
   end.
   
 end.  
@@ -111,12 +126,8 @@ end. /*if valid-object (promoGoodsSubs) then do:*/
 v-subGdCrs = v-promo-action:GoodsCrits .
 if valid-object (v-subGdCrs) then 
 do: 
-  if v-subGdCrs:iCounter eq 0
-  then do:
-    run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
-    run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
-  end.
-  else do v-i = 1 to v-subGdCrs:iCounter:
+  if v-subGdCrs:iCounter ne 0
+  then  do v-i = 1 to v-subGdCrs:iCounter:
     v-subGdCrs:GetItem(v-i) .
     v-subGdCr = v-subGdCrs:promoGoodsObjCurr .    
     
@@ -129,7 +140,31 @@ do:
 
   end.
 end. /*if VALID-OBJECT (v-subFree) then do:*/
+
+v-subcardbins= v-promo-action:CardsBin .
+if valid-object (v-subcardbins) then 
+do: 
+  if v-subcardbins:iCounter ne 0
+  then  do v-i = 1 to v-subcardbins:iCounter:
+    v-subcardbins:GetItem(v-i) .
+    v-subCardBin = v-subcardbins:promoGoodsObjCurr .    
     
+    run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
+    run bgelib-tag-put in this-procedure ( input 4, input "PAFGId":U
+      , input string(v-promo-action:id), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 4, input "PAFGCode":U
+      , input string(v-subCardBin:nameset), input 1 ).
+    run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
+
+  end.
+end. /*if VALID-OBJECT (v-subFree) then do:*/
+    
+if  valid-object (v-subGdCrs)    and v-subGdCrs   :iCounter eq 0
+and valid-object (v-subcardbins) and v-subcardbins:iCounter eq 0
+then do:
+   run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
+   run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
+end.
 
 /*Подарки*/
    

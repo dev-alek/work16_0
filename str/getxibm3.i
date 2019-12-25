@@ -28,8 +28,10 @@ define buffer buf_temp-temp for temp-temp.
   1- ub.chk-doc ub.chk-pay
 */
 /*Переменные для записи в таблицу chk-pay-attr*/
-define variable c-attr-code  as character no-undo.
-define variable c-attr-value as character no-undo.
+define variable c-attr-code   as character no-undo.
+define variable c-attr-value  as character no-undo.
+define variable vCPAgreement  as character no-undo.
+define variable vCPWithdrawal as character no-undo.
 
   _proc-03:
   do
@@ -124,6 +126,12 @@ define variable c-attr-value as character no-undo.
               end.
             end case.
           end. /*when "CPDOC":U then do:*/
+          when "CPAgreement" then do:
+             vCPAgreement = buf_temp-temp.field-value.
+          end.
+          when "CPWithdrawal" then do:
+             vCPWithdrawal = buf_temp-temp.field-value.
+          end.
             
 /*            if buf_temp-temp.field-value begins "RRN"                           */
 /*                then do:                                                        */
@@ -211,6 +219,28 @@ define variable c-attr-value as character no-undo.
               ub.chk-pay-attr.attr-value = c-attr-value
               no-error.
             end.
+            
+            if vCPAgreement ne "" and vCPAgreement ne ? 
+            then do:
+              create ub.chk-pay-attr.
+              assign 
+              ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
+              ub.chk-pay-attr.line-num   = lnp-spl
+              ub.chk-pay-attr.attr-code  = "CPAgreement"
+              ub.chk-pay-attr.attr-value = vCPAgreement
+              no-error.
+            end.
+            if vCPWithdrawal ne "" and vCPWithdrawal ne ? and dec(vCPWithdrawal) ne 0  
+            then do:
+              create ub.chk-pay-attr.
+              assign 
+              ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
+              ub.chk-pay-attr.line-num   = lnp-spl
+              ub.chk-pay-attr.attr-code  = "CPWithdrawal"
+              ub.chk-pay-attr.attr-value = left-trim(string (dec(vCPWithdrawal),">>>>>>>>>>>9.99") ) 
+              no-error.
+            end.
+            
           end.
           assign
           chk-pay.tot-sum = chk-pay.tot-sum + tot_sum

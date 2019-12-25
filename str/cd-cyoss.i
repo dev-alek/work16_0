@@ -82,8 +82,6 @@ FOR EACH for-cash-desk NO-LOCK WHERE
      next _for.
   end.
 
-
-
   run write-log-and-file in p-log-handle (
         input 1
       , input log-file-name
@@ -92,7 +90,7 @@ FOR EACH for-cash-desk NO-LOCK WHERE
                         )
                                         ).
   
-  
+  if pSubs = "" or action = 'D' then do:
   { str/outc-gen.i
   &cd-buffer=for-cash-desk
   &subject=gas-station
@@ -101,13 +99,15 @@ FOR EACH for-cash-desk NO-LOCK WHERE
   &cdt-ibm=yes
   &cdt-ibm-xml=yes
   }
+  
   /*сформируем вывод для кассы определенного типа*/
   RUN putc-oss in this-procedure
                ( input for-cash-desk.pos-type
                 ,input for-cash-desk.version
                 ,input for-cash-desk.cash-os
                 ,input for-cash-desk.cash-num
-                ,input false /*удалить весь справочник*/
+                ,input 'D' /*удалить весь справочник*/
+                ,input trim(pSubs)
                 ).
 
   { str/cloc-gen.i
@@ -119,9 +119,8 @@ FOR EACH for-cash-desk NO-LOCK WHERE
   &cdt-ibm=yes
   &cdt-ibm-xml=yes
   }
-  
-  
-  
+  end.
+  if pSubs <> "" or action <> 'D' then do:
   { str/outc-gen.i
   &cd-buffer=for-cash-desk
   &subject=gas-station
@@ -136,7 +135,8 @@ FOR EACH for-cash-desk NO-LOCK WHERE
                 ,input for-cash-desk.version
                 ,input for-cash-desk.cash-os
                 ,input for-cash-desk.cash-num
-                ,input true /*удалить весь справочник*/
+                ,input 'U' /*удалить весь справочник*/
+                ,input trim(pSubs)
                 ).
 
   { str/cloc-gen.i
@@ -148,7 +148,7 @@ FOR EACH for-cash-desk NO-LOCK WHERE
   &cdt-ibm=yes
   &cdt-ibm-xml=yes
   }
-
+  end.
 
 
 END . /*for each for-cash-desk*/
