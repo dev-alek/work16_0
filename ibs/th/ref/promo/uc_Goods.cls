@@ -30,10 +30,43 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     DEFINE PRIVATE VARIABLE tableLayoutPanel2 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
     DEFINE PRIVATE VARIABLE tableLayoutPanel1 AS System.Windows.Forms.TableLayoutPanel NO-UNDO.
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
-    
-    define public  variable mCrit as logical no-undo.
-    define public  variable PromoSet as logical no-undo.
-    define public  variable PromoSetGoods as logical no-undo. 
+    define variable mCrit as logical no-undo.
+    define variable PromoSet as logical no-undo.
+    define variable PromoSetGoods as logical no-undo.
+    define variable Promovisa as logical no-undo.
+    define property pCrit as logical no-undo
+    private get.
+    set(input iCrit as logical):
+       mCrit = iCrit.
+       this-object:PromoSet = no.
+       this-object:PromoSetGoods = no.
+       this-object:Promovisa = no.
+    end.
+    define property pPromoSet as logical no-undo
+    private get.
+    set(input iPromoSet as logical):
+       this-object:mCrit = no.
+       PromoSet = iPromoSet.
+       this-object:PromoSetGoods = no.
+       this-object:Promovisa = no.
+    end.
+    define property pPromoSetGoods as logical no-undo
+    private get.
+    set(input iPromoSetGoods as logical):
+       this-object:mCrit = no.
+       this-object:PromoSet = no.
+       PromoSetGoods = iPromoSetGoods.
+       this-object:Promovisa = no.
+    end.
+    define property pPromovisa as logical no-undo
+    private get.
+    set(input iPromovisa as logical):
+       this-object:mCrit = no.
+       this-object:PromoSet = no.
+       this-object:PromoSetGoods = no.
+       Promovisa = iPromovisa.
+    end.
+     
     define private variable mBind  as character no-undo.
     
     {ibs/th/ref/promo/promo_trg_heder.i }  
@@ -110,6 +143,11 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             mBind  = "PromoSetgoods"
             vLable = "Товары"
         .
+        else if Promovisa
+        then  assign
+            mBind  = "PromoCardsBin"
+            vLable = "Карты Visa"
+        .
         else assign
             mBind  = "PromoGoodsAppl"
             vLable = "Товары"
@@ -123,6 +161,18 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             THIS-OBJECT:dataGridView1:Columns[1]:Visible = no
             THIS-OBJECT:dataGridView1:Columns[2]:Visible = yes
             THIS-OBJECT:dataGridView1:Columns[3]:Visible = yes
+            /* this-object:button1:Visible = no
+            this-object:button2:Visible = no */
+           // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
+        .
+        else if Promovisa then assign
+            THIS-OBJECT:dataGridView1:Columns[0]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[1]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[2]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[2]:HeaderText = "Бины карт"
+            THIS-OBJECT:dataGridView1:Columns[3]:Visible = no
+            
+            
            // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
         .
         

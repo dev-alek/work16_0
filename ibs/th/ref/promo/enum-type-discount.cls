@@ -19,5 +19,6 @@ enum ibs.th.ref.promo.enum-type-discount:
   define enum
     ensolo  = 1 /* врЕменная скидка - предоставляется на отдельный товар */
     encombo = 2 /* промо-набор      - предоставляется на сочетание товаров */
+    enVisa = 3
   .
 end enum .

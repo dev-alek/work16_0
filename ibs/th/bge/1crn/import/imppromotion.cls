@@ -169,8 +169,8 @@ do: // заголок промо-акции
         v-promo-action:NameAction  = objImp:name_
      // обработка enum при взаимодействии со справочниками реализована в обход
      // v-promo-action:TypeDiscont = objImp:dscnt-type
-        v-promo-action:TypeDiscontenum = objImp:dscnt-type
-        v-promo-action:methodCalc  = objImp:dscnt-value-type
+        v-promo-action:TypeDiscontenum = if objImp:dscnt-value-type eq 8 then enum-type-discount:enVISA else objImp:dscnt-type
+        v-promo-action:methodCalc      = if objImp:dscnt-value-type eq 8 then 7                         else objImp:dscnt-value-type
      // v-promo-action:status_     = getPromoStatus(objImp:status_)
         v-promo-action:status_enum = getPromoStatus(objImp:status_)
         v-promo-action:priority    = objImp:priority
@@ -239,10 +239,12 @@ define variable v-txt-error         as character no-undo .
           v-txt-typedisc[v-promo-action:TypeDiscontenum:GetValue()]
         ) .
       end. // end_of_encombo
+      when enum-type-discount:enVISA then do:
+      END.
       otherwise v-txt-error = substitute("Тип скидки [&1] не поддерживается.", v-promo-action:TypeDiscontenum:GetValue()) .
     end case .
     
-    if v-txt-error = "" then v-promo-action:typecond = objImp:threshold-type .
+    /* if v-txt-error = "" then */ v-promo-action:typecond = objImp:threshold-type .
     /* 
        else undo, throw new Progress.Lang.AppError(v-txt-error) .
        09/VIII-2018 
@@ -437,26 +439,44 @@ end. // end_of_gds
 
         
 if valid-object(v-objlist5) then do: // gds-addcond - товары для независимых условий
-    v-promo-goods = v-promo-action:GoodsCrits .
-    v-i-counter = v-objlist5:iCounter .
-    do v-i-num = 1 to v-i-counter :
-      v-stub = v-objlist5:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
-      v-addcond-gd = cast(v-objlist5:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_gd) .
-      assign
-        v-promo-good = new ibs.th.ref.promo.promogoodssub ()
-        v-gds-code   = integer(v-addcond-gd:gd-code)
-      .
-      if not can-find (first buf_goods where buf_goods.gds-code = v-gds-code) then
-      undo, throw new Progress.Lang.AppError( substitute(
-        "Код товара [&1] из промо-акции [&2] отсутствует в справочнике товаров."
-        , v-gds-code, objImp:name_
-      ) ) .
-      assign
-        v-promo-good:GdsCode = v-gds-code
-        v-promo-good:Mode    = {&h-create}
-      .
-      v-promo-goods:AddItem (v-promo-good) .
-    end . // end_of_objImp:gds-addcond[]
+   if v-promo-action:TypeDiscontenum eq ibs.th.ref.promo.enum-type-discount:envisa
+   then do:
+      v-promo-goods = v-promo-action:CardsBin.
+      v-i-counter = v-objlist5:iCounter .
+      do v-i-num = 1 to v-i-counter :
+         v-stub = v-objlist5:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
+         v-addcond-gd = cast(v-objlist5:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_gd) .
+         assign
+           v-promo-good = new ibs.th.ref.promo.promogoodssub ()
+           v-promo-good:NameSet = v-addcond-gd:gd-code
+           v-promo-good:Mode    = {&h-create}
+         .
+         v-promo-goods:AddItem (v-promo-good) .
+      end . // end_of_objImp:gds-addcond[]
+      
+   end.
+   else do:
+      v-promo-goods = v-promo-action:GoodsCrits .
+      v-i-counter = v-objlist5:iCounter .
+      do v-i-num = 1 to v-i-counter :
+         v-stub = v-objlist5:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
+         v-addcond-gd = cast(v-objlist5:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_gd) .
+         assign
+           v-promo-good = new ibs.th.ref.promo.promogoodssub ()
+           v-gds-code   = integer(v-addcond-gd:gd-code)
+         .
+         if not can-find (first buf_goods where buf_goods.gds-code = v-gds-code) then
+         undo, throw new Progress.Lang.AppError( substitute(
+           "Код товара [&1] из промо-акции [&2] отсутствует в справочнике товаров."
+           , v-gds-code, objImp:name_
+         ) ) .
+         assign
+           v-promo-good:GdsCode = v-gds-code
+           v-promo-good:Mode    = {&h-create}
+         .
+         v-promo-goods:AddItem (v-promo-good) .
+      end . // end_of_objImp:gds-addcond[]
+   end.
 end. // end_of_gds-addcond
 
 

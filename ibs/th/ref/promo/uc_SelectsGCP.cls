@@ -44,7 +44,7 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
         SUPER().
         InitializeComponent().
         THIS-OBJECT:ComponentsCollection:ADD(THIS-OBJECT:components).
-        uc_Goods1:mCrit = yes.
+        uc_Goods1:pCrit = yes.
         CATCH e AS Progress.Lang.Error:
             UNDO, THROW e.
         END CATCH.
@@ -198,12 +198,17 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
         delete object uc_Canon1.
 
     END DESTRUCTOR.
-    
+    METHOD PUBLIC VOID INIT_Visa():
+        assign
+            uc_Goods1:pPromovisa = yes.
+            
+        .
+        INIT_Panel(yes,no,no,yes,no,yes).
+    end method.
     METHOD PUBLIC VOID INIT_Promoset():
         assign
-            uc_Goods1:mCrit         = no
-            uc_Goods1:PromoSet      = yes
-            uc_Goods2:PromoSetGoods = yes
+            uc_Goods1:pPromoSet      = yes
+            uc_Goods2:pPromoSetGoods = yes
         .
         INIT_Panel(yes,yes,no,no,no,yes).
     end method.    

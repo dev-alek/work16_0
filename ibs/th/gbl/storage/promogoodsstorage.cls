@@ -77,11 +77,11 @@ class ibs.th.gbl.storage.promogoodsstorage:
          assign
            v-sub:idAction = promoGoodssubsObj:IdAction when promoGoodssubsObj:IdAction > 0
            v-sub:idSet    = promoGoodssubsObj:IdSet    when promoGoodssubsObj:IdSet    > 0
-           v-sub:db-num   = promoGoodssubsObj:db-num   when promoGoodssubsObj:db-num   > 0
+           v-sub:db-num   = promoGoodssubsObj:db-num   when promoGoodssubsObj:db-num   ne ?
            v-sub:type     = promoGoodssubsObj:type     when promoGoodssubsObj:type     > 0
            v-sub:idAction = iIdAction                  when iIdAction > 0
            v-sub:idSet    = iIdSet                     when iIdSet    > 0
-           v-sub:db-num   = idb-num                    when idb-num   > 0
+           v-sub:db-num   = idb-num                    when idb-num   ne ?
          .
          case v-sub:Mode :
            when {&h-create} then

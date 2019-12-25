@@ -111,12 +111,8 @@ end. /*if valid-object (promoGoodsSubs) then do:*/
 v-subGdCrs = v-promo-action:GoodsCrits .
 if valid-object (v-subGdCrs) then 
 do: 
-  if v-subGdCrs:iCounter eq 0
-  then do:
-    run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
-    run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
-  end.
-  else do v-i = 1 to v-subGdCrs:iCounter:
+  if v-subGdCrs:iCounter ne 0
+  then  do v-i = 1 to v-subGdCrs:iCounter:
     v-subGdCrs:GetItem(v-i) .
     v-subGdCr = v-subGdCrs:promoGoodsObjCurr .    
     
@@ -129,7 +125,31 @@ do:
 
   end.
 end. /*if VALID-OBJECT (v-subFree) then do:*/
+
+v-subcardbins= v-promo-action:CardsBin .
+if valid-object (v-subcardbins) then 
+do: 
+  if v-subcardbins:iCounter ne 0
+  then  do v-i = 1 to v-subcardbins:iCounter:
+    v-subcardbins:GetItem(v-i) .
+    v-subCardBin = v-subcardbins:promoGoodsObjCurr .    
     
+    run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
+    run bgelib-tag-put in this-procedure ( input 4, input "PAFGId":U
+      , input string(v-promo-action:id), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 4, input "PAFGCode":U
+      , input string(v-subCardBin:nameset), input 1 ).
+    run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
+
+  end.
+end. /*if VALID-OBJECT (v-subFree) then do:*/
+    
+if  valid-object (v-subGdCrs)    and v-subGdCrs   :iCounter eq 0
+and valid-object (v-subcardbins) and v-subcardbins:iCounter eq 0
+then do:
+   run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
+   run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
+end.
 
 /*Подарки*/
    
