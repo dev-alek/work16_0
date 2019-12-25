@@ -228,7 +228,7 @@ procedure report:
   do:
     if buf_chk-doc.chk-type <> integer({&income-corr}) and buf_chk-doc.chk-type <> integer({&expense-corr}) then next .
     if num-entries(buf_chk-doc.doc-num, ",") > 2 then v-osnov-corr = entry(3,buf_chk-doc.doc-num,",") .     
-    if p-osnov-corr <> "0" then 
+    if p-osnov-corr <> "0" and p-osnov-corr <> "" then 
       if v-osnov-corr <> p-osnov-corr then next . 
 
     if num-entries(buf_chk-doc.doc-num, ",") > 0 then v-date-corr = entry(1,buf_chk-doc.doc-num,",") .
@@ -241,7 +241,7 @@ procedure report:
   end.
   else 
   do:
-    if p-osnov-corr <> "0" then 
+    if p-osnov-corr <> "0" and p-osnov-corr <> "" then 
     do:
       find first buf_chk-doc-attr no-lock where buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
         and buf_chk-doc-attr.attr-code = "corr-osnov" and buf_chk-doc-attr.attr-value = string(p-osnov-corr) no-error .
