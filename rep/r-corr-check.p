@@ -321,6 +321,7 @@ procedure report:
     tt-corr-check.sum-paytype = 0 .
     tt-corr-check.chk-type    = ChkType(buf_chk-doc.chk-type)
     .
+    run clients-write(INPUT buf_chk-doc.obj-code, INPUT buf_chk-doc.obj-type, OUTPUT tt-corr-check.obj-name) no-error .   
   for each buf_chk-pay no-lock where buf_chk-pay.doc-code = buf_chk-doc.doc-code:
     assign  
       tt-corr-check.sum-paytype = buf_chk-pay.tot-sum
@@ -473,7 +474,7 @@ end procedure .
       put stream OutStr-html unformatted
         '<TR>' skip
         '<TD text_wrap="true" style="text-align: center;">' + string(ii) + '</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">' + string(buf_tt-corr-check.obj-code) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(buf_tt-corr-check.obj-name) + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + string(buf_tt-corr-check.shift-num) + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + string(buf_tt-corr-check.shift-corr) + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + string(buf_tt-corr-check.shift-close) + '</TD>' skip

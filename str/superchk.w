@@ -3164,7 +3164,14 @@ create buf_chk-doc-attr.
            buf_chk-doc-attr.doc-code   = tt-chk-doc.doc-code
            buf_chk-doc-attr.attr-code  = "create-shift-date"
            buf_chk-doc-attr.attr-value = string(shift-date_)
-           .    
+           .   
+           
+for first ub.cash-pay no-lock where ub.cash-pay.obj-name = "Наличные",
+first ub.chk-pay no-lock where ub.chk-pay.pay-code = ub.cash-pay.pay-code and ub.chk-pay.doc-code = tt-chk-doc.doc-code :
+
+message "Необходимо скорректировать документы РКО/ПКО"
+view-as alert-box.
+end.            
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -6833,6 +6840,7 @@ if v-is-petrol-check then do:
   tt-chk-doc.netto = 0
   .
 end.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
