@@ -301,7 +301,7 @@ on error undo, return error return-value
 
   /*Печать*/
   put stream OutStr-html unformatted
-    '<TABLE fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0" name="Отчет">'skip
+    '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="Отчет">'skip
     .
 
   put stream OutStr-html unformatted

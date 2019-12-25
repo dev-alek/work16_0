@@ -1035,7 +1035,7 @@ assign
               when "1" or when "2" then tt-fin-doc.naznach-plat = "" .
               otherwise tt-fin-doc.naznach-plat = ub.CashBook.RuleOsnRko .
             end case .
-            if ub.CashBook.RulePril <> "0" and ub.CashBook.RulePril <> "1" then tt-fin-doc.enclosure = "" .
+            if ub.CashBook.RulePril = "0" or ub.CashBook.RulePril = "1" then tt-fin-doc.enclosure = "" .
             else tt-fin-doc.enclosure = ub.CashBook.RulePril .
             for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
             and ub.fin-code-cor-acc.host-code = p-curr-host-code :
