@@ -1401,8 +1401,8 @@ procedure print-sug .
             if main-line = no then "" else string(pol4,"->>>>>>>>>>>9.99"),
             if supp-line = no then "" else pol5,
             if pol6 = "" then "" else string(pol6),
-            if supp-line = no then "" else string(pol7,">>>>>>>>>>>9.99"),
             if supp-line = no then "" else string(pol9,"->>>>>>>>>>>9.99"),
+            if supp-line = no then "" else string(pol7,">>>>>>>>>>>9.99"),
             if pay-line = no then "" else pol11,
             if pay-line = no then "" else string(pol12,"->>>>>>>>>>>9.99")
             ).
@@ -1554,8 +1554,8 @@ procedure print-sug .
               if main-line = no then "" else string(pol4,"->>>>>>>>>>>9.99"),
               if supp-line = no then "" else pol5,
               if pol6 = "" then "" else string(pol6),
-              if supp-line = no then "" else string(pol7,">>>>>>>>>>>9.99"),
               if supp-line = no then "" else string(pol9,"->>>>>>>>>>>9.99"),
+              if supp-line = no then "" else string(pol7,">>>>>>>>>>>9.99"),
               if pay-line = no then "" else pol11,
               if pay-line = no then "" else string(pol12,"->>>>>>>>>>>9.99")
               ).
@@ -1661,8 +1661,8 @@ procedure print-sug .
         pol1,
         string(pol4,"->>>>>>>>>>>9.99"),
         pol5,
-        string(pol7,"->>>>>>>>>>>9.99"),
         string(pol9,"->>>>>>>>>>>9.99"),
+        string(pol7,"->>>>>>>>>>>9.99"),
         pol11,
         string(pol12,"->>>>>>>>>>>9.99"),
         string(pol13,"->>>>>>>>>>>9.99"),

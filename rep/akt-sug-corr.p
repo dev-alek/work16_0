@@ -595,8 +595,8 @@ do
         assign
           tt-petrol.name-gds   = v-gds-name
           tt-petrol.gds-code   = buf_goods.gds-code
-          tt-petrol.vol-TH     = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocQnty)
-          tt-petrol.density-TH = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocDensity)
+          tt-petrol.vol-TH     = buf_doc-line.cli-qnty / buf_doc-line.doc-density
+          tt-petrol.density-TH = buf_doc-line.doc-density
           tt-petrol.temp-TH    = buf_doc-line.temperature
           .
 /*        tt-petrol.weight-AC   = v-fact-qnty-after - v-fact-qnty-before .*/

@@ -234,6 +234,10 @@ define temp-table temp-rvs-line no-undo LIKE UB.RVS-LINE
   field pol15          as decimal
   field pol16          as decimal
   field itog-pol16     as decimal
+  field pol16-l        as decimal
+  field itog-pol16-l   as decimal
+  field pol16-kg       as decimal
+  field itog-pol16-kg  as decimal
   field pol17-l        as decimal
   field pol17-kg       as decimal
   field itog-pol17-l   as decimal
@@ -1376,7 +1380,8 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
           temp-rvs-line.itog-pol13    = temp-rvs-line.itog-pol13 + buf_temp-rvs-line.pol13
           temp-rvs-line.itog-pol7-l   = temp-rvs-line.itog-pol7-l + buf_temp-rvs-line.pol7-l
           temp-rvs-line.itog-pol7-kg  = temp-rvs-line.itog-pol7-kg + buf_temp-rvs-line.pol7-kg
-          temp-rvs-line.itog-pol16    = temp-rvs-line.itog-pol16 + buf_temp-rvs-line.state-brutto-qnty
+          temp-rvs-line.itog-pol16-l  = temp-rvs-line.itog-pol16-l + buf_temp-rvs-line.pol16-l
+          temp-rvs-line.itog-pol16-kg = temp-rvs-line.itog-pol16-kg + buf_temp-rvs-line.pol16-kg
           temp-rvs-line.itog-pol17-l  = temp-rvs-line.itog-pol17-l + buf_temp-rvs-line.pol17-l
           temp-rvs-line.itog-pol17-kg = temp-rvs-line.itog-pol17-kg + buf_temp-rvs-line.pol17-kg
           temp-rvs-line.itog-pol18    = temp-rvs-line.itog-pol17-kg / temp-rvs-line.itog-pol17-l
@@ -1405,7 +1410,7 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
-        '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol16,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol16 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol17-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol17-l <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol17-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
         '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol20-l <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
@@ -1425,7 +1430,7 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
-        '<td text_wrap="true" colspan="2" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol17-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
         '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol20-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol21-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
@@ -1435,7 +1440,8 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
         assign
           bf_temp-rvs-line.pol14 = bf_temp-rvs-line.state-level-total * 10
           bf_temp-rvs-line.pol15 = bf_temp-rvs-line.state-level-water * 10
-          bf_temp-rvs-line.pol16 = bf_temp-rvs-line.state-brutto-qnty
+          bf_temp-rvs-line.pol16-l = bf_temp-rvs-line.state-brutto-qnty + bf_temp-rvs-line.state-add-qnty
+          bf_temp-rvs-line.pol16-kg = (bf_temp-rvs-line.state-brutto-qnty + bf_temp-rvs-line.state-add-qnty) * bf_temp-rvs-line.density  
           bf_temp-rvs-line.pol19 = bf_temp-rvs-line.temperature
           .
         /*Итоги по резервуару*/
@@ -1457,7 +1463,7 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
           '<td text_wrap="true" style="text-align: right;"></td>' skip
           '<td text_wrap="true" style="text-align: right;"></td>' skip
           '<td text_wrap="true" style="text-align: right;"></td>' skip
-          '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol16,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol16 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
           '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
           '<td text_wrap="true" style="text-align: right;"></td>' skip
           '<td text_wrap="true" style="text-align: right;"></td>' skip
@@ -1477,7 +1483,7 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
           '<td text_wrap="true" style="text-align: right;"></td>' skip
           '<td text_wrap="true" style="text-align: right;"></td>' skip
           '<td text_wrap="true" style="text-align: right;"></td>' skip
-          '<td text_wrap="true" colspan="2" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
           '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
           '<td text_wrap="true" style="text-align: right;"></td>' skip
           '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
@@ -1497,7 +1503,8 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
         temp-rvs-line.itog-pol7-kg  = 0
         temp-rvs-line.itog-pol17-l  = 0
         temp-rvs-line.itog-pol17-kg = 0
-        temp-rvs-line.itog-pol16    = 0
+        temp-rvs-line.itog-pol16-l  = 0
+        temp-rvs-line.itog-pol16-kg = 0
         temp-rvs-line.itog-pol18    = 0
         temp-rvs-line.itog-pol13    = 0
         temp-rvs-line.itog-pol20-l  = 0

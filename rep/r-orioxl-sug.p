@@ -449,7 +449,8 @@ procedure table-inv:
       '<TD colspan = "10" text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.temp,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.temp,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.qnty1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.qnty1,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.delta1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.delta1,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true"></TD>' skip
+/*      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.delta1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.delta1,"->>>>>>>>>>>9.999",3) + '</TD>' skip*/
       '</TR>'skip     
       .
   end.  
