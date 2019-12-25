@@ -251,11 +251,11 @@ do
   end. 
   for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_trn-doc.doc-code and buf_rvs-doc.rvs-type = {&rvs-before-doc},
     first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-    v-fact-qnty-before = buf_rvs-line.state-brutto-cli-qnty .
+    v-fact-qnty-before = buf_rvs-line.state-measure-cli-qnty .
   end.    
   for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_trn-doc.doc-code and buf_rvs-doc.rvs-type = {&rvs-after-doc},
     first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-    v-fact-qnty-after = buf_rvs-line.state-brutto-cli-qnty .
+    v-fact-qnty-after = buf_rvs-line.state-measure-cli-qnty .
   end.    
         
   v-InfoSectionsTotal = new InfoSectionsTotal().

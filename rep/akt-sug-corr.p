@@ -608,7 +608,7 @@ do
                      
 
         assign
-          tt-petrol.limit      = abs(tt-petrol.weight-TH - tt-petrol.weight-AC)
+          tt-petrol.limit      = tt-petrol.weight-AC - tt-petrol.weight-TH
           tt-petrol.weight-est = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
           tt-petrol.deficit    = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Deficit
           tt-petrol.excess     = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Excess
@@ -722,14 +722,14 @@ for each bf_doc-line where bf_doc-line.doc-code = bf_trn-doc.doc-code :
     v-InfoSectionsTotal:GetDBAllAttr().
 
     do iNum = 1 to v-InfoSectionsTotal:SectionNum:
-  for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = v-doc-code and buf_rvs-doc.rvs-type = {&rvs-before-doc},
-    first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-    v-fact-qnty-before = buf_rvs-line.state-brutto-cli-qnty .
-  end.    
-  for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = v-doc-code and buf_rvs-doc.rvs-type = {&rvs-after-doc},
-    first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-    v-fact-qnty-after = buf_rvs-line.state-brutto-cli-qnty .
-  end.    
+      for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = v-doc-code and buf_rvs-doc.rvs-type = {&rvs-before-doc},
+        first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
+        v-fact-qnty-before = buf_rvs-line.state-measure-cli-qnty .
+      end.    
+      for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = v-doc-code and buf_rvs-doc.rvs-type = {&rvs-after-doc},
+        first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
+        v-fact-qnty-after = buf_rvs-line.state-measure-cli-qnty .
+      end.    
       create tt-sug .
       assign
         tt-sug.num-TH      = v-nakl
@@ -757,7 +757,7 @@ for each bf_doc-line where bf_doc-line.doc-code = bf_trn-doc.doc-code :
         .
 
       assign
-        tt-sug.limit      = abs(tt-sug.weight-TH - tt-sug.weight-AC)
+        tt-sug.limit      = tt-sug.weight-AC - tt-sug.weight-TH 
         tt-sug.weight-est = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
         tt-sug.deficit    = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Deficit
         tt-sug.excess     = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Excess
@@ -1014,7 +1014,7 @@ procedure print-table1:
       '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon((tt-sug.weight-AC),"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon((tt-sug.weight-AC),"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD text_wrap="true"></TD>' skip
 /*      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.AccPomi,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.AccPomi,"->>>>>>>>>>9.999",3) + '</TD>' skip*/
-      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(abs(tt-sug.limit),"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(abs(tt-sug.limit),"->>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon((tt-sug.limit),"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-sug.limit,"->>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD text_wrap="true"></TD>' skip
       '<TD text_wrap="true"></TD>' skip
       '</TR>'skip     
@@ -1041,9 +1041,9 @@ procedure print-table2:
     '</TR>'skip       
                     
     '<TR>' skip
-    '<TD text_wrap="true" colspan="2" style="text-align: center;">Объем, л</TD>' skip
-    '<TD text_wrap="true" colspan="2" style="text-align: center;">Плотность, г/см3</TD>' skip
-    '<TD text_wrap="true" colspan="2" style="text-align: center;">Температура, °С</TD>' skip
+    '<TD text_wrap="true" colspan="3" style="text-align: center;">Объем, л</TD>' skip
+/*    '<TD text_wrap="true" colspan="2" style="text-align: center;">Плотность, г/см3</TD>' skip*/
+    '<TD text_wrap="true" colspan="3" style="text-align: center;">Температура, °С</TD>' skip
     '<TD text_wrap="true" colspan="2" style="text-align: center;">Масса СУГ, подлежащая оприходыванию, кг</TD>' skip
     '</TR>'skip   
 
@@ -1052,10 +1052,10 @@ procedure print-table2:
     '<TD style="text-align: center;">2</TD>' skip
     '<TD style="text-align: center;">3</TD>' skip
     '<TD style="text-align: center;">4</TD>' skip
-    '<TD colspan="2" style="text-align: center;">5</TD>' skip
-    '<TD colspan="2" style="text-align: center;">6</TD>' skip
+    '<TD colspan="3" style="text-align: center;">5</TD>' skip
+    '<TD colspan="3" style="text-align: center;">6</TD>' skip
     '<TD colspan="2" style="text-align: center;">7</TD>' skip
-    '<TD colspan="2" style="text-align: center;">8</TD>' skip
+/*    '<TD colspan="2" style="text-align: center;">8</TD>' skip*/
     '</TR>'skip     
     .
   for each tt-petrol:
@@ -1065,9 +1065,9 @@ procedure print-table2:
       '<TD text_wrap="true" style="text-align: center;">' + v-num-ac + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.num-pl + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.name-gds + '</TD>' skip
-      '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '</TD>' skip           
-      '<TD text_wrap="true" colspan="2" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>9.9999",4) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>9.9999",4) + '</TD>' skip
-      '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD text_wrap="true" colspan="3" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '</TD>' skip           
+/*      '<TD text_wrap="true" colspan="2" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>9.9999",4) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>9.9999",4) + '</TD>' skip*/
+      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>9.999",3) + '</TD>' skip
       '</TR>'skip   
       '</tbody>'  

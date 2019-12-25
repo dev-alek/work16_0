@@ -386,7 +386,8 @@ procedure table-inv:
       '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-sug.gds-name + '</TD>' skip
       '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.gds-code) + '</TD>' skip
       '<TD colspan = "8" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.pl-code_) + '</TD>' skip
-      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.level,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.level,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip
+/*      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.level,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.level,"->>>>>>>>>>>9.999",3) + '</TD>' skip*/
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.volue,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.volue,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.temp,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.temp,"->>>>>>>>>>>9.999",3) + '</TD>' skip
@@ -449,7 +450,7 @@ procedure table-inv:
       '<TD colspan = "10" text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.temp,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.temp,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.qnty1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.qnty1,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD colspan = "10" text_wrap="true"></TD>' skip
+      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip
 /*      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.delta1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.delta1,"->>>>>>>>>>>9.999",3) + '</TD>' skip*/
       '</TR>'skip     
       .
