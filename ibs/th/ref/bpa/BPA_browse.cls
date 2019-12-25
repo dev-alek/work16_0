@@ -104,7 +104,9 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
   constructor public BPA_browse (iChange as character):
 
     super().
+
     pMode = iChange .
+   
     InitializeComponent().
     Visual_form(iChange) .
     v-status = {&current-status}.
@@ -197,7 +199,14 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
   method private void button_addBPA_Click(iChange as character, v-id as integer):
     
     define variable vPos      as integer   no-undo.
-    run ref/BPAform.p (iChange,v-id).
+    
+    define variable v-listact-brw as class ibs.th.ref.bpa.BPA_form no-undo .
+    
+    v-listact-brw = new ibs.th.ref.bpa.BPA_form (iChange,v-id).
+ 
+    v-listact-brw:parparentproc = parparentproc.
+    wait-for  v-listact-brw:ShowDialog() .
+ 
     vPos = bindingSource1:Position.
     bindingSource1:Handle = browse_OperServ(v-status, v-CalcType).
     bindingSource1:Position = vPos .   
@@ -368,344 +377,347 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
     Visual Designer to avoid any incompatible modifications.
     
     Modifying the contents of this method using a code editor will invalidate any support for this file. */
-      this-object:components = new System.ComponentModel.Container().
-      @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable tableDesc1 as Progress.Data.TableDesc no-undo.
-      tableDesc1 = new Progress.Data.TableDesc("tt-query").
-      this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
-      this-object:menuStrip = new System.Windows.Forms.MenuStrip().
-      this-object:toolStripMenuExit = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMark = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuChoose = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuAdd = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuCopy = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuEdit = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuLookUp = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuDel = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuGoods = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:toolStripMenuHist = new System.Windows.Forms.ToolStripMenuItem().
-      this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
-      this-object:radioButton3 = new System.Windows.Forms.RadioButton().
-      this-object:radioButton2 = new System.Windows.Forms.RadioButton().
-      this-object:radioButton1 = new System.Windows.Forms.RadioButton().
-      this-object:CalcType = new System.Windows.Forms.ComboBox().
-      this-object:label1 = new System.Windows.Forms.Label().
-      this-object:sortgroup = new System.Windows.Forms.GroupBox().
-      this-object:markDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:id = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:OsTypeRas = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:osTypeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:oSnameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:statusDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
-      this-object:menuStrip:SuspendLayout().
-      cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
-      this-object:sortgroup:SuspendLayout().
-      this-object:SuspendLayout().
-      /*  */
-      /* bindingSource1 */
-      /*  */
-      this-object:bindingSource1:MaxDataGuess = 0.
-      this-object:bindingSource1:NoLOBs = false.
-      this-object:bindingSource1:Position = 0.
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
-      arrayvar0 = new "Progress.Data.TableDesc[]"(0).
-      tableDesc1:ChildTables = arrayvar0.
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 7 no-undo.
-      arrayvar1[1] = new Progress.Data.ColumnPropDesc("OsTypeRas", "Тип расчёта", Progress.Data.DataType:CHARACTER).
-      arrayvar1[2] = new Progress.Data.ColumnPropDesc("OsType", "Тип", Progress.Data.DataType:CHARACTER).
-      arrayvar1[3] = new Progress.Data.ColumnPropDesc("OSname", "Наим.Оператора", Progress.Data.DataType:CHARACTER).
-      arrayvar1[4] = new Progress.Data.ColumnPropDesc("Status_", "Статус", Progress.Data.DataType:CHARACTER).
-      arrayvar1[5] = new Progress.Data.ColumnPropDesc("Mark", "*", Progress.Data.DataType:CHARACTER).
-      arrayvar1[6] = new Progress.Data.ColumnPropDesc("id", "", Progress.Data.DataType:INTEGER).
-      arrayvar1[7] = new Progress.Data.ColumnPropDesc("ext-code", "ext-code", Progress.Data.DataType:CHARACTER).
-      tableDesc1:Columns = arrayvar1.
-      this-object:bindingSource1:TableSchema = tableDesc1.
-      /*  */
-      /* menuStrip */
-      /*  */
-      this-object:menuStrip:Font = new System.Drawing.Font("Segoe UI", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold).
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar2 as System.Windows.Forms.ToolStripItem extent 10 no-undo.
-      arrayvar2[1] = this-object:toolStripMenuExit.
-      arrayvar2[2] = this-object:toolStripMark.
-      arrayvar2[3] = this-object:toolStripMenuChoose.
-      arrayvar2[4] = this-object:toolStripMenuAdd.
-      arrayvar2[5] = this-object:toolStripMenuCopy.
-      arrayvar2[6] = this-object:toolStripMenuEdit.
-      arrayvar2[7] = this-object:toolStripMenuLookUp.
-      arrayvar2[8] = this-object:toolStripMenuDel.
-      arrayvar2[9] = this-object:toolStripMenuGoods.
-      arrayvar2[10] = this-object:toolStripMenuHist.
-      this-object:menuStrip:Items:AddRange(arrayvar2).
-      this-object:menuStrip:Location = new System.Drawing.Point(0, 0).
-      this-object:menuStrip:Name = "menuStrip".
-      this-object:menuStrip:Padding = new System.Windows.Forms.Padding(15, 4, 0, 4).
-      this-object:menuStrip:Size = new System.Drawing.Size(797, 27).
-      this-object:menuStrip:TabIndex = 16.
-      this-object:menuStrip:Text = "menuStrip1".
-      this-object:menuStrip:DoubleClick:Subscribe(this-object:menuStrip_DoubleClick).
-      /*  */
-      /* toolStripMenuExit */
-      /*  */
-      this-object:toolStripMenuExit:Name = "toolStripMenuExit".
-      this-object:toolStripMenuExit:Size = new System.Drawing.Size(58, 19).
-      this-object:toolStripMenuExit:Text = "Выход".
-      this-object:toolStripMenuExit:Click:Subscribe(this-object:button1_Click).
-      /*  */
-      /* toolStripMark */
-      /*  */
-      this-object:toolStripMark:Name = "toolStripMark".
-      this-object:toolStripMark:Size = new System.Drawing.Size(24, 19).
-      this-object:toolStripMark:Text = "*".
-      this-object:toolStripMark:Click:Subscribe(this-object:click_mark).
-      /*  */
-      /* toolStripMenuChoose */
-      /*  */
-      this-object:toolStripMenuChoose:Name = "toolStripMenuChoose".
-      this-object:toolStripMenuChoose:Size = new System.Drawing.Size(58, 19).
-      this-object:toolStripMenuChoose:Text = "Выбор".
-      this-object:toolStripMenuChoose:Click:Subscribe(this-object:click_select).
-      /*  */
-      /* toolStripMenuAdd */
-      /*  */
-      this-object:toolStripMenuAdd:Name = "toolStripMenuAdd".
-      this-object:toolStripMenuAdd:Size = new System.Drawing.Size(75, 19).
-      this-object:toolStripMenuAdd:Text = "Добавить".
-      this-object:toolStripMenuAdd:Click:Subscribe(this-object:add_BPA).
-      /*  */
-      /* toolStripMenuCopy */
-      /*  */
-      this-object:toolStripMenuCopy:Name = "toolStripMenuCopy".
-      this-object:toolStripMenuCopy:Size = new System.Drawing.Size(88, 19).
-      this-object:toolStripMenuCopy:Text = "Копировать".
-      this-object:toolStripMenuCopy:Click:Subscribe(this-object:menu_copy).
-      /*  */
-      /* toolStripMenuEdit */
-      /*  */
-      this-object:toolStripMenuEdit:Name = "toolStripMenuEdit".
-      this-object:toolStripMenuEdit:Size = new System.Drawing.Size(77, 19).
-      this-object:toolStripMenuEdit:Text = "Изменить".
-      this-object:toolStripMenuEdit:Click:Subscribe(this-object:b_edit).
-      /*  */
-      /* toolStripMenuLookUp */
-      /*  */
-      this-object:toolStripMenuLookUp:Name = "toolStripMenuLookUp".
-      this-object:toolStripMenuLookUp:Size = new System.Drawing.Size(76, 19).
-      this-object:toolStripMenuLookUp:Text = "Просмотр".
-      this-object:toolStripMenuLookUp:Click:Subscribe(this-object:b_lookup).
-      /*  */
-      /* toolStripMenuDel */
-      /*  */
-      this-object:toolStripMenuDel:Name = "toolStripMenuDel".
-      this-object:toolStripMenuDel:Size = new System.Drawing.Size(65, 19).
-      this-object:toolStripMenuDel:Text = "Удалить".
-      this-object:toolStripMenuDel:Click:Subscribe(this-object:click_delete).
-      /*  */
-      /* toolStripMenuGoods */
-      /*  */
-      this-object:toolStripMenuGoods:Name = "toolStripMenuGoods".
-      this-object:toolStripMenuGoods:Size = new System.Drawing.Size(62, 19).
-      this-object:toolStripMenuGoods:Text = "Товары".
-      this-object:toolStripMenuGoods:Click:Subscribe(this-object:select_goods).
-      /*  */
-      /* toolStripMenuHist */
-      /*  */
-      this-object:toolStripMenuHist:Name = "toolStripMenuHist".
-      this-object:toolStripMenuHist:Size = new System.Drawing.Size(68, 19).
-      this-object:toolStripMenuHist:Text = "История".
-      /*  */
-      /* dataGridView1 */
-      /*  */
-      this-object:dataGridView1:AllowUserToAddRows = false.
-      this-object:dataGridView1:AllowUserToDeleteRows = false.
-      this-object:dataGridView1:AllowUserToOrderColumns = true.
-      this-object:dataGridView1:AllowUserToResizeRows = false.
-      this-object:dataGridView1:AutoGenerateColumns = false.
-      this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
-      this-object:dataGridView1:BorderStyle = System.Windows.Forms.BorderStyle:None.
-      this-object:dataGridView1:ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode:Disable.
-      this-object:dataGridView1:ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle:Single.
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar3 as System.Windows.Forms.DataGridViewColumn extent 7 no-undo.
-      arrayvar3[1] = this-object:markDataGridViewTextBoxColumn.
-      arrayvar3[2] = this-object:dataGridViewTextBoxColumn1.
-      arrayvar3[3] = this-object:id.
-      arrayvar3[4] = this-object:OsTypeRas.
-      arrayvar3[5] = this-object:osTypeDataGridViewTextBoxColumn.
-      arrayvar3[6] = this-object:oSnameDataGridViewTextBoxColumn.
-      arrayvar3[7] = this-object:statusDataGridViewTextBoxColumn.
-      this-object:dataGridView1:Columns:AddRange(arrayvar3).
-      this-object:dataGridView1:DataSource = this-object:bindingSource1.
-      this-object:dataGridView1:EnableHeadersVisualStyles = false.
-      this-object:dataGridView1:ImeMode = System.Windows.Forms.ImeMode:NoControl.
-      this-object:dataGridView1:Location = new System.Drawing.Point(5, 91).
-      this-object:dataGridView1:MultiSelect = false.
-      this-object:dataGridView1:Name = "dataGridView1".
-      this-object:dataGridView1:RightToLeft = System.Windows.Forms.RightToLeft:No.
-      this-object:dataGridView1:RowHeadersVisible = false.
-      this-object:dataGridView1:ScrollBars = System.Windows.Forms.ScrollBars:Vertical.
-      this-object:dataGridView1:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
-      this-object:dataGridView1:Size = new System.Drawing.Size(786, 457).
-      this-object:dataGridView1:TabIndex = 15.
-      this-object:dataGridView1:CellClick:Subscribe(this-object:dataGridView1_CellClick).
-      this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
-      this-object:dataGridView1:CellContentDoubleClick:Subscribe(this-object:dataGridView1_CellContentDoubleClick).
-      /*  */
-      /* radioButton3 */
-      /*  */
-      this-object:radioButton3:Location = new System.Drawing.Point(165, 20).
-      this-object:radioButton3:Name = "radioButton3".
-      this-object:radioButton3:Size = new System.Drawing.Size(104, 24).
-      this-object:radioButton3:TabIndex = 2.
-      this-object:radioButton3:Text = "Удаленные".
-      this-object:radioButton3:UseCompatibleTextRendering = true.
-      this-object:radioButton3:UseVisualStyleBackColor = true.
-      this-object:radioButton3:CheckedChanged:Subscribe(this-object:r_status_Checked).
-      /*  */
-      /* radioButton2 */
-      /*  */
-      this-object:radioButton2:Checked = true.
-      this-object:radioButton2:Location = new System.Drawing.Point(71, 20).
-      this-object:radioButton2:Name = "radioButton2".
-      this-object:radioButton2:Size = new System.Drawing.Size(77, 24).
-      this-object:radioButton2:TabIndex = 1.
-      this-object:radioButton2:TabStop = true.
-      this-object:radioButton2:Text = "Текущие".
-      this-object:radioButton2:UseCompatibleTextRendering = true.
-      this-object:radioButton2:UseVisualStyleBackColor = true.
-      this-object:radioButton2:CheckedChanged:Subscribe(this-object:r_status_Checked).
-      /*  */
-      /* radioButton1 */
-      /*  */
-      this-object:radioButton1:Location = new System.Drawing.Point(8, 20).
-      this-object:radioButton1:Name = "radioButton1".
-      this-object:radioButton1:Size = new System.Drawing.Size(54, 24).
-      this-object:radioButton1:TabIndex = 0.
-      this-object:radioButton1:Text = "Все".
-      this-object:radioButton1:UseCompatibleTextRendering = true.
-      this-object:radioButton1:UseVisualStyleBackColor = true.
-      this-object:radioButton1:CheckedChanged:Subscribe(this-object:r_status_Checked).
-      /*  */
-      /* CalcType */
-      /*  */
-      this-object:CalcType:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
-      this-object:CalcType:FormattingEnabled = true.
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar4 as System.Object extent 4 no-undo.
-      arrayvar4[1] = "Все".
-      arrayvar4[2] = "Оплата Сотовой связи".
-      arrayvar4[3] = "Начисление на карту".
-      arrayvar4[4] = "Платежный агент".
-      this-object:CalcType:Items:AddRange(arrayvar4).
-      this-object:CalcType:Location = new System.Drawing.Point(474, 17).
-      this-object:CalcType:Name = "CalcType".
-      this-object:CalcType:Size = new System.Drawing.Size(306, 23).
-      this-object:CalcType:TabIndex = 18.
-      this-object:CalcType:SelectedIndexChanged:Subscribe(this-object:r_type_Checked).
-      /*  */
-      /* label1 */
-      /*  */
-      this-object:label1:Location = new System.Drawing.Point(413, 20).
-      this-object:label1:Name = "label1".
-      this-object:label1:Size = new System.Drawing.Size(55, 23).
-      this-object:label1:TabIndex = 19.
-      this-object:label1:Text = "По типу:".
-      this-object:label1:UseCompatibleTextRendering = true.
-      /*  */
-      /* sortgroup */
-      /*  */
-      this-object:sortgroup:Controls:Add(this-object:radioButton3).
-      this-object:sortgroup:Controls:Add(this-object:label1).
-      this-object:sortgroup:Controls:Add(this-object:radioButton2).
-      this-object:sortgroup:Controls:Add(this-object:radioButton1).
-      this-object:sortgroup:Controls:Add(this-object:CalcType).
-      this-object:sortgroup:Location = new System.Drawing.Point(5, 30).
-      this-object:sortgroup:Name = "sortgroup".
-      this-object:sortgroup:Size = new System.Drawing.Size(786, 55).
-      this-object:sortgroup:TabIndex = 20.
-      this-object:sortgroup:TabStop = false.
-      this-object:sortgroup:Text = "Сортировка".
-      this-object:sortgroup:UseCompatibleTextRendering = true.
-      /*  */
-      /* markDataGridViewTextBoxColumn */
-      /*  */
-      this-object:markDataGridViewTextBoxColumn:DataPropertyName = "Mark".
-      this-object:markDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(21.952177).
-      this-object:markDataGridViewTextBoxColumn:HeaderText = "*".
-      this-object:markDataGridViewTextBoxColumn:Name = "markDataGridViewTextBoxColumn".
-      this-object:markDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:markDataGridViewTextBoxColumn:Resizable = System.Windows.Forms.DataGridViewTriState:False.
-      /*  */
-      /* dataGridViewTextBoxColumn1 */
-      /*  */
-      this-object:dataGridViewTextBoxColumn1:DataPropertyName = "ext-code".
-      this-object:dataGridViewTextBoxColumn1:HeaderText = "Внешний ключ".
-      this-object:dataGridViewTextBoxColumn1:Name = "dataGridViewTextBoxColumn1".
-      this-object:dataGridViewTextBoxColumn1:Visible = false.
-      /*  */
-      /* id */
-      /*  */
-      this-object:id:DataPropertyName = "id".
-      this-object:id:HeaderText = "Код".
-      this-object:id:Name = "id".
-      this-object:id:ReadOnly = true.
-      /*  */
-      /* OsTypeRas */
-      /*  */
-      this-object:OsTypeRas:DataPropertyName = "OsTypeRas".
-      this-object:OsTypeRas:FillWeight = Progress.Util.CastUtil:ToSingle(152.2842865).
-      this-object:OsTypeRas:HeaderText = "Тип".
-      this-object:OsTypeRas:Name = "OsTypeRas".
-      this-object:OsTypeRas:ReadOnly = true.
-      /*  */
-      /* osTypeDataGridViewTextBoxColumn */
-      /*  */
-      this-object:osTypeDataGridViewTextBoxColumn:DataPropertyName = "OsType".
-      this-object:osTypeDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(155.7800751).
-      this-object:osTypeDataGridViewTextBoxColumn:HeaderText = "Тип расчёта".
-      this-object:osTypeDataGridViewTextBoxColumn:Name = "osTypeDataGridViewTextBoxColumn".
-      this-object:osTypeDataGridViewTextBoxColumn:ReadOnly = true.
-      /*  */
-      /* oSnameDataGridViewTextBoxColumn */
-      /*  */
-      this-object:oSnameDataGridViewTextBoxColumn:DataPropertyName = "OSname".
-      this-object:oSnameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(172.8451538).
-      this-object:oSnameDataGridViewTextBoxColumn:HeaderText = "Наим.Оператора".
-      this-object:oSnameDataGridViewTextBoxColumn:MinimumWidth = 10.
-      this-object:oSnameDataGridViewTextBoxColumn:Name = "oSnameDataGridViewTextBoxColumn".
-      this-object:oSnameDataGridViewTextBoxColumn:ReadOnly = true.
-      /*  */
-      /* statusDataGridViewTextBoxColumn */
-      /*  */
-      this-object:statusDataGridViewTextBoxColumn:DataPropertyName = "Status_".
-      this-object:statusDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(48.569191).
-      this-object:statusDataGridViewTextBoxColumn:HeaderText = "Статус".
-      this-object:statusDataGridViewTextBoxColumn:Name = "statusDataGridViewTextBoxColumn".
-      this-object:statusDataGridViewTextBoxColumn:ReadOnly = true.
-      /*  */
-      /* BPA_browse */
-      /*  */
-      this-object:ClientSize = new System.Drawing.Size(797, 549).
-      this-object:Controls:Add(this-object:sortgroup).
-      this-object:Controls:Add(this-object:dataGridView1).
-      this-object:Controls:Add(this-object:menuStrip).
-      this-object:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-      this-object:Name = "BPA_browse".
-      this-object:Text = "СПРАВОЧНИК ПЛАТЕЖНЫХ АГЕНТОВ/ОПЕРАТОРОВ".
-      cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
-      this-object:menuStrip:ResumeLayout(false).
-      this-object:menuStrip:PerformLayout().
-      cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
-      this-object:sortgroup:ResumeLayout(false).
-      this-object:ResumeLayout(false).
-      this-object:PerformLayout().
-      catch e as Progress.Lang.Error:
-         undo, throw e.
-      end catch.
+    this-object:components = new System.ComponentModel.Container().
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+    tableDesc1 = new Progress.Data.TableDesc("tt-query").
+    this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
+    this-object:menuStrip = new System.Windows.Forms.MenuStrip().
+    this-object:toolStripMenuExit = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMark = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuChoose = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuAdd = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuCopy = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuEdit = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuLookUp = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuDel = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuGoods = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:toolStripMenuHist = new System.Windows.Forms.ToolStripMenuItem().
+    this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
+    this-object:markDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:id = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:OsTypeRas = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:osTypeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:oSnameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:statusDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:radioButton3 = new System.Windows.Forms.RadioButton().
+    this-object:radioButton2 = new System.Windows.Forms.RadioButton().
+    this-object:radioButton1 = new System.Windows.Forms.RadioButton().
+    this-object:CalcType = new System.Windows.Forms.ComboBox().
+    this-object:label1 = new System.Windows.Forms.Label().
+    this-object:sortgroup = new System.Windows.Forms.GroupBox().
+    cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
+    this-object:menuStrip:SuspendLayout().
+    cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
+    this-object:sortgroup:SuspendLayout().
+    this-object:SuspendLayout().
+    /*  */
+    /* bindingSource1 */
+    /*  */
+    this-object:bindingSource1:MaxDataGuess = 0.
+    this-object:bindingSource1:NoLOBs = false.
+    this-object:bindingSource1:Position = 0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
+    arrayvar0 = new "Progress.Data.TableDesc[]"(0).
+    tableDesc1:ChildTables = arrayvar0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 7 no-undo.
+    arrayvar1[1] = new Progress.Data.ColumnPropDesc("OsTypeRas", "Тип расчёта", Progress.Data.DataType:CHARACTER).
+    arrayvar1[2] = new Progress.Data.ColumnPropDesc("OsType", "Тип", Progress.Data.DataType:CHARACTER).
+    arrayvar1[3] = new Progress.Data.ColumnPropDesc("OSname", "Наим.Оператора", Progress.Data.DataType:CHARACTER).
+    arrayvar1[4] = new Progress.Data.ColumnPropDesc("Status_", "Статус", Progress.Data.DataType:CHARACTER).
+    arrayvar1[5] = new Progress.Data.ColumnPropDesc("Mark", "*", Progress.Data.DataType:CHARACTER).
+    arrayvar1[6] = new Progress.Data.ColumnPropDesc("id", "", Progress.Data.DataType:INTEGER).
+    arrayvar1[7] = new Progress.Data.ColumnPropDesc("ext-code", "ext-code", Progress.Data.DataType:CHARACTER).
+    tableDesc1:Columns = arrayvar1.
+    this-object:bindingSource1:TableSchema = tableDesc1.
+    /*  */
+    /* menuStrip */
+    /*  */
+    this-object:menuStrip:Font = new System.Drawing.Font("Segoe UI", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold).
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar2 as System.Windows.Forms.ToolStripItem extent 10 no-undo.
+    arrayvar2[1] = this-object:toolStripMenuExit.
+    arrayvar2[2] = this-object:toolStripMark.
+    arrayvar2[3] = this-object:toolStripMenuChoose.
+    arrayvar2[4] = this-object:toolStripMenuAdd.
+    arrayvar2[5] = this-object:toolStripMenuCopy.
+    arrayvar2[6] = this-object:toolStripMenuEdit.
+    arrayvar2[7] = this-object:toolStripMenuLookUp.
+    arrayvar2[8] = this-object:toolStripMenuDel.
+    arrayvar2[9] = this-object:toolStripMenuGoods.
+    arrayvar2[10] = this-object:toolStripMenuHist.
+    this-object:menuStrip:Items:AddRange(arrayvar2).
+    this-object:menuStrip:Location = new System.Drawing.Point(0, 0).
+    this-object:menuStrip:Name = "menuStrip".
+    this-object:menuStrip:Padding = new System.Windows.Forms.Padding(15, 4, 0, 4).
+    this-object:menuStrip:Size = new System.Drawing.Size(797, 27).
+    this-object:menuStrip:TabIndex = 16.
+    this-object:menuStrip:Text = "menuStrip1".
+    this-object:menuStrip:DoubleClick:Subscribe(this-object:menuStrip_DoubleClick).
+    /*  */
+    /* toolStripMenuExit */
+    /*  */
+    this-object:toolStripMenuExit:Name = "toolStripMenuExit".
+    this-object:toolStripMenuExit:Size = new System.Drawing.Size(58, 19).
+    this-object:toolStripMenuExit:Text = "Выход".
+    this-object:toolStripMenuExit:Click:Subscribe(this-object:button1_Click).
+    /*  */
+    /* toolStripMark */
+    /*  */
+    this-object:toolStripMark:Name = "toolStripMark".
+    this-object:toolStripMark:Size = new System.Drawing.Size(24, 19).
+    this-object:toolStripMark:Text = "*".
+    this-object:toolStripMark:Click:Subscribe(this-object:click_mark).
+    /*  */
+    /* toolStripMenuChoose */
+    /*  */
+    this-object:toolStripMenuChoose:Name = "toolStripMenuChoose".
+    this-object:toolStripMenuChoose:Size = new System.Drawing.Size(58, 19).
+    this-object:toolStripMenuChoose:Text = "Выбор".
+    this-object:toolStripMenuChoose:Click:Subscribe(this-object:click_select).
+    /*  */
+    /* toolStripMenuAdd */
+    /*  */
+    this-object:toolStripMenuAdd:Name = "toolStripMenuAdd".
+    this-object:toolStripMenuAdd:Size = new System.Drawing.Size(75, 19).
+    this-object:toolStripMenuAdd:Text = "Добавить".
+    this-object:toolStripMenuAdd:Click:Subscribe(this-object:add_BPA).
+    /*  */
+    /* toolStripMenuCopy */
+    /*  */
+    this-object:toolStripMenuCopy:Name = "toolStripMenuCopy".
+    this-object:toolStripMenuCopy:Size = new System.Drawing.Size(88, 19).
+    this-object:toolStripMenuCopy:Text = "Копировать".
+    this-object:toolStripMenuCopy:Click:Subscribe(this-object:menu_copy).
+    /*  */
+    /* toolStripMenuEdit */
+    /*  */
+    this-object:toolStripMenuEdit:Name = "toolStripMenuEdit".
+    this-object:toolStripMenuEdit:Size = new System.Drawing.Size(77, 19).
+    this-object:toolStripMenuEdit:Text = "Изменить".
+    this-object:toolStripMenuEdit:Click:Subscribe(this-object:b_edit).
+    /*  */
+    /* toolStripMenuLookUp */
+    /*  */
+    this-object:toolStripMenuLookUp:Name = "toolStripMenuLookUp".
+    this-object:toolStripMenuLookUp:Size = new System.Drawing.Size(76, 19).
+    this-object:toolStripMenuLookUp:Text = "Просмотр".
+    this-object:toolStripMenuLookUp:Click:Subscribe(this-object:b_lookup).
+    /*  */
+    /* toolStripMenuDel */
+    /*  */
+    this-object:toolStripMenuDel:Name = "toolStripMenuDel".
+    this-object:toolStripMenuDel:Size = new System.Drawing.Size(65, 19).
+    this-object:toolStripMenuDel:Text = "Удалить".
+    this-object:toolStripMenuDel:Click:Subscribe(this-object:click_delete).
+    /*  */
+    /* toolStripMenuGoods */
+    /*  */
+    this-object:toolStripMenuGoods:Name = "toolStripMenuGoods".
+    this-object:toolStripMenuGoods:Size = new System.Drawing.Size(62, 19).
+    this-object:toolStripMenuGoods:Text = "Товары".
+    this-object:toolStripMenuGoods:Click:Subscribe(this-object:select_goods).
+    /*  */
+    /* toolStripMenuHist */
+    /*  */
+    this-object:toolStripMenuHist:Name = "toolStripMenuHist".
+    this-object:toolStripMenuHist:Size = new System.Drawing.Size(68, 19).
+    this-object:toolStripMenuHist:Text = "История".
+    /*  */
+    /* dataGridView1 */
+    /*  */
+    this-object:dataGridView1:AllowUserToAddRows = false.
+    this-object:dataGridView1:AllowUserToDeleteRows = false.
+    this-object:dataGridView1:AllowUserToOrderColumns = true.
+    this-object:dataGridView1:AllowUserToResizeRows = false.
+    define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+    nestedvar0 = cast(Progress.Util.EnumHelper:Or(cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+    this-object:dataGridView1:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+    this-object:dataGridView1:AutoGenerateColumns = false.
+    this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
+    this-object:dataGridView1:BorderStyle = System.Windows.Forms.BorderStyle:None.
+    this-object:dataGridView1:ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode:Disable.
+    this-object:dataGridView1:ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle:Single.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar3 as System.Windows.Forms.DataGridViewColumn extent 7 no-undo.
+    arrayvar3[1] = this-object:markDataGridViewTextBoxColumn.
+    arrayvar3[2] = this-object:dataGridViewTextBoxColumn1.
+    arrayvar3[3] = this-object:id.
+    arrayvar3[4] = this-object:OsTypeRas.
+    arrayvar3[5] = this-object:osTypeDataGridViewTextBoxColumn.
+    arrayvar3[6] = this-object:oSnameDataGridViewTextBoxColumn.
+    arrayvar3[7] = this-object:statusDataGridViewTextBoxColumn.
+    this-object:dataGridView1:Columns:AddRange(arrayvar3).
+    this-object:dataGridView1:DataSource = this-object:bindingSource1.
+    this-object:dataGridView1:EnableHeadersVisualStyles = false.
+    this-object:dataGridView1:ImeMode = System.Windows.Forms.ImeMode:NoControl.
+    this-object:dataGridView1:Location = new System.Drawing.Point(5, 91).
+    this-object:dataGridView1:MultiSelect = false.
+    this-object:dataGridView1:Name = "dataGridView1".
+    this-object:dataGridView1:RightToLeft = System.Windows.Forms.RightToLeft:No.
+    this-object:dataGridView1:RowHeadersVisible = false.
+    this-object:dataGridView1:ScrollBars = System.Windows.Forms.ScrollBars:Vertical.
+    this-object:dataGridView1:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
+    this-object:dataGridView1:Size = new System.Drawing.Size(786, 457).
+    this-object:dataGridView1:TabIndex = 15.
+    this-object:dataGridView1:CellClick:Subscribe(this-object:dataGridView1_CellClick).
+    this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
+    this-object:dataGridView1:CellContentDoubleClick:Subscribe(this-object:dataGridView1_CellContentDoubleClick).
+    /*  */
+    /* markDataGridViewTextBoxColumn */
+    /*  */
+    this-object:markDataGridViewTextBoxColumn:DataPropertyName = "Mark".
+    this-object:markDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(21.952177).
+    this-object:markDataGridViewTextBoxColumn:HeaderText = "*".
+    this-object:markDataGridViewTextBoxColumn:Name = "markDataGridViewTextBoxColumn".
+    this-object:markDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:markDataGridViewTextBoxColumn:Resizable = System.Windows.Forms.DataGridViewTriState:False.
+    /*  */
+    /* dataGridViewTextBoxColumn1 */
+    /*  */
+    this-object:dataGridViewTextBoxColumn1:DataPropertyName = "ext-code".
+    this-object:dataGridViewTextBoxColumn1:HeaderText = "Внешний ключ".
+    this-object:dataGridViewTextBoxColumn1:Name = "dataGridViewTextBoxColumn1".
+    this-object:dataGridViewTextBoxColumn1:Visible = false.
+    /*  */
+    /* id */
+    /*  */
+    this-object:id:DataPropertyName = "id".
+    this-object:id:HeaderText = "Код".
+    this-object:id:Name = "id".
+    this-object:id:ReadOnly = true.
+    /*  */
+    /* OsTypeRas */
+    /*  */
+    this-object:OsTypeRas:DataPropertyName = "OsTypeRas".
+    this-object:OsTypeRas:FillWeight = Progress.Util.CastUtil:ToSingle(152.2842865).
+    this-object:OsTypeRas:HeaderText = "Тип".
+    this-object:OsTypeRas:Name = "OsTypeRas".
+    this-object:OsTypeRas:ReadOnly = true.
+    /*  */
+    /* osTypeDataGridViewTextBoxColumn */
+    /*  */
+    this-object:osTypeDataGridViewTextBoxColumn:DataPropertyName = "OsType".
+    this-object:osTypeDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(155.7800751).
+    this-object:osTypeDataGridViewTextBoxColumn:HeaderText = "Тип расчёта".
+    this-object:osTypeDataGridViewTextBoxColumn:Name = "osTypeDataGridViewTextBoxColumn".
+    this-object:osTypeDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* oSnameDataGridViewTextBoxColumn */
+    /*  */
+    this-object:oSnameDataGridViewTextBoxColumn:DataPropertyName = "OSname".
+    this-object:oSnameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(172.8451538).
+    this-object:oSnameDataGridViewTextBoxColumn:HeaderText = "Наим.Оператора".
+    this-object:oSnameDataGridViewTextBoxColumn:MinimumWidth = 10.
+    this-object:oSnameDataGridViewTextBoxColumn:Name = "oSnameDataGridViewTextBoxColumn".
+    this-object:oSnameDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* statusDataGridViewTextBoxColumn */
+    /*  */
+    this-object:statusDataGridViewTextBoxColumn:DataPropertyName = "Status_".
+    this-object:statusDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(48.569191).
+    this-object:statusDataGridViewTextBoxColumn:HeaderText = "Статус".
+    this-object:statusDataGridViewTextBoxColumn:Name = "statusDataGridViewTextBoxColumn".
+    this-object:statusDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* radioButton3 */
+    /*  */
+    this-object:radioButton3:Location = new System.Drawing.Point(165, 20).
+    this-object:radioButton3:Name = "radioButton3".
+    this-object:radioButton3:Size = new System.Drawing.Size(104, 24).
+    this-object:radioButton3:TabIndex = 2.
+    this-object:radioButton3:Text = "Удаленные".
+    this-object:radioButton3:UseCompatibleTextRendering = true.
+    this-object:radioButton3:UseVisualStyleBackColor = true.
+    this-object:radioButton3:CheckedChanged:Subscribe(this-object:r_status_Checked).
+    /*  */
+    /* radioButton2 */
+    /*  */
+    this-object:radioButton2:Checked = true.
+    this-object:radioButton2:Location = new System.Drawing.Point(71, 20).
+    this-object:radioButton2:Name = "radioButton2".
+    this-object:radioButton2:Size = new System.Drawing.Size(77, 24).
+    this-object:radioButton2:TabIndex = 1.
+    this-object:radioButton2:TabStop = true.
+    this-object:radioButton2:Text = "Текущие".
+    this-object:radioButton2:UseCompatibleTextRendering = true.
+    this-object:radioButton2:UseVisualStyleBackColor = true.
+    this-object:radioButton2:CheckedChanged:Subscribe(this-object:r_status_Checked).
+    /*  */
+    /* radioButton1 */
+    /*  */
+    this-object:radioButton1:Location = new System.Drawing.Point(8, 20).
+    this-object:radioButton1:Name = "radioButton1".
+    this-object:radioButton1:Size = new System.Drawing.Size(54, 24).
+    this-object:radioButton1:TabIndex = 0.
+    this-object:radioButton1:Text = "Все".
+    this-object:radioButton1:UseCompatibleTextRendering = true.
+    this-object:radioButton1:UseVisualStyleBackColor = true.
+    this-object:radioButton1:CheckedChanged:Subscribe(this-object:r_status_Checked).
+    /*  */
+    /* CalcType */
+    /*  */
+    this-object:CalcType:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
+    this-object:CalcType:FormattingEnabled = true.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar4 as System.Object extent 4 no-undo.
+    arrayvar4[1] = "Все".
+    arrayvar4[2] = "Оплата Сотовой связи".
+    arrayvar4[3] = "Начисление на карту".
+    arrayvar4[4] = "Платежный агент".
+    this-object:CalcType:Items:AddRange(arrayvar4).
+    this-object:CalcType:Location = new System.Drawing.Point(474, 17).
+    this-object:CalcType:Name = "CalcType".
+    this-object:CalcType:Size = new System.Drawing.Size(306, 23).
+    this-object:CalcType:TabIndex = 18.
+    this-object:CalcType:SelectedIndexChanged:Subscribe(this-object:r_type_Checked).
+    /*  */
+    /* label1 */
+    /*  */
+    this-object:label1:Location = new System.Drawing.Point(413, 20).
+    this-object:label1:Name = "label1".
+    this-object:label1:Size = new System.Drawing.Size(55, 23).
+    this-object:label1:TabIndex = 19.
+    this-object:label1:Text = "По типу:".
+    this-object:label1:UseCompatibleTextRendering = true.
+    /*  */
+    /* sortgroup */
+    /*  */
+    this-object:sortgroup:Controls:Add(this-object:radioButton3).
+    this-object:sortgroup:Controls:Add(this-object:label1).
+    this-object:sortgroup:Controls:Add(this-object:radioButton2).
+    this-object:sortgroup:Controls:Add(this-object:radioButton1).
+    this-object:sortgroup:Controls:Add(this-object:CalcType).
+    this-object:sortgroup:Location = new System.Drawing.Point(5, 30).
+    this-object:sortgroup:Name = "sortgroup".
+    this-object:sortgroup:Size = new System.Drawing.Size(786, 55).
+    this-object:sortgroup:TabIndex = 20.
+    this-object:sortgroup:TabStop = false.
+    this-object:sortgroup:Text = "Сортировка".
+    this-object:sortgroup:UseCompatibleTextRendering = true.
+    /*  */
+    /* BPA_browse */
+    /*  */
+    this-object:ClientSize = new System.Drawing.Size(797, 549).
+    this-object:Controls:Add(this-object:sortgroup).
+    this-object:Controls:Add(this-object:dataGridView1).
+    this-object:Controls:Add(this-object:menuStrip).
+    this-object:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:Name = "BPA_browse".
+    this-object:Text = "СПРАВОЧНИК ПЛАТЕЖНЫХ АГЕНТОВ/ОПЕРАТОРОВ".
+    cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
+    this-object:menuStrip:ResumeLayout(false).
+    this-object:menuStrip:PerformLayout().
+    cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
+    this-object:sortgroup:ResumeLayout(false).
+    this-object:ResumeLayout(false).
+    this-object:PerformLayout().
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
   end method.
 
   /*------------------------------------------------------------------------------
