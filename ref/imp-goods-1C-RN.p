@@ -66,6 +66,7 @@ define buffer first_gds-grp for ub.gds-grp.
 define buffer base-bar-code for ub.bar-code.
 define buffer buf_bar-code for ub.bar-code.
 define buffer buf_prod-bc for ub.prod-bc.
+define buffer buf_tax-rate-attr for ub.tax-rate-attr .
 
 define variable v-barcode as class goods_barcode .
 define variable v-barcodes as class subjects .
@@ -184,13 +185,38 @@ define variable v-barcode-list  as longchar  no-undo .
 /*  then do :                                                                                            */
 /*      undo, return error ("Нет единицы измерения с кодом ОКЕИ " + string(p-GdsObj:unit-spl-code)) .    */
 /*  end.                                                                                                 */
-  
-  find last ub.tax-rate-value no-lock where ub.tax-rate-value.rate-value = p-GdsObj:nds-code
-                                      and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
-                                      and ub.tax-rate-value.status_ = {&current-status}
-                                      use-index i-status no-error .
-  if available ub.tax-rate-value then v-nds-rate-code = ub.tax-rate-value.rate-code .
-  
+v-nds-rate-code = ? .
+if p-GdsObj:nds-code = -1 then 
+do:
+  for each buf_tax-rate-attr no-lock where buf_tax-rate-attr.tax-code = integer({&vat-tax-code})
+    and buf_tax-rate-attr.attr-code = "envd": 
+    find last ub.tax-rate-value no-lock where ub.tax-rate-value.rate-code = buf_tax-rate-attr.rate-code
+      and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
+      and ub.tax-rate-value.status_ = {&current-status}
+      use-index i-status no-error .                                    
+    if available ub.tax-rate-value and v-nds-rate-code = ? then v-nds-rate-code = ub.tax-rate-value.rate-code .   
+  end.     
+end.  
+else 
+do:
+  for each ub.tax-rate-value no-lock where ub.tax-rate-value.rate-value = p-GdsObj:nds-code
+    and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
+    and ub.tax-rate-value.status_ = {&current-status}
+    use-index i-status by ub.tax-rate-value.corr-date desc:                
+    if available ub.tax-rate-value then 
+    do:
+      if p-GdsObj:nds-code <> 0 and v-nds-rate-code = ? then 
+      do:
+        v-nds-rate-code = ub.tax-rate-value.rate-code .
+      end.
+      else do:
+        find first buf_tax-rate-attr no-lock where buf_tax-rate-attr.tax-code = integer({&vat-tax-code})
+        and buf_tax-rate-attr.attr-code = "envd" and buf_tax-rate-attr.rate-code = ub.tax-rate-value.rate-code no-error .
+        if not available (buf_tax-rate-attr) and v-nds-rate-code = ? then v-nds-rate-code = ub.tax-rate-value.rate-code . 
+      end.  
+    end.
+  end.
+end.  
     for each tt-tax:
       delete tt-tax.
     end.

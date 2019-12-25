@@ -9224,7 +9224,7 @@ procedure pftaxval :
   define variable v-fact-order as decimal no-undo .
   define buffer buf_tax-rate for ub.tax-rate.
   define buffer buf_tax-rate-value for ub.tax-rate-value.
-
+  define buffer buf_tax-rate-attr for ub.tax-rate-attr .
   do
   on error undo, return error return-value
   :
@@ -9277,12 +9277,15 @@ procedure pftaxval :
                 buf_tax-rate-value.obj-type = parobj-type AND
                 buf_tax-rate-value.obj-code = parobj-code AND
                 buf_tax-rate-value.fact-order <= v-fact-order AND
-                buf_tax-rate-value.status_ = {&current-status}
+                buf_tax-rate-value.status_ <> {&deleted-status}
                 NO-ERROR.
 
     if avail buf_tax-rate-value
     then do:
-      partax-value = buf_tax-rate-value.rate-value.
+      find first buf_tax-rate-attr no-lock where buf_tax-rate-attr.tax-code = integer({&vat-tax-code})
+      and buf_tax-rate-attr.attr-code = "envd" and buf_tax-rate-attr.rate-code = buf_tax-rate-value.rate-code no-error .
+      if available (buf_tax-rate-attr) then partax-value = -1 .
+      else partax-value = buf_tax-rate-value.rate-value.
       return.
     end.
 
@@ -9293,12 +9296,15 @@ procedure pftaxval :
                 buf_tax-rate-value.obj-type = "" AND
                 buf_tax-rate-value.obj-code = 0 AND
                 buf_tax-rate-value.fact-order <= v-fact-order AND
-                buf_tax-rate-value.status_ = {&current-status}
+                buf_tax-rate-value.status_ <> {&deleted-status}
                 NO-ERROR.
 
     if avail buf_tax-rate-value
     then do:
-      partax-value = buf_tax-rate-value.rate-value.
+      find first buf_tax-rate-attr no-lock where buf_tax-rate-attr.tax-code = integer({&vat-tax-code})
+      and buf_tax-rate-attr.attr-code = "envd" and buf_tax-rate-attr.rate-code = buf_tax-rate-value.rate-code no-error .
+      if available (buf_tax-rate-attr) then partax-value = -1 .
+      else partax-value = buf_tax-rate-value.rate-value.
       return.
     end.
 
@@ -9310,12 +9316,15 @@ procedure pftaxval :
                 buf_tax-rate-value.obj-type = "" AND
                 buf_tax-rate-value.obj-code = 0 AND
                 buf_tax-rate-value.fact-order <= v-fact-order AND
-                buf_tax-rate-value.status_ = {&current-status}
+                buf_tax-rate-value.status_ <> {&deleted-status}
                 NO-ERROR.
 
     if avail buf_tax-rate-value
     then do:
-      partax-value = buf_tax-rate-value.rate-value.
+      find first buf_tax-rate-attr no-lock where buf_tax-rate-attr.tax-code = integer({&vat-tax-code})
+      and buf_tax-rate-attr.attr-code = "envd" and buf_tax-rate-attr.rate-code = buf_tax-rate-value.rate-code no-error .
+      if available (buf_tax-rate-attr) then partax-value = -1 .
+      else partax-value = buf_tax-rate-value.rate-value.
       return.
     end.
 

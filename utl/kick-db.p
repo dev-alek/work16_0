@@ -232,14 +232,18 @@ if p-sys-key <> "raimbek":U then do:
   run cre-tax-rate in this-procedure (1, 1, "НДС 1").
   run cre-tax-rate in this-procedure (1, 2, "НДС 2").
   run cre-tax-rate in this-procedure (1, 3, "НДС 3").
+  run cre-tax-rate in this-procedure (1, 4, "НДС 4").
 
   run cre-tax-rate-value in this-procedure (1, 1, 20, v-today, v-time).
   run cre-tax-rate-value in this-procedure (1, 2, 10, v-today, v-time).
   run cre-tax-rate-value in this-procedure (1, 3, 0,  v-today, v-time).
+  run cre-tax-rate-value in this-procedure (1, 4, 0,  v-today, v-time).
 end.
 
 run cre-tax-rate in this-procedure (2, 22, "НП 22").
 run cre-tax-rate-value in this-procedure (2, 22, 0, v-today, v-time).
+
+run cre-tax-rate-attr in this-procedure (1, 4).
 
 run waitfram-show in this-procedure ("Заполнение налогов на группу товаров").
 run add-tax-gds-grp in this-procedure  no-error .
@@ -668,6 +672,32 @@ define buffer buf_tax-rate-value    for DICTDB.tax-rate-value .
       .
   end.
 
+
+end procedure.
+
+procedure cre-tax-rate-attr:
+def input param taxcode  like DICTDB.tax.tax-code       no-undo.
+def input param ratecode like DICTDB.tax-rate.rate-code no-undo.
+define buffer buf_tax-rate-attr          for DICTDB.tax-rate-attr .
+
+  find buf_tax-rate-attr where buf_tax-rate-attr.rate-code = ratecode no-error.
+  if available buf_tax-rate-attr then do:
+    if NOT buf_tax-rate-attr.tax-code = taxcode then do:
+      message "Для ставки налога с кодом " buf_tax-rate-attr.rate-code "уже есть атрибут ЕНВД." skip
+      "Подставляем:" taxcode
+      view-as alert-box.
+                      .
+      buf_tax-rate-attr.tax-code = taxcode.
+    end.
+  end.
+  else do:
+    create buf_tax-rate-attr.
+    assign
+      buf_tax-rate-attr.tax-code = taxcode
+      buf_tax-rate-attr.rate-code = ratecode
+      buf_tax-rate-attr.attr-code = "envd"
+      .
+  end.
 
 end procedure.
 
