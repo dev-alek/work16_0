@@ -877,7 +877,7 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
       define buffer buf_store for ub.store.
       
       mCashBook = new ibs.th.ref.cashbookstorage () .
-      
+
       o-head-position = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 5) .
       o-director      = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 6) .
       o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .
@@ -933,6 +933,7 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
           v-snr-accnt = buf_sysconf.snr-accnt.
         end.
       end case.
+      
       v-cashier = buf_sysconf.cashier.
     end. /*if tt-fin-doc.obj-type <> ''then do:*/
     else do:
@@ -943,6 +944,19 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
       v-cashier       = buf_sysconf.cashier
       .
     end.
+/* ищем следующюю смену и ее персонал */
+
+FIND FIRST ub.shift-staff No-LOCK WHERE
+    ub.shift-staff.obj-type   = p-obj-type AND
+    ub.shift-staff.obj-code   = p-obj-code AND
+    ub.shift-staff.shift-date = tt-fin-doc.shift-date AND
+    ub.shift-staff.shift-num  = tt-fin-doc.shift-num AND
+    ub.shift-staff.staff-role = yes and
+    ub.shift-staff.psn-num    >= 0 No-ERROR.
+assign 
+    v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+
+    .
 
     CASE p-fin-ext-doc-type:
       when {&FDEDT_Income_Cash} then do:
