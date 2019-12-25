@@ -72,7 +72,7 @@ class ibs.th.ref.incas inherits Form:
       if      maxSum ne ?
           and dec(fSum:text) > maxSum
       then do:
-         message "Сумма инкасации " dec(fSum:text) " не может быть больше суммы денег в кассе " maxSum
+         message "Сумма инкассации " dec(fSum:text) " не может быть больше суммы денег в кассе " maxSum
          view-as alert-box.
          return.
       end.
@@ -247,7 +247,7 @@ class ibs.th.ref.incas inherits Form:
       this-object:Controls:Add(this-object:windowContainer1).
       this-object:Cursor = System.Windows.Forms.Cursors:Default.
       this-object:Name = "incas".
-      this-object:Text = "Инкасация".
+      this-object:Text = "Инкассация".
       this-object:ResumeLayout(false).
       this-object:PerformLayout().
       catch e as Progress.Lang.Error:

@@ -886,7 +886,7 @@ ON CHOOSE OF B-pre-vedom IN FRAME Dialog-Frame /* Препровод. ведомость */
 DO:
   find first tt-fin-doc no-error .
   if available (tt-fin-doc) then do:
-  run ref/cover_sheet.p (input parParentProc, input p-host-code, input tt-fin-doc.fin-doc-code, input tt-fin-doc.CashBookId, input tt-fin-doc.sum-doc, input {&update}) no-error .
+  run ref/cover_sheet.p (input parParentProc, input p-host-code, input tt-fin-doc.fin-doc-code, input tt-fin-doc.CashBookId, input tt-fin-doc.sum-doc, input p-mode) no-error .
   end.
 END.
 

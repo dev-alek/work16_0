@@ -428,6 +428,10 @@ DEFINE BUTTON B-hist
      LABEL "Ис&тория" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON b-incas 
+     LABEL "Инкассация" 
+     SIZE 14 BY 1.
+
 DEFINE BUTTON b-lookup 
      LABEL "&Просмотр" 
      SIZE 10 BY 1.
@@ -466,10 +470,6 @@ DEFINE BUTTON b-sel AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-incas 
-     LABEL "Инкасация" 
-     SIZE 10 BY 1.
-
 DEFINE VARIABLE ED-notes AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 98 BY 2
@@ -493,7 +493,7 @@ DEFINE VARIABLE sch-c-schet AS CHARACTER FORMAT "X(9)":U
 DEFINE VARIABLE sch-cli-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0 
      LABEL "код" 
      VIEW-AS FILL-IN 
-     SIZE 11 BY .92 NO-UNDO.
+     SIZE 11 BY .91 NO-UNDO.
 
 DEFINE VARIABLE sch-curr-code AS INTEGER FORMAT ">>9":U INITIAL 0 
      LABEL "коду вал" 
@@ -535,7 +535,7 @@ DEFINE VARIABLE RS-cli-type AS CHARACTER
      RADIO-BUTTONS 
           "Item 1", "1",
 "Item 1", "2"
-     SIZE 14.13 BY 1.04 NO-UNDO.
+     SIZE 14.2 BY 1.05 NO-UNDO.
 
 DEFINE VARIABLE RS-list AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -544,7 +544,7 @@ DEFINE VARIABLE RS-list AS CHARACTER
 "Item 2", "2",
 "Item 3", "3",
 "Item 4", "4"
-     SIZE 72.13 BY .88
+     SIZE 72.2 BY .86
      FGCOLOR 4  NO-UNDO.
 
 DEFINE VARIABLE RS-receiver-payer AS CHARACTER 
@@ -552,12 +552,12 @@ DEFINE VARIABLE RS-receiver-payer AS CHARACTER
      RADIO-BUTTONS 
           "Item 1", "1",
 "Item 1", "2"
-     SIZE 26.75 BY 1 NO-UNDO.
+     SIZE 26.8 BY 1 NO-UNDO.
 
 DEFINE VARIABLE T-batch AS LOGICAL INITIAL no 
      LABEL "Пктн.рж" 
      VIEW-AS TOGGLE-BOX
-     SIZE 10.5 BY 1 TOOLTIP "Пакетная обработка выбранных платежей" NO-UNDO.
+     SIZE 10.6 BY 1 TOOLTIP "Пакетная обработка выбранных платежей" NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -599,7 +599,7 @@ ENABLE
 X_fin-doc.prn-doc-code
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.5 BY 12.38.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.6 BY 12.38.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -626,27 +626,27 @@ DEFINE FRAME Dialog-Frame
      B-attr AT ROW 2 COL 61
      B-exp AT ROW 2 COL 71
      b-incas AT ROW 2 COL 81 WIDGET-ID 2
-     br-fin-doc AT ROW 3.04 COL 1.38
-     ED-notes AT ROW 15.5 COL 1 NO-LABEL
-     RS-list AT ROW 17.58 COL 1.25 NO-LABEL
-     sch-prn-doc-code AT ROW 17.58 COL 88.63 COLON-ALIGNED
-     sch-curr-code AT ROW 18.58 COL 9 COLON-ALIGNED
-     B-curr AT ROW 18.58 COL 15.5
-     sch-doc-date AT ROW 18.58 COL 38.13 COLON-ALIGNED
-     sch-fact-date AT ROW 18.58 COL 62 COLON-ALIGNED
-     sch-pay-date AT ROW 18.58 COL 86 COLON-ALIGNED
-     sch-c-schet AT ROW 19.75 COL 40.88 COLON-ALIGNED
-     RS-receiver-payer AT ROW 19.79 COL 1.63 NO-LABEL
-     sch-r-schet AT ROW 19.79 COL 75.25 COLON-ALIGNED
-     sch-BIK AT ROW 20.92 COL 7.5 COLON-ALIGNED
-     sch-cli-code AT ROW 20.92 COL 26 COLON-ALIGNED
-     RS-cli-type AT ROW 20.92 COL 39.63 NO-LABEL
-     sch-name AT ROW 20.92 COL 66.25 COLON-ALIGNED
-     B-cli AT ROW 20.96 COL 53
-     mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
+     br-fin-doc AT ROW 3.05 COL 1.4
+     ED-notes AT ROW 15.52 COL 1 NO-LABEL
+     RS-list AT ROW 17.57 COL 1.2 NO-LABEL
+     sch-prn-doc-code AT ROW 17.57 COL 88.6 COLON-ALIGNED
+     sch-curr-code AT ROW 18.57 COL 9 COLON-ALIGNED
+     B-curr AT ROW 18.57 COL 15.6
+     sch-doc-date AT ROW 18.57 COL 38.2 COLON-ALIGNED
+     sch-fact-date AT ROW 18.57 COL 62 COLON-ALIGNED
+     sch-pay-date AT ROW 18.57 COL 86 COLON-ALIGNED
+     sch-c-schet AT ROW 19.76 COL 40.8 COLON-ALIGNED
+     RS-receiver-payer AT ROW 19.81 COL 1.6 NO-LABEL
+     sch-r-schet AT ROW 19.81 COL 75.2 COLON-ALIGNED
+     sch-BIK AT ROW 20.91 COL 7.6 COLON-ALIGNED
+     sch-cli-code AT ROW 20.91 COL 26 COLON-ALIGNED
+     RS-cli-type AT ROW 20.91 COL 39.6 NO-LABEL
+     sch-name AT ROW 20.91 COL 66.2 COLON-ALIGNED
+     B-cli AT ROW 20.95 COL 53
+     mark-num AT ROW 1 COL 12.6 COLON-ALIGNED NO-LABEL
      "ПОИСК ПО" VIEW-AS TEXT
-          SIZE 8.38 BY 1 AT ROW 17.58 COL 73.88
-     SPACE(17.04) SKIP(3.45)
+          SIZE 8.4 BY 1 AT ROW 17.57 COL 73.8
+     SPACE(17.10) SKIP(3.46)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Список платежей"
@@ -990,6 +990,42 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-incas
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-incas Dialog-Frame
+ON CHOOSE OF b-incas IN FRAME Dialog-Frame /* Инкассация */
+DO:
+  def var loc#log as logical no-undo.
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_fin-doc_add-def':U
+  {&cntxt-firm}
+  p-curr-host-code
+  '':U
+  0
+  0
+  0
+  0
+  true
+  loc#log
+}
+if not loc#log then return .
+
+  run utl/rkocollection.p(parparentproc,this-procedure,?).
+  run rep/pre-vedom.p (
+                  INPUT parParentProc
+                ,input p-curr-host-code
+                ,input X_fin-doc.fin-doc-code
+              ) no-error.
+  RUn OpenBR in this-procedure ( input yes, input no, input '':U).
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-lookup
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lookup Dialog-Frame
 ON CHOOSE OF b-lookup IN FRAME Dialog-Frame /* Просмотр */
@@ -1201,37 +1237,6 @@ DO:
   DEFINE VARIABLE dops as character no-undo .
   dops = if available X_fin-doc then X_fin-doc.ps else '':U.
   ED-notes:screen-value = dops.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b-incas
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-incas Dialog-Frame
-ON CHOOSE OF b-incas IN FRAME Dialog-Frame /* Инкасация */
-DO:
-  def var loc#log as logical no-undo.
-  { gbl/chk-actg.i
-  v-cntxt-db-num
-  v-cntxt-userid
-  {&action-head-code-main}
-  'actn_fin-doc_add-def':U
-  {&cntxt-firm}
-  p-curr-host-code
-  '':U
-  0
-  0
-  0
-  0
-  true
-  loc#log
-}
-if not loc#log then return .
-
-  run utl/rkocollection.p(parparentproc,this-procedure,?).
-  RUn OpenBR in this-procedure ( input yes, input no, input '':U).
-
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -5672,7 +5677,7 @@ define variable v-curr-abbr as character no-undo.
 define variable v-obj as character no-undo .
 
 DEFINE FRAME fin-doc-list
-X_fin-doc.host-code COLUMN-LABEL "Код!фирмы"
+X_fin-doc.host-code COLUMN-LABEL "Код!фирмы" format "99999999999999"
 X_fin-doc.prn-doc-code FORMAT "X(16)"
 v-receiver /*   X_fin-doc.receiver-type + string(X_fin-doc.receiver-code) */ COLUMN-LABEL "Получатель" FORMAT "X(12)"
 X_fin-doc.receiver-name COLUMN-LABEL "Назв.!получателя" FORMAT "X(17)"

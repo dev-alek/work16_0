@@ -31,7 +31,13 @@ define variable v-format as character no-undo .
 define buffer buf_fin-doc for ub.fin-doc.
 find first buf_fin-doc share-lock where
           recid(buf_fin-doc) = p-recid.
-
+  find first ub.fin-doc-attr no-lock where ub.fin-doc-attr.attr-code = "pre-vedom"
+    and ub.fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code and ub.fin-doc-attr.host-code = buf_fin-doc.host-code no-error .
+    if not available (ub.fin-doc-attr) then do:
+      message "” документа " + string(buf_fin-doc.prn-doc-code) + " нет препроводительной ведомости."
+      view-as alert-box.
+      return no-apply .
+    end.  
 run rep/pre-vedom.p (
                   INPUT parParentProc
                 ,input buf_fin-doc.host-code

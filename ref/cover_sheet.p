@@ -35,10 +35,12 @@ define input  parameter p-sum-doc     as decimal no-undo .
 define input  parameter p-mode        as character  no-undo . 
 
 define variable v-listact-brw as class ibs.th.ref.Cover_Sheet no-undo .
+do trans:
 v-listact-brw = new ibs.th.ref.Cover_Sheet (p-host-code, p-fin-code, p-CashBookId, p-sum-doc, p-mode).
 v-listact-brw:parparentproc = parparentproc .
 
 wait-for  v-listact-brw:ShowDialog() .
+end.
 /*  pList = v-listact-brw:p-list .*/
 define variable v-err-msg as character no-undo .  
 catch exAppErrors as class Progress.Lang.AppError :

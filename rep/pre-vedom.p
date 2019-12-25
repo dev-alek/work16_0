@@ -41,13 +41,14 @@ define variable vss-description as character no-undo init "Печать платежа  типа 
 { gbl/getcntxt.i get }
 { rep/html-conv.i }
 
-define temp-table tt-coins no-undo XML-NODE-NAME "coins" serialize-name  "coins"
+
+define temp-table tt-coins no-undo XML-NODE-NAME "coins" serialize-name "coins"
   field id       as decimal
   field qnty     as decimal
   field sum-qnty as decimal
   index pi id desc.
 
-define temp-table tt-banknots no-undo XML-NODE-NAME "banknots" serialize-name  "banknots"
+define temp-table tt-banknots no-undo XML-NODE-NAME "banknots" serialize-name "banknots"
   field id       as integer
   field qnty     as decimal
   field sum-qnty as decimal
@@ -113,6 +114,8 @@ define variable v-name-titul          as character no-undo .
 define variable v-name-titul1         as character no-undo .
 define variable v-cashier             as character no-undo .
 define variable v-decimal             as decimal   no-undo . 
+define variable v-pin                 as character no-undo .
+define variable v-qr-code             as integer   no-undo .
 define stream Out-Stream.
 define stream OutStr-html.
 
@@ -135,20 +138,28 @@ do
       find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
         ub.fin-bank-attr.attr-code = "collect-debt" no-error .
       if available (ub.fin-bank-attr) then v-debt-schet = ub.fin-bank-attr.attr-value .
-      assign
-        v-deposit-bank_name = ub.fin-bank.bank-name 
-        v-deposit-bank_bik  = ub.fin-bank.bik .
-    end.    
-
-    for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(v-recip-bank) and ub.fin-bank.host-code = ub.fin-doc-attr.host-code:
       find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
         ub.fin-bank-attr.attr-code = "collect-credit" no-error .
       if available (ub.fin-bank-attr) then v-credit-schet = ub.fin-bank-attr.attr-value .
+      find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
+        ub.fin-bank-attr.attr-code = "collect-qrcode" no-error .
+      if available (ub.fin-bank-attr) then v-qr-code = integer(ub.fin-bank-attr.attr-value) .
+
       assign
-        v-recip-bank_name = ub.fin-bank.bank-name
-        v-recip-bank_bik  = ub.fin-bank.bik
-        .
+        v-deposit-bank_name = ub.fin-bank.bank-name 
+        v-deposit-bank_bik  = ub.fin-bank.bik .
+        
     end.    
+
+    /*    for each ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(v-recip-bank) and ub.fin-bank.host-code = ub.fin-doc-attr.host-code:                  */
+    /*      find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and*/
+    /*        ub.fin-bank-attr.attr-code = "collect-credit" no-error .                                                                                             */
+    /*      if available (ub.fin-bank-attr) then v-credit-schet = ub.fin-bank-attr.attr-value .                                                                    */
+    /*      assign                                                                                                                                                 */
+    /*        v-recip-bank_name = ub.fin-bank.bank-name                                                                                                            */
+    /*        v-recip-bank_bik  = ub.fin-bank.bik                                                                                                                  */
+    /*        .                                                                                                                                                    */
+    /*    end.                                                                                                                                                     */
     
     find first ub.fin-doc no-lock where ub.fin-doc.fin-doc-code = ub.fin-doc-attr.fin-doc-code and ub.fin-doc.host-code = ub.fin-doc-attr.host-code no-error .
     v-shift-date = ub.fin-doc.shift-date .
@@ -160,14 +171,16 @@ do
       if buf_fin-doc.CashBookId <> 0 then 
       do:
         v-ok-cashUB = yes .
-        v-decimal =  decimal(entry(6,buf_fin-doc-attr.attr-value,";")) .
+        v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashUB = v-sum-cashUB + v-decimal .
+        v-pin = if v-pin = " " then entry(3,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(3,buf_fin-doc-attr.attr-value,";") .
       end.  
       else 
       do:
         v-ok-cashGB = yes .
-        v-decimal =  decimal(entry(6,buf_fin-doc-attr.attr-value,";")) .
+        v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashGB = v-sum-cashGB + v-decimal .
+        v-pin = if v-pin = " " then entry(3,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(3,buf_fin-doc-attr.attr-value,";") .
       end.  
       v-fin-doc-list = v-fin-doc-list + ";" + string(buf_fin-doc-attr.fin-doc-code) .
       v-total-sum = v-total-sum + buf_fin-doc.sum-doc .
@@ -180,16 +193,17 @@ do
     if v-ok-cashGB then v-source = "Поступления от продажи товаров" .
     if v-ok-cashUB then v-source1 = "Прочие поступления" .
     v-source = v-source + ", " + v-source1 .
-    FIND last ub.shift-staff No-LOCK WHERE
-      ub.shift-staff.obj-type   = ub.fin-doc.obj-type AND
-      ub.shift-staff.obj-code   = ub.fin-doc.obj-code AND
-      ub.shift-staff.shift-date = ub.fin-doc.shift-date AND
-      ub.shift-staff.shift-num  = ub.fin-doc.shift-num AND
-      ub.shift-staff.staff-role = yes and
-      ub.shift-staff.psn-num    >= 0 No-ERROR.
+    /*    FIND last ub.shift-staff No-LOCK WHERE                 */
+    /*      ub.shift-staff.obj-type   = ub.fin-doc.obj-type AND  */
+    /*      ub.shift-staff.obj-code   = ub.fin-doc.obj-code AND  */
+    /*      ub.shift-staff.shift-date = ub.fin-doc.shift-date AND*/
+    /*      ub.shift-staff.shift-num  = ub.fin-doc.shift-num AND */
+    /*      ub.shift-staff.staff-role = yes and                  */
+    /*      ub.shift-staff.psn-num    >= 0 No-ERROR.             */
     
+    find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error .
     assign 
-      v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+      v-cashier = if available ub.user-account then string(ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name) else "".
   end.  
 
   v-bank-code = trim (v-bank-code,";") .
@@ -197,7 +211,18 @@ do
   v-source = trim(v-source,", ") .
   do ii = 0 to num-entries (v-bank-code,";"):
     for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(entry (ii,v-bank-code,";")) and ub.fin-bank.host-code = p-host-code:
-      v-schet = if v-schet <> "" then v-schet + " , " + ub.fin-bank.cor-acc else ub.fin-bank.cor-acc .
+      v-schet = if v-schet <> "" then v-schet + " , " + ub.fin-bank.rkc else ub.fin-bank.rkc .
+      if v-recip-bank_name <> "" then 
+      do:
+        v-recip-bank_name = v-recip-bank_name + " , " + ub.fin-bank.bank-name . 
+      end. 
+      else v-recip-bank_name = ub.fin-bank.bank-name .
+      if v-recip-bank_bik <> "" then 
+      do: 
+        v-recip-bank_bik = v-recip-bank_bik + " , " + ub.fin-bank.bik . 
+      end. 
+      v-recip-bank_bik = ub.fin-bank.bik .
+      if v-credit-schet = "" then v-credit-schet = v-schet .
     end.  
   end.  
   
@@ -210,32 +235,36 @@ do
     for first buf_fin-doc-attr no-lock where buf_fin-doc-attr.fin-doc-code = integer(entry(ii,v-fin-doc-list,";")) and buf_fin-doc-attr.host-code = p-host-code
       and buf_fin-doc-attr.attr-code = "cover_sheet":
       CSJson = buf_fin-doc-attr.attr-value .
-      dataset ds-banknots:handle:read-json ("longchar",CSJson) .
-      for each tt-banknots no-lock where tt-banknots.qnty <> 0:
+      if CSJson <> "" and CSJson <> ? then 
+      do:
+        dataset ds-banknots:handle:read-json ("longchar",CSJson) .
+      
+        for each tt-banknots no-lock where tt-banknots.qnty <> 0:
 
-        find first tt-monets exclusive-lock where tt-monets.id = tt-banknots.id no-error .
-        if not available (tt-monets) then 
-        do:
-          create tt-monets .
-          tt-monets.id = tt-banknots.id .
+          find first tt-monets exclusive-lock where tt-monets.id = tt-banknots.id no-error .
+          if not available (tt-monets) then 
+          do:
+            create tt-monets .
+            tt-monets.id = tt-banknots.id .
+          end.  
+          assign
+            tt-monets.qnty     = tt-monets.qnty + tt-banknots.qnty
+            tt-monets.sum-qnty = tt-monets.sum-qnty + tt-banknots.sum-qnty 
+            .
         end.  
-        assign
-          tt-monets.qnty     = tt-monets.qnty + tt-banknots.qnty
-          tt-monets.sum-qnty = tt-monets.sum-qnty + tt-banknots.sum-qnty 
-          .
-      end.  
-      for each tt-coins no-lock where tt-coins.qnty <> 0:
-        find first tt-monets exclusive-lock where tt-monets.id = tt-coins.id no-error .
-        if not available (tt-monets) then 
-        do:
-          create tt-monets .
-          tt-monets.id = tt-coins.id .
-        end.  
-        assign
-          tt-monets.qnty     = tt-monets.qnty + tt-coins.qnty
-          tt-monets.sum-qnty = tt-monets.sum-qnty + tt-coins.sum-qnty 
-          .
-      end.        
+        for each tt-coins no-lock where tt-coins.qnty <> 0:
+          find first tt-monets exclusive-lock where tt-monets.id = tt-coins.id no-error .
+          if not available (tt-monets) then 
+          do:
+            create tt-monets .
+            tt-monets.id = tt-coins.id .
+          end.  
+          assign
+            tt-monets.qnty     = tt-monets.qnty + tt-coins.qnty
+            tt-monets.sum-qnty = tt-monets.sum-qnty + tt-coins.sum-qnty 
+            .
+        end.     
+      end.   
     end.  
   end.  
 
@@ -247,6 +276,49 @@ do
   find first buf_clients no-lock where buf_clients.obj-type = ub.fin-doc.obj-type and buf_clients.obj-code = ub.fin-doc.obj-code no-error .
   if available (buf_clients) then v-obj-name = buf_clients.obj-name .  
 
+if v-qr-code = 1 then do:
+/*QR-код*/
+  {gbl/base64.i}
+  define variable qr-code     as character no-undo.
+  define variable qr-code-out as character no-undo.
+  qr-code = '<?xml version="1.0" encoding="windows-1251" standalone="yes"?>
+<client_info><client_info_row>
+<client_ink>8598123368358741900012</client_ink>
+<client_ino>156885</client_ino>
+<client_name>АЗС№02-136 БашнефтьРозница</client_name>
+<client_organization_name>Общество с ограниченной ответственностью "Башнефть-Розница"</client_organization_name>
+<client_address xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Чишмы, Железнодорожная,1-1</client_address>
+<client_inn>1831090630</client_inn>
+<client_kpp>027801001</client_kpp>
+<client_accounts>
+<acc_num>40702810306000008673</acc_num>
+<bic>048073601</bic>
+<bank_name>БАШКИРСКОЕ ОТДЕЛЕНИЕ N8598 ПАО СБЕРБАНК Г.Уфа</bank_name>
+</client_accounts>
+<client_accounts>
+<acc_num>40821810200000000015</acc_num>
+<bic>044525880</bic>
+<bank_name>БАНК "ВБРР" (АО) Г.Москва</bank_name>
+</client_accounts>
+<bank_name>БАШКИРСКОЕ ОТДЕЛЕНИЕ N8598 ПАО СБЕРБАНК Г.УФА</bank_name>
+<bank_bic>048073601</bank_bic>
+<debet_account xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+</client_info_row></client_info>'.
+
+  run base64-encode (qr-code,output qr-code-out).
+  define variable v-arc as character no-undo .
+  define variable v-cmd as character no-undo .  
+
+  assign
+    v-arc = search( "exe/qrgen.exe":U )
+    .
+  if v-arc = ? then 
+  do:
+    return error "Не найдена программа qrgen.exe" .
+  end.   
+
+  os-command silent value (v-arc + ' -size=128 -content="' + qr-code-out + '"' + ' -filename="c:\temp\qr-code"') .
+end.
   run get-report-num  (output g#report-num).
   
   do jj = 1 to 3:
@@ -454,14 +526,6 @@ do
       '</tr>' skip
       .
 
-    /*  put stream OutStr-html unformatted                                                  */
-    /*    '<tr>' skip                                                                       */
-    /*    '<td></td>' skip                                                                  */
-    /*    '<td colspan="52" style="text-align: center; font-weight: bold;"></td>' skip      */
-    /*    '<td colspan="74"></td>'                                                          */
-    /*    '<td colspan="31" style="text-align: center; border: 1px solid black;"></td>' skip*/
-    /*    '</tr>' skip                                                                      */
-    /*    '<tr><td colspan="158"></td></tr>' skip .                                         */
     case jj:
       when 1 then 
         do:
@@ -479,15 +543,85 @@ do
           v-name-titul1 = "КВИТАНЦИЯ К СУМКЕ" .
         end.     
     end case .
-    
+    if jj = 1 then 
+    do:
+      if v-pin <> "" then 
+      do:
+        put stream OutStr-html unformatted
+          '<tr style="height: 45px;">' skip
+          '<td></td>' skip
+          '<td colspan="52" style="font-weight: bold;">ПИН ' + v-pin + '</td>' skip
+          .
+        if search( "C:\Temp\qr-code.png":U ) <> ? and v-qr-code = 1 then do:  
+        put stream OutStr-html unformatted   
+          '<td rowspan="3" colspan="74" style="text-align: right;"><img src="C:\Temp\qr-code.png" width="130" height="130" alt=""/></td>'.
+        end.
+        else do:  
+        put stream OutStr-html unformatted
+          '<td rowspan="3" colspan="74" style="text-align: right;"></td>'.
+        end.  
+        put stream OutStr-html unformatted            
+          '<td colspan="31"></td>' skip
+          '</tr>' skip 
+          '<tr><td colspan="53"></td>' skip
+          '<td colspan="31"></td>' skip
+          '</tr>' skip .
+      end.    
+      else 
+      do:
+        put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td></td>' skip
+          '<td colspan="52"></td>' skip
+          .
+        if search( "C:\Temp\qr-code.png":U ) <> ? and v-qr-code = 1 then do:  
+        put stream OutStr-html unformatted   
+          '<td rowspan="3" colspan="74" style="text-align: right;"><img src="C:\Temp\qr-code.png" width="130" height="130" alt=""/></td>'.
+        end.
+        else do:  
+        put stream OutStr-html unformatted
+          '<td rowspan="3" colspan="74" style="text-align: right;"></td>'.
+        end.  
+        put stream OutStr-html unformatted
+          '<td colspan="31"></td>' skip
+          '</tr>' skip 
+          '<tr><td colspan="53"></td>' skip
+          '<td colspan="31"></td>' skip
+          '</tr>' skip .
+      
+      end.  
+    end.
+    else 
+    do:
+      put stream OutStr-html unformatted
+        '<tr>' skip
+        '<td></td>' skip
+        '<td colspan="52"></td>' skip
+        '<td rowspan="2" colspan="74" style="text-align: right;"></td>'
+        '<td colspan="31"></td>' skip
+        '</tr>' skip 
+        '<tr><td colspan="53"></td>' skip
+        '<td colspan="31"></td>' skip
+        '</tr>' skip .
+
+    end.  
+    if jj <> 1 then do:
+            put stream OutStr-html unformatted
+        '<tr>' skip
+        '<td></td>' skip
+        '<td colspan="52"></td>' skip
+        '<td rowspan="2" colspan="74" style="text-align: right;"></td>'
+        '<td colspan="31"></td>' skip
+        '</tr>' skip. 
+    end.  
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td></td>' skip
       '<td colspan="52" style="text-align: center; font-weight: bold;">' + v-name-titul + '</td>' skip
-      '<td colspan="74"></td>'
       '<td colspan="31" style="text-align: center; border: 1px solid black;">Код формы документа по ОКУД 0402300</td>' skip
       '</tr>' skip 
       '<tr><td colspan="158"></td></tr>' skip .
+    
     
     put stream OutStr-html unformatted
       '<tr>' skip
@@ -512,7 +646,7 @@ do
       '<td colspan="5"></td>' skip
       '<td colspan="15"></td>' skip
       '<td colspan="8"></td>' skip
-      '<td colspan="50" style="text-align: center;">Дата</td>' skip
+      '<td colspan="50" style="text-align: center; font-size: 8px;">Дата</td>' skip
       '<td colspan="12"></td>' skip
       '<td colspan="31" style="text-align: right; border-left: 1px solid black; border-bottom: 1px solid black; border-right: 1px solid black;"></td>' skip
       '</tr>' skip .
@@ -645,7 +779,7 @@ do
       '<td></td>' skip
       '<td colspan="20" style="text-align: left;">Сумма прописью</td>' skip
       '<td></td>' skip
-      '<td colspan="99" style="text-align: center; border-bottom: 1px solid black;">' + v-total-rubl + '</td>' skip
+      '<td colspan="99" style="border-bottom: 1px solid black;">' + v-total-rubl + '</td>' skip
       .
       
     if jj <> 2 then 
@@ -679,7 +813,7 @@ do
       '<td></td>' skip
       '<td colspan="108" style="text-align: center;"></td>' skip
       '<td colspan="6"></td>' skip
-      '<td colspan="15" style="text-align: center;">(цифрами)</td>' skip
+      '<td colspan="15" style="text-align: center; font-size: 8px;">(цифрами)</td>' skip
       '<td colspan="6"></td>' skip
       '<td></td>' skip
       '</tr>' skip .
@@ -687,9 +821,9 @@ do
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td></td>' skip
-      '<td colspan="27" style="text-align: center;">Источник поступления</td>' skip
+      '<td colspan="34" style="text-align: center;">Источник поступления</td>' skip
       '<td style="border-bottom: 1px solid black;"></td>' skip
-      '<td colspan="129" style="text-align: center; border-bottom: 1px solid black;">' + v-source + '</td>' skip
+      '<td colspan="122" style="border-bottom: 1px solid black;">' + v-source + '</td>' skip
       '</tr>' skip 
       '<tr><td colspan="158" style="height:17px;"></td></tr>' skip
       '<tr><td colspan="158" style="height:17px;"></td></tr>' skip.
@@ -720,17 +854,17 @@ do
         '<td></td>' skip
         '<td colspan="9"></td>' skip
         '<td></td>' skip
-        '<td colspan="22" style="text-align: center;">(личная подпись)</td>' skip
+        '<td colspan="22" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
         '<td></td>' skip
-        '<td colspan="30" style="text-align: center;">(фамилия, инициалы)</td>' skip
+        '<td colspan="30" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '<td colspan="7"></td>' skip
-        '<td colspan="30" style="text-align: center;">(наименование должности)</td>' skip
+        '<td colspan="30" style="text-align: center; font-size: 8px;">(наименование должности)</td>' skip
         '<td></td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center;">(личная подпись)</td>' skip
+        '<td colspan="23" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
-        '<td colspan="30" style="text-align: center;">(фамилия, инициалы)</td>' skip
+        '<td colspan="30" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '</tr>'
         .
     end.  
@@ -760,10 +894,10 @@ do
         '<td></td>' skip
         '<td colspan="9"></td>' skip
         '<td></td>' skip
-        '<td colspan="22" style="text-align: center;">(личная подпись)</td>' skip
+        '<td colspan="22" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
         '<td></td>' skip
-        '<td colspan="30" style="text-align: center;">(фамилия, инициалы)</td>' skip
+        '<td colspan="30" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '<td colspan="7"></td>' skip
         '<td colspan="30" style="text-align: center;"></td>' skip
         '<td></td>' skip
@@ -806,10 +940,10 @@ do
         '<td></td>' skip
         '<td colspan="30" style="text-align: center;"></td>' skip
         '<td colspan="7"></td>' skip
-        '<td colspan="30" style="text-align: center;">(личная подпись)</td>' skip
+        '<td colspan="30" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center;">(фамилия, инициалы)</td>' skip
+        '<td colspan="23" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '<td></td>' skip
         '</tr>'
         .
@@ -834,18 +968,18 @@ do
       
       put stream OutStr-html unformatted
         '<tr>' skip
-        '<td colspan="28" style="text-align: center;">(наименование должности)</td>' skip
+        '<td colspan="28" style="text-align: center; font-size: 8px;">(наименование должности)</td>' skip
         '<td></td>' skip
-        '<td colspan="15" style="text-align: center;">(личная подпись)</td>' skip
+        '<td colspan="15" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center;">(фамилия, инициалы)</td>' skip
+        '<td colspan="23" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '<td></td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center;">(наименование должности)</td>' skip
+        '<td colspan="23" style="text-align: center; font-size: 8px;">(наименование должности)</td>' skip
         '<td></td>' skip
-        '<td colspan="18" style="text-align: center;">(личная подпись)</td>' skip
+        '<td colspan="18" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center;">(фамилия, инициалы)</td>' skip
+        '<td colspan="23" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '</tr>' skip.                
     end.  
     if jj = 2 then 
@@ -853,7 +987,7 @@ do
       put stream OutStr-html unformatted
         '<tr>' skip
         '<td></td>' skip
-        '<td colspan="49">Сумма с объявленной суммой принята</td>' skip
+        '<td colspan="49">Сумка с объявленной суммой принята</td>' skip
         '<td colspan="7"></td>' skip
         '<td colspan="30" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
         '<td></td>' skip
@@ -869,14 +1003,13 @@ do
         '<tr>' skip
         '<td></td>' skip
         '<td colspan="49"></td>' skip
-        '<td colspan="30" style="text-align: center;">(фамилия, инициалы)</td>' skip
         '<td colspan="7"></td>' skip
-        '<td colspan="30" style="text-align: center;">(наименование должности)</td>' skip
+        '<td colspan="30" style="text-align: center; font-size: 8px;">(наименование должности)</td>' skip
         '<td></td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center;">(личная подпись)</td>' skip
+        '<td colspan="23" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
-        '<td colspan="30" style="text-align: center;">(фамилия, инициалы)</td>' skip
+        '<td colspan="30" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '<td colspan="15"></td>' skip
         '</tr>' skip.
     end.
@@ -1073,48 +1206,49 @@ do
       '<td style="width: 6px;"></td>' skip
       '</tr>' skip
       .
-    if jj <> 3 then do:  
-    put stream OutStr-html unformatted
-      '<tr>' skip
-      '<td colspan="158" style="text-align: center;">Опись сдаваемых денег</td>' skip
-      '</tr>' skip
-      '<tr>' skip
-      '<td colspan="158" ></td>' skip
-      '</tr>' skip
-      .
-    put stream OutStr-html unformatted
-      '<tr>' skip
-      '<th colspan="53" style="text-align: center; font-weight: bold;">Номинал банкнот, монеты</th>' skip
-      '<th colspan="52" style="text-align: center; font-weight: bold;">Количество сдаваемых банкнот, монеты (в листах, штуках)</th>' skip
-      '<th colspan="53" style="text-align: center; font-weight: bold;">Сумма цифрами</th>' skip
-      '</tr>' skip
-      . 
-    put stream OutStr-html unformatted
-      '<tr>' skip
-      '<th colspan="53" style="text-align: center; font-weight: bold;">1</th>' skip
-      '<th colspan="52" style="text-align: center; font-weight: bold;">2</th>' skip
-      '<th colspan="53" style="text-align: center; font-weight: bold;">3</th>' skip
-      '</tr>' skip
-      .
-
-
-    /*заполнение таблицы циклом*/
-    for each tt-monets by tt-monets.id:
+    if jj <> 3 then 
+    do:  
       put stream OutStr-html unformatted
         '<tr>' skip
-        '<td colspan="53" text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-monets.id,"->>>>>>>>>>>9.99",2) + '" style="text-align: center; font-weight: bold; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-monets.id,"->>>>>>>>>>>9.99",2) + '</td>' skip
-        '<td colspan="52" style="text-align: center; font-weight: bold; border: 1px solid black;">' + string(tt-monets.qnty) + '</td>' skip
-        '<td colspan="53" text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-monets.sum-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: center; font-weight: bold; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-monets.sum-qnty,"->>>>>>>>>>>9.99",2) + '</td>' skip
+        '<td colspan="158" style="text-align: center;">Опись сдаваемых денег</td>' skip
+        '</tr>' skip
+        '<tr>' skip
+        '<td colspan="158" ></td>' skip
         '</tr>' skip
         .
-    end.
+      put stream OutStr-html unformatted
+        '<tr>' skip
+        '<th colspan="53" style="text-align: center; font-weight: bold;">Номинал банкнот, монеты</th>' skip
+        '<th colspan="52" style="text-align: center; font-weight: bold;">Количество сдаваемых банкнот, монеты (в листах, штуках)</th>' skip
+        '<th colspan="53" style="text-align: center; font-weight: bold;">Сумма цифрами</th>' skip
+        '</tr>' skip
+        . 
+      put stream OutStr-html unformatted
+        '<tr>' skip
+        '<th colspan="53" style="text-align: center; font-weight: bold;">1</th>' skip
+        '<th colspan="52" style="text-align: center; font-weight: bold;">2</th>' skip
+        '<th colspan="53" style="text-align: center; font-weight: bold;">3</th>' skip
+        '</tr>' skip
+        .
+
+
+      /*заполнение таблицы циклом*/
+      for each tt-monets by tt-monets.id:
+        put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="53" text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-monets.id,"->>>>>>>>>>>9.99",2) + '" style="text-align: center; border: 1px solid black; font-size: 9px;">' + fnc-convert-dot-to-colon(tt-monets.id,"->>>>>>>>>>>9.99",2) + '</td>' skip
+          '<td colspan="52" style="text-align: center; border: 1px solid black; font-size: 9px;">' + string(tt-monets.qnty) + '</td>' skip
+          '<td colspan="53" text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-monets.sum-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: center; border: 1px solid black; font-size: 9px;">' + fnc-convert-dot-to-colon(tt-monets.sum-qnty,"->>>>>>>>>>>9.99",2) + '</td>' skip
+          '</tr>' skip
+          .
+      end.
     end.
     put stream OutStr-html unformatted
       '<tr><td colspAN="158"></td></tr>' skip
       '<tr>' skip
       '<td></td>' skip
-      '<td colspan="72">Акт вскрытия сумки и пересчета вложенных наличных денег</td>' skip
-      '<td colspan="43"></td>' skip
+      '<td colspan="92">Акт вскрытия сумки и пересчета вложенных наличных денег</td>' skip
+      '<td colspan="23"></td>' skip
       '<td colspan="30" style="text-align: center; border-bottom: 1px solid black;">' + if v-shift-date <> ? then string(v-shift-date) + '</td>' else ""  + '</td>' skip
       '<td colspan="12"></td>' skip
       '</tr>' skip 
@@ -1125,7 +1259,7 @@ do
       '<td></td>' skip
       '<td colspan="72"></td>' skip
       '<td colspan="43"></td>' skip
-      '<td colspan="30" style="text-align: center;">Дата</td>' skip
+      '<td colspan="30" style="text-align: center; font-size: 8px;">Дата</td>' skip
       '<td colspan="12"></td>' skip
       '</tr>' skip 
       .
@@ -1222,22 +1356,22 @@ do
       '<td></td>' skip
       '</tr>' skip
       '<tr>' skip
-      '<td colspan="20" style="text-align: center;">(наименование должности)</td>' skip
+      '<td colspan="20" style="text-align: center; font-size: 8px;">(наименование должности)</td>' skip
       '<td></td>' skip
-      '<td colspan="14" style="text-align: center;">(личная подпись)</td>' skip
+      '<td colspan="14" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
       '<td></td>' skip
-      '<td colspan="20" style="text-align: center;">(фамилия, инициалы)</td>' skip
+      '<td colspan="20" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
       '<td></td>' skip
-      '<td colspan="20" style="text-align: center;">(наименование должности)</td>' skip
+      '<td colspan="20" style="text-align: center; font-size: 8px;">(наименование должности)</td>' skip
       '<td></td>' skip
-      '<td colspan="14" style="text-align: center;">(личная подпись)</td>' skip
+      '<td colspan="14" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
       '<td></td>' skip
-      '<td colspan="20" style="text-align: center;">(фамилия, инициалы)</td>' skip
+      '<td colspan="20" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
       '<td></td>' skip
       '<td colspan="10"></td>' skip
-      '<td colspan="14" style="text-align: center;">(личная подпись)</td>' skip
+      '<td colspan="14" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
       '<td></td>' skip
-      '<td colspan="19" style="text-align: center;">(фамилия, инициалы)</td>' skip
+      '<td colspan="19" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
       '<td></td>' skip
       '</tr>' skip
       '</thead>' skip
@@ -1253,9 +1387,9 @@ do
       '</body>' skip
       '</html>' skip
       .
-  output stream OutStr-html close.
-  if v-file-name-rep-html1 = "" then v-file-name-rep-html1 = v-file-name-rep-html .
-  else v-file-name-rep-html1 =  v-file-name-rep-html1 + " " + v-file-name-rep-html .      
+    output stream OutStr-html close.
+    if v-file-name-rep-html1 = "" then v-file-name-rep-html1 = v-file-name-rep-html .
+    else v-file-name-rep-html1 =  v-file-name-rep-html1 + " " + v-file-name-rep-html .      
   
   end.
   

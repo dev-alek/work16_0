@@ -185,6 +185,11 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         return no-apply .
       end.   
       
+      if this-object:num_bag:Text = "" then do:
+        message "Номер сумки не заполнен"
+        view-as alert-box.
+        return no-apply .
+      end.   
     find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = v-host-code
       and bf_fin-doc-attr.fin-doc-code = v-fin-code and bf_fin-doc-attr.attr-value begins this-object:num_bag:Text no-error . 
     if not available (bf_fin-doc-attr) then 
@@ -202,6 +207,9 @@ class ibs.th.ref.Cover_Sheet inherits Form:
       this-object:pin02:Text + ";" + this-object:source_rec:Text + ";" + string(windowContainer1:v-total-sum) . 
     bf_fin-doc-attr.attr-value = attr-value .
     
+    dataset ds-banknots:handle:write-json ("longchar",CSJson) .
+    if CSJson <> ? then do:
+    
     find first find_fin-doc-attr where find_fin-doc-attr.host-code = v-host-code and find_fin-doc-attr.attr-code = "cover_sheet" 
       and find_fin-doc-attr.fin-doc-code = v-fin-code no-error .
     if not available (find_fin-doc-attr) then
@@ -214,9 +222,8 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         .
     end.  
     
-    dataset ds-banknots:handle:write-json ("longchar",CSJson) .
     find_fin-doc-attr.attr-value = CSJson . 
-    
+    end.
     this-object:DialogResult = System.Windows.Forms.DialogResult:Ok.
     Close().
 
@@ -236,7 +243,8 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     define buffer bf_fin-doc-attr for ub.fin-doc-attr .
     define variable attr-value as character no-undo .
     define buffer buf_cashbook for ub.CashBook .
-    
+    { gbl/getcntxt.i def }
+    { gbl/getcntxt.i get }
     find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = v-host-code
       and bf_fin-doc-attr.fin-doc-code = v-fin-code and bf_fin-doc-attr.attr-value begins this-object:num_bag:Text no-error . 
     if available (bf_fin-doc-attr) then 
@@ -284,9 +292,12 @@ class ibs.th.ref.Cover_Sheet inherits Form:
             this-object:bank_recip:Text = find_fin-bank.bank-name .
             v-recip_bank = find_fin-bank.code-bank .
           end. 
+
         for first ub.CashBookRule no-lock where 
         ub.cashbookrule.CashBookID  = buf_cashbook.id and
         ub.cashbookrule.host-code   = string(v-host-code) and
+        ub.CashBookRule.Obj-code   =  v-cntxt-obj-code and
+        ub.CashBookRule.Obj-type   = string(v-cntxt-obj-type) and
         ub.cashbookrule.Status_     = 0 and
         ub.cashbookrule.Code        = 13 /* ПИН */:
            
@@ -303,6 +314,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     if available (find_fin-doc-attr) then 
     do:
       CSJson = find_fin-doc-attr.attr-value .
+      if CSJson <> ? and CSJson <> "" then 
       dataset ds-banknots:handle:read-json ("longchar",CSJson) .
     end.   
     add_Banknot().
@@ -562,6 +574,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         this-object:bank_recip:Enabled   = false
         this-object:pin02:Enabled        = false
         this-object:source_rec:Enabled   = false
+        windowContainer1:Enabled  = false
         /*        windowContainer1:Enabled         = false*/
         .
     end.   
