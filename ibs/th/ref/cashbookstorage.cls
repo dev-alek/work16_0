@@ -72,12 +72,12 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Выберите контрагента для автоматического формирования платежей. Поле Контрагент (авто)." .
       return .
     end.
-    if trim(tt-cashbook.takenfrom) = ""
+   /* if trim(tt-cashbook.takenfrom) = ""
     then do :
       Msg = "Поле Принято от (авто) не может быть пустым!" .
       return .
     end.
-    
+    */
     find first ub.cashbook no-lock where ub.CashBook.CashBookName = tt-cashbook.CashBookName and ub.CashBook.id <> tt-cashbook.id no-error.
     if available ub.cashbook
     then do :

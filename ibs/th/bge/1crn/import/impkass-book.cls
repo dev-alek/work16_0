@@ -260,6 +260,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     .
     /* Текст поля «Принято от» для ПКО.
        Если не указано, то в ПКО проставляется наименование контрагента (см. п. 4.3.4.3) */
+       tt-cashbook.takenfrom    = objImp:rule-payer .
+    /*
     if objImp:rule-payer <> ? then do : 
       tt-cashbook.takenfrom    = objImp:rule-payer .
     end .
@@ -304,7 +306,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           , tt-cashbook.cli-type, tt-cashbook.cli-code, v-code, objImp:name_
       ) ) .
     end .
-    
+    */
     
     if v-mode = {&add-def} then do :
       v-storage:insertDB(buffer tt-cashbook, output v-cashbookid) .
