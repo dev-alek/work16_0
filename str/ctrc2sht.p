@@ -602,6 +602,140 @@ do on error undo Main-Block, return error return-value :
                   buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
           
           end. /* if available (buf_rvs-line-attr) */
+
+          /* И всё для суга */
+          
+          find first buf_ctrl-rvs-line-attr where buf_ctrl-rvs-line-attr.obj-code = ctrl_rvs-line.obj-code
+                                              and buf_ctrl-rvs-line-attr.obj-type = ctrl_rvs-line.obj-type
+                                              and buf_ctrl-rvs-line-attr.gds-code = ctrl_rvs-line.gds-code
+                                              and buf_ctrl-rvs-line-attr.pl-code = ctrl_rvs-line.pl-code
+                                              and buf_ctrl-rvs-line-attr.rvs-code = ctrl_rvs-line.rvs-code
+                                              and buf_ctrl-rvs-line-attr.attr-code = "vol-pf-sug" no-lock no-error.
+          
+          if available (buf_ctrl-rvs-line-attr) then do: /* Если есть линии с погрешность измерения */
+          
+              create buf_shift-rvs-line-attr. 
+              
+              assign
+                  buf_shift-rvs-line-attr.obj-code = buf_ctrl-rvs-line-attr.obj-code
+                  buf_shift-rvs-line-attr.obj-type = buf_ctrl-rvs-line-attr.obj-type
+                  buf_shift-rvs-line-attr.gds-code = buf_ctrl-rvs-line-attr.gds-code
+                  buf_shift-rvs-line-attr.pl-code = buf_ctrl-rvs-line-attr.pl-code
+                  buf_shift-rvs-line-attr.rvs-code = shift_rvs-doc.rvs-code
+                  buf_shift-rvs-line-attr.attr-code = buf_ctrl-rvs-line-attr.attr-code
+                  buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
+          
+          end. /* if available (buf_rvs-line-attr) */
+          
+          find first buf_ctrl-rvs-line-attr where buf_ctrl-rvs-line-attr.obj-code = ctrl_rvs-line.obj-code
+                                              and buf_ctrl-rvs-line-attr.obj-type = ctrl_rvs-line.obj-type
+                                              and buf_ctrl-rvs-line-attr.gds-code = ctrl_rvs-line.gds-code
+                                              and buf_ctrl-rvs-line-attr.pl-code = ctrl_rvs-line.pl-code
+                                              and buf_ctrl-rvs-line-attr.rvs-code = ctrl_rvs-line.rvs-code
+                                              and buf_ctrl-rvs-line-attr.attr-code = "state-vol-pf-sug" no-lock no-error.
+          
+          if available (buf_ctrl-rvs-line-attr) then do: /* Если есть линии с погрешность измерения */
+          
+              create buf_shift-rvs-line-attr. 
+              
+              assign
+                  buf_shift-rvs-line-attr.obj-code = buf_ctrl-rvs-line-attr.obj-code
+                  buf_shift-rvs-line-attr.obj-type = buf_ctrl-rvs-line-attr.obj-type
+                  buf_shift-rvs-line-attr.gds-code = buf_ctrl-rvs-line-attr.gds-code
+                  buf_shift-rvs-line-attr.pl-code = buf_ctrl-rvs-line-attr.pl-code
+                  buf_shift-rvs-line-attr.rvs-code = shift_rvs-doc.rvs-code
+                  buf_shift-rvs-line-attr.attr-code = buf_ctrl-rvs-line-attr.attr-code
+                  buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
+          
+          end. /* if available (buf_rvs-line-attr) */
+          
+          find first buf_ctrl-rvs-line-attr where buf_ctrl-rvs-line-attr.obj-code = ctrl_rvs-line.obj-code
+                                              and buf_ctrl-rvs-line-attr.obj-type = ctrl_rvs-line.obj-type
+                                              and buf_ctrl-rvs-line-attr.gds-code = ctrl_rvs-line.gds-code
+                                              and buf_ctrl-rvs-line-attr.pl-code = ctrl_rvs-line.pl-code
+                                              and buf_ctrl-rvs-line-attr.rvs-code = ctrl_rvs-line.rvs-code
+                                              and buf_ctrl-rvs-line-attr.attr-code = "dens-pf-sug" no-lock no-error.
+          
+          if available (buf_ctrl-rvs-line-attr) then do: /* Если есть линии с погрешность измерения */
+          
+              create buf_shift-rvs-line-attr. 
+              
+              assign
+                  buf_shift-rvs-line-attr.obj-code = buf_ctrl-rvs-line-attr.obj-code
+                  buf_shift-rvs-line-attr.obj-type = buf_ctrl-rvs-line-attr.obj-type
+                  buf_shift-rvs-line-attr.gds-code = buf_ctrl-rvs-line-attr.gds-code
+                  buf_shift-rvs-line-attr.pl-code = buf_ctrl-rvs-line-attr.pl-code
+                  buf_shift-rvs-line-attr.rvs-code = shift_rvs-doc.rvs-code
+                  buf_shift-rvs-line-attr.attr-code = buf_ctrl-rvs-line-attr.attr-code
+                  buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
+          
+          end. /* if available (buf_rvs-line-attr) */
+          
+          find first buf_ctrl-rvs-line-attr where buf_ctrl-rvs-line-attr.obj-code = ctrl_rvs-line.obj-code
+                                              and buf_ctrl-rvs-line-attr.obj-type = ctrl_rvs-line.obj-type
+                                              and buf_ctrl-rvs-line-attr.gds-code = ctrl_rvs-line.gds-code
+                                              and buf_ctrl-rvs-line-attr.pl-code = ctrl_rvs-line.pl-code
+                                              and buf_ctrl-rvs-line-attr.rvs-code = ctrl_rvs-line.rvs-code
+                                              and buf_ctrl-rvs-line-attr.attr-code = "state-dens-pf-sug" no-lock no-error.
+          
+          if available (buf_ctrl-rvs-line-attr) then do: /* Если есть линии с погрешность измерения */
+          
+              create buf_shift-rvs-line-attr. 
+              
+              assign
+                  buf_shift-rvs-line-attr.obj-code = buf_ctrl-rvs-line-attr.obj-code
+                  buf_shift-rvs-line-attr.obj-type = buf_ctrl-rvs-line-attr.obj-type
+                  buf_shift-rvs-line-attr.gds-code = buf_ctrl-rvs-line-attr.gds-code
+                  buf_shift-rvs-line-attr.pl-code = buf_ctrl-rvs-line-attr.pl-code
+                  buf_shift-rvs-line-attr.rvs-code = shift_rvs-doc.rvs-code
+                  buf_shift-rvs-line-attr.attr-code = buf_ctrl-rvs-line-attr.attr-code
+                  buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
+          
+          end. /* if available (buf_rvs-line-attr) */
+          
+          find first buf_ctrl-rvs-line-attr where buf_ctrl-rvs-line-attr.obj-code = ctrl_rvs-line.obj-code
+                                              and buf_ctrl-rvs-line-attr.obj-type = ctrl_rvs-line.obj-type
+                                              and buf_ctrl-rvs-line-attr.gds-code = ctrl_rvs-line.gds-code
+                                              and buf_ctrl-rvs-line-attr.pl-code = ctrl_rvs-line.pl-code
+                                              and buf_ctrl-rvs-line-attr.rvs-code = ctrl_rvs-line.rvs-code
+                                              and buf_ctrl-rvs-line-attr.attr-code = "pressure-sug" no-lock no-error.
+          
+          if available (buf_ctrl-rvs-line-attr) then do: /* Если есть линии с погрешность измерения */
+          
+              create buf_shift-rvs-line-attr. 
+              
+              assign
+                  buf_shift-rvs-line-attr.obj-code = buf_ctrl-rvs-line-attr.obj-code
+                  buf_shift-rvs-line-attr.obj-type = buf_ctrl-rvs-line-attr.obj-type
+                  buf_shift-rvs-line-attr.gds-code = buf_ctrl-rvs-line-attr.gds-code
+                  buf_shift-rvs-line-attr.pl-code = buf_ctrl-rvs-line-attr.pl-code
+                  buf_shift-rvs-line-attr.rvs-code = shift_rvs-doc.rvs-code
+                  buf_shift-rvs-line-attr.attr-code = buf_ctrl-rvs-line-attr.attr-code
+                  buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
+          
+          end. /* if available (buf_rvs-line-attr) */
+          
+          find first buf_ctrl-rvs-line-attr where buf_ctrl-rvs-line-attr.obj-code = ctrl_rvs-line.obj-code
+                                              and buf_ctrl-rvs-line-attr.obj-type = ctrl_rvs-line.obj-type
+                                              and buf_ctrl-rvs-line-attr.gds-code = ctrl_rvs-line.gds-code
+                                              and buf_ctrl-rvs-line-attr.pl-code = ctrl_rvs-line.pl-code
+                                              and buf_ctrl-rvs-line-attr.rvs-code = ctrl_rvs-line.rvs-code
+                                              and buf_ctrl-rvs-line-attr.attr-code = "state-pressure-sug" no-lock no-error.
+          
+          if available (buf_ctrl-rvs-line-attr) then do: /* Если есть линии с погрешность измерения */
+          
+              create buf_shift-rvs-line-attr. 
+              
+              assign
+                  buf_shift-rvs-line-attr.obj-code = buf_ctrl-rvs-line-attr.obj-code
+                  buf_shift-rvs-line-attr.obj-type = buf_ctrl-rvs-line-attr.obj-type
+                  buf_shift-rvs-line-attr.gds-code = buf_ctrl-rvs-line-attr.gds-code
+                  buf_shift-rvs-line-attr.pl-code = buf_ctrl-rvs-line-attr.pl-code
+                  buf_shift-rvs-line-attr.rvs-code = shift_rvs-doc.rvs-code
+                  buf_shift-rvs-line-attr.attr-code = buf_ctrl-rvs-line-attr.attr-code
+                  buf_shift-rvs-line-attr.attr-value = buf_ctrl-rvs-line-attr.attr-value.
+          
+          end. /* if available (buf_rvs-line-attr) */
       
       
       end. /* for each bf_rvs-line */
