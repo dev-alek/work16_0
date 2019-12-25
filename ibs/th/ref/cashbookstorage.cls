@@ -161,7 +161,7 @@ class ibs.th.ref.cashbookstorage final:
       create ub.cashbook .
       buffer-copy tt-cashbook to ub.CashBook
       assign
-        ub.CashBook.id = next-value(s-cashbook-id)
+        ub.CashBook.id = if tt-cashbook.basic-kb then 0 else next-value(s-cashbook-id)
         ub.CashBook.Status_ = 0
       .
       p-id = ub.CashBook.id .
@@ -559,6 +559,7 @@ class ibs.th.ref.cashbookstorage final:
       buffer-copy buf_cashbook to tt-cashbook
       assign
         tt-cashbook.stat = if tt-cashbook.status_ = 0 then "Текущий" else if tt-cashbook.status_ = 1 then "Удаленный" else "?"
+        tt-cashbook.basic-kb = tt-cashbook.id eq 0
       .
     end.
   end method.
@@ -571,6 +572,7 @@ class ibs.th.ref.cashbookstorage final:
       buffer-copy buf_cashbook to tt-cashbook
       assign
         tt-cashbook.stat = if tt-cashbook.status_ = 0 then "Текущий" else if tt-cashbook.status_ = 1 then "Удаленный" else "?"
+        tt-cashbook.basic-kb = tt-cashbook.id eq 0
       .
     end.
   end method.

@@ -15,6 +15,7 @@
 define temp-table tt-cashbook like ub.cashbook
   field stat      as character
   field mark      as character
+  field basic-kb  as logical
 .
 
 define dataset ds-cashbook for tt-cashbook .

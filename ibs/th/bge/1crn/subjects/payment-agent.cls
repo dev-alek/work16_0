@@ -25,27 +25,30 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
   define property inn-trans-op    as character    no-undo get. private set.
   define property name-trans-op   as character    no-undo get. private set.
   define property oper-pa         as character    no-undo get. private set.
-  define property sign-pa         as character    no-undo get. private set.
+  define property sign-pa         as integer      no-undo get. private set.
   define property tel-pa          as character    no-undo get. private set.
   define property tel-acceptor    as character    no-undo get. private set.
   define property tel-trans-op    as character    no-undo get. private set.
-  define property sign-pa-subj    as character    no-undo get. private set.
+  define property sign-pa-subj    as integer      no-undo get. private set.
   define property name-prov       as character    no-undo get. private set.
   define property inn-prov        as character    no-undo get. private set.
   define property tel-prov        as character    no-undo get. private set.
-  define property type-calc-repl  as character    no-undo get. private set.
+  define property type-calc-repl  as integer      no-undo get. private set.
   define property min-sum         as decimal      no-undo get. private set.
   define property max-sum         as decimal      no-undo get. private set.
   define property warning-sum     as decimal      no-undo get. private set.
   define property comm-entry-type as integer      no-undo get. private set.
-  define property pct-comm        as decimal      no-undo get. private set.
-  define property sum-comm        as decimal      no-undo get. private set.
+  define property value-comm      as decimal      no-undo get. private set.
+  define property gds-comm        as integer      no-undo get. private set.
+/*  define property pct-comm        as decimal      no-undo get. private set. 29/III-2019 - пропало из ТР */
+/*  define property sum-comm        as decimal      no-undo get. private set. 29/III-2019 - пропало из ТР */
   define property auth-req        as integer      no-undo get. private set.
-  define property code-req        as integer      no-undo get. private set.
+/*  define property code-req        as integer      no-undo get. private set. 29/III-2019 - пропало из ТР */
   define property prt-slp-req     as integer      no-undo get. private set.
   define property name-slp        as character    no-undo get. private set.
   define property max-num         as integer      no-undo get. private set.
   define property min-num         as integer      no-undo get. private set.
+  define property oper-type       as integer      no-undo get. private set.
 
   define override property InitTag as character no-undo init "payment-agent"
     get.
@@ -62,27 +65,27 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
       when "inn-trans-op"    then inn-trans-op    = {&attr-str} .
       when "name-trans-op"   then name-trans-op   = {&attr-str} .
       when "oper-pa"         then oper-pa         = {&attr-str} .
-      when "sign-pa"         then sign-pa         = {&attr-str} .
+      when "sign-pa"         then sign-pa         = {&attr-integer} .
       when "tel-pa"          then tel-pa          = {&attr-str} .
       when "tel-acceptor"    then tel-acceptor    = {&attr-str} .
       when "tel-trans-op"    then tel-trans-op    = {&attr-str} .
-      when "sign-pa-subj"    then sign-pa-subj    = {&attr-str} .
+      when "sign-pa-subj"    then sign-pa-subj    = {&attr-integer} .
       when "name-prov"       then name-prov       = {&attr-str} .
       when "inn-prov"        then inn-prov        = {&attr-str} .
       when "tel-prov"        then tel-prov        = {&attr-str} .
-      when "type-calc-repl"  then type-calc-repl  = {&attr-str} .
+      when "type-calc-repl"  then type-calc-repl  = {&attr-integer} .
       when "min-sum"         then min-sum         = {&attr-dec} .
       when "max-sum"         then max-sum         = {&attr-dec} .
       when "warning-sum"     then warning-sum     = {&attr-dec} .
       when "comm-entry-type" then comm-entry-type = {&attr-integer} .
-      when "pct-comm"        then pct-comm        = {&attr-dec} .
-      when "sum-comm"        then sum-comm        = {&attr-dec} .
+      when "value-comm"      then value-comm      = {&attr-dec} .
+      when "gds-comm"        then gds-comm        = {&attr-integer} .
       when "auth-req"        then auth-req        = {&attr-integer} .
-      when "code-req"        then code-req        = {&attr-integer} .
       when "prt-slp-req"     then prt-slp-req     = {&attr-integer} .
       when "name-slp"        then name-slp        = {&attr-str} .
       when "max-num"         then max-num         = {&attr-integer} .
       when "min-num"         then min-num         = {&attr-integer} .
+      when "oper-type"       then oper-type       = {&attr-integer} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -100,22 +103,22 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
     def var v-str as char no-undo.
     
     assign
-      v-str = ",code" when code_ = ?
-      v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",adr-trans-op" when adr-trans-op = ?
-      v-str = v-str + ",inn-trans-op" when inn-trans-op = ?
-      v-str = v-str + ",name-trans-op" when name-trans-op = ?
-      v-str = v-str + ",oper-pa" when oper-pa = ?
-      v-str = v-str + ",sign-pa" when sign-pa = ?
-      v-str = v-str + ",tel-pa" when tel-pa = ?
-      v-str = v-str + ",tel-acceptor" when tel-acceptor = ?
-      v-str = v-str + ",tel-trans-op" when tel-trans-op = ?
-      v-str = v-str + ",sign-pa-subj" when sign-pa-subj = ?
-      v-str = v-str + ",name-prov" when name-prov = ?
-      v-str = v-str + ",inn-prov" when inn-prov = ?
-      v-str = v-str + ",tel-prov" when tel-prov = ?
+      v-str =         ",code"           when code_          = ?
+      v-str = v-str + ",name"           when name_          = ?
+      v-str = v-str + ",adr-trans-op"   when adr-trans-op   = ?
+      v-str = v-str + ",inn-trans-op"   when inn-trans-op   = ?
+      v-str = v-str + ",name-trans-op"  when name-trans-op  = ?
+      v-str = v-str + ",oper-pa"        when oper-pa        = ?
+      v-str = v-str + ",sign-pa"        when sign-pa        = ?
+      v-str = v-str + ",tel-pa"         when tel-pa         = ?
+      v-str = v-str + ",tel-acceptor"   when tel-acceptor   = ?
+      v-str = v-str + ",tel-trans-op"   when tel-trans-op   = ?
+      v-str = v-str + ",sign-pa-subj"   when sign-pa-subj   = ?
+      v-str = v-str + ",name-prov"      when name-prov      = ?
+      v-str = v-str + ",inn-prov"       when inn-prov       = ?
+      v-str = v-str + ",tel-prov"       when tel-prov       = ?
       v-str = v-str + ",type-calc-repl" when type-calc-repl = ?
-      v-str = v-str + ",max-sum" when max-sum = ?
+      v-str = v-str + ",max-sum"        when max-sum        = ?
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
@@ -144,14 +147,14 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
       max-sum         = ?
       warning-sum     = ?
       comm-entry-type = ?
-      pct-comm        = ?
-      sum-comm        = ?
+      value-comm      = ?
+      gds-comm        = ?
       auth-req        = ?
-      code-req        = ?
       prt-slp-req     = ?
       name-slp        = ?
       max-num         = ?
       min-num         = ?
+      oper-type       = ?
     .
   end method.
       
