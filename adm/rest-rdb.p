@@ -59,6 +59,55 @@ define temp-table temp-cash-desk no-undo
   field last-time like ub.chk-doc.chk-time
   field cash-num  like ub.cash-desk.cash-num
   index pi        is   unique primary cash-num.
+
+  define variable ind1                as integer   no-undo .
+  define variable ind2                as integer   no-undo .
+  define variable host                as integer   no-undo .
+
+  define variable tot-cli-count       as integer   no-undo.
+  define variable v-cli-count         as integer   no-undo.
+  define variable tot-firm-db-count   as integer   no-undo.
+  define variable firm-db-count       as integer   no-undo.
+  define variable v-log               as logical   no-undo.
+  define variable v-obj-is-active     as logical   no-undo.
+  define variable v-proceeded-host    as character no-undo.
+
+  define variable v-ok   as logical   no-undo .
+  define variable v-lock as logical   no-undo .
+  define variable v-msg  as character no-undo .
+
+  define variable v-today       as date      no-undo.
+  define variable v-time        as integer   no-undo.
+  define variable v-hn          as logical   no-undo.
+
+  define variable v-command   as character no-undo .
+  define variable v-new-route as logical   no-undo .
+  define variable v-subject as character no-undo .
+
+  define variable bh as handle    no-undo .
+
+  define buffer buf_pck-sent for ub.pck-sent .
+  define buffer buf_pck-rcvd for ub.pck-rcvd .
+
+  define temp-table tt-host-list no-undo
+    field host-code like ub.store.host-code
+    index pi        is   unique primary host-code
+  .
+
+  define variable l-prod-bc-global as logical no-undo .
+
+  define            variable fl        as character no-undo format "x(14)":U .
+  define new shared variable count-str as character no-undo initial "":U .
+
+  define new shared frame ddd
+    count-str label "":U      format "X(50)":U
+    fl        label "Таблица" format "X(50)":U
+    ind1      label "Записей"
+  with view-as dialog-box side-labels 1 columns three-d title "Перекачка данных".
+
+  define stream slog .
+
+
 /* Определяем интеграционный или нет режим работы */
   { gbl/conf-rd.i
     "'is-erpRN'"
@@ -140,52 +189,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     undo, return error "Активна транзакция" .
   end.
 
-  define variable ind1                as integer   no-undo .
-  define variable ind2                as integer   no-undo .
-  define variable host                as integer   no-undo .
-
-  define variable tot-cli-count       as integer   no-undo.
-  define variable v-cli-count         as integer   no-undo.
-  define variable tot-firm-db-count   as integer   no-undo.
-  define variable firm-db-count       as integer   no-undo.
-  define variable v-log               as logical   no-undo.
-  define variable v-obj-is-active     as logical   no-undo.
-  define variable v-proceeded-host    as character no-undo.
-
-  define variable v-ok   as logical   no-undo .
-  define variable v-lock as logical   no-undo .
-  define variable v-msg  as character no-undo .
-
-  define variable v-today       as date      no-undo.
-  define variable v-time        as integer   no-undo.
-  define variable v-hn          as logical   no-undo.
-
-  define variable v-command   as character no-undo .
-  define variable v-new-route as logical   no-undo .
-  define variable v-subject as character no-undo .
-
-  define variable bh as handle    no-undo .
-
-  define buffer buf_pck-sent for ub.pck-sent .
-  define buffer buf_pck-rcvd for ub.pck-rcvd .
-
-  define temp-table tt-host-list no-undo
-    field host-code like ub.store.host-code
-    index pi        is   unique primary host-code
-  .
-
-  define variable l-prod-bc-global as logical no-undo .
-
-  define            variable fl        as character no-undo format "x(14)":U .
-  define new shared variable count-str as character no-undo initial "":U .
-
-  define new shared frame ddd
-    count-str label "":U      format "X(50)":U
-    fl        label "Таблица" format "X(50)":U
-    ind1      label "Записей"
-  with view-as dialog-box side-labels 1 columns three-d title "Перекачка данных".
-
-  define stream slog .
 
   if p-type-unload <> {&unload-copy}
   and not v-multi
@@ -2997,6 +3000,22 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         output stream slog close .
       end.
 
+      output stream slog to rest-rdb.txt append .
+      export stream slog "start CashBook " cur-time-string() .
+      output stream slog close .
+
+      run rest-cash-book in this-procedure
+        ( input ub.clients.obj-type
+         ,input ub.clients.obj-code
+        )
+        no-error .
+      if error-status :error then do:
+        output stream slog to rest-rdb.txt append .
+        export stream slog  error-status :get-message(1) return-value cur-time-string() .
+        output stream slog close .
+        return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+      end.
+   
     end. /* for each clients */
 
     /* Вызов процедуры выгрузки документов МЦ */
@@ -5771,3 +5790,70 @@ define input  parameter p-obj-code as integer   no-undo .
   end.
 
 end procedure. /* rest-add-doc */
+
+procedure rest-cash-book private :
+/* Кассовые книги. Действие то же самое, что с add-doc и с action-role */
+define input  parameter p-obj-type as character no-undo .
+define input  parameter p-obj-code as integer   no-undo .
+
+  do
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+  on stop   undo, return error substitute( "&1. stop", vss-workfile )
+  on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+  :
+      for each ub.CashBook no-lock
+      on error  undo, return error substitute( "&1 (CashBook). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (CashBook). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (CashBook). endkey", vss-workfile )
+      :
+        create dst.CashBook.
+        buffer-copy ub.CashBook to dst.CashBook .
+      end.
+
+      for each ub.CashBookAttr no-lock
+      on error  undo, return error substitute( "&1 (CashBookAttr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (CashBookAttr). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (CashBookAttr). endkey", vss-workfile )
+      :
+        create dst.CashBookAttr.
+        buffer-copy ub.CashBookAttr to dst.CashBookAttr .
+      end.
+
+      for each ub.CashBookRule no-lock
+         where ub.CashBookRule.Obj-type = p-obj-type
+           and ub.CashBookRule.Obj-code = p-obj-code
+      on error  undo, return error substitute( "&1 (CashBookRule). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (CashBookRule). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (CashBookRule). endkey", vss-workfile )
+      :
+        create dst.CashBookRule.
+        buffer-copy ub.CashBookRule to dst.CashBookRule .
+        for each ub.CashBookRuleAttr no-lock
+           where ub.CashBookRuleAttr.id = ub.CashBookRule.id
+        :
+          create dst.CashBookRuleAttr.
+          buffer-copy ub.CashBookRuleAttr to dst.CashBookRuleAttr .
+        end.
+      end.
+
+      for each ub.OperServ no-lock
+      on error  undo, return error substitute( "&1 (OperServ). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (OperServ). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (OperServ). endkey", vss-workfile )
+      :
+        create dst.OperServ.
+        buffer-copy ub.OperServ to dst.OperServ .
+      end.
+
+      for each ub.OperServAttr no-lock
+      on error  undo, return error substitute( "&1 (OperServAttr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (OperServAttr). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (OperServAttr). endkey", vss-workfile )
+      :
+        create dst.OperServAttr.
+        buffer-copy ub.OperServAttr to dst.OperServAttr .
+      end.
+
+  end. /* end_of doe */
+
+end procedure. /* rest-cash-book */

@@ -35,6 +35,12 @@ cbr-bank
 c-cbr-bank
 cbr-bank-attr
 c-cbr-bank-attr
+CashBook
+CashBookAttr
+CashBookRule
+CashBookRuleAttr
+OperServ
+OperServAttr
 
 */
 
@@ -45,7 +51,6 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$".
 define variable vss-description as character no-undo init "Файл пирога обрезания. Относится к категории 75.".
 { cmp/str-glbl.i }
-/*{ utl/tt-objs.i  }*/
 
 define buffer old-c-fin-bank           for src.c-fin-bank          .
 define buffer old-c-fin-bank-attr      for src.c-fin-bank-attr     .
@@ -68,6 +73,12 @@ define buffer old-cbr-bank             for src.cbr-bank          .
 define buffer old-c-cbr-bank           for src.c-cbr-bank          .
 define buffer old-cbr-bank-attr        for src.cbr-bank-attr     .
 define buffer old-c-cbr-bank-attr      for src.c-cbr-bank-attr     .
+define buffer old-CashBook             for src.CashBook        .
+define buffer old-CashBookAttr         for src.CashBookAttr    .
+define buffer old-CashBookRule         for src.CashBookRule    .
+define buffer old-CashBookRuleAttr     for src.CashBookRuleAttr .
+define buffer old-OperServ             for src.OperServ        .
+define buffer old-OperServAttr         for src.OperServAttr    .
 define buffer new-c-fin-bank           for dst.c-fin-bank          .
 define buffer new-c-fin-bank-attr      for dst.c-fin-bank-attr     .
 define buffer new-c-fin-code-an-uchet  for dst.c-fin-code-an-uchet .
@@ -89,6 +100,14 @@ define buffer new-cbr-bank             for dst.cbr-bank            .
 define buffer new-c-cbr-bank           for dst.c-cbr-bank          .
 define buffer new-cbr-bank-attr        for dst.cbr-bank-attr       .
 define buffer new-c-cbr-bank-attr      for dst.c-cbr-bank-attr     .
+define buffer new-CashBook             for dst.CashBook        .
+define buffer new-CashBookAttr         for dst.CashBookAttr    .
+define buffer new-CashBookRule         for dst.CashBookRule    .
+define buffer new-CashBookRuleAttr     for dst.CashBookRuleAttr .
+define buffer new-OperServ             for dst.OperServ        .
+define buffer new-OperServAttr         for dst.OperServAttr    .
+
+define buffer buf_clients              for src.clients .
 
 do
 on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2))
@@ -116,6 +135,13 @@ on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:ge
   on WRITE of dst.c-cbr-bank          override do: end.
   on WRITE of dst.cbr-bank-attr       override do: end.
   on WRITE of dst.c-cbr-bank-attr     override do: end.
+  on WRITE of dst.CashBook         override do: end.
+  on WRITE of dst.CashBookAttr     override do: end.
+  on WRITE of dst.CashBookRule     override do: end.
+  on WRITE of dst.CashBookRuleAttr override do: end.
+  on WRITE of dst.OperServ         override do: end.
+  on WRITE of dst.OperServAttr     override do: end.
+
 
 
   { utl/00000002.i fin-bank }
@@ -158,8 +184,32 @@ on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:ge
     { utl/00000002.i c-cbr-bank-attr}
   end.
 
+  { utl/00000002.i CashBook }
+  { utl/00000002.i CashBookAttr }
+  for each buf_clients no-lock 
+     where buf_clients.db-num >= 0
+  on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2))
+  :
+    { utl/00000002.i CashBookRule
+      " where old-CashBookRule.Obj-type = buf_clients.obj-type
+          and old-CashBookRule.Obj-code = buf_clients.obj-code "
+    }
+    for each old-CashBookRule no-lock
+       where old-CashBookRule.Obj-type = buf_clients.obj-type
+         and old-CashBookRule.Obj-code = buf_clients.obj-code
+    on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2))
+    :
+      { utl/00000002.i CashBookRuleAttr
+        " where old-CashBookRuleAttr.id = old-CashBookRule.id "
+      }
+    end .
+  end .
+  { utl/00000002.i OperServ }
+  { utl/00000002.i OperServAttr }
+
 output stream str-gen close.
   return "Произведен экспорт таблиц: fin-bank c-fin-bank fin-bank-attr c-fin-bank-attr ~
 fin-code-an-uchet c-fin-code-an-uchet fin-code-cel-nazn c-fin-code-cel-nazn fin-code-cor-acc c-fin-code-cor-acc ~
-fin-schet c-fin-schet fin-schet-attr c-fin-schet-attr cbr-bank c-cbr-bank cbr-bank-attr c-cbr-bank-attr .".
+fin-schet c-fin-schet fin-schet-attr c-fin-schet-attr cbr-bank c-cbr-bank cbr-bank-attr c-cbr-bank-attr ~
+CashBook CashBookAttr CashBookRule CashBookRuleAttr OperServ OperServAttr .".
 end.
