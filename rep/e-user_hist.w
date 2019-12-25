@@ -258,7 +258,7 @@ for each user-obj no-lock where user-obj.obj-code = obj-list.obj-code and user-o
       assign
       tt-user-account.db-num = user-obj.db-num
       tt-user-account.user-id_ = ub.user-account.user-id
-      tt-user-account.user_name = user-account.last-name + " " + user-account.first-name + " " + user-account.second-name
+      tt-user-account.user_name = "ID: " + ub.user-account.user-id + " ิศฮ: " + user-account.last-name + " " + user-account.first-name + " " + user-account.second-name
       .
 end.      
 end.  
