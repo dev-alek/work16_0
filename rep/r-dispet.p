@@ -88,7 +88,7 @@ define buffer buf_rvs-line-attr for ub.rvs-line-attr .
 
 
 
-&global-define frame-width  188
+&global-define frame-width  212
 
 /*
 DEFINE TEMP-TABLE tt-place NO-UNDO
@@ -148,6 +148,8 @@ DEFINE VARIABLE sym7  AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
 DEFINE VARIABLE sym8  AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
 DEFINE VARIABLE sym9  AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
 DEFINE VARIABLE sym10 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
+DEFINE VARIABLE sym16 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
+DEFINE VARIABLE sym17 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
 DEFINE VARIABLE sym11 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
 DEFINE VARIABLE sym12 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
 DEFINE VARIABLE sym13 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL "|":U .
@@ -543,6 +545,8 @@ on error undo, return error
           assign
           buf_tt-place.found-in-rvs  = TRUE
           buf_tt-place.curr-qnty     = buf_rvs-line.state-measure-qnty
+          buf_tt-place.level-water   = buf_rvs-line.state-level-water
+          buf_tt-place.volume-water  = buf_rvs-line.state-brutto-qnty - buf_rvs-line.state-measure-qnty
           buf_tt-place.curr-date     = buf_rvs-doc.fact-date
           buf_tt-place.curr-time     = buf_rvs-doc.fact-time
           buf_tt-place.curr-time-str = STRING(buf_rvs-doc.fact-time, "HH:MM:SS") + ".000"
@@ -752,13 +756,13 @@ on error undo, return error
 
       "АЗС: " v-obj-name-list FORMAT "x({&frame-width})"skip
          "Дата отчета:" p-date " время отчета:" STRING(p-time, "HH:MM:SS") skip(1)
-"+--------------------+----------------------------------+---------------+---------------+--------+-----------+-----------+-----------+-----------+-----------+--------+--------+-----------+"       skip
-"|                    |                                  |               |               |        |           |           |           |           |           |        |        |           |"       skip
-"|        АЗС         |              Адрес               |    телефон    |     Марка     | № ре-  |   Объем   |  Трубо-   | Ожидаемая | Фактиче-  | Остаток   |  Дата  | Время  |реализация |"       skip
-"|                    |                                  |               |     н/пр      | зерву- |           |  провод   | реализация| ский      | по чекам  |  изме- | изме-  |( прошлые  |"       skip
-"|                    |                                  |               |               | ара    |           |           |           | остаток   | и док-ам  |  рения | рения  |   сутки ) |"       skip
-"|                    |                                  |               |               |        |           |           |           |           |           |        |        |           |"       skip
-"+--------------------+----------------------------------+---------------+---------------+--------+-----------+-----------+-----------+-----------+-----------+--------+--------+-----------+"       skip
+"+--------------------+----------------------------------+---------------+---------------+--------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+--------+--------+-----------+"       skip
+"|                    |                                  |               |               |        |           |           |           |           |           |           |           |        |        |           |"       skip
+"|        АЗС         |              Адрес               |    телефон    |     Марка     | № ре-  |   Объем   |  Трубо-   | Ожидаемая | Фактиче-  | Уровень   |   Объем   | Остаток   |  Дата  | Время  |реализация |"       skip
+"|                    |                                  |               |     н/пр      | зерву- |           |  провод   | реализация| ский      | воды, см  |  воды, л  | по чекам  |  изме- | изме-  |( прошлые  |"       skip
+"|                    |                                  |               |               | ара    |           |           |           | остаток   |           |           | и док-ам  |  рения | рения  |   сутки ) |"       skip
+"|                    |                                  |               |               |        |           |           |           |           |           |           |           |        |        |           |"       skip
+"+--------------------+----------------------------------+---------------+---------------+--------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+--------+--------+-----------+"       skip
    .
    END.
    run disp-xl-write-cell-data in this-procedure ( input {&disp-xl-h_obj-name-list},  input v-obj-name-list ).
@@ -795,6 +799,10 @@ define variable v-line    as character    no-undo.
     buf_tt-place.sale-qnty-7   no-label format "->>>,>>9.99" space(0)
     sym9                       no-label format "X(1)"       space(0)
     buf_tt-place.curr-qnty     no-label format "->>>,>>9.99" space(0)
+    sym16                      no-label format "X(1)"       space(0)
+    buf_tt-place.level-water   no-label format "->>>,>>9.99" space(0)
+    sym17                      no-label format "X(1)"       space(0)
+    buf_tt-place.volume-water  no-label format "->>>,>>9.99" space(0)
     sym10                      no-label format "X(1)"       space(0)
     buf_tt-place.doc-qnty      no-label format "->>>,>>9.99" space(0)
     sym15                      no-label format "X(1)"       space(0)
@@ -854,7 +862,10 @@ on error undo, return error
                buf_tt-place.max-qnty
                buf_tt-place.add-qnty
                buf_tt-place.sale-qnty-7
-                  (IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0 ) @ buf_tt-place.curr-qnty
+/*                  (IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0 ) @ buf_tt-place.curr-qnty*/
+               buf_tt-place.curr-qnty
+               buf_tt-place.level-water
+               buf_tt-place.volume-water
                buf_tt-place.doc-qnty
                buf_tt-place.curr-date
                buf_tt-place.curr-time-str
@@ -863,6 +874,7 @@ on error undo, return error
                   sym1  sym2  sym3
                sym4  sym5  sym6
                sym7  sym8  sym9
+                  sym16 sym17 
                   sym10 sym12
                sym13 sym14 sym15
 
@@ -879,7 +891,10 @@ on error undo, return error
                      , INPUT buf_tt-place.max-qnty
                      , INPUT buf_tt-place.add-qnty
                      , INPUT buf_tt-place.sale-qnty-7
-                     , INPUT IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0
+/*                     , INPUT IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0*/
+                     , INPUT buf_tt-place.curr-qnty
+                     , INPUT buf_tt-place.level-water
+                     , INPUT buf_tt-place.volume-water
                      , INPUT buf_tt-place.doc-qnty
                      , INPUT buf_tt-place.curr-date
                      , INPUT buf_tt-place.curr-time-str
@@ -900,7 +915,10 @@ on error undo, return error
                   buf_tt-place.max-qnty
                   buf_tt-place.add-qnty
                   buf_tt-place.sale-qnty-7
-                     (IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0) @ buf_tt-place.curr-qnty
+/*                     (IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0) @ buf_tt-place.curr-qnty*/
+                  buf_tt-place.curr-qnty
+                  buf_tt-place.level-water
+                  buf_tt-place.volume-water
                   buf_tt-place.doc-qnty
                   buf_tt-place.curr-date
                   buf_tt-place.curr-time-str
@@ -908,6 +926,7 @@ on error undo, return error
                      sym1  sym2  sym3
                   sym4  sym5  sym6
                   sym7  sym8  sym9
+                     sym16 sym17 
                      sym10 sym12 sym15
                   sym13 sym14
             with frame f-first.
@@ -923,7 +942,10 @@ on error undo, return error
                         , INPUT buf_tt-place.max-qnty
                         , INPUT buf_tt-place.add-qnty
                         , INPUT buf_tt-place.sale-qnty-7
-                        , INPUT IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0
+/*                        , INPUT IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0*/
+                        , INPUT buf_tt-place.curr-qnty
+                        , INPUT buf_tt-place.level-water
+                        , INPUT buf_tt-place.volume-water
                         , INPUT buf_tt-place.doc-qnty
                         , INPUT buf_tt-place.curr-date
                         , INPUT buf_tt-place.curr-time-str
@@ -944,14 +966,17 @@ on error undo, return error
                   buf_tt-place.max-qnty
                   buf_tt-place.add-qnty
                   "":U @ buf_tt-place.sale-qnty-7
-                     (IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0) @ buf_tt-place.curr-qnty
+/*                     (IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0) @ buf_tt-place.curr-qnty*/
+                  buf_tt-place.curr-qnty
+                  buf_tt-place.level-water
+                  buf_tt-place.volume-water
                   buf_tt-place.curr-date
                   buf_tt-place.curr-time-str
                   "":U @ buf_tt-place.sale-qnty-1
                      sym1  /* sym2  sym3 */
                   sym4  sym5  sym6
                   sym7  sym8  sym9
-                     sym10 sym12
+                     sym16 sym17 sym10 sym12
                   sym13 sym14
             with frame f-first.
             down stream out-stream with frame f-first
@@ -966,7 +991,10 @@ on error undo, return error
                         , INPUT buf_tt-place.max-qnty
                         , INPUT buf_tt-place.add-qnty
                         , INPUT "":U
-                        , INPUT IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0
+/*                        , INPUT IF buf_tt-place.is-meas THEN buf_tt-place.curr-qnty ELSE 0*/
+                        , INPUT buf_tt-place.curr-qnty
+                        , INPUT buf_tt-place.level-water
+                        , INPUT buf_tt-place.volume-water
                         , INPUT buf_tt-place.doc-qnty
                         , INPUT buf_tt-place.curr-date
                         , INPUT buf_tt-place.curr-time-str
@@ -1075,6 +1103,8 @@ on error undo, return error
                assign
                   buf_tt-place.found-in-rvs  = TRUE
                   buf_tt-place.curr-qnty     = buf_rvs-line.state-measure-qnty
+                  buf_tt-place.level-water   = buf_rvs-line.state-level-water
+                  buf_tt-place.volume-water  = buf_rvs-line.state-brutto-qnty - buf_rvs-line.state-measure-qnty
                   buf_tt-place.curr-date     = buf_rvs-doc.fact-date
                   buf_tt-place.curr-time     = buf_rvs-doc.fact-time
                   buf_tt-place.curr-time-str = STRING(buf_rvs-doc.fact-time, "HH:MM:SS") + ".000"
@@ -1260,6 +1290,8 @@ on error undo, return error
          assign
             buf_tt-place.found-in-rvs  = TRUE
             buf_tt-place.curr-qnty     = buf_rvs-line.state-measure-qnty
+            buf_tt-place.level-water   = buf_rvs-line.state-level-water
+            buf_tt-place.volume-water  = buf_rvs-line.state-brutto-qnty - buf_rvs-line.state-measure-qnty
             buf_tt-place.curr-date     = buf_rvs-doc.fact-date
             buf_tt-place.curr-time     = buf_rvs-doc.fact-time
             buf_tt-place.curr-time-str = STRING(buf_rvs-doc.fact-time, "HH:MM:SS") + ".000"

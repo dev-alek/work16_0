@@ -30,6 +30,8 @@
                     <xsd:element name="sale-qnty-7" type="xsd:decimal"/>
                     <xsd:element name="curr-qnty" type="xsd:decimal"/>
                     <xsd:element name="doc-qnty" type="xsd:decimal"/>
+                    <xsd:element name="level-water" type="xsd:decimal"/>
+                    <xsd:element name="volume-water" type="xsd:decimal"/>
                     <xsd:element name="sale-qnty-1" type="xsd:decimal"/>
                     <xsd:element name="curr-date" type="xsd:date"/>
                     <xsd:element name="curr-time-str" type="xsd:string"/>
