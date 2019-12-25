@@ -49,11 +49,11 @@ class ibs.th.ref.cashbookfrm inherits Form :
         parparentproc = ih.
   end.
   
-  define property host-code as integer no-undo
+  /*define property host-code as integer no-undo
   private get.
   set(input iH as integer):
         host-code = ih.
-  end.
+  end.*/
   
   constructor public cashbookfrm (Mode as character, p-id as int64 ):
     
@@ -120,9 +120,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
     run ref/fwcode-1.w (
                     parParentProc
                   ,"b-sel"
-                  ,{&company}
+                  ,{&all}
                   ,input ?
-                  ,input host-code
+                  ,input ?
                   ,output rid-list ).
     
     if rid-list <> "":U then do:
@@ -152,9 +152,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
     run ref/fwcode-1.w (
                     parParentProc
                   ,"b-sel"
-                  ,{&company}
+                  ,{&all}
                   ,input ?
-                  ,input host-code
+                  ,input ?
                   ,output rid-list ).
     
     if rid-list <> "":U then do:
@@ -205,275 +205,276 @@ class ibs.th.ref.cashbookfrm inherits Form :
          
          Modifying the contents of this method using a code editor will invalidate any support for this file. */
       
-    this-object:components = new System.ComponentModel.Container().
-    @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable tableDesc2 as Progress.Data.TableDesc no-undo.
-    tableDesc2 = new Progress.Data.TableDesc("tt-CashBook").
-    this-object:buttonOk = new System.Windows.Forms.Button().
-    this-object:buttonCancel = new System.Windows.Forms.Button().
-    this-object:label1 = new System.Windows.Forms.Label().
-    this-object:fName = new System.Windows.Forms.TextBox().
-    this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
-    this-object:label5 = new System.Windows.Forms.Label().
-    this-object:label6 = new System.Windows.Forms.Label().
-    this-object:FlagSepFuel = new System.Windows.Forms.CheckBox().
-    this-object:FlagSepCash = new System.Windows.Forms.CheckBox().
-    this-object:label3 = new System.Windows.Forms.Label().
-    this-object:fExtCode = new System.Windows.Forms.TextBox().
-    this-object:label4 = new System.Windows.Forms.Label().
-    this-object:label7 = new System.Windows.Forms.Label().
-    this-object:fCredit = new System.Windows.Forms.TextBox().
-    this-object:fDebet = new System.Windows.Forms.TextBox().
-    this-object:fRuleOsn = new System.Windows.Forms.ComboBox().
-    this-object:fRulePril = new System.Windows.Forms.ComboBox().
-    this-object:bChooseCredit = new System.Windows.Forms.Button().
-    this-object:bChooseDebit = new System.Windows.Forms.Button().
-    cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
-    this-object:SuspendLayout().
-    /*  */
-    /* buttonOk */
-    /*  */
-    this-object:buttonOk:Location = new System.Drawing.Point(12, 12).
-    this-object:buttonOk:Name = "buttonOk".
-    this-object:buttonOk:Size = new System.Drawing.Size(75, 23).
-    this-object:buttonOk:TabIndex = 0.
-    this-object:buttonOk:Text = "Ввод".
-    this-object:buttonOk:UseCompatibleTextRendering = true.
-    this-object:buttonOk:Click:Subscribe(this-object:okButton_Click).
-    /*  */
-    /* buttonCancel */
-    /*  */
-    define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
-    nestedvar0 = System.Windows.Forms.AnchorStyles:Bottom.
-    this-object:buttonCancel:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-    this-object:buttonCancel:DialogResult = System.Windows.Forms.DialogResult:Cancel.
-    this-object:buttonCancel:Location = new System.Drawing.Point(93, 12).
-    this-object:buttonCancel:Name = "buttonCancel".
-    this-object:buttonCancel:Size = new System.Drawing.Size(75, 23).
-    this-object:buttonCancel:TabIndex = 1.
-    this-object:buttonCancel:Text = "Отмена".
-    this-object:buttonCancel:UseCompatibleTextRendering = true.
-    this-object:buttonCancel:Click:Subscribe(this-object:cancelButton_Click).
-    /*  */
-    /* label1 */
-    /*  */
-    this-object:label1:Location = new System.Drawing.Point(12, 38).
-    this-object:label1:Name = "label1".
-    this-object:label1:Size = new System.Drawing.Size(199, 23).
-    this-object:label1:TabIndex = 2.
-    this-object:label1:Text = "Наименование типа кассовой книги:".
-    this-object:label1:UseCompatibleTextRendering = true.
-    /*  */
-    /* fName */
-    /*  */
-    this-object:fName:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "CashBookName", true)).
-    this-object:fName:Location = new System.Drawing.Point(264, 35).
-    this-object:fName:Name = "fName".
-    this-object:fName:Size = new System.Drawing.Size(100, 20).
-    this-object:fName:TabIndex = 3.
-    /*  */
-    /* bindingSource1 */
-    /*  */
-    this-object:bindingSource1:MaxDataGuess = 0.
-    this-object:bindingSource1:NoLOBs = false.
-    this-object:bindingSource1:Position = 0.
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
-    arrayvar0 = new "Progress.Data.TableDesc[]"(0).
-    tableDesc2:ChildTables = arrayvar0.
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 10 no-undo.
-    arrayvar1[1] = new Progress.Data.ColumnPropDesc("CashBookName", "Наименование", Progress.Data.DataType:CHARACTER).
-    arrayvar1[2] = new Progress.Data.ColumnPropDesc("Credit", "кредит", Progress.Data.DataType:CHARACTER).
-    arrayvar1[3] = new Progress.Data.ColumnPropDesc("Debit", "дебит", Progress.Data.DataType:CHARACTER).
-    arrayvar1[4] = new Progress.Data.ColumnPropDesc("ext-code", "ext-code", Progress.Data.DataType:CHARACTER).
-    arrayvar1[5] = new Progress.Data.ColumnPropDesc("FlagSepCash", "Отд. для кажд. кассы", Progress.Data.DataType:LOGICAL).
-    arrayvar1[6] = new Progress.Data.ColumnPropDesc("FlagSepFull", "Раздельно НП и ТНП", Progress.Data.DataType:LOGICAL).
-    arrayvar1[7] = new Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
-    arrayvar1[8] = new Progress.Data.ColumnPropDesc("RuleOsn", "Прав. запол.", Progress.Data.DataType:CHARACTER).
-    arrayvar1[9] = new Progress.Data.ColumnPropDesc("RulePril", "Прав. запол.", Progress.Data.DataType:CHARACTER).
-    arrayvar1[10] = new Progress.Data.ColumnPropDesc("Status_", "Статус", Progress.Data.DataType:INTEGER).
-    tableDesc2:Columns = arrayvar1.
-    this-object:bindingSource1:TableSchema = tableDesc2.
-    /*  */
-    /* label5 */
-    /*  */
-    this-object:label5:Location = new System.Drawing.Point(12, 130).
-    this-object:label5:Name = "label5".
-    this-object:label5:Size = new System.Drawing.Size(233, 23).
-    this-object:label5:TabIndex = 10.
-    this-object:label5:Text = "Правило заполнения графы ~"Основание~":".
-    this-object:label5:UseCompatibleTextRendering = true.
-    /*  */
-    /* label6 */
-    /*  */
-    this-object:label6:Location = new System.Drawing.Point(12, 153).
-    this-object:label6:Name = "label6".
-    this-object:label6:Size = new System.Drawing.Size(242, 23).
-    this-object:label6:TabIndex = 12.
-    this-object:label6:Text = "Правило заполнения графы ~"Приложение~":".
-    this-object:label6:UseCompatibleTextRendering = true.
-    /*  */
-    /* FlagSepFuel */
-    /*  */
-    this-object:FlagSepFuel:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepFull", true)).
-    this-object:FlagSepFuel:Location = new System.Drawing.Point(12, 209).
-    this-object:FlagSepFuel:Name = "FlagSepFuel".
-    this-object:FlagSepFuel:Size = new System.Drawing.Size(147, 24).
-    this-object:FlagSepFuel:TabIndex = 10.
-    this-object:FlagSepFuel:Text = "Раздельно НП и ТНП".
-    this-object:FlagSepFuel:UseCompatibleTextRendering = true.
-    this-object:FlagSepFuel:UseVisualStyleBackColor = true.
-    /*  */
-    /* FlagSepCash */
-    /*  */
-    this-object:FlagSepCash:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepCash", true)).
-    this-object:FlagSepCash:Location = new System.Drawing.Point(12, 179).
-    this-object:FlagSepCash:Name = "FlagSepCash".
-    this-object:FlagSepCash:Size = new System.Drawing.Size(226, 24).
-    this-object:FlagSepCash:TabIndex = 9.
-    this-object:FlagSepCash:Text = "Отдельный ПКО для каждой кассы".
-    this-object:FlagSepCash:UseCompatibleTextRendering = true.
-    this-object:FlagSepCash:UseVisualStyleBackColor = true.
-    /*  */
-    /* label3 */
-    /*  */
-    this-object:label3:Location = new System.Drawing.Point(12, 61).
-    this-object:label3:Name = "label3".
-    this-object:label3:Size = new System.Drawing.Size(199, 23).
-    this-object:label3:TabIndex = 19.
-    this-object:label3:Text = "Код/номер типа кассовой книги:".
-    this-object:label3:UseCompatibleTextRendering = true.
-    /*  */
-    /* fExtCode */
-    /*  */
-    this-object:fExtCode:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "ext-code", true)).
-    this-object:fExtCode:Location = new System.Drawing.Point(264, 58).
-    this-object:fExtCode:Name = "fExtCode".
-    this-object:fExtCode:Size = new System.Drawing.Size(100, 20).
-    this-object:fExtCode:TabIndex = 4.
-    /*  */
-    /* label4 */
-    /*  */
-    this-object:label4:Location = new System.Drawing.Point(12, 84).
-    this-object:label4:Name = "label4".
-    this-object:label4:Size = new System.Drawing.Size(199, 23).
-    this-object:label4:TabIndex = 21.
-    this-object:label4:Text = "Кредит:".
-    this-object:label4:UseCompatibleTextRendering = true.
-    /*  */
-    /* label7 */
-    /*  */
-    this-object:label7:Location = new System.Drawing.Point(12, 107).
-    this-object:label7:Name = "label7".
-    this-object:label7:Size = new System.Drawing.Size(199, 23).
-    this-object:label7:TabIndex = 22.
-    this-object:label7:Text = "Дебет:".
-    this-object:label7:UseCompatibleTextRendering = true.
-    /*  */
-    /* fCredit */
-    /*  */
-    this-object:fCredit:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "Credit", true)).
-    this-object:fCredit:Location = new System.Drawing.Point(264, 81).
-    this-object:fCredit:Name = "fCredit".
-    this-object:fCredit:Size = new System.Drawing.Size(100, 20).
-    this-object:fCredit:TabIndex = 5.
-    /*  */
-    /* fDebet */
-    /*  */
-    this-object:fDebet:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "Debit", true)).
-    this-object:fDebet:Location = new System.Drawing.Point(264, 104).
-    this-object:fDebet:Name = "fDebet".
-    this-object:fDebet:Size = new System.Drawing.Size(100, 20).
-    this-object:fDebet:TabIndex = 6.
-    /*  */
-    /* fRuleOsn */
-    /*  */
-    this-object:fRuleOsn:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "RuleOsn", true)).
-    this-object:fRuleOsn:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
-    this-object:fRuleOsn:FormattingEnabled = true.
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar2 as System.Object extent 3 no-undo.
-    arrayvar2[1] = "Выручка от реализации".
-    arrayvar2[2] = "Номера Z-отчетов".
-    arrayvar2[3] = "Не заполнять".
-    this-object:fRuleOsn:Items:AddRange(arrayvar2).
-    this-object:fRuleOsn:Location = new System.Drawing.Point(264, 127).
-    this-object:fRuleOsn:Name = "fRuleOsn".
-    this-object:fRuleOsn:Size = new System.Drawing.Size(146, 21).
-    this-object:fRuleOsn:TabIndex = 23.
-    /*  */
-    /* fRulePril */
-    /*  */
-    this-object:fRulePril:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "RulePril", true)).
-    this-object:fRulePril:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
-    this-object:fRulePril:FormattingEnabled = true.
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar3 as System.Object extent 2 no-undo.
-    arrayvar3[1] = "Номера Z-отчетов".
-    arrayvar3[2] = "Не заполнять".
-    this-object:fRulePril:Items:AddRange(arrayvar3).
-    this-object:fRulePril:Location = new System.Drawing.Point(264, 150).
-    this-object:fRulePril:Name = "fRulePril".
-    this-object:fRulePril:Size = new System.Drawing.Size(146, 21).
-    this-object:fRulePril:TabIndex = 24.
-    /*  */
-    /* bChooseCredit */
-    /*  */
-    this-object:bChooseCredit:Location = new System.Drawing.Point(370, 79).
-    this-object:bChooseCredit:Name = "bChooseCredit".
-    this-object:bChooseCredit:Size = new System.Drawing.Size(24, 23).
-    this-object:bChooseCredit:TabIndex = 25.
-    this-object:bChooseCredit:UseCompatibleTextRendering = true.
-    this-object:bChooseCredit:UseVisualStyleBackColor = true.
-    this-object:bChooseCredit:Click:Subscribe(this-object:bChooseCredit_Click).
-    /*  */
-    /* bChooseDebit */
-    /*  */
-    this-object:bChooseDebit:Location = new System.Drawing.Point(370, 102).
-    this-object:bChooseDebit:Name = "bChooseDebit".
-    this-object:bChooseDebit:Size = new System.Drawing.Size(24, 23).
-    this-object:bChooseDebit:TabIndex = 26.
-    this-object:bChooseDebit:UseCompatibleTextRendering = true.
-    this-object:bChooseDebit:UseVisualStyleBackColor = true.
-    this-object:bChooseDebit:Click:Subscribe(this-object:bChooseDebit_Click).
-    /*  */
-    /* cashbookfrm */
-    /*  */
-    this-object:AcceptButton = this-object:buttonOk.
-    this-object:CancelButton = this-object:buttonCancel.
-    this-object:ClientSize = new System.Drawing.Size(428, 237).
-    this-object:Controls:Add(this-object:bChooseDebit).
-    this-object:Controls:Add(this-object:bChooseCredit).
-    this-object:Controls:Add(this-object:fRulePril).
-    this-object:Controls:Add(this-object:fRuleOsn).
-    this-object:Controls:Add(this-object:fDebet).
-    this-object:Controls:Add(this-object:fCredit).
-    this-object:Controls:Add(this-object:label7).
-    this-object:Controls:Add(this-object:label4).
-    this-object:Controls:Add(this-object:fExtCode).
-    this-object:Controls:Add(this-object:label3).
-    this-object:Controls:Add(this-object:FlagSepCash).
-    this-object:Controls:Add(this-object:FlagSepFuel).
-    this-object:Controls:Add(this-object:label6).
-    this-object:Controls:Add(this-object:label5).
-    this-object:Controls:Add(this-object:fName).
-    this-object:Controls:Add(this-object:label1).
-    this-object:Controls:Add(this-object:buttonCancel).
-    this-object:Controls:Add(this-object:buttonOk).
-    this-object:FormBorderStyle = System.Windows.Forms.FormBorderStyle:FixedDialog.
-    this-object:MaximizeBox = false.
-    this-object:MinimizeBox = false.
-    this-object:Name = "cashbookfrm".
-    this-object:ShowInTaskbar = false.
-    this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
-    this-object:Text = "Кассовая книга".
-    cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
-    this-object:ResumeLayout(false).
-    this-object:PerformLayout().
-    catch e as Progress.Lang.Error:
-      undo, throw e.
-    end catch.
+      this-object:components = new System.ComponentModel.Container().
+      @VisualDesigner.FormMember (NeedsInitialize="true").
+      define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+      tableDesc1 = new Progress.Data.TableDesc("tt-CashBook").
+      this-object:buttonOk = new System.Windows.Forms.Button().
+      this-object:buttonCancel = new System.Windows.Forms.Button().
+      this-object:label1 = new System.Windows.Forms.Label().
+      this-object:fName = new System.Windows.Forms.TextBox().
+      this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
+      this-object:label5 = new System.Windows.Forms.Label().
+      this-object:label6 = new System.Windows.Forms.Label().
+      this-object:FlagSepFuel = new System.Windows.Forms.CheckBox().
+      this-object:FlagSepCash = new System.Windows.Forms.CheckBox().
+      this-object:label3 = new System.Windows.Forms.Label().
+      this-object:fExtCode = new System.Windows.Forms.TextBox().
+      this-object:label4 = new System.Windows.Forms.Label().
+      this-object:label7 = new System.Windows.Forms.Label().
+      this-object:fCredit = new System.Windows.Forms.TextBox().
+      this-object:fDebet = new System.Windows.Forms.TextBox().
+      this-object:fRuleOsn = new System.Windows.Forms.ComboBox().
+      this-object:fRulePril = new System.Windows.Forms.ComboBox().
+      this-object:bChooseCredit = new System.Windows.Forms.Button().
+      this-object:bChooseDebit = new System.Windows.Forms.Button().
+      cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
+      this-object:SuspendLayout().
+      /*  */
+      /* buttonOk */
+      /*  */
+      this-object:buttonOk:Location = new System.Drawing.Point(12, 12).
+      this-object:buttonOk:Name = "buttonOk".
+      this-object:buttonOk:Size = new System.Drawing.Size(75, 23).
+      this-object:buttonOk:TabIndex = 0.
+      this-object:buttonOk:Text = "Ввод".
+      this-object:buttonOk:UseCompatibleTextRendering = true.
+      this-object:buttonOk:Click:Subscribe(this-object:okButton_Click).
+      /*  */
+      /* buttonCancel */
+      /*  */
+      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar0 = System.Windows.Forms.AnchorStyles:Bottom.
+      this-object:buttonCancel:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:buttonCancel:DialogResult = System.Windows.Forms.DialogResult:Cancel.
+      this-object:buttonCancel:Location = new System.Drawing.Point(93, 12).
+      this-object:buttonCancel:Name = "buttonCancel".
+      this-object:buttonCancel:Size = new System.Drawing.Size(75, 23).
+      this-object:buttonCancel:TabIndex = 1.
+      this-object:buttonCancel:Text = "Отмена".
+      this-object:buttonCancel:UseCompatibleTextRendering = true.
+      this-object:buttonCancel:Click:Subscribe(this-object:cancelButton_Click).
+      /*  */
+      /* label1 */
+      /*  */
+      this-object:label1:Location = new System.Drawing.Point(12, 38).
+      this-object:label1:Name = "label1".
+      this-object:label1:Size = new System.Drawing.Size(199, 23).
+      this-object:label1:TabIndex = 2.
+      this-object:label1:Text = "Наименование типа кассовой книги:".
+      this-object:label1:UseCompatibleTextRendering = true.
+      /*  */
+      /* fName */
+      /*  */
+      this-object:fName:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "CashBookName", true)).
+      this-object:fName:Location = new System.Drawing.Point(264, 35).
+      this-object:fName:Name = "fName".
+      this-object:fName:Size = new System.Drawing.Size(100, 20).
+      this-object:fName:TabIndex = 3.
+      /*  */
+      /* bindingSource1 */
+      /*  */
+      this-object:bindingSource1:MaxDataGuess = 0.
+      this-object:bindingSource1:NoLOBs = false.
+      this-object:bindingSource1:Position = 0.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
+      arrayvar0 = new "Progress.Data.TableDesc[]"(0).
+      tableDesc1:ChildTables = arrayvar0.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 10 no-undo.
+      arrayvar1[1] = new Progress.Data.ColumnPropDesc("CashBookName", "Наименование", Progress.Data.DataType:CHARACTER).
+      arrayvar1[2] = new Progress.Data.ColumnPropDesc("Credit", "кредит", Progress.Data.DataType:CHARACTER).
+      arrayvar1[3] = new Progress.Data.ColumnPropDesc("Debit", "дебит", Progress.Data.DataType:CHARACTER).
+      arrayvar1[4] = new Progress.Data.ColumnPropDesc("ext-code", "ext-code", Progress.Data.DataType:CHARACTER).
+      arrayvar1[5] = new Progress.Data.ColumnPropDesc("FlagSepCash", "Отд. для кажд. кассы", Progress.Data.DataType:LOGICAL).
+      arrayvar1[6] = new Progress.Data.ColumnPropDesc("FlagSepFull", "Раздельно НП и ТНП", Progress.Data.DataType:LOGICAL).
+      arrayvar1[7] = new Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
+      arrayvar1[8] = new Progress.Data.ColumnPropDesc("RuleOsn", "Прав. запол.", Progress.Data.DataType:CHARACTER).
+      arrayvar1[9] = new Progress.Data.ColumnPropDesc("RulePril", "Прав. запол.", Progress.Data.DataType:CHARACTER).
+      arrayvar1[10] = new Progress.Data.ColumnPropDesc("Status_", "Статус", Progress.Data.DataType:INTEGER).
+      tableDesc1:Columns = arrayvar1.
+      this-object:bindingSource1:TableSchema = tableDesc1.
+      /*  */
+      /* label5 */
+      /*  */
+      this-object:label5:Location = new System.Drawing.Point(12, 130).
+      this-object:label5:Name = "label5".
+      this-object:label5:Size = new System.Drawing.Size(233, 23).
+      this-object:label5:TabIndex = 10.
+      this-object:label5:Text = "Правило заполнения графы ~"Основание~":".
+      this-object:label5:UseCompatibleTextRendering = true.
+      /*  */
+      /* label6 */
+      /*  */
+      this-object:label6:Location = new System.Drawing.Point(12, 153).
+      this-object:label6:Name = "label6".
+      this-object:label6:Size = new System.Drawing.Size(242, 23).
+      this-object:label6:TabIndex = 12.
+      this-object:label6:Text = "Правило заполнения графы ~"Приложение~":".
+      this-object:label6:UseCompatibleTextRendering = true.
+      /*  */
+      /* FlagSepFuel */
+      /*  */
+      this-object:FlagSepFuel:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepFull", true)).
+      this-object:FlagSepFuel:Location = new System.Drawing.Point(12, 209).
+      this-object:FlagSepFuel:Name = "FlagSepFuel".
+      this-object:FlagSepFuel:Size = new System.Drawing.Size(147, 24).
+      this-object:FlagSepFuel:TabIndex = 10.
+      this-object:FlagSepFuel:Text = "Раздельно НП и ТНП".
+      this-object:FlagSepFuel:UseCompatibleTextRendering = true.
+      this-object:FlagSepFuel:UseVisualStyleBackColor = true.
+      /*  */
+      /* FlagSepCash */
+      /*  */
+      this-object:FlagSepCash:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepCash", true)).
+      this-object:FlagSepCash:Location = new System.Drawing.Point(12, 179).
+      this-object:FlagSepCash:Name = "FlagSepCash".
+      this-object:FlagSepCash:Size = new System.Drawing.Size(226, 24).
+      this-object:FlagSepCash:TabIndex = 9.
+      this-object:FlagSepCash:Text = "Отдельный ПКО для каждой кассы".
+      this-object:FlagSepCash:UseCompatibleTextRendering = true.
+      this-object:FlagSepCash:UseVisualStyleBackColor = true.
+      /*  */
+      /* label3 */
+      /*  */
+      this-object:label3:Location = new System.Drawing.Point(12, 61).
+      this-object:label3:Name = "label3".
+      this-object:label3:Size = new System.Drawing.Size(199, 23).
+      this-object:label3:TabIndex = 19.
+      this-object:label3:Text = "Код/номер типа кассовой книги:".
+      this-object:label3:UseCompatibleTextRendering = true.
+      /*  */
+      /* fExtCode */
+      /*  */
+      this-object:fExtCode:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "id", true)).
+      this-object:fExtCode:Location = new System.Drawing.Point(264, 58).
+      this-object:fExtCode:Name = "fExtCode".
+      this-object:fExtCode:ReadOnly = true.
+      this-object:fExtCode:Size = new System.Drawing.Size(100, 20).
+      this-object:fExtCode:TabIndex = 4.
+      /*  */
+      /* label4 */
+      /*  */
+      this-object:label4:Location = new System.Drawing.Point(12, 84).
+      this-object:label4:Name = "label4".
+      this-object:label4:Size = new System.Drawing.Size(199, 23).
+      this-object:label4:TabIndex = 21.
+      this-object:label4:Text = "Кредит:".
+      this-object:label4:UseCompatibleTextRendering = true.
+      /*  */
+      /* label7 */
+      /*  */
+      this-object:label7:Location = new System.Drawing.Point(12, 107).
+      this-object:label7:Name = "label7".
+      this-object:label7:Size = new System.Drawing.Size(199, 23).
+      this-object:label7:TabIndex = 22.
+      this-object:label7:Text = "Дебет:".
+      this-object:label7:UseCompatibleTextRendering = true.
+      /*  */
+      /* fCredit */
+      /*  */
+      this-object:fCredit:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "Credit", true)).
+      this-object:fCredit:Location = new System.Drawing.Point(264, 81).
+      this-object:fCredit:Name = "fCredit".
+      this-object:fCredit:Size = new System.Drawing.Size(100, 20).
+      this-object:fCredit:TabIndex = 5.
+      /*  */
+      /* fDebet */
+      /*  */
+      this-object:fDebet:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "Debit", true)).
+      this-object:fDebet:Location = new System.Drawing.Point(264, 104).
+      this-object:fDebet:Name = "fDebet".
+      this-object:fDebet:Size = new System.Drawing.Size(100, 20).
+      this-object:fDebet:TabIndex = 6.
+      /*  */
+      /* fRuleOsn */
+      /*  */
+      this-object:fRuleOsn:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "RuleOsn", true)).
+      this-object:fRuleOsn:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
+      this-object:fRuleOsn:FormattingEnabled = true.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar2 as System.Object extent 3 no-undo.
+      arrayvar2[1] = "Выручка от реализации".
+      arrayvar2[2] = "Номера Z-отчетов".
+      arrayvar2[3] = "Не заполнять".
+      this-object:fRuleOsn:Items:AddRange(arrayvar2).
+      this-object:fRuleOsn:Location = new System.Drawing.Point(264, 127).
+      this-object:fRuleOsn:Name = "fRuleOsn".
+      this-object:fRuleOsn:Size = new System.Drawing.Size(146, 21).
+      this-object:fRuleOsn:TabIndex = 23.
+      /*  */
+      /* fRulePril */
+      /*  */
+      this-object:fRulePril:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "RulePril", true)).
+      this-object:fRulePril:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
+      this-object:fRulePril:FormattingEnabled = true.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar3 as System.Object extent 2 no-undo.
+      arrayvar3[1] = "Номера Z-отчетов".
+      arrayvar3[2] = "Не заполнять".
+      this-object:fRulePril:Items:AddRange(arrayvar3).
+      this-object:fRulePril:Location = new System.Drawing.Point(264, 150).
+      this-object:fRulePril:Name = "fRulePril".
+      this-object:fRulePril:Size = new System.Drawing.Size(146, 21).
+      this-object:fRulePril:TabIndex = 24.
+      /*  */
+      /* bChooseCredit */
+      /*  */
+      this-object:bChooseCredit:Location = new System.Drawing.Point(370, 79).
+      this-object:bChooseCredit:Name = "bChooseCredit".
+      this-object:bChooseCredit:Size = new System.Drawing.Size(24, 23).
+      this-object:bChooseCredit:TabIndex = 25.
+      this-object:bChooseCredit:UseCompatibleTextRendering = true.
+      this-object:bChooseCredit:UseVisualStyleBackColor = true.
+      this-object:bChooseCredit:Click:Subscribe(this-object:bChooseCredit_Click).
+      /*  */
+      /* bChooseDebit */
+      /*  */
+      this-object:bChooseDebit:Location = new System.Drawing.Point(370, 102).
+      this-object:bChooseDebit:Name = "bChooseDebit".
+      this-object:bChooseDebit:Size = new System.Drawing.Size(24, 23).
+      this-object:bChooseDebit:TabIndex = 26.
+      this-object:bChooseDebit:UseCompatibleTextRendering = true.
+      this-object:bChooseDebit:UseVisualStyleBackColor = true.
+      this-object:bChooseDebit:Click:Subscribe(this-object:bChooseDebit_Click).
+      /*  */
+      /* cashbookfrm */
+      /*  */
+      this-object:AcceptButton = this-object:buttonOk.
+      this-object:CancelButton = this-object:buttonCancel.
+      this-object:ClientSize = new System.Drawing.Size(428, 237).
+      this-object:Controls:Add(this-object:bChooseDebit).
+      this-object:Controls:Add(this-object:bChooseCredit).
+      this-object:Controls:Add(this-object:fRulePril).
+      this-object:Controls:Add(this-object:fRuleOsn).
+      this-object:Controls:Add(this-object:fDebet).
+      this-object:Controls:Add(this-object:fCredit).
+      this-object:Controls:Add(this-object:label7).
+      this-object:Controls:Add(this-object:label4).
+      this-object:Controls:Add(this-object:fExtCode).
+      this-object:Controls:Add(this-object:label3).
+      this-object:Controls:Add(this-object:FlagSepCash).
+      this-object:Controls:Add(this-object:FlagSepFuel).
+      this-object:Controls:Add(this-object:label6).
+      this-object:Controls:Add(this-object:label5).
+      this-object:Controls:Add(this-object:fName).
+      this-object:Controls:Add(this-object:label1).
+      this-object:Controls:Add(this-object:buttonCancel).
+      this-object:Controls:Add(this-object:buttonOk).
+      this-object:FormBorderStyle = System.Windows.Forms.FormBorderStyle:FixedDialog.
+      this-object:MaximizeBox = false.
+      this-object:MinimizeBox = false.
+      this-object:Name = "cashbookfrm".
+      this-object:ShowInTaskbar = false.
+      this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
+      this-object:Text = "Кассовая книга".
+      cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
+      this-object:ResumeLayout(false).
+      this-object:PerformLayout().
+      catch e as Progress.Lang.Error:
+         undo, throw e.
+      end catch.
    end method. 
  
   method public void ShowModalDialog(  ):

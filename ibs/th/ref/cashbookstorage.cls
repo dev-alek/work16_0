@@ -41,11 +41,6 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Наименование типа кассовой книги не может быть пустым!" .
       return .
     end.
-    if trim(tt-cashbook.ext-code) = ""
-    then do :
-      Msg = "Код/номер типа кассовой книги не может быть пустым!" .
-      return .
-    end.
     if trim(tt-cashbook.Credit) = ""
     then do :
       Msg = "Поле Кредит не может быть пустым!" .
