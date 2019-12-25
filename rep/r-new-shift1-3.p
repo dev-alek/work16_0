@@ -57,6 +57,7 @@ define variable vss-description as character no-undo init "$Печать сменного отче
 { str/lib-calc.i }
 { rep/html-conv.i }
 { rep/icm-9df.i  }
+{ str/is-sug.i }
 
 define variable v-stfactpl    as character no-undo initial "":U .
 define variable v-data-type   as character no-undo initial "":U .
@@ -956,17 +957,22 @@ if available (ub.doc-line) then v-fact-order-inv = ub.doc-line.fact-order .
  
 end. /*for each temp-rvs-line*/ 
 
+run print-total .
+run print-sug .
 
-/*------------------------------------------------------------------------------------------------------------------------------------*/
+procedure print-total:
+  /*------------------------------------------------------------------------------------------------------------------------------------*/
+  /*выводим на печать отчет*/
 
-/*выводим на печать отчет*/
-
-/*шапка таблицы HTML*/
+  /*шапка таблицы HTML*/
          
 output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
 put stream OutStr-html unformatted
             
     '<tbody>' skip
+    '<tr>' skip
+    '<th text_wrap="true" colspan="22" style="text-align: center;">Нефтепродукты: бензины и ДТ</th>' skip
+    '</tr>' skip
     '<tr>' skip
     '<th text_wrap="true" rowspan="2" style="text-align: center;">Наим продукта</th>' skip
     '<th text_wrap="true" rowspan="2" style="text-align: center;">№ рез.</th>' skip
@@ -1041,21 +1047,21 @@ put stream OutStr-html unformatted
 /*Сбор данных*/
 
 for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
-    if first-of(temp-rvs-line.gds-code) then 
+    if first-of(temp-rvs-line.gds-code) and not is-sug(temp-rvs-line.gds-code) then 
     do:
       for each buf_temp-rvs-line where buf_temp-rvs-line.gds-code = temp-rvs-line.gds-code:
         for each temp-line-pump where buf_temp-rvs-line.gds-code = temp-line-pump.gds-code
           and temp-line-pump.pl-code = buf_temp-rvs-line.pl-code
           and temp-line-pump.loc1 = buf_temp-rvs-line.place_loc1  :
-/*          find first buf_temp-line-pump where buf_temp-line-pump.gds-code = temp-line-pump.gds-code and buf_temp-line-pump.pump-code = temp-line-pump.pump-code*/
-/*            and buf_temp-line-pump.nozzle-code = temp-line-pump.nozzle-code and buf_temp-line-pump.loc1 <> temp-line-pump.loc1 no-error .                      */
-/*          if available (buf_temp-line-pump) then                                                                                                               */
-/*          do:                                                                                                                                                  */
-/*            if not temp-line-pump.log_ then                                                                                                                    */
-/*              assign                                                                                                                                           */
-/*                buf_temp-rvs-line.pol61 = buf_temp-rvs-line.pol61 + (temp-line-pump.pol6 - temp-line-pump.pol7)                                                */
-/*                buf_temp-line-pump.log_ = yes .                                                                                                                */
-/*          end.                                                                                                                                                 */
+          find first buf_temp-line-pump where buf_temp-line-pump.gds-code = temp-line-pump.gds-code and buf_temp-line-pump.pump-code = temp-line-pump.pump-code
+            and buf_temp-line-pump.nozzle-code = temp-line-pump.nozzle-code and buf_temp-line-pump.loc1 <> temp-line-pump.loc1 no-error .
+          if available (buf_temp-line-pump) then
+          do:
+            if not temp-line-pump.log_ then
+              assign
+                buf_temp-rvs-line.pol61 = buf_temp-rvs-line.pol61 + (temp-line-pump.pol6 - temp-line-pump.pol7)
+                buf_temp-line-pump.log_ = yes .
+          end.
           assign
             buf_temp-rvs-line.pol6    = buf_temp-rvs-line.pol6 + (temp-line-pump.pol6 - temp-line-pump.pol7)
             buf_temp-rvs-line.pol8-l  = buf_temp-rvs-line.pol8-l + temp-line-pump.pol8-l
@@ -1143,7 +1149,18 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
             '</tr>' skip
             .        
         for each bf_temp-rvs-line where bf_temp-rvs-line.gds-code = temp-rvs-line.gds-code  : 
-            assign
+            define variable v-value as character no-undo.
+        define variable v-ok    as logical   no-undo.
+      
+        run placelib_get-attr  ( input {&place-twice-code}
+          ,input bf_temp-rvs-line.obj-code
+          ,input bf_temp-rvs-line.obj-type
+          ,input bf_temp-rvs-line.pl-code
+          ,output v-value
+          ,output v-ok      ) no-error.
+        if v-value <> "" then  bf_temp-rvs-line.place_loc1 = string(bf_temp-rvs-line.place_loc1) + "," + v-value .
+        else bf_temp-rvs-line.place_loc1         = bf_temp-rvs-line.place_loc1 .
+		assign
                 bf_temp-rvs-line.pol14 = bf_temp-rvs-line.state-level-total * 10
                 bf_temp-rvs-line.pol15 = bf_temp-rvs-line.state-level-water * 10
                 bf_temp-rvs-line.pol16 = bf_temp-rvs-line.state-brutto-qnty
@@ -1227,6 +1244,276 @@ put stream OutStr-html unformatted
 
     '</tbody>' skip .                                                                                                    
 output stream OutStr-html close.
+end procedure .
+
+procedure print-sug:
+  /*------------------------------------------------------------------------------------------------------------------------------------*/
+  /*выводим на печать отчет*/
+
+  /*шапка таблицы HTML*/
+         
+output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+put stream OutStr-html unformatted
+            
+    '<tbody>' skip
+    '<tr>' skip
+    '<th text_wrap="true" colspan="22" style="text-align: center;">СУГ</th>' skip
+    '</tr>' skip
+    '<tr>' skip
+    '<th text_wrap="true" rowspan="3" style="text-align: center;">Наим продукта</th>' skip
+    '<th text_wrap="true" rowspan="3" style="text-align: center;">№ рез.</th>' skip
+    '<th text_wrap="true" rowspan="3" style="text-align: center;">ед. изм.</th>' skip.
+  if p-param-shft-qty = {&par-system} then 
+  do:
+    put stream OutStr-html unformatted
+      '<th text_wrap="true" rowspan="3" style="text-align: center;">Расчетно-книжный остаток на нач. смены, л/кг</th>' skip.
+  end.
+  else 
+  do:
+    put stream OutStr-html unformatted    
+      '<th text_wrap="true" rowspan="3" style="text-align: center;">Фактич. остаток на нач. смены, л/кг</th>' skip.
+  end.    
+  put stream OutStr-html unformatted    
+    '<th text_wrap="true" rowspan="3" style="text-align: center;">Поступило за смену, л/кг</th>' skip
+    '<th text_wrap="true" rowspan="2" colspan="7" style="text-align: center;">Обороты за смену</th>' skip
+    '<th text_wrap="true" colspan="4" style="text-align: center;">Потери</th>' skip
+    '<th text_wrap="true" rowspan="2" colspan="4" style="text-align: center;">Остаток на конец смены</th>' skip
+    
+    
+    /*    '<th text_wrap="true" colspan="3" style="text-align: center;">Показания счетных механизмов</th>' skip        */
+    /*    '<th text_wrap="true" rowspan="2" style="text-align: center;">В т.ч. Тех.пролив л/кг</th>'                   */
+    /*    '<th text_wrap="true" rowspan="2" style="text-align: center;">Обороты по кассе</th>'                         */
+    /*    '<th text_wrap="true" colspan="8" style="text-align: center;">Остаток нефтепродукта на конец смены</th>' skip*/
+    '<th text_wrap="true" rowspan="2" colspan="2" style="text-align: center;">Величина небаланса, кг</th>' skip
+    '</tr>' skip
+    '<tr>' skip
+    '<th text_wrap="true" colspan="2" style="text-align: center;">к списанию</th>' skip
+    '<th text_wrap="true" colspan="2" style="text-align: center;">к начислению</th>' skip
+    '</tr>' skip  
+    '<tr>' skip
+    
+    '<th text_wrap="true" style="text-align: center;">Всего по счетчикам ГРК</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Расход по кассе</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Техпролив</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Разница</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Сброс (не пролито)</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Сброс (пролито)</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Перелив</th>' skip
+    '<th text_wrap="true" style="text-align: center;">При зачистке</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Аварийные</th>' skip
+    '<th text_wrap="true" style="text-align: center;">За смену</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Нарастающим итогом</th>' skip
+    '<th text_wrap="true" colspan="2" style="text-align: center;">Измеренный</th>' skip
+    '<th text_wrap="true" colspan="2" style="text-align: center;">Расчетный</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Допускаемая</th>' skip
+    '<th text_wrap="true" style="text-align: center;">Фактическая</th>' skip
+    '</tr>' skip
+    '<tr>' skip
+    '<th style="text-align: center;">23</th>' skip
+    '<th style="text-align: center;">24</th>' skip
+    '<th style="text-align: center;">25</th>' skip
+    '<th style="text-align: center;">26</th>' skip
+    '<th style="text-align: center;">27</th>' skip
+    '<th style="text-align: center;">28</th>' skip
+    '<th style="text-align: center;">29</th>' skip
+    '<th style="text-align: center;">30</th>' skip
+    '<th style="text-align: center;">31</th>' skip
+    '<th style="text-align: center;">32</th>' skip
+    '<th style="text-align: center;">33</th>' skip
+    '<th style="text-align: center;">34</th>' skip
+    '<th style="text-align: center;">35</th>' skip
+    '<th style="text-align: center;">36</th>' skip
+    '<th style="text-align: center;">37</th>' skip
+    '<th style="text-align: center;">38</th>' skip
+    '<th colspan="2" style="text-align: center;">39</th>' skip
+    '<th colspan="2" style="text-align: center;">40</th>' skip
+    '<th style="text-align: center;">41</th>' skip
+    '<th style="text-align: center;">42</th>' skip
+    '</tr>' skip
+    .
+/*Сбор данных*/
+
+for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
+    if first-of(temp-rvs-line.gds-code) and is-sug(temp-rvs-line.gds-code) then 
+    do:
+      for each buf_temp-rvs-line where buf_temp-rvs-line.gds-code = temp-rvs-line.gds-code:
+        for each temp-line-pump where buf_temp-rvs-line.gds-code = temp-line-pump.gds-code
+          and temp-line-pump.pl-code = buf_temp-rvs-line.pl-code
+          and temp-line-pump.loc1 = buf_temp-rvs-line.place_loc1  :
+          find first buf_temp-line-pump where buf_temp-line-pump.gds-code = temp-line-pump.gds-code and buf_temp-line-pump.pump-code = temp-line-pump.pump-code
+            and buf_temp-line-pump.nozzle-code = temp-line-pump.nozzle-code and buf_temp-line-pump.loc1 <> temp-line-pump.loc1 no-error .
+          if available (buf_temp-line-pump) then
+          do:
+            if not temp-line-pump.log_ then
+              assign
+                buf_temp-rvs-line.pol61 = buf_temp-rvs-line.pol61 + (temp-line-pump.pol6 - temp-line-pump.pol7)
+                buf_temp-line-pump.log_ = yes .
+          end.
+          assign
+            buf_temp-rvs-line.pol6    = buf_temp-rvs-line.pol6 + (temp-line-pump.pol6 - temp-line-pump.pol7)
+            buf_temp-rvs-line.pol8-l  = buf_temp-rvs-line.pol8-l + temp-line-pump.pol8-l
+            buf_temp-rvs-line.pol8-kg = buf_temp-rvs-line.pol8-kg + temp-line-pump.pol8-kg
+            buf_temp-rvs-line.pol10   = buf_temp-rvs-line.pol10 + temp-line-pump.pol10
+            buf_temp-rvs-line.pol11   = buf_temp-rvs-line.pol11 + temp-line-pump.pol11
+            buf_temp-rvs-line.pol12   = buf_temp-rvs-line.pol12 + temp-line-pump.pol12
+            buf_temp-rvs-line.pol7-l  = buf_temp-rvs-line.pol7-l + temp-line-pump.pol9-l
+            buf_temp-rvs-line.pol7-kg = buf_temp-rvs-line.pol7-kg + temp-line-pump.pol9-kg
+            buf_temp-rvs-line.pol9    = buf_temp-rvs-line.pol8-l + buf_temp-rvs-line.pol7-l - buf_temp-rvs-line.pol6
+            .      
+        end.
+        assign
+          temp-rvs-line.itog-pol6     = temp-rvs-line.itog-pol6 + buf_temp-rvs-line.pol6 - buf_temp-rvs-line.pol61 
+          temp-rvs-line.itog-pol4-l   = temp-rvs-line.itog-pol4-l + buf_temp-rvs-line.pol4-l-system
+          temp-rvs-line.itog-pol4-kg  = temp-rvs-line.itog-pol4-kg + buf_temp-rvs-line.pol4-kg-system
+          temp-rvs-line.itog-pol5-l   = temp-rvs-line.itog-pol5-l + buf_temp-rvs-line.pol5-l
+          temp-rvs-line.itog-pol5-kg  = temp-rvs-line.itog-pol5-kg + buf_temp-rvs-line.pol5-kg
+          temp-rvs-line.itog-pol8-l   = temp-rvs-line.itog-pol8-l + buf_temp-rvs-line.pol8-l
+          temp-rvs-line.itog-pol8-kg  = temp-rvs-line.itog-pol8-kg + buf_temp-rvs-line.pol8-kg
+          temp-rvs-line.itog-pol9     = temp-rvs-line.itog-pol9 + buf_temp-rvs-line.pol9 + buf_temp-rvs-line.pol61 
+          temp-rvs-line.itog-pol10    = temp-rvs-line.itog-pol10 + buf_temp-rvs-line.pol10
+          temp-rvs-line.itog-pol11    = temp-rvs-line.itog-pol11 + buf_temp-rvs-line.pol11
+          temp-rvs-line.itog-pol12    = temp-rvs-line.itog-pol12 + buf_temp-rvs-line.pol12
+          temp-rvs-line.itog-pol13    = temp-rvs-line.itog-pol13 + buf_temp-rvs-line.pol13
+          temp-rvs-line.itog-pol7-l   = temp-rvs-line.itog-pol7-l + buf_temp-rvs-line.pol7-l
+          temp-rvs-line.itog-pol7-kg  = temp-rvs-line.itog-pol7-kg + buf_temp-rvs-line.pol7-kg
+          temp-rvs-line.itog-pol16    = temp-rvs-line.itog-pol16 + buf_temp-rvs-line.state-brutto-qnty
+          temp-rvs-line.itog-pol17-l  = temp-rvs-line.itog-pol17-l + buf_temp-rvs-line.pol17-l
+          temp-rvs-line.itog-pol17-kg = temp-rvs-line.itog-pol17-kg + buf_temp-rvs-line.pol17-kg
+          temp-rvs-line.itog-pol18    = temp-rvs-line.itog-pol17-kg / temp-rvs-line.itog-pol17-l
+          temp-rvs-line.itog-pol20-l  = temp-rvs-line.itog-pol20-l + buf_temp-rvs-line.pol20-l
+          temp-rvs-line.itog-pol20-kg = temp-rvs-line.itog-pol20-kg + buf_temp-rvs-line.pol20-kg
+          temp-rvs-line.itog-pol21-l  = temp-rvs-line.itog-pol21-l + buf_temp-rvs-line.pol21-l
+          temp-rvs-line.itog-pol21-kg = temp-rvs-line.itog-pol21-kg + buf_temp-rvs-line.pol21-kg .
+      end.
+ 
+    
+      put stream OutStr-html unformatted
+        '<tr>' skip 
+        '<td text_wrap="true" rowspan="2" style="text-align: right;">' + temp-rvs-line.gds-name + '</td>' skip /*товар*/
+        '<td text_wrap="true" rowspan="2" style="text-align: right;"></td>' skip 
+        '<td text_wrap="true" style="text-align: right;">л</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol4-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol4-l <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol4-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol5-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol5-l <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol5-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol6,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol6 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol6,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol7-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol7-l <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol7-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol8-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol8-l <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol8-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol9,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol9 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol10,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol10 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol10,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol11,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol11 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol12,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol12 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol12,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip 
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol16,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol16 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol20-l <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '</tr>' skip
+        '<tr>' skip 
+        '<td text_wrap="true" style="text-align: right;">кг</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol4-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol4-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol4-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol5-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol5-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol5-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol7-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol7-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol7-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol8-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol8-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol8-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip 
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" colspan="2" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol20-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" style="text-align: right;"></td>' skip
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol21-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '</tr>' skip
+        .        
+      for each bf_temp-rvs-line where bf_temp-rvs-line.gds-code = temp-rvs-line.gds-code: 
+        assign
+          bf_temp-rvs-line.pol14 = bf_temp-rvs-line.state-level-total * 10
+          bf_temp-rvs-line.pol15 = bf_temp-rvs-line.state-level-water * 10
+          bf_temp-rvs-line.pol16 = bf_temp-rvs-line.state-brutto-qnty
+          bf_temp-rvs-line.pol19 = bf_temp-rvs-line.temperature
+          .
+        /*Итоги по резервуару*/
+        put stream OutStr-html unformatted
+          '<tr>' skip 
+          '<td text_wrap="true" rowspan="2" style="text-align: right;">   по резер.</td>' skip 
+          '<td text_wrap="true" rowspan="2" style="text-align: right;">' + bf_temp-rvs-line.place_loc1 + '</td>' skip 
+          '<td text_wrap="true" style="text-align: right;">л</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-l-system,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol4-l-system <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-l-system,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol5-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol6,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol6 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol6,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol7-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol8-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol9,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol9 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol10,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol10 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol10,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol11,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol11 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol12,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol12 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol12,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip 
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol16,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol16 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '</tr>' skip
+          '<tr>' skip 
+          '<td text_wrap="true" style="text-align: right;">кг</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol4-kg-system <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol5-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol7-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol8-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip 
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" colspan="2" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '<td text_wrap="true" style="text-align: right;"></td>' skip
+          '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+          '</tr>' skip
+          .   
+            
+      end. 
+      assign
+        temp-rvs-line.itog-pol4-l   = 0
+        temp-rvs-line.itog-pol4-kg  = 0
+        temp-rvs-line.itog-pol5-l   = 0
+        temp-rvs-line.itog-pol5-kg  = 0
+        temp-rvs-line.itog-pol6     = 0
+        temp-rvs-line.itog-pol8-l   = 0
+        temp-rvs-line.itog-pol8-kg  = 0
+        temp-rvs-line.itog-pol7-l   = 0
+        temp-rvs-line.itog-pol7-kg  = 0
+        temp-rvs-line.itog-pol17-l  = 0
+        temp-rvs-line.itog-pol17-kg = 0
+        temp-rvs-line.itog-pol16    = 0
+        temp-rvs-line.itog-pol18    = 0
+        temp-rvs-line.itog-pol13    = 0
+        temp-rvs-line.itog-pol20-l  = 0
+        temp-rvs-line.itog-pol20-kg = 0
+        temp-rvs-line.itog-pol21-l  = 0
+        temp-rvs-line.itog-pol21-kg = 0
+        .
+    end.
+
+end.
+put stream OutStr-html unformatted                                                                     
+
+    '</tbody>' skip .                                                                                                    
+output stream OutStr-html close.
+end procedure .
+
 
 procedure add-chk :
   define input  parameter p-obj-type like ub.chk-doc.obj-type no-undo .
