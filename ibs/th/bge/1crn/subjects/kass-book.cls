@@ -34,7 +34,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   define property apart-np-tnp  as integer      no-undo get. private set.
   define property kredit        as character    no-undo get. private set.
   define property debit         as character    no-undo get. private set.
-  define property OsnAcct         as character    no-undo get. private set.
+  define property CorrRko         as character    no-undo get. private set.
   define property post-chief    as integer      no-undo get. private set.
   define property fio-chief     as integer      no-undo get. private set.
   define property fio-booker    as integer      no-undo get. private set.
@@ -81,7 +81,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "apart-np-tnp"     then apart-np-tnp     = {&attr-integer} .
       when "kredit"           then kredit           = {&attr-str} .
       when "debit"            then debit            = {&attr-str} .
-      when "OsnAcct"          then OsnAcct            = {&attr-str} .
+      when "CorrRko"          then CorrRko            = {&attr-str} .
       when "post-chief"       then post-chief       = {&attr-integer} .
       when "fio-chief"        then fio-chief        = {&attr-integer} .
       when "fio-booker"       then fio-booker       = {&attr-integer} .
@@ -161,7 +161,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       struct-unit-type = ?
       struct-unit-code = ?
       RuleOsnRko       = ?
-      OsnAcct          = ?
+      CorrRko          = ?
     .
     if valid-object(kb-gds)        then delete object kb-gds .
   end method.

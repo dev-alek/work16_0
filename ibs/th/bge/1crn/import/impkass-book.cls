@@ -247,9 +247,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     assign
       tt-cashbook.CashBookName = objImp:name_       when objImp:name_ <> ?
       tt-cashbook.CorrPko      = objImp:kredit      when objImp:kredit <> ? 
-      tt-cashbook.CorrRko      = objImp:debit       when objImp:debit <> ?
+      tt-cashbook.CorrRko      = objImp:CorrRko     when objImp:CorrRko <> ?
       tt-cashbook.RuleOsnPko   = objImp:rule-reason when objImp:rule-reason <> ?
-      tt-cashbook.OsnAcct      = objImp:OsnAcct     when objImp:OsnAcct <> ? 
+      tt-cashbook.OsnAcct      = objImp:debit       when objImp:debit <> ? 
       tt-cashbook.RuleOsnRko   = objImp:RuleOsnRko  when objImp:RuleOsnRko <> ?
       
       tt-cashbook.cli-type     = {&cmp}             when objImp:code-payer <> ?

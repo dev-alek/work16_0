@@ -51,12 +51,12 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Поле Кор. счет ПКО не может быть пустым!" .
       return .
     end.
-    if trim(tt-cashbook.CorrRko) = ""
+    /*if trim(tt-cashbook.CorrRko) = ""
     then do :
       Msg = "Поле Кор. счет РКО не может быть пустым!" .
       return .
-    end.
-     if trim(tt-cashbook.OSnAcct) = ""
+    end.*/
+    if trim(tt-cashbook.OSnAcct) = ""
     then do :
       Msg = "Поле Основной счет не может быть пустым!" .
       return .
@@ -66,11 +66,11 @@ class ibs.th.ref.cashbookstorage final:
       Msg = 'Правило заполнения графы "Основание" ПКО не может быть пустым!' .
       return .
     end.
-    if trim(tt-cashbook.RuleOsnRko) = ""
+    /*if trim(tt-cashbook.RuleOsnRko) = ""
     then do :
       Msg = 'Правило заполнения графы "Основание" РКО не может быть пустым!' .
       return .
-    end.
+    end.*/
     if trim(tt-cashbook.RulePril) = ""
     then do :
       Msg = "Правило заполнения графы Приложение не может быть пустым!" .
