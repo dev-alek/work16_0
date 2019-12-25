@@ -1183,6 +1183,7 @@ IMAGE-39
 /*IMAGE-51 ,*/
 /*IMAGE-52  */
 do:
+  run gbl/verinfo.p.
   run choose-image in this-procedure
     (input self :private-data
     ) .
@@ -1548,7 +1549,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          ) .
    end.
 
-
+   run gbl/verinfo.p.
   /* проверяем значения контекста */
 
   user-number:

@@ -25,6 +25,8 @@ define output parameter p-compilerVersion as character        no-undo.
 define output parameter p-date            as date             no-undo.
 define output parameter p-time            as integer          no-undo.
 define output parameter p-comment         as character        no-undo.
+define output parameter p-file-date       as date             no-undo.
+define output parameter p-file-time       as integer          no-undo.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -55,6 +57,8 @@ on error undo, return error return-value
         p-date              = ?
         p-time              = 0
         p-comment           = "":U
+        p-file-date         = ?
+        p-file-time         = ?
     .
     assign
         v-enc-file = search( "cmp/vertag.enc":U )
@@ -64,6 +68,25 @@ on error undo, return error return-value
         /* Нет файла с параметрами версии. */
     end.
     else do:
+       file-info:file-name = v-enc-file.
+       p-file-date = file-info:file-create-date.
+       p-file-time = file-info:file-create-time.
+       if file-info:file-create-date eq file-info:file-mod-date
+       then assign
+          p-file-date = file-info:file-create-date
+          p-file-time = max(file-info:file-create-time, file-info:file-mod-time)
+       .
+       else if file-info:file-create-date < file-info:file-mod-date
+       then assign
+          p-file-date = file-info:file-mod-date
+          p-file-time = file-info:file-mod-time
+       .
+       else assign
+          p-file-date = file-info:file-create-date
+          p-file-time = file-info:file-create-time
+       .
+       
+       
         run gbl/_tmpfile.p ( input "cp":U  , input ".ver":U, output v-ver-file ).
         run utl/filecryp.p (
               input v-enc-file

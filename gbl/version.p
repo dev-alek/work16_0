@@ -30,7 +30,9 @@ define buffer buf_db for ub.db .
     define variable v-compile-date      as date      no-undo .
     define variable v-time              as integer   no-undo .
     define variable v-comment           as character no-undo .
-
+    define variable v-file-date         as date      no-undo .
+    define variable v-file-time         as integer   no-undo .
+    
     define variable v-program-tag       as character    no-undo .
     define variable v-read-only         as logical      no-undo .
 
@@ -45,6 +47,8 @@ on error undo, return error return-value
         , output v-compile-date
         , output v-time
         , output v-comment
+        , output v-file-date
+        , output v-file-time
     ) .
     case v-locale
     :
@@ -70,6 +74,8 @@ on error undo, return error return-value
                                 , v-locale
                               )
     .
+    
+  run gbl/verinfo.p.
   run get-ro_get-read-only
     (output v-read-only
     ) .
@@ -79,7 +85,7 @@ on error undo, return error return-value
   find buf_db no-lock
     where buf_db.db-num = buf_sys-ctrl.db-num
     .
-    assign
+    /*assign
         v-version-developer-list = "":U
     .
     run add-developer in this-procedure ( input "Багнюк Татьяна"        ).
@@ -93,6 +99,7 @@ on error undo, return error return-value
     run add-developer in this-procedure ( input "Уханов Дмитрий"        ).
     run add-developer in this-procedure ( input "Хныкин Павел"          ).
     run add-developer in this-procedure ( input "Чернова Светлана"      ).
+*/ 
   message
          "Автоматизированная система управления"
     skip "торговым предприятием"
@@ -110,9 +117,9 @@ on error undo, return error return-value
          "БД:" {&tabulation} buf_db.db-name
     skip "Номер БД:" {&tabulation} buf_db.db-num
     skip "" (if v-read-only then "Режим только чтение" else '':U)
-    skip(1)
+  /*  skip(1)
          "Разработчики:"
-    skip v-version-developer-list
+    skip v-version-developer-list */
     view-as alert-box information .
 end.
 

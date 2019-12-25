@@ -114,7 +114,7 @@ ub.clients.obj-code ub.clients.obj-name
 &Scoped-define FIELDS-IN-QUERY-br-db ub.db.db-num ub.db.db-name ~
 ub.db.add-clients ub.db.add-goods ub.db.remote-stock ub.db.send-check ~
 ub.db.on-line-rest ub.db.max-p-queue ub.db.max-p-time ub.db.max-p-size ~
-ub.db.db-key ub.db.stts get-infodb-date( ub.db.db-num)
+ub.db.db-key ub.db.stts get-infodb-date( ub.db.db-num) get-infodb-ver( ub.db.db-num)
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-db
 &Scoped-define QUERY-STRING-br-db FOR EACH ub.db NO-LOCK
 &Scoped-define OPEN-QUERY-br-db OPEN QUERY br-db FOR EACH ub.db NO-LOCK.
@@ -141,6 +141,13 @@ b-hist b-help b-attr b-param b-send b-hn br-db br-clients
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-infodb-date d-db
 FUNCTION get-infodb-date RETURNS DATE
+  ( INPUT p-db-num as integer)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-infodb-ver d-db
+FUNCTION get-infodb-ver RETURNS character 
   ( INPUT p-db-num as integer)  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
@@ -286,6 +293,7 @@ DEFINE BROWSE br-db
       ub.db.reserve1-char COLUMN-LABEL "БД вер." FORMAT "X(12)":U
       ub.db.stts FORMAT "->>>>>>9":U
       get-infodb-date( ub.db.db-num) COLUMN-LABEL "Дата!актуальности!инф. о БД" FORMAT "99/99/9999":U
+      get-infodb-ver ( ub.db.db-num) COLUMN-LABEL "Версия r кодов." FORMAT "X(25)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH SEPARATORS SIZE 62 BY 16.5
@@ -405,6 +413,8 @@ ASSIGN
      _FldNameList[12]   = ub.db.stts
      _FldNameList[13]   > "_<CALC>"
 "get-infodb-date( ub.db.db-num)" "Дата!актуальности!инф. о БД" "99/99/9999" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"get-infodb-ver ( ub.db.db-num)" "Версия r кодов" "x(25)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+
      _Query            is OPENED
 */  /* BROWSE br-db */
 &ANALYZE-RESUME
@@ -1775,6 +1785,22 @@ find last buf_db-info no-lock where
         buf_db-info.db-num = p-db-num use-index  pi no-error.
 IF AVAILABLE buf_db-info  THEN RETURN buf_db-info.date-info.
 RETURN ?.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-infodb-ver d-db
+FUNCTION get-infodb-ver RETURNS character 
+  ( INPUT p-db-num as integer) :
+DEFINE BUFFER upgrade FOR upgrade.
+ block-step:
+for each upgrade where upgrade.db-num   eq p-db-num
+   no-lock by upgrade.db-num descending 
+           by upgrade.step-num descending :
+      leave block-step.        
+   end.
+   
+return if available upgrade then  entry(1,upgrade.version-num,{&delim-par}) else "?".
 
 END FUNCTION.
 
