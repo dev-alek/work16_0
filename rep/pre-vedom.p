@@ -95,8 +95,12 @@ define variable v-deposit-bank        as character no-undo .
 define variable v-deposit-bank_name   as character no-undo .
 define variable v-deposit-bank_bik    as character no-undo .
 define variable v-recip-bank          as character no-undo .
-define variable v-recip-bank_name     as character no-undo .
-define variable v-recip-bank_bik      as character no-undo .
+define variable v-recip-bank_name1    as character no-undo .
+define variable v-recip-bank_bik1     as character no-undo .
+define variable v-schet1              as character no-undo .
+define variable v-recip-bank_name2    as character no-undo .
+define variable v-recip-bank_bik2     as character no-undo .
+define variable v-schet2              as character no-undo .
 define variable v-source              as character no-undo .
 define variable v-source1             as character no-undo .
 define variable v-total-rubl          as character no-undo .
@@ -126,6 +130,9 @@ define buffer buf_clients      for ub.clients .
 do
   on error undo, return error return-value
   :
+  /*  find first ub.firm no-lock where ub.firm.firm-code = p-host-code no-error .*/
+  /*  find first ub.clients no-loc                                               */
+  
 
   for first ub.fin-doc-attr no-lock where ub.fin-doc-attr.attr-code = "pre-vedom"
     and ub.fin-doc-attr.fin-doc-code = p-fin-doc-code and ub.fin-doc-attr.host-code = p-host-code:
@@ -173,14 +180,14 @@ do
         v-ok-cashUB = yes .
         v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashUB = v-sum-cashUB + v-decimal .
-        v-pin = if v-pin = " " then entry(3,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(3,buf_fin-doc-attr.attr-value,";") .
+        v-pin = if v-pin = " " then entry(4,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(4,buf_fin-doc-attr.attr-value,";") .
       end.  
       else 
       do:
         v-ok-cashGB = yes .
         v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashGB = v-sum-cashGB + v-decimal .
-        v-pin = if v-pin = " " then entry(3,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(3,buf_fin-doc-attr.attr-value,";") .
+        v-pin = if v-pin = " " then entry(4,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(4,buf_fin-doc-attr.attr-value,";") .
       end.  
       v-fin-doc-list = v-fin-doc-list + ";" + string(buf_fin-doc-attr.fin-doc-code) .
       v-total-sum = v-total-sum + buf_fin-doc.sum-doc .
@@ -210,18 +217,25 @@ do
   v-fin-doc-list = trim(v-fin-doc-list,";") .
   v-source = trim(v-source,", ") .
   do ii = 0 to num-entries (v-bank-code,";"):
-    for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(entry (ii,v-bank-code,";")) and ub.fin-bank.host-code = p-host-code:
-      v-schet = if v-schet <> "" then v-schet + " , " + ub.fin-bank.rkc else ub.fin-bank.rkc .
-      if v-recip-bank_name <> "" then 
+    for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(entry (ii,v-bank-code,";")) and ub.fin-bank.host-code = p-host-code,
+      each ub.fin-schet no-lock where ub.fin-schet.code-bank = ub.fin-bank.code-bank and ub.fin-schet.status_ = {&current-status}
+      :
+      v-schet = if v-schet <> "" then v-schet + " , " + ub.fin-schet.r-schet else ub.fin-schet.r-schet .
+      if v-schet1 <> "" then 
       do:
-        v-recip-bank_name = v-recip-bank_name + " , " + ub.fin-bank.bank-name . 
+        v-schet2 = ub.fin-schet.r-schet . 
       end. 
-      else v-recip-bank_name = ub.fin-bank.bank-name .
-      if v-recip-bank_bik <> "" then 
+      else v-schet1 = ub.fin-schet.r-schet .
+      if v-recip-bank_name1 <> "" then 
+      do:
+        v-recip-bank_name2 = ub.fin-bank.bank-name . 
+      end. 
+      else v-recip-bank_name1 = ub.fin-bank.bank-name .
+      if v-recip-bank_bik1 <> "" then 
       do: 
-        v-recip-bank_bik = v-recip-bank_bik + " , " + ub.fin-bank.bik . 
+        v-recip-bank_bik2 = ub.fin-bank.bik . 
       end. 
-      v-recip-bank_bik = ub.fin-bank.bik .
+      else v-recip-bank_bik1 = ub.fin-bank.bik .
       if v-credit-schet = "" then v-credit-schet = v-schet .
     end.  
   end.  
@@ -276,12 +290,13 @@ do
   find first buf_clients no-lock where buf_clients.obj-type = ub.fin-doc.obj-type and buf_clients.obj-code = ub.fin-doc.obj-code no-error .
   if available (buf_clients) then v-obj-name = buf_clients.obj-name .  
 
-if v-qr-code = 1 then do:
+  if v-qr-code = 1 then 
+  do:
 /*QR-код*/
-  {gbl/base64.i}
-  define variable qr-code     as character no-undo.
-  define variable qr-code-out as character no-undo.
-  qr-code = '<?xml version="1.0" encoding="windows-1251" standalone="yes"?>
+    {gbl/base64.i}
+    define variable qr-code     as character no-undo.
+    define variable qr-code-out as character no-undo.
+    qr-code = '<?xml version="1.0" encoding="windows-1251" standalone="yes"?>
 <client_info><client_info_row>
 <client_ink>8598123368358741900012</client_ink>
 <client_ino>156885</client_ino>
@@ -305,20 +320,20 @@ if v-qr-code = 1 then do:
 <debet_account xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
 </client_info_row></client_info>'.
 
-  run base64-encode (qr-code,output qr-code-out).
-  define variable v-arc as character no-undo .
-  define variable v-cmd as character no-undo .  
+    run base64-encode (qr-code,output qr-code-out).
+    define variable v-arc as character no-undo .
+    define variable v-cmd as character no-undo .  
 
-  assign
-    v-arc = search( "exe/qrgen.exe":U )
-    .
-  if v-arc = ? then 
-  do:
-    return error "Не найдена программа qrgen.exe" .
-  end.   
+    assign
+      v-arc = search( "exe/qrgen.exe":U )
+      .
+    if v-arc = ? then 
+    do:
+      return error "Не найдена программа qrgen.exe" .
+    end.   
 
-  os-command silent value (v-arc + ' -size=128 -content="' + qr-code-out + '"' + ' -filename="c:\temp\qr-code"') .
-end.
+    os-command silent value (v-arc + ' -size=128 -content="' + qr-code-out + '"' + ' -filename="c:\temp\qr-code"') .
+  end.
   run get-report-num  (output g#report-num).
   
   do jj = 1 to 3:
@@ -552,13 +567,15 @@ end.
           '<td></td>' skip
           '<td colspan="52" style="font-weight: bold;">ПИН ' + v-pin + '</td>' skip
           .
-        if search( "C:\Temp\qr-code.png":U ) <> ? and v-qr-code = 1 then do:  
-        put stream OutStr-html unformatted   
-          '<td rowspan="3" colspan="74" style="text-align: right;"><img src="C:\Temp\qr-code.png" width="130" height="130" alt=""/></td>'.
+        if search( "C:\Temp\qr-code.png":U ) <> ? and v-qr-code = 1 then 
+        do:  
+          put stream OutStr-html unformatted   
+            '<td rowspan="3" colspan="74" style="text-align: right;"><img src="C:\Temp\qr-code.png" width="130" height="130" alt=""/></td>'.
         end.
-        else do:  
-        put stream OutStr-html unformatted
-          '<td rowspan="3" colspan="74" style="text-align: right;"></td>'.
+        else 
+        do:  
+          put stream OutStr-html unformatted
+            '<td rowspan="3" colspan="74" style="text-align: right;"></td>'.
         end.  
         put stream OutStr-html unformatted            
           '<td colspan="31"></td>' skip
@@ -574,13 +591,15 @@ end.
           '<td></td>' skip
           '<td colspan="52"></td>' skip
           .
-        if search( "C:\Temp\qr-code.png":U ) <> ? and v-qr-code = 1 then do:  
-        put stream OutStr-html unformatted   
-          '<td rowspan="3" colspan="74" style="text-align: right;"><img src="C:\Temp\qr-code.png" width="130" height="130" alt=""/></td>'.
+        if search( "C:\Temp\qr-code.png":U ) <> ? and v-qr-code = 1 then 
+        do:  
+          put stream OutStr-html unformatted   
+            '<td rowspan="3" colspan="74" style="text-align: right;"><img src="C:\Temp\qr-code.png" width="130" height="130" alt=""/></td>'.
         end.
-        else do:  
-        put stream OutStr-html unformatted
-          '<td rowspan="3" colspan="74" style="text-align: right;"></td>'.
+        else 
+        do:  
+          put stream OutStr-html unformatted
+            '<td rowspan="3" colspan="74" style="text-align: right;"></td>'.
         end.  
         put stream OutStr-html unformatted
           '<td colspan="31"></td>' skip
@@ -605,8 +624,9 @@ end.
         '</tr>' skip .
 
     end.  
-    if jj <> 1 then do:
-            put stream OutStr-html unformatted
+    if jj <> 1 then 
+    do:
+      put stream OutStr-html unformatted
         '<tr>' skip
         '<td></td>' skip
         '<td colspan="52"></td>' skip
@@ -693,10 +713,12 @@ end.
 
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td style="border-bottom: 1px solid black;"></td>' skip
-      '<td colspan="67" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
-      '<td style="border-bottom: 1px solid black;"></td>' skip
-      '<td colspan="52" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black; border-top: 1px solid black;"></td>' skip
+      '<td></td>' skip
+      '<td colspan="6" style="text-align: left;">ИНН</td>' skip
+      '<td></td>' skip
+      '<td colspan="36" style="text-align: center; border-bottom: 1px solid black;">' + v-inn + '</td>' skip
+      '<td colspan="11" style="text-align: center;"></td>' skip
+      '<td colspan="66" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
       '<td colspan="37" style="text-align: center; border-left: 1px solid black; border-right: 1px solid black; border-bottom: 1px solid black;">Сумма цифрами</td>' skip
       '</tr>' skip .
 
@@ -705,20 +727,26 @@ end.
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td></td>' skip
-      '<td colspan="6" style="text-align: left;">ИНН</td>' skip
+      '<td colspan="36" rowspan="2" style="text-align: left;">Наименование банка-вносителя</td>' skip
       '<td></td>' skip
-      '<td colspan="36" style="text-align: center; border-bottom: 1px solid black;">' + v-inn + '</td>' skip
-      '<td colspan="11" style="text-align: center;">Счет №</td>' skip
-      '<td colspan="66" style="text-align: center; border-bottom: 1px solid black;">' + v-schet + '</td>' skip
-      '<td colspan="37" style="text-align: center; border: 1px solid black;">в том числе по символам:</td>' skip
+      '<td colspan="83" style="text-align: center; border-bottom: 1px solid black;">' + v-deposit-bank_name + '</td>' skip
+      '<td rowspan="2" colspan="37" style="text-align: center; border: 1px solid black;">в том числе по символам:</td>' skip
       '</tr>' skip .
     
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td></td>' skip
-      '<td colspan="36" style="text-align: left;">Наименование банка-вносителя</td>' skip
-      '<td></td>' skip
-      '<td colspan="83" style="text-align: center; border-bottom: 1px solid black;">' + v-deposit-bank_name + '</td>' skip
+      '<td colspan="37" style="text-align: center;"></td>' skip
+      '<td colspan="10"></td>' skip
+      '<td colspan="10">БИК</td>' skip
+      '<td colspan="27" style="text-align: center; border-bottom: 1px solid black;">' + v-deposit-bank_bik + '</td>' skip
+      '</tr>' skip .
+
+    put stream OutStr-html unformatted
+      '<tr>' skip
+      '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">Наименование банка-получателя</td>' skip
+      '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">БИК</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">Счет№</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">символ</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">сумма</td>' skip
       '</tr>' skip .
@@ -735,10 +763,9 @@ end.
     end.        
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td></td>' skip
-      '<td colspan="73" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
-      '<td colspan="10">БИК</td>' skip
-      '<td colspan="37" style="text-align: center; border-bottom: 1px solid black;">' + v-deposit-bank_bik + '</td>' skip
+      '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name1 + '</td>' skip
+      '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik1 + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet1 + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .
@@ -755,31 +782,30 @@ end.
     end.              
  
     put stream OutStr-html unformatted
-      '<tr>' skip
-      '<td></td>' skip
-      '<td colspan="36" style="text-align: left;">Наименование банка-получателя</td>' skip
-      '<td></td>' skip
-      '<td colspan="83" style="text-align: center; border-bottom: 1px solid black;">' + v-recip-bank_name + '</td>' skip
+      '<tr style="height: 20px;">' skip
+      '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name2 + '</td>' skip
+      '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik2 + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet2 + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .
         
-    put stream OutStr-html unformatted
-      '<tr>' skip
-      '<td></td>' skip
-      '<td colspan="73" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
-      '<td colspan="10">БИК</td>' skip
-      '<td colspan="37" style="text-align: center; border-bottom: 1px solid black;">' + v-recip-bank_bik + '</td>' skip
-      '<td colspan="16" style="text-align: center; border: 1px solid black;"></td>' skip
-      '<td colspan="21" style="text-align: center; border: 1px solid black;"></td>' skip
-      '</tr>' skip .
+/*    put stream OutStr-html unformatted                                                                                 */
+/*      '<tr>' skip                                                                                                      */
+/*      '<td></td>' skip                                                                                                 */
+/*      '<td colspan="73" style="text-align: center; border-bottom: 1px solid black;"></td>' skip                        */
+/*      '<td colspan="10">БИК</td>' skip                                                                                 */
+/*      '<td colspan="37" style="text-align: center; border-bottom: 1px solid black;">' + v-recip-bank_bik + '</td>' skip*/
+/*      '<td colspan="16" style="text-align: center; border: 1px solid black;"></td>' skip                               */
+/*      '<td colspan="21" style="text-align: center; border: 1px solid black;"></td>' skip                               */
+/*      '</tr>' skip .                                                                                                   */
     
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td></td>' skip
-      '<td colspan="20" style="text-align: left;">Сумма прописью</td>' skip
+      '<td colspan="25" style="text-align: left;">Сумма прописью</td>' skip
       '<td></td>' skip
-      '<td colspan="99" style="border-bottom: 1px solid black;">' + v-total-rubl + '</td>' skip
+      '<td colspan="94" style="border-bottom: 1px solid black;">' + v-total-rubl + '</td>' skip
       .
       
     if jj <> 2 then 

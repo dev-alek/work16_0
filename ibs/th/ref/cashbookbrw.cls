@@ -692,26 +692,26 @@ class ibs.th.ref.cashbookbrw inherits Form :
 	@VisualDesigner.
 	method private void bLookup_Click( input sender as System.Object, input e as System.EventArgs ):
 	  define variable v-log as logical no-undo .
-    v-log = true .
-    { gbl/chk-actg.i
-      v-cntxt-db-num
-      v-cntxt-userid
-      {&action-head-code-main}
-      'actn_fin-cashbook_lookup':U
-      {&cntxt-global}
-      0
-      '':U
-      0
-      0
-      0
-      0
-      false
-      v-log
-    }
-    if v-log = false then do :
-      message 'Для просмотра требуется право "кассовые книги ПРОСМОТР"' view-as alert-box .
-      return .
-    end.
+/*    v-log = true .                                                                         */
+/*    { gbl/chk-actg.i                                                                       */
+/*      v-cntxt-db-num                                                                       */
+/*      v-cntxt-userid                                                                       */
+/*      {&action-head-code-main}                                                             */
+/*      'actn_fin-cashbook_lookup':U                                                         */
+/*      {&cntxt-global}                                                                      */
+/*      0                                                                                    */
+/*      '':U                                                                                 */
+/*      0                                                                                    */
+/*      0                                                                                    */
+/*      0                                                                                    */
+/*      0                                                                                    */
+/*      false                                                                                */
+/*      v-log                                                                                */
+/*    }                                                                                      */
+/*    if v-log = false then do :                                                             */
+/*      message 'Для просмотра требуется право "кассовые книги ПРОСМОТР"' view-as alert-box .*/
+/*      return .                                                                             */
+/*    end.                                                                                   */
 		v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
     AddCashBook({&lookup}, v-id) .
     return.
@@ -727,27 +727,27 @@ class ibs.th.ref.cashbookbrw inherits Form :
 		if valid-handle (mQueryRule)
     and mQueryRule:num-results > 0
     then do :
-      define variable v-log as logical no-undo .
-      v-log = true .
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_fin-cashbook_lookup':U
-        {&cntxt-global}
-        0
-        '':U
-        0
-        0
-        0
-        0
-        false
-        v-log
-      }
-      if v-log = false then do :
-        message 'Для просмотра требуется право "кассовые книги ПРОСМОТР"' view-as alert-box .
-        return .
-      end.
+/*      define variable v-log as logical no-undo .                                             */
+/*      v-log = true .                                                                         */
+/*      { gbl/chk-actg.i                                                                       */
+/*        v-cntxt-db-num                                                                       */
+/*        v-cntxt-userid                                                                       */
+/*        {&action-head-code-main}                                                             */
+/*        'actn_fin-cashbook_lookup':U                                                         */
+/*        {&cntxt-global}                                                                      */
+/*        0                                                                                    */
+/*        '':U                                                                                 */
+/*        0                                                                                    */
+/*        0                                                                                    */
+/*        0                                                                                    */
+/*        0                                                                                    */
+/*        false                                                                                */
+/*        v-log                                                                                */
+/*      }                                                                                      */
+/*      if v-log = false then do :                                                             */
+/*        message 'Для просмотра требуется право "кассовые книги ПРОСМОТР"' view-as alert-box .*/
+/*        return .                                                                             */
+/*      end.                                                                                   */
       v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
       v-obj-code = integer(substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 4)) .
       v-obj-type = substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 1, 3) .

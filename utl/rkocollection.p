@@ -1141,7 +1141,11 @@ define variable v-err               as logical    no-undo .
 
 
   /* ------------------------- &end-release-obj& -------------------------------------*/
-
+  run rep/pre-vedom.p (
+                  INPUT parParentProc
+                ,input buf_fin-doc.host-code
+                ,input buf_fin-doc.fin-doc-code
+              ) no-error.
 end. /*doe _main*/
 end procedure. /* proc-main */
 

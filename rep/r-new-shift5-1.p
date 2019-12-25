@@ -269,7 +269,7 @@ put stream OutStr-html unformatted
                 <th style="text-align: center;">Реализация</th>
                 <th style="text-align: center;">Прочее</th>
                 <th style="text-align: center;">Инкассация в банк</th>
-                <th style="text-align: center;">Другие</th>
+                <th style="text-align: center;">Прочее</th>
             </tr>
             <tr>
                 <th style="text-align: center;">5.1</th>

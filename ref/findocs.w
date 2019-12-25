@@ -1013,11 +1013,7 @@ DO:
 if not loc#log then return .
 
   run utl/rkocollection.p(parparentproc,this-procedure,?).
-  run rep/pre-vedom.p (
-                  INPUT parParentProc
-                ,input p-curr-host-code
-                ,input X_fin-doc.fin-doc-code
-              ) no-error.
+
   RUn OpenBR in this-procedure ( input yes, input no, input '':U).
 
 END.
