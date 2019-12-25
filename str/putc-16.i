@@ -65,17 +65,34 @@ do v-i = 1 to v-lengthSh:
   v-subShedW = v-subShedWs:promoSchedwObjCurr .
 
   do v-ii = 1 to num-entries(v-subShedW:wdaylist):
-    run bgelib-tag-open in this-procedure ( input 3, input "PASched","").
-  run bgelib-tag-put in this-procedure ( input 4, input "PASId":U
-    , input string(v-promo-action:id), input 1 ).
-  
-    run bgelib-tag-put in this-procedure ( input 4, input "PASDay":U
-      , input string(entry(v-ii,v-subShedW:wdaylist)), input 1 ).
-    run bgelib-tag-put in this-procedure ( input 4, input "PASBeg":U
-      , input Xml-CD-DateTimetoString(12/31/1989,v-subShedW:timebeg), input 1 ).
-    run bgelib-tag-put in this-procedure ( input 4, input "PASEnd":U
-      , input Xml-CD-DateTimetoString({&end-of-age},v-subShedW:timeend), input 1 ).
-    run bgelib-tag-close in this-procedure ( input 3, input "PASched").
+     define variable vj as integer no-undo.
+     if v-subShedW:wdaylist = "0"
+     then do vj = 1 to 7:
+        run bgelib-tag-open in this-procedure ( input 3, input "PASched","").
+        run bgelib-tag-put in this-procedure ( input 4, input "PASId":U
+        , input string(v-promo-action:id), input 1 ).
+     
+        run bgelib-tag-put in this-procedure ( input 4, input "PASDay":U
+          , input string(entry(v-ii,string(vj)), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 4, input "PASBeg":U
+          , input Xml-CD-DateTimetoString(12/31/1989,v-subShedW:timebeg), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 4, input "PASEnd":U
+          , input Xml-CD-DateTimetoString({&end-of-age},v-subShedW:timeend), input 1 ).
+        run bgelib-tag-close in this-procedure ( input 3, input "PASched").
+    end.
+    else do: 
+       run bgelib-tag-open in this-procedure ( input 3, input "PASched","").
+       run bgelib-tag-put in this-procedure ( input 4, input "PASId":U
+       , input string(v-promo-action:id), input 1 ).
+     
+       run bgelib-tag-put in this-procedure ( input 4, input "PASDay":U
+         , input string(entry(v-ii,v-subShedW:wdaylist)), input 1 ).
+       run bgelib-tag-put in this-procedure ( input 4, input "PASBeg":U
+         , input Xml-CD-DateTimetoString(12/31/1989,v-subShedW:timebeg), input 1 ).
+       run bgelib-tag-put in this-procedure ( input 4, input "PASEnd":U
+         , input Xml-CD-DateTimetoString({&end-of-age},v-subShedW:timeend), input 1 ).
+       run bgelib-tag-close in this-procedure ( input 3, input "PASched").
+    end.
   end.
   
 end.  
