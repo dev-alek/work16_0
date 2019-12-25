@@ -313,7 +313,7 @@ run cur-time in this-procedure ( output v-today
   , output v-time
   ).
 ASSIGN
-  date_from = v-today
+  date_from = 01.01.1990
   date_to   = v-today
   .
 
@@ -433,7 +433,7 @@ PROCEDURE test-input :
         "Даты интервала заданы неверно. "
         skip 
         " Нижняя дата интервала должна быть меньше верхней."
-        skip(1) "Задайте интервал дат правильно или отмените эпорт."
+        skip(1) "Задайте интервал дат правильно или отмените экспорт."
         view-as alert-box information.
       apply "entry" to date_from in frame {&frame-name} .
       undo, return error.
@@ -494,6 +494,7 @@ PROCEDURE proc-print-RC :
       , INPUT date_from 
       , INPUT date_to
       , INPUT v-db-list
+      , input yes
       ) .      
   end.
 

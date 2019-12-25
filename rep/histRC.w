@@ -495,9 +495,9 @@ PROCEDURE proc-print-RC :
         '<th text_wrap="true" style="align: center;">№</th>' skip
         '<th text_wrap="true" style="align: center;">Номер БД</th>' skip
         '<th text_wrap="true" style="align: center;">Название БД</th>' skip
-        '<th text_wrap="true" style="align: center;">Идентификатор версии RC</th>' skip
+        '<th text_wrap="true" style="align: center;">Индентификатор версии RC</th>' skip
         '<th text_wrap="true" style="align: center;">Дата и время компиляции RC</th>' skip
-        '<th text_wrap="true" style="align: center;">Дата и время копирования идентификатора версии RC на ПК</th>' skip
+        '<th text_wrap="true" style="align: center;">Дата и время копирования индентификатора версии RC на ПК</th>' skip
         '<th text_wrap="true" style="align: center;">Дата и время записи данных о версии в БД</th>' skip
         '<th text_wrap="true" style="align: center;">Имя пользователя</th>' skip
         '</tr>' skip
@@ -546,9 +546,9 @@ PROCEDURE proc-print-RC :
       put stream OutStr-html unformatted
         '<tr>' skip
         '<th text_wrap="true" style="align: center;">№</th>' skip
-        '<th text_wrap="true" style="align: center;">Идентификатор версии RC</th>' skip
+        '<th text_wrap="true" style="align: center;">Индентификатор версии RC</th>' skip
         '<th text_wrap="true" style="align: center;">Дата и время компиляции RC</th>' skip
-        '<th text_wrap="true" style="align: center;">Дата и время копирования идентификатора версии RC на ПК</th>' skip
+        '<th text_wrap="true" style="align: center;">Дата и время копирования индентификатора версии RC на ПК</th>' skip
         '<th text_wrap="true" style="align: center;">Дата и время записи данных о версии в БД</th>' skip
         '<th text_wrap="true" style="align: center;">Имя пользователя</th>' skip
         '</tr>' skip
@@ -596,7 +596,9 @@ PROCEDURE proc-print-RC :
           assign
             tt-upgrade.db-name = buf_db.db-name
             .
-          if buf_upgrade.version-num begins "?" then tt-upgrade.version-num = "Ошибка обновления" .                         
+            v-file-date = "" .
+            v-file-time = "" . 
+          if buf_upgrade.version-num begins "?" or buf_upgrade.version-num = "'?'" then tt-upgrade.version-num = "Ошибка обновления" .                         
           find first buf_upgrade-attr no-lock where 
             buf_upgrade-attr.db-num = buf_upgrade.db-num and 
             buf_upgrade-attr.version-num = buf_upgrade.version-num and

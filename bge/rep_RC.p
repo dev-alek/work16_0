@@ -106,8 +106,8 @@ do
     end.
   end.
   ASSIGN
-    num-days     = INTEGER( ENTRY(2, v-param-list, {&delim-par}) )
-    v-db-list    = ENTRY(1, v-param-list, {&delim-par}) 
+    num-days     = INTEGER( ENTRY(1, v-param-list, {&delim-par}) )
+    v-db-list    = ENTRY(2, v-param-list, {&delim-par}) 
     .
   run cur-time in this-procedure ( output v-today
   , output v-time
@@ -117,5 +117,6 @@ do
     , INPUT v-date_from 
     , INPUT v-today
     , INPUT v-db-list
+    , input no
     ) .
 end.

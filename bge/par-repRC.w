@@ -140,7 +140,7 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE num-days AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0 
+DEFINE VARIABLE num-days AS INTEGER FORMAT ">>>9":U INITIAL 0 
      LABEL "За последние" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -537,6 +537,7 @@ PROCEDURE init-param-values :
     define buffer buf_schedule-attr for ub.schedule-attr.
     
     DO WITH FRAME Dialog-Frame:
+
       CASE p-mode:
         when 'shd':U then 
           do:
@@ -609,8 +610,8 @@ PROCEDURE init-param-values :
             end.
               
             ASSIGN
-              sel-dbs     = ENTRY(1, v-param-list, {&delim-par})
-              num-days    = INTEGER( ENTRY(2, v-param-list, {&delim-par}) )
+              sel-dbs     = ENTRY(2, v-param-list, {&delim-par})
+              num-days    = INTEGER( ENTRY(1, v-param-list, {&delim-par}) )
               .
             DISPLAY
               num-days

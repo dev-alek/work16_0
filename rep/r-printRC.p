@@ -14,10 +14,11 @@ Author: Ilia Belousov
 Creation date: 11/22/07
 
 */
-define input parameter parparentproc    as widget-handle no-undo .
-define input parameter p-date_from as date          no-undo.
-define input parameter p-date_to         as date   no-undo .
-define input parameter p-db-list     as character        no-undo.
+define input parameter parparentproc  as widget-handle no-undo .
+define input parameter p-date_from    as date          no-undo.
+define input parameter p-date_to      as date          no-undo .
+define input parameter p-db-list      as character     no-undo.
+define input parameter p-log          as logical       no-undo .
 
 
 define variable vss-revision          as character no-undo init "$Revision$":U .
@@ -134,8 +135,7 @@ do
     output p-report-id
     ).
 
-  v-report-name-html = session:temp-directory + string(p-report-id) + ".html".
-  run cur-time in this-procedure ( output v-today
+    run cur-time in this-procedure ( output v-today
     , output v-time
     ).
   { rep/repfrm.i def } /* Показать окно информации о текущем процессе */
@@ -146,12 +146,13 @@ do
 define variable v-date_from as character no-undo .
 define variable v-date_to   as character no-undo .
 
-if string(entry(3,string(p-date_from),"/")) >= "90" then v-date_from = "19" + string(entry(3,string(p-date_from),"/")) + "_" + string(entry(2,string(p-date_from),"/")) + "_" + string(entry(1,string(p-date_from),"/")) .
-else v-date_from = "20" + string(entry(3,string(p-date_from),"/")) + "_" + string(entry(2,string(p-date_from),"/")) + "_" + string(entry(1,string(p-date_from),"/")) .
-if string(entry(3,string(p-date_to),"/")) >= "90" then v-date_to = "19" + string(entry(3,string(p-date_to),"/")) + "_" + string(entry(2,string(p-date_to),"/")) + "_" + string(entry(1,string(p-date_to),"/")) .
-else v-date_to = "20" + string(entry(3,string(p-date_to),"/")) + "_" + string(entry(2,string(p-date_to),"/")) + "_" + string(entry(1,string(p-date_to),"/")) .
-
-      
+  if string(entry(3,string(p-date_from),"/")) >= "90" then v-date_from = "19" + string(entry(3,string(p-date_from),"/")) + "_" + string(entry(2,string(p-date_from),"/")) + "_" + string(entry(1,string(p-date_from),"/")) .
+  else v-date_from = "20" + string(entry(3,string(p-date_from),"/")) + "_" + string(entry(2,string(p-date_from),"/")) + "_" + string(entry(1,string(p-date_from),"/")) .
+  if string(entry(3,string(p-date_to),"/")) >= "90" then v-date_to = "19" + string(entry(3,string(p-date_to),"/")) + "_" + string(entry(2,string(p-date_to),"/")) + "_" + string(entry(1,string(p-date_to),"/")) .
+  else v-date_to = "20" + string(entry(3,string(p-date_to),"/")) + "_" + string(entry(2,string(p-date_to),"/")) + "_" + string(entry(1,string(p-date_to),"/")) .
+  find first ub.db no-lock no-error .
+  v-report-name-html = session:temp-directory + "VERRC_" + string(substring (ub.db.db-key,1,4)) + "_TH_15_0_" + string(v-today,"99.99.99") + "_" + string(v-time) + ".html".
+  
   /*вызов процедуры печати шапки отчета*/      
   output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted
@@ -222,13 +223,13 @@ else v-date_to = "20" + string(entry(3,string(p-date_to),"/")) + "_" + string(en
     '<tr>' skip
     '<th text_wrap="true" style="align: center;">№</th>' skip
     '<th text_wrap="true" style="align: center;">Номер БД</th>' skip
-    '<th text_wrap="true" style="align: center;">Название БД</th>' skip
+    '<th text_wrap="true" style="align: center;">Наименование БД</th>' skip
     '<th text_wrap="true" style="align: center;">Ключ БД</th>' skip
     '<th text_wrap="true" style="align: center;">Дата актуальности информации о БД и RC</th>' skip
     '<th text_wrap="true" style="align: center;">Версия структуры БД</th>' skip
-    '<th text_wrap="true" style="align: center;">Идентификатор версии RC</th>' skip
+    '<th text_wrap="true" style="align: center;">Индентификатор версии RC</th>' skip
     '<th text_wrap="true" style="align: center;">Дата и время компиляции RC</th>' skip
-    '<th text_wrap="true" style="align: center;">Дата и время копирования идентификатора версии RC на ПК</th>' skip
+    '<th text_wrap="true" style="align: center;">Дата и время копирования индентификатора версии RC на ПК</th>' skip
     '<th text_wrap="true" style="align: center;">Дата и время записи данных о версии в БД</th>' skip
     '<th text_wrap="true" style="align: center;">Имя пользователя</th>' skip
     '</tr>' skip
@@ -236,17 +237,19 @@ else v-date_to = "20" + string(entry(3,string(p-date_to),"/")) + "_" + string(en
   if p-db-list = "" then 
   do:
     empty temp-table temp_db-list .
-    if v-cntxt-db-num = 0 then do: 
-    for each ub.db no-lock where ub.db.stts = 0:
-      create temp_db-list .
-      temp_db-list.db-num = ub.db.db-num .
-    end.  
+    if v-cntxt-db-num = 0 then 
+    do: 
+      for each ub.db no-lock:
+        create temp_db-list .
+        temp_db-list.db-num = ub.db.db-num .
+      end.  
     end.
-    else do:
-    for each ub.db no-lock where ub.db.stts = 0 and ub.db.db-num = v-cntxt-db-num:
-      create temp_db-list .
-      temp_db-list.db-num = ub.db.db-num .
-    end.  
+    else 
+    do:
+      for each ub.db no-lock where ub.db.db-num = v-cntxt-db-num:
+        create temp_db-list .
+        temp_db-list.db-num = ub.db.db-num .
+      end.  
     end.  
   end.  
   else 
@@ -286,7 +289,9 @@ else v-date_to = "20" + string(entry(3,string(p-date_to),"/")) + "_" + string(en
       put stream OutStr-html unformatted
         '<td text_wrap="true" style="align: center;">' + if available (buf_upgrade-attr) and string(buf_upgrade-attr.attr-value) <> ? then string(buf_upgrade-attr.attr-value) + '</td>' else " " + '</td>' skip
         .
-      
+      v-file-date = "" .
+      v-file-time = "" .
+      v-menedger = "" .
       for first buf_upgrade-attr no-lock where 
         buf_upgrade-attr.db-num = buf_upgrade.db-num and 
         buf_upgrade-attr.version-num = buf_upgrade.version-num and
@@ -337,13 +342,13 @@ else v-date_to = "20" + string(entry(3,string(p-date_to),"/")) + "_" + string(en
   output stream OutStr-html close.   
  
 
-
+if p-log then do:
   /*вызов программы печати*/ 
   run prn-lib-reportviewer-report-name in this-procedure (
     input parParentProc
     ,input v-report-name-html
     ).
-
+end.
 
 end.
   
