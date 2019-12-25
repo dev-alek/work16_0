@@ -285,7 +285,7 @@ end.
                   , input 0 /*par-alt-bc-mode as integer нужно ли вводить ДОП БК вместе с товаром*/
                   , input no /*par-manual as logical мз карточки товара - yes*/
                   , input yes /*par-silence as logical  ругаемся вслух или ?*/
-                  , input no /* import */
+                  , input yes /* import */
                   , input no /*par-file as logical идет импоррт из файла - из карточки товара*/
                   , input no /*par-single-record as logical надо сохранить только одну запись - потом выход в справ*/
                   , input ub.clients.host-code /*par-host-code like ub.sysconf.host-code */
