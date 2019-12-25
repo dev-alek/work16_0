@@ -482,7 +482,6 @@ class ibs.th.ref.cashbookstorage final:
   
   method public void getcashbook (input pExtCode as character, output dataset ds-cashbook ) :
     define buffer buf_cashbook for ub.cashbook .
-    define buffer buf_cashbookrule for ub.cashbookrule .
     for each buf_cashbook no-lock where buf_cashbook.ext-code = pExtCode :
       create tt-cashbook .
       buffer-copy buf_cashbook to tt-cashbook
@@ -490,7 +489,19 @@ class ibs.th.ref.cashbookstorage final:
         tt-cashbook.stat = if tt-cashbook.status_ = 0 then "Текущий" else if tt-cashbook.status_ = 1 then "Удаленный" else "?"
       .
     end.
-  end.
+  end method.
+
+  method public void getcashbook (input pCashBookId as int64, output dataset ds-cashbook ) :
+    define buffer buf_cashbook for ub.cashbook .
+    find first buf_cashbook no-lock where buf_cashbook.id = pCashBookId no-error .
+    if available buf_cashbook then do :
+      create tt-cashbook .
+      buffer-copy buf_cashbook to tt-cashbook
+      assign
+        tt-cashbook.stat = if tt-cashbook.status_ = 0 then "Текущий" else if tt-cashbook.status_ = 1 then "Удаленный" else "?"
+      .
+    end.
+  end method.
   
   method public handle getquery
   ( input v-stat as character,
