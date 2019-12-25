@@ -143,6 +143,17 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop other-fd-attr-cover_sheet '':u
 &scop news-fd-attr-cover_sheet no
 
+&scop bef-fd-attr-ParentMoney ParentMoney
+&glob fd-attr-cover_sheet '{&bef-fd-attr-ParentMoney}':U
+&scop type-fd-attr-ParentMoney {&type-char}
+&scop format-fd-attr-ParentMoney "X(4000)"
+&scop label-fd-attr-ParentMoney "—сылка на документ с распределением купюр"
+&scop tooltip-fd-attr-ParentMoney "—сылка на документ с распределением купюр"
+&scop user-can-edit-fd-attr-ParentMoney false
+&scop output-display-fd-attr-ParentMoney true
+&scop other-fd-attr-ParentMoney '':u
+&scop news-fd-attr-cParentMoney no
+
 &glob fd-attr-list '{&bef-fd-attr-shift-date},{&bef-fd-attr-shift-num},{&bef-fd-attr-shift-name},~
 {&bef-fd-attr-pre-vedom},{&bef-fd-attr-cover_sheet},~
 {&bef-fd-attr-barcode},{&bef-fd-attr-lockid},{&bef-fd-attr-bank-recipient},{&bef-fd-attr-bank-deposit},{&bef-fd-attr-obj-inkas}':u

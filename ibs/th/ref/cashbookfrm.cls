@@ -574,7 +574,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* FlagSepFuel */
       /*  */
       this-object:FlagSepFuel:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepFull", true)).
-      this-object:FlagSepFuel:Location = new System.Drawing.Point(12, 348).
+      this-object:FlagSepFuel:Location = new System.Drawing.Point(12, 366).
       this-object:FlagSepFuel:Name = "FlagSepFuel".
       this-object:FlagSepFuel:Size = new System.Drawing.Size(147, 24).
       this-object:FlagSepFuel:TabIndex = 10.
@@ -585,7 +585,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* FlagSepCash */
       /*  */
       this-object:FlagSepCash:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepCash", true)).
-      this-object:FlagSepCash:Location = new System.Drawing.Point(12, 318).
+      this-object:FlagSepCash:Location = new System.Drawing.Point(12, 336).
       this-object:FlagSepCash:Name = "FlagSepCash".
       this-object:FlagSepCash:Size = new System.Drawing.Size(226, 24).
       this-object:FlagSepCash:TabIndex = 9.
@@ -684,14 +684,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       this-object:label2:Location = new System.Drawing.Point(12, 234).
       this-object:label2:Name = "label2".
-      this-object:label2:Size = new System.Drawing.Size(103, 23).
+      this-object:label2:Size = new System.Drawing.Size(100, 36).
       this-object:label2:TabIndex = 27.
-      this-object:label2:Text = "Контрагент (авто):".
+      this-object:label2:Text = "Контрагент ПКО: (авто)".
       this-object:label2:UseCompatibleTextRendering = true.
       /*  */
       /* label8 */
       /*  */
-      this-object:label8:Location = new System.Drawing.Point(12, 292).
+      this-object:label8:Location = new System.Drawing.Point(12, 310).
       this-object:label8:Name = "label8".
       this-object:label8:Size = new System.Drawing.Size(103, 23).
       this-object:label8:TabIndex = 28.
@@ -701,9 +701,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* fTakenFrom */
       /*  */
       this-object:fTakenFrom:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "takenfrom", true)).
-      this-object:fTakenFrom:Location = new System.Drawing.Point(114, 292).
+      this-object:fTakenFrom:Location = new System.Drawing.Point(133, 310).
       this-object:fTakenFrom:Name = "fTakenFrom".
-      this-object:fTakenFrom:Size = new System.Drawing.Size(254, 20).
+      this-object:fTakenFrom:Size = new System.Drawing.Size(235, 20).
       this-object:fTakenFrom:TabIndex = 29.
       /*  */
       /* bChooseCli */
@@ -718,9 +718,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* lCli */
       /*  */
-      this-object:lCli:Location = new System.Drawing.Point(114, 234).
+      this-object:lCli:Location = new System.Drawing.Point(133, 234).
       this-object:lCli:Name = "lCli".
-      this-object:lCli:Size = new System.Drawing.Size(254, 23).
+      this-object:lCli:Size = new System.Drawing.Size(235, 23).
       this-object:lCli:TabIndex = 31.
       this-object:lCli:UseCompatibleTextRendering = true.
       /*  */
@@ -799,24 +799,24 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label11 */
       /*  */
-      this-object:label11:Location = new System.Drawing.Point(12, 261).
+      this-object:label11:Location = new System.Drawing.Point(12, 270).
       this-object:label11:Name = "label11".
-      this-object:label11:Size = new System.Drawing.Size(156, 23).
+      this-object:label11:Size = new System.Drawing.Size(100, 31).
       this-object:label11:TabIndex = 39.
-      this-object:label11:Text = "Контрагент (инкассация):".
+      this-object:label11:Text = "Контрагент РКО:(инкассация)".
       this-object:label11:UseCompatibleTextRendering = true.
       /*  */
       /* lincas */
       /*  */
-      this-object:lincas:Location = new System.Drawing.Point(145, 261).
+      this-object:lincas:Location = new System.Drawing.Point(106, 270).
       this-object:lincas:Name = "lincas".
-      this-object:lincas:Size = new System.Drawing.Size(223, 23).
+      this-object:lincas:Size = new System.Drawing.Size(262, 23).
       this-object:lincas:TabIndex = 40.
       this-object:lincas:UseCompatibleTextRendering = true.
       /*  */
       /* label13 */
       /*  */
-      this-object:label13:Location = new System.Drawing.Point(12, 375).
+      this-object:label13:Location = new System.Drawing.Point(12, 393).
       this-object:label13:Name = "label13".
       this-object:label13:Size = new System.Drawing.Size(100, 23).
       this-object:label13:TabIndex = 41.
@@ -826,7 +826,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label14 */
       /*  */
-      this-object:label14:Location = new System.Drawing.Point(12, 407).
+      this-object:label14:Location = new System.Drawing.Point(12, 425).
       this-object:label14:Name = "label14".
       this-object:label14:Size = new System.Drawing.Size(100, 23).
       this-object:label14:TabIndex = 42.
@@ -836,7 +836,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* btincas */
       /*  */
-      this-object:btincas:Location = new System.Drawing.Point(375, 258).
+      this-object:btincas:Location = new System.Drawing.Point(375, 267).
       this-object:btincas:Name = "btincas".
       this-object:btincas:Size = new System.Drawing.Size(23, 23).
       this-object:btincas:TabIndex = 43.
@@ -846,7 +846,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label15 */
       /*  */
-      this-object:label15:Location = new System.Drawing.Point(12, 440).
+      this-object:label15:Location = new System.Drawing.Point(12, 458).
       this-object:label15:Name = "label15".
       this-object:label15:Size = new System.Drawing.Size(156, 23).
       this-object:label15:TabIndex = 44.
@@ -862,14 +862,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar6[1] = "02".
       arrayvar6[2] = "32".
       this-object:fSourceCode:Items:AddRange(arrayvar6).
-      this-object:fSourceCode:Location = new System.Drawing.Point(174, 439).
+      this-object:fSourceCode:Location = new System.Drawing.Point(174, 457).
       this-object:fSourceCode:Name = "fSourceCode".
       this-object:fSourceCode:Size = new System.Drawing.Size(240, 21).
       this-object:fSourceCode:TabIndex = 45.
       /*  */
       /* lbankdep */
       /*  */
-      this-object:lbankdep:Location = new System.Drawing.Point(119, 375).
+      this-object:lbankdep:Location = new System.Drawing.Point(119, 393).
       this-object:lbankdep:Name = "lbankdep".
       this-object:lbankdep:Size = new System.Drawing.Size(249, 23).
       this-object:lbankdep:TabIndex = 46.
@@ -877,7 +877,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* lbankrec */
       /*  */
-      this-object:lbankrec:Location = new System.Drawing.Point(120, 407).
+      this-object:lbankrec:Location = new System.Drawing.Point(120, 425).
       this-object:lbankrec:Name = "lbankrec".
       this-object:lbankrec:Size = new System.Drawing.Size(249, 23).
       this-object:lbankrec:TabIndex = 47.
@@ -885,7 +885,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* btbankdep */
       /*  */
-      this-object:btbankdep:Location = new System.Drawing.Point(375, 370).
+      this-object:btbankdep:Location = new System.Drawing.Point(375, 388).
       this-object:btbankdep:Name = "btbankdep".
       this-object:btbankdep:Size = new System.Drawing.Size(23, 23).
       this-object:btbankdep:TabIndex = 48.
@@ -895,7 +895,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* btbankrec */
       /*  */
-      this-object:btbankrec:Location = new System.Drawing.Point(375, 398).
+      this-object:btbankrec:Location = new System.Drawing.Point(375, 416).
       this-object:btbankrec:Name = "btbankrec".
       this-object:btbankrec:Size = new System.Drawing.Size(23, 23).
       this-object:btbankrec:TabIndex = 49.
@@ -907,7 +907,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:CancelButton = this-object:buttonCancel.
-      this-object:ClientSize = new System.Drawing.Size(425, 472).
+      this-object:ClientSize = new System.Drawing.Size(425, 492).
       this-object:Controls:Add(this-object:btbankrec).
       this-object:Controls:Add(this-object:btbankdep).
       this-object:Controls:Add(this-object:lbankrec).
