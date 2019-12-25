@@ -28,7 +28,52 @@ procedure cre-raw :
   define input  parameter p-tbl-handle as handle    no-undo.
   define output parameter p-raw        as raw       no-undo.
 
+  define variable bh_t-raw        as handle    no-undo .
+  define variable v-ok            as logical   no-undo .
+  define variable v-msg           as character no-undo .
+
+  /* 21/II-2019  При удалении полей из БД на их месте остаются "дыры".
+                 Новые поля добавляются в хвост, "дыры" не используются.
+                 В итоге raw-transfer с буффера БД, в котором удалили третье поле,
+                 содержит "дыру": |1|2||3|
+                 Во временных таблицах, определённые через like, "дыры" отсутствуют.
+                 Поэтому в raw-transfer с буффера временной таблицы "дыра" отсутствует: |1|2|3|
+                 Несовпадение в "дырах" приводит к ошибке
+                 Table signatures do not match in RAW-TRANSFER operation. (4955)
+
+000020311, "RAW-TRANSFER error 4955 between temp-table and database table" 
+https://knowledgebase.progress.com/articles/Article/P31686
+
+000001160, "4GL. Signatures, RAW-TRANSFER, Temp Tables and How they Interact"                 
+https://knowledgebase.progress.com/articles/Article/18430?popup=true
+
+                 Создание временных таблиц для промежуточного хранения копируемого буффера пришлось вернуть.                  
+  */
+    define variable tth             as handle    no-undo .
+    define variable tt-name         as character no-undo .
+    define variable bh_tt           as handle    no-undo .
+
   do
+  on error  undo, throw
+  :
+    create temp-table tth.
+    assign
+      tth:undo = false
+      tt-name  = "tt_" + p-tbl-handle:table
+    .
+    v-ok = tth:create-like( p-tbl-handle ) .
+    v-ok = tth:temp-table-prepare( tt-name ) .
+    bh_tt = tth:default-buffer-handle .
+    v-ok = bh_tt:buffer-create .
+    v-ok = bh_tt:buffer-copy( p-tbl-handle ) .
+    
+    empty temp-table t-raw .
+    create t-raw.
+    bh_t-raw = buffer t-raw:handle .
+    v-ok =        bh_tt:raw-transfer ( true, bh_t-raw:buffer-field("t-raw-field":U) ) .
+    p-raw = t-raw.t-raw-field .
+    
+/* 30/I-2019 - заменено на raw-transfer из входного параметра    
   on error  undo, return error substitute( "&1 (cre-raw). &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1 (cre-raw). stop", vss-include-info{&vssseq} )
   on endkey undo, return error substitute( "&1 (cre-raw). endkey", vss-include-info{&vssseq} )
@@ -125,9 +170,32 @@ procedure cre-raw :
     end.
 
     delete object tth.
+*/
+
+  catch exAppErrors as class Progress.Lang.AppError :
+    v-msg = substitute( "&1 (cre-raw). raw-transfer не прошел для таблицы &2&3&4&3&5",
+      vss-include-info{&vssseq},
+      p-tbl-name,
+      {&new-line},
+      error-status:get-message (error-status:num-messages),
+      exAppErrors:CallStack
+    ) .
+    undo, throw new Progress.Lang.AppError(v-msg)  .
+  end catch .
+  catch exProErrors as class Progress.Lang.ProError :
+    undo, throw exProErrors .
+  end catch .
+  catch exAnyErrors as class Progress.Lang.Error:
+/*      Msg = "Unexpected error occurred..." .*/
+    undo, throw exAnyErrors .
+  end catch .
+  finally :
+    empty temp-table t-raw .
+    v-ok = tth:clear() no-error .
+    delete object tth.
+  end finally .
 
   end.
-
 end procedure.
 
 procedure cre-raw-delta :

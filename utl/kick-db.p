@@ -102,6 +102,7 @@ disable triggers for load of DICTDB.pay-type .
 disable triggers for load of DICTDB.criterion-analysis .
 disable triggers for load of DICTDB.global-state .
 disable triggers for load of DICTDB.trn-reason .
+disable triggers for load of DICTDB.CashBook .
 
 define stream errstream.
 find first buf_sys-ctrl.
@@ -415,8 +416,10 @@ run waitfram-show in this-procedure ("Заполнение справочника регионов РФ").
 run utl/reg-cre.p.
 end.
 
-run waitfram-hide in this-procedure .
+run waitfram-show in this-procedure ("Создание кассовой книги по основному виду деятельности.").
+run cre-CashBook in this-procedure .
 
+run waitfram-hide in this-procedure .
 message "Инициализация закончена.".
 
 procedure cre-unit:
@@ -1334,3 +1337,22 @@ define variable v-rid as recid initial ? no-undo .
   
   return .
 end procedure . /* end _of cre-trn-reason */
+
+procedure cre-CashBook private :
+define buffer buf_CashBook     for DICTDB.CashBook .
+define buffer buf_CashBookRule for DICTDB.CashBookRule .
+
+  create buf_CashBook .
+  assign
+    buf_CashBook.id           = 0
+    buf_CashBook.ext-code     = "0" /* Код/номер типа кассовой книги 0 */
+    buf_CashBook.CashBookName = "Основная деятельность" /* Наименование типа кассовой книги */  
+    buf_CashBook.RuleOsn      = "Выручка от реализации" /* Значение для заполнения графы "Основание" (перечень cb-by-osnovanie в rul/rcps-67.w) */
+    buf_CashBook.RulePril     = "Номера Z-отчетов"      /* Значение для заполнения графы "Приложение" (перечень cb-by-osnovanie в rul/rcps-67.w) */ 
+    buf_CashBook.FlagSepCash  = true /* Флаг «Отдельный ПКО для каждой кассы» */
+    buf_CashBook.FlagSepFull  = true /* Флаг «Раздельно НП и ТНП» */
+    buf_CashBook.Credit       = "90.01" /* Значение для заполнения поля «кредит» 90.01 */
+    buf_CashBook.Debit        = "50.02" /* Значение для заполнения поля «дебит» 50.02 */
+  .
+
+end procedure . /* end_of cre-CashBook */
