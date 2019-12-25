@@ -69,10 +69,12 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
+define buffer bf2_trn-doc     for ub.trn-doc.
 define buffer exp_trn-doc     for ub.trn-doc.
 define buffer in_trn-doc      for ub.trn-doc.
 define buffer bf_goods        for ub.goods.
 define buffer bf_doc-line     for ub.doc-line.
+define buffer bf2_doc-line    for ub.doc-line.
 define buffer in_doc-line     for ub.doc-line.
 define buffer bf_inv-line     for ub.inv-line.
 define buffer bf_clients      for ub.clients.
@@ -222,6 +224,7 @@ define variable v-value        as   character            no-undo.
 define variable v-show-str       as character no-undo .
 define variable v-add-nat-gas    as logical no-undo .
 define variable var-is-auto-trn  as logical no-undo .
+define variable v-return-qnty    as decimal no-undo .
 
 
 define stream str-err.
@@ -1008,8 +1011,18 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
             undo, return error ("Товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " нет в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
           end. 
           else do :
-            if in_doc-line.price-rubl <> bf_doc-line.price-rubl
-            or in_doc-line.price-base <> bf_doc-line.price-base
+            find first bf_gds-dtl no-lock where bf_gds-dtl.doc-code   = bf_doc-line.doc-code
+                                            and bf_gds-dtl.artic      = bf_doc-line.artic  
+                                            and bf_gds-dtl.prod-type  = bf_doc-line.prod-type
+                                            and bf_gds-dtl.prod-code  = bf_doc-line.prod-code
+                                            no-error .
+            if not available bf_gds-dtl
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("Отсутствет детализация по товару с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name ) .
+            end.                                
+            if in_doc-line.price-rubl <> bf_gds-dtl.price-rubl
+            or in_doc-line.price-base <> bf_gds-dtl.price-base
             then do :
               run waitfram-hide in this-procedure no-error.
               undo, return error ("У товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " цена не совпадает с ценой в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
@@ -1019,11 +1032,35 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
               run waitfram-hide in this-procedure no-error.
               undo, return error ("У товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " количество превышает количество в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
             end.
-          end.                                
-        end.
-      end.
-    end. 
-  end.
+            
+            assign v-return-qnty = 0 .
+            for each bf2_trn-doc no-lock where bf2_trn-doc.out-code = bf_trn-doc.out-code
+                                           and bf2_trn-doc.status_  = {&fact} :
+              if lookup( string(bf2_trn-doc.reason-code), v-reasons-for-return) > 0
+              then do :
+                for each bf2_doc-line no-lock where bf2_doc-line.doc-code   = bf2_trn-doc.doc-code
+                                                and bf2_doc-line.artic      = bf_doc-line.artic
+                                                and bf2_doc-line.prod-type  = bf_doc-line.prod-type
+                                                and bf2_doc-line.prod-code  = bf_doc-line.prod-code :
+                  assign v-return-qnty = v-return-qnty + bf2_doc-line.fact-qnty .                               
+                end.
+              end.                               
+            end.     /* for each bf2_trn-doc */
+            if in_doc-line.fact-qnty < (bf_doc-line.fact-qnty + v-return-qnty)
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("Товар с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + {&new-line} +
+                                  "Общее количество уже возвращенного товара по ПН " + in_trn-doc.doc-code + ":  " + string(v-return-qnty) + {&new-line} +
+                                  "Количество в ПН:  " + string(in_doc-line.fact-qnty) + {&new-line} +
+                                  "Максимальное количество, которое можно указать для возврата:  " + string(in_doc-line.fact-qnty - v-return-qnty) + {&new-line} +
+                                  "Вы указали:  " + string(bf_doc-line.fact-qnty)
+                                   ) .
+            end. 
+          end. /* available in_doc-line */
+        end. /* for each bf_doc-line, goods */
+      end. /* available in_trn-doc */
+    end. /*Возврат через расход*/
+  end. 
 
   if bf_trn-doc.status_ <> {&inquiry}                           and
         not (bf_trn-doc.status_  = {&wayb}   and
