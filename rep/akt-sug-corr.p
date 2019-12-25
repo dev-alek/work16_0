@@ -17,7 +17,6 @@ Creation date: 08/07/14
 
 using ibs.th.str.*.
 
-
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
