@@ -2,7 +2,7 @@
 .session:debug-alert = yes.
 { utl/setpwd.i }
 {cmp/trg-def.i new }
-pause 7.
+
 run gbl/set-gbl.p (yes,"sysadm",{&paswordcur}).
 output to "error.log".
    put unformatted "error   Не удалось получить счетсчи".
