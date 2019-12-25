@@ -791,6 +791,7 @@ abc-analysis~
 ,c-cashbook-head~
 ,c-goods-attr-any~
 ,c-promo-head~
+,code~
 ':U .
 
 

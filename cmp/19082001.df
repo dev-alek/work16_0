@@ -9,8 +9,8 @@ ADD TABLE "Code"
   LABEL "Справочники"
   DESCRIPTION "Справочники"
   DUMP-NAME "code"
-  TABLE-TRIGGER "DELETE" OVERRIDE PROCEDURE "trg\coded.p" CRC "?" 
-  TABLE-TRIGGER "WRITE" OVERRIDE PROCEDURE "trg\codew.p" CRC "?" 
+  TABLE-TRIGGER "DELETE" OVERRIDE PROCEDURE "trg/coded.p" CRC "?" 
+  TABLE-TRIGGER "WRITE" OVERRIDE PROCEDURE "trg/codew.p" CRC "?" 
 
 ADD FIELD "code" OF "Code" AS character 
   DESCRIPTION "Код"
@@ -21,6 +21,7 @@ ADD FIELD "code" OF "Code" AS character
   MAX-WIDTH 16
   COLUMN-LABEL "Код"
   ORDER 10
+  MANDATORY
 
 ADD FIELD "CodeName" OF "Code" AS character 
   DESCRIPTION "Наименование"
@@ -158,6 +159,7 @@ ADD FIELD "parent" OF "Code" AS character
   POSITION 16
   MAX-WIDTH 40
   ORDER 150
+  MANDATORY
 
 ADD FIELD "procdel" OF "Code" AS character 
   FORMAT "x(20)"
