@@ -150,6 +150,8 @@ define variable v-num-obj       as integer   no-undo .
 
 define variable v-col1  as decimal no-undo .
 define variable v-col3  as decimal no-undo .
+define variable v-col31 as decimal no-undo .
+define variable v-col41 as decimal no-undo .
 define variable v-col45 as decimal no-undo .
 define variable v-col4  as decimal no-undo .
 define variable v-col5  as decimal no-undo .
@@ -310,6 +312,8 @@ put stream OutStr-html unformatted
       v-col4 = v-col4 + temp-fin-doc.expense-bank
       v-col5 = v-col5 + temp-fin-doc.expense-other
       v-col6 = v-col6 + temp-fin-doc.ost-end
+      v-col31 = v-col31 + temp-fin-doc.income-realiz
+      v-col41 = v-col41 + temp-fin-doc.income-other
       .
       
     end.
@@ -327,8 +331,8 @@ put stream OutStr-html unformatted
                 '
            ,
             v-col1,
-            v-col3,
-            v-col45,
+            v-col31,
+            v-col41,
             v-col4,
             v-col5,
             v-col6
