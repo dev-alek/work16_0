@@ -287,32 +287,32 @@ DEFINE VARIABLE CriticalDif AS DECIMAL FORMAT ">>,>>9.999":U INITIAL 0
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varmeasure-water-cli-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Вес воды" 
+     LABEL "Масса воды (кг)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varmeasure-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем воды" 
+     LABEL "Объем воды (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varstate-water-cli-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Факт вес воды" 
+     LABEL "Факт масса воды (кг)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
      
 DEFINE VARIABLE varsum-vol AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем наполнения" 
+     LABEL "Объем наполнения (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varstate-sum-vol AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем наполнения" 
+     LABEL "Объем наполнения (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varstate-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем воды" 
+     LABEL "Объем воды (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
@@ -337,20 +337,20 @@ DEFINE FRAME Dialog-Frame
      b-cancel AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
      tt-rvs-line.system-qnty AT ROW 2.25 COL 26 COLON-ALIGNED
-          LABEL "Объем расчетно-книжный"
+          LABEL "Объем расчетно-книжный (л)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
      tt-rvs-line.system-cli-qnty AT ROW 2.25 COL 74 COLON-ALIGNED
-          LABEL "Вес расчетно-книжный"
+          LABEL "Вес расчетно-книжный (кг)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
      tt-rvs-line.orig-system-qnty AT ROW 3.25 COL 25 COLON-ALIGNED
-          LABEL "Первоначально"
+          LABEL "Первоначально (л)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
           FGCOLOR 4 
      tt-rvs-line.orig-system-cli-qnty AT ROW 3.25 COL 73 COLON-ALIGNED
-          LABEL "Первоначально"
+          LABEL "Первоначально (кг)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
           FGCOLOR 4 
@@ -370,38 +370,38 @@ DEFINE FRAME Dialog-Frame
      tt-rvs-line.state-measure-tc-qnty AT ROW 7.75 COL 73.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.density AT ROW 17.75 COL 28.25 COLON-ALIGNED FORMAT "9.9999999999"
-          LABEL "Измер. Плотность НП"
+     tt-rvs-line.density AT ROW 17.75 COL 32 COLON-ALIGNED FORMAT "9.9999999999"
+          LABEL "Измер. Плотность НП (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.state-density AT ROW 17.75 COL 85 COLON-ALIGNED FORMAT "9.9999999999"
-          LABEL "Плотность НП"
+          LABEL "Плотность НП (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      b-calc AT ROW 9.75 COL 65 WIDGET-ID 6
      tt-rvs-line.meas-calc-dens AT ROW 9.75 COL 34 COLON-ALIGNED WIDGET-ID 8
-          LABEL "Плотность расчит. по измер."
+          LABEL "Плотность расчит. по измер. (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.izmer-density AT ROW 8.75 COL 79 COLON-ALIGNED WIDGET-ID 4
-          LABEL "Плотность измер. для ПО к МИ"
+          LABEL "Плотность измер. для ПО к МИ (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.add-qnty AT ROW 11.75 COL 30.13 COLON-ALIGNED
-          LABEL "Объем в трубопроводе"
+     tt-rvs-line.add-qnty AT ROW 11.75 COL 35 COLON-ALIGNED
+          LABEL "Объем в трубопроводе (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.calc-add-mass AT ROW 12.75 COL 30.13 COLON-ALIGNED
-          LABEL "Рассч. Масса в трубопроводе"
+     tt-rvs-line.calc-add-mass AT ROW 12.75 COL 35 COLON-ALIGNED
+          LABEL "Рассч. Масса в трубопроводе (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.fact-calc-add-mass AT ROW 12.75 COL 85 COLON-ALIGNED
-          LABEL "Рассч. Масса в трубопроводе"
+          LABEL "Рассч. Масса в трубопроводе (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      abs-delta-mass-add-qnty AT ROW 13.75 COL 85 COLON-ALIGNED
      tt-rvs-line.state-add-qnty AT ROW 11.75 COL 85 COLON-ALIGNED
-          LABEL "Объем в трубопроводе"
+          LABEL "Объем в трубопроводе (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.brutto-qnty AT ROW 11.75 COL 28.13 COLON-ALIGNED
@@ -420,20 +420,20 @@ DEFINE FRAME Dialog-Frame
      varstate-water-qnty AT ROW 24.75 COL 85 COLON-ALIGNED
      varsum-vol AT ROW 25.75 COL 28.13 COLON-ALIGNED
      varstate-sum-vol AT ROW 25.75 COL 85 COLON-ALIGNED
-     tt-rvs-line.calc-vol AT ROW 15.75 COL 28.13 COLON-ALIGNED
-          LABEL "Рассч. Объем НП"
+     tt-rvs-line.calc-vol AT ROW 15.75 COL 32 COLON-ALIGNED
+          LABEL "Рассч. Объем НП (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.fact-calc-vol AT ROW 15.75 COL 85 COLON-ALIGNED
-          LABEL "Объем НП"
+          LABEL "Объем НП (л) (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.measure-cli-qnty AT ROW 16.75 COL 28.13 COLON-ALIGNED
-          LABEL "Измер. Масса НП"
+     tt-rvs-line.measure-cli-qnty AT ROW 16.75 COL 32 COLON-ALIGNED
+          LABEL "Измер. Масса НП (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.state-measure-cli-qnty AT ROW 16.75 COL 85 COLON-ALIGNED
-          LABEL "Масса НП"
+          LABEL "Масса НП (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -443,64 +443,65 @@ DEFINE FRAME Dialog-Frame
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
      tt-rvs-line.meas-cli-calc-qnty AT ROW 15.75 COL 34 COLON-ALIGNED WIDGET-ID 10
-          LABEL "Вес расчит. по измер."
+          LABEL "Вес расчит. по измер. (кг)"
           VIEW-AS FILL-IN
           SIZE 13 BY .88
      tt-rvs-line.brutto-cli-qnty AT ROW 16.75 COL 28.13 COLON-ALIGNED
-          LABEL "Измер. брутто вес"
+          LABEL "Измер. брутто вес (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.state-brutto-cli-qnty AT ROW 16.75 COL 73.5 COLON-ALIGNED
-          LABEL "Факт брутто вес"
+          LABEL "Факт брутто вес (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.sum-vol AT ROW 21.75 COL 28.13 COLON-ALIGNED
-          LABEL "Общий Объем НП"
+          LABEL "Общий Объем НП (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.sum-mass AT ROW 22.75 COL 28.13 COLON-ALIGNED
-          LABEL "Общая Масса НП"
+          LABEL "Общая Масса НП (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.fact-sum-vol AT ROW 21.75 COL 85 COLON-ALIGNED
-          LABEL "Общий Объем НП"
+          LABEL "Общий Объем НП (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.fact-sum-mass AT ROW 22.75 COL 85 COLON-ALIGNED
-          LABEL "Общая Масса НП"
+          LABEL "Общая Масса НП (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      varmeasure-water-cli-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
      varstate-water-cli-qnty AT ROW 24.75 COL 85 COLON-ALIGNED
-     tt-rvs-line.level-petrol AT ROW 18.75 COL 28.13 COLON-ALIGNED
-          LABEL "Измер. уровень топлива"
+     tt-rvs-line.level-petrol AT ROW 18.75 COL 30 COLON-ALIGNED
+          LABEL "Измер. уровень топлива (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.state-level-petrol AT ROW 18.75 COL 73.5 COLON-ALIGNED format ">>,>>9.999"
-          LABEL "Факт уровень топлива"
+          LABEL "Факт уровень топлива (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.level-total AT ROW 5.75 COL 23.13 COLON-ALIGNED
-          LABEL "Измер. общий уровень"
+     tt-rvs-line.level-total AT ROW 5.75 COL 28 COLON-ALIGNED
+          LABEL "Измер. общий уровень (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-total AT ROW 5.75 COL 69.5 COLON-ALIGNED format ">>,>>9.999"
-          LABEL "Факт общий уровень"
+     tt-rvs-line.state-level-total AT ROW 5.75 COL 75.5 COLON-ALIGNED format ">>,>>9.999"
+          LABEL "Факт общий уровень (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88 
-     tt-rvs-line.level-water AT ROW 6.75 COL 23.13 COLON-ALIGNED
-          LABEL "Измер. уровень воды"
+     tt-rvs-line.level-water AT ROW 6.75 COL 28 COLON-ALIGNED
+          LABEL "Измер. уровень воды (см)"
+          VIEW-AS FILL-IN 
+          SIZE 5 BY .88
+     tt-rvs-line.state-level-water AT ROW 6.75 COL 75.5 COLON-ALIGNED format ">>,>>9.999"
+          LABEL "Факт уровень воды (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-water AT ROW 6.75 COL 69.5 COLON-ALIGNED format ">>,>>9.999"
-          LABEL "Факт уровень воды"
+     tt-rvs-line.temperature AT ROW 7.75 COL 28 COLON-ALIGNED
+          LABEL "Измер. Температура (°С)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temperature AT ROW 7.75 COL 23.13 COLON-ALIGNED
-          LABEL "Измер. Температура"
-          VIEW-AS FILL-IN 
-          SIZE 13 BY .88
-     tt-rvs-line.state-temperature AT ROW 7.75 COL 69.5 COLON-ALIGNED
+     tt-rvs-line.state-temperature AT ROW 7.75 COL 75.5 COLON-ALIGNED
+          LABEL "Температура (°С)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.temp-layer1 AT ROW 5.75 COL 41 COLON-ALIGNED
