@@ -153,6 +153,7 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
   define property UUID as character no-undo
     get.
     set ( uuid-arg as char):
+      uuid-arg = trim(uuid-arg).
       if uuid-arg = "" or checkuuid (input-output uuid-arg)
         then do: 
           if UUID <> uuid-arg
@@ -552,7 +553,7 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
           then err = true.
       end.
       when 5 then do:
-        if length (entry (ii, uuid, "-")) <> 12
+        if length (trim (entry (ii, uuid, "-"))) <> 12
           then err = true.
       end.
       end case.
