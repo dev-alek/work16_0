@@ -59,39 +59,38 @@ FUNCTION make-num-string RETURN CHAR
 end.
 
 
-/*def var v-user-name as character no-undo .             */
-/*def var passwd as character no-undo .                  */
-/*                                                       */
-/*run input-user-and-passwd in this-procedure            */
-/*  (output v-user-name                                  */
-/*  ,output passwd                                       */
-/*  ) no-error .                                         */
-/*if error-status :error then do:                        */
-/*  return . /* --->>>--- */                             */
-/*end.                                                   */
-/*                                                       */
-/*case passwd :                                          */
-/*  when "request" then do:                              */
-/*    /* необходимо запросить одноразовый пароль у IBS */*/
-/*    run request-passwd in this-procedure .             */
-/*  end.                                                 */
-/*  when "generate" then do:                             */
-/*    /* сгенерировать одноразовый пароль */             */
-/*    run generate-passwd in this-procedure .            */
-/*  end.                                                 */
-/*  when "rndgen" then do:                               */
-/*    /* сгенерировать случайный пароль */               */
-/*    run random-passwd in this-procedure .              */
-/*  end.                                                 */
-/*  otherwise do:                                        */
-/*    /* проверить пароль пользователя sysadm */         */
-/*    run check-passwd in this-procedure                 */
-/*      (input  v-user-name                              */
-/*      ,input  passwd                                   */
-/*      ) .                                              */
-/*  end.                                                 */
-/*end.                                                   */
-p-permit = true.
+def var v-user-name as character no-undo .
+def var passwd as character no-undo .
+
+run input-user-and-passwd in this-procedure
+  (output v-user-name
+  ,output passwd
+  ) no-error .
+if error-status :error then do:
+  return . /* --->>>--- */
+end.
+
+case passwd :
+  when "request" then do:
+    /* необходимо запросить одноразовый пароль у IBS */
+    run request-passwd in this-procedure .
+  end.
+  when "generate" then do:
+    /* сгенерировать одноразовый пароль */
+    run generate-passwd in this-procedure .
+  end.
+  when "rndgen" then do:
+    /* сгенерировать случайный пароль */
+    run random-passwd in this-procedure .
+  end.
+  otherwise do:
+    /* проверить пароль пользователя sysadm */
+    run check-passwd in this-procedure
+      (input  v-user-name
+      ,input  passwd
+      ) .
+  end.
+end.
 return . /* --->>>--- */
 
 

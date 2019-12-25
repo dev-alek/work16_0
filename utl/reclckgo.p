@@ -155,7 +155,6 @@ on stop   undo, return error substitute("&1. stop main_block")
       .
     output stream LogStream close.
 
-
     assign
       v-after-cli-qnty = 0.0
       v-qnty           = 0.0

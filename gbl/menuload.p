@@ -545,6 +545,85 @@ define variable vss-description as character no-undo init "Информация об объекте
   " "
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Просмотр и изменение диапазонов кодов'"
+  "'utl/fixbcode.w'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Процедура проверки, восстановления Sequences'"
+  "'utl/rest_seq.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Экспорт/импорт прав и пользователей'"
+  "'utl/exp-imp.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Выравнивание остатков по массе'"
+  "'utl/reclck_go.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Корректировка даты на объекте'"
+  "'utl/cor-date.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Корректировка закрытых сверок'"
+  "'utl/updclrvs.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Удаление неиспользуемых дополнительных бар-кодов'"
+  "'utl/deleted_pbc.p'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Повторная выгрузка данных для 1С ERP'"
+  "'utl/send-1C.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_adm_check}                                                      */
 /* АРМ Администратор   Утилиты/Проверки                                       */

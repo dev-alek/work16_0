@@ -55,6 +55,35 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Импорт групп товаров'"
+  "'utl/imp-ggr.p'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Импорт (изменение) клиентов'"
+  "'utl/impcli.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
+  "'Импорт договоров с поставщиками'"
+  "'bge/impcontract.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+  
+}
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
   "'Экспорт в формате импорта приходной накладной (ПН)'"

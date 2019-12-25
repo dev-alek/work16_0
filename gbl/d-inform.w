@@ -279,7 +279,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   if connected("ub") = true
   then do:
-    run gbl/authoriz.p
+    run gbl/authoriz_main.p
       (input "Run information dialog"
       ,output l-permit
       ).
