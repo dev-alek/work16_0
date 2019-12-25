@@ -29,6 +29,12 @@ define temp-table tt-cashbook like ub.cashbook
   field CountCash-code     as integer
   field BasisIncas         as character 
   field CorrAcctIncas      as character
+ /* field contr-type-rko     as character 
+  field contr-code-rko     as integer */ 
+  field Corr-transf        as character 
+  field rule-osn-transf    as character 
+  field contr-type-transf  as character 
+  field contr-code-transf  as integer 
 .
 
 define dataset ds-cashbook for tt-cashbook .

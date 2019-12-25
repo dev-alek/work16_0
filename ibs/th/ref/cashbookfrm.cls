@@ -1,12 +1,12 @@
- /*------------------------------------------------------------------------
-    File        : cashbookfrm
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : sslivenko
-    Created     : Thu Dec 06 09:59:03 MSK 2018
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*------------------------------------------------------------------------
+   File        : cashbookfrm
+   Purpose     : 
+   Syntax      : 
+   Description : 
+   Author(s)   : sslivenko
+   Created     : Thu Dec 06 09:59:03 MSK 2018
+   Notes       : 
+ ----------------------------------------------------------------------*/
 using Progress.Windows.Form.
 using ibs.th.ref.cashbookstorage from propath.
   
@@ -14,123 +14,138 @@ block-level on error undo, throw.
 class ibs.th.ref.cashbookfrm inherits Form : 
   { cmp/str-glbl.i   class}
   
-  { ibs/th/ref/ttCashBook.i }
+   { ibs/th/ref/ttCashBook.i }
   
-   define private variable BankRecipacct as System.Windows.Forms.TextBox no-undo.
-  define private variable bChooseCli as System.Windows.Forms.Button no-undo.
-   define private variable bChooseCorRko as System.Windows.Forms.Button no-undo.
-   define private variable bChooseCorPko as System.Windows.Forms.Button no-undo.
-   define private variable bChooseOsnAcct as System.Windows.Forms.Button no-undo.
-  define private variable bindingSource1 as Progress.Data.BindingSource no-undo.
-   define private variable btbankrec as System.Windows.Forms.Button no-undo.
-   define private variable btbankdep as System.Windows.Forms.Button no-undo.
-   define private variable btcash as System.Windows.Forms.Button no-undo.
-   define private variable btcorrRKOincas as System.Windows.Forms.Button no-undo.
-   define private variable button1 as System.Windows.Forms.Button no-undo.
-  define private variable components as System.ComponentModel.IContainer no-undo.
-  define private variable buttonOk as System.Windows.Forms.Button no-undo.
-  define private variable buttonCancel as System.Windows.Forms.Button no-undo.
-   define private variable fCorpko as System.Windows.Forms.TextBox no-undo.
-   define private variable FcorRko as System.Windows.Forms.TextBox no-undo.
-   define private variable FcorrRKOincas as System.Windows.Forms.TextBox no-undo.
-  define private variable fExtCode as System.Windows.Forms.TextBox no-undo.
-  define private variable FlagSepFuel as System.Windows.Forms.CheckBox no-undo.
-  define private variable FlagSepCash as System.Windows.Forms.CheckBox no-undo.
-   define private variable FOsnIncas as System.Windows.Forms.ComboBox no-undo.
-   define private variable fRuleOsnRko as System.Windows.Forms.ComboBox no-undo.
-   define private variable fRuleOsnPko as System.Windows.Forms.ComboBox no-undo.
-   define private variable fOsnacct as System.Windows.Forms.TextBox no-undo.
-  define private variable fRulePril as System.Windows.Forms.ComboBox no-undo.
-  define private variable fName as System.Windows.Forms.TextBox no-undo.
-   define private variable fSourceCode as System.Windows.Forms.ComboBox no-undo.
-  define private variable fTakenFrom as System.Windows.Forms.TextBox no-undo.
-  define private variable label1 as System.Windows.Forms.Label no-undo.
-   define private variable label10 as System.Windows.Forms.Label no-undo.
-   define private variable label12 as System.Windows.Forms.Label no-undo.
-   define private variable label14 as System.Windows.Forms.Label no-undo.
-   define private variable label13 as System.Windows.Forms.Label no-undo.
-   define private variable label11 as System.Windows.Forms.Label no-undo.
-   define private variable label15 as System.Windows.Forms.Label no-undo.
-   define private variable label16 as System.Windows.Forms.Label no-undo.
-   define private variable label19 as System.Windows.Forms.Label no-undo.
-   define private variable label17 as System.Windows.Forms.Label no-undo.
-  define private variable label2 as System.Windows.Forms.Label no-undo.
-  define private variable label4 as System.Windows.Forms.Label no-undo.
-  define private variable label3 as System.Windows.Forms.Label no-undo.
-  define private variable label6 as System.Windows.Forms.Label no-undo.
-  define private variable label5 as System.Windows.Forms.Label no-undo.
-  define private variable label7 as System.Windows.Forms.Label no-undo.
+   define private variable BankRecipacct  as System.Windows.Forms.TextBox     no-undo.
+   define private variable bChooseCli     as System.Windows.Forms.Button      no-undo.
+   define private variable bChooseCorRko  as System.Windows.Forms.Button      no-undo.
+   define private variable bChooseCorPko  as System.Windows.Forms.Button      no-undo.
+   define private variable bChooseOsnAcct as System.Windows.Forms.Button      no-undo.
+   define private variable bindingSource1 as Progress.Data.BindingSource      no-undo.
+   define private variable btbankrec      as System.Windows.Forms.Button      no-undo.
+   define private variable btbankdep      as System.Windows.Forms.Button      no-undo.
+   define private variable btcash         as System.Windows.Forms.Button      no-undo.
+   define private variable btcorrRKOincas as System.Windows.Forms.Button      no-undo.
+   define private variable button1        as System.Windows.Forms.Button      no-undo.
+   define private variable button3        as System.Windows.Forms.Button      no-undo.
+   define private variable button2        as System.Windows.Forms.Button      no-undo.
+   define private variable components     as System.ComponentModel.IContainer no-undo.
+   define private variable buttonOk       as System.Windows.Forms.Button      no-undo.
+   define private variable buttonCancel   as System.Windows.Forms.Button      no-undo.
+   define private variable fCorpko        as System.Windows.Forms.TextBox     no-undo.
+   define private variable FcorRko        as System.Windows.Forms.TextBox     no-undo.
+   define private variable FcorrRKOincas  as System.Windows.Forms.TextBox     no-undo.
+   define private variable fcorrtrans     as System.Windows.Forms.TextBox     no-undo.
+   define private variable fExtCode       as System.Windows.Forms.TextBox     no-undo.
+   define private variable FlagSepFuel    as System.Windows.Forms.CheckBox    no-undo.
+   define private variable FlagSepCash    as System.Windows.Forms.CheckBox    no-undo.
+   define private variable FOsnIncas      as System.Windows.Forms.ComboBox    no-undo.
+   define private variable fosntrans      as System.Windows.Forms.ComboBox    no-undo.
+   define private variable fRuleOsnRko    as System.Windows.Forms.ComboBox    no-undo.
+   define private variable fRuleOsnPko    as System.Windows.Forms.ComboBox    no-undo.
+   define private variable fOsnacct       as System.Windows.Forms.TextBox     no-undo.
+   define private variable fRulePril      as System.Windows.Forms.ComboBox    no-undo.
+   define private variable fName          as System.Windows.Forms.TextBox     no-undo.
+   define private variable fSourceCode    as System.Windows.Forms.ComboBox    no-undo.
+   define private variable fTakenFrom     as System.Windows.Forms.TextBox     no-undo.
+   define private variable groupBox2      as System.Windows.Forms.GroupBox    no-undo.
+   define private variable groupBox1      as System.Windows.Forms.GroupBox    no-undo.
+   define private variable groupBox3      as System.Windows.Forms.GroupBox    no-undo.
+   define private variable groupBox4      as System.Windows.Forms.GroupBox    no-undo.
+   define private variable label1         as System.Windows.Forms.Label       no-undo.
+   define private variable label10        as System.Windows.Forms.Label       no-undo.
+   define private variable label12        as System.Windows.Forms.Label       no-undo.
+   define private variable label14        as System.Windows.Forms.Label       no-undo.
+   define private variable label13        as System.Windows.Forms.Label       no-undo.
+   define private variable label11        as System.Windows.Forms.Label       no-undo.
+   define private variable label15        as System.Windows.Forms.Label       no-undo.
+   define private variable label16        as System.Windows.Forms.Label       no-undo.
+   define private variable label18        as System.Windows.Forms.Label       no-undo.
+   define private variable label19        as System.Windows.Forms.Label       no-undo.
+   define private variable label17        as System.Windows.Forms.Label       no-undo.
+   define private variable label2         as System.Windows.Forms.Label       no-undo.
+   define private variable label23        as System.Windows.Forms.Label       no-undo.
+   define private variable label22        as System.Windows.Forms.Label       no-undo.
+   define private variable label21        as System.Windows.Forms.Label       no-undo.
+   define private variable label4         as System.Windows.Forms.Label       no-undo.
+   define private variable label3         as System.Windows.Forms.Label       no-undo.
+   define private variable label6         as System.Windows.Forms.Label       no-undo.
+   define private variable label5         as System.Windows.Forms.Label       no-undo.
+   define private variable label7         as System.Windows.Forms.Label       no-undo.
   
-  define private variable label8 as System.Windows.Forms.Label no-undo.
-   define private variable label9 as System.Windows.Forms.Label no-undo.
-   define private variable lbankrec as System.Windows.Forms.Label no-undo.
-   define private variable lbankdep as System.Windows.Forms.Label no-undo.
-   define private variable lcashcli as System.Windows.Forms.Label no-undo.
-  define private variable lCli as System.Windows.Forms.Label no-undo.
-   define private variable Lincasagent as System.Windows.Forms.Label no-undo.
-  define         variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
-  define variable v-cashbookId as int64 no-undo .
+   define private variable label8         as System.Windows.Forms.Label       no-undo.
+   define private variable label9         as System.Windows.Forms.Label       no-undo.
+   define private variable lbankrec       as System.Windows.Forms.Label       no-undo.
+   define private variable lbankdep       as System.Windows.Forms.Label       no-undo.
+   define private variable lcashcli       as System.Windows.Forms.Label       no-undo.
+   define private variable lCli           as System.Windows.Forms.Label       no-undo.
+   define private variable lclitrans      as System.Windows.Forms.Label       no-undo.
+   define private variable Lincasagent    as System.Windows.Forms.Label       no-undo.
+   define         variable mCashBook      as class                            ibs.th.ref.cashbookstorage no-undo .
+   define         variable v-cashbookId   as int64                            no-undo .
   
-  define buffer buf_cashbook for ub.cashbook .
-  define buffer buf_cashbookrule for ub.cashbookrule .
-  { cmp/library.i class}
-  { gbl/getcntxt.i def }
-  define variable v-host-code as integer no-undo .
-  define variable v-obj-date  as date    no-undo .
-  define property parparentproc as handle no-undo
-  private get.
-  set(input iH as handle):
-        parparentproc = ih.
-        { gbl/getcntxt.i get }
-        { gbl/hostcode.i v-cntxt-obj-type v-cntxt-obj-code v-host-code }
-        { gbl/objdtget.i v-cntxt-obj-type v-cntxt-obj-code v-obj-date no-error }
-       if error-status:error then
-             message substitute( "Ошибка чтения текущей даты на объекте &1&2" ,
-                                     v-cntxt-obj-type, v-cntxt-obj-code) view-as alert-box.
-  end.
-  
-  /*define property host-code as integer no-undo
-  private get.
-  set(input iH as integer):
-        host-code = ih.
-  end.*/
-  
-  constructor public cashbookfrm (Mode as character, p-id as int64 ):
-    
-    super().
-    
-    mCashBook = new cashbookstorage () .
-    
-    empty temp-table tt-cashbook .
-    create tt-CashBook .
-    case Mode: 
-      when {&add-def} then 
-      do:
-        tt-cashbook.id = ? .
+   define buffer buf_cashbook     for ub.cashbook .
+   define buffer buf_cashbookrule for ub.cashbookrule .
+   { cmp/library.i class}
+   { gbl/getcntxt.i def }
+   define         variable v-host-code      as integer   no-undo .
+   define         variable v-obj-date       as date      no-undo .
+   define private variable vss-include-info{&vssseq} as CHARACTER no-undo.
+   define property parparentproc as handle no-undo
+      private get.
+      set(input iH as handle):
+         parparentproc = ih.
+         { gbl/getcntxt.i get }
+         { gbl/hostcode.i v-cntxt-obj-type v-cntxt-obj-code v-host-code }
+         { gbl/objdtget.i v-cntxt-obj-type v-cntxt-obj-code v-obj-date no-error }
+         if error-status:error then
+            message substitute( "Ошибка чтения текущей даты на объекте &1&2" ,
+               v-cntxt-obj-type, v-cntxt-obj-code) view-as alert-box.
       end.
-      when {&update}
-      or when {&lookup} then 
-      do:
-        find first buf_cashbook no-lock where buf_cashbook.id = p-id .
-        buffer-copy buf_cashbook except buf_cashbook.RulePril buf_cashbook.RuleOsnPko to tt-cashbook .
-        tt-cashbook.RulePril = getRulePrilName(integer (buf_cashbook.RulePril)) .
-        tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
-        mCashBook:ttCashbooksaturation(buffer tt-cashbook:handle).
-      end. 
-    end case .
-
-    InitializeComponent().
-    Visual_form(Mode).
-    bindingSource1:Handle = buffer tt-CashBook:handle . 
+  
+   /*define property host-code as integer no-undo
+   private get.
+   set(input iH as integer):
+         host-code = ih.
+   end.*/
+  
+   constructor public cashbookfrm (Mode as character, p-id as int64 ):
     
-    this-object:ComponentsCollection:ADD(this-object:components).
-    catch e as Progress.Lang.Error:
-      undo, throw e.
-    end catch.
+      super().
+    
+      mCashBook = new cashbookstorage () .
+    
+      empty temp-table tt-cashbook .
+      create tt-CashBook .
+      case Mode: 
+         when {&add-def} then 
+            do:
+               tt-cashbook.id = ? .
+            end.
+         when {&update}
+         or 
+         when {&lookup} then 
+            do:
+               find first buf_cashbook no-lock where buf_cashbook.id = p-id .
+               buffer-copy buf_cashbook except buf_cashbook.RulePril buf_cashbook.RuleOsnPko to tt-cashbook .
+               tt-cashbook.RulePril = getRulePrilName(integer (buf_cashbook.RulePril)) .
+               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
+               mCashBook:ttCashbooksaturation(buffer tt-cashbook:handle).
+            end. 
+      end case .
 
-  end constructor.
+      InitializeComponent().
+      Visual_form(Mode).
+      bindingSource1:Handle = buffer tt-CashBook:handle . 
+    
+      this-object:ComponentsCollection:ADD(this-object:components).
+      catch e as Progress.Lang.Error:
+         undo, throw e.
+      end catch.
+
+   end constructor.
    
-  constructor public cashbookfrm( ):
+   constructor public cashbookfrm( ):
    
       super().
       InitializeComponent ( ).
@@ -138,376 +153,470 @@ class ibs.th.ref.cashbookfrm inherits Form :
          undo, throw e.
       end catch.      
 
-  end constructor.
+   end constructor.
 
-  destructor public cashbookfrm( ):
+   destructor public cashbookfrm( ):
     
-    delete object mCashBook no-error .
+      delete object mCashBook no-error .
 
-      if valid-object(components) then do:
+      if valid-object(components) then 
+      do:
          cast(components, System.IDisposable):Dispose().
       end.
 
-  end destructor.   
+   end destructor.   
 
 
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void bChooseCli_Click( input sender as System.Object, input e as System.EventArgs ):
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void bChooseCli_Click( input sender as System.Object, input e as System.EventArgs ):
 		
-		define variable ref-rec as recid no-undo .
-    define variable ref-list as character no-undo.
+      define variable ref-rec  as recid     no-undo .
+      define variable ref-list as character no-undo.
     
-    run ref/cli-all.w ( input parParentProc
-                     ,input "b-sel"
-                     ,input {&all}
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,output ref-list) .
-    if ref-list = "" then do:
-      return .
-    end.
-    ref-rec = integer( ref-list ).
-    FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
-    this-object:lCli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
-    this-object:lCli:Focus().
-    assign
-      tt-CashBook.cli-type = ub.clients.obj-type
-      tt-CashBook.cli-code = ub.clients.obj-code
-    .  
-    
-		return.
-
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void bChooseCredit_Click( input sender as System.Object, input e as System.EventArgs ):
-		define variable rid-list as character no-undo.
-    rid-list = "":U .
-    run ref/fwcode-1.w (
-                    parParentProc
-                  ,"b-sel"
-                  ,{&all}
-                  ,input ?
-                  ,input ?
-                  ,output rid-list ).
-    
-    if rid-list <> "":U then do:
-      FIND FIRST fin-code-cor-acc WHERE
-          recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
-      if fin-code-cor-acc.status_ <> integer({&current-status-int}) then do:
-        message
-        "Нельзя выбрать удаленный корр счет"
-        view-as alert-box error .
-        return .
+      run ref/cli-all.w ( input parParentProc
+         ,input "b-sel"
+         ,input {&all}
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,output ref-list) .
+      if ref-list = "" then 
+      do:
+         return .
       end.
-      this-object:fCorpko:Text = fin-code-cor-acc.code-value .
-      this-object:fCorpko:focus() .
-    end.
-		return.
-
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void bChooseDebit_Click( input sender as System.Object, input e as System.EventArgs ):
-		define variable rid-list as character no-undo.
-    rid-list = "":U .
-    run ref/fwcode-1.w (
-                    parParentProc
-                  ,"b-sel"
-                  ,{&all}
-                  ,input ?
-                  ,input ?
-                  ,output rid-list ).
+      ref-rec = integer( ref-list ).
+      FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
+      this-object:lCli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      this-object:lCli:Focus().
+      assign
+         tt-CashBook.cli-type = ub.clients.obj-type
+         tt-CashBook.cli-code = ub.clients.obj-code
+         .  
     
-    if rid-list <> "":U then do:
-      FIND FIRST fin-code-cor-acc WHERE
-          recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
-      if fin-code-cor-acc.status_ <> integer({&current-status-int}) then do:
-        message
-        "Нельзя выбрать удаленный корр счет"
-        view-as alert-box error .
-        return .
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void bChooseCredit_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable rid-list as character no-undo.
+      rid-list = "":U .
+      run ref/fwcode-1.w (
+         parParentProc
+         ,"b-sel"
+         ,{&all}
+         ,input ?
+         ,input ?
+         ,output rid-list ).
+    
+      if rid-list <> "":U then 
+      do:
+         FIND FIRST fin-code-cor-acc WHERE
+            recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
+         if fin-code-cor-acc.status_ <> integer({&current-status-int}) then 
+         do:
+            message
+               "Нельзя выбрать удаленный корр счет"
+               view-as alert-box error .
+            return .
+         end.
+         this-object:fCorpko:Text = fin-code-cor-acc.code-value .
+         this-object:fCorpko:focus() .
       end.
-      this-object:fOsnacct:Text = fin-code-cor-acc.code-value .
-      this-object:fOsnacct:focus() .
-    end.
-		return.
+      return.
 
-	end method.
+   end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void btbankdep_Click( input sender as System.Object, input e as System.EventArgs ):
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void bChooseDebit_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable rid-list as character no-undo.
+      rid-list = "":U .
+      run ref/fwcode-1.w (
+         parParentProc
+         ,"b-sel"
+         ,{&all}
+         ,input ?
+         ,input ?
+         ,output rid-list ).
+    
+      if rid-list <> "":U then 
+      do:
+         FIND FIRST fin-code-cor-acc WHERE
+            recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
+         if fin-code-cor-acc.status_ <> integer({&current-status-int}) then 
+         do:
+            message
+               "Нельзя выбрать удаленный корр счет"
+               view-as alert-box error .
+            return .
+         end.
+         this-object:fOsnacct:Text = fin-code-cor-acc.code-value .
+         this-object:fOsnacct:focus() .
+      end.
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void btbankdep_Click( input sender as System.Object, input e as System.EventArgs ):
       define variable v-rid-list as character no-undo .
-      define variable v-status_ like ub.fin-bank.status_ no-undo init {&current-status}.
+      define variable v-status_  like ub.fin-bank.status_ no-undo init {&current-status}.
       run ref/finbanks.w
-      (input parparentproc
-      ,input v-cntxt-host-code-obj
-      ,input "b-sel":U
-      ,input {&all}
-      ,input v-cntxt-host-code-obj
-      ,input-output v-status_
-      ,input-output v-rid-list
-      ).
+         (input parparentproc
+         ,input v-cntxt-host-code-obj
+         ,input "b-sel":U
+         ,input {&all}
+         ,input v-cntxt-host-code-obj
+         ,input-output v-status_
+         ,input-output v-rid-list
+         ).
       find first fin-bank where recid(fin-bank) eq integer (v-rid-list) no-lock no-error.
       if available fin-bank 
-      then
+         then
          assign
             lbankdep:text              = fin-bank.bank-name
             tt-cashbook.BankDepos-host = fin-bank.host-code
             tt-cashbook.BankDepos-code = fin-bank.code-bank
-         . 
-		return.
+            . 
+      return.
 
-	end method.
+   end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void btbankrec_Click( input sender as System.Object, input e as System.EventArgs ):
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void btbankrec_Click( input sender as System.Object, input e as System.EventArgs ):
       define variable v-rid-list as character no-undo .
-      define variable v-status_ like ub.fin-bank.status_ no-undo init {&current-status}.
+      define variable v-status_  like ub.fin-bank.status_ no-undo init {&current-status}.
       run ref/finbanks.w
-      (input parparentproc
-      ,input v-cntxt-host-code-obj
-      ,input "b-sel":U
-      ,input {&all}
-      ,input v-cntxt-host-code-obj
-      ,input-output v-status_
-      ,input-output v-rid-list
-      ).
+         (input parparentproc
+         ,input v-cntxt-host-code-obj
+         ,input "b-sel":U
+         ,input {&all}
+         ,input v-cntxt-host-code-obj
+         ,input-output v-status_
+         ,input-output v-rid-list
+         ).
       find first fin-bank where recid(fin-bank) eq integer (v-rid-list) no-lock no-error.
       if available fin-bank 
-      then
+         then
          assign
             lbankrec:text              = fin-bank.bank-name
             tt-cashbook.BankRecip-host = fin-bank.host-code
             tt-cashbook.BankRecip-code = fin-bank.code-bank
+            . 
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void btcorrRKOincas_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable rid-list as character no-undo.
+      rid-list = "":U .
+      run ref/fwcode-1.w (
+         parParentProc
+         ,"b-sel"
+         ,{&all}
+         ,input ?
+         ,input ?
+         ,output rid-list ).
+    
+      if rid-list <> "":U then 
+      do:
+         FIND FIRST fin-code-cor-acc WHERE
+            recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
+         if fin-code-cor-acc.status_ <> integer({&current-status-int}) then 
+         do:
+            message
+               "Нельзя выбрать удаленный корр счет"
+               view-as alert-box error .
+            return .
+         end.
+         this-object:FcorrRKOincas:Text = fin-code-cor-acc.code-value .
+         this-object:FcorrRKOincas:focus() .
+      end.
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void btincas_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable ref-rec  as recid     no-undo .
+      define variable ref-list as character no-undo.
+    
+      run ref/cli-all.w ( input parParentProc
+         ,input "b-sel"
+         ,input {&all}
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,output ref-list) .
+      if ref-list = "" then 
+      do:
+         return .
+      end.
+      ref-rec = integer( ref-list ).
+      FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
+      this-object:lcashcli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      this-object:lcashcli:Focus().
+      assign
+         tt-CashBook.CountCash-type = ub.clients.obj-type
+         tt-CashBook.CountCash-code = ub.clients.obj-code
          . 
-		return.
+      return.
 
-	end method.
+   end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void btcorrRKOincas_Click( input sender as System.Object, input e as System.EventArgs ):
-	define variable rid-list as character no-undo.
-    rid-list = "":U .
-    run ref/fwcode-1.w (
-                    parParentProc
-                  ,"b-sel"
-                  ,{&all}
-                  ,input ?
-                  ,input ?
-                  ,output rid-list ).
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void button1_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable ref-rec  as recid     no-undo .
+      define variable ref-list as character no-undo.
     
-    if rid-list <> "":U then do:
-      FIND FIRST fin-code-cor-acc WHERE
-          recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
-      if fin-code-cor-acc.status_ <> integer({&current-status-int}) then do:
-        message
-        "Нельзя выбрать удаленный корр счет"
-        view-as alert-box error .
-        return .
+      run ref/cli-all.w ( input parParentProc
+         ,input "b-sel"
+         ,input {&all}
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,output ref-list) .
+      if ref-list = "" then 
+      do:
+         return .
       end.
-      this-object:FcorrRKOincas:Text = fin-code-cor-acc.code-value .
-      this-object:FcorrRKOincas:focus() .
-    end.
-		return.
+      ref-rec = integer( ref-list ).
+      FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
+      this-object:Lincasagent:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      this-object:Lincasagent:Focus().
+      assign
+         tt-CashBook.CountCollect-type = ub.clients.obj-type
+         tt-CashBook.CountCollect-code = ub.clients.obj-code
+         .
+      return.
 
-	end method.
+   end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void btincas_Click( input sender as System.Object, input e as System.EventArgs ):
-	 define variable ref-rec as recid no-undo .
-    define variable ref-list as character no-undo.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void button2_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable ref-rec  as recid     no-undo .
+      define variable ref-list as character no-undo.
     
-    run ref/cli-all.w ( input parParentProc
-                     ,input "b-sel"
-                     ,input {&all}
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,output ref-list) .
-    if ref-list = "" then do:
-      return .
-    end.
-    ref-rec = integer( ref-list ).
-    FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
-    this-object:lcashcli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
-    this-object:lcashcli:Focus().
-    assign
-      tt-CashBook.CountCash-type  = ub.clients.obj-type
-      tt-CashBook.CountCash-code = ub.clients.obj-code
-    . 
-		return.
-
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void button1_Click( input sender as System.Object, input e as System.EventArgs ):
-	 define variable ref-rec as recid no-undo .
-    define variable ref-list as character no-undo.
-    
-    run ref/cli-all.w ( input parParentProc
-                     ,input "b-sel"
-                     ,input {&all}
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,input ?
-                     ,output ref-list) .
-    if ref-list = "" then do:
-      return .
-    end.
-    ref-rec = integer( ref-list ).
-    FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
-    this-object:Lincasagent:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
-    this-object:Lincasagent:Focus().
-    assign
-      tt-CashBook.CountCollect-type = ub.clients.obj-type
-      tt-CashBook.CountCollect-code = ub.clients.obj-code
-    .
-		return.
-
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void fRuleOsnPko_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
-		
-		return.
-
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void fTakenFrom_TextChanged( input sender as System.Object, input e as System.EventArgs ):
-		
-		return.
-
-	end method.
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void bCorRko_Click( input sender as System.Object, input e as System.EventArgs ):
-	 define variable rid-list as character no-undo.
-    rid-list = "":U .
-    run ref/fwcode-1.w (
-                    parParentProc
-                  ,"b-sel"
-                  ,{&all}
-                  ,input ?
-                  ,input ?
-                  ,output rid-list ).
-    
-    if rid-list <> "":U then do:
-      FIND FIRST fin-code-cor-acc WHERE
-          recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
-      if fin-code-cor-acc.status_ <> integer({&current-status-int}) then do:
-        message
-        "Нельзя выбрать удаленный корр счет"
-        view-as alert-box error .
-        return .
+      run ref/cli-all.w ( input parParentProc
+         ,input "b-sel"
+         ,input {&all}
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,output ref-list) .
+      if ref-list = "" then 
+      do:
+         return .
       end.
-      this-object:FcorRko:Text = fin-code-cor-acc.code-value .
-      this-object:FcorRko:focus() .
-    end.
+      ref-rec = integer( ref-list ).
+      FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
+      this-object:lclitrans:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      this-object:lclitrans:Focus().
+      assign
+         tt-CashBook.contr-type-transf = ub.clients.obj-type
+         tt-CashBook.contr-code-transf = ub.clients.obj-code
+         .
+      return.
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void cashbookfrm_Load( input sender as System.Object, input e as System.EventArgs ):
+		
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void fRuleOsnPko_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void fTakenFrom_TextChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+      return.
+
+   end method.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void bCorRko_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable rid-list as character no-undo.
+      rid-list = "":U .
+      run ref/fwcode-1.w (
+         parParentProc
+         ,"b-sel"
+         ,{&all}
+         ,input ?
+         ,input ?
+         ,output rid-list ).
+    
+      if rid-list <> "":U then 
+      do:
+         FIND FIRST fin-code-cor-acc WHERE
+            recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
+         if fin-code-cor-acc.status_ <> integer({&current-status-int}) then 
+         do:
+            message
+               "Нельзя выбрать удаленный корр счет"
+               view-as alert-box error .
+            return .
+         end.
+         this-object:FcorRko:Text = fin-code-cor-acc.code-value .
+         this-object:FcorRko:focus() .
+      end.
       
-	return.
+      return.
 
-	end method.
+   end method.
 
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void label13_Click( input sender as System.Object, input e as System.EventArgs ):
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void groupBox2_Enter( input sender as System.Object, input e as System.EventArgs ):
 		
-		return.
+      return.
 
-	end method.
+   end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void label14_Click( input sender as System.Object, input e as System.EventArgs ):
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void groupBox3_Enter( input sender as System.Object, input e as System.EventArgs ):
 		
-		return.
+      return.
 
-	end method.
+   end method.
 
-  method private void okButton_Click (sender as System.Object, e as System.EventArgs):
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void label13_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void label14_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+      return.
+
+   end method.
+
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void lCli_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+      return.
+
+   end method.
+
+   method private void okButton_Click (sender as System.Object, e as System.EventArgs):
       bindingSource1:Assign().
       if tt-cashbook.id = ?
-      then do :
-        mCashBook:insertDB(buffer tt-cashbook, output v-cashbookId) .
+         then 
+      do :
+         mCashBook:insertDB(buffer tt-cashbook, output v-cashbookId) .
       end.
-      else do :
-        mCashBook:updateDB(buffer tt-cashbook) .
+      else 
+      do :
+         mCashBook:updateDB(buffer tt-cashbook) .
       end.
       if mCashBook:Msg <> ""
-      then do :
-        message mCashBook:Msg view-as alert-box .
-        return .
+         then 
+      do :
+         message mCashBook:Msg view-as alert-box .
+         return .
       end.
       this-object:DialogResult = System.Windows.Forms.DialogResult:Ok.
       this-object:Close ( ). 
-  end method.
+   end method.
 
-  method private void cancelButton_Click (sender as System.Object, e as System.EventArgs):
+   method private void cancelButton_Click (sender as System.Object, e as System.EventArgs):
       this-object:DialogResult = System.Windows.Forms.DialogResult:Cancel.
       this-object:Close ( ).
-  end method.
+   end method.
     
-  method private void InitializeComponent ( ):
+   method private void InitializeComponent ( ):
 
       /* NOTE: The following method is automatically generated.
          
@@ -570,7 +679,24 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:button1 = new System.Windows.Forms.Button().
       this-object:Lincasagent = new System.Windows.Forms.Label().
       this-object:label19 = new System.Windows.Forms.Label().
+      this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+      this-object:groupBox2 = new System.Windows.Forms.GroupBox().
+      this-object:groupBox3 = new System.Windows.Forms.GroupBox().
+      this-object:label18 = new System.Windows.Forms.Label().
+      this-object:groupBox4 = new System.Windows.Forms.GroupBox().
+      this-object:fosntrans = new System.Windows.Forms.ComboBox().
+      this-object:lclitrans = new System.Windows.Forms.Label().
+      this-object:button2 = new System.Windows.Forms.Button().
+      this-object:label21 = new System.Windows.Forms.Label().
+      this-object:button3 = new System.Windows.Forms.Button().
+      this-object:fcorrtrans = new System.Windows.Forms.TextBox().
+      this-object:label22 = new System.Windows.Forms.Label().
+      this-object:label23 = new System.Windows.Forms.Label().
       cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
+      this-object:groupBox1:SuspendLayout().
+      this-object:groupBox2:SuspendLayout().
+      this-object:groupBox3:SuspendLayout().
+      this-object:groupBox4:SuspendLayout().
       this-object:SuspendLayout().
       /*  */
       /* buttonOk */
@@ -608,7 +734,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fName:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "CashBookName", true)).
       this-object:fName:Location = new System.Drawing.Point(268, 35).
       this-object:fName:Name = "fName".
-      this-object:fName:Size = new System.Drawing.Size(100, 20).
+      this-object:fName:Size = new System.Drawing.Size(156, 20).
       this-object:fName:TabIndex = 3.
       /*  */
       /* bindingSource1 */
@@ -621,7 +747,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar0 = new "Progress.Data.TableDesc[]"(0).
       tableDesc1:ChildTables = arrayvar0.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 17 no-undo.
+      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 19 no-undo.
       arrayvar1[1] = new Progress.Data.ColumnPropDesc("CashBookName", "Наименование", Progress.Data.DataType:CHARACTER).
       arrayvar1[2] = new Progress.Data.ColumnPropDesc("corrPko", "Корсчет для ПКО", Progress.Data.DataType:CHARACTER).
       arrayvar1[3] = new Progress.Data.ColumnPropDesc("osnAcct", "дебит", Progress.Data.DataType:CHARACTER).
@@ -639,21 +765,23 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar1[15] = new Progress.Data.ColumnPropDesc("BankRecip-acct", "Счет в банке получателе", Progress.Data.DataType:CHARACTER).
       arrayvar1[16] = new Progress.Data.ColumnPropDesc("BasisIncas", "Основание для инкассации", Progress.Data.DataType:CHARACTER).
       arrayvar1[17] = new Progress.Data.ColumnPropDesc("CorrAcctIncas", "Кор. Счет для инкассации", Progress.Data.DataType:CHARACTER).
+      arrayvar1[18] = new Progress.Data.ColumnPropDesc("Corr-transf", "корсчет", Progress.Data.DataType:CHARACTER).
+      arrayvar1[19] = new Progress.Data.ColumnPropDesc("rule-osn-transf", "правило", Progress.Data.DataType:CHARACTER).
       tableDesc1:Columns = arrayvar1.
       this-object:bindingSource1:TableSchema = tableDesc1.
       /*  */
       /* label5 */
       /*  */
-      this-object:label5:Location = new System.Drawing.Point(12, 107).
+      this-object:label5:Location = new System.Drawing.Point(4, 43).
       this-object:label5:Name = "label5".
-      this-object:label5:Size = new System.Drawing.Size(254, 23).
+      this-object:label5:Size = new System.Drawing.Size(237, 23).
       this-object:label5:TabIndex = 10.
-      this-object:label5:Text = "Правило заполнения графы ~"Основание~" ПКО:".
+      this-object:label5:Text = "Правило заполнения графы ~"Основание~":".
       this-object:label5:UseCompatibleTextRendering = true.
       /*  */
       /* label6 */
       /*  */
-      this-object:label6:Location = new System.Drawing.Point(12, 364).
+      this-object:label6:Location = new System.Drawing.Point(11, 107).
       this-object:label6:Name = "label6".
       this-object:label6:Size = new System.Drawing.Size(242, 23).
       this-object:label6:TabIndex = 12.
@@ -663,7 +791,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* FlagSepFuel */
       /*  */
       this-object:FlagSepFuel:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepFull", true)).
-      this-object:FlagSepFuel:Location = new System.Drawing.Point(15, 454).
+      this-object:FlagSepFuel:Location = new System.Drawing.Point(258, 160).
       this-object:FlagSepFuel:Name = "FlagSepFuel".
       this-object:FlagSepFuel:Size = new System.Drawing.Size(147, 24).
       this-object:FlagSepFuel:TabIndex = 10.
@@ -674,9 +802,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* FlagSepCash */
       /*  */
       this-object:FlagSepCash:DataBindings:Add(new System.Windows.Forms.Binding("Checked", this-object:bindingSource1, "FlagSepCash", true)).
-      this-object:FlagSepCash:Location = new System.Drawing.Point(15, 424).
+      this-object:FlagSepCash:Location = new System.Drawing.Point(12, 160).
       this-object:FlagSepCash:Name = "FlagSepCash".
-      this-object:FlagSepCash:Size = new System.Drawing.Size(254, 24).
+      this-object:FlagSepCash:Size = new System.Drawing.Size(240, 24).
       this-object:FlagSepCash:TabIndex = 9.
       this-object:FlagSepCash:Text = "Отдельный ПКО/РКО для каждой кассы".
       this-object:FlagSepCash:UseCompatibleTextRendering = true.
@@ -697,21 +825,21 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fExtCode:Location = new System.Drawing.Point(268, 58).
       this-object:fExtCode:Name = "fExtCode".
       this-object:fExtCode:ReadOnly = true.
-      this-object:fExtCode:Size = new System.Drawing.Size(100, 20).
+      this-object:fExtCode:Size = new System.Drawing.Size(156, 20).
       this-object:fExtCode:TabIndex = 4.
       /*  */
       /* label4 */
       /*  */
-      this-object:label4:Location = new System.Drawing.Point(12, 84).
+      this-object:label4:Location = new System.Drawing.Point(4, 20).
       this-object:label4:Name = "label4".
-      this-object:label4:Size = new System.Drawing.Size(199, 23).
+      this-object:label4:Size = new System.Drawing.Size(57, 23).
       this-object:label4:TabIndex = 21.
-      this-object:label4:Text = "Кор.счет для ПКО:".
+      this-object:label4:Text = "Кор.счет:".
       this-object:label4:UseCompatibleTextRendering = true.
       /*  */
       /* label7 */
       /*  */
-      this-object:label7:Location = new System.Drawing.Point(12, 164).
+      this-object:label7:Location = new System.Drawing.Point(11, 84).
       this-object:label7:Name = "label7".
       this-object:label7:Size = new System.Drawing.Size(199, 23).
       this-object:label7:TabIndex = 22.
@@ -721,17 +849,17 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* fCorpko */
       /*  */
       this-object:fCorpko:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "corrPko", true)).
-      this-object:fCorpko:Location = new System.Drawing.Point(268, 81).
+      this-object:fCorpko:Location = new System.Drawing.Point(67, 20).
       this-object:fCorpko:Name = "fCorpko".
-      this-object:fCorpko:Size = new System.Drawing.Size(100, 20).
+      this-object:fCorpko:Size = new System.Drawing.Size(36, 20).
       this-object:fCorpko:TabIndex = 5.
       /*  */
       /* fOsnacct */
       /*  */
       this-object:fOsnacct:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "osnAcct", true)).
-      this-object:fOsnacct:Location = new System.Drawing.Point(268, 167).
+      this-object:fOsnacct:Location = new System.Drawing.Point(267, 81).
       this-object:fOsnacct:Name = "fOsnacct".
-      this-object:fOsnacct:Size = new System.Drawing.Size(100, 20).
+      this-object:fOsnacct:Size = new System.Drawing.Size(128, 20).
       this-object:fOsnacct:TabIndex = 6.
       /*  */
       /* fRulePril */
@@ -744,14 +872,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar2[1] = "Номера Z-отчетов".
       arrayvar2[2] = "Не заполнять".
       this-object:fRulePril:Items:AddRange(arrayvar2).
-      this-object:fRulePril:Location = new System.Drawing.Point(268, 361).
+      this-object:fRulePril:Location = new System.Drawing.Point(267, 107).
       this-object:fRulePril:Name = "fRulePril".
-      this-object:fRulePril:Size = new System.Drawing.Size(146, 21).
+      this-object:fRulePril:Size = new System.Drawing.Size(157, 21).
       this-object:fRulePril:TabIndex = 24.
       /*  */
       /* bChooseCorPko */
       /*  */
-      this-object:bChooseCorPko:Location = new System.Drawing.Point(374, 79).
+      this-object:bChooseCorPko:Location = new System.Drawing.Point(111, 17).
       this-object:bChooseCorPko:Name = "bChooseCorPko".
       this-object:bChooseCorPko:Size = new System.Drawing.Size(23, 23).
       this-object:bChooseCorPko:TabIndex = 25.
@@ -761,7 +889,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* bChooseOsnAcct */
       /*  */
-      this-object:bChooseOsnAcct:Location = new System.Drawing.Point(374, 165).
+      this-object:bChooseOsnAcct:Location = new System.Drawing.Point(401, 81).
       this-object:bChooseOsnAcct:Name = "bChooseOsnAcct".
       this-object:bChooseOsnAcct:Size = new System.Drawing.Size(23, 23).
       this-object:bChooseOsnAcct:TabIndex = 26.
@@ -771,16 +899,16 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label2 */
       /*  */
-      this-object:label2:Location = new System.Drawing.Point(12, 130).
+      this-object:label2:Location = new System.Drawing.Point(140, 20).
       this-object:label2:Name = "label2".
-      this-object:label2:Size = new System.Drawing.Size(100, 36).
+      this-object:label2:Size = new System.Drawing.Size(70, 24).
       this-object:label2:TabIndex = 27.
-      this-object:label2:Text = "Контрагент ПКО: (авто)".
+      this-object:label2:Text = "Контрагент:".
       this-object:label2:UseCompatibleTextRendering = true.
       /*  */
       /* label8 */
       /*  */
-      this-object:label8:Location = new System.Drawing.Point(15, 398).
+      this-object:label8:Location = new System.Drawing.Point(12, 134).
       this-object:label8:Name = "label8".
       this-object:label8:Size = new System.Drawing.Size(103, 23).
       this-object:label8:TabIndex = 28.
@@ -790,14 +918,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* fTakenFrom */
       /*  */
       this-object:fTakenFrom:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "takenfrom", true)).
-      this-object:fTakenFrom:Location = new System.Drawing.Point(136, 398).
+      this-object:fTakenFrom:Location = new System.Drawing.Point(132, 134).
       this-object:fTakenFrom:Name = "fTakenFrom".
-      this-object:fTakenFrom:Size = new System.Drawing.Size(235, 20).
+      this-object:fTakenFrom:Size = new System.Drawing.Size(292, 20).
       this-object:fTakenFrom:TabIndex = 29.
       /*  */
       /* bChooseCli */
       /*  */
-      this-object:bChooseCli:Location = new System.Drawing.Point(374, 130).
+      this-object:bChooseCli:Location = new System.Drawing.Point(390, 12).
       this-object:bChooseCli:Name = "bChooseCli".
       this-object:bChooseCli:Size = new System.Drawing.Size(23, 23).
       this-object:bChooseCli:TabIndex = 30.
@@ -807,23 +935,24 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* lCli */
       /*  */
-      this-object:lCli:Location = new System.Drawing.Point(136, 130).
+      this-object:lCli:Location = new System.Drawing.Point(206, 17).
       this-object:lCli:Name = "lCli".
-      this-object:lCli:Size = new System.Drawing.Size(235, 23).
+      this-object:lCli:Size = new System.Drawing.Size(178, 23).
       this-object:lCli:TabIndex = 31.
       this-object:lCli:UseCompatibleTextRendering = true.
+      this-object:lCli:Click:Subscribe(this-object:lCli_Click).
       /*  */
       /* FcorRko */
       /*  */
       this-object:FcorRko:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "CorrRko", true)).
-      this-object:FcorRko:Location = new System.Drawing.Point(268, 193).
+      this-object:FcorRko:Location = new System.Drawing.Point(67, 14).
       this-object:FcorRko:Name = "FcorRko".
-      this-object:FcorRko:Size = new System.Drawing.Size(100, 20).
+      this-object:FcorRko:Size = new System.Drawing.Size(36, 20).
       this-object:FcorRko:TabIndex = 33.
       /*  */
       /* bChooseCorRko */
       /*  */
-      this-object:bChooseCorRko:Location = new System.Drawing.Point(374, 193).
+      this-object:bChooseCorRko:Location = new System.Drawing.Point(109, 14).
       this-object:bChooseCorRko:Name = "bChooseCorRko".
       this-object:bChooseCorRko:Size = new System.Drawing.Size(23, 23).
       this-object:bChooseCorRko:TabIndex = 34.
@@ -833,11 +962,11 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label9 */
       /*  */
-      this-object:label9:Location = new System.Drawing.Point(12, 190).
+      this-object:label9:Location = new System.Drawing.Point(4, 14).
       this-object:label9:Name = "label9".
-      this-object:label9:Size = new System.Drawing.Size(242, 23).
+      this-object:label9:Size = new System.Drawing.Size(57, 23).
       this-object:label9:TabIndex = 35.
-      this-object:label9:Text = "Кор.счет для РКО (cash as pos):".
+      this-object:label9:Text = "Кор.счет:".
       this-object:label9:UseCompatibleTextRendering = true.
       /*  */
       /* fRuleOsnRko */
@@ -856,18 +985,18 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar4[2] = "Номера Z-отчетов".
       arrayvar4[3] = "Не заполнять".
       this-object:fRuleOsnRko:Items:AddRange(arrayvar4).
-      this-object:fRuleOsnRko:Location = new System.Drawing.Point(268, 219).
+      this-object:fRuleOsnRko:Location = new System.Drawing.Point(247, 43).
       this-object:fRuleOsnRko:Name = "fRuleOsnRko".
-      this-object:fRuleOsnRko:Size = new System.Drawing.Size(146, 21).
+      this-object:fRuleOsnRko:Size = new System.Drawing.Size(166, 21).
       this-object:fRuleOsnRko:TabIndex = 36.
       /*  */
       /* label10 */
       /*  */
-      this-object:label10:Location = new System.Drawing.Point(12, 222).
+      this-object:label10:Location = new System.Drawing.Point(4, 46).
       this-object:label10:Name = "label10".
-      this-object:label10:Size = new System.Drawing.Size(254, 30).
+      this-object:label10:Size = new System.Drawing.Size(237, 18).
       this-object:label10:TabIndex = 37.
-      this-object:label10:Text = "Правило заполнения графы ~"Основание~" РКО: (cash at pos)".
+      this-object:label10:Text = "Правило заполнения графы ~"Основание~":".
       this-object:label10:UseCompatibleTextRendering = true.
       /*  */
       /* fRuleOsnPko */
@@ -880,32 +1009,32 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar5[2] = "Номера Z-отчетов".
       arrayvar5[3] = "Не заполнять".
       this-object:fRuleOsnPko:Items:AddRange(arrayvar5).
-      this-object:fRuleOsnPko:Location = new System.Drawing.Point(268, 107).
+      this-object:fRuleOsnPko:Location = new System.Drawing.Point(247, 43).
       this-object:fRuleOsnPko:Name = "fRuleOsnPko".
-      this-object:fRuleOsnPko:Size = new System.Drawing.Size(146, 21).
+      this-object:fRuleOsnPko:Size = new System.Drawing.Size(166, 21).
       this-object:fRuleOsnPko:TabIndex = 38.
       this-object:fRuleOsnPko:SelectedIndexChanged:Subscribe(this-object:fRuleOsnPko_SelectedIndexChanged).
       /*  */
       /* label11 */
       /*  */
-      this-object:label11:Location = new System.Drawing.Point(12, 252).
+      this-object:label11:Location = new System.Drawing.Point(140, 14).
       this-object:label11:Name = "label11".
-      this-object:label11:Size = new System.Drawing.Size(100, 31).
+      this-object:label11:Size = new System.Drawing.Size(70, 23).
       this-object:label11:TabIndex = 39.
-      this-object:label11:Text = "Контрагент РКО:(cash at pos)".
+      this-object:label11:Text = "Контрагент:".
       this-object:label11:UseCompatibleTextRendering = true.
       /*  */
       /* lcashcli */
       /*  */
-      this-object:lcashcli:Location = new System.Drawing.Point(106, 252).
+      this-object:lcashcli:Location = new System.Drawing.Point(206, 11).
       this-object:lcashcli:Name = "lcashcli".
-      this-object:lcashcli:Size = new System.Drawing.Size(262, 23).
+      this-object:lcashcli:Size = new System.Drawing.Size(178, 23).
       this-object:lcashcli:TabIndex = 40.
       this-object:lcashcli:UseCompatibleTextRendering = true.
       /*  */
       /* label13 */
       /*  */
-      this-object:label13:Location = new System.Drawing.Point(15, 481).
+      this-object:label13:Location = new System.Drawing.Point(4, 73).
       this-object:label13:Name = "label13".
       this-object:label13:Size = new System.Drawing.Size(100, 23).
       this-object:label13:TabIndex = 41.
@@ -915,7 +1044,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label14 */
       /*  */
-      this-object:label14:Location = new System.Drawing.Point(15, 513).
+      this-object:label14:Location = new System.Drawing.Point(4, 105).
       this-object:label14:Name = "label14".
       this-object:label14:Size = new System.Drawing.Size(100, 23).
       this-object:label14:TabIndex = 42.
@@ -925,7 +1054,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* btcash */
       /*  */
-      this-object:btcash:Location = new System.Drawing.Point(374, 252).
+      this-object:btcash:Location = new System.Drawing.Point(390, 14).
       this-object:btcash:Name = "btcash".
       this-object:btcash:Size = new System.Drawing.Size(23, 23).
       this-object:btcash:TabIndex = 43.
@@ -935,7 +1064,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label15 */
       /*  */
-      this-object:label15:Location = new System.Drawing.Point(15, 576).
+      this-object:label15:Location = new System.Drawing.Point(4, 168).
       this-object:label15:Name = "label15".
       this-object:label15:Size = new System.Drawing.Size(156, 23).
       this-object:label15:TabIndex = 44.
@@ -951,32 +1080,32 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar6[1] = "02".
       arrayvar6[2] = "32".
       this-object:fSourceCode:Items:AddRange(arrayvar6).
-      this-object:fSourceCode:Location = new System.Drawing.Point(177, 575).
+      this-object:fSourceCode:Location = new System.Drawing.Point(166, 167).
       this-object:fSourceCode:Name = "fSourceCode".
-      this-object:fSourceCode:Size = new System.Drawing.Size(240, 21).
+      this-object:fSourceCode:Size = new System.Drawing.Size(247, 21).
       this-object:fSourceCode:TabIndex = 45.
       /*  */
       /* lbankdep */
       /*  */
       this-object:lbankdep:AutoEllipsis = true.
-      this-object:lbankdep:Location = new System.Drawing.Point(122, 481).
+      this-object:lbankdep:Location = new System.Drawing.Point(111, 73).
       this-object:lbankdep:Name = "lbankdep".
-      this-object:lbankdep:Size = new System.Drawing.Size(249, 23).
+      this-object:lbankdep:Size = new System.Drawing.Size(273, 23).
       this-object:lbankdep:TabIndex = 46.
       this-object:lbankdep:UseCompatibleTextRendering = true.
       /*  */
       /* lbankrec */
       /*  */
       this-object:lbankrec:AutoEllipsis = true.
-      this-object:lbankrec:Location = new System.Drawing.Point(123, 513).
+      this-object:lbankrec:Location = new System.Drawing.Point(112, 105).
       this-object:lbankrec:Name = "lbankrec".
-      this-object:lbankrec:Size = new System.Drawing.Size(249, 23).
+      this-object:lbankrec:Size = new System.Drawing.Size(272, 23).
       this-object:lbankrec:TabIndex = 47.
       this-object:lbankrec:UseCompatibleTextRendering = true.
       /*  */
       /* btbankdep */
       /*  */
-      this-object:btbankdep:Location = new System.Drawing.Point(378, 476).
+      this-object:btbankdep:Location = new System.Drawing.Point(390, 69).
       this-object:btbankdep:Name = "btbankdep".
       this-object:btbankdep:Size = new System.Drawing.Size(23, 23).
       this-object:btbankdep:TabIndex = 48.
@@ -986,7 +1115,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* btbankrec */
       /*  */
-      this-object:btbankrec:Location = new System.Drawing.Point(378, 513).
+      this-object:btbankrec:Location = new System.Drawing.Point(390, 105).
       this-object:btbankrec:Name = "btbankrec".
       this-object:btbankrec:Size = new System.Drawing.Size(23, 23).
       this-object:btbankrec:TabIndex = 49.
@@ -996,7 +1125,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label12 */
       /*  */
-      this-object:label12:Location = new System.Drawing.Point(15, 547).
+      this-object:label12:Location = new System.Drawing.Point(4, 139).
       this-object:label12:Name = "label12".
       this-object:label12:Size = new System.Drawing.Size(100, 23).
       this-object:label12:TabIndex = 50.
@@ -1006,23 +1135,23 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* BankRecipacct */
       /*  */
       this-object:BankRecipacct:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "BankRecip-acct", true)).
-      this-object:BankRecipacct:Location = new System.Drawing.Point(177, 547).
+      this-object:BankRecipacct:Location = new System.Drawing.Point(166, 139).
       this-object:BankRecipacct:Name = "BankRecipacct".
-      this-object:BankRecipacct:Size = new System.Drawing.Size(239, 20).
+      this-object:BankRecipacct:Size = new System.Drawing.Size(247, 20).
       this-object:BankRecipacct:TabIndex = 51.
       /*  */
       /* label16 */
       /*  */
-      this-object:label16:Location = new System.Drawing.Point(12, 279).
+      this-object:label16:Location = new System.Drawing.Point(4, 19).
       this-object:label16:Name = "label16".
-      this-object:label16:Size = new System.Drawing.Size(242, 23).
+      this-object:label16:Size = new System.Drawing.Size(61, 23).
       this-object:label16:TabIndex = 54.
-      this-object:label16:Text = "Кор.счет для РКО (Инкассация):".
+      this-object:label16:Text = "Кор.счет:".
       this-object:label16:UseCompatibleTextRendering = true.
       /*  */
       /* btcorrRKOincas */
       /*  */
-      this-object:btcorrRKOincas:Location = new System.Drawing.Point(374, 279).
+      this-object:btcorrRKOincas:Location = new System.Drawing.Point(109, 17).
       this-object:btcorrRKOincas:Name = "btcorrRKOincas".
       this-object:btcorrRKOincas:Size = new System.Drawing.Size(23, 23).
       this-object:btcorrRKOincas:TabIndex = 53.
@@ -1033,14 +1162,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* FcorrRKOincas */
       /*  */
       this-object:FcorrRKOincas:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "CorrAcctIncas", true)).
-      this-object:FcorrRKOincas:Location = new System.Drawing.Point(268, 279).
+      this-object:FcorrRKOincas:Location = new System.Drawing.Point(67, 19).
       this-object:FcorrRKOincas:Name = "FcorrRKOincas".
-      this-object:FcorrRKOincas:Size = new System.Drawing.Size(100, 20).
+      this-object:FcorrRKOincas:Size = new System.Drawing.Size(36, 20).
       this-object:FcorrRKOincas:TabIndex = 52.
       /*  */
       /* label17 */
       /*  */
-      this-object:label17:Location = new System.Drawing.Point(11, 305).
+      this-object:label17:Location = new System.Drawing.Point(14, 499).
       this-object:label17:Name = "label17".
       this-object:label17:Size = new System.Drawing.Size(254, 30).
       this-object:label17:TabIndex = 56.
@@ -1063,14 +1192,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar8[2] = "Номера Z-отчетов".
       arrayvar8[3] = "Не заполнять".
       this-object:FOsnIncas:Items:AddRange(arrayvar8).
-      this-object:FOsnIncas:Location = new System.Drawing.Point(268, 305).
+      this-object:FOsnIncas:Location = new System.Drawing.Point(238, 42).
       this-object:FOsnIncas:Name = "FOsnIncas".
-      this-object:FOsnIncas:Size = new System.Drawing.Size(146, 21).
+      this-object:FOsnIncas:Size = new System.Drawing.Size(175, 21).
       this-object:FOsnIncas:TabIndex = 55.
       /*  */
       /* button1 */
       /*  */
-      this-object:button1:Location = new System.Drawing.Point(374, 332).
+      this-object:button1:Location = new System.Drawing.Point(390, 14).
       this-object:button1:Name = "button1".
       this-object:button1:Size = new System.Drawing.Size(23, 23).
       this-object:button1:TabIndex = 59.
@@ -1080,71 +1209,212 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* Lincasagent */
       /*  */
-      this-object:Lincasagent:Location = new System.Drawing.Point(106, 332).
+      this-object:Lincasagent:Location = new System.Drawing.Point(206, 17).
       this-object:Lincasagent:Name = "Lincasagent".
-      this-object:Lincasagent:Size = new System.Drawing.Size(262, 23).
+      this-object:Lincasagent:Size = new System.Drawing.Size(178, 23).
       this-object:Lincasagent:TabIndex = 58.
       this-object:Lincasagent:UseCompatibleTextRendering = true.
       /*  */
       /* label19 */
       /*  */
-      this-object:label19:Location = new System.Drawing.Point(12, 332).
+      this-object:label19:Location = new System.Drawing.Point(138, 19).
       this-object:label19:Name = "label19".
-      this-object:label19:Size = new System.Drawing.Size(100, 31).
+      this-object:label19:Size = new System.Drawing.Size(72, 23).
       this-object:label19:TabIndex = 57.
-      this-object:label19:Text = "Контрагент РКО:(Инкассация)".
+      this-object:label19:Text = "Контрагент:".
       this-object:label19:UseCompatibleTextRendering = true.
+      /*  */
+      /* groupBox1 */
+      /*  */
+      this-object:groupBox1:Controls:Add(this-object:fRuleOsnPko).
+      this-object:groupBox1:Controls:Add(this-object:lCli).
+      this-object:groupBox1:Controls:Add(this-object:bChooseCli).
+      this-object:groupBox1:Controls:Add(this-object:label2).
+      this-object:groupBox1:Controls:Add(this-object:bChooseCorPko).
+      this-object:groupBox1:Controls:Add(this-object:fCorpko).
+      this-object:groupBox1:Controls:Add(this-object:label4).
+      this-object:groupBox1:Controls:Add(this-object:label5).
+      this-object:groupBox1:Location = new System.Drawing.Point(12, 190).
+      this-object:groupBox1:Name = "groupBox1".
+      this-object:groupBox1:Size = new System.Drawing.Size(428, 76).
+      this-object:groupBox1:TabIndex = 60.
+      this-object:groupBox1:TabStop = false.
+      this-object:groupBox1:Text = "ПКО (авто)".
+      this-object:groupBox1:UseCompatibleTextRendering = true.
+      /*  */
+      /* groupBox2 */
+      /*  */
+      this-object:groupBox2:Controls:Add(this-object:label10).
+      this-object:groupBox2:Controls:Add(this-object:fRuleOsnRko).
+      this-object:groupBox2:Controls:Add(this-object:label9).
+      this-object:groupBox2:Controls:Add(this-object:bChooseCorRko).
+      this-object:groupBox2:Controls:Add(this-object:FcorRko).
+      this-object:groupBox2:Controls:Add(this-object:label11).
+      this-object:groupBox2:Controls:Add(this-object:lcashcli).
+      this-object:groupBox2:Controls:Add(this-object:btcash).
+      this-object:groupBox2:Location = new System.Drawing.Point(11, 272).
+      this-object:groupBox2:Name = "groupBox2".
+      this-object:groupBox2:Size = new System.Drawing.Size(428, 79).
+      this-object:groupBox2:TabIndex = 61.
+      this-object:groupBox2:TabStop = false.
+      this-object:groupBox2:Text = "РКО (cash as pos)".
+      this-object:groupBox2:UseCompatibleTextRendering = true.
+      this-object:groupBox2:Enter:Subscribe(this-object:groupBox2_Enter).
+      /*  */
+      /* groupBox3 */
+      /*  */
+      this-object:groupBox3:Controls:Add(this-object:label18).
+      this-object:groupBox3:Controls:Add(this-object:button1).
+      this-object:groupBox3:Controls:Add(this-object:Lincasagent).
+      this-object:groupBox3:Controls:Add(this-object:label19).
+      this-object:groupBox3:Controls:Add(this-object:FOsnIncas).
+      this-object:groupBox3:Controls:Add(this-object:label16).
+      this-object:groupBox3:Controls:Add(this-object:btcorrRKOincas).
+      this-object:groupBox3:Controls:Add(this-object:FcorrRKOincas).
+      this-object:groupBox3:Controls:Add(this-object:BankRecipacct).
+      this-object:groupBox3:Controls:Add(this-object:label12).
+      this-object:groupBox3:Controls:Add(this-object:btbankrec).
+      this-object:groupBox3:Controls:Add(this-object:btbankdep).
+      this-object:groupBox3:Controls:Add(this-object:lbankrec).
+      this-object:groupBox3:Controls:Add(this-object:lbankdep).
+      this-object:groupBox3:Controls:Add(this-object:fSourceCode).
+      this-object:groupBox3:Controls:Add(this-object:label15).
+      this-object:groupBox3:Controls:Add(this-object:label14).
+      this-object:groupBox3:Controls:Add(this-object:label13).
+      this-object:groupBox3:Location = new System.Drawing.Point(11, 357).
+      this-object:groupBox3:Name = "groupBox3".
+      this-object:groupBox3:Size = new System.Drawing.Size(428, 198).
+      this-object:groupBox3:TabIndex = 62.
+      this-object:groupBox3:TabStop = false.
+      this-object:groupBox3:Text = " РКО (Инкассация)".
+      this-object:groupBox3:UseCompatibleTextRendering = true.
+      this-object:groupBox3:Enter:Subscribe(this-object:groupBox3_Enter).
+      /*  */
+      /* label18 */
+      /*  */
+      this-object:label18:Location = new System.Drawing.Point(4, 42).
+      this-object:label18:Name = "label18".
+      this-object:label18:Size = new System.Drawing.Size(226, 21).
+      this-object:label18:TabIndex = 60.
+      this-object:label18:Text = "Правило заполнения графы ~"Основание~":".
+      this-object:label18:UseCompatibleTextRendering = true.
+      /*  */
+      /* groupBox4 */
+      /*  */
+      this-object:groupBox4:Controls:Add(this-object:fosntrans).
+      this-object:groupBox4:Controls:Add(this-object:lclitrans).
+      this-object:groupBox4:Controls:Add(this-object:button2).
+      this-object:groupBox4:Controls:Add(this-object:label21).
+      this-object:groupBox4:Controls:Add(this-object:button3).
+      this-object:groupBox4:Controls:Add(this-object:fcorrtrans).
+      this-object:groupBox4:Controls:Add(this-object:label22).
+      this-object:groupBox4:Controls:Add(this-object:label23).
+      this-object:groupBox4:Location = new System.Drawing.Point(11, 561).
+      this-object:groupBox4:Name = "groupBox4".
+      this-object:groupBox4:Size = new System.Drawing.Size(428, 76).
+      this-object:groupBox4:TabIndex = 61.
+      this-object:groupBox4:TabStop = false.
+      this-object:groupBox4:Text = "РКО (перемещения ДС)".
+      this-object:groupBox4:UseCompatibleTextRendering = true.
+      /*  */
+      /* fosntrans */
+      /*  */
+      this-object:fosntrans:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "rule-osn-transf", true)).
+      this-object:fosntrans:FormattingEnabled = true.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar9 as System.Object extent 3 no-undo.
+      arrayvar9[1] = "Выручка от реализации".
+      arrayvar9[2] = "Номера Z-отчетов".
+      arrayvar9[3] = "Не заполнять".
+      this-object:fosntrans:Items:AddRange(arrayvar9).
+      this-object:fosntrans:Location = new System.Drawing.Point(247, 43).
+      this-object:fosntrans:Name = "fosntrans".
+      this-object:fosntrans:Size = new System.Drawing.Size(166, 21).
+      this-object:fosntrans:TabIndex = 38.
+      /*  */
+      /* lclitrans */
+      /*  */
+      this-object:lclitrans:Location = new System.Drawing.Point(206, 17).
+      this-object:lclitrans:Name = "lclitrans".
+      this-object:lclitrans:Size = new System.Drawing.Size(178, 23).
+      this-object:lclitrans:TabIndex = 31.
+      this-object:lclitrans:UseCompatibleTextRendering = true.
+      /*  */
+      /* button2 */
+      /*  */
+      this-object:button2:Location = new System.Drawing.Point(390, 12).
+      this-object:button2:Name = "button2".
+      this-object:button2:Size = new System.Drawing.Size(23, 23).
+      this-object:button2:TabIndex = 30.
+      this-object:button2:UseCompatibleTextRendering = true.
+      this-object:button2:UseVisualStyleBackColor = true.
+      this-object:button2:Click:Subscribe(this-object:button2_Click).
+      /*  */
+      /* label21 */
+      /*  */
+      this-object:label21:Location = new System.Drawing.Point(140, 20).
+      this-object:label21:Name = "label21".
+      this-object:label21:Size = new System.Drawing.Size(70, 24).
+      this-object:label21:TabIndex = 27.
+      this-object:label21:Text = "Контрагент:".
+      this-object:label21:UseCompatibleTextRendering = true.
+      /*  */
+      /* button3 */
+      /*  */
+      this-object:button3:Location = new System.Drawing.Point(111, 17).
+      this-object:button3:Name = "button3".
+      this-object:button3:Size = new System.Drawing.Size(23, 23).
+      this-object:button3:TabIndex = 25.
+      this-object:button3:UseCompatibleTextRendering = true.
+      this-object:button3:UseVisualStyleBackColor = true.
+      /*  */
+      /* fcorrtrans */
+      /*  */
+      this-object:fcorrtrans:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "Corr-transf", true)).
+      this-object:fcorrtrans:Location = new System.Drawing.Point(67, 20).
+      this-object:fcorrtrans:Name = "fcorrtrans".
+      this-object:fcorrtrans:Size = new System.Drawing.Size(36, 20).
+      this-object:fcorrtrans:TabIndex = 5.
+      /*  */
+      /* label22 */
+      /*  */
+      this-object:label22:Location = new System.Drawing.Point(4, 20).
+      this-object:label22:Name = "label22".
+      this-object:label22:Size = new System.Drawing.Size(57, 23).
+      this-object:label22:TabIndex = 21.
+      this-object:label22:Text = "Кор.счет:".
+      this-object:label22:UseCompatibleTextRendering = true.
+      /*  */
+      /* label23 */
+      /*  */
+      this-object:label23:Location = new System.Drawing.Point(4, 43).
+      this-object:label23:Name = "label23".
+      this-object:label23:Size = new System.Drawing.Size(237, 23).
+      this-object:label23:TabIndex = 10.
+      this-object:label23:Text = "Правило заполнения графы ~"Основание~":".
+      this-object:label23:UseCompatibleTextRendering = true.
       /*  */
       /* cashbookfrm */
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:CancelButton = this-object:buttonCancel.
-      this-object:ClientSize = new System.Drawing.Size(420, 629).
-      this-object:Controls:Add(this-object:button1).
-      this-object:Controls:Add(this-object:Lincasagent).
-      this-object:Controls:Add(this-object:label19).
+      this-object:ClientSize = new System.Drawing.Size(447, 648).
+      this-object:Controls:Add(this-object:groupBox4).
+      this-object:Controls:Add(this-object:groupBox3).
+      this-object:Controls:Add(this-object:groupBox2).
+      this-object:Controls:Add(this-object:groupBox1).
       this-object:Controls:Add(this-object:label17).
-      this-object:Controls:Add(this-object:FOsnIncas).
-      this-object:Controls:Add(this-object:label16).
-      this-object:Controls:Add(this-object:btcorrRKOincas).
-      this-object:Controls:Add(this-object:FcorrRKOincas).
-      this-object:Controls:Add(this-object:BankRecipacct).
-      this-object:Controls:Add(this-object:label12).
-      this-object:Controls:Add(this-object:btbankrec).
-      this-object:Controls:Add(this-object:btbankdep).
-      this-object:Controls:Add(this-object:lbankrec).
-      this-object:Controls:Add(this-object:lbankdep).
-      this-object:Controls:Add(this-object:fSourceCode).
-      this-object:Controls:Add(this-object:label15).
-      this-object:Controls:Add(this-object:btcash).
-      this-object:Controls:Add(this-object:label14).
-      this-object:Controls:Add(this-object:label13).
-      this-object:Controls:Add(this-object:lcashcli).
-      this-object:Controls:Add(this-object:label11).
-      this-object:Controls:Add(this-object:fRuleOsnPko).
-      this-object:Controls:Add(this-object:label10).
-      this-object:Controls:Add(this-object:fRuleOsnRko).
-      this-object:Controls:Add(this-object:label9).
-      this-object:Controls:Add(this-object:bChooseCorRko).
-      this-object:Controls:Add(this-object:FcorRko).
-      this-object:Controls:Add(this-object:lCli).
-      this-object:Controls:Add(this-object:bChooseCli).
       this-object:Controls:Add(this-object:fTakenFrom).
       this-object:Controls:Add(this-object:label8).
-      this-object:Controls:Add(this-object:label2).
       this-object:Controls:Add(this-object:bChooseOsnAcct).
-      this-object:Controls:Add(this-object:bChooseCorPko).
       this-object:Controls:Add(this-object:fRulePril).
       this-object:Controls:Add(this-object:fOsnacct).
-      this-object:Controls:Add(this-object:fCorpko).
       this-object:Controls:Add(this-object:label7).
-      this-object:Controls:Add(this-object:label4).
       this-object:Controls:Add(this-object:fExtCode).
       this-object:Controls:Add(this-object:label3).
       this-object:Controls:Add(this-object:FlagSepCash).
       this-object:Controls:Add(this-object:FlagSepFuel).
       this-object:Controls:Add(this-object:label6).
-      this-object:Controls:Add(this-object:label5).
       this-object:Controls:Add(this-object:fName).
       this-object:Controls:Add(this-object:label1).
       this-object:Controls:Add(this-object:buttonCancel).
@@ -1156,7 +1426,16 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:ShowInTaskbar = false.
       this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
       this-object:Text = "Кассовая книга".
+      this-object:Load:Subscribe(this-object:cashbookfrm_Load).
       cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
+      this-object:groupBox1:ResumeLayout(false).
+      this-object:groupBox1:PerformLayout().
+      this-object:groupBox2:ResumeLayout(false).
+      this-object:groupBox2:PerformLayout().
+      this-object:groupBox3:ResumeLayout(false).
+      this-object:groupBox3:PerformLayout().
+      this-object:groupBox4:ResumeLayout(false).
+      this-object:groupBox4:PerformLayout().
       this-object:ResumeLayout(false).
       this-object:PerformLayout().
       catch e as Progress.Lang.Error:
@@ -1164,71 +1443,83 @@ class ibs.th.ref.cashbookfrm inherits Form :
       end catch.
    end method. 
  
-  method public void ShowModalDialog(  ):
+   method public void ShowModalDialog(  ):
       
       wait-for this-object:ShowDialog().
 
-  end method.
+   end method.
 
-  method public void Visual_form( input iChange AS character ): 
+   method public void Visual_form( input iChange AS character ): 
     
-    find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.cli-type
-                                    and ub.clients.obj-code = tt-cashbook.cli-code
-                                    no-error .
-    if available ub.clients
-    then do :
-      this-object:lCli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
-    end.
+      find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.cli-type
+         and ub.clients.obj-code = tt-cashbook.cli-code
+         no-error .
+      if available ub.clients
+         then 
+      do :
+         this-object:lCli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      end.
     
-    find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.CountCash-type
-                                    and ub.clients.obj-code = tt-cashbook.CountCash-code
-                                    no-error .
-    if available ub.clients
-    then do :
-      this-object:lcashcli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
-    end.
-    find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.CountCollect-type
-                                    and ub.clients.obj-code = tt-cashbook.CountCollect-code
-                                    no-error .
-    if available ub.clients
-    then do :
-      this-object:Lincasagent:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
-    end.
-    find first fin-bank where fin-bank.host-code = tt-cashbook.BankRecip-host  
-                          and fin-bank.code-bank = tt-cashbook.BankRecip-code  no-lock no-error.
-    if available fin-bank 
-    then
-       lbankrec:text              = fin-bank.bank-name.                                 
+      find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.CountCash-type
+         and ub.clients.obj-code = tt-cashbook.CountCash-code
+         no-error .
+      if available ub.clients
+         then 
+      do :
+         this-object:lcashcli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      end.
+      find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.CountCollect-type
+         and ub.clients.obj-code = tt-cashbook.CountCollect-code
+         no-error .
+      if available ub.clients
+         then 
+      do :
+         this-object:Lincasagent:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      end.
+      find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.contr-type-transf
+         and ub.clients.obj-code = tt-cashbook.contr-code-transf
+         no-error .
+      if available ub.clients
+         then 
+      do :
+         this-object:lclitrans:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      end.
     
-    find first fin-bank where fin-bank.host-code = tt-cashbook.Bankdepos-host  
-                          and fin-bank.code-bank = tt-cashbook.Bankdepos-code  no-lock no-error.
-    if available fin-bank 
-    then
-       lbankdep:text              = fin-bank.bank-name.                                 
+      find first fin-bank where fin-bank.host-code = tt-cashbook.BankRecip-host  
+         and fin-bank.code-bank = tt-cashbook.BankRecip-code  no-lock no-error.
+      if available fin-bank 
+         then
+         lbankrec:text              = fin-bank.bank-name.                                 
+    
+      find first fin-bank where fin-bank.host-code = tt-cashbook.Bankdepos-host  
+         and fin-bank.code-bank = tt-cashbook.Bankdepos-code  no-lock no-error.
+      if available fin-bank 
+         then
+         lbankdep:text              = fin-bank.bank-name.                                 
     
       
-    if iChange = {&lookup} then 
-    do:  
-      assign
-        this-object:fExtCode:ReadOnly = true
-        this-object:fName:ReadOnly = true
-        this-object:fCorpko:ReadOnly = true
-        this-object:FcorRko:ReadOnly = true
-        this-object:fOsnacct:ReadOnly = true
-        this-object:fTakenFrom:ReadOnly = true
-        this-object:fRuleOsnPko:Enabled = false
-        this-object:fRuleOsnRko:Enabled = false
-        this-object:fRulePril:Enabled = false
-        this-object:FlagSepCash:Enabled = false
-        this-object:FlagSepFuel:Enabled = false
-        this-object:buttonOk:Enabled = false
-        this-object:bChooseOsnAcct:Enabled = false
-        this-object:bChooseCorPko:Enabled = false
-        this-object:bChooseCorRko:Enabled = false
-        this-object:bChooseCli:Enabled = false
-      .
-    end.
-    return.
-  end method .
+      if iChange = {&lookup} then 
+      do:  
+         assign
+            this-object:fExtCode:ReadOnly      = true
+            this-object:fName:ReadOnly         = true
+            this-object:fCorpko:ReadOnly       = true
+            this-object:FcorRko:ReadOnly       = true
+            this-object:fOsnacct:ReadOnly      = true
+            this-object:fTakenFrom:ReadOnly    = true
+            this-object:fRuleOsnPko:Enabled    = false
+            this-object:fRuleOsnRko:Enabled    = false
+            this-object:fRulePril:Enabled      = false
+            this-object:FlagSepCash:Enabled    = false
+            this-object:FlagSepFuel:Enabled    = false
+            this-object:buttonOk:Enabled       = false
+            this-object:bChooseOsnAcct:Enabled = false
+            this-object:bChooseCorPko:Enabled  = false
+            this-object:bChooseCorRko:Enabled  = false
+            this-object:bChooseCli:Enabled     = false
+            .
+      end.
+      return.
+   end method .
  
 end class.

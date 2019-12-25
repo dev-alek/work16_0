@@ -104,6 +104,7 @@ define variable par-type as character no-undo .
 define variable v-tth as handle no-undo .
 define variable mValue as character no-undo.
 define variable mType as character no-undo.
+define variable mTypePay as character no-undo.
 
 define buffer buf_shift-obj for ub.shift-obj.
 { str/dia2auto.i }
@@ -187,8 +188,9 @@ field is-petrol as logical
 field cashbookid as int64
 field is-expense_cash as logical
 field num-expense_cash as int
+field pay-type as char
 index pi is unique primary
-num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid
+num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid pay-type
 .
 
 define temp-table temp-gds no-undo
@@ -272,8 +274,8 @@ procedure proc-main :
 define variable v-count         as integer   no-undo .
 define variable v-tot-r-b-chk   as decimal   no-undo .
 define variable v-tot-r-b-inkas as decimal   no-undo .
-/*define variable v-real-obj-type as character no-undo .
-define variable v-real-obj-code as integer   no-undo .*/
+define variable v-real-obj-type as character no-undo .
+define variable v-real-obj-code as integer   no-undo .
 define variable v-host-code     as integer   no-undo .
 define variable v-host-name     as character no-undo .
 define variable v-base-code     as integer   no-undo .
@@ -584,6 +586,7 @@ define variable v-err               as logical    no-undo .
                     then do :
                       p-by-cash-desk = ub.CashBook.FlagSepCash .
                       p-by-petrol-goods = ub.CashBook.FlagSepFull .
+                      mTypePay          = if chk-gds-pay.line-type = 'grp' then 'grp' else "".
                       /*p-by-osnovanie = if (msum < 0 and ub.CashBook.id ne 0) then ub.CashBook.RuleOsnRko else  ub.CashBook.RuleOsnPko .
                       p-by-pril = ub.CashBook.RulePril */
                       .
@@ -594,6 +597,7 @@ define variable v-err               as logical    no-undo .
                           and (p-by-petrol-goods = no or buf_temp-fin-sum.is-petrol = is-petrolium)
                           and buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
                           and buf_temp-fin-sum.is-expense_cash = (msum < 0 and ub.CashBook.id ne 0 )
+                          and buf_temp-fin-sum.pay-type eq mTypePay
                               no-error.
                     if not available buf_temp-fin-sum then do:
                         create buf_temp-fin-sum.
@@ -607,6 +611,7 @@ define variable v-err               as logical    no-undo .
                                                       else no)
                         buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
                         buf_temp-fin-sum.is-expense_cash = msum < 0 and ub.CashBook.id ne 0
+                        buf_temp-fin-sum.pay-type = mTypePay
                         .
                     end.
                     assign
@@ -1088,10 +1093,10 @@ define variable v-err               as logical    no-undo .
         release buf_temp-tax.
       end. /*      for each buf_temp-gds no-lock where*/
      end. /*    for each buf_sale-doc no-lock where*/
-    /* assign
+     assign
      v-real-obj-type = buf_trn-doc.cli-type
      v-real-obj-code = buf_trn-doc.cli-code
-     . */
+     . 
      empty temp-table temp-gds.
    end. /*   for each buf_inkas no-lock where*/
    
@@ -1156,8 +1161,8 @@ define variable v-err               as logical    no-undo .
                       ,input buf_shift-obj.obj-code
                       ,input 0 /*p-contract-code*/
                       ,input '' /*p-ob-doc-code*/
-                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-type")  /*p-receiver-type*/
-                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-code") /*p-receiever-code*/
+                      ,input if buf_temp-fin-sum.pay-type eq "grp" then mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-type") else v-real-obj-type  /*p-receiver-type*/ 
+                      ,input if buf_temp-fin-sum.pay-type eq "grp" then int(mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-code")) else v-real-obj-code /*p-receiever-code*/
                       ,input 0 /*p-payer-code-schet*/
                       ,input {&cmp} /*p-receiver-type*/
                       ,input v-host-code /*p-receiver-code*/
@@ -1192,8 +1197,8 @@ define variable v-err               as logical    no-undo .
                       ,input {&cmp} /*p-payer-type*/
                       ,input v-host-code /*p-payer-code*/
                       ,input 0 /*p-payer-code-schet*/
-                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-type")  /*p-receiver-type*/
-                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-code") /*p-receiever-code*/
+                      ,input  mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, if buf_temp-fin-sum.pay-type eq "grp" and buf_temp-fin-sum.cashbookid eq 0 then "contr-type-transf" else "CountCash-type"  )  /*p-receiver-type*/
+                      ,input int( mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, if buf_temp-fin-sum.pay-type eq "grp" and buf_temp-fin-sum.cashbookid eq 0 then "contr-code-transf" else "CountCash-code")) /*p-receiever-code*/
                       ,input 0 /*p-receiver-code-schet*/
                       ,input buf_temp-fin-sum.curr-code
                       ,input 0 /*p-cor-acc*/
@@ -1293,10 +1298,15 @@ define variable v-err               as logical    no-undo .
         find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
       end.
       if available ub.CashBook
+      
       then do :
         p-by-cash-desk = ub.CashBook.FlagSepCash .
         p-by-petrol-goods = ub.CashBook.FlagSepFull .
-        p-by-osnovanie = if buf_temp-fin-sum.is-expense_cash then ub.CashBook.RuleOsnRko else ub.CashBook.RuleOsnPko .
+        p-by-osnovanie = if buf_temp-fin-sum.is-expense_cash 
+                         then (if buf_temp-fin-sum.pay-type eq "grp"
+                         then mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "rule-osn-transf")
+                         else ub.CashBook.RuleOsnRko) 
+                         else ub.CashBook.RuleOsnPko .
         p-by-pril = ub.CashBook.RulePril .
       end.
 
@@ -1372,7 +1382,7 @@ define variable v-err               as logical    no-undo .
         end.
       end.
       
-      mCashBook = new ibs.th.ref.cashbookstorage () .
+      
       o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
       
       
@@ -1380,7 +1390,10 @@ define variable v-err               as logical    no-undo .
       if available ub.CashBook
       then do :
         tt-fin-doc.cor-acc-value  = if  buf_temp-fin-sum.tot-sum > 0 then ub.CashBook.CorrPko else ub.CashBook.OsnAcct .
-        tt-fin-doc.cor-acc1-value = if  buf_temp-fin-sum.tot-sum < 0 then ub.CashBook.CorrRko else ub.CashBook.OsnAcct.
+        tt-fin-doc.cor-acc1-value = if  buf_temp-fin-sum.tot-sum < 0 
+                                    then (if buf_temp-fin-sum.pay-type eq "grp" 
+                                    then mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "Corr-transf") 
+                                    else ub.CashBook.CorrRko) else ub.CashBook.OsnAcct.
         
         if buf_temp-fin-sum.tot-sum > 0
         then do: 

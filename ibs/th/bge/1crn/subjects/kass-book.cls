@@ -32,7 +32,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     private set.
   define property rule-reason   as character    no-undo get. 
     private set.
-  define property RuleOsnRko    as character    no-undo get. 
+  define property Rule-Osn-Rko    as character    no-undo get. 
     private set.
   define property code-payer    as integer      no-undo get. 
     private set.
@@ -48,7 +48,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     private set.
   define property debit         as character    no-undo get. 
     private set.
-  define property CorrRko       as character    no-undo get. 
+  define property Corr-Rko       as character    no-undo get. 
     private set.
   define property post-chief    as character      no-undo get. 
     private set.
@@ -74,12 +74,21 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     private set.
   define property pin   as character  no-undo get. 
     private set.
-  define property bank-resive   as character  no-undo get. 
+  define property bank-resive   as integer   no-undo get. 
     private set.
-  define property bank-deposit   as character  no-undo get. 
+  define property bank-deposit   as integer   no-undo get. 
     private set.
-  define property cont-inkass   as character  no-undo get. 
+  define property cont-inkass   as integer   no-undo get. 
     private set.
+  define property contr-code-rko   as integer   no-undo get. 
+    private set.
+  define property Corr-transf       as character    no-undo get.
+  private set.
+  define property rule-osn-transf       as character    no-undo get.
+  private set.
+  define property contr-code-transf       as integer    no-undo get.
+  private set.
+  
   define property kb-gds            as ibs.th.bge.1crn.subjects.subjects no-undo
     get. 
     private set.
@@ -113,8 +122,8 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
         basic-kb         = {&attr-integer} .
       when "rule-reason"      then 
         rule-reason      = {&attr-str} .
-      when "RuleOsnRko"       then 
-        RuleOsnRko       = {&attr-str} .
+      when "Rule-Osn-Rko"       then 
+        Rule-Osn-Rko       = {&attr-str} .
       when "code-payer"       then 
         code-payer       = {&attr-integer} .
       when "rule-payer"       then 
@@ -129,8 +138,8 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
         kredit           = {&attr-str} .
       when "debit"            then 
         debit            = {&attr-str} .
-      when "CorrRko"          then 
-        CorrRko            = {&attr-str} .
+      when "Corr-Rko"          then 
+        Corr-Rko            = {&attr-str} .
       when "post-chief"       then 
         post-chief       = {&attr-str} .
       when "fio-chief"        then 
@@ -156,11 +165,19 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "pin" then 
         pin = {&attr-str} .
       when "bank-resive" then 
-        bank-resive = {&attr-str} .
+        bank-resive = {&attr-integer} .
       when "bank-deposit" then 
-        bank-deposit = {&attr-str} .
+        bank-deposit = {&attr-integer} .
       when "cont-inkass" then 
         cont-inkass = {&attr-str} .
+      when "contr-code-rko" then 
+        contr-code-rko = {&attr-integer} .
+        when "Corr-transf" then 
+        Corr-transf = {&attr-str} .
+        when "rule-osn-transf" then 
+        rule-osn-transf = {&attr-str} .
+        when "contr-code-transf" then 
+        contr-code-transf = {&attr-integer} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -211,36 +228,40 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   
   method override protected void ClearSub():
     assign
-      code_            = ?
-      del-l            = ?
-      del-f            = ?
-      name_            = ?
-      basic-kb         = ?
-      rule-reason      = "Не заполнять"
-      code-payer       = ?
-      rule-payer       = ?
-      rule-att         = ?
-      ind-kass-pko     = ?
-      apart-np-tnp     = ?
-      kredit           = ?
-      debit            = ?
-      post-chief       = ?
-      fio-chief        = ?
-      fio-booker       = ?
-      acc-shift        = ?
-      pko-prefix       = ?
-      rko-prefix       = ?
-      struct-unit      = ?
-      struct-unit-name = ?
-      struct-unit-type = ?
-      struct-unit-code = ?
-      RuleOsnRko       = ?
-      CorrRko          = ?
-      code-symbol      = ?
-      pin              = ?
-      bank-resive      = ?
-      bank-deposit     = ?
-      cont-inkass      = ?
+      code_             = ?
+      del-l             = ?
+      del-f             = ?
+      name_             = ?
+      basic-kb          = ?
+      rule-reason       = "Не заполнять"
+      code-payer        = ?
+      rule-payer        = ?
+      rule-att          = ?
+      ind-kass-pko      = ?
+      apart-np-tnp      = ?
+      kredit            = ?
+      debit             = ?
+      post-chief        = ?
+      fio-chief         = ?
+      fio-booker        = ?
+      acc-shift         = ?
+      pko-prefix        = ?
+      rko-prefix        = ?
+      struct-unit       = ?
+      struct-unit-name  = ?
+      struct-unit-type  = ?
+      struct-unit-code  = ?
+      Rule-Osn-Rko      = ?
+      Corr-Rko          = ?
+      code-symbol       = ?
+      pin               = ?
+      bank-resive       = ?
+      bank-deposit      = ?
+      cont-inkass       = ?
+      contr-code-rko    = ?
+      Corr-transf       = ?
+      rule-osn-transf   = ?
+      contr-code-transf = ?
       .
     if valid-object(kb-gds)        then delete object kb-gds .
   end method.
