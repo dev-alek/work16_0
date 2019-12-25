@@ -4129,6 +4129,8 @@ run fltfield-add in this-procedure('PS', '', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('factur-date', 'Дата генерации счета-фактуры', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+run fltfield-add in this-procedure('CashBookId', 'Кассовая книга', '',
+input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 
 Filter-Block:
 DO ON STOP    UNDO Filter-Block, LEAVE Filter-Block
