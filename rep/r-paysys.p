@@ -46,20 +46,22 @@ define input parameter table for tt-promo .
 { ref/gds-attr.i }
 { gbl/prn-lib.i     }
 { rep/html-conv.i }
+{ str/is-min_max.i }
 
 /* Temp-Table and Buffer definitions                                    */
 
     
-DEFINE TEMP-TABLE tt-pay NO-UNDO 
-  field id      as integer
-  field pay-sys as character 
-  field bin     as character
-  INDEX pi id pay-sys.
+DEFINE TEMP-TABLE tt-promo-bin NO-UNDO 
+  field idAction as integer 
+  field min_bin  as integer
+  field max_bin  as integer
+  INDEX pi idAction .
 
-DEFINE TEMP-TABLE tt-pays NO-UNDO 
-  field bin     as integer
-  field pay-sys as character
-  INDEX pi bin .
+DEFINE TEMP-TABLE tt-code NO-UNDO 
+  field min_code as integer
+  field max_code as integer
+  field CodeName as character
+  INDEX pi CodeName .
               
 DEFINE TEMP-TABLE tt-cash-pay like ub.cash-pay-attr 
   field obj-name as character . 
@@ -102,14 +104,16 @@ DEFINE variable text-string         as char      no-undo.
 
 define buffer buf_chk-doc       for ub.chk-doc .
 define buffer buf_chk-pay       for ub.chk-pay .
+define buffer bf_chk-pay        for ub.chk-pay .
 define buffer buf_cash-pay-attr for ub.cash-pay-attr .
-define buffer buf_tt-pay        for tt-pay .
-define buffer buf_tt-pays       for tt-pays .
+define buffer buf_tt-code       for tt-code .
+define buffer buf_tt-promo-bin  for tt-promo-bin .
 define buffer buf_pay-sys       for tt-pay-sys .
 define buffer buf_chk-discnt    for ub.chk-discnt .
 define buffer buf_tt-promo      for tt-promo .
 define buffer buf_clients       for ub.clients .
 define buffer buf_code          for ub.code.
+define buffer buf_PromoGoods    for ub.PromoGoods .
 do
   on error undo, return error return-value
   :
@@ -124,63 +128,99 @@ do
   end.
   
 end.
-empty temp-table tt-pay .
-empty temp-table tt-pays .
+empty temp-table tt-code .
+empty temp-table tt-promo-bin .
 empty temp-table tt-pay-sys .
 empty temp-table tt-cash-pay .
 v-itog-sum = 0 .
 v-itog-tran = 0 .
 
-  for each buf_code no-lock where buf_code.status_ = {&bef-current-status-int}:
-    if num-entries (buf_code.parent,{&delim-par}) > 1 then do:
+/*Сбор бинов платежной системы*/
+for each buf_code no-lock where buf_code.status_ = {&bef-current-status-int}:
+  if num-entries (buf_code.parent,{&delim-par}) > 1 then 
+  do:
     if num-entries (buf_code.code,",") > 1 then 
     do:
       do jj = 1 to num-entries (buf_code.code,","):
         v-pay-sys = entry(jj,buf_code.code) .
         if num-entries (v-pay-sys,"-") > 1 then 
         do:
-          do kk = integer(entry(1,v-pay-sys,"-")) to integer(entry(2,v-pay-sys,"-")):
-            create tt-pays .
-            assign
-              tt-pays.bin     = kk
-              tt-pays.pay-sys = buf_code.CodeName
-              .
-          end.  
+          create tt-code .
+          assign
+            tt-code.min_code = MinInt(integer(entry(1,v-pay-sys,"-")))
+            tt-code.max_code = MaxInt(integer(entry(2,v-pay-sys,"-")))
+            tt-code.CodeName = buf_code.CodeName
+            .
         end.  
         else 
         do:
-          create tt-pays .
+          create tt-code .
           assign
-            tt-pays.bin     = integer(entry(jj,buf_code.code))
-            tt-pays.pay-sys = buf_code.CodeName
+            tt-code.min_code = MinInt(integer(v-pay-sys))
+            tt-code.max_code = MaxInt(integer(v-pay-sys))
+            tt-code.CodeName = buf_code.CodeName
             .
         end.  
       end.  
     end.   
     else 
     do:
-      v-pay-sys = buf_code.code .
-      if num-entries (v-pay-sys,"-") > 1 then 
+      if num-entries (buf_code.code,"-") > 1 then 
       do:
-        do kk = integer(entry(1,v-pay-sys,"-")) to integer(entry(2,v-pay-sys,"-")):
-          create tt-pays .
-          assign
-            tt-pays.bin     = kk
-            tt-pays.pay-sys = buf_code.codeName
-            .
-        end.  
+        create tt-code .
+        assign
+          tt-code.min_code = MinInt(integer(entry(1,buf_code.code,"-")))
+          tt-code.max_code = MaxInt(integer(entry(2,buf_code.code,"-")))
+          tt-code.CodeName = buf_code.CodeName
+          .
       end.  
       else 
       do:
-        create tt-pays .
+        create tt-code .
         assign
-          tt-pays.bin     = integer(buf_code.code)
-          tt-pays.pay-sys = buf_code.CodeName
+          tt-code.min_code = MinInt(integer(buf_code.code))
+          tt-code.max_code = MaxInt(integer(buf_code.code))
+          tt-code.CodeName = buf_code.CodeName
           .
       end.      
     end.  
   end.  
 end.
+
+/*Сбор бинов акций*/
+for each buf_tt-promo no-lock where buf_tt-promo.end-date >= x-Date-Start and buf_tt-promo.beg-date <= x-Date-End:
+  for each buf_PromoGoods no-lock where buf_PromoGoods.type = 5 and buf_PromoGoods.idAction = buf_tt-promo.id and buf_PromoGoods.db-num = buf_tt-promo.db-num:
+    if num-entries (buf_PromoGoods.NameSet,"-") > 1 then 
+    do:
+      create tt-promo-bin .
+      assign
+        tt-promo-bin.min_bin  = MinInt(integer(entry(1,buf_PromoGoods.NameSet,"-")))
+        tt-promo-bin.max_bin  = MaxInt(integer(entry(2,buf_PromoGoods.NameSet,"-")))
+        tt-promo-bin.idAction = buf_PromoGoods.idAction
+        .
+    end.  
+    else 
+    do:
+      create tt-promo-bin .
+      assign
+        tt-promo-bin.min_bin  = MinInt(integer(buf_PromoGoods.NameSet))
+        tt-promo-bin.max_bin  = MaxInt(integer(buf_PromoGoods.NameSet))
+        tt-promo-bin.idAction = buf_PromoGoods.idAction
+        .
+    end.      
+  end.  
+end.
+/*output to c:\temp\promo-bin.txt.*/
+/*  for each tt-promo-bin:        */
+/*    export tt-promo-bin .       */
+/*  end.                          */
+/*output close.                   */
+/*                                */
+/*output to c:\temp\code.txt.     */
+/*  for each tt-code:             */
+/*    export tt-code .            */
+/*  end.                          */
+/*output close.                   */
 
 DEFINE VARIABLE v-dop   AS character NO-UNDO .
 DEFINE VARIABLE v-value AS character NO-UNDO.
@@ -230,6 +270,7 @@ for each obj-list no-lock:
       and buf_chk-doc.obj-type = obj-list.obj-type
       and buf_chk-doc.shift-date >= x-Date-Start 
       and buf_chk-doc.shift-date <= x-Date-End
+      and buf_chk-doc.chk-type = integer({&rcpt-sale})
       and buf_chk-doc.out-code <> ?:
 
       if (buf_chk-doc.shift-date = X-date-Start)
@@ -246,6 +287,7 @@ for each obj-list no-lock:
       and buf_chk-doc.obj-type = obj-list.obj-type
       and buf_chk-doc.chk-date >= x-Date-Start 
       and buf_chk-doc.chk-date <= x-Date-End
+      and buf_chk-doc.chk-type = integer({&rcpt-sale})
       and buf_chk-doc.out-code <> ?:
       run report .
     end.  
@@ -257,10 +299,10 @@ end.
 procedure report:
   for each buf_chk-pay no-lock where buf_chk-pay.doc-code = buf_chk-doc.doc-code,
     first tt-cash-pay no-lock where tt-cash-pay.curr-code = buf_chk-pay.curr-code and tt-cash-pay.cdpay-code = buf_chk-pay.pay-code:
-        find first buf_tt-pays no-lock where buf_chk-pay.pay-card begins string(buf_tt-pays.bin) no-error .
-    if available (buf_tt-pays) then 
+    find first buf_tt-code no-lock where substring (buf_chk-pay.pay-card,1,6) >= string (buf_tt-code.min_code) and substring (buf_chk-pay.pay-card,1,6) <= string (buf_tt-code.max_code) no-error .
+    if available (buf_tt-code) then 
     do:
-      v-pay-name = buf_tt-pays.pay-sys .
+      v-pay-name = buf_tt-code.CodeName .
     end.
     else v-pay-name = "Прочие" .  
     find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = v-pay-name no-error .
@@ -281,9 +323,7 @@ procedure report:
         buf_pay-sys.pay-sum  = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
         .      
     end.    
-    for each tt-promo no-lock,
-      each buf_chk-discnt no-lock where buf_chk-discnt.promo-id = string(tt-promo.id) and buf_chk-discnt.doc-code = buf_chk-pay.doc-code 
-      and buf_chk-discnt.record-type = 0 :
+    for first buf_tt-promo-bin no-lock where substring (buf_chk-pay.pay-card,1,6) >= string (buf_tt-promo-bin.min_bin) and substring (buf_chk-pay.pay-card,1,6) >= string (buf_tt-promo-bin.max_bin):
       find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = "Премиальные карты " + v-pay-name no-error .
       if available (buf_pay-sys) then 
       do:
@@ -302,28 +342,35 @@ procedure report:
           buf_pay-sys.pay-sum    = buf_chk-pay.tot-sum
           .        
       end.    
-          if p-sum <> ? and p-sum <> 0 then do:
-     if buf_chk-pay.tot-sum > p-sum or buf_chk-pay.tot-sum = p-sum then do:
-      find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = string("Премиальные карты " + v-pay-name + " более " + string(p-sum) + "р.") no-error .
-      if available (buf_pay-sys) then 
+      if p-sum <> ? and p-sum <> 0 then 
       do:
-        assign
-          buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1
-          buf_pay-sys.pay-sum  = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
-          .      
-      end.
-      else 
-      do:
-        create buf_pay-sys .
-        assign
-          buf_pay-sys.pay-second = v-pay-name
-          buf_pay-sys.pay-name   = string("Премиальные карты " + v-pay-name + " более " + string(p-sum)  + "р.")
-          buf_pay-sys.pay-qnty   = 1
-          buf_pay-sys.pay-sum    = buf_chk-pay.tot-sum
-          .        
-      end.    
-    end.  
-    end.  
+        if buf_chk-pay.tot-sum > p-sum or buf_chk-pay.tot-sum = p-sum then 
+        do:
+          for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-doc.doc-code and buf_chk-discnt.promo-id = string(tt-promo-bin.idAction) and buf_chk-discnt.record-type = 0 :
+            find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = string("Премиальные карты " + v-pay-name + " более " + string(p-sum) + "р.") no-error .
+            if available (buf_pay-sys) then 
+            do:
+              assign
+                buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1
+                buf_pay-sys.pay-sum  = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
+                .      
+            end.
+            else 
+            do:
+              create buf_pay-sys .
+              assign
+                buf_pay-sys.pay-second = v-pay-name
+                buf_pay-sys.pay-name   = string("Премиальные карты " + v-pay-name + " более " + string(p-sum)  + "р.")
+                buf_pay-sys.pay-qnty   = 1
+                buf_pay-sys.pay-sum    = buf_chk-pay.tot-sum
+                .
+            for each bf_chk-pay no-lock where bf_chk-pay.doc-code = buf_chk-pay.doc-code and bf_chk-pay.tot-sum < 0 : 
+              buf_pay-sys.pay-sum = buf_pay-sys.pay-sum + bf_chk-pay.tot-sum .
+            end.
+            end.    
+          end.
+        end.  
+      end.  
   
     end.
   end.  
