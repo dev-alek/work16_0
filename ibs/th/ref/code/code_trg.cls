@@ -350,7 +350,7 @@ class ibs.th.ref.code.code_trg final:
        find first code where recid(code) eq tt-code-brw.Frecid no-lock no-error.
        if available code 
        then do:
-          if search(Code.procdel) ne ?
+          if searchlocal(Code.procdel) ne ?
           then 
              run value (Code.procdel) (recid(code)).
           else do:
@@ -428,7 +428,7 @@ class ibs.th.ref.code.code_trg final:
        define buffer buf_code for code.
        define variable vproc as character no-undo.
        vproc = getprocedit(ibuffertt).
-       if search(vproc) ne ?
+       if searchlocal(vproc) ne ?
        then
           run value(vproc) (Imode  ,ibuffertt,output Vsave ).
        else do:
@@ -527,5 +527,22 @@ class ibs.th.ref.code.code_trg final:
             then
                 tt-code-brw.fchange = vFlag.
                
+   end.
+   method public character  searchlocal(ifile as character  ):
+       define variable vFile as character no-undo.
+       define variable vendfile as character no-undo.
+       if iFile <> "" and iFile <> ? then 
+       vendfile = entry(num-entries(ifile,"."),ifile,".").
+       if    vendfile eq "r"
+          or vendfile eq "p"
+       then
+          entry(num-entries(ifile,"."),ifile,".") = "".
+       vFile = search(ifile + "p" ).
+       if vFile ne ?
+       then
+          return vFile.
+       else 
+          return search(ifile + "r" ).
+       
    end.
 end class.
