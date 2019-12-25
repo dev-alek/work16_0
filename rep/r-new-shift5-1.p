@@ -241,12 +241,12 @@ define variable v-cashbookid      as integer   no-undo .
         .
         run report-exec in this-procedure .
 
-        if is-rosneft then do: 
+/*        if is-rosneft then do:*/
             assign
                 temp-fin-doc.income-realiZ = temp-fin-doc.income-realiZ + temp-fin-doc.income-other
                 temp-fin-doc.income-other = 0
                 . 
-        end.        
+/*        end.*/
 /*шапка таблицы HTML*/
          
 output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
@@ -254,14 +254,16 @@ put stream OutStr-html unformatted
   substitute (
   '<tbody> <!-- Здесь начинается таблица отчета -->
             <tr> <!-- Первые строки – шапка таблицы с тэгами tr -->
-                <th colspan="7" style="text-align: center;">Движение денежных средств</th>
+                <th colspan="9" style="text-align: center;">Движение денежных средств</th>
             </tr>
             <tr>
                 <th rowspan="2" style="text-align: center;">Кассовая книга</th>
                 <th rowspan="2" style="text-align: center;">Остаток денежных средств на начало смены</th>
+                <th rowspan="2" style="text-align: center;">в т.ч. кассовый фонд</th>
                 <th colspan="2" style="text-align: center;">Приход</th>
                 <th colspan="2" style="text-align: center;">Расход</th>
                 <th rowspan="2" style="text-align: center;">Остаток денежных средств на конец смены</th>
+                <th rowspan="2" style="text-align: center;">в т.ч. кассовый фонд</th>
             </tr>
             <tr>
                 <th style="text-align: center;">Реализация</th>
@@ -276,7 +278,9 @@ put stream OutStr-html unformatted
                 <th style="text-align: center;">5.4</th>
                 <th style="text-align: center;">5.5</th>
                 <th style="text-align: center;">5.6</th>
-                <th style="text-align: center;">5.7</th>      
+                <th style="text-align: center;">5.7</th>
+                <th style="text-align: center;">5.8</th>
+                <th style="text-align: center;">5.9</th>      
             </tr>
             '
   , chr(123), chr(125)
@@ -288,11 +292,13 @@ put stream OutStr-html unformatted
       '<tr>
                 <td num="#0.00" style="text-align: right;">&1</td>
                 <td num="#0.00" style="text-align: right;">&2</td>
+                <td num="#0.00" style="text-align: right;"></td>
                 <td num="#0.00" style="text-align: right;">&3</td>
                 <td num="#0.00" style="text-align: right;">&4</td>
                 <td num="#0.00" style="text-align: right;">&5</td>
                 <td num="#0.00" style="text-align: right;">&6</td>
                 <td num="#0.00" style="text-align: right;">&7</td>
+                <td num="#0.00" style="text-align: right;"></td>
             </tr>    
                 '
            ,
@@ -322,11 +328,13 @@ put stream OutStr-html unformatted
       '<tr>
                 <td num="#0.00" style="text-align: right;">Итого:</td>
                 <td num="#0.00" style="text-align: right;">&1</td>
+                <td num="#0.00" style="text-align: right;"></td>
                 <td num="#0.00" style="text-align: right;">&2</td>
                 <td num="#0.00" style="text-align: right;">&3</td>
                 <td num="#0.00" style="text-align: right;">&4</td>
                 <td num="#0.00" style="text-align: right;">&5</td>
                 <td num="#0.00" style="text-align: right;">&6</td>
+                <td num="#0.00" style="text-align: right;"></td>
             </tr>    
                 '
            ,
@@ -351,65 +359,65 @@ put stream OutStr-html unformatted
       substitute (
       '<tfoot>
        <tr style="height:30px;">
-                <td colspan="7"></td>
+                <td colspan="9"></td>
        </tr>
        <tr>
-                <td style="text-align: left;">Принято по смене</td>
+                <td colspan="3" style="text-align: left;">Принято по смене</td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: left;">&1</td>
        </tr>               
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>     
        <tr>
-                <td style="text-align: left;">Выручка за смену</td>
+                <td colspan="3" style="text-align: left;">Выручка за смену</td>
                 <td style="text-align: right;"></td>
                 <td colspan="6" style="text-align: left;">&2</td>
        </tr>  
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>     
        <tr>
-                <td style="text-align: left;">Сдано: в банк</td>
+                <td colspan="3" style="text-align: left;">Сдано: в банк</td>
                 <td style="text-align: right;"></td>
                 <td colspan="6" style="text-align: left;">&3</td>
        </tr>  
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>     
        <tr>
-                <td style="text-align: left;">Сдано: в офис</td>
+                <td colspan="3" style="text-align: left;">Сдано: в офис</td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: left;">&4</td>
        </tr>  
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>     
        <tr>
-                <td style="text-align: left;">Итого инкассировано</td>
+                <td colspan="3" style="text-align: left;">Итого инкассировано</td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: left;">&5</td>
        </tr>                                
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>     
        <tr>
-                <td style="text-align: left;">Передано по смене: наличных денег</td>
+                <td colspan="3" style="text-align: left;">Передано по смене: наличных денег</td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: left;">&6</td>
        </tr>     
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="5" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>     
@@ -429,25 +437,25 @@ put stream OutStr-html unformatted
       substitute (
       '<tfoot>
        <tr style="height:30px;">
-                <td colspan="7"></td>
+                <td colspan="9"></td>
        </tr>
        <tr>
-                <td colspan="2" style="text-align: left;">Принято по смене</td>
+                <td colspan="4" style="text-align: left;">Принято по смене</td>
                 <td style="text-align: right;"></td>
                 <td colspan="4" style="text-align: left;">&1</td>
        </tr>  
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="4" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>                    
        <tr>
-                <td colspan="2" style="text-align: left;">Передано по смене: наличных денег</td>
+                <td colspan="4" style="text-align: left;">Передано по смене: наличных денег</td>
                 <td style="text-align: right;"></td>
                 <td colspan="4" style="text-align: left;">&2</td>
        </tr>
        <tr>
-                <td colspan="2" style="text-align: left;"></td>
+                <td colspan="4" style="text-align: left;"></td>
                 <td style="text-align: right;"></td>
                 <td colspan="4" style="text-align: center; border-top: 1px solid black;">(прописью)</td>
        </tr>     
@@ -745,7 +753,6 @@ for each buf_cashbook no-lock where buf_cashbook.Status_ = 0:
           create temp-fin-doc.
           assign
                 temp-fin-doc.cashbookid     = buf_cashbook.id
-                temp-fin-doc.cashbook       = buf_cashbook.CashBookName
                 temp-fin-doc.ost-begin      = v-ost-begin
                 temp-fin-doc.income-realiZ  = v-income-realiZ
                 temp-fin-doc.income-other   = v-income-other
@@ -753,7 +760,7 @@ for each buf_cashbook no-lock where buf_cashbook.Status_ = 0:
                 temp-fin-doc.expense-other  = v-expense-other
                 temp-fin-doc.ost-end        = v-ost-begin + ( v-income-realiZ + v-income-other ) - ( v-expense-bank + v-expense-other )
         .
-        
+        if buf_cashbook.id = 0 then temp-fin-doc.cashbook       = "Основная деятельность" .        
 end. 
 end. 
 

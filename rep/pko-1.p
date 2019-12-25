@@ -39,7 +39,7 @@ define variable g#quest-print   as logical      no-undo.
 { cmp/r-pril.i new }
 { gbl/prn-lib.i }
 { rep/frmlib.i }
-
+{ rep/rpp1xl.i  }
 define variable Line              as character no-undo .
 define variable v-str-podr-name   as character no-undo .
 define variable v-payer-name-p1   as character no-undo .
@@ -188,7 +188,7 @@ on error undo, return error return-value
       where ub.shop.obj-code = buf_fin-doc.str-podr-code
         no-error.
         if available ub.shop then do:
-          assign v-str-podr-name = buf_fin-doc.str-podr-name + " " + ub.shop.addres1.
+          assign v-str-podr-name = buf_fin-doc.str-podr-name.
         end.
     end.
     when {&stock} then do:
@@ -238,6 +238,7 @@ on error undo, return error return-value
   v-sum-doc-l1 = v-sum-doc-l1 +  fill("-":U, 66 - length(v-sum-doc-l1))
   v-sum-doc-l1 = caps(substring(v-sum-doc-l1, 1, 1)) + substring(v-sum-doc-l1, 2)
   .
+  
   assign
   v-including = replace(buf_fin-doc.including, "@":U, "":U)
   v-including = trim(v-including, {&comma-char})
@@ -502,7 +503,8 @@ on error undo, return error return-value
     '</tr>' skip     .
       put stream OutStr-html unformatted
     '<tr>' skip
-    '<td colspan="49" style="text-align: center; border-bottom: 1px solid black;">' + v-str-podr-name + '</td>' skip
+    '<td colspan="39" style="text-align: center; border-bottom: 1px solid black;">' + v-str-podr-name + '</td>' skip
+    '<td colspan="10" style="text-align: right;"></td>' skip
     '<td></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
@@ -512,18 +514,19 @@ on error undo, return error return-value
     '</tr>' skip    .
       put stream OutStr-html unformatted
     '<tr>' skip
-    '<td colspan="49" style="text-align:center; font-size: 10px;">(структурное подразделение)</td>' skip
+    '<td colspan="39" style="text-align:center; font-size: 10px;">(структурное подразделение)</td>' skip
+    '<td colspan="10" style="text-align: right;"></td>' skip
     '<td colspan="16" style="text-align:center;"></td>' skip
     '<td></td>' skip
     '<td style="text-align: center; border-left: 1px solid black; border-right: 1px solid black;">л</td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td></td>' skip
     '<td colspan="4" style="text-align:right;">от "</td>' skip
-    '<td colspan="4" style="text-align:left; border-bottom: 1px solid black;">' + string(day(v-date-create), "99":U) + '</td>' skip
+    '<td colspan="4" style="text-align:center; border-bottom: 1px solid black;">' + string(day(v-date-create), "99":U) + '</td>' skip
     '<td colspan="2" style="text-align:left;">"</td>' skip
-    '<td colspan="15" style="text-align:left; border-bottom: 1px solid black;">' + MonthNameRusGen(Month(v-date-create)) + '</td>' skip
+    '<td colspan="15" style="text-align:center; border-bottom: 1px solid black;">' + MonthNameRusGen(Month(v-date-create)) + '</td>' skip
     '<td colspan="1" style="text-align:left;"></td>' skip
-    '<td colspan="6" style="text-align:left; border-bottom: 1px solid black;">' + string(Year(v-date-create), "9999") + '</td>' skip
+    '<td colspan="6" style="text-align:center; border-bottom: 1px solid black;">' + string(Year(v-date-create), "9999") + '</td>' skip
     '<td colspan="2" style="text-align:left;">г.</td>' skip
     '<td colspan="6" style="text-align:left;"></td>' skip
     '</tr>' skip    .
@@ -589,9 +592,9 @@ on error undo, return error return-value
       put stream OutStr-html unformatted
     '<tr>' skip
     '<td text_wrap="true" rowspan="3" colspan="4" style="text-align: center; border: 1px solid black;"></td>' skip
-    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">код струк- турного подразде- ления</td>' skip
-    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">корреспон- дирующий счет, субсчет</td>' skip
-    '<td text_wrap="true" colspan="11" rowspan="3" style="text-align: center; border: 1px solid black;">код аналити- ческого учета</td>' skip
+    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">код структурного подразделения</td>' skip
+    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">корреспондирующий счет, субсчет</td>' skip
+    '<td text_wrap="true" colspan="11" rowspan="3" style="text-align: center; border: 1px solid black;">код аналитического учета</td>' skip
     '<td></td>' skip
     '<td text_wrap="true" style="border-left: 1px solid black; border-right: 1px solid black; text-align: center;">и</td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
@@ -618,7 +621,7 @@ on error undo, return error return-value
     '<tr>' skip
     '<td text_wrap="true" colspan="6" rowspan="2" style="text-align: center; border: 1px solid black;">' + string(buf_fin-doc.cor-acc1-value) + '</td>' skip
     '<td text_wrap="true" colspan="4" rowspan="2" style="text-align: center; border: 1px solid black;"></td>' skip
-    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.str-podr-code = 0 then "-"  + '</td>' else string(buf_fin-doc.str-podr-code) + '</td>' skip
+    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + "-" + '</td>' skip
     '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.cor-acc-value = "" then "-"  + '</td>' else buf_fin-doc.cor-acc-value + '</td>' skip
     '<td text_wrap="true" colspan="11" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.an-uchet-value = "" then "-"  + '</td>' else buf_fin-doc.an-uchet-value + '</td>' skip
     '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + Sum-delim-with-defis(buf_fin-doc.sum-doc, 14) + '</td>' skip
@@ -630,24 +633,7 @@ on error undo, return error return-value
     '<td></td>' skip
     '<td colspan="41" style="text-align: center;"></td>' skip
     '</tr>' skip  .
-  if buf_fin-doc.curr-code = 0                                                                                                                          
-    then                                                                                                                                                   
-    Sum-Rub-Kop-Digit ( INPUT buf_fin-doc.sum-doc                                                                                                          
-      ,INPUT 64                                                                                                                           
-      ,INPUT 4                                                                                                                            
-      ,INPUT v-fill                                                                                                                       
-      ,INPUT ""                                                                                                                           
-      ,INPUT v-rub                                                                                                                        
-      ,INPUT v-kop                                                                                                                        
-      )  .                                                                                                                              
-  else                                                                                                                                                   
-    Sum-Invalut-Digit ( INPUT buf_fin-doc.sum-doc                                                                                                          
-      ,INPUT 79                                                                                                                           
-      ,Input buf_fin-doc.curr-code                                                                                                        
-      ,INPUT v-fill           
-      ,INPUT ""                                                                                                                           
-      )
-      .
+
       put stream OutStr-html unformatted
     '<tr>' skip
     '<td></td>' skip
@@ -656,7 +642,7 @@ on error undo, return error return-value
     '<td></td>' skip
     '<td colspan="6" style="text-align: center;">Сумма</td>' skip
 /*    '<td colspan="17" style="text-align: center; border-bottom: 1px solid black;"></td>' skip*/
-    '<td colspan="34" style="text-align: left; border-bottom: 1px solid black;">' + string(v-sumRubKop) + '</td>' skip
+    '<td colspan="34" style="text-align:left; border-bottom: 1px solid black;">' + string(v-sumRubKop) + '</td>' skip
 /*    '<td colspan="3" style="text-align: center;"></td>' skip*/
     '</tr>' skip      .
       put stream OutStr-html unformatted
@@ -716,7 +702,7 @@ on error undo, return error return-value
       put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="6" style="text-align: left;">Сумма</td>' skip
-    '<td colspan="59" style="text-align: right; border-bottom: 1px solid black;">' + v-sum-doc-l1 + '</td>' skip
+    '<td colspan="59" style="text-align: left; border-bottom: 1px solid black;">' + v-sum-doc-l1 + '</td>' skip
     '<td></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black; text-align: center;">е</td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
@@ -745,11 +731,11 @@ on error undo, return error return-value
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td></td>' skip
     '<td colspan="2" style="text-align: right;">"</td>' skip
-    '<td colspan="4" style="text-align: left; border-bottom: 1px solid black;">' + string(day(v-date-create), "99":U) + '</td>' skip
+    '<td colspan="4" style="text-align: center; border-bottom: 1px solid black;">' + string(day(v-date-create), "99":U) + '</td>' skip
     '<td colspan="2" style="text-align: left;">"</td>' skip
-    '<td colspan="15" style="text-align: left; border-bottom: 1px solid black;">' + MonthNameRusGen(Month(v-date-create)) + '</td>' skip
+    '<td colspan="15" style="text-align: center; border-bottom: 1px solid black;">' + MonthNameRusGen(Month(v-date-create)) + '</td>' skip
     '<td colspan="1" style="text-align: left;"></td>' skip
-    '<td colspan="6" style="text-align: left; border-bottom: 1px solid black;">' + string(Year(v-date-create), "9999") + '</td>' skip
+    '<td colspan="6" style="text-align: center; border-bottom: 1px solid black;">' + string(Year(v-date-create), "9999") + '</td>' skip
     '<td colspan="2" style="text-align: left;">г.</td>' skip
     '<td colspan="8" style="text-align: left;"></td>' skip
     '</tr>' skip      .
@@ -810,7 +796,7 @@ on error undo, return error return-value
     '<td colspan="1" style="text-align: left;"></td>' skip
     '<td colspan="9" style="text-align: left; border-bottom: 1px solid black;"></td>' skip
     '<td colspan="1" style="text-align: left;"></td>' skip
-    '<td colspan="20" text_wrap="true" style="text-align: left; border-bottom: 1px solid black;">' + if buf_fin-doc.receiver-sign2 = ? then " "  + '</td>' else buf_fin-doc.receiver-sign2 + '</td>' skip
+    '<td colspan="20" text_wrap="true" style="text-align: center; border-bottom: 1px solid black;">' + if buf_fin-doc.receiver-sign2 = ? then " "  + '</td>' else buf_fin-doc.receiver-sign2 + '</td>' skip
     '</tr>' skip            .
       put stream OutStr-html unformatted   
     '<tr>' skip
@@ -846,7 +832,7 @@ on error undo, return error return-value
     '<td colspan="1" style="text-align: left;"></td>' skip
     '<td colspan="9" style="text-align: left; border-bottom: 1px solid black;"></td>' skip
     '<td colspan="1" style="text-align: left;"></td>' skip
-    '<td colspan="20" text_wrap="true" style="text-align: left; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-sign3 + '</td>' skip
+    '<td colspan="20" text_wrap="true" style="text-align: center; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-sign3 + '</td>' skip
     '</tr>' skip         .
       put stream OutStr-html unformatted      
     '<tr>' skip

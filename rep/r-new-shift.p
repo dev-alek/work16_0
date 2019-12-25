@@ -2925,6 +2925,8 @@ procedure first-line-tog5-1-html :
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
                         <td style="width:150px"></td>
+                        <td style="width:150px"></td>
+                        <td style="width:150px"></td>
                       </tr>
                        <tr>  
                         <td colspan="7" >&1</td>
@@ -4024,7 +4026,7 @@ procedure last-line-tog-html :
 End procedure.
 procedure last-line-tog-html5-1 :
     define input parameter v-report-name-html     as character no-undo .
-
+run gbl/inidebug.p .
     find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
     if available temp-shift-obj then 
     do:
@@ -4097,7 +4099,7 @@ procedure last-line-tog-html5-1 :
             '
               
                   <tr> <!--Подвал-->
-                    <td colspan="8"></td>
+                    <td colspan="9"></td>
                   </tr>
                     <tr> 
                     <td colspan="2" style="height:30px;"> Отчет составил и смену сдал:</td>
@@ -4106,7 +4108,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;">&2</td>
+                    <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&2</td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -4115,7 +4117,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="font-size:10px; text-align: center;">подпись</td>
                     <td></td>
-                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                    <td colspan="2" style="font-size:10px; text-align: center;">расшифровка подписи</td>
                   </tr>
                     <tr> 
                     <td colspan="2" style="height:30px;"> Смену принял:</td>
@@ -4124,7 +4126,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;">&4</td>
+                    <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&4</td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -4133,7 +4135,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="font-size:10px;  text-align: center;">подпись</td>
                     <td></td>
-                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                    <td colspan="2" style="font-size:10px; text-align: center;">расшифровка подписи</td>
                   </tr>
                     <tr>
                     <td colspan="2" style="height:30px;"> Отчет проверил:</td>
@@ -4142,7 +4144,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="border-bottom: 1px solid black; text-align: center;"></td>
                     <td></td>
-                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td colspan="2" style="border-bottom: 1px solid black; text-align: center;"></td>
                   </tr>
                   <tr> 
                     <td colspan="2"></td>
@@ -4151,7 +4153,7 @@ procedure last-line-tog-html5-1 :
                     <td></td>
                     <td style="font-size:10px; text-align: center;">подпись</td>
                     <td></td>
-                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                    <td colspan="2" style="font-size:10px; text-align: center;">расшифровка подписи</td>
                   </tr>
         
             </tfoot>

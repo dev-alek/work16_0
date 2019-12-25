@@ -875,7 +875,10 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
       define variable v-cashier as character no-undo .
       define buffer buf_shop for ub.shop.
       define buffer buf_store for ub.store.
-      
+      define variable p-by-osnovanie    as character  no-undo .
+      define variable p-by-pril         as character  no-undo .
+      define variable p-by-cash-desk as logical no-undo .
+      define variable p-by-petrol-goods as logical no-undo .
       mCashBook = new ibs.th.ref.cashbookstorage () .
 
       o-head-position = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 5) .
@@ -891,8 +894,11 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
         when '1':U then do:
           v-head-position = "Директор".
         end.
-        otherwise do :
+        when '2':U then do:
           v-head-position = "Управляющий".
+        end.
+        otherwise do :
+          v-head-position = o-head-position.
         end. 
       end case.
       case o-director:
@@ -915,6 +921,9 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
         when '0':U then do:
           v-director = buf_firm.director.
         end.
+        otherwise do:
+          v-director = o-director .
+        end.  
       end case.
       case o-snr-accnt:
         when '1':U then do:
@@ -932,6 +941,9 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
         when '2':U then do:
           v-snr-accnt = buf_sysconf.snr-accnt.
         end.
+        otherwise do:
+          v-snr-accnt = o-snr-accnt .
+        end.  
       end case.
       
       v-cashier = buf_sysconf.cashier.
@@ -955,9 +967,23 @@ FIND FIRST ub.shift-staff No-LOCK WHERE
     ub.shift-staff.psn-num    >= 0 No-ERROR.
 assign 
     v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
-
     .
-
+      find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.cashbookid no-error .
+      if not available ub.CashBook 
+      then do :
+        find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+      end.
+      if available ub.CashBook
+      then do :
+        p-by-cash-desk = ub.CashBook.FlagSepCash .
+        p-by-petrol-goods = ub.CashBook.FlagSepFull .
+/*        case ub.CashBook.RulePril:                      */
+/*          when "0" then p-by-pril = "Номера Z-отчетов" .*/
+/*          when "1" then p-by-pril = "Не заполнять" .    */
+/*          otherwise p-by-pril = ub.CashBook.RulePril .  */
+/*        end case.                                       */
+      end.
+      
     CASE p-fin-ext-doc-type:
       when {&FDEDT_Income_Cash} then do:
         assign
@@ -1002,9 +1028,25 @@ assign
           assign
           tt-fin-doc.cel-nazn-code = buf_sysconf.cel-nazn-code-out-cash
           tt-fin-doc.an-uchet-code = buf_sysconf.an-uchet-code-out-cash
-          tt-fin-doc.cor-acc       = buf_sysconf.cor-acc-out-cash
-          tt-fin-doc.cor-acc1      = buf_sysconf.cor-acc1-out-cash
           .
+          if available (ub.CashBook) then do:
+            case ub.CashBook.RuleOsnRko :
+              when "0" then tt-fin-doc.naznach-plat = "Выручка от реализации" .
+              when "1" or when "2" then tt-fin-doc.naznach-plat = "" .
+              otherwise tt-fin-doc.naznach-plat = ub.CashBook.RuleOsnRko .
+            end case .
+            if ub.CashBook.RulePril <> "0" and ub.CashBook.RulePril <> "1" then tt-fin-doc.enclosure = "" .
+            else tt-fin-doc.enclosure = ub.CashBook.RulePril .
+            for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
+            and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+            tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+            end.  
+            for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
+            and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+            tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
+            end.  
+          end.
+      
         end.
       end.
       when {&FDEDT_Income_Cashless} then do:

@@ -150,7 +150,6 @@ define variable sum            as decimal   no-undo .
 define variable sum1           as decimal   no-undo .
 define variable v-tab110       as character no-undo .
 define variable v-num-page     as character no-undo .
-
 define variable x-store-code   like ub.clients.obj-code no-undo.
 define variable x-store-type   like ub.clients.obj-type no-undo.
 
@@ -176,7 +175,7 @@ define variable v-date-name           as character no-undo .
 define variable v-date-name-full      as character no-undo .
 define variable v-obj-name            as character no-undo .
 define variable v-shift-on            as logical   no-undo .
-
+define variable v-cashier as character no-undo .
 define variable v-sheet-num           as integer   init 1 no-undo .
 
 define variable v-user-action         as character no-undo .
@@ -230,6 +229,7 @@ find first buf_firm no-lock where buf_firm.firm-code = buf_clients.obj-code no-e
 assign 
   v-firm = buf_clients.obj-name  .
 
+find first ub.firm no-lock where ub.firm.firm-code = buf_clients.obj-code no-error .
 for each obj-list by obj-list.obj-name:
   if v-obj-code = -1 then 
   do:
@@ -329,7 +329,7 @@ do:
   end.  
 end.   
 /*Касссовые книги*/
-
+run gbl/inidebug.p.
 do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
   
   /*Печать титульного листа по кассовой книге*/
@@ -349,9 +349,13 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         when '1':U then do:
           v-head-position = "Директор".
         end.
-        otherwise do :
+        when '2' then do:
           v-head-position = "Управляющий".
+        end.  
+        otherwise do :
+          v-head-position = o-head-position .
         end. 
+        
       end case.
       case o-director:
         when '1':U then do:
@@ -373,6 +377,9 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         when '0':U then do:
           v-director = buf_firm.director.
         end.
+        otherwise do:
+          v-director = o-director .
+        end.  
       end case.
       case o-snr-accnt:
         when '1':U then do:
@@ -390,10 +397,34 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         when '2':U then do:
           v-snr-accnt = buf_sysconf.snr-accnt.
         end.
+        otherwise do:
+          v-snr-accnt = o-snr-accnt .
+        end.  
       end case.
    
 
-  if X-SelectObject = {&obj-firm} then 
+
+  /*печать*/
+  run get-report-num (output p-report-id).
+    
+  v-file-name-rep-html = session:temp-directory + string(p-report-id) + "_" + string (entry(ii,p-cashbook,{&delim-cmd})) + ".html".     
+
+  output stream OutStr-html to value(v-file-name-rep-html) convert target 'UTF-8'.
+  put stream OutStr-html unformatted
+    "<!DOCTYPE HTML>" skip
+    ' <html>' skip
+    '  <head>' skip
+    '   <meta charset="utf-8">' skip
+    '    <style type="text/css">' skip
+                        
+    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+    '   </style>' skip
+    '  </head>' skip
+    '<body>' skip
+    .
+   if X-SelectObject = {&obj-firm} then 
   do :
     assign  
       str1 = "Организация: " + v-firm.
@@ -427,6 +458,8 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         .
       end.
     end.
+  end. /* if x-tog-shift then do : */
+
     if v-date-start1 = v-date-end1 then do:
       v-date-name-full =  "за " + string(day(v-date-end1)) + " " + MonthNameRusGen(MONTH(v-date-end1)) + " " + string(year(v-date-end1)) + "г." .
     end.
@@ -437,30 +470,8 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     else do:
       v-date-name-full =  "c " + string(day(v-date-start1)) + " " + MonthNameRusGen(MONTH(v-date-start1)) + " " + string(year(v-date-start1)) + " по " + string(day(v-date-end1)) + " " + MonthNameRusGen(MONTH(v-date-end1)) + " " + string(year(v-date-end1)) + "г." .
     end.
-    end.  
-  end. /* if x-tog-shift then do : */
   
-  /*печать*/
-  run get-report-num (output p-report-id).
-    
-  v-file-name-rep-html = session:temp-directory + string(p-report-id) + "_" + string (entry(ii,p-cashbook,{&delim-cmd})) + ".html".     
-
-  output stream OutStr-html to value(v-file-name-rep-html) convert target 'UTF-8'.
-  put stream OutStr-html unformatted
-    "<!DOCTYPE HTML>" skip
-    ' <html>' skip
-    '  <head>' skip
-    '   <meta charset="utf-8">' skip
-    '    <style type="text/css">' skip
-                        
-    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
-    '   </style>' skip
-    '  </head>' skip
-    '<body>' skip
-    .
-  
+  end.     
   if p-titul then do:
   put stream OutStr-html unformatted
     '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="Титульный лист КК ' + string(entry(ii,p-cashbook,{&delim-cmd})) + '">'skip
@@ -511,7 +522,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     '<td></td>' skip
     '<td colspan="4" style="text-align: center; border-bottom:1px solid black;">' + v-firm + '</td>' skip
     '<td style="text-align: right;">по ОКПО </td>' skip
-    '<td style="text-align:center;  border:1px solid black; font-weight: bold;">03478920</td>' skip
+    '<td style="text-align:center;  border:1px solid black; font-weight: bold;">' + string(ub.firm.okpo) + '</td>' skip
     '</tr>' skip
     '<tr>' skip
     '<td></td>' skip
@@ -767,6 +778,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
       .
 
     find first temp-fin-doc no-lock where temp-fin-doc.cashbook_id = integer(entry(ii,p-cashbook,{&delim-cmd}))no-error .     
+    
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td colspan="3" style="text-align: right;">Остаток на начало дня</td>' skip
@@ -777,6 +789,27 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
       .
     if available (temp-fin-doc) then 
     do:
+      if x-TOG-Shift then do:
+    FIND last ub.shift-staff No-LOCK WHERE
+    ub.shift-staff.obj-type   = temp-fin-doc.obj-type AND
+    ub.shift-staff.obj-code   = temp-fin-doc.obj-code AND
+    ub.shift-staff.shift-date = v-date-start AND
+    ub.shift-staff.shift-num  = v-shift-start AND
+    ub.shift-staff.staff-role = yes and
+    ub.shift-staff.psn-num    >= 0 No-ERROR.
+    end.
+    else do:
+      FIND last ub.shift-staff No-LOCK WHERE
+    ub.shift-staff.obj-type   = temp-fin-doc.obj-type AND
+    ub.shift-staff.obj-code   = temp-fin-doc.obj-code AND
+    ub.shift-staff.shift-date = v-date-start AND
+    ub.shift-staff.staff-role = yes and
+    ub.shift-staff.psn-num    >= 0 No-ERROR.
+    end.  
+assign 
+    v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+
+    .     
       for each buf_temp-fin-doc where buf_temp-fin-doc.cashbook_id = temp-fin-doc.cashbook_id:
         put stream OutStr-html unformatted
           '<tr>' skip
@@ -884,7 +917,8 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     do :
       v-rko-propis = 'Ноль'.
     end.
-            
+    
+       
     put stream OutStr-html unformatted
 
       '<tfoot>' skip
@@ -898,7 +932,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
       '<td colspan="2" style="height: 30px;">Кассир</td>' skip
       '<td style="text-align: center;">_________________</td>' skip
       '<td></td>' skip
-      '<td colspan="2" style="text-align: center;">_______________________</td>' skip
+      '<td colspan="2" style="text-align: center; border-bottom:1px solid black;">' + v-cashier + '</td>' skip
       '</tr>' skip
       '<tr>' skip
       '<td colspan="2"></td>' skip
@@ -1056,7 +1090,7 @@ run prn-lib-reportviewer-report-name in this-procedure (
 procedure report-exec :
   define input  parameter p-date        as date    no-undo .
   define input parameter p-cash-book as integer no-undo .
-
+run gbl/inidebug.p.
   assign
     v-ost-begin = 0
     v-num-obj   = 0
