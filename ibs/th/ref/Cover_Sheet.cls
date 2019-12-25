@@ -52,9 +52,14 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   DEFINE BUFFER find_fin-doc-attr FOR ub.fin-doc-attr.
   define private variable v-deposit_bank   as integer                  no-undo .
   define private variable v-recip_bank     as integer                  no-undo .
+  define         variable v-recip_schet    as character                no-undo .
+  define         variable vBankDepos-host  as integer                  no-undo.
+  define         variable vBankDepos-code  as integer                  no-undo.
+  define         variable vBankRecip-host  as integer                  no-undo.
+  define         variable vBankRecip-code  as integer                  no-undo.
   define private variable windowContainer1 as ibs.th.ref.Coins_Banknot no-undo.
   define public  variable v-num-bag        as character                no-undo .
-  
+  define         variable mCashBook        as class                    ibs.th.ref.cashbookstorage no-undo .
   define property parparentproc as handle no-undo
     private get.
     set(input iH as handle):
@@ -71,6 +76,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     
     InitializeComponent().
     Visual(p-mode) .
+
     this-object:ComponentsCollection:ADD(this-object:components).
     catch e as Progress.Lang.Error:
       undo, throw e.
@@ -116,6 +122,8 @@ class ibs.th.ref.Cover_Sheet inherits Form:
       end.
       this-object:bank_recip:Text = find_fin-bank.bank-name.
       v-recip_bank = find_fin-bank.code-bank .
+      find first ub.fin-schet no-lock where ub.fin-schet.code-bank = v-recip_bank no-error .
+      if available (ub.fin-schet) then v-recip_schet = ub.fin-schet.r-schet .
     end.         
     return.
 
@@ -179,17 +187,19 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     define buffer buf_fin-doc for ub.fin-doc .
     
     
-      if v-sum-doc <> windowContainer1:v-total-sum then do:
-        message "Сумма документа " + string(v-sum-doc) + " не равна сумме " + string(windowContainer1:v-total-sum) + " из препроводительной ведомости."
+    if v-sum-doc <> windowContainer1:v-total-sum and v-sum-doc <> decimal(windowContainer1:Fsumm:Text) then 
+    do:
+      message "Сумма документа " + string(v-sum-doc) + " не равна сумме " + string(windowContainer1:v-total-sum) + " из препроводительной ведомости."
         view-as alert-box.
-        return no-apply .
-      end.   
+      return no-apply .
+    end.   
       
-      if this-object:num_bag:Text = "" then do:
-        message "Номер сумки не заполнен"
+    if this-object:num_bag:Text = "" then 
+    do:
+      message "Номер сумки не заполнен"
         view-as alert-box.
-        return no-apply .
-      end.   
+      return no-apply .
+    end.   
     find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = v-host-code
       and bf_fin-doc-attr.fin-doc-code = v-fin-code and bf_fin-doc-attr.attr-value begins this-object:num_bag:Text no-error . 
     if not available (bf_fin-doc-attr) then 
@@ -204,25 +214,26 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     if this-object:source_rec:Text = "Поступления от продажи товаров" then v-source = "02" .
     else v-source = "32" .
     attr-value = this-object:num_bag:Text + ";" + string(v-deposit_bank) + ";" + string(v-recip_bank) + ";" + 
-      this-object:pin02:Text + ";" + this-object:source_rec:Text + ";" + string(windowContainer1:v-total-sum) . 
+      this-object:pin02:Text + ";" + this-object:source_rec:Text + ";" + string(windowContainer1:v-total-sum) + ";" + v-recip_schet . 
     bf_fin-doc-attr.attr-value = attr-value .
     
     dataset ds-banknots:handle:write-json ("longchar",CSJson) .
-    if CSJson <> ? then do:
-    
-    find first find_fin-doc-attr where find_fin-doc-attr.host-code = v-host-code and find_fin-doc-attr.attr-code = "cover_sheet" 
-      and find_fin-doc-attr.fin-doc-code = v-fin-code no-error .
-    if not available (find_fin-doc-attr) then
+    if CSJson <> ? then 
     do:
-      create find_fin-doc-attr .
-      assign
-        find_fin-doc-attr.attr-code    = "cover_sheet"
-        find_fin-doc-attr.fin-doc-code = v-fin-code
-        find_fin-doc-attr.host-code    = v-host-code  
-        .
-    end.  
     
-    find_fin-doc-attr.attr-value = CSJson . 
+      find first find_fin-doc-attr where find_fin-doc-attr.host-code = v-host-code and find_fin-doc-attr.attr-code = "cover_sheet" 
+        and find_fin-doc-attr.fin-doc-code = v-fin-code no-error .
+      if not available (find_fin-doc-attr) then
+      do:
+        create find_fin-doc-attr .
+        assign
+          find_fin-doc-attr.attr-code    = "cover_sheet"
+          find_fin-doc-attr.fin-doc-code = v-fin-code
+          find_fin-doc-attr.host-code    = v-host-code  
+          .
+      end.  
+    
+      find_fin-doc-attr.attr-value = CSJson . 
     end.
     this-object:DialogResult = System.Windows.Forms.DialogResult:Ok.
     Close().
@@ -254,6 +265,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         this-object:pin02:Text       = entry(4,bf_fin-doc-attr.attr-value,";")
         this-object:source_rec:Text  = entry(5,bf_fin-doc-attr.attr-value,";")
         windowContainer1:v-total-sum = decimal(entry(6,bf_fin-doc-attr.attr-value,";"))
+        v-recip_schet                = entry(7,bf_fin-doc-attr.attr-value,";")
         .
         
       FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = integer(entry(2,bf_fin-doc-attr.attr-value,";")) and find_fin-bank.host-code = v-host-code No-ERROR.
@@ -271,55 +283,57 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     end.  
     else 
     do:
-        for first buf_cashbook no-lock where buf_cashbook.id = v-CashBookId:
-          if buf_cashbook.id = 0 then 
-          do:
-            this-object:source_rec:Text = "Поступления от продажи товаров" .
-          end.
-          else 
-          do:  
-            this-object:source_rec:Text = "Прочие поступления".
-          end.
-          define variable mCashBook as class ibs.th.ref.cashbookstorage NO-UNDO.
-          mCashBook = new  ibs.th.ref.cashbookstorage().
+      for first buf_cashbook no-lock where buf_cashbook.id = v-CashBookId:
+        if buf_cashbook.id = 0 then 
+        do:
+          this-object:source_rec:Text = "Поступления от продажи товаров" .
+        end.
+        else 
+        do:  
+          this-object:source_rec:Text = "Прочие поступления".
+        end.
+        define variable mCashBook as class ibs.th.ref.cashbookstorage NO-UNDO.
+        mCashBook = new  ibs.th.ref.cashbookstorage().
+        vBankDepos-host = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankDepos-host")) .
+        vBankDepos-code = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankDepos-code") ).
+        vBankRecip-host = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankRecip-host")) .
+        vBankRecip-code = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankRecip-code") ).
+        v-recip_schet = mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankRecip-acct") .
+        delete object mCashBook no-error.
           
-          define variable vBankDepos-host as integer  no-undo.
-          define variable vBankDepos-code as integer no-undo.
-          define variable vBankRecip-host as integer  no-undo.
-          define variable vBankRecip-code as integer no-undo.
-         
-          vBankDepos-host = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankDepos-host")) .
-          vBankDepos-code = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankDepos-code") ).
-          vBankRecip-host = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankRecip-host")) .
-          vBankRecip-code = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankRecip-code") ).
-          delete object mCashBook no-error.
-          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = vBankDepos-code 
-                                             and find_fin-bank.host-code = vBankDepos-host No-ERROR.
-          if avail find_fin-bank then 
-          do:
-            this-object:deposit_bank:Text = find_fin-bank.bank-name .
-            v-deposit_bank = find_fin-bank.code-bank .
-          end. 
-          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = vBankRecip-code 
-                                             and find_fin-bank.host-code = vBankRecip-host No-ERROR.
-          if avail find_fin-bank then 
-          do:
-            this-object:bank_recip:Text = find_fin-bank.bank-name .
-            v-recip_bank = find_fin-bank.code-bank .
-          end. 
+        FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = vBankDepos-code 
+          and find_fin-bank.host-code = vBankDepos-host No-ERROR.
+        if avail find_fin-bank then 
+        do:
+          this-object:deposit_bank:Text = find_fin-bank.bank-name .
+          v-deposit_bank = find_fin-bank.code-bank .
+        end. 
+        FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = vBankRecip-code 
+          and find_fin-bank.host-code = vBankRecip-host No-ERROR.
+        if avail find_fin-bank then 
+        do:
+          this-object:bank_recip:Text = find_fin-bank.bank-name .
+          v-recip_bank = find_fin-bank.code-bank .
+        end. 
+          
+
+        /*mCashBook = new ibs.th.ref.cashbookstorage () .                                                           */
+        /*mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-acct").*/
+        /*delete object mCashBook no-error .                                                                        */
+
 
         for first ub.CashBookRule no-lock where 
-        ub.cashbookrule.CashBookID  = buf_cashbook.id and
-        ub.cashbookrule.host-code   = string(v-host-code) and
-        ub.CashBookRule.Obj-code   =  v-cntxt-obj-code and
-        ub.CashBookRule.Obj-type   = string(v-cntxt-obj-type) and
-        ub.cashbookrule.Status_     = 0 and
-        ub.cashbookrule.Code        = "Pin" /* ПИН */:
+          ub.cashbookrule.CashBookID  = buf_cashbook.id and
+          ub.cashbookrule.host-code   = string(v-host-code) and
+          ub.CashBookRule.Obj-code   =  v-cntxt-obj-code and
+          ub.CashBookRule.Obj-type   = string(v-cntxt-obj-type) and
+          ub.cashbookrule.Status_     = 0 and
+          ub.cashbookrule.Code        = "Pin" /* ПИН */:
            
-        this-object:pin02:Text = ub.cashbookrule.RuleValue .
+          this-object:pin02:Text = ub.cashbookrule.RuleValue .
         end.
-        end.  
       end.  
+    end.  
 
    
 
@@ -330,7 +344,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     do:
       CSJson = find_fin-doc-attr.attr-value .
       if CSJson <> ? and CSJson <> "" then 
-      dataset ds-banknots:handle:read-json ("longchar",CSJson) .
+        dataset ds-banknots:handle:read-json ("longchar",CSJson) .
     end.   
     add_Banknot().
     windowContainer1:Update_Banknots (getq_Banknot()).
@@ -589,7 +603,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         this-object:bank_recip:Enabled   = false
         this-object:pin02:Enabled        = false
         this-object:source_rec:Enabled   = false
-        windowContainer1:Enabled  = false
+        windowContainer1:Enabled         = false
         /*        windowContainer1:Enabled         = false*/
         .
     end.   

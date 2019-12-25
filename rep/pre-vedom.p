@@ -101,6 +101,7 @@ define variable v-schet1              as character no-undo .
 define variable v-recip-bank_name2    as character no-undo .
 define variable v-recip-bank_bik2     as character no-undo .
 define variable v-schet2              as character no-undo .
+define variable v-schetUB             as character no-undo .
 define variable v-source              as character no-undo .
 define variable v-source1             as character no-undo .
 define variable v-total-rubl          as character no-undo .
@@ -181,6 +182,7 @@ do
         v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashUB = v-sum-cashUB + v-decimal .
         v-pin = if v-pin = " " then entry(4,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(4,buf_fin-doc-attr.attr-value,";") .
+        v-schet2 = entry(7,buf_fin-doc-attr.attr-value,";") .
       end.  
       else 
       do:
@@ -188,6 +190,7 @@ do
         v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashGB = v-sum-cashGB + v-decimal .
         v-pin = if v-pin = " " then entry(4,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(4,buf_fin-doc-attr.attr-value,";") .
+        v-schet1 = entry(7,buf_fin-doc-attr.attr-value,";") .
       end.  
       v-fin-doc-list = v-fin-doc-list + ";" + string(buf_fin-doc-attr.fin-doc-code) .
       v-total-sum = v-total-sum + buf_fin-doc.sum-doc .
@@ -212,7 +215,9 @@ do
     assign 
       v-cashier = if available ub.user-account then string(ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name) else "".
   end.  
-
+  v-schet = v-schet1 + "," + v-schet2 .
+  v-schet = trim(v-schet,",") .
+  if v-credit-schet = "" then v-credit-schet = v-schet .
   v-bank-code = trim (v-bank-code,";") .
   v-fin-doc-list = trim(v-fin-doc-list,";") .
   v-source = trim(v-source,", ") .
@@ -220,12 +225,6 @@ do
     for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(entry (ii,v-bank-code,";")) and ub.fin-bank.host-code = p-host-code,
       each ub.fin-schet no-lock where ub.fin-schet.code-bank = ub.fin-bank.code-bank and ub.fin-schet.status_ = {&current-status}
       :
-      v-schet = if v-schet <> "" then v-schet + " , " + ub.fin-schet.r-schet else ub.fin-schet.r-schet .
-      if v-schet1 <> "" then 
-      do:
-        v-schet2 = ub.fin-schet.r-schet . 
-      end. 
-      else v-schet1 = ub.fin-schet.r-schet .
       if v-recip-bank_name1 <> "" then 
       do:
         v-recip-bank_name2 = ub.fin-bank.bank-name . 
@@ -236,7 +235,6 @@ do
         v-recip-bank_bik2 = ub.fin-bank.bik . 
       end. 
       else v-recip-bank_bik1 = ub.fin-bank.bik .
-      if v-credit-schet = "" then v-credit-schet = v-schet .
     end.  
   end.  
   
@@ -717,8 +715,8 @@ do
       '<td colspan="6" style="text-align: left;">»ÕÕ</td>' skip
       '<td></td>' skip
       '<td colspan="36" style="text-align: center; border-bottom: 1px solid black;">' + v-inn + '</td>' skip
-      '<td colspan="11" style="text-align: center;"></td>' skip
-      '<td colspan="66" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
+      '<td colspan="11" style="text-align: center;">—˜ÂÚπ</td>' skip
+      '<td colspan="66" style="text-align: center; border-bottom: 1px solid black;">' + v-schet + '</td>' skip
       '<td colspan="37" style="text-align: center; border-left: 1px solid black; border-right: 1px solid black; border-bottom: 1px solid black;">—ÛÏÏ‡ ˆËÙ‡ÏË</td>' skip
       '</tr>' skip .
 
@@ -755,17 +753,19 @@ do
     do: 
       v-sum = string(v-sum-cashGB) .
       v-simvol = "02" .
+      v-schetUB = v-schet1 .
     end.
     else 
     do:
       v-sum = string(v-sum-cashUB) .
       v-simvol = "32" .
+      v-schetUB = v-schet2 .
     end.        
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name1 + '</td>' skip
       '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik1 + '</td>' skip
-      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet1 + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schetUB + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .
@@ -774,31 +774,33 @@ do
     do: 
       v-sum = string(v-sum-cashUB) .
       v-simvol = "32" .
+      v-schetUB = v-schet2 .
     end.
     else 
     do:
       v-sum = "" .
       v-simvol = "" .
+      v-schetUB = "" .
     end.              
  
     put stream OutStr-html unformatted
       '<tr style="height: 20px;">' skip
       '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name2 + '</td>' skip
       '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik2 + '</td>' skip
-      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet2 + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schetUB + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .
         
-/*    put stream OutStr-html unformatted                                                                                 */
-/*      '<tr>' skip                                                                                                      */
-/*      '<td></td>' skip                                                                                                 */
-/*      '<td colspan="73" style="text-align: center; border-bottom: 1px solid black;"></td>' skip                        */
-/*      '<td colspan="10">¡» </td>' skip                                                                                 */
-/*      '<td colspan="37" style="text-align: center; border-bottom: 1px solid black;">' + v-recip-bank_bik + '</td>' skip*/
-/*      '<td colspan="16" style="text-align: center; border: 1px solid black;"></td>' skip                               */
-/*      '<td colspan="21" style="text-align: center; border: 1px solid black;"></td>' skip                               */
-/*      '</tr>' skip .                                                                                                   */
+    /*    put stream OutStr-html unformatted                                                                                 */
+    /*      '<tr>' skip                                                                                                      */
+    /*      '<td></td>' skip                                                                                                 */
+    /*      '<td colspan="73" style="text-align: center; border-bottom: 1px solid black;"></td>' skip                        */
+    /*      '<td colspan="10">¡» </td>' skip                                                                                 */
+    /*      '<td colspan="37" style="text-align: center; border-bottom: 1px solid black;">' + v-recip-bank_bik + '</td>' skip*/
+    /*      '<td colspan="16" style="text-align: center; border: 1px solid black;"></td>' skip                               */
+    /*      '<td colspan="21" style="text-align: center; border: 1px solid black;"></td>' skip                               */
+    /*      '</tr>' skip .                                                                                                   */
     
     put stream OutStr-html unformatted
       '<tr>' skip
