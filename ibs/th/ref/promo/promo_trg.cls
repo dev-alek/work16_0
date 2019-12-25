@@ -1477,19 +1477,19 @@ end . /* end_of низ таблицы и html-файла */
       */
       tt-promo-schedule-week.dtime-beg = datetime (today, 0)
       tt-promo-schedule-week.dtime-end = datetime (today, 86340 * 1000) // 86340 = 23:59
-      tt-promo-schedule-week.wdaylist = "1,2,3,4,5,6,7"
+      tt-promo-schedule-week.wdaylist = "0"
     .
   end .
   
     assign
       tt-promo-schedule-week.id        = tt-promo-schedule-week.promosched-id
-      tt-promo-schedule-week.isday_mon = can-do(tt-promo-schedule-week.wdaylist, "1")
-      tt-promo-schedule-week.isday_tue = can-do(tt-promo-schedule-week.wdaylist, "2")
-      tt-promo-schedule-week.isday_wed = can-do(tt-promo-schedule-week.wdaylist, "3")
-      tt-promo-schedule-week.isday_thu = can-do(tt-promo-schedule-week.wdaylist, "4")
-      tt-promo-schedule-week.isday_fri = can-do(tt-promo-schedule-week.wdaylist, "5")
-      tt-promo-schedule-week.isday_sat = can-do(tt-promo-schedule-week.wdaylist, "6")
-      tt-promo-schedule-week.isday_sun = can-do(tt-promo-schedule-week.wdaylist, "7")
+      tt-promo-schedule-week.isday_mon = can-do(tt-promo-schedule-week.wdaylist, "1") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_tue = can-do(tt-promo-schedule-week.wdaylist, "2") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_wed = can-do(tt-promo-schedule-week.wdaylist, "3") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_thu = can-do(tt-promo-schedule-week.wdaylist, "4") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_fri = can-do(tt-promo-schedule-week.wdaylist, "5") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_sat = can-do(tt-promo-schedule-week.wdaylist, "6") or can-do(tt-promo-schedule-week.wdaylist, "0")
+      tt-promo-schedule-week.isday_sun = can-do(tt-promo-schedule-week.wdaylist, "7") or can-do(tt-promo-schedule-week.wdaylist, "0")
     .
     // if p-mode = {&update} then temp-table tt-PromoGift:tracking-changes = true .
   end method. // end_of_CreateTableForSchedw0
@@ -1884,6 +1884,8 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
         v-days = v-days + ",7" when tt-promo-schedule-week.isday_sun
       .
       v-days = substring(v-days, 2) .
+      if v-days eq "1,2,3,4,5,6,7"
+      then v-days = "0".
       
       roundDtime (0, tt-promo-schedule-week.dtime-beg, tt-promo-schedule-week.dtime-end,
            output v-temp-id,
@@ -1913,7 +1915,7 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
       end .
       else do :
         // если расписания не было - то пишем его только если что-нибудь поменялось
-        if (v-days <> "1,2,3,4,5,6,7") or (v-itimebeg <> 0) or (v-itimeend <> 86340) then do :
+       // if (v-days <> "0") or (v-itimebeg <> 0) or (v-itimeend <> 86340) then do :
           v-sub = new promoSchedwSub().
           assign
             v-sub:timebeg  = v-itimebeg 
@@ -1923,7 +1925,7 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
           .
           p-subs = new promoSchedwSubs().
           p-subs:AddItem(v-sub).
-        end .
+       // end .
       end .
       
     end.

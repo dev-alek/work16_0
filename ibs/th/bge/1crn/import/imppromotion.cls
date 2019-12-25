@@ -364,6 +364,29 @@ if valid-object (v-schedule) then do: // schedule - расписание
     end . // end_of дни расписания
     
 end. // end_of расписание
+else do :
+
+    v-promo-sched  = new ibs.th.ref.promo.promoSchedsub () .
+    assign
+      v-promo-sched:Mode         = {&h-create}      
+      v-promo-sched:status_      = getSchedStatus (v-promo-action:status_enum) // обработка enum при взаимодействии со справочниками реализована в обход
+      v-promo-sched:dispname     = "Расписание для акции " + string(v-promo-action:ID)
+      v-promo-sched:schedType    = 1
+          v-objlist1              = v-schedule:schedule-lines
+        .
+    v-promo-action:Schedule     = v-promo-sched .
+    
+    v-promo-schdws = v-promo-action:ScheduleWeek . // создаётся пустая коллекция дней расписания
+    v-promo-schdw = new ibs.th.ref.promo.promoSchedwsub () .
+    assign
+       v-promo-schdw:wdaylist = "0"
+       v-promo-schdw:timebeg  = 0
+       v-promo-schdw:timeend  = 86399
+       v-promo-schdw:Mode     = {&h-create}      
+    .
+    v-promo-schdws:AddItem (v-promo-schdw) .
+    
+end.
 
     
 if valid-object(v-objlist2) then do: // threshold - пороговые значения
@@ -577,7 +600,14 @@ end. // end_of_gifts
     v-storage = new ibs.th.gbl.storage.promoactionstorage () .
     // если прочитанная акция ранее присутствовала в БД - сначала удаляем её, затем - создаём;
     // если прочитанная акция пришла впервые - создаём её как новую
-    if valid-object(v-promo-delete) then v-storage:deleteDB(v-promo-delete) .
+    if valid-object(v-promo-delete) 
+    then do:
+       define variable mStorsed as class ibs.th.gbl.storage.promoSchedstorage NO-UNDO.
+       mstorsed = new ibs.th.gbl.storage.promoSchedstorage().
+       mstorsed:deleteDB(v-promo-delete:Schedule) .
+       delete object  mStorsed.
+       v-storage:deleteDB(v-promo-delete) .
+    end.
     v-storage:insertDB(v-promo-action) .
     // акции с датой досрочного завершения отправляются на кассу тутже
     if v-promo-action:changeDate <> ? then do :

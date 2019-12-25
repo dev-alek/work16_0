@@ -31,3 +31,7 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
   &nws  = yes
   &del  = yes
 }
+for each promo-schedule-week where promo-schedule-week.promosched-id eq promo-schedule.id
+exclusive-lock:
+   delete promo-schedule-week.
+end.
