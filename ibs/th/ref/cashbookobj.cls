@@ -13,6 +13,8 @@ using ibs.th.ref.cashbookstorage from propath.
 block-level on error undo, throw.
 class ibs.th.ref.cashbookobj inherits Form : 
   { cmp/str-glbl.i   class}
+  { gbl/getcntxt.i def }
+  { cmp/library.i class }
   
   { ibs/th/ref/ttCashBookRule.i }
   
@@ -63,9 +65,11 @@ class ibs.th.ref.cashbookobj inherits Form :
         parparentproc = ih.
   end.
   
-  constructor public cashbookobj (Mode as character, p-id as int64, p-obj-code as integer, p-obj-type as character):
+  constructor public cashbookobj (inParparentproc as handle, Mode as character, p-id as int64, p-obj-code as integer, p-obj-type as character):
     
     super().
+    parparentproc = inParparentproc .
+    { gbl/getcntxt.i get }
     
     v-cashbookID = p-id .
     v-obj-code = p-obj-code .
@@ -718,6 +722,53 @@ class ibs.th.ref.cashbookobj inherits Form :
         this-object:fObjCode:ReadOnly = true
         this-object:bObj:Enabled = false
       .
+      define variable v-log as logical no-undo .
+      define variable v-log2 as logical no-undo .
+      v-log = true .
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_fin-cashbook_update':U
+        {&cntxt-global}
+        0
+        '':U
+        0
+        0
+        0
+        0
+        false
+        v-log
+      }
+      v-log2 = true .
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_fin-counter_update':U
+        {&cntxt-object}
+        v-cntxt-host-code-obj
+        v-cntxt-obj-type
+        v-cntxt-obj-code
+        0
+        0
+        0
+        false
+        v-log2
+      }         
+      assign
+        this-object:fMaskPko:ReadOnly = not (v-log and v-cntxt-db-num = 0)
+        this-object:fMaskRko:ReadOnly = not (v-log and v-cntxt-db-num = 0)
+        this-object:fDptName:ReadOnly = not (v-log and v-cntxt-db-num = 0)
+        this-object:fDptType:ReadOnly = not (v-log and v-cntxt-db-num = 0)
+        this-object:fDptCode:ReadOnly = not (v-log and v-cntxt-db-num = 0)
+        this-object:fBuhFIO:Enabled = (v-log and v-cntxt-db-num = 0)
+        this-object:fManagerFIO:Enabled = (v-log and v-cntxt-db-num = 0)
+        this-object:fManagerPosition:Enabled = (v-log and v-cntxt-db-num = 0)
+        this-object:fStruct:Enabled = (v-log and v-cntxt-db-num = 0)
+        this-object:fUchet:Enabled = (v-log and v-cntxt-db-num = 0)
+        this-object:buttonOk:Enabled = (v-log and v-cntxt-db-num = 0) or v-log2
+      .                       
       if tt-CashBookrule.Obj-type = {&cmp}
       then do :
         assign
@@ -727,8 +778,8 @@ class ibs.th.ref.cashbookobj inherits Form :
       end.
       else do :
         assign
-          this-object:fCurrRKO:Enabled = true
-          this-object:fCurrPKO:Enabled = true
+          this-object:fCurrRKO:Enabled = v-log2
+          this-object:fCurrPKO:Enabled = v-log2
         .
       end.
     end.

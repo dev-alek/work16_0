@@ -62,10 +62,10 @@ class ibs.th.ref.cashbookstorage final:
       return .
     end.
     
-    find first ub.cashbook no-lock where ub.CashBook.ext-code = tt-cashbook.ext-code and ub.CashBook.id <> tt-cashbook.id no-error.
+    find first ub.cashbook no-lock where ub.CashBook.CashBookName = tt-cashbook.CashBookName and ub.CashBook.id <> tt-cashbook.id no-error.
     if available ub.cashbook
     then do :
-      Msg = "Уже есть тип кассовой книги с кодом " + tt-cashbook.ext-code .
+      Msg = "Уже есть тип кассовой книги с наименованием  " + tt-cashbook.CashBookName .
       return .
     end.
     
@@ -437,15 +437,20 @@ class ibs.th.ref.cashbookstorage final:
       then do :
         ub.CashBook.Status_ = 1.
         for each ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = ub.cashbook.id :
-          ub.CashBookRule.Status_ = ub.CashBook.Status_ .
+          delete ub.CashBookRule.
         end.
+        for each ub.goods-attr exclusive-lock where ub.goods-attr.attr-code = {&attr-cash-book-id}
+                                              and ub.goods-attr.attr-value = string(ub.cashbook.id):
+        delete ub.goods-attr .
+      end.
       end.  
-      else if ub.CashBook.Status_ = 1
+      else
+      if ub.CashBook.Status_ = 1
       then do :
         ub.CashBook.Status_ = 0.
-        for each ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = ub.cashbook.id :
-          ub.CashBookRule.Status_ = ub.CashBook.Status_ .
-        end.
+/*        for each ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = ub.cashbook.id :*/
+/*          ub.CashBookRule.Status_ = ub.CashBook.Status_ .                                          */
+/*        end.                                                                                       */
       end. 
     end. 
   end method .
@@ -457,15 +462,19 @@ class ibs.th.ref.cashbookstorage final:
     then do :
       ub.CashBook.Status_ = 1.
       for each ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = ub.cashbook.id :
-        ub.CashBookRule.Status_ = ub.CashBook.Status_ .
+        delete ub.CashBookRule.
+      end.
+      for each ub.goods-attr exclusive-lock where ub.goods-attr.attr-code = {&attr-cash-book-id}
+                                              and ub.goods-attr.attr-value = string(ub.cashbook.id):
+        delete ub.goods-attr .
       end.
     end.  
     else if ub.CashBook.Status_ = 1
     then do :
       ub.CashBook.Status_ = 0.
-      for each ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = ub.cashbook.id :
-        ub.CashBookRule.Status_ = ub.CashBook.Status_ .
-      end.
+/*      for each ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = ub.cashbook.id :*/
+/*        ub.CashBookRule.Status_ = ub.CashBook.Status_ .                                          */
+/*      end.                                                                                       */
     end. 
     
   end method .

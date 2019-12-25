@@ -8703,11 +8703,18 @@ end procedure. /* m_gds-ef-exe */
 
 procedure m-cashbook-ref :
 define variable v-rid-list as character no-undo .
-
+define variable v-mode     as character no-undo .
+define variable v-value    as character no-undo .
+define variable v-type     as character no-undo .
   do
   on error undo, return error
   :
-    run ref/cashbook.p ( input parparentproc, input {&update}) no-error.
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    
+    if v-value = "no"
+    then v-mode = {&update} .
+    else v-mode = {&lookup} .
+    run ref/cashbook.p ( input parparentproc, input v-mode ) no-error.
   end.
 
 end procedure.

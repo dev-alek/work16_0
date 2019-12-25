@@ -21,8 +21,8 @@ define input  parameter i-obj-code as integer no-undo.
 define input  parameter i-obj-type as character no-undo.
     define variable v-brw as class ibs.th.ref.cashbookobj no-undo .
   
-    v-brw = new ibs.th.ref.cashbookobj ( iMode, i-id, i-obj-code, i-obj-type ).
-    v-brw:parparentproc = parparentproc .
+    v-brw = new ibs.th.ref.cashbookobj (parparentproc, iMode, i-id, i-obj-code, i-obj-type ).
+/*    v-brw:parparentproc = parparentproc .*/
     subscribe   to "getNextseq"     anywhere run-procedure "local-getNextseq".
     wait-for  v-brw:ShowDialog() .
     unsubscribe to "getNextseq".

@@ -497,6 +497,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
         this-object:FlagSepCash:Enabled = false
         this-object:FlagSepFuel:Enabled = false
         this-object:buttonOk:Enabled = false
+        this-object:bChooseCredit:Enabled = false
+        this-object:bChooseDebit:Enabled = false
       .
     end.
     return.
