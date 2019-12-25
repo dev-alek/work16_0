@@ -265,7 +265,7 @@ DEFINE FRAME d-pl-form
           SIZE 11.63 BY 1
      error-mass AT Y 262 X 703 RIGHT-ALIGNED WIDGET-ID 38
      tt-place.max-qnty AT ROW 12.92 COL 30.63 COLON-ALIGNED
-          LABEL "Макс. кол-во/Макс. уровень СУГ"
+          LABEL "Макс. кол-во в резервуаре"
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
      place-si AT ROW 12.92 COL 75.38 COLON-ALIGNED WIDGET-ID 16

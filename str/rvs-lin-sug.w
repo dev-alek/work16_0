@@ -302,6 +302,13 @@ DEFINE VARIABLE abs-delta-mass-add-qnty AS DECIMAL FORMAT "->>,>>9.999":U INITIA
 
 define variable level-prc as decimal format ">>9.99":U initial ? .
 
+define variable str-level-total as character format "X(28)" .
+define variable str-level-sug as character format "X(28)" .
+define variable str-level-water as character format "X(28)" .
+define variable str-level-total-fact as character format "X(28)" .
+define variable str-level-sug-fact as character format "X(28)" .
+define variable str-level-water-fact as character format "X(28)" .
+
 DEFINE VARIABLE CriticalDif AS DECIMAL FORMAT ">>,>>9.999":U INITIAL 0
      LABEL "Сверхнормативные расхождения" 
      VIEW-AS FILL-IN 
@@ -540,6 +547,30 @@ DEFINE FRAME Dialog-Frame
           LABEL "Факт уровень воды (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
+     str-level-sug AT ROW 7.75 COL 30 COLON-ALIGNED
+          LABEL "Измер. уровень СУГ (см)"
+          VIEW-AS FILL-IN 
+          SIZE 20 BY .88
+     str-level-sug-fact AT ROW 7.75 COL 79.5 COLON-ALIGNED
+          LABEL "Факт уровень СУГ (см)"
+          VIEW-AS FILL-IN 
+          SIZE 20 BY .88
+     str-level-total AT ROW 5.75 COL 30 COLON-ALIGNED
+          LABEL "Измер. общий уровень (см)"
+          VIEW-AS FILL-IN 
+          SIZE 20 BY .88
+     str-level-total-fact AT ROW 5.75 COL 79.5 COLON-ALIGNED
+          LABEL "Факт общий уровень (см)"
+          VIEW-AS FILL-IN 
+          SIZE 20 BY .88
+     str-level-water AT ROW 6.75 COL 30 COLON-ALIGNED
+          LABEL "Измер. уровень воды (см)"
+          VIEW-AS FILL-IN 
+          SIZE 20 BY .88
+     str-level-water-fact AT ROW 6.75 COL 79.5 COLON-ALIGNED
+          LABEL "Факт уровень воды (см)"
+          VIEW-AS FILL-IN 
+          SIZE 20 BY .88
      tt-rvs-line.temperature AT ROW 8.75 COL 30 COLON-ALIGNED
           LABEL "Температура средняя (°С)"
           VIEW-AS FILL-IN 
@@ -548,25 +579,25 @@ DEFINE FRAME Dialog-Frame
           LABEL "Температура средняя (°С)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temp-layer1 AT ROW 5.75 COL 45 COLON-ALIGNED
+     tt-rvs-line.temp-layer1 AT ROW 9.75 COL 8.5
           LABEL "T1"
           VIEW-AS FILL-IN 
           SIZE 6 BY .88
-     tt-rvs-line.temp-layer2 AT ROW 6.75 COL 45 COLON-ALIGNED
+     tt-rvs-line.temp-layer2 AT ROW 9.75 COL 23.5
           LABEL "T2"
           VIEW-AS FILL-IN 
           SIZE 6 BY .88
-     tt-rvs-line.temp-layer3 AT ROW 7.75 COL 45 COLON-ALIGNED
+     tt-rvs-line.temp-layer3 AT ROW 9.75 COL 38.5
           LABEL "T3"
           VIEW-AS FILL-IN 
           SIZE 6 BY .88
-     tt-rvs-line.state-temp-layer1 AT ROW 5.75 COL 99 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer1 AT ROW 9.75 COL 65 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer2 AT ROW 6.75 COL 99 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer2 AT ROW 9.75 COL 80 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer3 AT ROW 7.75 COL 99 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer3 AT ROW 9.75 COL 95 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
      tt-rvs-line.meas-mh-qnty AT ROW 29.75 COL 29.13 COLON-ALIGNED
@@ -1382,7 +1413,7 @@ define variable v-is-olddens as logical no-undo initial no .
     apply "ENTRY":U to tt-rvs-line.state-level-total in frame {&frame-name}.
     return no-apply.
   end.
-  run volume-water in this-procedure               no-error.
+/*  run volume-water in this-procedure               no-error.*/
   if error-status :error then do: return no-apply. end.
   run chg-density  in this-procedure               no-error.
   if error-status :error then do: return no-apply. end.
@@ -1764,8 +1795,8 @@ END.
 ON LEAVE OF tt-rvs-line.state-brutto-qnty IN FRAME Dialog-Frame /* Факт брутто */
 DO:
 if input frame {&frame-name} {&self-name} <> {&self-name} then do:
-  run volume-water no-error.
-  if error-status:error then return no-apply.
+/*  run volume-water no-error.                 */
+/*  if error-status:error then return no-apply.*/
 end.
 END.
 
@@ -1811,10 +1842,14 @@ END.
 ON LEAVE OF tt-rvs-line.state-density IN FRAME Dialog-Frame /* Плотность */
 DO:
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
-     run chg-density no-error.
-     if error-status:error then return no-apply.
-     run weath-water no-error.
-     if error-status:error then return no-apply.
+    assign tt-rvs-line.state-density .
+    tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty * tt-rvs-line.state-density .
+    tt-rvs-line.fact-sum-mass = tt-rvs-line.state-measure-cli-qnty + tt-rvs-line.fact-calc-add-mass .
+    display tt-rvs-line.fact-sum-mass tt-rvs-line.fact-calc-add-mass with frame {&frame-name} .
+/*     run chg-density no-error.                  */
+/*     if error-status:error then return no-apply.*/
+/*     run weath-water no-error.                  */
+/*     if error-status:error then return no-apply.*/
 /*     if tarir-value = 'yes'                  */
 /*     then do :                               */
 /*       run local-tarir("state-level-total") .*/
@@ -1849,7 +1884,7 @@ DO:
      tt-rvs-line.fact-sum-vol = input frame {&frame-name} {&self-name} + input frame {&frame-name} tt-rvs-line.state-add-qnty .
      varstate-sum-vol = input frame {&frame-name} {&self-name} + (if input frame {&frame-name} varstate-water-qnty = ? then 0 else input frame {&frame-name} varstate-water-qnty) .
      display tt-rvs-line.fact-sum-vol varstate-sum-vol with frame {&frame-name}.
-     run volume-water no-error.
+/*     run volume-water no-error.*/
      if error-status:error then return no-apply.
      if tt-rvs-line.state-density <> 0 and
         tt-rvs-line.state-density <> ? then do:
@@ -1858,9 +1893,9 @@ DO:
         run weath-water no-error.
         if error-status:error then return no-apply.
      end.
-     tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty .
+/*     tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty .*/
      abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
-     display tt-rvs-line.fact-sum-mass /* abs-delta-mass-add-qnty */ with frame {&frame-name}.
+/*     display tt-rvs-line.fact-sum-mass /* abs-delta-mass-add-qnty */ with frame {&frame-name}.*/
      assign tt-rvs-line.fact-calc-vol .
   end.
 
@@ -1931,7 +1966,7 @@ DO:
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
           run level-water in this-procedure ( input no ) /* no-error */ .
       
-    RUN local-tarir ("state-level-total").
+/*    RUN local-tarir ("state-level-total").*/
     /* if error-status :error then do: return no-apply. end. */
   end.
 END.
@@ -1958,7 +1993,7 @@ DO:
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
           run level-water in this-procedure ( input no ) /* no-error */ .
       
-    RUN local-tarir ("state-level-total").
+/*    RUN local-tarir ("state-level-total").*/
     /* if error-status :error then do: return no-apply. end. */
   end.
 END.
@@ -1995,7 +2030,7 @@ END.
 ON LEAVE OF tt-rvs-line.state-measure-qnty IN FRAME Dialog-Frame /* Факт остаток */
 DO:
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
-     run volume-water no-error.
+/*     run volume-water no-error.*/
      if error-status:error then return no-apply.
      if tt-rvs-line.state-density <> 0 and
         tt-rvs-line.state-density <> ? then do:
@@ -2004,6 +2039,20 @@ DO:
         run weath-water no-error.
         if error-status:error then return no-apply.
      end.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME tt-rvs-line.state-measure-cli-qnty
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-measure-cli-qnty Dialog-Frame
+ON LEAVE OF tt-rvs-line.state-measure-cli-qnty IN FRAME Dialog-Frame /* Факт остаток */
+DO:
+  if input frame {&frame-name} {&self-name} <> {&self-name} then do:
+    assign tt-rvs-line.state-measure-cli-qnty .
+    tt-rvs-line.fact-sum-mass = tt-rvs-line.state-measure-cli-qnty + (tt-rvs-line.state-add-qnty * tt-rvs-line.state-density) .
+    display tt-rvs-line.fact-sum-mass with frame {&frame-name} .
   end.
 END.
 
@@ -2200,6 +2249,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   RUN enable_UI IN THIS-PROCEDURE.
   
+  define variable str       as character no-undo .
+  define variable str1      as character no-undo .
   find first rvs-line-attr exclusive-lock
         where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
           and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
@@ -2212,9 +2263,80 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     twice-place-data = trim(twice-place-data, {&new-line}) .
     display b-rez with frame Dialog-Frame.
     enable b-rez with frame Dialog-Frame.
+    assign
+      str-level-total       = ""
+      str-level-total-fact  = ""
+      str-level-sug         = ""
+      str-level-sug-fact    = ""
+      str-level-water       = ""
+      str-level-water-fact  = ""
+    .
+    find first place no-lock where place.obj-type = tt-rvs-line.obj-type
+                               and place.obj-code = tt-rvs-line.obj-code
+                               and place.pl-code  = tt-rvs-line.pl-code
+                               no-error .
+    do ii = 1 to num-entries(twice-place-data, {&new-line}) :
+      str = entry(ii, twice-place-data, {&new-line}) .
+      str1 = trim(entry(1, str, ":")) no-error.
+      if error-status:error then next .
+      if str1 = "Общий уровень"
+      then do :
+        str-level-total = str-level-total + "," + trim(entry(2, str, ":")) .
+      end.
+      if str1 = "Уровень СУГ"
+      then do :
+        str-level-sug = str-level-sug + "," + trim(entry(2, str, ":")) .
+      end.
+      if str1 = "Уровень воды"
+      then do :
+        str-level-water = str-level-water + "," + trim(entry(2, str, ":")) .
+      end.
+    end.
+    assign
+      str-level-total = trim(str-level-total, ",")
+      str-level-total = trim(str-level-total)
+      str-level-sug = trim(str-level-sug, ",")
+      str-level-sug = trim(str-level-sug)
+      str-level-water = trim(str-level-water, ",")
+      str-level-water = trim(str-level-water)
+      str-level-total-fact = str-level-total
+      str-level-sug-fact = str-level-sug
+      str-level-water-fact = str-level-water
+    .
+/*    do ii = 1 to num-entries(str-level-total):                                                                                                                                                      */
+/*      str-level-prc = str-level-prc + ", " + string((decimal(trim(entry(ii,str-level-sug))) + decimal(trim(entry(ii,str-level-water))) ) / decimal(trim(entry(ii,str-level-total))), ">>>>9.<<<" ) .*/
+/*    end.                                                                                                                                                                                            */
+/*    assign                                                                                                                                                                                          */
+/*      str-level-prc = trim(str-level-prc, ",")                                                                                                                                                      */
+/*      str-level-prc = trim(str-level-prc)                                                                                                                                                           */
+/*    .                                                                                                                                                                                               */
+    hide
+      tt-rvs-line.level-petrol
+      tt-rvs-line.state-level-petrol
+      tt-rvs-line.level-water
+      tt-rvs-line.state-level-water
+      tt-rvs-line.level-total
+      tt-rvs-line.state-level-total
+    in frame Dialog-Frame.
+    display
+      str-level-total
+      str-level-total-fact
+      str-level-sug
+      str-level-sug-fact
+      str-level-water
+      str-level-water-fact
+    with frame Dialog-Frame.
   end.
   else do :
     hide b-rez in frame Dialog-Frame.
+    hide
+      str-level-total
+      str-level-total-fact
+      str-level-sug
+      str-level-sug-fact
+      str-level-water
+      str-level-water-fact
+    in frame Dialog-Frame.
   end.
 
   if tt-rvs-line.system-qnty <> tt-rvs-line.orig-system-qnty
@@ -2524,6 +2646,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             when "state-pressure-sug" then do :
               tt-rvs-line.state-pressure-sug = decimal(rvs-line-attr.attr-value) .
             end.
+            when "sug-water-qnty" then do :
+              varmeasure-water-qnty = decimal(rvs-line-attr.attr-value) .
+              varstate-water-qnty = varmeasure-water-qnty .
+            end.
           end case.
     end.
     release rvs-line-attr no-error .
@@ -2682,8 +2808,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     tt-rvs-line.fact-sum-mass
     varstate-sum-vol
     
-    tt-rvs-line.state-level-total
-    tt-rvs-line.level-total
+/*    tt-rvs-line.state-level-total*/
+/*    tt-rvs-line.level-total      */
     
 /*    abs-delta-mass-add-qnty*/
 
@@ -2695,6 +2821,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     tt-rvs-line.state-dens-pf-sug
     tt-rvs-line.pressure-sug
     tt-rvs-line.state-pressure-sug
+    varmeasure-water-qnty
+    varstate-water-qnty
 /*    tt-rvs-line.state-brutto-qnty*/
 /*    tt-rvs-line.state-brutto-cli-qnty*/
 /*    tt-rvs-line.brutto-qnty*/
@@ -2702,11 +2830,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     level-prc
   with frame {&frame-name}.
   
+  hide
+    level-prc
+  in frame {&frame-name}.
   
-  run volume-measure-water in this-procedure                 no-error.
+/*  run volume-measure-water in this-procedure                 no-error.*/
   run weath-measure-water  in this-procedure                 no-error.
   run level-measure-water  in this-procedure                 no-error.
-  run volume-water         in this-procedure                 no-error.
+/*  run volume-water         in this-procedure                 no-error.*/
   run weath-water          in this-procedure                 no-error.
   run level-water          in this-procedure ( input no ) /* no-error */ .
   

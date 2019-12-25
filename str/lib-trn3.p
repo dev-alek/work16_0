@@ -42,6 +42,7 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { gbl/ptrlprop.i def }
 { ref/gds-attr.i }
 { str/is-gas.i }
+{ str/is-sug.i }
 { str/placelib.i }
 
 
@@ -4873,6 +4874,8 @@ procedure lib-trn3_chkqnpl :
     v-rest-av   = false
     p-new-qnty  = p-qnty
   .
+  
+  if is-sug(p-gds-code) then return .
 
   if p-doc-type = {&inventory} then do:
     return. /* контролировать вроде как нечего. на то она и инвентаризация */

@@ -74,6 +74,10 @@ create: Булгаков Андрей Николаевич
     field vapor-density like ub.rvs-line.density
     field vapor-pressure as decimal format ">>9.9<":U
     field log-brutto as logical
+    field temp-not-null as logical
+    field t1-not-null as logical
+    field t2-not-null as logical
+    field t3-not-null as logical
     index pi        as primary   unique loc1.
     
 &endif

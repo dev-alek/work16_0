@@ -782,7 +782,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
       end.
       else do:
         if ptrlprop-olddens = true
-          
+        and not is-sug(buf_rvs-line.gds-code)  
         then do:
 
               prev:
@@ -1271,6 +1271,8 @@ define variable      v-water-qnty as decimal no-undo.
     define buffer   bf-water-nxt_pl-level for pl-level.
       define variable varlevel-sm-water as decimal no-undo.
     define buffer bf_place for ub.place.
+    define buffer buf_place for ub.place.
+    define buffer buf_pl-gds for ub.pl-gds .
     run gbl/conf-rd.p ("tarir", "", "", 0, "", "", "", no, output vartarirvalue, output vartarirtype) no-error.
     
     { str/crtt-rvs.i
@@ -1569,6 +1571,26 @@ define variable      v-water-qnty as decimal no-undo.
                 .
               end.
             end case.
+            if tt-param.strfrfile = 'temperature':U   then do:
+              assign
+                tt-meas-file.temp-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer1':U   then do:
+              assign
+                tt-meas-file.t1-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer2':U   then do:
+              assign
+                tt-meas-file.t2-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer3':U   then do:
+              assign
+                tt-meas-file.t3-not-null   = yes
+              .
+            end.
             if tt-param.strfrfile = 'volume_oil':U   then do:
               assign
                 tt-meas-file.meas-vol-oil   = yes
@@ -1610,9 +1632,58 @@ define variable      v-water-qnty as decimal no-undo.
     end. /* repeat rpt */
 
     if is_FatalError = no then do:
+    _recalc:
     for each tt-meas-file
           on error undo, return error return-value
           :
+            
+          if tt-meas-file.pl-code <> 0
+          then do :
+            find first buf_place no-lock where buf_place.obj-type = p-obj-type
+                                           and buf_place.obj-code = p-obj-code
+                                           and buf_place.pl-code  = tt-meas-file.pl-code
+                                           and buf_place.is-meas  = yes
+                                           no-error .
+          end.
+          else do :
+            twice-code:
+            for each  buf_place where buf_place.obj-code = p-obj-code
+                                  and buf_place.obj-type = p-obj-type
+                                  and buf_place.is-meas  = yes : 
+                run placelib_get-attr  ( input {&place-twice-code}
+                    ,input p-obj-code
+                    ,input p-obj-type
+                    ,input buf_place.pl-code
+                    ,output v-value
+                    ,output v-ok      ) no-error.   
+      
+                if v-ok then pl-twice-code = v-value .
+                if num-entries(pl-twice-code) > 1
+                then do :
+                  do ii = 1 to num-entries(pl-twice-code) :
+                    if trim( entry( ii, pl-twice-code ) ) = trim( tt-meas-file.loc1 )
+                    then do :
+                      leave twice-code.
+                    end.
+                  end.
+                end.
+                else do :
+                  if trim(pl-twice-code) =  trim( tt-meas-file.loc1 ) then leave twice-code.
+                end.
+                pl-twice-code = "" .
+            end.
+          end.
+          
+          if available buf_place
+          then do :
+            find first buf_pl-gds no-lock where buf_pl-gds.obj-type     = buf_place.obj-type
+                                            and buf_pl-gds.obj-code     = buf_place.obj-code
+                                            and buf_pl-gds.pl-code      = buf_place.pl-code
+                                            and buf_pl-gds.status_      = {&current-status}
+                                            no-error .
+            if available buf_pl-gds
+            and is-sug(buf_pl-gds.gds-code) then next _recalc.                                
+          end.  
           
           place-asi-sertif = no .  
           run placelib_get-attr  ( input {&place-asi-sertif}
@@ -1957,17 +2028,18 @@ define variable      v-water-qnty as decimal no-undo.
         tt-meas.measure-cli-qnty = tt-meas-file.measure-cli-qnty
         tt-meas.brutto-cli-qnty  = tt-meas-file.brutto-cli-qnty
         tt-meas.density          = tt-meas-file.density
-        tt-meas.temperature      = tt-meas-file.temperature
+        tt-meas.temperature      = (if tt-meas-file.temp-not-null then tt-meas-file.temperature else ?)
         tt-meas.level-total      = tt-meas-file.level-total
         tt-meas.level-petrol     = tt-meas-file.level-petrol
         tt-meas.level-water      = tt-meas-file.level-water
-        tt-meas.temp-layer1      = tt-meas-file.temp-layer1
-        tt-meas.temp-layer2      = tt-meas-file.temp-layer2
-        tt-meas.temp-layer3      = tt-meas-file.temp-layer3
+        tt-meas.temp-layer1      = (if tt-meas-file.t1-not-null then tt-meas-file.temp-layer1 else ?)
+        tt-meas.temp-layer2      = (if tt-meas-file.t2-not-null then tt-meas-file.temp-layer2 else ?)
+        tt-meas.temp-layer3      = (if tt-meas-file.t3-not-null then tt-meas-file.temp-layer3 else ?)
         tt-meas.measure-tc-qnty  = tt-meas-file.measure-tc-qnty
         tt-meas.brutto-tc-qnty   = tt-meas-file.brutto-tc-qnty
         tt-meas.vapor-density    = tt-meas-file.vapor-density
         tt-meas.vapor-pressure   = tt-meas-file.vapor-pressure
+        tt-meas.water-qnty       = tt-meas-file.water-qnty
       .
     end. /* for each */
 end.
@@ -2056,6 +2128,7 @@ define variabl v-file-name as character no-undo.
   define variable twice-num   as integer no-undo.
   define variable twice-place-data as character no-undo .
   define variable sug-density as decimal no-undo .
+  define variable sug-water-qnty as decimal no-undo .
   define variable vapor-density as decimal no-undo .
   define variable vapor-pressure as decimal no-undo .
 
@@ -2107,20 +2180,6 @@ define variabl v-file-name as character no-undo.
     bf_rvs-line.state-measure-tc-qnty  = bf_rvs-line.measure-tc-qnty
     bf_rvs-line.state-brutto-tc-qnty   = bf_rvs-line.brutto-tc-qnty
   .
-  
-  if is-sug(bf_rvs-line.gds-code)
-  then do :
-    find first place no-lock where place.obj-type = p-obj-type
-                               and place.obj-code = p-obj-code
-                               and place.pl-code  = p-pl-code
-                               .
-    assign
-/*      bf_rvs-line.level-petrol = bf_rvs-line.level-total*/
-      bf_rvs-line.level-total = place.max-qnty
-      bf_rvs-line.state-level-petrol = bf_rvs-line.level-petrol
-      bf_rvs-line.state-level-total = bf_rvs-line.level-total
-    . 
-  end.
 
 
   find first rvs-line-attr exclusive-lock
@@ -2149,11 +2208,20 @@ define variabl v-file-name as character no-undo.
 
 
 
+place-asi-sertif = no .  
+run placelib_get-attr  ( input {&place-asi-sertif}
+                      ,input p-obj-code
+                      ,input p-obj-type
+                      ,input p-pl-code
+                      ,output v-value
+                      ,output v-ok      ) no-error.
+if v-ok then place-asi-sertif = logical(v-value) .
 
 
 
-
-if ptrlprop-olddens = true then do:
+if ptrlprop-olddens = true
+and not is-sug(bf_rvs-line.gds-code)
+then do:
   if tt-meas.density = 0 then do:
     assign
       tt-meas.temperature                = bf_rvs-line.state-temperature
@@ -2209,17 +2277,44 @@ if ptrlprop-olddens = true then do:
     sug-density = tt-meas.density
     vapor-density = tt-meas.vapor-density
     vapor-pressure = tt-meas.vapor-pressure
+    sug-water-qnty = tt-meas.water-qnty
   .
-  assign
-    bf_rvs-line.temperature            = tt-meas.temperature    
-    bf_rvs-line.state-temperature      = bf_rvs-line.temperature
-    bf_rvs-line.density                = if tt-meas.density > 0 then tt-meas.density else  bf_rvs-line.state-density
-    bf_rvs-line.brutto-cli-qnty        = if bf_rvs-line.brutto-cli-qnty <> 0 then bf_rvs-line.brutto-cli-qnty else bf_rvs-line.brutto-qnty * bf_rvs-line.density     
-    bf_rvs-line.measure-cli-qnty       = if bf_rvs-line.measure-cli-qnty <> 0 then bf_rvs-line.measure-cli-qnty else bf_rvs-line.measure-qnty * bf_rvs-line.density
-    bf_rvs-line.state-density          = if bf_rvs-line.density > 0 then bf_rvs-line.density else bf_rvs-line.state-density
-    bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.state-measure-qnty * bf_rvs-line.state-density
-    bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.state-brutto-qnty  * bf_rvs-line.state-density
-.
+  
+  if is-sug(bf_rvs-line.gds-code)
+  then do :
+    assign
+      bf_rvs-line.temperature            = tt-meas.temperature    
+      bf_rvs-line.state-temperature      = bf_rvs-line.temperature
+      bf_rvs-line.density                = tt-meas.density
+      bf_rvs-line.state-density          = if bf_rvs-line.density > 0 then bf_rvs-line.density else bf_rvs-line.state-density
+    .
+    assign
+      bf_rvs-line.measure-qnty           = tt-meas.brutto-qnty
+      bf_rvs-line.brutto-qnty            = tt-meas.brutto-qnty + bf_rvs-line.add-qnty
+      bf_rvs-line.measure-cli-qnty       = tt-meas.brutto-cli-qnty
+      bf_rvs-line.brutto-cli-qnty        = tt-meas.brutto-cli-qnty + (bf_rvs-line.add-qnty * bf_rvs-line.density)
+    .
+    assign
+      bf_rvs-line.state-level-petrol = bf_rvs-line.level-petrol
+      bf_rvs-line.state-level-total = bf_rvs-line.level-total
+      bf_rvs-line.state-brutto-cli-qnty      = bf_rvs-line.brutto-cli-qnty
+      bf_rvs-line.state-measure-cli-qnty     = bf_rvs-line.measure-cli-qnty
+      bf_rvs-line.state-measure-qnty     = bf_rvs-line.measure-qnty
+      bf_rvs-line.state-brutto-qnty      = bf_rvs-line.brutto-qnty
+    .
+  end .
+  else do :
+    assign
+      bf_rvs-line.temperature            = tt-meas.temperature    
+      bf_rvs-line.state-temperature      = bf_rvs-line.temperature
+      bf_rvs-line.density                = if tt-meas.density > 0 then tt-meas.density else  bf_rvs-line.state-density
+      bf_rvs-line.brutto-cli-qnty        = if bf_rvs-line.brutto-cli-qnty <> 0 then bf_rvs-line.brutto-cli-qnty else bf_rvs-line.brutto-qnty * bf_rvs-line.density     
+      bf_rvs-line.measure-cli-qnty       = if bf_rvs-line.measure-cli-qnty <> 0 then bf_rvs-line.measure-cli-qnty else bf_rvs-line.measure-qnty * bf_rvs-line.density
+      bf_rvs-line.state-density          = if bf_rvs-line.density > 0 then bf_rvs-line.density else bf_rvs-line.state-density
+      bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.state-measure-qnty * bf_rvs-line.state-density
+      bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.state-brutto-qnty  * bf_rvs-line.state-density
+    .
+  end .
     run placelib_get-attr  ( input {&place-twice-code}
         ,input p-obj-code
         ,input p-obj-type
@@ -2236,22 +2331,24 @@ if ptrlprop-olddens = true then do:
                                      and place.obj-code = p-obj-code
                                      and place.pl-code  = p-pl-code
                                      no-error .
+          if tt-meas.measure-qnty = 0 then tt-meas.measure-qnty = tt-meas.brutto-qnty .
+          if tt-meas.measure-cli-qnty = 0 then tt-meas.measure-cli-qnty = tt-meas.brutto-cli-qnty .
           twice-place-data = "Резервуар " + (if available place then place.loc1 else tt-meas.loc1) + {&new-line} +
-                             "Объем СУГ:   " + string(tt-meas.measure-qnty) + {&new-line} +
+                             "Объем СУГ:       " + string(tt-meas.measure-qnty) + {&new-line} +
                              "Общий объем:     " + string(tt-meas.brutto-qnty) + {&new-line} +
-                             "Масса СУГ:   " + string(tt-meas.measure-cli-qnty) + {&new-line} +
+                             "Масса СУГ:       " + string(tt-meas.measure-cli-qnty) + {&new-line} +
                              "Общая масса:     " + string(tt-meas.brutto-cli-qnty) + {&new-line} +
-                             "Плотность:       " + string(tt-meas.density) + {&new-line} +
-                             "Температура:     " + string(tt-meas.temperature) + {&new-line} +
+                             "Плотность:       " + string(tt-meas.density, ">>>9.9<<<") + {&new-line} +
+                             "Температура:     " + (if tt-meas.temperature = ? then "?" else string(tt-meas.temperature)) + {&new-line} +
                              "Общий уровень:   " + string(tt-meas.level-total) + {&new-line} +
-                             "Уровень СУГ: " + string(tt-meas.level-petrol) + {&new-line} +
+                             "Уровень СУГ:     " + string(tt-meas.level-petrol) + {&new-line} +
                              "Уровень воды:    " + string(tt-meas.level-water) + {&new-line} +
-                             "T1:              " + string(tt-meas.temp-layer1) + {&new-line} +
-                             "T2:              " + string(tt-meas.temp-layer2) + {&new-line} +
-                             "T3:              " + string(tt-meas.temp-layer3) + {&new-line} +
+                             "T1:              " + (if tt-meas.temp-layer1 = ? then "?" else string(tt-meas.temp-layer1)) + {&new-line} +
+                             "T2:              " + (if tt-meas.temp-layer2 = ? then "?" else string(tt-meas.temp-layer2)) + {&new-line} +
+                             "T3:              " + (if tt-meas.temp-layer3 = ? then "?" else string(tt-meas.temp-layer3)) + {&new-line} +
                              "Вода:            " + string(tt-meas.water-qnty) + {&new-line} +
-                             "Плотность ПФ:    " + string(tt-meas.vapor-density) + {&new-line} +
-                             "Давление:        " + string(tt-meas.vapor-pressure)
+                             "Плотность ПФ:    " + string(tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
+                             "Давление:        " + string(tt-meas.vapor-pressure / 1000, ">>>9.9<<<")
                              .
           find first rvs-line-attr exclusive-lock
                 where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -2294,24 +2391,27 @@ if ptrlprop-olddens = true then do:
                  sug-density = sug-density + buf_tt-meas.density
     	           vapor-density = vapor-density + buf_tt-meas.vapor-density
     	           vapor-pressure = vapor-pressure + buf_tt-meas.vapor-pressure
+    	           sug-water-qnty = sug-water-qnty + buf_tt-meas.water-qnty
     	          .
   
+                if buf_tt-meas.measure-qnty = 0 then buf_tt-meas.measure-qnty = buf_tt-meas.brutto-qnty .
+                if buf_tt-meas.measure-cli-qnty = 0 then buf_tt-meas.measure-cli-qnty = buf_tt-meas.brutto-cli-qnty .
                 twice-place-data = "Резервуар " + buf_tt-meas.loc1 + {&new-line} +
-                                   "Объем СУГ:   " + string(buf_tt-meas.measure-qnty) + {&new-line} +
+                                   "Объем СУГ:       " + string(buf_tt-meas.measure-qnty) + {&new-line} +
                                    "Общий объем:     " + string(buf_tt-meas.brutto-qnty) + {&new-line} +
-                                   "Масса СУГ:   " + string(buf_tt-meas.measure-cli-qnty) + {&new-line} +
+                                   "Масса СУГ:       " + string(buf_tt-meas.measure-cli-qnty) + {&new-line} +
                                    "Общая масса:     " + string(buf_tt-meas.brutto-cli-qnty) + {&new-line} +
-                                   "Плотность:       " + string(buf_tt-meas.density) + {&new-line} +
-                                   "Температура:     " + string(buf_tt-meas.temperature) + {&new-line} +
+                                   "Плотность:       " + string(buf_tt-meas.density, ">>>9.9<<<") + {&new-line} +
+                                   "Температура:     " + (if buf_tt-meas.temperature = ? then "?" else string(buf_tt-meas.temperature)) + {&new-line} +
                                    "Общий уровень:   " + string(buf_tt-meas.level-total) + {&new-line} +
-                                   "Уровень СУГ: " + string(buf_tt-meas.level-petrol) + {&new-line} +
+                                   "Уровень СУГ:     " + string(buf_tt-meas.level-petrol) + {&new-line} +
                                    "Уровень воды:    " + string(buf_tt-meas.level-water) + {&new-line} +
-                                   "T1:              " + string(buf_tt-meas.temp-layer1) + {&new-line} +
-                                   "T2:              " + string(buf_tt-meas.temp-layer2) + {&new-line} +
-                                   "T3:              " + string(buf_tt-meas.temp-layer3) + {&new-line} +
+                                   "T1:              " + (if buf_tt-meas.temp-layer1 = ? then "?" else string(buf_tt-meas.temp-layer1)) + {&new-line} +
+                                   "T2:              " + (if buf_tt-meas.temp-layer2 = ? then "?" else string(buf_tt-meas.temp-layer2)) + {&new-line} +
+                                   "T3:              " + (if buf_tt-meas.temp-layer3 = ? then "?" else string(buf_tt-meas.temp-layer3)) + {&new-line} +
                                    "Вода:            " + string(buf_tt-meas.water-qnty) + {&new-line} +
-                                   "Плотность ПФ:    " + string(buf_tt-meas.vapor-density) + {&new-line} +
-                                   "Давление:        " + string(buf_tt-meas.vapor-pressure)
+                                   "Плотность ПФ:    " + string(buf_tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
+                                   "Давление:        " + string(buf_tt-meas.vapor-pressure / 1000, ">>>9.9<<<")
                                    .
                 find first rvs-line-attr exclusive-lock
                       where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -2336,39 +2436,60 @@ if ptrlprop-olddens = true then do:
                   .
                 end.
               end.
-              assign
-                bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.measure-qnty
-                bf_rvs-line.brutto-qnty            = bf_rvs-line.brutto-qnty + buf_tt-meas.brutto-qnty
-                bf_rvs-line.measure-cli-qnty       = bf_rvs-line.measure-cli-qnty + buf_tt-meas.measure-cli-qnty
-                bf_rvs-line.brutto-cli-qnty        = bf_rvs-line.brutto-cli-qnty  + (if buf_tt-meas.brutto-cli-qnty <> 0 then buf_tt-meas.brutto-cli-qnty else buf_tt-meas.brutto-qnty * buf_tt-meas.density) 
-                bf_rvs-line.temperature            = (bf_rvs-line.temperature + buf_tt-meas.temperature) 
-/*                bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)  */
-/*                bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)*/
-/*                bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)  */
-                bf_rvs-line.temp-layer1            = (bf_rvs-line.temp-layer1 + buf_tt-meas.temp-layer1)
-                bf_rvs-line.temp-layer2            = (bf_rvs-line.temp-layer2  + buf_tt-meas.temp-layer2)
-                bf_rvs-line.temp-layer3            = (bf_rvs-line.temp-layer3 +  buf_tt-meas.temp-layer3)
-                bf_rvs-line.measure-tc-qnty        = bf_rvs-line.measure-tc-qnty  + buf_tt-meas.measure-tc-qnty
-                bf_rvs-line.brutto-tc-qnty         = bf_rvs-line.brutto-tc-qnty +  buf_tt-meas.brutto-tc-qnty
-              .
-              if is-sug(bf_rvs-line.gds-code)
-              then do :
-                find first place no-lock where place.obj-type = p-obj-type
-                                           and place.obj-code = p-obj-code
-                                           and place.pl-code  = p-pl-code
-                                           .
-                assign
-/*                  bf_rvs-line.level-petrol = bf_rvs-line.level-petrol + buf_tt-meas.level-total*/
-                  bf_rvs-line.level-petrol = bf_rvs-line.level-petrol + buf_tt-meas.level-petrol
-                  bf_rvs-line.level-total = bf_rvs-line.level-total + place.max-qnty
-                  bf_rvs-line.level-water = bf_rvs-line.level-water + buf_tt-meas.level-water 
-                .
+	          
+  	          if not is-sug(bf_rvs-line.gds-code)
+  	          then do :
+    	          if place-asi-sertif then 
+    	          do:
+                  assign
+    	              bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.measure-qnty
+    	              bf_rvs-line.brutto-qnty            = bf_rvs-line.brutto-qnty + buf_tt-meas.brutto-qnty
+    	              bf_rvs-line.measure-cli-qnty       = bf_rvs-line.measure-cli-qnty + (if buf_tt-meas.measure-cli-qnty <> 0 then buf_tt-meas.measure-cli-qnty else buf_tt-meas.measure-qnty * buf_tt-meas.density) 
+    	              bf_rvs-line.brutto-cli-qnty        = bf_rvs-line.brutto-cli-qnty  + (if buf_tt-meas.brutto-cli-qnty <> 0 then buf_tt-meas.brutto-cli-qnty else buf_tt-meas.brutto-qnty * buf_tt-meas.density) 
+    	              bf_rvs-line.temperature            = (bf_rvs-line.temperature + buf_tt-meas.temperature)
+    	              bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)
+    	              bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)
+    	              bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)
+    	              bf_rvs-line.temp-layer1            = (bf_rvs-line.temp-layer1 + buf_tt-meas.temp-layer1)
+    	              bf_rvs-line.temp-layer2            = (bf_rvs-line.temp-layer2  + buf_tt-meas.temp-layer2)
+    	              bf_rvs-line.temp-layer3            = (bf_rvs-line.temp-layer3 +  buf_tt-meas.temp-layer3)
+    	              bf_rvs-line.measure-tc-qnty        = bf_rvs-line.measure-tc-qnty  + buf_tt-meas.measure-tc-qnty
+    	              bf_rvs-line.brutto-tc-qnty         = bf_rvs-line.brutto-tc-qnty +  buf_tt-meas.brutto-tc-qnty
+                  .
+                end.
+                else do :
+                  assign
+    	              bf_rvs-line.measure-cli-qnty       = (bf_rvs-line.measure-qnty * bf_rvs-line.density) + (buf_tt-meas.measure-qnty * buf_tt-meas.density) 
+    	              bf_rvs-line.brutto-cli-qnty        = (bf_rvs-line.brutto-qnty * bf_rvs-line.density)  + (buf_tt-meas.brutto-qnty * buf_tt-meas.density) 
+    	              bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.measure-qnty
+    	              bf_rvs-line.brutto-qnty            = bf_rvs-line.brutto-qnty + buf_tt-meas.brutto-qnty
+    	              bf_rvs-line.temperature            = (bf_rvs-line.temperature + buf_tt-meas.temperature)
+    	              bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)
+    	              bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)
+    	              bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)
+    	              bf_rvs-line.temp-layer1            = (bf_rvs-line.temp-layer1 + buf_tt-meas.temp-layer1)
+    	              bf_rvs-line.temp-layer2            = (bf_rvs-line.temp-layer2  + buf_tt-meas.temp-layer2)
+    	              bf_rvs-line.temp-layer3            = (bf_rvs-line.temp-layer3 +  buf_tt-meas.temp-layer3)
+    	              bf_rvs-line.measure-tc-qnty        = bf_rvs-line.measure-tc-qnty  + buf_tt-meas.measure-tc-qnty
+    	              bf_rvs-line.brutto-tc-qnty         = bf_rvs-line.brutto-tc-qnty +  buf_tt-meas.brutto-tc-qnty
+    	            .
+                end.
               end.
               else do :
                 assign
-                  bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total) 
-                  bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol) 
-                  bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water) 
+                  bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.brutto-qnty
+                  bf_rvs-line.brutto-qnty            = bf_rvs-line.brutto-qnty + buf_tt-meas.brutto-qnty
+                  bf_rvs-line.measure-cli-qnty       = bf_rvs-line.measure-cli-qnty + buf_tt-meas.brutto-cli-qnty 
+                  bf_rvs-line.brutto-cli-qnty        = bf_rvs-line.brutto-cli-qnty  + buf_tt-meas.brutto-cli-qnty 
+                  bf_rvs-line.temperature            = (bf_rvs-line.temperature + buf_tt-meas.temperature) 
+                  bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)
+                  bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)
+                  bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)
+                  bf_rvs-line.temp-layer1            = (bf_rvs-line.temp-layer1 + buf_tt-meas.temp-layer1)
+                  bf_rvs-line.temp-layer2            = (bf_rvs-line.temp-layer2  + buf_tt-meas.temp-layer2)
+                  bf_rvs-line.temp-layer3            = (bf_rvs-line.temp-layer3 +  buf_tt-meas.temp-layer3)
+                  bf_rvs-line.measure-tc-qnty        = bf_rvs-line.measure-tc-qnty  + buf_tt-meas.measure-tc-qnty
+                  bf_rvs-line.brutto-tc-qnty         = bf_rvs-line.brutto-tc-qnty +  buf_tt-meas.brutto-tc-qnty
                 .
               end.
             end.
@@ -2422,23 +2543,26 @@ if ptrlprop-olddens = true then do:
                sug-density = sug-density + buf_tt-meas.density
                vapor-density = vapor-density + buf_tt-meas.vapor-density
                vapor-pressure = vapor-pressure + buf_tt-meas.vapor-pressure
+               sug-water-qnty = sug-water-qnty + buf_tt-meas.water-qnty
               . 
+              if buf_tt-meas.measure-qnty = 0 then buf_tt-meas.measure-qnty = buf_tt-meas.brutto-qnty .
+              if buf_tt-meas.measure-cli-qnty = 0 then buf_tt-meas.measure-cli-qnty = buf_tt-meas.brutto-cli-qnty .
               twice-place-data = "Резервуар " + buf_tt-meas.loc1 + {&new-line} +
-                                 "Объем СУГ:   " + string(buf_tt-meas.measure-qnty) + {&new-line} +
+                                 "Объем СУГ:       " + string(buf_tt-meas.measure-qnty) + {&new-line} +
                                  "Общий объем:     " + string(buf_tt-meas.brutto-qnty) + {&new-line} +
-                                 "Масса СУГ:   " + string(buf_tt-meas.measure-cli-qnty) + {&new-line} +
+                                 "Масса СУГ:       " + string(buf_tt-meas.measure-cli-qnty) + {&new-line} +
                                  "Общая масса:     " + string(buf_tt-meas.brutto-cli-qnty) + {&new-line} +
-                                 "Плотность:       " + string(buf_tt-meas.density) + {&new-line} +
-                                 "Температура:     " + string(buf_tt-meas.temperature) + {&new-line} +
+                                 "Плотность:       " + string(buf_tt-meas.density, ">>>9.9<<<") + {&new-line} +
+                                 "Температура:     " + (if buf_tt-meas.temperature = ? then "?" else string(buf_tt-meas.temperature)) + {&new-line} +
                                  "Общий уровень:   " + string(buf_tt-meas.level-total) + {&new-line} +
-                                 "Уровень СУГ: " + string(buf_tt-meas.level-petrol) + {&new-line} +
+                                 "Уровень СУГ:     " + string(buf_tt-meas.level-petrol) + {&new-line} +
                                  "Уровень воды:    " + string(buf_tt-meas.level-water) + {&new-line} +
-                                 "T1:              " + string(buf_tt-meas.temp-layer1) + {&new-line} +
-                                 "T2:              " + string(buf_tt-meas.temp-layer2) + {&new-line} +
-                                 "T3:              " + string(buf_tt-meas.temp-layer3) + {&new-line} +
+                                 "T1:              " + (if buf_tt-meas.temp-layer1 = ? then "?" else string(buf_tt-meas.temp-layer1)) + {&new-line} +
+                                 "T2:              " + (if buf_tt-meas.temp-layer2 = ? then "?" else string(buf_tt-meas.temp-layer2)) + {&new-line} +
+                                 "T3:              " + (if buf_tt-meas.temp-layer3 = ? then "?" else string(buf_tt-meas.temp-layer3)) + {&new-line} +
                                  "Вода:            " + string(buf_tt-meas.water-qnty) + {&new-line} +
-                                 "Плотность ПФ:    " + string(buf_tt-meas.vapor-density) + {&new-line} +
-                                 "Давление:        " + string(buf_tt-meas.vapor-pressure)
+                                 "Плотность ПФ:    " + string(buf_tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
+                                 "Давление:        " + string(buf_tt-meas.vapor-pressure / 1000, ">>>9.9<<<")
                                  .
               find first rvs-line-attr exclusive-lock
                     where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -2469,17 +2593,92 @@ if ptrlprop-olddens = true then do:
                vapor-density = vapor-density / 2
                vapor-pressure = vapor-pressure / 2
               .
-              assign
-                  bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.measure-qnty
+            end.
+            
+            if not is-sug(bf_rvs-line.gds-code)  
+            then do :
+  	          if place-asi-sertif then
+  	          do:
+  	            assign
+  	              bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.measure-qnty
+  	              bf_rvs-line.brutto-qnty            = bf_rvs-line.brutto-qnty + buf_tt-meas.brutto-qnty
+  	              bf_rvs-line.measure-cli-qnty       = bf_rvs-line.measure-cli-qnty + (if buf_tt-meas.measure-cli-qnty <> 0 then buf_tt-meas.measure-cli-qnty else buf_tt-meas.measure-qnty * buf_tt-meas.density) 
+  	              bf_rvs-line.brutto-cli-qnty        = bf_rvs-line.brutto-cli-qnty  + (if buf_tt-meas.brutto-cli-qnty <> 0 then buf_tt-meas.brutto-cli-qnty else buf_tt-meas.brutto-qnty * buf_tt-meas.density) 
+  	              bf_rvs-line.density                = bf_rvs-line.brutto-cli-qnty / bf_rvs-line.brutto-qnty    
+  	              bf_rvs-line.temperature            = (bf_rvs-line.temperature + buf_tt-meas.temperature) / 2
+  	              bf_rvs-line.state-temperature      = bf_rvs-line.temperature 
+  	              bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)
+  	              bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)
+  	              bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)
+  	              bf_rvs-line.temp-layer1            = (bf_rvs-line.temp-layer1 + buf_tt-meas.temp-layer1) / 2
+  	              bf_rvs-line.temp-layer2            = (bf_rvs-line.temp-layer2  + buf_tt-meas.temp-layer2) / 2
+  	              bf_rvs-line.temp-layer3            = (bf_rvs-line.temp-layer3 +  buf_tt-meas.temp-layer3) / 2
+  	              bf_rvs-line.measure-tc-qnty        = bf_rvs-line.measure-tc-qnty  + buf_tt-meas.measure-tc-qnty
+  	              bf_rvs-line.brutto-tc-qnty         = bf_rvs-line.brutto-tc-qnty +  buf_tt-meas.brutto-tc-qnty
+  	
+  	              bf_rvs-line.state-measure-qnty     = bf_rvs-line.measure-qnty
+  	              bf_rvs-line.state-brutto-qnty      = bf_rvs-line.brutto-qnty
+  	              bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.measure-cli-qnty
+  	              bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.brutto-cli-qnty
+  	              bf_rvs-line.state-density          = bf_rvs-line.density
+  	              bf_rvs-line.state-level-total      = bf_rvs-line.level-total
+  	              bf_rvs-line.state-level-petrol     = bf_rvs-line.level-petrol
+  	              bf_rvs-line.state-level-water      = bf_rvs-line.level-water
+  	              bf_rvs-line.state-temp-layer1      = bf_rvs-line.temp-layer1
+  	              bf_rvs-line.state-temp-layer2      = bf_rvs-line.temp-layer2
+  	              bf_rvs-line.state-temp-layer3      = bf_rvs-line.temp-layer3
+  	              bf_rvs-line.state-measure-tc-qnty  = bf_rvs-line.measure-tc-qnty
+  	              bf_rvs-line.state-brutto-tc-qnty   = bf_rvs-line.brutto-tc-qnty
+  	              .
+  	              
+  	          end.
+  	          else 
+  	          do: 	
+  	              assign
+  	              bf_rvs-line.measure-cli-qnty       = (bf_rvs-line.measure-qnty * bf_rvs-line.density) + (buf_tt-meas.measure-qnty * buf_tt-meas.density) 
+  	              bf_rvs-line.brutto-cli-qnty        = (bf_rvs-line.brutto-qnty * bf_rvs-line.density)  + (buf_tt-meas.brutto-qnty * buf_tt-meas.density) 
+  	              bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.measure-qnty
+  	              bf_rvs-line.brutto-qnty            = bf_rvs-line.brutto-qnty + buf_tt-meas.brutto-qnty
+  	              bf_rvs-line.density                = (bf_rvs-line.density + buf_tt-meas.density) / 2    
+  	              bf_rvs-line.temperature            = (bf_rvs-line.temperature + buf_tt-meas.temperature) / 2
+  	              bf_rvs-line.state-temperature      = bf_rvs-line.temperature 
+  	              bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)
+  	              bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)
+  	              bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)
+  	              bf_rvs-line.temp-layer1            = (bf_rvs-line.temp-layer1 + buf_tt-meas.temp-layer1) / 2
+  	              bf_rvs-line.temp-layer2            = (bf_rvs-line.temp-layer2  + buf_tt-meas.temp-layer2) / 2
+  	              bf_rvs-line.temp-layer3            = (bf_rvs-line.temp-layer3 +  buf_tt-meas.temp-layer3) / 2
+  	              bf_rvs-line.measure-tc-qnty        = bf_rvs-line.measure-tc-qnty  + buf_tt-meas.measure-tc-qnty
+  	              bf_rvs-line.brutto-tc-qnty         = bf_rvs-line.brutto-tc-qnty +  buf_tt-meas.brutto-tc-qnty
+  	
+  	              bf_rvs-line.state-measure-qnty     = bf_rvs-line.measure-qnty
+  	              bf_rvs-line.state-brutto-qnty      = bf_rvs-line.brutto-qnty
+  	              bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.measure-cli-qnty
+  	              bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.brutto-cli-qnty
+  	              bf_rvs-line.state-density          = bf_rvs-line.density
+  	              bf_rvs-line.state-level-total      = bf_rvs-line.level-total
+  	              bf_rvs-line.state-level-petrol     = bf_rvs-line.level-petrol
+  	              bf_rvs-line.state-level-water      = bf_rvs-line.level-water
+  	              bf_rvs-line.state-temp-layer1      = bf_rvs-line.temp-layer1
+  	              bf_rvs-line.state-temp-layer2      = bf_rvs-line.temp-layer2
+  	              bf_rvs-line.state-temp-layer3      = bf_rvs-line.temp-layer3
+  	              bf_rvs-line.state-measure-tc-qnty  = bf_rvs-line.measure-tc-qnty
+  	              bf_rvs-line.state-brutto-tc-qnty   = bf_rvs-line.brutto-tc-qnty
+  	              .
+  	          end.
+  	        end .
+	          else do :
+	            assign
+                  bf_rvs-line.measure-qnty           = bf_rvs-line.measure-qnty + buf_tt-meas.brutto-qnty
                   bf_rvs-line.brutto-qnty            = bf_rvs-line.brutto-qnty + buf_tt-meas.brutto-qnty
-                  bf_rvs-line.measure-cli-qnty       = bf_rvs-line.measure-cli-qnty + buf_tt-meas.measure-cli-qnty
-                  bf_rvs-line.brutto-cli-qnty        = bf_rvs-line.brutto-cli-qnty  + (if buf_tt-meas.brutto-cli-qnty <> 0 then buf_tt-meas.brutto-cli-qnty else buf_tt-meas.brutto-qnty * buf_tt-meas.density) 
-                  bf_rvs-line.density                = bf_rvs-line.brutto-cli-qnty / bf_rvs-line.brutto-qnty    
+                  bf_rvs-line.measure-cli-qnty       = bf_rvs-line.measure-cli-qnty + buf_tt-meas.brutto-cli-qnty 
+                  bf_rvs-line.brutto-cli-qnty        = bf_rvs-line.brutto-cli-qnty  + buf_tt-meas.brutto-cli-qnty 
+                  bf_rvs-line.density                = sug-density    
                   bf_rvs-line.temperature            = (bf_rvs-line.temperature + buf_tt-meas.temperature) / 2
                   bf_rvs-line.state-temperature      = bf_rvs-line.temperature 
-/*                  bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)  */
-/*                  bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)*/
-/*                  bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)  */
+                  bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total)
+                  bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol)
+                  bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)
                   bf_rvs-line.temp-layer1            = (bf_rvs-line.temp-layer1 + buf_tt-meas.temp-layer1) / 2
                   bf_rvs-line.temp-layer2            = (bf_rvs-line.temp-layer2  + buf_tt-meas.temp-layer2) / 2
                   bf_rvs-line.temp-layer3            = (bf_rvs-line.temp-layer3 +  buf_tt-meas.temp-layer3) / 2
@@ -2491,51 +2690,45 @@ if ptrlprop-olddens = true then do:
                   bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.measure-cli-qnty
                   bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.brutto-cli-qnty
                   bf_rvs-line.state-density          = bf_rvs-line.density
-/*                  bf_rvs-line.state-level-total      = bf_rvs-line.level-total */
-/*                  bf_rvs-line.state-level-petrol     = bf_rvs-line.level-petrol*/
-/*                  bf_rvs-line.state-level-water      = bf_rvs-line.level-water */
+                  bf_rvs-line.state-level-total      = bf_rvs-line.level-total
+                  bf_rvs-line.state-level-petrol     = bf_rvs-line.level-petrol
+                  bf_rvs-line.state-level-water      = bf_rvs-line.level-water
                   bf_rvs-line.state-temp-layer1      = bf_rvs-line.temp-layer1
                   bf_rvs-line.state-temp-layer2      = bf_rvs-line.temp-layer2
                   bf_rvs-line.state-temp-layer3      = bf_rvs-line.temp-layer3
                   bf_rvs-line.state-measure-tc-qnty  = bf_rvs-line.measure-tc-qnty
                   bf_rvs-line.state-brutto-tc-qnty   = bf_rvs-line.brutto-tc-qnty
-                  .
-              if is-sug(bf_rvs-line.gds-code)
-              then do :
-                assign
-                  bf_rvs-line.density       = sug-density
-                  bf_rvs-line.state-density = bf_rvs-line.density
                 .
-                find first place no-lock where place.obj-type = p-obj-type
-                                           and place.obj-code = p-obj-code
-                                           and place.pl-code  = p-pl-code
-                                           .
-                assign
-  /*                bf_rvs-line.level-petrol = bf_rvs-line.level-petrol + buf_tt-meas.level-total*/
-                  bf_rvs-line.level-petrol = bf_rvs-line.level-petrol + buf_tt-meas.level-petrol
-                  bf_rvs-line.level-total = bf_rvs-line.level-total + place.max-qnty
-                  bf_rvs-line.level-water = bf_rvs-line.level-water + buf_tt-meas.level-water
-                . 
               end.
-              else do :
-                assign 
-                  bf_rvs-line.level-total            = (bf_rvs-line.level-total + buf_tt-meas.level-total) 
-                  bf_rvs-line.level-petrol           = (bf_rvs-line.level-petrol + buf_tt-meas.level-petrol) 
-                  bf_rvs-line.level-water            = (bf_rvs-line.level-water + buf_tt-meas.level-water)
-                .  
-              end.
-              assign
-                bf_rvs-line.state-level-total      = bf_rvs-line.level-total
-                bf_rvs-line.state-level-petrol     = bf_rvs-line.level-petrol
-                bf_rvs-line.state-level-water      = bf_rvs-line.level-water
-              .
             
           end.
-        end.
     end.
     
     if is-sug(bf_rvs-line.gds-code)
     then do :
+      find first rvs-line-attr exclusive-lock
+            where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+              and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+              and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+              and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+              and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+              and rvs-line-attr.attr-code = "sug-water-qnty" no-error.
+      if available rvs-line-attr then do :
+        rvs-line-attr.attr-value = string(sug-water-qnty) .
+      end.
+      else do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+          rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+          rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+          rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+          rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+          rvs-line-attr.attr-code = "sug-water-qnty"
+          rvs-line-attr.attr-value = string(sug-water-qnty)
+        .
+      end.
+      
       find first rvs-line-attr exclusive-lock
             where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
               and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -2592,7 +2785,11 @@ if ptrlprop-olddens = true then do:
     v-lvl-qnty = 0 .
     /*     if search(v-file-name ) <> ? then do:*/
 
-    IF rdc-value = "pomi-rn" and available tt-meas-file and   tt-meas-file.log-brutto = yes then do:
+    IF rdc-value = "pomi-rn"
+    and available tt-meas-file 
+    and   tt-meas-file.log-brutto = yes
+    and not is-sug(bf_rvs-line.gds-code)
+    then do:
     /*Тип резервуара*/
     run placelib_get-attr in this-procedure  (
         input {&place-type}
@@ -2699,7 +2896,9 @@ if ptrlprop-olddens = true then do:
       /* Для тех у кого установлен параметр olddens */
     { gbl/ptrlprop.i run p-obj-type p-obj-code }
     
-        IF ptrlprop-olddens = true THEN 
+        IF ptrlprop-olddens = true
+        and not is-sug(bf_rvs-line.gds-code)
+        THEN 
         DO:
             p-prev-rvs-date = NO.
             FIND FIRST rvs-doc WHERE rvs-doc.rvs-code = bf_rvs-line.rvs-code NO-LOCK NO-ERROR.
@@ -2832,7 +3031,10 @@ if ptrlprop-olddens = true then do:
 FIND FIRST tt-meas-file WHERE tt-meas-file.pl-code =  tt-meas.pl-code NO-LOCK NO-ERROR.
   
 
-IF available tt-meas-file and   tt-meas-file.log-brutto = no THEN DO: 
+IF available tt-meas-file
+and   tt-meas-file.log-brutto = no
+and not is-sug(bf_rvs-line.gds-code)
+THEN DO: 
 
 
         RUN gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", NO, OUTPUT rdc-dnstvalue, OUTPUT rdc-dnsttype) NO-ERROR.
@@ -3063,7 +3265,7 @@ IF available tt-meas-file and   tt-meas-file.log-brutto = no THEN DO:
           v-mm:H                      = integer(round( bf_rvs-line.level-total, 1) * 10)
           v-mm:H_water                = integer(round( bf_rvs-line.level-water, 1) * 10)
           v-mm:CalibrationTable       = CalibTable
-          v-mm:Tv                     = bf_rvs-line.state-temp-layer1 
+          v-mm:Tv                     = (if bf_rvs-line.state-temp-layer1 <> ? then bf_rvs-line.state-temp-layer1 else 0)
           v-mm:Tr                     = bf_rvs-line.temperature
           v-mm:R                      = ( bf_rvs-line.density * 1000 )
           v-mm:Tcy                    = temp-for-pomi
@@ -3118,7 +3320,7 @@ IF available tt-meas-file and   tt-meas-file.log-brutto = no THEN DO:
             and place.obj-type =  bf_rvs-line.obj-type
             and place.pl-code  =  bf_rvs-line.pl-code no-error.
       if place.is-meas  = yes then do :
-         v-mm:Tv =  bf_rvs-line.state-temperature .
+         v-mm:Tv =  (if bf_rvs-line.state-temperature <> ? then bf_rvs-line.state-temperature else 0) .
       end.
         
         output stream outstream close.
@@ -3547,7 +3749,9 @@ define variable p-prev-rvs-date as logical no-undo.
     end. /* if available crl_prev_rvs-doc */
     
     { gbl/ptrlprop.i run p-obj-type p-obj-code }    
-        IF ptrlprop-olddens = true THEN 
+        IF ptrlprop-olddens = true
+        and not is-sug(bf_rvs-line.gds-code)
+        THEN 
         DO:
             p-prev-rvs-date = NO.
             FIND FIRST rvs-doc WHERE rvs-doc.rvs-code = bf_rvs-line.rvs-code NO-LOCK NO-ERROR.
