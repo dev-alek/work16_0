@@ -36,10 +36,14 @@ define variable vss-description as character no-undo init "Печать платежа  типа 
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print   as logical      no-undo.
 { gbl/cur-time.i }
+{ cmp/library.i }
 { cmp/r-pril.i new }
 { gbl/prn-lib.i }
 { rep/frmlib.i }
-{ rep/rpp1xl.i  }
+/*{ rep/rpp1xl.i  }*/
+{ gbl/db-attr.i }
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
 define variable Line              as character no-undo .
 define variable v-str-podr-name   as character no-undo .
 define variable v-payer-name-p1   as character no-undo .
@@ -81,6 +85,10 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable par-type as character no-undo .
 define variable v-tth as handle no-undo .
+define variable l-ok  as logical no-undo .
+define variable v-hist-name            as character no-undo .
+define variable v-hist-code            as character no-undo .
+
 
 define variable p-report-id          as character no-undo .
 define variable v-file-name-rep-html as character no-undo .
@@ -96,6 +104,11 @@ define buffer buf_currency for ub.currency.
 do
 on error undo, return error return-value
 :
+  
+  message "Печатать отрывной лист квитанции ? " skip
+  view-as alert-box question
+  buttons yes-no
+  update l-ok .
   
   mCashBook = new ibs.th.ref.cashbookstorage () .
       
@@ -282,7 +295,8 @@ on error undo, return error return-value
                                     , string( Year( v-date-create ), "9999":U )
                                   )
     .
-
+  run db-attr-value(INPUT v-cntxt-db-num,INPUT {&attr-hist-code},OUTPUT v-hist-code ,OUTPUT par-type) .
+if l-ok then do:
   output stream OutStr-html to value(v-file-name-rep-html) convert target 'UTF-8'.
   put stream OutStr-html unformatted
     "<!DOCTYPE HTML>" skip
@@ -494,7 +508,7 @@ on error undo, return error return-value
     '<td colspan="39" style="text-align: center; font-size: 10px;">(организация)</td>' skip
     '<td colspan="9" style="text-align: right;"></td>' skip
     '<td></td>' skip
-    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.str-podr-code = 0 then "" + '</td>' else string( buf_fin-doc.str-podr-code ) + '</td>' skip
+    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;">' + string( v-hist-code ) + '</td>' skip
     '<td></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
@@ -867,7 +881,350 @@ on error undo, return error return-value
     '</html>' skip
     .
   output stream OutStr-html close.    
+end.
+else do:
+    output stream OutStr-html to value(v-file-name-rep-html) convert target 'UTF-8'.
+  put stream OutStr-html unformatted
+    "<!DOCTYPE HTML>" skip
+    ' <html>' skip
+    '  <head>' skip
+    '   <meta charset="utf-8">' skip
+    '    <style type="text/css">' skip
+                        
+    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+    '   </style>' skip
+    '  </head>' skip
+    '<body>' skip
+    .
+
+  /*Печать*/
+  put stream OutStr-html unformatted
+    '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="Отчет">'skip
+    .
+
+  put stream OutStr-html unformatted
+    '<thead>' skip
+    '<tr>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '</tr>' skip
+    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="31" style="text-align: center;"></td>' skip
+    '<td colspan="35" style="text-align: left;">Унифицированная форма № КО-1</td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="31" style="text-align: center;"></td>' skip
+    '<td colspan="35" style="text-align: left;">Утверждена постановлением Госкомстата</td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="31" style="text-align: center;"></td>' skip
+    '<td colspan="35" style="text-align: left;">России от 18.08.98 №88</td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="31" style="text-align: center;"></td>' skip
+    '<td colspan="35" style="text-align: left;"></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="49" style="text-align: center;"></td>' skip
+    '<td colspan="16" style="text-align: center; border: 1px solid black;">Код</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="35" style="text-align: center;"></td>' skip
+    '<td colspan="13" style="text-align: right;">Форма по ОКУД</td>' skip
+    '<td></td>' skip
+    '<td colspan="16" style="text-align: center; border: 2px solid black;">0310001</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="39" style="text-align: center; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-name + '</td>' skip
+    '<td colspan="9" style="text-align: right;">по ОКПО</td>' skip
+    '<td></td>' skip
+    '<td colspan="16" style="text-align: center; border: 2px solid black;">' + string(buf_fin-doc.receiver-okpo) + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="39" style="text-align: center; font-size: 10px;">(организация)</td>' skip
+    '<td colspan="9" style="text-align: right;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;">' + string( v-hist-code ) + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="39" style="text-align: center; border-bottom: 1px solid black;">' + v-str-podr-name + '</td>' skip
+    '<td colspan="10" style="text-align: right;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="39" style="text-align:center; font-size: 10px;">(структурное подразделение)</td>' skip
+    '<td colspan="10" style="text-align: right;"></td>' skip
+    '<td colspan="16" style="text-align:center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="41" style="text-align:center;"></td>' skip
+    '<td colspan="10" style="text-align:center; border-left: 1px solid black; border-right: 1px solid black; border-top: 1px solid black">Номер</td>' skip
+    '<td colspan="14" style="text-align:center; border-left: 1px solid black; border-right: 1px solid black; border-top: 1px solid black">Дата</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="41" style="text-align: center;"></td>' skip
+    '<td colspan="10" style="text-align: center; border-left: 1px solid black; border-right: 1px solid black; border-bottom: 1px solid black">документа</td>' skip
+    '<td colspan="14" style="text-align: center; border-left: 1px solid black; border-right: 1px solid black; border-bottom: 1px solid black">составления</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="41" style="text-align: center; font-weight: bold;">ПРИХОДНЫЙ КАССОВЫЙ ОРДЕР</td>' skip
+    '<td colspan="10" style="text-align: center; border: 1px solid black;">' + string(buf_fin-doc.prn-doc-code) + '</td>' skip
+    '<td colspan="14" style="text-align: center; border: 1px solid black;">' + string(v-doc-date-f) + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted 
+    '<tr>' skip
+    '<td colspan="41" style="text-align: center; font-weight: bold;"></td>' skip
+    '<td colspan="10" style="text-align: center;"></td>' skip
+    '<td colspan="14" style="text-align: center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted 
+    '<tr>' skip
+    '<td colspan="6" rowspan="4" style="text-align: center; border: 1px solid black;">Дебет</td>' skip
+    '<td text_wrap="true" colspan="33" style="text-align: center; border: 1px solid black;">Кредит</td>' skip
+    '<td text_wrap="true" rowspan="4" colspan="9" style="text-align: center; border: 1px solid black;">Сумма, руб. коп.</td>' skip
+    '<td text_wrap="true" rowspan="4" colspan="10" style="text-align: center; border: 1px solid black;">Код целевого назначения</td>' skip
+    '<td text_wrap="true" rowspan="4" colspan="7" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td text_wrap="true" rowspan="3" colspan="4" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">код структурного подразделения</td>' skip
+    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">корреспондирующий счет, субсчет</td>' skip
+    '<td text_wrap="true" colspan="11" rowspan="3" style="text-align: center; border: 1px solid black;">код аналитического учета</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted       
+    '<tr>' skip
+    '<td text_wrap="true" colspan="6" rowspan="2" style="text-align: center; border: 1px solid black;">' + string(buf_fin-doc.cor-acc1-value) + '</td>' skip
+    '<td text_wrap="true" colspan="4" rowspan="2" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + "-" + '</td>' skip
+    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.cor-acc-value = "" then "-"  + '</td>' else buf_fin-doc.cor-acc-value + '</td>' skip
+    '<td text_wrap="true" colspan="11" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.an-uchet-value = "" then "-"  + '</td>' else buf_fin-doc.an-uchet-value + '</td>' skip
+    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + Sum-delim-with-defis(buf_fin-doc.sum-doc, 14) + '</td>' skip
+    '<td text_wrap="true" colspan="10" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.cel-nazn-value = "" then "-"  + '</td>' else buf_fin-doc.cel-nazn-value + '</td>' skip
+    '<td text_wrap="true" colspan="7" rowspan="2" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="text-align: center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">Принято от</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + if v-payer-name-p1 = ? then " "  + '</td>' else v-payer-name-p1 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: center;"></td>' skip
+    '<td colspan="55" style="text-align: right;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">Основание:</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-naznach-plat-l1 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="text-align: right; border-bottom: 1px solid black;">' + v-naznach-plat-l2 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="6" style="text-align: left;">Сумма</td>' skip
+    '<td colspan="59" style="text-align: left; border-bottom: 1px solid black;">' + v-sum-doc-l1 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="6" style="text-align: left;"></td>' skip
+    '<td colspan="59" style="text-align: center; font-size: 10px;">(прописью)</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="48" style="text-align: right; border-bottom: 1px solid black;">' + v-sum-doc-l2 + '</td>' skip
+    '<td colspan="3" style="text-align: left;">руб.</td>' skip
+    '<td colspan="7" style="text-align: right; border-bottom: 1px solid black;">' + string(v-sum-kop-p) + '</td>' skip
+    '<td colspan="7" style="text-align: left;">коп.</td>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">В том числе</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-including + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="text-align: center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">Приложение</td>' skip
+    '<td></td>' skip
+    '<td colspan="54" style="text-align: left; border-bottom: 1px solid black;">' + buf_fin-doc.enclosure + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="align: center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip   .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="15" style="text-align: left;">Главный бухгалтер</td>' skip
+    '<td></td>' skip
+    '<td colspan="20" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="25" style="text-align: center; border-bottom: 1px solid black;">' + if buf_fin-doc.receiver-sign2 = ? then " "  + '</td>' else buf_fin-doc.receiver-sign2 + '</td>' skip
+    '<td colspan="3"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip            .
+      put stream OutStr-html unformatted   
+    '<tr>' skip
+    '<td colspan="15" style="text-align: left;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="20" style="text-align: center; font-size: 10px;">(подпись)</td>' skip
+    '<td></td>' skip
+    '<td colspan="25" style="text-align: center; font-size: 10px;">(расшифровка подписи)</td>' skip
+    '<td colspan="3"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="15" style="text-align: left;">Получил кассир</td>' skip
+    '<td></td>' skip
+    '<td colspan="20" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="25" text_wrap="true" style="text-align: center; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-sign3 + '</td>' skip
+    '<td colspan="3"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip 
+    '</thead>' skip
+    '<tbody>' skip    
+    .
+    put stream OutStr-html unformatted
+    '</tbody>' skip  
+    '</table>' skip
+    .
+
+  put stream OutStr-html unformatted
         
+    '</body>' skip
+    '</html>' skip
+    .
+  output stream OutStr-html close.    
+  
+end.          
   run prn-lib-reportviewer-report-name in this-procedure (
     input THIS-PROCEDURE
     ,input v-file-name-rep-html

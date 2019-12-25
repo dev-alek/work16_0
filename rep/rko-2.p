@@ -39,49 +39,53 @@ define variable vss-description as character no-undo init "Печать платежа  типа 
 { cmp/r-pril.i new }
 { gbl/prn-lib.i }
 { rep/frmlib.i }
+{ gbl/db-attr.i }
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
+define variable g#report-num         as integer   no-undo .
+define variable g#quest-print        as logical   no-undo.
 
-define variable g#report-num  as integer no-undo .
-define variable g#quest-print   as logical      no-undo.
 
+define variable Line                 as character no-undo .
+define variable v-enclosure-1        as character no-undo .
+define variable v-enclosure-2        as character no-undo .
+define variable v-doc-date-f         as character no-undo .
+define variable v-date-create        as date      no-undo .
+define variable v-str-podr-name      as character no-undo .
+define variable num-lines            as integer   no-undo .
+define variable v-fill               as character no-undo init "_".
+define variable v-sum-doc-v1         as character no-undo .
+define variable v-sum-doc-v2         as character no-undo .
+define variable v-sum-doc-n1         as character no-undo .
+define variable v-sum-doc-n2         as character no-undo .
+define variable v-sum-kop-p          as character no-undo .
+define variable v-dops               as character no-undo .
+define variable v-head-position      as character no-undo .
+define variable v-sign1              as character no-undo .
+define variable v-passport-1         as character no-undo .
+define variable v-passport-2         as character no-undo .
+define variable v-rub                as character no-undo .
+define variable v-kop                as character no-undo .
+define variable v-title-rub          as character no-undo .
+define variable v-line3              as integer   no-undo .
+define variable v-line2              as integer   no-undo .
+define variable v-okv-code           as character no-undo .
+define variable v-chernovik          as character no-undo .
+define variable v-naznach-plat-1     as character no-undo .
+define variable v-naznach-plat-2     as character no-undo .
+define variable g#log                as logical   no-undo .
 
-define variable Line              as character no-undo .
-define variable v-enclosure-1     as character no-undo .
-define variable v-enclosure-2     as character no-undo .
-define variable v-doc-date-f      as character no-undo .
-define variable v-date-create     as date      no-undo .
-define variable v-str-podr-name   as character no-undo .
-define variable num-lines         as integer   no-undo .
-define variable v-fill            as character no-undo init "_".
-define variable v-sum-doc-v1      as character no-undo .
-define variable v-sum-doc-v2      as character no-undo .
-define variable v-sum-doc-n1      as character no-undo .
-define variable v-sum-doc-n2      as character no-undo .
-define variable v-sum-kop-p       as character no-undo .
-define variable v-dops            as character no-undo .
-define variable v-head-position   as character no-undo .
-define variable v-sign1           as character no-undo .
-define variable v-passport-1      as character no-undo .
-define variable v-passport-2      as character no-undo .
-define variable v-rub             as character no-undo .
-define variable v-kop             as character no-undo .
-define variable v-title-rub       as character no-undo .
-define variable v-line3           as integer   no-undo .
-define variable v-line2           as integer   no-undo .
-define variable v-okv-code        as character no-undo .
-define variable v-chernovik       as character no-undo .
-define variable v-naznach-plat-1  as character no-undo .
-define variable v-naznach-plat-2  as character no-undo .
-define variable g#log             as logical   no-undo .
-
-define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
-define variable o-uchet as character no-undo .
-define variable v-uchet as character no-undo .
-define variable v-value-date as date no-undo .
-define variable v-value-decimal as decimal no-undo .
-define variable v-value-integer as INTEGER no-undo .
-define variable v-value-logical AS LOGICAL no-undo .
-define variable par-type as character no-undo .
-define variable v-tth as handle no-undo .
+define variable mCashBook            as class     ibs.th.ref.cashbookstorage no-undo .
+define variable o-uchet              as character no-undo .
+define variable v-uchet              as character no-undo .
+define variable v-value-date         as date      no-undo .
+define variable v-value-decimal      as decimal   no-undo .
+define variable v-value-integer      as INTEGER   no-undo .
+define variable v-value-logical      AS LOGICAL   no-undo .
+define variable par-type             as character no-undo .
+define variable v-tth                as handle    no-undo .
+define variable v-hist-name          as character no-undo .
+define variable v-hist-code          as character no-undo .
 
 define variable p-report-id          as character no-undo .
 define variable v-file-name-rep-html as character no-undo .
@@ -89,185 +93,200 @@ define variable ii                   as integer   no-undo .
 define variable v-name               as character no-undo .
 define variable v-name-report        as character no-undo .
 define variable v-obj-name           as character no-undo .
-define variable o-head-position AS character no-undo.    /* Должность */
+define variable o-head-position      AS character no-undo.    /* Должность */
 define stream Out-Stream.
 define stream OutStr-html.
 
 define buffer buf_currency for ub.currency.
-define buffer   buf_sysconf    FOR ub.sysconf.
+define buffer buf_sysconf  FOR ub.sysconf.
 
 do
-on error undo, return error return-value
-:
+  on error undo, return error return-value
+  :
 
   mCashBook = new ibs.th.ref.cashbookstorage () .
       
   o-uchet    = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 9) .
   if o-uchet = "0"
-  then v-uchet = "cal" .
+    then v-uchet = "cal" .
   else v-uchet = "smen" .
   
   delete object mCashBook no-error .
 
   run get-report-num  (output g#report-num).
-/*  run get-quest-print in parParentProc(output g#quest-print).*/
+  /*  run get-quest-print in parParentProc(output g#quest-print).*/
   v-file-name-rep-html = session:temp-directory + string(g#report-num) + ".html".
   
- if p-format <> 0
- and p-format <> ?
- and p-append
- then do:
+  if p-format <> 0
+    and p-format <> ?
+    and p-append
+    then 
+  do:
     assign
-    p-format = ?
+      p-format = ?
+      .
+    return.
+  end.
+  assign
+    Line = fill("_":U, 136)
     .
-   return.
- end.
   assign
-  Line = fill("_":U, 136)
-  .
-  assign
-  v-chernovik = if buf_fin-doc.status_ = {&fin-new}
+    v-chernovik = if buf_fin-doc.status_ = {&fin-new}
                 then "Ч Е Р Н О В И К"
                 else (fill( {&space-char}, 15))
-  .
-  if buf_fin-doc.curr-code = 0 then do:
-    assign
-    v-rub = " {&abbr_rub}.":U
-    v-kop = " {&abbr_kop}.":U
-    v-title-rub = v-rub + v-kop + {&space-char} + {&space-char}
     .
-  end.
-  else do:
-    find first buf_currency no-lock where
-               buf_currency.curr-code = buf_fin-doc.curr-code .
+  if buf_fin-doc.curr-code = 0 then 
+  do:
     assign
-    v-rub = {&space-char} + buf_currency.curr-abbr + ".":U
-    v-kop = {&space-char} + buf_currency.part-abbr + ".":U
-    v-title-rub = "       инвалюты       ":U
-    v-okv-code = (if buf_currency.okv-code = 0
+      v-rub       = " {&abbr_rub}.":U
+      v-kop       = " {&abbr_kop}.":U
+      v-title-rub = v-rub + v-kop + {&space-char} + {&space-char}
+      .
+  end.
+  else 
+  do:
+    find first buf_currency no-lock where
+      buf_currency.curr-code = buf_fin-doc.curr-code .
+    assign
+      v-rub       = {&space-char} + buf_currency.curr-abbr + ".":U
+      v-kop       = {&space-char} + buf_currency.part-abbr + ".":U
+      v-title-rub = "       инвалюты       ":U
+      v-okv-code  = (if buf_currency.okv-code = 0
                   then "Код ОКВ?"
                   else string(buf_Currency.okv-code))
-    .
+      .
   end.
 
   assign
-  v-enclosure-1 = Break-n-line(Buf_fin-doc.enclosure, "62,73", output num-lines)
-  v-enclosure-2 = if num-lines >=2
+    v-enclosure-1 = Break-n-line(Buf_fin-doc.enclosure, "62,73", output num-lines)
+    v-enclosure-2 = if num-lines >=2
                       then entry(2, v-enclosure-1, {&delim-par})
                       else "":U
-  v-enclosure-1 = entry(1, v-enclosure-1, {&delim-par})
-  .
+    v-enclosure-1 = entry(1, v-enclosure-1, {&delim-par})
+    .
   assign
-  v-passport-1 = Break-n-line(Buf_fin-doc.receiver-passport, "70,73", output num-lines)
-  v-passport-2 = if num-lines >=2
+    v-passport-1 = Break-n-line(Buf_fin-doc.receiver-passport, "70,73", output num-lines)
+    v-passport-2 = if num-lines >=2
                       then entry(2, v-passport-1, {&delim-par})
                       else "":U
-  v-passport-1 = entry(1, v-passport-1, {&delim-par})
-  .
+    v-passport-1 = entry(1, v-passport-1, {&delim-par})
+    .
   assign
     v-date-create = (if buf_fin-doc.shift-date = ? or v-uchet = "cal" then buf_fin-doc.doc-date else buf_fin-doc.shift-date)
-    v-doc-date-f = string(v-date-create, "99.99.9999":U) + " г."
-  .
+    v-doc-date-f  = string(v-date-create, "99.99.9999":U) + " г."
+    .
   Case buf_fin-doc.str-podr-type :
-    when {&shop} then do:
-      find first ub.shop
-      where ub.shop.obj-code = buf_fin-doc.str-podr-code
-        no-error.
-        if available ub.shop then do:
-          assign v-str-podr-name = buf_fin-doc.str-podr-name.
+    when {&shop} then 
+      do:
+        find first ub.shop
+          where ub.shop.obj-code = buf_fin-doc.str-podr-code
+          no-error.
+        if available ub.shop then 
+        do:
+          assign 
+            v-str-podr-name = buf_fin-doc.str-podr-name.
         end.
-    end.
-    when {&stock} then do:
-      find first ub.store
-      where ub.store.obj-code = buf_fin-doc.str-podr-code
-        no-error.
-        if available ub.store then do:
-          assign v-str-podr-name = buf_fin-doc.str-podr-name + " " + ub.store.addres1.
+      end.
+    when {&stock} then 
+      do:
+        find first ub.store
+          where ub.store.obj-code = buf_fin-doc.str-podr-code
+          no-error.
+        if available ub.store then 
+        do:
+          assign 
+            v-str-podr-name = buf_fin-doc.str-podr-name + " " + ub.store.addres1.
         end.
-    end.
+      end.
   end case.
   if v-str-podr-name = "" then v-str-podr-name = buf_fin-doc.str-podr-name .
 
   assign
-  v-naznach-plat-1 = Break-n-line(buf_fin-doc.naznach-plat, "125,136":U, output num-lines)
-  v-naznach-plat-2 = (if num-lines >=2
+    v-naznach-plat-1 = Break-n-line(buf_fin-doc.naznach-plat, "125,136":U, output num-lines)
+    v-naznach-plat-2 = (if num-lines >=2
                       then entry(2, v-naznach-plat-1, {&delim-par})
                       else "":U
                       )
-  v-naznach-plat-1 = entry(1, v-naznach-plat-1, {&delim-par})
-  .
+    v-naznach-plat-1 = entry(1, v-naznach-plat-1, {&delim-par})
+    .
 
-  if buf_fin-doc.curr-code = 0 then do:
+  if buf_fin-doc.curr-code = 0 then 
+  do:
     assign
-    v-dops = Sum-in-Words-Without-Dec(buf_fin-doc.sum-doc)
-    .
+      v-dops = Sum-in-Words-Without-Dec(buf_fin-doc.sum-doc)
+      .
     assign
-    v-sum-kop-p = string((buf_fin-doc.sum-doc - truncate(buf_fin-doc.sum-doc, 0)) * 100, "99":U)
-    .
+      v-sum-kop-p = string((buf_fin-doc.sum-doc - truncate(buf_fin-doc.sum-doc, 0)) * 100, "99":U)
+      .
     v-line2 = 121.
   end.
-  else do:
+  else 
+  do:
     assign
-    v-dops = Sum-in-Words-Invalut(buf_fin-doc.sum-doc, buf_fin-doc.curr-code)
-    v-line2 = 136
-    .
+      v-dops  = Sum-in-Words-Invalut(buf_fin-doc.sum-doc, buf_fin-doc.curr-code)
+      v-line2 = 136
+      .
   end.
 
   assign
-  v-sum-doc-v1 = Break-n-line(v-dops, ("128,":U + string(v-line2)), output num-lines)
-  v-sum-doc-v2 = If num-lines >= 2
+    v-sum-doc-v1 = Break-n-line(v-dops, ("128,":U + string(v-line2)), output num-lines)
+    v-sum-doc-v2 = If num-lines >= 2
                  then entry(2, v-sum-doc-v1, {&delim-par})
                  else "":U
-  v-sum-doc-v2 =  v-sum-doc-v2 +  fill("-":U, v-line2 - length(v-sum-doc-v2))
-  v-sum-doc-v1 =  entry(1, v-sum-doc-v1, {&delim-par})
-  v-sum-doc-v1 = v-sum-doc-v1 +  fill("-":U, 128 - length(v-sum-doc-v1))
-  v-sum-doc-v1 = caps(substring(v-sum-doc-v1, 1, 1)) + substring(v-sum-doc-v1, 2)
-  .
+    v-sum-doc-v2 = v-sum-doc-v2 +  fill("-":U, v-line2 - length(v-sum-doc-v2))
+    v-sum-doc-v1 = entry(1, v-sum-doc-v1, {&delim-par})
+    v-sum-doc-v1 = v-sum-doc-v1 +  fill("-":U, 128 - length(v-sum-doc-v1))
+    v-sum-doc-v1 = caps(substring(v-sum-doc-v1, 1, 1)) + substring(v-sum-doc-v1, 2)
+    .
   assign
-  v-sum-doc-n1 = Break-n-line(v-dops, ("128,":U + string(v-line2)), output num-lines)
-  v-sum-doc-n2 = If num-lines >= 2
+    v-sum-doc-n1 = Break-n-line(v-dops, ("128,":U + string(v-line2)), output num-lines)
+    v-sum-doc-n2 = If num-lines >= 2
                  then entry(2, v-sum-doc-n1, {&delim-par})
                  else "":U
-  v-sum-doc-n2 = v-sum-doc-n2 +  fill("-":U, v-line2 - length(v-sum-doc-n2))
-  v-sum-doc-n1 = entry(1, v-sum-doc-n1, {&delim-par})
-  v-sum-doc-n1 = v-sum-doc-n1 +  fill("-":U, 128 - length(v-sum-doc-n1))
-  v-sum-doc-n1 = caps(substring(v-sum-doc-n1, 1, 1)) + substring(v-sum-doc-n1, 2)
-  .
+    v-sum-doc-n2 = v-sum-doc-n2 +  fill("-":U, v-line2 - length(v-sum-doc-n2))
+    v-sum-doc-n1 = entry(1, v-sum-doc-n1, {&delim-par})
+    v-sum-doc-n1 = v-sum-doc-n1 +  fill("-":U, 128 - length(v-sum-doc-n1))
+    v-sum-doc-n1 = caps(substring(v-sum-doc-n1, 1, 1)) + substring(v-sum-doc-n1, 2)
+    .
   
   /*Проверить, что печатать*/
 
-      mCashBook = new ibs.th.ref.cashbookstorage () .
-      o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 5) .
-/*      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 6) .*/
-/*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .*/
-      delete object mCashBook no-error .
+  mCashBook = new ibs.th.ref.cashbookstorage () .
+  o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 5) .
+  /*      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 6) .*/
+  /*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .*/
+  delete object mCashBook no-error .
 
-      case o-head-position:
-        when '1':U then do:
-          v-head-position = "Директор".
+  case o-head-position:
+    when '1':U then 
+      do:
+        v-head-position = "Директор".
+      end.
+    when '2':U then 
+      do:
+        v-head-position = "Управляющий".
+      end.
+    when '0':U then 
+      do:
+        for first buf_sysconf where buf_sysconf.host-code = buf_fin-doc.host-code:
+          v-head-position = buf_sysconf.head-position.
         end.
-        when '2':U then do:
-          v-head-position = "Управляющий".
-        end.
-        when '0':U then do:
-            for first buf_sysconf where buf_sysconf.host-code = buf_fin-doc.host-code:
-            v-head-position = buf_sysconf.head-position.
-            end.
-        end.
-        otherwise do:
-          v-head-position = o-head-position .
-        end.  
-      end case.
-/*                                                                                                                                                                                             */
-/*  if num-entries(buf_fin-doc.payer-sign1, {&delim-par})> 1 and entry(1, buf_fin-doc.payer-sign1, {&delim-par}) <> "" then v-head-position = entry(1, buf_fin-doc.payer-sign1, {&delim-par}) .*/
-/*                    else v-head-position = "Директор" .                                                                                                                                      */
+      end.
+    otherwise 
+    do:
+      v-head-position = o-head-position .
+    end.  
+  end case.
+  /*                                                                                                                                                                                             */
+  /*  if num-entries(buf_fin-doc.payer-sign1, {&delim-par})> 1 and entry(1, buf_fin-doc.payer-sign1, {&delim-par}) <> "" then v-head-position = entry(1, buf_fin-doc.payer-sign1, {&delim-par}) .*/
+  /*                    else v-head-position = "Директор" .                                                                                                                                      */
   v-sign1         = (if num-entries(buf_fin-doc.payer-sign1, {&delim-par})  > 1
-                    then entry(2, buf_fin-doc.payer-sign1, {&delim-par})
-                    else entry(1, buf_fin-doc.payer-sign1, {&delim-par})
-                    )
+    then entry(2, buf_fin-doc.payer-sign1, {&delim-par})
+    else entry(1, buf_fin-doc.payer-sign1, {&delim-par})
+    )
 
-  .
-
+    .
+  run db-attr-value(INPUT v-cntxt-db-num,INPUT {&attr-hist-code},OUTPUT v-hist-code ,OUTPUT par-type) .
   output stream OutStr-html to value(v-file-name-rep-html) convert target 'UTF-8'.
   put stream OutStr-html unformatted
     "<!DOCTYPE HTML>" skip
@@ -360,28 +379,28 @@ on error undo, return error return-value
     '<td style="width: 6px;"></td>' skip
     '</tr>' skip
     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="21" style="text-align: center;"></td>' skip
     '<td colspan="45" style="text-align: left;">Унифицированная форма № КО-2</td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="21" style="text-align: center;"></td>' skip
     '<td colspan="45" style="text-align: left;">Утверждена постановлением Госкомстата России от 18.08.98 №88</td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="31" style="text-align: center;"></td>' skip
     '<td colspan="35" style="text-align: left;"></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="49" style="text-align: center;"></td>' skip
     '<td colspan="16" style="text-align: center; border: 1px solid black;">Код</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="35" style="text-align: center;"></td>' skip
     '<td colspan="13" style="text-align: right;">Форма по ОКУД</td>' skip
@@ -389,7 +408,7 @@ on error undo, return error return-value
     '<td colspan="16" style="text-align: center; border: 2px solid black;">0310002</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="39" style="text-align: center; border-bottom: 1px solid black;">' + buf_fin-doc.payer-name + '</td>' skip
     '<td colspan="9" style="text-align: right;">по ОКПО</td>' skip
@@ -397,49 +416,49 @@ on error undo, return error return-value
     '<td colspan="16" style="text-align: center; border: 2px solid black;">' + string(buf_fin-doc.payer-okpo) + '</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="39" style="text-align: center; font-size: 10px;">(организация)</td>' skip
     '<td colspan="9" style="text-align: right;"></td>' skip
     '<td></td>' skip
-    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.str-podr-code = 0 then "" + '</td>' else string( buf_fin-doc.str-podr-code ) + '</td>' skip
+    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;">' + string( v-hist-code ) + '</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="39" style="text-align: center; border-bottom: 1px solid black;">' + v-str-podr-name + '</td>' skip
     '<td colspan="9" style="text-align: right; border-bottom: 0px solid white;"></td>' skip
     '<td></td>' skip
     '</tr>' skip    .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="39" style="text-align:center; font-size: 10px;">(структурное подразделение)</td>' skip
     '<td colspan="9" style="text-align: right; border-bottom: 0px solid white;"></td>' skip
     '<td colspan="16" style="text-align:center;"></td>' skip
     '<td></td>' skip
     '</tr>' skip    .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="41" style="text-align:center;"></td>' skip
     '<td colspan="10" style="text-align:center; border-left: 1px solid black; border-right: 1px solid black; border-top: 1px solid black">Номер документа</td>' skip
     '<td colspan="14" style="text-align:center; border-left: 1px solid black; border-right: 1px solid black; border-top: 1px solid black">Дата составления</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="41" style="text-align: center; font-weight: bold;">РАСХОДНЫЙ КАССОВЫЙ ОРДЕР</td>' skip
     '<td colspan="10" style="text-align: center; border: 1px solid black;">' + string(buf_fin-doc.prn-doc-code) + '</td>' skip
     '<td colspan="14" style="text-align: center; border: 1px solid black;">' + string(v-doc-date-f) + '</td>' skip
     '<td></td>' skip
     '</tr>' skip      .
-      put stream OutStr-html unformatted 
+  put stream OutStr-html unformatted 
     '<tr>' skip
     '<td colspan="41" style="text-align: center; font-weight: bold;"></td>' skip
     '<td colspan="10" style="text-align: center;"></td>' skip
     '<td colspan="14" style="text-align: center;"></td>' skip
     '<td></td>' skip
     '</tr>' skip    .
-      put stream OutStr-html unformatted 
+  put stream OutStr-html unformatted 
     '<tr>' skip
     '<td colspan="33" style="text-align: center; border: 1px solid black;">Дебет</td>' skip
     '<td text_wrap="true" rowspan="4" colspan="6" style="text-align: center; border: 1px solid black;">Кредит</td>' skip
@@ -448,7 +467,7 @@ on error undo, return error return-value
     '<td text_wrap="true" rowspan="4" colspan="7" style="text-align: center; border: 1px solid black;"></td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td text_wrap="true" rowspan="3" colspan="4" style="text-align: center; border: 1px solid black;"></td>' skip
     '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">код структурного подразделения</td>' skip
@@ -456,15 +475,15 @@ on error undo, return error return-value
     '<td text_wrap="true" colspan="11" rowspan="3" style="text-align: center; border: 1px solid black;">код аналитического учета</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td></td>' skip
     '</tr>' skip      .
-      put stream OutStr-html unformatted       
+  put stream OutStr-html unformatted       
     '<tr>' skip
     '<td text_wrap="true" colspan="4" rowspan="2" style="text-align: center; border: 1px solid black;"></td>' skip
     '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + "-"  + '</td>' skip
@@ -477,46 +496,46 @@ on error undo, return error return-value
     '<td></td>' skip
     '</tr>' skip  .
 
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td></td>' skip
     '</tr>' skip      .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="65" style="text-align: center;"></td>' skip
     '<td></td>' skip
     '</tr>' skip  .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="5" style="text-align: left;">Выдать</td>' skip
     '<td colspan="60" style="text-align: left; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-name + '</td>' skip
     '<td></td>' skip
     '</tr>' skip  .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="5" style="text-align: center;"></td>' skip
     '<td colspan="60" style="text-align: center; font-size: 10px;">(фамилия, имя, отчество)</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;">Основание:</td>' skip
     '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-naznach-plat-1 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip  .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;">Сумма</td>' skip
     '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-sum-doc-v1 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip  .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;"></td>' skip
     '<td colspan="55" style="text-align: center; font-size: 10px;">(прописью)</td>' skip
     '<td></td>' skip
     '</tr>' skip  .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="48" style="text-align: left; border-bottom: 1px solid black;">' + v-sum-doc-v2 + '</td>' skip
     '<td colspan="3" style="text-align: left;">руб.</td>' skip
@@ -524,18 +543,18 @@ on error undo, return error return-value
     '<td colspan="7" style="text-align: left;">коп.</td>' skip
     '<td></td>' skip
     '</tr>' skip      .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;">Приложение</td>' skip
     '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-enclosure-1 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="65" style="text-align: center;">' + v-enclosure-2 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="18" style="text-align: left;">Руководитель организации</td>' skip
     '<td colspan="2" style="text-align: right;"></td>' skip
@@ -546,7 +565,7 @@ on error undo, return error return-value
     '<td colspan="15" style="text-align: center; border-bottom: 1px solid black;">' + v-sign1 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="18" style="text-align: left;"></td>' skip
     '<td colspan="2" style="text-align: right;"></td>' skip
@@ -557,7 +576,7 @@ on error undo, return error return-value
     '<td colspan="15" style="text-align: center; font-size: 10px;">(расшифровка подписи)</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="15" style="text-align: left;">Главный бухгалтер</td>' skip
     '<td></td>' skip
@@ -567,7 +586,7 @@ on error undo, return error return-value
     '<td colspan="3"></td>' skip
     '<td></td>' skip
     '</tr>' skip            .
-      put stream OutStr-html unformatted   
+  put stream OutStr-html unformatted   
     '<tr>' skip
     '<td colspan="15" style="text-align: left;"></td>' skip
     '<td></td>' skip
@@ -577,21 +596,21 @@ on error undo, return error return-value
     '<td colspan="3"></td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;">Получил</td>' skip
     '<td></td>' skip
     '<td colspan="54" style="text-align: center; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-sign3 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip         .
-      put stream OutStr-html unformatted      
+  put stream OutStr-html unformatted      
     '<tr>' skip
     '<td colspan="10" style="text-align: left;"></td>' skip
     '<td></td>' skip
     '<td colspan="54" style="text-align: center; font-size: 10px;">(сумма прописью)</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted      
+  put stream OutStr-html unformatted      
     '<tr>' skip
     '<td colspan="45" style="text-align: left; border-bottom: 1px solid black;"></td>' skip
     '<td></td>' skip
@@ -600,7 +619,7 @@ on error undo, return error return-value
     '<td colspan="4" style="text-align: center;">коп.</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-      put stream OutStr-html unformatted      
+  put stream OutStr-html unformatted      
     '<tr>' skip
     '<td colspan="25" style="text-align: left; border-bottom: 1px solid black;">' + '"' + string(day(v-date-create), "99":U) + '" ' + MonthNameRusGen(Month(v-date-create)) + " " + string(year(v-date-create), "9999":U) + " г." + '</td>' skip
     '<td colspan="7"></td>' skip
@@ -609,29 +628,29 @@ on error undo, return error return-value
     '<td colspan="14" style="text-align: center;"></td>' skip
     '<td></td>' skip
     '</tr>' skip .
-          put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="5" style="text-align: left;">По</td>' skip
     '<td colspan="60" style="text-align: left; border-bottom: 1px solid black;">' + v-passport-1 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-          put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="5" style="text-align: left;"></td>' skip
     '<td colspan="60" style="text-align: center; font-size: 10px;">(наименование, номер, дата и место выдачи документа,</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="65" style="text-align: center;border-bottom: 1px solid black; height: 12px;">' + v-passport-2 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip .
-    put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="65" style="text-align: center; font-size: 10px;">удостоверяющего личность получателя)</td>' skip
     '<td></td>' skip
     '</tr>' skip     .    
-      put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="15" style="text-align: left;">Выдал кассир</td>' skip
     '<td></td>' skip
@@ -641,7 +660,7 @@ on error undo, return error return-value
     '<td colspan="3"></td>' skip
     '<td></td>' skip
     '</tr>' skip            .
-      put stream OutStr-html unformatted   
+  put stream OutStr-html unformatted   
     '<tr>' skip
     '<td colspan="15" style="text-align: left;"></td>' skip
     '<td></td>' skip
@@ -654,7 +673,7 @@ on error undo, return error return-value
     '</thead>' skip
     '<tbody>' skip    
     .
-    put stream OutStr-html unformatted
+  put stream OutStr-html unformatted
     '</tbody>' skip  
     '</table>' skip
     .

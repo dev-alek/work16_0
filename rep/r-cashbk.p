@@ -43,6 +43,7 @@ define variable vss-description as character no-undo init "Кассовая книга".
 { cmp/vssrevis.i }
 
 { cmp/str-glbl.i }
+{ cmp/library.i }
 { cmp/r-page1.i  }
 { cmp/r-pril.i new }
 { rep/r-sym.i    }
@@ -61,7 +62,7 @@ define variable g#report-num as integer no-undo .
 { rep/ost-line.i }
 { str/farh-def.i }
 { cmp/trg-def.i  }
-
+{ gbl/db-attr.i }
 { gbl/std-func.i }
 { rep/html-conv.i }
 
@@ -157,7 +158,8 @@ define variable v-payer        as character no-undo .
 define variable Fact-order-1   like ub.stk-tot.Fact-order no-undo.
 define variable Fact-order-2   like ub.stk-tot.Fact-order no-undo.
 define variable Fact-order-0   like ub.stk-tot.Fact-order no-undo.
-define variable date_ as date no-undo .
+define variable date_          as date      no-undo .
+define variable par-type       as character no-undo .
 define stream Out-Stream.
 define stream OutStr-html.
 
@@ -185,6 +187,8 @@ define variable disabledoptions       as integer   no-undo .
 define variable v-orient-page         as character no-undo .
 define variable v-obj-type            as character no-undo .
 define variable v-obj-code            as integer   no-undo init -1.
+define variable v-hist-name           as character no-undo .
+define variable v-hist-code           as character no-undo .
 
 define variable ii                    as integer   no-undo .
 
@@ -232,6 +236,8 @@ assign
 
 find first ub.firm no-lock where ub.firm.firm-code = buf_clients.obj-code no-error .
 for each obj-list by obj-list.obj-name:
+  run db-attr-value(INPUT v-cntxt-db-num,INPUT {&attr-hist-code},OUTPUT v-hist-code ,OUTPUT par-type) .
+  run db-attr-value(INPUT v-cntxt-db-num,INPUT {&attr-hist-name},OUTPUT v-hist-name ,OUTPUT par-type) .
   if v-obj-code = -1 then 
   do:
     assign
@@ -561,11 +567,11 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
       '<td></td>' skip
       '<td colspan="4" style="text-align: center; font-size: 8px;">организация</td>' skip
       '<td style="text-align: right;"></td>' skip
-      '<td rowspan="2" style="text-align:center;  border:1px solid black; font-weight: bold;">' + string (v-obj-code) + '</td>' skip
+      '<td rowspan="2" style="text-align:center;  border:1px solid black; font-weight: bold;">' + string (v-hist-code) + '</td>' skip
       '</tr>' skip  
       '<tr>' skip
       '<td></td>' skip
-      '<td colspan="4" style="text-align: center; border-bottom:1px solid black;">' + v-obj-name + '</td>' skip
+      '<td colspan="4" style="text-align: center; border-bottom:1px solid black;">' + if v-hist-name <> "" then v-hist-name + '</td>' else v-obj-name + '</td>' skip
       '<td style="text-align: right;"></td>' skip
       '</tr>' skip     
       '<tr>' skip
@@ -593,8 +599,8 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
       .
   end.
   assign
-    date_ = v-date-start1
-    v-date-end   = v-date-end1
+    date_      = v-date-start1
+    v-date-end = v-date-end1
     .
     
   do v-date-start = date_ to (v-date-end) :
@@ -739,59 +745,60 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     run report-exec in this-procedure (input v-date-start, input integer(entry(ii,p-cashbook,{&delim-cmd})) ).
   
     find first temp-fin-doc no-lock where temp-fin-doc.cashbook_id = integer(entry(ii,p-cashbook,{&delim-cmd})) no-error .
-    if available (temp-fin-doc) then do: 
+    if available (temp-fin-doc) then 
+    do: 
 
-v-num-page = v-num-page + 1 .
-    /*    v-num-page = string(v-date-start - date("01/01/" + string(year(v-date-start))) + 1).    /* За нумерацию листов отчёта - берётся кол-во дней от начала Uода до тек.даты. */*/
-    /*Печать*/
-    put stream OutStr-html unformatted
-      '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="KK_' + string(entry(ii,p-cashbook,{&delim-cmd})) + "_за_" + string (v-date-start,"99.99.99") + '">'skip
-      .
-    put stream OutStr-html unformatted
-      '<thead>' skip
-      '<tr>' skip
-      '<td style="width: 120px;"></td>' skip
-      '<td style="width: 120px;"></td>' skip
-      '<td style="width: 260px;"></td>' skip
-      '<td style="width: 120px;"></td>' skip
-      '<td style="width: 120px;"></td>' skip
-      '<td style="width: 120px;"></td>' skip
-      '</tr>' skip
-      '<tr>' skip
-      '<td colspan="5">' + " Касса за " + v-date-name + v-tab110 + '</td>' skip
-      '<td style="text-align: right;">' + "Лист " + string(v-num-page) + '</td>' skip
-      '</tr>' skip
-      '</thead>' skip
-      '<tbody>' skip
-      .
+      v-num-page = v-num-page + 1 .
+      /*    v-num-page = string(v-date-start - date("01/01/" + string(year(v-date-start))) + 1).    /* За нумерацию листов отчёта - берётся кол-во дней от начала Uода до тек.даты. */*/
+      /*Печать*/
+      put stream OutStr-html unformatted
+        '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="KK_' + string(entry(ii,p-cashbook,{&delim-cmd})) + "_за_" + string (v-date-start,"99.99.99") + '">'skip
+        .
+      put stream OutStr-html unformatted
+        '<thead>' skip
+        '<tr>' skip
+        '<td style="width: 120px;"></td>' skip
+        '<td style="width: 120px;"></td>' skip
+        '<td style="width: 260px;"></td>' skip
+        '<td style="width: 120px;"></td>' skip
+        '<td style="width: 120px;"></td>' skip
+        '<td style="width: 120px;"></td>' skip
+        '</tr>' skip
+        '<tr>' skip
+        '<td colspan="5">' + " Касса за " + v-date-name + v-tab110 + '</td>' skip
+        '<td style="text-align: right;">' + "Лист " + string(v-num-page) + '</td>' skip
+        '</tr>' skip
+        '</thead>' skip
+        '<tbody>' skip
+        .
         
-    put stream OutStr-html unformatted
-      '<tr>' skip
-      '<th colspan="2" style="width: 120px; align: center;">Номер документа</th>' skip
-      '<th style="width: 260px; align: center;">От кого получено или кому выдано</th>' skip
-      '<th text_wrap="true" style="width: 120px; align: center;">Номер коррес-пондирующего счета, субсчета</th>' skip
-      '<th style="width: 120px; align: center;">Приход, руб.коп.</th>' skip
-      '<th style="width: 120px; align: center;">Расход, руб.коп.</th>' skip
-      '</tr>' skip
-      .
-    put stream OutStr-html unformatted
-      '<tr>' skip
-      '<td colspan="2" style="text-align: center;">1</td>' skip
-      '<td style="text-align: center;">2</td>' skip
-      '<td style="text-align: center;">3</td>' skip
-      '<td style="text-align: center;">4</td>' skip
-      '<td style="text-align: center;">5</td>' skip
-      '</tr>' skip
-      .
+      put stream OutStr-html unformatted
+        '<tr>' skip
+        '<th colspan="2" style="width: 120px; align: center;">Номер документа</th>' skip
+        '<th style="width: 260px; align: center;">От кого получено или кому выдано</th>' skip
+        '<th text_wrap="true" style="width: 120px; align: center;">Номер коррес-пондирующего счета, субсчета</th>' skip
+        '<th style="width: 120px; align: center;">Приход, руб.коп.</th>' skip
+        '<th style="width: 120px; align: center;">Расход, руб.коп.</th>' skip
+        '</tr>' skip
+        .
+      put stream OutStr-html unformatted
+        '<tr>' skip
+        '<td colspan="2" style="text-align: center;">1</td>' skip
+        '<td style="text-align: center;">2</td>' skip
+        '<td style="text-align: center;">3</td>' skip
+        '<td style="text-align: center;">4</td>' skip
+        '<td style="text-align: center;">5</td>' skip
+        '</tr>' skip
+        .
 
-    put stream OutStr-html unformatted
-      '<tr>' skip
-      '<td colspan="3" style="text-align: right;">Остаток на начало дня</td>' skip
-      '<td></td>' skip
-      '<td style="text-align: center;">' + if available (temp-fin-doc) then string(temp-fin-doc.ostatok-begin, "->>>>>>>>9.99") + '</td>' else "" + '</td>' skip
-      '<td style="text-align: center;">Х</td>' skip
-      '</tr>' skip
-      .
+      put stream OutStr-html unformatted
+        '<tr>' skip
+        '<td colspan="3" style="text-align: right;">Остаток на начало дня</td>' skip
+        '<td></td>' skip
+        '<td style="text-align: center;">' + if available (temp-fin-doc) then string(temp-fin-doc.ostatok-begin, "->>>>>>>>9.99") + '</td>' else "" + '</td>' skip
+        '<td style="text-align: center;">Х</td>' skip
+        '</tr>' skip
+        .
       if x-TOG-Shift then 
       do:
         FIND last ub.shift-staff No-LOCK WHERE
@@ -864,87 +871,87 @@ v-num-page = v-num-page + 1 .
         '</tr>' skip      
         .        
     
-    assign
-      v-kolvo-pko  = 0 
-      v-kolvo-rko  = 0 
-      v-pko-propis = ""
-      v-rko-propis = ""
-      .
-    for each buf_temp-fin-doc where buf_temp-fin-doc.cashbook_id = temp-fin-doc.cashbook_id:
-      if buf_temp-fin-doc.fin-doc-type = {&income-cash} then v-kolvo-pko = v-kolvo-pko + 1 .
-      else v-kolvo-rko = v-kolvo-rko + 1 .
-    end.      
-    run rep/wp-qnty.p ( input v-kolvo-pko, output v-pko-propis ).
+      assign
+        v-kolvo-pko  = 0 
+        v-kolvo-rko  = 0 
+        v-pko-propis = ""
+        v-rko-propis = ""
+        .
+      for each buf_temp-fin-doc where buf_temp-fin-doc.cashbook_id = temp-fin-doc.cashbook_id:
+        if buf_temp-fin-doc.fin-doc-type = {&income-cash} then v-kolvo-pko = v-kolvo-pko + 1 .
+        else v-kolvo-rko = v-kolvo-rko + 1 .
+      end.      
+      run rep/wp-qnty.p ( input v-kolvo-pko, output v-pko-propis ).
             
-    if v-pko-propis = '' then 
-    do :
-      v-pko-propis = 'Ноль'.
-    end.
+      if v-pko-propis = '' then 
+      do :
+        v-pko-propis = 'Ноль'.
+      end.
             
-    run rep/wp-qnty.p ( input v-kolvo-rko, output v-rko-propis ).
+      run rep/wp-qnty.p ( input v-kolvo-rko, output v-rko-propis ).
             
-    if v-rko-propis = '' then 
-    do :
-      v-rko-propis = 'Ноль'.
-    end.
+      if v-rko-propis = '' then 
+      do :
+        v-rko-propis = 'Ноль'.
+      end.
     
        
-    put stream OutStr-html unformatted
+      put stream OutStr-html unformatted
 
-      '<tfoot>' skip
-      '<tr>' skip         
-      '<td colspan="3" style="text-align: right;"></td>' skip
-      '<td></td>' skip
-      '<td></td>' skip
-      '<td></td>' skip
-      '</tr>' skip 
-      '<tr>' skip
-      '<td colspan="2" style="height: 30px;">Кассир</td>' skip
-      '<td style="text-align: center;">_________________</td>' skip
-      '<td></td>' skip
-      '<td colspan="2" style="text-align: center; border-bottom:1px solid black;">' + v-cashier + '</td>' skip
-      '</tr>' skip
-      '<tr>' skip
-      '<td colspan="2"></td>' skip
-      '<td style="text-align: center;">подпись</td>' skip
-      '<td></td>' skip
-      '<td colspan="2" style="text-align: center;">расшифровка подписи</td>' skip
-      '</tr>' skip
-      '<tr>' skip
-      '<td colspan="4">Записи в кассовой книге проверил и документы в количестве</td>' skip
-      '<td></td>' skip
-      '<td></td>' skip
-      '</tr>' skip
-      '<tr>' skip
-      '<td colspan="4">' + v-pko-propis + " приходных и " + v-rko-propis + " расходных получил." + '</td>' skip
-      '<td></td>' skip
-      '<td></td>' skip
-      '</tr>' skip 
-      '<tr>' skip
-      '<td colspan="2">Бухгалтер</td>' skip
-      '<td style="text-align: center;">_________________</td>' skip
-      '<td></td>' skip
-      '<td colspan="2" style="text-align: center;">_______________________</td>' skip
-      '</tr>' skip
-      '<tr>' skip
-      '<td colspan="2"></td>' skip
-      '<td style="text-align: center;">подпись</td>' skip
-      '<td></td>' skip
-      '<td colspan="2" style="text-align: center;">расшифровка подписи</td>' skip
-      '</tr>' skip
+        '<tfoot>' skip
+        '<tr>' skip         
+        '<td colspan="3" style="text-align: right;"></td>' skip
+        '<td></td>' skip
+        '<td></td>' skip
+        '<td></td>' skip
+        '</tr>' skip 
+        '<tr>' skip
+        '<td colspan="2" style="height: 30px;">Кассир</td>' skip
+        '<td style="text-align: center;">_________________</td>' skip
+        '<td></td>' skip
+        '<td colspan="2" style="text-align: center; border-bottom:1px solid black;">' + v-cashier + '</td>' skip
+        '</tr>' skip
+        '<tr>' skip
+        '<td colspan="2"></td>' skip
+        '<td style="text-align: center;">подпись</td>' skip
+        '<td></td>' skip
+        '<td colspan="2" style="text-align: center;">расшифровка подписи</td>' skip
+        '</tr>' skip
+        '<tr>' skip
+        '<td colspan="4">Записи в кассовой книге проверил и документы в количестве</td>' skip
+        '<td></td>' skip
+        '<td></td>' skip
+        '</tr>' skip
+        '<tr>' skip
+        '<td colspan="4">' + v-pko-propis + " приходных и " + v-rko-propis + " расходных получил." + '</td>' skip
+        '<td></td>' skip
+        '<td></td>' skip
+        '</tr>' skip 
+        '<tr>' skip
+        '<td colspan="2">Бухгалтер</td>' skip
+        '<td style="text-align: center;">_________________</td>' skip
+        '<td></td>' skip
+        '<td colspan="2" style="text-align: center; border-bottom:1px solid black;">' + v-snr-accnt + '</td>' skip
+        '</tr>' skip
+        '<tr>' skip
+        '<td colspan="2"></td>' skip
+        '<td style="text-align: center;">подпись</td>' skip
+        '<td></td>' skip
+        '<td colspan="2" style="text-align: center;">расшифровка подписи</td>' skip
+        '</tr>' skip
 
-      '</tfoot>' skip
-      .        
-    put stream OutStr-html unformatted
-      '</tbody>' skip  
-      '</table>' skip
-      .
-    assign
-      v-date-start = v-date-start + 1
-      v-sheet-num  = v-sheet-num + 1
-      v-kolvo-pko  = 0
-      v-kolvo-rko  = 0
-      .
+        '</tfoot>' skip
+        .        
+      put stream OutStr-html unformatted
+        '</tbody>' skip  
+        '</table>' skip
+        .
+      assign
+        v-date-start = v-date-start + 1
+        v-sheet-num  = v-sheet-num + 1
+        v-kolvo-pko  = 0
+        v-kolvo-rko  = 0
+        .
 
     end.        
   end. /* do while v-date-start <> (v-date-end + 1) : */
@@ -1124,7 +1131,7 @@ procedure report-exec :
       and buf_arh-fin-doc-schet-nal-obj.sum-type          = (if x-tog-shift then {&arh-fin-doc-schet-nal-obj-shift-obj} else {&arh-fin-doc-schet-nal-obj-obj} )
       and buf_arh-fin-doc-schet-nal-obj.fact-order       >= fact-order-1
       and buf_arh-fin-doc-schet-nal-obj.fact-order       <= fact-order-2
-            and p-date = ( if x-tog-shift then buf_arh-fin-doc-schet-nal-obj.shift-date else buf_arh-fin-doc-schet-nal-obj.fact-date )   /*в 15-0 поля shift-date нет */
+      and p-date = ( if x-tog-shift then buf_arh-fin-doc-schet-nal-obj.shift-date else buf_arh-fin-doc-schet-nal-obj.fact-date )   /*в 15-0 поля shift-date нет */
       use-index pi :
       if x-TOG-Shift then 
       do:

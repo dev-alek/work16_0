@@ -20,7 +20,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 { gbl/cur-time.i }
 { gbl/thbj-def.i }
-
+{ gbl/attr-lib.i }
+{ cmp/str-glbl.i }
+{ cmp/library.i }
 &if "{&action}" = "define" &then
 define variable v-is-auto-obj as logical no-undo .
 define variable v-start       as integer no-undo .
@@ -603,6 +605,9 @@ PROCEDURE check-obj :
     define variable v-director        as character no-undo .
     define variable v-snr-accnt       as character no-undo .
     define variable v-cashier         as character no-undo .
+    define variable v-hist-code       as character no-undo .
+    define variable v-hist-name       as character no-undo .
+    
     define buffer buf_sysconf for ub.sysconf.
     define buffer buf_shop    for ub.shop .
     define buffer buf_store   for ub.store .  
@@ -622,15 +627,21 @@ PROCEDURE check-obj :
     o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .
   
     delete object mCashBook no-error .
-  
+
     case v-dpt-option:
       when "1" then 
         do:
-          assign
-            v-dpt-dflt-name = X_clients-obj.obj-name
-            v-dpt-dflt-type = X_clients-obj.obj-type
-            v-dpt-dflt-code = X_clients-obj.obj-code
-            .
+          for first ub.db-attr no-lock where ub.db-attr.db-num = v-cntxt-db-num
+          and ub.db-attr.attr-code = {&attr-hist-code}:
+            v-hist-code = ub.db-attr.attr-value .
+          end.  
+          for first ub.db-attr no-lock where ub.db-attr.db-num = v-cntxt-db-num
+          and ub.db-attr.attr-code = {&attr-hist-name}:
+            v-hist-name = ub.db-attr.attr-value .
+          end.  
+          if v-hist-code = "" then v-dpt-dflt-code = X_clients-obj.obj-code .
+          if v-hist-name = "" then v-dpt-dflt-name = X_clients-obj.obj-name . 
+          v-dpt-dflt-type = X_clients-obj.obj-type  .
         end.
       when "0" then 
         do:
@@ -774,20 +785,34 @@ PROCEDURE check-obj :
         otherwise 
         tt-fin-doc.enclosure = ub.CashBook.RulePril .
       end case.  
-      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
-        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
-        tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
-        tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
-      end.  
-      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
-        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
-        tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
-        tt-fin-doc.cor-acc1-value = ub.fin-code-cor-acc.code-value .
-      end.  
+      if ub.CashBook.CorrRko <> "" then 
+      do:
+        for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
+          and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+          tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+        end.
+      end.
+      if tt-fin-doc.cor-acc = ? or tt-fin-doc.cor-acc = 0 then 
+      do:
+        for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = "57.01"
+          and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+          tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+        end. 
+      end.    
+      if ub.CashBook.OsnAcct <> "" then 
+      do:
+        for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
+          and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+          tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
+          tt-fin-doc.cor-acc1-value = ub.fin-code-cor-acc.code-value .
+        end.  
+      end.
     end.
   
     assign
-      tt-fin-doc.str-podr-name = v-dpt-dflt-name
+      tt-fin-doc.str-podr-name = if v-hist-name = "" then v-dpt-dflt-name else v-hist-name
       tt-fin-doc.str-podr-type = v-dpt-dflt-type
       tt-fin-doc.str-podr-code = v-dpt-dflt-code
       .
@@ -1342,6 +1367,7 @@ ON CHOOSE OF B-cashbook IN FRAME Dialog-Frame /* Кассовая книга */
       /*      if ub.cashbook.id > 0*/
       /*        then               */
       /*      do :                 */
+      
       find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = (if tt-fin-doc.fin-doc-type eq {&expense-cash} then ub.cashbook.corrRko else ub.cashbook.corrPko)
         and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
         and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
@@ -1357,33 +1383,39 @@ ON CHOOSE OF B-cashbook IN FRAME Dialog-Frame /* Кассовая книга */
       end.
       else 
       do:
-        assign
-          tt-fin-doc.cor-acc-value = ""
-          f-cor-acc-descr          = ""
-          tt-fin-doc.cor-acc       = ?
-          .
+        if ub.cashbook.corrRko = "" then 
+        do:
+          for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = "57.01"
+            and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+            tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+            tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+          end. 
+        end.    
       end.  
-      find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
-        and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
-        and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
-        no-error .
-      if available X_fin-code-cor-acc
-        then 
-      do :
-        assign
-          tt-fin-doc.cor-acc1-value = X_fin-code-cor-acc.code-value
-          f-cor-acc1-descr          = X_fin-code-cor-acc.descr
-          tt-fin-doc.cor-acc1       = X_fin-code-cor-acc.fin-code
-          .
-      end.   
-      else 
+      if ub.CashBook.OsnAcct <> "" then 
       do:
-        assign
-          tt-fin-doc.cor-acc1-value = ""
-          f-cor-acc1-descr          = ""
-          tt-fin-doc.cor-acc1       = ?
-          .
-      end.       
+        find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
+          and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
+          and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+          no-error .
+        if available X_fin-code-cor-acc
+          then 
+        do :
+          assign
+            tt-fin-doc.cor-acc1-value = X_fin-code-cor-acc.code-value
+            f-cor-acc1-descr          = X_fin-code-cor-acc.descr
+            tt-fin-doc.cor-acc1       = X_fin-code-cor-acc.fin-code
+            .
+        end.   
+        else 
+        do:
+          assign
+            tt-fin-doc.cor-acc1-value = ""
+            f-cor-acc1-descr          = ""
+            tt-fin-doc.cor-acc1       = ?
+            .
+        end.       
+      end.
     /*      end.*/
     /*      else*/
     /*      do :*/
