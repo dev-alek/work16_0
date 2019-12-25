@@ -804,6 +804,7 @@ procedure report-exec :
         ,input   X-shift-end
         ,input   yes /*xTog-obj*/
         ,input   0 /*p-curr-code*/
+        ,input   0
         ,output  v-sum-begin
         ,output  Fact-order-1)
         no-error .
@@ -818,6 +819,7 @@ procedure report-exec :
         ,input   X-shift-end
         ,input   yes /*xTog-obj*/
         ,input   0 /*p-curr-code*/
+        ,input   0
         ,output  sum1
         ,output  Fact-order-2)
         no-error .

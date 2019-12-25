@@ -922,6 +922,7 @@ do on error undo, return error return-value  :
         ,input   X-shift-alone
         ,input   yes /*xTog-obj*/
         ,input   0 /*p-curr-code*/
+        ,input   0
         ,output  v-sum-begin
         ,output  Fact-order-1)
         no-error .
@@ -936,6 +937,7 @@ do on error undo, return error return-value  :
         ,input   X-shift-alone
         ,input   yes /*xTog-obj*/
         ,input   0 /*p-curr-code*/
+        ,input   0
         ,output  v-sum-end
         ,output  Fact-order-2)
         no-error .
