@@ -1,3 +1,6 @@
+/*
+26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
+
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 /* Connected Databases 
@@ -1014,3 +1017,4 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+*/

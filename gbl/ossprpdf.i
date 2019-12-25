@@ -12,6 +12,8 @@ Author: Bakhtadze Natalya
 Creation date: 06/14/06
 
 */
+/*
+26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
 
 &GLOBAL-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
@@ -30,5 +32,5 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &GLOBAL-DEFINE need-slip-print 'Печать слипа'
 &GLOBAL-DEFINE slip-file 'Имя слип-файла'
 &GLOBAL-DEFINE billing-type 'Тип расчета'
-
+*/
 /* $Workfile$ e n d */

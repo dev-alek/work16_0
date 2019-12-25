@@ -1,3 +1,4 @@
+/* 04/III-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -481,3 +482,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+*/

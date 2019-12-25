@@ -1840,7 +1840,7 @@ define variable vss-description as character no-undo init "".
   "'TopAukc'"
   "yes"
 }
-
+/* 04/III-2019 не используется. Работа с кассовыми книгами перенесена в БПА
 { gbl/menuload.i
   {&bef-menuload_service_utility}
   "'Изменение текущего номера ПКО/РКО'"
@@ -1851,7 +1851,7 @@ define variable vss-description as character no-undo init "".
   " "
   "yes"
 }
-
+*/
 { gbl/menuload.i
   {&bef-menuload_service_utility}
   "'Мониторинг инкрементальной выгрузки в XML'"

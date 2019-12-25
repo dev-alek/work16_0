@@ -2876,7 +2876,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop level-way-attr-fin-global ",,global"
 &scop up-way-attr-fin-global ",,fin-global"
 
-/* Объектные параметры по ФИн документам */
+/* Объектные параметры по ФИн документам
+26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 &scop type-attr-fin-doc            {&type-char}
 &scop format-attr-fin-doc          "x(40)"
 &scop label-attr-fin-doc           "Настройки для Фин.документов"
@@ -2910,7 +2911,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 '
 &scop level-way-attr-fin-doc "obj,,"
 &scop up-way-attr-fin-doc "fin-doc,,"
-
+*/
 
 
 /* Общие параметры по Накладным и договорам  */
@@ -4805,8 +4806,10 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-fin-plan
       {&attr-temp-full-code}
+      /* 26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
       &scop attr-code attr-fin-doc
       {&attr-temp-full-code}
+      */
       &scop attr-code attr-rt-trn-doc
       {&attr-temp-full-code}
       &scop attr-code attr-gds-ref
@@ -4961,8 +4964,12 @@ on error undo, return error return-value
     {&attr-temp-code}
     &scop attr-code attr-fin-plan
     {&attr-temp-code}
+    
+    /* 26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
     &scop attr-code attr-fin-doc
     {&attr-temp-code}
+    */
+    
     &scop attr-code attr-gds-ref
     {&attr-temp-code}
     &scop attr-code attr-gds-ref_obj
@@ -5670,8 +5677,12 @@ on error undo, return error return-value
     {&attr-legacy-code}
     &scop attr-code attr-fin-plan
     {&attr-legacy-code}
+    
+    /* 26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
     &scop attr-code attr-fin-doc
     {&attr-legacy-code}
+    */
+    
     &scop attr-code attr-gds-ref
     {&attr-legacy-code}
     &scop attr-code attr-gds-ref_obj
@@ -10812,6 +10823,7 @@ end procedure.
 &scop manual-edit-attr-no-envd-h  1
 &scop batch-edit-attr-no-envd-h  1
 
+/* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
 &glob type-attr-oss-props-h {&type-char}
 &glob format-attr-oss-props-h   "X(256)"
 &glob label-attr-oss-props-h   "Настройки платежа ОСС"
@@ -10823,7 +10835,7 @@ end procedure.
 &glob copy-attr-oss-props-h  true
 &scop manual-edit-attr-oss-props-h  0
 &scop batch-edit-attr-oss-props-h  0
-
+*/
 
 &scop attr-temp-code ~
   when ~{&~{&attr-code~}~} then do: ~
@@ -10882,8 +10894,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-temp-full-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-temp-full-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -10909,8 +10924,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-temp-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-temp-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -11192,8 +11210,11 @@ procedure gdshattr-news :
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-news-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-news-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -11214,8 +11235,11 @@ procedure gdshattr-copy :
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-copy-code}
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-copy-code}
+      */
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -11237,8 +11261,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-manual-edit-code }
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-manual-edit-code}
+      */
 
 
       /* сюда добавлять новые параметры */
@@ -11262,8 +11289,11 @@ do
     case p-code :
       &scop attr-code attr-no-envd-h
       {&attr-batch-edit-code }
+      
+      /* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
       &scop attr-code attr-oss-props-h
       {&attr-batch-edit-code}
+      */
 
 
             /* сюда добавлять новые параметры */

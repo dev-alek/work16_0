@@ -315,7 +315,7 @@ end procedure.
 
 
 
-
+/* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
 procedure gds-host-oss-props :
 define input parameter p-gds-code like ub.goods.gds-code no-undo .
 define input parameter p-obj-type like ub.gds-obj.obj-type no-undo .
@@ -365,7 +365,7 @@ define buffer buf_goods for ub.goods.
   end. /*doe*/
 
 end procedure. /* gds-host-oss-propsd  */
-
+*/
 
 &endif
 

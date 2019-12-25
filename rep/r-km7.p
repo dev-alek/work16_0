@@ -568,21 +568,13 @@ do on error undo, return error return-value  :
    END.
 
 /* Взято из finfnoco.p, узнается фио и должность руководителя */
+      define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
+      mCashBook = new ibs.th.ref.cashbookstorage () .
+      o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, 5) .
+      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, 6) .
+/*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .*/
+      delete object mCashBook no-error .
 
-       for each buf_thbj-attr where
-                buf_thbj-attr.obj-type = This_Object.obj-type
-            and buf_thbj-attr.obj-code = This_Object.obj-code
-            and buf_thbj-attr.upper-prop-code = {&attr-fin-doc}
-      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
-        case buf_thbj-attr.prop-code: 
-          when {&attr-fin-doc_head-position} then do:
-            o-head-position = buf_thbj-attr.property-value-character.
-          end.
-          when {&attr-fin-doc_director} then do:
-            o-director = buf_thbj-attr.property-value-character.
-          end.
-        end case.
-      end. /*for each thbj-attr where*/
       case o-head-position:
         when 'director':U then do:
           v-head-position = "Директор".

@@ -1,3 +1,7 @@
+/*
+
+26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
+
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -1057,3 +1061,4 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+*/

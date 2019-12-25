@@ -1437,6 +1437,7 @@ end.
       end.
     end.
 
+/* 26/II-2019 не используется. Атрибуты финансовых документов перенесены в БПА
     when {&attr-fin-doc} then do:
       v-prop-code = "{&bef-attr-fin-doc_suffix-pko},{&bef-attr-fin-doc_suffix-rko}" .
 &scop ptype character
@@ -1446,6 +1447,7 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+      
       v-prop-code = "{&bef-attr-fin-doc_prefix-pko},{&bef-attr-fin-doc_prefix-rko},{&bef-attr-fin-doc_dpt-dflt-name},{&bef-attr-fin-doc_dpt-dflt-type}" .
 &scop ptype character
 &scop prop-value ''
@@ -1507,7 +1509,6 @@ end.
           v-head-position = "ruk_firm".
         end.
       end case.
-
 &scop ptype character
 &scop prop-value v-head-position
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -1528,7 +1529,6 @@ end.
           v-snr-accnt = "glbuh_firm".
         end.
       end case.
-
 &scop ptype character
 &scop prop-value v-snr-accnt
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -1544,6 +1544,7 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+      
       v-prop-code = "{&bef-attr-fin-doc_cash-book}" .
 &scop ptype    integer
 &scop prop-value integer(~{&cash-book-firm~})
@@ -1561,8 +1562,8 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-
     end. /*attr-fin-doc*/
+*/
     when {&attr-ord-obj} then do:
       v-prop-code = "{&bef-attr-ord-obj_ord-askp},{&bef-attr-ord-obj_ord-11}" .
 &scop ptype logical
