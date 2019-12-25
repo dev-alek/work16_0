@@ -4586,6 +4586,19 @@ procedure m-promo-u-exe :
   end.
 
 end procedure. /* m-cash-pay-exe */
+procedure m-catalog-corr-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/sendcorr.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка данных по справочнику ОСС ")
+  ) no-error.
+
+end procedure. /* m-catalog-oss-exe */
 
 procedure m-promo-d-exe :
 
