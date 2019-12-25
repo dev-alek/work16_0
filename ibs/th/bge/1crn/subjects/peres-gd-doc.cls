@@ -244,7 +244,6 @@ index sum-type is primary unique sum-type.
           write-data-element ("qnty", string-mth ( round (get-income-qnty(buffer bf_doc-line, buffer bf-plus_doc-line), 3) )).
           write-data-element ("sum-from", string-mth (round (get-write-off-sum-rubl (buffer bf_doc-line), 3))).
           write-data-element ("sum-to", string-mth (round (get-income-sum-rbl (buffer bf_doc-line, buffer bf-plus_doc-line ), 3))).
-          write-data-element ("sum-from-s", string-mth (round (absolut (bf_parts.fact-qnty * bf_parts.price-base / (1 + (bf_parts.VAT-pc / 100))), 3))).
         sw:end-element ("gd").
       end.
     end.
