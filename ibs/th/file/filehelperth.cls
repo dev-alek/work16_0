@@ -17,7 +17,7 @@ class ibs.th.file.filehelperth:
    { cmp/str-glbl.i class}
    {utl/ttprocdef.i}
    {utl/ttfileList.i  ttfile  }
-    
+   {utl/setpwd.i class } 
 /*define temp-table ttfileTarget no-undo like ttfile.*/
 define temp-table ttfileList no-undo like ttfile.
 
@@ -271,7 +271,7 @@ end method.
       assign
       v-user-passwd = substitute("-U &1 -P &2":U
                                 ,"sysadm"
-                                ,"sysadm"
+                                ,{&paswordcur}
                                 )
     .
       mConPar = substitute(mConPar, v-user-passwd).
