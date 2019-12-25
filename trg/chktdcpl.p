@@ -35,6 +35,7 @@ define variable vss-description as character no-undo initial "Проверка всех това
 { str/valddnst.i def      }
 { str/is-gas.i }
 { str/placelib.i }
+{ str/trdcalib.i }
 
 do
 on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -67,7 +68,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-after-qnty      as decimal   no-undo .
   define variable v-after-cli-qnty  as decimal   no-undo .
   define variable v-last-invlin     as recid     no-undo .
-  define variable is-lgas           as logical   no-undo.
+/*  define variable is-lgas           as logical   no-undo.*/
+  define variable trn-is-lgas-corr  as logical   no-undo.
 
   define variable is-vir as logical no-undo.
   define variable v-value as character no-undo.
@@ -209,18 +211,27 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 and buf_goods.prod-code = buf_doc-line.prod-code
             .
 
-
-            
-            run gds-attr-value in this-procedure
-              (  input buf_goods.gds-code
-                ,input {&attr-fuel-type}
-                ,output v-attr-value
-                ,output v-attr-type
-               ) .
-            if v-attr-value = "lgas" 
-              then assign v-chk-rvs = false is-lgas = true.
-            
-            
+/*            is-lgas = false.*/
+            trn-is-lgas-corr = false.
+            { str/tdat-val.i
+                buf_doc-line.doc-code
+                {&trdcattr-is-lgas-corr}
+                v-attr-value
+                v-attr-type
+                no-error
+            }
+            if v-attr-value = "yes" then do:
+            assign
+              trn-is-lgas-corr = true.
+            end.
+/*            run gds-attr-value in this-procedure*/
+/*              (  input buf_goods.gds-code       */
+/*                ,input {&attr-fuel-type}        */
+/*                ,output v-attr-value            */
+/*                ,output v-attr-type             */
+/*               ) no-error.                      */
+/*            if v-attr-value = "lgas"            */
+/*              then assign is-lgas = true.       */
             
             run gds-attr-value in this-procedure
               ( input  buf_goods.gds-code
@@ -244,7 +255,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
             is-vir = if (v-ok and logical(v-value)) then true else false.
             
-            if lookup(v-attr-value, 'true,yes':u) = 0 and not is-lgas and not is-gas(buf_goods.gds-code) and not is-vir then do:
+            if lookup(v-attr-value, 'true,yes':u) = 0 and not is-gas(buf_goods.gds-code) and not is-vir and 
+              not trn-is-lgas-corr then do:
               assign
                 v-chk-rvs = true
               .
@@ -289,15 +301,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           and buf_goods.prod-type = buf_doc-line.prod-type
           and buf_goods.prod-code = buf_doc-line.prod-code
       .
-      
-      run gds-attr-value in this-procedure
-        (  input buf_goods.gds-code
-          ,input {&attr-fuel-type}
-          ,output v-attr-value
-          ,output v-attr-type
-         ) .
-      if v-attr-value = "lgas" 
-        then next.
       
       run gds-attr-value in this-procedure
         (  input buf_goods.gds-code
