@@ -526,6 +526,16 @@ procedure lib-trn4_int-clos :
   define variable v-is-petrl         as logical   no-undo .
   define variable v-is-pieces        as logical   no-undo .
 
+  /* два комплекта переменных для проверки если тип = Товар платёжного агента */
+  define variable v-pay-agent-gd1    as integer no-undo .
+  define variable v-pay-agent-nm1    as character no-undo .
+  define variable v-pay-agent-ar1    as character no-undo .
+  define variable v-pay-agent-fl1    as logical no-undo .
+  define variable v-pay-agent-gd2    as integer no-undo .
+  define variable v-pay-agent-nm2    as character no-undo .
+  define variable v-pay-agent-ar2    as character no-undo .
+  define variable v-pay-agent-fl2    as logical no-undo .
+  
   { gbl/getcntxt.i def }
   { str/getctxtp.i def }
 
@@ -613,7 +623,6 @@ define variable v-ischg-ext-type as logical no-undo .
        buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Object} then do:
       find first exp_trn-doc where exp_trn-doc.doc-code = buf_trn-doc.doc-code no-lock no-error.
       { gbl/objdtget.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error }
-/* 28/IX-2018 заменено на objdtget.i     { gbl/curobjdt.i buf_trn-doc.obj-type buf_trn-doc.obj-code varfact-date no-error}*/
       if error-status:error then do:
         message
           vss-workfile vss-revision vss-description skip
@@ -713,10 +722,6 @@ define variable v-ischg-ext-type as logical no-undo .
         :
           when 1
           then do:
-            case buf_trn-doc.doc-type
-            :
-              when {&income}
-              then do:
                 { gbl/chk-actg.i
                   v-cntxt-db-num
                   v-cntxt-userid
@@ -732,6 +737,11 @@ define variable v-ischg-ext-type as logical no-undo .
                   true
                   varlog
                 }
+            /* 05/III-2019 остальные не используются: Сверху if buf_trn-doc.doc-type = {&income} в строке 687     
+            case buf_trn-doc.doc-type
+            :
+              when {&income}
+              then do:
               end.
               when {&expense}
               then do:
@@ -815,7 +825,7 @@ define variable v-ischg-ext-type as logical no-undo .
                 undo, return error return-value .
               end.
             end case .
-
+            */
             if not varlog then  return error.
             assign
               varmode = {&close-doc}
@@ -823,10 +833,6 @@ define variable v-ischg-ext-type as logical no-undo .
           end.
           when 2
           then do:
-            case buf_trn-doc.doc-type
-            :
-              when {&income}
-              then do:
                 { gbl/chk-actg.i
                   v-cntxt-db-num
                   v-cntxt-userid
@@ -842,6 +848,11 @@ define variable v-ischg-ext-type as logical no-undo .
                   true
                   varlog
                 }
+            /* 05/III-2019 остальные не используются: Сверху if buf_trn-doc.doc-type = {&income} в строке 687     
+            case buf_trn-doc.doc-type
+            :
+              when {&income}
+              then do:
               end.
               when {&expense}
               then do:
@@ -925,6 +936,7 @@ define variable v-ischg-ext-type as logical no-undo .
                 undo, return error return-value .
               end.
             end case .
+            */
             if not varlog then  return error.
             assign
               varmode = {&close-fact}
@@ -981,6 +993,22 @@ define variable v-ischg-ext-type as logical no-undo .
         :
           when 1
           then do:
+                { gbl/chk-actg.i
+                  v-cntxt-db-num
+                  v-cntxt-userid
+                  {&action-head-code-main}
+                  'actn_expense_preparation':U
+                  {&cntxt-object}
+                  buf_trn-doc.host-code
+                  buf_trn-doc.obj-type
+                  buf_trn-doc.obj-code
+                  0
+                  0
+                  0
+                  true
+                  varlog
+                }
+            /* 05/III-2019 остальные не используются: Сверху if buf_trn-doc.doc-type = {&expense} в строке 963     
             case buf_trn-doc.doc-type
             :
               when {&income}
@@ -1003,21 +1031,6 @@ define variable v-ischg-ext-type as logical no-undo .
               end.
               when {&expense}
               then do:
-                { gbl/chk-actg.i
-                  v-cntxt-db-num
-                  v-cntxt-userid
-                  {&action-head-code-main}
-                  'actn_expense_preparation':U
-                  {&cntxt-object}
-                  buf_trn-doc.host-code
-                  buf_trn-doc.obj-type
-                  buf_trn-doc.obj-code
-                  0
-                  0
-                  0
-                  true
-                  varlog
-                }
               end.
               when {&write-off}
               then do:
@@ -1083,7 +1096,7 @@ define variable v-ischg-ext-type as logical no-undo .
                 undo, return error return-value .
               end.
             end case .
-
+            */
             if not varlog then  return error.
             assign
               varmode = {&close-doc}
@@ -1091,6 +1104,22 @@ define variable v-ischg-ext-type as logical no-undo .
           end.
           when 2
           then do:
+                { gbl/chk-actg.i
+                  v-cntxt-db-num
+                  v-cntxt-userid
+                  {&action-head-code-main}
+                  'actn_expense_fact':U
+                  {&cntxt-object}
+                  buf_trn-doc.host-code
+                  buf_trn-doc.obj-type
+                  buf_trn-doc.obj-code
+                  0
+                  0
+                  0
+                  true
+                  varlog
+                }
+            /* 05/III-2019 остальные не используются: Сверху if buf_trn-doc.doc-type = {&expense} в строке 963     
             case buf_trn-doc.doc-type
             :
               when {&income}
@@ -1113,21 +1142,6 @@ define variable v-ischg-ext-type as logical no-undo .
               end.
               when {&expense}
               then do:
-                { gbl/chk-actg.i
-                  v-cntxt-db-num
-                  v-cntxt-userid
-                  {&action-head-code-main}
-                  'actn_expense_fact':U
-                  {&cntxt-object}
-                  buf_trn-doc.host-code
-                  buf_trn-doc.obj-type
-                  buf_trn-doc.obj-code
-                  0
-                  0
-                  0
-                  true
-                  varlog
-                }
               end.
               when {&write-off}
               then do:
@@ -1193,6 +1207,7 @@ define variable v-ischg-ext-type as logical no-undo .
                 undo, return error return-value .
               end.
             end case .
+            */
             if not varlog then  return error.
             assign
               varmode = {&close-fact}
@@ -1275,6 +1290,60 @@ define variable v-ischg-ext-type as logical no-undo .
         end.
       end.
     end.
+
+    /* проверка, что товары с типом Товар платежного агента не пересекается в документе с обычными товарами
+    
+       Товар платёжного агента привязан к оператору сотовой связи.
+       У обычного товара привязка к оператору сотовой связи отсутствует.
+       Привязка к оператору сотовой связи хранится в goods-attr в атрибуте attr-code = {&attr-oper-serv-id}
+       Значением атрибута является string(OperServ.id)
+    */
+    if buf_trn-doc.doc-type = {&inventory} then do :
+      assign
+        v-pay-agent-fl1 = false
+        v-pay-agent-fl2 = false
+      .
+      for each ub.doc-line where ub.doc-line.doc-code = buf_trn-doc.doc-code:
+        find first ub.goods no-lock
+             where ub.goods.artic     = ub.doc-line.artic
+               and ub.goods.prod-type = ub.doc-line.prod-type
+               and ub.goods.prod-code = ub.doc-line.prod-code no-error.
+        if available ub.goods then do :
+          if can-find (first ub.goods-attr
+                       where ub.goods-attr.gds-code   = ub.goods.gds-code
+                         and ub.goods-attr.attr-code  = {&attr-oper-serv-id})
+          then do :
+            assign
+              v-pay-agent-gd1 = ub.goods.gds-code
+              v-pay-agent-nm1 = ub.goods.gds-name
+              v-pay-agent-ar1 = ub.doc-line.artic
+              v-pay-agent-fl1 = true
+            .
+            if v-pay-agent-fl2 then leave .
+          end .
+          else do :
+            assign
+              v-pay-agent-gd2 = ub.goods.gds-code
+              v-pay-agent-nm2 = ub.goods.gds-name
+              v-pay-agent-ar2 = ub.doc-line.artic
+              v-pay-agent-fl2 = true
+            .
+            if v-pay-agent-fl1 then leave .
+          end .
+        end . /* end_of available_goods */
+      end. /* end_of for_each_doc-line */
+      if v-pay-agent-fl1 and v-pay-agent-fl2 then do :
+        message
+          substitute("Ошибка закрытия документа &1", buf_trn-doc.doc-code) skip
+          substitute("Товар платёжного агента &1 &2 (арт. &3) " +
+                     "должен проводиться отдельным документом от обычного товара &4 &5 (арт. &6)",
+            v-pay-agent-gd1, v-pay-agent-nm1, v-pay-agent-ar1,
+            v-pay-agent-gd2, v-pay-agent-nm2, v-pay-agent-ar2
+                    )
+        view-as alert-box .
+        return error.
+      end . 
+    end . /* end_of doc-type={&inventory} */
 
     if varstatus = {&fact} and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}) 
     then do:
