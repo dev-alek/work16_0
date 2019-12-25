@@ -138,7 +138,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       del-f = ?
       name_ = ?
       basic-kb         = ?
-      rule-reason      = ?
+      rule-reason      = "Не заполнять"
       code-payer       = ?
       rule-payer       = ?
       rule-att         = ?

@@ -129,14 +129,14 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
     assign
       v-str =         ",code"           when code_          = ?
       v-str = v-str + ",name"           when name_          = ?
-      v-str = v-str + ",adr-trans-op"   when adr-trans-op   = ?
-      v-str = v-str + ",inn-trans-op"   when inn-trans-op   = ?
-      v-str = v-str + ",name-trans-op"  when name-trans-op  = ?
-      v-str = v-str + ",oper-pa"        when oper-pa        = ?
+      v-str = v-str + ",adr-trans-op"   when adr-trans-op   = ? and type-calc-repl ne 1
+      v-str = v-str + ",inn-trans-op"   when inn-trans-op   = ? and type-calc-repl ne 1
+      v-str = v-str + ",name-trans-op"  when name-trans-op  = ? and type-calc-repl ne 1
+      v-str = v-str + ",oper-pa"        when oper-pa        = ? and type-calc-repl ne 1
       v-str = v-str + ",sign-pa"        when sign-pa        = ?
-      v-str = v-str + ",tel-pa"         when tel-pa         = ?
-      v-str = v-str + ",tel-acceptor"   when tel-acceptor   = ?
-      v-str = v-str + ",tel-trans-op"   when tel-trans-op   = ?
+      v-str = v-str + ",tel-pa"         when tel-pa         = ? and type-calc-repl ne 1
+      v-str = v-str + ",tel-acceptor"   when tel-acceptor   = ? and type-calc-repl ne 1
+      v-str = v-str + ",tel-trans-op"   when tel-trans-op   = ? and type-calc-repl ne 1
       v-str = v-str + ",sign-pa-subj"   when sign-pa-subj   = ?
       /* 13/VIII-2019  ¬ реальности эти данные могут не заполн€тьс€ дл€ определенных видов операторов
       v-str = v-str + ",name-prov"      when name-prov      = ?
