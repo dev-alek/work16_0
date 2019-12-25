@@ -105,7 +105,7 @@ class ibs.th.adm.upd.updschm:
     if loadDFProcFile <> ?
     then isRcode = true.
     else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
-    if not isRcode and CurrDBShm < TargetDBShm 
+    if not isRcode and CurrDBShm < TargetDBShm and not IsComp
     then do:
        message "Обновить базу с версии " CurrDBShm  " до " TargetDBShm "?" view-as alert-box question 
           buttons yes-no title "[ ВНИМАНИЕ! ]" update vupd.
@@ -141,12 +141,14 @@ class ibs.th.adm.upd.updschm:
     upddbshmall().
     /* загрузка df файлов */
     if isUpdShm  /* загрузка df файлов коректировки выполняется всегда*/
+       and not IsComp
     then do:
       /* if vdbconect
          
       then */
          disconnect value ('ub').
          m-Batch = yes. 
+         
       do vi = 1 to num-entries(mDfUpdaLL):
          
          upddbshm-1(entry(vi,mDfUpdaLL)).

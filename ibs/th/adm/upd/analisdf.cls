@@ -315,7 +315,7 @@ define temp-table {&prefixtt}INDEX
          if    mBufferName eq "field"
             or mBufferName eq "index"
          then do:
-            vTableWhere = if vMode eq "rename" then entry(7,istr, " ") else entry(5 + vSdvig,istr, " ") no-error.
+            vTableWhere = if vMode eq "rename" then entry(5,istr, " ") else entry(5 + vSdvig,istr, " ") no-error.
             if error-status:error
             then do: 
                message "Ошибка структуре df файла не задан таблица для " mBufferName mName
@@ -338,9 +338,13 @@ define temp-table {&prefixtt}INDEX
                and mBuffer::{&prefixfil}mode eq "add"
             then do:
                if mbuffername eq "table"
-               then
+               then do:
                   ChangeTable(mBuffer::{&prefixfil}Name , entry(5,istr, " ")).
-               mBuffer::{&prefixfil}Name = entry(5,istr, " ").
+                  mBuffer::{&prefixfil}Name = entry(5,istr, " ").
+               end.
+               else
+                  mBuffer::{&prefixfil}Name = entry(7,istr, " ").
+                  return no.
             end.    
             else if      mBuffer::{&prefixfil}mode eq "rename" 
                       or (    vMode eq "rename"
@@ -371,7 +375,11 @@ define temp-table {&prefixtt}INDEX
             mBuffer::{&prefixfil}mode       = vmode.
             mBuffer::{&prefixfil}Name       = mName.
             mBuffer::{&prefixfil}localIndex = vposih.
-            if vMode eq "rename" then mBuffer::{&prefixfil}NewName = entry(5,istr, " ").
+            if vMode eq "rename" 
+            then 
+               mBuffer::{&prefixfil}NewName = if mbuffername eq "table"
+                                              then entry(5,istr, " ") 
+                                              else entry(7,istr, " ").
          end.
          if VPrimary 
          then
@@ -381,6 +389,7 @@ define temp-table {&prefixtt}INDEX
          then 
             mBuffer::{&prefixfil}table = vTableWhere.
          if    mBufferName eq "field"
+            and vMode ne "rename"
          then do: 
             mBuffer::{&prefixfil}Data-Type = entry(7,istr, " ") no-error.
             if     error-status:error
@@ -478,11 +487,11 @@ define temp-table {&prefixtt}INDEX
       do while vBuffer:available:
          
          vtxt = if vBuffer:name eq "{&prefixtt}field" 
-             then substitute ("&1 FIELD &2&3 OF &4 &5",
+             then substitute ("&1 FIELD &2 OF &3 &4&5",
                               vBuffer::{&prefixfil}mode,
                               vBuffer::{&prefixfil}name,
-                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}NewName else "",
                               vBuffer::{&prefixfil}table,
+                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}NewName else "",
                               if vBuffer::{&prefixfil}Data-Type ne "" then "AS " + vBuffer::{&prefixfil}Data-Type else "")
              else if vBuffer:name eq "{&prefixtt}index" 
              then substitute ("&1 INDEX &2&3 ON &4",
