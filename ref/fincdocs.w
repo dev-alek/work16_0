@@ -360,7 +360,7 @@ DEFINE BROWSE br-c-fin-doc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-c-fin-doc Dialog-Frame _FREEFORM
   QUERY br-c-fin-doc DISPLAY
       mark-string(recid(X_c-fin-doc), v-rid-list) FORMAT "X(1)":U
-      X_c-fin-doc.host-code COLUMN-LABEL "Код!фирмы" FORMAT "99999":U
+      X_c-fin-doc.host-code COLUMN-LABEL "Код!фирмы" FORMAT "999999999":U
       X_c-fin-doc.prn-doc-code FORMAT "X(16)":U
       X_c-fin-doc.doc-date FORMAT "99/99/9999":U
       get-shift(BUFFER X_c-fin-doc, OUTPUT v-fin-doc-shift-name-num)

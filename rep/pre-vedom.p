@@ -121,6 +121,9 @@ define variable v-cashier             as character no-undo .
 define variable v-decimal             as decimal   no-undo . 
 define variable v-pin                 as character no-undo .
 define variable v-qr-code             as integer   no-undo .
+define variable v-hist-name           as character no-undo .
+define variable v-hist-code           as character no-undo .
+define variable par-type       as character no-undo .
 define stream Out-Stream.
 define stream OutStr-html.
 
@@ -287,7 +290,12 @@ do
   
   find first buf_clients no-lock where buf_clients.obj-type = ub.fin-doc.obj-type and buf_clients.obj-code = ub.fin-doc.obj-code no-error .
   if available (buf_clients) then v-obj-name = buf_clients.obj-name .  
-
+  
+  run db-attr-value(INPUT v-cntxt-db-num,INPUT {&attr-hist-code},OUTPUT v-hist-code ,OUTPUT par-type) .
+  run db-attr-value(INPUT v-cntxt-db-num,INPUT {&attr-hist-name},OUTPUT v-hist-name ,OUTPUT par-type) .
+  
+  if v-hist-name = "" then v-hist-name = v-obj-name .
+  
   if v-qr-code = 1 then 
   do:
 /*QR-код*/
@@ -681,7 +689,7 @@ do
       '<tr>' skip
       '<td></td>' skip
       '<td colspan="10" style="text-align: left;">От кого</td>' skip
-      '<td colspan="57" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + v-firm + " " + v-obj-name + '</td>' skip
+      '<td colspan="57" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + v-firm + " " + v-hist-name + '</td>' skip
       '<td style="border-bottom: 1px solid black; border-top: 1px solid black;"></td>' skip
       '<td colspan="9" style="border-bottom: 1px solid black; border-top: 1px solid black;">счет №</td>' skip
       '<td colspan="43" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black; border-top: 1px solid black;">' + v-debt-schet + '</td>' skip
