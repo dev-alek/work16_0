@@ -1206,7 +1206,7 @@ define variable v-err               as logical    no-undo .
         end.
       end.
       
-      if o-uchet = "по календарным датам"
+      if o-uchet = "0"
       then v-uchet = "cal" .
       else v-uchet = "smen" . 
       

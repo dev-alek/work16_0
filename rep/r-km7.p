@@ -576,23 +576,20 @@ do on error undo, return error return-value  :
       delete object mCashBook no-error .
 
       case o-head-position:
-        when 'director':U then do:
+        when '1':U then do:
           v-head-position = "Директор".
         end.
-        when 'zavsklad':U then do:
-          v-head-position = "Зав.складом".
-        end.
-        when 'upravl':U then do:
+        when '2':U then do:
           v-head-position = "Управляющий".
         end.
-        when 'ruk_firm':U then do:
+        when '0':U then do:
             for first buf_sysconf where buf_sysconf.host-code = This_Object.host-code:
             v-head-position = buf_sysconf.head-position.
             end.
         end.
       end case.
       case o-director:
-        when 'dir_obj':U then do:
+        when '1':U then do:
           if This_Object.obj-type = {&shop} then do:
             find first buf_shop no-lock where
                       buf_shop.obj-code = This_Object.obj-code no-error .
@@ -608,7 +605,7 @@ do on error undo, return error return-value  :
             end.
           end.
         end. /*when 'dir_obj' then do:*/
-        when 'ruk_firm':U then do:
+        when '0':U then do:
           v-director = buf_firm.director.
         end.
       end case.

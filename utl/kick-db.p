@@ -1377,8 +1377,8 @@ define buffer buf_CashBookRule for DICTDB.CashBookRule .
     buf_CashBook.id           = 0
     buf_CashBook.ext-code     = "0" /* Код/номер типа кассовой книги 0 */
     buf_CashBook.CashBookName = "Основная деятельность" /* Наименование типа кассовой книги */  
-    buf_CashBook.RuleOsn      = "Выручка от реализации" /* Значение для заполнения графы "Основание" (перечень cb-by-osnovanie в rul/rcps-67.w) */
-    buf_CashBook.RulePril     = "Номера Z-отчетов"      /* Значение для заполнения графы "Приложение" (перечень cb-by-osnovanie в rul/rcps-67.w) */ 
+    buf_CashBook.RuleOsn      = "0" /* Значение для заполнения графы "Основание" (перечень cb-by-osnovanie в rul/rcps-67.w) */
+    buf_CashBook.RulePril     = "0"      /* Значение для заполнения графы "Приложение" (перечень cb-by-osnovanie в rul/rcps-67.w) */ 
     buf_CashBook.FlagSepCash  = true /* Флаг «Отдельный ПКО для каждой кассы» */
     buf_CashBook.FlagSepFull  = true /* Флаг «Раздельно НП и ТНП» */
     buf_CashBook.Credit       = "90.01" /* Значение для заполнения поля «кредит» 90.01 */

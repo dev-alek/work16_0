@@ -138,7 +138,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
                tt-cashbook.ext-code = v-code
                tt-cashbook.id       = 0
                tt-cashbook.basic-kb = yes
-               
            .
            
          end.  
@@ -252,7 +251,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.RuleOsn      = objImp:rule-reason when objImp:rule-reason <> ?
       tt-cashbook.cli-type     = {&cmp}             when objImp:code-payer <> ?
       tt-cashbook.cli-code     = objImp:code-payer  when objImp:code-payer <> ?
-      tt-cashbook.RulePril     = getRulePrilName(objImp:rule-att)   when objImp:rule-att <> ?
+      tt-cashbook.RulePril     = string(objImp:rule-att)   when objImp:rule-att <> ?
       tt-cashbook.FlagSepCash  = (objImp:ind-kass-pko = 1) when objImp:ind-kass-pko <> ?
       tt-cashbook.FlagSepFull  = (objImp:apart-np-tnp = 1) when objImp:apart-np-tnp <> ?
    /* tt-cashbook.Status_      = 0:"Текущий", 1:"Удаленный"
@@ -331,14 +330,14 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           /* 05/III-2019 Маски формировать из Получаемого префикса + "[NNNN]" */
           tt-cashbookrule.RkoMask         = substitute("&1[NNNN]", objImp:pko-prefix) when objImp:pko-prefix <> ?
           tt-cashbookrule.PkoMask         = substitute("&1[NNNN]", objImp:rko-prefix) when objImp:rko-prefix <> ?
-          tt-cashbookrule.ManagerPosition = getMgrPositionName(objImp:post-chief) when objImp:post-chief <> ?
-          tt-cashbookrule.ManagerFIO      = getMgrFioName(objImp:fio-chief)       when objImp:fio-chief <> ?
-          tt-cashbookrule.BuhFIO          = getBuhFioName(objImp:fio-booker)      when objImp:fio-booker <> ?
-          tt-cashbookrule.Struct          = getStructName(objImp:struct-unit) when objImp:struct-unit <> ?
+          tt-cashbookrule.ManagerPosition = string(objImp:post-chief) when objImp:post-chief <> ?
+          tt-cashbookrule.ManagerFIO      = string(objImp:fio-chief)       when objImp:fio-chief <> ?
+          tt-cashbookrule.BuhFIO          = string(objImp:fio-booker)      when objImp:fio-booker <> ?
+          tt-cashbookrule.Struct          = string(objImp:struct-unit) when objImp:struct-unit <> ?
           tt-cashbookrule.DptName         = objImp:struct-unit-name           when objImp:struct-unit-name <> ?
           tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
           tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
-          tt-cashbookrule.uchet           = getUchetName(objImp:acc-shift)        when objImp:acc-shift <> ?
+          tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
         .
         v-storage:insertDBobj(input dataset ds-cashbookrule by-reference) .
         if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
@@ -362,14 +361,14 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
          assign
           tt-cashbookrule.RkoMask         = substitute("&1[NNNN]", objImp:pko-prefix) when objImp:pko-prefix <> ?
           tt-cashbookrule.PkoMask         = substitute("&1[NNNN]", objImp:rko-prefix) when objImp:rko-prefix <> ?
-          tt-cashbookrule.ManagerPosition = getMgrPositionName(objImp:post-chief) when objImp:post-chief <> ?
-          tt-cashbookrule.ManagerFIO      = getMgrFioName(objImp:fio-chief)       when objImp:fio-chief <> ?
-          tt-cashbookrule.BuhFIO          = getBuhFioName(objImp:fio-booker)      when objImp:fio-booker <> ?
-          tt-cashbookrule.Struct          = getStructName(objImp:struct-unit) when objImp:struct-unit <> ?
+          tt-cashbookrule.ManagerPosition = string(objImp:post-chief) when objImp:post-chief <> ?
+          tt-cashbookrule.ManagerFIO      = string(objImp:fio-chief)       when objImp:fio-chief <> ?
+          tt-cashbookrule.BuhFIO          = string(objImp:fio-booker)      when objImp:fio-booker <> ?
+          tt-cashbookrule.Struct          = string(objImp:struct-unit) when objImp:struct-unit <> ?
           tt-cashbookrule.DptName         = objImp:struct-unit-name           when objImp:struct-unit-name <> ?
           tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
           tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
-          tt-cashbookrule.uchet           = getUchetName(objImp:acc-shift)        when objImp:acc-shift <> ?
+          tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
          .
          v-storage:updateDBobj(input dataset ds-cashbookrule by-reference) .
          if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
@@ -387,14 +386,14 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           /* 05/III-2019 Маски формировать из Получаемого префикса + "[NNNN]" */
           tt-cashbookrule.RkoMask         = substitute("&1[NNNN]", objImp:pko-prefix) when objImp:pko-prefix <> ?
           tt-cashbookrule.PkoMask         = substitute("&1[NNNN]", objImp:rko-prefix) when objImp:rko-prefix <> ?
-          tt-cashbookrule.ManagerPosition = getMgrPositionName(objImp:post-chief) when objImp:post-chief <> ?
-          tt-cashbookrule.ManagerFIO      = getMgrFioName(objImp:fio-chief)       when objImp:fio-chief <> ?
-          tt-cashbookrule.BuhFIO          = getBuhFioName(objImp:fio-booker)      when objImp:fio-booker <> ?
-          tt-cashbookrule.Struct          = getStructName(objImp:struct-unit) when objImp:struct-unit <> ?
+          tt-cashbookrule.ManagerPosition = string(objImp:post-chief) when objImp:post-chief <> ?
+          tt-cashbookrule.ManagerFIO      = string(objImp:fio-chief)       when objImp:fio-chief <> ?
+          tt-cashbookrule.BuhFIO          = string(objImp:fio-booker)      when objImp:fio-booker <> ?
+          tt-cashbookrule.Struct          = string(objImp:struct-unit) when objImp:struct-unit <> ?
           tt-cashbookrule.DptName         = objImp:struct-unit-name           when objImp:struct-unit-name <> ?
           tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
           tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
-          tt-cashbookrule.uchet           = getUchetName(objImp:acc-shift)        when objImp:acc-shift <> ?
+          tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
          .
          v-storage:insertDBobj(input dataset ds-cashbookrule by-reference) .
          if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
@@ -504,113 +503,5 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       return v-retfl .
     end finally .
   end method. /* end_of Excute */
-
-
-  method private character getMgrPositionName (input p-post-chief as integer) :
-    /* Должность рук-ля
-• 0 – должность рук-ля фирмы
-• 1 – «директор»
-• 2 – «управляющий»
-    */
-    define variable v-name as character no-undo .
-    case p-post-chief :
-      when 1 then v-name = "директор" .
-      when 2 then v-name = "управляющий" .
-      otherwise do :
-        // как найти должность руководителя фирмы?
-      end .
-    end case .
-    return v-name .
-  end method . /* end_of getMgrPositionName */
-
-  method private character getMgrFioName (input p-fio-chief as integer) :
-    /* ФИО рук-ля
-• 0 - "ФИО руководителя фирмы"
-• 1 - "ФИО руководителя магазина"
-    */
-    define variable v-name as character no-undo .
-    case p-fio-chief :
-      when 1 then v-name = "ФИО руководителя магазина" .
-        otherwise v-name = "ФИО руководителя фирмы" .
-    end case .
-    return v-name .
-  end method . /* end_of getMgrFioName */
-
-  method private character getBuhFioName (input p-fio-booker as integer) :
-    /* ФИО бухг-ра
-• 0 - "ФИО гл. бухгалтера фирмы"
-• 1 - "ФИО бухгалтера магазина"
-    */
-    define variable v-name as character no-undo .
-    case p-fio-booker :
-      when 1 then v-name = "ФИО бухгалтера магазина" .
-        otherwise v-name = "ФИО гл. бухгалтера фирмы" .
-    end case .
-    return v-name .
-  end method . /* end_of getBuhFioName */
-
-  method private character getStructName (input p-struct-unit as integer) :
-    /* Поле «Структурн.подразд»
-• 0 – заполняет оператор
-• 1 – из настроек объекта
-• 2 – свободный текст
-       В экранной форме реализован выбор:
-arrayvar5[1] = "Заполняет оператор".
-arrayvar5[2] = "Взять из объекта".
-arrayvar5[3] = "Значение по умолчанию".
-    */
-    define variable v-name as character no-undo .
-    case p-struct-unit :
-      when 1 then v-name = "Взять из объекта" .
-      when 2 then v-name = "Значение по умолчанию" .
-        otherwise v-name = "Заполняет оператор" .
-    end case .
-    return v-name .
-  end method . /* end_of getStructName */
-  
-  method private character getRuleOsnName (input p-rule-reason as integer) :
-    /* Правило заполнения графы "Основание"
-• 0 - "Выручка от реализации"
-• 1 - "Номера Z-отчетов"
-• 2 - "Не заполнять"
-20/V-2019 не используется
-    */
-    define variable v-name as character no-undo .
-    case p-rule-reason :
-      when 1 then v-name = "Номера Z-отчетов" .
-      when 2 then v-name = "Не заполнять" .
-        otherwise v-name = "Выручка от реализации" .
-    end case .
-    return v-name .
-  end method . /* end_of getRuleOsnName */
-    
-  method private character getRulePrilName (input p-rule-att as integer) :
-    /* Правило заполнения графы "Приложение"
-• 0 - "Номера Z-отчетов"
-• 1 - "Не заполнять"
-    */
-    define variable v-name as character no-undo .
-    case p-rule-att :
-      when 1 then v-name = "Не заполнять" .
-        otherwise v-name = "Номера Z-отчетов" .
-    end case .
-    return v-name .
-  end method . /* end_of getRulePrilName */
-
-  method private character getUchetName (input p-acc-shift as integer) :
-    /* Учет ведется по:
-• 0 –календарным датам
-• 1 –по сменам
-       В экранной форме реализован выбор:
-arrayvar6[1] = "по сменным датам".
-arrayvar6[2] = "по календарным датам".
-    */
-    define variable v-name as character no-undo .
-    case p-acc-shift :
-      when 1 then v-name = "по сменным датам" .
-        otherwise v-name = "по календарным датам" .
-    end case .
-    return v-name .
-  end method . /* end_of getUchetName */
     
 end class.

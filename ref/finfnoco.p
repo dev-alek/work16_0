@@ -366,45 +366,6 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
     define variable v-dpt-dflt-name as character no-undo .
     define variable v-dpt-dflt-type as character no-undo .
     define variable v-dpt-dflt-code as integer no-undo .
-/*    run adm/shattri.p (                                                                                  */
-/*        input "get":U                                                                                    */
-/*        ,input  buf_clients-obj.obj-type                                                                 */
-/*        ,input  buf_clients-obj.obj-code                                                                 */
-/*        ,input  {&attr-fin-doc}                                                                          */
-/*        ,input  '':U /*p-param-code*/                                                                    */
-/*        ,output  v-value-character                                                                       */
-/*        ,output v-value-date                                                                             */
-/*        ,output v-value-decimal                                                                          */
-/*        ,output v-value-integer                                                                          */
-/*        ,output v-value-logical                                                                          */
-/*        ,output par-type /*p-param-value*/                                                               */
-/*        ,INPUT-OUTPUT table-handle v-tth                                                                 */
-/*        ) no-error .                                                                                     */
-/*    if error-status:error then do:                                                                       */
-/*      undo, return  substitute("Ошибка при получении настроек для фин.документов НА ОБЪЕКТЕ &1&2:&3&4 &5"*/
-/*                          , buf_clients-obj.obj-type                                                     */
-/*                          , buf_clients-obj.obj-code                                                     */
-/*                          , {&new-line}                                                                  */
-/*                          , error-status:get-message(1)                                                  */
-/*                          , return-value ).                                                              */
-/*    end.                                                                                                 */
-/*    for each  thbjattr_thbj-attr where                                                                   */
-/*              thbjattr_thbj-attr.obj-type = buf_clients-obj.obj-type                                     */
-/*          and thbjattr_thbj-attr.obj-code = buf_clients-obj.obj-code                                     */
-/*          and thbjattr_thbj-attr.upper-prop-code = {&attr-fin-doc}:                                      */
-/*      if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-option} then do:                              */
-/*        v-dpt-option = thbjattr_thbj-attr.property-value-character.                                      */
-/*      end.                                                                                               */
-/*      if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-dflt-name} then do:                           */
-/*        v-dpt-dflt-name = thbjattr_thbj-attr.property-value-character.                                   */
-/*      end.                                                                                               */
-/*      if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-dflt-type} then do:                           */
-/*        v-dpt-dflt-type = thbjattr_thbj-attr.property-value-character.                                   */
-/*      end.                                                                                               */
-/*      if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-dflt-code} then do:                           */
-/*        v-dpt-dflt-code = thbjattr_thbj-attr.property-value-integer.                                     */
-/*      end.                                                                                               */
-/*    end.                                                                                                 */
     mCashBook = new ibs.th.ref.cashbookstorage () .
       
     v-dpt-option    = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, 8) .
@@ -415,28 +376,14 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
     delete object mCashBook no-error .
     
     case v-dpt-option:
-/*      when "object" then do:                      */
-/*        assign                                    */
-/*        v-dpt-dflt-name = buf_clients-obj.obj-name*/
-/*        v-dpt-dflt-type = buf_clients-obj.obj-type*/
-/*        v-dpt-dflt-code = buf_clients-obj.obj-code*/
-/*        .                                         */
-/*      end.                                        */
-/*      when "blank" then do:                       */
-/*        assign                                    */
-/*        v-dpt-dflt-name = ''                      */
-/*        v-dpt-dflt-type = ''                      */
-/*        v-dpt-dflt-code = 0                       */
-/*        .                                         */
-/*      end.                                        */
-      when "Взять из объекта" then do:
+      when "1" then do:
         assign
         v-dpt-dflt-name = buf_clients-obj.obj-name
         v-dpt-dflt-type = buf_clients-obj.obj-type
         v-dpt-dflt-code = buf_clients-obj.obj-code
         .
       end.
-      when "Заполняет оператор" then do:
+      when "0" then do:
         assign
         v-dpt-dflt-name = ''
         v-dpt-dflt-type = ''
@@ -445,6 +392,11 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
       end.
       otherwise do:
         /*уже заполнено в цикле*/
+                assign
+        v-dpt-dflt-name = v-dpt-dflt-name
+        v-dpt-dflt-type = v-dpt-dflt-type
+        v-dpt-dflt-code = v-dpt-dflt-code
+        .
       end.
     end case.
   end. /*if (p-mode = {&add-def}*/
@@ -931,65 +883,20 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
       o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .
       
       delete object mCashBook no-error .
-      
-/*      for each  thbjattr_thbj-attr where                                                                                            */
-/*                thbjattr_thbj-attr.obj-type = tt-fin-doc.obj-type                                                                   */
-/*            and thbjattr_thbj-attr.obj-code = tt-fin-doc.obj-code                                                                   */
-/*            and thbjattr_thbj-attr.upper-prop-code = {&attr-fin-doc}                                                                */
-/*      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):*/
-/*        case thbjattr_thbj-attr.prop-code:                                                                                          */
-/*          when {&attr-fin-doc_head-position} then do:                                                                               */
-/*            o-head-position = thbjattr_thbj-attr.property-value-character.                                                          */
-/*          end.                                                                                                                      */
-/*          when {&attr-fin-doc_director} then do:                                                                                    */
-/*            o-director = thbjattr_thbj-attr.property-value-character.                                                               */
-/*          end.                                                                                                                      */
-/*          when {&attr-fin-doc_snr-accnt} then do:                                                                                   */
-/*            o-snr-accnt = thbjattr_thbj-attr.property-value-character.                                                              */
-/*          end.                                                                                                                      */
-/*        end case.                                                                                                                   */
-/*      end. /*for each  thbjattr_thbj-attr where*/                                                                                   */
+
       case o-head-position:
-/*        when 'director':U then do:                    */
-/*          v-head-position = "Директор".               */
-/*        end.                                          */
-/*        when 'zavsklad':U then do:                    */
-/*          v-head-position = "Зав.складом".            */
-/*        end.                                          */
-/*        when 'upravl':U then do:                      */
-/*          v-head-position = "Управляющий".            */
-/*        end.                                          */
-/*        when 'ruk_firm':U then do:                    */
-/*          v-head-position = buf_sysconf.head-position.*/
-/*        end.                                          */
-        when 'Должность рук-ля фирмы':U then do:
+        when '0':U then do:
           v-head-position = buf_sysconf.head-position.
         end.
+        when '1':U then do:
+          v-head-position = "Директор".
+        end.
         otherwise do :
-          v-head-position = o-head-position .
+          v-head-position = "Управляющий".
         end. 
       end case.
       case o-director:
-/*        when 'dir_obj':U then do:                               */
-/*          if p-obj-type = {&shop} then do:                      */
-/*            find first buf_shop no-lock where                   */
-/*                      buf_shop.obj-code = p-obj-code no-error . */
-/*            if available buf_shop then do:                      */
-/*              v-director = buf_shop.director.                   */
-/*            end.                                                */
-/*          end.                                                  */
-/*          if p-obj-type = {&stock} then do:                     */
-/*            find first buf_store no-lock where                  */
-/*                      buf_store.obj-code = p-obj-code no-error .*/
-/*            if available buf_store then do:                     */
-/*              v-director = buf_store.store-boss.                */
-/*            end.                                                */
-/*          end.                                                  */
-/*        end. /*when 'dir_obj' then do:*/                        */
-/*        when 'ruk_firm':U then do:                              */
-/*          v-director = buf_firm.director.                       */
-/*        end.                                                    */
-        when 'ФИО руководителя магазина':U then do:
+        when '1':U then do:
           if p-obj-type = {&shop} then do:
             find first buf_shop no-lock where
                       buf_shop.obj-code = p-obj-code no-error .
@@ -1005,27 +912,12 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
             end.
           end.
         end. /*when 'dir_obj' then do:*/
-        when 'ФИО руководителя фирмы':U then do:
+        when '0':U then do:
           v-director = buf_firm.director.
         end.
       end case.
       case o-snr-accnt:
-/*        when 'buh_obj':U then do:                              */
-/*          if p-obj-type = {&shop} then do:                     */
-/*            find first buf_shop no-lock where                  */
-/*                      buf_shop.obj-code = p-obj-code no-error .*/
-/*            if available buf_shop then do:                     */
-/*              v-snr-accnt = entry(1,buf_shop.acct,"|").        */
-/*            end.                                               */
-/*          end.                                                 */
-/*          if p-obj-type = {&stock} then do:                    */
-/*            v-snr-accnt = ''.                                  */
-/*          end.                                                 */
-/*        end.                                                   */
-/*        when 'glbuh_firm':U then do:                           */
-/*          v-snr-accnt = buf_sysconf.snr-accnt.                 */
-/*        end.                                                   */
-        when 'ФИО бухгалтера магазина':U then do:
+        when '1':U then do:
           if p-obj-type = {&shop} then do:
             find first buf_shop no-lock where
                       buf_shop.obj-code = p-obj-code no-error .
@@ -1037,7 +929,7 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
             v-snr-accnt = ''.
           end.
         end.
-        when 'ФИО гл. бухгалтера фирмы':U then do:
+        when '2':U then do:
           v-snr-accnt = buf_sysconf.snr-accnt.
         end.
       end case.
@@ -1051,7 +943,6 @@ return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, 
       v-cashier       = buf_sysconf.cashier
       .
     end.
-
 
     CASE p-fin-ext-doc-type:
       when {&FDEDT_Income_Cash} then do:

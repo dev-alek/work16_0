@@ -39,9 +39,6 @@ define input parameter p-dir-name               as character               no-un
 
 define input parameter table for tt-cash-desk .
 
-
-
-
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -908,19 +905,22 @@ do on error undo, return error return-value  :
                     o-director      = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 6) .
                     
                     delete object mCashBook no-error .
-                    
+                     
                     case o-head-position:
-                      when 'Должность рук-ля фирмы':U then do:
+                      when '0':U then do:
                         for first buf_sysconf no-lock where buf_sysconf.host-code = This_Object.host-code :
                           v-head-position = buf_sysconf.head-position.
                         end.
                       end.
+                      when '1':U then do:
+                        v-head-position = "Директор" .
+                      end.  
                       otherwise do :
-                        v-head-position = o-head-position .
+                        v-head-position = "Управляющий" .
                       end.
                     end case.
                     case o-director:
-                      when 'ФИО руководителя магазина':U then do:
+                      when '1':U then do:
                         if This_Object.obj-type = {&shop} then do:
                           find first buf_shop no-lock where
                                     buf_shop.obj-code = This_Object.obj-code no-error .
@@ -936,7 +936,7 @@ do on error undo, return error return-value  :
                           end.
                         end.
                       end. /*when 'dir_obj' then do:*/
-                      when 'ФИО руководителя фирмы':U then do:
+                      when '0':U then do:
                         v-director = buf_firm.director.
                       end .
                     end case.

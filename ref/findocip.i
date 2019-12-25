@@ -578,14 +578,14 @@ if not (tt-fin-doc.obj-type = '' and tt-fin-doc.obj-code = 0) then do:
   delete object mCashBook no-error .
   
   case v-dpt-option:
-    when "Взять из объекта" then do:
+    when "1" then do:
       assign
       v-dpt-dflt-name = X_clients-obj.obj-name
       v-dpt-dflt-type = X_clients-obj.obj-type
       v-dpt-dflt-code = X_clients-obj.obj-code
       .
     end.
-    when "Заполняет оператор" then do:
+    when "0" then do:
       assign
       v-dpt-dflt-name = ''
       v-dpt-dflt-type = ''
@@ -594,6 +594,11 @@ if not (tt-fin-doc.obj-type = '' and tt-fin-doc.obj-code = 0) then do:
     end.
     otherwise do:
       /*уже заполнено в цикле*/
+        assign
+        v-dpt-dflt-name = v-dpt-dflt-name
+        v-dpt-dflt-type = v-dpt-dflt-type
+        v-dpt-dflt-code = v-dpt-dflt-code
+        .
     end.
   end case.
   assign

@@ -77,7 +77,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       or when {&lookup} then 
       do:
         find first buf_cashbook no-lock where buf_cashbook.id = p-id .
-        buffer-copy buf_cashbook to tt-cashbook .
+        buffer-copy buf_cashbook except buf_cashbook.RulePril buf_cashbook.RuleOsn to tt-cashbook .
+        tt-cashbook.RulePril = getRulePrilName(integer (buf_cashbook.RulePril)) .
+        tt-cashbook.RuleOsn = getRuleOsnName(buf_cashbook.RuleOsn) .
       end. 
     end case .
 
@@ -209,6 +211,17 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fDebet:Text = fin-code-cor-acc.code-value .
       this-object:fDebet:focus() .
     end.
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void fTakenFrom_TextChanged( input sender as System.Object, input e as System.EventArgs ):
+		
 		return.
 
 	end method.

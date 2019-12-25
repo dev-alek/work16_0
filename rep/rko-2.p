@@ -89,11 +89,12 @@ define variable ii                   as integer   no-undo .
 define variable v-name               as character no-undo .
 define variable v-name-report        as character no-undo .
 define variable v-obj-name           as character no-undo .
+define variable o-head-position AS character no-undo.    /* Должность */
 define stream Out-Stream.
 define stream OutStr-html.
 
 define buffer buf_currency for ub.currency.
-
+define buffer   buf_sysconf    FOR ub.sysconf.
 
 do
 on error undo, return error return-value
@@ -102,7 +103,7 @@ on error undo, return error return-value
   mCashBook = new ibs.th.ref.cashbookstorage () .
       
   o-uchet    = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 9) .
-  if o-uchet = "по календарным датам"
+  if o-uchet = "0"
   then v-uchet = "cal" .
   else v-uchet = "smen" .
   
@@ -233,9 +234,30 @@ on error undo, return error return-value
   v-sum-doc-n1 = caps(substring(v-sum-doc-n1, 1, 1)) + substring(v-sum-doc-n1, 2)
   .
   
-  
-  if num-entries(buf_fin-doc.payer-sign1, {&delim-par})> 1 and entry(1, buf_fin-doc.payer-sign1, {&delim-par}) <> "" then v-head-position = entry(1, buf_fin-doc.payer-sign1, {&delim-par}) .
-                    else v-head-position = "Директор" .
+  /*Проверить, что печатать*/
+
+      mCashBook = new ibs.th.ref.cashbookstorage () .
+      o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 5) .
+/*      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 6) .*/
+/*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .*/
+      delete object mCashBook no-error .
+
+      case o-head-position:
+        when '1':U then do:
+          v-head-position = "Директор".
+        end.
+        when '2':U then do:
+          v-head-position = "Управляющий".
+        end.
+        when '0':U then do:
+            for first buf_sysconf where buf_sysconf.host-code = buf_fin-doc.host-code:
+            v-head-position = buf_sysconf.head-position.
+            end.
+        end.
+      end case.
+/*                                                                                                                                                                                             */
+/*  if num-entries(buf_fin-doc.payer-sign1, {&delim-par})> 1 and entry(1, buf_fin-doc.payer-sign1, {&delim-par}) <> "" then v-head-position = entry(1, buf_fin-doc.payer-sign1, {&delim-par}) .*/
+/*                    else v-head-position = "Директор" .                                                                                                                                      */
   v-sign1         = (if num-entries(buf_fin-doc.payer-sign1, {&delim-par})  > 1
                     then entry(2, buf_fin-doc.payer-sign1, {&delim-par})
                     else entry(1, buf_fin-doc.payer-sign1, {&delim-par})
@@ -516,7 +538,7 @@ on error undo, return error return-value
     '<td colspan="2" style="text-align: right;"></td>' skip
     '<td colspan="14" style="text-align: right; border-bottom: 1px solid black;"></td>' skip
     '<td colspan="2" style="text-align: right;"></td>' skip
-    '<td colspan="15" style="text-align: right; border-bottom: 1px solid black;">' + v-sign1 + '</td>' skip
+    '<td colspan="15" style="text-align: center; border-bottom: 1px solid black;">' + v-sign1 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
       put stream OutStr-html unformatted
