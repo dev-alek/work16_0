@@ -1,19 +1,21 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
 
+
 /* Temp-Table and Buffer definitions                                    */
-DEFINE TEMP-TABLE Temp-hattr NO-UNDO LIKE ub.fin-doc-attr
+DEFINE TEMP-TABLE Temp-hattr NO-UNDO LIKE fin-doc-attr
        field user-can-edit as log
        field code as character
        field value_ as character.
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -73,14 +75,14 @@ define variable temp-doc-rec as recid no-undo.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
 &Scoped-define BROWSE-NAME BROWSE-2
 
@@ -89,8 +91,8 @@ define variable temp-doc-rec as recid no-undo.
 
 /* Definitions for BROWSE BROWSE-2                                      */
 &Scoped-define FIELDS-IN-QUERY-BROWSE-2 Temp-hattr.attr-code ~
-Temp-hattr.attr-value
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2
+Temp-hattr.attr-value 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2 
 &Scoped-define QUERY-STRING-BROWSE-2 FOR EACH Temp-hattr NO-LOCK
 &Scoped-define OPEN-QUERY-BROWSE-2 OPEN QUERY BROWSE-2 FOR EACH Temp-hattr NO-LOCK.
 &Scoped-define TABLES-IN-QUERY-BROWSE-2 Temp-hattr
@@ -103,8 +105,8 @@ Temp-hattr.attr-value
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-ins b-chg b-del B-hist b-help ~
-cd-host-code cd-fin-doc-code
-&Scoped-Define DISPLAYED-OBJECTS cd-host-code cd-fin-doc-code
+cd-host-code cd-fin-doc-code 
+&Scoped-Define DISPLAYED-OBJECTS cd-host-code cd-fin-doc-code 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -119,45 +121,45 @@ cd-host-code cd-fin-doc-code
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-chg
-     LABEL "&Изменить":L
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить":L 
      SIZE 10 BY 1 TOOLTIP "Изменить атрибут платежа".
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить":L
+DEFINE BUTTON b-del 
+     LABEL "&Удалить":L 
      SIZE 10 BY 1 TOOLTIP "Удалить  атрибут платежа".
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь":L
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-hist
-     LABEL "Ис&тория"
+DEFINE BUTTON B-hist 
+     LABEL "Ис&тория" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-ins
-     LABEL "&Добавить":L
+DEFINE BUTTON b-ins 
+     LABEL "&Добавить":L 
      SIZE 10 BY 1 TOOLTIP "Добавить атрибут платежа".
 
-DEFINE BUTTON b-quit AUTO-GO
-     LABEL "&Выход ":L
+DEFINE BUTTON b-quit AUTO-GO 
+     LABEL "&Выход ":L 
      SIZE 10 BY 1 TOOLTIP "Выход из режима".
 
-DEFINE VARIABLE cd-fin-doc-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
-     LABEL "Вн. N"
-      VIEW-AS TEXT
+DEFINE VARIABLE cd-fin-doc-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0 
+     LABEL "Вн. N" 
+      VIEW-AS TEXT 
      SIZE 17 BY 1
      BGCOLOR 3 FGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE cd-host-code AS INTEGER FORMAT ">>>>9":U INITIAL 0
-     LABEL "Фирма"
-      VIEW-AS TEXT
-     SIZE 9.63 BY 1
+DEFINE VARIABLE cd-host-code AS INTEGER FORMAT ">>>>>>>>>>9":U INITIAL 0 
+     LABEL "Фирма" 
+      VIEW-AS TEXT 
+     SIZE 18 BY 1
      BGCOLOR 3 FGCOLOR 15  NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY BROWSE-2 FOR
+DEFINE QUERY BROWSE-2 FOR 
       Temp-hattr SCROLLING.
 &ANALYZE-RESUME
 
@@ -185,8 +187,8 @@ DEFINE FRAME Dialog-Frame
      cd-host-code AT ROW 3.29 COL 1
      cd-fin-doc-code AT ROW 3.29 COL 29.5
      SPACE(39.50) SKIP(15.66)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Атрибуты платежа".
 
 
@@ -213,9 +215,9 @@ DEFINE FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-                                                                        */
+   FRAME-NAME                                                           */
 /* BROWSE-TAB BROWSE-2 b-help Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -235,14 +237,14 @@ ASSIGN
 /* Query rebuild information for BROWSE BROWSE-2
      _TblList          = "Temp-Tables.Temp-hattr"
      _FldNameList[1]   > Temp-Tables.Temp-hattr.attr-code
-"Temp-hattr.attr-code" "Атрибут" "X(50)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" ""
+"Temp-hattr.attr-code" "Атрибут" "X(50)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > Temp-Tables.Temp-hattr.attr-value
-"Temp-hattr.attr-value" "Значение" "X(50)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" ""
+"Temp-hattr.attr-value" "Значение" "X(50)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is OPENED
 */  /* BROWSE BROWSE-2 */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -442,7 +444,7 @@ END.
 &Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -481,7 +483,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -500,12 +502,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY cd-host-code cd-fin-doc-code
+  DISPLAY cd-host-code cd-fin-doc-code 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit b-ins b-chg b-del B-hist b-help cd-host-code cd-fin-doc-code
+  ENABLE b-quit b-ins b-chg b-del B-hist b-help cd-host-code cd-fin-doc-code 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -514,7 +516,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame 
 PROCEDURE init-proc :
 define var  attr-type as character no-undo .          /* тип атрибута      */
 define var  attr-format as character no-undo .        /* формат атрибута   */
@@ -577,7 +579,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -642,7 +644,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-add-chg Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-add-chg Dialog-Frame 
 PROCEDURE proc-add-chg :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -861,7 +863,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE temp-fd-attr-exist Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE temp-fd-attr-exist Dialog-Frame 
 PROCEDURE temp-fd-attr-exist :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -913,3 +915,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
