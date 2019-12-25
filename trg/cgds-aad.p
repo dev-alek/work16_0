@@ -1,0 +1,1 @@
+TRIGGER PROCEDURE FOR DELETE OF c-goods-attr-any.

@@ -28,7 +28,9 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
-
+if new-{&main-tbl}.gds-code eq 0
+then
+   new-{&main-tbl}.gds-code = ?.
 { trg/trghistnws.i 
   &hist = yes 
   &seqnamehist = "s-c-{&main-tbl}-chip-num"
