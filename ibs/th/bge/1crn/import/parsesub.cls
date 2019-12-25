@@ -186,6 +186,11 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
   define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
+  define variable seasonSubjectObj                      as class season                  no-undo.
+  define variable impSeasonEventHndlrObj                as class impseason               no-undo.
+  define variable gds-seasonSubjectObj                  as class gds-season              no-undo.
+  define variable impGds-SeasonEventHndlrObj            as class impgds-season           no-undo.
+  
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
   define variable iNum             as integer   no-undo. /* примерный счетчик элемента */
@@ -261,6 +266,11 @@ class ibs.th.bge.1crn.import.parsesub:
     bank-accountsSubjectObj = new bank-accounts ().
     impbank-accountsEventHndlrObj = new impbank-accounts ().
     
+    seasonSubjectObj = new season ().
+    impSeasonEventHndlrObj = new impseason ().
+    
+    gds-seasonSubjectObj = new gds-season ().
+    impGds-SeasonEventHndlrObj = new impgds-season ().
 
     price-doc-listSubjectsObj = new subjects("gds-sale").
 
@@ -600,6 +610,14 @@ class ibs.th.bge.1crn.import.parsesub:
         when "tank" then do:
           GetChildrenSub (hNoderef, (level + 1), tank-impSubjectObj).
           ReceivedSubjectPublish(tank-impSubjectObj, imptank-impEventHndlrObj).
+        end.
+        when "Tb-group" then do:
+          GetChildrenSub (hNoderef, (level + 1), seasonSubjectObj).
+          ReceivedSubjectPublish(seasonSubjectObj, impSeasonEventHndlrObj).
+        end.
+        when "Tb-gd" then do:
+          GetChildrenSub (hNoderef, (level + 1), gds-seasonSubjectObj).
+          ReceivedSubjectPublish(gds-seasonSubjectObj, impGds-SeasonEventHndlrObj).
         end.
       end case.
       // --> вставить GetChildrenSub и ReceivedSubjectPublish сюда

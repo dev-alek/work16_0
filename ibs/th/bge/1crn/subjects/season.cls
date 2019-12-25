@@ -1,0 +1,78 @@
+
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Структура данных season в 1С
+
+Автор: Sergey Slivenko
+Дата создания: 09/11/19
+Author: Sergey Slivenko
+Creation date: 09/11/19
+
+*/
+
+using Progress.Lang.*.
+
+class ibs.th.bge.1crn.subjects.season inherits ibs.th.bge.1crn.subjects.asubject: 
+
+  define property Tbg-code    as character    no-undo get. private set.
+  define property del-l       as integer      no-undo get. private set.
+  define property del-f       as integer      no-undo get. private set.
+  define property Tb-name     as character    no-undo get. private set.
+  define property Tb-image    as character    no-undo get. private set.
+
+  define override property InitTag as character no-undo init "Tb-group"
+    get. 
+
+
+  method OVERRIDE PROTECTED void SetPropProtected (inTag as char, inValue as char):
+    case inTag:
+      when "Tbg-code" then do:
+        assign Tbg-code = inValue .
+      end.
+      when "del-l" then do:
+        assign del-l = integer (inValue).
+      end.
+      when "del-f" then do:
+        assign del-f = integer (inValue).
+      end.
+      when "Tb-name" then do:
+        assign Tb-name = inValue .
+      end.
+      when "Tb-image" then do:
+        assign Tb-image = inValue .
+      end.
+    end case.
+  end.
+
+  method override protected void CheckData ():
+
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = "Tbg-code" when Tbg-code = ?
+      v-str = v-str + ",Tb-name" when Tb-name = ?
+    .
+    v-str = trim (v-str, ",").
+    if v-str > ''
+    then 
+      undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
+
+  end.
+  
+  method override protected void ClearSub():
+    assign 
+      Tbg-code   = ?
+      del-l     = ?
+      del-f     = ?
+      Tb-name   = ?
+      Tb-image  = ?
+    .
+  end.
+  
+end class.
