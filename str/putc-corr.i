@@ -19,7 +19,6 @@ Creation date: 02/14/14
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 { cmp/str-glbl.i  }
-{ ref/extclass.i }
 
 procedure putc-corr :
 define input parameter p-pos-type like ub.cash-desk.pos-type no-undo .
@@ -28,7 +27,7 @@ define input parameter p-cash-os like ub.cash-desk.cash-os no-undo .
 define input parameter p-cash-num like ub.cash-desk.cash-num  no-undo .
 define input parameter p-is-del as logical no-undo .
 
-define buffer buf_ext-classif for ub.ext-classif.
+define buffer buf_code for ub.code.
 
 define variable ii as integer no-undo.
 
@@ -37,10 +36,10 @@ define variable ii as integer no-undo.
   :
 
     if p-is-del then do:
-      for each buf_ext-classif where buf_ext-classif.classif-subject = "doc_osnov" and buf_ext-classif.classif-name = {&extclass_oss-ref} no-lock by buf_ext-classif.CharKey_One :
+      for each buf_code where buf_code.parent = "OsnovCorr" and buf_code.status_ = 0 :
         ii = ii + 1.
         run bgelib-tag-open in this-procedure ( input 2, input "CorrectionReason", input substitute("ctrl='&2' code='&1'", string (ii), "ADD":u)).
-          run bgelib-tag-put in this-procedure ( input 3, input "CorrectionReasonName", input string(entry(2,buf_ext-classif.uniq-key-rec,{&delim-key})), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "CorrectionReasonName", input string(buf_code.CodeName), input 1 ).
         run bgelib-tag-close in this-procedure ( input 2, input "CorrectionReason").    
   
       end.
