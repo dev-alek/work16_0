@@ -59,17 +59,23 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с кодексом 24, набор 1".
+
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
+
 { rul/garbcoll.i }
 { gbl/cur-time.i }
 { gbl/key-rec.i }
+{ cmp/obj-list.i new }
+run create_obj-list(p-obj-type,p-obj-code).
+{ rep/fostatok.i  &arh-name = "arh-fin-doc-schet-nal-obj" } /* Fact-order и остатки на дату ПО ФИН АРХИВАМ */
 { ref/fndocip.i  }
 { rep/r-pychk0.i defalgo    }
 { str/out-vatp.i def    }
 { str/lib-trn.i  }
 { ref/gds-attr.i }
 { ref/fd-attr.i }
+
 
 /*переменные контекста*/
 /*это у нас объект 0*/
@@ -121,6 +127,7 @@ define variable p-by-petrol-goods as logical no-undo .
 define variable p-by-osnovanie    as character  no-undo .
 define variable p-by-pril         as character  no-undo .
 
+
 /*---------------------------&end-rule-call-param&-------------------------------*/
 
 
@@ -163,7 +170,12 @@ DEFINE TEMP-TABLE ttc-fin-doc NO-UNDO LIKE ub.fin-doc.
 DEFINE TEMP-TABLE tt0-fin-doc-attr NO-UNDO LIKE ub.fin-doc-attr.
 DEFINE TEMP-TABLE tt0-fin-doc-tax NO-UNDO LIKE ub.fin-doc-tax.
 DEFINE TEMP-TABLE tt0-payment NO-UNDO LIKE ub.payment.
-
+define temp-table tt-cashBookOst no-undo
+field cashbookid as int64
+field ost        as decimal 
+field osnpko     as decimal
+field osnrko     as decimal 
+index pi cashbookid.
 
 define temp-table temp-fin-sum no-undo
 field cash-desk  as integer
@@ -173,8 +185,10 @@ field tot-base as decimal
 field tot-rubl as decimal
 field is-petrol as logical
 field cashbookid as int64
+field is-expense_cash as logical
+field num-expense_cash as int
 index pi is unique primary
-cash-desk curr-code is-petrol cashbookid
+num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid
 .
 
 define temp-table temp-gds no-undo
@@ -217,7 +231,11 @@ field sum-doc as decimal
 field cash-desk  as integer
 field is-petrol as logical
 field cashbookId as int64
+field is-expense_cash as logical
+field num-expense_cash as int
 index pi is unique primary
+num-expense_cash
+is-expense_cash
 cash-desk
 curr-code
 vat-pc
@@ -272,6 +290,7 @@ define buffer buf_inkas          for ub.inkas.
 define buffer buf_inkas-pay-desk for ub.inkas-pay-desk.
 define buffer buf_cash-pay       for ub.cash-pay.
 define buffer buf_temp-fin-sum   for temp-fin-sum.
+define buffer buf_temp-fin-sum-Pko for temp-fin-sum.
 define buffer buf_chk-gds-pay    for ub.chk-gds-pay.
 define buffer buf_chk-doc        for ub.chk-doc.
 define buffer buf_chk-pay        for ub.chk-pay.
@@ -288,6 +307,7 @@ define buffer buf_fin-doc        for ub.fin-doc.
 define buffer buf_sysconf        for ub.sysconf.
 define buffer buf_shift-staff    for ub.shift-staff.
 define buffer buf_chk-gds        for ub.chk-gds.
+
 _main:
 do
 on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -500,6 +520,7 @@ define variable v-err               as logical    no-undo .
 
        if last-of(buf_inkas-pay-desk.pay-desk) then do:
 //создание финдоков
+
         for each buf_chk-doc no-lock
         where buf_chk-doc.obj-code = buf_inkas.obj-code
           and buf_chk-doc.obj-type = buf_inkas.obj-type
@@ -521,6 +542,33 @@ define variable v-err               as logical    no-undo .
                                         ,input "cash-book-id"
                                         ,output mValue
                                         ,output mType) no-error.
+                     
+                       
+                    if p-by-petrol-goods then do: /*проверяем товар на топливность*/
+                      run check-petrol in this-procedure (
+                                                          input buf_chk-gds-pay.b-code ,
+                                                          output is-petrolium
+                                                          ).
+                    end.       
+                    define variable msum as decimal no-undo.
+                     case buf_chk-gds-pay.curr-code:
+                      when 0 then do:
+                        assign
+                        msum =  (if v-curr-r-b = {&r-b-rubl}
+                                 then buf_chk-gds-pay.tot-r-b
+                                 else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
+                                                                          )
+                        .
+                      end.
+                      when v-base-code then do:
+                        assign
+                        msum = (if v-curr-r-b = {&r-b-base}
+                                then buf_chk-gds-pay.tot-r-b
+                                else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                                                          )
+                        .
+                      end.
+                    end case.
                     find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
                     if not available ub.CashBook 
                     then do :
@@ -530,20 +578,16 @@ define variable v-err               as logical    no-undo .
                     then do :
                       p-by-cash-desk = ub.CashBook.FlagSepCash .
                       p-by-petrol-goods = ub.CashBook.FlagSepFull .
-                      p-by-osnovanie = ub.CashBook.RuleOsn .
-                      p-by-pril = ub.CashBook.RulePril .
-                    end.    
-                    if p-by-petrol-goods then do: /*проверяем товар на топливность*/
-                      run check-petrol in this-procedure (
-                                                          input buf_chk-gds-pay.b-code ,
-                                                          output is-petrolium
-                                                          ).
-                    end.                
+                      /*p-by-osnovanie = if (msum < 0 and ub.CashBook.id ne 0) then ub.CashBook.RuleOsnRko else  ub.CashBook.RuleOsnPko .
+                      p-by-pril = ub.CashBook.RulePril */
+                      .
+                    end.         
                     find first buf_temp-fin-sum
                          where buf_temp-fin-sum.curr-code = buf_cash-pay.curr-code
                           and (p-by-cash-desk    = no or buf_temp-fin-sum.cash-desk = buf_inkas-pay-desk.pay-desk)
                           and (p-by-petrol-goods = no or buf_temp-fin-sum.is-petrol = is-petrolium)
                           and buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
+                          and buf_temp-fin-sum.is-expense_cash = (msum < 0 and ub.CashBook.id ne 0 )
                               no-error.
                     if not available buf_temp-fin-sum then do:
                         create buf_temp-fin-sum.
@@ -556,6 +600,7 @@ define variable v-err               as logical    no-undo .
                                                       then is-petrolium
                                                       else no)
                         buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
+                        buf_temp-fin-sum.is-expense_cash = msum < 0 and ub.CashBook.id ne 0
                         .
                     end.
                     assign
@@ -567,25 +612,13 @@ define variable v-err               as logical    no-undo .
                                                                         then buf_chk-gds-pay.tot-r-b
                                                                         else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
                                                                         )
+                    buf_temp-fin-sum.tot-sum = buf_temp-fin-sum.tot-sum + msum
+                    
                     .
-                    case buf_chk-gds-pay.curr-code:
-                      when 0 then do:
-                        assign
-                        buf_temp-fin-sum.tot-sum = buf_temp-fin-sum.tot-sum + (if v-curr-r-b = {&r-b-rubl}
-                                                                          then buf_chk-gds-pay.tot-r-b
-                                                                          else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
-                                                                          )
-                        .
-                      end.
-                      when v-base-code then do:
-                        assign
-                        buf_temp-fin-sum.tot-sum = buf_temp-fin-sum.tot-sum +   (if v-curr-r-b = {&r-b-base}
-                                                                          then buf_chk-gds-pay.tot-r-b
-                                                                          else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
-                                                                          )
-                        .
-                      end.
-                  end.
+                    
+                                          
+                    
+                  
                 end.
             end.
 
@@ -653,7 +686,161 @@ define variable v-err               as logical    no-undo .
         /*найдем НДС - для этого надо пройти по всем размазам с этим типом касс платежа
         найти doc-line и
         */
-
+        define variable Fact-order as decimal no-undo.
+        define buffer tt-cashBookOst0 for tt-cashBookOst.
+        define buffer buf_new_temp-fin-sum for temp-fin-sum.
+        define variable mNumDoc as integer no-undo.
+        
+        
+        find first tt-cashBookOst0 where tt-cashBookOst0.cashbookid eq 0
+          no-error.
+        if not available tt-cashBookOst
+        then do:
+           create tt-cashBookOst0.
+           tt-cashBookOst0.cashbookid =  0.
+           run fostatok in this-procedure (
+             input   v-host-code
+             ,input   buf_shift-obj.obj-code
+             ,input   buf_shift-obj.obj-type
+             ,input   yes
+             ,input   buf_shift-obj.close-date - 1
+             ,input   date('')
+             ,input   buf_shift-obj.shift-num
+             ,input   buf_shift-obj.shift-num
+             ,input   yes /*xTog-obj*/
+             ,input   0 /*p-curr-code*/
+             ,input   0 
+             ,output  tt-cashBookOst0.ost
+             ,output  Fact-order)
+          no-error .
+       end.
+       find first buf_temp-fin-sum-Pko where buf_temp-fin-sum-Pko.num-expense_cash eq 0
+                                          and buf_temp-fin-sum-Pko.is-expense_cash eq no
+                                          and buf_temp-fin-sum-Pko.cashbookid      eq 0
+          no-lock no-error.
+       if available buf_temp-fin-sum-Pko
+       then 
+          tt-cashBookOst0.ost = tt-cashBookOst0.ost + buf_temp-fin-sum-Pko.tot-sum.
+       for each buf_temp-fin-sum where  buf_temp-fin-sum.num-expense_cash eq 0
+                                   and  buf_temp-fin-sum.is-expense_cash  eq yes
+                                   :
+          
+          find first tt-cashBookOst where tt-cashBookOst.cashbookid eq buf_temp-fin-sum.cashbookid
+          no-error.
+          if not available tt-cashBookOst
+          then do:
+             create tt-cashBookOst.
+             tt-cashBookOst.cashbookid =  buf_temp-fin-sum.cashbookid.
+             run fostatok in this-procedure (
+             input   v-host-code
+             ,input   buf_shift-obj.obj-code
+             ,input   buf_shift-obj.obj-type
+             ,input   yes
+             ,input   buf_shift-obj.close-date - 1
+             ,input   date('')
+             ,input   buf_shift-obj.shift-num
+             ,input   buf_shift-obj.shift-num
+             ,input   yes /*xTog-obj*/
+             ,input   0 /*p-curr-code*/
+             ,input   buf_temp-fin-sum.cashbookid 
+             ,output  tt-cashBookOst.ost
+             ,output  Fact-order)
+             no-error .
+             find first buf_temp-fin-sum-Pko where buf_temp-fin-sum-Pko.num-expense_cash eq 0
+                                            and buf_temp-fin-sum-Pko.is-expense_cash eq (not buf_temp-fin-sum.is-expense_cash)
+                                            and buf_temp-fin-sum-Pko.cash-desk       eq buf_temp-fin-sum.cash-desk
+                                            and buf_temp-fin-sum-Pko.curr-code       eq buf_temp-fin-sum.curr-code
+                                            and buf_temp-fin-sum-Pko.cashbookid      eq buf_temp-fin-sum.cashbookid
+             no-lock no-error.
+             if available buf_temp-fin-sum-Pko
+             then 
+                tt-cashBookOst.ost = tt-cashBookOst.ost + buf_temp-fin-sum-Pko.tot-sum.
+                                              
+          end.
+          msum = tt-cashBookOst.ost + buf_temp-fin-sum.tot-sum. //остаток положительный а  buf_temp-fin-sum.tot-sum отрицательный 
+          if msum < 0
+          then do:
+             tt-cashBookOst.ost = 0.
+             
+             
+             if tt-cashBookOst0.ost + msum > 0
+             then do:
+                create buf_new_temp-fin-sum.
+                buffer-copy buf_temp-fin-sum except cashbookid to  buf_new_temp-fin-sum
+                assign
+                   mNumDoc = mNumDoc + 1
+                   buf_new_temp-fin-sum.cashbookid       = 0
+                   buf_new_temp-fin-sum.num-expense_cash = mNumDoc
+                   buf_new_temp-fin-sum.tot-sum          = msum
+                   buf_new_temp-fin-sum.tot-base         = msum
+                   buf_new_temp-fin-sum.tot-rubl         = msum
+                   tt-cashBookOst0.ost                   = tt-cashBookOst0.ost + msum.
+                .
+                
+                create buf_temp-tax.
+                assign
+                   buf_temp-tax.curr-code        = buf_new_temp-fin-sum.curr-code
+                   buf_temp-tax.cash-desk        = buf_new_temp-fin-sum.cash-desk
+                   buf_temp-tax.is-petrol        = buf_new_temp-fin-sum.is-petrol
+                   buf_temp-tax.cashbookId       = buf_new_temp-fin-sum.cashbookid
+                   buf_temp-tax.is-expense_cash  = buf_new_temp-fin-sum.is-expense_cash
+                   buf_temp-tax.num-expense_cash = buf_new_temp-fin-sum.num-expense_cash
+                   buf_temp-tax.sum-rubl = msum
+                   buf_temp-tax.sum-base = msum
+                   buf_temp-tax.sum-doc  = msum
+                .
+                
+                create buf_new_temp-fin-sum.
+                buffer-copy buf_temp-fin-sum to  buf_new_temp-fin-sum
+                assign
+                   mNumDoc = mNumDoc + 1
+                   msum                                  = -1 * msum
+                   buf_new_temp-fin-sum.tot-sum          = msum
+                   buf_new_temp-fin-sum.num-expense_cash = mNumDoc
+                   buf_new_temp-fin-sum.tot-base         = msum
+                   buf_new_temp-fin-sum.tot-rubl         = msum
+                   buf_new_temp-fin-sum.is-expense_cash  = no
+                   
+                .
+                create buf_temp-tax.
+                assign
+                   buf_temp-tax.curr-code        = buf_new_temp-fin-sum.curr-code
+                   buf_temp-tax.cash-desk        = buf_new_temp-fin-sum.cash-desk
+                   buf_temp-tax.is-petrol        = buf_new_temp-fin-sum.is-petrol
+                   buf_temp-tax.cashbookId       = buf_new_temp-fin-sum.cashbookid
+                   buf_temp-tax.is-expense_cash  = buf_new_temp-fin-sum.is-expense_cash
+                   buf_temp-tax.num-expense_cash = buf_new_temp-fin-sum.num-expense_cash
+                   buf_temp-tax.sum-rubl = msum
+                   buf_temp-tax.sum-base = msum
+                   buf_temp-tax.sum-doc  = msum
+                .
+                
+             end.
+             else do:
+                 &scop fin-doc-type-code (if buf_temp-fin-sum.tot-sum > 0 then ~{&FDEDT_Income_Cash~} else ~{&FDEDT_expense_Cash~})
+                 &scop my-message substitute("Не возможно создаю &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8 на кассой книге № 0 не достаточно средств." ~
+                                  , ~{&fin-doc-type-name~}  ~
+                                  , buf_shift-obj.shift-name ~
+                                  , buf_shift-obj.shift-date ~
+                                  , buf_shift-obj.shift-nuM    ~
+                                  , buf_shift-obj.obj-type ~
+                                  , buf_shift-obj.obj-code ~
+                                  , buf_temp-fin-sum.cashbookid ~
+                                  , abs(buf_temp-fin-sum.tot-sum) ~
+                                  , ~{&new-line~} ~
+                                  )
+                {&DISPLAY-MESSAGE}.
+                delete  buf_temp-fin-sum.
+                
+                
+             end.
+          end.
+          else
+             tt-cashBookOst.ost = msum. 
+          
+          
+             
+       end.
       _chk-gds-pay:
         for each buf_chk-gds-pay no-lock
            where buf_chk-gds-pay.out-code = buf_inkas.inkas-code
@@ -686,10 +873,12 @@ define variable v-err               as logical    no-undo .
           end.
           if available ub.CashBook
           then do :
-            p-by-cash-desk = ub.CashBook.FlagSepCash .
-            p-by-petrol-goods = ub.CashBook.FlagSepFull .
-            p-by-osnovanie = ub.CashBook.RuleOsn .
-            p-by-pril = ub.CashBook.RulePril .
+             assign
+                p-by-cash-desk = ub.CashBook.FlagSepCash
+                p-by-petrol-goods = ub.CashBook.FlagSepFull 
+             .
+            /*p-by-osnovanie = ub.CashBook.RuleOsn .
+            p-by-pril = ub.CashBook.RulePril .*/
           end.
 
           if p-by-petrol-goods then do: /*проверяем товар на топливность*/
@@ -825,10 +1014,12 @@ define variable v-err               as logical    no-undo .
         end.
         if available ub.CashBook
         then do :
-          p-by-cash-desk = ub.CashBook.FlagSepCash .
-          p-by-petrol-goods = ub.CashBook.FlagSepFull .
-          p-by-osnovanie = ub.CashBook.RuleOsn .
-          p-by-pril = ub.CashBook.RulePril .
+          assign
+             p-by-cash-desk    = ub.CashBook.FlagSepCash 
+             p-by-petrol-goods = ub.CashBook.FlagSepFull 
+          .
+        /*  p-by-osnovanie = ub.CashBook.RuleOsn .
+          p-by-pril = ub.CashBook.RulePril .*/
         end.
         
         find first buf_temp-tax where
@@ -838,6 +1029,9 @@ define variable v-err               as logical    no-undo .
               and buf_temp-tax.cash-desk = buf_temp-gds.cash-desk
               and buf_temp-tax.is-petrol = buf_temp-gds.is-petrol
               and buf_temp-tax.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
+              and buf_temp-tax.is-expense_cash = (buf_temp-gds.tot-doc < 0 and ub.CashBook.id ne 0)
+              and buf_temp-tax.num-expense_cash = 0
+              
 /*              and (p-by-cash-desk = no or buf_temp-tax.cash-desk = buf_temp-gds.cash-desk)   */
 /*              and (p-by-petrol-goods = no or buf_temp-tax.is-petrol = buf_temp-gds.is-petrol)*/
              no-error.
@@ -854,6 +1048,8 @@ define variable v-err               as logical    no-undo .
                                     then buf_temp-gds.is-petrol
                                     else no)
           buf_temp-tax.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
+          buf_temp-tax.is-expense_cash = (buf_temp-gds.tot-doc < 0 and ub.CashBook.id ne 0)
+          buf_temp-tax.num-expense_cash = 0
           .
         end. /*if not available buf_temp-tax then do:*/
          /*получаем НДС*/
@@ -1010,10 +1206,12 @@ define variable v-err               as logical    no-undo .
       define variable v-line-num as integer no-undo .
 
       for each buf_temp-tax no-lock
-         where buf_temp-tax.curr-code = buf_temp-fin-sum.curr-code
-          and buf_temp-tax.cash-desk = buf_temp-fin-sum.cash-desk
-           and buf_temp-tax.is-petrol = buf_temp-fin-sum.is-petrol
-           and buf_temp-tax.cashbookId = buf_temp-fin-sum.cashbookId
+         where buf_temp-tax.curr-code        = buf_temp-fin-sum.curr-code
+          and buf_temp-tax.cash-desk         = buf_temp-fin-sum.cash-desk
+           and buf_temp-tax.is-petrol        = buf_temp-fin-sum.is-petrol
+           and buf_temp-tax.cashbookId       = buf_temp-fin-sum.cashbookId
+           and buf_temp-tax.is-expense_cash  = buf_temp-fin-sum.is-expense_cash
+           and buf_temp-tax.num-expense_cash = buf_temp-fin-sum.num-expense_cash
               :
         v-line-num = v-line-num + 1.
         create tt0-fin-doc-tax .
@@ -1082,7 +1280,7 @@ define variable v-err               as logical    no-undo .
       then do :
         p-by-cash-desk = ub.CashBook.FlagSepCash .
         p-by-petrol-goods = ub.CashBook.FlagSepFull .
-        p-by-osnovanie = ub.CashBook.RuleOsn .
+        p-by-osnovanie = if buf_temp-fin-sum.is-expense_cash then ub.CashBook.RuleOsnRko else ub.CashBook.RuleOsnPko .
         p-by-pril = ub.CashBook.RulePril .
       end.
 
@@ -1160,8 +1358,8 @@ define variable v-err               as logical    no-undo .
       find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.CashBookId no-error .
       if available ub.CashBook
       then do :
-        tt-fin-doc.cor-acc-value = ub.CashBook.Credit .
-        tt-fin-doc.cor-acc1-value = ub.CashBook.Debit .
+        tt-fin-doc.cor-acc-value  = if  buf_temp-fin-sum.tot-sum > 0 then ub.CashBook.CorrPko else ub.CashBook.OsnAcct .
+        tt-fin-doc.cor-acc1-value = if  buf_temp-fin-sum.tot-sum < 0 then ub.CashBook.CorrRko else ub.CashBook.OsnAcct.
         
         if buf_temp-fin-sum.tot-sum > 0
         then do: 
@@ -1280,13 +1478,14 @@ define variable v-err               as logical    no-undo .
         END.
      end.
      &scop fin-doc-type-code (if buf_temp-fin-sum.tot-sum > 0 then ~{&FDEDT_Income_Cash~} else ~{&FDEDT_expense_Cash~})
-     &scop my-message substitute("Создаю &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6 на сумму &7" ~
+     &scop my-message substitute("Создаю &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8" ~
                                   , ~{&fin-doc-type-name~}  ~
                                   , buf_shift-obj.shift-name ~
                                   , buf_shift-obj.shift-date ~
                                   , buf_shift-obj.shift-nuM    ~
                                   , buf_shift-obj.obj-type ~
                                   , buf_shift-obj.obj-code ~
+                                  , buf_temp-fin-sum.cashbookid ~
                                   , abs(buf_temp-fin-sum.tot-sum) ~
                                   , ~{&new-line~} ~
                                   )

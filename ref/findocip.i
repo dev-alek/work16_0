@@ -1107,7 +1107,7 @@ DO:
                                      no-error.
     if ub.cashbook.id > 0
     then do :
-      find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = ub.cashbook.Credit
+      find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = (if tt-fin-doc.fin-doc-type eq {&expense-cash} then ub.cashbook.corrRko else ub.cashbook.corrPko)
                                               and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
                                               and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
                                               no-error .

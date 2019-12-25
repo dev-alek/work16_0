@@ -22,10 +22,6 @@ block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.iimpsubject: 
 
-/*
-  { ibs/th/ref/ttCashBook.i }
-  { ibs/th/ref/ttCashBookRule.i }
-*/  
   { cmp/str-glbl.i class } /* &add-def, &update, &deletion, &shop, &attr-cash-book-id, &attr-oper-serv-id */
 
   define private temp-table tt-gds no-undo

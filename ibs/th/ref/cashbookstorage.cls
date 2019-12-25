@@ -46,19 +46,29 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Наименование типа кассовой книги не может быть пустым!" .
       return .
     end.
-    if trim(tt-cashbook.Credit) = ""
+    if trim(tt-cashbook.CorrPko) = ""
     then do :
-      Msg = "Поле Кредит не может быть пустым!" .
+      Msg = "Поле Кор. счет ПКО не может быть пустым!" .
       return .
     end.
-    if trim(tt-cashbook.Debit) = ""
+    if trim(tt-cashbook.CorrRko) = ""
     then do :
-      Msg = "Поле Дебет не может быть пустым!" .
+      Msg = "Поле Кор. счет РКО не может быть пустым!" .
       return .
     end.
-    if trim(tt-cashbook.RuleOsn) = ""
+     if trim(tt-cashbook.OSnAcct) = ""
     then do :
-      Msg = "Правило заполнения графы Основание не может быть пустым!" .
+      Msg = "Поле Основной счет не может быть пустым!" .
+      return .
+    end.
+    if trim(tt-cashbook.RuleOsnPko) = ""
+    then do :
+      Msg = 'Правило заполнения графы "Основание" ПКО не может быть пустым!' .
+      return .
+    end.
+    if trim(tt-cashbook.RuleOsnRko) = ""
+    then do :
+      Msg = 'Правило заполнения графы "Основание" РКО не может быть пустым!' .
       return .
     end.
     if trim(tt-cashbook.RulePril) = ""

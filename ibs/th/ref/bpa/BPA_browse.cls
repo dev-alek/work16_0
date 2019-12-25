@@ -110,7 +110,7 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
     pMode = iChange .
    
     InitializeComponent().
-    Visual_form(iChange) .
+    Visual_form(pMode) .
     v-status = {&current-status}.
     this-object:CalcType:Text = "Все" .
     v-CalcType   = 0 .
@@ -126,6 +126,22 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
   
   constructor public BPA_browse ():
 
+super().
+
+    pMode = {&update} .
+   
+    InitializeComponent().
+    Visual_form(pMode) .
+    v-status = {&current-status}.
+    this-object:CalcType:Text = "Все" .
+    v-CalcType   = 0 .
+
+    bindingSource1:Handle = browse_OperServ(v-status, v-CalcType).
+
+    this-object:ComponentsCollection:ADD(this-object:components).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
   end constructor.
 
 
@@ -778,6 +794,10 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
         when 3 then 
           do:
             type_ = "Пополнение ВБРР" .
+          end. 
+        when 4 then 
+          do:
+            type_ = "Выдача наличных" .
           end.          
       end case .
       button_Edit( p-id , type_ ) .
@@ -837,7 +857,7 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
     return.
 
   end method.
-
+  
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -887,398 +907,133 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
   end method.
 
 
+
+  method private void add_query(buffer buf_OperServ for OperServ):
+     
+      create tt-query .
+      assign
+        tt-query.ext-code = buf_OperServ.ext-code
+        tt-query.id       = buf_OperServ.id
+        tt-query.OSname   = buf_OperServ.OSname
+        .
+      case buf_OperServ.OsType:
+        when 0 then 
+          do:
+            tt-query.OsType = "" .
+          end.
+        when 1 then 
+          do:
+            tt-query.OsType = "ОСС (OpenWay)" .
+          end.
+        when 2 then 
+          do:
+            tt-query.OsType = "Автопомощь" .
+          end.
+        when 3 then 
+          do:
+            tt-query.OsType = "Пополнение ВБРР" .
+          end.
+          when 4 then 
+          do:
+            tt-query.OsType = "Выдача наличных" .
+          end.
+      end case .   
+      case buf_OperServ.CalcType:
+        when 1 then 
+          do:
+            tt-query.OsTypeRas = "Оплата Сотовой связи" .
+          end.
+        when 2 then 
+          do:
+            tt-query.OsTypeRas = "Оплата по договору" .
+          end.
+        when 3 then 
+          do:
+            tt-query.OsTypeRas = "Оплата Счёта" .
+          end.
+        when 4 then 
+          do:
+            tt-query.OsTypeRas = "Начисление на карту" .
+          end.
+        when 5 then 
+          do:
+            tt-query.OsTypeRas = "Платежный агент" .
+          end.                                  
+      end case .               
+      if buf_OperServ.Status_ = 0 then tt-query.Status_ = {&current-status} .
+      else tt-query.Status_ = {&deleted-status} .
+  end.
   method private handle browse_OperServ(status_ as character, type_ as integer):
     define buffer buf_OperServ for ub.OperServ .
       
     empty temp-table tt-query .
-      
+   
     case type_ :
       when 0 then 
-        do:
-          case status_ :
+      do:
+         case status_ :
             when {&all} then 
-              do:
-                for each buf_OperServ no-lock :
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 1 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Сотовой связи" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата по договору" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Счёта" .
-                      end.
-                    when 4 then 
-                      do:
-                        tt-query.OsTypeRas = "Начисление на карту" .
-                      end.
-                    when 5 then 
-                      do:
-                        tt-query.OsTypeRas = "Платежный агент" .
-                      end.                                  
-                  end case .               
-                  if buf_OperServ.Status_ = 0 then tt-query.Status_ = {&current-status} .
-                  else tt-query.Status_ = {&deleted-status} .
-                end.
-              end.
+            do:
+               for each buf_OperServ no-lock :
+                  add_query(buffer buf_OperServ).
+               end.
+            end.
             when {&current-status} then 
-              do:              
-                for each buf_OperServ no-lock where buf_OperServ.Status_ = 0:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&current-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 1 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Сотовой связи" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата по договору" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Счёта" .
-                      end.
-                    when 4 then 
-                      do:
-                        tt-query.OsTypeRas = "Начисление на карту" .
-                      end.
-                    when 5 then 
-                      do:
-                        tt-query.OsTypeRas = "Платежный агент" .
-                      end.                                  
-                  end case .                   
-                end.
-              end.
+            do:              
+               for each buf_OperServ no-lock where buf_OperServ.Status_ = 0:
+                  add_query(buffer buf_OperServ).
+               end.
+            end.
             when {&deleted-status} then 
-              do:              
-                for each buf_OperServ no-lock where buf_OperServ.Status_ = 1:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&deleted-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 1 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Сотовой связи" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата по договору" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Счёта" .
-                      end.
-                    when 4 then 
-                      do:
-                        tt-query.OsTypeRas = "Начисление на карту" .
-                      end.
-                    when 5 then 
-                      do:
-                        tt-query.OsTypeRas = "Платежный агент" .
-                      end.                                  
-                  end case .                   
-                end.
-              end.
-          end case.
-        end.
+            do:              
+               for each buf_OperServ no-lock where buf_OperServ.Status_ = 1:
+                  add_query(buffer buf_OperServ).
+               end.
+            end.
+         end case.
+      end.
       when 1 then 
-        do:
-          case status_ :
-            when {&all} then 
-              do:
-                for each buf_OperServ no-lock where buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 1 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Сотовой связи" .
-                      end.
-                  end case .               
-                  if buf_OperServ.Status_ = 0 then tt-query.Status_ = {&current-status} .
-                  else tt-query.Status_ = {&deleted-status} .
-                end.
-              end.
-            when {&current-status} then 
-              do:              
-                for each buf_OperServ no-lock where buf_OperServ.Status_ = 0 and buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&current-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 1 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Сотовой связи" .
-                      end.
-                  end case .                   
-                end.
-              end.
-            when {&deleted-status} then 
-              do:              
-                for each buf_OperServ no-lock where buf_OperServ.Status_ = 1 and buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&deleted-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 1 then 
-                      do:
-                        tt-query.OsTypeRas = "Оплата Сотовой связи" .
-                      end.
-                  end case .                   
-                end.
-              end.
-          end case.
-        end.
+      do:
+         case status_ :
+         when {&all} then 
+         do:
+            for each buf_OperServ no-lock where buf_OperServ.CalcType = type_:
+               add_query(buffer buf_OperServ).
+            end.
+         end.
+         when {&current-status} then 
+         do:              
+            for each buf_OperServ no-lock where buf_OperServ.Status_ = 0 and buf_OperServ.CalcType = type_:
+               add_query(buffer buf_OperServ).                
+            end.
+         end.
+         when {&deleted-status} then 
+         do:              
+            for each buf_OperServ no-lock where buf_OperServ.Status_ = 1 and buf_OperServ.CalcType = type_:
+               add_query(buffer buf_OperServ).                  
+            end.
+         end.
+         end case.
+      end .
       when 4 then 
         do:
           case status_ :
             when {&all} then 
               do:
                 for each buf_OperServ no-lock where buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 4 then 
-                      do:
-                        tt-query.OsTypeRas = "Начисление на карту" .
-                      end.
-                  end case .               
-                  if buf_OperServ.Status_ = 0 then tt-query.Status_ = {&current-status} .
-                  else tt-query.Status_ = {&deleted-status} .
+                  add_query(buffer buf_OperServ).
                 end.
               end.
             when {&current-status} then 
               do:              
                 for each buf_OperServ no-lock where buf_OperServ.Status_ = 0 and buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&current-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 4 then 
-                      do:
-                        tt-query.OsTypeRas = "Начисление на карту" .
-                      end.
-                  end case .                   
+                  add_query(buffer buf_OperServ).                   
                 end.
               end.
             when {&deleted-status} then 
               do:              
                 for each buf_OperServ no-lock where buf_OperServ.Status_ = 1 and buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&deleted-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 4 then 
-                      do:
-                        tt-query.OsTypeRas = "Начисление на карту" .
-                      end.
-                  end case .                   
+                  add_query(buffer buf_OperServ).                   
                 end.
               end.
           end case.
@@ -1289,110 +1044,19 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
             when {&all} then 
               do:
                 for each buf_OperServ no-lock where buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 5 then 
-                      do:
-                        tt-query.OsTypeRas = "Платежный агент" .
-                      end.                                  
-                  end case .               
-                  if buf_OperServ.Status_ = 0 then tt-query.Status_ = {&current-status} .
-                  else tt-query.Status_ = {&deleted-status} .
+                  add_query(buffer buf_OperServ).
                 end.
               end.
             when {&current-status} then 
               do:              
                 for each buf_OperServ no-lock where buf_OperServ.Status_ = 0 and buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&current-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 5 then 
-                      do:
-                        tt-query.OsTypeRas = "Платежный агент" .
-                      end.                                  
-                  end case .                   
+                  add_query(buffer buf_OperServ).                   
                 end.
               end.
             when {&deleted-status} then 
               do:              
                 for each buf_OperServ no-lock where buf_OperServ.Status_ = 1 and buf_OperServ.CalcType = type_:
-                  create tt-query .
-                  assign
-                    tt-query.ext-code = buf_OperServ.ext-code
-                    tt-query.id       = buf_OperServ.id
-                    tt-query.OSname   = buf_OperServ.OSname
-                    tt-query.Status_  = {&deleted-status}
-                    .
-                  case buf_OperServ.OsType:
-                    when 0 then 
-                      do:
-                        tt-query.OsType = "" .
-                      end.
-                    when 1 then 
-                      do:
-                        tt-query.OsType = "ОСС (OpenWay)" .
-                      end.
-                    when 2 then 
-                      do:
-                        tt-query.OsType = "Автопомощь" .
-                      end.
-                    when 3 then 
-                      do:
-                        tt-query.OsType = "Пополнение ВБРР" .
-                      end.
-                  end case .   
-                  case buf_OperServ.CalcType:
-                    when 5 then 
-                      do:
-                        tt-query.OsTypeRas = "Платежный агент" .
-                      end.                                  
-                  end case .                   
+                  add_query(buffer buf_OperServ).                   
                 end.
               end.
           end case.
