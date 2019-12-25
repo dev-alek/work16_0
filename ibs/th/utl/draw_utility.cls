@@ -236,15 +236,15 @@ class ibs.th.utl.draw_utility inherits Form:
         mUtil:put-log("Выполнено: передача масок карт на кассы").
       if vtestlg then message "выполнено "   checkBox16:text view-as alert-box.
     
-      /*  mUtil:put-log("Начато   : удаление справочника ОСС с касс").
+        mUtil:put-log("Начато   : удаление справочника ОСС с касс").
        checkBox17:checked = mutil:sendcode(11).
         mUtil:put-log("Выполнено: удаление справочника ОСС с касс").
       if vtestlg then message "выполнено "   checkBox17:text view-as alert-box.
-    */
-        mUtil:put-log("Начато   : удаление и передача справочника ОСС на кассы").
+    
+        mUtil:put-log("Начато   : передача справочника ОСС на кассы").
       checkBox17:checked = mutil:sendcode(12).
         checkBox18:checked = checkBox17:checked.
-        mUtil:put-log("Выполнено: удаление и  передача справочника ОСС на кассы").
+        mUtil:put-log("Выполнено: передача справочника ОСС на кассы").
       if vtestlg then message "выполнено "   checkBox18:text view-as alert-box.
       
         mUtil:put-log("Начато   : удаление товаров с касс").

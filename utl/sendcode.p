@@ -74,16 +74,16 @@ then do:
   run str/senddcty.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
 end.
 
-else if iCode eq 11
+else  if iCode eq 11
 then do:
-  
-  run str/sendcoss.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
+  mAnswer = "1".
+  run str/bpasend.p (iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-IBM-XML} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
 end.
-else if iCode eq 12
-        then 
-    do:
-        run str/sendcoss.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
-    end.
+else  if iCode eq 12
+then do:
+   mAnswer = "1".
+   run str/bpasend.p (iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-IBM-XML} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
+end.
 else if iCode eq 13
 then do:
     mAnswer = "4".
