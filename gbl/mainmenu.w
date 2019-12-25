@@ -1183,7 +1183,6 @@ IMAGE-39
 /*IMAGE-51 ,*/
 /*IMAGE-52  */
 do:
-  run gbl/verinfo.p.
   run choose-image in this-procedure
     (input self :private-data
     ) .

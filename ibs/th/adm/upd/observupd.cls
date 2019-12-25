@@ -62,7 +62,7 @@ class ibs.th.adm.upd.observupd:
 
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 12
+  &scop NumWorkBase 13
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -76,6 +76,7 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/19022601.df"
             ,'proc:ibs/th/adm/upd/copytable.p;"arh-fin-doc-contr-schet-nal|arh-fin-doc-schet-nal-obj|fin-doc"'
             ,"cmp/19022602.df"
+            ,"cmp/19052201.df"
             
             
             ] 
@@ -93,7 +94,7 @@ class ibs.th.adm.upd.observupd:
             ,"TABLE:arh-fin-doc-contr-schet-nal,TABLE:arh-fin-doc-contr-schet-nal_old,TABLE:arh-fin-doc-schet-nal-obj,TABLE:arh-fin-doc-schet-nal-obj_old,TABLE:fin-doc,TABLE:fin-doc_old"
             ,"proc:ibs/th/adm/upd/chkemptable.p;arh-fin-doc-contr-schet-nal_old|arh-fin-doc-schet-nal-obj_old|fin-doc_old"
             ,"TABLE:cashbook,TABLE:operserv"
-            
+            ,"Initial:db.reserve1-char=13"
             
             ] 
     get.

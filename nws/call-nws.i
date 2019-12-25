@@ -288,6 +288,8 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,cd-event-log-attr~
 ,c-assortment-matrix-goods~
 ,c-gds-obj-prop~
+,upgrade~
+,upgrade-attr~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
