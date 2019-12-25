@@ -82,9 +82,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       or when {&lookup} then 
       do:
         find first buf_cashbook no-lock where buf_cashbook.id = p-id .
-        buffer-copy buf_cashbook except buf_cashbook.RulePril buf_cashbook.RuleOsn to tt-cashbook .
+        buffer-copy buf_cashbook except buf_cashbook.RulePril buf_cashbook.RuleOsnPko to tt-cashbook .
         tt-cashbook.RulePril = getRulePrilName(integer (buf_cashbook.RulePril)) .
-        tt-cashbook.RuleOsn = getRuleOsnName(buf_cashbook.RuleOsn) .
+        tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
       end. 
     end case .
 
