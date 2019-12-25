@@ -46,6 +46,28 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob output-display-attr-schedule-obj-list-h  true
 &glob other-attr-schedule-obj-list-h  ""
 &glob news-attr-schedule-obj-list-h false
+/*--- Список клиентов --------------------------------------- */
+&scop bef-attr-schedule-oss-list-h schedule-oss-list
+&glob attr-schedule-oss-list-h '{&bef-attr-schedule-oss-list-h}':U
+&glob type-attr-schedule-oss-list-h {&type-char}
+&glob format-attr-schedule-oss-list-h  "X(30)"
+&glob label-attr-schedule-oss-list-h   "Параметры строки расписания"
+&glob tooltip-attr-schedule-oss-list-h   "Параметры строки расписания"
+&glob user-can-edit-attr-schedule-oss-list-h  true
+&glob output-display-attr-schedule-oss-list-h  true
+&glob other-attr-schedule-oss-list-h  ""
+&glob news-attr-schedule-oss-list-h false
+/*--- Список товаров --------------------------------------- */
+&scop bef-attr-schedule-gds-list-h schedule-gds-list
+&glob attr-schedule-gds-list-h '{&bef-attr-schedule-gds-list-h}':U
+&glob type-attr-schedule-gds-list-h {&type-char}
+&glob format-attr-schedule-gds-list-h  "X(30)"
+&glob label-attr-schedule-gds-list-h   "Параметры строки расписания"
+&glob tooltip-attr-schedule-gds-list-h   "Параметры строки расписания"
+&glob user-can-edit-attr-schedule-gds-list-h  true
+&glob output-display-attr-schedule-gds-list-h  true
+&glob other-attr-schedule-gds-list-h  ""
+&glob news-attr-schedule-gds-list-h false
 /*--- Список типов документов --------------------------------------- */
 &scop bef-attr-schedule-doc-type-list-h schedule-doc-type-list
 &glob attr-schedule-doc-type-list-h '{&bef-attr-schedule-doc-type-list-h}':U
@@ -189,6 +211,10 @@ do
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-obj-list-h
       {&attr-temp-full-code}
+      &scop attr-code attr-schedule-oss-list-h
+      {&attr-temp-full-code}
+      &scop attr-code attr-schedule-gds-list-h
+      {&attr-temp-full-code}
       &scop attr-code attr-schedule-doc-type-list-h
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-date-list-h
@@ -228,6 +254,10 @@ do
       &scop attr-code attr-schedule-param-list-h
       {&attr-temp-code}
       &scop attr-code attr-schedule-obj-list-h
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-oss-list-h
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-gds-list-h
       {&attr-temp-code}
       &scop attr-code attr-schedule-doc-type-list-h
       {&attr-temp-code}
@@ -471,6 +501,10 @@ on error undo, return error
       &scop attr-code attr-schedule-param-list-h
       {&attr-news-code}
       &scop attr-code attr-schedule-obj-list-h
+      {&attr-news-code}
+      &scop attr-code attr-schedule-oss-list-h
+      {&attr-news-code}
+      &scop attr-code attr-schedule-gds-list-h
       {&attr-news-code}
       &scop attr-code attr-schedule-doc-type-list-h
       {&attr-news-code}

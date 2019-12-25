@@ -163,6 +163,17 @@ define variable vss-description as character no-undo init "".
 
 { gbl/menuload.i
    {&bef-menuload_service_impexp}
+   "'Выгрузка ВБРР'"
+    " 'bge/e-help-road.p' "
+    " "
+    " "
+    " "
+    " "
+    "yes"
+}
+
+{ gbl/menuload.i
+   {&bef-menuload_service_impexp}
    "'Экспорт данных по пополнениям и активации для сверки с ВБРР'"
     " 'bge/bge-active-vbrr-p.p' "
     " "
