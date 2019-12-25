@@ -1,6 +1,6 @@
  
  /*------------------------------------------------------------------------
-    File        : ProcView
+    File        : ProcViewth
     Purpose     : 
     Syntax      : 
     Description : 
@@ -14,7 +14,7 @@ using Progress.Windows.Form.
 
 block-level on error undo, throw.
 
-class ibs.th.file.ProcView inherits Form: 
+class ibs.th.file.ProcViewth inherits Form: 
     
     define private variable bindProc as Progress.Data.BindingSource no-undo.
     define private variable button1 as System.Windows.Forms.Button no-undo.
@@ -39,7 +39,7 @@ class ibs.th.file.ProcView inherits Form:
       refreshgrid().
       
     end.    
-    constructor public ProcView (  ):
+    constructor public ProcViewth (  ):
         
         
         super().
@@ -110,7 +110,7 @@ class ibs.th.file.ProcView inherits Form:
         tableDesc1 = new Progress.Data.TableDesc("ttRun").
         @VisualDesigner.FormMember (NeedsInitialize="true").
         define variable resources as Progress.Util.ResourceManager no-undo.
-        resources = new Progress.Util.ResourceManager("ibs.th.file.ProcView").
+        resources = new Progress.Util.ResourceManager("ibs.th.file.ProcViewth").
         this-object:bindProc = new Progress.Data.BindingSource(this-object:components).
         this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
         this-object:procDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
@@ -260,7 +260,7 @@ class ibs.th.file.ProcView inherits Form:
         this-object:Controls:Add(this-object:button2).
         this-object:Controls:Add(this-object:button1).
         this-object:Controls:Add(this-object:dataGridView1).
-        this-object:Name = "ProcView".
+        this-object:Name = "ProcViewth".
         cast(this-object:bindProc, System.ComponentModel.ISupportInitialize):EndInit().
         cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
         this-object:ResumeLayout(false).
@@ -280,7 +280,7 @@ class ibs.th.file.ProcView inherits Form:
 
 	end method.
 
-    destructor public ProcView ( ):
+    destructor public ProcViewth ( ):
 
     end destructor.
 

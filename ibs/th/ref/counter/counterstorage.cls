@@ -91,37 +91,43 @@ class ibs.th.ref.counter.counterstorage final:
       define variable vlogfile as character no-undo.
       define variable vError as logical no-undo.
       define variable vCount   as int64 no-undo init ?.
-      
-      vFileHelper = new ibs.th.file.filehelperth().
-      vFileHelper:AsyncProc("utl/proc-getnextcount", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U , iFileName ,ikey, icode ),1).
-      vFileHelper:myTimeOut = 3.
-      vFileHelper:WaitFor("proc-getnextcount", 1).
-      vlogfile = vFileHelper:myWorkDir + "proc-getnextcounterror.log".
-      if vFileHelper:FileExists(vlogfile)
+      if trans
       then do:
-         input stream sReadfile FROM  VALUE(vlogfile).
-         repeat:
-            import stream sReadfile unformatted vText.
-            if vtext begins "error" then vError = yes.
-            else do: 
-               vCount = int64(vText) no-error.
-               if error-status:error
-               then
-                  vError = yes.
-            end.   
-          end.
-          input stream sReadfile close  .
-          os-delete value(vlogfile).
+         vFileHelper = new ibs.th.file.filehelperth().
+         vFileHelper:AsyncProc("utl/proc-getnextcount", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U , iFileName ,ikey, icode ),1).
+         vFileHelper:myTimeOut = 300.
+         vFileHelper:WaitFor("proc-getnextcount", 1,"Получаем значение счетчика.").
+         vlogfile = vFileHelper:myWorkDir + "proc-getnextcounterror.log".
+         if vFileHelper:FileExists(vlogfile)
+         then do:
+            input stream sReadfile FROM  VALUE(vlogfile).
+            repeat:
+               import stream sReadfile unformatted vText.
+               if vtext begins "error" then vError = yes.
+               else do: 
+                  vCount = int64(vText) no-error.
+                  if error-status:error
+                  then
+                     vError = yes.
+               end.   
+            end.
+            input stream sReadfile close  .
+            os-delete value(vlogfile).
           
+          end.
+          else
+             vError = yes.
+          vFileHelper:delworkdir().
+          delete object vFileHelper.
        end.
        else
           vError = yes.
-       if vError
+       if    vError
+          or vCount eq ?
           then do:
              vCount = GetNextcount(iFileName , iKey,icode ).
           end.
-      vFileHelper:delworkdir().
-      delete object vFileHelper. 
+       
      return vCount.
    end.
    method public int64 GetNextcount(iFileName as character , iKey as character,icode as character  ):
@@ -132,6 +138,7 @@ class ibs.th.ref.counter.counterstorage final:
       define variable vNumPar    as integer   no-undo.
       define variable vInt       as integer   no-undo.
       define variable vNextCount as integer   no-undo.
+     
       find first counter where counter.db        eq idb
                            and counter.file-name eq iFileName
                            and counter.key       eq iKey

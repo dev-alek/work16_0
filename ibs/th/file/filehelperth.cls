@@ -71,8 +71,8 @@ get.
             if vpid ne 0 and vpid ne ?
             then do:
                
-               MyWorkDir = "pid_" + string(vpid).
-               os-create-dir VALUE("pid_" + string(vpid)).
+               MyWorkDir = "pid_" + string(vpid) + "_" + string(random(1,9999999)).
+               os-create-dir VALUE(MyWorkDir).
             end. 
          end.
          else
@@ -251,7 +251,7 @@ end method.
    define variable mProcFile as character no-undo.
    define variable mIniFile as character no-undo.
    define variable mConPar as character no-undo.
-   
+         
    method public int64 AsyncProc (
       iProc    as character,
       iParam   as character,
@@ -283,19 +283,21 @@ end method.
          output close.
          do vi = 1 to iCount:
            vTask = vprocname + string(vi).
-           if not FolderExists  ( MyWorkDir + vTask) 
-           then
-             os-create-dir VALUE(MyWorkDir + vTask ).
-             os-copy value(MyWorkDir + "assemblies.xml" )
+           if  FolderExists  ( MyWorkDir + vTask) 
+           then do:
+              os-delete value (MyWorkDir + vTask + "/endproc.txt") recursive.
+           end. 
+           os-create-dir VALUE(MyWorkDir + vTask ).
+           os-copy value(MyWorkDir + "assemblies.xml" )
                  value(MyWorkDir + vTask + v-path-tls-dir-delim + "assemblies.xml").  
-           output to value(MyWorkDir + vTask + "/" + "param.txt").
+           output to value(MyWorkDir + vTask + v-path-tls-dir-delim + "param.txt").
              SavePARAM("numSession",string(vi)).
              SavePARAM("countSession",string(iCount)).
              do vj = 1 to num-entries(iParam, {&delim-par} ):
                 SavePARAM("ParamProc_" + string(vj),entry(vj,iParam, {&delim-par} )).
              end.
            output close.
-           output to value(MyWorkDir + vTask + "/" + "stop.txt").
+           output to value(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt").
             output close.
             AsyncRun(vTask, iProc).
             create ttrun.
@@ -371,7 +373,8 @@ end method.
          end.
       end.
       output close.
-   end.   
+   end. 
+   define variable mStop as logical no-undo.  
    method public logical WaitFor ( input iSched as character, input ipInterval as int64):
        define variable vNowTask as character  no-undo.
        define variable vCountOld as integer init -1 no-undo.
@@ -379,12 +382,13 @@ end method.
        define variable vOK as logical no-undo initial true.
        
       output to value (MyWorkDir + iSched + "error.log" ).
-      define variable vStart  as datetime no-undo.
+      define variable vStart  as datetime-tz no-undo.
       vStart = now.
       output close.
        vCountend = 0. 
        vNowTask          = iSched.
        WAIT-FOR-COMPLETE = false.      /* на всякий случай */
+       mstop = no.
       output to value(MyWorkDir + "Stop.txt").
       output close.
        do while not WAIT-FOR-COMPLETE:
@@ -392,13 +396,13 @@ end method.
           
           WAIT-FOR-COMPLETE = true.
           vCount = vCountEnd + WaitForOne(iSched) .
-          if not WAIT-FOR-COMPLETE 
+          if (not WAIT-FOR-COMPLETE 
            and not FileExists(MyWorkDir + "Stop.txt")
            or (    myTimeOut    ne 0
                and myTimeOut    ne ?
                and vCountOld    = vCount
-               and (now - vStart) / 1000 > myTimeOut
-              )
+               and dec(now - vStart) / 1000 > myTimeOut
+              )) or mstop
           then do:
              WaitForStop (iSched).
              vOK = false.
@@ -429,8 +433,8 @@ end.
 define public event MyPause   //10 прогрес не поддерживает публикацию событий
     signature void ( input pcInterval as int64 ). 
    method public void AsyncRunpause (input iInterval as int64):
-     define variable vStart  as datetime no-undo.
-     define variable vend    as datetime no-undo.
+     define variable vStart  as datetime-tz no-undo.
+     define variable vend    as datetime-tz no-undo.
      define variable vint as int64 no-undo.
      
      vStart = now.
@@ -438,7 +442,9 @@ define public event MyPause   //10 прогрес не поддерживает публикацию событий
      if valid-handle(mProcPublish)
      then
         publish "MyPause" from mProcPublish (iInterval ).
-     MyPause:PUBLISH (iInterval). 
+     MyPause:PUBLISH (iInterval).
+     if not mStop
+     then 
      do while vint / 1000   < iInterval:
         
        vend   =  now.
@@ -447,7 +453,7 @@ define public event MyPause   //10 прогрес не поддерживает публикацию событий
      end.
      
    end.
-   method public int64 AsyncRun (
+   method private int64 AsyncRun (
       iSchedId as character,
       iProc    as character
      ):
@@ -766,4 +772,141 @@ method public logical  termprc(iPid as integer):
    end.
    return vOk.    
 end.    
+
+/*************************************************/
+
+define variable v-waitfram-action01         as character no-undo .
+define variable v-waitfram-action02         as character no-undo .
+define variable v-waitfram-action03         as character no-undo .
+define variable v-waitfram-prev-left-margin as integer   no-undo init 0 .
+define variable mText                       as character no-undo.
+define button B-stop auto-end-key
+     label "Стоп"
+     size 10 by 1 tooltip "Остоновить процесс".
+define button B-viewProcInfo
+     label "Информация"
+     size 15 by 1 tooltip "Информация о процесс".
+
+
+define frame waitfram
+  v-waitfram-action01 format "x(72)" no-label skip
+  v-waitfram-action02 format "x(72)" no-label skip
+  v-waitfram-action03 format "x(72)" no-label skip
+  B-viewProcInfo 
+  B-stop at row 4 col 30
+  with view-as dialog-box side-labels three-d cancel-button b-stop
+  .
+on choose of B-stop in frame waitfram /* Добавить в АМ */
+do:
+  mStop = yes.
+  
+end.
+
+on choose of B-viewProcInfo in frame waitfram /* Добавить в АМ */
+do:
+  run ref/runprocview.p (MyWorkDir,MyWorkDir).
+end.
+  
+method private void waitfram-hide () :
+
+  do
+  on error undo, return error return-value
+  :
+    pause 0 before-hide .
+    hide frame waitfram .
+
+/*&if "{1}" = "" &then
+    process events .
+&endif*/
+  end.
+
+end method. /* waitfram-hide */
+define variable MstarstProc as datetime-tz no-undo.
+method public void waitfram-show (input iInterval as int64  ):
+   define variable vtime as int64 no-undo.
+   vtime = ( now - MstarstProc ) / 1000 .
+   waitfram-show(substitute("&1 Прошло: &2 сек" ,mText , string( vtime)), iInterval).
+   
+end method.
+   
+method private void waitfram-show (input p-message as character,input iInterval as int64  ):
+
+  
+
+  define variable v-left-margin as integer   no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    if length(p-message) <= 70 then do:
+      assign
+        v-left-margin = integer((70 - length(p-message)) / 2)
+      .
+      assign
+        v-left-margin = max(0, v-left-margin - (v-left-margin mod 5))
+      .
+      if abs(v-left-margin - v-waitfram-prev-left-margin) > 5 then do:
+        assign
+          v-waitfram-prev-left-margin = v-left-margin
+        .
+      end.
+
+      assign
+        v-waitfram-action01 = " "
+        v-waitfram-action02 = " "
+                                 + fill(" ", v-waitfram-prev-left-margin)
+                                 + p-message
+        v-waitfram-action03 = " "
+      .
+    end.
+    else do:
+      if length(p-message) <= 140 then do:
+        assign
+          v-waitfram-action01 = " "
+          v-waitfram-action02 = " " + substring(p-message,   1, 70)
+          v-waitfram-action03 = " " + substring(p-message,  71, 70)
+        .
+      end.
+      else do:
+        assign
+          v-waitfram-action01 = " " + substring(p-message,   1, 70)
+          v-waitfram-action02 = " " + substring(p-message,  71, 70)
+          v-waitfram-action03 = " " + substring(p-message, 141, 70)
+        .
+      end.
+    end.
+    B-viewProcInfo:visible in frame waitfram = session:debug-alert.
+    B-viewProcInfo:sensitive in frame waitfram = session:debug-alert.
+    display
+      v-waitfram-action01 skip
+      v-waitfram-action02 skip
+      v-waitfram-action03 skip
+      with frame waitfram .
+      
+      
+    B-stop:sensitive   in frame waitfram = yes.   
+/*&if "{1}" = "" &then
+    process events .
+&endif
+*/
+     wait-for go of frame waitfram pause iInterval.
+  end.
+
+end method. /* waitfram-show */
+
+method public logical WaitFor ( input iSched as character, input ipInterval as int64,input itext as character ):
+  mText = itext.
+  MstarstProc = now.
+  if not session:batch-mode
+  then
+     this-object:MyPause:Subscribe(this-object:waitfram-show).
+  return WaitFor(iSched,ipInterval).
+  finally:
+     mtext = "".
+     waitfram-hide().
+     if not session:batch-mode
+     then
+        this-object:MyPause:Unsubscribe(this-object:waitfram-show).
+  end finally.
+  end.
 end class.
