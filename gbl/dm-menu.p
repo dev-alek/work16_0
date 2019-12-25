@@ -8661,6 +8661,7 @@ procedure m-obj-rvinv-exe :
 
 end procedure. /* m-obj-rvinv-exe */
 
+/* 26/II-2019 не используется. Справочник операторов сотовой связи (ОСС) перенесён в БПА
 procedure m-oss-ref :
     define variable v-rid-list as character no-undo.
     define variable v-mode as character no-undo.
@@ -8679,6 +8680,7 @@ procedure m-oss-ref :
   end.
 
 end procedure. /* m-oss-exe */
+*/
 
 procedure m-bpa-ref :
 define variable v-rid-list as character no-undo .
@@ -13582,6 +13584,7 @@ procedure chk-is-pharm :
     end.
   end.
 end procedure.
+/* 04/III-2019 не используется. Работа с кассовыми книгами перенесена в БПА
 procedure chk-cash-book :
 
   define output parameter p-enable-item as logical   no-undo .
@@ -13638,7 +13641,7 @@ procedure chk-cash-book :
   end.
 
 end procedure. /* chk-cash-book */
-
+*/
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE image-procedure-pharm W-Win
 PROCEDURE image-procedure-pharm :
