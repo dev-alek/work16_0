@@ -8699,6 +8699,17 @@ define variable v-type     as character no-undo .
 
 end procedure. /* m_gds-ef-exe */
 
+procedure m-cashbook-ref :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run ref/cashbook.p ( input parparentproc, input {&update}) no-error.
+  end.
+
+end procedure.
+
 procedure m_autopush-exe :
 
   define variable varrid-list   as   character           no-undo.

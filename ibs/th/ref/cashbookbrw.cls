@@ -3,53 +3,560 @@
     Purpose     : 
     Syntax      : 
     Description : 
-    Author(s)   : druban
+    Author(s)   : sslivenko
     Created     : Thu Dec 06 11:17:18 MSK 2018
     Notes       : 
   ----------------------------------------------------------------------*/
 using Progress.Windows.Form.
+using ibs.th.ref.cashbookstorage from propath.
   
 block-level on error undo, throw.
 class ibs.th.ref.cashbookbrw inherits Form : 
-
-   define private variable bindingSource1 as Progress.Data.BindingSource no-undo.
-   define private variable button2 as System.Windows.Forms.Button no-undo.
-   define private variable button1 as System.Windows.Forms.Button no-undo.
-   define private variable components as System.ComponentModel.IContainer no-undo.
-    define private variable buttonOk as System.Windows.Forms.Button no-undo.
-   define private variable dataGridView1 as System.Windows.Forms.DataGridView no-undo.
-   define private variable nameDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-   define private variable idDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-   define private variable firmDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-   define private variable extcodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  {cmp/str-glbl.i class}
+  { gbl/getcntxt.i def }
+  
+  { ibs/th/ref/ttCashBook.i }
+  { ibs/th/ref/ttCashBookRule.i }
+  
+  define private variable bAdd as System.Windows.Forms.Button no-undo.
+  define private variable bAddObj as System.Windows.Forms.Button no-undo.
+  define private variable bChange as System.Windows.Forms.Button no-undo.
+  define private variable bChangeObj as System.Windows.Forms.Button no-undo.
+  define private variable bDel as System.Windows.Forms.Button no-undo.
+  define private variable bDelObj as System.Windows.Forms.Button no-undo.
+  define private variable bGoods as System.Windows.Forms.Button no-undo.
+  define private variable bindingSource1 as Progress.Data.BindingSource no-undo.
+  define private variable bindingSource2 as Progress.Data.BindingSource no-undo.
+  define private variable bLookup as System.Windows.Forms.Button no-undo.
+  define private variable bLookupObj as System.Windows.Forms.Button no-undo.
+  define private variable bMark as System.Windows.Forms.Button no-undo.
+  define private variable bSelect as System.Windows.Forms.Button no-undo.
+  define private variable buhFIODataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable cashbookBrowse as System.Windows.Forms.DataGridView no-undo.
+  define private variable cashbookIdDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable cashBookNameDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable cashbookRuleBrowse as System.Windows.Forms.DataGridView no-undo.
+  define private variable components as System.ComponentModel.IContainer no-undo.
+  define private variable buttonOk as System.Windows.Forms.Button no-undo.
+  define private variable creditDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable currRkoDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable currPkoDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable groupBox1 as System.Windows.Forms.GroupBox no-undo.
+  define private variable groupBox2 as System.Windows.Forms.GroupBox no-undo.
+  define private variable hostcodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable flagSepFullDataGridViewCheckBoxColumn as System.Windows.Forms.DataGridViewCheckBoxColumn no-undo.
+  define private variable flagSepCashDataGridViewCheckBoxColumn as System.Windows.Forms.DataGridViewCheckBoxColumn no-undo.
+  define private variable debitDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable extcodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable id as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable labelObj as System.Windows.Forms.Label no-undo.
+  define private variable managerPositionDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable managerFIODataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable markDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable obj as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable objtypeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable objcodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable rbFirmSelect as System.Windows.Forms.RadioButton no-undo.
+  define private variable rbFirmCurr as System.Windows.Forms.RadioButton no-undo.
+  define private variable rbFirmAll as System.Windows.Forms.RadioButton no-undo.
+  define private variable rbStatDel as System.Windows.Forms.RadioButton no-undo.
+  define private variable rbStatCurr as System.Windows.Forms.RadioButton no-undo.
+  define private variable rbStatAll as System.Windows.Forms.RadioButton no-undo.
+  define private variable rkoMaskDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable pkoMaskDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable rulePrilDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable ruleOsnDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable statDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable statusDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  
+  define private variable uchetDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable structDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define         variable v-status                         as character                                      no-undo .
+  define         variable v-firmes                         as character                                      no-undo .
+  define         variable v-id                             as integer                                        no-undo .
+  define         variable v-ext-code                       as character                                      no-undo .
+  define         variable v-list                           as character                                      no-undo .
+  define variable v-host-code as character no-undo .
+  define variable v-obj-code as integer no-undo .
+  define variable v-obj-type as character no-undo .
+  define private variable iH as handle no-undo .
+  define         variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
+  define variable vMode as character no-undo .
+  define variable mQuery as handle no-undo .
+  define variable mQueryRule as handle no-undo .
+  define private variable v-firmChoosed as logical no-undo .
+  
+  define variable parparentproc as handle no-undo .
+  
+  define property out-list-id as character no-undo
+  public get.
+  private set (input iList as character) :
+    out-list-id = iList .
+  end.
+  
+  constructor public cashbookbrw( input Mode as character, input p-parparentproc as handle ):
+ 
+    super().
+    parparentproc = p-parparentproc .
+    vMode = Mode .
+    { gbl/getcntxt.i get }
+    InitializeComponent().
+    Visual_form(vMode) .
+    v-status = {&current-status}.
+    v-firmes = {&all} .
     
-   constructor public cashbookbrw( ):
-   
-      super().
-      InitializeComponent ( ).
-      catch e as Progress.Lang.Error:
-         undo, throw e.
-      end catch.      
+    mCashBook = new cashbookstorage () .
 
-   end constructor.
+    bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQuery, output mQueryRule).
+    bindingSource2:handle = mQueryRule .
+    
 
-   destructor public cashbookbrw( ):
+    this-object:ComponentsCollection:ADD(this-object:components).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.    
 
-      if valid-object(components) then do:
-         cast(components, System.IDisposable):Dispose().
+  end constructor.
+    
+  constructor public cashbookbrw( ):
+ 
+    super().
+    InitializeComponent ( ).
+    catch e as Progress.Lang.Error:
+       undo, throw e.
+    end catch.      
+
+  end constructor.
+
+  destructor public cashbookbrw( ):
+    
+     delete object mCashBook no-error .
+
+     if valid-object(components) then do:
+        cast(components, System.IDisposable):Dispose().
+     end.
+
+  end destructor.   
+  
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void cashbookBrowse_SelectionChanged( input sender as System.Object, input e as System.EventArgs ):
+		if mQuery:num-results > 0
+		then do :
+  		v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value no-error.
+  		if error-status:error then return .
+  		mQueryRule:query-prepare(substitute("FOR EACH tt-cashbookrule where tt-cashbookrule.CashBookId = &1 break by tt-cashbookrule.host-code by tt-cashbookrule.obj-type desc by tt-cashbookrule.obj-code", v-id)).
+      mQueryRule:query-open ().
+      bindingSource2:handle = mQueryRule .
+    end .
+	end method.
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void labelObj_DoubleClick( input sender as System.Object, input e as System.EventArgs ):
+		this-object:cashbookBrowse:Columns[1]:Visible = not this-object:cashbookBrowse:Columns[1]:Visible .
+		this-object:cashbookRuleBrowse:Columns[2]:Visible  = not this-object:cashbookRuleBrowse:Columns[2]:Visible .
+		return.
+
+	end method.
+	
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  method public void Visual_form( input iChange AS character ): 
+      
+    IF iChange = {&update} then 
+    do:  
+      assign
+        this-object:bMark:Enabled = false
+        this-object:bSelect:Enabled = false
+      .
+      if v-cntxt-db-num <> 0
+      then do :
+        assign
+          this-object:bAdd:Enabled = false 
+          this-object:bChange:Enabled = false 
+          this-object:bDel:Enabled = false 
+          this-object:bAddObj:Enabled = false 
+          this-object:bChangeObj:Enabled = false 
+          this-object:bDelObj:Enabled = false 
+        .
       end.
+    end.
+    if iChange = {&SELECT} then do:
+      assign
+        this-object:bAdd:Enabled = false 
+        this-object:bChange:Enabled = false 
+        this-object:bDel:Enabled = false 
+        this-object:bAddObj:Enabled = false 
+        this-object:bChangeObj:Enabled = false 
+        this-object:bDelObj:Enabled = false 
+        this-object:bMark:Enabled = false
+      .
+    end.  
+    return.
+  end method .
 
-   end destructor.   
 
-    method private void okButton_Click (sender as System.Object, e as System.EventArgs):
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bAdd_Click( input sender as System.Object, input e as System.EventArgs ):
+		AddCashBook({&add-def}, v-id) .
+		return.
+
+	end method.
+	
+	method private void AddCashBook( Mode as character, v-id as int64):
+    SESSION:ERROR-STACK-TRACE=YES.
+
+    define variable v-brw as class ibs.th.ref.cashbookfrm no-undo .
+  
+    v-brw = new ibs.th.ref.cashbookfrm ( Mode, v-id ).
+    v-brw:parparentproc = parparentproc .
+    v-brw:host-code = v-cntxt-host-code-obj .
+    wait-for  v-brw:ShowDialog() .
+ 
+    define variable v-err-msg as character no-undo .  
+    define variable vPos      as integer   no-undo.
+    vPos = bindingSource1:Position.
+    bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQuery, output mQueryRule).
+    bindingSource2:handle = mQueryRule .
+    bindingSource1:Position = vPos .  
+    catch exAppErrors as class Progress.Lang.AppError :
+      v-err-msg = exAppErrors:ReturnValue .
+      if v-err-msg > "" then . 
+      else 
+      do :
+        v-err-msg = exAppErrors:GetMessage(1) .
+        if v-err-msg > "" then . 
+        else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+      end .
+      message v-err-msg  view-as alert-box.
+    end catch .
+    catch exProErrors as class Progress.Lang.ProError :
+      v-err-msg = exProErrors:GetMessage(1) . 
+      if v-err-msg > "" then . 
+      else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+      message "ProError" skip(1) v-err-msg /*skip exProErrors:CallStack*/ view-as alert-box.
+    end catch .
+    catch exAnyErrors as class Progress.Lang.Error:
+      v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+      message "LangError" skip(1) v-err-msg /*skip exAnyErrors:CallStack*/ view-as alert-box.
+    end catch .
+    finally:
+      SESSION:ERROR-STACK-TRACE=no. 
+      if valid-object(v-brw) then delete object v-brw no-error .
+    end finally.  
+
+  end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bAddObj_Click( input sender as System.Object, input e as System.EventArgs ):
+    if valid-handle (mQuery)
+    and mQuery:num-results > 0
+    then do :
+  		v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+  		v-obj-code = ? .
+  		v-obj-type = ? .
+  		AddCashBookObj({&add-def}, v-id, v-obj-code, v-obj-type) .
+    end.
+    else do :
+      message "Сначала выберите (или создайте) тип кассовой книги!" view-as alert-box .
+    end.
+		return.
+
+	end method.
+	
+	method private void AddCashBookObj( Mode as character, p-id as int64, p-obj-code as integer, p-obj-type as character):
+    SESSION:ERROR-STACK-TRACE=YES.
+
+    define variable v-brw as class ibs.th.ref.cashbookobj no-undo .
+  
+    v-brw = new ibs.th.ref.cashbookobj ( Mode, p-id, p-obj-code, p-obj-type ).
+    v-brw:parparentproc = parparentproc .
+    wait-for  v-brw:ShowDialog() .
+ 
+    define variable v-err-msg as character no-undo .  
+    define variable vPos      as integer   no-undo.
+    vPos = bindingSource1:Position.
+    bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQuery, output mQueryRule).
+    bindingSource2:handle = mQueryRule .
+    bindingSource1:Position = vPos .  
+    catch exAppErrors as class Progress.Lang.AppError :
+      v-err-msg = exAppErrors:ReturnValue .
+      if v-err-msg > "" then . 
+      else 
+      do :
+        v-err-msg = exAppErrors:GetMessage(1) .
+        if v-err-msg > "" then . 
+        else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+      end .
+      message v-err-msg  view-as alert-box.
+    end catch .
+    catch exProErrors as class Progress.Lang.ProError :
+      v-err-msg = exProErrors:GetMessage(1) . 
+      if v-err-msg > "" then . 
+      else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+      message "ProError" skip(1) v-err-msg /*skip exProErrors:CallStack*/ view-as alert-box.
+    end catch .
+    catch exAnyErrors as class Progress.Lang.Error:
+      v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+      message "LangError" skip(1) v-err-msg /*skip exAnyErrors:CallStack*/ view-as alert-box.
+    end catch .
+    finally:
+      SESSION:ERROR-STACK-TRACE=no. 
+      if valid-object(v-brw) then delete object v-brw no-error .
+    end finally.  
+
+  end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bChange_Click( input sender as System.Object, input e as System.EventArgs ):
+	  v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+		AddCashBook({&update}, v-id) .
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bChangeObj_Click( input sender as System.Object, input e as System.EventArgs ):
+		if valid-handle (mQueryRule)
+		and mQueryRule:num-results > 0
+		then do :
+  		v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+      v-obj-code = integer(substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 4)) .
+      v-obj-type = substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 1, 3) .
+      AddCashBookObj({&update}, v-id, v-obj-code, v-obj-type) .
+    end.
+    return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bDel_Click( input sender as System.Object, input e as System.EventArgs ):
+	  define variable v-ok as logical no-undo .
+	  define variable vPos      as integer   no-undo.
+    
+	  message "Вы уверены?" view-as alert-box question buttons yes-no update v-ok .
+	  if not v-ok then return .
+	  vPos = bindingSource1:Position.
+		v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+		mCashBook:deleteDB(v-id) .
+		
+    bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQuery, output mQueryRule).
+    bindingSource2:handle = mQueryRule .
+    bindingSource1:Position = vPos no-error .
+    
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bDelObj_Click( input sender as System.Object, input e as System.EventArgs ):
+		define variable v-ok as logical no-undo .
+    
+		if valid-handle (mQueryRule)
+    and mQueryRule:num-results > 0
+    then do :
+      message "Вы уверены? Настройки будут удалены из базы!" view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok then return .
+      v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+      v-obj-code = integer(substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 4)) .
+      v-obj-type = substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 1, 3) .
+      mCashBook:deleteDBobj(v-id, v-obj-type, v-obj-code) .
+      bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQuery, output mQueryRule).
+      bindingSource2:handle = mQueryRule .
+    end.
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bLookup_Click( input sender as System.Object, input e as System.EventArgs ):
+		v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+    AddCashBook({&lookup}, v-id) .
+    return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bLookupObj_Click( input sender as System.Object, input e as System.EventArgs ):
+		if valid-handle (mQueryRule)
+    and mQueryRule:num-results > 0
+    then do :
+      v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+      v-obj-code = integer(substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 4)) .
+      v-obj-type = substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 1, 3) .
+      AddCashBookObj({&lookup}, v-id, v-obj-code, v-obj-type) .
+    end.
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bMark_Click( input sender as System.Object, input e as System.EventArgs ):
+		define variable vPos as integer no-undo.
+    define variable v-mark as character no-undo .
+    vPos = bindingSource1:Position.
+    v-mark = cashbookBrowse:CurrentRow:Cells["markDataGridViewTextBoxColumn"]:Value .
+    v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+    v-list = "" .
+    if v-mark = "*"
+    then do :
+      cashbookBrowse:CurrentRow:Cells["markDataGridViewTextBoxColumn"]:Value = "" .
+      mQuery:reposition-to-row (vPos + 1) .
+      mQuery:get-buffer-handle("tt-cashbook"):buffer-field("mark"):buffer-value = "" .
+    end.
+    else do :
+      cashbookBrowse:CurrentRow:Cells["markDataGridViewTextBoxColumn"]:Value = "*" .
+      mQuery:reposition-to-row (vPos + 1) .
+      mQuery:get-buffer-handle("tt-cashbook"):buffer-field("mark"):buffer-value = "*" .
+    end.
+    mQuery:get-first () .
+    repeat :
+      v-id = mQuery:get-buffer-handle("tt-cashbook"):buffer-field("id"):buffer-value .
+      if mQuery:get-buffer-handle("tt-cashbook"):buffer-field("mark"):buffer-value = "*"
+      then v-list = v-list + {&delim-cmd} + string(v-id) .
+
+      mQuery:get-next () no-error.
+      if mQuery:query-off-end then leave .
+    end.
+    v-list = trim (v-list,{&delim-cmd}) .
+    if cashbookBrowse:RowCount <> (bindingSource1:position + 1) then bindingSource1:Position = vPos + 1 .
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bSelect_Click( input sender as System.Object, input e as System.EventArgs ):
+		if trim(v-list) <> ""
+		then do :
+		  out-list-id = v-list .
+		end.
+		else do :
+		  out-list-id = string(cashbookBrowse:CurrentRow:Cells["id"]:Value) .
+		end.
+		close() .
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void goods_Click( input sender as System.Object, input e as System.EventArgs ):
+		SESSION:ERROR-STACK-TRACE=YES.
+    define variable v-err-msg as character no-undo .
+    define variable vPos      as integer   no-undo .
+    define variable v-listact-brw as class ibs.th.ref.bpa.BPA_Goods no-undo .
+    
+    if valid-handle (mQuery)
+    and mQuery:num-results > 0
+    then.
+    else return .
+    
+    v-ext-code = cashbookBrowse:CurrentRow:Cells["extcodeDataGridViewTextBoxColumn"]:Value .
+    
+    v-listact-brw = new ibs.th.ref.bpa.BPA_Goods (if v-cntxt-db-num <> 0 then {&lookup} else vMode, v-ext-code, {&attr-cash-book-id}).
+ //v-listact-brw:Visual_form(iChange). 
+
+    v-listact-brw:parparentproc = parparentproc.
+    wait-for  v-listact-brw:ShowDialog() .
+ 
+    
+/*    vPos = bindingSource1:Position.                                                               */
+/*    bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQueryRule).*/
+/*    bindingSource2:handle = mQueryRule .                                                          */
+/*    bindingSource1:Position = vPos no-error .                                                     */
+    catch exAppErrors as class Progress.Lang.AppError :
+      v-err-msg = exAppErrors:ReturnValue .
+      if v-err-msg > "" then . 
+      else 
+      do :
+        v-err-msg = exAppErrors:GetMessage(1) .
+        if v-err-msg > "" then . 
+        else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+      end .
+      message v-err-msg  view-as alert-box.
+    end catch .
+    catch exProErrors as class Progress.Lang.ProError :
+      v-err-msg = exProErrors:GetMessage(1) . 
+      if v-err-msg > "" then . 
+      else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+      message "ProError" skip(1) v-err-msg /*skip exProErrors:CallStack*/ view-as alert-box.
+    end catch .
+    catch exAnyErrors as class Progress.Lang.Error:
+      v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+      message "LangError" skip(1) v-err-msg /*skip exAnyErrors:CallStack*/ view-as alert-box.
+    end catch .
+
+    finally:
+      SESSION:ERROR-STACK-TRACE=no. 
+      if valid-object(v-listact-brw) then delete object v-listact-brw no-error .
+    end finally.  
+
+	end method.
+
+  method private void okButton_Click (sender as System.Object, e as System.EventArgs):
       this-object:DialogResult = System.Windows.Forms.DialogResult:Ok.
       this-object:Close ( ). 
-   end method.
+  end method.
 
-   method private void cancelButton_Click (sender as System.Object, e as System.EventArgs):
+  method private void cancelButton_Click (sender as System.Object, e as System.EventArgs):
       this-object:DialogResult = System.Windows.Forms.DialogResult:Cancel.
       this-object:Close ( ).
-   end method.
+  end method.
     
    method private void InitializeComponent ( ):
 
@@ -60,139 +567,753 @@ class ibs.th.ref.cashbookbrw inherits Form :
          
          Modifying the contents of this method using a code editor will invalidate any support for this file. */
       
-      this-object:components = new System.ComponentModel.Container().
-      @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable tableDesc2 as Progress.Data.TableDesc no-undo.
-      tableDesc2 = new Progress.Data.TableDesc("Table").
-      this-object:buttonOk = new System.Windows.Forms.Button().
-      this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
-      this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
-      this-object:nameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:firmDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:idDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:extcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:button1 = new System.Windows.Forms.Button().
-      this-object:button2 = new System.Windows.Forms.Button().
-      cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
-      cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
-      this-object:SuspendLayout().
-      /*  */
-      /* buttonOk */
-      /*  */
-      this-object:buttonOk:Location = new System.Drawing.Point(12, 12).
-      this-object:buttonOk:Name = "buttonOk".
-      this-object:buttonOk:Size = new System.Drawing.Size(75, 40).
-      this-object:buttonOk:TabIndex = 0.
-      this-object:buttonOk:Text = "Выход".
-      this-object:buttonOk:UseCompatibleTextRendering = true.
-      this-object:buttonOk:Click:Subscribe(this-object:okButton_Click).
-      /*  */
-      /* dataGridView1 */
-      /*  */
-      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar0 = cast(Progress.Util.EnumHelper:Or(cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-      this-object:dataGridView1:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:dataGridView1:AutoGenerateColumns = false.
-      this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
-      this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 4 no-undo.
-      arrayvar0[1] = this-object:nameDataGridViewTextBoxColumn.
-      arrayvar0[2] = this-object:firmDataGridViewTextBoxColumn.
-      arrayvar0[3] = this-object:idDataGridViewTextBoxColumn.
-      arrayvar0[4] = this-object:extcodeDataGridViewTextBoxColumn.
-      this-object:dataGridView1:Columns:AddRange(arrayvar0).
-      this-object:dataGridView1:DataSource = this-object:bindingSource1.
-      this-object:dataGridView1:Location = new System.Drawing.Point(12, 81).
-      this-object:dataGridView1:Name = "dataGridView1".
-      this-object:dataGridView1:Size = new System.Drawing.Size(445, 276).
-      this-object:dataGridView1:TabIndex = 2.
-      /*  */
-      /* bindingSource1 */
-      /*  */
-      this-object:bindingSource1:MaxDataGuess = 0.
-      this-object:bindingSource1:NoLOBs = false.
-      this-object:bindingSource1:Position = 0.
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
-      arrayvar1 = new "Progress.Data.TableDesc[]"(0).
-      tableDesc2:ChildTables = arrayvar1.
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 4 no-undo.
-      arrayvar2[1] = new Progress.Data.ColumnPropDesc("Name", "Наименование", Progress.Data.DataType:CHARACTER).
-      arrayvar2[2] = new Progress.Data.ColumnPropDesc("firm", "Фирма", Progress.Data.DataType:CHARACTER).
-      arrayvar2[3] = new Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
-      arrayvar2[4] = new Progress.Data.ColumnPropDesc("ext-code", "ext-code", Progress.Data.DataType:CHARACTER).
-      tableDesc2:Columns = arrayvar2.
-      this-object:bindingSource1:TableSchema = tableDesc2.
-      /*  */
-      /* nameDataGridViewTextBoxColumn */
-      /*  */
-      this-object:nameDataGridViewTextBoxColumn:DataPropertyName = "Name".
-      this-object:nameDataGridViewTextBoxColumn:HeaderText = "Наименование".
-      this-object:nameDataGridViewTextBoxColumn:Name = "nameDataGridViewTextBoxColumn".
-      /*  */
-      /* firmDataGridViewTextBoxColumn */
-      /*  */
-      this-object:firmDataGridViewTextBoxColumn:DataPropertyName = "firm".
-      this-object:firmDataGridViewTextBoxColumn:HeaderText = "Фирма".
-      this-object:firmDataGridViewTextBoxColumn:Name = "firmDataGridViewTextBoxColumn".
-      /*  */
-      /* idDataGridViewTextBoxColumn */
-      /*  */
-      this-object:idDataGridViewTextBoxColumn:DataPropertyName = "id".
-      this-object:idDataGridViewTextBoxColumn:HeaderText = "id".
-      this-object:idDataGridViewTextBoxColumn:Name = "idDataGridViewTextBoxColumn".
-      /*  */
-      /* extcodeDataGridViewTextBoxColumn */
-      /*  */
-      this-object:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
-      this-object:extcodeDataGridViewTextBoxColumn:HeaderText = "ext-code".
-      this-object:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
-      /*  */
-      /* button1 */
-      /*  */
-      this-object:button1:Location = new System.Drawing.Point(93, 12).
-      this-object:button1:Name = "button1".
-      this-object:button1:Size = new System.Drawing.Size(75, 40).
-      this-object:button1:TabIndex = 3.
-      this-object:button1:Text = "Товары".
-      this-object:button1:UseCompatibleTextRendering = true.
-      this-object:button1:UseVisualStyleBackColor = true.
-      /*  */
-      /* button2 */
-      /*  */
-      this-object:button2:Location = new System.Drawing.Point(174, 12).
-      this-object:button2:Name = "button2".
-      this-object:button2:Size = new System.Drawing.Size(133, 40).
-      this-object:button2:TabIndex = 4.
-      this-object:button2:Text = "Настройки для объектов".
-      this-object:button2:UseCompatibleTextRendering = true.
-      this-object:button2:UseVisualStyleBackColor = true.
-      /*  */
-      /* cashbookbrw */
-      /*  */
-      this-object:AcceptButton = this-object:buttonOk.
-      this-object:ClientSize = new System.Drawing.Size(469, 369).
-      this-object:Controls:Add(this-object:button2).
-      this-object:Controls:Add(this-object:button1).
-      this-object:Controls:Add(this-object:dataGridView1).
-      this-object:Controls:Add(this-object:buttonOk).
-      this-object:FormBorderStyle = System.Windows.Forms.FormBorderStyle:FixedDialog.
-      this-object:MaximizeBox = false.
-      this-object:MinimizeBox = false.
-      this-object:Name = "cashbookbrw".
-      this-object:ShowInTaskbar = false.
-      this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
-      this-object:Text = "cashbookbrw".
-      cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
-      cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
-      this-object:ResumeLayout(false).
-      catch e as Progress.Lang.Error:
-         undo, throw e.
-      end catch.
+    this-object:components = new System.ComponentModel.Container().
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    define variable tableDesc3 as Progress.Data.TableDesc no-undo.
+    tableDesc3 = new Progress.Data.TableDesc("tt-cashbook").
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    define variable tableDesc4 as Progress.Data.TableDesc no-undo.
+    tableDesc4 = new Progress.Data.TableDesc("tt-cashbook-rule").
+    this-object:buttonOk = new System.Windows.Forms.Button().
+    this-object:cashbookBrowse = new System.Windows.Forms.DataGridView().
+    this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
+    this-object:bGoods = new System.Windows.Forms.Button().
+    this-object:cashbookRuleBrowse = new System.Windows.Forms.DataGridView().
+    this-object:bindingSource2 = new Progress.Data.BindingSource(this-object:components).
+    this-object:bAdd = new System.Windows.Forms.Button().
+    this-object:bMark = new System.Windows.Forms.Button().
+    this-object:bSelect = new System.Windows.Forms.Button().
+    this-object:bChange = new System.Windows.Forms.Button().
+    this-object:bLookup = new System.Windows.Forms.Button().
+    this-object:bDel = new System.Windows.Forms.Button().
+    this-object:rbStatDel = new System.Windows.Forms.RadioButton().
+    this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+    this-object:rbStatCurr = new System.Windows.Forms.RadioButton().
+    this-object:rbStatAll = new System.Windows.Forms.RadioButton().
+    this-object:rbFirmSelect = new System.Windows.Forms.RadioButton().
+    this-object:groupBox2 = new System.Windows.Forms.GroupBox().
+    this-object:rbFirmCurr = new System.Windows.Forms.RadioButton().
+    this-object:rbFirmAll = new System.Windows.Forms.RadioButton().
+    this-object:bDelObj = new System.Windows.Forms.Button().
+    this-object:bLookupObj = new System.Windows.Forms.Button().
+    this-object:bChangeObj = new System.Windows.Forms.Button().
+    this-object:bAddObj = new System.Windows.Forms.Button().
+    this-object:labelObj = new System.Windows.Forms.Label().
+    this-object:markDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:id = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:extcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:cashBookNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:ruleOsnDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:rulePrilDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:creditDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:debitDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:flagSepCashDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
+    this-object:flagSepFullDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
+    this-object:statDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:hostcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:obj = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:cashbookIdDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:objtypeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:objcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:managerPositionDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:managerFIODataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:buhFIODataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:structDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:uchetDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:pkoMaskDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:rkoMaskDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:currPkoDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:currRkoDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:statusDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    cast(this-object:cashbookBrowse, System.ComponentModel.ISupportInitialize):BeginInit().
+    cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
+    cast(this-object:cashbookRuleBrowse, System.ComponentModel.ISupportInitialize):BeginInit().
+    cast(this-object:bindingSource2, System.ComponentModel.ISupportInitialize):BeginInit().
+    this-object:groupBox1:SuspendLayout().
+    this-object:groupBox2:SuspendLayout().
+    this-object:SuspendLayout().
+    /*  */
+    /* buttonOk */
+    /*  */
+    this-object:buttonOk:Location = new System.Drawing.Point(12, 12).
+    this-object:buttonOk:Name = "buttonOk".
+    this-object:buttonOk:Size = new System.Drawing.Size(75, 23).
+    this-object:buttonOk:TabIndex = 0.
+    this-object:buttonOk:Text = "Выход".
+    this-object:buttonOk:UseCompatibleTextRendering = true.
+    this-object:buttonOk:Click:Subscribe(this-object:okButton_Click).
+    /*  */
+    /* cashbookBrowse */
+    /*  */
+    this-object:cashbookBrowse:AllowUserToAddRows = false.
+    this-object:cashbookBrowse:AllowUserToDeleteRows = false.
+    this-object:cashbookBrowse:AllowUserToOrderColumns = true.
+    define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+    nestedvar0 = cast(Progress.Util.EnumHelper:Or(cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+    this-object:cashbookBrowse:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+    this-object:cashbookBrowse:AutoGenerateColumns = false.
+    this-object:cashbookBrowse:CausesValidation = false.
+    this-object:cashbookBrowse:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 11 no-undo.
+    arrayvar0[1] = this-object:markDataGridViewTextBoxColumn.
+    arrayvar0[2] = this-object:id.
+    arrayvar0[3] = this-object:extcodeDataGridViewTextBoxColumn.
+    arrayvar0[4] = this-object:cashBookNameDataGridViewTextBoxColumn.
+    arrayvar0[5] = this-object:ruleOsnDataGridViewTextBoxColumn.
+    arrayvar0[6] = this-object:rulePrilDataGridViewTextBoxColumn.
+    arrayvar0[7] = this-object:creditDataGridViewTextBoxColumn.
+    arrayvar0[8] = this-object:debitDataGridViewTextBoxColumn.
+    arrayvar0[9] = this-object:flagSepCashDataGridViewCheckBoxColumn.
+    arrayvar0[10] = this-object:flagSepFullDataGridViewCheckBoxColumn.
+    arrayvar0[11] = this-object:statDataGridViewTextBoxColumn.
+    this-object:cashbookBrowse:Columns:AddRange(arrayvar0).
+    this-object:cashbookBrowse:DataSource = this-object:bindingSource1.
+    this-object:cashbookBrowse:Location = new System.Drawing.Point(12, 88).
+    this-object:cashbookBrowse:Name = "cashbookBrowse".
+    this-object:cashbookBrowse:ReadOnly = true.
+    this-object:cashbookBrowse:Size = new System.Drawing.Size(1055, 195).
+    this-object:cashbookBrowse:TabIndex = 2.
+    this-object:cashbookBrowse:SelectionChanged:Subscribe(this-object:cashbookBrowse_SelectionChanged).
+    /*  */
+    /* bindingSource1 */
+    /*  */
+    this-object:bindingSource1:MaxDataGuess = 0.
+    this-object:bindingSource1:NoLOBs = false.
+    this-object:bindingSource1:Position = 0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
+    arrayvar1 = new "Progress.Data.TableDesc[]"(0).
+    tableDesc3:ChildTables = arrayvar1.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 12 no-undo.
+    arrayvar2[1] = new Progress.Data.ColumnPropDesc("mark", "*", Progress.Data.DataType:CHARACTER).
+    arrayvar2[2] = new Progress.Data.ColumnPropDesc("CashBookName", "Наименование", Progress.Data.DataType:CHARACTER).
+    arrayvar2[3] = new Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
+    arrayvar2[4] = new Progress.Data.ColumnPropDesc("ext-code", "Код/номер", Progress.Data.DataType:CHARACTER).
+    arrayvar2[5] = new Progress.Data.ColumnPropDesc("RuleOsn", "Правила заполнения графы ~"Основание~"", Progress.Data.DataType:CHARACTER).
+    arrayvar2[6] = new Progress.Data.ColumnPropDesc("RulePril", "Правила заполнения графы ~"Приложение~"", Progress.Data.DataType:CHARACTER).
+    arrayvar2[7] = new Progress.Data.ColumnPropDesc("Credit", "Кредит", Progress.Data.DataType:CHARACTER).
+    arrayvar2[8] = new Progress.Data.ColumnPropDesc("Debit", "Дебет", Progress.Data.DataType:CHARACTER).
+    arrayvar2[9] = new Progress.Data.ColumnPropDesc("FlagSepCash", "Отдельно для каждой кассы", Progress.Data.DataType:LOGICAL).
+    arrayvar2[10] = new Progress.Data.ColumnPropDesc("FlagSepFull", "Раздельно НП и ТНП", Progress.Data.DataType:LOGICAL).
+    arrayvar2[11] = new Progress.Data.ColumnPropDesc("Status_", "Статус", Progress.Data.DataType:INTEGER).
+    arrayvar2[12] = new Progress.Data.ColumnPropDesc("stat", "Статус", Progress.Data.DataType:CHARACTER).
+    tableDesc3:Columns = arrayvar2.
+    this-object:bindingSource1:TableSchema = tableDesc3.
+    /*  */
+    /* bGoods */
+    /*  */
+    this-object:bGoods:Location = new System.Drawing.Point(564, 12).
+    this-object:bGoods:Name = "bGoods".
+    this-object:bGoods:Size = new System.Drawing.Size(75, 23).
+    this-object:bGoods:TabIndex = 3.
+    this-object:bGoods:Text = "Товары".
+    this-object:bGoods:UseCompatibleTextRendering = true.
+    this-object:bGoods:UseVisualStyleBackColor = true.
+    this-object:bGoods:Click:Subscribe(this-object:goods_Click).
+    /*  */
+    /* cashbookRuleBrowse */
+    /*  */
+    this-object:cashbookRuleBrowse:AllowUserToAddRows = false.
+    this-object:cashbookRuleBrowse:AllowUserToDeleteRows = false.
+    this-object:cashbookRuleBrowse:AllowUserToOrderColumns = true.
+    this-object:cashbookRuleBrowse:AutoGenerateColumns = false.
+    this-object:cashbookRuleBrowse:CausesValidation = false.
+    this-object:cashbookRuleBrowse:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar3 as System.Windows.Forms.DataGridViewColumn extent 15 no-undo.
+    arrayvar3[1] = this-object:hostcodeDataGridViewTextBoxColumn.
+    arrayvar3[2] = this-object:obj.
+    arrayvar3[3] = this-object:cashbookIdDataGridViewTextBoxColumn.
+    arrayvar3[4] = this-object:objtypeDataGridViewTextBoxColumn.
+    arrayvar3[5] = this-object:objcodeDataGridViewTextBoxColumn.
+    arrayvar3[6] = this-object:managerPositionDataGridViewTextBoxColumn.
+    arrayvar3[7] = this-object:managerFIODataGridViewTextBoxColumn.
+    arrayvar3[8] = this-object:buhFIODataGridViewTextBoxColumn.
+    arrayvar3[9] = this-object:structDataGridViewTextBoxColumn.
+    arrayvar3[10] = this-object:uchetDataGridViewTextBoxColumn.
+    arrayvar3[11] = this-object:pkoMaskDataGridViewTextBoxColumn.
+    arrayvar3[12] = this-object:rkoMaskDataGridViewTextBoxColumn.
+    arrayvar3[13] = this-object:currPkoDataGridViewTextBoxColumn.
+    arrayvar3[14] = this-object:currRkoDataGridViewTextBoxColumn.
+    arrayvar3[15] = this-object:statusDataGridViewTextBoxColumn.
+    this-object:cashbookRuleBrowse:Columns:AddRange(arrayvar3).
+    this-object:cashbookRuleBrowse:DataSource = this-object:bindingSource2.
+    this-object:cashbookRuleBrowse:Location = new System.Drawing.Point(12, 332).
+    this-object:cashbookRuleBrowse:Name = "cashbookRuleBrowse".
+    this-object:cashbookRuleBrowse:ReadOnly = true.
+    this-object:cashbookRuleBrowse:Size = new System.Drawing.Size(1055, 293).
+    this-object:cashbookRuleBrowse:TabIndex = 5.
+    /*  */
+    /* bindingSource2 */
+    /*  */
+    this-object:bindingSource2:MaxDataGuess = 0.
+    this-object:bindingSource2:NoLOBs = false.
+    this-object:bindingSource2:Position = 0.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar4 as "Progress.Data.TableDesc[]" no-undo.
+    arrayvar4 = new "Progress.Data.TableDesc[]"(0).
+    tableDesc4:ChildTables = arrayvar4.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar5 as Progress.Data.ColumnPropDesc extent 16 no-undo.
+    arrayvar5[1] = new Progress.Data.ColumnPropDesc("host-code", "Фирма", Progress.Data.DataType:CHARACTER).
+    arrayvar5[2] = new Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
+    arrayvar5[3] = new Progress.Data.ColumnPropDesc("cashbookId", "cashbookId", Progress.Data.DataType:INT64).
+    arrayvar5[4] = new Progress.Data.ColumnPropDesc("obj-type", "obj-type", Progress.Data.DataType:CHARACTER).
+    arrayvar5[5] = new Progress.Data.ColumnPropDesc("obj-code", "obj-code", Progress.Data.DataType:INTEGER).
+    arrayvar5[6] = new Progress.Data.ColumnPropDesc("ManagerPosition", "Должность руководителя", Progress.Data.DataType:CHARACTER).
+    arrayvar5[7] = new Progress.Data.ColumnPropDesc("PkoMask", "Маска номера ПКО", Progress.Data.DataType:CHARACTER).
+    arrayvar5[8] = new Progress.Data.ColumnPropDesc("RkoMask", "Маска номера РКО", Progress.Data.DataType:CHARACTER).
+    arrayvar5[9] = new Progress.Data.ColumnPropDesc("currPko", "Текущий номер ПКО", Progress.Data.DataType:CHARACTER).
+    arrayvar5[10] = new Progress.Data.ColumnPropDesc("currRko", "Текущий номер РКО", Progress.Data.DataType:CHARACTER).
+    arrayvar5[11] = new Progress.Data.ColumnPropDesc("status_", "Статус", Progress.Data.DataType:INTEGER).
+    arrayvar5[12] = new Progress.Data.ColumnPropDesc("obj", "Объект", Progress.Data.DataType:CHARACTER).
+    arrayvar5[13] = new Progress.Data.ColumnPropDesc("ManagerFIO", "ФИО руководителя", Progress.Data.DataType:CHARACTER).
+    arrayvar5[14] = new Progress.Data.ColumnPropDesc("BuhFIO", "ФИО Бухгалтера", Progress.Data.DataType:CHARACTER).
+    arrayvar5[15] = new Progress.Data.ColumnPropDesc("Struct", "Поле ~"Структурное подразделение~"", Progress.Data.DataType:CHARACTER).
+    arrayvar5[16] = new Progress.Data.ColumnPropDesc("uchet", "Учёт ведётся", Progress.Data.DataType:CHARACTER).
+    tableDesc4:Columns = arrayvar5.
+    this-object:bindingSource2:TableSchema = tableDesc4.
+    /*  */
+    /* bAdd */
+    /*  */
+    this-object:bAdd:Location = new System.Drawing.Point(205, 12).
+    this-object:bAdd:Name = "bAdd".
+    this-object:bAdd:Size = new System.Drawing.Size(75, 23).
+    this-object:bAdd:TabIndex = 6.
+    this-object:bAdd:Text = "Добавить".
+    this-object:bAdd:UseCompatibleTextRendering = true.
+    this-object:bAdd:UseVisualStyleBackColor = true.
+    this-object:bAdd:Click:Subscribe(this-object:bAdd_Click).
+    /*  */
+    /* bMark */
+    /*  */
+    this-object:bMark:Location = new System.Drawing.Point(93, 12).
+    this-object:bMark:Name = "bMark".
+    this-object:bMark:Size = new System.Drawing.Size(25, 23).
+    this-object:bMark:TabIndex = 7.
+    this-object:bMark:Text = "*".
+    this-object:bMark:TextAlign = System.Drawing.ContentAlignment:BottomCenter.
+    this-object:bMark:UseCompatibleTextRendering = true.
+    this-object:bMark:UseVisualStyleBackColor = true.
+    this-object:bMark:Click:Subscribe(this-object:bMark_Click).
+    /*  */
+    /* bSelect */
+    /*  */
+    this-object:bSelect:Location = new System.Drawing.Point(124, 12).
+    this-object:bSelect:Name = "bSelect".
+    this-object:bSelect:Size = new System.Drawing.Size(75, 23).
+    this-object:bSelect:TabIndex = 8.
+    this-object:bSelect:Text = "Выбор".
+    this-object:bSelect:UseCompatibleTextRendering = true.
+    this-object:bSelect:UseVisualStyleBackColor = true.
+    this-object:bSelect:Click:Subscribe(this-object:bSelect_Click).
+    /*  */
+    /* bChange */
+    /*  */
+    this-object:bChange:Location = new System.Drawing.Point(286, 12).
+    this-object:bChange:Name = "bChange".
+    this-object:bChange:Size = new System.Drawing.Size(75, 23).
+    this-object:bChange:TabIndex = 9.
+    this-object:bChange:Text = "Изменить".
+    this-object:bChange:UseCompatibleTextRendering = true.
+    this-object:bChange:UseVisualStyleBackColor = true.
+    this-object:bChange:Click:Subscribe(this-object:bChange_Click).
+    /*  */
+    /* bLookup */
+    /*  */
+    this-object:bLookup:Location = new System.Drawing.Point(367, 12).
+    this-object:bLookup:Name = "bLookup".
+    this-object:bLookup:Size = new System.Drawing.Size(75, 23).
+    this-object:bLookup:TabIndex = 10.
+    this-object:bLookup:Text = "Просмотр".
+    this-object:bLookup:UseCompatibleTextRendering = true.
+    this-object:bLookup:UseVisualStyleBackColor = true.
+    this-object:bLookup:Click:Subscribe(this-object:bLookup_Click).
+    /*  */
+    /* bDel */
+    /*  */
+    this-object:bDel:Location = new System.Drawing.Point(448, 12).
+    this-object:bDel:Name = "bDel".
+    this-object:bDel:Size = new System.Drawing.Size(75, 23).
+    this-object:bDel:TabIndex = 11.
+    this-object:bDel:Text = "Удалить".
+    this-object:bDel:UseCompatibleTextRendering = true.
+    this-object:bDel:UseVisualStyleBackColor = true.
+    this-object:bDel:Click:Subscribe(this-object:bDel_Click).
+    /*  */
+    /* rbStatDel */
+    /*  */
+    this-object:rbStatDel:Location = new System.Drawing.Point(182, 13).
+    this-object:rbStatDel:Name = "rbStatDel".
+    this-object:rbStatDel:Size = new System.Drawing.Size(104, 24).
+    this-object:rbStatDel:TabIndex = 2.
+    this-object:rbStatDel:Text = "Удаленные".
+    this-object:rbStatDel:UseCompatibleTextRendering = true.
+    this-object:rbStatDel:UseVisualStyleBackColor = true.
+    this-object:rbStatDel:CheckedChanged:Subscribe(this-object:status_CheckedChanged).
+    /*  */
+    /* groupBox1 */
+    /*  */
+    this-object:groupBox1:Controls:Add(this-object:rbStatDel).
+    this-object:groupBox1:Controls:Add(this-object:rbStatCurr).
+    this-object:groupBox1:Controls:Add(this-object:rbStatAll).
+    this-object:groupBox1:Location = new System.Drawing.Point(12, 41).
+    this-object:groupBox1:Name = "groupBox1".
+    this-object:groupBox1:Size = new System.Drawing.Size(302, 40).
+    this-object:groupBox1:TabIndex = 18.
+    this-object:groupBox1:TabStop = false.
+    this-object:groupBox1:Text = "Статус".
+    this-object:groupBox1:UseCompatibleTextRendering = true.
+    /*  */
+    /* rbStatCurr */
+    /*  */
+    this-object:rbStatCurr:Checked = true.
+    this-object:rbStatCurr:Location = new System.Drawing.Point(88, 13).
+    this-object:rbStatCurr:Name = "rbStatCurr".
+    this-object:rbStatCurr:Size = new System.Drawing.Size(77, 24).
+    this-object:rbStatCurr:TabIndex = 1.
+    this-object:rbStatCurr:TabStop = true.
+    this-object:rbStatCurr:Text = "Текущие".
+    this-object:rbStatCurr:UseCompatibleTextRendering = true.
+    this-object:rbStatCurr:UseVisualStyleBackColor = true.
+    this-object:rbStatCurr:CheckedChanged:Subscribe(this-object:status_CheckedChanged).
+    /*  */
+    /* rbStatAll */
+    /*  */
+    this-object:rbStatAll:Location = new System.Drawing.Point(25, 13).
+    this-object:rbStatAll:Name = "rbStatAll".
+    this-object:rbStatAll:Size = new System.Drawing.Size(54, 24).
+    this-object:rbStatAll:TabIndex = 0.
+    this-object:rbStatAll:Text = "Все".
+    this-object:rbStatAll:UseCompatibleTextRendering = true.
+    this-object:rbStatAll:UseVisualStyleBackColor = true.
+    this-object:rbStatAll:CheckedChanged:Subscribe(this-object:status_CheckedChanged).
+    /*  */
+    /* rbFirmSelect */
+    /*  */
+    this-object:rbFirmSelect:Location = new System.Drawing.Point(182, 13).
+    this-object:rbFirmSelect:Name = "rbFirmSelect".
+    this-object:rbFirmSelect:Size = new System.Drawing.Size(104, 24).
+    this-object:rbFirmSelect:TabIndex = 2.
+    this-object:rbFirmSelect:Text = "Выборочно".
+    this-object:rbFirmSelect:UseCompatibleTextRendering = true.
+    this-object:rbFirmSelect:UseVisualStyleBackColor = true.
+    this-object:rbFirmSelect:CheckedChanged:Subscribe(this-object:firm_CheckedChanged).
+    /*  */
+    /* groupBox2 */
+    /*  */
+    this-object:groupBox2:Controls:Add(this-object:rbFirmSelect).
+    this-object:groupBox2:Controls:Add(this-object:rbFirmCurr).
+    this-object:groupBox2:Controls:Add(this-object:rbFirmAll).
+    this-object:groupBox2:Location = new System.Drawing.Point(337, 41).
+    this-object:groupBox2:Name = "groupBox2".
+    this-object:groupBox2:Size = new System.Drawing.Size(302, 40).
+    this-object:groupBox2:TabIndex = 19.
+    this-object:groupBox2:TabStop = false.
+    this-object:groupBox2:Text = "Фирмы".
+    this-object:groupBox2:UseCompatibleTextRendering = true.
+    /*  */
+    /* rbFirmCurr */
+    /*  */
+    this-object:rbFirmCurr:Location = new System.Drawing.Point(88, 13).
+    this-object:rbFirmCurr:Name = "rbFirmCurr".
+    this-object:rbFirmCurr:Size = new System.Drawing.Size(77, 24).
+    this-object:rbFirmCurr:TabIndex = 1.
+    this-object:rbFirmCurr:Text = "Текущая".
+    this-object:rbFirmCurr:UseCompatibleTextRendering = true.
+    this-object:rbFirmCurr:UseVisualStyleBackColor = true.
+    this-object:rbFirmCurr:CheckedChanged:Subscribe(this-object:firm_CheckedChanged).
+    /*  */
+    /* rbFirmAll */
+    /*  */
+    this-object:rbFirmAll:Checked = true.
+    this-object:rbFirmAll:Location = new System.Drawing.Point(25, 13).
+    this-object:rbFirmAll:Name = "rbFirmAll".
+    this-object:rbFirmAll:Size = new System.Drawing.Size(54, 24).
+    this-object:rbFirmAll:TabIndex = 0.
+    this-object:rbFirmAll:TabStop = true.
+    this-object:rbFirmAll:Text = "Все".
+    this-object:rbFirmAll:UseCompatibleTextRendering = true.
+    this-object:rbFirmAll:UseVisualStyleBackColor = true.
+    this-object:rbFirmAll:CheckedChanged:Subscribe(this-object:firm_CheckedChanged).
+    /*  */
+    /* bDelObj */
+    /*  */
+    this-object:bDelObj:Location = new System.Drawing.Point(255, 303).
+    this-object:bDelObj:Name = "bDelObj".
+    this-object:bDelObj:Size = new System.Drawing.Size(75, 23).
+    this-object:bDelObj:TabIndex = 23.
+    this-object:bDelObj:Text = "Удалить".
+    this-object:bDelObj:UseCompatibleTextRendering = true.
+    this-object:bDelObj:UseVisualStyleBackColor = true.
+    this-object:bDelObj:Click:Subscribe(this-object:bDelObj_Click).
+    /*  */
+    /* bLookupObj */
+    /*  */
+    this-object:bLookupObj:Location = new System.Drawing.Point(174, 303).
+    this-object:bLookupObj:Name = "bLookupObj".
+    this-object:bLookupObj:Size = new System.Drawing.Size(75, 23).
+    this-object:bLookupObj:TabIndex = 22.
+    this-object:bLookupObj:Text = "Просмотр".
+    this-object:bLookupObj:UseCompatibleTextRendering = true.
+    this-object:bLookupObj:UseVisualStyleBackColor = true.
+    this-object:bLookupObj:Click:Subscribe(this-object:bLookupObj_Click).
+    /*  */
+    /* bChangeObj */
+    /*  */
+    this-object:bChangeObj:Location = new System.Drawing.Point(93, 303).
+    this-object:bChangeObj:Name = "bChangeObj".
+    this-object:bChangeObj:Size = new System.Drawing.Size(75, 23).
+    this-object:bChangeObj:TabIndex = 21.
+    this-object:bChangeObj:Text = "Изменить".
+    this-object:bChangeObj:UseCompatibleTextRendering = true.
+    this-object:bChangeObj:UseVisualStyleBackColor = true.
+    this-object:bChangeObj:Click:Subscribe(this-object:bChangeObj_Click).
+    /*  */
+    /* bAddObj */
+    /*  */
+    this-object:bAddObj:Location = new System.Drawing.Point(12, 303).
+    this-object:bAddObj:Name = "bAddObj".
+    this-object:bAddObj:Size = new System.Drawing.Size(75, 23).
+    this-object:bAddObj:TabIndex = 20.
+    this-object:bAddObj:Text = "Добавить".
+    this-object:bAddObj:UseCompatibleTextRendering = true.
+    this-object:bAddObj:UseVisualStyleBackColor = true.
+    this-object:bAddObj:Click:Subscribe(this-object:bAddObj_Click).
+    /*  */
+    /* labelObj */
+    /*  */
+    this-object:labelObj:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(12), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:labelObj:Location = new System.Drawing.Point(416, 306).
+    this-object:labelObj:Name = "labelObj".
+    this-object:labelObj:Size = new System.Drawing.Size(207, 23).
+    this-object:labelObj:TabIndex = 24.
+    this-object:labelObj:Text = "Настройки для объектов".
+    this-object:labelObj:UseCompatibleTextRendering = true.
+    this-object:labelObj:DoubleClick:Subscribe(this-object:labelObj_DoubleClick).
+    /*  */
+    /* markDataGridViewTextBoxColumn */
+    /*  */
+    this-object:markDataGridViewTextBoxColumn:DataPropertyName = "mark".
+    this-object:markDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(19.6377163).
+    this-object:markDataGridViewTextBoxColumn:HeaderText = "*".
+    this-object:markDataGridViewTextBoxColumn:Name = "markDataGridViewTextBoxColumn".
+    this-object:markDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:markDataGridViewTextBoxColumn:Width = 20.
+    /*  */
+    /* id */
+    /*  */
+    this-object:id:DataPropertyName = "id".
+    this-object:id:HeaderText = "id".
+    this-object:id:Name = "id".
+    this-object:id:ReadOnly = true.
+    this-object:id:Visible = false.
+    this-object:id:Width = 35.
+    /*  */
+    /* extcodeDataGridViewTextBoxColumn */
+    /*  */
+    this-object:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
+    this-object:extcodeDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(58.2789688).
+    this-object:extcodeDataGridViewTextBoxColumn:HeaderText = "Код/номер".
+    this-object:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
+    this-object:extcodeDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:extcodeDataGridViewTextBoxColumn:Width = 80.
+    /*  */
+    /* cashBookNameDataGridViewTextBoxColumn */
+    /*  */
+    this-object:cashBookNameDataGridViewTextBoxColumn:DataPropertyName = "CashBookName".
+    this-object:cashBookNameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(86.5020294).
+    this-object:cashBookNameDataGridViewTextBoxColumn:HeaderText = "Наименование".
+    this-object:cashBookNameDataGridViewTextBoxColumn:Name = "cashBookNameDataGridViewTextBoxColumn".
+    this-object:cashBookNameDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:cashBookNameDataGridViewTextBoxColumn:Width = 140.
+    /*  */
+    /* ruleOsnDataGridViewTextBoxColumn */
+    /*  */
+    this-object:ruleOsnDataGridViewTextBoxColumn:DataPropertyName = "RuleOsn".
+    this-object:ruleOsnDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(120.6885452).
+    this-object:ruleOsnDataGridViewTextBoxColumn:HeaderText = "Правила заполнения графы ~"Основание~"".
+    this-object:ruleOsnDataGridViewTextBoxColumn:Name = "ruleOsnDataGridViewTextBoxColumn".
+    this-object:ruleOsnDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:ruleOsnDataGridViewTextBoxColumn:Width = 185.
+    /*  */
+    /* rulePrilDataGridViewTextBoxColumn */
+    /*  */
+    this-object:rulePrilDataGridViewTextBoxColumn:DataPropertyName = "RulePril".
+    this-object:rulePrilDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(109.7253876).
+    this-object:rulePrilDataGridViewTextBoxColumn:HeaderText = "Правила заполнения графы ~"Приложение~"".
+    this-object:rulePrilDataGridViewTextBoxColumn:Name = "rulePrilDataGridViewTextBoxColumn".
+    this-object:rulePrilDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:rulePrilDataGridViewTextBoxColumn:Width = 185.
+    /*  */
+    /* creditDataGridViewTextBoxColumn */
+    /*  */
+    this-object:creditDataGridViewTextBoxColumn:DataPropertyName = "Credit".
+    this-object:creditDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(100.8853531).
+    this-object:creditDataGridViewTextBoxColumn:HeaderText = "Кредит".
+    this-object:creditDataGridViewTextBoxColumn:Name = "creditDataGridViewTextBoxColumn".
+    this-object:creditDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:creditDataGridViewTextBoxColumn:Width = 80.
+    /*  */
+    /* debitDataGridViewTextBoxColumn */
+    /*  */
+    this-object:debitDataGridViewTextBoxColumn:DataPropertyName = "Debit".
+    this-object:debitDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(355.3299866).
+    this-object:debitDataGridViewTextBoxColumn:HeaderText = "Дебет".
+    this-object:debitDataGridViewTextBoxColumn:Name = "debitDataGridViewTextBoxColumn".
+    this-object:debitDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:debitDataGridViewTextBoxColumn:Width = 80.
+    /*  */
+    /* flagSepCashDataGridViewCheckBoxColumn */
+    /*  */
+    this-object:flagSepCashDataGridViewCheckBoxColumn:DataPropertyName = "FlagSepCash".
+    this-object:flagSepCashDataGridViewCheckBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(70.3734589).
+    this-object:flagSepCashDataGridViewCheckBoxColumn:HeaderText = "Отдельно для каждой кассы".
+    this-object:flagSepCashDataGridViewCheckBoxColumn:Name = "flagSepCashDataGridViewCheckBoxColumn".
+    this-object:flagSepCashDataGridViewCheckBoxColumn:ReadOnly = true.
+    this-object:flagSepCashDataGridViewCheckBoxColumn:Width = 90.
+    /*  */
+    /* flagSepFullDataGridViewCheckBoxColumn */
+    /*  */
+    this-object:flagSepFullDataGridViewCheckBoxColumn:DataPropertyName = "FlagSepFull".
+    this-object:flagSepFullDataGridViewCheckBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(78.2929916).
+    this-object:flagSepFullDataGridViewCheckBoxColumn:HeaderText = "Раздельно НП и ТНП".
+    this-object:flagSepFullDataGridViewCheckBoxColumn:Name = "flagSepFullDataGridViewCheckBoxColumn".
+    this-object:flagSepFullDataGridViewCheckBoxColumn:ReadOnly = true.
+    this-object:flagSepFullDataGridViewCheckBoxColumn:Width = 70.
+    /*  */
+    /* statDataGridViewTextBoxColumn */
+    /*  */
+    this-object:statDataGridViewTextBoxColumn:DataPropertyName = "stat".
+    this-object:statDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(0.2856203).
+    this-object:statDataGridViewTextBoxColumn:HeaderText = "Статус".
+    this-object:statDataGridViewTextBoxColumn:Name = "statDataGridViewTextBoxColumn".
+    this-object:statDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:statDataGridViewTextBoxColumn:Width = 80.
+    /*  */
+    /* hostcodeDataGridViewTextBoxColumn */
+    /*  */
+    this-object:hostcodeDataGridViewTextBoxColumn:DataPropertyName = "host-code".
+    this-object:hostcodeDataGridViewTextBoxColumn:HeaderText = "Фирма".
+    this-object:hostcodeDataGridViewTextBoxColumn:Name = "hostcodeDataGridViewTextBoxColumn".
+    this-object:hostcodeDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:hostcodeDataGridViewTextBoxColumn:Width = 69.
+    /*  */
+    /* obj */
+    /*  */
+    this-object:obj:DataPropertyName = "obj".
+    this-object:obj:HeaderText = "Объект".
+    this-object:obj:Name = "obj".
+    this-object:obj:ReadOnly = true.
+    this-object:obj:Width = 90.
+    /*  */
+    /* cashbookIdDataGridViewTextBoxColumn */
+    /*  */
+    this-object:cashbookIdDataGridViewTextBoxColumn:DataPropertyName = "cashbookId".
+    this-object:cashbookIdDataGridViewTextBoxColumn:HeaderText = "cashbookId".
+    this-object:cashbookIdDataGridViewTextBoxColumn:Name = "cashbookIdDataGridViewTextBoxColumn".
+    this-object:cashbookIdDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:cashbookIdDataGridViewTextBoxColumn:Visible = false.
+    this-object:cashbookIdDataGridViewTextBoxColumn:Width = 50.
+    /*  */
+    /* objtypeDataGridViewTextBoxColumn */
+    /*  */
+    this-object:objtypeDataGridViewTextBoxColumn:DataPropertyName = "obj-type".
+    this-object:objtypeDataGridViewTextBoxColumn:HeaderText = "obj-type".
+    this-object:objtypeDataGridViewTextBoxColumn:Name = "objtypeDataGridViewTextBoxColumn".
+    this-object:objtypeDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:objtypeDataGridViewTextBoxColumn:Visible = false.
+    /*  */
+    /* objcodeDataGridViewTextBoxColumn */
+    /*  */
+    this-object:objcodeDataGridViewTextBoxColumn:DataPropertyName = "obj-code".
+    this-object:objcodeDataGridViewTextBoxColumn:HeaderText = "obj-code".
+    this-object:objcodeDataGridViewTextBoxColumn:Name = "objcodeDataGridViewTextBoxColumn".
+    this-object:objcodeDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:objcodeDataGridViewTextBoxColumn:Visible = false.
+    /*  */
+    /* managerPositionDataGridViewTextBoxColumn */
+    /*  */
+    this-object:managerPositionDataGridViewTextBoxColumn:DataPropertyName = "ManagerPosition".
+    this-object:managerPositionDataGridViewTextBoxColumn:HeaderText = "Должность руководителя".
+    this-object:managerPositionDataGridViewTextBoxColumn:Name = "managerPositionDataGridViewTextBoxColumn".
+    this-object:managerPositionDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* managerFIODataGridViewTextBoxColumn */
+    /*  */
+    this-object:managerFIODataGridViewTextBoxColumn:DataPropertyName = "ManagerFIO".
+    this-object:managerFIODataGridViewTextBoxColumn:HeaderText = "ФИО руководителя".
+    this-object:managerFIODataGridViewTextBoxColumn:Name = "managerFIODataGridViewTextBoxColumn".
+    this-object:managerFIODataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:managerFIODataGridViewTextBoxColumn:Width = 120.
+    /*  */
+    /* buhFIODataGridViewTextBoxColumn */
+    /*  */
+    this-object:buhFIODataGridViewTextBoxColumn:DataPropertyName = "BuhFIO".
+    this-object:buhFIODataGridViewTextBoxColumn:HeaderText = "ФИО Бухгалтера".
+    this-object:buhFIODataGridViewTextBoxColumn:Name = "buhFIODataGridViewTextBoxColumn".
+    this-object:buhFIODataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:buhFIODataGridViewTextBoxColumn:Width = 120.
+    /*  */
+    /* structDataGridViewTextBoxColumn */
+    /*  */
+    this-object:structDataGridViewTextBoxColumn:DataPropertyName = "Struct".
+    this-object:structDataGridViewTextBoxColumn:HeaderText = "Поле ~"Структурное подразделение~"".
+    this-object:structDataGridViewTextBoxColumn:Name = "structDataGridViewTextBoxColumn".
+    this-object:structDataGridViewTextBoxColumn:ReadOnly = true.
+    /*  */
+    /* uchetDataGridViewTextBoxColumn */
+    /*  */
+    this-object:uchetDataGridViewTextBoxColumn:DataPropertyName = "uchet".
+    this-object:uchetDataGridViewTextBoxColumn:HeaderText = "Учёт ведётся".
+    this-object:uchetDataGridViewTextBoxColumn:Name = "uchetDataGridViewTextBoxColumn".
+    this-object:uchetDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:uchetDataGridViewTextBoxColumn:Width = 80.
+    /*  */
+    /* pkoMaskDataGridViewTextBoxColumn */
+    /*  */
+    this-object:pkoMaskDataGridViewTextBoxColumn:DataPropertyName = "PkoMask".
+    this-object:pkoMaskDataGridViewTextBoxColumn:HeaderText = "Маска номера ПКО".
+    this-object:pkoMaskDataGridViewTextBoxColumn:Name = "pkoMaskDataGridViewTextBoxColumn".
+    this-object:pkoMaskDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:pkoMaskDataGridViewTextBoxColumn:Width = 90.
+    /*  */
+    /* rkoMaskDataGridViewTextBoxColumn */
+    /*  */
+    this-object:rkoMaskDataGridViewTextBoxColumn:DataPropertyName = "RkoMask".
+    this-object:rkoMaskDataGridViewTextBoxColumn:HeaderText = "Маска номера РКО".
+    this-object:rkoMaskDataGridViewTextBoxColumn:Name = "rkoMaskDataGridViewTextBoxColumn".
+    this-object:rkoMaskDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:rkoMaskDataGridViewTextBoxColumn:Width = 90.
+    /*  */
+    /* currPkoDataGridViewTextBoxColumn */
+    /*  */
+    this-object:currPkoDataGridViewTextBoxColumn:DataPropertyName = "currPko".
+    this-object:currPkoDataGridViewTextBoxColumn:HeaderText = "Текущий номер ПКО".
+    this-object:currPkoDataGridViewTextBoxColumn:Name = "currPkoDataGridViewTextBoxColumn".
+    this-object:currPkoDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:currPkoDataGridViewTextBoxColumn:Width = 90.
+    /*  */
+    /* currRkoDataGridViewTextBoxColumn */
+    /*  */
+    this-object:currRkoDataGridViewTextBoxColumn:DataPropertyName = "currRko".
+    this-object:currRkoDataGridViewTextBoxColumn:HeaderText = "Текущий номер РКО".
+    this-object:currRkoDataGridViewTextBoxColumn:Name = "currRkoDataGridViewTextBoxColumn".
+    this-object:currRkoDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:currRkoDataGridViewTextBoxColumn:Width = 90.
+    /*  */
+    /* statusDataGridViewTextBoxColumn */
+    /*  */
+    this-object:statusDataGridViewTextBoxColumn:DataPropertyName = "status_".
+    this-object:statusDataGridViewTextBoxColumn:HeaderText = "Статус".
+    this-object:statusDataGridViewTextBoxColumn:Name = "statusDataGridViewTextBoxColumn".
+    this-object:statusDataGridViewTextBoxColumn:ReadOnly = true.
+    this-object:statusDataGridViewTextBoxColumn:Width = 66.
+    /*  */
+    /* cashbookbrw */
+    /*  */
+    this-object:AcceptButton = this-object:buttonOk.
+    this-object:ClientSize = new System.Drawing.Size(1079, 637).
+    this-object:Controls:Add(this-object:labelObj).
+    this-object:Controls:Add(this-object:bDelObj).
+    this-object:Controls:Add(this-object:bLookupObj).
+    this-object:Controls:Add(this-object:bChangeObj).
+    this-object:Controls:Add(this-object:bAddObj).
+    this-object:Controls:Add(this-object:groupBox2).
+    this-object:Controls:Add(this-object:groupBox1).
+    this-object:Controls:Add(this-object:bDel).
+    this-object:Controls:Add(this-object:bLookup).
+    this-object:Controls:Add(this-object:bChange).
+    this-object:Controls:Add(this-object:bSelect).
+    this-object:Controls:Add(this-object:bMark).
+    this-object:Controls:Add(this-object:bAdd).
+    this-object:Controls:Add(this-object:cashbookRuleBrowse).
+    this-object:Controls:Add(this-object:bGoods).
+    this-object:Controls:Add(this-object:cashbookBrowse).
+    this-object:Controls:Add(this-object:buttonOk).
+    this-object:FormBorderStyle = System.Windows.Forms.FormBorderStyle:FixedDialog.
+    this-object:MaximizeBox = false.
+    this-object:MinimizeBox = false.
+    this-object:Name = "cashbookbrw".
+    this-object:ShowInTaskbar = false.
+    this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
+    this-object:Text = "Типы кассовых книг".
+    cast(this-object:cashbookBrowse, System.ComponentModel.ISupportInitialize):EndInit().
+    cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
+    cast(this-object:cashbookRuleBrowse, System.ComponentModel.ISupportInitialize):EndInit().
+    cast(this-object:bindingSource2, System.ComponentModel.ISupportInitialize):EndInit().
+    this-object:groupBox1:ResumeLayout(false).
+    this-object:groupBox2:ResumeLayout(false).
+    this-object:ResumeLayout(false).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
    end method. 
  
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void firm_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+	  define variable ref-rec as recid no-undo .
+    define variable ref-list as character no-undo.
+    
+		if this-object:rbFirmAll:Checked = true
+		then do :
+		  v-firmes = {&all} .
+		  v-firmChoosed = no .
+		end.
+    if this-object:rbFirmCurr:Checked = true
+    then do :
+      v-firmes = string(v-cntxt-host-code-obj) .
+      v-firmChoosed = no .
+    end.
+    if this-object:rbFirmSelect:Checked = true
+    then do :
+      if v-firmChoosed then return .
+      run ref/cli-all.w ( input parParentProc
+                     ,input "b-add,b-sel"
+                     ,input {&cmp}
+                     ,input ?
+                     ,input ?
+                     ,input ?
+                     ,input ?
+                     ,input ?
+                     ,output ref-list) .
+      if ref-list = "" then do:
+        this-object:rbFirmCurr:Checked = true .
+        v-firmes = string(v-cntxt-host-code-obj) .
+        return .
+      end.
+      ref-rec = integer( ref-list ).
+      FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
+      v-firmes = string(ub.clients.obj-code) .
+      v-firmChoosed = yes .
+    end . 
+    bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQuery, output mQueryRule).
+    bindingSource2:handle = mQueryRule .
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void status_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+		if this-object:rbStatAll:Checked = true then v-status = {&all} .
+    if this-object:rbStatCurr:Checked = true then v-status = {&current-status} .
+    if this-object:rbStatDel:Checked = true then v-status = {&deleted-status} .
+    bindingSource1:Handle = mCashBook:getquery(input v-status, input v-firmes, output mQuery, output mQueryRule).
+    bindingSource2:handle = mQueryRule .
+		return.
+
+	end method.
+
    method public void ShowModalDialog(  ):
       
       wait-for this-object:ShowDialog().
