@@ -28,30 +28,8 @@ define input  parameter I-id as int64 no-undo.
     v-brw = new ibs.th.ref.cashbookfrm ( iMode, i-id ).
     v-brw:parparentproc = parparentproc .
     /*v-brw:host-code =  i-cntxt-host-code-obj.*/
-    subscribe   to "getNextseq"     anywhere run-procedure "local-getNextseq".
     wait-for  v-brw:ShowDialog() .
-    unsubscribe to "getNextseq".
-  
- define variable mSeqSave as integer no-undo init ?.
-  procedure local-getNextseq:
-     define input  parameter iseqnamehist    as character no-undo.
-     define input  parameter idb-name_schema as character no-undo.
-     define output parameter oSeq            as int64 no-undo.
-     
-     if iseqnamehist ne "s-c-cashbook-chip-num"
-     then
-        oSeq = ?.
-      
-     else if mSeqSave = ?
-     then
-        assign 
-           mSeqSave = dynamic-next-value (iseqnamehist, idb-name_schema)
-           oSeq     = mSeqSave
-        .
-     else
-        oSeq = mSeqSave.
- end. 
- 
+    
     define variable v-err-msg as character no-undo .  
     catch exAppErrors as class Progress.Lang.AppError :
       v-err-msg = exAppErrors:ReturnValue .
@@ -75,6 +53,5 @@ define input  parameter I-id as int64 no-undo.
       message "LangError" skip(1) v-err-msg /*skip exAnyErrors:CallStack*/ view-as alert-box.
     end catch .
     finally:
-      session:error-stack-trace=no. 
       if valid-object(v-brw) then delete object v-brw no-error .
     end finally.  
