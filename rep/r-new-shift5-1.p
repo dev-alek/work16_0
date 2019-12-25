@@ -302,6 +302,7 @@ put stream OutStr-html unformatted
             temp-fin-doc.expense-other,
             temp-fin-doc.ost-end
       ).
+      
       ASSIGN
       v-col1 = v-col1 + temp-fin-doc.ost-begin 
       v-col3 = v-col3 + (temp-fin-doc.income-realiZ + temp-fin-doc.income-other) 
@@ -312,6 +313,27 @@ put stream OutStr-html unformatted
       .
       
     end.
+        put stream OutStr-html unformatted
+      substitute (
+      '<tr>
+                <td num="#0.00" style="text-align: right;">Итого:</td>
+                <td num="#0.00" style="text-align: right;">&1</td>
+                <td num="#0.00" style="text-align: right;">&2</td>
+                <td num="#0.00" style="text-align: right;">&3</td>
+                <td num="#0.00" style="text-align: right;">&4</td>
+                <td num="#0.00" style="text-align: right;">&5</td>
+                <td num="#0.00" style="text-align: right;">&6</td>
+            </tr>    
+                '
+           ,
+            v-col1,
+            v-col3,
+            v-col45,
+            v-col4,
+            v-col5,
+            v-col6
+      ).
+      
         run rep/wp-rub.p ( input (v-col1), output v-col1-propis,  output abbr ).
         run rep/wp-rub.p ( input (v-col3), output v-col3-propis,  output abbr ).
         run rep/wp-rub.p ( input (v-col45), output v-col45-propis, output abbr ).
