@@ -106,7 +106,7 @@ do
 
   mCashBook = new ibs.th.ref.cashbookstorage () .
       
-  o-uchet    = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 9) .
+  o-uchet    = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "uchet") .
   if o-uchet = "0"
     then v-uchet = "cal" .
   else v-uchet = "smen" .
@@ -252,9 +252,9 @@ do
   /*Проверить, что печатать*/
 
   mCashBook = new ibs.th.ref.cashbookstorage () .
-  o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 5) .
-  /*      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 6) .*/
-  /*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .*/
+  o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "ManagerPosition") .
+  /*      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "ManagerFIO") .*/
+  /*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BuhFIO") .*/
   delete object mCashBook no-error .
 
   case o-head-position:

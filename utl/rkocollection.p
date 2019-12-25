@@ -112,6 +112,7 @@ define variable mValue as character no-undo.
 define variable mType as character no-undo.
 
 define buffer buf_shift-obj for ub.shift-obj.
+
 { str/dia2auto.i }
 { rul/seterror.i }
 run str/diallog.w (parparentproc, this-procedure, 'str/get-chkf.p':U, (v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + string(0)), yes, '', 'Прием чеков с касс') .
@@ -330,7 +331,7 @@ define buffer buf_fin-doc        for ub.fin-doc.
 define buffer buf_sysconf        for ub.sysconf.
 define buffer buf_shift-staff    for ub.shift-staff.
 define buffer buf_chk-gds        for ub.chk-gds.
-
+mCashBook = new ibs.th.ref.cashbookstorage () .
 _main:
 do
 on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -636,7 +637,11 @@ define variable v-err               as logical    no-undo .
     define variable mSumAll as decimal no-undo.
     for each tt-cashBookOst where tt-cashBookOst.ostrasch > 0:
        mSumAll = mSumAll + tt-cashBookOst.ostrasch.
+       tt-cashBookOst.chang = yes.
     end. 
+    for each tt-cashBookOst where tt-cashBookOst.cashbookid eq 0:
+       tt-cashBookOst.chang = yes.
+    end.
     define variable msumInc as decimal no-undo.
     define variable msumInc-save as decimal no-undo.
     define variable mOsnbag as character no-undo.
@@ -744,8 +749,8 @@ define variable v-err               as logical    no-undo .
       define variable mCashbookName as character no-undo.     
       mCashbookName = string(ub.CashBook.id).                            
       if available CashBook then assign
-         v-real-obj-type = CashBook.CountCollect-type
-         v-real-obj-code = CashBook.CountCollect-code
+         v-real-obj-type = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "CountCollect-type") . 
+         v-real-obj-code = int(mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "CountCollect-code") ).
          mCashbookName = string(ub.CashBook.id) + " (" + CashBook.CashBookName + ")".
       .
       define variable v-doc-rec as recid no-undo .
@@ -937,9 +942,9 @@ define variable v-err               as logical    no-undo .
       tt-fin-doc.base-scale = 1
       .
       
-      mCashBook = new ibs.th.ref.cashbookstorage () .
-      o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 9) .
-      delete object mCashBook no-error .
+      
+      o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
+      
       
       
       if available ub.CashBook
@@ -1040,15 +1045,15 @@ define variable v-err               as logical    no-undo .
          .
       end.
       define variable mPin as character no-undo.
-      mCashBook = new ibs.th.ref.cashbookstorage () .
-      mPin   = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 13) .
-      delete object mCashBook no-error .
+      
+      mPin   = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "Pin") .
+      
       fin-doc-attr.attr-value = substitute("&1;&2;&3;&4;&5;&6"
                                           ,mOsnbag
-                                          ,CashBook.BankDepos-code
-                                          , CashBook.BankRecip-code
+                                          ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankDepos-code")
+                                          ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-code") 
                                           ,mPin
-                                          ,CashBook.SourceCode
+                                          ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "SourceCode")
                                           ,msumInc-save).
       define variable Vparentrec as character no-undo. 
       if Vparentrec eq ""
@@ -1147,6 +1152,10 @@ define variable v-err               as logical    no-undo .
                 ,input buf_fin-doc.fin-doc-code
               ) no-error.
 end. /*doe _main*/
+
+finally:
+    delete object mCashBook no-error .
+end finally.
 end procedure. /* proc-main */
 
 /*procedure load-ruleset-context :

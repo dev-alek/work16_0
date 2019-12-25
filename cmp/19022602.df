@@ -313,12 +313,16 @@ ADD FIELD "source-ref" OF "c-cashbook-head" AS character
   MAX-WIDTH 16
   ORDER 150
 
-ADD FIELD "code" OF "c-cashbook-head" AS integer 
-  FORMAT "->,>>>,>>9"
-  INITIAL "0"
+
+ADD FIELD "code" OF "c-cashbook-head" AS character
+  DESCRIPTION "Код атрибута"
+  FORMAT "x(20)"
   POSITION 18
-  MAX-WIDTH 4
+  INITIAL ""
+  LABEL "Код атрибута"
+  COLUMN-LABEL "Код атрибута"
   ORDER 160
+  MAX-WIDTH 40
 
 ADD INDEX "pi" ON "c-cashbook-head" 
   AREA "Primary_index"
@@ -508,15 +512,15 @@ ADD FIELD "CashBookID" OF "c-CashBookRule" AS int64
   ORDER 20
   MANDATORY
 
-ADD FIELD "Code" OF "c-CashBookRule" AS integer 
-  DESCRIPTION "Код"
-  FORMAT "->,>>>,>>9"
-  INITIAL "0"
-  LABEL "Код"
+ADD FIELD "Code" OF "c-CashBookRule" AS character
+  DESCRIPTION "Код атрибута"
+  FORMAT "x(20)"
   POSITION 4
-  MAX-WIDTH 4
-  COLUMN-LABEL "Код"
+  INITIAL ""
+  LABEL "Код атрибута"
+  COLUMN-LABEL "Код атрибута"
   ORDER 41
+  MAX-WIDTH 40
   MANDATORY
 
 ADD FIELD "RuleValue" OF "c-CashBookRule" AS character 
@@ -788,9 +792,12 @@ ADD FIELD "cashbookid" OF "c-CashBookRuleAttr" AS int64
   ORDER 120
   MANDATORY
 
-ADD FIELD "code" OF "c-CashBookRuleAttr" AS integer 
-  FORMAT "->,>>>,>>9"
-  INITIAL "0"
+ADD FIELD "code" OF "c-CashBookRuleAttr" AS character 
+  DESCRIPTION "Код атрибута"
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Код атрибута"
+  COLUMN-LABEL "Код атрибута"
   POSITION 17
   MAX-WIDTH 4
   ORDER 150
@@ -2108,14 +2115,14 @@ ADD FIELD "CashBookID" OF "CashBookRule" AS int64
   ORDER 20
   MANDATORY
 
-ADD FIELD "Code" OF "CashBookRule" AS integer 
-  DESCRIPTION "Код"
-  FORMAT "->,>>>,>>9"
-  INITIAL "0"
-  LABEL "Код"
+ADD FIELD "Code" OF "CashBookRule" AS character 
+  DESCRIPTION "Код атрибута"
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Код атрибута"
+  COLUMN-LABEL "Код атрибута"
   POSITION 4
   MAX-WIDTH 4
-  COLUMN-LABEL "Код"
   ORDER 41
   MANDATORY
 
@@ -2241,11 +2248,14 @@ ADD FIELD "cashbookid" OF "CashBookRuleAttr" AS int64
   ORDER 50
   MANDATORY
 
-ADD FIELD "code" OF "CashBookRuleAttr" AS integer 
-  FORMAT "->,>>>,>>9"
-  INITIAL "0"
+ADD FIELD "code" OF "CashBookRuleAttr" AS character
+  DESCRIPTION "Код атрибута"
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Код атрибута"
   POSITION 10
-  MAX-WIDTH 4
+  MAX-WIDTH 40
+  COLUMN-LABEL "Код атрибута"
   ORDER 80
   MANDATORY
 

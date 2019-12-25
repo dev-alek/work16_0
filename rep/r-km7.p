@@ -570,9 +570,9 @@ do on error undo, return error return-value  :
 /* ¬з€то из finfnoco.p, узнаетс€ фио и должность руководител€ */
       define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
       mCashBook = new ibs.th.ref.cashbookstorage () .
-      o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, 5) .
-      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, 6) .
-/*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .*/
+      o-head-position = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, "ManagerPosition") .
+      o-director      = mCashBook:getSinglRule(0 /* tt-fin-doc.CashBookId */, This_Object.obj-type, This_Object.obj-code, "ManagerFIO") .
+/*      o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BuhFIO") .*/
       delete object mCashBook no-error .
 
       case o-head-position:

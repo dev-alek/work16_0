@@ -388,10 +388,10 @@ do
     
     mCashBook = new ibs.th.ref.cashbookstorage () .
       
-    v-dpt-option    = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, 8) .
-    v-dpt-dflt-name = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, 10) .
-    v-dpt-dflt-type = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, 11) .
-    v-dpt-dflt-code = integer(mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, 12)) .
+    v-dpt-option    = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "Struct") .
+    v-dpt-dflt-name = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "DptName") .
+    v-dpt-dflt-type = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "DptType") .
+    v-dpt-dflt-code = integer(mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "DptCode")) .
     
     delete object mCashBook no-error .
     
@@ -625,11 +625,10 @@ do:
     AND buf_receiver.obj-code = (if p-mode = {&add-def}
     then p-receiver-code
     else tt-fin-doc.receiver-code)
-    NO-LOCK .
+    NO-LOCK  no-error.
   if not avail buf_receiver then 
   do:
-    undo, return error substitute("&1& 2& 3&4 Неверные параметры p-receiver-type или значение поля receiver-type &5&4" +
-      "И/ИЛИ p-receiver-code или значение поля receiver-code &6"
+    undo, return error substitute("&1 &2 &3&4 Неверные параметры p-receiver-type или значение поля receiver-type &5&4И/ИЛИ p-receiver-code или значение поля receiver-code &6"
       ,vss-workfile
       ,vss-revision
       ,vss-description
@@ -937,9 +936,9 @@ do:
     define variable p-by-petrol-goods as logical   no-undo .
     mCashBook = new ibs.th.ref.cashbookstorage () .
 
-    o-head-position = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 5) .
-    o-director      = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 6) .
-    o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 7) .
+    o-head-position = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "ManagerPosition") .
+    o-director      = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "ManagerFIO") .
+    o-snr-accnt     = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BuhFIO") .
       
     delete object mCashBook no-error .
 

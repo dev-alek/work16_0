@@ -22,7 +22,13 @@ class ibs.th.ref.cashbookstorage final:
   define property Msg as character
     get.
     private set.
-  
+   /* 
+  {ibs/th/ref/type.i
+    &NameType = AttrCode
+    &ListType = "PkoMask,RkoMask,currPko,currRko,ManagerPosition,ManagerFIO,BuhFIO,Struct,uchet,DptName,DptType,DptCode,Pin,BankDepos-host,BankDepos-code,CountCollect-code,CountCollect-type,SourceCode,BankRecip-host,BankRecip-code"
+    &Shift    =  1
+} 
+  */
   define variable mQuery as handle no-undo.
   define variable mQueryRule as handle no-undo.
   define variable objKeyRec as ibs.th.gbl.keyrec no-undo.
@@ -183,10 +189,77 @@ class ibs.th.ref.cashbookstorage final:
         ub.CashBook.RulePril = getRulePrilID(tt-cashbook.RulePril)
         ub.CashBook.RuleOsnPko = getRuleOsnID(tt-cashbook.RuleOsnPko) 
       .
+      updateAttrForcashbook (buffer tt-cashbook:handle).
       p-id = ub.CashBook.id .
   
   end method .
   
+  method public void ttCashbooksaturation (input iBuffer as handle):
+     define variable vBuffer  as handle no-undo.
+     define variable vField as handle no-undo.
+     define variable vitm  as integer no-undo.
+     define buffer buf_file  for _file.
+     define buffer buf_field for _field.
+      find first buf_file where buf_file._file-name eq "cashbook" no-lock.
+     
+     do vitm = 1 to vBuffer:num-fields:
+         vField = vBuffer:buffer-field(vItm).
+         find first buf_field where buf_field._file-recid eq recid(buf_file) 
+                                and buf_field._Field-Name eq vField:name
+         no-lock no-error.
+         if not available buf_field
+         then do:
+            find first ub.CashBookrule where ub.CashBookRule.CashBookID eq ub.CashBook.id
+                                         and ub.CashBookRule.Obj-type   eq {&by_all}
+                                         and ub.CashBookRule.Obj-code   eq 0
+                                         and ub.CashBookRule.Code       eq vField:name
+            no-lock no-error.
+            if  available  ub.CashBookrule
+            then do:
+               vField:buffer-value () =  ub.CashBookRule.RuleValue.             
+            end.                            
+         end.
+         
+      end.
+  end.
+  
+   method public void updateAttrForcashbook (input iBuffer as handle):
+     
+     define variable vField as handle no-undo.
+     define variable vitm  as integer no-undo.
+     define buffer buf_file  for _file.
+     define buffer buf_field for _field.
+      find first buf_file where buf_file._file-name eq "cashbook" no-lock.
+     
+     do vitm = 1 to iBuffer:num-fields:
+         vField = iBuffer:buffer-field(vItm).
+         find first buf_field where buf_field._file-recid eq recid(buf_file) 
+                                and buf_field._Field-Name eq vField:name
+         no-lock no-error.
+         if not available buf_field
+         then do:
+            find first ub.CashBookrule where ub.CashBookRule.CashBookID eq ub.CashBook.id
+                                         and ub.CashBookRule.Obj-type   eq {&by_all}
+                                         and ub.CashBookRule.Obj-code   eq 0
+                                         and ub.CashBookRule.Code       eq vField:name
+            no-lock no-error.
+            if not available  ub.CashBookrule
+            then do:
+               create ub.CashBookRule.
+               assign
+                  ub.CashBookRule.CashBookID = ub.CashBook.id
+                  ub.CashBookRule.Obj-type   = {&by_all}
+                  ub.CashBookRule.Obj-code   = 0
+                  ub.CashBookRule.Code       = vField:name
+                  ub.CashBookRule.Status_    = 0
+               .
+               
+            end.
+            ub.CashBookRule.RuleValue =  vField:buffer-value ().                          
+         end.
+         
+      end.
+  end.
   method public void insertDBobj (input dataset for ds-cashbookrule) :
     for each tt-cashbookrule :
       checkCashBookRule(buffer tt-cashbookrule) .
@@ -200,7 +273,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 1 /* Маска ПКО */
+        ub.cashbookrule.Code        = "PkoMask" /* Маска ПКО */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.PkoMask
       .
       
@@ -211,7 +284,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 2 /* Маска РКО */
+        ub.cashbookrule.Code        = "RkoMask" /* Маска РКО */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.RkoMask
       .
       
@@ -224,7 +297,7 @@ class ibs.th.ref.cashbookstorage final:
           ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
           ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
           ub.cashbookrule.Status_     = 0
-          ub.cashbookrule.Code        = 3 /* Текущий ПКО */
+          ub.cashbookrule.Code        = "currPko" /* Текущий ПКО */
           ub.cashbookrule.RuleValue   = tt-cashbookrule.currPko
         .
         
@@ -248,7 +321,7 @@ class ibs.th.ref.cashbookstorage final:
           ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
           ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
           ub.cashbookrule.Status_     = 0
-          ub.cashbookrule.Code        = 4 /* Текущий РКО */
+          ub.cashbookrule.Code        = "currRko" /* Текущий РКО */
           ub.cashbookrule.RuleValue   = tt-cashbookrule.currRko
         .
         objKeyRec:GenKeyRec ( input {&table_cashbookrule}
@@ -272,7 +345,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 5 /* Должность руководителя */
+        ub.cashbookrule.Code        = "ManagerPosition" /* Должность руководителя */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.ManagerPosition .
       .
       
@@ -283,7 +356,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 6 /* ФИО руководителя */
+        ub.cashbookrule.Code        = "ManagerFIO" /* ФИО руководителя */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.ManagerFIO 
       .
       
@@ -294,7 +367,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 7 /* ФИО бухгалтера */
+        ub.cashbookrule.Code        = "BuhFIO" /* ФИО бухгалтера */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.BuhFIO
       .
       
@@ -305,7 +378,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 8 /* Структурное подразделение */
+        ub.cashbookrule.Code        = "Struct" /* Структурное подразделение */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.Struct
       .
       
@@ -316,7 +389,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 9 /* Учёт ведется */
+        ub.cashbookrule.Code        = "uchet" /* Учёт ведется */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.uchet
       .
       
@@ -327,7 +400,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 10 /* Наименование структурного подразделения по умлочанию */
+        ub.cashbookrule.Code        = "DptName" /* Наименование структурного подразделения по умлочанию */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.DptName
       .
       
@@ -338,7 +411,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 11 /* Тип структурного подразделения по умлочанию */
+        ub.cashbookrule.Code        = "DptType" /* Тип структурного подразделения по умлочанию */
         ub.cashbookrule.RuleValue   = tt-cashbookrule.DptType
       .
       
@@ -349,7 +422,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 12 /* Код структурного подразделения по умлочанию */
+        ub.cashbookrule.Code        = "DptCode" /* Код структурного подразделения по умлочанию */
         ub.cashbookrule.RuleValue   = string(tt-cashbookrule.DptCode)
       .
       create ub.cashbookrule .
@@ -359,7 +432,7 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
         ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
         ub.cashbookrule.Status_     = 0
-        ub.cashbookrule.Code        = 13 /* ПИН */
+        ub.cashbookrule.Code        = "Pin" /* ПИН */
         ub.cashbookrule.RuleValue   = string(tt-cashbookrule.Pin)
       .
     end.  
@@ -376,9 +449,9 @@ class ibs.th.ref.cashbookstorage final:
       ub.CashBook.RuleOsnPko = getRuleOsnID(tt-cashbook.RuleOsnPko)
       ub.CashBook.RulePril = getRulePrilID(tt-cashbook.RulePril) 
       .
-      
+      updateAttrForcashbook(buffer tt-cashbook:handle).
   end method .
-  method private void CrRuleDBobj (buffer tt-cashbookrule for tt-cashbookrule  , icode as integer ) :
+  method private void CrRuleDBobj (buffer tt-cashbookrule for tt-cashbookrule  , icode as character  ) :
      find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID  = tt-cashbookrule.CashBookID 
                                                  and ub.CashBookRule.host-code   = tt-cashbookrule.host-code
                                                  and ub.CashBookRule.Obj-type    = tt-cashbookrule.obj-type
@@ -398,37 +471,37 @@ class ibs.th.ref.cashbookstorage final:
            ub.CashBookRule.Code        = icode
         .
      end.
-     ub.CashBookRule.RuleValue = if      icode eq 1 
+     ub.CashBookRule.RuleValue = if      icode eq "PkoMask" 
                                   then tt-cashbookrule.PkoMask 
-                                  else if icode eq 2 
+                                  else if icode eq "RkoMask" 
                                   then tt-cashbookrule.RkoMask 
-                                  else if icode eq 3 
+                                  else if icode eq "currPko" 
                                   then tt-cashbookrule.currPko 
-                                  else if icode eq 4 
+                                  else if icode eq "currRko" 
                                   then tt-cashbookrule.currRko
-                                  else if icode eq 5 
+                                  else if icode eq "ManagerPosition" 
                                   then getMgrPositionID(tt-cashbookrule.ManagerPosition)
-                                  else if icode eq 6 
+                                  else if icode eq "ManagerFIO" 
                                   then getMgrFioID(tt-cashbookrule.ManagerFIO)
-                                  else if icode eq 7 
+                                  else if icode eq "BuhFIO" 
                                   then getBuhFioID(tt-cashbookrule.BuhFIO)
-                                  else if icode eq 8 
+                                  else if icode eq "Struct" 
                                   then getStructID(tt-cashbookrule.Struct)
-                                  else if icode eq 9 
+                                  else if icode eq "uchet" 
                                   then getUchetID(tt-cashbookrule.uchet)
-                                  else if icode eq 10 
+                                  else if icode eq "DptName" 
                                   then tt-cashbookrule.DptName
-                                  else if icode eq 11 
+                                  else if icode eq "DptType" 
                                   then tt-cashbookrule.DptType
-                                  else if icode eq 12 
+                                  else if icode eq "DptCode" 
                                   then string (tt-cashbookrule.DptCode)
-                                  else if icode eq 13 
+                                  else if icode eq "Pin" 
                                   then string (tt-cashbookrule.Pin)
                                   else ""
                                   
                                   .
          define variable v-cashbookrule-key-rec as character no-undo.
-         if icode eq 3 or icode eq 4
+         if icode eq "currPko"  or icode eq "currRko"
          then do:
             objKeyRec:GenKeyRec ( input {&table_cashbookrule}
                                                ,input buffer ub.cashbookrule:handle
@@ -442,7 +515,7 @@ class ibs.th.ref.cashbookstorage final:
             objcount:SetCountValue(clients.db-num,
                                    "cashbookrule",
                                    v-cashbookrule-key-rec,
-                                   if icode eq 3 then "currPKO" else if icode eq 4 then "currRko" else "",
+                                   icode,
                                    int64(ub.cashbookrule.RuleValue)).
            
         end.                             
@@ -452,19 +525,19 @@ class ibs.th.ref.cashbookstorage final:
       checkCashBookRule(buffer tt-cashbookrule) .
       if Msg <> ""
       then return .
-      CrRuleDBobj(buffer tt-cashbookrule, 1).
-      CrRuleDBobj(buffer tt-cashbookrule, 2).
-      CrRuleDBobj(buffer tt-cashbookrule, 3).
-      CrRuleDBobj(buffer tt-cashbookrule, 4).
-      CrRuleDBobj(buffer tt-cashbookrule, 5).
-      CrRuleDBobj(buffer tt-cashbookrule, 6).
-      CrRuleDBobj(buffer tt-cashbookrule, 7).
-      CrRuleDBobj(buffer tt-cashbookrule, 8).
-      CrRuleDBobj(buffer tt-cashbookrule, 9).
-      CrRuleDBobj(buffer tt-cashbookrule,10).
-      CrRuleDBobj(buffer tt-cashbookrule,11).
-      CrRuleDBobj(buffer tt-cashbookrule,12).
-      CrRuleDBobj(buffer tt-cashbookrule,13).
+      CrRuleDBobj(buffer tt-cashbookrule, "PkoMask").
+      CrRuleDBobj(buffer tt-cashbookrule, "RkoMask").
+      CrRuleDBobj(buffer tt-cashbookrule, "currPko").
+      CrRuleDBobj(buffer tt-cashbookrule, "currRko" ).
+      CrRuleDBobj(buffer tt-cashbookrule, "ManagerPosition").
+      CrRuleDBobj(buffer tt-cashbookrule, "ManagerFIO").
+      CrRuleDBobj(buffer tt-cashbookrule, "BuhFIO" ).
+      CrRuleDBobj(buffer tt-cashbookrule, "Struct").
+      CrRuleDBobj(buffer tt-cashbookrule, "uchet").
+      CrRuleDBobj(buffer tt-cashbookrule,"DptName" ).
+      CrRuleDBobj(buffer tt-cashbookrule,"DptType").
+      CrRuleDBobj(buffer tt-cashbookrule,"DptCode").
+      CrRuleDBobj(buffer tt-cashbookrule,"Pin").
             
     end.                                        
   end method .
@@ -537,6 +610,7 @@ class ibs.th.ref.cashbookstorage final:
         tt-cashbook.stat = if tt-cashbook.status_ = 0 then "Текущий" else if tt-cashbook.status_ = 1 then "Удаленный" else "?"
         tt-cashbook.basic-kb = tt-cashbook.id eq 0
       .
+      ttCashbooksaturation(buffer tt-cashbook:handle).
     end.
   end method.
 
@@ -550,6 +624,7 @@ class ibs.th.ref.cashbookstorage final:
         tt-cashbook.stat = if tt-cashbook.status_ = 0 then "Текущий" else if tt-cashbook.status_ = 1 then "Удаленный" else "?"
         tt-cashbook.basic-kb = tt-cashbook.id eq 0
       .
+      ttCashbooksaturation(buffer tt-cashbook:handle).
     end.
   end method.
   
@@ -580,6 +655,7 @@ class ibs.th.ref.cashbookstorage final:
               .
               tt-cashbook.RulePril = getRulePrilName(integer(buf_cashbook.RulePril)) .
               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
+              ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   break by buf_cashbookrule.obj-type desc
                                                         by buf_cashbookrule.obj-code:
@@ -604,6 +680,7 @@ class ibs.th.ref.cashbookstorage final:
               .
               tt-cashbook.RulePril = getRulePrilName(integer(buf_cashbook.RulePril)) .
               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
+              ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.status_ = 0
                                                   break by buf_cashbookrule.obj-type desc
@@ -629,7 +706,7 @@ class ibs.th.ref.cashbookstorage final:
               .
               tt-cashbook.RulePril = getRulePrilName(integer(buf_cashbook.RulePril)) .
               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
-              
+              ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.status_ = 1
                                                   break by buf_cashbookrule.obj-type desc
@@ -660,7 +737,7 @@ class ibs.th.ref.cashbookstorage final:
               .
               tt-cashbook.RulePril = getRulePrilName(integer(buf_cashbook.RulePril)) .
               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
-              
+              ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.host-code = v-firm 
                                                   break by buf_cashbookrule.obj-type desc
@@ -688,7 +765,7 @@ class ibs.th.ref.cashbookstorage final:
               .
               tt-cashbook.RulePril = getRulePrilName(integer(buf_cashbook.RulePril)) .
               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
-              
+              ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.host-code = v-firm
                                                   and buf_cashbookrule.status_ = 0
@@ -715,7 +792,7 @@ class ibs.th.ref.cashbookstorage final:
               .
               tt-cashbook.RulePril = getRulePrilName(integer(buf_cashbook.RulePril)) .
               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
-              
+              ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.host-code = v-firm 
                                                   and buf_cashbookrule.status_ = 1
@@ -774,7 +851,7 @@ class ibs.th.ref.cashbookstorage final:
     
   end method.
   
-  method public character getSinglRule (input pCashBookId as int64, input pObjType as character, input pObjCode as integer, input pRuleCode as integer) :
+  method public character getSinglRule (input pCashBookId as int64, input pObjType as character, input pObjCode as integer, input pRuleCode as character ) :
     find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = pCashBookId
                                          and ub.CashBookRule.Obj-type   = pObjType
                                          and ub.CashBookRule.Obj-code   = pObjCode
@@ -796,7 +873,15 @@ class ibs.th.ref.cashbookstorage final:
                                            no-error.  
       if not available ub.CashBookRule
       then do :
-        return ? .
+         find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = pCashBookId
+                                              and ub.CashBookRule.Obj-type   = {&by_all}
+                                              and ub.CashBookRule.Obj-code   = 0
+                                              and ub.CashBookRule.Code       = pRuleCode
+                                              no-error.  
+         if not available ub.CashBookRule
+         then do :
+            return ? .
+         end.
       end.                                                             
     end.
     
@@ -807,15 +892,15 @@ class ibs.th.ref.cashbookstorage final:
   method private void fill_cashbookrule (buffer buf_cashbookrule for ub.cashbookrule) :
     define variable v-cashbookrule-key-rec as character no-undo.
     case buf_cashbookrule.code :
-      when 1 /*маска ПКО*/
+      when "PkoMask" /*маска ПКО*/
       then do :
         tt-cashbookrule.PkoMask = buf_cashbookrule.RuleValue .
       end.
-      when 2 /*маска РКО*/
+      when "RkoMask" /*маска РКО*/
       then do :
         tt-cashbookrule.RkoMask = buf_cashbookrule.RuleValue .
       end.
-      when 3 /*маска ПКО*/
+      when "currPko" /*маска ПКО*/
       then do :
         objKeyRec:GenKeyRec ( input {&table_cashbookrule}
                                             ,input buffer buf_cashbookrule:handle
@@ -833,7 +918,7 @@ class ibs.th.ref.cashbookstorage final:
                                                                 "currPKO")
                                          ). 
       end.
-      when 4 /*маска РКО*/
+      when "currRko" /*маска РКО*/
       then do :
          objKeyRec:GenKeyRec ( input {&table_cashbookrule}
                                             ,input buffer buf_cashbookrule:handle
@@ -850,39 +935,39 @@ class ibs.th.ref.cashbookstorage final:
                                                                  "currRko")) .
         
       end.
-      when 5 /*Должность руководителя*/
+      when "ManagerPosition" /*Должность руководителя*/
       then do :
         tt-cashbookrule.ManagerPosition = getMgrPositionName(buf_cashbookrule.RuleValue) .
       end.
-      when 6 /*Фио руководителя*/
+      when "ManagerFIO" /*Фио руководителя*/
       then do :
         tt-cashbookrule.ManagerFIO = getMgrFioName(buf_cashbookrule.RuleValue) .
       end.
-      when 7 /*Фио бухгалтера*/
+      when "BuhFIO" /*Фио бухгалтера*/
       then do :
         tt-cashbookrule.BuhFIO = getBuhFioName(buf_cashbookrule.RuleValue) .
       end.
-      when 8 /*Структурное подразделение*/
+      when "Struct" /*Структурное подразделение*/
       then do :
         tt-cashbookrule.Struct = getStructName(integer(buf_cashbookrule.RuleValue)) .
       end.
-      when 9 /*Учёт ведётся*/
+      when "uchet" /*Учёт ведётся*/
       then do :
         tt-cashbookrule.uchet = getUchetName(integer(buf_cashbookrule.RuleValue)) .
       end.
-      when 10 /*Наименование структурного подразделения по умолчанию*/
+      when "DptName" /*Наименование структурного подразделения по умолчанию*/
       then do :
         tt-cashbookrule.DptName = buf_cashbookrule.RuleValue .
       end.
-      when 11 /*Тип структурного подразделения по умолчанию*/
+      when "DptType" /*Тип структурного подразделения по умолчанию*/
       then do :
         tt-cashbookrule.DptType = buf_cashbookrule.RuleValue .
       end.
-      when 12 /*Код структурного подразделения по умолчанию*/
+      when "DptCode" /*Код структурного подразделения по умолчанию*/
       then do :
         tt-cashbookrule.DptCode = integer(buf_cashbookrule.RuleValue) no-error .
       end.
-      when 13 /*Код структурного подразделения по умолчанию*/
+      when "Pin" /*Код структурного подразделения по умолчанию*/
       then do :
         tt-cashbookrule.Pin = buf_cashbookrule.RuleValue .
       end.

@@ -1890,8 +1890,8 @@ define variable vCashBook as class ibs.th.ref.cashbookstorage no-undo.
      end. 
   vCashBook = new ibs.th.ref.cashbookstorage () .
       
-  vmask = vCashBook:getSinglRule(tt-fin-doc.cashbookId, p-obj-type,p-obj-code, 1) .
-/*  mask-rko = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 2) .*/
+  vmask = vCashBook:getSinglRule(tt-fin-doc.cashbookId, p-obj-type,p-obj-code, "RkoMask") .
+
   
   delete object vCashBook no-error .
   
@@ -1901,7 +1901,7 @@ define variable vCashBook as class ibs.th.ref.cashbookstorage no-undo.
   find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
                                               and ub.CashBookRule.Obj-type = p-obj-type
                                               and ub.CashBookRule.Obj-code = p-obj-code
-                                           and ub.CashBookRule.Code = 4
+                                           and ub.CashBookRule.Code = "currRko"
                                            no-error .
   if not available ub.CashBookRule
   then do :
@@ -1910,7 +1910,7 @@ define variable vCashBook as class ibs.th.ref.cashbookstorage no-undo.
         ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
         ub.CashBookRule.Obj-type = p-obj-type    
         ub.CashBookRule.Obj-code = p-obj-code    
-        ub.CashBookRule.Code = 4    
+        ub.CashBookRule.Code = "currRko"    
         ub.CashBookRule.Status_ = 0
         ub.CashBookRule.RuleValue = "1"                       
      .

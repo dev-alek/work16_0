@@ -34,6 +34,7 @@ run day-begin-fact-order in this-procedure
      ,output mFactOrder
     ).
 define variable mlisttype as character no-undo.
+
 define variable mi as integer no-undo.
 define variable mOldYear as integer no-undo.
 define variable mcount as integer no-undo.
@@ -58,7 +59,7 @@ for each cashbook where CashBook.id eq ICashbook no-lock:
       find first CashBookRule where CashBookRule.CashBookID eq cashbook.id
                                 and CashBookRule.Obj-type   eq v-cntxt-obj-type
                                 and CashBookRule.Obj-code   eq v-cntxt-obj-code
-                                and CashBookRule.Code       eq mi
+                                and CashBookRule.Code       eq entry(mi,"PkoMask,RkoMask")
       no-lock no-error.
       if available CashBookRule
       then
@@ -93,7 +94,7 @@ for each cashbook where CashBook.id eq ICashbook no-lock:
          find first CashBookRule where CashBookRule.CashBookID eq cashbook.id
                                 and CashBookRule.Obj-type   eq v-cntxt-obj-type
                                 and CashBookRule.Obj-code   eq v-cntxt-obj-code
-                                and CashBookRule.Code       eq mi + 2
+                                and CashBookRule.Code       eq entry(mi,"currPko,currRko") 
       no-lock no-error.
          objKeyRec:GenKeyRec ( input {&table_cashbookrule}
                                             ,input buffer ub.cashbookrule:handle

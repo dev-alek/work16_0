@@ -901,8 +901,8 @@ do on error undo, return error return-value  :
                   if available buf_fin-doc then do :
                     mCashBook = new ibs.th.ref.cashbookstorage () .
       
-                    o-head-position = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 5) .
-                    o-director      = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 6) .
+                    o-head-position = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "ManagerPosition") .
+                    o-director      = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "ManagerFIO") .
                     
                     delete object mCashBook no-error .
                      

@@ -343,9 +343,9 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
 
   mCashBook = new ibs.th.ref.cashbookstorage () .
   run utl/fin-doc-nom.p(parparentproc,int64(entry(ii,p-cashbook,{&delim-cmd})),x-Date-Start). 
-  o-head-position = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, 5) .
-  o-director      = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, 6) .
-  o-snr-accnt     = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, 7) .
+  o-head-position = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, "ManagerPosition") .
+  o-director      = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, "ManagerFIO") .
+  o-snr-accnt     = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, "BuhFIO") .
       
   delete object mCashBook no-error .
 

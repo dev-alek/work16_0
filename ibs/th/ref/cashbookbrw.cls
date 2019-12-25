@@ -188,7 +188,7 @@ class ibs.th.ref.cashbookbrw inherits Form :
       find first cashbookrule where CashBookRule.CashBookID eq v-id
                                 and CashBookRule.Obj-type   eq v-obj-type
                                 and CashBookRule.Obj-code   eq v-obj-code
-                                and CashBookRule.Code       eq 3
+                                and CashBookRule.Code       eq "currPko"
       no-lock no-error.
       if available cashbookrule
       then do:
@@ -240,7 +240,7 @@ class ibs.th.ref.cashbookbrw inherits Form :
       find first cashbookrule where CashBookRule.CashBookID eq v-id
                                 and CashBookRule.Obj-type   eq v-obj-type
                                 and CashBookRule.Obj-code   eq v-obj-code
-                                and CashBookRule.Code       eq 4
+                                and CashBookRule.Code       eq "currRko"
       no-lock no-error.
       if available cashbookrule
       then do:

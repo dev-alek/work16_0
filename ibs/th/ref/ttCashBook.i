@@ -13,9 +13,16 @@
   ----------------------------------------------------------------------*/
 
 define temp-table tt-cashbook like ub.cashbook
-  field stat      as character
-  field mark      as character
-  field basic-kb  as logical
+  field stat               as character
+  field mark               as character
+  field basic-kb           as logical
+  field CountCollect-type  as character
+  field SourceCode         as character
+  field BankRecip-host     as integer
+  field BankRecip-code     as integer
+  field BankDepos-host     as integer
+  field BankDepos-code     as integer
+  field CountCollect-code  as integer
 .
 
 define dataset ds-cashbook for tt-cashbook .

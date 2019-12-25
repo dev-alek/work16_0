@@ -112,7 +112,7 @@ on error undo, return error return-value
   
   mCashBook = new ibs.th.ref.cashbookstorage () .
       
-  o-uchet    = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 9) .
+  o-uchet    = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "uchet") .
   if o-uchet = "0"
   then v-uchet = "cal" .
   else v-uchet = "smen" .

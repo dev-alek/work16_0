@@ -150,18 +150,19 @@ on error undo, return error return-value
 define variable v-label-param as character no-undo .
   v-label-param =
    "RuleValue"     + {&delim-par} + 
-       ( if  current_c-cashbookrule.Code eq 1 then "Маска ПКО"  
-    else if  current_c-cashbookrule.Code eq 2 then "Маска РКО"
-    else if  current_c-cashbookrule.Code eq 3 then "Текущий ПКО"
-    else if  current_c-cashbookrule.Code eq 4 then "Текущий РКО"
-    else if  current_c-cashbookrule.Code eq 5 then "Должность руководителя"
-    else if  current_c-cashbookrule.Code eq 6 then "ФИО руководителя "
-    else if  current_c-cashbookrule.Code eq 7 then "ФИО бухгалтера"
-    else if  current_c-cashbookrule.Code eq 8 then "Структурное подразделение"
-    else if  current_c-cashbookrule.Code eq 9 then "Учёт ведется"
-    else if  current_c-cashbookrule.Code eq 10 then "Наименование структурного подразделения по умлочанию"
-    else if  current_c-cashbookrule.Code eq 11 then "Тип структурного подразделения по умлочанию"
-    else if  current_c-cashbookrule.Code eq 12 then "Код структурного подразделения по умлочанию"
+       ( if  current_c-cashbookrule.Code eq "PkoMask" then "Маска ПКО"  
+    else if  current_c-cashbookrule.Code eq "RkoMask" then "Маска РКО"
+    else if  current_c-cashbookrule.Code eq "currPko" then "Текущий ПКО"
+    else if  current_c-cashbookrule.Code eq "currRko" then "Текущий РКО"
+    else if  current_c-cashbookrule.Code eq "ManagerPosition" then "Должность руководителя"
+    else if  current_c-cashbookrule.Code eq "ManagerFIO" then "ФИО руководителя "
+    else if  current_c-cashbookrule.Code eq "BuhFIO" then "ФИО бухгалтера"
+    else if  current_c-cashbookrule.Code eq "Struct" then "Структурное подразделение"
+    else if  current_c-cashbookrule.Code eq "uchet" then "Учёт ведется"
+    else if  current_c-cashbookrule.Code eq "DptName" then "Наименование структурного подразделения по умлочанию"
+    else if  current_c-cashbookrule.Code eq "DptType" then "Тип структурного подразделения по умлочанию"
+    else if  current_c-cashbookrule.Code eq "DptCode" then "Код структурного подразделения по умлочанию"
+    else if  current_c-cashbookrule.Code eq "Pin" then "Пин"
     else string(current_c-cashbookrule.Code) )
     
     

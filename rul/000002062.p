@@ -1370,7 +1370,7 @@ define variable v-err               as logical    no-undo .
       end.
       
       mCashBook = new ibs.th.ref.cashbookstorage () .
-      o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 9) .
+      o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
       delete object mCashBook no-error .
       
       find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.CashBookId no-error .

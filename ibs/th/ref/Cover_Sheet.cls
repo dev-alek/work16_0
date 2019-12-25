@@ -279,14 +279,29 @@ class ibs.th.ref.Cover_Sheet inherits Form:
           else 
           do:  
             this-object:source_rec:Text = "Прочие поступления".
-          end.  
-          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = buf_cashbook.BankDepos-code and find_fin-bank.host-code = buf_cashbook.BankDepos-host No-ERROR.
+          end.
+          define variable mCashBook as class ibs.th.ref.cashbookstorage NO-UNDO.
+          mCashBook = new  ibs.th.ref.cashbookstorage().
+          
+          define variable vBankDepos-host as integer  no-undo.
+          define variable vBankDepos-code as integer no-undo.
+          define variable vBankRecip-host as integer  no-undo.
+          define variable vBankRecip-code as integer no-undo.
+         
+          vBankDepos-host = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankDepos-host")) .
+          vBankDepos-code = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankDepos-code") ).
+          vBankRecip-host = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankRecip-host")) .
+          vBankRecip-code = int(mCashBook:getSinglRule(v-CashBookId, {&by_all}, 0, "BankRecip-code") ).
+          delete object mCashBook no-error.
+          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = vBankDepos-code 
+                                             and find_fin-bank.host-code = vBankDepos-host No-ERROR.
           if avail find_fin-bank then 
           do:
             this-object:deposit_bank:Text = find_fin-bank.bank-name .
             v-deposit_bank = find_fin-bank.code-bank .
           end. 
-          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = buf_cashbook.BankRecip-code and find_fin-bank.host-code = buf_cashbook.BankRecip-host No-ERROR.
+          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = vBankRecip-code 
+                                             and find_fin-bank.host-code = vBankRecip-host No-ERROR.
           if avail find_fin-bank then 
           do:
             this-object:bank_recip:Text = find_fin-bank.bank-name .
@@ -299,7 +314,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         ub.CashBookRule.Obj-code   =  v-cntxt-obj-code and
         ub.CashBookRule.Obj-type   = string(v-cntxt-obj-type) and
         ub.cashbookrule.Status_     = 0 and
-        ub.cashbookrule.Code        = 13 /* ПИН */:
+        ub.cashbookrule.Code        = "Pin" /* ПИН */:
            
         this-object:pin02:Text = ub.cashbookrule.RuleValue .
         end.
