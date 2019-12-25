@@ -224,13 +224,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_bar-code     for ub.bar-code .
     define buffer buf_goods        for ub.goods .
     define buffer buf_chk-gds-attr for ub.chk-gds-attr .
-    define buffer buf_ext-classif  for ub.ext-classif .
     define buffer buf_chk-pay      for ub.chk-pay .
     define buffer buf_chk-pay-attr for ub.chk-pay-attr .
     define buffer buf_cash-pay-attr for ub.cash-pay-attr . 
     define buffer buf_chk-discnt   for ub.chk-discnt .
     define buffer bf_chk-discnt    for ub.chk-discnt .
     define buffer buf_chk-gds-pay  for ub.chk-gds-pay .
+    define buffer buf_OperServ     for ub.OperServ .
     define buffer buf_cash-desk-attr for ub.cash-desk-attr .
     define buffer buf_clients      for ub.clients .
     define buffer buf_cash-desk    for ub.cash-desk .
@@ -499,15 +499,18 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
             insw:write-data-element (  "vat",       string(buf_chk-gds.VAT-sum-rubl)  ) .
         end .
         
-        /* обязательность 0-1
-           «Оператор» это оператор сотовой связи. Берется из атрибута строки чека с кодом oss-code.
+        /* «Оператор» это оператор сотовой связи. Берется из атрибута строки чека с кодом oss-code.
            Название подтягивается из соответствующего справочника.
         */
         find first buf_chk-gds-attr no-lock
              where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
                and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
-               and buf_chk-gds-attr.attr-code = 'oss-code' no-error .
+               and buf_chk-gds-attr.attr-code = 'oss-code':U no-error .
         if available buf_chk-gds-attr then do:
+          /* 20/II-2019  В выгрузке чеков изменить получение кода ОСС.
+                         Брать из нового справочника и выгружать туда внешний код ОСС.
+             28/II-2019  Надо оставить operator-code operator-name и туда класть наш ID и имя из справочника ОСС.
+                                   
           insw:write-data-element (  "operator-code",  buf_chk-gds-attr.attr-value  ) . /* Код оператора(эмитента) (Строка) */
           v-key-one = integer (buf_chk-gds-attr.attr-value) no-error .
           find first buf_ext-classif no-lock
@@ -515,6 +518,25 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
                  and buf_ext-classif.Key#_One        = v-key-one no-error .
           if available buf_ext-classif then
             insw:write-data-element (  "operator-name",  entry(1, buf_ext-classif.charkey_two, {&delim-par})  ) . /* Наименование оператора(эмитента) (Строка) */
+          */
+          v-key-one = integer (buf_chk-gds-attr.attr-value) no-error .
+          find first buf_OperServ no-lock where buf_OperServ.id = v-key-one no-error .
+          if available buf_OperServ then do :
+            /* @NOTE OperServ.ext-code всегда равен ext-code его кассовой книги */
+            insw:write-data-element (  "operator-code",  buf_OperServ.ext-code  ) . /* Код оператора(эмитента) (Строка) */
+            insw:write-data-element (  "operator-name",  buf_OperServ.OSname    ) . /* Наименование оператора(эмитента) (Строка) */
+          end .
+        end .
+
+        /* 15/II-2019  номер сертификата «Автопомощь» */
+        find first buf_chk-gds-attr no-lock
+             where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
+               and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
+               and buf_chk-gds-attr.attr-code = "agent-gd-code":U no-error .
+        if available buf_chk-gds-attr then do:
+          /* сертификаты автопомощи (для товаров pay-agent-gd):
+             строка через запятую, собранная из CBCBarcode_ с кассы */
+          insw:write-data-element (  "srt-BC",  buf_chk-gds-attr.attr-value  ) . /* Полный штрих-код сертификата БП «Автопомощь» (Строка) */
         end .
         
         /* 17/XI-2017 Добавляем поле «price» (цена до применения скидок) в секции «chk-gd». */
