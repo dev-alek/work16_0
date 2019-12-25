@@ -4541,7 +4541,7 @@ procedure restore-s-casm :
     &scoped-define seq-field-name  sea-code
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
-    &undefine not-include-in-seq-records
+
 
     {&update-sequence}
   end.
