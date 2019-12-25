@@ -39,6 +39,7 @@ define variable vss-description as character no-undo init "Печать платежа  типа 
 { gbl/db-attr.i }
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
+{ rep/html-conv.i }
 
 define temp-table tt-coins no-undo XML-NODE-NAME "coins" serialize-name  "coins"
   field id       as decimal
@@ -48,14 +49,14 @@ define temp-table tt-coins no-undo XML-NODE-NAME "coins" serialize-name  "coins"
 
 define temp-table tt-banknots no-undo XML-NODE-NAME "banknots" serialize-name  "banknots"
   field id       as integer
-  field qnty     as integer
-  field sum-qnty as integer
+  field qnty     as decimal
+  field sum-qnty as decimal
   index pi id .
         
 define temp-table tt-monets no-undo
   field id       as decimal
-  field qnty     as integer
-  field sum-qnty as integer
+  field qnty     as decimal
+  field sum-qnty as decimal
   index pi id .
 
 define dataset ds-banknots XML-NODE-NAME "money" serialize-name  "money" for tt-banknots,
@@ -96,6 +97,7 @@ define variable v-recip-bank          as character no-undo .
 define variable v-recip-bank_name     as character no-undo .
 define variable v-recip-bank_bik      as character no-undo .
 define variable v-source              as character no-undo .
+define variable v-source1             as character no-undo .
 define variable v-total-rubl          as character no-undo .
 define variable v-total-kop           as character no-undo .
 define variable v-ii                  as character no-undo .
@@ -105,12 +107,12 @@ define variable v-ok-cashGB           as logical   no-undo .
 define variable v-ok-cashUB           as logical   no-undo .
 define variable v-sum-cashGB          as decimal   no-undo .
 define variable v-sum-cashUB          as decimal   no-undo .
-define variable v-sum                 as decimal   no-undo .
+define variable v-sum                 as character no-undo .
 define variable v-simvol              as character no-undo .
 define variable v-name-titul          as character no-undo .
 define variable v-name-titul1         as character no-undo .
 define variable v-cashier             as character no-undo .
- 
+define variable v-decimal             as decimal   no-undo . 
 define stream Out-Stream.
 define stream OutStr-html.
 
@@ -150,30 +152,34 @@ do
     
     find first ub.fin-doc no-lock where ub.fin-doc.fin-doc-code = ub.fin-doc-attr.fin-doc-code and ub.fin-doc.host-code = ub.fin-doc-attr.host-code no-error .
     v-shift-date = ub.fin-doc.shift-date .
-    
+
     for each buf_fin-doc no-lock where buf_fin-doc.host-code = ub.fin-doc.host-code and buf_fin-doc.shift-date = ub.fin-doc.shift-date and buf_fin-doc.shift-name = ub.fin-doc.shift-name
       and buf_fin-doc.obj-code = ub.fin-doc.obj-code and buf_fin-doc.obj-type = ub.fin-doc.obj-type,
-      each buf_fin-doc-attr no-lock where buf_fin-doc-attr.attr-code = "pre-vedom" and buf_fin-doc-attr.host-code = buf_fin-doc.host-code and entry(1,buf_fin-doc-attr.attr-value,";") = v-num-bag and
+      first buf_fin-doc-attr no-lock where buf_fin-doc-attr.attr-code = "pre-vedom" and buf_fin-doc-attr.host-code = buf_fin-doc.host-code and entry(1,buf_fin-doc-attr.attr-value,";") = v-num-bag and
       buf_fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code:
       if buf_fin-doc.CashBookId <> 0 then 
       do:
         v-ok-cashUB = yes .
-        v-sum-cashUB = v-sum-cashUB + decimal(entry(6,buf_fin-doc-attr.attr-value,";")) . 
+        v-decimal =  decimal(entry(6,buf_fin-doc-attr.attr-value,";")) .
+        v-sum-cashUB = v-sum-cashUB + v-decimal .
       end.  
       else 
       do:
         v-ok-cashGB = yes .
-        v-sum-cashGB = v-sum-cashUB + decimal(entry(6,buf_fin-doc-attr.attr-value,";")) . 
+        v-decimal =  decimal(entry(6,buf_fin-doc-attr.attr-value,";")) .
+        v-sum-cashGB = v-sum-cashGB + v-decimal .
       end.  
       v-fin-doc-list = v-fin-doc-list + ";" + string(buf_fin-doc-attr.fin-doc-code) .
-      v-total-sum = v-total-sum + decimal(entry(6,buf_fin-doc-attr.attr-value,";")) .
-      v-source = v-source + " , " + entry(5,buf_fin-doc-attr.attr-value,";") .
+      v-total-sum = v-total-sum + buf_fin-doc.sum-doc .
       v-ii = entry(3,buf_fin-doc-attr.attr-value,";") .
       if lookup (v-ii,v-bank-code,";") = 0 then 
       do: 
         v-bank-code = v-bank-code + ";" + entry(3,buf_fin-doc-attr.attr-value,";") .
       end.
     end.  
+    if v-ok-cashGB then v-source = "Поступления от продажи товаров" .
+    if v-ok-cashUB then v-source1 = "Прочие поступления" .
+    v-source = v-source + ", " + v-source1 .
     FIND last ub.shift-staff No-LOCK WHERE
       ub.shift-staff.obj-type   = ub.fin-doc.obj-type AND
       ub.shift-staff.obj-code   = ub.fin-doc.obj-code AND
@@ -188,7 +194,7 @@ do
 
   v-bank-code = trim (v-bank-code,";") .
   v-fin-doc-list = trim(v-fin-doc-list,";") .
-  v-source = trim(v-source,",") .
+  v-source = trim(v-source,", ") .
   do ii = 0 to num-entries (v-bank-code,";"):
     for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(entry (ii,v-bank-code,";")) and ub.fin-bank.host-code = p-host-code:
       v-schet = if v-schet <> "" then v-schet + " , " + ub.fin-bank.cor-acc else ub.fin-bank.cor-acc .
@@ -199,11 +205,14 @@ do
   v-total-kop = string((v-total-sum - truncate(v-total-sum, 0)) * 100, "99":U) .
 
   do ii = 0 to num-entries(v-fin-doc-list,";"):
+    empty temp-table tt-banknots .
+    empty temp-table tt-coins .
     for first buf_fin-doc-attr no-lock where buf_fin-doc-attr.fin-doc-code = integer(entry(ii,v-fin-doc-list,";")) and buf_fin-doc-attr.host-code = p-host-code
       and buf_fin-doc-attr.attr-code = "cover_sheet":
       CSJson = buf_fin-doc-attr.attr-value .
       dataset ds-banknots:handle:read-json ("longchar",CSJson) .
       for each tt-banknots no-lock where tt-banknots.qnty <> 0:
+
         find first tt-monets exclusive-lock where tt-monets.id = tt-banknots.id no-error .
         if not available (tt-monets) then 
         do:
@@ -522,7 +531,7 @@ do
       '<td colspan="10" style="text-align: left;">От кого</td>' skip
       '<td colspan="57" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + v-firm + " " + v-obj-name + '</td>' skip
       '<td style="border-bottom: 1px solid black; border-top: 1px solid black;"></td>' skip
-      '<td colspan="9" style="text-align: right; border-bottom: 1px solid black; border-top: 1px solid black;">счет №</td>' skip
+      '<td colspan="9" style="border-bottom: 1px solid black; border-top: 1px solid black;">счет №</td>' skip
       '<td colspan="43" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black; border-top: 1px solid black;">' + v-debt-schet + '</td>' skip
       '<td colspan="37" style="text-align: right; border-left: 1px solid black; border-top: 1px solid black; border-right: 1px solid black;"></td>' skip
       '</tr>' skip .
@@ -543,7 +552,7 @@ do
       '<td></td>' skip
       '<td colspan="52" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + v-firm + '</td>' skip
       '<td style="border-bottom: 1px solid black; border-top: 1px solid black;"></td>' skip
-      '<td colspan="9" style="text-align: right; border-bottom: 1px solid black;">счет №</td>' skip
+      '<td colspan="9" style="border-bottom: 1px solid black;">счет №</td>' skip
       '<td colspan="43" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black; border-top: 1px solid black;">' + v-credit-schet + '</td>' skip
       '<td colspan="37" style="text-align: right; border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
       '</tr>' skip .
@@ -582,12 +591,12 @@ do
           
     if v-ok-cashGB then 
     do: 
-      v-sum = v-sum-cashGB .
+      v-sum = string(v-sum-cashGB) .
       v-simvol = "02" .
     end.
     else 
     do:
-      v-sum = v-sum-cashUB .
+      v-sum = string(v-sum-cashUB) .
       v-simvol = "32" .
     end.        
     put stream OutStr-html unformatted
@@ -602,12 +611,12 @@ do
 
     if v-ok-cashUB and v-simvol <> "32" then 
     do: 
-      v-sum = v-sum-cashUB .
+      v-sum = string(v-sum-cashUB) .
       v-simvol = "32" .
     end.
     else 
     do:
-      v-sum = 0 .
+      v-sum = "" .
       v-simvol = "" .
     end.              
  
@@ -656,9 +665,9 @@ do
 
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td colspan="122" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
+      '<td colspan="130" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
       '<td colspan="6">руб.</td>' skip
-      '<td colspan="23" style="text-align: center; border-bottom: 1px solid black;">' + v-total-kop + '</td>' skip
+      '<td colspan="15" style="text-align: center; border-bottom: 1px solid black;">' + v-total-kop + '</td>' skip
       '<td colspan="6">коп.</td>' skip
       '<td></td>' skip
       '</tr>' skip .
@@ -668,9 +677,9 @@ do
       '<td></td>' skip
       '<td colspan="20"></td>' skip
       '<td></td>' skip
-      '<td colspan="108" style="text-align: center;">(цифрами)</td>' skip
+      '<td colspan="108" style="text-align: center;"></td>' skip
       '<td colspan="6"></td>' skip
-      '<td colspan="15" style="text-align: center;"></td>' skip
+      '<td colspan="15" style="text-align: center;">(цифрами)</td>' skip
       '<td colspan="6"></td>' skip
       '<td></td>' skip
       '</tr>' skip .
@@ -1072,7 +1081,6 @@ do
       '<tr>' skip
       '<td colspan="158" ></td>' skip
       '</tr>' skip
-      '</thead>'
       .
     put stream OutStr-html unformatted
       '<tr>' skip
@@ -1094,15 +1102,14 @@ do
     for each tt-monets by tt-monets.id:
       put stream OutStr-html unformatted
         '<tr>' skip
-        '<td colspan="53" style="text-align: center; font-weight: bold;">' + string(tt-monets.id) + '</td>' skip
-        '<td colspan="52" style="text-align: center; font-weight: bold;">' + string(tt-monets.qnty) + '</td>' skip
-        '<td colspan="53" style="text-align: center; font-weight: bold;">' + string(tt-monets.sum-qnty) + '</td>' skip
+        '<td colspan="53" text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-monets.id,"->>>>>>>>>>>9.99",2) + '" style="text-align: center; font-weight: bold; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-monets.id,"->>>>>>>>>>>9.99",2) + '</td>' skip
+        '<td colspan="52" style="text-align: center; font-weight: bold; border: 1px solid black;">' + string(tt-monets.qnty) + '</td>' skip
+        '<td colspan="53" text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-monets.sum-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: center; font-weight: bold; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-monets.sum-qnty,"->>>>>>>>>>>9.99",2) + '</td>' skip
         '</tr>' skip
         .
     end.
     end.
     put stream OutStr-html unformatted
-      '<thead>' skip
       '<tr><td colspAN="158"></td></tr>' skip
       '<tr>' skip
       '<td></td>' skip
@@ -1121,73 +1128,71 @@ do
       '<td colspan="30" style="text-align: center;">Дата</td>' skip
       '<td colspan="12"></td>' skip
       '</tr>' skip 
-      '</thead>' skip
       .
 
     put stream OutStr-html unformatted
-      '<tr style="height=80px;">' skip
-      '<th colspan="21" style="text-align: center; font-weight: bold;">Фактическая сумма цифрами</th>' skip
-      '<th colspan="17" style="text-align: center; font-weight: bold;">Сумма недостачи цифрами</th>' skip
-      '<th colspan="21" style="text-align: center; font-weight: bold;">Сумма излишка цифрами</th>' skip
-      '<th colspan="33" style="text-align: center; font-weight: bold;">Сомнительные денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</th>' skip
-      '<th colspan="33" style="text-align: center; font-weight: bold;">Неплатежеспособные не имеющие признаков подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</th>' skip
-      '<th colspan="33" style="text-align: center; font-weight: bold;">Имеющие признаки подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</th>' skip
+      '<tr style="height: 80px;">' skip
+      '<td colspan="21" style="text-align: center; font-weight: bold;  border: 1px solid black;">Фактическая сумма цифрами</td>' skip
+      '<td colspan="17" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сумма недостачи цифрами</td>' skip
+      '<td colspan="21" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сумма излишка цифрами</td>' skip
+      '<td colspan="33" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сомнительные денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
+      '<td colspan="33" style="text-align: center; font-weight: bold; border: 1px solid black;">Неплатежеспособные не имеющие признаков подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
+      '<td colspan="33" style="text-align: center; font-weight: bold; border: 1px solid black;">Имеющие признаки подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
       '</tr>' skip
       . 
     
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<th colspan="21" style="text-align: center; font-weight: bold;">1</th>' skip
-      '<th colspan="17" style="text-align: center; font-weight: bold;">2</th>' skip
-      '<th colspan="21" style="text-align: center; font-weight: bold;">3</th>' skip
-      '<th colspan="33" style="text-align: center; font-weight: bold;">4</th>' skip
-      '<th colspan="33" style="text-align: center; font-weight: bold;">5</th>' skip
-      '<th colspan="33" style="text-align: center; font-weight: bold;">6</th>' skip
+      '<th colspan="21" style="text-align: center; font-weight: bold; border: 1px solid black;">1</th>' skip
+      '<th colspan="17" style="text-align: center; font-weight: bold; border: 1px solid black;">2</th>' skip
+      '<th colspan="21" style="text-align: center; font-weight: bold; border: 1px solid black;">3</th>' skip
+      '<th colspan="33" style="text-align: center; font-weight: bold; border: 1px solid black;">4</th>' skip
+      '<th colspan="33" style="text-align: center; font-weight: bold; border: 1px solid black;">5</th>' skip
+      '<th colspan="33" style="text-align: center; font-weight: bold; border: 1px solid black;">6</th>' skip
       '</tr>' skip
       .
 
 
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td colspan="21" rowspan="4" style="text-align: center;"></td>' skip
-      '<td colspan="17" rowspan="4" style="text-align: center;"></td>' skip
-      '<td colspan="21" rowspan="4" style="text-align: center;"></td>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
+      '<td colspan="21" rowspan="4" style="text-align: center; border: 1px solid black;"></td>' skip
+      '<td colspan="17" rowspan="4" style="text-align: center; border: 1px solid black;"></td>' skip
+      '<td colspan="21" rowspan="4" style="text-align: center; border: 1px solid black;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
       '</tr>' skip
       .
 
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
       '</tr>' skip
       . 
 
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
-      '<td colspan="33" style="text-align: center;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
+      '<td colspan="33" style="text-align: center; border: 1px solid black; height: 20px;"></td>' skip
       '</tr>' skip
       . 
 
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td colspan="17">Сумма цифрами</td>' skip
-      '<td colspan="16"></td>' skip
-      '<td colspan="17">Сумма цифрами</td>' skip
-      '<td colspan="16"></td>' skip
-      '<td colspan="17">Сумма цифрами</td>' skip
-      '<td colspan="16"></td>' skip
+      '<td colspan="17" style="border: 1px solid black;">Сумма цифрами</td>' skip
+      '<td colspan="16" style="text-align: center; border: 1px solid black;"></td>' skip
+      '<td colspan="17" style="border: 1px solid black;">Сумма цифрами</td>' skip
+      '<td colspan="16" style="text-align: center; border: 1px solid black;"></td>' skip
+      '<td colspan="17" style="border: 1px solid black;">Сумма цифрами</td>' skip
+      '<td colspan="16" style="text-align: center; border: 1px solid black;"></td>' skip
       '</tr>' skip
       . 
 
 
     put stream OutStr-html unformatted
-      '<thead>'
       '<tr>' skip
       '<td></td>' skip
       '</tr>' skip

@@ -40,16 +40,20 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   define private variable pin02          as System.Windows.Forms.TextBox     no-undo.
   define private variable v-host-code    as integer                          no-undo .
   define private variable v-fin-code     as integer                          no-undo .
+  define private variable v-CashBookId   as integer                          no-undo .
+  define private variable v-sum-doc      as decimal                          no-undo .
+  
   define private variable v-status       as character                        no-undo init "тек".
   define private variable v-rid-list     as character                        no-undo . 
   define private variable v-total-sum    as decimal                          no-undo .
+  
   
   DEFINE BUFFER find_fin-bank     FOR ub.fin-bank.
   DEFINE BUFFER find_fin-doc-attr FOR ub.fin-doc-attr.
   define private variable v-deposit_bank   as integer                  no-undo .
   define private variable v-recip_bank     as integer                  no-undo .
   define private variable windowContainer1 as ibs.th.ref.Coins_Banknot no-undo.
-  define public variable v-num-bag as character no-undo .
+  define public  variable v-num-bag        as character                no-undo .
   
   define property parparentproc as handle no-undo
     private get.
@@ -57,11 +61,14 @@ class ibs.th.ref.Cover_Sheet inherits Form:
       parparentproc = ih.
     end.
         
-  constructor public Cover_Sheet (p-host-code as integer, p-fin-code as integer, p-mode as character ):
+  constructor public Cover_Sheet (p-host-code as integer, p-fin-code as integer, p-CashBookId as integer, p-sum-doc as decimal, p-mode as character ):
     
     super().
     v-host-code = p-host-code .    
     v-fin-code  = p-fin-code .
+    v-CashBookId = p-CashBookId .
+    v-sum-doc = p-sum-doc .
+    
     InitializeComponent().
     Visual(p-mode) .
     this-object:ComponentsCollection:ADD(this-object:components).
@@ -168,7 +175,16 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     define variable CShtt  as handle   no-undo .
     define buffer bf_fin-doc-attr for ub.fin-doc-attr .
     define variable attr-value as character no-undo .
+    define variable v-source   as character no-undo .
+    define buffer buf_fin-doc for ub.fin-doc .
     
+    
+      if v-sum-doc <> windowContainer1:v-total-sum then do:
+        message "Сумма документа " + string(v-sum-doc) + " не равна сумме " + string(windowContainer1:v-total-sum) + " из препроводительной ведомости."
+        view-as alert-box.
+        return no-apply .
+      end.   
+      
     find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = v-host-code
       and bf_fin-doc-attr.fin-doc-code = v-fin-code and bf_fin-doc-attr.attr-value begins this-object:num_bag:Text no-error . 
     if not available (bf_fin-doc-attr) then 
@@ -180,7 +196,8 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         bf_fin-doc-attr.host-code    = v-host-code
         .
     end.  
-    
+    if this-object:source_rec:Text = "Поступления от продажи товаров" then v-source = "02" .
+    else v-source = "32" .
     attr-value = this-object:num_bag:Text + ";" + string(v-deposit_bank) + ";" + string(v-recip_bank) + ";" + 
       this-object:pin02:Text + ";" + this-object:source_rec:Text + ";" + string(windowContainer1:v-total-sum) . 
     bf_fin-doc-attr.attr-value = attr-value .
@@ -218,7 +235,8 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     define variable CShtt  as handle   no-undo .
     define buffer bf_fin-doc-attr for ub.fin-doc-attr .
     define variable attr-value as character no-undo .
-
+    define buffer buf_cashbook for ub.CashBook .
+    
     find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = v-host-code
       and bf_fin-doc-attr.fin-doc-code = v-fin-code and bf_fin-doc-attr.attr-value begins this-object:num_bag:Text no-error . 
     if available (bf_fin-doc-attr) then 
@@ -231,10 +249,52 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         .
         
       FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = integer(entry(2,bf_fin-doc-attr.attr-value,";")) and find_fin-bank.host-code = v-host-code No-ERROR.
-      if avail find_fin-bank then this-object:deposit_bank:Text = find_fin-bank.bank-name .
+      if avail find_fin-bank then 
+      do:
+        this-object:deposit_bank:Text = find_fin-bank.bank-name .
+        v-deposit_bank = find_fin-bank.code-bank .
+      end. 
       FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = integer(entry(3,bf_fin-doc-attr.attr-value,";")) and find_fin-bank.host-code = v-host-code No-ERROR.
-      if avail find_fin-bank then this-object:bank_recip:Text = find_fin-bank.bank-name .
+      if avail find_fin-bank then 
+      do:
+        this-object:bank_recip:Text = find_fin-bank.bank-name .
+        v-recip_bank = find_fin-bank.code-bank .
+      end.
     end.  
+    else 
+    do:
+        for first buf_cashbook no-lock where buf_cashbook.id = v-CashBookId:
+          if buf_cashbook.id = 0 then 
+          do:
+            this-object:source_rec:Text = "Поступления от продажи товаров" .
+          end.
+          else 
+          do:  
+            this-object:source_rec:Text = "Прочие поступления".
+          end.  
+          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = buf_cashbook.BankDepos-code and find_fin-bank.host-code = buf_cashbook.BankDepos-host No-ERROR.
+          if avail find_fin-bank then 
+          do:
+            this-object:deposit_bank:Text = find_fin-bank.bank-name .
+            v-deposit_bank = find_fin-bank.code-bank .
+          end. 
+          FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = buf_cashbook.BankRecip-code and find_fin-bank.host-code = buf_cashbook.BankRecip-host No-ERROR.
+          if avail find_fin-bank then 
+          do:
+            this-object:bank_recip:Text = find_fin-bank.bank-name .
+            v-recip_bank = find_fin-bank.code-bank .
+          end. 
+        for first ub.CashBookRule no-lock where 
+        ub.cashbookrule.CashBookID  = buf_cashbook.id and
+        ub.cashbookrule.host-code   = string(v-host-code) and
+        ub.cashbookrule.Status_     = 0 and
+        ub.cashbookrule.Code        = 13 /* ПИН */:
+           
+        this-object:pin02:Text = ub.cashbookrule.RuleValue .
+        end.
+        end.  
+      end.  
+
    
 
     find first find_fin-doc-attr where find_fin-doc-attr.host-code = v-host-code and find_fin-doc-attr.attr-code = "cover_sheet"
@@ -249,6 +309,8 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     windowContainer1:Update_Banknots (getq_Banknot()).
     add_Coints(). 
     windowContainer1:Update_coints( getq_Coints()). 
+	
+	
 	
     return.
 
@@ -491,7 +553,6 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void Visual( input mode as character ):
-    
     if mode = {&lookup} then 
     do:
       assign
@@ -501,10 +562,9 @@ class ibs.th.ref.Cover_Sheet inherits Form:
         this-object:bank_recip:Enabled   = false
         this-object:pin02:Enabled        = false
         this-object:source_rec:Enabled   = false
-/*        windowContainer1:Enabled         = false*/
+        /*        windowContainer1:Enabled         = false*/
         .
     end.   
-    
     return.
 
   end method.
