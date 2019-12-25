@@ -62,7 +62,7 @@ class ibs.th.adm.upd.observupd:
 
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 9
+  &scop NumWorkBase 12
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -73,11 +73,10 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/18102101.df"
             ,"cmp/18102102.df"
             ,"cmp/18112201.df"
-
-            /*,"up2.df"
-            ,"up3.df"
-            ,"proc:ibs/th/adm/upd/copytable.p;tax-rate-value"
-            ,"up4.df"*/
+            ,"cmp/19022601.df"
+            ,'proc:ibs/th/adm/upd/copytable.p;"arh-fin-doc-contr-schet-nal|arh-fin-doc-schet-nal-obj|fin-doc"'
+            ,"cmp/19022602.df"
+            
             
             ] 
      get.
@@ -91,11 +90,11 @@ class ibs.th.adm.upd.observupd:
             ,"TABLE:tech-prol-pwd" 
             ,"FIELD:c-norm-loss.sec-vol1"
             ,"FIELD:tech-prol-pwd.f-cash-num"
-
-            /*,"TABLE:tax-rate-value_old"
-            ,"TABLE:tax-rate-value"
-            ,"proc:ibs/th/adm/upd/chkemptable.p;tax-rate-value_old"
-            ,""*/
+            ,"TABLE:arh-fin-doc-contr-schet-nal,TABLE:arh-fin-doc-contr-schet-nal_old,TABLE:arh-fin-doc-schet-nal-obj,TABLE:arh-fin-doc-schet-nal-obj_old,TABLE:fin-doc,TABLE:fin-doc_old"
+            ,"proc:ibs/th/adm/upd/chkemptable.p;arh-fin-doc-contr-schet-nal_old|arh-fin-doc-schet-nal-obj_old|fin-doc_old"
+            ,"TABLE:cashbook,TABLE:operserv"
+            
+            
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
