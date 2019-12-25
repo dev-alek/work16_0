@@ -19,7 +19,7 @@ Creation date: 10/13/05
 
 */
 
-define input parameter parparentproc as widget-handle no-undo .
+define input parameter parparentproc as handle no-undo . /* в тексте get-xibm.p не встречается */
 define input parameter p-log-handle  as handle no-undo .
 define input parameter p-obj-type like ub.clients.obj-type no-undo .
 define input parameter p-obj-code like ub.clients.obj-code no-undo .
@@ -53,7 +53,7 @@ define stream stmXMLOut.
 { str/magiachk.i }
 { str/magiachk.i -line " extent 2 "}
 { str/magiachk.i proc }
-{ gbl/thbj-def.i }
+/*{ gbl/thbj-def.i } 14/II-2019 - подключается внутри str/get-chkc.i */
 
 DEFINE VARIABLE n-entry                    as   char no-undo extent 20.
 DEFINE VARIABLE accept-types               as   character no-undo .
@@ -813,6 +813,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     . /* Предпологаем что уже есть в базе */
     return.
   end.
+  /* 14/II-2019 следущие три проверки выглядят избыточными
   assign
   shift-date_ = (if cas-shft
                  then shift-date_
@@ -823,6 +824,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   shift-open-time_ = (if cas-shft
                      then shift-open-time_
                      else 0)
+  .
+  */
+  if cas-shft then . else assign
+    shift-date_      = chk-date_
+    shift-num_       = 0
+    shift-open-time_ = 0
   .
 
   find first temp-cash-desk where
@@ -1832,10 +1839,12 @@ on error undo, return error
 
        return .
     end.
-    If cstype_ = 37 and (p-pos-type = {&cd-type-ibm-xml} OR p-pos-type = {&cd-type-Autotank}) then assign    /* Если чек пополнения, то считаем, что количество равно сумме при стоимости 1 руб */
+    If cstype_ = 37 and (p-pos-type = {&cd-type-ibm-xml} OR p-pos-type = {&cd-type-Autotank}) then for first ub.goods-attr no-lock where ub.goods-attr.gds-code = int(bc-buf)
+                            and ub.goods-attr.attr-code = {&attr-office-type} and ub.goods-attr.attr-value = {&attr-office-type_oss-pay}:
+         assign    /* Если чек пополнения, то считаем, что количество равно сумме при стоимости 1 руб */
         curr-string-qnty = sum-from-check
-        price-from-check = 1
-        .
+        price-from-check = 1.
+    end.
 
 
     CREATE chk-gds.
@@ -2054,7 +2063,6 @@ end procedure. /* proc-01 */
 procedure proc-02-gds :
 define variable v-attr-code as character no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
-
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_tt-sum-grp for tt-sum-grp.
 do
