@@ -302,7 +302,7 @@ attr-gds-ref
 { cmp/cr-prep.i 1 attr-gds-ref_obj                 gds-ref_obj                 " " gds-ref_obj }
 
 { cmp/cr-prepc.i 1 prop-list-attr-gds-ref_obj
-"dfltggrp,gdsscrvw,chg-bcod"
+"dfltggrp,gdsscrvw,chg-bcod,image-dir"
 attr-gds-ref_obj
 }
 

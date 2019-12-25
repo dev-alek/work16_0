@@ -3138,7 +3138,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-gds-ref_obj true
 &scop output-display-attr-gds-ref_obj false
 &scop other-attr-gds-ref_obj 'spr-ext=adm\shattr22.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-gds-ref_obj 'integer,character,logical'
+&scop prop-type-list-attr-gds-ref_obj 'integer,character,logical,character'
 &scop prop-label-list-attr-gds-ref_obj '~
 Гр.товаров по умолч.~
 ,Заказные поля в экране покупателя~

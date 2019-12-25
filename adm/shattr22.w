@@ -124,12 +124,12 @@ INDEX pi IS UNIQUE PRIMARY tbl-name fld-name
     ~{&OPEN-QUERY-BR-gdsscrvw}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help B-dfltggrp BR-gdsscrvw t-chg-bcod
-&Scoped-Define DISPLAYED-OBJECTS f-dfltggrp f-grp-name t-chg-bcod 
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help B-dfltggrp BR-gdsscrvw t-chg-bcod f-image-dir
+&Scoped-Define DISPLAYED-OBJECTS f-dfltggrp f-grp-name t-chg-bcod f-image-dir 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
-&Scoped-define List-2 f-dfltggrp B-dfltggrp f-grp-name
+&Scoped-define List-2 f-dfltggrp B-dfltggrp f-grp-name f-image-dir
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -172,6 +172,12 @@ DEFINE VARIABLE f-grp-name AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN NATIVE
      SIZE 61 BY 1
      FGCOLOR 3  NO-UNDO.
+     
+DEFINE VARIABLE f-image-dir AS CHARACTER FORMAT "X(256)":U
+     label "Директория для фото"
+     VIEW-AS FILL-IN NATIVE
+     SIZE 61 BY 1
+     FGCOLOR 3  NO-UNDO.
 
 DEFINE VARIABLE t-chg-bcod AS LOGICAL INITIAL no 
      LABEL "Запрещена работа с Доп-БК" 
@@ -208,6 +214,7 @@ DEFINE FRAME Dialog-Frame
      B-dfltggrp AT ROW 3.13 COL 32.5 WIDGET-ID 24
      f-grp-name AT ROW 3.13 COL 35 COLON-ALIGNED NO-LABEL WIDGET-ID 68
      t-chg-bcod AT ROW 5.91 COL 2.6 WIDGET-ID 70
+     f-image-dir at row 12 col 2.6 widget-id 80
      BR-gdsscrvw AT ROW 5 COL 57 WIDGET-ID 100
      SPACE(0.24) SKIP(12.45)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -489,9 +496,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-dfltggrp f-grp-name t-chg-bcod 
+  DISPLAY f-dfltggrp f-grp-name t-chg-bcod f-image-dir 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help B-dfltggrp t-chg-bcod BR-gdsscrvw
+  ENABLE B-exit b-quit B-Help B-dfltggrp t-chg-bcod BR-gdsscrvw f-image-dir
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -600,6 +607,12 @@ FOR EACH thbjattr_thbj-attr:
     v-gdsscrvw = thbjattr_thbj-attr.property-value-character
     .
   END.
+  IF v-entry = {&attr-gds-ref_obj_image-dir} THEN DO:
+    ASSIGN
+    f-image-dir = thbjattr_thbj-attr.property-value-character
+    f-image-dir:private-data IN FRAME {&FRAME-NAME} = "recid=" + string(recid(thbjattr_thbj-attr))
+    .
+  END.
 
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
@@ -641,11 +654,12 @@ or p-obj-type = {&stock} then do:
   .
 end.
 
-v-tab-order = "b-dfltggrp,t-chg-bcod".
+v-tab-order = "b-dfltggrp,t-chg-bcod,f-image-dir".
 display
 f-dfltggrp
 f-grp-name
 t-chg-bcod
+f-image-dir
 with frame {&frame-name} .
 ENABLE
 B-exit WHEN p-mode = {&UPDATE}
@@ -653,6 +667,7 @@ b-quit
 B-Help
 b-dfltggrp WHEN p-mode = {&UPDATE}
 t-chg-bcod WHEN p-mode = {&UPDATE}
+f-image-dir WHEN p-mode = {&UPDATE}
 br-gdsscrvw
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
@@ -704,11 +719,13 @@ ASSIGN
 FRAME {&FRAME-NAME}
 f-dfltggrp
 t-chg-bcod
+f-image-dir
 .
 assign
 fh = frame {&frame-name}:first-child
 wh = fh:first-child
 .
+
 do while valid-handle(wh):
   if wh:private-data begins "recid=" then do:
     find first thbjattr_thbj-attr where

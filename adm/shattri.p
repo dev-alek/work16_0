@@ -1963,6 +1963,13 @@ end.
 &scop prop-code v-prop-code
 
       {&create-thbj-attr}.
+      v-prop-code = "{&bef-attr-gds-ref_obj_image-dir}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype character
+&scop prop-value ''
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
+      end.
     end.
     when {&attr-dc-ref} then do:
       v-prop-code = "{&bef-attr-dc-ref_l-zeros},{&bef-attr-dc-ref_l-mask}".

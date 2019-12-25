@@ -855,6 +855,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define blob-res-
 &glob blob-trn-doc-image 'trn-doc-image':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define blob-trn-doc-image {&blob-trn-doc-image}" ).
 
+&glob blob-collec-image 'collec-image':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define blob-collec-image {&blob-collec-image}" ).
+
+&glob blob-gds-collec-image 'gds-collec-image':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define blob-gds-collec-image {&blob-gds-collec-image}" ).
+
 
 { cmp/cr-prep.i 1 lk-type_update-delete update-delete    "Изменение/Удаление"    update-delete           "Update/Delete"      }
 

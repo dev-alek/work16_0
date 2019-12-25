@@ -56,6 +56,10 @@ define variable log-res as log no-undo.
 define variable rr as recid no-undo.
 define variable v-log as logical   no-undo .
 
+define variable v-value    as character no-undo .
+define variable v-type     as character no-undo .
+define variable is-erpRn   as logical no-undo .
+
 define stream ListStream .
 
 define variable sort-column-name as character no-undo .
@@ -639,6 +643,20 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         disp
         num-entries (rid-list) @ mark-num
         with frame {&frame-name}.
+        
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    is-erpRN = logical(v-value) no-error .
+    if error-status:error then is-erpRN = false .
+    
+    if is-erpRN
+    then do :
+      disable
+        b-add
+        b-upd
+        b-del
+      with FRAME {&FRAME-NAME}.
+    end.
+    
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 run disable_ui.
