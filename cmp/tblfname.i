@@ -359,6 +359,14 @@ Creation date: 01/29/07
 &glob table_c-cash-pay-full '{&bef-table_c-cash-pay-full}':U
 &glob bef-table_c-cash-pay-attr-full Атрибуты типа касс. платежа
 &glob table_c-cash-pay-attr-full '{&bef-table_c-cash-pay-attr-full}':U
+&glob bef-table_c-CashBook-full Кассовые книги
+&glob table_c-CashBook-full '{&bef-table_c-CashBook-full}':U
+&glob bef-table_c-CashBookAttr-full атрибуты кассовой книги
+&glob table_c-CashBookAttr-full '{&bef-table_c-CashBookAttr-full}':U
+&glob bef-table_c-CashBookRule-full c-CashBookRule
+&glob table_c-CashBookRule-full '{&bef-table_c-CashBookRule-full}':U
+&glob bef-table_c-CashBookRuleAttr-full атрибуты кассовой книги
+&glob table_c-CashBookRuleAttr-full '{&bef-table_c-CashBookRuleAttr-full}':U
 &glob bef-table_c-cbr-bank-full Банки из списков ЦБ РФ
 &glob table_c-cbr-bank-full '{&bef-table_c-cbr-bank-full}':U
 &glob bef-table_c-cbr-bank-attr-full Иcтория для cbr-bank-attr
@@ -669,6 +677,10 @@ Creation date: 01/29/07
 &glob table_c-nzl-hist-full '{&bef-table_c-nzl-hist-full}':U
 &glob bef-table_c-obj-grp-obj-price-full Объект в группе об. для ценооб
 &glob table_c-obj-grp-obj-price-full '{&bef-table_c-obj-grp-obj-price-full}':U
+&glob bef-table_c-OperServ-full Операторы
+&glob table_c-OperServ-full '{&bef-table_c-OperServ-full}':U
+&glob bef-table_c-operServAttr-full атрибуты кассовой книги
+&glob table_c-operServAttr-full '{&bef-table_c-operServAttr-full}':U
 &glob bef-table_c-ord-doc-full История заказа
 &glob table_c-ord-doc-full '{&bef-table_c-ord-doc-full}':U
 &glob bef-table_c-ord-doc-attr-full История атрибутов заказа
@@ -993,6 +1005,14 @@ Creation date: 01/29/07
 &glob table_cash-pay-full '{&bef-table_cash-pay-full}':U
 &glob bef-table_cash-pay-attr-full Аттр.касс.пл-жа
 &glob table_cash-pay-attr-full '{&bef-table_cash-pay-attr-full}':U
+&glob bef-table_CashBook-full Кассовые книги
+&glob table_CashBook-full '{&bef-table_CashBook-full}':U
+&glob bef-table_CashBookAttr-full атрибуты кассовой книги
+&glob table_CashBookAttr-full '{&bef-table_CashBookAttr-full}':U
+&glob bef-table_CashBookRule-full CashBookRule
+&glob table_CashBookRule-full '{&bef-table_CashBookRule-full}':U
+&glob bef-table_CashBookRuleAttr-full атрибуты кассовой книги
+&glob table_CashBookRuleAttr-full '{&bef-table_CashBookRuleAttr-full}':U
 &glob bef-table_cbr-bank-full Банки из списков ЦБ РФ
 &glob table_cbr-bank-full '{&bef-table_cbr-bank-full}':U
 &glob bef-table_cbr-bank-attr-full Атрибуты для cbr-bank
@@ -1095,6 +1115,8 @@ Creation date: 01/29/07
 &glob table_contract-specif-full '{&bef-table_contract-specif-full}':U
 &glob bef-table_contract-specif-attr-full Атрибуты для contract-specif
 &glob table_contract-specif-attr-full '{&bef-table_contract-specif-attr-full}':U
+&glob bef-table_counter-full counter
+&glob table_counter-full '{&bef-table_counter-full}':U
 &glob bef-table_country-full country
 &glob table_country-full '{&bef-table_country-full}':U
 &glob bef-table_country-attr-full Атрибуты для country
@@ -1717,6 +1739,10 @@ Creation date: 01/29/07
 &glob table_obj-grp-obj-price-full '{&bef-table_obj-grp-obj-price-full}':U
 &glob bef-table_obj-grp-obj-price-attr-full Атрибуты для obj-grp-obj-price
 &glob table_obj-grp-obj-price-attr-full '{&bef-table_obj-grp-obj-price-attr-full}':U
+&glob bef-table_OperServ-full Операторы
+&glob table_OperServ-full '{&bef-table_OperServ-full}':U
+&glob bef-table_OperServAttr-full атрибуты кассовой книги
+&glob table_OperServAttr-full '{&bef-table_OperServAttr-full}':U
 &glob bef-table_ord-blank-full Бланки заказов
 &glob table_ord-blank-full '{&bef-table_ord-blank-full}':U
 &glob bef-table_ord-blank-attr-full Атрибуты для ord-blank

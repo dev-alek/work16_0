@@ -188,6 +188,10 @@ Creation date: 01/29/07
 &glob bef-table_c-cash-desk-attr c-cash-desk-attr
 &glob bef-table_c-cash-pay c-cash-pay
 &glob bef-table_c-cash-pay-attr c-cash-pay-attr
+&glob bef-table_c-CashBook c-CashBook
+&glob bef-table_c-CashBookAttr c-CashBookAttr
+&glob bef-table_c-CashBookRule c-CashBookRule
+&glob bef-table_c-CashBookRuleAttr c-CashBookRuleAttr
 &glob bef-table_c-cbr-bank c-cbr-bank
 &glob bef-table_c-cbr-bank-attr c-cbr-bank-attr
 &glob bef-table_c-cd-clu c-cd-clu
@@ -343,6 +347,8 @@ Creation date: 01/29/07
 &glob bef-table_c-nozzle-attr c-nozzle-attr
 &glob bef-table_c-nzl-hist c-nzl-hist
 &glob bef-table_c-obj-grp-obj-price c-obj-grp-obj-price
+&glob bef-table_c-OperServ c-OperServ
+&glob bef-table_c-operServAttr c-operServAttr
 &glob bef-table_c-ord-doc c-ord-doc
 &glob bef-table_c-ord-doc-attr c-ord-doc-attr
 &glob bef-table_c-ord-dtl c-ord-dtl
@@ -505,6 +511,10 @@ Creation date: 01/29/07
 &glob bef-table_cash-desk-attr cash-desk-attr
 &glob bef-table_cash-pay cash-pay
 &glob bef-table_cash-pay-attr cash-pay-attr
+&glob bef-table_CashBook CashBook
+&glob bef-table_CashBookAttr CashBookAttr
+&glob bef-table_CashBookRule CashBookRule
+&glob bef-table_CashBookRuleAttr CashBookRuleAttr
 &glob bef-table_cbr-bank cbr-bank
 &glob bef-table_cbr-bank-attr cbr-bank-attr
 &glob bef-table_cd-clu cd-clu
@@ -556,6 +566,7 @@ Creation date: 01/29/07
 &glob bef-table_contract-line-attr contract-line-attr
 &glob bef-table_contract-specif contract-specif
 &glob bef-table_contract-specif-attr contract-specif-attr
+&glob bef-table_counter counter
 &glob bef-table_country country
 &glob bef-table_country-attr country-attr
 &glob bef-table_criterion-analysis criterion-analysis
@@ -867,6 +878,8 @@ Creation date: 01/29/07
 &glob bef-table_obj-date obj-date
 &glob bef-table_obj-grp-obj-price obj-grp-obj-price
 &glob bef-table_obj-grp-obj-price-attr obj-grp-obj-price-attr
+&glob bef-table_OperServ OperServ
+&glob bef-table_OperServAttr OperServAttr
 &glob bef-table_ord-blank ord-blank
 &glob bef-table_ord-blank-attr ord-blank-attr
 &glob bef-table_ord-chain ord-chain

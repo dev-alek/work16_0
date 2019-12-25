@@ -188,6 +188,10 @@ Creation date: 04/05/06
 &glob table_c-cash-desk-attr 'c-cash-desk-attr':U
 &glob table_c-cash-pay 'c-cash-pay':U
 &glob table_c-cash-pay-attr 'c-cash-pay-attr':U
+&glob table_c-CashBook 'c-CashBook':U
+&glob table_c-CashBookAttr 'c-CashBookAttr':U
+&glob table_c-CashBookRule 'c-CashBookRule':U
+&glob table_c-CashBookRuleAttr 'c-CashBookRuleAttr':U
 &glob table_c-cbr-bank 'c-cbr-bank':U
 &glob table_c-cbr-bank-attr 'c-cbr-bank-attr':U
 &glob table_c-cd-clu 'c-cd-clu':U
@@ -343,6 +347,8 @@ Creation date: 04/05/06
 &glob table_c-nozzle-attr 'c-nozzle-attr':U
 &glob table_c-nzl-hist 'c-nzl-hist':U
 &glob table_c-obj-grp-obj-price 'c-obj-grp-obj-price':U
+&glob table_c-OperServ 'c-OperServ':U
+&glob table_c-operServAttr 'c-operServAttr':U
 &glob table_c-ord-doc 'c-ord-doc':U
 &glob table_c-ord-doc-attr 'c-ord-doc-attr':U
 &glob table_c-ord-dtl 'c-ord-dtl':U
@@ -505,6 +511,10 @@ Creation date: 04/05/06
 &glob table_cash-desk-attr 'cash-desk-attr':U
 &glob table_cash-pay 'cash-pay':U
 &glob table_cash-pay-attr 'cash-pay-attr':U
+&glob table_CashBook 'CashBook':U
+&glob table_CashBookAttr 'CashBookAttr':U
+&glob table_CashBookRule 'CashBookRule':U
+&glob table_CashBookRuleAttr 'CashBookRuleAttr':U
 &glob table_cbr-bank 'cbr-bank':U
 &glob table_cbr-bank-attr 'cbr-bank-attr':U
 &glob table_cd-clu 'cd-clu':U
@@ -556,6 +566,7 @@ Creation date: 04/05/06
 &glob table_contract-line-attr 'contract-line-attr':U
 &glob table_contract-specif 'contract-specif':U
 &glob table_contract-specif-attr 'contract-specif-attr':U
+&glob table_counter 'counter':U
 &glob table_country 'country':U
 &glob table_country-attr 'country-attr':U
 &glob table_criterion-analysis 'criterion-analysis':U
@@ -867,6 +878,8 @@ Creation date: 04/05/06
 &glob table_obj-date 'obj-date':U
 &glob table_obj-grp-obj-price 'obj-grp-obj-price':U
 &glob table_obj-grp-obj-price-attr 'obj-grp-obj-price-attr':U
+&glob table_OperServ 'OperServ':U
+&glob table_OperServAttr 'OperServAttr':U
 &glob table_ord-blank 'ord-blank':U
 &glob table_ord-blank-attr 'ord-blank-attr':U
 &glob table_ord-chain 'ord-chain':U

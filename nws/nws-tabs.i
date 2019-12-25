@@ -759,6 +759,7 @@ abc-analysis~
 ,c-promo-schedule~
 ,c-promo-schedule-week~
 ,c-PromoAction~
+,c-PromoAttr~
 ,c-PromoCriterion~
 ,c-PromoGift~
 ,c-PromoGoods~
@@ -773,6 +774,20 @@ abc-analysis~
 ,PromoObject~
 ,tech-prol-pwd~
 ,c-tech-prol-pwd~
+,c-CashBook~
+,c-CashBookAttr~
+,c-CashBookRule~
+,c-CashBookRuleAttr~
+,c-OperServ~
+,c-operServAttr~
+,CashBook~
+,CashBookAttr~
+,CashBookRule~
+,CashBookRuleAttr~
+,OperServ~
+,OperServAttr~
+,c-counter~
+,counter~
 ':U .
 
 
