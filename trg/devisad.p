@@ -16,7 +16,7 @@ Creation date: 17/02/19
 */
 block-level on error undo, throw.
 
-&scoped-define main-tbl upgrade
+&scoped-define main-tbl devisPC-attr
 trigger procedure for delete of {&main-tbl}.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
@@ -31,8 +31,4 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
   &nobufhist = yes
 }
 
-for each {&main-tbl}-attr where {&main-tbl}-attr.db           eq {&main-tbl}.db
-                            and {&main-tbl}-attr.version-num  eq {&main-tbl}.version-num
-exclusive-lock:
-   delete {&main-tbl}-attr.
-end.
+

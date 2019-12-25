@@ -189,6 +189,7 @@ Creation date: 04/05/06
 &glob table_c-cash-pay 'c-cash-pay':U
 &glob table_c-cash-pay-attr 'c-cash-pay-attr':U
 &glob table_c-CashBook 'c-CashBook':U
+&glob table_c-cashbook-head 'c-cashbook-head':U
 &glob table_c-CashBookAttr 'c-CashBookAttr':U
 &glob table_c-CashBookRule 'c-CashBookRule':U
 &glob table_c-CashBookRuleAttr 'c-CashBookRuleAttr':U
@@ -216,6 +217,7 @@ Creation date: 04/05/06
 &glob table_c-contract 'c-contract':U
 &glob table_c-contract-line 'c-contract-line':U
 &glob table_c-contract-specif 'c-contract-specif':U
+&glob table_c-counter 'c-counter':U
 &glob table_c-country 'c-country':U
 &glob table_c-country-attr 'c-country-attr':U
 &glob table_c-curr-accnt 'c-curr-accnt':U
@@ -325,6 +327,7 @@ Creation date: 04/05/06
 &glob table_c-global-state-attr 'c-global-state-attr':U
 &glob table_c-goods 'c-goods':U
 &glob table_c-goods-attr 'c-goods-attr':U
+&glob table_c-goods-attr-any 'c-goods-attr-any':U
 &glob table_c-group-period-validity 'c-group-period-validity':U
 &glob table_c-group-period-validity-attr 'c-group-period-validity-attr':U
 &glob table_c-grp-obj-price 'c-grp-obj-price':U
@@ -348,7 +351,7 @@ Creation date: 04/05/06
 &glob table_c-nzl-hist 'c-nzl-hist':U
 &glob table_c-obj-grp-obj-price 'c-obj-grp-obj-price':U
 &glob table_c-OperServ 'c-OperServ':U
-&glob table_c-operServAttr 'c-operServAttr':U
+&glob table_c-OperServAttr 'c-OperServAttr':U
 &glob table_c-ord-doc 'c-ord-doc':U
 &glob table_c-ord-doc-attr 'c-ord-doc-attr':U
 &glob table_c-ord-dtl 'c-ord-dtl':U
@@ -402,9 +405,11 @@ Creation date: 04/05/06
 &glob table_c-prod-bc-attr 'c-prod-bc-attr':U
 &glob table_c-prod-bc-db-attr 'c-prod-bc-db-attr':U
 &glob table_c-profile-by-profile 'c-profile-by-profile':U
+&glob table_c-promo-head 'c-promo-head':U
 &glob table_c-promo-schedule 'c-promo-schedule':U
 &glob table_c-promo-schedule-week 'c-promo-schedule-week':U
 &glob table_c-PromoAction 'c-PromoAction':U
+&glob table_c-PromoAttr 'c-PromoAttr':U
 &glob table_c-PromoCriterion 'c-PromoCriterion':U
 &glob table_c-PromoGift 'c-PromoGift':U
 &glob table_c-PromoGoods 'c-PromoGoods':U
@@ -556,6 +561,7 @@ Creation date: 04/05/06
 &glob table_clients-attr 'clients-attr':U
 &glob table_clob-bind 'clob-bind':U
 &glob table_clob-data 'clob-data':U
+&glob table_Code 'Code':U
 &glob table_code-range 'code-range':U
 &glob table_condition-keeping 'condition-keeping':U
 &glob table_condition-keeping-attr 'condition-keeping-attr':U
@@ -612,6 +618,8 @@ Creation date: 04/05/06
 &glob table_delivery-type-attr 'delivery-type-attr':U
 &glob table_delivery-type-subject 'delivery-type-subject':U
 &glob table_delivery-type-subject-attr 'delivery-type-subject-attr':U
+&glob table_devisPC 'devisPC':U
+&glob table_devisPC-attr 'devisPC-attr':U
 &glob table_dis-card 'dis-card':U
 &glob table_dis-card-long 'dis-card-long':U
 &glob table_dis-card-long-attr 'dis-card-long-attr':U

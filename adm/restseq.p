@@ -5208,3 +5208,22 @@ procedure restore-{&sequence-name} :
     {&update-sequence}
   end.
 end procedure. /* restore-s-operserv-id */
+
+&scoped-define sequence-name s-devisPC-id
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  id
+    
+    &scoped-define table-name      devisPC
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-operserv-id */

@@ -361,6 +361,8 @@ Creation date: 01/29/07
 &glob table_c-cash-pay-attr-full '{&bef-table_c-cash-pay-attr-full}':U
 &glob bef-table_c-CashBook-full Кассовые книги
 &glob table_c-CashBook-full '{&bef-table_c-CashBook-full}':U
+&glob bef-table_c-cashbook-head-full c-cashbook-head
+&glob table_c-cashbook-head-full '{&bef-table_c-cashbook-head-full}':U
 &glob bef-table_c-CashBookAttr-full атрибуты кассовой книги
 &glob table_c-CashBookAttr-full '{&bef-table_c-CashBookAttr-full}':U
 &glob bef-table_c-CashBookRule-full c-CashBookRule
@@ -415,6 +417,8 @@ Creation date: 01/29/07
 &glob table_c-contract-line-full '{&bef-table_c-contract-line-full}':U
 &glob bef-table_c-contract-specif-full c-contract-specif
 &glob table_c-contract-specif-full '{&bef-table_c-contract-specif-full}':U
+&glob bef-table_c-counter-full c-counter
+&glob table_c-counter-full '{&bef-table_c-counter-full}':U
 &glob bef-table_c-country-full история стран
 &glob table_c-country-full '{&bef-table_c-country-full}':U
 &glob bef-table_c-country-attr-full Иcтория для country-attr
@@ -633,6 +637,8 @@ Creation date: 01/29/07
 &glob table_c-goods-full '{&bef-table_c-goods-full}':U
 &glob bef-table_c-goods-attr-full ИСТОРИЯ атрибутов товара
 &glob table_c-goods-attr-full '{&bef-table_c-goods-attr-full}':U
+&glob bef-table_c-goods-attr-any-full ИСТОРИЯ атрибутов товара
+&glob table_c-goods-attr-any-full '{&bef-table_c-goods-attr-any-full}':U
 &glob bef-table_c-group-period-validity-full История групп сроков хранения
 &glob table_c-group-period-validity-full '{&bef-table_c-group-period-validity-full}':U
 &glob bef-table_c-group-period-validity-attr-full Иcтория для group-period-validity-attr
@@ -679,8 +685,8 @@ Creation date: 01/29/07
 &glob table_c-obj-grp-obj-price-full '{&bef-table_c-obj-grp-obj-price-full}':U
 &glob bef-table_c-OperServ-full Операторы
 &glob table_c-OperServ-full '{&bef-table_c-OperServ-full}':U
-&glob bef-table_c-operServAttr-full атрибуты кассовой книги
-&glob table_c-operServAttr-full '{&bef-table_c-operServAttr-full}':U
+&glob bef-table_c-OperServAttr-full атрибуты кассовой книги
+&glob table_c-OperServAttr-full '{&bef-table_c-OperServAttr-full}':U
 &glob bef-table_c-ord-doc-full История заказа
 &glob table_c-ord-doc-full '{&bef-table_c-ord-doc-full}':U
 &glob bef-table_c-ord-doc-attr-full История атрибутов заказа
@@ -787,12 +793,16 @@ Creation date: 01/29/07
 &glob table_c-prod-bc-db-attr-full '{&bef-table_c-prod-bc-db-attr-full}':U
 &glob bef-table_c-profile-by-profile-full Ист привязки проф к проф
 &glob table_c-profile-by-profile-full '{&bef-table_c-profile-by-profile-full}':U
+&glob bef-table_c-promo-head-full c-promo-head
+&glob table_c-promo-head-full '{&bef-table_c-promo-head-full}':U
 &glob bef-table_c-promo-schedule-full История заголовков расписаний акций
 &glob table_c-promo-schedule-full '{&bef-table_c-promo-schedule-full}':U
 &glob bef-table_c-promo-schedule-week-full История расписаний акций
 &glob table_c-promo-schedule-week-full '{&bef-table_c-promo-schedule-week-full}':U
 &glob bef-table_c-PromoAction-full История акций
 &glob table_c-PromoAction-full '{&bef-table_c-PromoAction-full}':U
+&glob bef-table_c-PromoAttr-full атрибуты акций
+&glob table_c-PromoAttr-full '{&bef-table_c-PromoAttr-full}':U
 &glob bef-table_c-PromoCriterion-full История критериев акций
 &glob table_c-PromoCriterion-full '{&bef-table_c-PromoCriterion-full}':U
 &glob bef-table_c-PromoGift-full История подарков акций
@@ -1095,6 +1105,8 @@ Creation date: 01/29/07
 &glob table_clob-bind-full '{&bef-table_clob-bind-full}':U
 &glob bef-table_clob-data-full CLOB-data
 &glob table_clob-data-full '{&bef-table_clob-data-full}':U
+&glob bef-table_Code-full Справочники
+&glob table_Code-full '{&bef-table_Code-full}':U
 &glob bef-table_code-range-full code-range
 &glob table_code-range-full '{&bef-table_code-range-full}':U
 &glob bef-table_condition-keeping-full Условия хранения
@@ -1207,6 +1219,10 @@ Creation date: 01/29/07
 &glob table_delivery-type-subject-full '{&bef-table_delivery-type-subject-full}':U
 &glob bef-table_delivery-type-subject-attr-full Атрибуты для delivery-type-subject
 &glob table_delivery-type-subject-attr-full '{&bef-table_delivery-type-subject-attr-full}':U
+&glob bef-table_devisPC-full Устройства
+&glob table_devisPC-full '{&bef-table_devisPC-full}':U
+&glob bef-table_devisPC-attr-full devisPC-attr
+&glob table_devisPC-attr-full '{&bef-table_devisPC-attr-full}':U
 &glob bef-table_dis-card-full Диск.карта
 &glob table_dis-card-full '{&bef-table_dis-card-full}':U
 &glob bef-table_dis-card-long-full Реальные (длинные) номера карт

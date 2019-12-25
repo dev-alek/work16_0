@@ -290,6 +290,8 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-gds-obj-prop~
 ,upgrade~
 ,upgrade-attr~
+,devisPC~
+,devisPC-attr~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -403,6 +405,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,PromoObject~
 ,promo-schedule-week~
 ,promo-schedule~
+
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
