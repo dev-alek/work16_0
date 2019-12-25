@@ -459,23 +459,6 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           else  left-trim( string(buf_chk-gds.sum-base, "->>>>>>>>9.99") )
         ) . /* Сумма (Число 15,2) */
         
-        if available buf_goods
-        then do :
-          find first buf_parts no-lock where buf_parts.out-code   = p-buf_chk-doc.out-code
-                                         and buf_parts.artic      = buf_goods.artic
-                                         and buf_parts.prod-code  = buf_goods.prod-code
-                                         and buf_parts.prod-type  = buf_goods.prod-type
-                                         no-error .
-          if available buf_parts
-          then do :
-            insw:write-data-element (  "sum-s",
-              left-trim( string(buf_chk-gds.doc-qnty * buf_parts.price-rubl / (1 + (buf_parts.VAT-pc / 100)), "->>>>>>>>9.99") )
-            ) . 
-          end.
-          else do :
-            insw:write-data-element (  "sum-s", "0" ) .
-          end.
-        end. /* Себестоимость (Число 15,2) */
         
         /* далее обязательность 0-1 */
 
