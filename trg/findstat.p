@@ -817,7 +817,9 @@ and not (buf_fin-doc.obj-type = ''
           buf_fin-doc.obj-code = 0)
 then do:
   { gbl/objdbnum.i buf_fin-doc.obj-type buf_fin-doc.obj-code v-obj-db-num }
-  if v-obj-db-num <> g#db-num then do:
+  if    v-obj-db-num <> g#db-num 
+     or (buf_fin-doc.prn-doc-code <> "" and buf_fin-doc.prn-doc-code <> ?) 
+  then do:
     return.
   end .
   
