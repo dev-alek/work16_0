@@ -232,6 +232,7 @@ class ibs.th.adm.upd.updschm:
     
     
      analisdfObj = new analisdf ().
+     analisdfObj:IsComp = IsComp.
      if analisdfObj:createDF(CurrDBShm)
      then do:
         m-FileDf     = analisdfObj:mFileDf.
@@ -267,6 +268,7 @@ class ibs.th.adm.upd.updschm:
     if CurrDBShm < TargetDBShm
     then do:
       analisdfObj = new analisdf ().
+      analisdfObj:IsComp = IsComp.
       if not m-FileDf begins "proc:"
       then 
          m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1).

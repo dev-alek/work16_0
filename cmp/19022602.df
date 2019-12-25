@@ -2757,6 +2757,33 @@ ADD FIELD "CashBookId" OF "c-fin-doc" AS int64
   ORDER 1500
   MAX-WIDTH 8
 
+UPDATE FIELD "payer-name" OF "c-fin-doc"
+  NULL-ALLOWED
+
+UPDATE FIELD "receiver-sign1" OF "c-fin-doc"
+  FORMAT "X(60)"
+
+UPDATE FIELD "receiver-sign2" OF "c-fin-doc"
+  FORMAT "X(60)"
+
+UPDATE FIELD "receiver-sign3" OF "c-fin-doc"
+  FORMAT "X(60)"
+
+UPDATE FIELD "receiver-sign4" OF "c-fin-doc"
+  FORMAT "X(60)"
+
+UPDATE FIELD "payer-sign1" OF "c-fin-doc"
+  FORMAT "X(60)"
+
+UPDATE FIELD "payer-sign2" OF "c-fin-doc"
+  FORMAT "X(60)"
+
+UPDATE FIELD "payer-sign3" OF "c-fin-doc"
+  FORMAT "X(60)"
+
+UPDATE FIELD "payer-sign4" OF "c-fin-doc"
+  FORMAT "X(60)"
+
 ADD FIELD "action" OF "c-promo-schedule" AS integer
   DESCRIPTION "Описание действия"
   FORMAT "99"

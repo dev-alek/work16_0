@@ -531,6 +531,8 @@ define temp-table {&prefixtt}INDEX
    output close.
 end method.
 method public logical CheckTable(ifile  as character):
+   /* message "!!!!!!"
+               view-as alert-box.*/
       define variable vOk as logical no-undo.
       define variable oOK as logical no-undo.
       oOK = CheckOneTable(temp-table {&prefixtt}Table:handle ).
@@ -562,7 +564,7 @@ method private logical CheckOneTable(iTable as  handle):
    define variable vBufferName as character no-undo.
    define variable vWhere      as character no-undo.
    define variable vOk     as logical no-undo.
-   define variable oOk     as logical no-undo.
+   define variable oOkl     as logical no-undo init yes.
    define variable verror  as logical no-undo.
    define variable vFlagEQ as logical no-undo.
    define variable vCheckField as logical no-undo.
@@ -661,8 +663,8 @@ method private logical CheckOneTable(iTable as  handle):
                   and vField:buffer-value ne "" 
                then do vj = 1 to if vField:buffer-value eq ? then 1 else num-entries(vField:buffer-value,{&delim-par}):
                   define variable vValuedb as character no-undo.
-                  vFieldValue = trim(trim(vField:buffer-value," "),'"').
-                  vValuedb = vBufferDB:buffer-field(vFieldName):buffer-value.
+                  vFieldValue = replace(trim(vField:buffer-value," "),'"','').
+                  vValuedb = replace(vBufferDB:buffer-field(vFieldName):buffer-value,'"','').
                   vFlagEQ = if vFieldValue eq "{&logicalfield}" 
                         then 
                            logical (vValuedb) eq yes
@@ -677,25 +679,30 @@ method private logical CheckOneTable(iTable as  handle):
             end.
              
          end.
+         else if     not vBufferDB:available
+                 and vBuffer::{&prefixfil}mode eq "drop"
+         then          
+            vOk = yes.
+           
          if vOk
          then
             vBuffer:buffer-delete ().
          else do:
-            oOk = no.
-            /*message "!!!!!!"
+            oOkl = no.
+           /* message "!!!!!!"
                view-as alert-box.*/
          end.    
          vQuery:get-next().
          
       end.
    end.
-   ook = not verror.
+   ookl = not verror and oOkl.
    vQuery:query-close().
 
    delete object vQuery.
    output close.
    finally:
-      return oOk.
+      return oOkl.
    end finally.   
 end method.
 method private void ChangeTable(OldName as character, NewName as character ):

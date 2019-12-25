@@ -756,7 +756,6 @@ ADD FIELD "payer-name" OF "fin-doc" AS character
   MAX-WIDTH 80
   COLUMN-LABEL "Плательщик"
   ORDER 120
-  MANDATORY
 
 ADD FIELD "receiver-type" OF "fin-doc" AS character 
   DESCRIPTION "Перечислимый тип объекта учета товара: склад, магазин`Obj`Obiect"
@@ -787,7 +786,6 @@ ADD FIELD "receiver-name" OF "fin-doc" AS character
   MAX-WIDTH 80
   COLUMN-LABEL "Получатель"
   ORDER 150
-  MANDATORY
 
 ADD FIELD "user-name-perm" OF "fin-doc" AS character 
   DESCRIPTION "Имя пользователя"
@@ -1248,7 +1246,7 @@ ADD FIELD "naznach-plat" OF "fin-doc" AS character
 
 ADD FIELD "payer-sign1" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 64
   MAX-WIDTH 36
@@ -1256,7 +1254,7 @@ ADD FIELD "payer-sign1" OF "fin-doc" AS character
 
 ADD FIELD "payer-sign2" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 65
   MAX-WIDTH 36
@@ -1264,7 +1262,7 @@ ADD FIELD "payer-sign2" OF "fin-doc" AS character
 
 ADD FIELD "payer-sign3" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 66
   MAX-WIDTH 36
@@ -1763,7 +1761,7 @@ ADD FIELD "con-stat" OF "fin-doc" AS integer
 
 ADD FIELD "payer-sign4" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 116
   MAX-WIDTH 36
@@ -1771,7 +1769,7 @@ ADD FIELD "payer-sign4" OF "fin-doc" AS character
 
 ADD FIELD "receiver-sign1" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 117
   MAX-WIDTH 36
@@ -1779,7 +1777,7 @@ ADD FIELD "receiver-sign1" OF "fin-doc" AS character
 
 ADD FIELD "receiver-sign2" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 118
   MAX-WIDTH 36
@@ -1787,7 +1785,7 @@ ADD FIELD "receiver-sign2" OF "fin-doc" AS character
 
 ADD FIELD "receiver-sign3" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 119
   MAX-WIDTH 36
@@ -1795,7 +1793,7 @@ ADD FIELD "receiver-sign3" OF "fin-doc" AS character
 
 ADD FIELD "receiver-sign4" OF "fin-doc" AS character 
   DESCRIPTION "подпись "
-  FORMAT "X(18)"
+  FORMAT "X(60)"
   INITIAL ""
   POSITION 120
   MAX-WIDTH 36
@@ -2317,6 +2315,31 @@ ADD INDEX "trn-d" ON "fin-doc"
   INDEX-FIELD "host-code" ASCENDING 
   INDEX-FIELD "trn-doc-code" ASCENDING 
   INDEX-FIELD "fin-doc-code" ASCENDING 
+
+ADD INDEX "cashbFactOrder" ON "fin-doc"
+  AREA "Fin-Doc"
+  INDEX-FIELD "CashBookId" ASCENDING
+  INDEX-FIELD "obj-type" ASCENDING
+  INDEX-FIELD "obj-code" ASCENDING
+  INDEX-FIELD "fin-doc-type" ASCENDING
+  INDEX-FIELD "fact-order" ASCENDING
+
+ADD INDEX "cashbshiftdate" ON "fin-doc"
+  AREA "Fin-Doc"
+  INDEX-FIELD "CashBookId" ASCENDING
+  INDEX-FIELD "obj-type" ASCENDING
+  INDEX-FIELD "obj-code" ASCENDING
+  INDEX-FIELD "fin-doc-type" ASCENDING
+  INDEX-FIELD "shift-date" ASCENDING
+  INDEX-FIELD "shift-num" ASCENDING
+
+ADD INDEX "cashbShiftOrder" ON "fin-doc"
+  AREA "Fin-Doc"
+  INDEX-FIELD "CashBookId" ASCENDING
+  INDEX-FIELD "obj-type" ASCENDING
+  INDEX-FIELD "obj-code" ASCENDING
+  INDEX-FIELD "fin-doc-type" ASCENDING
+  INDEX-FIELD "shift-fact-order" ASCENDING
 
 UPDATE FIELD "reserve1-char" OF "db"
   INITIAL "10"

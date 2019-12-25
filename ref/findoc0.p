@@ -209,10 +209,10 @@ if p-receiver-name = "":U then do:
   run err-mess in this-procedure ( "»м€ ѕќЋ”„ј“≈Ћя не может быть пустым", output v-ret-mess).
   undo, return error (if p-silent = no then "receiver-name":U else v-ret-mess).
 end.
-if p-payer-name = "":U then do:
+/*if p-payer-name = "":U then do:
   run err-mess in this-procedure ( "»м€ ѕЋј“≈Ћ№ў» ј не может быть пустым", output v-ret-mess).
   undo, return error (if p-silent = no then "payer-name":U else v-ret-mess).
-end.
+end.*/
 if p-receiver-inn <> "":U then do:
   run gbl/keyinn.p ( input p-receiver-inn
                     ,input p-receiver-type
