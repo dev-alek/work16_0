@@ -31,6 +31,7 @@ mCodeTrg:formLable(1, 3, "Наименование").
 /*mCodeTrg:formLable(1, 3, "Описание").*/
 mCodeTrg:MaxLevel = 1.
 mCodeTrg:Mode = imode.
+mCodeTrg:chek-erpRN = yes.
 if imode = {&select} then do:
 mCodeTrg:formLable(1, 1, "").  
 end.  

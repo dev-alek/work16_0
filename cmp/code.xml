@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="windows-1251" ?>
 <Root>
    <File-info>
-      <version>001</version>
+      <version>002</version>
    </File-info>
-   
    <table-Code>
       <record-Code>
          <code>PlatSys</code>
@@ -27,6 +26,14 @@
          <export_>yes</export_>
          <procedit>ibs\th\ref\code\SDEdit.p</procedit>
          <procview>ibs\th\ref\code\SpravDevice.p</procview>
+         <record-delete>no</record-delete>
+         <status_>0</status_>
+      </record-Code>
+      <record-Code>
+         <parent>OsnovCorr</parent>
+         <code>0</code>
+         <CodeName>Чек, созданный вручную</CodeName>
+         <export_>yes</export_>
          <record-delete>no</record-delete>
          <status_>0</status_>
       </record-Code>
