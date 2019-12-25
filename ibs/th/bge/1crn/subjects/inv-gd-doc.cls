@@ -216,6 +216,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("sum-izl", string-mth (round (fncextra-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-ned", string-mth (round (fncmiss-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-b-s", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        write-data-element ("sum-a-s", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
       sw:end-element ("gd").
     end.
     sw:end-element ("gds").
