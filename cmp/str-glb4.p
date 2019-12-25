@@ -948,8 +948,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdsoattr-
 /*Не попадает под действие ЕНВД*/
 { cmp/cr-prep.i 1 attr-no-envd-h                   no-envd                " " no-envd           }
 
-/*Настройки платежа ОСС*/
+/*Настройки платежа ОСС
+04/III-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 { cmp/cr-prep.i 1 attr-oss-props-h                 oss-props              " " oss-props          }
+*/
 
 &glob gdshattr-list '{&bef-attr-no-envd-h}~
 ,{&bef-attr-oss-props-h}~

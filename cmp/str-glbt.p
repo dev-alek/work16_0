@@ -257,12 +257,13 @@ attr-fin-global }
 
 
 
-/* атрибут объектный -  Взаиморасчеты -Платежи */
+/* атрибут объектный -  Взаиморасчеты -Платежи
+04/III-2019 не используется. Атрибуты финансовых документов перенесены в БПА
 { cmp/cr-prep.i 1 attr-fin-doc  fin-doc fin-doc fin-doc fin-doc  }
 { cmp/cr-prepc.i 1 prop-list-attr-fin-doc
 "suffix-pko,prefix-pko,current-pko,suffix-rko,prefix-rko,current-rko,head-position,director,snr-accnt,cash-book,uchet,dpt-option,dpt-dflt-name,dpt-dflt-type,dpt-dflt-code"
 attr-fin-doc }
-
+*/
 
 
 /* атрибут глобальный -  Договор в накладных */
