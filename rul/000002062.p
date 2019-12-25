@@ -259,6 +259,7 @@ define variable v-host-name     as character no-undo .
 define variable v-base-code     as integer   no-undo .
 define variable v-param-type    as character no-undo .
 define variable v-naznach-plat  as character no-undo .
+define variable v-naznach-plat2 as character no-undo .
 define variable cash-book       as integer   no-undo .
 define variable v-value         as character no-undo .
 define variable v-cashier       as character no-undo .
@@ -418,22 +419,36 @@ define variable v-err               as logical    no-undo .
      v-count = v-count + 1
      v-tot-r-b-inkas = v-tot-r-b-inkas  + buf_inkas.netto
      .
-    for each buf_chk-doc no-lock
-      where buf_chk-doc.obj-type    = buf_inkas.obj-type
-        and buf_chk-doc.obj-code    = buf_inkas.obj-code
-        and buf_chk-doc.out-code    = buf_inkas.inkas-code
-    :
-      if not can-find (first temp-z-number
-                       where temp-z-number.cash-desk = buf_chk-doc.pay-desk
-                         and temp-z-number.z-number  = buf_chk-doc.z-number)
-      then do:
-          create temp-z-number.
-          assign
-            temp-z-number.cash-desk = buf_chk-doc.pay-desk
-            temp-z-number.z-number  = buf_chk-doc.z-number
-          .
-      end.
-    end. /* for each ub.chk-doc */
+/*     for each buf_inkas-pay-desk no-lock                                          */
+/*         where buf_inkas-pay-desk.inkas-code = buf_inkas.inkas-code :             */
+/*       find first buf_cash-pay no-lock                                            */
+/*             where buf_cash-pay.cdpay-code = buf_inkas-pay-desk.pay-code          */
+/*               and buf_cash-pay.curr-code = buf_inkas-pay-desk.curr-code no-error.*/
+/*       if not available buf_cash-pay then do:                                     */
+/*       end.                                                                       */
+/*       if not (buf_cash-pay.is-cash                                               */
+/*       or buf_cash-pay.cdpay-code = 1) then do:                                   */
+/*         next.                                                                    */
+/*       end.                                                                       */
+/*     end.                                                                         */
+        for each buf_chk-doc no-lock
+          where buf_chk-doc.obj-type    = buf_inkas.obj-type
+            and buf_chk-doc.obj-code    = buf_inkas.obj-code
+            and buf_chk-doc.out-code    = buf_inkas.inkas-code
+        :
+/*          find first buf_inkas-pay-desk no-lock where buf_inkas-pay-desk.inkas-code = buf_inkas.inkas-code*/
+/*                                                  and buf_inkas-pay-desk.pay-desk = buf_chk-doc.pay-desk  */
+          if not can-find (first temp-z-number
+                           where temp-z-number.cash-desk = buf_chk-doc.pay-desk
+                             and temp-z-number.z-number  = buf_chk-doc.z-number)
+          then do:
+              create temp-z-number.
+              assign
+                temp-z-number.cash-desk = buf_chk-doc.pay-desk
+                temp-z-number.z-number  = buf_chk-doc.z-number
+              .
+          end.
+        end. /* for each ub.chk-doc */
    end. /*for each buf_inkas no-lock where*/
    if abs(v-tot-r-b-chk - v-tot-r-b-inkas) > 0.015 * v-count then do:
       &scop my-message substitute("В БД нет ПОЛНОЙ информации по разбиению товарных сумм в чеках по типам кассовых платежей")
@@ -897,6 +912,7 @@ define variable v-err               as logical    no-undo .
      assign
      temp-z-number-list.naznach-plat = substitute("Z &1 от &2г.", temp-z-number-list.naznach-plat, if v-uchet = "smen" then string(buf_shift-obj.shift-date, "99/99/99") else string(TODAY, "99/99/99")).
    end.
+   v-naznach-plat2 = v-naznach-plat . 
 
    /*теперь создадим fin-doc*/
    _temp-fin-sum:
@@ -912,6 +928,9 @@ define variable v-err               as logical    no-undo .
       if buf_temp-fin-sum.tot-sum = 0  then do:
         next _temp-fin-sum.
       end.
+      
+      v-naznach-plat = v-naznach-plat2 .
+      
       define variable v-doc-rec as recid no-undo .
       if buf_temp-fin-sum.tot-sum > 0  then do:
         run ref/finfnoco.p (
@@ -1073,7 +1092,7 @@ define variable v-err               as logical    no-undo .
              no-error.
       end.
 
-      if trim(p-by-pril) = 'Номера Z-отчетов' and tt-fin-doc.including = '' then tt-fin-doc.including = v-naznach-plat.
+      if trim(p-by-pril) = 'Номера Z-отчетов' then tt-fin-doc.enclosure = v-naznach-plat.
 
       if      trim(p-by-osnovanie) = 'Выручка от реализации' then do :
         v-naznach-plat = 'Выручка от реализации'.
@@ -1143,6 +1162,13 @@ define variable v-err               as logical    no-undo .
       then do :
         tt-fin-doc.cor-acc-value = ub.CashBook.Credit .
         tt-fin-doc.cor-acc1-value = ub.CashBook.Debit .
+        
+        if buf_temp-fin-sum.tot-sum > 0
+        then do: 
+          tt-fin-doc.payer-type = ub.CashBook.cli-type .
+          tt-fin-doc.payer-code = ub.CashBook.cli-code .
+          tt-fin-doc.payer-name = ub.CashBook.takenfrom .
+        end.
         
         FIND ub.fin-code-cor-acc WHERE
          ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc-value
