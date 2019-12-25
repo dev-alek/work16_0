@@ -19,41 +19,75 @@ block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubject:
   
-  define property code_         as character    no-undo get. private set.
-  define property del-l         as integer      no-undo get. private set.
-  define property del-f         as integer      no-undo get. private set.
-  define property name_         as character    no-undo get. private set.
+  define property code_         as character    no-undo get. 
+    private set.
+  define property del-l         as integer      no-undo get. 
+    private set.
+  define property del-f         as integer      no-undo get. 
+    private set.
+  define property name_         as character    no-undo get. 
+    private set.
   
-  define property basic-kb      as integer      no-undo get. private set.
-  define property rule-reason   as character    no-undo get. private set.
-  define property RuleOsnRko    as character    no-undo get. private set.
-  define property code-payer    as integer      no-undo get. private set.
-  define property rule-payer    as character    no-undo get. private set.
-  define property rule-att      as integer      no-undo get. private set.
-  define property ind-kass-pko  as integer      no-undo get. private set.
-  define property apart-np-tnp  as integer      no-undo get. private set.
-  define property kredit        as character    no-undo get. private set.
-  define property debit         as character    no-undo get. private set.
-  define property CorrRko       as character    no-undo get. private set.
-  define property post-chief    as character      no-undo get. private set.
-  define property fio-chief     as character      no-undo get. private set.
-  define property fio-booker    as character      no-undo get. private set.
-  define property acc-shift     as integer      no-undo get. private set.
-  define property pko-prefix    as character    no-undo get. private set.
-  define property rko-prefix    as character    no-undo get. private set.
-  define property struct-unit   as integer      no-undo get. private set.
-  define property struct-unit-name as character    no-undo get. private set.
-  define property struct-unit-type as character    no-undo get. private set.
-  define property struct-unit-code as integer      no-undo get. private set.
-
+  define property basic-kb      as integer      no-undo get. 
+    private set.
+  define property rule-reason   as character    no-undo get. 
+    private set.
+  define property RuleOsnRko    as character    no-undo get. 
+    private set.
+  define property code-payer    as integer      no-undo get. 
+    private set.
+  define property rule-payer    as character    no-undo get. 
+    private set.
+  define property rule-att      as integer      no-undo get. 
+    private set.
+  define property ind-kass-pko  as integer      no-undo get. 
+    private set.
+  define property apart-np-tnp  as integer      no-undo get. 
+    private set.
+  define property kredit        as character    no-undo get. 
+    private set.
+  define property debit         as character    no-undo get. 
+    private set.
+  define property CorrRko       as character    no-undo get. 
+    private set.
+  define property post-chief    as character      no-undo get. 
+    private set.
+  define property fio-chief     as character      no-undo get. 
+    private set.
+  define property fio-booker    as character      no-undo get. 
+    private set.
+  define property acc-shift     as integer      no-undo get. 
+    private set.
+  define property pko-prefix    as character    no-undo get. 
+    private set.
+  define property rko-prefix    as character    no-undo get. 
+    private set.
+  define property struct-unit   as integer      no-undo get. 
+    private set.
+  define property struct-unit-name as character    no-undo get. 
+    private set.
+  define property struct-unit-type as character    no-undo get. 
+    private set.
+  define property struct-unit-code as integer      no-undo get. 
+    private set.
+  define property code-symbol   as integer  no-undo get. 
+    private set.
+  define property pin   as character  no-undo get. 
+    private set.
+  define property bank-resive   as character  no-undo get. 
+    private set.
+  define property bank-deposit   as character  no-undo get. 
+    private set.
+  define property cont-inkass   as character  no-undo get. 
+    private set.
   define property kb-gds            as ibs.th.bge.1crn.subjects.subjects no-undo
     get. 
     private set.
-   /* с 21/V-2019 импортируется как отдельная сущность
-  define property payment-agent     as ibs.th.bge.1crn.subjects.payment-agent no-undo
-    get. 
-    private set.
-  */
+  /* с 21/V-2019 импортируется как отдельная сущность
+ define property payment-agent     as ibs.th.bge.1crn.subjects.payment-agent no-undo
+   get. 
+   private set.
+ */
   define override property InitTag as character no-undo init "kass-book"
     get.
   
@@ -67,40 +101,77 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
-      when "code"         then code_        = {&attr-str} .
-      when "del-l"        then del-l        = {&attr-integer} .
-      when "del-f"        then del-f        = {&attr-integer} .
-      when "name"         then name_        = {&attr-str} .
-      when "basic-kb"         then basic-kb         = {&attr-integer} .
-      when "rule-reason"      then rule-reason      = {&attr-str} .
-      when "RuleOsnRko"       then RuleOsnRko       = {&attr-str} .
-      when "code-payer"       then code-payer       = {&attr-integer} .
-      when "rule-payer"       then rule-payer       = {&attr-str} .
-      when "rule-att"         then rule-att         = {&attr-integer} .
-      when "ind-kass-pko"     then ind-kass-pko     = {&attr-integer} .
-      when "apart-np-tnp"     then apart-np-tnp     = {&attr-integer} .
-      when "kredit"           then kredit           = {&attr-str} .
-      when "debit"            then debit            = {&attr-str} .
-      when "CorrRko"          then CorrRko            = {&attr-str} .
-      when "post-chief"       then post-chief       = {&attr-str} .
-      when "fio-chief"        then fio-chief        = {&attr-str} .
-      when "fio-booker"       then fio-booker       = {&attr-str} .
-      when "acc-shift"        then acc-shift        = {&attr-integer} .
-      when "pko-prefix"       then pko-prefix       = {&attr-str} .
-      when "rko-prefix"       then rko-prefix       = {&attr-str} .
-      when "struct-unit"      then struct-unit      = {&attr-integer} .
-      when "struct-unit-name" then struct-unit-name = {&attr-str} .
-      when "struct-unit-type" then struct-unit-type = {&attr-str} .
-      when "struct-unit-code" then struct-unit-code = {&attr-integer} .
+      when "code"         then 
+        code_        = {&attr-str} .
+      when "del-l"        then 
+        del-l        = {&attr-integer} .
+      when "del-f"        then 
+        del-f        = {&attr-integer} .
+      when "name"         then 
+        name_        = {&attr-str} .
+      when "basic-kb"         then 
+        basic-kb         = {&attr-integer} .
+      when "rule-reason"      then 
+        rule-reason      = {&attr-str} .
+      when "RuleOsnRko"       then 
+        RuleOsnRko       = {&attr-str} .
+      when "code-payer"       then 
+        code-payer       = {&attr-integer} .
+      when "rule-payer"       then 
+        rule-payer       = {&attr-str} .
+      when "rule-att"         then 
+        rule-att         = {&attr-integer} .
+      when "ind-kass-pko"     then 
+        ind-kass-pko     = {&attr-integer} .
+      when "apart-np-tnp"     then 
+        apart-np-tnp     = {&attr-integer} .
+      when "kredit"           then 
+        kredit           = {&attr-str} .
+      when "debit"            then 
+        debit            = {&attr-str} .
+      when "CorrRko"          then 
+        CorrRko            = {&attr-str} .
+      when "post-chief"       then 
+        post-chief       = {&attr-str} .
+      when "fio-chief"        then 
+        fio-chief        = {&attr-str} .
+      when "fio-booker"       then 
+        fio-booker       = {&attr-str} .
+      when "acc-shift"        then 
+        acc-shift        = {&attr-integer} .
+      when "pko-prefix"       then 
+        pko-prefix       = {&attr-str} .
+      when "rko-prefix"       then 
+        rko-prefix       = {&attr-str} .
+      when "struct-unit"      then 
+        struct-unit      = {&attr-integer} .
+      when "struct-unit-name" then 
+        struct-unit-name = {&attr-str} .
+      when "struct-unit-type" then 
+        struct-unit-type = {&attr-str} .
+      when "struct-unit-code" then 
+        struct-unit-code = {&attr-integer} .
+      when "code-symbol" then 
+        code-symbol = {&attr-integer} .
+      when "pin" then 
+        pin = {&attr-str} .
+      when "bank-resive" then 
+        bank-resive = {&attr-str} .
+      when "bank-deposit" then 
+        bank-deposit = {&attr-str} .
+      when "cont-inkass" then 
+        cont-inkass = {&attr-str} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
-        when 18207 then undo, throw new Progress.Lang.AppError(
-          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
-        ) .
-        otherwise undo, throw new Progress.Lang.AppError(
+        when 18207 then 
+          undo, throw new Progress.Lang.AppError(
+            substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+            ) .
+        otherwise 
+        undo, throw new Progress.Lang.AppError(
           substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
-        ) .
+          ) .
       end case .
     end catch .
   end method.
@@ -118,7 +189,8 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     /* вызывается для переприсваивания коллекции после каждого добавления элемента в коллекцию;
        указатель на объект коллекции приходит с одним и тем же значением */
     case SubsObj:InitTag:
-      when "kb-gds"   then kb-gds   = SubsObj.            
+      when "kb-gds"   then 
+        kb-gds   = SubsObj.            
     end case.
   end method.
 
@@ -126,21 +198,23 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     def var v-str as char no-undo.
     
     assign
-      v-str = ",code" when (basic-kb = 1 and code_ = ?) /* Условно-обязательное поле. Добавлено в ТР вер.2.5 от 07/III-2019 */
-      v-str = v-str + ",name" when name_ = ?
-    .
+      v-str = ",code" 
+      when (basic-kb = 1 and code_ = ?) /* Условно-обязательное поле. Добавлено в ТР вер.2.5 от 07/III-2019 */
+      v-str = v-str + ",name" 
+      when name_ = ?
+      .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
-      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
-    ) .
+        substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+        ) .
   end method.
   
   method override protected void ClearSub():
     assign
-      code_ = ?
-      del-l = ?
-      del-f = ?
-      name_ = ?
+      code_            = ?
+      del-l            = ?
+      del-f            = ?
+      name_            = ?
       basic-kb         = ?
       rule-reason      = "Не заполнять"
       code-payer       = ?
@@ -162,7 +236,12 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       struct-unit-code = ?
       RuleOsnRko       = ?
       CorrRko          = ?
-    .
+      code-symbol      = ?
+      pin              = ?
+      bank-resive      = ?
+      bank-deposit     = ?
+      cont-inkass      = ?
+      .
     if valid-object(kb-gds)        then delete object kb-gds .
   end method.
       

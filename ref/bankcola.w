@@ -98,8 +98,8 @@ DEFINE BUTTON b-quit AUTO-END-KEY
 DEFINE VARIABLE v-qr-code AS CHARACTER FORMAT "X(256)":U 
      LABEL "QR код" 
      VIEW-AS COMBO-BOX INNER-LINES 2
-     LIST-ITEM-PAIRS " ","1",
-                     "Сбербанк","2"
+     LIST-ITEM-PAIRS " ","0",
+                     "Сбербанк","1"
      DROP-DOWN-LIST
      SIZE 15.25 BY 1 NO-UNDO.
 

@@ -257,6 +257,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.RulePril     = string(objImp:rule-att)   when objImp:rule-att <> ?
       tt-cashbook.FlagSepCash  = (objImp:ind-kass-pko = 1) when objImp:ind-kass-pko <> ?
       tt-cashbook.FlagSepFull  = (objImp:apart-np-tnp = 1) when objImp:apart-np-tnp <> ?
+      tt-cashbook.SourceCode   = string(objImp:code-symbol)       when objImp:code-symbol <> ?
+      tt-cashbook.BankRecip-code   = integer(objImp:bank-resive)   when objImp:bank-resive <> ?
+      tt-cashbook.BankDepos-code   = integer(objImp:bank-deposit)  when objImp:bank-deposit <> ?
+      tt-cashbook.CountCollect-type  = objImp:cont-inkass   when objImp:cont-inkass <> ?
       
    /* tt-cashbook.Status_      = 0:"“екущий", 1:"”даленный"
       - при создании заполн€етс€ значением по умолчанию, при обновлении остаЄтс€ в прежнем значении */
@@ -340,7 +344,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           tt-cashbookrule.DptName         = objImp:struct-unit-name           when objImp:struct-unit-name <> ?
           tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
           tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
-          tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
+          tt-cashbookrule.uchet           = string(objImp:acc-shift)          when objImp:acc-shift <> ?
+          tt-cashbookrule.Pin             = objImp:pin                        when objImp:pin <> ?
         .
         v-storage:insertDBobj(input dataset ds-cashbookrule by-reference) .
         if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
@@ -372,6 +377,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
           tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
           tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
+          tt-cashbookrule.Pin             = objImp:pin                      when objImp:pin <> ?
          .
          v-storage:updateDBobj(input dataset ds-cashbookrule by-reference) .
          if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
@@ -397,6 +403,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
           tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
           tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
+          tt-cashbookrule.Pin             = objImp:pin                      when objImp:pin <> ?
          .
          v-storage:insertDBobj(input dataset ds-cashbookrule by-reference) .
          if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
