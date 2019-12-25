@@ -355,10 +355,14 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
           write-data-element ("sum-s", string-mth ( round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty / (1 + (buf_doc-line.VAT-pc / 100)), 2))).
         end.
         else do:
-          write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
-          write-data-element ("sum-nds", string-mth (round ((buf_doc-line.price-cli * buf_doc-line.cli-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
+          def var sum-nds as decimal no-undo.
+          def var sum_ as decimal no-undo.
+          sum_ = round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2).
+          sum-nds = round ((buf_doc-line.price-cli * buf_doc-line.cli-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2).
+          write-data-element ("sum", string-mth (sum_)).
+          write-data-element ("sum-nds", string-mth (sum-nds)).
           write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
-          write-data-element ("sum-s", string-mth ( round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty / (1 + (buf_doc-line.VAT-pc / 100)), 2))).
+          write-data-element ("sum-s", string-mth (sum_ - sum-nds)).
         end.
         
       sw:end-element ("gd").
