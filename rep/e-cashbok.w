@@ -66,6 +66,7 @@ define temp-table tt-cashbook
 field id as integer
 field name as character
 .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -83,8 +84,9 @@ field name as character
 &Scoped-define FRAME-NAME F-Main
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-13 f-cashbook B-cashbook l-cashbook 
-&Scoped-Define DISPLAYED-OBJECTS f-cashbook l-cashbook 
+&Scoped-Define ENABLED-OBJECTS RECT-13 f-cashbook B-cashbook p-titul ~
+l-cashbook 
+&Scoped-Define DISPLAYED-OBJECTS f-cashbook p-titul l-cashbook 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -96,7 +98,7 @@ field name as character
 
 /* ***********************  Control Definitions  ********************** */
 
-     
+
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON B-cashbook 
      IMAGE-UP FILE "btn-down-arrow":U
@@ -116,7 +118,12 @@ DEFINE VARIABLE l-cashbook AS CHARACTER FORMAT "X(256)":U INITIAL "Кассовая книг
 
 DEFINE RECTANGLE RECT-13
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 69 BY 2.75.
+     SIZE 69 BY 3.71.
+
+DEFINE VARIABLE p-titul AS LOGICAL INITIAL no 
+     LABEL "Печать титульного листа" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 40 BY .83 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -124,6 +131,7 @@ DEFINE RECTANGLE RECT-13
 DEFINE FRAME F-Main
      f-cashbook AT ROW 2 COL 21.5 COLON-ALIGNED NO-LABEL WIDGET-ID 34
      B-cashbook AT ROW 2 COL 65.5 WIDGET-ID 32
+     p-titul AT ROW 3.42 COL 23.5 WIDGET-ID 38
      l-cashbook AT ROW 2.33 COL 5.5 NO-LABEL WIDGET-ID 36
      RECT-13 AT ROW 1.29 COL 2 WIDGET-ID 18
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
@@ -238,6 +246,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME p-titul
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL p-titul s-object
+ON VALUE-CHANGED OF p-titul IN FRAME F-Main /* Печать титульного листа */
+DO:
+  assign p-titul .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK s-object 
@@ -290,7 +309,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-report s-object 
 PROCEDURE my-report :
 /*------------------------------------------------------------------------------
@@ -315,6 +333,7 @@ run rep/r-cashbk.p
     ,input yes /*t-text*/
     ,input yes /*t-excel*/
     ,input '' /*p-dir-name*/
+    ,input p-titul
      ) .
      
 END PROCEDURE.
@@ -322,7 +341,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-var s-object
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE my-var s-object 
 PROCEDURE my-var :
 /*------------------------------------------------------------------------------
   Purpose:     здесь происходит вызов  значений переменных

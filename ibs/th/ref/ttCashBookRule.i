@@ -31,14 +31,13 @@ define temp-table tt-cashbookrule like ub.cashbookrule
 
 define dataset ds-cashbookrule for tt-cashbookrule .
 
- method private character getMgrPositionName (input p-post-chief as integer) :
+ method private character getMgrPositionName (input p-post-chief as character) :
     define variable v-name as character no-undo .
     case p-post-chief :
-      when 1 then v-name = "Директор" .
-      when 2 then v-name = "Управляющий" .
-      otherwise do :
-      v-name = "Должность рук-ля фирмы" .        
-      end .
+      when "1" then v-name = "Директор" .
+      when "2" then v-name = "Управляющий" .
+      when "0" then v-name = "Должность рук-ля фирмы" .
+      otherwise v-name = p-post-chief .        
     end case .
     return v-name .
   end method . /* end_of getMgrPositionName */
@@ -48,22 +47,18 @@ define dataset ds-cashbookrule for tt-cashbookrule .
     case p-post-chief :
       when "Директор" then v-id = "1" .
       when "Управляющий" then v-id = "2" .
-      otherwise do :
-        v-id = "0".
-      end .
+      when "Должность рук-ля фирмы" then v-id = "0" .
+      otherwise v-id = p-post-chief.
     end case .
     return v-id .
   end method . /* end_of getMgrPositionName */
   
-  method private character getMgrFioName (input p-fio-chief as integer) :
-    /* ФИО рук-ля
-• 0 - "ФИО руководителя фирмы"
-• 1 - "ФИО руководителя магазина"
-    */
+  method private character getMgrFioName (input p-fio-chief as character) :
     define variable v-name as character no-undo .
     case p-fio-chief :
-      when 1 then v-name = "ФИО руководителя магазина" .
-        otherwise v-name = "ФИО руководителя фирмы" .
+      when "1" then v-name = "ФИО руководителя магазина" .
+      when "0" then v-name = "ФИО руководителя фирмы" .
+      otherwise v-name = p-fio-chief .
     end case .
     return v-name .
   end method . /* end_of getMgrFioName */
@@ -72,16 +67,18 @@ define dataset ds-cashbookrule for tt-cashbookrule .
     define variable v-id as character no-undo .
     case p-fio-chief :
       when "ФИО руководителя магазина" then v-id = "1" .
-        otherwise v-id = "0" .
+      when "ФИО руководителя фирмы" then v-id = "0" .
+        otherwise v-id = p-fio-chief .
     end case .
     return v-id .
   end method . /* end_of getMgrFioName */
   
-  method private character getBuhFioName (input p-fio-booker as integer) :
+  method private character getBuhFioName (input p-fio-booker as character) :
     define variable v-name as character no-undo .
     case p-fio-booker :
-      when 1 then v-name = "ФИО бухгалтера магазина" .
-      when 0 then v-name = "ФИО гл. бухгалтера фирмы" .
+      when "1" then v-name = "ФИО бухгалтера магазина" .
+      when "0" then v-name = "ФИО гл. бухгалтера фирмы" .
+      otherwise v-name = p-fio-booker .
     end case .
     return v-name .
   end method . /* end_of getBuhFioName */
@@ -90,7 +87,8 @@ define dataset ds-cashbookrule for tt-cashbookrule .
     define variable v-id as character no-undo .
     case p-fio-booker :
       when "ФИО бухгалтера магазина" then v-id = "1" .
-      otherwise v-id = "0" .
+      when "ФИО гл. бухгалтера фирмы" then v-id = "0" .
+      otherwise v-id = p-fio-booker .
     end case .
     return v-id .
   end method . /* end_of getBuhFioName */

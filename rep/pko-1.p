@@ -103,7 +103,7 @@ on error undo, return error return-value
   if o-uchet = "0"
   then v-uchet = "cal" .
   else v-uchet = "smen" .
-  
+
   delete object mCashBook no-error .
 
   run get-report-num  (output g#report-num).
@@ -300,7 +300,7 @@ on error undo, return error return-value
 
   /*Печать*/
   put stream OutStr-html unformatted
-    '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="Отчет">'skip
+    '<TABLE fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0" name="Отчет">'skip
     .
 
   put stream OutStr-html unformatted

@@ -310,7 +310,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       ) ) .
     end .
     */
-    
     if v-mode = {&add-def} then do :
       v-storage:insertDB(buffer tt-cashbook, output v-cashbookid) .
       if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        

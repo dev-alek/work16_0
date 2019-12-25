@@ -205,15 +205,14 @@ end.
 tt-fin-doc.shift-num tt-fin-doc.prn-doc-code tt-fin-doc.doc-date ~
 tt-fin-doc.user-name-doc tt-fin-doc.obj-type tt-fin-doc.obj-code ~
 tt-fin-doc.str-podr-type tt-fin-doc.str-podr-code tt-fin-doc.str-podr-name ~
-tt-fin-doc.cor-acc1-value tt-fin-doc.cor-acc-value ~
-tt-fin-doc.an-uchet-value tt-fin-doc.contract-curr ~
-tt-fin-doc.cel-nazn-value tt-fin-doc.sum-doc tt-fin-doc.curr-code ~
-tt-fin-doc.exch-rate tt-fin-doc.exch-scale tt-fin-doc.sum-rubl ~
-tt-fin-doc.sum-base tt-fin-doc.contract-rate tt-fin-doc.contract-scale ~
-tt-fin-doc.sum-contr tt-fin-doc.payer-type tt-fin-doc.payer-code ~
-tt-fin-doc.payer-name tt-fin-doc.naznach-plat tt-fin-doc.including ~
-tt-fin-doc.enclosure tt-fin-doc.PS tt-fin-doc.receiver-sign2 ~
-tt-fin-doc.receiver-sign3 
+tt-fin-doc.cor-acc1-value tt-fin-doc.cor-acc-value tt-fin-doc.contract-curr ~
+tt-fin-doc.an-uchet-value tt-fin-doc.cel-nazn-value tt-fin-doc.sum-doc ~
+tt-fin-doc.curr-code tt-fin-doc.exch-rate tt-fin-doc.exch-scale ~
+tt-fin-doc.sum-rubl tt-fin-doc.sum-base tt-fin-doc.contract-rate ~
+tt-fin-doc.contract-scale tt-fin-doc.sum-contr tt-fin-doc.payer-type ~
+tt-fin-doc.payer-code tt-fin-doc.payer-name tt-fin-doc.naznach-plat ~
+tt-fin-doc.including tt-fin-doc.enclosure tt-fin-doc.PS ~
+tt-fin-doc.receiver-sign2 tt-fin-doc.receiver-sign3 
 &Scoped-define ENABLED-TABLES tt-fin-doc
 &Scoped-define FIRST-ENABLED-TABLE tt-fin-doc
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit r-sht B-tax B-cards B-print ~
@@ -227,15 +226,15 @@ tt-fin-doc.user-name-doc tt-fin-doc.obj-type tt-fin-doc.obj-code ~
 tt-fin-doc.fact-date tt-fin-doc.user-name-fact tt-fin-doc.receiver-type ~
 tt-fin-doc.receiver-okpo tt-fin-doc.receiver-name tt-fin-doc.receiver-code ~
 tt-fin-doc.str-podr-type tt-fin-doc.str-podr-code tt-fin-doc.str-podr-name ~
-tt-fin-doc.cor-acc1-value tt-fin-doc.cor-acc-value ~
-tt-fin-doc.an-uchet-value tt-fin-doc.contract-curr ~
-tt-fin-doc.cel-nazn-value tt-fin-doc.sum-doc tt-fin-doc.curr-code ~
-tt-fin-doc.exch-rate tt-fin-doc.exch-scale tt-fin-doc.sum-rubl ~
-tt-fin-doc.base-rate tt-fin-doc.base-scale tt-fin-doc.sum-base ~
-tt-fin-doc.contract-rate tt-fin-doc.contract-scale tt-fin-doc.sum-contr ~
-tt-fin-doc.payer-type tt-fin-doc.payer-code tt-fin-doc.payer-name ~
-tt-fin-doc.naznach-plat tt-fin-doc.including tt-fin-doc.enclosure ~
-tt-fin-doc.PS tt-fin-doc.receiver-sign2 tt-fin-doc.receiver-sign3 
+tt-fin-doc.cor-acc1-value tt-fin-doc.cor-acc-value tt-fin-doc.contract-curr ~
+tt-fin-doc.an-uchet-value tt-fin-doc.cel-nazn-value tt-fin-doc.sum-doc ~
+tt-fin-doc.curr-code tt-fin-doc.exch-rate tt-fin-doc.exch-scale ~
+tt-fin-doc.sum-rubl tt-fin-doc.base-rate tt-fin-doc.base-scale ~
+tt-fin-doc.sum-base tt-fin-doc.contract-rate tt-fin-doc.contract-scale ~
+tt-fin-doc.sum-contr tt-fin-doc.payer-type tt-fin-doc.payer-code ~
+tt-fin-doc.payer-name tt-fin-doc.naznach-plat tt-fin-doc.including ~
+tt-fin-doc.enclosure tt-fin-doc.PS tt-fin-doc.receiver-sign2 ~
+tt-fin-doc.receiver-sign3 
 &Scoped-define DISPLAYED-TABLES tt-fin-doc
 &Scoped-define FIRST-DISPLAYED-TABLE tt-fin-doc
 &Scoped-Define DISPLAYED-OBJECTS RS-view f-cashbook f-cor-acc1-descr ~
@@ -552,15 +551,10 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 14 BY 1
           FGCOLOR 4 
-     tt-fin-doc.cor-acc-value AT ROW 8 COL 9.4
-          LABEL "Корсчет"
-          VIEW-AS FILL-IN 
-          SIZE 14 BY 1
-          FGCOLOR 4 
      B-cor-acc1 AT ROW 7 COL 33.2
      f-cor-acc1-descr AT ROW 7 COL 35.4 COLON-ALIGNED NO-LABEL
-     tt-fin-doc.an-uchet-value AT ROW 9 COL 5.4
-          LABEL "Код ан. уч."
+     tt-fin-doc.cor-acc-value AT ROW 8 COL 9.4
+          LABEL "Корсчет"
           VIEW-AS FILL-IN 
           SIZE 14 BY 1
           FGCOLOR 4 
@@ -574,6 +568,11 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 4 BY 1
      f-contract-type AT ROW 8.52 COL 72 COLON-ALIGNED
+     tt-fin-doc.an-uchet-value AT ROW 9 COL 5.4
+          LABEL "Код ан. уч."
+          VIEW-AS FILL-IN 
+          SIZE 14 BY 1
+          FGCOLOR 4 
      B-an-uchet AT ROW 9 COL 33.2
      f-an-uchet-descr AT ROW 9 COL 35.4 COLON-ALIGNED NO-LABEL
      tt-fin-doc.cel-nazn-value AT ROW 10 COL 3.4
@@ -675,21 +674,21 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 38.8 BY 1
           FGCOLOR 4 
-     l-cashbook AT ROW 2.2 COL 1 NO-LABEL
+     l-cashbook AT ROW 2.19 COL 1 NO-LABEL
      F-debet AT ROW 7.19 COL 5 COLON-ALIGNED NO-LABEL
      F-credit AT ROW 8.19 COL 1.4 NO-LABEL
-     "(Примечание (доп.информация, не печатается))" VIEW-AS TEXT
-          SIZE 47.2 BY 1 AT ROW 19 COL 51
-     "В том числе" VIEW-AS TEXT
-          SIZE 19.4 BY 1 AT ROW 16 COL 50.6
-          FGCOLOR 4 
      "Основание платежа" VIEW-AS TEXT
           SIZE 19.4 BY 1 AT ROW 16 COL 1.4
           FGCOLOR 4 
+     "В том числе" VIEW-AS TEXT
+          SIZE 19.4 BY 1 AT ROW 16 COL 50.6
+          FGCOLOR 4 
+     "(Примечание (доп.информация, не печатается))" VIEW-AS TEXT
+          SIZE 47.2 BY 1 AT ROW 19 COL 51
      "Приложение" VIEW-AS TEXT
           SIZE 19.4 BY 1 AT ROW 19 COL 2
           FGCOLOR 4 
-     SPACE(77.97) SKIP(3.04)
+     SPACE(78.00) SKIP(3.05)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Приходный кассовый ордер - Получатель"
@@ -1315,7 +1314,7 @@ PROCEDURE enable_UI :
           tt-fin-doc.receiver-code tt-fin-doc.str-podr-type 
           tt-fin-doc.str-podr-code tt-fin-doc.str-podr-name 
           tt-fin-doc.cor-acc1-value tt-fin-doc.cor-acc-value 
-          tt-fin-doc.an-uchet-value tt-fin-doc.contract-curr 
+          tt-fin-doc.contract-curr tt-fin-doc.an-uchet-value 
           tt-fin-doc.cel-nazn-value tt-fin-doc.sum-doc tt-fin-doc.curr-code 
           tt-fin-doc.exch-rate tt-fin-doc.exch-scale tt-fin-doc.sum-rubl 
           tt-fin-doc.base-rate tt-fin-doc.base-scale tt-fin-doc.sum-base 
@@ -1331,9 +1330,9 @@ PROCEDURE enable_UI :
          tt-fin-doc.doc-date tt-fin-doc.user-name-doc tt-fin-doc.obj-type 
          tt-fin-doc.obj-code B-receiver-view tt-fin-doc.str-podr-type 
          tt-fin-doc.str-podr-code tt-fin-doc.str-podr-name 
-         tt-fin-doc.cor-acc1-value tt-fin-doc.cor-acc-value B-cor-acc1 
-         tt-fin-doc.an-uchet-value B-cor-acc f-contract-curr-abbr 
-         B-contract-view tt-fin-doc.contract-curr B-an-uchet 
+         tt-fin-doc.cor-acc1-value B-cor-acc1 tt-fin-doc.cor-acc-value 
+         B-cor-acc f-contract-curr-abbr B-contract-view 
+         tt-fin-doc.contract-curr tt-fin-doc.an-uchet-value B-an-uchet 
          tt-fin-doc.cel-nazn-value B-cel-nazn tt-fin-doc.sum-doc f-rest-con-sum 
          tt-fin-doc.curr-code B-currency B-calc tt-fin-doc.exch-rate 
          tt-fin-doc.exch-scale tt-fin-doc.sum-rubl tt-fin-doc.sum-base 
@@ -1527,6 +1526,33 @@ if p-mode = {&add-copy} then do:
   run recalc in this-procedure("sum-doc").
 end.
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterCurr Dialog-Frame 
+PROCEDURE MycounterCurr :
+define input  parameter iFileName as character no-undo.
+define input  parameter ikey      as character no-undo.
+define input  parameter icode     as character no-undo.
+define output parameter oCount    as int64 no-undo.
+ define variable mCounterStor as class ibs.th.ref.counter.counterstorage.
+ mCounterStor = new ibs.th.ref.counter.counterstorage().
+ oCount = mCounterStor:GetCountValue(G#db-num,"cashbookrule", current-ruleID, current-pko-rko ) + 1.
+ delete object mCounterStor.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterNext Dialog-Frame 
+PROCEDURE MycounterNext :
+define input  parameter iFileName as character no-undo.
+define input  parameter ikey      as character no-undo.
+define input  parameter icode     as character no-undo.
+define output parameter oCount    as int64 no-undo.
+ run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko  ,output oCount    ).
+end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1835,29 +1861,3 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Mycounter Dialog-Frame 
-PROCEDURE MycounterCurr :
-define input  parameter iFileName as character no-undo.
-define input  parameter ikey      as character no-undo.
-define input  parameter icode     as character no-undo.
-define output parameter oCount    as int64 no-undo.
- define variable mCounterStor as class ibs.th.ref.counter.counterstorage.
- mCounterStor = new ibs.th.ref.counter.counterstorage().
- oCount = mCounterStor:GetCountValue(G#db-num,"cashbookrule", current-ruleID, current-pko-rko ) + 1.
- delete object mCounterStor.
-end procedure.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Mycounter Dialog-Frame 
-PROCEDURE MycounterNext :
-define input  parameter iFileName as character no-undo.
-define input  parameter ikey      as character no-undo.
-define input  parameter icode     as character no-undo.
-define output parameter oCount    as int64 no-undo.
- run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko  ,output oCount    ).
-end procedure.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME

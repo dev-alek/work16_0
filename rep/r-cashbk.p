@@ -32,7 +32,7 @@ define input parameter p-cashbook               as character               no-un
 define input parameter p-plain-txt              as   logical               no-undo .
 define input parameter p-xls                    as   logical               no-undo .
 define input parameter p-dir-name               as   character             no-undo .
-
+define input parameter p-titul                  as logical                 no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -461,7 +461,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     '<body>' skip
     .
   
-  
+  if p-titul then do:
   put stream OutStr-html unformatted
     '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="Титульный лист КК ' + string(entry(ii,p-cashbook,{&delim-cmd})) + '">'skip
     .
@@ -547,7 +547,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     '</tbody>' skip  
     '</table>' skip
     .
-  
+  end.
   assign
     v-date-start = v-date-start1
     v-date-end   = v-date-end1
@@ -721,6 +721,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
             end.
     end.*/
     /***********************************************************/
+    
     v-num-page = string(v-date-start - date("01/01/" + string(year(v-date-start))) + 1).    /* За нумерацию листов отчёта - берётся кол-во дней от начала Uода до тек.даты. */
     
                   
@@ -944,7 +945,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
             
   end. /* do while v-date-start <> (v-date-end + 1) : */
  
- 
+ if p-titul then do:
   /* Конец основного цикла */     
   put stream OutStr-html unformatted
     '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="ПЛ_КК ' + string(entry(ii,p-cashbook,{&delim-cmd})) + '">'skip
@@ -977,7 +978,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     '</tr>' skip
     '<tr>' skip
     '<td colspan="2"></td>' skip
-    '<td colspan="6">прошнуровано ' + "__" + ' листов.</td>' skip
+    '<td colspan="6">прошнуровано ' + string (v-num-page) + ' листов.</td>' skip
     '</tr>' skip
     '<tr>' skip
     '<td colspan="3" style="text-align: center;">М.П.(штампа)</td>' skip
@@ -1030,8 +1031,9 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
 
   put stream OutStr-html unformatted
      '</thead>' skip
+     '</table>' skip
     .
-                    
+    end.                
   put stream OutStr-html unformatted
         
     '</body>' skip

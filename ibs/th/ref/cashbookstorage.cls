@@ -840,15 +840,15 @@ class ibs.th.ref.cashbookstorage final:
       end.
       when 5 /*Должность руководителя*/
       then do :
-        tt-cashbookrule.ManagerPosition = getMgrPositionName(integer(buf_cashbookrule.RuleValue)) .
+        tt-cashbookrule.ManagerPosition = getMgrPositionName(buf_cashbookrule.RuleValue) .
       end.
       when 6 /*Фио руководителя*/
       then do :
-        tt-cashbookrule.ManagerFIO = getMgrFioName(integer(buf_cashbookrule.RuleValue)) .
+        tt-cashbookrule.ManagerFIO = getMgrFioName(buf_cashbookrule.RuleValue) .
       end.
       when 7 /*Фио бухгалтера*/
       then do :
-        tt-cashbookrule.BuhFIO = getBuhFioName(integer (buf_cashbookrule.RuleValue)) .
+        tt-cashbookrule.BuhFIO = getBuhFioName(buf_cashbookrule.RuleValue) .
       end.
       when 8 /*Структурное подразделение*/
       then do :

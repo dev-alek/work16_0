@@ -34,10 +34,10 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   define property apart-np-tnp  as integer      no-undo get. private set.
   define property kredit        as character    no-undo get. private set.
   define property debit         as character    no-undo get. private set.
-  define property CorrRko         as character    no-undo get. private set.
-  define property post-chief    as integer      no-undo get. private set.
-  define property fio-chief     as integer      no-undo get. private set.
-  define property fio-booker    as integer      no-undo get. private set.
+  define property CorrRko       as character    no-undo get. private set.
+  define property post-chief    as character      no-undo get. private set.
+  define property fio-chief     as character      no-undo get. private set.
+  define property fio-booker    as character      no-undo get. private set.
   define property acc-shift     as integer      no-undo get. private set.
   define property pko-prefix    as character    no-undo get. private set.
   define property rko-prefix    as character    no-undo get. private set.
@@ -82,9 +82,9 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "kredit"           then kredit           = {&attr-str} .
       when "debit"            then debit            = {&attr-str} .
       when "CorrRko"          then CorrRko            = {&attr-str} .
-      when "post-chief"       then post-chief       = {&attr-integer} .
-      when "fio-chief"        then fio-chief        = {&attr-integer} .
-      when "fio-booker"       then fio-booker       = {&attr-integer} .
+      when "post-chief"       then post-chief       = {&attr-str} .
+      when "fio-chief"        then fio-chief        = {&attr-str} .
+      when "fio-booker"       then fio-booker       = {&attr-str} .
       when "acc-shift"        then acc-shift        = {&attr-integer} .
       when "pko-prefix"       then pko-prefix       = {&attr-str} .
       when "rko-prefix"       then rko-prefix       = {&attr-str} .
