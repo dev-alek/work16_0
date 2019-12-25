@@ -39,10 +39,10 @@ define variable vss-description as character no-undo init "Печать платежа  типа 
 { cmp/r-pril.i new }
 { gbl/prn-lib.i }
 { rep/frmlib.i }
-{ gbl/paramls.i }
+
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print   as logical      no-undo.
-{ rep/rko2xl.i  }
+
 
 define variable Line              as character no-undo .
 define variable v-enclosure-1     as character no-undo .
@@ -83,6 +83,14 @@ define variable v-value-logical AS LOGICAL no-undo .
 define variable par-type as character no-undo .
 define variable v-tth as handle no-undo .
 
+define variable p-report-id          as character no-undo .
+define variable v-file-name-rep-html as character no-undo .
+define variable ii                   as integer   no-undo .
+define variable v-name               as character no-undo .
+define variable v-name-report        as character no-undo .
+define variable v-obj-name           as character no-undo .
+define stream Out-Stream.
+define stream OutStr-html.
 
 define buffer buf_currency for ub.currency.
 
@@ -100,12 +108,10 @@ on error undo, return error return-value
   
   delete object mCashBook no-error .
 
-    run get-report-num  in parParentProc(output g#report-num).
-    run get-quest-print in parParentProc(output g#quest-print).
-    output to value( string( session:temp-directory + "$" + string( g#report-num ) ) + ".txl" ) .
-    output close.
-    run rko2xl-init in this-procedure .
-
+  run get-report-num  (output g#report-num).
+/*  run get-quest-print in parParentProc(output g#quest-print).*/
+  v-file-name-rep-html = session:temp-directory + string(g#report-num) + ".html".
+  
  if p-format <> 0
  and p-format <> ?
  and p-append
@@ -237,319 +243,451 @@ on error undo, return error return-value
 
   .
 
-  run prn-lib-open-stream  in this-procedure (
-                                              input parParentProc
-                                              ,input {&CS_PS}
-                                              ,input yes /*p-is-stream*/
-                                              ,input p-append /*p-append*/
-                                              ).
-if buf_fin-doc.curr-code = 0 then do:
-  PUT  STREAM PrnLibStream unformatted
-  Line skip
- v-chernovik    fill({&space-char}, 93)                                                                    "Унифицированная форма N КО-2" skip
-                fill({&space-char}, 99)                                                           "Утверждена постановлением Госкомстата" skip
-                fill({&space-char}, 110)                                                                     "России от 18.08.98 г. N 88" skip
-                fill({&space-char}, 136)                                                                                                  skip
-                fill({&space-char}, 125)                                                                                    "+---------+" skip
-                fill({&space-char}, 125)                                                                                    "|   Код   |" skip
-                fill({&space-char}, 125)                                                                                    "+---------+" skip
-                fill({&space-char}, 112)                                                                       "Форма по ОКУД| 0310002 |" skip
-                fill({&space-char}, 125)                                                                                    "+---------+" skip
-  .
-end.
-else do:
-  PUT  STREAM PrnLibStream unformatted
-  Line skip
-  fill( {&space-char} , 136)                                                                                                              skip
-  fill( {&space-char} , 136)                                                                                                              skip
-  fill( {&space-char} , 136)                                                                                                              skip
-  fill( {&space-char} , 136)                                                                                                              skip
-  fill({&space-char}, 125)                                                                                                  "+---------+" skip
-  fill({&space-char}, 125)                                                                                                  "|   Код   |" skip
-  fill({&space-char}, 125)                                                                                                  "+---------+" skip
-  fill({&space-char}, 112)                                                                                     "Форма по ОКУД|         |" skip
-  fill({&space-char}, 125)                                                                                                  "+---------+" skip
- .
-end.
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_organization}
-        , input buf_fin-doc.payer-name
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_object}
-        , input v-str-podr-name
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_okpo}
-        , input buf_fin-doc.payer-okpo
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_objectCode}
-        , input if buf_fin-doc.str-podr-code = 0 then "" else string( buf_fin-doc.str-podr-code )
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_docCode}
-        , input buf_fin-doc.prn-doc-code
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_docDate}
-        , input string( v-date-create, "99.99.9999":U )
-    ).
+  output stream OutStr-html to value(v-file-name-rep-html) convert target 'UTF-8'.
+  put stream OutStr-html unformatted
+    "<!DOCTYPE HTML>" skip
+    ' <html>' skip
+    '  <head>' skip
+    '   <meta charset="utf-8">' skip
+    '    <style type="text/css">' skip
+                        
+    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+    '   </style>' skip
+    '  </head>' skip
+    '<body>' skip
+    .
 
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_strPodrCode}
-        , input (if buf_fin-doc.str-podr-code = 0 then "-" else string( buf_fin-doc.str-podr-code ))
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_corAccValue}
-        , input (if buf_fin-doc.cor-acc-value = "" then "-" else buf_fin-doc.cor-acc-value)
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_anUchetValue}
-        , input (if buf_fin-doc.an-uchet-value = "" then "-" else buf_fin-doc.an-uchet-value)
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_corAcc1Value}
-        , input (if buf_fin-doc.cor-acc1-value = "" then "-" else buf_fin-doc.cor-acc1-value)
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_sumDoc}
-        , input string( Sum-delim-with-defis( buf_fin-doc.sum-doc, 15 ) )
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-h_celNaznValue}
-        , input (if buf_fin-doc.cel-nazn-value = "" then "-" else buf_fin-doc.cel-nazn-value)
-    ).
+  /*Печать*/
+  put stream OutStr-html unformatted
+    '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="Отчет">'skip
+    .
 
+  put stream OutStr-html unformatted
+    '<thead>' skip
+    '<tr>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '<td style="width: 6px;"></td>' skip
+    '</tr>' skip
+    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="21" style="text-align: center;"></td>' skip
+    '<td colspan="45" style="text-align: left;">Унифицированная форма № КО-2</td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="21" style="text-align: center;"></td>' skip
+    '<td colspan="45" style="text-align: left;">Утверждена постановлением Госкомстата России от 18.08.98 №88</td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="31" style="text-align: center;"></td>' skip
+    '<td colspan="35" style="text-align: left;"></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="49" style="text-align: center;"></td>' skip
+    '<td colspan="16" style="text-align: center; border: 1px solid black;">Код</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="35" style="text-align: center;"></td>' skip
+    '<td colspan="13" style="text-align: right;">Форма по ОКУД</td>' skip
+    '<td></td>' skip
+    '<td colspan="16" style="text-align: center; border: 2px solid black;">0310002</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="39" style="text-align: center; border-bottom: 1px solid black;">' + buf_fin-doc.payer-name + '</td>' skip
+    '<td colspan="9" style="text-align: right;">по ОКПО</td>' skip
+    '<td></td>' skip
+    '<td colspan="16" style="text-align: center; border: 2px solid black;">' + string(buf_fin-doc.payer-okpo) + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="39" style="text-align: center; font-size: 10px;">(организация)</td>' skip
+    '<td colspan="9" style="text-align: right;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.str-podr-code = 0 then "" + '</td>' else string( buf_fin-doc.str-podr-code ) + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="49" style="text-align: center; border-bottom: 1px solid black;">' + v-str-podr-name + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="49" style="text-align:center; font-size: 10px;">(структурное подразделение)</td>' skip
+    '<td colspan="16" style="text-align:center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="41" style="text-align:center;"></td>' skip
+    '<td colspan="10" style="text-align:center; border-left: 1px solid black; border-right: 1px solid black; border-top: 1px solid black">Номер документа</td>' skip
+    '<td colspan="14" style="text-align:center; border-left: 1px solid black; border-right: 1px solid black; border-top: 1px solid black">Дата составления</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="41" style="text-align: center; font-weight: bold;">РАСХОДНЫЙ КАССОВЫЙ ОРДЕР</td>' skip
+    '<td colspan="10" style="text-align: center; border: 1px solid black;">' + string(buf_fin-doc.prn-doc-code) + '</td>' skip
+    '<td colspan="14" style="text-align: center; border: 1px solid black;">' + string(v-doc-date-f) + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted 
+    '<tr>' skip
+    '<td colspan="41" style="text-align: center; font-weight: bold;"></td>' skip
+    '<td colspan="10" style="text-align: center;"></td>' skip
+    '<td colspan="14" style="text-align: center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip    .
+      put stream OutStr-html unformatted 
+    '<tr>' skip
+    '<td colspan="33" style="text-align: center; border: 1px solid black;">Дебет</td>' skip
+    '<td text_wrap="true" rowspan="4" colspan="6" style="text-align: center; border: 1px solid black;">Кредит</td>' skip
+    '<td text_wrap="true" rowspan="4" colspan="9" style="text-align: center; border: 1px solid black;">Сумма, руб. коп.</td>' skip
+    '<td text_wrap="true" rowspan="4" colspan="10" style="text-align: center; border: 1px solid black;">Код целевого назначения</td>' skip
+    '<td text_wrap="true" rowspan="4" colspan="7" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td text_wrap="true" rowspan="3" colspan="4" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">код структурного подразделения</td>' skip
+    '<td text_wrap="true" rowspan="3" colspan="9" style="text-align: center; border: 1px solid black;">корреспондирующий счет, субсчет</td>' skip
+    '<td text_wrap="true" colspan="11" rowspan="3" style="text-align: center; border: 1px solid black;">код аналитического учета</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted       
+    '<tr>' skip
+    '<td text_wrap="true" colspan="4" rowspan="2" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.str-podr-code = 0 then "-"  + '</td>' else string(buf_fin-doc.str-podr-code) + '</td>' skip
+    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + string(buf_fin-doc.cor-acc-value) + '</td>' skip
+    '<td text_wrap="true" colspan="11" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.an-uchet-value = "" then "-"  + '</td>' else buf_fin-doc.an-uchet-value + '</td>' skip
+    '<td text_wrap="true" colspan="6" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.cor-acc1-value = "" then "-"  + '</td>' else buf_fin-doc.cor-acc1-value + '</td>' skip
+    '<td text_wrap="true" colspan="9" rowspan="2" style="text-align: center; border: 1px solid black;">' + Sum-delim-with-defis(buf_fin-doc.sum-doc, 15) + '</td>' skip
+    '<td text_wrap="true" colspan="10" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.cel-nazn-value = "" then "-" + '</td>' else buf_fin-doc.cel-nazn-value + '</td>' skip
+    '<td text_wrap="true" colspan="7" rowspan="2" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
 
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_receiverName}
-        , input buf_fin-doc.receiver-name
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_reason}
-        , input substitute( "&1 &2", v-naznach-plat-1, v-naznach-plat-2 )
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_sumPropis1}
-        , input v-sum-doc-v1
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_sumPropis2}
-        , input substitute( "&1 &2"
-                        , v-sum-doc-v2
-                        , ( if buf_fin-doc.curr-code = 0
-                            then ( v-rub + {&space-char} + v-sum-kop-p + v-kop)
-                            else "":U ) )
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_pril1}
-        , input v-enclosure-1
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_pril2}
-        , input v-enclosure-2
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_bossPos}
-        , input v-head-position
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_bossName}
-        , input v-sign1
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_genAcc}
-        , input buf_fin-doc.payer-sign2
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_dateGet}
-        , input substitute( '"&1" &2 &3 г.'
-                        , day( v-date-create)
-                        , MonthNameRusGen( Month( v-date-create ) )
-                        , string( Year( v-date-create ), "9999" ) )
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_passport1}
-        , input v-passport-1
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_passport2}
-        , input v-passport-2
-    ).
-    run rko2xl-write-cell-data in this-procedure (
-          input {&rko2xl-f_kassMan}
-        , input buf_fin-doc.payer-sign3
-    ).
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="text-align: center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="5" style="text-align: left;">Выдать</td>' skip
+    '<td colspan="60" style="text-align: left; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-name + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="5" style="text-align: center;"></td>' skip
+    '<td colspan="60" style="text-align: center; font-size: 10px;">(фамилия, имя, отчество)</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">Основание:</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-naznach-plat-1 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">Сумма</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-sum-doc-v1 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;"></td>' skip
+    '<td colspan="55" style="text-align: center; font-size: 10px;">(прописью)</td>' skip
+    '<td></td>' skip
+    '</tr>' skip  .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="48" style="text-align: left; border-bottom: 1px solid black;">' + v-sum-doc-v2 + '</td>' skip
+    '<td colspan="3" style="text-align: left;">руб.</td>' skip
+    '<td colspan="7" style="text-align: center; border-bottom: 1px solid black;">' + string(v-sum-kop-p) + '</td>' skip
+    '<td colspan="7" style="text-align: left;">коп.</td>' skip
+    '<td></td>' skip
+    '</tr>' skip      .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">Приложение</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + v-enclosure-1 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="text-align: center;">' + v-enclosure-2 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="18" style="text-align: left;">Руководитель организации</td>' skip
+    '<td colspan="2" style="text-align: right;"></td>' skip
+    '<td colspan="12" style="text-align: center; border-bottom: 1px solid black;">' + v-head-position + '</td>' skip
+    '<td colspan="2" style="text-align: right;"></td>' skip
+    '<td colspan="14" style="text-align: right; border-bottom: 1px solid black;"></td>' skip
+    '<td colspan="2" style="text-align: right;"></td>' skip
+    '<td colspan="15" style="text-align: right; border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="18" style="text-align: left;"></td>' skip
+    '<td colspan="2" style="text-align: right;"></td>' skip
+    '<td colspan="12" style="text-align: center; font-size: 10px;">(должность)</td>' skip
+    '<td colspan="2" style="text-align: right;"></td>' skip
+    '<td colspan="14" style="text-align: center; font-size: 10px;">(подпись)</td>' skip
+    '<td colspan="2" style="text-align: right;"></td>' skip
+    '<td colspan="15" style="text-align: center; font-size: 10px;">(расшифровка подписи)</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="15" style="text-align: left;">Главный бухгалтер</td>' skip
+    '<td></td>' skip
+    '<td colspan="20" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="25" style="text-align: center; border-bottom: 1px solid black;">' + if buf_fin-doc.payer-sign2 = ? then " "  + '</td>' else buf_fin-doc.payer-sign2 + '</td>' skip
+    '<td colspan="3"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip            .
+      put stream OutStr-html unformatted   
+    '<tr>' skip
+    '<td colspan="15" style="text-align: left;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="20" style="text-align: center; font-size: 10px;">(подпись)</td>' skip
+    '<td></td>' skip
+    '<td colspan="25" style="text-align: center; font-size: 10px;">(расшифровка подписи)</td>' skip
+    '<td colspan="3"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;">Получил</td>' skip
+    '<td></td>' skip
+    '<td colspan="54" style="text-align: center; border-bottom: 1px solid black;">' + buf_fin-doc.receiver-sign3 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip         .
+      put stream OutStr-html unformatted      
+    '<tr>' skip
+    '<td colspan="10" style="text-align: left;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="54" style="text-align: center; font-size: 10px;">(сумма прописью)</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted      
+    '<tr>' skip
+    '<td colspan="45" style="text-align: left; border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="4" style="text-align: center;">руб.</td>' skip
+    '<td colspan="11" style="border-bottom: 1px solid black;"></td>' skip
+    '<td colspan="4" style="text-align: center;">коп.</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+      put stream OutStr-html unformatted      
+    '<tr>' skip
+    '<td colspan="25" style="text-align: left; border-bottom: 1px solid black;">' + '"' + string(day(v-date-create), "99":U) + '" ' + MonthNameRusGen(Month(v-date-create)) + " " + string(year(v-date-create), "9999":U) + "г." + '</td>' skip
+    '<td colspan="7"></td>' skip
+    '<td colspan="8" style="text-align: center;">Подпись </td>' skip
+    '<td colspan="11" style="border-bottom: 1px solid black;"></td>' skip
+    '<td colspan="14" style="text-align: center;"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+          put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="5" style="text-align: left;">По</td>' skip
+    '<td colspan="60" style="text-align: left; border-bottom: 1px solid black;">' + v-passport-1 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+          put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="5" style="text-align: left;"></td>' skip
+    '<td colspan="60" style="text-align: center; font-size: 10px;">(наименование, номер, дата и место выдачи документа,</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="text-align: center;border-bottom: 1px solid black; height: 12px;">' + v-passport-2 + '</td>' skip
+    '<td></td>' skip
+    '</tr>' skip .
+    put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="65" style="text-align: center; font-size: 10px;">,удостоверяющего личность получателя)</td>' skip
+    '<td></td>' skip
+    '</tr>' skip     .    
+      put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="15" style="text-align: left;">Выдал кассир</td>' skip
+    '<td></td>' skip
+    '<td colspan="20" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="25" style="text-align: center; border-bottom: 1px solid black;">' + if buf_fin-doc.payer-sign3 = ? then " "  + '</td>' else buf_fin-doc.payer-sign3 + '</td>' skip
+    '<td colspan="3"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip            .
+      put stream OutStr-html unformatted   
+    '<tr>' skip
+    '<td colspan="15" style="text-align: left;"></td>' skip
+    '<td></td>' skip
+    '<td colspan="20" style="text-align: center; font-size: 10px;">(подпись)</td>' skip
+    '<td></td>' skip
+    '<td colspan="25" style="text-align: center; font-size: 10px;">(расшифровка подписи)</td>' skip
+    '<td colspan="3"></td>' skip
+    '<td></td>' skip
+    '</tr>' skip     
+    '</thead>' skip
+    '<tbody>' skip    
+    .
+    put stream OutStr-html unformatted
+    '</tbody>' skip  
+    '</table>' skip
+    .
 
- PUT  STREAM PrnLibStream unformatted
- center-field(buf_fin-doc.payer-name, 117, 117, v-fill)
- /*"______________________________________________________"*/
-                                                                                                                    " по ОКПО|"
-                                                                 center-field(buf_fin-doc.payer-okpo, 8, 9, {&space-char})
-                                                                                                                                      "|" skip
-center-field("организация", 125, 125, {&space-char} )                                                                       "+---------+" skip
-center-field( ( if v-str-podr-name = "":U
-                then fill( v-fill, 125 )
-                else v-str-podr-name ) , 125, 125, v-fill)
-                                                                                                                            "|"
-                        center-field(if buf_fin-doc.str-podr-code = 0 then "" else string( buf_fin-doc.str-podr-code ), 9, 9, {&space-char})
-                                                                                                                                      "|" skip
- center-field("структурное подразделение", 125, 125, {&space-char} )                                                        "+---------+" skip
- fill( {&space-char} , 106)                                                                              "+----------------+-----------+" skip
- fill( {&space-char} , 106)                                                                              "|      Номер     |    Дата   |" skip
- fill( {&space-char} , 106)                                                                              "|    документа   |составления|" skip
- fill( {&space-char} , 106)                                                                              "+----------------+-----------+" skip
- fill( {&space-char} , 106)                                                                              "|" center-field(buf_fin-doc.prn-doc-code, 16, 16, {&space-char})
-                                                                                                                          "|"
-                                                                                         center-field(v-doc-date-f, 11, 11, {&space-char})
-                                                                                                                                      "|" skip
-center-field("РАСХОДНЫЙ КАССОВЫЙ ОРДЕР", 106, 106, {&space-char} )                                       "+----------------+-----------+" skip
- .
-if buf_fin-doc.curr-code = 0 then do:
-PUT  STREAM PrnLibStream unformatted
-"+-----------------------------------------------------------------+--------------------+----------------------+-----------------+------+" skip
-"|                      Дебет                                      |                    |                      |                 |      |" skip
-"+-----+-------------------+-------------------+-------------------+--------------------+                      |      Код        |      |" skip
-"|     | код структурного  | корреспондирующий |    код аналити-   |      Кредит        |         Сумма,       |      целевого   |      |" skip
-"|     |   подразделения   |     счет,         |     ческого       |                    |" fill( {&space-char} , 8) trim(v-rub) v-kop fill({&space-char}, 5)
-                                                                                            /* р у б . к о п */
-                                                                                                              "|   назначения    |      |" skip
-"|     |                   |     субсчет       |      учета        |                    |                      |                 |      |" skip
-"+-----+-------------------+-------------------+-------------------+--------------------+----------------------+-----------------+------+" skip
-"|     |" center-field(if buf_fin-doc.str-podr-code = 0 then "-" else string( buf_fin-doc.str-podr-code ), 19, 19, {&space-char})
-                          "|" center-field(if buf_fin-doc.cor-acc-value = "" then "-" else buf_fin-doc.cor-acc-value, 19, 19, {&space-char})
-                                              "|" center-field(if buf_fin-doc.an-uchet-value = "" then "-" else buf_fin-doc.an-uchet-value, 19, 19, {&space-char})
-                                                                  "|" center-field(if buf_fin-doc.cor-acc1-value = "" then "-" else buf_fin-doc.cor-acc1-value, 20, 20, {&space-char})
-                                                                                       "|" center-field(Sum-delim-with-defis(buf_fin-doc.sum-doc, 15), 22, 22, {&space-char})
-                                                                                                              "|" center-field(if buf_fin-doc.cel-nazn-value = "" then "-" else buf_fin-doc.cel-nazn-value, 17, 17, {&space-char})
-                                                                                                                                "|      |" skip
-"+-----+-------------------+-------------------+-------------------+--------------------+----------------------+-----------------+------+" skip
- .
-end.
-else do:
-PUT  STREAM PrnLibStream unformatted
-"+-----------------------------------------------------------+--------------------+------------+----------------------+-----------------+" skip
-"|             Дебет                                         |                    |            |                      |                 |" skip
-"+-------------------+-------------------+-------------------+--------------------+            |                      |    Код          |" skip
-"|  код структурного | корреспондирующий |    код аналити-   |      Кредит        | Валюта     |        Сумма,        |  целевого       |" skip
-"|   подразделения   |      счет,        |      ческого      |                    |            |" v-title-rub        /*инвалюта */
-                                                                                                                     "|     значения    |" skip
-"|                   |     субсчет       |       учета       |                    |            |                      |                 |" skip
-"+-------------------+-------------------+-------------------+--------------------+------------+----------------------+-----------------+" skip
-"|" center-field(if buf_fin-doc.str-podr-code = 0 then "-" else string( buf_fin-doc.str-podr-code ), 19, 19, {&space-char})
-                    "|" center-field(if buf_fin-doc.cor-acc-value = "" then "-" else buf_fin-doc.cor-acc-value, 19, 19, {&space-char})
-                                        "|" center-field(if buf_fin-doc.an-uchet-value = "" then "-" else buf_fin-doc.an-uchet-value, 19, 19, {&space-char})
-                                                            "|" center-field(if buf_fin-doc.cor-acc1-value = "" then "-" else buf_fin-doc.cor-acc1-value, 20, 20, {&space-char})
-                                                                                 "|" center-field(if v-okv-code = "" then "-" else v-okv-code, 12, 12, {&space-char})
-                                                                                              "|" center-field(Sum-delim-with-defis(buf_fin-doc.sum-doc, 15), 22, 22, {&space-char})
-                                                                                                                     "|" center-field(if buf_fin-doc.cel-nazn-value = "" then "-" else buf_fin-doc.cel-nazn-value, 17, 17, {&space-char})
-                                                                                                                                       "|" skip
-"+-------------------+-------------------+-------------------+--------------------+------------+----------------------+-----------------+" skip
- .
-end.
-PUT  STREAM PrnLibStream unformatted
- "Выдать " left-field(buf_fin-doc.receiver-name, 129, 129, v-fill)
-                                                               /*"____________________________________________________________________"*/  skip
+  put stream OutStr-html unformatted
+        
+    '</body>' skip
+    '</html>' skip
+    .
+  output stream OutStr-html close.    
+        
+  run prn-lib-reportviewer-report-name in this-procedure (
+    input THIS-PROCEDURE
+    ,input v-file-name-rep-html
+    ). 
+    
+    
+PROCEDURE get-report-num :
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  define output parameter p-report-num as integer no-undo .
 
-center-field(string("фамилия, имя, отчество"), 136, 136, {&space-char})                                                                    skip
-"Основание: " left-field(v-naznach-plat-1, 125, 125, v-fill)                                                                               skip
-left-field(v-naznach-plat-2, 136, 136, v-fill)                                                                                             skip
- "Сумма   " v-sum-doc-v1                                                                                                                   skip
-center-field(string("прописью"), 136, 136, {&space-char})                                                                                  skip
-v-sum-doc-v2
+  do
+    on error undo, return error return-value
+    :
+    run gbl/getrpnum.p (output p-report-num).
+  end.
 
-                                       (if buf_fin-doc.curr-code = 0
-                                        then  (v-rub + {&space-char} +
-                                                    /* " р у б . " */ center-field(v-sum-kop-p, 4, 4, v-fill) +
-                                                             /*"____"*/
-                                                                      v-kop)
-                                        else "":U)
-                                                                     /* "к о п." */
-                                                                                                                                           skip
- "Приложение " Left-Field(v-enclosure-1, 125, 125, v-fill)
-          /*"______________________________________________________________"*/
-                                                                             skip
-  Left-Field(v-enclosure-2, 136, 136, v-fill)
- /*"_________________________________________________________________________"*/
-                                                                             skip
- "Руководитель организации "
-                            center-field(v-head-position, 36, 36,  v-fill)
-                                 /*"_______________"*/
-                                           ( {&space-char} + fill( v-fill, 36) + {&space-char} ) center-field(v-sign1, 37, 37,  v-fill)
-                                                                                                                        /*"___________________" */
-                                                                                                                                                   skip
- fill( {&space-char} , 25)  center-field("должность", 36, 36,  {&space-char} )
-                                          ( {&space-char} + center-field("подпись", 36, 36,  {&space-char} ) + {&space-char} )
-                                                                     center-field("расшифровка подписи", 40, 40,  {&space-char} ) skip
- "Главный бухгалтер " fill( "_", 48)  fill( {&space-char} , 4) center-field(buf_fin-doc.payer-sign2, 66, 66,  v-fill) skip
- fill ( {&space-char}, 18)  center-field("подпись", 48, 48,  {&space-char}) fill( {&space-char} , 4) center-field("расшифровка подписи", 66, 66,  {&space-char}) skip
-/*закоментарим прописью - пусть пишут шариковой ручкой*/
-/*
- "получил " v-sum-doc-n1                                                              skip
- center-field("сумма прописью", 136, 136,  {&space-char})                             skip
- v-sum-doc-n2
+END PROCEDURE.
 
-                                                  (if buf_fin-doc.curr-code = 0
-                                                   then (v-rub + {&space-char} +
-                                                           /* " р у б . " */
-                                                           center-field(v-sum-kop-p, 4, 4, v-fill) +
-                                                                /*"____*/
-                                                                     v-kop /* "к о п ." */ )
-                                                   else "":U)
-                                                                             skip
-*/
-"получил " fill("_", 128)                                                    skip
-center-field("сумма прописью", 136, 136,  {&space-char})                     skip
-fill("_", 136)                                                               skip
-{&double-quote} string(day(v-date-create), "99":U) {&double-quote}
-/*'"  "'*/
-      Center-FIeld(MonthNameRusGen(Month(v-date-create)), 8, 22, v-fill)
-      /*"  ______________      "*/
-      string(Year(v-date-create), "9999")
+end.    
+    
 
-                               " г. Подпись " fill( "_", 94)  skip
- "По " Left-Field(v-passport-1, 133, 133, v-fill)
-  /*"______________________________________________________________________" */
-                                                                             skip
-center-field("наименование, номер, дата и место выдачи документа,", 136, 136,  {&space-char}) skip
-Left-Field(v-passport-2, 136, 136, v-fill)                                                   skip
-center-field("удостоверяющего личность получателя", 136, 136,  {&space-char}) skip
-"Выдал кассир  " fill("_",  53) fill( {&space-char}, 4)  center-field(buf_fin-doc.payer-sign3, 65, 65, v-fill) skip
-fill( {&space-char}, 14) center-field("подпись", 53, 53,  {&space-char}) center-field("расшифровка подписи", 65, 65,  {&space-char}) skip
-.
-
-
-
-  if p-append and not p-is-last then Page stream PrnLibStream .
-  output  STREAM PrnLibStream CLOSE.
-  assign
-    p-format = 0
-  .
-    run rko2xl-close in this-procedure .
-    if p-from-forms then do:
-      { rep/q-print.i 0 }
-    end. /*if from-forms*/
-    else do:
-    if not p-append
-    then do:
-        os-delete
-            value( string( session:temp-directory ) + {&DF_Name} + string( g#report-num ) + ".txl" )
-        .
-        os-rename
-            value( string( session:temp-directory ) + "$" + string( g#report-num ) + ".txl" )
-            value( string( session:temp-directory ) + {&DF_Name} + string( g#report-num ) + ".txl" )
-        .
-        run prn-lib-prn-file in this-procedure (
-            input parParentProc
-            , input 0
-        ).
-        os-delete
-            value( string( session:temp-directory ) + {&DF_Name} + string( g#report-num ) + ".txl" )
-        .
-        os-delete
-            value( v-rko2xl-cell-file-name )
-        .
-    end.
-    end. /*else if from-forms*/
-end.
+/*    run rko2xl-close in this-procedure .*/
+/*    if p-from-forms then do:                                                                        */
+/*      { rep/q-print.i 0 }                                                                           */
+/*    end. /*if from-forms*/                                                                          */
+/*    else do:                                                                                        */
+/*    if not p-append                                                                                 */
+/*    then do:                                                                                        */
+/*        os-delete                                                                                   */
+/*            value( string( session:temp-directory ) + {&DF_Name} + string( g#report-num ) + ".txl" )*/
+/*        .                                                                                           */
+/*        os-rename                                                                                   */
+/*            value( string( session:temp-directory ) + "$" + string( g#report-num ) + ".txl" )       */
+/*            value( string( session:temp-directory ) + {&DF_Name} + string( g#report-num ) + ".txl" )*/
+/*        .                                                                                           */
+/*        run prn-lib-prn-file in this-procedure (                                                    */
+/*            input parParentProc                                                                     */
+/*            , input 0                                                                               */
+/*        ).                                                                                          */
+/*        os-delete                                                                                   */
+/*            value( string( session:temp-directory ) + {&DF_Name} + string( g#report-num ) + ".txl" )*/
+/*        .                                                                                           */
+/*        os-delete                                                                                   */
+/*            value( v-rko2xl-cell-file-name )                                                        */
+/*        .                                                                                           */
+/*    end.                                                                                            */
+/*    end. /*else if from-forms*/                                                                     */
+/*end.*/

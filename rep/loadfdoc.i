@@ -47,10 +47,10 @@ initial "@(#)$Workfile$ $Revision$".
 */
 
 
-{ rep/menufdoc.i {&income-cash}           {&fin-fact_fin-permitted_fin-new}               "'форма N КО-1'"                              "'doc,rubl,base'"   "'rep/findocpr.p'"   "''"                        "'-'"  "''"                 "'A4lans'"  "''"                                  ? }
+{ rep/menufdoc.i {&income-cash}           {&fin-fact_fin-permitted_fin-new}               "'форма N КО-1'"                              "'doc,rubl,base'"   "'rep/findocpr.p'"   "''"                        "'-'"  "''"                 "'HTML'"  "''"                                  ? }
 
 { rep/menufdoc.i {&expense-cash}          {&fin-fact_fin-permitted_fin-new}               "'Заявка на оплату'"                          "'doc,rubl,base'"   "'rep/prn-zay.p'"   "'plat,yes'"                 "'-'"  "''"                 "'A4port'"  "''"                                  ? }
-{ rep/menufdoc.i {&expense-cash}          {&fin-fact_fin-permitted_fin-new}               "'форма N КО-2'"                              "'doc,rubl,base'"   "'rep/findocpr.p'"   "''"                        "'-'"  "''"                 "'A4port'"  "''"                                  ? }
+{ rep/menufdoc.i {&expense-cash}          {&fin-fact_fin-permitted_fin-new}               "'форма N КО-2'"                              "'doc,rubl,base'"   "'rep/findocpr.p'"   "''"                        "'-'"  "''"                 "'HTML'"  "''"                                  ? }
 
 { rep/menufdoc.i {&income-cashless}       {&fin-fact_fin-bank_fin-permitted_fin-new}      "'форма N 0401060'"                           "'doc,rubl,base'"   "'rep/findocpr.p'"   "''"                        "'-'"  "''"                 "'A4port'"  "''"                                  ? }
 
