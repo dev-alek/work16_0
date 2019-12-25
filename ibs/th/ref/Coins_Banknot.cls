@@ -1,36 +1,37 @@
  
- /*------------------------------------------------------------------------
-    File        : Coins_Banknot
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : eshklyar
-    Created     : Sat Nov 02 13:33:04 MSK 2019
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*------------------------------------------------------------------------
+   File        : Coins_Banknot
+   Purpose     : 
+   Syntax      : 
+   Description : 
+   Author(s)   : eshklyar
+   Created     : Sat Nov 02 13:33:04 MSK 2019
+   Notes       : 
+ ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
-using Progress.Windows.Form.
+using Progress.Windows.UserControl.
 
 block-level on error undo, throw.
 
-class ibs.th.ref.Coins_Banknot inherits Form: 
+class ibs.th.ref.Coins_Banknot inherits UserControl: 
   { ibs\th\ref\Coins_Bank_tt.i }
     
-  define private variable bindingSource_Coins as Progress.Data.BindingSource no-undo.
-  define private variable bindingSource_Bank as Progress.Data.BindingSource no-undo.
-  define private variable components as System.ComponentModel.IContainer no-undo.
-  define private variable dataGridView2 as System.Windows.Forms.DataGridView no-undo.
-  define private variable dataGridView1 as System.Windows.Forms.DataGridView no-undo.
+  define private variable bindingSource_Coins               as Progress.Data.BindingSource                    no-undo.
+  define private variable bindingSource_Bank                as Progress.Data.BindingSource                    no-undo.
+  define private variable components                        as System.ComponentModel.IContainer               no-undo.
+  define private variable dataGridView2                     as System.Windows.Forms.DataGridView              no-undo.
+  define private variable dataGridView1                     as System.Windows.Forms.DataGridView              no-undo.
+  define private variable label1 as System.Windows.Forms.Label no-undo.
+  define public variable Fsumm as System.Windows.Forms.TextBox no-undo.
   define private variable sumqntyDataGridViewTextBoxColumn1 as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-  define private variable sumqntyDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-  define private variable qntyDataGridViewTextBoxColumn1 as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-  define private variable qntyDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-  define private variable idDataGridViewTextBoxColumn1 as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-  define private variable idDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-  define         variable hQuery1                               as handle                                         no-undo .
-  define         variable hQuery2                               as handle                                         no-undo .
-
+  define private variable sumqntyDataGridViewTextBoxColumn  as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable qntyDataGridViewTextBoxColumn1    as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable qntyDataGridViewTextBoxColumn     as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable idDataGridViewTextBoxColumn1      as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  define private variable idDataGridViewTextBoxColumn       as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+  
+  define public variable v-total-sum                       as decimal                                        no-undo .
     
   constructor public Coins_Banknot (  ):
     
@@ -46,64 +47,81 @@ class ibs.th.ref.Coins_Banknot inherits Form:
 
   end constructor.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void click_change_( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
-	
-	define variable vi as integer no-undo.
-	for each tt-banknots by tt-banknots.id:
-	  vi = vi + 1.
-	  if vi =	e:RowIndex then
-	  tt-banknots.sum-qnty = tt-banknots.id * tt-banknots.qnty .
-  end.
-  bindingSource_Coins:Refresh().	  
-		return.
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void dataGridView1_CellValueChanged( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
+    define buffer buf_tt-banknots for tt-banknots.
+    define variable vi as integer no-undo.
+    bindingSource_Bank:Assign().
+    if e:RowIndex >= 0
+       and e:ColumnIndex eq 1
+    then do:
+       define variable msum1 as integer   no-undo.
+       define variable msum2 as integer   no-undo.
+       msum1 = dataGridView1:rows[e:RowIndex]:Cells[1]:Value.
+       msum2 = dataGridView1:rows[e:RowIndex]:Cells[0]:Value.
+       dataGridView1:rows[e:RowIndex]:Cells[2]:Value = msum1 * msum2.
+    
+      
+       find first buf_tt-banknots where buf_tt-banknots.id eq msum2
+       no-error.
+       if not available buf_tt-banknots
+       then do:
+          create buf_tt-banknots. 
+          buf_tt-banknots.id = msum2.
+       end.
+       buf_tt-banknots.qnty = msum1.
+       buf_tt-banknots.sum-qnty = msum1 * msum2.
+        bindingSource_Bank:Assign().
+    end.
+    
+    setItog().
+    return.
 
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void Coins_Banknot_Load( input sender as System.Object, input e as System.EventArgs ):
-		
-		return.
-
-	end method.
+  end method.
 
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void dataGridView2_CellContentClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
-		
-		return.
 
-	end method.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void dataGridView2_CellValueChanged( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
+    define buffer tt-coins     for tt-coins.
+    define buffer buf_tt-coins for tt-coins.
+    define variable vi as integer no-undo.
+    bindingSource_Coins:Assign().
+    if e:RowIndex >= 0
+       and e:ColumnIndex eq 1
+    then do:
+       define variable msum1 as decimal  no-undo.
+       define variable msum2 as decimal  no-undo.
+       msum1 = dataGridView2:rows[e:RowIndex]:Cells[1]:Value.
+       msum2 = dataGridView2:rows[e:RowIndex]:Cells[0]:Value.
+       dataGridView2:rows[e:RowIndex]:Cells[2]:Value = msum1 * msum2.
+    
+      
+       find first  buf_tt-coins where  buf_tt-coins.id eq msum2
+       no-error.
+       if not available  buf_tt-coins
+       then do:
+          create  buf_tt-coins. 
+          buf_tt-coins.id = msum2.
+       end.
+        buf_tt-coins.qnty = msum1.
+        buf_tt-coins.sum-qnty = msum1 * msum2.
+        bindingSource_Coins:Assign().
+    end.
+    setItog().
+    return.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void dataGridView2_CellValueChanged( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
+  end method.
 
-  define variable vi as integer no-undo.
-  for each tt-coins by tt-coins.id:
-    vi = vi + 1.
-    if vi = e:RowIndex then
-    tt-coins.sum-qnty = tt-coins.id * tt-coins.qnty .
-  end.
-  bindingSource_Coins:Refresh().
-		return.
-
-	end method.
 
   method private void InitializeComponent(  ):
     
@@ -154,6 +172,8 @@ class ibs.th.ref.Coins_Banknot inherits Form:
     this-object:qntyDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:sumqntyDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:bindingSource_Coins = new Progress.Data.BindingSource(this-object:components).
+    this-object:Fsumm = new System.Windows.Forms.TextBox().
+    this-object:label1 = new System.Windows.Forms.Label().
     cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:bindingSource_Bank, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:dataGridView2, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -186,32 +206,33 @@ class ibs.th.ref.Coins_Banknot inherits Form:
     this-object:dataGridView1:Name = "dataGridView1".
     this-object:dataGridView1:RowHeadersVisible = false.
     this-object:dataGridView1:RowTemplate:Height = 26.
-    this-object:dataGridView1:RowTemplate:ReadOnly = true.
     this-object:dataGridView1:Size = new System.Drawing.Size(300, 231).
     this-object:dataGridView1:TabIndex = 0.
-    this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView2_CellContentClick).
-    this-object:dataGridView1:CellValueChanged:Subscribe(this-object:click_change_).
+    this-object:dataGridView1:CellValueChanged:Subscribe(this-object:dataGridView1_CellValueChanged).
     /*  */
     /* idDataGridViewTextBoxColumn1 */
     /*  */
-    this-object:idDataGridViewTextBoxColumn1:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:Fill.
+    this-object:idDataGridViewTextBoxColumn1:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
     this-object:idDataGridViewTextBoxColumn1:DataPropertyName = "id".
     dataGridViewCellStyle2:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleCenter.
     dataGridViewCellStyle2:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:idDataGridViewTextBoxColumn1:DefaultCellStyle = dataGridViewCellStyle2.
+    this-object:idDataGridViewTextBoxColumn1:Frozen = true.
     this-object:idDataGridViewTextBoxColumn1:HeaderText = "Банкноты".
     this-object:idDataGridViewTextBoxColumn1:Name = "idDataGridViewTextBoxColumn1".
     this-object:idDataGridViewTextBoxColumn1:ReadOnly = true.
+    this-object:idDataGridViewTextBoxColumn1:Width = 99.
     /*  */
     /* qntyDataGridViewTextBoxColumn1 */
     /*  */
-    this-object:qntyDataGridViewTextBoxColumn1:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:Fill.
+    this-object:qntyDataGridViewTextBoxColumn1:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:None.
     this-object:qntyDataGridViewTextBoxColumn1:DataPropertyName = "qnty".
     dataGridViewCellStyle3:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleCenter.
     this-object:qntyDataGridViewTextBoxColumn1:DefaultCellStyle = dataGridViewCellStyle3.
     this-object:qntyDataGridViewTextBoxColumn1:HeaderText = "Кол-во".
     this-object:qntyDataGridViewTextBoxColumn1:Name = "qntyDataGridViewTextBoxColumn1".
     this-object:qntyDataGridViewTextBoxColumn1:Resizable = System.Windows.Forms.DataGridViewTriState:False.
+    this-object:qntyDataGridViewTextBoxColumn1:Width = 99.
     /*  */
     /* sumqntyDataGridViewTextBoxColumn1 */
     /*  */
@@ -225,6 +246,7 @@ class ibs.th.ref.Coins_Banknot inherits Form:
     /*  */
     /* bindingSource_Bank */
     /*  */
+    this-object:bindingSource_Bank:AutoUpdate = true.
     this-object:bindingSource_Bank:MaxDataGuess = 0.
     this-object:bindingSource_Bank:NoLOBs = false.
     this-object:bindingSource_Bank:Position = 0.
@@ -268,7 +290,6 @@ class ibs.th.ref.Coins_Banknot inherits Form:
     this-object:dataGridView2:RowTemplate:Height = 30.
     this-object:dataGridView2:Size = new System.Drawing.Size(300, 233).
     this-object:dataGridView2:TabIndex = 1.
-    this-object:dataGridView2:CellContentClick:Subscribe(this-object:dataGridView2_CellContentClick).
     this-object:dataGridView2:CellValueChanged:Subscribe(this-object:dataGridView2_CellValueChanged).
     /*  */
     /* idDataGridViewTextBoxColumn */
@@ -302,6 +323,7 @@ class ibs.th.ref.Coins_Banknot inherits Form:
     /*  */
     /* bindingSource_Coins */
     /*  */
+    this-object:bindingSource_Coins:AutoUpdate = true.
     this-object:bindingSource_Coins:MaxDataGuess = 0.
     this-object:bindingSource_Coins:NoLOBs = false.
     this-object:bindingSource_Coins:Position = 0.
@@ -317,75 +339,129 @@ class ibs.th.ref.Coins_Banknot inherits Form:
     tableDesc2:Columns = arrayvar5.
     this-object:bindingSource_Coins:TableSchema = tableDesc2.
     /*  */
+    /* Fsumm */
+    /*  */
+    this-object:Fsumm:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:Fsumm:Location = new System.Drawing.Point(516, 250).
+    this-object:Fsumm:Name = "Fsumm".
+    this-object:Fsumm:Size = new System.Drawing.Size(143, 21).
+    this-object:Fsumm:TabIndex = 2.
+    /*  */
+    /* label1 */
+    /*  */
+    this-object:label1:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label1:Location = new System.Drawing.Point(453, 251).
+    this-object:label1:Name = "label1".
+    this-object:label1:Size = new System.Drawing.Size(57, 23).
+    this-object:label1:TabIndex = 3.
+    this-object:label1:Text = "Итого:".
+    this-object:label1:UseCompatibleTextRendering = true.
+    /*  */
     /* Coins_Banknot */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(668, 253).
+    this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
+    this-object:Controls:Add(this-object:label1).
+    this-object:Controls:Add(this-object:Fsumm).
     this-object:Controls:Add(this-object:dataGridView2).
     this-object:Controls:Add(this-object:dataGridView1).
     this-object:Name = "Coins_Banknot".
-    this-object:Text = "Coins_Banknot".
-    this-object:Load:Subscribe(this-object:Coins_Banknot_Load).
+    this-object:Size = new System.Drawing.Size(668, 292).
     cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:bindingSource_Bank, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:dataGridView2, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:bindingSource_Coins, System.ComponentModel.ISupportInitialize):EndInit().
     this-object:ResumeLayout(false).
+    this-object:PerformLayout().
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.
   end method.
+  
+/*  method public void Update_CB (input table1 as handle, input table2 as handle):*/
+/*    bindingSource_Bank:Handle = table1 .                                        */
+/*    bindingSource_Coins:Handle = table2 .                                       */
+/*  end.                                                                          */
 
+  method public void Update_Banknots (input table1 as handle):
+    define variable vB as handle no-undo.
+    define buffer tt-banknots for tt-banknots.
+    vB = table1:get-buffer-handle (1).
+    table1:get-first( ).
+
+    do while table1:query-off-end <> true:
+       find first tt-banknots where tt-banknots.id       = vB::id
+       no-error.
+       if not available tt-banknots
+       then
+          create tt-banknots. 
+       assign 
+          tt-banknots.id       = vB::id
+          tt-banknots.qnty     = vB::qnty
+          tt-banknots.sum-qnty = vB::sum-qnty.
+       table1:get-next( ).
+    end.
+    setItog().
+    bindingSource_Bank:Handle = table1 .
+  end.  
+  
+  method public void Update_coints (input table2 as handle):
+     define variable vB as handle no-undo.
+     define buffer tt-coins for tt-coins.
+     vB = table2:get-buffer-handle (1).
+    do while table2:query-off-end <> true:
+       find first tt-coins where tt-coins.id       = vB::id
+       no-error.
+       if not available tt-coins
+       then
+          create tt-coins.
+       assign 
+          tt-coins.id       = vB::id
+          tt-coins.qnty     = vB::qnty
+          tt-coins.sum-qnty = vB::sum-qnty.
+       table2:get-next(  ).
+    end.
+    setItog().
+    bindingSource_Coins:Handle = table2 .
+  end.  
+  
   method private handle browse_Coints():
-    define variable v-list-coints as character no-undo .
-    define variable ii  as integer no-undo .
     
-    v-list-coints = "10;5;2;1;0.5;0.1;0.05" .
-    /*Посмотреть, есть ли данные в атрибуте*/
-    /*если нет заполняем пустую таблицу*/
-    do ii = 1 to num-entries (v-list-coints,";"):
-      create tt-coins .
-      assign
-      tt-coins.id = decimal(entry(ii,v-list-coints,";"))
-      tt-coins.qnty = 0
-      tt-coins.sum-qnty = 0 
-      .
-    end.  
+    
+    add_Coints().  
            
-    if valid-handle(hQuery2)  THEN DELETE object hQuery2.
-    create query hQuery2. 
-    hQuery2:set-buffers(buffer tt-coins:HANDLE).
-    hQuery2:query-prepare("FOR EACH tt-coins by tt-coins.id desc").
-    hQuery2:query-open.
-    bindingSource_Coins:Refresh() .
-    return hQuery2 .                        
+    
+    return getq_Coints() .                        
       
   end method .  
 
   method private handle browse_Banknot():
-    define variable v-list-banknot as character no-undo .
-    define variable ii  as integer no-undo .
+    add_Banknot().
     
-    v-list-banknot = "5000;2000;1000;500;200;100;50;10" .
-    /*Посмотреть, есть ли данные в атрибуте*/
-    /*если нет заполняем пустую таблицу*/
-    do ii = 1 to num-entries (v-list-banknot,";"):
-      create tt-banknots .
-      assign
-      tt-banknots.id = integer(entry(ii,v-list-banknot,";"))
-      tt-banknots.qnty = 0
-      tt-banknots.sum-qnty = 0 
-      .
-    end.  
+      
            
-    if valid-handle(hQuery1)  THEN DELETE object hQuery1.
-    create query hQuery1. 
-    hQuery1:set-buffers(buffer tt-banknots:HANDLE).
-    hQuery1:query-prepare("FOR EACH tt-banknots by tt-banknots.id desc").
-    hQuery1:query-open.
-    bindingSource_Bank:Refresh() .
-    return hQuery1 .                        
+    
+    return getq_Banknot().                        
       
   end method .  
+  
+  method private void setItog():
+     define buffer tt-coins     for tt-coins.
+     define buffer tt-banknots  for tt-banknots.
+     define variable vSumm as decimal no-undo.
+     for each tt-coins:
+        VSumm = vSumm + tt-coins.sum-qnty.
+     end.
+     for each tt-banknots :
+        VSumm = vSumm + tt-banknots .sum-qnty.
+     end.
+     Fsumm:text = string(VSumm,">>>>>>>>>9.99").
+     v-total-sum = vSumm .
+  end.
+  
+  method private void ChekItog():
+     
+     
+  end.
   
   destructor public Coins_Banknot ( ):
 

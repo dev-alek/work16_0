@@ -222,9 +222,10 @@ tt-fin-doc.payer-sign1 tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3
 &Scoped-define ENABLED-TABLES tt-fin-doc
 &Scoped-define FIRST-ENABLED-TABLE tt-fin-doc
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit r-sht B-tax B-print B-hist ~
-B-Help RS-view f-cashbook B-cashbook B-obj B-payer-view B-cor-acc ~
-B-an-uchet f-contract-curr-abbr B-contract-view B-cel-nazn B-cor-acc1 ~
-f-rest-con-sum B-currency B-calc B-receiver B-receiver-view l-cashbook 
+B-Help RS-view f-cashbook B-cashbook B-pre-vedom B-obj B-payer-view ~
+B-cor-acc B-an-uchet f-contract-curr-abbr B-contract-view B-cel-nazn ~
+B-cor-acc1 f-rest-con-sum B-currency B-calc B-receiver B-receiver-view ~
+l-cashbook 
 &Scoped-Define DISPLAYED-FIELDS tt-fin-doc.shift-date tt-fin-doc.shift-name ~
 tt-fin-doc.shift-num tt-fin-doc.prn-doc-code tt-fin-doc.fin-doc-code ~
 tt-fin-doc.perm-date tt-fin-doc.user-name-perm tt-fin-doc.doc-date ~
@@ -338,6 +339,10 @@ DEFINE BUTTON B-payer-view
      LABEL "П&лательщик" 
      SIZE 12 BY 1
      FGCOLOR 4 .
+
+DEFINE BUTTON B-pre-vedom 
+     LABEL "&Препровод. ведомость" 
+     SIZE 25 BY 1.
 
 DEFINE BUTTON B-print 
      LABEL "Пе&чать" 
@@ -474,6 +479,7 @@ DEFINE FRAME Dialog-Frame
      RS-view AT ROW 1.08 COL 21 NO-LABEL
      f-cashbook AT ROW 2 COL 15 COLON-ALIGNED NO-LABEL
      B-cashbook AT ROW 2 COL 59
+     B-pre-vedom AT ROW 2 COL 74 WIDGET-ID 20
      tt-fin-doc.prn-doc-code AT ROW 3 COL 16.5 COLON-ALIGNED NO-LABEL
           VIEW-AS FILL-IN 
           SIZE 16 BY 1
@@ -680,9 +686,6 @@ DEFINE FRAME Dialog-Frame
      l-cashbook AT ROW 2.21 COL 1.38 NO-LABEL
      F-debet AT ROW 7.13 COL 1.88 NO-LABEL
      F-credit AT ROW 10.29 COL 8.88 NO-LABEL
-     "Номер документа:" VIEW-AS TEXT
-          SIZE 16.5 BY .67 AT ROW 3.17 COL 1.38 WIDGET-ID 16
-          FGCOLOR 4 
      "Сумма:" VIEW-AS TEXT
           SIZE 6.5 BY .67 AT ROW 11.13 COL 1.25 WIDGET-ID 14
           FGCOLOR 4 
@@ -703,7 +706,10 @@ DEFINE FRAME Dialog-Frame
      "Дата сост.:" VIEW-AS TEXT
           SIZE 11 BY .67 AT ROW 4.13 COL 1.38 WIDGET-ID 18
           FGCOLOR 4 
-     SPACE(86.92) SKIP(18.24)
+     "Номер документа:" VIEW-AS TEXT
+          SIZE 16.5 BY .67 AT ROW 3.17 COL 1.38 WIDGET-ID 16
+          FGCOLOR 4 
+     SPACE(81.42) SKIP(19.20)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Расходный кассовый ордер - Плательщик"
@@ -867,7 +873,21 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Расходный кассовый ордер - Плательщик */
 DO:
-  APPLY "END-ERROR":U TO SELF.
+    /*Запуск интерфейса препроводительной ведомости*/
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-pre-vedom
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-pre-vedom Dialog-Frame
+ON CHOOSE OF B-pre-vedom IN FRAME Dialog-Frame /* Препровод. ведомость */
+DO:
+  find first tt-fin-doc no-error .
+  if available (tt-fin-doc) then do:
+  run ref/cover_sheet.p(input parParentProc, input p-host-code, input tt-fin-doc.fin-doc-code, input {&update}) no-error .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1126,6 +1146,7 @@ IF AVAILABLE tt-fin-doc THEN
 ENABLE
 b-quit
 B-tax
+B-pre-vedom
 B-print when p-mode <> {&add-def}
 B-hist when p-mode <> {&add-def}
 B-Help
@@ -1340,7 +1361,7 @@ PROCEDURE enable_UI :
       WITH FRAME Dialog-Frame.
   ENABLE B-exit b-quit tt-fin-doc.shift-date tt-fin-doc.shift-name 
          tt-fin-doc.shift-num r-sht B-tax B-print B-hist B-Help RS-view 
-         f-cashbook B-cashbook tt-fin-doc.prn-doc-code B-obj 
+         f-cashbook B-cashbook B-pre-vedom tt-fin-doc.prn-doc-code B-obj 
          tt-fin-doc.doc-date tt-fin-doc.user-name-doc tt-fin-doc.obj-type 
          tt-fin-doc.obj-code tt-fin-doc.payer-name B-payer-view 
          tt-fin-doc.str-podr-type tt-fin-doc.str-podr-code 
@@ -1355,7 +1376,7 @@ PROCEDURE enable_UI :
          tt-fin-doc.receiver-code tt-fin-doc.receiver-name B-receiver-view 
          tt-fin-doc.naznach-plat tt-fin-doc.receiver-passport 
          tt-fin-doc.enclosure tt-fin-doc.PS tt-fin-doc.payer-sign1 
-         tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3 l-cashbook 
+         tt-fin-doc.payer-sign2 tt-fin-doc.payer-sign3 l-cashbook
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1648,6 +1669,7 @@ v-head-position = (if num-entries(tt-fin-doc.payer-sign1, {&delim-par}) > 1
                     else "":U)
 .
 if p-mode = {&add-def} and tt-fin-doc.contract-code = 0 then do:
+ 
   assign
   tt-fin-doc.receiver-type = (if tt-fin-doc.receiver-type = "":U then {&cmp} else tt-fin-doc.receiver-type)
   tt-fin-doc.payer-sign1:label  = tt-fin-doc.payer-sign1:label  +
@@ -1668,6 +1690,7 @@ else do: /* <> {&add-def} */
                                     else entry(1, tt-fin-doc.payer-sign1, {&delim-par}))
 
   .
+  
 end.
 if p-mode = {&lookup} then do:
     run proc-color-widgets in this-procedure({&not-in-form-list}, no, yes, ?, ?).

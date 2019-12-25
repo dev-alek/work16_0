@@ -29,7 +29,6 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   define private variable b_exit         as System.Windows.Forms.Button      no-undo.
   define private variable bank_recip     as System.Windows.Forms.TextBox     no-undo.
   define private variable components     as System.ComponentModel.IContainer no-undo.
-  define private variable label6         as System.Windows.Forms.Label       no-undo.
   define private variable label5         as System.Windows.Forms.Label       no-undo.
   define private variable label4         as System.Windows.Forms.Label       no-undo.
   define private variable label3         as System.Windows.Forms.Label       no-undo.
@@ -37,16 +36,20 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   define private variable label2         as System.Windows.Forms.Label       no-undo.
   define private variable deposit_bank   as System.Windows.Forms.TextBox     no-undo.
   define private variable label1         as System.Windows.Forms.Label       no-undo.
-  define private variable total_sum      as System.Windows.Forms.TextBox     no-undo.
-  define private variable source_receipt as System.Windows.Forms.TextBox     no-undo.
+  define private variable source_rec     as System.Windows.Forms.ComboBox    no-undo.
   define private variable pin02          as System.Windows.Forms.TextBox     no-undo.
   define private variable v-host-code    as integer                          no-undo .
-  define private variable v-status       as character                        no-undo .
+  define private variable v-fin-code     as integer                          no-undo .
+  define private variable v-status       as character                        no-undo init "тек".
   define private variable v-rid-list     as character                        no-undo . 
-  DEFINE BUFFER find_fin-bank      FOR ub.fin-bank.
-  DEFINE BUFFER find_fin-bank-attr FOR ub.fin-bank-attr.
-  define private variable v-deposit_bank as integer no-undo .
-  define private variable v-recip_bank   as integer no-undo .
+  define private variable v-total-sum    as decimal                          no-undo .
+  
+  DEFINE BUFFER find_fin-bank     FOR ub.fin-bank.
+  DEFINE BUFFER find_fin-doc-attr FOR ub.fin-doc-attr.
+  define private variable v-deposit_bank   as integer                  no-undo .
+  define private variable v-recip_bank     as integer                  no-undo .
+  define private variable windowContainer1 as ibs.th.ref.Coins_Banknot no-undo.
+  define public variable v-num-bag as character no-undo .
   
   define property parparentproc as handle no-undo
     private get.
@@ -54,9 +57,23 @@ class ibs.th.ref.Cover_Sheet inherits Form:
       parparentproc = ih.
     end.
         
-  constructor public Cover_Sheet (p-host-code as integer ):
+  constructor public Cover_Sheet (p-host-code as integer, p-fin-code as integer, p-mode as character ):
+    
     super().
     v-host-code = p-host-code .    
+    v-fin-code  = p-fin-code .
+    InitializeComponent().
+    Visual(p-mode) .
+    this-object:ComponentsCollection:ADD(this-object:components).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
+
+  end constructor.
+  
+  constructor public Cover_Sheet ( ):
+    
+    super().
     InitializeComponent().
     this-object:ComponentsCollection:ADD(this-object:components).
     catch e as Progress.Lang.Error:
@@ -71,9 +88,9 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void b_bank_recip_Click( input sender as System.Object, input e as System.EventArgs ):
-
+    
     run ref/finbanks.w (input parParentProc
-      , input v-cntxt-host-code-obj
+      , input v-host-code
       , input "b-sel":U
       , input {&company}
       , input v-host-code
@@ -105,7 +122,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   method private void b_deposit_bank_Click( input sender as System.Object, input e as System.EventArgs ):
 	  
     run ref/finbanks.w (input parParentProc
-      , input v-cntxt-host-code-obj
+      , input v-host-code
       , input "b-sel":U
       , input {&company}
       , input v-host-code
@@ -134,25 +151,105 @@ class ibs.th.ref.Cover_Sheet inherits Form:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
-  method private void Cover_Sheet_Load( input sender as System.Object, input e as System.EventArgs ):
-    define variable ii as integer no-undo .
+  method private void b_exit_Click( input sender as System.Object, input e as System.EventArgs ):
+    Close().
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void b_save_Click( input sender as System.Object, input e as System.EventArgs ):
+
     define variable CSJson as longchar no-undo .
-    define variable CShtt   as handle no-undo .
+    define variable CShtt  as handle   no-undo .
+    define buffer bf_fin-doc-attr for ub.fin-doc-attr .
+    define variable attr-value as character no-undo .
     
-	  find first find_fin-bank-attr no-lock where find_fin-bank-attr.host-code = v-host-code and find_fin-bank-attr.attr-code = "cover_sheet" no-error .
-	  if available (find_fin-bank-attr) then do:
-	    dataset ds-banknots:handle:read-json ("longchar",CSJson) .
-	    
-	    this-object:num_bag:Text = string(tt-cover-sheet.num-bag) .
-	    this-object:deposit_bank:Text = tt-cover-sheet.depos-bank .
-	    this-object:bank_recip:Text = tt-cover-sheet.repos-bank . 
-	    this-object:pin02:Text = tt-cover-sheet.pin02 .
-	    this-object:source_receipt:Text = tt-cover-sheet.source_ .
-	    this-object:total_sum:Text = string(tt-cover-sheet.total-sum) .
-	    
-	    
-	  end.   
-		
+    find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = v-host-code
+      and bf_fin-doc-attr.fin-doc-code = v-fin-code and bf_fin-doc-attr.attr-value begins this-object:num_bag:Text no-error . 
+    if not available (bf_fin-doc-attr) then 
+    do:
+      create bf_fin-doc-attr .
+      assign
+        bf_fin-doc-attr.attr-code    = "pre-vedom"
+        bf_fin-doc-attr.fin-doc-code = v-fin-code
+        bf_fin-doc-attr.host-code    = v-host-code
+        .
+    end.  
+    
+    attr-value = this-object:num_bag:Text + ";" + string(v-deposit_bank) + ";" + string(v-recip_bank) + ";" + 
+      this-object:pin02:Text + ";" + this-object:source_rec:Text + ";" + string(windowContainer1:v-total-sum) . 
+    bf_fin-doc-attr.attr-value = attr-value .
+    
+    find first find_fin-doc-attr where find_fin-doc-attr.host-code = v-host-code and find_fin-doc-attr.attr-code = "cover_sheet" 
+      and find_fin-doc-attr.fin-doc-code = v-fin-code no-error .
+    if not available (find_fin-doc-attr) then
+    do:
+      create find_fin-doc-attr .
+      assign
+        find_fin-doc-attr.attr-code    = "cover_sheet"
+        find_fin-doc-attr.fin-doc-code = v-fin-code
+        find_fin-doc-attr.host-code    = v-host-code  
+        .
+    end.  
+    
+    dataset ds-banknots:handle:write-json ("longchar",CSJson) .
+    find_fin-doc-attr.attr-value = CSJson . 
+    
+    this-object:DialogResult = System.Windows.Forms.DialogResult:Ok.
+    Close().
+
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void Cover_Sheet_Load( input sender as System.Object, input e as System.EventArgs ):
+    define variable ii     as integer  no-undo .
+    define variable CSJson as longchar no-undo .
+    define variable CShtt  as handle   no-undo .
+    define buffer bf_fin-doc-attr for ub.fin-doc-attr .
+    define variable attr-value as character no-undo .
+
+    find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = v-host-code
+      and bf_fin-doc-attr.fin-doc-code = v-fin-code and bf_fin-doc-attr.attr-value begins this-object:num_bag:Text no-error . 
+    if available (bf_fin-doc-attr) then 
+    do:
+      assign
+        this-object:num_bag:Text     = entry(1,bf_fin-doc-attr.attr-value,";")
+        this-object:pin02:Text       = entry(4,bf_fin-doc-attr.attr-value,";")
+        this-object:source_rec:Text  = entry(5,bf_fin-doc-attr.attr-value,";")
+        windowContainer1:v-total-sum = decimal(entry(6,bf_fin-doc-attr.attr-value,";"))
+        .
+        
+      FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = integer(entry(2,bf_fin-doc-attr.attr-value,";")) and find_fin-bank.host-code = v-host-code No-ERROR.
+      if avail find_fin-bank then this-object:deposit_bank:Text = find_fin-bank.bank-name .
+      FIND FIRST find_fin-bank No-LOCK where find_fin-bank.code-bank = integer(entry(3,bf_fin-doc-attr.attr-value,";")) and find_fin-bank.host-code = v-host-code No-ERROR.
+      if avail find_fin-bank then this-object:bank_recip:Text = find_fin-bank.bank-name .
+    end.  
+   
+
+    find first find_fin-doc-attr where find_fin-doc-attr.host-code = v-host-code and find_fin-doc-attr.attr-code = "cover_sheet"
+      and find_fin-doc-attr.fin-doc-code = v-fin-code no-error .
+
+    if available (find_fin-doc-attr) then 
+    do:
+      CSJson = find_fin-doc-attr.attr-value .
+      dataset ds-banknots:handle:read-json ("longchar",CSJson) .
+    end.   
+    add_Banknot().
+    windowContainer1:Update_Banknots (getq_Banknot()).
+    add_Coints(). 
+    windowContainer1:Update_coints( getq_Coints()). 
+	
     return.
 
   end method.
@@ -182,44 +279,45 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     this-object:label4 = new System.Windows.Forms.Label().
     this-object:pin02 = new System.Windows.Forms.TextBox().
     this-object:label5 = new System.Windows.Forms.Label().
-    this-object:source_receipt = new System.Windows.Forms.TextBox().
-    this-object:label6 = new System.Windows.Forms.Label().
-    this-object:total_sum = new System.Windows.Forms.TextBox().
-    
+    this-object:windowContainer1 = new ibs.th.ref.Coins_Banknot().
+    this-object:source_rec = new System.Windows.Forms.ComboBox().
     this-object:SuspendLayout().
     /*  */
     /* b_exit */
     /*  */
     this-object:b_exit:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:b_exit:Location = new System.Drawing.Point(493, 2).
+    this-object:b_exit:Location = new System.Drawing.Point(572, 2).
     this-object:b_exit:Name = "b_exit".
     this-object:b_exit:Size = new System.Drawing.Size(100, 25).
     this-object:b_exit:TabIndex = 0.
     this-object:b_exit:Text = "Выход".
     this-object:b_exit:UseCompatibleTextRendering = true.
     this-object:b_exit:UseVisualStyleBackColor = true.
+    this-object:b_exit:Click:Subscribe(this-object:b_exit_Click).
     /*  */
     /* b_save */
     /*  */
     this-object:b_save:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:b_save:Location = new System.Drawing.Point(392, 2).
+    this-object:b_save:Location = new System.Drawing.Point(471, 2).
     this-object:b_save:Name = "b_save".
     this-object:b_save:Size = new System.Drawing.Size(100, 25).
     this-object:b_save:TabIndex = 1.
     this-object:b_save:Text = "Сохранить".
     this-object:b_save:UseCompatibleTextRendering = true.
     this-object:b_save:UseVisualStyleBackColor = true.
+    this-object:b_save:Click:Subscribe(this-object:b_save_Click).
     /*  */
     /* b_print */
     /*  */
     this-object:b_print:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:b_print:Location = new System.Drawing.Point(291, 2).
+    this-object:b_print:Location = new System.Drawing.Point(370, 2).
     this-object:b_print:Name = "b_print".
     this-object:b_print:Size = new System.Drawing.Size(100, 25).
     this-object:b_print:TabIndex = 2.
     this-object:b_print:Text = "Печать".
     this-object:b_print:UseCompatibleTextRendering = true.
     this-object:b_print:UseVisualStyleBackColor = true.
+    this-object:b_print:Visible = false.
     /*  */
     /* num_bag */
     /*  */
@@ -243,19 +341,18 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     this-object:deposit_bank:Location = new System.Drawing.Point(173, 70).
     this-object:deposit_bank:Name = "deposit_bank".
     this-object:deposit_bank:ReadOnly = true.
-    this-object:deposit_bank:Size = new System.Drawing.Size(177, 20).
+    this-object:deposit_bank:Size = new System.Drawing.Size(314, 20).
     this-object:deposit_bank:TabIndex = 5.
     /*  */
     /* b_deposit_bank */
     /*  */
     this-object:b_deposit_bank:Image = cast(resources:GetObject("b_deposit_bank.Image"), System.Drawing.Image).
-    this-object:b_deposit_bank:Location = new System.Drawing.Point(356, 70).
+    this-object:b_deposit_bank:Location = new System.Drawing.Point(493, 69).
     this-object:b_deposit_bank:Name = "b_deposit_bank".
     this-object:b_deposit_bank:Size = new System.Drawing.Size(25, 23).
     this-object:b_deposit_bank:TabIndex = 14.
     this-object:b_deposit_bank:UseCompatibleTextRendering = true.
     this-object:b_deposit_bank:UseVisualStyleBackColor = true.
-    this-object:b_deposit_bank:Visible = false.
     this-object:b_deposit_bank:Click:Subscribe(this-object:b_deposit_bank_Click).
     /*  */
     /* label2 */
@@ -283,13 +380,12 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     /* b_bank_recip */
     /*  */
     this-object:b_bank_recip:Image = cast(resources:GetObject("b_bank_recip.Image"), System.Drawing.Image).
-    this-object:b_bank_recip:Location = new System.Drawing.Point(356, 96).
+    this-object:b_bank_recip:Location = new System.Drawing.Point(493, 95).
     this-object:b_bank_recip:Name = "b_bank_recip".
     this-object:b_bank_recip:Size = new System.Drawing.Size(25, 23).
     this-object:b_bank_recip:TabIndex = 17.
     this-object:b_bank_recip:UseCompatibleTextRendering = true.
     this-object:b_bank_recip:UseVisualStyleBackColor = true.
-    this-object:b_bank_recip:Visible = false.
     this-object:b_bank_recip:Click:Subscribe(this-object:b_bank_recip_Click).
     /*  */
     /* bank_recip */
@@ -297,7 +393,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     this-object:bank_recip:Location = new System.Drawing.Point(173, 96).
     this-object:bank_recip:Name = "bank_recip".
     this-object:bank_recip:ReadOnly = true.
-    this-object:bank_recip:Size = new System.Drawing.Size(177, 20).
+    this-object:bank_recip:Size = new System.Drawing.Size(314, 20).
     this-object:bank_recip:TabIndex = 16.
     /*  */
     /* label4 */
@@ -307,7 +403,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     this-object:label4:Name = "label4".
     this-object:label4:Size = new System.Drawing.Size(100, 20).
     this-object:label4:TabIndex = 20.
-    this-object:label4:Text = "ПИН (02):".
+    this-object:label4:Text = "ПИН:".
     this-object:label4:UseCompatibleTextRendering = true.
     /*  */
     /* pin02 */
@@ -327,39 +423,33 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     this-object:label5:Text = "Источник поступления:".
     this-object:label5:UseCompatibleTextRendering = true.
     /*  */
-    /* source_receipt */
+    /* windowContainer1 */
     /*  */
-    this-object:source_receipt:Location = new System.Drawing.Point(173, 148).
-    this-object:source_receipt:Name = "source_receipt".
-    this-object:source_receipt:Size = new System.Drawing.Size(420, 20).
-    this-object:source_receipt:TabIndex = 21.
+    this-object:windowContainer1:Location = new System.Drawing.Point(12, 171).
+    this-object:windowContainer1:Name = "windowContainer1".
+    this-object:windowContainer1:Size = new System.Drawing.Size(669, 284).
+    this-object:windowContainer1:TabIndex = 25.
+    this-object:windowContainer1:Load:Subscribe(this-object:windowContainer1_Load).
     /*  */
-    /* label6 */
+    /* source_rec */
     /*  */
-    this-object:label6:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label6:Location = new System.Drawing.Point(380, 430).
-    this-object:label6:Name = "label6".
-    this-object:label6:Size = new System.Drawing.Size(100, 20).
-    this-object:label6:TabIndex = 24.
-    this-object:label6:Text = "Общая сумма:".
-    this-object:label6:UseCompatibleTextRendering = true.
+    this-object:source_rec:FormattingEnabled = true.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar0 as System.Object extent 2 no-undo.
+    arrayvar0[1] = "Поступления от продажи товаров".
+    arrayvar0[2] = "Прочие поступления".
+    this-object:source_rec:Items:AddRange(arrayvar0).
+    this-object:source_rec:Location = new System.Drawing.Point(173, 147).
+    this-object:source_rec:Name = "source_rec".
+    this-object:source_rec:Size = new System.Drawing.Size(499, 21).
+    this-object:source_rec:TabIndex = 26.
     /*  */
-    /* total_sum */
-    /*  */
-    this-object:total_sum:Location = new System.Drawing.Point(486, 429).
-    this-object:total_sum:Name = "total_sum".
-    this-object:total_sum:Size = new System.Drawing.Size(107, 20).
-    this-object:total_sum:TabIndex = 23.
-    /*  */
-   
     /* Cover_Sheet */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(600, 457).
-    
-    this-object:Controls:Add(this-object:label6).
-    this-object:Controls:Add(this-object:total_sum).
+    this-object:ClientSize = new System.Drawing.Size(684, 467).
+    this-object:Controls:Add(this-object:source_rec).
+    this-object:Controls:Add(this-object:windowContainer1).
     this-object:Controls:Add(this-object:label5).
-    this-object:Controls:Add(this-object:source_receipt).
     this-object:Controls:Add(this-object:label4).
     this-object:Controls:Add(this-object:pin02).
     this-object:Controls:Add(this-object:label3).
@@ -374,7 +464,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     this-object:Controls:Add(this-object:b_save).
     this-object:Controls:Add(this-object:b_exit).
     this-object:Name = "Cover_Sheet".
-    this-object:Text = "Сover_Sheet".
+    this-object:Text = "Препроводительная ведомость".
     this-object:Load:Subscribe(this-object:Cover_Sheet_Load).
     this-object:ResumeLayout(false).
     this-object:PerformLayout().
@@ -382,6 +472,47 @@ class ibs.th.ref.Cover_Sheet inherits Form:
       undo, throw e.
     end catch.
   end method.
+
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void windowContainer1_Load( input sender as System.Object, input e as System.EventArgs ):
+		
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void Visual( input mode as character ):
+    
+    if mode = {&lookup} then 
+    do:
+      assign
+        this-object:b_save:Enabled       = false
+        this-object:num_bag:Enabled      = false
+        this-object:deposit_bank:Enabled = false
+        this-object:bank_recip:Enabled   = false
+        this-object:pin02:Enabled        = false
+        this-object:source_rec:Enabled   = false
+/*        windowContainer1:Enabled         = false*/
+        .
+    end.   
+    
+    return.
+
+  end method.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
 
   destructor public Cover_Sheet ( ):
 
