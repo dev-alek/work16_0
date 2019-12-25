@@ -4026,7 +4026,7 @@ procedure last-line-tog-html :
 End procedure.
 procedure last-line-tog-html5-1 :
     define input parameter v-report-name-html     as character no-undo .
-run gbl/inidebug.p .
+
     find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
     if available temp-shift-obj then 
     do:

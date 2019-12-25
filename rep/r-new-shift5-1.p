@@ -241,12 +241,12 @@ define variable v-cashbookid      as integer   no-undo .
         .
         run report-exec in this-procedure .
 
-/*        if is-rosneft then do:*/
+        if is-rosneft then do:
             assign
                 temp-fin-doc.income-realiZ = temp-fin-doc.income-realiZ + temp-fin-doc.income-other
                 temp-fin-doc.income-other = 0
                 . 
-/*        end.*/
+        end.
 /*шапка таблицы HTML*/
          
 output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
