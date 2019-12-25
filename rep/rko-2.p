@@ -232,10 +232,10 @@ on error undo, return error return-value
   v-sum-doc-n1 = v-sum-doc-n1 +  fill("-":U, 128 - length(v-sum-doc-n1))
   v-sum-doc-n1 = caps(substring(v-sum-doc-n1, 1, 1)) + substring(v-sum-doc-n1, 2)
   .
-  assign
-  v-head-position = (if num-entries(buf_fin-doc.payer-sign1, {&delim-par})  > 1
-                    then entry(1, buf_fin-doc.payer-sign1, {&delim-par})
-                    else "Директор")
+  
+  
+  if num-entries(buf_fin-doc.payer-sign1, {&delim-par})> 1 and entry(1, buf_fin-doc.payer-sign1, {&delim-par}) <> "" then v-head-position = entry(1, buf_fin-doc.payer-sign1, {&delim-par}) .
+                    else v-head-position = "Директор" .
   v-sign1         = (if num-entries(buf_fin-doc.payer-sign1, {&delim-par})  > 1
                     then entry(2, buf_fin-doc.payer-sign1, {&delim-par})
                     else entry(1, buf_fin-doc.payer-sign1, {&delim-par})
@@ -516,7 +516,7 @@ on error undo, return error return-value
     '<td colspan="2" style="text-align: right;"></td>' skip
     '<td colspan="14" style="text-align: right; border-bottom: 1px solid black;"></td>' skip
     '<td colspan="2" style="text-align: right;"></td>' skip
-    '<td colspan="15" style="text-align: right; border-bottom: 1px solid black;"></td>' skip
+    '<td colspan="15" style="text-align: right; border-bottom: 1px solid black;">' + v-sign1 + '</td>' skip
     '<td></td>' skip
     '</tr>' skip     .
       put stream OutStr-html unformatted
