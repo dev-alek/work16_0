@@ -416,15 +416,15 @@ procedure PutColumnTitulExcel : /* заголовки для колонок экселя */
   end.
 
   if use-column[13] = yes then do:
-    run macr_excel_char ("Остаток на конец (кол-во)", v-row, v-col) .
+    run macr_excel_char ("Остаток на конец по партиям (кол-во)", v-row, v-col) .
     assign v-col = v-col + 1 .
   end.
   if use-column[32] = yes then do:
-    run macr_excel_char ("Остаток на конец  (сумма учет. цен)", v-row, v-col) .
+    run macr_excel_char ("Остаток на конец по партиям (сумма учет. цен)", v-row, v-col) .
     assign v-col = v-col + 1 .
   end.
   if use-column[51] = yes then do:
-    run macr_excel_char ("Остаток на конец  (сумма прод. цен)", v-row, v-col) .
+    run macr_excel_char ("Остаток на конец по партиям (сумма прод. цен)", v-row, v-col) .
     assign v-col = v-col + 1 .
   end.
 
@@ -1722,8 +1722,8 @@ procedure PrintTitul :
     assign
       line-frm.num    = ii
       line-frm.beg    = beg
-      line-frm.titul  = "Остаток"
-      line-frm.titul1 = "на конец"
+      line-frm.titul  = "Остаток на ко-"
+      line-frm.titul1 = "нец по партиям"
       line-frm.titul2 = "(кол-во)"
       line-frm.frm    = frm-qnty
       line-frm.frmt   = "X(14)"
@@ -1736,9 +1736,9 @@ procedure PrintTitul :
     assign
       line-frm.num    = ii
       line-frm.beg    = beg
-      line-frm.titul  = "Остаток на"
-      line-frm.titul1 = "конец (сумма"
-      line-frm.titul2 = "учет. цен)"
+      line-frm.titul  = "Остаток на ко-"
+      line-frm.titul1 = "нец по партиям"
+      line-frm.titul2 = "(сум. уч. цен)"
       line-frm.frm    = "->>,>>>,>>9.99"
       line-frm.frmt   = "X(14)"
       ii  = ii + 1
@@ -1750,9 +1750,9 @@ procedure PrintTitul :
     assign
       line-frm.num    = ii
       line-frm.beg    = beg
-      line-frm.titul  = "Остаток на"
-      line-frm.titul1 = "конец (сумма"
-      line-frm.titul2 = "прод. цен)"
+      line-frm.titul  = "Остаток на ко-"
+      line-frm.titul1 = "нец по партиям"
+      line-frm.titul2 = "(сум.прод.цен)"
       line-frm.frm    = "->>,>>>,>>9.99"
       line-frm.frmt   = "X(14)"
       ii  = ii + 1
