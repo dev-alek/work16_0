@@ -141,6 +141,10 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,gds-mercury~
 ,gds-mercury-attr~
 ,units-attr~
+,operserv~
+,operservattr~
+,cashbook~
+,cashbookattr~
 ":U.
 
 
@@ -387,6 +391,9 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,fin-code-cor-acc~
 ,thbj-attr~
 ,edi-status~
+,counter~
+,cashbookrule~
+,cashbookruleattr~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -1177,6 +1184,12 @@ v-custom-except-list-erprn =
 ,dis-time-rule-attr~
 ,vsd~
 ,vsd-attr~
+,operserv~
+,operservattr~
+,cashbook~
+,cashbookattr~
+,cashbookrule~
+,cashbookruleattr~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/

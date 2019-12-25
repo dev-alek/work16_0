@@ -1700,8 +1700,10 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
           if available (buf_clients) and not buf_clients.db-num = 0
             then assign list-db-for-send = string (buf_clients.db-num).
         end.
+     
         v-found = true.
-      end.  
+      end. 
+    
       otherwise do:
         assign
           v-found = false

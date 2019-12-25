@@ -31,9 +31,26 @@ define variable vss-description as character no-undo init "Тригер изменение {&ma
 { trg/trghistnws.i} 
 if new-{&main-tbl}.CountValue ne old-{&main-tbl}.CountValue + 1
 then do:
-{ trg/trghistnws.i 
-  &hist = yes 
-  &seqnamehist = "s-c-{&main-tbl}-chip-num"
-}
+   if new-{&main-tbl}.file-name eq "cashbookrule"
+   then do:
+   
+   { trg/trghistnws.i 
+     &hist = yes 
+     &seqnamehist = "s-c-{&main-tbl}-chip-num"
+     
+   }
+   end.
+   else do:
+   { trg/trghistnws.i 
+     &hist = yes 
+     &seqnamehist = "s-c-{&main-tbl}-chip-num"
+   }
+   end.
 end.
 
+if new-{&main-tbl}.file-name eq "cashbookrule"
+then do:
+{ trg/trghistnws.i 
+  &nws  = yes 
+}
+end.

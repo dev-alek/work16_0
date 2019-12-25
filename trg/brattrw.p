@@ -9,17 +9,17 @@ $Archive$
 
 
 Автор: Рубан Дмитрий Андреевич
-Дата создания: 11/07/18
+Дата создания: 17/02/19
 Author: Ruban Dmitriy
-Creation date: 11/07/18
+Creation date: 17/02/19
 
 */
 block-level on error undo, throw.
 
-&scoped-define main-tbl CashBookRuleAttr
-TRIGGER PROCEDURE FOR WRITE OF ub.{&main-tbl}
-  NEW BUFFER new-{&main-tbl}
-  OLD BUFFER old-{&main-tbl}
+&Glob main-tbl cashbookruleattr
+trigger procedure for write of ub.{&main-tbl}
+  new buffer new-{&main-tbl}
+  old buffer old-{&main-tbl}
 .
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
@@ -28,5 +28,12 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
-{ cmp/vssrevis.i }
+
+{ trg/trghistnws.i 
+  &hist = yes 
+  &seqnamehist = "s-c-cashbook-chip-num"
+  &nws  = yes
+  
+}
+
 
