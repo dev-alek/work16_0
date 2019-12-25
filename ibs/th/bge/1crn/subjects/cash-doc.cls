@@ -23,11 +23,6 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
   
   { cmp/str-glbl.i class }
   
-  define buffer buf_fin-doc       for ub.fin-doc .
-  define buffer buf_fin-doc-tax   for ub.fin-doc-tax .
-  define buffer buf_c-fin-doc     for ub.c-fin-doc .
-  define buffer buf_c-fin-doc-tax for ub.c-fin-doc-tax .
-  
   define temp-table tt-fin-doc like ub.c-fin-doc .
   define temp-table tt-fin-doc-tax like ub.c-fin-doc-tax .
   
@@ -51,9 +46,15 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
   define variable v-type as character no-undo .
 
   method public void CrContentToSW (insw as handle):
+  define buffer buf_fin-doc       for ub.fin-doc .
+  define buffer buf_fin-doc-tax   for ub.fin-doc-tax .
+  define buffer buf_c-fin-doc     for ub.c-fin-doc .
+  define buffer buf_c-fin-doc-tax for ub.c-fin-doc-tax .
+  define buffer buf_CashBook      for ub.CashBook .
     
     sw = insw .    
 
+    /* взятие документа для выгрузки: сам документ, либо история документа */
     find first buf_fin-doc no-lock where buf_fin-doc.fin-doc-code = INTEGER (fin-doc) no-error .
     if AVAILABLE buf_fin-doc then 
     do:
@@ -83,6 +84,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       end.
     
     end.    
+    /* end_of взятие документа для выгрузки */
     
     case tt-fin-doc.fin-doc-type:
       when {&income-cash} then 
@@ -93,15 +95,31 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
         v-type = "".   
     end.  
     
-    /*      sw:start-element ("cash-doc") .*/
     sw:start-element ("cash-doc") .
     sw:write-data-element ("doc-code", string-mth(tt-fin-doc.fin-doc-code)).
     sw:write-data-element ("num", if tt-fin-doc.prn-doc-code = ? then "" else string(tt-fin-doc.prn-doc-code)).
     sw:write-data-element ("del-f", string(del_f)).
+    
+    /* обязательность 0-1 */
+    find first buf_CashBook no-lock where buf_CashBook.id = tt-fin-doc.CashBookId no-error .
+    if available buf_CashBook then do :
+      if buf_CashBook.ext-code > "" then
+        sw:write-data-element ("type-kb", buf_CashBook.ext-code). /* Код типа кассовой книги (Строка) */
+    end .
+    
     sw:write-data-element ("date", if tt-fin-doc.doc-date = ? then "" else ISO-DATE (tt-fin-doc.doc-date)).
     sw:write-data-element ("shift-date", if tt-fin-doc.shift-date = ? then "" else ISO-DATE (tt-fin-doc.shift-date)).
     sw:write-data-element ("shift-num", string-mth(tt-fin-doc.shift-num)).
     sw:write-data-element ("type", v-type).
+    
+    /* далее обязательность 0-1 */
+    if available buf_CashBook then do :
+      if buf_CashBook.Credit > "" then
+        sw:write-data-element ("kredit", buf_CashBook.Credit). /* Номер счета в графе «Кредит» при формировании ПКО и РКО (Строка) */
+      if buf_CashBook.Debit > "" then
+        sw:write-data-element ("debit", buf_CashBook.Debit). /* Номер счета в графе «Дебит» при формировании ПКО и РКО (Строка) */
+    end .
+    
     sw:write-data-element ("sum", string-mth(tt-fin-doc.sum-doc)).
     if v-type = "1" then 
     do:
@@ -112,7 +130,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     do:
       sw:write-data-element ("contr-name", if tt-fin-doc.receiver-name = ? then "" else string(tt-fin-doc.receiver-name)).
       sw:write-data-element ("contr-code", string-mth(tt-fin-doc.receiver-code)).
-    end.    
+    end.
     sw:write-data-element ("doc-osn", if tt-fin-doc.naznach-plat = ? then "" else string(tt-fin-doc.naznach-plat)).
     sw:write-data-element ("pril", if tt-fin-doc.enclosure = ? then "" else string(tt-fin-doc.enclosure)).
     sw:write-data-element ("nds-str", if tt-fin-doc.including = ? then "" else string(tt-fin-doc.including)).
@@ -130,7 +148,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     sw:end-element ("ndss")  .  
     sw:END-ELEMENT ("cash-doc") .  
     
-  end.
+  end method. /* end_of CrContentToSW */
   
   method private character string-mth (inValue as decimal):
     
