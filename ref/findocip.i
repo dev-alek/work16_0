@@ -1100,6 +1100,90 @@ DO:
                                        ,input tt-fin-doc.obj-code
                                        )
                                      no-error.
+    if ub.cashbook.id > 0
+    then do :
+      find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = ub.cashbook.Credit
+                                              and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
+                                              and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+                                              no-error .
+      if available X_fin-code-cor-acc
+      then do :
+        assign
+          tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value
+          f-cor-acc-descr = X_fin-code-cor-acc.descr
+          tt-fin-doc.cor-acc = X_fin-code-cor-acc.fin-code
+        .
+      end.
+    end.  
+    else do :
+      find first ub.sysconf no-lock where ub.sysconf.host-code = tt-fin-doc.host-code .
+      case tt-fin-doc.fin-doc-type :
+        when {&income-cash}
+        then do :
+          if tt-fin-doc.contract-code = 0
+          then do:
+            find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.fin-code = ub.sysconf.cor-acc-in-cash
+                                                    and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
+                                                    and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+                                                    no-error .
+            if available X_fin-code-cor-acc
+            then do :
+              assign
+                tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value
+                f-cor-acc-descr = X_fin-code-cor-acc.descr
+                tt-fin-doc.cor-acc = X_fin-code-cor-acc.fin-code
+              .
+            end.
+            else do :
+              assign
+                tt-fin-doc.cor-acc-value = ""
+                f-cor-acc-descr = ""
+                tt-fin-doc.cor-acc = 0
+              .
+            end.
+          end.
+          else do :
+            assign
+              tt-fin-doc.cor-acc-value = ""
+              f-cor-acc-descr = ""
+              tt-fin-doc.cor-acc = 0
+            .
+          end.
+        end.
+        when {&expense-cash}
+        then do :
+          if tt-fin-doc.contract-code = 0
+          then do:
+            find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.fin-code = ub.sysconf.cor-acc1-out-cash
+                                                    and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
+                                                    and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+                                                    no-error .
+            if available X_fin-code-cor-acc
+            then do :
+              assign
+                tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value
+                f-cor-acc-descr = X_fin-code-cor-acc.descr
+                tt-fin-doc.cor-acc = X_fin-code-cor-acc.fin-code
+              .
+            end.
+            else do :
+              assign
+                tt-fin-doc.cor-acc-value = ""
+                f-cor-acc-descr = ""
+                tt-fin-doc.cor-acc = 0
+              .
+            end.            
+          end.
+          else do :
+            assign
+              tt-fin-doc.cor-acc-value = ""
+              f-cor-acc-descr = ""
+              tt-fin-doc.cor-acc = 0
+            .
+          end.
+        end.
+      end case .
+    end .                                                                     
   end.
 
 END.

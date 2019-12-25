@@ -65,6 +65,17 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Правило заполнения графы Приложение не может быть пустым!" .
       return .
     end.
+    if trim(tt-cashbook.cli-type) = ""
+    or tt-cashbook.cli-code = ? or tt-cashbook.cli-code <= 0
+    then do :
+      Msg = "Выберите контрагента для автоматического формирования платежей. Поле Контрагент (авто)." .
+      return .
+    end.
+    if trim(tt-cashbook.takenfrom) = ""
+    then do :
+      Msg = "Поле Принято от (авто) не может быть пустым!" .
+      return .
+    end.
     
     find first ub.cashbook no-lock where ub.CashBook.CashBookName = tt-cashbook.CashBookName and ub.CashBook.id <> tt-cashbook.id no-error.
     if available ub.cashbook

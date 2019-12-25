@@ -113,11 +113,25 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     sw:write-data-element ("type", v-type).
     
     /* далее обязательность 0-1 */
-    if available buf_CashBook then do :
-      if buf_CashBook.Credit > "" then
-        sw:write-data-element ("kredit", buf_CashBook.Credit). /* Номер счета в графе «Кредит» при формировании ПКО и РКО (Строка) */
-      if buf_CashBook.Debit > "" then
-        sw:write-data-element ("debit", buf_CashBook.Debit). /* Номер счета в графе «Дебит» при формировании ПКО и РКО (Строка) */
+/*    if available buf_CashBook then do :                                                                                              */
+/*      if buf_CashBook.Credit > "" then                                                                                               */
+/*        sw:write-data-element ("kredit", buf_CashBook.Credit). /* Номер счета в графе «Кредит» при формировании ПКО и РКО (Строка) */*/
+/*      if buf_CashBook.Debit > "" then                                                                                                */
+/*        sw:write-data-element ("debit", buf_CashBook.Debit). /* Номер счета в графе «Дебит» при формировании ПКО и РКО (Строка) */   */
+/*    end .                                                                                                                            */
+    if v-type = "1"
+    then do :
+      if tt-fin-doc.cor-acc-value > "" then
+        sw:write-data-element ("kredit", tt-fin-doc.cor-acc-value). /* Номер счета в графе «Кредит» при формировании ПКО и РКО (Строка) */
+      if tt-fin-doc.cor-acc1-value > "" then
+        sw:write-data-element ("debit", tt-fin-doc.cor-acc1-value). /* Номер счета в графе «Дебит» при формировании ПКО и РКО (Строка) */
+    end .
+    if v-type = "2"
+    then do :
+      if tt-fin-doc.cor-acc-value > "" then
+        sw:write-data-element ("kredit", tt-fin-doc.cor-acc1-value). /* Номер счета в графе «Кредит» при формировании ПКО и РКО (Строка) */
+      if tt-fin-doc.cor-acc1-value > "" then
+        sw:write-data-element ("debit", tt-fin-doc.cor-acc-value). /* Номер счета в графе «Дебит» при формировании ПКО и РКО (Строка) */
     end .
     
     sw:write-data-element ("sum", string-mth(tt-fin-doc.sum-doc)).

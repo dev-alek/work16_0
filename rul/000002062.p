@@ -1084,6 +1084,8 @@ define variable v-err               as logical    no-undo .
         if available temp-z-number-list then temp-z-number-list.naznach-plat = ''.
       end.
       else do :
+        v-naznach-plat = p-by-osnovanie.
+        if available temp-z-number-list then temp-z-number-list.naznach-plat = p-by-osnovanie.
       end.
 
       assign

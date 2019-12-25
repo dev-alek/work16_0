@@ -552,14 +552,14 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 14 BY 1
           FGCOLOR 4 
-     tt-fin-doc.cor-acc-value AT ROW 7 COL 9.4
+     tt-fin-doc.cor-acc-value AT ROW 8 COL 9.4
           LABEL "Корсчет"
           VIEW-AS FILL-IN 
           SIZE 14 BY 1
           FGCOLOR 4 
      B-cor-acc1 AT ROW 7 COL 33.2
      f-cor-acc1-descr AT ROW 7 COL 35.4 COLON-ALIGNED NO-LABEL
-     tt-fin-doc.an-uchet-value AT ROW 8 COL 5.4
+     tt-fin-doc.an-uchet-value AT ROW 9 COL 5.4
           LABEL "Код ан. уч."
           VIEW-AS FILL-IN 
           SIZE 14 BY 1
