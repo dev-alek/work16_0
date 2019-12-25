@@ -18,12 +18,19 @@ Input:
 Output:
 
 */
-block-level on error undo, throw.
+using ibs.th.ref.bpa.*.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle  as widget-handle no-undo .
 define input parameter p-log-handle  as handle no-undo .
-define input parameter p-parameter   as character no-undo .
+define input parameter i-obj-code like ub.shop.obj-code no-undo.
+DEFINE INPUT PARAMETER action as char no-undo.
+DEFINE INPUT PARAMETER selective as integer no-undo.
+/*по оплатам выборочно или все!*/
+define input parameter pSubs as character no-undo .
+/*список recid cash-pay если selective = yes*/
+define input parameter p-log-file-name as character no-undo .
+define input-output parameter p-view-log as logical no-undo .
 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -39,32 +46,8 @@ define variable vss-description as character no-undo init "Отсылка данных по спр
 { bge/bgelib.i }
 { str/cd-xml.i }
 
-
-define variable p-obj-type as character no-undo .
-define variable i-obj-code like ub.cash-desk.obj-code no-undo .
-define variable action     as character no-undo init 'U':U.
-
-assign
-p-obj-type = entry(1, p-parameter, {&delim-par})
-i-obj-code = integer(entry(2, p-parameter, {&delim-par}))
-action     = entry(3, p-parameter, {&delim-par})
-no-error
-.
-if error-status:error then do:
-  run write-log-and-file in p-log-handle (
-        input 1
-      , input log-file-name
-      , input 1
-      , input substitute("Ошибка входных параметров &1:&2&3"
-                         , p-parameter
-                         , {&new-line}
-                         , error-status:get-message(1)
-                         )).
-  v-view-log = yes.
-  undo, return error .
-end .
-
-
+define variable v-host-code          like ub.sysconf.host-code no-undo .
+define variable v-cp-is-use          as logical   no-undo .
 
 FIND FIRST ub.cash-desk NO-LOCK WHERE
            ub.cash-desk.db-num = g#db-num AND
@@ -89,33 +72,47 @@ IF not avail(cash-desk) then do:
                                         ).
   return.
 end.
-
-
-
+if action = "D" then 
+do:
+  message
+    "Вы действительно хотите удалить с кассы записи справочника платежных агентов/операторов?"
+    view-as alert-box QUESTION buttons YES-NO update glog.
+  if not glog then return.
+end.
 { str/putc-oss.i }
-
 /*PROCEDURE for-cash-cycle*/
 /*пройдем цикл по всем кассам одного типа*/
+if pSubs = "" then do:
 { str/cd-cyoss.i }
-
-
-/*PROCEDURE SENDING.*/
-{ str/cd-seoss.i }
-
-
-RUN SENDING no-error.
-
-if error-status:error then do:
-  run write-log-and-file in p-log-handle (
-        input 1
-      , input log-file-name
-      , input 1
-      , input substitute( "!!!Ошибки при отсылке справочника ОСС на кассы &1&2"
-                         , p-obj-type, i-obj-code
-                        )
-                                        ).
 end.
 
+RUN SENDING no-error.
+{ str/cd-seoss.i }
+
+assign
+  log-file-name = p-log-file-name
+  .
+
+{ gbl/hostcode.i {&shop} i-obj-code v-host-code }
+
+if error-status:error then 
+do:
+  run write-log-and-file in p-log-handle (
+    input 1
+    , input log-file-name
+    , input 1
+    , input substitute( "!!!Ошибки при отсылке справочника платежные агенты/операторы на кассы  маг&1:&2&3 &4"
+    , i-obj-code
+    , {&new-line}
+    , error-status:get-message(1)
+    , return-value
+    )
+    ).
+
+  assign
+    v-view-log = yes
+    .
+end.
   finally :
     run write-log-and-file in p-log-handle (
         input 1

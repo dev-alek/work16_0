@@ -4524,6 +4524,20 @@ define input parameter p-action as character no-undo .
   ) no-error.
 end procedure. /* run-2cashpay */
 
+procedure bpasend :
+define input parameter p-pos-type as character no-undo .
+define input parameter p-action as character no-undo .
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/bpasend.p":U
+      , input (p-pos-type + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + p-action)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка справочника ОСС на кассы &1", p-pos-type, {&cd-type-IBm-XML})
+  ) no-error.
+end procedure. /* bpasend */
+
 procedure run-2cashpay :
 define input parameter p-pos-type as character no-undo .
 define input parameter p-action as character no-undo .
@@ -4572,6 +4586,26 @@ procedure m-promo-d-exe :
 
 end procedure. /* m-cash-pay-exe */
 
+procedure m-bpa-u-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run bpasend in this-procedure ({&cd-type-IBm-XML}, 'U':U) .
+  end.
+
+end procedure. /* m-bpa-u-exe */
+
+procedure m-bpa-d-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run bpasend in this-procedure ({&cd-type-IBm-XML}, 'D':U) .
+  end.
+
+end procedure. /* m-bpa-d-exe */
+
 procedure m-gds-ef-exe :
 define variable v-rid-list as character no-undo .
 
@@ -4597,20 +4631,6 @@ define input parameter p-action as character no-undo .   */
       , input substitute("Отсылка данных по маскам серийных МЦ на кассы ")
   ) no-error.
 end procedure. /* run-2cashpay */
-
-procedure m-catalog-oss-exe :
-
- run str/diallog.w (
-        input parparentproc
-      , input this-procedure
-      , input "str/sendcoss.p":U
-      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U)
-      , input no /*p-auto-go*/
-      , input "":U
-      , input substitute("Отсылка данных по справочнику ОСС ")
-  ) no-error.
-
-end procedure. /* m-catalog-oss-exe */
 
 procedure m-cash-dept-exe :
   define variable v-obj-db-num  as integer   no-undo initial ? .
@@ -8662,11 +8682,19 @@ end procedure. /* m-oss-exe */
 
 procedure m-bpa-ref :
 define variable v-rid-list as character no-undo .
-
+define variable v-mode     as character no-undo .
+define variable v-value    as character no-undo .
+define variable v-type     as character no-undo .
   do
   on error undo, return error
   :
-    run ref/bpa.p ( input parparentproc, input {&update}, output v-rid-list) no-error.
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    
+    if v-value = "no" then do:
+    if v-cntxt-db-num > 0 then v-mode = {&lookup}. else v-mode = {&update} .
+    end.
+    else v-mode = {&lookup} .
+    run ref/bpa.p ( input parparentproc, input v-mode, output v-rid-list) no-error.
   end.
 
 end procedure. /* m_gds-ef-exe */
