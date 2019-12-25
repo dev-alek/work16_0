@@ -102,9 +102,6 @@ class ibs.th.ref.cashbookbrw inherits Form :
     super().
     parparentproc = p-parparentproc .
     vMode = Mode .
-    if vMode = {&lookup}
-    then
-       vMode = {&update}.
     { gbl/getcntxt.i get }
     InitializeComponent().
     Visual_form(vMode) .
@@ -346,12 +343,12 @@ class ibs.th.ref.cashbookbrw inherits Form :
           v-log
         }
         assign
-          this-object:bAdd:Enabled = true 
-          this-object:bChange:Enabled = true 
-          this-object:bDel:Enabled = true 
-          this-object:bAddObj:Enabled = true 
-          this-object:bChangeObj:Enabled = true 
-          this-object:bDelObj:Enabled = true 
+          this-object:bAdd:Enabled = false
+          this-object:bChange:Enabled = false 
+          this-object:bDel:Enabled = false 
+          this-object:bAddObj:Enabled = false 
+          this-object:bChangeObj:Enabled = false 
+          this-object:bDelObj:Enabled = false 
         .
         if v-log then this-object:bChangeObj:Enabled = true .
       end.
