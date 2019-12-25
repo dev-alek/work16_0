@@ -1093,6 +1093,9 @@ DO:
     display
     f-cashbook
     with frame {&frame-name} .
+    IF LOOKUP("update_prc-doc-code-mask", THIS-PROCEDURE:INTERNAL-ENTRIES) >  0 
+    THEN 
+       run update_prc-doc-code-mask (no). /* Возможно процедуры нет */
     run check-obj in this-procedure (   input tt-fin-doc.obj-type
                                        ,input tt-fin-doc.obj-code
                                        )
