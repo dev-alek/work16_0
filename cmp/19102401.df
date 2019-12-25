@@ -194,7 +194,7 @@ ADD INDEX "date-time" ON "devisPC-attr"
   INDEX-FIELD "db-num" ASCENDING 
   INDEX-FIELD "id" ASCENDING 
   INDEX-FIELD "date" ASCENDING 
-  INDEX-FIELD "attr-value" ASCENDING 
+  INDEX-FIELD "time_" ASCENDING
 
 UPDATE FIELD "reserve1-char" OF "db"
   INITIAL "16"

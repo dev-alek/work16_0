@@ -497,8 +497,8 @@ define temp-table {&prefixtt}INDEX
              then substitute ("&1 INDEX &2&3 ON &4",
                               vBuffer::{&prefixfil}mode,
                               vBuffer::{&prefixfil}name,
-                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}NewName else "",
-                              vBuffer::{&prefixfil}table)
+                              if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}table  else "",
+                              if vBuffer::{&prefixfil}mode eq "rename" then vBuffer::{&prefixfil}NewName else vBuffer::{&prefixfil}table)
              else substitute ("&1 &2 &3&4",
                               vBuffer::{&prefixfil}mode,
                               substring(vBuffer:name,length("{&prefixtt}") + 1),
