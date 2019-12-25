@@ -500,26 +500,26 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     find first X_clients-host no-lock where
               X_clients-host.obj-type = {&cmp}
           AND X_clients-host.obj-code = p-host-code.
-  if LOOKUP({&lookup} , p-mode, {&delim-par}) = 0 then do:
-    define variable v-ok as logical no-undo .
-    define variable v-mess as character no-undo .
-    { str/finchkdb.i
-      p-host-code
-      p-fin-doc-code
-      p-obj-type
-      p-obj-code
-      p-fin-ext-doc-type
-      p-cash-book-place
-      ?
-      v-ok
-      v-mess
-    no-error }
-    if not v-ok then do:
-      message v-mess
-      view-as alert-box error .
-      undo main-block, return error .
-    end.
-  end.
+/*  if LOOKUP({&lookup} , p-mode, {&delim-par}) = 0 then do:*/
+/*    define variable v-ok as logical no-undo .             */
+/*    define variable v-mess as character no-undo .         */
+/*    { str/finchkdb.i                                      */
+/*      p-host-code                                         */
+/*      p-fin-doc-code                                      */
+/*      p-obj-type                                          */
+/*      p-obj-code                                          */
+/*      p-fin-ext-doc-type                                  */
+/*      p-cash-book-place                                   */
+/*      ?                                                   */
+/*      v-ok                                                */
+/*      v-mess                                              */
+/*    no-error }                                            */
+/*    if not v-ok then do:                                  */
+/*      message v-mess                                      */
+/*      view-as alert-box error .                           */
+/*      undo main-block, return error .                     */
+/*    end.                                                  */
+/*  end.                                                    */
   if p-mode = {&update}
   or p-mode = {&lookup} then do:
     if p-mode = {&update} then do:

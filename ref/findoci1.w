@@ -299,6 +299,13 @@ DEFINE BUTTON B-currency
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "Btn 1"
      SIZE 3 BY 1.
+     
+DEFINE BUTTON B-cashbook
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL ""
+     SIZE 3 BY 1.
 
 DEFINE BUTTON B-exit AUTO-GO
      LABEL "&Ввод"
@@ -405,6 +412,15 @@ DEFINE VARIABLE F-debet AS CHARACTER FORMAT "X(256)":U INITIAL "Дебет"
       VIEW-AS TEXT
      SIZE 10 BY .67
      FGCOLOR 4  NO-UNDO.
+     
+DEFINE VARIABLE l-cashbook AS CHARACTER FORMAT "X(256)":U INITIAL "Кассовая книга:"
+      VIEW-AS TEXT
+     SIZE 15 BY .67
+     NO-UNDO.
+     
+DEFINE VARIABLE f-cashbook AS CHARACTER FORMAT "X(256)":U
+     VIEW-AS FILL-IN
+     SIZE 40 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-rest-con-sum AS DECIMAL FORMAT "->,>>>,>>>,>>>,>>9.99" INITIAL 0
      LABEL "Своб.ост.(в.д.)"
@@ -653,6 +669,9 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN
           SIZE 38.7 BY 1
           FGCOLOR 4
+     l-cashbook at row 22.2 col 1 no-label
+     f-cashbook at row 22 col 19 no-label
+     b-cashbook at row 22 col 61 FGCOLOR 4
      F-debet AT ROW 6.2 COL 5 COLON-ALIGNED NO-LABEL
      F-credit AT ROW 7.2 COL 1.4 NO-LABEL
      "Приложение" VIEW-AS TEXT
@@ -1084,6 +1103,7 @@ WITH FRAME Dialog-Frame.
 if p-mode <> {&lookup} and not is-fact-and-edit() then do:
   ENABLE
   B-exit
+  B-cashbook
   tt-fin-doc.prn-doc-code
   tt-fin-doc.doc-date when v-limit-access = 0
   b-obj   when not v-is-auto-obj
@@ -1182,6 +1202,8 @@ CASE p-view:
     f-an-uchet-descr
     tt-fin-doc.cel-nazn-value
     f-cel-nazn-descr
+    l-cashbook
+    f-cashbook
     with frame {&frame-name}
     .
     if not is-fact-and-edit() then
@@ -1270,7 +1292,7 @@ PROCEDURE enable_UI :
   GET FIRST Dialog-Frame.
   DISPLAY RS-view f-cor-acc1-descr f-cor-acc-descr f-contract-curr-abbr
           f-contract-prn-code f-contract-date f-contract-type f-an-uchet-descr
-          f-cel-nazn-descr f-rest-con-sum F-curr-abbr F-debet F-credit
+          f-cel-nazn-descr f-rest-con-sum F-curr-abbr F-debet F-credit l-cashbook f-cashbook
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-fin-doc THEN
     DISPLAY tt-fin-doc.shift-date tt-fin-doc.shift-name tt-fin-doc.shift-num
@@ -1308,6 +1330,7 @@ PROCEDURE enable_UI :
          tt-fin-doc.payer-code tt-fin-doc.payer-name B-payer-view
          tt-fin-doc.naznach-plat tt-fin-doc.including tt-fin-doc.enclosure
          tt-fin-doc.PS tt-fin-doc.receiver-sign2 tt-fin-doc.receiver-sign3
+         B-cashbook
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1397,6 +1420,7 @@ then do:
     sum-doc
     receiver-sign2
     receiver-sign3
+    CashBookId
     to tt-fin-doc
     assign
     tt-fin-doc.host-code = p-host-code
@@ -1433,6 +1457,7 @@ or p-mode = {&add-copy} then do:
                 ,input p-cor-acc1
                 ,input p-an-uchet-code
                 ,input p-cel-nazn-code
+                ,input (if available tt-fin-doc then tt-fin-doc.CashBookId else 0)
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,output table tt0-fin-doc-attr
@@ -1464,6 +1489,7 @@ else do:
                 ,input tt-fin-doc.cor-acc1
                 ,input tt-fin-doc.an-uchet-code
                 ,input tt-fin-doc.cel-nazn-code
+                ,input tt-fin-doc.CashBookId
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,output table tt0-fin-doc-attr
@@ -1591,6 +1617,14 @@ tt-fin-doc.shift-num  when tt-fin-doc.shift-flag = integer({&fin-flag-shift})
 tt-fin-doc.shift-name when tt-fin-doc.shift-flag = integer({&fin-flag-shift})
 with frame {&frame-name}
 .
+find first ub.cashbook no-lock where ub.cashbook.id = tt-fin-doc.CashBookId no-error.
+if available ub.cashbook
+then do :
+  f-cashbook = ub.CashBook.CashBookName .
+  display
+    f-cashbook
+  with frame {&frame-name} .
+end.
 if tt-fin-doc.shift-flag <> integer({&fin-flag-shift})  then do:
   hide
   tt-fin-doc.shift-date

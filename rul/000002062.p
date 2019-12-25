@@ -88,6 +88,7 @@ define variable v-rv         as character no-undo.
 define variable v-err-mess   as character no-undo.
 define variable is-petrolium as logical   no-undo.
 
+define variable o-uchet as character no-undo .
 define variable v-uchet as character no-undo .
 define variable v-value-date as date no-undo .
 define variable v-value-decimal as decimal no-undo .
@@ -114,7 +115,8 @@ define buffer buf_shift-obj for ub.shift-obj.
 
 
 /*---------------------------&start-rule-call-param&-------------------------------*/
-define variable p-by-cash-desk as logical no-undo .
+define variable mCashBook         as class ibs.th.ref.cashbookstorage no-undo .
+define variable p-by-cash-desk    as logical no-undo .
 define variable p-by-petrol-goods as logical no-undo .
 define variable p-by-osnovanie    as character  no-undo .
 define variable p-by-pril         as character  no-undo .
@@ -214,6 +216,7 @@ field sum-rubl as decimal
 field sum-doc as decimal
 field cash-desk  as integer
 field is-petrol as logical
+field cashbookId as int64
 index pi is unique primary
 cash-desk
 curr-code
@@ -292,69 +295,69 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
 
 define variable v-err               as logical    no-undo .
 
-run adm/shattri.p (
-        input "get":U
-        ,input buf_shift-obj.obj-type
-        ,input buf_shift-obj.obj-code
-        ,input {&attr-fin-doc}
-        ,input  {&attr-fin-doc_uchet}
-        ,output v-uchet
-        ,output v-value-date
-        ,output v-value-decimal
-        ,output v-value-integer
-        ,output v-value-logical
-        ,output par-type
-        ,INPUT-OUTPUT table-handle v-tth
-        ) no-error .
-      if error-status :error  then v-uchet = "smen" .
-
-      delete object v-tth no-error.
+/*run adm/shattri.p (                                  */
+/*        input "get":U                                */
+/*        ,input buf_shift-obj.obj-type                */
+/*        ,input buf_shift-obj.obj-code                */
+/*        ,input {&attr-fin-doc}                       */
+/*        ,input  {&attr-fin-doc_uchet}                */
+/*        ,output v-uchet                              */
+/*        ,output v-value-date                         */
+/*        ,output v-value-decimal                      */
+/*        ,output v-value-integer                      */
+/*        ,output v-value-logical                      */
+/*        ,output par-type                             */
+/*        ,INPUT-OUTPUT table-handle v-tth             */
+/*        ) no-error .                                 */
+/*      if error-status :error  then v-uchet = "smen" .*/
+/*                                                     */
+/*      delete object v-tth no-error.                  */
 
 
 /* ------------------------- &end-hn-option& -----------------------------------*/
   /* ------------------------- &start-rule& -----------------------------------*/
-    { gbl/cashbook.i  buf_shift-obj.obj-type buf_shift-obj.obj-code cash-book no-error }
-    IF error-status:error then do:
-      &scop my-message  substitute("Ошибка при получении настроек фин.документов НА ОБЪЕКТЕ &1&2:&3&4 &5" ~
-              , buf_shift-obj.obj-type ~
-              , buf_shift-obj.obj-code ~
-              , ~{&new-line~}   ~
-              , error-status:get-message(1) ~
-              , return-value )
-      undo, return error .
-    end.
+/*    { gbl/cashbook.i  buf_shift-obj.obj-type buf_shift-obj.obj-code cash-book no-error }                   */
+/*    IF error-status:error then do:                                                                         */
+/*      &scop my-message  substitute("Ошибка при получении настроек фин.документов НА ОБЪЕКТЕ &1&2:&3&4 &5" ~*/
+/*              , buf_shift-obj.obj-type ~                                                                   */
+/*              , buf_shift-obj.obj-code ~                                                                   */
+/*              , ~{&new-line~}   ~                                                                          */
+/*              , error-status:get-message(1) ~                                                              */
+/*              , return-value )                                                                             */
+/*      undo, return error .                                                                                 */
+/*    end.                                                                                                   */
    { gbl/hostname.i buf_shift-obj.obj-type buf_shift-obj.obj-code v-host-code v-host-name }
    { gbl/objdbnum.i buf_shift-obj.obj-type buf_shift-obj.obj-code v-obj-db-num }
    { gbl/basecode.i v-host-code v-base-code }
     find first buf_sysconf no-lock where
               buf_sysconf.host-code = v-host-code.
-    if cash-book = integer({&cash-book-firm}) then do:
-      /*затычка - чтобы не создавался ордер если не настроено на объекте*/
-      return "return".
-    end.
-    if cash-book = integer({&cash-book-firm})
-    and g#db-num <> buf_sysconf.firm-db-num
-    then do:
-      &scop my-message substitute("Невозможно создать платеж для &1&2 на БД &3&4На БД объекта не ведется Операционная кассовая книга" ~
-                                  ,buf_shift-obj.obj-type ~
-                                  ,buf_shift-obj.obj-code ~
-                                  ,g#db-num  )
-      {&display-message}.
-      undo, return error .
-    end.
-    if cash-book = integer({&cash-book-object})
-    and g#db-num <> v-obj-db-num
-    then do:
-      &scop my-message substitute("Невозможно создать платеж для &1&2 на БД &3&4На БД объекта ведется Операционная кассовая книга&4" + ~
-                                  "Текущая БД &3 БД объекта &5" ~
-                                  ,buf_shift-obj.obj-type ~
-                                  ,buf_shift-obj.obj-code ~
-                                  ,g#db-num     ~
-                                  , {&new-line} ~
-                                  , v-obj-db-num  )
-      {&display-message}.
-      undo, return error .
-    end.
+/*    if cash-book = integer({&cash-book-firm}) then do:                                                                                  */
+/*      /*затычка - чтобы не создавался ордер если не настроено на объекте*/                                                              */
+/*      return "return".                                                                                                                  */
+/*    end.                                                                                                                                */
+/*    if cash-book = integer({&cash-book-firm})                                                                                           */
+/*    and g#db-num <> buf_sysconf.firm-db-num                                                                                             */
+/*    then do:                                                                                                                            */
+/*      &scop my-message substitute("Невозможно создать платеж для &1&2 на БД &3&4На БД объекта не ведется Операционная кассовая книга" ~ */
+/*                                  ,buf_shift-obj.obj-type ~                                                                             */
+/*                                  ,buf_shift-obj.obj-code ~                                                                             */
+/*                                  ,g#db-num  )                                                                                          */
+/*      {&display-message}.                                                                                                               */
+/*      undo, return error .                                                                                                              */
+/*    end.                                                                                                                                */
+/*    if cash-book = integer({&cash-book-object})                                                                                         */
+/*    and g#db-num <> v-obj-db-num                                                                                                        */
+/*    then do:                                                                                                                            */
+/*      &scop my-message substitute("Невозможно создать платеж для &1&2 на БД &3&4На БД объекта ведется Операционная кассовая книга&4" + ~*/
+/*                                  "Текущая БД &3 БД объекта &5" ~                                                                       */
+/*                                  ,buf_shift-obj.obj-type ~                                                                             */
+/*                                  ,buf_shift-obj.obj-code ~                                                                             */
+/*                                  ,g#db-num     ~                                                                                       */
+/*                                  , {&new-line} ~                                                                                       */
+/*                                  , v-obj-db-num  )                                                                                     */
+/*      {&display-message}.                                                                                                               */
+/*      undo, return error .                                                                                                              */
+/*    end.                                                                                                                                */
     /*перезаполним с учетом  требований ЮКОС*/
     find first buf_shift-staff no-lock
          where buf_shift-staff.obj-type   = buf_shift-obj.obj-type
@@ -496,23 +499,35 @@ run adm/shattri.p (
                  and buf_chk-gds-pay.algo-num = {&current-algo-1}
                   :
                     if buf_chk-gds-pay.curr-code <> buf_inkas-pay-desk.curr-code then next .
-
-                    if p-by-petrol-goods then do: /*проверяем товар на топливность*/
-                      run check-petrol in this-procedure (
-                                                          input buf_chk-gds-pay.b-code ,
-                                                          output is-petrolium
-                                                          ).
-                    end.
+                    
                     run gds-attr-value in this-procedure (
                                          input buf_chk-gds-pay.gds-code
                                         ,input "cash-book-id"
                                         ,output mValue
                                         ,output mType) no-error.
+                    find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
+                    if not available ub.CashBook 
+                    then do :
+                      find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+                    end.
+                    if available ub.CashBook
+                    then do :
+                      p-by-cash-desk = ub.CashBook.FlagSepCash .
+                      p-by-petrol-goods = ub.CashBook.FlagSepFull .
+                      p-by-osnovanie = ub.CashBook.RuleOsn .
+                      p-by-pril = ub.CashBook.RulePril .
+                    end.    
+                    if p-by-petrol-goods then do: /*проверяем товар на топливность*/
+                      run check-petrol in this-procedure (
+                                                          input buf_chk-gds-pay.b-code ,
+                                                          output is-petrolium
+                                                          ).
+                    end.                
                     find first buf_temp-fin-sum
                          where buf_temp-fin-sum.curr-code = buf_cash-pay.curr-code
                           and (p-by-cash-desk    = no or buf_temp-fin-sum.cash-desk = buf_inkas-pay-desk.pay-desk)
                           and (p-by-petrol-goods = no or buf_temp-fin-sum.is-petrol = is-petrolium)
-                          and buf_temp-fin-sum.cashbookid = int64(mValue)
+                          and buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
                               no-error.
                     if not available buf_temp-fin-sum then do:
                         create buf_temp-fin-sum.
@@ -524,7 +539,7 @@ run adm/shattri.p (
                         buf_temp-fin-sum.is-petrol = (if p-by-petrol-goods
                                                       then is-petrolium
                                                       else no)
-                        buf_temp-fin-sum.cashbookid = int64(mValue)
+                        buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
                         .
                     end.
                     assign
@@ -642,6 +657,24 @@ run adm/shattri.p (
             if buf_chk-doc.pay-desk <> buf_inkas-pay-desk.pay-desk then next _chk-gds-pay.
           end.
         end.  */
+        
+          run gds-attr-value in this-procedure (
+                               input buf_chk-gds-pay.gds-code
+                              ,input "cash-book-id"
+                              ,output mValue
+                              ,output mType) no-error.
+          find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
+          if not available ub.CashBook 
+          then do :
+            find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+          end.
+          if available ub.CashBook
+          then do :
+            p-by-cash-desk = ub.CashBook.FlagSepCash .
+            p-by-petrol-goods = ub.CashBook.FlagSepFull .
+            p-by-osnovanie = ub.CashBook.RuleOsn .
+            p-by-pril = ub.CashBook.RulePril .
+          end.
 
           if p-by-petrol-goods then do: /*проверяем товар на топливность*/
             run check-petrol in this-procedure (
@@ -657,7 +690,7 @@ run adm/shattri.p (
                                            else '')
              and buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
              and (p-by-cash-desk = no or buf_temp-gds.cash-desk = buf_inkas-pay-desk.pay-desk)
-          /*   and (p-by-petrol-goods = no or buf_temp-gds.is-petrol = is-petrolium) */
+             and (p-by-petrol-goods = no or buf_temp-gds.is-petrol = is-petrolium)
              no-error.
         if not available buf_temp-gds then do:
           find first buf_bar-code no-lock where
@@ -682,7 +715,9 @@ run adm/shattri.p (
                                           then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
                                           else '')
                 buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
-                buf_temp-gds.cash-desk = buf_inkas-pay-desk.pay-desk
+                buf_temp-gds.cash-desk = (if p-by-cash-desk
+                                                      then buf_inkas-pay-desk.pay-desk
+                                                      else 0)
                 buf_temp-gds.node-code = buf_bar-code.node-code
                 buf_temp-gds.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
                 .
@@ -762,12 +797,32 @@ run adm/shattri.p (
           and  buf_gds-dtl.prod-code = buf_temp-gds.prod-code
           and  buf_gds-dtl.prt-code = buf_temp-gds.node-code
           :
+        run gds-attr-value in this-procedure (
+                             input buf_temp-gds.gds-code
+                            ,input "cash-book-id"
+                            ,output mValue
+                            ,output mType) no-error.
+        find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
+        if not available ub.CashBook 
+        then do :
+          find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+        end.
+        if available ub.CashBook
+        then do :
+          p-by-cash-desk = ub.CashBook.FlagSepCash .
+          p-by-petrol-goods = ub.CashBook.FlagSepFull .
+          p-by-osnovanie = ub.CashBook.RuleOsn .
+          p-by-pril = ub.CashBook.RulePril .
+        end.
+        
         find first buf_temp-tax where
                   buf_temp-tax.curr-code = buf_temp-gds.curr-code
               and buf_temp-tax.vat-pc = buf_doc-line.vat-pc
               and buf_temp-tax.slt-pc = buf_doc-line.slt-pc
-              and (p-by-cash-desk = no or buf_temp-tax.cash-desk = buf_temp-gds.cash-desk)
-              and (p-by-petrol-goods = no or buf_temp-tax.is-petrol = buf_temp-gds.is-petrol)
+              and buf_temp-tax.cash-desk = buf_temp-gds.cash-desk
+              and buf_temp-tax.is-petrol = buf_temp-gds.is-petrol
+/*              and (p-by-cash-desk = no or buf_temp-tax.cash-desk = buf_temp-gds.cash-desk)   */
+/*              and (p-by-petrol-goods = no or buf_temp-tax.is-petrol = buf_temp-gds.is-petrol)*/
              no-error.
         if not available buf_temp-tax then do:
           create buf_temp-tax.
@@ -781,6 +836,7 @@ run adm/shattri.p (
           buf_temp-tax.is-petrol = (if p-by-petrol-goods
                                     then buf_temp-gds.is-petrol
                                     else no)
+          buf_temp-tax.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
           .
         end. /*if not available buf_temp-tax then do:*/
          /*получаем НДС*/
@@ -813,7 +869,8 @@ run adm/shattri.p (
      .
      empty temp-table temp-gds.
    end. /*   for each buf_inkas no-lock where*/
-
+   
+   
    for each temp-z-number
    break
    by temp-z-number.cash-desk
@@ -881,6 +938,7 @@ run adm/shattri.p (
                       ,input 0 /*p-cor-acc1*/
                       ,input 0 /*p-an-uchet-code*/
                       ,input 0 /*p-cel-nazn-code*/
+                      ,input buf_temp-fin-sum.cashbookid
                       ,INPUT-OUTPUT table tt-fin-doc
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr
@@ -912,6 +970,7 @@ run adm/shattri.p (
                       ,input 0 /*p-cor-acc1*/
                       ,input 0 /*p-an-uchet-code*/
                       ,input 0 /*p-cel-nazn-code*/
+                      ,input buf_temp-fin-sum.cashbookid
                       ,INPUT-OUTPUT table tt-fin-doc
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr
@@ -934,6 +993,7 @@ run adm/shattri.p (
          where buf_temp-tax.curr-code = buf_temp-fin-sum.curr-code
           and buf_temp-tax.cash-desk = buf_temp-fin-sum.cash-desk
            and buf_temp-tax.is-petrol = buf_temp-fin-sum.is-petrol
+           and buf_temp-tax.cashbookId = buf_temp-fin-sum.cashbookId
               :
         v-line-num = v-line-num + 1.
         create tt0-fin-doc-tax .
@@ -992,6 +1052,19 @@ run adm/shattri.p (
       run StrTax in this-procedure ( input-output tt-fin-doc.including) .
        /* округляем  */
       run RoundTax in this-procedure .
+      
+      find first ub.CashBook no-lock where ub.CashBook.id = buf_temp-fin-sum.cashbookid no-error .
+      if not available ub.CashBook 
+      then do :
+        find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+      end.
+      if available ub.CashBook
+      then do :
+        p-by-cash-desk = ub.CashBook.FlagSepCash .
+        p-by-petrol-goods = ub.CashBook.FlagSepFull .
+        p-by-osnovanie = ub.CashBook.RuleOsn .
+        p-by-pril = ub.CashBook.RulePril .
+      end.
 
       if p-by-cash-desk then do:
         find first temp-z-number-list no-lock
@@ -1057,6 +1130,57 @@ run adm/shattri.p (
           .
         end.
       end.
+      
+      mCashBook = new ibs.th.ref.cashbookstorage () .
+      o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 9) .
+      delete object mCashBook no-error .
+      
+      find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.CashBookId no-error .
+      if available ub.CashBook
+      then do :
+        tt-fin-doc.cor-acc-value = ub.CashBook.Credit .
+        tt-fin-doc.cor-acc1-value = ub.CashBook.Debit .
+        
+        FIND ub.fin-code-cor-acc WHERE
+         ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc-value
+         AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+         AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+         NO-LOCK NO-error.
+        
+        if not available ub.fin-code-cor-acc
+        then do:
+          assign
+            tt-fin-doc.cor-acc-value = {&question-mark}
+          .
+        end.
+        else do:
+          assign
+            tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code
+          .
+        end.
+        FIND ub.fin-code-cor-acc WHERE
+         ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc1-value
+         AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+         AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+         NO-LOCK NO-error.
+        
+        if not available ub.fin-code-cor-acc
+        then do:
+          assign
+            tt-fin-doc.cor-acc1-value = {&question-mark}
+          .
+        end.
+        else do:
+          assign
+            tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code
+          .
+        end.
+      end.
+      
+      if o-uchet = "по календарным датам"
+      then v-uchet = "cal" .
+      else v-uchet = "smen" . 
+      
 
        /*подкручиваем для утилиты */
        if buf_shift-obj.status_ = {&sht-closed} and v-uchet = "smen" then do:
@@ -1179,27 +1303,27 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             rowid(buf_shift-obj) = v-rowid.
 
   /*---------------------------&start-process-rule-call-param&-------------------------------*/
-  find first buf_rule-call-param no-lock
-  where buf_rule-call-param.codex_id = p-codex-id
-  and buf_rule-call-param.ruleset_id = p-ruleset-id
-  and buf_rule-call-param.call_id = p-call-id
-  and buf_rule-call-param.order_id = p-order-id
-  and buf_rule-call-param.rule_id = p-rule-id
-  and buf_rule-call-param.param-name = "p-by-cash-desk" no-error.
-  if available buf_rule-call-param then do:
-    assign p-by-cash-desk = buf_rule-call-param.param-value-logical.
-  end.
-
-  find first buf_rule-call-param no-lock
-  where buf_rule-call-param.codex_id = p-codex-id
-    and buf_rule-call-param.ruleset_id = p-ruleset-id
-    and buf_rule-call-param.call_id = p-call-id
-    and buf_rule-call-param.order_id = p-order-id
-    and buf_rule-call-param.rule_id = p-rule-id
-    and buf_rule-call-param.param-name = "p-by-petrol-goods" no-error.
-  if available buf_rule-call-param then do:
-    assign p-by-petrol-goods = buf_rule-call-param.param-value-logical.
-  end.
+/*  find first buf_rule-call-param no-lock                               */
+/*  where buf_rule-call-param.codex_id = p-codex-id                      */
+/*  and buf_rule-call-param.ruleset_id = p-ruleset-id                    */
+/*  and buf_rule-call-param.call_id = p-call-id                          */
+/*  and buf_rule-call-param.order_id = p-order-id                        */
+/*  and buf_rule-call-param.rule_id = p-rule-id                          */
+/*  and buf_rule-call-param.param-name = "p-by-cash-desk" no-error.      */
+/*  if available buf_rule-call-param then do:                            */
+/*    assign p-by-cash-desk = buf_rule-call-param.param-value-logical.   */
+/*  end.                                                                 */
+/*                                                                       */
+/*  find first buf_rule-call-param no-lock                               */
+/*  where buf_rule-call-param.codex_id = p-codex-id                      */
+/*    and buf_rule-call-param.ruleset_id = p-ruleset-id                  */
+/*    and buf_rule-call-param.call_id = p-call-id                        */
+/*    and buf_rule-call-param.order_id = p-order-id                      */
+/*    and buf_rule-call-param.rule_id = p-rule-id                        */
+/*    and buf_rule-call-param.param-name = "p-by-petrol-goods" no-error. */
+/*  if available buf_rule-call-param then do:                            */
+/*    assign p-by-petrol-goods = buf_rule-call-param.param-value-logical.*/
+/*  end.                                                                 */
 
 /*---------------------------&end-process-rule-call-param&-------------------------------*/
 

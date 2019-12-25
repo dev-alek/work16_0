@@ -2323,9 +2323,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         end.
       end.
       /*----S----Финансовые-документы----*/
-      { gbl/cashbook.i ub.clients.obj-type ub.clients.obj-code fin-doc-par no-error }
-
-      if fin-doc-par = integer({&cash-book-object}) then do :
+/*      { gbl/cashbook.i ub.clients.obj-type ub.clients.obj-code fin-doc-par no-error }*/
+/*                                                                                     */
+/*      if fin-doc-par = integer({&cash-book-object}) then do :                        */
         output stream slog to rest-rdb.txt append .
         export stream slog "start rest-fin-doc " cur-time-string() .
         output stream slog close .
@@ -2346,7 +2346,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             )
           .
         end.
-      end.
+/*      end.*/
       /*----E----Финансовые-документы----*/
       if ub.clients.obj-type = {&shop} then do:
 

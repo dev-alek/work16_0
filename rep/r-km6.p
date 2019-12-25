@@ -756,6 +756,7 @@ procedure PrintPodval :
 do on error undo, return error return-value  :
 
    define input parameter p-sheet-name AS character no-undo .
+   define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
    define variable o-head-position     AS character no-undo.     /* Должность */
    define variable o-director          AS character no-undo.     /* кто указан в фин настройках */
    define variable v-head-position     AS character no-undo.     /* Должность на русском */
@@ -772,57 +773,8 @@ do on error undo, return error return-value  :
    
 /* Взято из finfnoco.p, узнается фио и должность руководителя */
 
-       for each buf_thbj-attr where
-                buf_thbj-attr.obj-type = This_Object.obj-type
-            and buf_thbj-attr.obj-code = This_Object.obj-code
-            and buf_thbj-attr.upper-prop-code = {&attr-fin-doc}
-      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
-        case buf_thbj-attr.prop-code: 
-          when {&attr-fin-doc_head-position} then do:
-            o-head-position = buf_thbj-attr.property-value-character.
-          end.
-          when {&attr-fin-doc_director} then do:
-            o-director = buf_thbj-attr.property-value-character.
-          end.
-        end case.
-      end. /*for each thbj-attr where*/
-      case o-head-position:
-        when 'director':U then do:
-          v-head-position = "Директор".
-        end.
-        when 'zavsklad':U then do:
-          v-head-position = "Зав.складом".
-        end.
-        when 'upravl':U then do:
-          v-head-position = "Управляющий".
-        end.
-        when 'ruk_firm':U then do:
-            for first buf_sysconf where buf_sysconf.host-code = This_Object.host-code:
-            v-head-position = buf_sysconf.head-position.
-            end.
-        end.
-      end case.
-      case o-director:
-        when 'dir_obj':U then do:
-          if This_Object.obj-type = {&shop} then do:
-            find first buf_shop no-lock where
-                      buf_shop.obj-code = This_Object.obj-code no-error .
-            if available buf_shop then do:
-              v-director = buf_shop.director.
-            end.
-          end.
-          if This_Object.obj-type = {&stock} then do:
-            find first buf_store no-lock where
-                      buf_store.obj-code = This_Object.obj-code no-error .
-            if available buf_store then do:
-              v-director = buf_store.store-boss.
-            end.
-          end.
-        end. /*when 'dir_obj' then do:*/
-        when 'ruk_firm':U then do:
-          v-director = buf_firm.director.
-        end.
-      end case.
+      
+      
       
    
       
@@ -861,22 +813,6 @@ do on error undo, return error return-value  :
 
     if v-cassir = v-cassir-op then v-cassir-op = "".
 
-     run km6xl-write-cell-data in this-procedure (
-            input substitute("&1_&2"
-                       , p-sheet-name
-                       , {&km6xl-f_post}
-                       )
-       , input v-head-position
-   ).      
-   
-         run km6xl-write-cell-data in this-procedure (
-            input substitute("&1_&2"
-                       , p-sheet-name
-                       , {&km6xl-f_boss}
-                       )
-       , input v-director
-   ).   
-      
       run km6xl-write-cell-data in this-procedure (
             input substitute("&1_&2"
                        , p-sheet-name
@@ -966,6 +902,44 @@ do on error undo, return error return-value  :
                     and buf_fin-doc.fin-ext-doc-type = {&income-cash}
                   no-error.
                   if available buf_fin-doc then do :
+                    mCashBook = new ibs.th.ref.cashbookstorage () .
+      
+                    o-head-position = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 5) .
+                    o-director      = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 6) .
+                    
+                    delete object mCashBook no-error .
+                    
+                    case o-head-position:
+                      when 'Должность рук-ля фирмы':U then do:
+                        for first buf_sysconf no-lock where buf_sysconf.host-code = This_Object.host-code :
+                          v-head-position = buf_sysconf.head-position.
+                        end.
+                      end.
+                      otherwise do :
+                        v-head-position = o-head-position .
+                      end.
+                    end case.
+                    case o-director:
+                      when 'ФИО руководителя магазина':U then do:
+                        if This_Object.obj-type = {&shop} then do:
+                          find first buf_shop no-lock where
+                                    buf_shop.obj-code = This_Object.obj-code no-error .
+                          if available buf_shop then do:
+                            v-director = buf_shop.director.
+                          end.
+                        end.
+                        if This_Object.obj-type = {&stock} then do:
+                          find first buf_store no-lock where
+                                    buf_store.obj-code = This_Object.obj-code no-error .
+                          if available buf_store then do:
+                            v-director = buf_store.store-boss.
+                          end.
+                        end.
+                      end. /*when 'dir_obj' then do:*/
+                      when 'ФИО руководителя фирмы':U then do:
+                        v-director = buf_firm.director.
+                      end .
+                    end case.
                     find first buf_sysconf no-lock
                           where buf_sysconf.host-code = This_Object.host-code
                           no-error.
@@ -999,6 +973,22 @@ do on error undo, return error return-value  :
    .
 
    /* Добавил 21.01.2015г Арн. (Обращение Заказчика за №16448) - было: не отобр суммы в Ексель, а только на экране. */
+   run km6xl-write-cell-data in this-procedure (
+            input substitute("&1_&2"
+                       , p-sheet-name
+                       , {&km6xl-f_post}
+                       )
+       , input v-head-position
+   ).      
+   
+         run km6xl-write-cell-data in this-procedure (
+            input substitute("&1_&2"
+                       , p-sheet-name
+                       , {&km6xl-f_boss}
+                       )
+       , input v-director
+   ). 
+   
    run km6xl-write-cell-data in this-procedure (
          input substitute("&1_&2"
                        , p-sheet-name

@@ -133,7 +133,7 @@ or p-obj-code <> 0 then do:
   end.
   { gbl/objdbnum.i buf_clients-obj.obj-type buf_clients-obj.obj-code v-obj-db-num }
   /*только там может быть не пусто v-cash-book-place */
-  { gbl/cashbook.i buf_clients-obj.obj-type buf_clients-obj.obj-code v-cash-book no-error }
+/*  { gbl/cashbook.i buf_clients-obj.obj-type buf_clients-obj.obj-code v-cash-book no-error }*/
 
 end.
 
@@ -449,7 +449,7 @@ end.
 if l-shift-on
 and lookup(p-fin-ext-doc-type, {&fin-ext-doc-cash-types}) > 0
 and (p-doc-author = {&manual} or p-doc-author = {&auto})
-and v-cash-book = integer({&cash-book-object})
+/*and v-cash-book = integer({&cash-book-object})*/
 then do:
    /*проверим корректно ли заполнена смена*/
   v-flag-shift = yes.
@@ -493,7 +493,7 @@ if not (p-mode = {&update}
     .
   end.
   if abs(v-acc - p-sum-doc) > 0.01 then do:
-    run err-mess in this-procedure ("Сумма по документу не равна сумме строк по исчислению налогов " +  string(v-acc) + string(p-sum-doc), output v-ret-mess ).
+    run err-mess in this-procedure ("Сумма по документу " + string(p-sum-doc) + " не равна сумме строк по исчислению налогов " +  string(v-acc), output v-ret-mess ).
     undo, return error (if p-silent = no then  "sum-doc":U  else v-ret-mess).
   end.
 end.
@@ -657,13 +657,13 @@ ON STOP UNDO, RETURN ERROR:
     p-doc-rec = recid(ub.fin-doc)
     .
     /*при создании платежа проставим cash-book-place  - auto сюда не должны попадать*/
-    if v-obj-db-num = g#db-num then do:
-      if v-cash-book = integer({&cash-book-object}) then do:
+/*    if v-obj-db-num = g#db-num then do:                     */
+/*      if v-cash-book = integer({&cash-book-object}) then do:*/
         assign
         v-cash-book-place = buf_clients-obj.obj-type + string(buf_clients-obj.obj-code, "99999")
         .
-      end.
-    end.
+/*      end.*/
+/*    end.  */
   end.
   else do:
     FIND FIRST ub.fin-doc where
@@ -692,24 +692,27 @@ ON STOP UNDO, RETURN ERROR:
       { gbl/fautoobj.i p-host-code p-fin-doc-code v-is-auto-obj }
       if not v-is-auto-obj then do:
          /*надо перезаполнить*/
-        if v-obj-db-num = g#db-num then do:
-          /*только там может быть не пусто v-cash-book-place */
-          { gbl/cashbook.i buf_clients-obj.obj-type buf_clients-obj.obj-code v-cash-book no-error }
-
-          if v-cash-book = integer({&cash-book-object}) then do:
-            assign
-            v-cash-book-place = p-obj-type + string(p-obj-code, "99999")
-            .
-          end.
-          else do:
-            assign
-            v-cash-book-place = ''.
-          end.
-        end.
-        else do:
-          assign
-          v-cash-book-place = ''.
-        end.
+/*        if v-obj-db-num = g#db-num then do:                                                        */
+/*          /*только там может быть не пусто v-cash-book-place */                                    */
+/*          { gbl/cashbook.i buf_clients-obj.obj-type buf_clients-obj.obj-code v-cash-book no-error }*/
+/*                                                                                                   */
+/*          if v-cash-book = integer({&cash-book-object}) then do:                                   */
+/*            assign                                                                                 */
+/*            v-cash-book-place = p-obj-type + string(p-obj-code, "99999")                           */
+/*            .                                                                                      */
+/*          end.                                                                                     */
+/*          else do:                                                                                 */
+/*            assign                                                                                 */
+/*            v-cash-book-place = ''.                                                                */
+/*          end.                                                                                     */
+/*        end.                                                                                       */
+/*        else do:                                                                                   */
+/*          assign                                                                                   */
+/*          v-cash-book-place = ''.                                                                  */
+/*        end.                                                                                       */
+        assign
+        v-cash-book-place = p-obj-type + string(p-obj-code, "99999")
+        .
       end. /*if not v-is-auto-obj then do:*/
       else do:
         assign v-cash-book-place = "".
@@ -892,28 +895,28 @@ ON STOP UNDO, RETURN ERROR:
     end.
   end.
 
-  define variable v-ok as logical no-undo .
-  define variable v-out-mess as character no-undo .
-  { str/finchkdb.i
-    p-host-code
-    p-fin-doc-code
-    p-obj-type
-    p-obj-code
-    p-fin-ext-doc-type
-    v-cash-book-place
-    "p-doc-author = 'fin-ob'"
-    v-ok
-    v-out-mess
-    no-error }
-  if error-status:error then do:
-    run err-mess in this-procedure ( substitute("Ошибка при проверке возможности сохранения документа в данной БД (&1)" , v-db-num)
-                                    , output v-ret-mess).
-    undo, return error (if p-silent = no then "obj-code":U else v-ret-mess).
-  end.
-  if not v-ok then do:
-    run err-mess in this-procedure ( v-out-mess, output v-ret-mess).
-    undo, return error (if p-silent = no then "obj-code":U else v-ret-mess).
-  end.
+/*  define variable v-ok as logical no-undo .                                                                                        */
+/*  define variable v-out-mess as character no-undo .                                                                                */
+/*  { str/finchkdb.i                                                                                                                 */
+/*    p-host-code                                                                                                                    */
+/*    p-fin-doc-code                                                                                                                 */
+/*    p-obj-type                                                                                                                     */
+/*    p-obj-code                                                                                                                     */
+/*    p-fin-ext-doc-type                                                                                                             */
+/*    v-cash-book-place                                                                                                              */
+/*    "p-doc-author = 'fin-ob'"                                                                                                      */
+/*    v-ok                                                                                                                           */
+/*    v-out-mess                                                                                                                     */
+/*    no-error }                                                                                                                     */
+/*  if error-status:error then do:                                                                                                   */
+/*    run err-mess in this-procedure ( substitute("Ошибка при проверке возможности сохранения документа в данной БД (&1)" , v-db-num)*/
+/*                                    , output v-ret-mess).                                                                          */
+/*    undo, return error (if p-silent = no then "obj-code":U else v-ret-mess).                                                       */
+/*  end.                                                                                                                             */
+/*  if not v-ok then do:                                                                                                             */
+/*    run err-mess in this-procedure ( v-out-mess, output v-ret-mess).                                                               */
+/*    undo, return error (if p-silent = no then "obj-code":U else v-ret-mess).                                                       */
+/*  end.                                                                                                                             */
 
   assign
   ub.fin-doc.an-uchet-code       = p-an-uchet-code

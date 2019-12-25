@@ -73,6 +73,8 @@ define variable v-naznach-plat-1  as character no-undo .
 define variable v-naznach-plat-2  as character no-undo .
 define variable g#log             as logical   no-undo .
 
+define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
+define variable o-uchet as character no-undo .
 define variable v-uchet as character no-undo .
 define variable v-value-date as date no-undo .
 define variable v-value-decimal as decimal no-undo .
@@ -88,23 +90,15 @@ define buffer buf_currency for ub.currency.
 do
 on error undo, return error return-value
 :
- run adm/shattri.p (
-        input "get":U
-        ,input buf_fin-doc.obj-type
-        ,input buf_fin-doc.obj-code
-        ,input {&attr-fin-doc}
-        ,input  {&attr-fin-doc_uchet}
-        ,output v-uchet
-        ,output v-value-date
-        ,output v-value-decimal
-        ,output v-value-integer
-        ,output v-value-logical
-        ,output par-type
-        ,INPUT-OUTPUT table-handle v-tth
-        ) no-error .
-  if error-status :error  then v-uchet = "smen" .
 
-  delete object v-tth no-error.
+  mCashBook = new ibs.th.ref.cashbookstorage () .
+      
+  o-uchet    = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, 9) .
+  if o-uchet = "по календарным датам"
+  then v-uchet = "cal" .
+  else v-uchet = "smen" .
+  
+  delete object mCashBook no-error .
 
     run get-report-num  in parParentProc(output g#report-num).
     run get-quest-print in parParentProc(output g#quest-print).

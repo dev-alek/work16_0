@@ -532,7 +532,7 @@ tt-fin-doc.obj-code
 with frame {&frame-name}.
 if not (tt-fin-doc.obj-type = '' and tt-fin-doc.obj-code = 0) then do:
    { gbl/objdbnum.i tt-fin-doc.obj-type tt-fin-doc.obj-code v-obj-db-num }
-   { gbl/cashbook.i tt-fin-doc.obj-type tt-fin-doc.obj-code v-cash-book no-error }
+/*   { gbl/cashbook.i tt-fin-doc.obj-type tt-fin-doc.obj-code v-cash-book no-error }*/
   define variable l-shift-on as logical no-undo .
   { gbl/objat.i
     tt-fin-doc.obj-type
@@ -544,7 +544,7 @@ if not (tt-fin-doc.obj-type = '' and tt-fin-doc.obj-code = 0) then do:
   tt-fin-doc.shift-flag =  (if l-shift-on
                                   and lookup(tt-fin-doc.fin-ext-doc-type, {&fin-ext-doc-cash-types}) > 0
                                   and (tt-fin-doc.doc-author = {&manual} or tt-fin-doc.doc-author = {&auto})
-                                  and v-cash-book = integer({&cash-book-object})
+/*                                  and v-cash-book = integer({&cash-book-object})*/
                                   and v-obj-db-num = v-cntxt-db-num
                                   then integer({&fin-flag-shift})
                                   else 0)
@@ -553,6 +553,7 @@ if not (tt-fin-doc.obj-type = '' and tt-fin-doc.obj-code = 0) then do:
   for each thbjattr_thbj-attr:
     delete thbjattr_thbj-attr.
   end.
+  define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
   define variable par-type as character no-undo .
   define variable v-dpt-option as character no-undo .
   define variable v-dpt-dflt-name as character no-undo .
@@ -567,54 +568,24 @@ if not (tt-fin-doc.obj-type = '' and tt-fin-doc.obj-code = 0) then do:
   assign
   v-tth = buffer thbjattr_thbj-attr:table-handle .
 
-  run adm/shattri.p (
-      input "get":U
-      ,input  X_clients-obj.obj-type
-      ,input  X_clients-obj.obj-code
-      ,input  {&attr-fin-doc}
-      ,input  '':U /*p-param-code*/
-      ,output  v-value-character
-      ,output v-value-date
-      ,output v-value-decimal
-      ,output v-value-integer
-      ,output v-value-logical
-      ,output par-type /*p-param-value*/
-      ,INPUT-OUTPUT table-handle v-tth
-      ) no-error .
-  if error-status:error then do:
-    undo, return  substitute("Ошибка при получении настроек для фин.документов НА ОБЪЕКТЕ &1&2:&3&4 &5"
-                        , X_clients-obj.obj-type
-                        , X_clients-obj.obj-code
-                        , {&new-line}
-                        , error-status:get-message(1)
-                        , return-value ).
-  end.
-  for each  thbjattr_thbj-attr where
-            thbjattr_thbj-attr.obj-type = X_clients-obj.obj-type
-        and thbjattr_thbj-attr.obj-code = X_clients-obj.obj-code
-        and thbjattr_thbj-attr.upper-prop-code = {&attr-fin-doc}:
-    if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-option} then do:
-      v-dpt-option = thbjattr_thbj-attr.property-value-character.
-    end.
-    if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-dflt-name} then do:
-      v-dpt-dflt-name = thbjattr_thbj-attr.property-value-character.
-    end.
-    if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-dflt-type} then do:
-      v-dpt-dflt-type = thbjattr_thbj-attr.property-value-character.
-    end.
-    if thbjattr_thbj-attr.prop-code = {&attr-fin-doc_dpt-dflt-code} then do:
-      v-dpt-dflt-code = thbjattr_thbj-attr.property-value-integer.
-    end.
-  end.
+  mCashBook = new ibs.th.ref.cashbookstorage () .
+      
+  v-dpt-option    = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 8) .
+  v-dpt-dflt-name = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 10) .
+  v-dpt-dflt-type = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 11) .
+  v-dpt-dflt-code = integer(mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, 12)) .
+  
+  delete object mCashBook no-error .
+  
   case v-dpt-option:
-    when "object" then do:
+    when "Взять из объекта" then do:
       assign
       v-dpt-dflt-name = X_clients-obj.obj-name
       v-dpt-dflt-type = X_clients-obj.obj-type
       v-dpt-dflt-code = X_clients-obj.obj-code
       .
     end.
-    when "blank" then do:
+    when "Заполняет оператор" then do:
       assign
       v-dpt-dflt-name = ''
       v-dpt-dflt-type = ''
@@ -1103,6 +1074,30 @@ DO:
   ri = recid( X_contract ).
   run str/sh-contr.p ( input parParentProc,  input ri) no-error.
   if error-status:error then return no-apply.
+
+END.
+
+ON CHOOSE OF B-cashbook IN FRAME Dialog-Frame /* Кассовая книга */
+DO:
+  define variable v-cb-brw as class ibs.th.ref.cashbookbrw no-undo .
+  
+  v-cb-brw = new ibs.th.ref.cashbookbrw ( {&SELECT}, parparentproc ).
+
+  wait-for  v-cb-brw:ShowDialog() .
+  
+  if v-cb-brw:out-list-id > ""
+  then do :
+    find first ub.cashbook no-lock where ub.cashbook.id = int64(v-cb-brw:out-list-id) .
+    tt-fin-doc.cashbookId = ub.cashbook.id .
+    f-cashbook = ub.CashBook.CashBookName .
+    display
+    f-cashbook
+    with frame {&frame-name} .
+    run check-obj in this-procedure (   input tt-fin-doc.obj-type
+                                       ,input tt-fin-doc.obj-code
+                                       )
+                                     no-error.
+  end.
 
 END.
 

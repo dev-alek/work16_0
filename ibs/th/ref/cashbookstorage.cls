@@ -77,7 +77,7 @@ class ibs.th.ref.cashbookstorage final:
     return .
   end method .
   
-  method private void checkCashBookRule () :
+  method private void checkCashBookRule (buffer tt-cashbookrule for tt-cashbookrule) :
     Msg = "" .
     if trim(tt-cashbookrule.obj) = ""
     then do :
@@ -150,7 +150,7 @@ class ibs.th.ref.cashbookstorage final:
   
   method public void insertDBobj (input dataset for ds-cashbookrule) :
     for each tt-cashbookrule :
-      checkCashBookRule() .
+      checkCashBookRule(buffer tt-cashbookrule) .
       if Msg <> ""
       then return .
       
@@ -316,7 +316,7 @@ class ibs.th.ref.cashbookstorage final:
   
   method public void updateDBobj (input dataset for ds-cashbookrule) :
     for each tt-cashbookrule :
-      checkCashBookRule() .
+      checkCashBookRule(buffer tt-cashbookrule) .
       if Msg <> ""
       then return .
       
@@ -693,6 +693,36 @@ class ibs.th.ref.cashbookstorage final:
     
   end method.
   
+  method public character getSinglRule (input pCashBookId as int64, input pObjType as character, input pObjCode as integer, input pRuleCode as integer) :
+    find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = pCashBookId
+                                         and ub.CashBookRule.Obj-type   = pObjType
+                                         and ub.CashBookRule.Obj-code   = pObjCode
+                                         and ub.CashBookRule.Code       = pRuleCode
+                                         no-error.
+    if not available ub.CashBookRule
+    then do :
+      find first ub.clients no-lock where ub.clients.obj-type = pObjType
+                                      and ub.clients.obj-code = pObjCode
+                                      no-error.
+      if not available ub.clients   
+      then do :
+        return ? .
+      end.  
+      find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = pCashBookId
+                                           and ub.CashBookRule.Obj-type   = {&cmp}
+                                           and ub.CashBookRule.Obj-code   = ub.clients.host-code
+                                           and ub.CashBookRule.Code       = pRuleCode
+                                           no-error.  
+      if not available ub.CashBookRule
+      then do :
+        return ? .
+      end.                                                             
+    end.
+    
+    return ub.CashBookRule.RuleValue .
+                                        
+  end.
+   
   method private void fill_cashbookrule (buffer buf_cashbookrule for ub.cashbookrule) :
     case buf_cashbookrule.code :
       when 1 /*маска ПКО*/
