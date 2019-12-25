@@ -5485,7 +5485,7 @@ end.
 
 for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
 and buf_chk-doc-attr.attr-code = "corr-osnov":
-  v-doc-osnov = OsnovCorr(buf_chk-doc-attr.attr-value) .
+  v-doc-osnov = OsnovCorr(int(buf_chk-doc-attr.attr-value)) .
 end.   
 for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
 and buf_chk-doc-attr.attr-code = "corr-date":
