@@ -302,8 +302,8 @@ end procedure.
       put stream OutStr-html unformatted
         '<TR>' skip
         '<TD text_wrap="true">' + string(buf_tt-doc-line.obj-name) + '</TD>' skip
-        '<TD text_wrap="true">' + if buf_tt-doc-line.shift-date <> ? then string(buf_tt-doc-line.shift-date) + '</TD>' else "" '</TD>' skip
-        '<TD text_wrap="true">' + if buf_tt-doc-line.shift-num <> ? then string(buf_tt-doc-line.shift-num) + '</TD>' else " "  '</td>'skip
+        '<TD text_wrap="true">' + if buf_tt-doc-line.shift-date <> ? then string(buf_tt-doc-line.shift-date) + '</TD>' else "" + '</TD>' skip
+        '<TD text_wrap="true">' + if buf_tt-doc-line.shift-num <> ? then string(buf_tt-doc-line.shift-num) + '</TD>' else "" + '</td>'skip
         '<TD text_wrap="true">' + string(buf_tt-doc-line.doc-date) + '</TD>' skip
         '<TD text_wrap="true">' + string(v-name-ext-doc-type) + '</TD>' skip
         '<TD text_wrap="true">' + string(buf_tt-doc-line.doc-code) + '</TD>' skip
