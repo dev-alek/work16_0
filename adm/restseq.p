@@ -1486,19 +1486,36 @@ end procedure. /* restore-s-user-id */
 
 procedure restore-s-user-login-action-role :
   define input parameter p-curr-db-num as integer no-undo.
-
+  define buffer buf_global-state for ub.global-state .
+  define buffer buf_global-state-attr for ub.global-state-attr .
   do
   on error undo, return error
   :
-
-
     {&init-validation}
 
     &scoped-define sequence-name   s-user-login-action-role
 
     &scoped-define table-name      user-login-action-role
     &scoped-define seq-field-name  user-login-role-code
-    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+
+   FIND FIRST buf_global-state
+        exclusive-LOCK        .
+FIND FIRST buf_global-state-attr
+    WHERE buf_global-state-attr.gls-id = buf_global-state.gls-id
+    AND buf_global-state-attr.attr-code = "action-gbl"
+    EXCLUSIVE-LOCK
+    NO-error
+    .
+  IF not AVAILABLE buf_global-state-attr or buf_global-state-attr.attr-value <> "yes"
+    THEN
+  DO:
+         &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+
+  END.
+  else do:
+             &scoped-define not-include-in-seq-records .
+  end.  
+
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
     &undefine not-include-in-seq-records
