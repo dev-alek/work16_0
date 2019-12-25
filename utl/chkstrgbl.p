@@ -164,16 +164,24 @@ then do:
             or mverinfile  ne tt-file-ver.filever
          then do: 
             chancript = yes.
-            mfilenew = replace (mfile,".txt",".enc").
-            run utl/filecrypnodb.p ( input mfile
-                               , input "sysadm"
-                               , input yes
-                               , input mfileNew
-                              ) .
+            
          end.
       end.
       else
          chancript = yes.
+      mfilenew = replace (mfile,".txt",".enc").
+      if    msizeinfile ne tt-file-ver.filesize
+         or mverinfile  ne tt-file-ver.filever
+         or search(mfilenew) eq ?
+      then do:
+          
+          run utl/filecrypnodb.p ( input mfile
+                               , input "sysadm"
+                               , input yes
+                               , input mfileNew
+                              ) .
+      end.
+         
       
    end.
    if    changstr

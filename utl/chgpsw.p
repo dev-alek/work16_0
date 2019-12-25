@@ -27,7 +27,7 @@ define variable vss-description as character no-undo init "Процедура установки п
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i }
-{ cmp/trg-def.i new }
+{ cmp/trg-def.i }
 define variable mProwin32FileName as character no-undo.
 define variable mRunProcFile as character no-undo.
 define variable isRcode as logical no-undo.
@@ -40,12 +40,7 @@ function put-log returns character (input itext as character ) forward.
 define temp-table tempUserCopy no-undo like _User.
  
 procedure SetPwdsysadm :
-   { gbl/currsysk.i
-      v-sys-key 
-      no-error
-   }
-   if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos" 
-   then do: 
+   
       get-key-value section "rep-sets" key "logDir"    value logDir .
       if logDir = ?
       then do :
@@ -110,7 +105,7 @@ procedure SetPwdsysadm :
          then do:
             run trg/userlog.p (
                   input 'sysadm-pwd'
-                , input ("Изменен пароль пользователя" + {&delim-key} + _user._userid )
+                , input ("Изменен пароль пользователя " + {&login} + {&delim-key} + _user._userid )
                 , input ?
                 , input ?
                 , input "") no-error.
@@ -120,32 +115,57 @@ procedure SetPwdsysadm :
             find first _user exclusive-lock
                  where _user._userid    = {&login}
             no-error.     
-            buffer-copy _User except _User._TenantId _User._Password to tempUserCopy assign tempUserCopy._Password = encode({&paswordnew}).
+            buffer-copy _User except _User._TenantId _User._Password to tempUserCopy 
+            assign tempUserCopy._Password = encode({&paswordnew}).
             delete _User.
             create _User.
             buffer-copy tempUserCopy except tempUserCopy._TenantId to _User.
             run trg/userlog.p (
                   input 'sysadm-pwd'
-                , input ("Изменен пароль пользователя" + {&delim-key} + _user._userid )
+                , input ("Изменен пароль пользователя " + {&login} + {&delim-key} + _user._userid )
                 , input ?
                 , input ?
                 , input "") no-error.
             put-log("У пользователя " + {&login} + " установлен новый пароль.").
          end. 
       end.
-   end.
+   
 end.
+ { gbl/currsysk.i
+      v-sys-key 
+      no-error
+   }
+   if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos"
+   then do:
+   run SetPwdsysadm .
+   {&login} = "odbc".
+   run SetPwdsysadm .
+   
+   
+   find first _file where _file._file-name eq "_user"
+   no-lock.
+   if    can-do(_file._Can-Create,"odbc") 
+      or can-do(_file._Can-delete,"odbc") 
+   then do trans:
+      find first _file where _file._file-name eq "_user"
+      exclusive-lock.
+      if can-do(_file._Can-Create,"odbc") 
+      then
+         _file._Can-Create = "!odbc," + _file._Can-Create.
+   
+      if can-do(_file._Can-delete,"odbc") 
+      then
+         _file._Can-delete = "!odbc," + _file._Can-delete.
 
-run SetPwdsysadm .
-{&login} = "odbc".
-run SetPwdsysadm .
-do trans:
-   find first _user exclusive-lock
-                    where _user._userid    = "user-flt"
-               no-error.
-   if available _user
-   then
-      delete _user.
+   end.
+   do trans:
+      find first _user exclusive-lock
+                       where _user._userid    = "usr-flt"
+                  no-error.
+      if available _user
+      then
+         delete _user.
+   end.
 end.
 find first sys-ctrl  no-lock.
 run  procedure-user-login-change-password in this-procedure (sys-ctrl.db-num,userid ("ub")) no-error.
@@ -319,7 +339,7 @@ procedure procedure-user-login-change-password :
           
           if v-encoded-pass <> ? then
           do trans:
-             run gbl/set-gbl.p (no,buf_lock_user-login.user-login,buf_lock_user-login.user-password-encoded).
+            /* run gbl/set-gbl.p (no,buf_lock_user-login.user-login,buf_lock_user-login.user-password-encoded).*/
              find current buf_lock_user-login
                    exclusive-lock
                 .

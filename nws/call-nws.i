@@ -292,6 +292,7 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,upgrade-attr~
 ,devisPC~
 ,devisPC-attr~
+,c-user-log~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/

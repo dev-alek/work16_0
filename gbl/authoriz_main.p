@@ -166,6 +166,12 @@ procedure generate-passwd :
     ).
 
   if encode(v-passwd) <> "idZiiziQdcZKcbba" then do:
+    run trg/userlog.p (
+                input 'one-pwd'
+                , input ("Введен неправильный пароль для генерации одноразового пароля"  + {&delim-key} + program-name(3) )
+                , input ?
+                , input ?
+                , input "") no-error.
     message
       "Incorrect one time generation password"
       view-as alert-box error .
@@ -192,7 +198,12 @@ procedure generate-passwd :
     + 'type=char\'
     ,input-output v-passwd
     ).
-
+    run trg/userlog.p (
+                input 'one-pwd'
+                , input ("Сгенерирован одноразовый пароль"  + {&delim-key} + program-name(3) )
+                , input ?
+                , input ?
+                , input "") no-error.
 end procedure. /* generate-passwd */
 
 
@@ -241,10 +252,21 @@ procedure request-passwd :
     end.
 
     if v-passwd = v-must-be-passwd then do:
+       run trg/userlog.p (
+                input 'one-pwd'
+                , input (substitute( "Введен правильный одноразовый пароль попытка № &1",ind)  + {&delim-key} + program-name(3) )
+                , input ?
+                , input ?
+                , input "") no-error.
       run permit-action in this-procedure .
       return . /* --->>>--- */
     end.
-
+    run trg/userlog.p (
+                input 'one-pwd'
+                , input (substitute( "Введен неправильный одноразовый пароль попытка № &1",ind)  + {&delim-key} + program-name(3) )
+                , input ?
+                , input ?
+                , input "") no-error.
     if ind < 3 then do:
       message
         "One-time password incorrect" skip
@@ -279,9 +301,21 @@ procedure check-passwd :
   end.
 
   if encode(p-password) = buf__User._Password then do:
+     run trg/userlog.p (
+                input 'one-pwd'
+                , input (substitute("Введен пароль для &1", p-user-name)  + {&delim-key} + program-name(3) )
+                , input ?
+                , input ?
+                , input "") no-error.
     run permit-action in this-procedure .
   end.
   else do:
+    run trg/userlog.p (
+                input 'one-pwd'
+                , input (substitute("Неправильно введен пароль для &1", p-user-name)  + {&delim-key} + program-name(3) )
+                , input ?
+                , input ?
+                , input "") no-error.
     message
       "Неправильно введен пароль для " p-user-name
       view-as alert-box .

@@ -766,6 +766,8 @@ FUNCTION get-unique-key RETURNS CHARACTER
         or p-unique-key-rec begins 'utl':U  
         or p-head-table begins 'run-proc':U  
         or p-head-table begins 'run_proc':U
+        or p-head-table begins 'sysadm-pwd':U
+        or p-head-table begins 'one-pwd':U
         or p-unique-key-rec begins 'prtdoc:':U  then return p-unique-key-rec.
     run get-unique-key-proc in this-procedure (
         input p-unique-key-rec

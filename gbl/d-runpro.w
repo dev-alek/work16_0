@@ -586,7 +586,14 @@ PROCEDURE run-procedure :
         end.
       end.
     end.
-
+    if search(v-proc-name) = ?
+    then do:
+       message
+          substitute("Не найдена процедура &1", v-proc-name) 
+       view-as alert-box.
+       return no-apply.
+       
+    end.
     /* запоминаем параметры вызываемой процедуры */
     find first temp-param
       where temp-param.run-name = v-proc-name
@@ -690,6 +697,30 @@ PROCEDURE run-procedure :
        else do:
           if can-do("true,yes", t-persistent :screen-value)
           then do:
+              case v-num-parameters :
+                when 0
+                then do:
+                   vParamlist = "".
+                end.
+                when 1
+                then do:
+                   vParamlist = v-parameter1.
+                end.
+                when 2
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2.
+                end.
+                when 3
+                then do:
+                   vParamlist = v-parameter1 + "|" + v-parameter2 + "|" + v-parameter3.
+                end.
+             end.
+             run trg/userlog.p (
+                input 'run-proc'
+                , input ("Начато выполнение процедуры "  + {&delim-key} + v-proc-name  + {&delim-key} + vParamlist)
+                , input ?
+                , input ?
+                , input "") no-error.
              case v-num-parameters :
                 when 0
                 then do:
@@ -892,7 +923,7 @@ PROCEDURE run-procedure :
           then do:
              run trg/userlog.p (
                 input 'run-proc'
-                , input ("Выполнена процедура без ошибок "  + {&delim-key} + v-proc-name  + {&delim-key} + vParamlist)
+                , input ("Завершено выполнение процедуры без ошибок "  + {&delim-key} + v-proc-name  + {&delim-key} + vParamlist)
                 , input ?
                 , input ?
                 , input "") no-error.
@@ -902,7 +933,7 @@ PROCEDURE run-procedure :
           then do:
              run trg/userlog.p (
                 input 'run-proc'
-                , input ("Выполнена процедура с ошибками "  + {&delim-key} + v-proc-name + {&delim-key} + vParamlist)
+                , input ("Завершено выполнение процедуры с ошибками "  + {&delim-key} + v-proc-name + {&delim-key} + vParamlist)
                 , input ?
                 , input ?
                 , input "") no-error.

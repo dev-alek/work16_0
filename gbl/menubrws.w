@@ -250,6 +250,13 @@ DO:
   on stop  undo, return no-apply
   on error undo, return no-apply
   :
+     run trg/userlog.p (
+                input 'run-proc'
+                , input ('Запущено выполнение процедуры: "'   
+                + br-proc.proc-name +  '"' + {&delim-key} + br-proc.proc-file )
+                , input ?
+                , input ?
+                , input "") no-error.
     if br-proc.proc-install then do:
       if br-proc.mainmenu-handle then do:
         run value (br-proc.proc-file)
@@ -276,7 +283,7 @@ DO:
   end.
   run trg/userlog.p (
                 input 'run-proc'
-                , input ('Выполнена процедура' + (if error-status:error then ' с ошибкой "' else ' без ошибок "')  
+                , input ('Завершено выполнение процедуры' + (if error-status:error then ' с ошибкой "' else ' без ошибок "')  
                 + br-proc.proc-name +  '"' + {&delim-key} + br-proc.proc-file )
                 , input ?
                 , input ?
