@@ -304,7 +304,7 @@ DEFINE BROWSE br-db
       ub.db.reserve1-char COLUMN-LABEL "БД вер." FORMAT "X(12)":U
       ub.db.stts FORMAT "->>>>>>9":U
       get-infodb-date( ub.db.db-num) COLUMN-LABEL "Дата!актуальности!инф. о БД" FORMAT "99/99/9999":U
-      get-infodb-ver ( ub.db.db-num) COLUMN-LABEL "Версия r кодов." FORMAT "X(25)":U
+      get-infodb-ver ( ub.db.db-num) COLUMN-LABEL "Версия r кодов." FORMAT "X(30)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH SEPARATORS SIZE 62 BY 16.5
@@ -428,7 +428,7 @@ ASSIGN
      _FldNameList[12]   = ub.db.stts
      _FldNameList[13]   > "_<CALC>"
 "get-infodb-date( ub.db.db-num)" "Дата!актуальности!инф. о БД" "99/99/9999" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-"get-infodb-ver ( ub.db.db-num)" "Версия r кодов" "x(25)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"get-infodb-ver ( ub.db.db-num)" "Версия r кодов" "x(30)" ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
 
      _Query            is OPENED
 */  /* BROWSE br-db */
