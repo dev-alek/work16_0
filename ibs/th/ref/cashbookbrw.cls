@@ -16,8 +16,9 @@ class ibs.th.ref.cashbookbrw inherits Form :
   { gbl/getcntxt.i def }
   { cmp/library.i class }
   
-  { ibs/th/ref/ttCashBook.i }
-  { ibs/th/ref/ttCashBookRule.i }
+ /* { ibs/th/ref/ttCashBook.i }
+  { ibs/th/ref/ttCashBookRule.i }*/
+  define variable objKeyRec as ibs.th.gbl.keyrec no-undo. 
   
   define private variable bAdd as System.Windows.Forms.Button no-undo.
   define private variable bAddObj as System.Windows.Forms.Button no-undo.
@@ -26,8 +27,11 @@ class ibs.th.ref.cashbookbrw inherits Form :
   define private variable bDel as System.Windows.Forms.Button no-undo.
   define private variable bDelObj as System.Windows.Forms.Button no-undo.
   define private variable bGoods as System.Windows.Forms.Button no-undo.
+   define private variable bhist as System.Windows.Forms.Button no-undo.
+   define private variable bhistpko as System.Windows.Forms.Button no-undo.
   define private variable bindingSource1 as Progress.Data.BindingSource no-undo.
   define private variable bindingSource2 as Progress.Data.BindingSource no-undo.
+   define private variable bistrko as System.Windows.Forms.Button no-undo.
   define private variable bLookup as System.Windows.Forms.Button no-undo.
   define private variable bLookupObj as System.Windows.Forms.Button no-undo.
   define private variable bMark as System.Windows.Forms.Button no-undo.
@@ -139,6 +143,135 @@ class ibs.th.ref.cashbookbrw inherits Form :
   end destructor.   
   
 
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bhist_Click( input sender as System.Object, input e as System.EventArgs ):
+	   define variable v-rid-list as character no-undo.
+		run ref/ccbhist.w (parparentproc,
+                   0,
+                   "",
+                   0,
+                   "",
+                   "one",
+                   v-id, // id
+                   ?,
+                   
+                   "",
+                   "",
+                   ibs.th.gbl.gbl-var:g#db-num,
+                   input-output v-rid-list ).
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+   method private void bhistpko_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable v-cashbookrule-key-rec as character no-undo.
+      define variable v-rid-list as character no-undo.
+      define variable v-id as int64 no-undo. 
+      define variable v-obj-code as integer no-undo.
+      define variable v-obj-type as character no-undo.
+      
+      v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+      v-obj-code = integer(substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 4)) .
+      v-obj-type = substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 1, 3) .
+      find first cashbookrule where CashBookRule.CashBookID eq v-id
+                                and CashBookRule.Obj-type   eq v-obj-type
+                                and CashBookRule.Obj-code   eq v-obj-code
+                                and CashBookRule.Code       eq 3
+      no-lock no-error.
+      if available cashbookrule
+      then do:
+         objKeyRec = new ibs.th.gbl.keyrec().
+         objKeyRec:GenKeyRec ( input {&table_cashbookrule}
+                              ,input buffer ub.cashbookrule:handle
+                              ,output v-cashbookrule-key-rec).
+         delete object objKeyRec.                                    
+         find first clients where clients.obj-type eq cashbookrule.obj-type
+                             and clients.obj-code  eq  cashbookrule.obj-code
+         no-lock no-error.
+         if     available clients
+            and clients.db-num ne ?
+         then
+            run ref/ccounhist.w (parparentproc,
+                               0,
+                               "",
+                               0,
+                               "",
+                               "one",
+                               clients.db-num, // id
+                               "cashbookrule",
+                               v-cashbookrule-key-rec,
+                               "currPKO",
+                               ?,
+                               "",
+                               "",
+                               ibs.th.gbl.gbl-var:g#db-num,
+                               input-output v-rid-list ).
+      end.
+      return.
+   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bistrko_Click( input sender as System.Object, input e as System.EventArgs ):
+		define variable v-cashbookrule-key-rec as character no-undo.
+      define variable v-rid-list as character no-undo.
+      define variable v-id as int64 no-undo. 
+      define variable v-obj-code as integer no-undo.
+      define variable v-obj-type as character no-undo.
+      
+      v-id = cashbookBrowse:CurrentRow:Cells["id"]:Value .
+      v-obj-code = integer(substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 4)) .
+      v-obj-type = substring(cashbookRuleBrowse:CurrentRow:Cells["obj"]:Value:ToString(), 1, 3) .
+      find first cashbookrule where CashBookRule.CashBookID eq v-id
+                                and CashBookRule.Obj-type   eq v-obj-type
+                                and CashBookRule.Obj-code   eq v-obj-code
+                                and CashBookRule.Code       eq 4
+      no-lock no-error.
+      if available cashbookrule
+      then do:
+         objKeyRec = new ibs.th.gbl.keyrec().
+         objKeyRec:GenKeyRec ( input {&table_cashbookrule}
+                              ,input buffer ub.cashbookrule:handle
+                              ,output v-cashbookrule-key-rec).
+         delete object objKeyRec.                                    
+         find first clients where clients.obj-type eq cashbookrule.obj-type
+                              and clients.obj-code eq cashbookrule.obj-code
+         no-lock no-error.
+         if     available clients
+            and clients.db-num ne ?
+         then
+            run ref/ccounhist.w (parparentproc,
+                               0,
+                               "",
+                               0,
+                               "",
+                               "one",
+                               clients.db-num, // id
+                               "cashbookrule",
+                               v-cashbookrule-key-rec,
+                               "currRKO",
+                               ?,
+                               "",
+                               "",
+                               ibs.th.gbl.gbl-var:g#db-num,
+                               input-output v-rid-list ).
+      end.
+		return.
+
+	end method.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -764,6 +897,17 @@ class ibs.th.ref.cashbookbrw inherits Form :
       tableDesc2 = new Progress.Data.TableDesc("tt-cashbook-rule").
       this-object:buttonOk = new System.Windows.Forms.Button().
       this-object:cashbookBrowse = new System.Windows.Forms.DataGridView().
+      this-object:markDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:extcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:id = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:cashBookNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:ruleOsnDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:rulePrilDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:creditDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:debitDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:flagSepCashDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
+      this-object:flagSepFullDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
+      this-object:statDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
       this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
       this-object:bGoods = new System.Windows.Forms.Button().
       this-object:cashbookRuleBrowse = new System.Windows.Forms.DataGridView().
@@ -801,17 +945,9 @@ class ibs.th.ref.cashbookbrw inherits Form :
       this-object:bChangeObj = new System.Windows.Forms.Button().
       this-object:bAddObj = new System.Windows.Forms.Button().
       this-object:labelObj = new System.Windows.Forms.Label().
-      this-object:markDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:extcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:id = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:cashBookNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:ruleOsnDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:rulePrilDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:creditDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:debitDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:flagSepCashDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
-      this-object:flagSepFullDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn().
-      this-object:statDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:bhist = new System.Windows.Forms.Button().
+      this-object:bhistpko = new System.Windows.Forms.Button().
+      this-object:bistrko = new System.Windows.Forms.Button().
       cast(this-object:cashbookBrowse, System.ComponentModel.ISupportInitialize):BeginInit().
       cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
       cast(this-object:cashbookRuleBrowse, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -862,6 +998,105 @@ class ibs.th.ref.cashbookbrw inherits Form :
       this-object:cashbookBrowse:Size = new System.Drawing.Size(1055, 195).
       this-object:cashbookBrowse:TabIndex = 2.
       this-object:cashbookBrowse:SelectionChanged:Subscribe(this-object:cashbookBrowse_SelectionChanged).
+      /*  */
+      /* markDataGridViewTextBoxColumn */
+      /*  */
+      this-object:markDataGridViewTextBoxColumn:DataPropertyName = "mark".
+      this-object:markDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(19.6377163).
+      this-object:markDataGridViewTextBoxColumn:HeaderText = "*".
+      this-object:markDataGridViewTextBoxColumn:Name = "markDataGridViewTextBoxColumn".
+      this-object:markDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:markDataGridViewTextBoxColumn:Width = 20.
+      /*  */
+      /* extcodeDataGridViewTextBoxColumn */
+      /*  */
+      this-object:extcodeDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCellsExceptHeader.
+      this-object:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
+      this-object:extcodeDataGridViewTextBoxColumn:HeaderText = "ext-code".
+      this-object:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
+      this-object:extcodeDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:extcodeDataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* id */
+      /*  */
+      this-object:id:DataPropertyName = "id".
+      this-object:id:FillWeight = Progress.Util.CastUtil:ToSingle(58.2789688).
+      this-object:id:HeaderText = "Код/номер".
+      this-object:id:Name = "id".
+      this-object:id:ReadOnly = true.
+      this-object:id:Width = 80.
+      /*  */
+      /* cashBookNameDataGridViewTextBoxColumn */
+      /*  */
+      this-object:cashBookNameDataGridViewTextBoxColumn:DataPropertyName = "CashBookName".
+      this-object:cashBookNameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(86.5020294).
+      this-object:cashBookNameDataGridViewTextBoxColumn:HeaderText = "Наименование".
+      this-object:cashBookNameDataGridViewTextBoxColumn:Name = "cashBookNameDataGridViewTextBoxColumn".
+      this-object:cashBookNameDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:cashBookNameDataGridViewTextBoxColumn:Width = 140.
+      /*  */
+      /* ruleOsnDataGridViewTextBoxColumn */
+      /*  */
+      this-object:ruleOsnDataGridViewTextBoxColumn:DataPropertyName = "RuleOsn".
+      this-object:ruleOsnDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(120.6885452).
+      this-object:ruleOsnDataGridViewTextBoxColumn:HeaderText = "Правила заполнения графы ~"Основание~"".
+      this-object:ruleOsnDataGridViewTextBoxColumn:Name = "ruleOsnDataGridViewTextBoxColumn".
+      this-object:ruleOsnDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:ruleOsnDataGridViewTextBoxColumn:Width = 185.
+      /*  */
+      /* rulePrilDataGridViewTextBoxColumn */
+      /*  */
+      this-object:rulePrilDataGridViewTextBoxColumn:DataPropertyName = "RulePril".
+      this-object:rulePrilDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(109.7253876).
+      this-object:rulePrilDataGridViewTextBoxColumn:HeaderText = "Правила заполнения графы ~"Приложение~"".
+      this-object:rulePrilDataGridViewTextBoxColumn:Name = "rulePrilDataGridViewTextBoxColumn".
+      this-object:rulePrilDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:rulePrilDataGridViewTextBoxColumn:Width = 185.
+      /*  */
+      /* creditDataGridViewTextBoxColumn */
+      /*  */
+      this-object:creditDataGridViewTextBoxColumn:DataPropertyName = "Credit".
+      this-object:creditDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(100.8853531).
+      this-object:creditDataGridViewTextBoxColumn:HeaderText = "Кредит".
+      this-object:creditDataGridViewTextBoxColumn:Name = "creditDataGridViewTextBoxColumn".
+      this-object:creditDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:creditDataGridViewTextBoxColumn:Width = 80.
+      /*  */
+      /* debitDataGridViewTextBoxColumn */
+      /*  */
+      this-object:debitDataGridViewTextBoxColumn:DataPropertyName = "Debit".
+      this-object:debitDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(355.3299866).
+      this-object:debitDataGridViewTextBoxColumn:HeaderText = "Дебет".
+      this-object:debitDataGridViewTextBoxColumn:Name = "debitDataGridViewTextBoxColumn".
+      this-object:debitDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:debitDataGridViewTextBoxColumn:Width = 80.
+      /*  */
+      /* flagSepCashDataGridViewCheckBoxColumn */
+      /*  */
+      this-object:flagSepCashDataGridViewCheckBoxColumn:DataPropertyName = "FlagSepCash".
+      this-object:flagSepCashDataGridViewCheckBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(70.3734589).
+      this-object:flagSepCashDataGridViewCheckBoxColumn:HeaderText = "Отдельно для каждой кассы".
+      this-object:flagSepCashDataGridViewCheckBoxColumn:Name = "flagSepCashDataGridViewCheckBoxColumn".
+      this-object:flagSepCashDataGridViewCheckBoxColumn:ReadOnly = true.
+      this-object:flagSepCashDataGridViewCheckBoxColumn:Width = 90.
+      /*  */
+      /* flagSepFullDataGridViewCheckBoxColumn */
+      /*  */
+      this-object:flagSepFullDataGridViewCheckBoxColumn:DataPropertyName = "FlagSepFull".
+      this-object:flagSepFullDataGridViewCheckBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(78.2929916).
+      this-object:flagSepFullDataGridViewCheckBoxColumn:HeaderText = "Раздельно НП и ТНП".
+      this-object:flagSepFullDataGridViewCheckBoxColumn:Name = "flagSepFullDataGridViewCheckBoxColumn".
+      this-object:flagSepFullDataGridViewCheckBoxColumn:ReadOnly = true.
+      this-object:flagSepFullDataGridViewCheckBoxColumn:Width = 70.
+      /*  */
+      /* statDataGridViewTextBoxColumn */
+      /*  */
+      this-object:statDataGridViewTextBoxColumn:DataPropertyName = "stat".
+      this-object:statDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(0.2856203).
+      this-object:statDataGridViewTextBoxColumn:HeaderText = "Статус".
+      this-object:statDataGridViewTextBoxColumn:Name = "statDataGridViewTextBoxColumn".
+      this-object:statDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:statDataGridViewTextBoxColumn:Width = 80.
       /*  */
       /* bindingSource1 */
       /*  */
@@ -1292,110 +1527,46 @@ class ibs.th.ref.cashbookbrw inherits Form :
       this-object:labelObj:Click:Subscribe(this-object:labelObj_Click).
       this-object:labelObj:DoubleClick:Subscribe(this-object:labelObj_DoubleClick).
       /*  */
-      /* markDataGridViewTextBoxColumn */
+      /* bhist */
       /*  */
-      this-object:markDataGridViewTextBoxColumn:DataPropertyName = "mark".
-      this-object:markDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(19.6377163).
-      this-object:markDataGridViewTextBoxColumn:HeaderText = "*".
-      this-object:markDataGridViewTextBoxColumn:Name = "markDataGridViewTextBoxColumn".
-      this-object:markDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:markDataGridViewTextBoxColumn:Width = 20.
+      this-object:bhist:Location = new System.Drawing.Point(645, 13).
+      this-object:bhist:Name = "bhist".
+      this-object:bhist:Size = new System.Drawing.Size(75, 23).
+      this-object:bhist:TabIndex = 25.
+      this-object:bhist:Text = "История".
+      this-object:bhist:UseCompatibleTextRendering = true.
+      this-object:bhist:UseVisualStyleBackColor = true.
+      this-object:bhist:Click:Subscribe(this-object:bhist_Click).
       /*  */
-      /* extcodeDataGridViewTextBoxColumn */
+      /* bhistpko */
       /*  */
-      this-object:extcodeDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCellsExceptHeader.
-      this-object:extcodeDataGridViewTextBoxColumn:DataPropertyName = "ext-code".
-      this-object:extcodeDataGridViewTextBoxColumn:HeaderText = "ext-code".
-      this-object:extcodeDataGridViewTextBoxColumn:Name = "extcodeDataGridViewTextBoxColumn".
-      this-object:extcodeDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:extcodeDataGridViewTextBoxColumn:Visible = false.
-      this-object:extcodeDataGridViewTextBoxColumn:Width = 21.
+      this-object:bhistpko:Location = new System.Drawing.Point(734, 303).
+      this-object:bhistpko:Name = "bhistpko".
+      this-object:bhistpko:Size = new System.Drawing.Size(86, 23).
+      this-object:bhistpko:TabIndex = 26.
+      this-object:bhistpko:Text = "История ПКО".
+      this-object:bhistpko:UseCompatibleTextRendering = true.
+      this-object:bhistpko:UseVisualStyleBackColor = true.
+      this-object:bhistpko:Click:Subscribe(this-object:bhistpko_Click).
       /*  */
-      /* id */
+      /* bistrko */
       /*  */
-      this-object:id:DataPropertyName = "id".
-      this-object:id:FillWeight = Progress.Util.CastUtil:ToSingle(58.2789688).
-      this-object:id:HeaderText = "Код/номер".
-      this-object:id:Name = "id".
-      this-object:id:ReadOnly = true.
-      this-object:id:Width = 80.
-      /*  */
-      /* cashBookNameDataGridViewTextBoxColumn */
-      /*  */
-      this-object:cashBookNameDataGridViewTextBoxColumn:DataPropertyName = "CashBookName".
-      this-object:cashBookNameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(86.5020294).
-      this-object:cashBookNameDataGridViewTextBoxColumn:HeaderText = "Наименование".
-      this-object:cashBookNameDataGridViewTextBoxColumn:Name = "cashBookNameDataGridViewTextBoxColumn".
-      this-object:cashBookNameDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:cashBookNameDataGridViewTextBoxColumn:Width = 140.
-      /*  */
-      /* ruleOsnDataGridViewTextBoxColumn */
-      /*  */
-      this-object:ruleOsnDataGridViewTextBoxColumn:DataPropertyName = "RuleOsn".
-      this-object:ruleOsnDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(120.6885452).
-      this-object:ruleOsnDataGridViewTextBoxColumn:HeaderText = "Правила заполнения графы ~"Основание~"".
-      this-object:ruleOsnDataGridViewTextBoxColumn:Name = "ruleOsnDataGridViewTextBoxColumn".
-      this-object:ruleOsnDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:ruleOsnDataGridViewTextBoxColumn:Width = 185.
-      /*  */
-      /* rulePrilDataGridViewTextBoxColumn */
-      /*  */
-      this-object:rulePrilDataGridViewTextBoxColumn:DataPropertyName = "RulePril".
-      this-object:rulePrilDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(109.7253876).
-      this-object:rulePrilDataGridViewTextBoxColumn:HeaderText = "Правила заполнения графы ~"Приложение~"".
-      this-object:rulePrilDataGridViewTextBoxColumn:Name = "rulePrilDataGridViewTextBoxColumn".
-      this-object:rulePrilDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:rulePrilDataGridViewTextBoxColumn:Width = 185.
-      /*  */
-      /* creditDataGridViewTextBoxColumn */
-      /*  */
-      this-object:creditDataGridViewTextBoxColumn:DataPropertyName = "Credit".
-      this-object:creditDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(100.8853531).
-      this-object:creditDataGridViewTextBoxColumn:HeaderText = "Кредит".
-      this-object:creditDataGridViewTextBoxColumn:Name = "creditDataGridViewTextBoxColumn".
-      this-object:creditDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:creditDataGridViewTextBoxColumn:Width = 80.
-      /*  */
-      /* debitDataGridViewTextBoxColumn */
-      /*  */
-      this-object:debitDataGridViewTextBoxColumn:DataPropertyName = "Debit".
-      this-object:debitDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(355.3299866).
-      this-object:debitDataGridViewTextBoxColumn:HeaderText = "Дебет".
-      this-object:debitDataGridViewTextBoxColumn:Name = "debitDataGridViewTextBoxColumn".
-      this-object:debitDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:debitDataGridViewTextBoxColumn:Width = 80.
-      /*  */
-      /* flagSepCashDataGridViewCheckBoxColumn */
-      /*  */
-      this-object:flagSepCashDataGridViewCheckBoxColumn:DataPropertyName = "FlagSepCash".
-      this-object:flagSepCashDataGridViewCheckBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(70.3734589).
-      this-object:flagSepCashDataGridViewCheckBoxColumn:HeaderText = "Отдельно для каждой кассы".
-      this-object:flagSepCashDataGridViewCheckBoxColumn:Name = "flagSepCashDataGridViewCheckBoxColumn".
-      this-object:flagSepCashDataGridViewCheckBoxColumn:ReadOnly = true.
-      this-object:flagSepCashDataGridViewCheckBoxColumn:Width = 90.
-      /*  */
-      /* flagSepFullDataGridViewCheckBoxColumn */
-      /*  */
-      this-object:flagSepFullDataGridViewCheckBoxColumn:DataPropertyName = "FlagSepFull".
-      this-object:flagSepFullDataGridViewCheckBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(78.2929916).
-      this-object:flagSepFullDataGridViewCheckBoxColumn:HeaderText = "Раздельно НП и ТНП".
-      this-object:flagSepFullDataGridViewCheckBoxColumn:Name = "flagSepFullDataGridViewCheckBoxColumn".
-      this-object:flagSepFullDataGridViewCheckBoxColumn:ReadOnly = true.
-      this-object:flagSepFullDataGridViewCheckBoxColumn:Width = 70.
-      /*  */
-      /* statDataGridViewTextBoxColumn */
-      /*  */
-      this-object:statDataGridViewTextBoxColumn:DataPropertyName = "stat".
-      this-object:statDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(0.2856203).
-      this-object:statDataGridViewTextBoxColumn:HeaderText = "Статус".
-      this-object:statDataGridViewTextBoxColumn:Name = "statDataGridViewTextBoxColumn".
-      this-object:statDataGridViewTextBoxColumn:ReadOnly = true.
-      this-object:statDataGridViewTextBoxColumn:Width = 80.
+      this-object:bistrko:Location = new System.Drawing.Point(826, 303).
+      this-object:bistrko:Name = "bistrko".
+      this-object:bistrko:Size = new System.Drawing.Size(85, 23).
+      this-object:bistrko:TabIndex = 27.
+      this-object:bistrko:Text = "История РКО".
+      this-object:bistrko:UseCompatibleTextRendering = true.
+      this-object:bistrko:UseVisualStyleBackColor = true.
+      this-object:bistrko:Click:Subscribe(this-object:bistrko_Click).
       /*  */
       /* cashbookbrw */
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:ClientSize = new System.Drawing.Size(1079, 637).
+      this-object:Controls:Add(this-object:bistrko).
+      this-object:Controls:Add(this-object:bhistpko).
+      this-object:Controls:Add(this-object:bhist).
       this-object:Controls:Add(this-object:labelObj).
       this-object:Controls:Add(this-object:bDelObj).
       this-object:Controls:Add(this-object:bLookupObj).
