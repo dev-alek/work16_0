@@ -99,7 +99,8 @@ define dataset ds-cashbookrule for tt-cashbookrule .
     case p-struct-unit :
       when 1 then v-name = "Взять из объекта" .
       when 2 then v-name = "Значение по умолчанию" .
-        otherwise v-name = "Заполняет оператор" .
+      when 0 then v-name = "Заполняет оператор" .
+        otherwise v-name = string(p-struct-unit) .
     end case .
     return v-name .
   end method . /* end_of getStructName */
@@ -109,7 +110,8 @@ define dataset ds-cashbookrule for tt-cashbookrule .
     case p-struct-unit :
       when "Взять из объекта" then v-id = "1" .
       when "Значение по умолчанию" then v-id = "2" .
-        otherwise v-id = "0" .
+      when "Заполняет оператор" then v-id = "0" .
+        otherwise v-id = p-struct-unit .
     end case .
     return v-id .
   end method . /* end_of getStructName */
@@ -125,7 +127,8 @@ arrayvar6[2] = "по календарным датам".
     define variable v-name as character no-undo .
     case p-acc-shift :
       when 1 then v-name = "по сменным датам" .
-        otherwise v-name = "по календарным датам" .
+      when 0 then v-name = "по календарным датам" .
+        otherwise v-name = string (p-acc-shift) .
     end case .
     return v-name .
   end method . /* end_of getUchetName */
@@ -141,7 +144,8 @@ arrayvar6[2] = "по календарным датам".
     define variable v-id as character no-undo .
     case p-acc-shift :
       when "по сменным датам" then v-id = "1" .
-        otherwise v-id = "0" .
+      when "по календарным датам" then v-id = "0" .
+        otherwise v-id = p-acc-shift .
     end case .
     return v-id .
   end method . /* end_of getUchetName */

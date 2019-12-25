@@ -494,7 +494,7 @@ on error undo, return error return-value
     '<td colspan="39" style="text-align: center; font-size: 10px;">(организация)</td>' skip
     '<td colspan="9" style="text-align: right;"></td>' skip
     '<td></td>' skip
-    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;"></td>' skip
+    '<td colspan="16" rowspan="2" style="text-align: center; border: 1px solid black;">' + if buf_fin-doc.str-podr-code = 0 then "" + '</td>' else string( buf_fin-doc.str-podr-code ) + '</td>' skip
     '<td></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
@@ -510,7 +510,7 @@ on error undo, return error return-value
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td></td>' skip
     '<td colspan="27" style="text-align: left;">к приходному кассовому ордеру № </td>' skip
-    '<td colspan="14" style="text-align: left; border-bottom: 1px solid black;">' + string(buf_fin-doc.prn-doc-code) + '</td>' skip
+    '<td colspan="14" style="text-align: center; border-bottom: 1px solid black;">' + string(buf_fin-doc.prn-doc-code) + '</td>' skip
     '</tr>' skip    .
       put stream OutStr-html unformatted
     '<tr>' skip
@@ -659,12 +659,12 @@ on error undo, return error return-value
       put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;">Принято от</td>' skip
-    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + if buf_fin-doc.payer-name = ? then " "  + '</td>' else buf_fin-doc.payer-name + '</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + if v-payer-name-p1 = ? then " "  + '</td>' else v-payer-name-p1 + '</td>' skip
     '<td></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black; text-align: center;">о</td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td></td>' skip
-    '<td colspan="41" style="text-align: center; border-bottom: 1px solid black;">' + string(v-sum-doc-p1) + '</td>' skip
+    '<td colspan="41" style="text-align: left; border-bottom: 1px solid black;">' + string(v-sum-doc-p1) + '</td>' skip
     '</tr>' skip  .
       put stream OutStr-html unformatted
     '<tr>' skip
@@ -763,7 +763,8 @@ on error undo, return error return-value
       put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;">Приложение</td>' skip
-    '<td colspan="55" style="text-align: right; border-bottom: 1px solid black;">' + buf_fin-doc.enclosure + '</td>' skip
+    '<td></td>' skip
+    '<td colspan="54" style="text-align: left; border-bottom: 1px solid black;">' + buf_fin-doc.enclosure + '</td>' skip
     '<td></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black; text-align: center;"></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip

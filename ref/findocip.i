@@ -592,21 +592,22 @@ PROCEDURE check-obj :
     define variable v-value-decimal   as decimal   no-undo .
     define variable v-value-integer   as INTEGER   no-undo .
     define variable v-value-logical   AS LOGICAL   no-undo .
-    define variable v-tth           as handle    no-undo .
-    define variable v-naznach-plat  as character no-undo .
-    define variable v-enclosure     as character no-undo .
-    define variable o-head-position as character no-undo .
-    define variable o-director      as character no-undo .
-    define variable o-snr-accnt     as character no-undo .
-    define variable o-cashier       as character no-undo .
-    define variable v-head-position as character no-undo .
-    define variable v-director      as character no-undo .
-    define variable v-snr-accnt     as character no-undo .
-    define variable v-cashier       as character no-undo .
+    define variable v-tth             as handle    no-undo .
+    define variable v-naznach-plat    as character no-undo .
+    define variable v-enclosure       as character no-undo .
+    define variable o-head-position   as character no-undo .
+    define variable o-director        as character no-undo .
+    define variable o-snr-accnt       as character no-undo .
+    define variable o-cashier         as character no-undo .
+    define variable v-head-position   as character no-undo .
+    define variable v-director        as character no-undo .
+    define variable v-snr-accnt       as character no-undo .
+    define variable v-cashier         as character no-undo .
     define buffer buf_sysconf for ub.sysconf.
-    define buffer buf_shop for ub.shop .
-    define buffer buf_store for ub.store .  
-    define buffer buf_firm for ub.firm .
+    define buffer buf_shop    for ub.shop .
+    define buffer buf_store   for ub.store .  
+    define buffer buf_firm    for ub.firm .
+    
     assign
       v-tth = buffer thbjattr_thbj-attr:table-handle .
 
@@ -649,7 +650,7 @@ PROCEDURE check-obj :
           .
       end.
     end case.
-find first buf_sysconf no-error .
+    find first buf_sysconf no-error .
     case o-head-position:
       when '0':U then
         do:
@@ -668,8 +669,8 @@ find first buf_sysconf no-error .
         v-head-position = o-head-position.
       end.
     end case.
-  find first buf_firm no-lock where
-              buf_firm.firm-code = buf_sysconf.host-code.
+    find first buf_firm no-lock where
+      buf_firm.firm-code = buf_sysconf.host-code.
     case o-director:
       when '1':U then 
         do:
@@ -728,20 +729,26 @@ find first buf_sysconf no-error .
         v-snr-accnt = o-snr-accnt .
       end.  
     end case.
+    /* ищем следующюю смену и ее персонал */
 
-/* ищем следующюю смену и ее персонал */
-
-FIND FIRST ub.shift-staff No-LOCK WHERE
-    ub.shift-staff.obj-type   = p-obj-type AND
-    ub.shift-staff.obj-code   = p-obj-code AND
-    ub.shift-staff.shift-date = tt-fin-doc.shift-date AND
-    ub.shift-staff.shift-num  = tt-fin-doc.shift-num AND
-    ub.shift-staff.staff-role = yes and
-    ub.shift-staff.psn-num    >= 0 No-ERROR.
-assign 
-    v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+    FIND FIRST ub.shift-staff No-LOCK WHERE
+      ub.shift-staff.obj-type   = p-obj-type AND
+      ub.shift-staff.obj-code   = p-obj-code AND
+      ub.shift-staff.shift-date = tt-fin-doc.shift-date AND
+      ub.shift-staff.shift-num  = tt-fin-doc.shift-num AND
+      ub.shift-staff.staff-role = yes and
+      ub.shift-staff.psn-num    >= 0 No-ERROR.
+    assign 
+      v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
     .
-    
+    if tt-fin-doc.fin-ext-doc-type = {&FDEDT_Expense_Cash} then 
+    do:
+      assign
+        tt-fin-doc.payer-sign1 = v-director
+        tt-fin-doc.payer-sign2 = v-snr-accnt
+        tt-fin-doc.payer-sign3 = v-cashier
+        .        
+    end.
     find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.CashBookId no-error .
     if available (ub.CashBook) then 
     do:
@@ -754,9 +761,19 @@ assign
         otherwise 
         tt-fin-doc.naznach-plat = ub.CashBook.RuleOsnRko .
       end case .
-      
-      if ub.CashBook.RulePril = "0" or ub.CashBook.RulePril = "1" then tt-fin-doc.enclosure = "" .
-      else tt-fin-doc.enclosure = ub.CashBook.RulePril .
+
+      case ub.CashBook.RulePril:
+        when '0' then 
+          do:
+            tt-fin-doc.enclosure = v-naznach-plat .
+          end.  
+        when '1' then 
+          do:
+            tt-fin-doc.enclosure = "" .
+          end.  
+        otherwise 
+        tt-fin-doc.enclosure = ub.CashBook.RulePril .
+      end case.  
       for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
         and ub.fin-code-cor-acc.host-code = p-curr-host-code :
         tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
@@ -769,44 +786,53 @@ assign
       end.  
     end.
   
-  assign
-    tt-fin-doc.str-podr-name = v-dpt-dflt-name
-    tt-fin-doc.str-podr-type = v-dpt-dflt-type
-    tt-fin-doc.str-podr-code = v-dpt-dflt-code
-    .
-  display
-    tt-fin-doc.str-podr-name
-    tt-fin-doc.str-podr-type
-    tt-fin-doc.str-podr-code
-    tt-fin-doc.enclosure
-    tt-fin-doc.naznach-plat
-    tt-fin-doc.cor-acc
-    tt-fin-doc.cor-acc1
-    tt-fin-doc.cor-acc1-value
-    tt-fin-doc.cor-acc-value
+    assign
+      tt-fin-doc.str-podr-name = v-dpt-dflt-name
+      tt-fin-doc.str-podr-type = v-dpt-dflt-type
+      tt-fin-doc.str-podr-code = v-dpt-dflt-code
+      .
     
-        with frame {&frame-name} .
-end.
-else do:
-assign
-  tt-fin-doc.shift-flag = 0
-  .
-end.
+    display
+      tt-fin-doc.str-podr-name
+      tt-fin-doc.str-podr-type
+      tt-fin-doc.str-podr-code
+      tt-fin-doc.enclosure
+      tt-fin-doc.naznach-plat
+      tt-fin-doc.cor-acc
+      tt-fin-doc.cor-acc1
+      tt-fin-doc.cor-acc1-value
+      tt-fin-doc.cor-acc-value
+      /*  tt-fin-doc.payer-sign1:label  = "Рук. орг-ции"  +*/
+      /*  (if v-head-position <> ''                        */
+      /*  then " - ":U + v-head-position                   */
+      /*  else '')                                         */
+      tt-fin-doc.payer-sign2
+      tt-fin-doc.payer-sign3
+    
+      with frame {&frame-name} .
+        
+  end.
+  else 
+  do:
+    assign
+      tt-fin-doc.shift-flag = 0
+      .
+  end.
 
 &if "{&doc-type}" = "income-cash" or "{&doc-type}" = "expense-cash" &then
-if tt-fin-doc.shift-flag = integer({&fin-flag-shift}) then 
-do:
-  define variable v-fin-doc-shift-date      as date      no-undo .
-  define variable v-fin-doc-shift-num       as integer   no-undo .
-  define variable v-fin-doc-shift-name      as character no-undo .
-  define variable v-fin-doc-shift-date-char as character no-undo .
-  define variable v-fin-doc-shift-num-char  as character no-undo .
-  define variable varobj-shift-date         as date      no-undo .
-  define variable varobj-shift-num          as integer   no-undo .
-  define variable varobj-shift-name         as character no-undo .
-  define variable v-can-back-shift          as logical   no-undo .
+  if tt-fin-doc.shift-flag = integer({&fin-flag-shift}) then 
+  do:
+    define variable v-fin-doc-shift-date      as date      no-undo .
+    define variable v-fin-doc-shift-num       as integer   no-undo .
+    define variable v-fin-doc-shift-name      as character no-undo .
+    define variable v-fin-doc-shift-date-char as character no-undo .
+    define variable v-fin-doc-shift-num-char  as character no-undo .
+    define variable varobj-shift-date         as date      no-undo .
+    define variable varobj-shift-num          as integer   no-undo .
+    define variable varobj-shift-name         as character no-undo .
+    define variable v-can-back-shift          as logical   no-undo .
 
-  { gbl/chk-actg.i
+    { gbl/chk-actg.i
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
@@ -821,7 +847,7 @@ do:
     false
     v-can-back-shift
   }
-  { gbl/curshift.i
+    { gbl/curshift.i
     tt-fin-doc.obj-type
     tt-fin-doc.obj-code
     varobj-shift-date
@@ -829,49 +855,49 @@ do:
     varobj-shift-name
     no-error
   }
-  if error-status :error then 
-  do:
-    if not v-can-back-shift then 
+    if error-status :error then 
     do:
-      return error substitute("Не найдена текущая смена на &1&2", tt-fin-doc.obj-type, tt-fin-doc.obj-code).
+      if not v-can-back-shift then 
+      do:
+        return error substitute("Не найдена текущая смена на &1&2", tt-fin-doc.obj-type, tt-fin-doc.obj-code).
+      end.
+      else 
+      do:
+        run proc-sht in this-procedure .
+      end.
     end.
     else 
     do:
-      run proc-sht in this-procedure .
+      assign
+        tt-fin-doc.shift-date = varobj-shift-date
+        tt-fin-doc.shift-num  = varobj-shift-num
+        tt-fin-doc.shift-name = varobj-shift-name
+        .
     end.
+    define variable v-date as date    no-undo  .
+    define variable v-time as integer no-undo .
+    run cur-time in this-procedure(output v-date, output v-time).
+    display
+      tt-fin-doc.shift-date
+      tt-fin-doc.shift-num
+      tt-fin-doc.shift-name
+      with frame {&frame-name} .
+    enable
+      r-sht 
+      when (tt-fin-doc.shift-flag = integer({&fin-flag-shift}) and v-limit-access = 0 and v-can-back-shift)
+      with frame {&frame-name}.
   end.
   else 
   do:
-    assign
-      tt-fin-doc.shift-date = varobj-shift-date
-      tt-fin-doc.shift-num  = varobj-shift-num
-      tt-fin-doc.shift-name = varobj-shift-name
-      .
+    hide
+      tt-fin-doc.shift-date
+      tt-fin-doc.shift-num
+      tt-fin-doc.shift-name
+      in frame {&frame-name} .
+    disable
+      r-sht
+      with frame {&frame-name} .
   end.
-  define variable v-date as date    no-undo  .
-  define variable v-time as integer no-undo .
-  run cur-time in this-procedure(output v-date, output v-time).
-  display
-    tt-fin-doc.shift-date
-    tt-fin-doc.shift-num
-    tt-fin-doc.shift-name
-    with frame {&frame-name} .
-  enable
-    r-sht 
-    when (tt-fin-doc.shift-flag = integer({&fin-flag-shift}) and v-limit-access = 0 and v-can-back-shift)
-    with frame {&frame-name}.
-end.
-else 
-do:
-  hide
-    tt-fin-doc.shift-date
-    tt-fin-doc.shift-num
-    tt-fin-doc.shift-name
-    in frame {&frame-name} .
-  disable
-    r-sht
-    with frame {&frame-name} .
-end.
 &endif
 END PROCEDURE.
 
@@ -1313,139 +1339,141 @@ ON CHOOSE OF B-cashbook IN FRAME Dialog-Frame /* Кассовая книга */
         ,input tt-fin-doc.obj-code
         )
         no-error.
-/*      if ub.cashbook.id > 0*/
-/*        then               */
-/*      do :                 */
-        find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = (if tt-fin-doc.fin-doc-type eq {&expense-cash} then ub.cashbook.corrRko else ub.cashbook.corrPko)
-          and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
-          and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
-          no-error .
-        if available X_fin-code-cor-acc
-          then 
-        do :
-          assign
-            tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value
-            f-cor-acc-descr          = X_fin-code-cor-acc.descr
-            tt-fin-doc.cor-acc       = X_fin-code-cor-acc.fin-code
-            .
-        end.
-        else do:
-          assign
-            tt-fin-doc.cor-acc-value = ""
-            f-cor-acc-descr          = ""
-            tt-fin-doc.cor-acc       = ?
-            .
-        end.  
-        find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
-          and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
-          and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
-          no-error .
-        if available X_fin-code-cor-acc
-          then 
-        do :
-          assign
-            tt-fin-doc.cor-acc1-value = X_fin-code-cor-acc.code-value
-            f-cor-acc1-descr          = X_fin-code-cor-acc.descr
-            tt-fin-doc.cor-acc1       = X_fin-code-cor-acc.fin-code
-            .
-        end.   
-                else do:
-          assign
-            tt-fin-doc.cor-acc1-value = ""
-            f-cor-acc1-descr          = ""
-            tt-fin-doc.cor-acc1       = ?
-            .
-        end.       
-/*      end.*/
-/*      else*/
-/*      do :*/
-/*        find first ub.sysconf no-lock where ub.sysconf.host-code = tt-fin-doc.host-code .                           */
-/*        case tt-fin-doc.fin-doc-type :                                                                              */
-/*          when {&income-cash}                                                                                       */
-/*          then                                                                                                      */
-/*            do :                                                                                                    */
-/*              if tt-fin-doc.contract-code = 0                                                                       */
-/*                then                                                                                                */
-/*              do:                                                                                                   */
-/*                find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.fin-code = ub.sysconf.cor-acc-in-cash*/
-/*                  and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code                                           */
-/*                  and X_fin-code-cor-acc.status_ = integer({&current-status-int})                                   */
-/*                  no-error .                                                                                        */
-/*                if available X_fin-code-cor-acc                                                                     */
-/*                  then                                                                                              */
-/*                do :                                                                                                */
-/*                  assign                                                                                            */
-/*                    tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value                                        */
-/*                    f-cor-acc-descr          = X_fin-code-cor-acc.descr                                             */
-/*                    tt-fin-doc.cor-acc       = X_fin-code-cor-acc.fin-code                                          */
-/*                    .                                                                                               */
-/*                end.                                                                                                */
-/*                else                                                                                                */
-/*                do :                                                                                                */
-/*                  assign                                                                                            */
-/*                    tt-fin-doc.cor-acc-value = ""                                                                   */
-/*                    f-cor-acc-descr          = ""                                                                   */
-/*                    tt-fin-doc.cor-acc       = 0                                                                    */
-/*                    .                                                                                               */
-/*                end.                                                                                                */
-/*              end.                                                                                                  */
-/*              else                                                                                                  */
-/*              do :                                                                                                  */
-/*                assign                                                                                              */
-/*                  tt-fin-doc.cor-acc-value = ""                                                                     */
-/*                  f-cor-acc-descr          = ""                                                                     */
-/*                  tt-fin-doc.cor-acc       = 0                                                                      */
-/*                  .                                                                                                 */
-/*              end.                                                                                                  */
-/*            end.                                                                                                    */
-/*          when {&expense-cash}                                                                                        */
-/*          then                                                                                                        */
-/*            do :                                                                                                      */
-/*              if tt-fin-doc.contract-code = 0                                                                         */
-/*                then                                                                                                  */
-/*              do:                                                                                                     */
-/*                find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.fin-code = ub.sysconf.cor-acc1-out-cash*/
-/*                  and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code                                             */
-/*                  and X_fin-code-cor-acc.status_ = integer({&current-status-int})                                     */
-/*                  no-error .                                                                                          */
-/*                if available X_fin-code-cor-acc                                                                       */
-/*                  then                                                                                                */
-/*                do :                                                                                                  */
-/*                  assign                                                                                              */
-/*                    tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value                                          */
-/*                    f-cor-acc-descr          = X_fin-code-cor-acc.descr                                               */
-/*                    tt-fin-doc.cor-acc       = X_fin-code-cor-acc.fin-code                                            */
-/*                    .                                                                                                 */
-/*                end.                                                                                                  */
-/*                else                                                                                                  */
-/*                do :                                                                                                  */
-/*                  assign                                                                                              */
-/*                    tt-fin-doc.cor-acc-value = ""                                                                     */
-/*                    f-cor-acc-descr          = ""                                                                     */
-/*                    tt-fin-doc.cor-acc       = 0                                                                      */
-/*                    .                                                                                                 */
-/*                end.                                                                                                  */
-/*              end.                                                                                                    */
-/*              else                                                                                                    */
-/*              do :                                                                                                    */
-/*                assign                                                                                                */
-/*                  tt-fin-doc.cor-acc-value = ""                                                                       */
-/*                  f-cor-acc-descr          = ""                                                                       */
-/*                  tt-fin-doc.cor-acc       = 0                                                                        */
-/*                  .                                                                                                   */
-/*              end.                                                                                                    */
-/*            end.                                                                                                      */
-/*        end case .                                                                                                    */
-/*      end .*/
+      /*      if ub.cashbook.id > 0*/
+      /*        then               */
+      /*      do :                 */
+      find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = (if tt-fin-doc.fin-doc-type eq {&expense-cash} then ub.cashbook.corrRko else ub.cashbook.corrPko)
+        and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
+        and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+        no-error .
+      if available X_fin-code-cor-acc
+        then 
+      do :
+        assign
+          tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value
+          f-cor-acc-descr          = X_fin-code-cor-acc.descr
+          tt-fin-doc.cor-acc       = X_fin-code-cor-acc.fin-code
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc-value = ""
+          f-cor-acc-descr          = ""
+          tt-fin-doc.cor-acc       = ?
+          .
+      end.  
+      find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
+        and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
+        and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+        no-error .
+      if available X_fin-code-cor-acc
+        then 
+      do :
+        assign
+          tt-fin-doc.cor-acc1-value = X_fin-code-cor-acc.code-value
+          f-cor-acc1-descr          = X_fin-code-cor-acc.descr
+          tt-fin-doc.cor-acc1       = X_fin-code-cor-acc.fin-code
+          .
+      end.   
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc1-value = ""
+          f-cor-acc1-descr          = ""
+          tt-fin-doc.cor-acc1       = ?
+          .
+      end.       
+    /*      end.*/
+    /*      else*/
+    /*      do :*/
+    /*        find first ub.sysconf no-lock where ub.sysconf.host-code = tt-fin-doc.host-code .                           */
+    /*        case tt-fin-doc.fin-doc-type :                                                                              */
+    /*          when {&income-cash}                                                                                       */
+    /*          then                                                                                                      */
+    /*            do :                                                                                                    */
+    /*              if tt-fin-doc.contract-code = 0                                                                       */
+    /*                then                                                                                                */
+    /*              do:                                                                                                   */
+    /*                find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.fin-code = ub.sysconf.cor-acc-in-cash*/
+    /*                  and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code                                           */
+    /*                  and X_fin-code-cor-acc.status_ = integer({&current-status-int})                                   */
+    /*                  no-error .                                                                                        */
+    /*                if available X_fin-code-cor-acc                                                                     */
+    /*                  then                                                                                              */
+    /*                do :                                                                                                */
+    /*                  assign                                                                                            */
+    /*                    tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value                                        */
+    /*                    f-cor-acc-descr          = X_fin-code-cor-acc.descr                                             */
+    /*                    tt-fin-doc.cor-acc       = X_fin-code-cor-acc.fin-code                                          */
+    /*                    .                                                                                               */
+    /*                end.                                                                                                */
+    /*                else                                                                                                */
+    /*                do :                                                                                                */
+    /*                  assign                                                                                            */
+    /*                    tt-fin-doc.cor-acc-value = ""                                                                   */
+    /*                    f-cor-acc-descr          = ""                                                                   */
+    /*                    tt-fin-doc.cor-acc       = 0                                                                    */
+    /*                    .                                                                                               */
+    /*                end.                                                                                                */
+    /*              end.                                                                                                  */
+    /*              else                                                                                                  */
+    /*              do :                                                                                                  */
+    /*                assign                                                                                              */
+    /*                  tt-fin-doc.cor-acc-value = ""                                                                     */
+    /*                  f-cor-acc-descr          = ""                                                                     */
+    /*                  tt-fin-doc.cor-acc       = 0                                                                      */
+    /*                  .                                                                                                 */
+    /*              end.                                                                                                  */
+    /*            end.                                                                                                    */
+    /*          when {&expense-cash}                                                                                        */
+    /*          then                                                                                                        */
+    /*            do :                                                                                                      */
+    /*              if tt-fin-doc.contract-code = 0                                                                         */
+    /*                then                                                                                                  */
+    /*              do:                                                                                                     */
+    /*                find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.fin-code = ub.sysconf.cor-acc1-out-cash*/
+    /*                  and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code                                             */
+    /*                  and X_fin-code-cor-acc.status_ = integer({&current-status-int})                                     */
+    /*                  no-error .                                                                                          */
+    /*                if available X_fin-code-cor-acc                                                                       */
+    /*                  then                                                                                                */
+    /*                do :                                                                                                  */
+    /*                  assign                                                                                              */
+    /*                    tt-fin-doc.cor-acc-value = X_fin-code-cor-acc.code-value                                          */
+    /*                    f-cor-acc-descr          = X_fin-code-cor-acc.descr                                               */
+    /*                    tt-fin-doc.cor-acc       = X_fin-code-cor-acc.fin-code                                            */
+    /*                    .                                                                                                 */
+    /*                end.                                                                                                  */
+    /*                else                                                                                                  */
+    /*                do :                                                                                                  */
+    /*                  assign                                                                                              */
+    /*                    tt-fin-doc.cor-acc-value = ""                                                                     */
+    /*                    f-cor-acc-descr          = ""                                                                     */
+    /*                    tt-fin-doc.cor-acc       = 0                                                                      */
+    /*                    .                                                                                                 */
+    /*                end.                                                                                                  */
+    /*              end.                                                                                                    */
+    /*              else                                                                                                    */
+    /*              do :                                                                                                    */
+    /*                assign                                                                                                */
+    /*                  tt-fin-doc.cor-acc-value = ""                                                                       */
+    /*                  f-cor-acc-descr          = ""                                                                       */
+    /*                  tt-fin-doc.cor-acc       = 0                                                                        */
+    /*                  .                                                                                                   */
+    /*              end.                                                                                                    */
+    /*            end.                                                                                                      */
+    /*        end case .                                                                                                    */
+    /*      end .*/
     end.
-  display
-   tt-fin-doc.cor-acc-value                                                                     
-   f-cor-acc-descr                                                                              
-   tt-fin-doc.cor-acc      
-   tt-fin-doc.cor-acc1-value                                                                     
-   f-cor-acc1-descr                                                                              
-   tt-fin-doc.cor-acc1
-  with frame {&frame-name} .       
+    display
+      tt-fin-doc.cor-acc-value                                                                     
+      f-cor-acc-descr                                                                              
+      tt-fin-doc.cor-acc      
+      tt-fin-doc.cor-acc1-value                                                                     
+      f-cor-acc1-descr                                                                              
+      tt-fin-doc.cor-acc1
+      with frame {&frame-name} .       
   END.
 
 ON CHOOSE OF B-an-uchet IN FRAME Dialog-Frame /* Btn 1 */
@@ -2556,6 +2584,8 @@ procedure proc-create-default-tax :
   end. /*doe*/
 end procedure. /* proc-create-default-tax */
 
+
+
 procedure proc-update-sum-vat-chr :
   define input-output parameter p-start as integer no-undo .
   define variable v-sum-vat      like ub.fin-doc-tax.sum-vat-line-doc no-undo .
@@ -2663,7 +2693,6 @@ procedure proc-update-sum-vat-chr :
   end. /* do on error undo, return error: */
 &endif
 end procedure. /* proc-update-sum-vat-chr */
-
 
 /* конец части &if "{&action}" = "triggers" &then*/
 

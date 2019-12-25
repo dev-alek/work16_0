@@ -457,6 +457,8 @@ define variable v-err               as logical    no-undo .
           where buf_chk-doc.obj-type    = buf_inkas.obj-type
             and buf_chk-doc.obj-code    = buf_inkas.obj-code
             and buf_chk-doc.out-code    = buf_inkas.inkas-code
+            and (buf_chk-doc.chk-type    = integer({&rcpt-sale})
+            or  buf_chk-doc.chk-type    = integer({&rcpt-return}))
         :
 /*          find first buf_inkas-pay-desk no-lock where buf_inkas-pay-desk.inkas-code = buf_inkas.inkas-code*/
 /*                                                  and buf_inkas-pay-desk.pay-desk = buf_chk-doc.pay-desk  */
@@ -1111,10 +1113,11 @@ define variable v-err               as logical    no-undo .
      temp-z-number-list.naznach-plat = temp-z-number-list.naznach-plat + (if temp-z-number-list.naznach-plat = '' then '' else {&comma-char}) + string(temp-z-number.z-number)
      .
    end.
-   v-naznach-plat = substitute("Z &1 от &2г.", v-naznach-plat, if v-uchet = "smen" then string(buf_shift-obj.shift-date, "99/99/99") else string(TODAY, "99/99/99")).
+
+   v-naznach-plat = substitute("Z-отчет(ы) &1 от &2г.", v-naznach-plat, if v-uchet = "smen" then string(buf_shift-obj.shift-date, "99/99/99") else string(TODAY, "99/99/99")).
    for each temp-z-number-list:
      assign
-     temp-z-number-list.naznach-plat = substitute("Z &1 от &2г.", temp-z-number-list.naznach-plat, if v-uchet = "smen" then string(buf_shift-obj.shift-date, "99/99/99") else string(TODAY, "99/99/99")).
+     temp-z-number-list.naznach-plat = substitute("Z-отчет(ы) &1 от &2г.", temp-z-number-list.naznach-plat, if v-uchet = "smen" then string(buf_shift-obj.shift-date, "99/99/99") else string(TODAY, "99/99/99")).
    end.
    v-naznach-plat2 = v-naznach-plat . 
 
@@ -1276,10 +1279,11 @@ define variable v-err               as logical    no-undo .
 
         release tt0-fin-doc-tax.
       end.
+      
       run StrTax in this-procedure ( input-output tt-fin-doc.including) .
        /* округляем  */
       run RoundTax in this-procedure .
-      
+
       find first ub.CashBook no-lock where ub.CashBook.id = buf_temp-fin-sum.cashbookid no-error .
       if not available ub.CashBook 
       then do :
@@ -1297,22 +1301,27 @@ define variable v-err               as logical    no-undo .
         find first temp-z-number-list no-lock
              where temp-z-number-list.cash-desk = buf_temp-fin-sum.cash-desk
              no-error.
-      end.
+        end.        
+      
 
-      if trim(p-by-pril) = 'Номера Z-отчетов' then tt-fin-doc.enclosure = v-naznach-plat.
-
-      if      trim(p-by-osnovanie) = 'Выручка от реализации' then do :
+      if trim(p-by-pril) = '0' then tt-fin-doc.enclosure = v-naznach-plat.
+      case p-by-osnovanie:
+      when '0' then do :
         v-naznach-plat = 'Выручка от реализации'.
         if available temp-z-number-list then temp-z-number-list.naznach-plat = 'Выручка от реализации'.
       end.
-      else if trim(p-by-osnovanie) = 'Не заполнять'          then do :
+      when '2'          then do :
         v-naznach-plat = ''.
         if available temp-z-number-list then temp-z-number-list.naznach-plat = ''.
-      end.
-      else do :
-        v-naznach-plat = p-by-osnovanie.
+        end.
+      when '1'          then do :
+        if available temp-z-number-list then temp-z-number-list.naznach-plat = v-naznach-plat.
+        end.
+      otherwise do:
+          v-naznach-plat = p-by-osnovanie.
         if available temp-z-number-list then temp-z-number-list.naznach-plat = p-by-osnovanie.
-      end.
+        end.        
+      end case .  
 
       assign
       tt-fin-doc.naznach-plat       = (if p-by-cash-desk
@@ -1580,19 +1589,17 @@ PROCEDURE StrTax :
     for each tt0-fin-doc-tax :
       
       if str <> " В т.ч.: " then str = str + "," .
-      
+      if not tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      else do:
       if tt-fin-doc.curr-code = 0 then do:
-        if not tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
-        else 
         assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
       end.
       else do:
-        if not tt0-fin-doc-tax.with-vat then 
-        assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
-        else assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+        assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
       end.  
     end.
     if str = " В т.ч.: " then assign str = "" .
+  end.
   end.
 END PROCEDURE.
 

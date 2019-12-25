@@ -708,7 +708,7 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.src-sum COLUMN-LABEL "Сумма в чеке"
       tt-chk-gds.density COLUMN-LABEL "Плотность"
       tt-chk-gds.pass-gds COLUMN-LABEL "Тип!ввода"
-      tt-chk-gds.vat-pc COLUMN-LABEL "% НДС"
+      tt-chk-gds.vat-pc COLUMN-LABEL "% НДС" format "->9.9<%" 
       tt-chk-gds.vat-sum-rubl COLUMN-LABEL "Сумма!НДС"
   ENABLE
       tt-chk-gds.src-code
@@ -5173,7 +5173,14 @@ END.
   actn#log
 }
 
-if actn#log then do:
+if not actn#log and par-mode <>  {&lookup} then do:
+assign
+cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  '{&bef-rcpt-sale-full},{&bef-rcpt-sale},{&bef-rcpt-return-full},{&bef-rcpt-return}':U +
+                                                      (if par-mode <> {&add-def}
+                                                      then ({&comma-char} + "Ошибка" + {&comma-char} + string(0))
+                                                      else "":U).
+end.
+else do:
 assign
 cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  {&receipt-codes-combo} +
 
@@ -5182,13 +5189,6 @@ cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  {&receipt-codes-combo} +
                                                       then ({&comma-char} + "Ошибка" + {&comma-char} + string(0))
                                                       else "":U)
 .
-end.
-else do:
-assign
-cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  '{&bef-rcpt-sale-full},{&bef-rcpt-sale},{&bef-rcpt-return-full},{&bef-rcpt-return}':U +
-                                                      (if par-mode <> {&add-def}
-                                                      then ({&comma-char} + "Ошибка" + {&comma-char} + string(0))
-                                                      else "":U).
 end.  
 if (par-mode = {&update}
 or par-mode = {&lookup} )

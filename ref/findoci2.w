@@ -1700,6 +1700,21 @@ define input parameter p-save as logical no-undo .
 if p-mode = {&lookup} or not available tt-fin-doc then do:
     return error.
 end.
+
+if tt-fin-doc.cor-acc = ? then do:
+      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+      end.  
+end.
+if tt-fin-doc.cor-acc1 = ? then do:      
+      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc1-value = ub.fin-code-cor-acc.code-value .
+      end. 
+end.      
 assign
 tt-fin-doc.prn-doc-code frame {&frame-name}
 tt-fin-doc.doc-date
@@ -1710,18 +1725,19 @@ tt-fin-doc.payer-name
 tt-fin-doc.str-podr-type
 tt-fin-doc.str-podr-code
 tt-fin-doc.str-podr-name
-tt-fin-doc.cor-acc1 = (if available X_fin-code-cor-acc1
-                       then X_fin-code-cor-acc1.fin-code
-                       else 0)
-tt-fin-doc.cor-acc1-value = (if available X_fin-code-cor-acc1
-                       then X_fin-code-cor-acc1.code-value
-                       else "":U)
-tt-fin-doc.cor-acc  = (if available X_fin-code-cor-acc
-                       then X_fin-code-cor-acc.fin-code
-                       else 0)
-tt-fin-doc.cor-acc-value  = (if available X_fin-code-cor-acc
-                       then X_fin-code-cor-acc.code-value
-                       else "":U)
+
+/*tt-fin-doc.cor-acc1 = (if available X_fin-code-cor-acc1 */
+/*                       then X_fin-code-cor-acc1.fin-code*/
+/*                       else 0)                          */
+/*tt-fin-doc.cor-acc1-value = (if available X_fin-code-cor-acc1*/
+/*                       then X_fin-code-cor-acc1.code-value   */
+/*                       else "":U)                            */
+/*tt-fin-doc.cor-acc  = (if available X_fin-code-cor-acc */
+/*                       then X_fin-code-cor-acc.fin-code*/
+/*                       else 0)                         */
+/*tt-fin-doc.cor-acc-value  = (if available X_fin-code-cor-acc*/
+/*                       then X_fin-code-cor-acc.code-value   */
+/*                       else "":U)                           */
 tt-fin-doc.an-uchet-code  = (if available X_fin-code-an-uchet
                         then X_fin-code-an-uchet.fin-code
                         else 0)

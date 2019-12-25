@@ -355,10 +355,10 @@ if p-cor-acc <> 0 then do:
     run err-mess in this-procedure (substitute("Ќе найден корреспондирующий счет: фирма &1 внутр. код счета &2", p-host-code, p-cor-acc), output v-ret-mess ).
     undo, return error (if p-silent = no then  "cor-acc":U  else v-ret-mess).
   end.
-  if buf_fin-code-cor-acc.code-value <> p-cor-acc-value then do:
-    run err-mess in this-procedure (substitute("Ќе соответствуют друг другу внутр код корреспондирующего счета и его значение: фирма &1 внутр. код счета &2 значение &3", p-host-code, p-cor-acc, p-cor-acc-value), output v-ret-mess ).
-    undo, return error (if p-silent = no then  "cor-acc-value":U  else v-ret-mess).
-  end.
+/*  if buf_fin-code-cor-acc.code-value <> p-cor-acc-value then do:                                                                                                                                                                        */
+/*    run err-mess in this-procedure (substitute("Ќе соответствуют друг другу внутр код корреспондирующего счета и его значение: фирма &1 внутр. код счета &2 значение &3", p-host-code, p-cor-acc, p-cor-acc-value), output v-ret-mess ).*/
+/*    undo, return error (if p-silent = no then  "cor-acc-value":U  else v-ret-mess).                                                                                                                                                     */
+/*  end.                                                                                                                                                                                                                                  */
   if buf_fin-code-cor-acc.status_ <> integer({&current-status-int}) then do:
     run err-mess in this-procedure (substitute("Ќедопустимый статус корр счета: фирма &1 внутр. код счета &2 значение &3", p-host-code, p-cor-acc, p-cor-acc-value), output v-ret-mess ).
     undo, return error (if p-silent = no then  "an-uchet-value":U  else v-ret-mess).
@@ -373,10 +373,10 @@ if p-cor-acc1 <> 0 then do:
     run err-mess in this-procedure (substitute("Ќе найден корреспондирующий счет2: фирма &1 внутр. код счета &2", p-host-code, p-cor-acc1), output v-ret-mess ).
     undo, return error (if p-silent = no then  "cor-acc1":U  else v-ret-mess).
   end.
-  if buf_fin-code-cor-acc.code-value <> p-cor-acc1-value then do:
-    run err-mess in this-procedure (substitute("Ќе соответствуют друг другу внутр код корреспондирующего счета2 и его значение: фирма &1 внутр. код счета &2 значение &3", p-host-code, p-cor-acc1, p-cor-acc1-value), output v-ret-mess ).
-    undo, return error (if p-silent = no then  "cor-acc1-value":U  else v-ret-mess).
-  end.
+/*  if buf_fin-code-cor-acc.code-value <> p-cor-acc1-value then do:                                                                                                                                                                          */
+/*    run err-mess in this-procedure (substitute("Ќе соответствуют друг другу внутр код корреспондирующего счета2 и его значение: фирма &1 внутр. код счета &2 значение &3", p-host-code, p-cor-acc1, p-cor-acc1-value), output v-ret-mess ).*/
+/*    undo, return error (if p-silent = no then  "cor-acc1-value":U  else v-ret-mess).                                                                                                                                                       */
+/*  end.                                                                                                                                                                                                                                     */
   if buf_fin-code-cor-acc.status_ <> integer({&current-status-int}) then do:
     run err-mess in this-procedure (substitute("Ќедопустимый статус корр счета2: фирма &1 внутр. код счета &2 значение &3", p-host-code, p-cor-acc1, p-cor-acc1-value), output v-ret-mess ).
     undo, return error (if p-silent = no then  "cor-acc1-value":U else v-ret-mess).
