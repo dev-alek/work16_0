@@ -142,6 +142,7 @@ define variable v-tth as handle no-undo .
 define variable par-l-mask  as logical no-undo .
 define variable v-param-type as character no-undo .
 define variable actn#log as logical no-undo .
+define variable actn#log_bonus as logical no-undo .
 define variable p-view-log as logical no-undo.
 { str/get-chkc.i def  update }
 /*{ str/getcheck.i UPDATE this-procedure }*/
@@ -5173,16 +5174,35 @@ END.
   actn#log
 }
 
-if not actn#log and par-mode <>  {&lookup} then do:
+{ gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_receipt_input_bonus':U
+  {&cntxt-object}
+  v-host-code
+  p-obj-type
+  p-obj-code
+  0
+  0
+  0
+  false
+  actn#log_bonus
+}
+if actn#log or par-mode = {&lookup} then do:
 assign
-cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  '{&bef-rcpt-sale-full},{&bef-rcpt-sale},{&bef-rcpt-return-full},{&bef-rcpt-return}':U +
+cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  {&receipt-codes-combo} +
+
+
                                                       (if par-mode <> {&add-def}
                                                       then ({&comma-char} + "Ошибка" + {&comma-char} + string(0))
-                                                      else "":U).
+                                                      else "":U)
+
+.  
 end.
 else do:
 assign
-cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  {&receipt-codes-combo} +
+cb-chk-type:LIST-ITEM-PAIRS  in frame {&frame-name} =  '{&bef-rcpt-sale-full},{&bef-rcpt-sale},{&bef-rcpt-return-full},{&bef-rcpt-return}':U +
 
 
                                                       (if par-mode <> {&add-def}
@@ -5444,8 +5464,8 @@ if not cas-shft then do:
     tt-chk-doc.shift-name
     in frame {&frame-name}.
 end.
-if not actn#log then do:
-  disable  b-addbonus B-adddiscnt tt-chk-doc.d-card v-src-d-card B-card with frame {&frame-name} .
+if not actn#log_bonus then do:
+  disable  tt-chk-doc.d-card v-src-d-card B-card with frame {&frame-name} .
 end.  
 b-adddiscnt:POPUP-MENU IN FRAME {&frame-name} = ?.
 b-addbonus:POPUP-MENU IN FRAME {&frame-name} = ?.
@@ -5730,8 +5750,8 @@ define variable v-updated AS LOGICAL NO-UNDO.
 define buffer loc_tt-chk-discnt for tt-chk-discnt.
 define buffer buf_tt-chk-discnt for tt-chk-discnt.
 define buffer last-tt-chk-gds for tt-chk-gds.
-if not actn#log then do:
-  message "Нет прав администратора"
+if not actn#log_bonus then do:
+  message "Отсутствует право: Редактирование бонусов, скидок и ДК в чеках"
   view-as alert-box.
   return.
 end.  
@@ -5891,8 +5911,8 @@ define variable v-wro-code as integer no-undo .
 
 define buffer loc_tt-chk-discnt for tt-chk-discnt.
 define buffer last-tt-chk-gds for tt-chk-gds.
-if not actn#log then do:
-  message "Нет прав администратора"
+if not actn#log_bonus then do:
+  message "Отсутствует право: Редактирование бонусов, скидок и ДК в чеках"
   view-as alert-box.
   return.
 end. 
