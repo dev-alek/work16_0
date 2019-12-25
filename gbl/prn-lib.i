@@ -207,7 +207,7 @@ procedure prn-lib-reportviewer-report-name :
   end.
 
   do ii = 1 to NUM-ENTRIES (p-report-name-html).
-    v-report-name = ENTRY (ii,p-report-name-html).
+    v-report-name = ENTRY (ii,p-report-name-html," ").
     if search(v-report-name) = ? then
     do:
       message "Не найден файл отчёта: " v-report-name view-as alert-box error.
