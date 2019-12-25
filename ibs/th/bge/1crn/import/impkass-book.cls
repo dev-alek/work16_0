@@ -31,7 +31,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
   define private temp-table tt-gds no-undo
     field gds-code as integer
   .
-  define private temp-table tt-operserv no-undo like ub.OperServ .
+/*  define private temp-table tt-operserv no-undo like ub.OperServ .*/
   
   define property Msg as character no-undo
     get. 
@@ -52,15 +52,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-stub      as integer no-undo .
     define variable v-gds-code  as integer no-undo .
     define variable v-str-kb-id as character no-undo .
-    define variable v-str-ossid as character no-undo .
-    define variable v-pay-agent as class ibs.th.bge.1crn.subjects.payment-agent no-undo . // imp:payment-agent
+/*    define variable v-str-ossid as character no-undo .*/
+/*    define variable v-pay-agent as class ibs.th.bge.1crn.subjects.payment-agent no-undo . // imp:payment-agent*/
     define variable v-cashbookid as int64 no-undo .
-    define variable v-operservid as int64 no-undo .
+/*    define variable v-operservid as int64 no-undo .*/
     define variable v-commentrytype as integer no-undo .
+    define variable v-host-code  as integer no-undo .
     define buffer buf_clients    for ub.clients .
     define buffer buf_goods      for ub.goods .
     define buffer buf_goods-attr for ub.goods-attr .
-    define buffer buf_OperServ   for ub.OperServ .
+/*    define buffer buf_OperServ   for ub.OperServ .*/
     define buffer buf_fin-code-cor-acc for ub.fin-code-cor-acc .
 
 
@@ -159,6 +160,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
              and buf_goods-attr.attr-value = v-str-kb-id :
           delete buf_goods-attr.
         end .
+        /* 21/V-2019 платёжный агент вынесен в отдельную сущность
         find first buf_OperServ exclusive-lock
              where buf_OperServ.ext-code = tt-cashbook.ext-code no-error .
         if available buf_OperServ then do:
@@ -170,12 +172,18 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
             delete buf_goods-attr.
           end .
         end .
+        */
         v-storage:deleteDB(input dataset ds-cashbook by-reference) .
       end .
       v-retfl = true.
       return true . /* несмотря на return true, внутри final всё равно сработает return v-retfl */
     end .
 
+    /* Для поиска значений счёта кредита и дебета, а также для взятия контрагента "Тип и код реализации",
+       используется host-code.
+       Мы ищем какой-нибудь host-code, запоминаем последний найденный, а при его отсутсвии берём как в library.p
+    */
+    v-host-code = -1 .
 
     /* проверить счета дебета и кредита по справочнику счетов */
     define variable v-int-schet   as integer no-undo .
@@ -192,6 +200,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
         if can-find (first buf_fin-code-cor-acc
                      where buf_fin-code-cor-acc.host-code  = buf_clients.host-code
                        AND buf_fin-code-cor-acc.code-value = v-code-value) then do :
+          v-host-code   = buf_clients.host-code .
           v-schet-found = true .
           leave.
         end .
@@ -213,6 +222,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
         if can-find (first buf_fin-code-cor-acc
                      where buf_fin-code-cor-acc.host-code  = buf_clients.host-code
                        AND buf_fin-code-cor-acc.code-value = v-code-value) then do :
+          v-host-code   = buf_clients.host-code .
           v-schet-found = true .
           leave.
         end .
@@ -224,18 +234,78 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
         ) ) .
     end .
 
+    /* проверить код контрагента для оформления ПКО по справочнику клиентов */
+    if objImp:code-payer <> ? then do :
+      if not can-find (first buf_clients
+                       where buf_clients.obj-type = {&cmp}
+                         and buf_clients.obj-code = objImp:code-payer) then
+        undo, throw new Progress.Lang.AppError( substitute(
+          "Контрагент для оформления ПКО [&1 &2] из кассовой книги [&3 &4] отсутствует в справочнике клиентов."
+          , {&cmp}, objImp:code-payer, v-code, objImp:name_
+        ) ) .
+    end .
 
     assign
       tt-cashbook.CashBookName = objImp:name_       when objImp:name_ <> ?
       tt-cashbook.Credit       = objImp:kredit      when objImp:kredit <> ? 
       tt-cashbook.Debit        = objImp:debit       when objImp:debit <> ?
-      tt-cashbook.RuleOsn      = getRuleOsnName(objImp:rule-reason) when objImp:rule-reason <> ?
+      tt-cashbook.RuleOsn      = objImp:rule-reason when objImp:rule-reason <> ?
+      tt-cashbook.cli-type     = {&cmp}             when objImp:code-payer <> ?
+      tt-cashbook.cli-code     = objImp:code-payer  when objImp:code-payer <> ?
       tt-cashbook.RulePril     = getRulePrilName(objImp:rule-att)   when objImp:rule-att <> ?
       tt-cashbook.FlagSepCash  = (objImp:ind-kass-pko = 1) when objImp:ind-kass-pko <> ?
       tt-cashbook.FlagSepFull  = (objImp:apart-np-tnp = 1) when objImp:apart-np-tnp <> ?
    /* tt-cashbook.Status_      = 0:"Текущий", 1:"Удаленный"
       - при создании заполняется значением по умолчанию, при обновлении остаётся в прежнем значении */
     .
+    /* Текст поля «Принято от» для ПКО.
+       Если не указано, то в ПКО проставляется наименование контрагента (см. п. 4.3.4.3) */
+    if objImp:rule-payer <> ? then do : 
+      tt-cashbook.takenfrom    = objImp:rule-payer .
+    end .
+    else do :
+      /* п.4.3.4.3
+         Поле «Получено от» - представляет собой контрагента, от которого поступили ДС.
+         Если не заполнено, то подставляется контрагент, указанный в настройке фирмы «Тип и код реализации».
+         Наименование контрагента – текстовое поле, которое может быть изменено посредством РВД или импортом из 1С:ERP.
+         Значение поля наименования контрагента выводится в поле «Получено от» в ПКО.
+         27/V-2019  в поле "Принято от (авто)" должно писаться наименование контрагента, а не тип контрагента.
+      */
+      
+      /* 27/V-2019 Т.к. неизвестно, какое наименование соответствует sysconf.sale-type, то
+                   подставляется наименование от cashbook.cli-type + cashbook.cli-code
+      define buffer buf_shop    for ub.shop .
+      define buffer buf_sysconf for ub.sysconf .
+      if v-host-code < 0 then do :
+        find first buf_shop no-lock no-error .
+        if available buf_shop then do:
+          v-host-code = buf_shop.host-code .
+        end.
+      end .
+      if v-host-code < 0 then do :
+        find first buf_sysconf no-lock no-error .
+      end .
+      else do :
+        find first buf_sysconf no-lock where buf_sysconf.host-code = v-host-code no-error .
+      end .
+      if available buf_sysconf then tt-cashbook.takenfrom = buf_sysconf.sale-type . 
+      else undo, throw new Progress.Lang.AppError( substitute(
+          "В настройках БД отсутствует контрагент ~«Тип и код реализации~» для кассовой книги [&2 &3]"
+          , "", v-code, objImp:name_
+      ) ) .
+      */
+      
+      find first buf_clients no-lock
+           where buf_clients.obj-type = tt-cashbook.cli-type
+             and buf_clients.obj-code = tt-cashbook.cli-code no-error .
+      if available buf_clients then tt-cashbook.takenfrom = buf_clients.obj-name .
+      else undo, throw new Progress.Lang.AppError( substitute(
+          "В справочнике отсутствует контрагент [&1 &2] ~«Тип и код реализации~» для кассовой книги [&3 &4]"
+          , tt-cashbook.cli-type, tt-cashbook.cli-code, v-code, objImp:name_
+      ) ) .
+    end .
+    
+    
     if v-mode = {&add-def} then do :
       v-storage:insertDB(buffer tt-cashbook, output v-cashbookid) .
       if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
@@ -333,142 +403,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     end .
 
 
-    /* платёжный агент:
-      - ext-code платёжного агента совпадает с ext-code кассовой книги, к которой он относится в 1с;
-      - новый платёжный агент добавляется, старый - обновляется;
-      - при удалении Status_ у платёжного агента изменяется как Status_ у кассовой книги.
-      Ид. платёжного агента далее используется вместе с ид.кассовой книги для привязки товара к кассовой книге.
-    */
-    empty temp-table tt-operserv .
-    v-pay-agent = objImp:payment-agent .
-    if valid-object(v-pay-agent) then do :
-      
-      /* 29/III-2019  обязательность 1-1 для полей sign-pa, sign-pa-subj, type-calc-repl,
-                      тип полей сменился с Строка на Число (N,0) */
-        if (v-pay-agent:sign-pa = 1) or (v-pay-agent:sign-pa = 2) or
-           (v-pay-agent:sign-pa = 4) or (v-pay-agent:sign-pa = 8) or
-           (v-pay-agent:sign-pa = 16) or (v-pay-agent:sign-pa = 32) or
-           (v-pay-agent:sign-pa = 64) then .
-        else undo, throw new Progress.Lang.AppError( substitute(
-            "Признак агента [&1] для платёжного агента из типа кассовой книги [&2] может принимать только значения значения: " +
-            "1-Банковский платежный агент, 2-Банковский платежный субагент, 4-Платежный агент, " +
-            "8-Платежный субагент, 16-Поверенный пользователь, 32-Комиссионер, 64-Агент, не явл. никем из перечисленных"
-            , v-pay-agent:sign-pa, objImp:name_
-        ) ) .
-
-        if (v-pay-agent:sign-pa-subj = 1) or (v-pay-agent:sign-pa-subj = 2) or
-           (v-pay-agent:sign-pa-subj = 4) or (v-pay-agent:sign-pa-subj = 8) or
-           (v-pay-agent:sign-pa-subj = 16) or (v-pay-agent:sign-pa-subj = 32) or
-           (v-pay-agent:sign-pa-subj = 64) then .
-        else undo, throw new Progress.Lang.AppError( substitute(
-            "Признак агента по предмету расчета [&1] для платёжного агента из типа кассовой книги [&2] может принимать только значения значения: " +
-            "1-Банковский платежный агент, 2-Банковский платежный субагент, 4-Платежный агент, " +
-            "8-Платежный субагент, 16-Поверенный пользователь, 32-Комиссионер, 64-Агент, не явл. никем из перечисленных"
-            , v-pay-agent:sign-pa-subj, objImp:name_
-        ) ) .
-            
-        /* 07/III-2019 Допустимые значения: 0 - пусто, 1 - "Автопомощь" */
-        if (v-pay-agent:type-calc-repl = 1) or (v-pay-agent:type-calc-repl = 4) or
-           (v-pay-agent:type-calc-repl = 5) then .
-        else undo, throw new Progress.Lang.AppError( substitute(
-            "Тип расчета с опер.пополн. [&1] для платёжного агента из типа кассовой книги [&2] может принимать только значения: " +
-            "1-Оплата Сотовой связи, 4-Начисление на карту, 5-Платежный агент"
-            , v-pay-agent:type-calc-repl, objImp:name_
-        ) ) .
-
-      v-commentrytype = integer(v-pay-agent:comm-entry-type) no-error .
-      if v-commentrytype > 0 then do :
-        if (v-commentrytype = 1) then .
-        else undo, throw new Progress.Lang.AppError( substitute(
-            "Тип ввода комиссии [&1] для платёжного агента из типа кассовой книги [&2] может принимать только значения: " +
-            "0–процент, 1–сумма"
-            , v-pay-agent:comm-entry-type, objImp:name_
-        ) ) .
-      end .
-        
-                  
-      find first buf_OperServ exclusive-lock
-           where buf_OperServ.ext-code = tt-cashbook.ext-code no-error .
-      if available buf_OperServ then do :
-        create tt-operserv .
-        buffer-copy buf_OperServ to tt-operserv .
-      end .
-      else do :
-        create tt-operserv .
-        assign
-          tt-operserv.id       = next-value (s-operserv-id)
-          tt-operserv.ext-code = tt-cashbook.ext-code
-        .
-      end .
-              
-         
-      assign
-        v-operservid = tt-operserv.id
-        /* v-pay-agent:code_ ишнорируется */
-/* char   */ tt-operserv.OSname    = v-pay-agent:name_ /* обязательность 1-1 */
-/* char      tt-operserv.OsNameAbbr = отсутствует в формате импорта */ 
-/* deci-2 */ tt-operserv.SummMin   = v-pay-agent:min-sum     when v-pay-agent:min-sum <> ?
-/* deci-2 */ tt-operserv.SummMax   = v-pay-agent:max-sum     /* обязательность 1-1 */
-/* deci-2 */ tt-operserv.SummAtent = v-pay-agent:warning-sum when v-pay-agent:warning-sum <> ?
-      .
-
-      /* 03/IV-2019  в импорте приходит 1 или 0, в БД сохраняется 4 или 5: 4=сумма,5=процент */
-      if v-commentrytype <> ? then do :
-        case v-commentrytype:
-          when 0 then tt-operserv.CommType = 5 .
-          when 1 then tt-operserv.CommType = 4 .
-          otherwise .
-        end case .
-        if v-pay-agent:value-comm <> ? then case v-commentrytype :
-          when 0 then assign 
-/* deci-2 */ tt-operserv.CommPerc  = v-pay-agent:value-comm
-          .
-          when 1 then assign
-/* deci-2 */ tt-operserv.CommSumm  = v-pay-agent:value-comm
-          .
-          otherwise .
-        end case .
-      end .
-      
-      assign
-/* inte   */ tt-operserv.gds-code  = v-pay-agent:gds-comm when v-pay-agent:gds-comm <> ?
-/* logi   */ tt-operserv.PreAAvt   = (v-pay-agent:auth-req > 0)    when v-pay-agent:auth-req <> ?
-/* logi   */ tt-operserv.PreSlip   = (v-pay-agent:prt-slp-req > 0) when v-pay-agent:prt-slp-req <> ?
-/* char   */ tt-operserv.SlipName  = v-pay-agent:name-slp          when v-pay-agent:name-slp <> ?
-/* inte   */ tt-operserv.CalcType  = v-pay-agent:type-calc-repl    /* обязательность 1-1 */
-/* char   */ tt-operserv.OperAddr  = v-pay-agent:adr-trans-op  /* обязательность 1-1 */
-/* char   */ tt-operserv.OperInn   = v-pay-agent:inn-trans-op  /* обязательность 1-1 */
-/* char   */ tt-operserv.OperName  = v-pay-agent:name-trans-op /* обязательность 1-1 */
-/* inte   */ tt-operserv.AgentFlag = v-pay-agent:sign-pa       /* обязательность 1-1 */
-/* char   */ tt-operserv.AgentTel  = v-pay-agent:tel-pa        /* обязательность 1-1 */
-/* char   */ tt-operserv.OperTel   = v-pay-agent:tel-acceptor  /* обязательность 1-1 */
-/* inte   */ tt-operserv.AgentFlagRasch = v-pay-agent:sign-pa-subj /* обязательность 1-1 */
-/* char   */ tt-operserv.InnSupp   = v-pay-agent:inn-prov          /* обязательность 1-1 */
-/* char   */ tt-operserv.OperTelTran    = v-pay-agent:tel-trans-op /* обязательность 1-1 */
-/* char   */ tt-operserv.AgentOpere     = v-pay-agent:oper-pa      /* обязательность 1-1 */
-/* char   */ tt-operserv.SuppTel   = v-pay-agent:tel-prov          /* обязательность 1-1 */
-/* char   */ tt-operserv.SuppName  = v-pay-agent:name-prov         /* обязательность 1-1 */
-/* inte   */ tt-operserv.QuantMax  = v-pay-agent:max-num     when v-pay-agent:max-num <> ?
-/* inte   */ tt-operserv.QuantMin  = v-pay-agent:min-num     when v-pay-agent:min-num <> ?
-/* inte   */ tt-operserv.OsType    = v-pay-agent:oper-type   when v-pay-agent:oper-type <> ?
-      .
-      if tt-operserv.CalcType eq 1
-      then
-         tt-operserv.OsType = 1.
-      else if tt-operserv.CalcType eq 4
-      then
-         tt-operserv.OsType = 3.
-      if available buf_OperServ then do :
-        buffer-copy tt-operserv to buf_OperServ .
-      end .
-      else do :
-        create buf_OperServ .
-        buffer-copy tt-operserv to buf_OperServ .
-      end .
-      
-    end . // end_of_payment-agent
-    else v-operservid = ? .
-
     /* на выходе товары:
        - привязаны к пришедшей кассовой книге,
        - других товаров к ней не привязано,
@@ -497,19 +431,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           tt-gds.gds-code = v-gds-code .
         end . // end_of_objImp:gds[]
 
-        v-str-ossid = string(v-operservid) no-error .
-        
         /* Отвязать от других кассовых книг. Скопировано из attr-lib:gds-attr-DELETE() */
         if v-mode = {&update} then do :
           for each buf_goods-attr exclusive-lock
              where buf_goods-attr.attr-code  = {&attr-cash-book-id}
                and buf_goods-attr.attr-value = v-str-kb-id :
-            if not can-find (first tt-gds where tt-gds.gds-code = buf_goods-attr.gds-code) then
-              delete buf_goods-attr.
-          end .
-          for each buf_goods-attr exclusive-lock
-             where buf_goods-attr.attr-code  = {&attr-oper-serv-id}
-               and buf_goods-attr.attr-value = v-str-ossid :
             if not can-find (first tt-gds where tt-gds.gds-code = buf_goods-attr.gds-code) then
               delete buf_goods-attr.
           end .
@@ -528,20 +454,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
               buf_goods-attr.gds-code   = tt-gds.gds-code
               buf_goods-attr.attr-code  = {&attr-cash-book-id}
               buf_goods-attr.attr-value = v-str-kb-id
-            .
-          end.
-          find first buf_goods-attr exclusive-lock
-               where buf_goods-attr.gds-code  = tt-gds.gds-code
-                 and buf_goods-attr.attr-code = {&attr-oper-serv-id} no-error .
-          if available buf_goods-attr then assign
-            buf_goods-attr.attr-value = v-str-ossid when (buf_goods-attr.attr-value <> v-str-ossid)
-          .
-          else do:
-            create buf_goods-attr .
-            assign
-              buf_goods-attr.gds-code   = tt-gds.gds-code
-              buf_goods-attr.attr-code  = {&attr-oper-serv-id}
-              buf_goods-attr.attr-value = v-str-ossid
             .
           end.
         end .
@@ -659,6 +571,7 @@ arrayvar5[3] = "Значение по умолчанию".
 • 0 - "Выручка от реализации"
 • 1 - "Номера Z-отчетов"
 • 2 - "Не заполнять"
+20/V-2019 не используется
     */
     define variable v-name as character no-undo .
     case p-rule-reason :

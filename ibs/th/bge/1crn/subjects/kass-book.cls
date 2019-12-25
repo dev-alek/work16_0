@@ -25,7 +25,9 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   define property name_         as character    no-undo get. private set.
   
   define property basic-kb      as integer      no-undo get. private set.
-  define property rule-reason   as integer      no-undo get. private set.
+  define property rule-reason   as character    no-undo get. private set.
+  define property code-payer    as integer      no-undo get. private set.
+  define property rule-payer    as character    no-undo get. private set.
   define property rule-att      as integer      no-undo get. private set.
   define property ind-kass-pko  as integer      no-undo get. private set.
   define property apart-np-tnp  as integer      no-undo get. private set.
@@ -45,15 +47,16 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   define property kb-gds            as ibs.th.bge.1crn.subjects.subjects no-undo
     get. 
     private set.
+   /* с 21/V-2019 импортируется как отдельная сущность
   define property payment-agent     as ibs.th.bge.1crn.subjects.payment-agent no-undo
     get. 
     private set.
-
+  */
   define override property InitTag as character no-undo init "kass-book"
     get.
   
   constructor public kass-book ():
-    InitListTag = "kb-gds,payment-agent".
+    InitListTag = "kb-gds".
   end constructor.
   
   &scoped-define attr-str      if inValue >= "" then inValue else ""
@@ -67,7 +70,9 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "del-f"        then del-f        = {&attr-integer} .
       when "name"         then name_        = {&attr-str} .
       when "basic-kb"         then basic-kb         = {&attr-integer} .
-      when "rule-reason"      then rule-reason      = {&attr-integer} .
+      when "rule-reason"      then rule-reason      = {&attr-str} .
+      when "code-payer"       then code-payer       = {&attr-integer} .
+      when "rule-payer"       then rule-payer       = {&attr-str} .
       when "rule-att"         then rule-att         = {&attr-integer} .
       when "ind-kass-pko"     then ind-kass-pko     = {&attr-integer} .
       when "apart-np-tnp"     then apart-np-tnp     = {&attr-integer} .
@@ -96,12 +101,14 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     end catch .
   end method.
 
+  /* с 21/V-2019 импортируется как отдельная сущность
   method override protected void SetPropProtected (SubObj as ibs.th.bge.1crn.subjects.isubject):
     case SubObj:InitTag:
       when "payment-agent" then
         payment-agent = cast (SubObj, ibs.th.bge.1crn.subjects.payment-agent) .
     end case .    
   end method.
+  */
   
   method override protected void SetPropProtected (SubsObj as ibs.th.bge.1crn.subjects.subjects):
     /* вызывается для переприсваивания коллекции после каждого добавления элемента в коллекцию;
@@ -132,6 +139,8 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       name_ = ?
       basic-kb         = ?
       rule-reason      = ?
+      code-payer       = ?
+      rule-payer       = ?
       rule-att         = ?
       ind-kass-pko     = ?
       apart-np-tnp     = ?
@@ -149,7 +158,6 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       struct-unit-code = ?
     .
     if valid-object(kb-gds)        then delete object kb-gds .
-    if valid-object(payment-agent) then delete object payment-agent .
   end method.
       
 end class.

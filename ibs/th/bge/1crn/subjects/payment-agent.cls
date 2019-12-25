@@ -7,6 +7,7 @@ $Workfile$
 $Archive$
 
 kass-book:payment-agent - Секция с параметрами платежного агента из 1С
+c 21/V-2019 самостоятельная сущность Платежные агента/Банковские платежные агенты
 
 Автор: Молотков Сергей
 Дата создания: 13/02/19
@@ -21,6 +22,7 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
   
   define property code_         as character    no-undo get. private set.
   define property name_         as character    no-undo get. private set.
+  
   define property adr-trans-op    as character    no-undo get. private set.
   define property inn-trans-op    as character    no-undo get. private set.
   define property name-trans-op   as character    no-undo get. private set.
@@ -50,8 +52,16 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
   define property min-num         as integer      no-undo get. private set.
   define property oper-type       as integer      no-undo get. private set.
 
+  define property kb-gds            as ibs.th.bge.1crn.subjects.subjects no-undo
+    get. 
+    private set.
+
   define override property InitTag as character no-undo init "payment-agent"
     get.
+  
+  constructor public payment-agent ():
+    InitListTag = "kb-gds".
+  end constructor.
   
   &scoped-define attr-str      if inValue >= "" then inValue else ""
   &scoped-define attr-integer  if inValue >= "" then integer (inValue) else 0
@@ -99,6 +109,14 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
     end catch .
   end method.
 
+  method override protected void SetPropProtected (SubsObj as ibs.th.bge.1crn.subjects.subjects):
+    /* вызывается для переприсваивания коллекции после каждого добавления элемента в коллекцию;
+       указатель на объект коллекции приходит с одним и тем же значением */
+    case SubsObj:InitTag:
+      when "kb-gds"   then kb-gds   = SubsObj.            
+    end case.
+  end method.
+
   method override protected void CheckData ():
     def var v-str as char no-undo.
     
@@ -114,9 +132,11 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
       v-str = v-str + ",tel-acceptor"   when tel-acceptor   = ?
       v-str = v-str + ",tel-trans-op"   when tel-trans-op   = ?
       v-str = v-str + ",sign-pa-subj"   when sign-pa-subj   = ?
+      /* 13/VIII-2019  В реальности эти данные могут не заполняться для определенных видов операторов
       v-str = v-str + ",name-prov"      when name-prov      = ?
       v-str = v-str + ",inn-prov"       when inn-prov       = ?
       v-str = v-str + ",tel-prov"       when tel-prov       = ?
+      */
       v-str = v-str + ",type-calc-repl" when type-calc-repl = ?
       v-str = v-str + ",max-sum"        when max-sum        = ?
     .
@@ -156,6 +176,7 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
       min-num         = ?
       oper-type       = ?
     .
+    if valid-object(kb-gds)        then delete object kb-gds .
   end method.
       
 end class.

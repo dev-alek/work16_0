@@ -166,8 +166,12 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable kass-bookSubjectObj                   as class kass-book               no-undo. // <kass-book>
   define variable kass-book-gdListSubjectsObj           as class subjects                no-undo. // kass-book:kb-gds
   define variable kass-book-gdSubjectObj                as class kass-book-gd            no-undo. // kass-book:kb-gds:gd
-  define variable payment-agentSubjectObj               as class payment-agent           no-undo. // kass-book:payment-agent
   define variable impkass-bookEventHndlrObj             as class impkass-book            no-undo.
+
+  define variable payment-agentSubjectObj               as class payment-agent           no-undo. // <payment-agent>
+  define variable payment-agent-gdListSubjectsObj       as class subjects                no-undo. // payment-agent:kb-gds
+  define variable payment-agent-gdSubjectObj            as class kass-book-gd            no-undo. // payment-agent:kb-gds:gd
+  define variable imppayment-agentEventHndlrObj         as class imppayment-agent        no-undo.
 
   
   define variable good             as logical   no-undo.
@@ -204,9 +208,6 @@ class ibs.th.bge.1crn.import.parsesub:
   constructor public parsesub (  ):
 
     /* производство групп объектов дл€ обрабатываемых сущностей */
-
-    countrySubjectObj = new country ().
-    impcountryEventHndlrObj = new impcountry ().
     
     cliGrpSubjectObj = new cli-grps ().
     impCliGrpEventHndlrObj = new impcli-grps ().
@@ -273,6 +274,7 @@ class ibs.th.bge.1crn.import.parsesub:
     tank-imp_cal-tbllistSubjectsObj = new subjects ("cal-tbl").
 		    
     /* перенесено внутрь парсинга создание экземпл€ров объектов:
+       - стран
        - фирм
        - товаров
        - рецептов
@@ -280,6 +282,7 @@ class ibs.th.bge.1crn.import.parsesub:
        - промо-акций
        - срецификаций к договорам поставки
        - типов кассовых книг
+       - платЄжных агентов
        - документов движени€ —“
        - движение Ќѕ
     */
@@ -365,7 +368,17 @@ class ibs.th.bge.1crn.import.parsesub:
       case hNoderef:name:
         // экземпл€р xxxSubjectObj создаЄтс€ перед первым импортом
         // экземпл€р xxxSubjectObj очищаетс€ перед началом каждого нового объекта внутри GetChildrenSub()
-        when "org-unit" then do:
+        
+        when "country":U then do:
+          if not valid-object(countrySubjectObj)       then countrySubjectObj       = new country (). // <country>
+          if not valid-object(impcountryEventHndlrObj) then impcountryEventHndlrObj = new impcountry () .
+          v-iSubject = countrySubjectObj .
+          v-iImpSub  = impcountryEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "org-unit":U then do:
           if not valid-object(firmsSubjectObj)       then firmsSubjectObj       = new firms (). // <org-unit>
           if not valid-object(impFirmsEventHndlrObj) then impFirmsEventHndlrObj = new impfirms () .
           v-iSubject = firmsSubjectObj .
@@ -374,7 +387,7 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-        when "good" then do:
+        when "good":U then do:
           if not valid-object(goodSubjectObj)       then goodSubjectObj         = new goods (). // <good>
           if not valid-object(impGoodEventHndlrObj) then do :
             impGoodEventHndlrObj = new impgoods () .
@@ -385,7 +398,7 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-        when "recipe" then do:
+        when "recipe":U then do:
           if not valid-object(recipeSubjectObj)       then recipeSubjectObj       = new recipe (). // <recipe>
           if not valid-object(imprecipeEventHndlrObj) then do :
             imprecipeEventHndlrObj = new imprecipe ().
@@ -398,7 +411,7 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-        when "azk" then do:
+        when "azk":U then do:
           if not valid-object(shopsSubjectObj)       then shopsSubjectObj       = new shops (). // <azk>
           if not valid-object(impShopsEventHndlrObj) then do :
             impShopsEventHndlrObj = new impshops ().
@@ -410,7 +423,7 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-        when "promotion" then do:
+        when "promotion":U then do:
           if not valid-object(promotionSubjectObj)       then promotionSubjectObj       = new promotion(). // <promotion>
           if not valid-object(imppromotionEventHndlrObj) then do :
             imppromotionEventHndlrObj = new imppromotion ().
@@ -422,7 +435,7 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-        when "contr-price-doc" then do:
+        when "contr-price-doc":U then do:
           if not valid-object(contr-price-docsSubjectObj) then contr-price-docsSubjectObj = new contr-price-docs (). // <contr-price-doc>
           if not valid-object(impcontr-price-docsEventHndlrObj) then do :
             impcontr-price-docsEventHndlrObj = new impcontr-price-docs ().
@@ -433,13 +446,24 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-        when "kass-book" then do:
+        when "kass-book":U then do:
           if not valid-object(kass-bookSubjectObj) then kass-bookSubjectObj = new kass-book (). // <kass-book>
           if not valid-object(impkass-bookEventHndlrObj) then do :
             impkass-bookEventHndlrObj = new impkass-book ().
           end .
           v-iSubject = kass-bookSubjectObj .
           v-iImpSub  = impkass-bookEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "payment-agent":U then do:
+          if not valid-object(payment-agentSubjectObj) then payment-agentSubjectObj = new payment-agent (). // <payment-agent>
+          if not valid-object(imppayment-agentEventHndlrObj) then do :
+            imppayment-agentEventHndlrObj = new imppayment-agent ().
+          end .
+          v-iSubject = payment-agentSubjectObj .
+          v-iImpSub  = imppayment-agentEventHndlrObj .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
@@ -486,10 +510,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "norm-loss" then do:
           GetChildrenSub (hNoderef, (level + 1), normlossSubjectObj).
           ReceivedSubjectPublish(normlossSubjectObj, impnormlossEventHndlrObj).
-        end.
-        when "country" then do:
-          GetChildrenSub (hNoderef, (level + 1), countrySubjectObj).
-          ReceivedSubjectPublish(countrySubjectObj, impcountryEventHndlrObj).
         end.
         when "currency" then do:
           GetChildrenSub (hNoderef, (level + 1), currencySubjectObj).
@@ -916,10 +936,42 @@ class ibs.th.bge.1crn.import.parsesub:
           end case.
         end.
         when "kb-gds" then do : // kass-book:kb-gds
-          if kass-bookSubjectObj:IsInitSubForWrite then do:
-            kass-book-gdListSubjectsObj = new subjects ("kb-gds") .
-            GetChildrenSub (hNoderef, (level + 1), ?).
-            kass-bookSubjectObj:SetProp (kass-book-gdListSubjectsObj).
+          v-need-parse = true . 
+          if v-need-parse and valid-object (kass-bookSubjectObj) then do: // kass-book:kb-gds
+            if kass-bookSubjectObj:IsInitSubForWrite then do:
+              kass-book-gdListSubjectsObj = new subjects ("kb-gds") .
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              kass-bookSubjectObj:SetProp (kass-book-gdListSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (payment-agentSubjectObj) then do: // payment-agent:kb-gds
+            if payment-agentSubjectObj:IsInitSubForWrite then do:
+              payment-agent-gdListSubjectsObj = new subjects ("kb-gds") .
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              payment-agentSubjectObj:SetProp (payment-agent-gdListSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
+        when "kb-gd" then do:
+          v-need-parse = true . 
+          if v-need-parse and valid-object (kass-bookSubjectObj) then do: // kass-book:kb-gds:kb-gd
+            if kass-bookSubjectObj:IsInitSubForWrite then do: 
+              kass-book-gdListSubjectsObj:Add(  new kass-book-gd()  ).
+              kass-book-gdSubjectObj = cast (kass-book-gdListSubjectsObj:SubjectObjCurr, kass-book-gd).
+              GetChildrenSub (hNoderef, (level + 1), kass-book-gdSubjectObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (payment-agentSubjectObj) then do: // payment-agent:kb-gds:kb-gd
+            if payment-agentSubjectObj:IsInitSubForWrite then do: 
+              payment-agent-gdListSubjectsObj:Add(  new kass-book-gd()  ).
+              payment-agent-gdSubjectObj = cast (payment-agent-gdListSubjectsObj:SubjectObjCurr, kass-book-gd).
+              GetChildrenSub (hNoderef, (level + 1), payment-agent-gdSubjectObj).
+              v-need-parse = false .
+            end .
           end .
         end.
         when "gd" then do:
@@ -983,14 +1035,6 @@ class ibs.th.bge.1crn.import.parsesub:
               end .  
             end .
           end .
-          if v-need-parse and valid-object (kass-bookSubjectObj) then do: // kass-book:kb-gds:gd
-            if kass-bookSubjectObj:IsInitSubForWrite then do: 
-              kass-book-gdListSubjectsObj:Add(  new kass-book-gd()  ).
-              kass-book-gdSubjectObj = cast (kass-book-gdListSubjectsObj:SubjectObjCurr, kass-book-gd).
-              GetChildrenSub (hNoderef, (level + 1), kass-book-gdSubjectObj).
-              v-need-parse = false .
-            end .
-          end .
         end.
         when "prt" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
           case true : 
@@ -1050,12 +1094,6 @@ class ibs.th.bge.1crn.import.parsesub:
             good_unitaddSubjectObj = cast (unitaddsSubjectsObj:SubjectObjCurr, unit-add-code).
             GetChildrenSub (hNoderef, (level + 1), good_unitaddSubjectObj).
         end.
-        when "payment-agent" then do: // kass-book:payment-agent
-          if not valid-object(payment-agentSubjectObj) then
-            payment-agentSubjectObj = new payment-agent().
-          GetChildrenSub (hNoderef, (level + 1), payment-agentSubjectObj).
-          kass-bookSubjectObj:SetProp (payment-agentSubjectObj).
-        end .
 
         
         /* ----- конечный уровень

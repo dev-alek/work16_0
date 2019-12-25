@@ -22,7 +22,7 @@ class ibs.th.bge.1crn.subjects.kass-book-gd inherits ibs.th.bge.1crn.subjects.as
    
   define property gd-code as character  no-undo get. private set.
   
-  define override property InitTag as character no-undo init "gd"
+  define override property InitTag as character no-undo init "kb-gd"
     get.
     
   &scoped-define attr-str      if inValue >= "" then inValue else ""
