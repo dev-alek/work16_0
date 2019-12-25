@@ -883,6 +883,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define without-S
 { cmp/cr-prep.i 1 prt-err          прт-ош           " "                    Prt-Err }
 { cmp/cr-prep.i 1 staff-err        перс-ош           " "                   Staf-Err}
 
+&glob chk-err-list '{&bef-gds-err},{&bef-summa-err},{&bef-serial-err},{&bef-Dtl-Err},{&bef-Pay-Err},{&bef-discount-err},{&bef-goods-err},{&bef-amount-err},{&bef-Prt-Err}':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define chk-err-list {&chk-err-list}" ).
+
+
 /* Типы единиц измерения!!!Первые три буквы в длинном названии должны обязательно совпадать с коротким!!!*/
 { cmp/cr-prep.i 1 pieces           шту              штучный               pie pieces    }
 { cmp/cr-prep.i 1 divisional       дро              дробный               div divisional}

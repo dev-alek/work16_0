@@ -27,6 +27,7 @@ define temp-table tt-cashbookrule like ub.cashbookrule
   field DptCode         as integer
   field obj             as character
   field stat            as character
+  field Pin             as character
 .
 
 define dataset ds-cashbookrule for tt-cashbookrule .

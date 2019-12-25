@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,14 +8,14 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER find_fin-doc FOR ub.fin-doc.
-DEFINE BUFFER X_clients-host FOR ub.clients.
-DEFINE NEW SHARED BUFFER X_fin-doc FOR ub.fin-doc.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER find_fin-doc FOR fin-doc.
+DEFINE BUFFER X_clients-host FOR clients.
+DEFINE NEW SHARED BUFFER X_fin-doc FOR fin-doc.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -242,7 +242,7 @@ define buffer X_curr_sysconf for ub.sysconf.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -257,8 +257,8 @@ define buffer X_curr_sysconf for ub.sysconf.
 &Scoped-define INTERNAL-TABLES X_fin-doc
 
 /* Definitions for BROWSE br-fin-doc                                    */
-&Scoped-define FIELDS-IN-QUERY-br-fin-doc mark-string(recid(X_fin-doc), v-rid-list) X_fin-doc.host-code X_fin-doc.prn-doc-code X_fin-doc.fin-doc-type X_fin-doc.doc-date X_fin-doc.status_ X_fin-doc.receiver-type + string(X_fin-doc.receiver-code) X_fin-doc.receiver-name X_fin-doc.perm-date X_fin-doc.pay-date X_fin-doc.fact-date X_fin-doc.sttm-code X_fin-doc.sum-doc X_fin-doc.fin-ext-doc-type get-contract(buffer X_fin-doc) X_fin-doc.payer-type + string(X_fin-doc.payer-code) X_fin-doc.payer-name get-currency(buffer X_fin-doc) if X_fin-doc.obj-code <> 0 then (X_fin-doc.obj-type + string(X_fin-doc.obj-code)) else "":U X_fin-doc.fin-doc-code f-factur(buffer X_fin-doc) get-shift(BUFFER X_fin-doc, OUTPUT v-fin-doc-shift-name-num) v-fin-doc-shift-name-num X_fin-doc.trn-doc-code
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-fin-doc X_fin-doc.prn-doc-code
+&Scoped-define FIELDS-IN-QUERY-br-fin-doc mark-string(recid(X_fin-doc), v-rid-list) X_fin-doc.host-code X_fin-doc.prn-doc-code X_fin-doc.fin-doc-type X_fin-doc.doc-date X_fin-doc.status_ X_fin-doc.receiver-type + string(X_fin-doc.receiver-code) X_fin-doc.receiver-name X_fin-doc.perm-date X_fin-doc.pay-date X_fin-doc.fact-date X_fin-doc.sttm-code X_fin-doc.sum-doc X_fin-doc.fin-ext-doc-type get-contract(buffer X_fin-doc) X_fin-doc.payer-type + string(X_fin-doc.payer-code) X_fin-doc.payer-name get-currency(buffer X_fin-doc) if X_fin-doc.obj-code <> 0 then (X_fin-doc.obj-type + string(X_fin-doc.obj-code)) else "":U X_fin-doc.fin-doc-code f-factur(buffer X_fin-doc) get-shift(BUFFER X_fin-doc, OUTPUT v-fin-doc-shift-name-num) v-fin-doc-shift-name-num X_fin-doc.trn-doc-code get-CashbookName(X_fin-doc.cashbookid)   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-fin-doc X_fin-doc.prn-doc-code   
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-fin-doc X_fin-doc
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-fin-doc X_fin-doc
 &Scoped-define SELF-NAME br-fin-doc
@@ -273,14 +273,14 @@ define buffer X_curr_sysconf for ub.sysconf.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel B-add b-lookup B-chg ~
 B-del B-factura B-print B-hist B-sch B-Help T-batch B-close B-open B-reject ~
-B-client B-schet B-attr B-exp br-fin-doc ED-notes RS-list sch-prn-doc-code ~
-sch-curr-code B-curr sch-doc-date sch-fact-date sch-pay-date sch-c-schet ~
-RS-receiver-payer sch-r-schet sch-BIK sch-cli-code RS-cli-type sch-name ~
-B-cli mark-num
+B-client B-schet B-attr B-exp b-incas br-fin-doc ED-notes RS-list ~
+sch-prn-doc-code sch-curr-code B-curr sch-doc-date sch-fact-date ~
+sch-pay-date sch-c-schet RS-receiver-payer sch-r-schet sch-BIK sch-cli-code ~
+RS-cli-type sch-name B-cli mark-num 
 &Scoped-Define DISPLAYED-OBJECTS T-batch ED-notes RS-list sch-prn-doc-code ~
 sch-curr-code sch-doc-date sch-fact-date sch-pay-date sch-c-schet ~
 RS-receiver-payer sch-r-schet sch-BIK sch-cli-code RS-cli-type sch-name ~
-mark-num
+mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -291,42 +291,42 @@ mark-num
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-factur Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-factur Dialog-Frame 
 FUNCTION f-factur RETURNS CHARACTER
   ( buffer loc-t-doc for ub.fin-doc )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD factur Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD factur Dialog-Frame 
 FUNCTION factur RETURNS CHARACTER
   ( BUFFER loc-fin-doc FOR ub.fin-doc )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-contract Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-cashbookname Dialog-Frame 
+FUNCTION get-cashbookname RETURNS CHARACTER
+  ( input iCashbookID as int64)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-contract Dialog-Frame 
 FUNCTION get-contract RETURNS CHARACTER
   ( BUFFER loc-fin-doc FOR ub.fin-doc )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-currency Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-currency Dialog-Frame 
 FUNCTION get-currency RETURNS CHARACTER
   ( BUFFER loc-fin-doc FOR ub.fin-doc )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-cashbookname Dialog-Frame
-FUNCTION get-cashbookname RETURNS CHARACTER
-  ( input icashbookid as int64 )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-shift Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-shift Dialog-Frame 
 FUNCTION get-shift RETURNS DATE
   ( BUFFER buf_fin-doc FOR ub.fin-doc, OUTPUT p-shift-name-num AS CHARACTER)  FORWARD.
 
@@ -339,203 +339,207 @@ FUNCTION get-shift RETURNS DATE
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-B-add
+DEFINE MENU MENU-B-add 
        MENU-ITEM income-cash    LABEL "Приход наличные"
-       MENU-ITEM income-cashless LABEL "Приход безнал"
+       MENU-ITEM income-cashless LABEL "Приход безнал" 
        MENU-ITEM income-payoff  LABEL "Приход погашение"
        MENU-ITEM expense-cash   LABEL "Расход наличные"
-       MENU-ITEM expense-cashless LABEL "Расход безнал"
+       MENU-ITEM expense-cashless LABEL "Расход безнал" 
        MENU-ITEM expense-payoff LABEL "Расход погашение"
        RULE
        MENU-ITEM m_copy         LABEL "Копия"         .
 
-DEFINE MENU MENU-B-client
-       MENU-ITEM receiver       LABEL "Получатель"
+DEFINE MENU MENU-B-client 
+       MENU-ITEM receiver       LABEL "Получатель"    
        MENU-ITEM payer          LABEL "Плательщик"    .
 
-DEFINE MENU MENU-B-factura
+DEFINE MENU MENU-B-factura 
        MENU-ITEM m_s-f          LABEL "Просмотр Счетов-фактур"
        RULE
-       MENU-ITEM m_gen-1        LABEL "Генерация"
+       MENU-ITEM m_gen-1        LABEL "Генерация"     
        MENU-ITEM m_gen-2        LABEL "Отказаться от генерации счета-фактуры"
        MENU-ITEM m_gen-3        LABEL "Снять признак - есть генерация счета-фактуры"
        MENU-ITEM m_gen-4        LABEL "Снять 'не опред'".
 
-DEFINE MENU MENU-B-print
+DEFINE MENU MENU-B-print 
        MENU-ITEM m_one          LABEL "Выбранные (форма по умолчанию)"
        MENU-ITEM m_one-graphics LABEL "Выбранные-графика (форма по умолчанию)"
-       MENU-ITEM m_list         LABEL "Список"
+       MENU-ITEM m_list         LABEL "Список"        
        MENU-ITEM m_form         LABEL "Один с выбором формы".
 
-DEFINE MENU MENU-B-schet
-       MENU-ITEM receiver-schet LABEL "Получатель"
+DEFINE MENU MENU-B-schet 
+       MENU-ITEM receiver-schet LABEL "Получатель"    
        MENU-ITEM payer-schet    LABEL "Плательщик"    .
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-add
-     LABEL "&Добавить"
+DEFINE BUTTON B-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-attr
-     LABEL "&Атриб."
+DEFINE BUTTON B-attr 
+     LABEL "&Атриб." 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-chg
-     LABEL "&Изменить"
+DEFINE BUTTON B-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-cli
+DEFINE BUTTON B-cli 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-client
-     LABEL "&Контраг."
+DEFINE BUTTON B-client 
+     LABEL "&Контраг." 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-close
-     LABEL "&Закрыть"
+DEFINE BUTTON B-close 
+     LABEL "&Закрыть" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-curr
+DEFINE BUTTON B-curr 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "Btn 1"
+     LABEL "Btn 1" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-del
-     LABEL "&Удалить"
+DEFINE BUTTON B-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exp
-     LABEL "&Экспорт"
+DEFINE BUTTON B-exp 
+     LABEL "&Экспорт" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-factura
-     LABEL "Счет-факт"
+DEFINE BUTTON B-factura 
+     LABEL "Счет-факт" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-hist
-     LABEL "Ис&тория"
+DEFINE BUTTON B-hist 
+     LABEL "Ис&тория" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-lookup
-     LABEL "&Просмотр"
+DEFINE BUTTON b-lookup 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-mark
-     LABEL "&*"
+DEFINE BUTTON B-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-open
-     LABEL "&Открыть"
+DEFINE BUTTON B-open 
+     LABEL "&Открыть" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-print
-     LABEL "Пе&чать"
+DEFINE BUTTON B-print 
+     LABEL "Пе&чать" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-reject
-     LABEL "&-Отказ"
+DEFINE BUTTON B-reject 
+     LABEL "&-Отказ" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON B-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-schet
-     LABEL "&Счета"
+DEFINE BUTTON B-schet 
+     LABEL "&Счета" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE ED-notes AS CHARACTER
+DEFINE BUTTON b-incas 
+     LABEL "Инкасация" 
+     SIZE 10 BY 1.
+
+DEFINE VARIABLE ED-notes AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 98 BY 2
      BGCOLOR 8 FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 6 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE sch-BIK AS CHARACTER FORMAT "X(9)":U
-     LABEL "БИК"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-BIK AS CHARACTER FORMAT "X(9)":U 
+     LABEL "БИК" 
+     VIEW-AS FILL-IN 
      SIZE 12 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-c-schet AS CHARACTER FORMAT "X(9)":U
-     LABEL "Корр.счет"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-c-schet AS CHARACTER FORMAT "X(9)":U 
+     LABEL "Корр.счет" 
+     VIEW-AS FILL-IN 
      SIZE 22 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-cli-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0
-     LABEL "код"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-cli-code AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0 
+     LABEL "код" 
+     VIEW-AS FILL-IN 
      SIZE 11 BY .92 NO-UNDO.
 
-DEFINE VARIABLE sch-curr-code AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "коду вал"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-curr-code AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "коду вал" 
+     VIEW-AS FILL-IN 
      SIZE 4 BY 1 NO-UNDO.
 
-DEFINE VARIABLE sch-doc-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дате док-та"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-doc-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дате док-та" 
+     VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE sch-fact-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дате факт."
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-fact-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дате факт." 
+     VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE sch-name AS CHARACTER FORMAT "X(35)":U
-     LABEL "нач.назв."
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-name AS CHARACTER FORMAT "X(35)":U 
+     LABEL "нач.назв." 
+     VIEW-AS FILL-IN 
      SIZE 31 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-pay-date AS DATE FORMAT "99/99/9999":U
-     LABEL "Дате плат."
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-pay-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дате плат." 
+     VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE sch-prn-doc-code AS CHARACTER FORMAT "X(16)":U
-     LABEL "номеру"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-prn-doc-code AS CHARACTER FORMAT "X(16)":U 
+     LABEL "номеру" 
+     VIEW-AS FILL-IN 
      SIZE 8 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE sch-r-schet AS CHARACTER FORMAT "X(35)":U
-     LABEL "Расч.счет"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE sch-r-schet AS CHARACTER FORMAT "X(35)":U 
+     LABEL "Расч.счет" 
+     VIEW-AS FILL-IN 
      SIZE 22 BY 1 TOOLTIP "Поиск первой записи - <ВВОД>; поиск следующей - <CTRL-J>" NO-UNDO.
 
-DEFINE VARIABLE RS-cli-type AS CHARACTER
+DEFINE VARIABLE RS-cli-type AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "1",
 "Item 1", "2"
      SIZE 14.13 BY 1.04 NO-UNDO.
 
-DEFINE VARIABLE RS-list AS CHARACTER
+DEFINE VARIABLE RS-list AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "1",
 "Item 2", "2",
 "Item 3", "3",
@@ -543,22 +547,23 @@ DEFINE VARIABLE RS-list AS CHARACTER
      SIZE 72.13 BY .88
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE RS-receiver-payer AS CHARACTER
+DEFINE VARIABLE RS-receiver-payer AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "1",
 "Item 1", "2"
      SIZE 26.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-batch AS LOGICAL INITIAL no
-     LABEL "Пктн.рж"
+DEFINE VARIABLE T-batch AS LOGICAL INITIAL no 
+     LABEL "Пктн.рж" 
      VIEW-AS TOGGLE-BOX
      SIZE 10.5 BY 1 TOOLTIP "Пакетная обработка выбранных платежей" NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE NEW SHARED QUERY br-fin-doc FOR
-      X_fin-doc SCROLLING.
+                X_fin-doc SCROLLING.
+
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
@@ -620,6 +625,7 @@ DEFINE FRAME Dialog-Frame
      B-schet AT ROW 2 COL 51
      B-attr AT ROW 2 COL 61
      B-exp AT ROW 2 COL 71
+     b-incas AT ROW 2 COL 81 WIDGET-ID 2
      br-fin-doc AT ROW 3.04 COL 1.38
      ED-notes AT ROW 15.5 COL 1 NO-LABEL
      RS-list AT ROW 17.58 COL 1.25 NO-LABEL
@@ -641,8 +647,8 @@ DEFINE FRAME Dialog-Frame
      "ПОИСК ПО" VIEW-AS TEXT
           SIZE 8.38 BY 1 AT ROW 17.58 COL 73.88
      SPACE(17.04) SKIP(3.45)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Список платежей"
          CANCEL-BUTTON b-quit.
 
@@ -669,27 +675,27 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB br-fin-doc B-exp Dialog-Frame */
-ASSIGN
+/* BROWSE-TAB br-fin-doc b-incas Dialog-Frame */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
        B-add:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-add:HANDLE.
 
-ASSIGN
+ASSIGN 
        B-client:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-client:HANDLE.
 
-ASSIGN
+ASSIGN 
        B-factura:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-factura:HANDLE.
 
-ASSIGN
+ASSIGN 
        B-print:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-print:HANDLE.
 
-ASSIGN
+ASSIGN 
        B-schet:POPUP-MENU IN FRAME Dialog-Frame       = MENU MENU-B-schet:HANDLE.
 
-ASSIGN
+ASSIGN 
        br-fin-doc:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 1.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -711,7 +717,7 @@ DEFINE NEW SHARED QUERY br-fin-doc FOR
 */  /* BROWSE br-fin-doc */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -1201,6 +1207,37 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-incas
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-incas Dialog-Frame
+ON CHOOSE OF b-incas IN FRAME Dialog-Frame /* Инкасация */
+DO:
+  def var loc#log as logical no-undo.
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_fin-doc_add-def':U
+  {&cntxt-firm}
+  p-curr-host-code
+  '':U
+  0
+  0
+  0
+  0
+  true
+  loc#log
+}
+if not loc#log then return .
+
+  run utl/rkocollection.p(parparentproc,this-procedure,?).
+  RUn OpenBR in this-procedure ( input yes, input no, input '':U).
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME ED-notes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ED-notes Dialog-Frame
 ON LEAVE OF ED-notes IN FRAME Dialog-Frame
@@ -1320,25 +1357,26 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME m_gen-1
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_gen-1 Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_gen-1 /* Генерация */
+&Scoped-define SELF-NAME m_form
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_form Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_form /* Один с выбором формы */
 DO:
-  ASSIGN
-  factura-option = "option1":U.
-  APPLY "CHOOSE" to b-factura in frame {&frame-name}.
+   assign
+  print-option = 'form':U.
+  APPLY "CHOOSE" to b-print  in frame {&frame-name}.
+
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME m_s-f
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_s-f Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_s-f /* Генерация */
+&Scoped-define SELF-NAME m_gen-1
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_gen-1 Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_gen-1 /* Генерация */
 DO:
   ASSIGN
-  factura-option = "option-lkp":U.
+  factura-option = "option1":U.
   APPLY "CHOOSE" to b-factura in frame {&frame-name}.
 END.
 
@@ -1401,7 +1439,7 @@ END.
 
 &Scoped-define SELF-NAME m_one
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_one Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_one /* Один */
+ON CHOOSE OF MENU-ITEM m_one /* Выбранные (форма по умолчанию) */
 DO:
    assign
   print-option = 'ONE':U.
@@ -1415,7 +1453,7 @@ END.
 
 &Scoped-define SELF-NAME m_one-graphics
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_one-graphics Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_one-graphics /* Один-графика */
+ON CHOOSE OF MENU-ITEM m_one-graphics /* Выбранные-графика (форма по умолчанию) */
 DO:
    assign
   print-option = 'ONE-GRAPHICS':U.
@@ -1427,14 +1465,13 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME m_form
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_form Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_form /* Формы */
+&Scoped-define SELF-NAME m_s-f
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_s-f Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_s-f /* Просмотр Счетов-фактур */
 DO:
-   assign
-  print-option = 'form':U.
-  APPLY "CHOOSE" to b-print  in frame {&frame-name}.
-
+  ASSIGN
+  factura-option = "option-lkp":U.
+  APPLY "CHOOSE" to b-factura in frame {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1900,7 +1937,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1995,7 +2032,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -2014,19 +2051,19 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY T-batch ED-notes RS-list sch-prn-doc-code sch-curr-code sch-doc-date
-          sch-fact-date sch-pay-date sch-c-schet RS-receiver-payer sch-r-schet
-          sch-BIK sch-cli-code RS-cli-type sch-name mark-num
+  DISPLAY T-batch ED-notes RS-list sch-prn-doc-code sch-curr-code sch-doc-date 
+          sch-fact-date sch-pay-date sch-c-schet RS-receiver-payer sch-r-schet 
+          sch-BIK sch-cli-code RS-cli-type sch-name mark-num 
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-mark b-sel B-add b-lookup B-chg B-del B-factura B-print
-         B-hist B-sch B-Help T-batch B-close B-open B-reject B-client B-schet
-         B-attr B-exp br-fin-doc ED-notes RS-list sch-prn-doc-code
-         sch-curr-code B-curr sch-doc-date sch-fact-date sch-pay-date
-         sch-c-schet RS-receiver-payer sch-r-schet sch-BIK sch-cli-code
-         RS-cli-type sch-name B-cli mark-num
+  ENABLE b-quit B-mark b-sel B-add b-lookup B-chg B-del B-factura B-print 
+         B-hist B-sch B-Help T-batch B-close B-open B-reject B-client B-schet 
+         B-attr B-exp b-incas br-fin-doc ED-notes RS-list sch-prn-doc-code 
+         sch-curr-code B-curr sch-doc-date sch-fact-date sch-pay-date 
+         sch-c-schet RS-receiver-payer sch-r-schet sch-BIK sch-cli-code 
+         RS-cli-type sch-name B-cli mark-num 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -2035,7 +2072,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MainProc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MainProc Dialog-Frame 
 PROCEDURE MainProc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -2470,7 +2507,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 define variable is-finvalue as character no-undo .
 define variable is-fintype as character no-undo .
@@ -2655,7 +2692,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -2973,7 +3010,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame 
 PROCEDURE proc-b-add :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3352,7 +3389,7 @@ CASE p-option:
                         ,input 0 /*p-fin-doc-code*/
                         ,input v-obj-type
                         ,input v-obj-code
-						,input "":U /*p-fin-ext-doc-type*/
+                                                ,input "":U /*p-fin-ext-doc-type*/
                         ,input v-contract-code
                         ,input '':U /*p-ob-doc-code*/
                         ,input v-receiver-type
@@ -3435,7 +3472,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-chg-lookup Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-chg-lookup Dialog-Frame 
 PROCEDURE proc-b-chg-lookup :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3669,7 +3706,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-del Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-del Dialog-Frame 
 PROCEDURE proc-b-del :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3838,7 +3875,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-exp Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-exp Dialog-Frame 
 PROCEDURE proc-b-exp :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3956,7 +3993,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame 
 PROCEDURE proc-b-print :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3992,7 +4029,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch Dialog-Frame 
 PROCEDURE proc-b-sch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4152,7 +4189,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-fin-doc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-br-fin-doc Dialog-Frame 
 PROCEDURE proc-br-fin-doc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4165,7 +4202,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-buttons Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-buttons Dialog-Frame 
 PROCEDURE proc-buttons :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4221,6 +4258,7 @@ CASE p-is-batch:
         with frame {&frame-name}.
         disable
         b-add
+        b-incas
         b-chg with frame {&frame-name}.
       assign
       menu-item m_one:sensitive in menu menu-b-print = (is-type-mode = yes).
@@ -4230,7 +4268,14 @@ CASE p-is-batch:
     when no then do:
         ENABLE
         B-mark when lookup("b-mark":U, bttns) > 0
-        B-add when (p-curr-host-code = p-host-code
+        B-add  when (p-curr-host-code = p-host-code
+                    AND available X_sysconf
+                    AND (X_sysconf.firm-db-num = v-db-num or v-cntxt-db-num = v-obj-db-num)
+                    AND not p-is-batch
+                    AND not(is-stat-mode = yes and p-status_ <> {&fin-new})
+                    AND not transaction
+                    )
+        b-incas when (p-curr-host-code = p-host-code
                     AND available X_sysconf
                     AND (X_sysconf.firm-db-num = v-db-num or v-cntxt-db-num = v-obj-db-num)
                     AND not p-is-batch
@@ -4259,7 +4304,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-close-open Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-close-open Dialog-Frame 
 PROCEDURE proc-close-open :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4958,7 +5003,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-factura Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-factura Dialog-Frame 
 PROCEDURE proc-factura :
 do on error undo, return error return-value :
 define buffer bf_fin-doc  for ub.fin-doc .
@@ -5141,7 +5186,7 @@ end procedure. /* proc-factura */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-bik Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-bik Dialog-Frame 
 PROCEDURE proc-find-bik :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5198,7 +5243,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-c-schet Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-c-schet Dialog-Frame 
 PROCEDURE proc-find-c-schet :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5256,7 +5301,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-cli-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-cli-code Dialog-Frame 
 PROCEDURE proc-find-cli-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5314,7 +5359,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-curr-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-curr-code Dialog-Frame 
 PROCEDURE proc-find-curr-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5357,7 +5402,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-date Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-date Dialog-Frame 
 PROCEDURE proc-find-date :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5451,7 +5496,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-name Dialog-Frame 
 PROCEDURE proc-find-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5507,7 +5552,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-prn-doc-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-prn-doc-code Dialog-Frame 
 PROCEDURE proc-find-prn-doc-code :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5552,7 +5597,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-r-schet Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find-r-schet Dialog-Frame 
 PROCEDURE proc-find-r-schet :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5609,7 +5654,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-print-list Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-print-list Dialog-Frame 
 PROCEDURE proc-print-list :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5743,7 +5788,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-print-one Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-print-one Dialog-Frame 
 PROCEDURE proc-print-one :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5830,7 +5875,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-print-one-graphics Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-print-one-graphics Dialog-Frame 
 PROCEDURE proc-print-one-graphics :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -5981,7 +6026,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION f-factur Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION f-factur Dialog-Frame 
 FUNCTION f-factur RETURNS CHARACTER
   ( buffer loc-t-doc for ub.fin-doc ) :
  if loc-t-doc.cr-factur = yes then do:
@@ -5997,7 +6042,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION factur Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION factur Dialog-Frame 
 FUNCTION factur RETURNS CHARACTER
   ( BUFFER loc-fin-doc FOR ub.fin-doc ) :
 /*------------------------------------------------------------------------------
@@ -6019,27 +6064,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-contract Dialog-Frame
-FUNCTION get-contract RETURNS CHARACTER
-  ( BUFFER loc-fin-doc FOR ub.fin-doc ) :
-/*------------------------------------------------------------------------------
-  Purpose:
-    Notes:
-------------------------------------------------------------------------------*/
-define buffer buf_contract for ub.contract.
-  find first buf_contract no-lock where
-                buf_contract.host-code = loc-fin-doc.host-code
-            AND buf_contract.contract-code = loc-fin-doc.contract-code no-error.
-    if available buf_contract then return buf_contract.contract-prn-code.
-
-  RETURN "".   /* Function return value. */
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-cashbookname Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-cashbookname Dialog-Frame 
 FUNCTION get-cashbookname RETURNS CHARACTER
   ( input iCashbookID as int64) :
 /*------------------------------------------------------------------------------
@@ -6059,7 +6084,27 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-currency Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-contract Dialog-Frame 
+FUNCTION get-contract RETURNS CHARACTER
+  ( BUFFER loc-fin-doc FOR ub.fin-doc ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+    Notes:
+------------------------------------------------------------------------------*/
+define buffer buf_contract for ub.contract.
+  find first buf_contract no-lock where
+                buf_contract.host-code = loc-fin-doc.host-code
+            AND buf_contract.contract-code = loc-fin-doc.contract-code no-error.
+    if available buf_contract then return buf_contract.contract-prn-code.
+
+  RETURN "".   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-currency Dialog-Frame 
 FUNCTION get-currency RETURNS CHARACTER
   ( BUFFER loc-fin-doc FOR ub.fin-doc ) :
 /*------------------------------------------------------------------------------
@@ -6080,7 +6125,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-shift Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-shift Dialog-Frame 
 FUNCTION get-shift RETURNS DATE
   ( BUFFER buf_fin-doc FOR ub.fin-doc, OUTPUT p-shift-name-num AS CHARACTER) :
 define variable v-fin-doc-shift-name-num as character no-undo.
@@ -6107,3 +6152,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

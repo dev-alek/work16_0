@@ -121,7 +121,30 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop other-fd-attr-obj-inkas '':u
 &scop news-fd-attr-obj-inkas no
 
+&scop bef-fd-attr-pre-vedom pre-vedom
+&glob fd-attr-pre-vedom '{&bef-fd-attr-pre-vedom}':U
+&scop type-fd-attr-pre-vedom {&type-char}
+&scop format-fd-attr-pre-vedom "X(256)"
+&scop label-fd-attr-pre-vedom "Атрибут для препроводительной ведомости"
+&scop tooltip-fd-attr-pre-vedom "Атрибут для препроводительной ведомости"
+&scop user-can-edit-fd-attr-pre-vedom false
+&scop output-display-fd-attr-pre-vedom false
+&scop other-fd-attr-pre-vedom '':u
+&scop news-fd-attr-pre-vedom no
+
+&scop bef-fd-attr-cover_sheet cover_sheet
+&glob fd-attr-cover_sheet '{&bef-fd-attr-cover_sheet}':U
+&scop type-fd-attr-cover_sheet {&type-char}
+&scop format-fd-attr-cover_sheet "X(4000)"
+&scop label-fd-attr-cover_sheet "Разбиение по номиналам"
+&scop tooltip-fd-attr-cover_sheet "Разбиение по номиналам"
+&scop user-can-edit-fd-attr-cover_sheet false
+&scop output-display-fd-attr-cover_sheet true
+&scop other-fd-attr-cover_sheet '':u
+&scop news-fd-attr-cover_sheet no
+
 &glob fd-attr-list '{&bef-fd-attr-shift-date},{&bef-fd-attr-shift-num},{&bef-fd-attr-shift-name},~
+{&bef-fd-attr-pre-vedom},{&bef-fd-attr-cover_sheet},~
 {&bef-fd-attr-barcode},{&bef-fd-attr-lockid},{&bef-fd-attr-bank-recipient},{&bef-fd-attr-bank-deposit},{&bef-fd-attr-obj-inkas}':u
 
 
@@ -179,8 +202,10 @@ procedure fd-attr-code :
       {&attr-temp-full-code}
       &scop attr-code fd-attr-lockid
       {&attr-temp-full-code}
-
-
+      &scop attr-code fd-attr-cover_sheet
+      {&attr-temp-full-code}
+      &scop attr-code fd-attr-pre-vedom
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -211,6 +236,11 @@ procedure fd-attr-tooltip :
       {&attr-temp-code}
       &scop attr-code fd-attr-lockid
       {&attr-temp-code}
+      &scop attr-code fd-attr-cover_sheet
+      {&attr-temp-code}
+      &scop attr-code fd-attr-pre-vedom
+      {&attr-temp-code}
+
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -449,6 +479,10 @@ procedure fd-attr-news :
       &scop attr-code fd-attr-barcode
       {&attr-news-code}
       &scop attr-code fd-attr-lockid
+      {&attr-news-code}
+      &scop attr-code fd-attr-cover_sheet
+      {&attr-news-code}
+      &scop attr-code fd-attr-pre-vedom
       {&attr-news-code}
       
       /* сюда добавлять новые параметры */

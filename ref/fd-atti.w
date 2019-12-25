@@ -168,10 +168,10 @@ DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
   QUERY BROWSE-2 DISPLAY
       Temp-hattr.attr-code COLUMN-LABEL "Атрибут" FORMAT "X(50)":U
-      Temp-hattr.attr-value COLUMN-LABEL "Значение" FORMAT "X(50)":U
+      Temp-hattr.attr-value COLUMN-LABEL "Значение" FORMAT "X(600)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 91 BY 15.33.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 100 BY 15.33.
 
 
 /* ************************  Frame Definitions  *********************** */

@@ -41,6 +41,7 @@ class ibs.th.ref.cashbookobj inherits Form :
   define private variable label11 as System.Windows.Forms.Label no-undo.
   define private variable label12 as System.Windows.Forms.Label no-undo.
   define private variable label13 as System.Windows.Forms.Label no-undo.
+   define private variable label14 as System.Windows.Forms.Label no-undo.
   define private variable label2 as System.Windows.Forms.Label no-undo.
   define private variable label3 as System.Windows.Forms.Label no-undo.
   define private variable label7 as System.Windows.Forms.Label no-undo.
@@ -52,6 +53,7 @@ class ibs.th.ref.cashbookobj inherits Form :
   
   define         variable mCashBook as class ibs.th.ref.cashbookstorage no-undo .
   
+   define private variable textBox1 as System.Windows.Forms.TextBox no-undo.
   define variable v-cashbookID as int64 no-undo .
   define variable v-obj-code  as integer no-undo .
   define variable v-obj-type  as character no-undo .
@@ -268,8 +270,8 @@ class ibs.th.ref.cashbookobj inherits Form :
       
       this-object:components = new System.ComponentModel.Container().
       @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable tableDesc3 as Progress.Data.TableDesc no-undo.
-      tableDesc3 = new Progress.Data.TableDesc("tt-cashbook-rule").
+      define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+      tableDesc1 = new Progress.Data.TableDesc("tt-cashbook-rule").
       this-object:buttonOk = new System.Windows.Forms.Button().
       this-object:buttonCancel = new System.Windows.Forms.Button().
       this-object:fObjCode = new System.Windows.Forms.TextBox().
@@ -300,6 +302,8 @@ class ibs.th.ref.cashbookobj inherits Form :
       this-object:fDptType = new System.Windows.Forms.TextBox().
       this-object:label13 = new System.Windows.Forms.Label().
       this-object:fDptCode = new System.Windows.Forms.TextBox().
+      this-object:textBox1 = new System.Windows.Forms.TextBox().
+      this-object:label14 = new System.Windows.Forms.Label().
       cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:SuspendLayout().
       /*  */
@@ -315,9 +319,6 @@ class ibs.th.ref.cashbookobj inherits Form :
       /*  */
       /* buttonCancel */
       /*  */
-      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar0 = System.Windows.Forms.AnchorStyles:Bottom.
-      this-object:buttonCancel:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
       this-object:buttonCancel:DialogResult = System.Windows.Forms.DialogResult:Cancel.
       this-object:buttonCancel:Location = new System.Drawing.Point(93, 12).
       this-object:buttonCancel:Name = "buttonCancel".
@@ -343,9 +344,9 @@ class ibs.th.ref.cashbookobj inherits Form :
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
       arrayvar0 = new "Progress.Data.TableDesc[]"(0).
-      tableDesc3:ChildTables = arrayvar0.
+      tableDesc1:ChildTables = arrayvar0.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 17 no-undo.
+      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 18 no-undo.
       arrayvar1[1] = new Progress.Data.ColumnPropDesc("mark", "*", Progress.Data.DataType:CHARACTER).
       arrayvar1[2] = new Progress.Data.ColumnPropDesc("id", "id", Progress.Data.DataType:INT64).
       arrayvar1[3] = new Progress.Data.ColumnPropDesc("cashbookId", "cashbookId", Progress.Data.DataType:INT64).
@@ -363,8 +364,9 @@ class ibs.th.ref.cashbookobj inherits Form :
       arrayvar1[15] = new Progress.Data.ColumnPropDesc("DptName", "DptName", Progress.Data.DataType:CHARACTER).
       arrayvar1[16] = new Progress.Data.ColumnPropDesc("DptType", "DptType", Progress.Data.DataType:CHARACTER).
       arrayvar1[17] = new Progress.Data.ColumnPropDesc("DptCode", "DptCode", Progress.Data.DataType:INTEGER).
-      tableDesc3:Columns = arrayvar1.
-      this-object:bindingSource1:TableSchema = tableDesc3.
+      arrayvar1[18] = new Progress.Data.ColumnPropDesc("Pin", "œ»Õ", Progress.Data.DataType:CHARACTER).
+      tableDesc1:Columns = arrayvar1.
+      this-object:bindingSource1:TableSchema = tableDesc1.
       /*  */
       /* label2 */
       /*  */
@@ -632,11 +634,30 @@ class ibs.th.ref.cashbookobj inherits Form :
       this-object:fDptCode:TabIndex = 52.
       this-object:fDptCode:Visible = false.
       /*  */
+      /* textBox1 */
+      /*  */
+      this-object:textBox1:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "Pin", true)).
+      this-object:textBox1:Location = new System.Drawing.Point(179, 300).
+      this-object:textBox1:Name = "textBox1".
+      this-object:textBox1:Size = new System.Drawing.Size(231, 20).
+      this-object:textBox1:TabIndex = 53.
+      /*  */
+      /* label14 */
+      /*  */
+      this-object:label14:Location = new System.Drawing.Point(12, 297).
+      this-object:label14:Name = "label14".
+      this-object:label14:Size = new System.Drawing.Size(100, 23).
+      this-object:label14:TabIndex = 54.
+      this-object:label14:Text = "œ»Õ:".
+      this-object:label14:UseCompatibleTextRendering = true.
+      /*  */
       /* cashbookobj */
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:CancelButton = this-object:buttonCancel.
-      this-object:ClientSize = new System.Drawing.Size(420, 299).
+      this-object:ClientSize = new System.Drawing.Size(422, 343).
+      this-object:Controls:Add(this-object:label14).
+      this-object:Controls:Add(this-object:textBox1).
       this-object:Controls:Add(this-object:fDptCode).
       this-object:Controls:Add(this-object:label13).
       this-object:Controls:Add(this-object:fDptType).

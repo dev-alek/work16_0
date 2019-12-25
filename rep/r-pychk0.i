@@ -135,8 +135,8 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           assign
           temp-ptrl-goods.gds-code = buf_bar-code.gds-code
           temp-ptrl-goods.b-code = buf_bar-code.b-code
-          temp-ptrl-goods.ptrl-good = (not logical(pychk_value))
-          .
+          temp-ptrl-goods.ptrl-good = (not logical(pychk_value)) /*здесь возникает ошибка так как на товаре нет атрибута {&attr-ptrl-as-good}*/
+          no-error.
         end.
         pychk_line-type = if temp-ptrl-goods.ptrl-good then 1 else 0 .
         release temp-ptrl-goods.

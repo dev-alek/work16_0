@@ -352,7 +352,16 @@ class ibs.th.ref.cashbookstorage final:
         ub.cashbookrule.Code        = 12 /* Код структурного подразделения по умлочанию */
         ub.cashbookrule.RuleValue   = string(tt-cashbookrule.DptCode)
       .
-      
+      create ub.cashbookrule .
+      assign
+        ub.cashbookrule.CashBookID  = tt-cashbookrule.CashBookID
+        ub.cashbookrule.Obj-code    = tt-cashbookrule.Obj-code
+        ub.cashbookrule.Obj-type    = tt-cashbookrule.obj-type
+        ub.cashbookrule.host-code   = tt-cashbookrule.host-code 
+        ub.cashbookrule.Status_     = 0
+        ub.cashbookrule.Code        = 13 /* ПИН */
+        ub.cashbookrule.RuleValue   = string(tt-cashbookrule.Pin)
+      .
     end.  
   end method .
   
@@ -413,6 +422,8 @@ class ibs.th.ref.cashbookstorage final:
                                   then tt-cashbookrule.DptType
                                   else if icode eq 12 
                                   then string (tt-cashbookrule.DptCode)
+                                  else if icode eq 13 
+                                  then string (tt-cashbookrule.Pin)
                                   else ""
                                   
                                   .
@@ -453,6 +464,7 @@ class ibs.th.ref.cashbookstorage final:
       CrRuleDBobj(buffer tt-cashbookrule,10).
       CrRuleDBobj(buffer tt-cashbookrule,11).
       CrRuleDBobj(buffer tt-cashbookrule,12).
+      CrRuleDBobj(buffer tt-cashbookrule,13).
             
     end.                                        
   end method .
@@ -869,6 +881,10 @@ class ibs.th.ref.cashbookstorage final:
       when 12 /*Код структурного подразделения по умолчанию*/
       then do :
         tt-cashbookrule.DptCode = integer(buf_cashbookrule.RuleValue) no-error .
+      end.
+      when 13 /*Код структурного подразделения по умолчанию*/
+      then do :
+        tt-cashbookrule.Pin = buf_cashbookrule.RuleValue .
       end.
     end case.
   end method.
