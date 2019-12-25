@@ -1,0 +1,10 @@
+define temp-table ttRun no-undo
+   field proc as character
+   field num as integer
+   field item as integer
+   field olditem as integer
+   field fmaxitem as integer 
+   field fpid as integer 
+   field fmax as integer
+   field favail as logical 
+index proc proc num.
