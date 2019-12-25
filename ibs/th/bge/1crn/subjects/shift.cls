@@ -98,7 +98,7 @@ class ibs.th.bge.1crn.subjects.shift implements iexpsubject:
         if buf_shift-staff.psn-code > 0 then
         insw:write-data-element (  "cashier-code",  string(buf_shift-staff.psn-code)                 ) . /* Код кассира (Строка) - 16/XI-2017: выгружать код физ.лица */
         else
-        insw:write-empty-element ( "cashier-code") .
+        insw:write-data-element (  "cashier-code",  "0"                 ) . /* Код кассира (Строка) - 16/XI-2017: выгружать код физ.лица */
         
         insw:write-data-element (  "main-cashier",  if buf_shift-staff.staff-role then "1" else "0"  ) . /* Признак старшего смены (Число (1,0)) */
         insw:end-element ({&tag-item1}) .
