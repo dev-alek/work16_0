@@ -132,7 +132,7 @@ class ibs.th.ref.counter.counterstorage final:
       define variable vNumPar    as integer   no-undo.
       define variable vInt       as integer   no-undo.
       define variable vNextCount as integer   no-undo.
-      find first counter where counter.db        = idb
+      find first counter where counter.db        eq idb
                            and counter.file-name eq iFileName
                            and counter.key       eq iKey
                            and counter.code      eq iCode
@@ -153,7 +153,9 @@ class ibs.th.ref.counter.counterstorage final:
                   vNextCount = 1.
                else
                   vNextCount = counter.CountValue + 1.  
-            end.  
+            end.
+            else
+               vNextCount = counter.CountValue + 1.  
          end.
          else
             vNextCount = counter.CountValue + 1.
@@ -217,7 +219,8 @@ class ibs.th.ref.counter.counterstorage final:
             assign
                counter.Rule = "year". 
       end.
-         
-      counter.CountValue = iValue.
+      assign   
+      counter.CountValue = iValue
+      counter.sysInfo    = substitute("year,&1",string(year(today))).
    end.
 end class.
