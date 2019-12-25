@@ -111,6 +111,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop tag-value buf_fin-doc.fin-doc-code
 {&tag-put}
 
+&scop tag-name  cashbookid
+&scop tag-value buf_fin-doc.cashbookid
+{&tag-put}
+  
 &scop tag-name paymentCodeOperation
 &scop tag-value buf_fin-doc.fin-ext-doc-type
 {&tag-put}
@@ -773,6 +777,10 @@ on error undo, return error
   &scop tag-value buf_fin-doc.fin-doc-code
   {&tag-put}
 
+  &scop tag-name  cashbookid
+  &scop tag-value buf_fin-doc.cashbookid
+  {&tag-put}
+  
   &scop tag-name  taxLineNum
   &scop tag-value buf_fin-doc-tax.line-num
   {&tag-put}
