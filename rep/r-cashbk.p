@@ -1075,7 +1075,7 @@ procedure report-exec :
     .
   empty temp-table temp-fin-sum .
   empty temp-table temp-fin-doc .
- 
+
   for each buf_obj-list no-lock :
     { gbl/hostcode.i buf_obj-list.obj-type buf_obj-list.obj-code v-host-code }
     assign
@@ -1183,7 +1183,7 @@ procedure report-exec :
             temp-fin-doc.receiver     = buf_fin-doc.receiver-name
             temp-fin-doc.cor-acc      = buf_fin-doc.cor-acc-value
             temp-fin-doc.fin-doc-type = buf_fin-doc.fin-doc-type
-            temp-fin-doc.sum-rubl     = buf_fin-doc.sum-rubl
+            temp-fin-doc.sum-rubl     = buf_fin-doc.sum-doc
               
             .
           if temp-fin-doc.fin-doc-type = {&income-cash} then temp-fin-doc.sum-income = temp-fin-doc.sum-income + temp-fin-doc.sum-rubl .
@@ -1216,7 +1216,8 @@ procedure report-exec :
     end.
   end. /*buf_list-object*/
   
-
+  release buf_fin-doc .
+  
 end procedure . /*report-exec*/
 
 PROCEDURE get-report-num :
