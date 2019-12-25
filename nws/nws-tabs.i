@@ -788,6 +788,9 @@ abc-analysis~
 ,OperServAttr~
 ,c-counter~
 ,counter~
+,c-cashbook-head
+,c-goods-attr-any
+,c-promo-head
 ':U .
 
 

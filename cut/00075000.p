@@ -200,7 +200,7 @@ on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:ge
     on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2))
     :
       { utl/00000002.i CashBookRuleAttr
-        " where old-CashBookRuleAttr.id = old-CashBookRule.id "
+        " where old-CashBookRuleAttr.cashbookid = old-CashBookRule.cashbookid and old-CashBookRuleAttr.obj-type = old-CashBookRule.obj-type and old-CashBookRuleAttr.obj-code = old-CashBookRule.obj-code  and old-CashBookRuleAttr.code = old-CashBookRule.code"
       }
     end .
   end .

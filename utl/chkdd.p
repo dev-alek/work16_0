@@ -370,14 +370,14 @@ on error undo, return error return-value
 ord-rcv-line-attr,user-window-attr,esys-all-attr,trn-rsn-attr,bar-code-obj-attr,parts-obj-attr".
     define variable v-no-primary-table as character no-undo initial
     "c-pl-gds-obj,c-gds-hist,c-cli-hist,c-dc-hist,c-tax-hist,c-gds-grp-hist,c-wth-hist,c-fbr-gds-grp-hist,c-plc-hist,~
-c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-log,c-gds-obj-ref":U.
+c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-log,c-gds-obj-ref,c-cashbook-head,c-goods-attr-any,c-promo-head":U.
     define variable v-no-check-corr-user-name as character no-undo .
     define variable v-no-check-corr-user-db-num as character no-undo .
     define variable v-cmp as character no-undo .
     define variable v-found-corr-user-name as logical no-undo .
     define variable v-found-corr-user-db-num as logical no-undo .
     define variable v-found-subject as logical no-undo .
-    define variable v-no-check-subject as character no-undo initial "c-pl-gds-obj,c-user-log,c-gds-obj-ref".
+    define variable v-no-check-subject as character no-undo initial "c-pl-gds-obj,c-user-log,c-gds-obj-ref,c-goods-attr-any".
     v-no-check-corr-user-name =
     "c-chk-gds,c-chk-doc-attr,c-chk-pay,c-chk-discnt,c-fin-doc-tax,c-fin-statement-line," +
     "c-inkas-pay,c-inkas-pay-desk,c-inkas-pay-wth,c-wth-dtl,c-wth-line,c-rvs-line,c-rvs-line-pump".

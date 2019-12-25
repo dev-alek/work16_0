@@ -41,7 +41,7 @@ define variable vss-description as character no-undo init "Перевод статусов для 
 { ref/fd-attr.i }
 { gbl/thbj-def.i }
 { gbl/thbjattr.i }
-
+{ gbl/key-rec.i }
 define variable v-date as date no-undo .
 define variable v-time as integer no-undo .
 define variable v-fact-order as decimal no-undo .
@@ -72,7 +72,7 @@ define variable current-ruleID as character no-undo .
 define variable v-current-num as integer no-undo .
 define variable v-prev-prn-doc-code as character no-undo .
 define variable v-matches as character no-undo .
-
+define variable v-key     as character no-undo.
 define buffer buf_fin-doc for ub.fin-doc.
 define buffer buf_fin-statement-line for ub.fin-statement-line.
 define buffer locked_fin-statement-line for ub.fin-statement-line.
@@ -891,7 +891,6 @@ then do:
       then do :
         create ub.CashBookRule .
         assign
-          ub.CashBookRule.id = next-value(s-cashbookrule-id)
           ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
           ub.CashBookRule.Obj-type = buf_fin-doc.obj-type    
           ub.CashBookRule.Obj-code = buf_fin-doc.obj-code    
@@ -899,16 +898,17 @@ then do:
           ub.CashBookRule.Status_ = 0
           ub.CashBookRule.RuleValue = "1"                       
         .
-      end.                                    
+      end.  
+      run gen-key-rec in this-procedure ( input {&table_CashBookRule}
+                                         ,input (buffer CashBookRule:handle)
+                                         ,output v-key).                                     
+                                        
       assign
         current-pko-rko = "currPKO" 
-        current-ruleID = string(ub.CashBookRule.id)
+        current-ruleID = v-key
       .
       run utl/maskproc.p(parparentproc, mask-pko, "cashbook", buf_fin-doc.CashBookId, output mValue).
-      integer(ub.CashBookRule.RuleValue) no-error.
-      if error-status:error
-      then.
-      else ub.CashBookRule.RuleValue = string(integer(ub.CashBookRule.RuleValue) + 1) .
+      
     end.
     when {&FDEDT_expense_cash} then do:
       find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
@@ -920,7 +920,6 @@ then do:
       then do :
         create ub.CashBookRule .
         assign
-          ub.CashBookRule.id = next-value(s-cashbookrule-id)
           ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
           ub.CashBookRule.Obj-type = buf_fin-doc.obj-type    
           ub.CashBookRule.Obj-code = buf_fin-doc.obj-code    
@@ -928,16 +927,17 @@ then do:
           ub.CashBookRule.Status_ = 0 
           ub.CashBookRule.RuleValue = "1"                         
         .
-      end.                                     
+      end.
+      
+      run gen-key-rec in this-procedure ( input {&table_CashBookRule}
+                                         ,input (buffer CashBookRule:handle)
+                                         ,output v-key).                                     
       assign
         current-pko-rko = "currRKO" 
-        current-ruleID = string(ub.CashBookRule.id)
+        current-ruleID = v-key
       .
       run utl/maskproc.p(parparentproc, mask-rko, "cashbook", buf_fin-doc.CashBookId, output mValue).
-      integer(ub.CashBookRule.RuleValue) no-error.
-      if error-status:error
-      then.
-      else ub.CashBookRule.RuleValue = string(integer(ub.CashBookRule.RuleValue) + 1) .
+      
     end.
   end case.
   

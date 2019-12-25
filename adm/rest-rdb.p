@@ -5828,14 +5828,20 @@ define input  parameter p-obj-code as integer   no-undo .
       :
         create dst.CashBookRule.
         buffer-copy ub.CashBookRule to dst.CashBookRule .
-        for each ub.CashBookRuleAttr no-lock
-           where ub.CashBookRuleAttr.id = ub.CashBookRule.id
-        :
+        
+      end.
+      
+      for each ub.CashBookRuleAttr no-lock
+              where ub.CashBookRuleAttr.obj-type    = ub.CashBookRule.obj-type
+                and ub.CashBookRuleAttr.obj-code    = ub.CashBookRule.obj-code
+      on error  undo, return error substitute( "&1 (CashBookRuleAttr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1 (CashBookRuleAttr). stop", vss-workfile )
+      on endkey undo, return error substitute( "&1 (CashBookRuleAttr). endkey", vss-workfile )
+      :
           create dst.CashBookRuleAttr.
           buffer-copy ub.CashBookRuleAttr to dst.CashBookRuleAttr .
-        end.
       end.
-
+      
       for each ub.OperServ no-lock
       on error  undo, return error substitute( "&1 (OperServ). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
       on stop   undo, return error substitute( "&1 (OperServ). stop", vss-workfile )

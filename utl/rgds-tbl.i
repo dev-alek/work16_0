@@ -229,6 +229,9 @@ abc-analysis-gds-obj~
 ,PromoGoods~
 ,c-PromoGift~
 ,c-PromoGoods~
+,OperServ~
+,c-OperServ~
+,c-goods-attr-any~
 ":U
 
 procedure valid-ren-gdsc-tbl-list :

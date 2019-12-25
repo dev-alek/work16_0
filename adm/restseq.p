@@ -4541,7 +4541,7 @@ procedure restore-s-casm :
     &scoped-define seq-field-name  sea-code
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
-
+    &undefine not-include-in-seq-records
 
     {&update-sequence}
   end.
@@ -5146,26 +5146,6 @@ procedure restore-{&sequence-name} :
   end.
 end procedure. /* restore-s-cashbook-id */
 
-
-&scoped-define sequence-name s-cashbookrule-id
-procedure restore-{&sequence-name} :
-  define input parameter p-curr-db-num as integer no-undo.
-
-  do
-  on error undo, return error
-  :
-    {&init-validation}
-
-    &scoped-define seq-field-name  id
-    
-    &scoped-define table-name      cashbookrule
-    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
-    {&validate-sequence}
-
-    {&update-sequence}
-  end.
-end procedure. /* restore-s-c-cashbook-id */
-
 &scoped-define sequence-name s-c-operserv-chip-num
 procedure restore-{&sequence-name} :
   define input parameter p-curr-db-num as integer no-undo.
@@ -5182,6 +5162,27 @@ procedure restore-{&sequence-name} :
     {&validate-sequence}
 
     &scoped-define table-name      c-operservattr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-c-operserv-chip-num */
+
+
+
+&scoped-define sequence-name s-c-counter-chip-num
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-counter
     &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
     {&validate-sequence}
 
@@ -5206,42 +5207,4 @@ procedure restore-{&sequence-name} :
 
     {&update-sequence}
   end.
-end procedure. /* restore-s-c-operserv-id */
-
-&scoped-define sequence-name s-counter-id
-procedure restore-{&sequence-name} :
-  define input parameter p-curr-db-num as integer no-undo.
-
-  do
-  on error undo, return error
-  :
-    {&init-validation}
-
-    &scoped-define seq-field-name  id
-    
-    &scoped-define table-name      counter
-    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
-    {&validate-sequence}
-
-    {&update-sequence}
-  end.
-end procedure. /* restore-s-c-operserv-id */
-
-&scoped-define sequence-name s-c-counter-chip-num
-procedure restore-{&sequence-name} :
-  define input parameter p-curr-db-num as integer no-undo.
-
-  do
-  on error undo, return error
-  :
-    {&init-validation}
-
-    &scoped-define seq-field-name  chip-num
-    
-    &scoped-define table-name      c-counter
-    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
-    {&validate-sequence}
-
-    {&update-sequence}
-  end.
-end procedure. /* restore-s-c-operserv-id */
+end procedure. /* restore-s-operserv-id */

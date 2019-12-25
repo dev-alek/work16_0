@@ -33,7 +33,9 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
   &del  = yes
 }
 
-for each cashbookruleattr where CashBookruleAttr.id eq {&main-tbl}.id
+for each cashbookruleattr where CashBookruleAttr.cashbookid  eq {&main-tbl}.cashbookid
+                            and CashBookruleAttr.obj-type    eq {&main-tbl}.obj-type
+                            and CashBookruleAttr.obj-code    eq {&main-tbl}.obj-code
 exclusive-lock:
    delete cashbookruleattr.
 end.

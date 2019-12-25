@@ -82,9 +82,11 @@ class ibs.th.ref.cashbookobj inherits Form :
       do:
         create tt-CashBookrule .
         assign
-          tt-cashbookrule.id = ?
           tt-cashbookrule.host-code = ?
           tt-cashbookrule.cashbookID = v-cashbookID
+          tt-cashbookrule.obj-type   =  p-obj-type
+          tt-cashbookrule.obj-code   =  p-obj-code
+          
         .
       end.
       when {&update}
@@ -240,13 +242,7 @@ class ibs.th.ref.cashbookobj inherits Form :
   method private void okButton_Click (sender as System.Object, e as System.EventArgs):
       bindingSource1:Assign().
       tt-cashbookrule.obj = tt-cashbookrule.obj-type + string(tt-cashbookrule.obj-code) .
-      if tt-cashbookrule.id = ?
-      then do :
-        mCashBook:insertDBobj(input dataset ds-cashbookrule) .
-      end.
-      else do :
-        mCashBook:updateDBobj(input dataset ds-cashbookrule) .
-      end.
+      mCashBook:updateDBobj(input dataset ds-cashbookrule) .
       if mCashBook:Msg <> ""
       then do :
         message mCashBook:Msg view-as alert-box .
