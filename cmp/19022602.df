@@ -101,7 +101,7 @@ ADD FIELD "FlagSepFull" OF "c-CashBook" AS logical
   ORDER 80
 
 ADD FIELD "Debit" OF "c-CashBook" AS character 
-  DESCRIPTION "Значение для заполнения поля «дебит»"
+  DESCRIPTION "Значение для заполнения поля «дебет»"
   FORMAT "x(8)"
   INITIAL ""
   LABEL "дебит"

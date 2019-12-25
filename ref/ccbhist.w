@@ -112,7 +112,7 @@ define variable v-label-param as character no-undo .
  + "cli-type"     + {&delim-par} + "Тип контрагента"                       + {&delim-par} + "" + {&delim-flf}
  + "cli-code"     + {&delim-par} + "Код контрагента"                       + {&delim-par} + "" + {&delim-flf}
  + "takenfrom"    + {&delim-par} + "Принято от"                            + {&delim-par} + "" + {&delim-flf}
- + "Debit"        + {&delim-par} + "Значение для заполнения поля «дебит»"  + {&delim-par} + "" .
+ + "Debit"        + {&delim-par} + "Значение для заполнения поля «дебет»"  + {&delim-par} + "" .
 
   run proc-full-temp-changes in this-procedure (
                                                input current_c-cashbook.action = integer({&hn-create})
