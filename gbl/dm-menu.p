@@ -8660,6 +8660,17 @@ procedure m-oss-ref :
 
 end procedure. /* m-oss-exe */
 
+procedure m-bpa-ref :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run ref/bpa.p ( input parparentproc, input {&update}, output v-rid-list) no-error.
+  end.
+
+end procedure. /* m_gds-ef-exe */
+
 procedure m_autopush-exe :
 
   define variable varrid-list   as   character           no-undo.
