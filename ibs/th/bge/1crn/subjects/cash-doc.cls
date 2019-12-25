@@ -22,11 +22,17 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
 
   
   { cmp/str-glbl.i class }
-  
+  { ibs/th/ref/Coins_Bank_tt.i }
   define temp-table tt-fin-doc like ub.c-fin-doc .
   define temp-table tt-fin-doc-tax like ub.c-fin-doc-tax .
   define temp-table tt-fin-doc-attr no-undo
     field fin-doc      as integer
+    field sumka        as character
+    field banknote     as character
+    field bank-resive  as integer
+    field bank-deposit as integer
+    field pin          as character
+    field source_      as character
     field contr-kb     as character init ?
     index pi fin-doc
     .
@@ -49,7 +55,8 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
 
   define variable sw     as handle    no-undo.
   define variable v-type as character no-undo .
-
+  define variable CSJson as longchar  no-undo .
+  
   method public void CrContentToSW (insw as handle):
   define buffer buf_fin-doc       for ub.fin-doc .
   define buffer buf_fin-doc-attr  for ub.fin-doc-attr .
@@ -132,6 +139,42 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
             .
        end.
     end .
+    find first buf_fin-doc-attr no-lock where buf_fin-doc-attr.fin-doc-code = tt-fin-doc.fin-doc-code and buf_fin-doc-attr.host-code = tt-fin-doc.host-code 
+      and buf_fin-doc-attr.attr-code = "pre-vedom" no-error .
+    if available (buf_fin-doc-attr) then 
+    do:
+      find first tt-fin-doc-attr where tt-fin-doc-attr.sumka = entry (1,buf_fin-doc-attr.attr-value,";") no-error .
+      if not available (tt-fin-doc-attr) then 
+      do:
+        create tt-fin-doc-attr .
+        assign
+          tt-fin-doc-attr.fin-doc = buf_fin-doc-attr.fin-doc-code 
+          .
+      end.  
+      assign
+        tt-fin-doc-attr.sumka = entry (1,buf_fin-doc-attr.attr-value,";")
+        tt-fin-doc-attr.bank-deposit = integer(entry(2,buf_fin-doc-attr.attr-value,";"))
+        tt-fin-doc-attr.bank-resive  = integer(entry (3,buf_fin-doc-attr.attr-value,";"))
+        tt-fin-doc-attr.pin          = entry(4,buf_fin-doc-attr.attr-value,";")
+        tt-fin-doc-attr.source_      = if tt-fin-doc.CashBookId = 0 then "Поступления от продажи товаров" else "Прочие поступления"
+        .
+    end.    
+    find first buf_fin-doc-attr no-lock where buf_fin-doc-attr.fin-doc-code = tt-fin-doc.fin-doc-code and buf_fin-doc-attr.host-code = tt-fin-doc.host-code 
+      and buf_fin-doc-attr.attr-code = "cover_sheet" no-error .
+    if available (buf_fin-doc-attr) then 
+    do:
+      find first tt-fin-doc-attr where tt-fin-doc-attr.fin-doc = buf_fin-doc-attr.fin-doc-code no-error .
+      if not available (tt-fin-doc-attr) then 
+      do:
+        create tt-fin-doc-attr .
+        assign
+          tt-fin-doc-attr.fin-doc = buf_fin-doc-attr.fin-doc-code 
+          .
+      end.  
+      assign
+        tt-fin-doc-attr.banknote = buf_fin-doc-attr.attr-value 
+        .
+    end.
     
     sw:write-data-element ("date", if tt-fin-doc.doc-date = ? then "" else ISO-DATE (tt-fin-doc.doc-date)).
     sw:write-data-element ("shift-date", if tt-fin-doc.shift-date = ? then "" else ISO-DATE (tt-fin-doc.shift-date)).
@@ -176,6 +219,28 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     sw:write-data-element ("nds-str", if tt-fin-doc.including = ? then "" else string(tt-fin-doc.including)).
     sw:write-data-element ("operator", if tt-fin-doc.user-name-doc = ? then "" else user-name(tt-fin-doc.user-name-doc)).
     sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else string(tt-fin-doc.receiver-passport)).
+
+    find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
+    if available (tt-fin-doc-attr) then do:
+       if tt-fin-doc-attr.sumka ne ? 
+       then
+          sw:write-data-element ("sumka", string(tt-fin-doc-attr.sumka)).
+       if tt-fin-doc-attr.banknote ne ? 
+       then 
+          sw:write-data-element ("banknote",  string(tt-fin-doc-attr.banknote)).
+       if tt-fin-doc-attr.bank-resive ne ? 
+       then
+          sw:write-data-element ("bank-resive",  string(tt-fin-doc-attr.bank-resive)).
+       if tt-fin-doc-attr.bank-deposit ne ? 
+       then
+          sw:write-data-element ("bank-deposit", string(tt-fin-doc-attr.bank-deposit)).
+       if tt-fin-doc-attr.pin ne ? 
+       then 
+          sw:write-data-element ("pin",  string(tt-fin-doc-attr.pin)).
+       if tt-fin-doc-attr.source_ ne ? 
+       then
+          sw:write-data-element ("source",  string(tt-fin-doc-attr.source_)).
+    end.
       
     sw:start-element ("ndss") .
     for each tt-fin-doc-tax no-lock where tt-fin-doc-tax.fin-doc-code = tt-fin-doc.fin-doc-code:
@@ -213,26 +278,26 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
   end.
   
   method private character  user-name   (v-user-code as character):
-      define variable v-user-name as character no-undo .
+    define variable v-user-name as character no-undo .
       
-      define buffer buf_user-account    for ub.user-account .
+    define buffer buf_user-account for ub.user-account .
       
-      find first buf_user-account no-lock
-          where buf_user-account.user-id = v-user-code
-          no-error .
-        if not available buf_user-account
-          then 
-        do:
-          assign
-            v-user-name = string(v-user-code)
-            .
-        end.
-        else 
-        do:
-          assign
-            v-user-name = buf_user-account.nik
-            .
-        end.
-      return v-user-name.
+    find first buf_user-account no-lock
+      where buf_user-account.user-id = v-user-code
+      no-error .
+    if not available buf_user-account
+      then 
+    do:
+      assign
+        v-user-name = string(v-user-code)
+        .
+    end.
+    else 
+    do:
+      assign
+        v-user-name = buf_user-account.nik
+        .
+    end.
+    return v-user-name.
   end.    
 end class.
