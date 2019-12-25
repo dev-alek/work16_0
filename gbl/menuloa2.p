@@ -418,6 +418,17 @@ define variable vss-description as character no-undo init "".
 
 }
 
+{gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Отчет для сверки ВБРР-Виза'"
+  "'rep/g-vbbr_viza.p'"
+  " "
+  " "
+  " "
+  "'Yukos,Rosneft-*'"
+  "yes"
+}
+
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Продажи топлива и сервисного элемента'"
