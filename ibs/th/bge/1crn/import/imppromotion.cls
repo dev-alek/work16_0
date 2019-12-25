@@ -142,6 +142,7 @@ do: // заголок промо-акции
       assign
         v-promo-delete:ID     = buf_PromoAction.id
         v-promo-delete:db-num = buf_PromoAction.db-num
+        v-promo-delete:promosched-id = buf_PromoAction.promosched-id
         v-promo-action:ID     = buf_PromoAction.id
       .
     /* отключено на время работы сценария "создать-удалить"
@@ -603,6 +604,7 @@ end. // end_of_gifts
     then do:
        define variable mStorsed as class ibs.th.gbl.storage.promoSchedstorage NO-UNDO.
        mstorsed = new ibs.th.gbl.storage.promoSchedstorage().
+       v-promo-delete:refreshChildObj().
        mstorsed:deleteDB(v-promo-delete:Schedule) .
        delete object  mStorsed.
        v-storage:deleteDB(v-promo-delete) .
