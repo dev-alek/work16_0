@@ -2776,24 +2776,27 @@ FUNCTION get-input-type RETURNS CHARACTER
     
     if can-do(v-input-type-list, '‡')
     and not can-do(v-input-type-list, 'Ù')
-    and not can-do(v-input-type-list, 'Í')
+    and not can-do(v-input-type-list, '‡Í')
+    and not can-do(v-input-type-list, 'ÙÍ')
     and not can-do(v-input-type-list, 'Ô') 
     then v-doc-input-type = '‡'.
     
     if can-do(v-input-type-list, 'Ù')
     and not can-do(v-input-type-list, '‡')
-    and not can-do(v-input-type-list, 'Í')
+    and not can-do(v-input-type-list, '‡Í')
+    and not can-do(v-input-type-list, 'ÙÍ')
     and not can-do(v-input-type-list, 'Ô') 
     then v-doc-input-type = 'Ù'.
     
-    if can-do(v-input-type-list, '‡')
-    and can-do(v-input-type-list, 'Ù')
-    and not can-do(v-input-type-list, 'Í')
+    if  not can-do(v-input-type-list, 'Ù')
+    and can-do(v-input-type-list, '‡Í')
     and not can-do(v-input-type-list, 'Ô') 
     then v-doc-input-type = '‡Í'.
     
-    if can-do(v-input-type-list, 'Í')
-    or can-do(v-input-type-list, 'Ô') 
+    if ((can-do(v-input-type-list, 'Ù')
+    or can-do(v-input-type-list, 'Ô')) 
+    and can-do(v-input-type-list, '‡'))
+    or can-do(v-input-type-list, 'ÙÍ')
     then v-doc-input-type = 'ÙÍ'.
     
     if can-do(v-input-type-list, '')

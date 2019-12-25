@@ -1144,47 +1144,20 @@ define buffer buf_place     for ub.place.
         output stream outstream close.
         run volume-water no-error.
         if error-status :error then do :
-/*                                 enable                             */
-/*                                   tt-rvs-line.state-density        */
-/*                                   tt-rvs-line.state-measure-qnty   */
-/*                                   tt-rvs-line.state-add-qnty       */
-/*                                  tt-rvs-line.state-brutto-qnty     */
-/*                                   tt-rvs-line.state-brutto-cli-qnty*/
-/*                                 with frame Dialog-Frame.           */
                                  undo _trpomi, return .
                                end.
         run chg-density no-error.
         if error-status :error then do :
-/*                                 enable                             */
-/*                                   tt-rvs-line.state-density        */
-/*                                   tt-rvs-line.state-measure-qnty   */
-/*                                   tt-rvs-line.state-add-qnty       */
-/*                                  tt-rvs-line.state-brutto-qnty     */
-/*                                   tt-rvs-line.state-brutto-cli-qnty*/
-/*                                 with frame Dialog-Frame.           */
                                  undo _trpomi, return .
                                end.
         run weath-water no-error.
         if error-status:error then do :
-/*                                enable                             */
-/*                                  tt-rvs-line.state-density        */
-/*                                  tt-rvs-line.state-measure-qnty   */
-/*                                  tt-rvs-line.state-add-qnty       */
-/*                                 tt-rvs-line.state-brutto-qnty     */
-/*                                  tt-rvs-line.state-brutto-cli-qnty*/
-/*                                with frame Dialog-Frame.           */
                                 undo _trpomi, return .
                               end.
       end.
     END.
   end.
-/*  enable                             */
-/*    tt-rvs-line.state-density        */
-/*    tt-rvs-line.state-measure-qnty   */
-/*    tt-rvs-line.state-add-qnty       */
-/*    tt-rvs-line.state-brutto-qnty    */
-/*    tt-rvs-line.state-brutto-cli-qnty*/
-/*  with frame Dialog-Frame.           */
+  
   find first rvs-line-attr exclusive-lock
        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
          and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
@@ -1342,7 +1315,7 @@ define variable v-is-olddens as logical no-undo initial no .
   else do :
     rvs-line-attr.attr-value = string(tt-rvs-line.izmer-density) .
   end.
-  
+ 
   find first rvs-line-attr exclusive-lock
        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
          and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
@@ -1368,7 +1341,8 @@ define variable v-is-olddens as logical no-undo initial no .
   else do :
     if v-hand-input /* ѕлотность редактировалась */
     then do :
-      if rvs-line-attr.attr-value = "а" or rvs-line-attr.attr-value = "ф" then rvs-line-attr.attr-value = "к" .
+      if rvs-line-attr.attr-value = "а" then rvs-line-attr.attr-value = "ак" .
+      if rvs-line-attr.attr-value = "ф" then rvs-line-attr.attr-value = "фк" .
     end.
     else do :
       find first olddens-rvs-line-attr no-lock
@@ -1443,39 +1417,39 @@ release rvs-line-attr no-error .
 /*  find first rvs-doc where rvs-doc.rvs-code = tt-rvs-line.rvs-code no-lock no-error.*/
       v-vid-action = 56 .
     v-vid-param = 
-            "Initiator=" + v-initiator + {&delim-par} +
-            "SHOP_NUM=" + string(buf_rvs-doc.obj-code) + {&delim-par} +
-            "DocType=" + string(buf_rvs-doc.rvs-type) + {&delim-par} +
-            "DocNum=" + string(buf_rvs-doc.rvs-code) + {&delim-par} +
+          "Initiator=" + v-initiator + {&delim-par} +
+          "SHOP_NUM=" + string(buf_rvs-doc.obj-code) + {&delim-par} +
+          "DocType=" + string(buf_rvs-doc.rvs-type) + {&delim-par} +
+          "DocNum=" + string(buf_rvs-doc.rvs-code) + {&delim-par} +
 /*            "ShiftNum=" + string(bf_rvs-doc.shift-num) + {&delim-par} +  */
 /*            "ShiftDate=" + string(bf_rvs-doc.shift-date) + {&delim-par} +*/
-            "SHIFT_NUM_DOC=" + (if string(buf_rvs-doc.shift-num) = ? then '' else string(buf_rvs-doc.shift-num)) + (if string(buf_rvs-doc.shift-date) = ? then '' else string(buf_rvs-doc.shift-date, "99999999")) + {&delim-par} +  
-            "SHIFT_NUM=" + (if string(v-shift-num) = ? then '' else string(v-shift-num)) + (if string(v-shift-date) = ? then '' else string(v-shift-date, "99999999")) + {&delim-par} +
+          "SHIFT_NUM_DOC=" + (if string(buf_rvs-doc.shift-num) = ? then '' else string(buf_rvs-doc.shift-num)) + (if string(buf_rvs-doc.shift-date) = ? then '' else string(buf_rvs-doc.shift-date, "99999999")) + {&delim-par} +  
+          "SHIFT_NUM=" + (if string(v-shift-num) = ? then '' else string(v-shift-num)) + (if string(v-shift-date) = ? then '' else string(v-shift-date, "99999999")) + {&delim-par} +
 
-            
-            "PlCode=" + string( tt-rvs-line.pl-code) + {&delim-par} +
-            "RESULT=0" + {&delim-par} +
+          
+          "PlCode=" + string( tt-rvs-line.pl-code) + {&delim-par} +
+          "RESULT=0" + {&delim-par} +
 /*            "Density=" + string(  tt-rvs-line.density ) + {&delim-par} +*/
-            "Temperature=" +  (if string(tt-rvs-line.state-temperature) = ? then '' else string(tt-rvs-line.state-temperature)) + {&delim-par} +
-            
-            "StateDensity="        +  (if string(tt-rvs-line.state-density) = ? then '' else string(tt-rvs-line.state-density)) + {&delim-par} +
-            
-            "StateMeasureQnty="    +  (if string( tt-rvs-line.state-measure-qnty) = ? then '' else string( tt-rvs-line.state-measure-qnty)) + {&delim-par} +
-            "StateBruttoQnty="  +  (if string(  tt-rvs-line.state-brutto-qnty) = ? then '' else string(  tt-rvs-line.state-brutto-qnty)) + {&delim-par} +
+          "Temperature=" +  (if string(tt-rvs-line.state-temperature) = ? then '' else string(tt-rvs-line.state-temperature)) + {&delim-par} +
+          
+          "StateDensity="        +  (if string(tt-rvs-line.state-density) = ? then '' else string(tt-rvs-line.state-density)) + {&delim-par} +
+          
+          "StateMeasureQnty="    +  (if string( tt-rvs-line.state-measure-qnty) = ? then '' else string( tt-rvs-line.state-measure-qnty)) + {&delim-par} +
+          "StateBruttoQnty="  +  (if string(  tt-rvs-line.state-brutto-qnty) = ? then '' else string(  tt-rvs-line.state-brutto-qnty)) + {&delim-par} +
 
-            "StateMeasureCliQnty=" +  (if string(  tt-rvs-line.state-measure-cli-qnty) = ? then '' else string(  tt-rvs-line.state-measure-cli-qnty)) + {&delim-par} +
+          "StateMeasureCliQnty=" +  (if string(  tt-rvs-line.state-measure-cli-qnty) = ? then '' else string(  tt-rvs-line.state-measure-cli-qnty)) + {&delim-par} +
 
-            "StateBruttoCliQnty=" +  (if string(  tt-rvs-line.state-brutto-cli-qnty) = ? then '' else string(   tt-rvs-line.state-brutto-cli-qnty)) + {&delim-par} +
+          "StateBruttoCliQnty=" +  (if string(  tt-rvs-line.state-brutto-cli-qnty) = ? then '' else string(   tt-rvs-line.state-brutto-cli-qnty)) + {&delim-par} +
 
-            "StateLevelTotal="  +  (if string(  tt-rvs-line.state-level-total) = ? then '' else string(  tt-rvs-line.state-level-total)) + {&delim-par} +
-            "StateLevelPetrol=" +  (if string(  tt-rvs-line.state-level-petrol) = ? then '' else string( tt-rvs-line.state-level-petrol)) + {&delim-par} +
+          "StateLevelTotal="  +  (if string(  tt-rvs-line.state-level-total) = ? then '' else string(  tt-rvs-line.state-level-total)) + {&delim-par} +
+          "StateLevelPetrol=" +  (if string(  tt-rvs-line.state-level-petrol) = ? then '' else string( tt-rvs-line.state-level-petrol)) + {&delim-par} +
 
-            "StateLevelWater=" +  (if string(  tt-rvs-line.state-level-water) = ? then '' else string(  tt-rvs-line.state-level-water)) + {&delim-par} +
-            
-            "StateMeasureTcQnty="  +  (if string(  tt-rvs-line.state-measure-tc-qnty  ) = ? then '' else string(   tt-rvs-line.state-measure-tc-qnty  )) + {&delim-par} + 
-            "StateBruttoTcQnty="  +  (if string(  tt-rvs-line.state-brutto-tc-qnty  ) = ? then '' else string(    tt-rvs-line.state-brutto-tc-qnty  )) + {&delim-par} + 
-                        
-            "Description=".
+          "StateLevelWater=" +  (if string(  tt-rvs-line.state-level-water) = ? then '' else string(  tt-rvs-line.state-level-water)) + {&delim-par} +
+          
+          "StateMeasureTcQnty="  +  (if string(  tt-rvs-line.state-measure-tc-qnty  ) = ? then '' else string(   tt-rvs-line.state-measure-tc-qnty  )) + {&delim-par} + 
+          "StateBruttoTcQnty="  +  (if string(  tt-rvs-line.state-brutto-tc-qnty  ) = ? then '' else string(    tt-rvs-line.state-brutto-tc-qnty  )) + {&delim-par} + 
+                      
+          "Description=".
             
     run trg/userlog.p (
         input {&nwsdochs_action_create}
@@ -1612,6 +1586,7 @@ DO:
      then do :
        run local-tarir("state-level-total") .
      end.
+     assign v-hand-input = true .
   end.
 
 END.
