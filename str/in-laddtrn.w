@@ -55,8 +55,11 @@ define stream outstream.
 
 define variable rdc-dnstvalue as character no-undo.
 define variable rdc-dnsttype  as character no-undo.
-
+   
 define variable v-dop-info as character  no-undo .
+define variable varvalue as character no-undo.
+define variable vartype  as character no-undo.
+define variable v-is-lgas as logical no-undo.
 
 define buffer buf_trn-doc for ub.trn-doc .
 /* Local Variable Definitions ---                                       */
@@ -83,14 +86,16 @@ define buffer buf_goods for ub.goods .
 f-autoent-obj-type b-clients f-car-num b-auto-tank f-condition ~
 f-seals-condition f-insp-cert f-seals-condition-2 f-date-cert f-fio ~
 f-ptbocode f-ptbotype b-ptb f-date-pour f-hour-pour f-min-pour ~
-f-hour-income f-min-income f-item-pour f-acc-ship b-doc 
+f-hour-income f-min-income f-item-pour f-acc-ship b-doc f-date-start ~
+f-date-end f-hour-start f-min-start f-hour-end f-min-end 
 &Scoped-Define DISPLAYED-OBJECTS f-autoent f-autoent-obj-code ~
 f-autoent-obj-type f-autoent-obj-name f-car f-car-num f-condition-name ~
 f-condition f-seals-1 f-seals-condition f-insp f-insp-cert f-seals-2 ~
 f-seals-condition-2 f-insp-2 f-date-cert f-fio-name f-fio f-ptbocode-1 ~
 f-ptbocode f-ptbotype f-ptboname f-date-pour-1 f-date-pour f-hour-pour-2 ~
 f-hour-pour f-min-pour f-hour-income-2 f-hour-income f-min-income ~
-f-item-pour-2 f-item-pour f-acc-ship-2 f-acc-ship f-doc b-doc f-item-doc 
+f-item-pour-2 f-item-pour f-acc-ship-2 f-acc-ship f-doc b-doc f-item-doc ~
+f-date-start f-date-end f-hour-start f-min-start f-hour-end f-min-end 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -185,6 +190,11 @@ DEFINE VARIABLE f-date-cert AS DATE FORMAT "99/99/99":U
      VIEW-AS FILL-IN 
      SIZE 13.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-date-end AS DATE FORMAT "99/99/99":U 
+     LABEL "Дата конца слива" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-date-pour AS DATE FORMAT "99/99/99":U 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -192,6 +202,11 @@ DEFINE VARIABLE f-date-pour AS DATE FORMAT "99/99/99":U
 DEFINE VARIABLE f-date-pour-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Дата налива:" 
      VIEW-AS FILL-IN 
      SIZE 12.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-date-start AS DATE FORMAT "99/99/99":U 
+     LABEL "Дата начала слива" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-doc AS CHARACTER FORMAT "X(256)":U INITIAL "Документы НЕ предоставлены" 
      VIEW-AS FILL-IN 
@@ -204,6 +219,11 @@ DEFINE VARIABLE f-fio AS CHARACTER FORMAT "X(256)":U INITIAL "?"
 DEFINE VARIABLE f-fio-name AS CHARACTER FORMAT "X(256)":U INITIAL "Ф.И.О. водителя-экспедитора:" 
      VIEW-AS FILL-IN 
      SIZE 29 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-hour-end AS INTEGER FORMAT "99":U INITIAL 0 
+     LABEL "Время конца слива" 
+     VIEW-AS FILL-IN 
+     SIZE 4 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-hour-income AS INTEGER FORMAT "99":U INITIAL ? 
      VIEW-AS FILL-IN 
@@ -220,6 +240,11 @@ DEFINE VARIABLE f-hour-pour AS INTEGER FORMAT "99":U INITIAL ?
 DEFINE VARIABLE f-hour-pour-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Время налива:" 
      VIEW-AS FILL-IN 
      SIZE 14.13 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-hour-start AS INTEGER FORMAT "99":U INITIAL 0 
+     LABEL "Время начала слива" 
+     VIEW-AS FILL-IN 
+     SIZE 4 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-insp AS CHARACTER FORMAT "X(256)":U INITIAL "Свидетельство о поверке:" 
      VIEW-AS FILL-IN 
@@ -245,6 +270,10 @@ DEFINE VARIABLE f-item-pour-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Примечание
      VIEW-AS FILL-IN 
      SIZE 26 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-min-end AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 4 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-min-income AS INTEGER FORMAT "99":U INITIAL ? 
      VIEW-AS FILL-IN 
      SIZE 3 BY 1 NO-UNDO.
@@ -252,6 +281,10 @@ DEFINE VARIABLE f-min-income AS INTEGER FORMAT "99":U INITIAL ?
 DEFINE VARIABLE f-min-pour AS INTEGER FORMAT "99":U INITIAL ? 
      VIEW-AS FILL-IN 
      SIZE 3 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-min-start AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 4 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-ptbocode AS INTEGER FORMAT ">>>>>>>>9":U INITIAL ? 
      VIEW-AS FILL-IN 
@@ -336,8 +369,16 @@ DEFINE FRAME Dialog-Frame
      f-acc-ship AT ROW 14.46 COL 38.13 NO-LABEL WIDGET-ID 42
      f-doc AT ROW 14.67 COL 4.5 NO-LABEL WIDGET-ID 108
      b-doc AT ROW 14.75 COL 2 WIDGET-ID 48
-     f-item-doc AT ROW 16.79 COL 82.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 46
-     SPACE(0.87) SKIP(0.37)
+     f-item-doc AT ROW 15.83 COL 82.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 46
+     f-date-start AT ROW 17 COL 19.25 COLON-ALIGNED WIDGET-ID 60
+     f-date-end AT ROW 17 COL 59.5 COLON-ALIGNED WIDGET-ID 58
+     f-hour-start AT ROW 18.17 COL 19.13 COLON-ALIGNED WIDGET-ID 50
+     f-min-start AT ROW 18.17 COL 23.63 COLON-ALIGNED NO-LABEL WIDGET-ID 54
+     f-hour-end AT ROW 18.17 COL 59.63 COLON-ALIGNED WIDGET-ID 52
+     f-min-end AT ROW 18.17 COL 64.25 COLON-ALIGNED NO-LABEL WIDGET-ID 56
+     "Примечание к нефтебазе" VIEW-AS TEXT
+          SIZE 25.5 BY 1 AT ROW 12.17 COL 1.13
+     SPACE(56.99) SKIP(6.24)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Дополнительная информация по приемке топлива"
@@ -462,6 +503,12 @@ DO:
                               f-acc-ship
                               b-doc
                               f-item-doc
+                              f-hour-start
+                              f-min-start
+                              f-hour-end
+                              f-min-end
+                              f-date-start
+                              f-date-end
   .
  
   if input frame {&frame-name} f-hour-income <> ?
@@ -660,6 +707,20 @@ DO:
     assign
         f-car-num    = auto-tank.auto-num
     .
+    find first auto-tank-attr where auto-tank-attr.attr-code = "auto-firm" and auto-tank-attr.auto-num = auto-tank.auto-num no-error.
+    if available (auto-tank-attr)
+    then do:
+      assign
+        f-autoent-obj-type = substring (auto-tank-attr.attr-value, 1, 3)
+        f-autoent-obj-code = integer (substring (auto-tank-attr.attr-value, 4)).
+        f-autoent-obj-type:screen-value = f-autoent-obj-type.
+        f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
+        assign
+          v-autoent-obj-type = f-autoent-obj-type
+          v-autoent-obj-code =  f-autoent-obj-code
+        .
+    end.
+          
     display f-car-num with frame {&frame-name}.
   end.
   apply "leave" to f-car-num in frame {&frame-name}.
@@ -814,20 +875,6 @@ END.
 
 &Scoped-define SELF-NAME f-car-num
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-num Dialog-Frame
-ON return OF f-car-num IN FRAME Dialog-Frame
-DO:
-  
-  apply "leave" to f-car-num in frame {&frame-name} .
-  
-/*  apply "entry" to f-car-vol in frame {&frame-name}.*/
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME f-car-num
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-num Dialog-Frame
 ON leave OF f-car-num IN FRAME Dialog-Frame
 DO:
   assign
@@ -863,6 +910,21 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-car-num Dialog-Frame
+ON return OF f-car-num IN FRAME Dialog-Frame
+DO:
+  
+  apply "leave" to f-car-num in frame {&frame-name} .
+  
+/*  apply "entry" to f-car-vol in frame {&frame-name}.*/
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME f-condition
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-condition Dialog-Frame
 ON return OF f-condition IN FRAME Dialog-Frame
@@ -880,7 +942,7 @@ END.
 
 &Scoped-define SELF-NAME f-date-cert
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date-cert Dialog-Frame
-ON return OF f-date-cert IN FRAME Dialog-Frame /* Дата свид-ва о поверке */
+ON return OF f-date-cert IN FRAME Dialog-Frame
 DO:
 /*  apply "entry" to f-car-vol in frame {&frame-name}.*/
 return no-apply.
@@ -944,6 +1006,22 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME f-hour-start
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-start Dialog-Frame
+ON LEAVE OF f-hour-start IN FRAME Dialog-Frame /* Время начала слива */
+DO:
+  if input frame {&frame-name} f-hour-start > 24
+  then do:
+     message "Неверно заведено поле <<минуты>>." view-as alert-box .
+     apply "entry" to f-hour-start in frame {&frame-name} .
+     return no-apply .
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME f-insp-cert
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-insp-cert Dialog-Frame
 ON return OF f-insp-cert IN FRAME Dialog-Frame
@@ -977,6 +1055,22 @@ ON return OF f-item-pour IN FRAME Dialog-Frame
 DO:
     apply "entry" to f-hour-income in frame {&frame-name}.
 return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-min-end
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-end Dialog-Frame
+ON LEAVE OF f-min-end IN FRAME Dialog-Frame
+DO:
+  if input frame {&frame-name} f-min-end > 60
+  then do:
+     message "Неверно заведено поле <<минуты>>." view-as alert-box .
+     apply "entry" to f-hour-start in frame {&frame-name} .
+     return no-apply .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1031,6 +1125,22 @@ ON return OF f-min-pour IN FRAME Dialog-Frame
 DO:
 
 return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-min-start
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-min-start Dialog-Frame
+ON LEAVE OF f-min-start IN FRAME Dialog-Frame
+DO:
+  if input frame {&frame-name} f-min-start > 60
+  then do:
+     message "Неверно заведено поле <<минуты>>." view-as alert-box .
+     apply "entry" to f-hour-start in frame {&frame-name} .
+     return no-apply .
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1133,6 +1243,19 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   define buffer buf_doc-attr for ub.doc-attr.
   
+  
+  
+  { str/tdat-val.i
+     p-doc-code
+     {&trdcattr-trn-lgas-corr}
+     varvalue
+     vartype
+     no-error
+  }
+
+  if not varvalue = ""
+    then frame {&frame-name}:title = "Дополнительная информация по корр. накладной СУГ. Исх.накл. - " + varvalue.
+  
   for each tt-upd-attr-fuel no-lock:
 
     find first buf_doc-attr no-lock
@@ -1233,6 +1356,42 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             end.
           end.
         end.
+        when {&trdcattr-time-start} then do:
+            assign f-hour-start = integer(substring(buf_doc-attr.attr-value, 1, 2)) no-error.
+          if error-status:error then do:
+            message "Неверное время начала слива " buf_doc-attr.attr-value
+            view-as alert-box.
+            assign f-hour-start = 0
+                    f-min-start  = 0.
+          end.
+          else do:
+            assign f-min-start = integer(substring(buf_doc-attr.attr-value, 4, 2)) no-error.
+            if error-status:error then do:
+                message "Неверное время начала слива " buf_doc-attr.attr-value
+                view-as alert-box.
+                assign f-hour-start = 0
+                      f-min-start  = 0.
+            end.
+          end.
+        end.
+        when {&trdcattr-time-end} then do:
+            assign f-hour-end = integer(substring(buf_doc-attr.attr-value, 1, 2)) no-error.
+          if error-status:error then do:
+            message "Неверное время конца слива " buf_doc-attr.attr-value
+            view-as alert-box.
+            assign f-hour-end = 0
+                    f-min-end  = 0.
+          end.
+          else do:
+            assign f-min-end = integer(substring(buf_doc-attr.attr-value, 4, 2)) no-error.
+            if error-status:error then do:
+                message "Неверное время конца слива " buf_doc-attr.attr-value
+                view-as alert-box.
+                assign f-hour-end = 0
+                      f-min-end = 0.
+            end.
+          end.
+        end.
         when {&trdcattr-date-pour} then do:
             assign
               f-date-pour = date(buf_doc-attr.attr-value).
@@ -1273,7 +1432,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         when {&trdcattr-spisok-not-doc} then do:
             assign
               f-item-doc =  buf_doc-attr.attr-value no-error.
-        end.        
+        end.
+        when {&trdcattr-date-start} then do:
+            assign
+              f-date-start = date(buf_doc-attr.attr-value).
+        end.
+        when {&trdcattr-date-end} then do:
+            assign
+              f-date-end = date(buf_doc-attr.attr-value).
+        end.
       end case.
     end.
 
@@ -1329,12 +1496,61 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-save
       f-acc-ship
       b-doc
+      f-date-start
+      f-date-end
     with frame {&frame-name}.
     if b-doc = no then do:
         hide
             f-item-doc
-        in frame Dialog-Frame . 
+        in frame {&frame-name} . 
     end.
+    
+    hide
+        f-hour-start
+        f-hour-end
+        f-min-end
+        f-min-start
+        f-date-start
+        f-date-end
+    in frame Dialog-Frame . 
+
+   { str/tdat-val.i
+     p-doc-code
+     {&trdcattr-is-lgas}
+     varvalue
+     vartype
+     no-error
+   }
+   
+   if varvalue = "yes" then do:
+     assign
+       v-is-lgas = true.
+
+   end.
+   
+   { str/tdat-val.i
+     p-doc-code
+     {&trdcattr-is-lgas-corr}
+     varvalue
+     vartype
+     no-error
+   }
+
+   if varvalue = "yes" then do:
+     assign
+       v-is-lgas = true.
+
+   end.
+    if v-is-lgas then do:
+      display
+        f-hour-start
+        f-hour-end
+        f-min-end
+        f-min-start
+        f-date-start
+        f-date-end
+      with frame Dialog-Frame .
+    end. 
     hide 
     f-acc-ship-2 f-acc-ship
     in frame Dialog-Frame .
@@ -1378,6 +1594,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-save
       f-acc-ship
       b-doc
+      f-hour-start
+      f-hour-end
+      f-min-end
+      f-min-start
+      f-date-start
+      f-date-end
       with frame {&frame-name}.
   end.
 /*  assign                      */
@@ -1581,13 +1803,15 @@ PROCEDURE enable_UI :
           f-ptbotype f-ptboname f-date-pour-1 f-date-pour f-hour-pour-2 
           f-hour-pour f-min-pour f-hour-income-2 f-hour-income f-min-income 
           f-item-pour-2 f-item-pour f-acc-ship-2 f-acc-ship f-doc b-doc 
-          f-item-doc 
+          f-item-doc f-date-start f-date-end f-hour-start f-min-start f-hour-end 
+          f-min-end 
       WITH FRAME Dialog-Frame.
   ENABLE b-save b-quit b-help f-autoent-obj-code f-autoent-obj-type b-clients 
          f-car-num b-auto-tank f-condition f-seals-condition f-insp-cert 
          f-seals-condition-2 f-date-cert f-fio f-ptbocode f-ptbotype b-ptb 
          f-date-pour f-hour-pour f-min-pour f-hour-income f-min-income 
-         f-item-pour f-acc-ship b-doc 
+         f-item-pour f-acc-ship b-doc f-date-start f-date-end f-hour-start 
+         f-min-start f-hour-end f-min-end 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1639,6 +1863,14 @@ PROCEDURE save-attr :
             assign
               v-attr-value = string( f-hour-pour,   "99":U ) + ":" + string( f-min-pour,   "99":U ) when f-hour-pour <> ? and f-min-pour <> ?.
         end.
+        when {&trdcattr-time-start} then do:
+            assign
+              v-attr-value = string( f-hour-start,   "99":U ) + ":" + string( f-min-start,   "99":U ) when f-hour-start <> ? and f-min-start <> ?.
+        end.
+        when {&trdcattr-time-end} then do:
+            assign
+              v-attr-value = string( f-hour-end,   "99":U ) + ":" + string( f-min-end,   "99":U ) when f-hour-end <> ? and f-min-end <> ?.
+        end.
         when {&trdcattr-date-pour} then do:
             assign
               v-attr-value = string(f-date-pour) when string(f-date-pour) <> "".
@@ -1676,6 +1908,16 @@ PROCEDURE save-attr :
         end.
         else v-attr-value = "".
         end.
+        when {&trdcattr-date-start} then do:
+            assign
+              v-attr-value = string(f-date-start) when string(f-date-start) <> "".
+        end.
+        when {&trdcattr-date-end} then do:
+            assign
+              v-attr-value = string(f-date-end) when string(f-date-end) <> "".
+        end.
+/*          infoSectionTotal:GetInfoSectionProp(v-page-current):TimeStart = f-hour-start * 3600 + f-min-start * 60*/
+/*        infoSectionTotal:GetInfoSectionProp(v-page-current):TimeEnd = f-hour-end   * 3600 + f-min-end   * 60*/
       end case.
       
       find first buf_doc-attr

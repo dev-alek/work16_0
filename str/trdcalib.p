@@ -468,6 +468,10 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-time-pour
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-time-start
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-time-end
+      {&attr-temp-full-code}
       &scop attr-code trdcattr-date-pour
       {&attr-temp-full-code}
       &scop attr-code trdcattr-inspection-cert
@@ -490,7 +494,16 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-is-auto-trn
       {&attr-temp-full-code}
-
+      &scop attr-code trdcattr-is-lgas
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-is-lgas-corr
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-trn-lgas-corr
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-date-start
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-date-end
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры */
       otherwise do:
         undo, return error substitute( 'неизвестный атрибут документа "&1"', p-code ).

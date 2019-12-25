@@ -95,6 +95,11 @@ define buffer doc-line for ub.doc-line  .
 {ref/imagelist.i}
 { gbl/color.i }
 
+&global-define is-fuel 1
+&global-define is-lgas 2
+&global-define is-lgas-corr 3
+&global-define is-gds 0
+
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
 &SCOP term-b-c           not can-find (first ub.gds-prt where ub.gds-prt.upper-code = bar-code.node-code)
@@ -212,8 +217,9 @@ define variable v-data-type                 as   character                     n
 define variable is-doc-hold                 as   logical                       no-undo.
 define variable d-reason                    as   character                     no-undo.
 define variable ch-vsd as character no-undo .
-define variable vat-sum as decimal no-undo .
-define variable is-fuel as logical no-undo initial no.
+/*define variable is-fuel as logical no-undo initial no.*/
+/*define variable is-lgas as logical no-undo initial no.*/
+define variable trn-type as integer no-undo init 0.
 define variable choice as integer no-undo.
 define variable isEgais  as logical   no-undo .
 define variable v-mercury-value as character no-undo .
@@ -2430,7 +2436,7 @@ on F12 of frame {&frame-name} anywhere do:
 END.
 
 /* общие триггеры и процедуры для РН и ПН */
-{ str/trn-tr.i in is-fuel}
+{ str/trn-tr.i in trn-type}
 { str/sch-line.i doc-line {&browse-name} }
 IF mImagePh THEN
 DO:
@@ -2571,6 +2577,46 @@ do on error undo main-block, leave main-block :
        isEgais = yes.
    end.
 
+   { str/tdat-val.i
+     t-doc.doc-code
+     {&trdcattr-is-fuel}
+     varvalue
+     vartype
+     no-error
+   }
+   
+   if varvalue = "yes" then do:
+     assign
+       trn-type = {&is-fuel}.
+   end.
+
+   
+   { str/tdat-val.i
+     t-doc.doc-code
+     {&trdcattr-is-lgas}
+     varvalue
+     vartype
+     no-error
+   }
+   
+   if varvalue = "yes" then do:
+     assign
+       trn-type = {&is-lgas}.
+   end.
+   
+   { str/tdat-val.i
+     t-doc.doc-code
+     {&trdcattr-is-lgas-corr}
+     varvalue
+     vartype
+     no-error
+   }
+   
+   if varvalue = "yes" then do:
+     assign
+       trn-type = {&is-lgas-corr}.
+   end.
+
    display varinplnsum m-inc with frame {&frame-name}.
    if pardoc-mode <> {&lookup} then line-rec = ?. /* указатель на ту строку, на которую надо встать */
 
@@ -2614,7 +2660,7 @@ do on error undo main-block, leave main-block :
          vartype 
          no-error}
       if  varattr = "yes"
-        then is-fuel = true.
+        then trn-type = {&is-fuel}.
     end.
   end.
 
@@ -2625,42 +2671,72 @@ do on error undo main-block, leave main-block :
        parnext-prev = no.
      return error.
    end.
-   if not is-copy and can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.attr-code = {&attr-supp-np}
+   if not is-copy and can-find (FIRST ub.clients-attr no-lock where (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})
                                                 and ub.clients-attr.attr-value = "yes") and pardoc-mode = {&add-def}
    then do :
     run gbl/d-askw.w (
                  input "Выбор типа приходного документа"
                 ,input "Выберите тип товаров в приходной накладной"
                 ,input "|"
-                ,input "Топливо|ТНП|Отмена"
-                ,input "Приход топлива|Приход ТНП|Отказ от создания приходной накладной"
-                ,input 2
-                ,input 3
+                ,input "Топливо|Приход СУГ|Корр. СУГ|ТНП|Отмена"
+                ,input "Приход топлива|Приход СУГ|Корректировка массы СУГ|Приход ТНП|Отказ от создания приходной накладной"
+                ,input 4
+                ,input 5
                 ,output choice).
-    case choice :
-      when 1 then is-fuel = yes.
-      when 2 then is-fuel = no.
-      when 3 then return error.
-    end.
-    if is-fuel
-    then do:
-      { str/tdat-wrt.i                                    
-         t-doc.doc-code
-         {&trdcattr-is-fuel}
-         "yes" 
-      no-error} 
+    case choice:
+      when 1 
+      then do:
+        trn-type = {&is-fuel}.
+        { str/tdat-wrt.i                                    
+           t-doc.doc-code
+           {&trdcattr-is-fuel}
+           "yes" 
+        no-error} 
+      end.
+      when 2 
+      then do:
+        trn-type = {&is-lgas}.
+        { str/tdat-wrt.i                                    
+           t-doc.doc-code
+           {&trdcattr-is-lgas}
+           "yes" 
+        no-error} 
+      end.
+      when 3 
+      then do:
+        { str/tdat-wrt.i                                    
+           t-doc.doc-code
+           {&trdcattr-is-lgas-corr}
+           "yes" 
+        no-error}
+        trn-type = {&is-lgas-corr}.
+        run add-lgas-corr no-error.
+        if error-status :error then do:
+          run proc-exit.
+          return.
+        end.
+        run UI-on     in this-procedure ( input "line" ).
+      end.
+      when 4
+      then do:
+        trn-type = {&is-gds}.
+      end.
+      when 5 then do:
+        run proc-exit.
+        return.
+      end.
     end.
    end.
-
-    { str/tdat-val.i                                    
-       t-doc.doc-code
-       {&trdcattr-is-fuel}
-       varattr 
-       vartype no-error} 
-    
-    if varattr = "yes"
-      then is-fuel = true.
-   
+/*                                                      */
+/*                                                      */
+/*   if trn-type = {&is-lgas-corr} then do:             */
+/*     menu-item m-outs-2:sensitive in menu m-outs = no.*/
+/*     menu-item m-outs-3:sensitive in menu m-outs = no.*/
+/*     menu-item m-outs-4:sensitive in menu m-outs = no.*/
+/*     menu-item m-outs-6:sensitive in menu m-outs = no.*/
+/*     menu-item m-outs-7:sensitive in menu m-outs = no.*/
+/*   end.                                               */
+/*                                                      */
    /*if is-fuel or can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type  
                                                 and ub.clients-attr.obj-code = ub.clients.obj-code
                                                 and ub.clients-attr.attr-code = {&attr-supp-np}
@@ -2670,14 +2746,10 @@ do on error undo main-block, leave main-block :
    ub.goods.gds-name:width     in browse {&browse-name}   = 40.
   /*end.*/
    
-  if not is-fuel
+  if not (trn-type = {&is-lgas} or trn-type = {&is-lgas-corr} or trn-type = {&is-fuel}) 
     then 
   do:
-    if not is-fuel
-      then 
-    do:
-      hide b-in-attr-fuel in frame {&frame-name}.
-    end.
+    hide b-in-attr-fuel in frame {&frame-name}.
   end.
    
    if pardoc-mode = {&update}
@@ -2815,25 +2887,46 @@ do on stop undo, return error return-value :
     return error return-value.
   end.
   
-  if is-fuel
+  if trn-type = {&is-lgas} or trn-type = {&is-lgas-corr} or trn-type = {&is-fuel}
   then do:
-    run ref/gds-ref.p
-    ( 
-       input parparentproc
-      ,input "b-sel,b-add"
-      ,input ?             /*p-stat */
-      ,input {&group}             /*p-list  */
-      ,input ?             /*p-cond  */
-      ,input ?             /*p-rec   */
-      ,input "Топливное предложение"             /*p-grp   */
-      ,input t-doc.cli-type             /*p-cli-type */
-      ,input t-doc.cli-code             /*p-cli-code  */
-      ,input v-cntxt-obj-type    /*p-obj-type  */
-      ,input v-cntxt-obj-code    /*p-obj-code  */
-      ,input ?             /*p-other     */
-      ,output varnotes).
+    if trn-type = {&is-lgas} or trn-type = {&is-lgas-corr}
+    then do:
+      run ref/gds-ref.p
+      ( 
+         input parparentproc
+        ,input "b-sel"
+        ,input {&all}             /*p-stat */
+        ,input "lgas"             /*p-list  */
+        ,input {&all}             /*p-cond  */
+        ,input ?             /*p-rec   */
+        ,input ?            /*p-grp   */
+        ,input t-doc.cli-type             /*p-cli-type */
+        ,input t-doc.cli-code             /*p-cli-code  */
+        ,input v-cntxt-obj-type    /*p-obj-type  */
+        ,input v-cntxt-obj-code    /*p-obj-code  */
+        ,input ?             /*p-other     */
+        ,output varnotes).
+    end.
+    else do:
+      run ref/gds-ref.p
+      ( 
+         input parparentproc
+        ,input "b-sel"
+        ,input {&all} /*p-stat */
+        ,input "ptrl" /*p-list  */
+        ,input {&all}      /*p-cond  */
+        ,input ?             /*p-rec   */
+        ,input ?             /*p-grp   */
+        ,input t-doc.cli-type             /*p-cli-type */
+        ,input t-doc.cli-code             /*p-cli-code  */
+        ,input v-cntxt-obj-type    /*p-obj-type  */
+        ,input v-cntxt-obj-code    /*p-obj-code  */
+        ,input ?             /*p-other     */
+        ,output varnotes).
+    end.
   end.
   else do:
+
     v-choice = 0.
     if t-doc.contract-code <> 0 then do:
   /*
@@ -2940,16 +3033,16 @@ do on stop undo, return error return-value :
       end.
   
       when 3 then do: /* из справочника */
-      find first buf_assortment-matrix no-lock where
-                 buf_assortment-matrix.obj-code = v-cntxt-obj-code and
-                 buf_assortment-matrix.obj-type = v-cntxt-obj-type and
-                 buf_assortment-matrix.asmt-status = integer ({&current-status-int}) no-error .
-                  if available buf_assortment-matrix then do:
-                      v-type-mode-spr = {&g___object} .
-                  end.
-                  else do:
-                      v-type-mode-spr = {&all} .
-                  end.
+        find first buf_assortment-matrix no-lock where
+                   buf_assortment-matrix.obj-code = v-cntxt-obj-code and
+                   buf_assortment-matrix.obj-type = v-cntxt-obj-type and
+                   buf_assortment-matrix.asmt-status = integer ({&current-status-int}) no-error .
+                    if available buf_assortment-matrix then do:
+                        v-type-mode-spr = {&g___object} .
+                    end.
+                    else do:
+                        v-type-mode-spr = {&all} .
+                    end.
         run str/chs-gds.w ( input parparentproc
                       , input v-cntxt-obj-type
                       , input v-cntxt-obj-code
@@ -2964,6 +3057,7 @@ do on stop undo, return error return-value :
                       , input-output varschartic
                       , output varnotes) no-error.
       end.
+
     end case.
   end.
   run cycle-add in this-procedure.
@@ -3928,6 +4022,14 @@ end.
 {&create-record-fuel}
 &scop attr-code trdcattr-spisok-not-doc
 {&create-record-fuel}
+&scop attr-code trdcattr-time-start
+{&create-record-fuel}
+&scop attr-code trdcattr-time-end
+{&create-record-fuel}
+&scop attr-code trdcattr-date-start
+{&create-record-fuel}
+&scop attr-code trdcattr-date-end
+{&create-record-fuel}
 
 end.
 end procedure.
@@ -4014,7 +4116,7 @@ do while varlns-cnt <= num-entries (varnotes):
       next.
     end.
   end.
-  if can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.attr-code = {&attr-supp-np}
+  if can-find (FIRST ub.clients-attr no-lock where (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})
                                                and ub.clients-attr.attr-value = "yes")
   then do :
     find first bf_goods where recid(bf_goods) = gds-rec no-lock.
@@ -4022,11 +4124,14 @@ do while varlns-cnt <= num-entries (varnotes):
     if v-is-petrol then do :
       if not can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type   = t-doc.cli-type
                                                         and ub.clients-attr.obj-code   = t-doc.cli-code
-                                                        and ub.clients-attr.attr-code  = {&attr-supp-np}
+                                                        and 
+                                                          (ub.clients-attr.attr-code  = {&attr-supp-np}
+                                                          or ub.clients-attr.attr-code  = {&attr-supp-lgas}
+                                                          )
                                                         and ub.clients-attr.attr-value = "yes")
       then do :
         message
-        "Контрагент документа не является поставщиком НП." skip
+        "Контрагент документа не является поставщиком НП или СУГ." skip
         "Продолжить ввод товара?"
         view-as alert-box question buttons yes-no update v-log.
         if not v-log then leave cycle.
@@ -7321,5 +7426,133 @@ procedure rowdisp :
   
 end procedure.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rowdisp d-in-doc 
+procedure add-lgas-corr :
+
+  def var loc-ref-list as character no-undo.
+  def var v-gds-code as integer no-undo.
+
+  run str/all-docs.w
+    (  input parparentproc,
+        input t-doc.host-code ,
+        input t-doc.obj-type ,
+        input t-doc.obj-code ,
+        input {&status},
+        input {&fact},
+        input {&income},
+        input ?,
+        input no,
+        input "b-sel,":U + {&trdcattr-is-lgas-corr},
+        input {&TDEDT_Pri_Vnesh},
+        input false,
+        input ?,
+        output loc-ref-list ).
+    find t-d-b where recid (t-d-b) = integer (loc-ref-list) no-lock no-error.
+    if not available t-d-b then do:
+      message "Не выбран документ-источник для корр. СУГ." view-as alert-box.
+      return error.
+    end.
+    if not t-d-b.status_ = {&fact}
+    then do:
+      message "Неверный выбор документа-источника для корр. СУГ."
+        skip "Документ не закрыт на факт." view-as alert-box.
+      return error.
+    end.
+    
+    find clients where clients.obj-type = t-d-b.cli-type and clients.obj-code = t-d-b.cli-code no-lock.
+    disp clients.obj-code @ t-doc.cli-code
+            clients.obj-name with frame {&frame-name}.
+    disp clients.obj-type @ t-doc.cli-type with frame {&frame-name}.
+        run check-cli no-error.
+        if error-status :error then return no-apply.
+ 
+ 
+   { str/tdat-val.i
+     t-d-b.doc-code
+     {&trdcattr-is-lgas}
+     varvalue
+     vartype
+     no-error
+   }
+ 
+     
+     if not varvalue = "yes" then do:
+      message "Неверный выбор документа-источника для корр. СУГ."
+        skip "Документ не является приходной накладной СУГ." view-as alert-box.
+      return error.
+   end.
+
+  { str/tdat-wrt.i
+    t-doc.doc-code
+    {&trdcattr-trn-lgas-corr}
+    t-d-b.doc-code
+    no-error
+  }
+  
+  find first ub.doc-line no-lock where ub.doc-line.doc-code = t-d-b.doc-code no-error.
+  if available (ub.doc-line)
+  then do:
+    { gbl/doclicod.i
+      recid(ub.doc-line)
+      v-gds-code
+    }
+    
+    find first ub.goods no-lock where ub.goods.gds-code = v-gds-code no-error.
+    if available (ub.goods)
+    then do:
+      varnotes = string (recid (ub.goods)).
+      run cycle-add in this-procedure.
+    end.
+  end.
+  
+  def buffer buf_doc-attr for ub.doc-attr.
+  for each tt-upd-attr-fuel :
+    find first ub.doc-attr where ub.doc-attr.doc-code = t-d-b.doc-code and ub.doc-attr.attr-code = tt-upd-attr-fuel.code no-lock no-error.
+    if available (ub.doc-attr)
+    then do:
+      find first buf_doc-attr 
+        where buf_doc-attr.doc-code = t-doc.doc-code 
+          and buf_doc-attr.attr-code = tt-upd-attr-fuel.code no-error.
+      if not available (buf_doc-attr)
+      then do:
+        create buf_doc-attr.
+        buf_doc-attr.doc-code = t-doc.doc-code.
+      end.
+      buffer-copy ub.doc-attr except ub.doc-attr.doc-code
+      to buf_doc-attr.
+    end.
+  end.
+  find first ub.doc-attr where ub.doc-attr.doc-code = t-d-b.doc-code and ub.doc-attr.attr-code = {&trdcattr-nids} no-lock no-error.
+  if available (ub.doc-attr)
+  then do:
+    find first buf_doc-attr 
+      where buf_doc-attr.doc-code = t-doc.doc-code 
+        and buf_doc-attr.attr-code = tt-upd-attr-fuel.code no-error.
+    if not available (buf_doc-attr)
+    then do:
+      create buf_doc-attr.
+      buf_doc-attr.doc-code = t-doc.doc-code.
+    end.
+    buffer-copy ub.doc-attr except ub.doc-attr.doc-code
+    to buf_doc-attr.
+  end.
+  find first ub.doc-attr where ub.doc-attr.doc-code = t-d-b.doc-code and ub.doc-attr.attr-code = {&trdcattr-dids} no-lock no-error.
+  if available (ub.doc-attr)
+  then do:
+    find first buf_doc-attr 
+      where buf_doc-attr.doc-code = t-doc.doc-code 
+        and buf_doc-attr.attr-code = tt-upd-attr-fuel.code no-error.
+    if not available (buf_doc-attr)
+    then do:
+      create buf_doc-attr.
+      buf_doc-attr.doc-code = t-doc.doc-code.
+    end.
+    buffer-copy ub.doc-attr except ub.doc-attr.doc-code
+    to buf_doc-attr.
+  end.
+end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

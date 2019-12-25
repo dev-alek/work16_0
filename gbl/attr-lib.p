@@ -870,11 +870,23 @@ end.
 &scop manual-edit-attr-supp-np   1
 &scop batch-edit-attr-supp-np   1
 
-/* Атрибут клиента - является нефтебазой для:*/
+/* Атрибут клиента - Поставщик СУГ   */
+&scop type-attr-supp-lgas  {&type-log}
+&scop format-attr-supp-lgas  "+/"
+&scop label-attr-supp-lgas  "Поставщик СУГ"
+&scop tooltip-attr-supp-lgas  "Поставщик СУГ"
+&scop user-can-edit-attr-supp-lgas   true
+&scop output-display-attr-supp-lgas  true
+&scop other-attr-supp-lgas  '':u
+&scop news-attr-supp-lgas  true
+&scop manual-edit-attr-supp-lgas   1
+&scop batch-edit-attr-supp-lgas   1
+
+/* Атрибут клиента - является нефтебазой/ГНС для:*/
 &scop type-attr-tank-farm-for {&type-char}
 &scop format-attr-tank-farm-for "X(255)"
-&scop label-attr-tank-farm-for "Является нефтебазой для:"
-&scop tooltip-attr-tank-farm-for "Является нефтебазой для:"
+&scop label-attr-tank-farm-for "Является нефтебазой/ГНС для:"
+&scop tooltip-attr-tank-farm-for "Является нефтебазой/ГНС для:"
 &scop user-can-edit-attr-tank-farm-for  true
 &scop output-display-attr-tank-farm-for  true
 &scop other-attr-tank-farm-for 'spr=clntattr-tank-farm-for':u
@@ -1106,6 +1118,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-supp-np
       {&attr-temp-full-code}
+      &scop attr-code attr-supp-lgas
+      {&attr-temp-full-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-full-code}
       &scop attr-code attr-auto-tank-for
@@ -1254,6 +1268,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-division-code
       {&attr-temp-code}
       &scop attr-code attr-supp-np
+      {&attr-temp-code}
+      &scop attr-code attr-supp-lgas
       {&attr-temp-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-code}
@@ -1610,6 +1626,8 @@ procedure clntattr-news :
       &scop attr-code attr-division-code
       {&attr-news-code}
       &scop attr-code attr-supp-np
+      {&attr-news-code}
+      &scop attr-code attr-supp-lgas
       {&attr-news-code}
       &scop attr-code attr-tank-farm-for
       {&attr-news-code}
@@ -2165,6 +2183,8 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-supp-np
       {&attr-manual-edit-code}
+      &scop attr-code attr-supp-lgas
+      {&attr-manual-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-manual-edit-code}
       &scop attr-code attr-auto-tank-for
@@ -2227,6 +2247,8 @@ procedure clntattr-batch-edit :
       &scop attr-code attr-division-code
       {&attr-batch-edit-code}
       &scop attr-code attr-supp-np
+      {&attr-batch-edit-code}
+      &scop attr-code attr-supp-lgas
       {&attr-batch-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-batch-edit-code}

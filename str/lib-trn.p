@@ -44,6 +44,7 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { trg/checkart.i }
 { str/valddnst.i def }
 { gbl/ptrlprop.i def }
+{ ref/gds-attr.i }
 
 define variable g-varr-b as character no-undo. /* читается из gbl/curr-r-b.i один раз на всю библиотеку */
 
@@ -1235,6 +1236,42 @@ else do:
       buf_trn-doc.obj-type
       buf_trn-doc.obj-code
     }
+    def var varvalue as character no-undo.
+
+    find first ub.goods no-lock where  
+            ub.goods.artic = parartic
+        and ub.goods.prod-type = parprod-type
+        and ub.goods.prod-code = parprod-code.
+    
+    run gds-attr-value in this-procedure
+      (  input ub.goods.gds-code
+      ,  input {&attr-fuel-type}
+      , output varvalue
+      , output vartype
+      ) no-error .
+    /*для типа топлива СУГ работаем через кг*/
+    if varvalue = 'lgas' then 
+    do:
+      ptrlprop-expptrl = {&calc-petrol-weight}.
+    end.
+
+    find first ub.goods no-lock where  
+            ub.goods.artic = parartic
+        and ub.goods.prod-type = parprod-type
+        and ub.goods.prod-code = parprod-code.
+    
+    run gds-attr-value in this-procedure
+      (  input ub.goods.gds-code
+      ,  input {&attr-fuel-type}
+      , output varvalue
+      , output vartype
+      ) no-error .
+    /*для типа топлива СУГ работаем через кг*/
+    if varvalue = 'lgas' then 
+    do:
+      ptrlprop-expptrl = {&calc-petrol-weight}.
+    end.
+    
   end.
 end.
 /*----------------------------------------------------------------------------------*/

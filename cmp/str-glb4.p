@@ -350,6 +350,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 /* Атрибут клиента - Выведен из эксплуатации:*/
 { cmp/cr-prep.i 1 attr-cli-decommissioned cli-decommissioned " " cli-decommissioned }
 
+/* Атрибут клиента - Поставщик СУГ   */
+{ cmp/cr-prep.i 1 attr-supp-lgas supp-lgas " " supp-lgas }
+
 /* сюда добавлять новые названия атрибутов клиентов */
 
 /* список атрибутов клиентов */
@@ -397,6 +400,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 ,{&bef-attr-requisite-alc-decl}~
 ,{&bef-attr-division-code}~
 ,{&bef-attr-supp-np}~
+,{&bef-attr-supp-lgas}~
 ,{&bef-attr-tank-farm-for}~
 ,{&bef-attr-auto-tank-for}~
 ,{&bef-attr-cli-for-close-fo}~
@@ -638,7 +642,7 @@ attr-group-np
 
 /* типы топлива */
 { cmp/cr-prepc.i 1 prop-list-attr-fuel-type
-"petrol,diesel-sum,diesel-wint,metan"
+"petrol,diesel-sum,diesel-wint,metan,lgas"
 attr-fuel-type
 }
 
@@ -1310,6 +1314,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Время налива */
 { cmp/cr-prep.i 1 trdcattr-date-pour "date-pour" " " "date-pour" }
 
+/* Время начала слива */
+{ cmp/cr-prep.i 1 trdcattr-time-start "time-start" " " "time-start" }
+
+/* Время конца слива */
+{ cmp/cr-prep.i 1 trdcattr-time-end "time-end" " " "time-end" }
+
 /* Свидетельство о проверке */
 { cmp/cr-prep.i 1 trdcattr-inspection-cert "inspection-cert" " " "inspection-cert" }
 
@@ -1328,8 +1338,23 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Список не предоставленных документов */
 { cmp/cr-prep.i 1 trdcattr-spisok-not-doc "spisok-not-doc" " " "spisok-not-doc" }
 
-/* Признак топливной накладной */
+/* Топливная накладная */
 { cmp/cr-prep.i 1 trdcattr-is-fuel "is-fuel" " " "is-fuel" }
+
+/* Приход СУГ */
+{ cmp/cr-prep.i 1 trdcattr-is-lgas "is-lgas" " " "is-lgas" }
+
+/* Корр. СУГ */
+{ cmp/cr-prep.i 1 trdcattr-is-lgas-corr "is-lgas-corr" " " "is-lgas-corr" }
+
+/* Документ источник для корр. СУГ */
+{ cmp/cr-prep.i 1 trdcattr-trn-lgas-corr "trn-lgas-corr" " " "trn-lgas-corr" }
+
+/* Дата начала слива */
+{ cmp/cr-prep.i 1 trdcattr-date-start "trdcattr-date-start" " " "trdcattr-date-start" }
+
+/* Дата конца слива */
+{ cmp/cr-prep.i 1 trdcattr-date-end "trdcattr-date-end" " " "trdcattr-date-end" }
 
 /* Признак накладной технологического пролива */
 { cmp/cr-prep.i 1 trdcattr-techpass "techpass" " " "techpass" }
@@ -1427,6 +1452,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-doc-not}~
 ,{&bef-trdcattr-spisok-not-doc}~
 ,{&bef-trdcattr-is-fuel}~
+,{&bef-trdcattr-is-lgas}~
+,{&bef-trdcattr-is-lgas-corr}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 

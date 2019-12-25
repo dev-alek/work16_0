@@ -67,6 +67,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-after-qnty      as decimal   no-undo .
   define variable v-after-cli-qnty  as decimal   no-undo .
   define variable v-last-invlin     as recid     no-undo .
+  define variable is-lgas           as logical   no-undo.
 
   define variable is-vir as logical no-undo.
   define variable v-value as character no-undo.
@@ -208,6 +209,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 and buf_goods.prod-code = buf_doc-line.prod-code
             .
 
+
+            
+            run gds-attr-value in this-procedure
+              (  input buf_goods.gds-code
+                ,input {&attr-fuel-type}
+                ,output v-attr-value
+                ,output v-attr-type
+               ) .
+            if v-attr-value = "lgas" 
+              then assign v-chk-rvs = false is-lgas = true.
+            
+            
+            
             run gds-attr-value in this-procedure
               ( input  buf_goods.gds-code
               ,input  {&attr-ptrl-without-rvs}
@@ -230,7 +244,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
             is-vir = if (v-ok and logical(v-value)) then true else false.
             
-            if lookup(v-attr-value, 'true,yes':u) = 0 and not is-gas(buf_goods.gds-code) and not is-vir then do:
+            if lookup(v-attr-value, 'true,yes':u) = 0 and not is-lgas and not is-gas(buf_goods.gds-code) and not is-vir then do:
               assign
                 v-chk-rvs = true
               .
@@ -275,6 +289,24 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           and buf_goods.prod-type = buf_doc-line.prod-type
           and buf_goods.prod-code = buf_doc-line.prod-code
       .
+      
+      run gds-attr-value in this-procedure
+        (  input buf_goods.gds-code
+          ,input {&attr-fuel-type}
+          ,output v-attr-value
+          ,output v-attr-type
+         ) .
+      if v-attr-value = "lgas" 
+        then next.
+      
+      run gds-attr-value in this-procedure
+        (  input buf_goods.gds-code
+          ,input {&attr-fuel-type}
+          ,output v-attr-value
+          ,output v-attr-type
+         ) .
+      if v-attr-value = "lgas" 
+        then next.
       
       if is-gas(buf_goods.gds-code) then next.
       

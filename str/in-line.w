@@ -169,6 +169,7 @@ define variable vat-sumvalue                as   character initial ?         no-
 define variable vat-sumtype                 as   character initial ?         no-undo.
 define variable v-insalepr                  as   logical   initial ?         no-undo.
 define variable v-attr-type                 as   character                   no-undo.
+define variable v-attr-value                as   character                   no-undo.
 define variable rdtaxcdvalue                as   character initial ?         no-undo.
 define variable exctaxcdvalue               as   character initial ?         no-undo.
 define variable vattaxcdvalue               as   character initial ?         no-undo.
@@ -209,6 +210,7 @@ define variable vardensity-calc             as   character      initial ?    no-
 define variable varcli-base-rate-calc       as   character      initial ?    no-undo.
 define variable vardoc-qnty-calc            as   character      initial ?    no-undo.
 define variable varfact-qnty-calc           as   character      initial ?    no-undo.
+define variable vardensity-ist              as   decimal        initial ?    no-undo.
 define variable varprice-cli-calc           as   character      initial ?    no-undo.
 define variable varbase-price-calc          as   character      initial ?    no-undo.
 define variable vartax-3-calc               as   character      initial ?    no-undo.
@@ -290,6 +292,9 @@ define variable is-fuel                     as logical                       no-
 define variable v-specif-unit-list          as character no-undo . /* ед.изм. из спецификации договора */
 define variable v-specif-cli-base-rate      as decimal no-undo .   /* коэф. к базовой ЕИ для ЕИ из договора */ 
 define variable l-repeat-asi                as logical                       no-undo .
+define variable v-is-lgas                   as logical                       no-undo.
+define variable v-is-lgas-corr              as logical                       no-undo.
+define variable v-lgas-gds                  as logical                       no-undo.
 
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
@@ -443,9 +448,10 @@ define frame d-in-line
   tt-fr-doc-line.unit-base             at row 7    col 26.5  colon-aligned no-label                   view-as text    size 7     by 1
   b-docsec                             at row 7    col 32  
   tt-fr-doc-line.fact-qnty    format ">>>,>>>,>>9.<<<"  at row 8    col 10.5  colon-aligned    label "&Факт"           view-as fill-in size 16    by 1
-  tt-fr-doc-line.fact-qnty-kg format ">>>,>>>,>>9.<<<"  at row 8    col 29.0  colon-aligned no-label                   view-as fill-in size 16    by 1
-  tt-fr-doc-line.vat-pc                 at row 8    col 50    colon-aligned
-  tt-fr-doc-line.type-inp-vat           at row 8    col 58    no-label                   view-as toggle-box size 2 by 1
+  tt-fr-doc-line.fact-density format ">>9.9999999999"   at row 8    col 27.0  colon-aligned no-label                   view-as fill-in size 16    by 1
+  tt-fr-doc-line.fact-qnty-kg format ">>>,>>>,>>9.<<<"  at row 8    col 42.5  colon-aligned no-label                   view-as fill-in size 16    by 1
+  tt-fr-doc-line.vat-pc                 at row 8    col 64    colon-aligned
+  tt-fr-doc-line.type-inp-vat           at row 8    col 73    no-label                   view-as toggle-box size 2 by 1
   tt-fr-doc-line.slt-pc                 at row 9    col 50    colon-aligned
   tt-fr-doc-line.price-cli              at row 12   col 15    colon-aligned label "П&о ТТН" format "->>,>>>,>>>,>>9.9999999999" view-as fill-in size 20 by 1  fgcolor 4
   tt-fr-doc-line.price-base             at row 13   col 15    colon-aligned label "Учет"    format ">>,>>>,>>>,>>9.999"           view-as fill-in size 20    by 1
@@ -465,7 +471,7 @@ define frame d-in-line
   prt-doc                               at row 9    col 10.5  colon-aligned
   prt-fact                              at row 10   col 10.5  colon-aligned
   "Сумма НДС(вал.постав.)"              at row 7    col 60                                             view-as text                     bgcolor 3 fgcolor 15
-  sum-vat                               at row 8    col 58    colon-aligned no-label
+  sum-vat                               at row 8    col 73    colon-aligned no-label
   b-save                                at row 4.5  col 90
   b-quit                                at row 6    col 90
   b-prt                                 at row 9    col 90
@@ -692,6 +698,13 @@ do:
       end.
     end.
   end.
+  if vardensity-ist <> 0 and vardensity-ist <> ?
+  then do:
+    tt-fr-doc-line.doc-density:screen-value = string (vardensity-ist).
+    apply "leave" to tt-fr-doc-line.doc-density in frame {&frame-name} .
+    tt-fr-doc-line.doc-density:sensitive = false.
+  end.
+
 end.
 
 on return of tt-fr-doc-line.doc-qnty in frame {&frame-name}
@@ -823,6 +836,17 @@ do:
     end.
 
     if input frame {&frame-name} tt-fr-doc-line.fact-qnty <> tt-fr-doc-line.fact-qnty then do:
+      
+/*      if v-lgas-gds                                                                                                         */
+/*      then do:                                                                                                              */
+/*        message "Для СУГ запрещено менять фактическое кол-во. Кол-во проставляется по документам сверки." view-as alert-box.*/
+/*        assign                                                                                                              */
+/*          tt-fr-doc-line.fact-qnty:screen-value = string (tt-fr-doc-line.fact-qnty)                                         */
+/*        .                                                                                                                   */
+/*                                                                                                                            */
+/*        return no-apply.                                                                                                    */
+/*      end.                                                                                                                  */
+      
       assign
         frame {&frame-name} tt-fr-doc-line.fact-qnty
       .
@@ -833,6 +857,7 @@ do:
 
       display
         tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true
+        tt-fr-doc-line.fact-density when tt-fr-doc-line.fact-density :visible = true
         with frame {&frame-name} .
 
       run disp-total in this-procedure .
@@ -1511,6 +1536,7 @@ do:
   display
     tt-fr-doc-line.fact-qnty
     tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true
+    tt-fr-doc-line.fact-density when tt-fr-doc-line.fact-density :visible = true
     with frame {&frame-name} .
 
 end.
@@ -1996,10 +2022,43 @@ do on error   undo main-block, leave main-block
 
    find t-doc where recid( t-doc ) = pardoc-rec.
 
+     { str/tdat-val.i
+        t-doc.doc-code
+        {&trdcattr-is-lgas}
+        varvalue
+        vartype
+        no-error 
+    }
+    if varvalue = "yes"
+      then v-is-lgas = true.
+    
+    { str/tdat-val.i                                    
+       t-doc.doc-code
+       {&trdcattr-is-lgas-corr}
+        varvalue
+        vartype
+        no-error
+    }
+    
+    if varvalue = "yes"
+      then v-is-lgas-corr = true.
+
    find first buf_goods no-lock
      where recid(buf_goods) = pargds-rec
    .
    { gbl/hold-doc.i t-doc.doc-code v-hold-doc }
+  
+    run gds-attr-value in this-procedure
+      (  input buf_goods.gds-code
+        ,input {&attr-fuel-type}
+        ,output v-attr-value
+        ,output v-attr-type
+       ) .
+    if v-attr-value = "lgas" then 
+    do:
+      v-lgas-gds = true.
+    end.
+
 
    find first bf_sysconf no-lock
      where bf_sysconf.host-code = t-doc.host-code
@@ -2308,6 +2367,8 @@ define buffer bf-another_parts  for ub.parts.
 define buffer bf_contract       for ub.contract.
 define buffer bf_gds-obj        for ub.gds-obj.
 define buffer bf_trn-doc        for ub.trn-doc.
+define buffer bf_trn-ist        for ub.trn-doc.
+define buffer bf_doc-line-ist   for ub.doc-line.
 define buffer bf_clients        for ub.clients.
 define buffer bf_doc-line       for ub.doc-line.
 define buffer buf_country       for ub.country.
@@ -2324,6 +2385,7 @@ disable all with frame {&frame-name}.
 assign
   tt-fr-doc-line.doc-density            :visible = no
   tt-fr-doc-line.temperature            :visible = no
+  tt-fr-doc-line.fact-density           :visible = no
   tt-fr-doc-line.num-place              :visible = no
   tt-fr-doc-line.wt-brutto              :visible = no
   tt-fr-doc-line.pl-code                :visible = no
@@ -2389,6 +2451,27 @@ if not available tt-fr-doc-line then do:
      if error-status :error then return error.
    end.
 
+end.
+if v-is-lgas-corr
+then do:
+
+   { str/tdat-val.i
+      t-doc.doc-code
+      {&trdcattr-trn-lgas-corr}
+      varvalue
+      vartype
+      }
+  
+  find first bf_trn-ist no-lock where bf_trn-ist.doc-code = varvalue no-error.
+  if not available (bf_trn-ist)
+    then return error "Не найден документ-источник: " + varvalue.
+  find first bf_doc-line-ist where bf_doc-line-ist.doc-code = bf_trn-ist.doc-code and
+    buf_goods.artic     = bf_doc-line-ist.artic     and
+    buf_goods.prod-type = bf_doc-line-ist.prod-type and
+    buf_goods.prod-code = bf_doc-line-ist.prod-code no-lock no-error.
+  if not available (bf_trn-ist)
+    then return error "Не найден товар в документе-источника: " + string (buf_goods.gds-code).    
+  vardensity-ist = bf_doc-line-ist.fact-density.
 end.
 
 run tax-name in this-procedure
@@ -2598,12 +2681,14 @@ else do: /* не добавление (изменение и просмотр) */
     display tt-fr-doc-line.fact-qnty with frame {&frame-name}.
     if is-petrolium = yes and is-pieces = no then do:
       display tt-fr-doc-line.fact-qnty-kg with frame {&frame-name}.
+      display tt-fr-doc-line.fact-density with frame {&frame-name}.
     end.
   end.
   else do:
     hide
       tt-fr-doc-line.fact-qnty    in frame {&frame-name}
       tt-fr-doc-line.fact-qnty-kg in frame {&frame-name}
+      tt-fr-doc-line.fact-density in frame {&frame-name}.
     .
   end.
   if is-petrolium = yes then do:
@@ -2714,9 +2799,12 @@ if varrvs-place = yes then do:
       .
     end.
     
-    enable
-      b-docsec
-      with frame {&frame-name}.
+    if not v-lgas-gds
+    then 
+      enable
+        b-docsec
+        with frame {&frame-name}.
+
 
     if t-doc.flag_ = true
       or t-doc.status_ = {&fact}
@@ -2724,7 +2812,7 @@ if varrvs-place = yes then do:
       hide
         b-docsec
         in frame {&frame-name}.
-      if lookup(v-ptrl-without-rvs, 'true,yes':u) = 0 then do:
+      if lookup(v-ptrl-without-rvs, 'true,yes':u) = 0 and not v-is-lgas-corr then do:
         enable
           b-rvs-bf
           b-rvs-af
@@ -2788,7 +2876,6 @@ if varrvs-place = yes then do:
         return error .
       end.
     end.
-
     NormWast = new ibs.th.ref.normwastsub ().
     NormWast:ParGdsOAttr:GdsCode = buf_goods.gds-code.
     NormWast:ParGdsOAttr:ObjType = t-doc.obj-type.
@@ -2813,106 +2900,109 @@ if varrvs-place = yes then do:
       infoSectionsTotal:NewSection().
     end.
     
-    define variable l-ok as logical   no-undo .
-  
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_income_petrol-сommission':U
-        {&cntxt-object}
-        t-doc.host-code
+      define variable l-ok as logical   no-undo .
+
+      if not (v-is-lgas or v-is-lgas-corr)  
+      then do:  
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_income_petrol-сommission':U
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            false
+            l-ok
+          }
+      
+         if l-ok = true
+          then do:
+            infoSectionsTotal:IsActnComm = true.
+          end.
+    
+         { str/tdat-val.i
+            t-doc.doc-code
+            {&trdcattr-car-num}
+            varcar-num
+            vartype
+            }
+        
+         { str/tdat-val.i
+            t-doc.doc-code
+            {&trdcattr-acc-ship}
+            varvalue
+            vartype
+            }
+        
+        varrn-acc-ship = decimal (varvalue) no-error.
+        if varrn-acc-ship = ?
+          then varrn-acc-ship = 0.
+      end.
+      
+      { gbl/ptrlprop.i
+        run
         t-doc.obj-type
         t-doc.obj-code
-        0
-        0
-        0
-        false
-        l-ok
       }
   
-     if l-ok = true
-      then do:
-        infoSectionsTotal:IsActnComm = true.
-      end.
 
-     { str/tdat-val.i
-        t-doc.doc-code
-        {&trdcattr-car-num}
-        varcar-num
-        vartype
-        }
-    
-     { str/tdat-val.i
-        t-doc.doc-code
-        {&trdcattr-acc-ship}
-        varvalue
-        vartype
-        }
-    
-    varrn-acc-ship = decimal (varvalue) no-error.
-    if varrn-acc-ship = ?
-      then varrn-acc-ship = 0.
-    
-    { gbl/ptrlprop.i
-      run
-      t-doc.obj-type
-      t-doc.obj-code
-    }
-
-
-    assign
-      infoSectionsTotal:CliQntyInput = varcli-qnty-input
-      infoSectionsTotal:DensityInput = vardensity-input
-      infoSectionsTotal:DocQntyInput = vardoc-qnty-input
+      assign
+        infoSectionsTotal:CliQntyInput = varcli-qnty-input
+        infoSectionsTotal:DensityInput = vardensity-input
+        infoSectionsTotal:DocQntyInput = vardoc-qnty-input
       infoSectionsTotal:NormalWastage = NormWast:NormalWastageTransDate
-      infoSectionsTotal:IsRNAlgo = if ptrlprop-algoincome = 2 then true else false
-      infoSectionsTotal:PercAcc = varpercauto
-      infoSectionsTotal:AccShip = varrn-acc-ship
-      infoSectionsTotal:CarNum = varcar-num
+        infoSectionsTotal:IsRNAlgo = if ptrlprop-algoincome = 2 then true else false
+        infoSectionsTotal:PercAcc = varpercauto
+        infoSectionsTotal:AccShip = varrn-acc-ship
+        infoSectionsTotal:CarNum = varcar-num
       infoSectionsTotal:FlagTrn = t-doc.flag_
       infoSectionsTotal:Sts = t-doc.status_
       infoSectionsTotal:Parentproc = parparentproc
     .
-
-    if parline-mode <> {&add-def} then do:
-      infoSectionsTotal:GetDBAllAttr().
-      v-prt-start-real-date = infoSectionsTotal:StartRealDate.
-      v-prt-start-real-time = infoSectionsTotal:StartRealTime.
-      v-prt-end-real-date = infoSectionsTotal:EndRealDate.
-      v-prt-end-real-time = infoSectionsTotal:EndRealTime.
-    end.
-    
+  
+      if parline-mode <> {&add-def} then do:
+        infoSectionsTotal:GetDBAllAttr().
+        v-prt-start-real-date = infoSectionsTotal:StartRealDate.
+        v-prt-start-real-time = infoSectionsTotal:StartRealTime.
+        v-prt-end-real-date = infoSectionsTotal:EndRealDate.
+        v-prt-end-real-time = infoSectionsTotal:EndRealTime.
+      end.
+      
     if parline-mode <> {&add-def} then infoSectionsTotal:GetDBAllAttr().
 
-    
-    tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
-    
-    /*run str/in-ladd.w
-      ( input        parParentProc
-       ,input        "get-attr":U
-       ,input        t-doc.doc-code
-       ,input        buf_goods.gds-code
-       ,input-output infoSectionsTotal
-       ,      output was_setting
-      ) .*/
       
-      /*IF  was_setting = YES
-      AND (
-            v-car-num          <> v-prt-car-num
-         OR v-car-vol          <> v-prt-car-vol
-         OR v-autoent-obj-type <> v-prt-autoent-obj-type
-         OR v-autoent-obj-code <> v-prt-autoent-obj-code
-         OR v-fio              <> v-prt-fio
-         OR v-ptbotype         <> v-prt-ptbotype
-         OR v-ptbocode         <> v-prt-ptbocode
-          )
-      THEN DO:
-         assign
-            v-change = TRUE
-         .
-      end.*/
-
+    tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
+      
+      /*run str/in-ladd.w
+        ( input        parParentProc
+         ,input        "get-attr":U
+         ,input        t-doc.doc-code
+         ,input        buf_goods.gds-code
+         ,input-output infoSectionsTotal
+         ,      output was_setting
+        ) .*/
+      
+        /*IF  was_setting = YES
+        AND (
+              v-car-num          <> v-prt-car-num
+           OR v-car-vol          <> v-prt-car-vol
+           OR v-autoent-obj-type <> v-prt-autoent-obj-type
+           OR v-autoent-obj-code <> v-prt-autoent-obj-code
+           OR v-fio              <> v-prt-fio
+           OR v-ptbotype         <> v-prt-ptbotype
+           OR v-ptbocode         <> v-prt-ptbocode
+            )
+        THEN DO:
+           assign
+              v-change = TRUE
+           .
+        end.*/
+  
      if stfactplvalue <> ""  then do:
        { str/chkqtpl.i
          stfactplvalue
@@ -3280,12 +3370,16 @@ if parline-mode <> {&lookup} and
    if kind-qnty = "doc" then do:
       display tt-fr-doc-line.cli-qnty tt-fr-doc-line.doc-qnty with frame {&frame-name}.
       hide    tt-fr-doc-line.fact-qnty    in frame {&frame-name}
-              tt-fr-doc-line.fact-qnty-kg in frame {&frame-name}.
+              tt-fr-doc-line.fact-qnty-kg in frame {&frame-name}
+              tt-fr-doc-line.fact-density in frame {&frame-name}
+              .
    end.
    else do:
       display tt-fr-doc-line.fact-qnty with frame {&frame-name}.
       if is-petrolium = yes and is-pieces = no then do:
-        display tt-fr-doc-line.fact-qnty-kg with frame {&frame-name}.
+        display tt-fr-doc-line.fact-qnty-kg 
+        tt-fr-doc-line.fact-density
+        with frame {&frame-name}.
       end.
    end.
 
@@ -3430,7 +3524,7 @@ enable b-quit b-help with frame {&frame-name}.
       .
 run disp-total in this-procedure.
 end.
-if is-petrolium = yes and is-pieces = no then do:
+if is-petrolium = yes and is-pieces = no and not v-lgas-gds then do:
   disable 
     tt-fr-doc-line.doc-density
     tt-fr-doc-line.fact-qnty
@@ -3438,7 +3532,9 @@ if is-petrolium = yes and is-pieces = no then do:
     tt-fr-doc-line.doc-qnty
     tt-fr-doc-line.cli-qnty
     tt-fr-doc-line.temperature
-    tt-fr-doc-line.doc-density with frame {&frame-name}.
+    tt-fr-doc-line.doc-density
+    tt-fr-doc-line.fact-density 
+    with frame {&frame-name}.
   hide tt-fr-doc-line.cli-base-rate tt-fr-doc-line.temperature tt-fr-doc-line.doc-density in frame {&frame-name}.
 end.
 end procedure. /* ui-on */
@@ -5182,6 +5278,7 @@ procedure edit-doc-pl :
         display
           tt-fr-doc-line.fact-qnty
           tt-fr-doc-line.fact-qnty-kg
+          tt-fr-doc-line.fact-density
           with frame {&FRAME-NAME}
         .
       end.
@@ -5620,6 +5717,7 @@ procedure save-place-rsrv :
         display
           tt-fr-doc-line.fact-qnty
           tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true
+          tt-fr-doc-line.fact-density when tt-fr-doc-line.fact-density :visible = true
           with frame {&frame-name} .
 
         run eq-qnty-rvs-pl in this-procedure
@@ -5650,6 +5748,7 @@ procedure save-place-rsrv :
           display
             tt-fr-doc-line.fact-qnty
             tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true
+            tt-fr-doc-line.fact-density when tt-fr-doc-line.fact-density :visible = true
             with frame {&frame-name} .
         end.
         if p-ok = false then do:
@@ -5728,6 +5827,7 @@ procedure correct-fact-qnty :
     display
       tt-fr-doc-line.fact-qnty
       tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true
+      tt-fr-doc-line.fact-density when tt-fr-doc-line.fact-density :visible = true
       with frame {&frame-name} .
 
     find first tt-doc-pl no-lock

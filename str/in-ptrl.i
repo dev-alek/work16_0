@@ -304,6 +304,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define input parameter p-action      as   character           no-undo .
       define input parameter p-action-type as   character           no-undo .
       define input parameter p-rvs-type    like ub.rvs-doc.rvs-type no-undo .
+      define buffer buf_doc-line for ub.doc-line.
 
       block_tr:
       do transaction
@@ -333,6 +334,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-density         like ub.rvs-line.state-density          no-undo .
         define variable v-delta-mass-qnty as decimal   no-undo .
+        define variable v-attr-type           as character no-undo .
+        define variable v-attr-value          as character   no-undo .
         assign
           v-pl-code = ?
         .
@@ -836,6 +839,55 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     view-as alert-box .
                   undo block_tr, return error .
                 end.
+                
+                run gds-attr-value in this-procedure
+                  (  input buf_goods.gds-code
+                    ,input {&attr-fuel-type}
+                    ,output v-attr-value
+                    ,output v-attr-type
+                   ) .
+                if v-attr-value = "lgas" then 
+                do:
+                  def var dmdop as decimal no-undo.
+                  def var dM    as decimal no-undo.
+                  def var infoSectionObj as class infosection no-undo.
+                  find first buf_doc-line no-lock where buf_doc-line.doc-code = t-doc.doc-code
+                      and buf_goods.artic = buf_doc-line.artic
+                      and buf_goods.prod-type = buf_doc-line.prod-type
+                      and buf_goods.prod-code = buf_doc-line.prod-code no-error.
+                  dM = buf_doc-line.cli-qnty - (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
+                  dmdop = SQRT ((v-rvs-cli-qnty-after *  0.65) * (v-rvs-cli-qnty-after *  0.65) + (v-rvs-cli-qnty-before *  0.65) * (v-rvs-cli-qnty-before *  0.65)) / 100.
+/*                  message "dM - " dM "dmdop - " dmdop "v-rvs-cli-qnty-before - " v-rvs-cli-qnty-before "v-rvs-cli-qnty-after - " v-rvs-cli-qnty-after view-as alert-box.*/
+                  if absolute (dM) <= dmdop  
+                  then do:
+                    infoSectionObj = infoSectionsTotal:GetInfoSectionProp(1).
+                    infoSectionObj:AccPOMI = dmdop.
+                    infoSectionObj:FactKgQnty = buf_doc-line.doc-qnty * buf_doc-line.doc-density.
+                    infoSectionObj:FactQnty = (v-rvs-qnty-after - v-rvs-qnty-before).
+                    infoSectionObj:FactDensity = infoSectionObj:FactKgQnty / infoSectionObj:FactQnty.
+                    infoSectionsTotal:SaveDB().
+                    run correct-fact-qnty in this-procedure
+                      ( input buf_doc-line.doc-qnty
+                       ,input buf_doc-line.doc-density
+                      ) no-error .
+                  end.
+                  else do:
+                    infoSectionObj = infoSectionsTotal:GetInfoSectionProp(1).
+                    infoSectionObj:FactKgQnty = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
+                    infoSectionObj:FactQnty = (v-rvs-qnty-after - v-rvs-qnty-before).
+                    infoSectionObj:FactDensity = infoSectionObj:FactKgQnty / infoSectionObj:FactQnty.
+                    infoSectionsTotal:SaveDB().
+                    run correct-fact-qnty in this-procedure
+                      ( input infoSectionObj:FactQnty
+                       ,input infoSectionObj:FactDensity
+                      ) no-error.
+                    message
+                      substitute( "По результатам слива Газовоза фактическое кол-во товара изменяется на &1 (&2),", infoSectionObj:FactQnty, buf_goods.unit-base ) skip
+                      substitute( "фактическая плотность на &1.", infoSectionObj:FactDensity ) skip
+                      view-as alert-box information .
+                  end.
+                end.
+                
               end. /* v-rvs-qnty-after <> ? */
             end.
         end.
@@ -1403,9 +1455,21 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-edit-doc-pl     as integer   no-undo .
         define variable v-set-doc-pl      as integer   no-undo .
         define variable v-delta-mass-qnty as decimal   no-undo .
-
+        define variable v-attr-type       as character no-undo .
+        define variable v-attr-value      as character no-undo .
+        
         define buffer buf_goods for ub.goods .
-
+        run gds-attr-value in this-procedure
+          (  input p-gds-code
+            ,input {&attr-fuel-type}
+            ,output v-attr-value
+            ,output v-attr-type
+           ) .
+        if v-attr-value = "lgas" 
+        then do:
+          p-ok = true.
+          return.
+        end.
         find first buf_goods no-lock
           where buf_goods.gds-code = p-gds-code
           .

@@ -10,7 +10,7 @@ $Archive$
 
 Автор: Бахтадзе Наталья Викторовна
 Дата создания: 09/09/05
-Author: Bakhtadze Natalya
+Author: Bakhtadze NatalyaC:\work16_0hg\ref\gds-ref.i
 Creation date: 09/09/05
 
 {1} = goo-doc : browse строится по goods. Фильтр : {&all}.
@@ -1382,14 +1382,35 @@ assign
 assign
 frame {&FRAME-NAME} :title = for-title
 .
-assign
-rs-stat = g-stat
-rs-list = g-list
-rs-cond = g-cond
-.
-DISPLAY
-rs-list rs-cond rs-stat
-WITH FRAME {&FRAME-NAME}.
+
+if g-list = "ptrl" or g-list = "lgas"
+then do:
+  assign
+  rs-list = {&all}
+  rs-stat = {&current}  
+  rs-cond = {&all}
+  .
+  DISPLAY
+  rs-list rs-cond rs-stat
+  WITH FRAME {&FRAME-NAME}.
+  disable
+  rs-list rs-cond rs-stat
+  WITH FRAME {&FRAME-NAME}.
+
+end.
+else do:
+  assign
+  rs-list = g-list
+  rs-stat = g-stat  
+  rs-cond = g-cond
+  .
+  DISPLAY
+  rs-list rs-cond rs-stat
+  WITH FRAME {&FRAME-NAME}.
+
+end.
+
+
 run set-filter-name in this-procedure (INPUT v-filter-name) no-error .
 if g-rep <> ? then do:
   reposition {&BROWSE-NAME} to recid g-rep no-error.
@@ -3820,7 +3841,7 @@ assign
   false
   v-lookup-cost
 }
-
+def var v-str-temp as character no-undo.
 run uf-get in this-procedure (
     input {&uf-gdsreffi}
   ,input  v-cntxt-userid
@@ -3834,6 +3855,11 @@ run uf-get in this-procedure (
 if not error-status :error then do:
   assign
   gdsreffi = entry(1, v-uf-list_,  {&delim-par} ) no-error.
+  v-str-temp = entry(2, v-uf-list_,  {&delim-par} ) no-error.
+  if v-str-temp = "ptrl" or v-str-temp = "lgas"
+  then do:
+    entry(2, v-uf-list_,  {&delim-par} ) = {&current}.
+  end.
 end.
 RUN gds-ref-to IN THIS-PROCEDURE (
                                      INPUT        gdsreffi

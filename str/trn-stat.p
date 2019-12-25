@@ -84,6 +84,7 @@ define buffer bf_parts        for ub.parts.
 define buffer bf-cst_parts    for ub.parts.
 define buffer bf_gds-prt      for ub.gds-prt.
 define buffer bf_dis-card     for ub.dis-card.
+define buffer bf_rvs-doc      for ub.rvs-doc.
 define buffer bf_rvs-line     for ub.rvs-line.
 define buffer bf_store        for ub.store.
 define buffer bf_contract     for ub.contract.
@@ -626,11 +627,10 @@ if ((varstatus = {&wayb} and varflag) or varstatus = {&fact}) and varauto-tank =
 then do:
   
   for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code and bf_doc-line-attr.attr-code = "n":
-    
+    def var infoSectionObj as class InfoSection no-undo.
     infoSectionsTotal = new InfoSectionsTotal().
     infoSectionsTotal:Initialization(bf_trn-doc.doc-code, bf_doc-line-attr.gds-code).
     infoSectionsTotal:GetDBAllAttr().
-    
     infoSectionsTotal:CalculateTotal().
     find first bf_goods no-lock where bf_goods.gds-code = bf_doc-line-attr.gds-code. 
     find first bf_doc-line no-lock where
@@ -638,77 +638,92 @@ then do:
                            and bf_goods.artic= bf_doc-line.artic
                            and bf_goods.prod-code = bf_doc-line.prod-code
                            and bf_goods.prod-type = bf_doc-line.prod-type no-error.
-    
-    if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.01
-      or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.01
-      or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.01
-    then do:
-      v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8",
-                                      {&new-line}, 
-                                      bf_doc-line.artic,
-                                      bf_doc-line.doc-qnty,
-                                      bf_doc-line.doc-density,
-                                      bf_doc-line.cli-qnty,
-                                      infoSectionsTotal:DocQntyTotal,
-                                      infoSectionsTotal:DocDensityAvg,
-                                      infoSectionsTotal:CliQntyTotal
-                                      ).
-      delete object infoSectionsTotal.
-      undo, return error v-mess.
+
+    run gds-attr-value in this-procedure
+      (  input bf_doc-line-attr.gds-code
+        ,input {&attr-fuel-type}
+        ,output v-attr-value
+        ,output v-attr-type
+       ) .
+    if v-attr-value = "lgas" then 
+    do:
+      infoSectionObj = infoSectionsTotal:GetInfoSectionProp(1).
+      infoSectionObj:FactKgQnty = bf_doc-line.fact-qnty * bf_doc-line.fact-density.
+      infoSectionObj:FactQnty = bf_doc-line.fact-qnty.
+      infoSectionObj:FactDensity = bf_doc-line.fact-density.
+      infoSectionsTotal:SaveDB().
     end.
-    if varstatus = {&fact} then do:
-      if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
-         or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.01)
-      then do:
-        v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6",
-                                        {&new-line}, 
-                                        bf_doc-line.artic,
-                                        bf_doc-line.fact-qnty,
-                                        bf_doc-line.fact-density * bf_doc-line.fact-qnty,
-                                        infoSectionsTotal:FactQntyTotal,
-                                        infoSectionsTotal:FactKgQntyTotal
-                                        ).
+    else do:
+      if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.01
+        or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.01
+        or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.01
+        then do:
+          v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8",
+                                          {&new-line}, 
+                                          bf_doc-line.artic,
+                                          bf_doc-line.doc-qnty,
+                                          bf_doc-line.doc-density,
+                                          bf_doc-line.cli-qnty,
+                                          infoSectionsTotal:DocQntyTotal,
+                                          infoSectionsTotal:DocDensityAvg,
+                                          infoSectionsTotal:CliQntyTotal
+                                          ).
+          delete object infoSectionsTotal.
+          undo, return error v-mess.
+        end.
+        if varstatus = {&fact} then do:
+          if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
+           or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.01)
+          then do:
+            v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6",
+                                            {&new-line}, 
+                                            bf_doc-line.artic,
+                                            bf_doc-line.fact-qnty,
+                                            bf_doc-line.fact-density * bf_doc-line.fact-qnty,
+                                            infoSectionsTotal:FactQntyTotal,
+                                            infoSectionsTotal:FactKgQntyTotal
+                                            ).
+            delete object infoSectionsTotal.
+            undo, return error v-mess.
+          end.
+        end.
+        v-iskp = false.
+        do ii = 1 to infoSectionsTotal:SectionNum : 
+          infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii).
+          if not v-iskp 
+          then do:
+            v-iskp = infoSectionObj:IsKP.
+          end.
+        end.
+      
+        
         delete object infoSectionsTotal.
-        undo, return error v-mess.
+        
+        if v-iskp
+        then do:
+          { gbl/chk-actg.i
+            v-curr-db-num
+            v-curr-userid
+            {&action-head-code-main}
+            'actn_inventory_fact_not-peresort':U
+            {&cntxt-object}
+            bf_trn-doc.host-code
+            bf_trn-doc.obj-type
+            bf_trn-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+          
+          if not varlog
+          then do:
+            undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').
+          end.
+          
+        end.
       end.
-    end.
-    v-iskp = false.
-    do ii = 1 to infoSectionsTotal:SectionNum : 
-      def var infoSectionObj as class InfoSection no-undo.
-      infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii).
-      if not v-iskp 
-      then do:
-        v-iskp = infoSectionObj:IsKP.
-      end.
-   end.
-    
-    
-    delete object infoSectionsTotal.
-    
-    if v-iskp
-    then do:
-      { gbl/chk-actg.i
-        v-curr-db-num
-        v-curr-userid
-        {&action-head-code-main}
-        'actn_inventory_fact_not-peresort':U
-        {&cntxt-object}
-        bf_trn-doc.host-code
-        bf_trn-doc.obj-type
-        bf_trn-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
-      
-      if not varlog
-      then do:
-        undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').
-      end.
-      
-    end.
     
   end.
 end.
@@ -1416,6 +1431,106 @@ vartechproliv = no
           run waitfram-hide in this-procedure no-error.
           undo, return error "Закрыть накладную по ФАКТУ можно только для объекта своей базы данных или пассивного объекта.".
         end.
+        
+        
+         { str/tdat-val.i
+            bf_trn-doc.doc-code
+            {&trdcattr-is-lgas}
+            v-attr-value
+            v-attr-type
+            no-error 
+         }
+        if not v-attr-value = "yes"
+        then do:
+         { str/tdat-val.i
+            bf_trn-doc.doc-code
+            {&trdcattr-is-lgas}
+            v-attr-value
+            v-attr-type
+            no-error 
+         }
+        end.
+        
+        if v-attr-value = "yes"
+        then do:
+          
+          { str/tdat-val.i
+              bf_trn-doc.doc-code
+              {&trdcattr-date-start}
+              v-attr-value
+              v-attr-type
+              no-error 
+          }
+          
+          if v-attr-value = "" or v-attr-value = ? or error-status:error
+          then do:
+            find first bf_rvs-doc exclusive-lock
+              where bf_rvs-doc.rvs-type = {&rvs-before-doc}
+                and bf_rvs-doc.out-code = bf_trn-doc.doc-code
+              no-error .
+            
+            for first bf_rvs-line no-lock
+              where bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code
+                and bf_rvs-line.obj-type = bf_rvs-doc.obj-type
+                and bf_rvs-line.obj-code = bf_rvs-doc.obj-code
+                by bf_rvs-line.real-date
+                by bf_rvs-line.real-time:
+              
+              if bf_rvs-line.real-date <> ?
+              then do:
+              
+                v-attr-value = string (bf_rvs-line.real-date).
+                
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-date-start}
+                    v-attr-value
+                    no-error
+                }
+                v-attr-value = string (bf_rvs-line.real-time, "HH:MM").
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-time-start}
+                    v-attr-value
+                    no-error
+                }
+              end.
+            end.
+            find first bf_rvs-doc exclusive-lock
+              where bf_rvs-doc.rvs-type = {&rvs-after-doc}
+                and bf_rvs-doc.out-code = bf_trn-doc.doc-code
+              no-error .
+            for last bf_rvs-line no-lock
+              where bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code
+                and bf_rvs-line.obj-type = bf_rvs-doc.obj-type
+                and bf_rvs-line.obj-code = bf_rvs-doc.obj-code
+                by bf_rvs-line.real-date
+                by bf_rvs-line.real-time:
+                  
+              if bf_rvs-line.real-date <> ?
+              then do:
+              
+                v-attr-value = string (bf_rvs-line.real-date).
+                
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-date-end}
+                    v-attr-value
+                    no-error
+                }
+                v-attr-value = string (bf_rvs-line.real-time, "HH:MM").
+                { str/tdat-wrt.i
+                    bf_trn-doc.doc-code
+                    {&trdcattr-time-end}
+                    v-attr-value
+                    no-error
+                }
+              end.
+            end.
+          end.
+        end.
+      
+        
         /* проверяем по строчкам */
         if bf_trn-doc.status_ <> {&inquiry}
         then do:

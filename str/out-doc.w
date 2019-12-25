@@ -91,6 +91,11 @@ define variable vss-description as character no-undo initial "Обработка РН (заве
 {ref/imagelist.i}
 { gbl/color.i }
 
+&global-define is-fuel 1
+&global-define is-lgas 2
+&global-define is-lgas-corr 3
+&global-define is-gds 0
+
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
 
@@ -227,7 +232,7 @@ define variable bcol as handle extent no-undo.
 define variable hBrowse as handle no-undo.
 define variable ii as integer no-undo.
 define variable ch-vsd as character no-undo .
-
+define variable trn-type as integer no-undo init 0.
 
 define new shared temp-table tt-doc-pl no-undo
 field pl-code as integer format "99999999999"
@@ -2248,7 +2253,7 @@ on end-error of ub.gds-dtl.fact-qnty in browse {&browse-name} do:
 end.
 
 /* общие триггеры и процедуры для РН и ПН */
-{ str/trn-tr.i out no }
+{ str/trn-tr.i out }
 on return, leave of t-doc.tot-calc in frame {&frame-name} do:
 if input frame {&frame-name} t-doc.tot-calc <> t-doc.tot-calc then do:
   assign t-doc.tot-calc = input frame {&frame-name} t-doc.tot-calc.

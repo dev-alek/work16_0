@@ -3957,6 +3957,23 @@ if ( v-use-grp-buy or v-use-oborot-buy )  then   is-price-buyer = true .
               end.
         end.
       end.
+      if entry(1, entry(ii, c-other, ";":U), "=":U) = "supp-lgas":U then do:
+        for each x_temp-list-buyer :
+          delete x_temp-list-buyer.
+        end.
+        for each X_clients-attr no-lock where X_clients-attr.attr-code = {&attr-supp-lgas}
+                                          and X_clients-attr.attr-value = "yes" :
+              if not can-find (first x_temp-list-buyer where x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                                                         and x_temp-list-buyer.obj-code = X_clients-attr.obj-code)
+              then do :
+                create x_temp-list-buyer.
+                assign
+                  x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                  x_temp-list-buyer.obj-code = X_clients-attr.obj-code
+                .
+              end.
+        end.
+      end.
       if  entry(1, entry(ii, c-other, ";":U), "=":U) = "tank-farm-for":U then do :
         if entry(2, entry(ii, c-other, ";":U), "=":U) <> "":U
         then do:
@@ -4062,7 +4079,7 @@ if ( v-use-grp-buy or v-use-oborot-buy )  then   is-price-buyer = true .
     end.
     return.
 end.
-if v-other begins "tank-farm-for" or v-other begins "auto-tank-for" or v-other begins "supp-np" then v-other = "".
+if v-other begins "tank-farm-for" or v-other begins "auto-tank-for" or v-other begins "supp-np" or v-other begins "supp-lgas" then v-other = "".
 if c-types = {&pro} then do :
   c-types = ? .
   v-is-prod = true.
@@ -4248,7 +4265,7 @@ else do:
    }
 end.
 
-if entry(1,c-other,"=":U) = "supp-np" or entry(1,c-other,"=":U) = "auto-tank-for-supp" or entry(1,c-other,"=":U) = "tank-farm-for-supp"
+if entry(1,c-other,"=":U) = "supp-lgas" or entry(1,c-other,"=":U) = "supp-np" or entry(1,c-other,"=":U) = "auto-tank-for-supp" or entry(1,c-other,"=":U) = "tank-farm-for-supp"
 then do :
   HIDE
   CLi-list in frame {&frame-name}
@@ -4339,7 +4356,7 @@ then TitleStr = TitleStr + {&space-char} + "Поставщики НП" .
 if entry(1,c-other,"=":U) = "auto-tank-for-supp"
 then TitleStr = TitleStr + {&space-char} + "Является перевозчиком для:" + v-auto-tank-for-supp .
 if entry(1,c-other,"=":U) = "tank-farm-for-supp"
-then TitleStr = TitleStr + {&space-char} + "Является нефтебазой для:" + v-tank-farm-for-supp.
+then TitleStr = TitleStr + {&space-char} + "Является нефтебазой/ГНС для:" + v-tank-farm-for-supp.
 frame {&frame-name}:title = TitleStr .
 show-as = Cli-Types + "-" + Find-By + "-" + All-Or-Group + "-" + Cli-Status .
 if ub.db.add-clients /*AND
