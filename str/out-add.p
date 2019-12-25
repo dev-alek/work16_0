@@ -69,6 +69,8 @@ define variable rate                                      as   decimal          
 define variable is-all                                    as   logical                    no-undo.
 define variable b-c                                       as   integer                    no-undo. /* обрабатываемый бар-код                           */
 define variable line-mode                                 as   character                  no-undo.
+
+define variable v-is-return                               as   logical                    no-undo. /* дл€ оформлени€ возврата через расход */
 { str/bc-res.i "processing" "mes" }
 
 define variable o-total-doc-line_tot-ovnew                like ub.trn-doc.tot-ov          no-undo.
@@ -241,7 +243,14 @@ on error undo, return error return-value
   /* ѕреценденты были */
   assign
     work-mode = trim(work-mode)
+    v-is-return = false
   .
+  
+  if num-entries(work-mode, {&delim-par}) = 2
+  then do :
+    if entry(2, work-mode, {&delim-par}) = "return" then v-is-return = true .
+    work-mode = entry(1, work-mode, {&delim-par}) .
+  end.
 
   do while no-end-all-operation
   :
@@ -878,7 +887,7 @@ on error undo, return error return-value
                   pardoc-rec    ,
                   parline-rec   ,
                   pargds-rec       ,
-                  (if work-mode = {&update} then {&prt-def} else {&lookup}) ,
+                  (if work-mode = {&update} then {&prt-def} else {&lookup}) + (if v-is-return then ({&delim-par} + "return") else "") ,
                   recid(ub.gds-prt),
                   {&g#term}) no-error.
               end.
@@ -891,7 +900,7 @@ on error undo, return error return-value
               pardoc-rec    ,
               parline-rec   ,
               pargds-rec       ,
-              (if work-mode <> {&lookup} then {&inv-def} else {&lookup}),
+              (if work-mode <> {&lookup} then {&inv-def} else {&lookup}) + (if v-is-return then ({&delim-par} + "return") else "") ,
               recid(ub.gds-prt),
               {&g#root}) no-error.
             if error-status :error

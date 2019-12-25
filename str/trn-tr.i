@@ -533,7 +533,7 @@ if ( varis-fin = "yes":u
                                                   input  ?,
                                                   input  parparentproc,
                                                   input  t-doc.doc-date,
-                                                  input if paris-hold = yes then "all" else (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or mode-erprn ) then {&income} else {&expense}) ,
+                                                  input if paris-hold = yes then "all" else (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or mode-erprn or (t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and logical(varcontract))) then {&income} else {&expense}) ,
                                                   output varcontract-code) no-error.
       if error-status :error    or
          varcontract-code = ?  or

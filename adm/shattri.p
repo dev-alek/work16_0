@@ -1261,6 +1261,15 @@ on error undo, return error
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+      
+          v-prop-code = "{&bef-attr-nakl_par_reasons-for-return}" .
+&scop ptype character
+&scop prop-value '':U
+&scop prop-code  entry(v-ii,v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
      end.
 
     when {&attr-nakl-glob} then do:

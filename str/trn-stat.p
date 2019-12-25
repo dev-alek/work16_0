@@ -70,8 +70,10 @@ define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
 define buffer exp_trn-doc     for ub.trn-doc.
+define buffer in_trn-doc      for ub.trn-doc.
 define buffer bf_goods        for ub.goods.
 define buffer bf_doc-line     for ub.doc-line.
+define buffer in_doc-line     for ub.doc-line.
 define buffer bf_inv-line     for ub.inv-line.
 define buffer bf_clients      for ub.clients.
 define buffer bf_pay-type     for ub.pay-type.
@@ -179,6 +181,7 @@ define variable v-kol-doc as integer   no-undo .
 define variable v-is-add-doc as logical   no-undo init false  .
 define variable v-reasonm as logical   no-undo init false .
 define variable v-reasonme as character no-undo .
+define variable v-reasons-for-return as character no-undo . 
 define variable v-attr-mandat-wayb  as character no-undo .
 define variable v-attr-dop-info  as character no-undo .
 define variable v-is-ord-doc as logical   no-undo init false .
@@ -377,6 +380,7 @@ for each thbjattr_thbj-attr :
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonm}   then v-reasonm      = thbjattr_thbj-attr.property-value-logical .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasonme}  then v-reasonme     = thbjattr_thbj-attr.property-value-character .
     if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_inv-ship}  then inv-shipvalue  = thbjattr_thbj-attr.property-value-logical .
+    if thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasons-for-return}  then v-reasons-for-return     = thbjattr_thbj-attr.property-value-character .
     if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} 
     then do:
       if isFuel 
@@ -885,6 +889,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end.
   end.
   /*проверка на заполнение обязательных атрибутов в накладной*/
+  
   if not var-is-auto-trn and not v-add-nat-gas and not vartechproliv and v-attr-mandat-wayb <> "" and not bf_trn-doc.doc-code matches "*=*" then do:
       v-error-attr = "" .
       if not can-find (first buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code 
@@ -945,19 +950,64 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     
   if bf_trn-doc.status_ <> {&inquiry}  then do:
   /* */
-  define variable v-reasonm-type-n as character no-undo.
-
-
+    define variable v-reasonm-type-n as character no-undo.
 
     if v-reasonm and
              lookup( bf_trn-doc.ext-doc-type ,v-reasonme) = 0 and
              lookup( bf_trn-doc.ext-doc-type ,{&TDEDT_List-not-ver-reason}) = 0
-     then do:
-        if bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ? then do:
+    then do:
+      if bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ? then do:
                 run waitfram-hide in this-procedure no-error.
                 undo, return error "Не задано поле ПРИЧИНА СОЗДАНИЯ ДОКУМЕНТА.".
-         end.
-     end.
+      end.
+    end.
+    
+    if lookup( string(bf_trn-doc.reason-code), v-reasons-for-return) > 0
+    then do : 
+      /*Возврат через расход*/
+      find first in_trn-doc no-lock where in_trn-doc.doc-code = bf_trn-doc.out-code no-error .
+      if not available in_trn-doc
+      then do :
+        run waitfram-hide in this-procedure no-error.
+        undo, return error "Не задано поле Источник.".
+      end.
+      else do :
+        if in_trn-doc.cli-type <> bf_trn-doc.cli-type
+        or in_trn-doc.cli-code <> bf_trn-doc.cli-code
+        then do :
+          run waitfram-hide in this-procedure no-error.
+          undo, return error ("Поставщик не совпадает с поставщиком из источника (ПН " + in_trn-doc.doc-code + ").").
+        end.
+        for each bf_doc-line no-lock where bf_doc-line.doc-code = bf_trn-doc.doc-code,
+        first ub.goods no-lock where  ub.goods.artic      = bf_doc-line.artic
+                                  and ub.goods.prod-type  = bf_doc-line.prod-type
+                                  and ub.goods.prod-code  = bf_doc-line.prod-code :
+          find first in_doc-line no-lock where in_doc-line.doc-code   = in_trn-doc.doc-code
+                                           and in_doc-line.artic      = bf_doc-line.artic
+                                           and in_doc-line.prod-type  = bf_doc-line.prod-type
+                                           and in_doc-line.prod-code  = bf_doc-line.prod-code
+                                           no-error.
+          if not available in_doc-line
+          then do :
+            run waitfram-hide in this-procedure no-error.
+            undo, return error ("Товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " нет в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
+          end. 
+          else do :
+            if in_doc-line.price-rubl <> bf_doc-line.price-rubl
+            or in_doc-line.price-base <> bf_doc-line.price-base
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("У товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " цена не совпадает с ценой в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
+            end.
+            if in_doc-line.fact-qnty < bf_doc-line.fact-qnty
+            then do :
+              run waitfram-hide in this-procedure no-error.
+              undo, return error ("У товара с кодом " + string(ub.goods.gds-code) + " " + ub.goods.gds-name + " количество превышает количество в документе-источнике (ПН " + in_trn-doc.doc-code + ").") .
+            end.
+          end.                                
+        end.
+      end.
+    end. 
   end.
 
   if bf_trn-doc.status_ <> {&inquiry}                           and

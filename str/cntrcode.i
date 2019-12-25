@@ -95,7 +95,7 @@ then do:
   run str/cont-all.w (input parmenu-handle,
                   input parhost-code,
                   input "b-sel",
-                  input "firm-curr" ,
+                  input if var-ext-doc-type = {&TDEDT_Ras_Vnesh} then {&company} else "firm-curr" ,
                   input parcli-type,
                   input parcli-code,
                   input ?,
@@ -124,7 +124,8 @@ then do:
   if (bf_contract.status_ = {&objdt-closed} or
       (bf_contract.contract-date-end <> ? and bf_contract.contract-date-end < parobj-date)) then do:
     /* если возврат в накладных, то ненадо ошибки */
-    if lookup(var-ext-doc-type, '{&bef-TDEDT_Ras_Vnesh_VP},{&bef-TDEDT_Vozvrat_Vnesh},{&bef-TDEDT_Vozvrat_Vnesh_Kass}') = 0 then do:
+    if lookup(var-ext-doc-type, '{&bef-TDEDT_Ras_Vnesh_VP},{&bef-TDEDT_Vozvrat_Vnesh},{&bef-TDEDT_Vozvrat_Vnesh_Kass},{&bef-TDEDT_Ras_Vnesh}') = 0
+    then do:
         assign
           varlog = no.
         message "Договор с номером " bf_contract.contract-prn-code " закрыт." skip
