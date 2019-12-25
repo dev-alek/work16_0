@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME d-db
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-db
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-db 
 /*
 
 $Revision$
@@ -60,6 +60,7 @@ DEFINE VARIABLE hn-option AS CHARACTER NO-UNDO.
 DEFINE VARIABLE attr-option AS CHARACTER NO-UNDO.
 define variable select-list       as longchar  no-undo .
 
+
 &scop my-refresh ~
   assign ~
     log-res = browse br-db :set-repositioned-row( browse br-db :focused-row, 'CONDITIONAL':u) ~
@@ -82,7 +83,7 @@ define frame f-info
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -128,7 +129,8 @@ ub.db.db-key ub.db.stts get-infodb-date( ub.db.db-num) get-infodb-ver( ub.db.db-
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-sel b-lkp b-chg b-add b-unld b-del ~
-b-hist b-help b-attr b-param b-send b-hn br-db br-clients
+b-unld-list b-print b-hist b-help b-mark b-sel-all b-unmark b-attr b-param ~
+b-send b-hn br-db br-clients 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -139,7 +141,7 @@ b-hist b-help b-attr b-param b-send b-hn br-db br-clients
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-infodb-date d-db
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-infodb-date d-db 
 FUNCTION get-infodb-date RETURNS DATE
   ( INPUT p-db-num as integer)  FORWARD.
 
@@ -165,54 +167,63 @@ end function.
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-b-hn
-       MENU-ITEM m_hn-lookup    LABEL "Просмотр"
-       MENU-ITEM m_hn-update    LABEL "Изменить"
+DEFINE MENU MENU-b-hn 
+       MENU-ITEM m_hn-lookup    LABEL "Просмотр"      
+       MENU-ITEM m_hn-update    LABEL "Изменить"      
        MENU-ITEM m_hn-copy      LABEL "Копировать"    .
 
-DEFINE MENU MENU-b-param
-       MENU-ITEM m_lookup       LABEL "Просмотр"
-       MENU-ITEM m_update       LABEL "Изменение"
+DEFINE MENU MENU-b-param 
+       MENU-ITEM m_lookup       LABEL "Просмотр"      
+       MENU-ITEM m_update       LABEL "Изменение"     
        MENU-ITEM m_copy         LABEL "Копирование"   .
 
-DEFINE MENU POPUP-MENU-b-unld
+DEFINE MENU POPUP-MENU-b-print 
+       MENU-ITEM m_b-print-RC LABEL "Отчет по версиям RC на БД"
+       MENU-ITEM m_b-print-hist LABEL "Историческая справка по версиям RC на выбранной БД"  
+       .
+
+DEFINE MENU POPUP-MENU-b-unld 
        MENU-ITEM m_online-unload LABEL "online-выгрузка" ACCELERATOR "в"
        MENU-ITEM m_prep-copy    LABEL "Подготовка копии" ACCELERATOR "к".
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Создать"
+DEFINE BUTTON b-add 
+     LABEL "&Создать" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-attr
-     LABEL "&Атрибуты"
+DEFINE BUTTON b-attr 
+     LABEL "&Атрибуты" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-del
-     LABEL "У&далить"
+DEFINE BUTTON b-del 
+     LABEL "У&далить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь":L
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь":L 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-hist
-     LABEL "Ис&тория":L
+DEFINE BUTTON b-hist 
+     LABEL "Ис&тория":L 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-hn
-     LABEL "Ист+маршр"
+DEFINE BUTTON b-hn 
+     LABEL "Ист+маршр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON b-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-print 
+     LABEL "Печать" 
+     SIZE 3 BY 1.
+     
 DEFINE BUTTON b-param
      LABEL "Парамет&ры"
      SIZE 10 BY 1.
@@ -221,20 +232,20 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      LABEL "&Выход ":L
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор ":L
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор ":L 
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-send
      LABEL "&Остатки"
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-turn-off
-     LABEL "От&ключить"
+DEFINE BUTTON b-turn-off 
+     LABEL "От&ключить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-unld
-     LABEL "Вы&грузка"
+DEFINE BUTTON b-unld 
+     LABEL "Вы&грузка" 
      SIZE 10 BY 1.
      
 DEFINE BUTTON b-unld-list
@@ -267,9 +278,9 @@ DEFINE QUERY br-db FOR
 DEFINE BROWSE br-clients
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-clients d-db _STRUCTURED
   QUERY br-clients NO-LOCK DISPLAY
-      ub.clients.obj-type FORMAT "X(3)":U
-      ub.clients.obj-code FORMAT ">>>>>>>>9":U
-      ub.clients.obj-name COLUMN-LABEL "Название" FORMAT "X(40)":U
+      clients.obj-type FORMAT "X(3)":U
+      clients.obj-code FORMAT ">>>>>>>>9":U
+      clients.obj-name COLUMN-LABEL "Название" FORMAT "X(40)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH SEPARATORS SIZE 35.13 BY 16.5
@@ -310,22 +321,23 @@ DEFINE FRAME d-db
      b-add AT ROW 1 COL 41
      b-unld AT ROW 1 COL 51
      b-del AT ROW 1 COL 61
+     b-unld-list AT ROW 1 COL 71
+     b-print AT ROW 1 COL 88.88 WIDGET-ID 62
      b-hist AT ROW 1 COL 92 WIDGET-ID 10
      b-help AT ROW 1 COL 95
+     b-mark AT ROW 2 COL 1
+     b-sel-all AT ROW 2 COL 4
+     b-unmark AT ROW 2 COL 7
      b-attr AT ROW 2 COL 21
      b-param AT ROW 2 COL 31 WIDGET-ID 4
      b-send AT ROW 2 COL 41
      b-hn AT ROW 2 COL 51
      b-turn-off AT ROW 2 COL 61 WIDGET-ID 2
      br-db AT ROW 3.5 COL 1
-     b-mark at row 2 col 1
-     b-sel-all at row 2 col 4
-     b-unmark at row 2 col 7
-     b-unld-list at row 1 col 71
      br-clients AT ROW 3.5 COL 63.5
      SPACE(0.36) SKIP(0.26)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Базы данных":L.
 
 
@@ -346,24 +358,27 @@ DEFINE FRAME d-db
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-db b-turn-off d-db */
 /* BROWSE-TAB br-clients br-db d-db */
-ASSIGN
+ASSIGN 
        FRAME d-db:SCROLLABLE       = FALSE.
 
-ASSIGN
+ASSIGN 
        b-hn:POPUP-MENU IN FRAME d-db       = MENU MENU-b-hn:HANDLE.
 
-ASSIGN
+ASSIGN 
        b-param:POPUP-MENU IN FRAME d-db       = MENU MENU-b-param:HANDLE.
 
+ASSIGN 
+       b-print:POPUP-MENU IN FRAME d-db       = MENU POPUP-MENU-b-print:HANDLE.
+ASSIGN b-print :MENU-MOUSE = 1.
 /* SETTINGS FOR BUTTON b-turn-off IN FRAME d-db
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-turn-off:HIDDEN IN FRAME d-db           = TRUE.
 
-ASSIGN
+ASSIGN 
        b-unld:POPUP-MENU IN FRAME d-db       = MENU POPUP-MENU-b-unld:HANDLE.
 
-ASSIGN
+ASSIGN 
        br-db:NUM-LOCKED-COLUMNS IN FRAME d-db     = 1.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -419,7 +434,7 @@ ASSIGN
 */  /* BROWSE br-db */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -623,6 +638,31 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-db
+ON choose OF b-mark IN FRAME d-db /* * */
+do:
+    
+    run proc-b-mark in this-procedure no-error.
+
+  end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print d-db
+ON CHOOSE OF b-print IN FRAME d-db /* Печать */
+DO:
+      run gbl/pop-up.p (self:handle, no) no-error.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-quit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit d-db
 ON CHOOSE OF b-quit IN FRAME d-db /* Выход  */
@@ -699,6 +739,23 @@ DO:
     return no-apply.
   end.
 END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-sel-all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all d-db
+ON choose OF b-sel-all IN FRAME d-db /* + */
+do:
+    assign 
+      select-list = "".
+    if not available ub.db then return.
+    for each ub.db no-lock :
+      { gbl/markstrn.i ub.db select-list }
+    end.
+    br-db:refresh() in frame {&frame-name} .
+  end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1117,9 +1174,10 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define SELF-NAME b-unld-list
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unld-list d-db
-ON CHOOSE OF b-unld-list IN FRAME d-db /* Выгрузка */
+ON CHOOSE OF b-unld-list IN FRAME d-db /* Мультивыгрузка */
 DO:
   define buffer buf-new_db      for ub.db .
   define buffer buf-lst_db      for ub.db .
@@ -1261,6 +1319,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-unmark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unmark d-db
+ON choose OF b-unmark IN FRAME d-db /* - */
+do:
+    select-list  = "".
+    br-db:refresh() in frame {&frame-name} .
+  end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define BROWSE-NAME br-db
 &Scoped-define SELF-NAME br-db
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-db d-db
@@ -1310,6 +1380,31 @@ DO:
     {&open-query-br-clients}
   end.
  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_b-print-list
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-list d-db
+ON CHOOSE OF MENU-ITEM m_b-print-RC /*  */
+DO:
+  run rep/printRC.w (parparentproc).
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_b-print-prava
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-prava d-db
+ON CHOOSE OF MENU-ITEM m_b-print-hist /*  */
+DO:
+  
+run rep/histRC.w (parparentproc, string (select-list)).
+
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1431,50 +1526,11 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME b-mark
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-db
-on choose of b-mark in frame d-db /* * */
-  do:
-    
-    run proc-b-mark in this-procedure no-error.
-
-  end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b-sel-all
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all d-db
-on choose of b-sel-all in frame d-db /* + */
-  do:
-    assign 
-      select-list = "".
-    if not available ub.db then return.
-    for each ub.db no-lock :
-      { gbl/markstrn.i ub.db select-list }
-    end.
-    br-db:refresh() in frame {&frame-name} .
-  end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b-unmark
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unmark d-db
-on choose of b-unmark in frame d-db /* - */
-  do:
-    select-list  = "".
-    br-db:refresh() in frame {&frame-name} .
-  end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 &Scoped-define BROWSE-NAME br-clients
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-db
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-db 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1520,7 +1576,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1545,6 +1601,7 @@ define variable v-userid       as character no-undo .
     br-db
     br-clients
     b-lkp
+    b-print
     b-attr when valid-handle( parparentproc )
     b-param when valid-handle( parparentproc )
     b-hn when valid-handle( parparentproc )
@@ -1777,7 +1834,7 @@ end procedure.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-infodb-date d-db
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-infodb-date d-db 
 FUNCTION get-infodb-date RETURNS DATE
   ( INPUT p-db-num as integer) :
 DEFINE BUFFER buf_db-info FOR ub.db-info.

@@ -18,5 +18,6 @@
 "img-search" "Загрузка фото товаров" "bge/imgsearch-shd.p" "" "" yes yes no no "" "kvaknraZMkstiEfr" no
 "log_arh" "Архивация логов" "bge/log_arh.p" "bge/log_arh-par.w" "" yes yes no no "" "bujfMuiabjKacilb" no
 "ord_rum" "Работа с заказами в автоматическом режиме" "str/ordrum.p" "" "" yes yes no no "" "pbtjfkdPjmcacbDe" yes
+"rep-RC" "Отчет по версиям RC" "bge/rep_RC.p" "bge/par-repRC.w" "" yes yes no no "" "ipaqhcqcbExrHODp" no
 "rvs-auto" "Автоматическое создание сверок" "str/rvs-auto.p" "" "" yes yes no no "" "XcLllaicGMlXKfIp" no
 "uclcdcpc" "Расчет скидки или категории понакопительному алгоритму ДК" "utl/dcpcuq1.p" "utl/uclcdcpc.w" "" yes no no no "" "imjAjraLaQPjifib" no
