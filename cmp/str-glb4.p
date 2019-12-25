@@ -1080,6 +1080,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-cert-file-ext      cert-file-ext        " " cert-file-ext     }
 
 
+/* исторический код */
+{ cmp/cr-prep.i 1 attr-hist-code               hist-code              " " hist-code            }
+
+/* Историческое наименование */
+{ cmp/cr-prep.i 1 attr-hist-name              hist-name               " " hist-name            }
+
 /* сюда добавлять новые названия атрибутов баз данных */
 
 &glob ext-system-attr-list '~

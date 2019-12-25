@@ -543,8 +543,23 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         buf_shop.kitchen-store-code = v-obj-code
       .
     end.
-
-        &scop proc-name clntattr-write
+    If objimp:hist-code ne ?
+    then do:
+    &scop proc-name db-attr-write
+    {&run_proc_attr-lib}  ( input v-db-num
+                                        , input {&attr-hist-code}
+                                        , input objimp:hist-code
+                                        ) no-error .
+    end.
+    If objimp:hist-name ne ?
+    then do:
+    &scop proc-name db-attr-write
+    {&run_proc_attr-lib}  ( input v-db-num
+                                        , input {&attr-hist-name}
+                                        , input objimp:hist-name
+                                        ) no-error .
+     end.
+     &scop proc-name clntattr-write
         {&run_proc_attr-lib}
       (input {&shop}
       ,input v-obj-code

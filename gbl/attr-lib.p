@@ -13472,6 +13472,31 @@ end procedure.
 &scop news-attr-ver-code no
 &scop manual-edit-attr-ver-code 0
 &scop batch-edit-attr-ver-code 0
+
+/* Исторический код объекта */
+&scop type-attr-hist-code {&type-char}
+&scop format-attr-hist-code "x(50)"
+&scop label-attr-hist-code "Исторический код объекта"
+&scop tooltip-attr-hist-code "Исторический код объекта"
+&scop user-can-edit-attr-hist-code false
+&scop output-display-attr-hist-code true
+&scop other-attr-hist-code '':u
+&scop news-attr-hist-code yes
+&scop manual-edit-attr-hist-code 0
+&scop batch-edit-attr-hist-code 0
+
+/* Историческое наименование объекта */
+&scop type-attr-hist-name {&type-char}
+&scop format-attr-hist-name "x(50)"
+&scop label-attr-hist-name "Историческое наименование объекта"
+&scop tooltip-attr-hist-name "Историческое наименование объекта"
+&scop user-can-edit-attr-hist-name false
+&scop output-display-attr-hist-name true
+&scop other-attr-hist-name '':u
+&scop news-attr-hist-name yes
+&scop manual-edit-attr-hist-name 0
+&scop batch-edit-attr-hist-name 0
+
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -13574,6 +13599,10 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-ver-code
       {&attr-temp-full-code}
+      &scop attr-code attr-hist-code
+      {&attr-temp-full-code}
+      &scop attr-code attr-hist-name
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13639,6 +13668,10 @@ procedure db-attr-tooltip :
       &scop attr-code attr-int-point
       {&attr-temp-code}
       &scop attr-code attr-ver-code
+      {&attr-temp-code}
+      &scop attr-code attr-hist-code
+      {&attr-temp-code}
+      &scop attr-code attr-hist-name
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13892,7 +13925,10 @@ procedure db-attr-news :
       {&attr-news-code}
       &scop attr-code attr-int-point
       {&attr-news-code}
-
+      &scop attr-code attr-hist-code
+      {&attr-news-code}
+      &scop attr-code attr-hist-name
+      {&attr-news-code}
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут БД &1", p-code) .

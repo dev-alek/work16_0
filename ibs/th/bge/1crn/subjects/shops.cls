@@ -32,6 +32,12 @@ class ibs.th.bge.1crn.subjects.shops inherits ibs.th.bge.1crn.subjects.asubject:
   define property name_ as character no-undo 
     get. 
     private set.
+define property hist-code as character no-undo 
+    get. 
+    private set.
+define property hist-name as character no-undo 
+    get. 
+    private set.
   define property frm-code as character no-undo
     get.
     private set.
@@ -84,6 +90,8 @@ class ibs.th.bge.1crn.subjects.shops inherits ibs.th.bge.1crn.subjects.asubject:
       when "del-l"          then del-l          = if inValue >= "" then integer (inValue) else 0 .
       when "del-f"          then del-f          = if inValue >= "" then integer (inValue) else 0 .
       when "name"           then name_          = if inValue >= "" then inValue else "" .
+      when "hist-code"      then Hist-code      = if inValue >= "" then inValue else "" .
+      when "hist-name"      then hist-name      = if inValue >= "" then inValue else "" .
       when "frm-code"       then frm-code       = if inValue >= "" then inValue else "" .
       when "grp-code"       then grp-code       = if inValue >= "" then inValue else "" .
       when "address"        then address        = if inValue >= "" then inValue else "" .
@@ -133,6 +141,8 @@ class ibs.th.bge.1crn.subjects.shops inherits ibs.th.bge.1crn.subjects.asubject:
       del-f      = ?
       name_      = ?
       frm-code   = ?
+      hist-name  = ?
+      hist-code  = ?
       grp-code   = ?
       address    = ?
       tel        = ?
