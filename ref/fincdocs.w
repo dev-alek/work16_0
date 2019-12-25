@@ -177,6 +177,13 @@ FUNCTION get-contract RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-cashbookname Dialog-Frame
+FUNCTION get-cashbookname RETURNS CHARACTER
+  ( input icashbookid as int64 )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-currency Dialog-Frame
 FUNCTION get-currency RETURNS CHARACTER
   ( BUFFER loc-c-fin-doc FOR ub.c-fin-doc )  FORWARD.
@@ -378,6 +385,7 @@ DEFINE BROWSE br-c-fin-doc
       X_c-fin-doc.payer-type + string(X_c-fin-doc.payer-code) COLUMN-LABEL "Плательщик" FORMAT "X(12)":U
       get-contract(buffer X_c-fin-doc) COLUMN-LABEL "Договор" FORMAT "X(16)":U
       X_c-fin-doc.fin-doc-code COLUMN-LABEL "Вн.N" FORMAT "999999999":U
+      get-CashbookName(X_c-fin-doc.cashbookid) COLUMN-LABEL "Кассовая книга" FORMAT "x(30)":U
   ENABLE
       X_c-fin-doc.prn-doc-code
 /* _UIB-CODE-BLOCK-END */
@@ -2531,6 +2539,26 @@ define buffer buf_contract for ub.contract.
     if available buf_contract then return buf_contract.contract-prn-code.
 
   RETURN "".   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-cashbookname Dialog-Frame
+FUNCTION get-cashbookname RETURNS CHARACTER
+  ( input iCashbookID as int64) :
+/*------------------------------------------------------------------------------
+  Purpose:
+    Notes:
+------------------------------------------------------------------------------*/
+define buffer buf_cashbook for ub.cashbook.
+  find first buf_cashbook no-lock where
+                buf_cashbook.id = iCashbookID
+     no-error.
+  if available buf_cashbook 
+  then return buf_cashbook.CashBookName.
+  else return string(iCashbookID).   /* Function return value. */
 
 END FUNCTION.
 

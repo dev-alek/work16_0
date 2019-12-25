@@ -95,6 +95,8 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable par-type as character no-undo .
 define variable v-tth as handle no-undo .
+define variable mValue as character no-undo.
+define variable mType as character no-undo.
 
 define buffer buf_shift-obj for ub.shift-obj.
 { str/dia2auto.i }
@@ -168,8 +170,9 @@ field tot-sum as decimal
 field tot-base as decimal
 field tot-rubl as decimal
 field is-petrol as logical
+field cashbookid as int64
 index pi is unique primary
-cash-desk curr-code is-petrol
+cash-desk curr-code is-petrol cashbookid
 .
 
 define temp-table temp-gds no-undo
@@ -197,7 +200,7 @@ cash-desk
 b-code
 doc-kind
 curr-code
-is-petrol
+/*is-petrol*/
 .
 define temp-table temp-tax no-undo
 field curr-code as integer
@@ -477,7 +480,7 @@ run adm/shattri.p (
         end.
 
        if last-of(buf_inkas-pay-desk.pay-desk) then do:
-
+//создание финдоков
         for each buf_chk-doc no-lock
         where buf_chk-doc.obj-code = buf_inkas.obj-code
           and buf_chk-doc.obj-type = buf_inkas.obj-type
@@ -500,10 +503,16 @@ run adm/shattri.p (
                                                           output is-petrolium
                                                           ).
                     end.
+                    run gds-attr-value in this-procedure (
+                                         input buf_chk-gds-pay.gds-code
+                                        ,input "cash-book-id"
+                                        ,output mValue
+                                        ,output mType) no-error.
                     find first buf_temp-fin-sum
                          where buf_temp-fin-sum.curr-code = buf_cash-pay.curr-code
                           and (p-by-cash-desk    = no or buf_temp-fin-sum.cash-desk = buf_inkas-pay-desk.pay-desk)
                           and (p-by-petrol-goods = no or buf_temp-fin-sum.is-petrol = is-petrolium)
+                          and buf_temp-fin-sum.cashbookid = int64(mValue)
                               no-error.
                     if not available buf_temp-fin-sum then do:
                         create buf_temp-fin-sum.
@@ -515,6 +524,7 @@ run adm/shattri.p (
                         buf_temp-fin-sum.is-petrol = (if p-by-petrol-goods
                                                       then is-petrolium
                                                       else no)
+                        buf_temp-fin-sum.cashbookid = int64(mValue)
                         .
                     end.
                     assign
@@ -639,6 +649,7 @@ run adm/shattri.p (
                                                 output is-petrolium
                                                 ).
           end.
+          
         find first buf_temp-gds no-lock where
                  buf_temp-gds.b-code = buf_chk-gds-pay.b-code
               and buf_temp-gds.doc-kind = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
@@ -646,7 +657,7 @@ run adm/shattri.p (
                                            else '')
              and buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
              and (p-by-cash-desk = no or buf_temp-gds.cash-desk = buf_inkas-pay-desk.pay-desk)
-             and (p-by-petrol-goods = no or buf_temp-gds.is-petrol = is-petrolium)
+          /*   and (p-by-petrol-goods = no or buf_temp-gds.is-petrol = is-petrolium) */
              no-error.
         if not available buf_temp-gds then do:
           find first buf_bar-code no-lock where
@@ -654,6 +665,12 @@ run adm/shattri.p (
           if available buf_bar-code then do:
              find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
              if available buf_goods then do:
+                if p-by-petrol-goods then do: /*проверяем товар на топливность*/
+                  run check-petrol in this-procedure (
+                                                      input buf_chk-gds-pay.b-code ,
+                                                      output is-petrolium
+                                                      ).
+                end.
                 create buf_temp-gds.
                 assign
                 buf_temp-gds.b-code = buf_chk-gds-pay.b-code
@@ -667,7 +684,7 @@ run adm/shattri.p (
                 buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
                 buf_temp-gds.cash-desk = buf_inkas-pay-desk.pay-desk
                 buf_temp-gds.node-code = buf_bar-code.node-code
-                buf_temp-gds.is-petrol = (if p-by-petrol-goods then is-petrolium else no)
+                buf_temp-gds.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
                 .
              end.
           end.
@@ -1003,6 +1020,7 @@ run adm/shattri.p (
                                         else  v-naznach-plat)
       .
       assign
+      tt-fin-doc.CashBookId = buf_temp-fin-sum.cashbookid
       tt-fin-doc.sum-doc = abs(buf_temp-fin-sum.tot-sum)
       tt-fin-doc.sum-base = abs(buf_temp-fin-sum.tot-base)
       tt-fin-doc.sum-rubl = abs(buf_temp-fin-sum.tot-rubl)
@@ -1329,3 +1347,6 @@ define buffer buf_goods          for ub.goods.
   end.
 
 end procedure.
+
+
+

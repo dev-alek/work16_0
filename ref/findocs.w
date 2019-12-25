@@ -319,6 +319,13 @@ FUNCTION get-currency RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-cashbookname Dialog-Frame
+FUNCTION get-cashbookname RETURNS CHARACTER
+  ( input icashbookid as int64 )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-shift Dialog-Frame
 FUNCTION get-shift RETURNS DATE
   ( BUFFER buf_fin-doc FOR ub.fin-doc, OUTPUT p-shift-name-num AS CHARACTER)  FORWARD.
@@ -582,6 +589,7 @@ f-factur(buffer X_fin-doc) COLUMN-LABEL "Счет-фактура" FORMAT "X(8)":U
 get-shift(BUFFER X_fin-doc, OUTPUT v-fin-doc-shift-name-num) COLUMN-LABEL "Дата смены" FORMAT "99/99/9999":U
 v-fin-doc-shift-name-num COLUMN-LABEL "Смена" FORMAT "X(6)"
 X_fin-doc.trn-doc-code COLUMN-LABEL "Опер.касса" FORMAT "X(8)"
+get-CashbookName(X_fin-doc.cashbookid) COLUMN-LABEL "Кассовая книга" FORMAT "x(30)":U
 ENABLE
 X_fin-doc.prn-doc-code
 /* _UIB-CODE-BLOCK-END */
@@ -6023,6 +6031,26 @@ define buffer buf_contract for ub.contract.
     if available buf_contract then return buf_contract.contract-prn-code.
 
   RETURN "".   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-cashbookname Dialog-Frame
+FUNCTION get-cashbookname RETURNS CHARACTER
+  ( input iCashbookID as int64) :
+/*------------------------------------------------------------------------------
+  Purpose:
+    Notes:
+------------------------------------------------------------------------------*/
+define buffer buf_cashbook for ub.cashbook.
+  find first buf_cashbook no-lock where
+                buf_cashbook.id = iCashbookID
+     no-error.
+  if available buf_cashbook 
+  then return buf_cashbook.CashBookName.
+  else return string(iCashbookID).   /* Function return value. */
 
 END FUNCTION.
 

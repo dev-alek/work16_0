@@ -5932,6 +5932,30 @@ end procedure.
 &scop manual-edit-attr-item-matter-mark 1
 &scop batch-edit-attr-item-matter-mark  1
 
+&scop type-attr-cash-book-id {&type-int}
+&scop format-attr-cash-book-id  ">>>>>>>>9"
+&scop label-attr-cash-book-id   "Кассовая книга"
+&scop tooltip-attr-cash-book-id   "Кассовая книга"
+&scop user-can-edit-attr-cash-book-id  true
+&scop output-display-attr-cash-book-id  true
+&scop other-attr-cash-book-id "" /*"spr-ext=ref\gds-imm.w/spr-param=item-matter-mark/check=gds-attr_check-item-matter-mark"*/
+&scop news-attr-cash-book-id true
+&scop copy-attr-cash-book-id  true
+&scop manual-edit-attr-cash-book-id 1
+&scop batch-edit-attr-cash-book-id  1
+
+&scop type-attr-oper-serv-id {&type-int}
+&scop format-attr-oper-serv-id  ">>>>>>>>9"
+&scop label-attr-oper-serv-id   "Платежный агент"
+&scop tooltip-attr-oper-serv-id  "Платежный агент"
+&scop user-can-edit-attr-oper-serv-id  true
+&scop output-display-attr-oper-serv-id  true
+&scop other-attr-oper-serv-id  ""  /*"spr-ext=ref\gds-imm.w/spr-param=item-matter-mark/check=gds-attr_check-item-matter-mark"*/
+&scop news-attr-oper-serv-id true
+&scop copy-attr-oper-serv-id  true
+&scop manual-edit-attr-oper-serv-id 1
+&scop batch-edit-attr-oper-serv-id  1
+
 &scop type-attr-is-oss-payment {&type-log}
 &scop format-attr-is-oss-payment  "+/ "
 &scop label-attr-is-oss-payment   "Платеж ОСС"
@@ -6389,6 +6413,10 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-item-matter-mark
       {&attr-temp-full-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-temp-full-code}
+      &scop attr-code attr-oper-serv-id
+      {&attr-temp-full-code}
       &scop attr-code attr-group-np
       {&attr-temp-full-code}
       &scop attr-code attr-is-loyalty-payment
@@ -6486,6 +6514,10 @@ do
       &scop attr-code attr-mark-type
       {&attr-temp-code}      
       &scop attr-code attr-item-matter-mark
+      {&attr-temp-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-temp-code}
+      &scop attr-code attr-oper-serv-id
       {&attr-temp-code}
       &scop attr-code attr-group-np
       {&attr-temp-code}
@@ -6818,6 +6850,10 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-item-matter-mark
       {&attr-news-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-news-code}
+      &scop attr-code attr-oper-serv-id
+      {&attr-news-code}
       &scop attr-code attr-group-np
       {&attr-news-code}
       &scop attr-code attr-is-loyalty-payment
@@ -6909,6 +6945,10 @@ procedure gds-attr-copy :
       &scop attr-code attr-mark-type
       {&attr-copy-code}
       &scop attr-code attr-item-matter-mark
+      {&attr-copy-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-copy-code}
+      &scop attr-code attr-oper-serv-id
       {&attr-copy-code}
       &scop attr-code attr-group-np
       {&attr-copy-code}
@@ -7205,7 +7245,10 @@ do
 on error undo, return error return-value
 :
   CASE p-mode:
-    when {&add-def} then do:
+    when {&add-def} 
+    or
+    when {&update}
+    then do:
       
       if    lookup(p-value, {&prop-list-attr-item-matter-mark}) = 0  
       then do:
@@ -7219,6 +7262,82 @@ on error undo, return error return-value
 end.
 assign
 p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-cash-book-id :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+   define variable VValue as integer no-undo.
+   do
+   on error undo, return error return-value
+   :
+     CASE p-mode:
+       when {&add-def} 
+       or
+       when {&update}
+       then do:
+          VValue = int64(p-value) no-error.
+          if     p-value ne ""
+             and VValue eq 0
+        then
+           p-error-code = "Значение не может быть 0".
+        else do:
+            find first cashbook where CashBook.id eq VValue no-lock no-error.
+            if not available  cashbook
+            then
+               p-error-code = "Не существует кассоdая книга с номером " + string( VValue).
+        end.
+        if p-error-code <> "" then
+           return p-error-code.
+       end.
+     END CASE.
+   end.
+   assign
+   p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-oper-serv-id :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+   define variable VValue as integer no-undo.
+   do
+   on error undo, return error return-value
+   :
+     CASE p-mode:
+       when {&add-def} 
+       or
+       when {&update}
+       then do:
+          VValue = int64(p-value) no-error.
+          if     p-value ne ""
+             and VValue eq 0
+        then
+           p-error-code = "Значение не может быть 0".
+        else do:
+            find first operserv where operserv.id eq VValue no-lock no-error.
+            if not available  operserv
+            then
+               p-error-code = "Не существует оператора с номером " + string( VValue).
+        end.
+        if p-error-code <> "" then
+           return p-error-code.
+       end.
+     END CASE.
+   end.
+   assign
+   p-correct = yes.
 end procedure.
 
 procedure gds-attr_check-group-np :
@@ -7510,6 +7629,10 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-item-matter-mark
       {&attr-manual-edit-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-manual-edit-code}
+      &scop attr-code attr-oper-serv-id
+      {&attr-manual-edit-code}
       &scop attr-code attr-group-np
       {&attr-manual-edit-code}
       &scop attr-code attr-is-loyalty-payment
@@ -7602,6 +7725,10 @@ do
       &scop attr-code attr-mark-type
       {&attr-batch-edit-code}
       &scop attr-code attr-item-matter-mark
+      {&attr-batch-edit-code}
+      &scop attr-code attr-cash-book-id
+      {&attr-batch-edit-code}
+      &scop attr-code attr-oper-serv-id
       {&attr-batch-edit-code}
       &scop attr-code attr-group-np
       {&attr-batch-edit-code}

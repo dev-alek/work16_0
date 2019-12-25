@@ -30,12 +30,12 @@ define input parameter p-silent                       as logical no-undo .
 {&all-fin-doc-params-doc-status-define}
 {&all-fin-doc-params-doc-status-define-2}
 define temp-table tt0-fin-doc-tax no-undo like ub.fin-doc-tax.
-DEFINE INPUT PARAMETER TABLE FOR tt0-fin-doc-tax.
+define input parameter table for tt0-fin-doc-tax.
 define temp-table tt0-fin-doc-attr no-undo like ub.fin-doc-attr.
-DEFINE INPUT PARAMETER TABLE FOR tt0-fin-doc-attr.
+define input parameter table for tt0-fin-doc-attr.
 define input parameter p-save-payment as logical no-undo .
 define temp-table tt0-payment no-undo like ub.payment.
-DEFINE INPUT PARAMETER TABLE FOR tt0-payment.
+define input parameter table for tt0-payment.
 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -93,7 +93,7 @@ define buffer buf0_payment for ub.payment.
 { str/lib-trn.i }
 
 if entry(1, p-mode, {&delim-par}) <> {&add-def}
-AND entry(1, p-mode, {&delim-par}) <> {&update} then do:
+and entry(1, p-mode, {&delim-par}) <> {&update} then do:
   message
   vss-workfile vss-revision vss-description skip
   "Неверный параметр p-mode" p-mode
@@ -111,7 +111,7 @@ p-mode = entry(1, p-mode, {&delim-par})
 
 find first buf_sysconf no-lock where
                 buf_sysconf.host-code = p-host-code.
-if not avail buf_sysconf then dO:
+if not avail buf_sysconf then do:
   run err-mess in this-procedure ( substitute("Не найдена фирма с кодом &1", string(p-host-code)), output v-ret-mess).
   undo, return error (if p-silent = no then "host-code":U else v-ret-mess).
 end.
@@ -1008,6 +1008,7 @@ ON STOP UNDO, RETURN ERROR:
   ub.fin-doc.vid-plat            = p-vid-plat
   ub.fin-doc.user-db-num-doc     = g#db-num
   ub.fin-doc.user-name-doc       = g#userid
+  ub.fin-doc.CashBookId          = p-cashbookid 
   ub.fin-doc.doc-author          = (if v-author = '':U
                                     and p-doc-author <> {&manual}
                                     then ub.fin-doc.doc-author
