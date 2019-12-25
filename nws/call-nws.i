@@ -396,6 +396,13 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,counter~
 ,cashbookrule~
 ,cashbookruleattr~
+,PromoAction~
+,PromoCriterion~
+,PromoGift~
+,PromoGoods~
+,PromoObject~
+,promo-schedule-week~
+,promo-schedule~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -1192,6 +1199,14 @@ v-custom-except-list-erprn =
 ,cashbookattr~
 ,cashbookrule~
 ,cashbookruleattr~
+,PromoAction~
+,PromoCriterion~
+,PromoGift~
+,PromoGoods~
+,PromoObject~
+,PromoAttr~
+,promo-schedule~
+,promo-schedule-week~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/

@@ -1358,6 +1358,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_cashbookattr}
             or when {&table_cashbookrule}
             or when {&table_cashbookruleattr}
+            or when {&table_PromoAction}
+            or when {&table_PromoCriterion}
+            or when {&table_PromoGift}
+            or when {&table_PromoGoods}
+            or when {&table_PromoObject}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec
