@@ -336,7 +336,7 @@ DEFINE FRAME Dialog-Frame
      b-save AT ROW 1 COL 1
      b-cancel AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
-     tt-rvs-line.system-qnty AT ROW 2.25 COL 26 /* COLON-ALIGNED */
+     tt-rvs-line.system-qnty AT ROW 2.25 COL 34 COLON-ALIGNED 
           LABEL "Объем расчетно-книжный (л)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
@@ -344,12 +344,12 @@ DEFINE FRAME Dialog-Frame
           LABEL "Вес расчетно-книжный (кг)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
-     tt-rvs-line.orig-system-qnty AT ROW 3.25 COL 25 COLON-ALIGNED
+     tt-rvs-line.orig-system-qnty AT ROW 3.25 COL 34 COLON-ALIGNED
           LABEL "Первоначально (л)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
           FGCOLOR 4 
-     tt-rvs-line.orig-system-cli-qnty AT ROW 3.25 COL 73 COLON-ALIGNED
+     tt-rvs-line.orig-system-cli-qnty AT ROW 3.25 COL 74 COLON-ALIGNED
           LABEL "Первоначально (кг)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
@@ -425,7 +425,7 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.fact-calc-vol AT ROW 15.75 COL 85 COLON-ALIGNED
-          LABEL "Объем НП (л) (кг)"
+          LABEL "Объем НП (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.measure-cli-qnty AT ROW 16.75 COL 32 COLON-ALIGNED
