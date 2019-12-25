@@ -372,8 +372,7 @@ else do :
       v-promo-sched:status_      = getSchedStatus (v-promo-action:status_enum) // обработка enum при взаимодействии со справочниками реализована в обход
       v-promo-sched:dispname     = "Расписание для акции " + string(v-promo-action:ID)
       v-promo-sched:schedType    = 1
-          v-objlist1              = v-schedule:schedule-lines
-        .
+    .
     v-promo-action:Schedule     = v-promo-sched .
     
     v-promo-schdws = v-promo-action:ScheduleWeek . // создаётся пустая коллекция дней расписания
