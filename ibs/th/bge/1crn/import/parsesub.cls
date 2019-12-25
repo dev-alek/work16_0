@@ -271,11 +271,7 @@ class ibs.th.bge.1crn.import.parsesub:
     tank-impSubjectObj = new tank-imp ().
     imptank-impEventHndlrObj = new imptank-imp ().
     tank-imp_cal-tbllistSubjectsObj = new subjects ("cal-tbl").
-		
-/*		trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().       */
-/*    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().  */
-/*    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").*/
-    
+		    
     /* перенесено внутрь парсинга создание экземпляров объектов:
        - фирм
        - товаров
@@ -284,19 +280,11 @@ class ibs.th.bge.1crn.import.parsesub:
        - промо-акций
        - срецификаций к договорам поставки
        - типов кассовых книг
+       - документов движения СТ
+       - движение НП
     */
-
-    trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().
-    trn-gdSubjectObj = new trn-gd ().
-    imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().
-    trn-gd-doc-inlistSubjectsObj = new subjects ("gds").
-    trn-prt-doc-inlistSubjectsObj = new subjects ("prts").
-		
-    trn-fuel-doc-inSubjectObj = new trn-fuel-doc-in ().
-    trn-gd-fuelSubjectObj = new trn-gd-fuel ().
-    imptrn-fuel-docEventHndlrObj = new imptrn-fuel-doc ().
-    trn-fuel-doc-inlistSubjectsObj = new subjects ("gds").
-		
+    trn-prt-doc-inlistSubjectsObj = new subjects ("prts"). // - осталось не перенесённым из документов движения СТ
+    
   end constructor.
   
   method public void setParent (
@@ -456,7 +444,29 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-
+        when "trn-gd-doc" then do:
+          if not valid-object(trn-gd-doc-inSubjectObj) then trn-gd-doc-inSubjectObj = new trn-gd-doc-in (). // <trn-gd-doc>
+          if not valid-object(imptrn-gd-docEventHndlrObj) then do :
+            imptrn-gd-docEventHndlrObj = new imptrn-gd-doc ().
+          end .
+          v-iSubject = trn-gd-doc-inSubjectObj .
+          v-iImpSub  = imptrn-gd-docEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "trn-fuel-doc" then do:
+          if not valid-object(trn-fuel-doc-inSubjectObj) then trn-fuel-doc-inSubjectObj = new trn-fuel-doc-in (). // <trn-fuel-doc>
+          if not valid-object(imptrn-fuel-docEventHndlrObj) then do :
+            imptrn-fuel-docEventHndlrObj = new imptrn-fuel-doc ().
+          end .
+          v-iSubject = trn-fuel-doc-inSubjectObj .
+          v-iImpSub  = imptrn-fuel-docEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        
         when "business-unit" then do:
           GetChildrenSub (hNoderef, (level + 1), businessUnitsSubjectObj).
           ReceivedSubjectPublish(businessUnitsSubjectObj, impbusinessUnitsEventHndlrObj).
@@ -532,14 +542,6 @@ class ibs.th.bge.1crn.import.parsesub:
         when "tank" then do:
           GetChildrenSub (hNoderef, (level + 1), tank-impSubjectObj).
           ReceivedSubjectPublish(tank-impSubjectObj, imptank-impEventHndlrObj).
-        end.
-        when "trn-gd-doc" then do:
-          GetChildrenSub (hNoderef, (level + 1), trn-gd-doc-inSubjectObj).
-          ReceivedSubjectPublish(trn-gd-doc-inSubjectObj, imptrn-gd-docEventHndlrObj).
-        end.
-        when "trn-fuel-doc" then do:
-          GetChildrenSub (hNoderef, (level + 1), trn-fuel-doc-inSubjectObj).
-          ReceivedSubjectPublish(trn-fuel-doc-inSubjectObj, imptrn-fuel-docEventHndlrObj).
         end.
       end case.
       // --> вставить GetChildrenSub и ReceivedSubjectPublish сюда
@@ -687,6 +689,22 @@ class ibs.th.bge.1crn.import.parsesub:
               promotion_gdsListSubjectsObj = new subjects ("gds") .
                GetChildrenSub (hNoderef, (level + 1), ?).
               promotionSubjectObj:SetProp (promotion_gdsListSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (trn-gd-doc-inSubjectObj) then do: // trn-gd-doc:gds
+            if trn-gd-doc-inSubjectObj:IsInitSubForWrite then do:
+              trn-gd-doc-inlistSubjectsObj = new subjects ("gds") .        
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              trn-gd-doc-inSubjectObj:SetProp (trn-gd-doc-inlistSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (trn-fuel-doc-inSubjectObj) then do: // trn-fuel-doc:gds
+            if trn-fuel-doc-inSubjectObj:IsInitSubForWrite then do:
+              trn-fuel-doc-inlistSubjectsObj = new subjects ("gds") .        
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              trn-fuel-doc-inSubjectObj:SetProp (trn-fuel-doc-inlistSubjectsObj).
               v-need-parse = false .
             end .
           end .
@@ -904,24 +922,26 @@ class ibs.th.bge.1crn.import.parsesub:
             kass-bookSubjectObj:SetProp (kass-book-gdListSubjectsObj).
           end .
         end.
-        when "gd" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
-          case true : 
-            when trn-gd-doc-inSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
-              if not valid-object(trn-gd-doc-inlistSubjectsObj) then trn-gd-doc-inlistSubjectsObj = new subjects ("gds") .        
-              trn-gd-doc-inlistSubjectsObj:Add(new trn-gd()). /* а вот здесь уже создаем объект сущнности*/
+        when "gd" then do:
+          v-need-parse = true . 
+          if v-need-parse and valid-object (trn-gd-doc-inSubjectObj) then do: // trn-gd-doc:gds:gd
+            if trn-gd-doc-inSubjectObj:IsInitSubForWrite then do:
+              trn-gd-doc-inlistSubjectsObj:Add(  new trn-gd()  ).
               trn-gdSubjectObj = cast (trn-gd-doc-inlistSubjectsObj:SubjectObjCurr, trn-gd).
               GetChildrenSub (hNoderef, (level + 1), trn-gdSubjectObj).
-              trn-gd-doc-inSubjectObj:SetProp (trn-gd-doc-inlistSubjectsObj).
-            end.
-            when trn-fuel-doc-inSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
-              if not valid-object(trn-fuel-doc-inlistSubjectsObj) then trn-fuel-doc-inlistSubjectsObj = new subjects ("gds") .        
-              trn-fuel-doc-inlistSubjectsObj:Add(new trn-gd-fuel()). /* а вот здесь уже создаем объект сущнности*/
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (trn-fuel-doc-inSubjectObj) then do: // trn-fuel-doc:gds:gd
+            if trn-fuel-doc-inSubjectObj:IsInitSubForWrite then do:
+              trn-fuel-doc-inlistSubjectsObj:Add(  new trn-gd-fuel()  ).
               trn-gd-fuelSubjectObj = cast (trn-fuel-doc-inlistSubjectsObj:SubjectObjCurr, trn-gd-fuel).
               GetChildrenSub (hNoderef, (level + 1), trn-gd-fuelSubjectObj).
-              trn-fuel-doc-inSubjectObj:SetProp (trn-fuel-doc-inlistSubjectsObj).
-            end.
-            when promotionSubjectObj:IsInitSubForWrite then do: // все :gd, прямо или косвенно вложенные в promotion
-              v-need-parse = true . 
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (promotionSubjectObj) then do: // все :gd, прямо или косвенно вложенные в promotion
+            if promotionSubjectObj:IsInitSubForWrite then do :
               if v-need-parse and valid-object (promotion_psSubjectObj) then do : // promotion:promoset:ps-sections:ps-section:gds:gd
                 if promotion_psSubjectObj:IsInitSubForWrite then do:
                   promotion_p_gdListSubjectsObj:Add(  new promotion_gd()  ).
@@ -961,16 +981,16 @@ class ibs.th.bge.1crn.import.parsesub:
                 otherwise v-need-parse = true .
                 end case .
               end .  
-            end . // end_of_promotionSubjectObj
-            when kass-bookSubjectObj:IsInitSubForWrite then do: // kass-book:kb-gds:gd
+            end .
+          end .
+          if v-need-parse and valid-object (kass-bookSubjectObj) then do: // kass-book:kb-gds:gd
+            if kass-bookSubjectObj:IsInitSubForWrite then do: 
               kass-book-gdListSubjectsObj:Add(  new kass-book-gd()  ).
               kass-book-gdSubjectObj = cast (kass-book-gdListSubjectsObj:SubjectObjCurr, kass-book-gd).
               GetChildrenSub (hNoderef, (level + 1), kass-book-gdSubjectObj).
-            end . // end_of_kass-bookSubjectObj
-            otherwise do:
-              
-            end.
-          end case.
+              v-need-parse = false .
+            end .
+          end .
         end.
         when "prt" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
           case true : 
