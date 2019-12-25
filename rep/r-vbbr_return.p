@@ -180,8 +180,9 @@ first tt-cash-pay no-lock where tt-cash-pay.curr-code = buf_chk-pay.curr-code an
       end. 
       else v-doc-num2 = buf_chk-doc.doc-num2 . 
 
-    for first bf_chk-doc no-lock where bf_chk-doc.chk-num = integer(v-doc-num2) and bf_chk-doc.obj-code = buf_chk-doc.obj-code
-    and bf_chk-doc.obj-type = buf_chk-doc.obj-type and bf_chk-doc.z-number = buf_chk-doc.z-number:
+    for last bf_chk-doc no-lock where bf_chk-doc.chk-num = integer(v-doc-num2) and bf_chk-doc.obj-code = buf_chk-doc.obj-code
+    and bf_chk-doc.obj-type = buf_chk-doc.obj-type and bf_chk-doc.z-number = buf_chk-doc.z-number
+    and bf_chk-doc.pay-desk = buf_chk-doc.pay-desk and bf_chk-doc.chk-type = integer({&rcpt-sale}) by bf_chk-doc.chk-date:
 	/*and bf_chk-doc.chk-date = buf_chk-doc.chk-date,*/
   for first buf_chk-disnt no-lock where buf_chk-disnt.doc-code = bf_chk-doc.doc-code
     and buf_chk-disnt.promo-id = string(tt-promo.id) and buf_chk-disnt.record-type = 0:
@@ -284,7 +285,7 @@ end procedure.
     '<TD text_wrap="true" style="text-align: center;">Дата и время чека возврата</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Номер чека возврата</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Сумма чека возврата</TD>' skip
-    '<TD text_wrap="true" style="text-align: center;">Итоговая сумма покупки (без учета суммы возврата)</TD>' skip
+    '<TD text_wrap="true" style="text-align: center;">Итоговая сумма с учетом возврата</TD>' skip
     '</TR>'skip       
                     
     .
