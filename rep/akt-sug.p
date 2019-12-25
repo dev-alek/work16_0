@@ -557,7 +557,7 @@ do
                      
 
         assign
-          tt-petrol.limit      = abs(tt-petrol.weight-TH - tt-petrol.weight-AC)
+          tt-petrol.limit      = tt-petrol.weight-AC - tt-petrol.weight-TH
           tt-petrol.weight-est = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
           tt-petrol.deficit    = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Deficit
           tt-petrol.excess     = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Excess
