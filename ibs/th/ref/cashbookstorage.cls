@@ -24,6 +24,7 @@ class ibs.th.ref.cashbookstorage final:
     private set.
   
   define variable mQuery as handle no-undo.
+  define variable mQueryRule as handle no-undo.
   define variable objKeyRec as ibs.th.gbl.keyrec no-undo.
   define variable objCount  as ibs.th.ref.counter.counterstorage no-undo.
   constructor public cashbookstorage (  ):
@@ -527,8 +528,8 @@ class ibs.th.ref.cashbookstorage final:
   method public handle getquery
   ( input v-stat as character,
     input v-firm as character,
-    output mQuery as handle,
-    output mQueryRule as handle)
+    output oQuery as handle,
+    output oQueryRule as handle)
   :
     define buffer buf_cashbook for ub.cashbook .
     define buffer buf_cashbookrule for ub.cashbookrule .
@@ -689,17 +690,23 @@ class ibs.th.ref.cashbookstorage final:
       end.
     end case.
     
-    create query mQuery.
-    mQuery:set-buffers(buffer tt-cashbook:HANDLE).
-    mQuery:query-prepare("FOR EACH tt-cashbook").
+    if not valid-object(mQuery)
+    then do:
+       create query mQuery.
+       mQuery:set-buffers(buffer tt-cashbook:HANDLE).
+       mQuery:query-prepare("FOR EACH tt-cashbook").
+    end.
     mQuery:query-open ().
-    
-    create query mQueryRule.
-    mQueryRule:set-buffers(buffer tt-cashbookrule:HANDLE).
-    mQueryRule:query-prepare("FOR EACH tt-cashbookrule").
+    oQuery = mQuery.
+    if not valid-object(mQueryRule)
+    then do:
+       create query mQueryRule.
+       mQueryRule:set-buffers(buffer tt-cashbookrule:HANDLE).
+       mQueryRule:query-prepare("FOR EACH tt-cashbookrule").
+    end.
     mQueryRule:query-open ().
-    
-    return mQuery.
+    oQueryRule = mQueryRule.
+    return oQuery.
   end method.
   
   method public void getCashBookRule (input pCashBookId as int64, input pObjType as character, input pObjCode as integer, output dataset ds-cashbookrule) :
