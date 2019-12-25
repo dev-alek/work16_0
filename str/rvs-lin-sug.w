@@ -104,6 +104,7 @@ define variable v-value           as character no-undo.
 define variable v-ok              as logical   no-undo.
 define VARIABLE ii as integer no-undo .
 
+define variable twice-place-data as character no-undo .
 
 define buffer buf_goods        for ub.goods .
 define buffer buf_rvs-doc      for ub.rvs-doc.
@@ -273,6 +274,11 @@ DEFINE BUTTON b-save AUTO-GO
      LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
+     
+DEFINE BUTTON b-rez 
+     LABEL "&Резервуары" 
+     SIZE 12 BY 1
+     BGCOLOR 8 .
 
 DEFINE VARIABLE delta-mass-qnty AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
      LABEL "Отн. погр. изм. массы НП (ПО к МИ)" 
@@ -294,48 +300,50 @@ DEFINE VARIABLE abs-delta-mass-add-qnty AS DECIMAL FORMAT "->>,>>9.999":U INITIA
 /*     VIEW-AS FILL-IN                                                     */
 /*     SIZE 13 BY .88 NO-UNDO.                                             */
 
+define variable level-prc as decimal format ">>9.99":U initial ? .
+
 DEFINE VARIABLE CriticalDif AS DECIMAL FORMAT ">>,>>9.999":U INITIAL 0
      LABEL "Сверхнормативные расхождения" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varmeasure-water-cli-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Масса воды" 
+     LABEL "Масса воды (кг)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varmeasure-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем воды" 
+     LABEL "Объем воды (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varstate-water-cli-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Факт масса воды" 
+     LABEL "Факт масса воды (кг)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
      
 DEFINE VARIABLE varsum-vol AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем наполнения" 
+     LABEL "Объем наполнения (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varstate-sum-vol AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем наполнения" 
+     LABEL "Объем наполнения (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE VARIABLE varstate-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Объем воды" 
+     LABEL "Объем воды (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 52.25 BY 22.75.
+     SIZE 54 BY 24.75.
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 47.88 BY 22.75.
+     SIZE 52 BY 24.75.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -348,57 +356,60 @@ DEFINE QUERY Dialog-Frame FOR
 DEFINE FRAME Dialog-Frame
      b-save AT ROW 1 COL 1
      b-cancel AT ROW 1 COL 11
+     b-rez at row 1 col 21
      b-help AT ROW 1 COL 21
-     tt-rvs-line.system-qnty AT ROW 2.25 COL 26 COLON-ALIGNED
-          LABEL "Объем расчетно-книжный"
+     tt-rvs-line.system-qnty AT ROW 2.25 COL 10 
+          LABEL "Объем расчетно-книжный (л)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
      tt-rvs-line.system-cli-qnty AT ROW 2.25 COL 74 COLON-ALIGNED
-          LABEL "Вес расчетно-книжный"
+          LABEL "Вес расчетно-книжный (кг)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
      tt-rvs-line.orig-system-qnty AT ROW 3.25 COL 25 COLON-ALIGNED
-          LABEL "Первоначально"
+          LABEL "Первоначально (л)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
           FGCOLOR 4 
      tt-rvs-line.orig-system-cli-qnty AT ROW 3.25 COL 73 COLON-ALIGNED
-          LABEL "Первоначально"
+          LABEL "Первоначально (кг)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
           FGCOLOR 4 
-     tt-rvs-line.measure-qnty AT ROW 5.75 COL 28.25 COLON-ALIGNED
+     tt-rvs-line.measure-qnty AT ROW 5.75 COL 35 COLON-ALIGNED
+          LABEL "Измер. остаток (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-qnty AT ROW 5.75 COL 73.25 COLON-ALIGNED
+     tt-rvs-line.state-measure-qnty AT ROW 5.75 COL 90 COLON-ALIGNED
+          LABEL "Факт ост. общ. ЖФ+ПФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
 /*     tt-rvs-line.meas-calc-qnty AT ROW 6.75 COL 34 COLON-ALIGNED WIDGET-ID 20*/
 /*          LABEL "Остаток рассчит. по измер."                                 */
 /*          VIEW-AS FILL-IN                                                    */
 /*          SIZE 13 BY .88                                                     */
-     tt-rvs-line.measure-tc-qnty AT ROW 7.75 COL 28.25 COLON-ALIGNED
-          LABEL "Остаток ЖФ СУГ"
+     tt-rvs-line.measure-tc-qnty AT ROW 15.75 COL 35 COLON-ALIGNED
+          LABEL "Измер. объем СУГ ЖФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-tc-qnty AT ROW 7.75 COL 73.25 COLON-ALIGNED
-          LABEL "Факт остаток ЖФ"
+     tt-rvs-line.state-measure-tc-qnty AT ROW 15.75 COL 90 COLON-ALIGNED
+          LABEL "Объем СУГ ЖФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.vol-pf-sug AT ROW 8.75 COL 28.25 COLON-ALIGNED
-          LABEL "Остаток ПФ СУГ"
+     tt-rvs-line.vol-pf-sug AT ROW 16.75 COL 35 COLON-ALIGNED
+          LABEL "Измер. объем СУГ ПФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-vol-pf-sug AT ROW 8.75 COL 73.25 COLON-ALIGNED
-          LABEL "Факт остаток ПФ"
+     tt-rvs-line.state-vol-pf-sug AT ROW 16.75 COL 90 COLON-ALIGNED
+          LABEL "Объем СУГ ПФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.density AT ROW 17.75 COL 28.25 COLON-ALIGNED FORMAT "9.9999999999"
-          LABEL "Измер. Плотность ЖФ"
+     tt-rvs-line.density AT ROW 18.75 COL 35 COLON-ALIGNED FORMAT "9.9999999999"
+          LABEL "Измер. Плотность ЖФ (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-density AT ROW 17.75 COL 85 COLON-ALIGNED FORMAT "9.9999999999"
-          LABEL "Плотность ЖФ"
+     tt-rvs-line.state-density AT ROW 18.75 COL 90 COLON-ALIGNED FORMAT "9.9999999999"
+          LABEL "Плотность ЖФ (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      b-calc AT ROW 9.75 COL 65 WIDGET-ID 6
@@ -410,37 +421,37 @@ DEFINE FRAME Dialog-Frame
           LABEL "Плотность измер. для ПО к МИ"
           VIEW-AS FILL-IN
           SIZE 13 BY .88
-     tt-rvs-line.dens-pf-sug AT ROW 10.75 COL 28.25 COLON-ALIGNED FORMAT "9.9999999999"
-          LABEL "Измер. плотность ПФ"
+     tt-rvs-line.dens-pf-sug AT ROW 19.75 COL 35 COLON-ALIGNED FORMAT "9.9999999999"
+          LABEL "Измер. плотность ПФ (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-dens-pf-sug AT ROW 10.75 COL 73.25 COLON-ALIGNED FORMAT "9.9999999999"
-          LABEL "Плотность ПФ"
+     tt-rvs-line.state-dens-pf-sug AT ROW 19.75 COL 90 COLON-ALIGNED FORMAT "9.9999999999"
+          LABEL "Плотность ПФ (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.add-qnty AT ROW 11.75 COL 30.13 COLON-ALIGNED
-          LABEL "Объем в трубопроводе"
+     tt-rvs-line.add-qnty AT ROW 11.75 COL 35 COLON-ALIGNED
+          LABEL "Объем в трубопроводе (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.calc-add-mass AT ROW 12.75 COL 30.13 COLON-ALIGNED
-          LABEL "Рассч. Масса в трубопроводе"
+     tt-rvs-line.calc-add-mass AT ROW 12.75 COL 35 COLON-ALIGNED
+          LABEL "Рассч. Масса в трубопроводе (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.fact-calc-add-mass AT ROW 12.75 COL 85 COLON-ALIGNED
-          LABEL "Рассч. Масса в трубопроводе"
+     tt-rvs-line.fact-calc-add-mass AT ROW 12.75 COL 90 COLON-ALIGNED
+          LABEL "Рассч. Масса в трубопроводе (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     abs-delta-mass-add-qnty AT ROW 13.75 COL 85 COLON-ALIGNED
-     tt-rvs-line.state-add-qnty AT ROW 11.75 COL 85 COLON-ALIGNED
-          LABEL "Объем в трубопроводе"
+     abs-delta-mass-add-qnty AT ROW 13.75 COL 90 COLON-ALIGNED
+     tt-rvs-line.state-add-qnty AT ROW 11.75 COL 90 COLON-ALIGNED
+          LABEL "Объем в трубопроводе (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.brutto-qnty AT ROW 11.75 COL 28.13 COLON-ALIGNED
-          LABEL "Общий объём"
+     tt-rvs-line.brutto-qnty AT ROW 11.75 COL 35 COLON-ALIGNED
+          LABEL "Общий объём СУГ ЖФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-brutto-qnty AT ROW 11.75 COL 73.5 COLON-ALIGNED
-          LABEL "Факт объём"
+     tt-rvs-line.state-brutto-qnty AT ROW 11.75 COL 74.5 COLON-ALIGNED
+          LABEL "Факт объём (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
 /*     tt-rvs-line.brutto-tc-qnty AT ROW 12.75 COL 28.13 COLON-ALIGNED     */
@@ -449,24 +460,24 @@ DEFINE FRAME Dialog-Frame
 /*     tt-rvs-line.state-brutto-tc-qnty AT ROW 12.75 COL 73.5 COLON-ALIGNED*/
 /*          VIEW-AS FILL-IN                                                */
 /*          SIZE 13 BY .88                                                 */
-     varmeasure-water-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
-     varstate-water-qnty AT ROW 24.75 COL 85 COLON-ALIGNED
-     varsum-vol AT ROW 25.75 COL 28.13 COLON-ALIGNED
-     varstate-sum-vol AT ROW 25.75 COL 85 COLON-ALIGNED
-     tt-rvs-line.calc-vol AT ROW 15.75 COL 28.13 COLON-ALIGNED
-          LABEL "Рассч. Объем ЖФ"
+     varmeasure-water-qnty AT ROW 24.75 COL 35 COLON-ALIGNED
+     varstate-water-qnty AT ROW 24.75 COL 90 COLON-ALIGNED
+     varsum-vol AT ROW 25.75 COL 35 COLON-ALIGNED
+     varstate-sum-vol AT ROW 25.75 COL 90 COLON-ALIGNED
+     tt-rvs-line.calc-vol AT ROW 15.75 COL 35 COLON-ALIGNED
+          LABEL "Измер. объем СУГ ЖФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.fact-calc-vol AT ROW 15.75 COL 85 COLON-ALIGNED
-          LABEL "Объем ЖФ"
+     tt-rvs-line.fact-calc-vol AT ROW 15.75 COL 90 COLON-ALIGNED
+          LABEL "Объем СУГ ЖФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.measure-cli-qnty AT ROW 16.75 COL 28.13 COLON-ALIGNED
-          LABEL "Измер. Масса"
+     tt-rvs-line.measure-cli-qnty AT ROW 17.75 COL 35 COLON-ALIGNED
+          LABEL "Измер. Масса СУГ (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-cli-qnty AT ROW 16.75 COL 85 COLON-ALIGNED
-          LABEL "Факт Масса"
+     tt-rvs-line.state-measure-cli-qnty AT ROW 17.75 COL 90 COLON-ALIGNED
+          LABEL "Масса СУГ (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -479,99 +490,100 @@ DEFINE FRAME Dialog-Frame
 /*          LABEL "Вес расчит. по измер."                                           */
 /*          VIEW-AS FILL-IN                                                         */
 /*          SIZE 13 BY .88                                                          */
-     tt-rvs-line.brutto-cli-qnty AT ROW 16.75 COL 28.13 COLON-ALIGNED
-          LABEL "Общая масса"
+     tt-rvs-line.brutto-cli-qnty AT ROW 16.75 COL 35 COLON-ALIGNED
+          LABEL "Общая масса (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-brutto-cli-qnty AT ROW 16.75 COL 73.5 COLON-ALIGNED
-          LABEL "Факт общая масса"
+     tt-rvs-line.state-brutto-cli-qnty AT ROW 16.75 COL 79.5 COLON-ALIGNED
+          LABEL "Факт общая масса (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.sum-vol AT ROW 21.75 COL 28.13 COLON-ALIGNED
-          LABEL "Общий Объем ЖФ"
+     tt-rvs-line.sum-vol AT ROW 21.75 COL 35 COLON-ALIGNED
+          LABEL "Общий Объем СУГ ЖФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.sum-mass AT ROW 22.75 COL 28.13 COLON-ALIGNED
-          LABEL "Общая Масса ЖФ"
+     tt-rvs-line.sum-mass AT ROW 22.75 COL 35 COLON-ALIGNED
+          LABEL "Общая Масса СУГ ЖФ (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.fact-sum-vol AT ROW 21.75 COL 85 COLON-ALIGNED
-          LABEL "Общий Объем ЖФ"
+     tt-rvs-line.fact-sum-vol AT ROW 21.75 COL 90 COLON-ALIGNED
+          LABEL "Общий Объем СУГ ЖФ (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.fact-sum-mass AT ROW 22.75 COL 85 COLON-ALIGNED
-          LABEL "Общая Масса ЖФ"
+     tt-rvs-line.fact-sum-mass AT ROW 22.75 COL 90 COLON-ALIGNED
+          LABEL "Общая Масса СУГ ЖФ (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      varmeasure-water-cli-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
-     varstate-water-cli-qnty AT ROW 24.75 COL 85 COLON-ALIGNED
-     tt-rvs-line.level-petrol AT ROW 18.75 COL 28.13 COLON-ALIGNED
-          LABEL "Измер. уровень СУГ"
+     varstate-water-cli-qnty AT ROW 24.75 COL 90 COLON-ALIGNED
+     tt-rvs-line.level-petrol AT ROW 7.75 COL 30 COLON-ALIGNED
+          LABEL "Измер. уровень СУГ (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-petrol AT ROW 18.75 COL 73.5 COLON-ALIGNED format ">>,>>9.999"
-          LABEL "Факт уровень СУГ"
+     tt-rvs-line.state-level-petrol AT ROW 7.75 COL 79.5 COLON-ALIGNED format ">>,>>9.999"
+          LABEL "Факт уровень СУГ (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.level-total AT ROW 5.75 COL 23.13 COLON-ALIGNED
-          LABEL "Измер. общий уровень"
+     tt-rvs-line.level-total AT ROW 5.75 COL 30 COLON-ALIGNED
+          LABEL "Измер. общий уровень (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-total AT ROW 5.75 COL 69.5 COLON-ALIGNED format ">>,>>9.999"
-          LABEL "Факт общий уровень"
+     tt-rvs-line.state-level-total AT ROW 5.75 COL 79.5 COLON-ALIGNED format ">>,>>9.999"
+          LABEL "Факт общий уровень (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88 
-     tt-rvs-line.level-water AT ROW 6.75 COL 23.13 COLON-ALIGNED
-          LABEL "Измер. уровень воды"
+     tt-rvs-line.level-water AT ROW 6.75 COL 30 COLON-ALIGNED
+          LABEL "Измер. уровень воды (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-level-water AT ROW 6.75 COL 69.5 COLON-ALIGNED format ">>,>>9.999"
-          LABEL "Факт уровень воды"
+     tt-rvs-line.state-level-water AT ROW 6.75 COL 79.5 COLON-ALIGNED format ">>,>>9.999"
+          LABEL "Факт уровень воды (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temperature AT ROW 7.75 COL 23.13 COLON-ALIGNED
-          LABEL "Измер. Температура"
+     tt-rvs-line.temperature AT ROW 8.75 COL 30 COLON-ALIGNED
+          LABEL "Температура средняя (°С)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-temperature AT ROW 7.75 COL 69.5 COLON-ALIGNED
+     tt-rvs-line.state-temperature AT ROW 8.75 COL 79.5 COLON-ALIGNED
+          LABEL "Температура средняя (°С)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.temp-layer1 AT ROW 5.75 COL 41 COLON-ALIGNED
+     tt-rvs-line.temp-layer1 AT ROW 5.75 COL 45 COLON-ALIGNED
           LABEL "T1"
           VIEW-AS FILL-IN 
           SIZE 6 BY .88
-     tt-rvs-line.temp-layer2 AT ROW 6.75 COL 41 COLON-ALIGNED
+     tt-rvs-line.temp-layer2 AT ROW 6.75 COL 45 COLON-ALIGNED
           LABEL "T2"
           VIEW-AS FILL-IN 
           SIZE 6 BY .88
-     tt-rvs-line.temp-layer3 AT ROW 7.75 COL 41 COLON-ALIGNED
+     tt-rvs-line.temp-layer3 AT ROW 7.75 COL 45 COLON-ALIGNED
           LABEL "T3"
           VIEW-AS FILL-IN 
           SIZE 6 BY .88
-     tt-rvs-line.state-temp-layer1 AT ROW 5.75 COL 91 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer1 AT ROW 5.75 COL 99 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer2 AT ROW 6.75 COL 91 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer2 AT ROW 6.75 COL 99 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.state-temp-layer3 AT ROW 7.75 COL 91 COLON-ALIGNED
+     tt-rvs-line.state-temp-layer3 AT ROW 7.75 COL 99 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 8 BY .88
-     tt-rvs-line.meas-mh-qnty AT ROW 23.75 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.meas-mh-qnty AT ROW 29.75 COL 29.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
-     tt-rvs-line.state-mh-qnty AT ROW 28.25 COL 15.5 COLON-ALIGNED
+     tt-rvs-line.state-mh-qnty AT ROW 31.75 COL 15.5 COLON-ALIGNED
           LABEL "Оборот по ТРК"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
-     tt-rvs-line.meas-am-qnty AT ROW 24.75 COL 28.13 COLON-ALIGNED
+     tt-rvs-line.meas-am-qnty AT ROW 30.75 COL 29.13 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
-     tt-rvs-line.state-am-qnty AT ROW 28.25 COL 55.5 COLON-ALIGNED
+     tt-rvs-line.state-am-qnty AT ROW 31.75 COL 55.5 COLON-ALIGNED
           LABEL "Сумма оборота по ТРК"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
-     tt-rvs-line.meas-cf-qnty AT ROW 25.75 COL 29.13 COLON-ALIGNED
+     tt-rvs-line.meas-cf-qnty AT ROW 31.75 COL 30.13 COLON-ALIGNED
           LABEL "Измеренное кол-во наливов"
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
@@ -581,26 +593,30 @@ DEFINE FRAME Dialog-Frame
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     tt-rvs-line.state-cf-qnty AT ROW 28.25 COL 95.5 COLON-ALIGNED
+     tt-rvs-line.state-cf-qnty AT ROW 31.75 COL 95.5 COLON-ALIGNED
           LABEL "Количество наливов"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
-     tt-rvs-line.pressure-sug AT ROW 26.75 COL 28.13 COLON-ALIGNED
-          LABEL "Изм. давление"
+     tt-rvs-line.pressure-sug AT ROW 26.75 COL 35 COLON-ALIGNED
+          LABEL "Изм. давление (МПа)"
           VIEW-AS FILL-IN 
           SIZE 17 BY .88
-     tt-rvs-line.state-pressure-sug AT ROW 26.75 COL 73.5 COLON-ALIGNED
-          LABEL "Давление"
+     tt-rvs-line.state-pressure-sug AT ROW 26.75 COL 90 COLON-ALIGNED
+          LABEL "Давление (МПа)"
           VIEW-AS FILL-IN 
-          SIZE 10 BY .88      
-     delta-mass-qnty AT ROW 18.75 COL 85 COLON-ALIGNED  WIDGET-ID 22
-     abs-delta-mass-qnty AT ROW 19.75 COL 85 COLON-ALIGNED  WIDGET-ID 22
+          SIZE 10 BY .88  
+     level-prc at row 27.75 COL 90 COLON-ALIGNED
+          label "Уровень наполнения (%)"
+          VIEW-AS FILL-IN 
+          SIZE 6 BY .88    
+     delta-mass-qnty AT ROW 18.75 COL 90 COLON-ALIGNED  WIDGET-ID 22
+     abs-delta-mass-qnty AT ROW 19.75 COL 90 COLON-ALIGNED  WIDGET-ID 22
      CriticalDif AT ROW 4.25 COL 34 COLON-ALIGNED WIDGET-ID 2
 /*     mass-float-cov AT ROW 26.5 COL 54 COLON-ALIGNED WIDGET-ID 2*/
 /*       "Погр. изм." VIEW-AS TEXT                             */
 /*          SIZE 12.5 BY .75 AT ROW 24.75 COL 88.5 WIDGET-ID 24*/
      
-     RECT-2 AT ROW 5.54 COL 50.25
+     RECT-2 AT ROW 5.54 COL 54
      RECT-3 AT ROW 5.5 COL 2
      SPACE(58.61) SKIP(2.74)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -1250,6 +1266,21 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-rez
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-rez Dialog-Frame
+ON CHOOSE OF b-rez IN FRAME Dialog-Frame /* Отмена */
+DO:
+  if twice-place-data > ""
+  then do :
+    message twice-place-data view-as alert-box information .
+  end.
+  else do :
+    message "Нет данных" view-as alert-box .
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-save
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-save Dialog-Frame
@@ -1784,10 +1815,10 @@ DO:
      if error-status:error then return no-apply.
      run weath-water no-error.
      if error-status:error then return no-apply.
-     if tarir-value = 'yes'
-     then do :
-       run local-tarir("state-level-total") .
-     end.
+/*     if tarir-value = 'yes'                  */
+/*     then do :                               */
+/*       run local-tarir("state-level-total") .*/
+/*     end.                                    */
   end.
 
 END.
@@ -1829,7 +1860,7 @@ DO:
      end.
      tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty .
      abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
-     display tt-rvs-line.fact-sum-mass abs-delta-mass-add-qnty with frame {&frame-name}.
+     display tt-rvs-line.fact-sum-mass /* abs-delta-mass-add-qnty */ with frame {&frame-name}.
      assign tt-rvs-line.fact-calc-vol .
   end.
 
@@ -2168,6 +2199,23 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     .
 
   RUN enable_UI IN THIS-PROCEDURE.
+  
+  find first rvs-line-attr exclusive-lock
+        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          and rvs-line-attr.attr-code = "twice-place-data" no-error.
+  if available rvs-line-attr then do :
+    twice-place-data = trim(rvs-line-attr.attr-value) .
+    twice-place-data = trim(twice-place-data, {&new-line}) .
+    display b-rez with frame Dialog-Frame.
+    enable b-rez with frame Dialog-Frame.
+  end.
+  else do :
+    hide b-rez in frame Dialog-Frame.
+  end.
 
   if tt-rvs-line.system-qnty <> tt-rvs-line.orig-system-qnty
     and tt-rvs-line.system-cli-qnty <> tt-rvs-line.orig-system-cli-qnty
@@ -2331,12 +2379,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if parmode <> {&update} then do:
     disable b-save with frame {&frame-name}.
   end.
-  run volume-measure-water in this-procedure                 no-error.
-  run weath-measure-water  in this-procedure                 no-error.
-  run level-measure-water  in this-procedure                 no-error.
-  run volume-water         in this-procedure                 no-error.
-  run weath-water          in this-procedure                 no-error.
-  run level-water          in this-procedure ( input no ) /* no-error */ .
+  
   find first buf_goods no-lock
     where buf_goods.gds-code = tt-rvs-line.gds-code
     .
@@ -2366,8 +2409,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.meas-am-qnty
       tt-rvs-line.meas-cf-qnty
       tt-rvs-line.meas-mh-qnty
-      tt-rvs-line.level-petrol
-      tt-rvs-line.state-level-petrol
+/*      tt-rvs-line.level-petrol      */
+/*      tt-rvs-line.state-level-petrol*/
       tt-rvs-line.brutto-cli-qnty
       tt-rvs-line.state-brutto-cli-qnty
 /*      tt-rvs-line.meas-cli-calc-qnty*/
@@ -2383,7 +2426,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.measure-qnty
       tt-rvs-line.state-measure-qnty
 /*      tt-rvs-line.meas-calc-qnty*/
-      
+      tt-rvs-line.izmer-density
+      b-calc
+      abs-delta-mass-add-qnty
       in frame Dialog-Frame.
 /*    rdc-value =  "pomi-rn"  .*/
   if rdc-value <>  "pomi-rn" then do :
@@ -2417,19 +2462,19 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       
   end.
   else  do :
-    view
-      tt-rvs-line.izmer-density
-    in frame Dialog-Frame.
-    enable   
-      tt-rvs-line.izmer-density
-    with frame Dialog-Frame.
-    disable
-      tt-rvs-line.state-density
-      tt-rvs-line.state-measure-qnty
-      tt-rvs-line.state-add-qnty
-      tt-rvs-line.state-brutto-qnty
-      tt-rvs-line.state-brutto-cli-qnty
-    with frame Dialog-Frame.
+/*    view                               */
+/*      tt-rvs-line.izmer-density        */
+/*    in frame Dialog-Frame.             */
+/*    enable                             */
+/*      tt-rvs-line.izmer-density        */
+/*    with frame Dialog-Frame.           */
+/*    disable                            */
+/*      tt-rvs-line.state-density        */
+/*      tt-rvs-line.state-measure-qnty   */
+/*      tt-rvs-line.state-add-qnty       */
+/*      tt-rvs-line.state-brutto-qnty    */
+/*      tt-rvs-line.state-brutto-cli-qnty*/
+/*    with frame Dialog-Frame.           */
     end.
 
     for each rvs-line-attr no-lock
@@ -2484,7 +2529,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     release rvs-line-attr no-error .
     if rdc-value =  "pomi-rn" then do :
     display
-      tt-rvs-line.izmer-density
+/*      tt-rvs-line.izmer-density*/
       delta-mass-qnty
     with frame {&frame-name}.
     end.
@@ -2567,6 +2612,63 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 .
   abs-delta-mass-qnty = tt-rvs-line.state-measure-cli-qnty * delta-mass-qnty / 100 .
   
+  if tt-rvs-line.level-total = 0
+  or tt-rvs-line.level-total = ?
+  then do :
+    find first place no-lock where place.obj-type = tt-rvs-line.obj-type
+                               and place.obj-code = tt-rvs-line.obj-code
+                               and place.pl-code  = tt-rvs-line.pl-code
+                               .
+    tt-rvs-line.level-total = place.max-qnty .  
+    tt-rvs-line.state-level-total = tt-rvs-line.level-total .                         
+  end.
+  
+  if tt-rvs-line.calc-vol = ?
+  or tt-rvs-line.calc-vol = 0
+  then do :
+    tt-rvs-line.calc-vol = tt-rvs-line.measure-qnty .
+  end.
+  
+  if tt-rvs-line.fact-calc-vol = ?
+  or tt-rvs-line.fact-calc-vol = 0
+  then do :
+    tt-rvs-line.fact-calc-vol = tt-rvs-line.state-measure-qnty .
+  end.
+  
+  if tt-rvs-line.state-dens-pf-sug = ?
+  or tt-rvs-line.state-dens-pf-sug = 0
+  then do :
+    tt-rvs-line.state-dens-pf-sug = tt-rvs-line.dens-pf-sug .
+  end.
+  
+  if tt-rvs-line.state-pressure-sug = ?
+  or tt-rvs-line.state-pressure-sug = 0
+  then do :
+    tt-rvs-line.state-pressure-sug = tt-rvs-line.pressure-sug .
+  end.
+  
+  if tt-rvs-line.fact-calc-vol = tt-rvs-line.fact-sum-vol
+  then do :
+    tt-rvs-line.fact-sum-vol = tt-rvs-line.fact-sum-vol + tt-rvs-line.state-add-qnty .
+  end.
+  
+  if tt-rvs-line.state-measure-cli-qnty = tt-rvs-line.state-brutto-cli-qnty
+  then do :
+    tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-brutto-cli-qnty + (tt-rvs-line.state-add-qnty * tt-rvs-line.state-density) .
+  end.
+  
+  if tt-rvs-line.calc-vol = tt-rvs-line.sum-vol
+  then do :
+    tt-rvs-line.sum-vol = tt-rvs-line.sum-vol + tt-rvs-line.add-qnty .
+  end.
+  
+  if tt-rvs-line.measure-cli-qnty = tt-rvs-line.brutto-cli-qnty
+  then do :
+    tt-rvs-line.brutto-cli-qnty = tt-rvs-line.brutto-cli-qnty + (tt-rvs-line.add-qnty * tt-rvs-line.density) .
+  end.
+  
+  level-prc = (tt-rvs-line.state-level-petrol + tt-rvs-line.state-level-water) / tt-rvs-line.state-level-total * 100 .
+
   display
     tt-rvs-line.calc-add-mass
     tt-rvs-line.calc-vol
@@ -2580,8 +2682,34 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     tt-rvs-line.fact-sum-mass
     varstate-sum-vol
     
-    abs-delta-mass-add-qnty
+    tt-rvs-line.state-level-total
+    tt-rvs-line.level-total
+    
+/*    abs-delta-mass-add-qnty*/
+
+/*    tt-rvs-line.measure-tc-qnty      */
+/*    tt-rvs-line.state-measure-tc-qnty*/
+    tt-rvs-line.vol-pf-sug
+    tt-rvs-line.state-vol-pf-sug
+    tt-rvs-line.dens-pf-sug
+    tt-rvs-line.state-dens-pf-sug
+    tt-rvs-line.pressure-sug
+    tt-rvs-line.state-pressure-sug
+/*    tt-rvs-line.state-brutto-qnty*/
+/*    tt-rvs-line.state-brutto-cli-qnty*/
+/*    tt-rvs-line.brutto-qnty*/
+/*    tt-rvs-line.brutto-cli-qnty*/
+    level-prc
   with frame {&frame-name}.
+  
+  
+  run volume-measure-water in this-procedure                 no-error.
+  run weath-measure-water  in this-procedure                 no-error.
+  run level-measure-water  in this-procedure                 no-error.
+  run volume-water         in this-procedure                 no-error.
+  run weath-water          in this-procedure                 no-error.
+  run level-water          in this-procedure ( input no ) /* no-error */ .
+  
   
   if rdc-value = 'pomi-rn'
   then do :
@@ -2604,34 +2732,50 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      disable b-calc with frame {&frame-name}.
   end.
   else do :
-    if (pl-rvd-dens or tt-rvs-line.density = ?) and rdc-value = 'pomi-rn'
-    then do :
-      enable tt-rvs-line.izmer-density with frame {&frame-name}.
-    end.
-    else do :
-      disable tt-rvs-line.izmer-density with frame {&frame-name}.
-    end.
-    if pl-rvd-dens or tt-rvs-line.density = ?
-    then do :
-      enable tt-rvs-line.state-density with frame {&frame-name}.
-    end.
-    else do :
-      disable tt-rvs-line.state-density with frame {&frame-name}.
-    end.
-    if pl-rvd-lvl or tt-rvs-line.density = ?
-    then do :
-      enable tt-rvs-line.state-level-total tt-rvs-line.state-level-water with frame {&frame-name}.
-    end.
-    else do :
-      disable tt-rvs-line.state-level-total tt-rvs-line.state-level-water with frame {&frame-name}.
-    end.
-    if pl-rvd-temp or tt-rvs-line.density = ?
-    then do :
-      enable tt-rvs-line.state-temperature tt-rvs-line.state-temp-layer1 tt-rvs-line.state-temp-layer2 tt-rvs-line.state-temp-layer3 with frame {&frame-name}.
-    end.
-    else do :
-      disable tt-rvs-line.state-temperature tt-rvs-line.state-temp-layer1 tt-rvs-line.state-temp-layer2 tt-rvs-line.state-temp-layer3 with frame {&frame-name}.
-    end.
+/*    if (pl-rvd-dens or tt-rvs-line.density = ?) and rdc-value = 'pomi-rn'                                                                                      */
+/*    then do :                                                                                                                                                  */
+/*      enable tt-rvs-line.izmer-density with frame {&frame-name}.                                                                                               */
+/*    end.                                                                                                                                                       */
+/*    else do :                                                                                                                                                  */
+/*      disable tt-rvs-line.izmer-density with frame {&frame-name}.                                                                                              */
+/*    end.                                                                                                                                                       */
+/*    if pl-rvd-dens or tt-rvs-line.density = ?                                                                                                                  */
+/*    then do :                                                                                                                                                  */
+/*      enable tt-rvs-line.state-density with frame {&frame-name}.                                                                                               */
+/*    end.                                                                                                                                                       */
+/*    else do :                                                                                                                                                  */
+/*      disable tt-rvs-line.state-density with frame {&frame-name}.                                                                                              */
+/*    end.                                                                                                                                                       */
+/*    if pl-rvd-lvl or tt-rvs-line.density = ?                                                                                                                   */
+/*    then do :                                                                                                                                                  */
+/*      enable tt-rvs-line.state-level-total tt-rvs-line.state-level-water with frame {&frame-name}.                                                             */
+/*    end.                                                                                                                                                       */
+/*    else do :                                                                                                                                                  */
+/*      disable tt-rvs-line.state-level-total tt-rvs-line.state-level-water with frame {&frame-name}.                                                            */
+/*    end.                                                                                                                                                       */
+/*    if pl-rvd-temp or tt-rvs-line.density = ?                                                                                                                  */
+/*    then do :                                                                                                                                                  */
+/*      enable tt-rvs-line.state-temperature tt-rvs-line.state-temp-layer1 tt-rvs-line.state-temp-layer2 tt-rvs-line.state-temp-layer3 with frame {&frame-name}. */
+/*    end.                                                                                                                                                       */
+/*    else do :                                                                                                                                                  */
+/*      disable tt-rvs-line.state-temperature tt-rvs-line.state-temp-layer1 tt-rvs-line.state-temp-layer2 tt-rvs-line.state-temp-layer3 with frame {&frame-name}.*/
+/*    end.                                                                                                                                                       */
+    
+    disable 
+      tt-rvs-line.state-temperature
+      tt-rvs-line.state-temp-layer1
+      tt-rvs-line.state-temp-layer2
+      tt-rvs-line.state-temp-layer3
+      tt-rvs-line.state-level-petrol
+      tt-rvs-line.state-level-water
+      tt-rvs-line.state-level-total
+      tt-rvs-line.state-add-qnty
+      varstate-water-qnty
+    with frame {&frame-name}.
+    
+    enable
+      tt-rvs-line.fact-calc-vol
+    with frame {&frame-name}.
   end.
   assign frame {&frame-name} :title = frame {&frame-name} :title + " - " + parmode
                                     + " - " +  partitle.
@@ -2690,11 +2834,11 @@ run gds-attr-value in this-procedure
   end.
 
 assign frame {&frame-name} tt-rvs-line.state-density tt-rvs-line.state-measure-cli-qnty tt-rvs-line.state-brutto-cli-qnty .
-assign
-  tt-rvs-line.state-measure-cli-qnty = tt-rvs-line.state-measure-qnty * tt-rvs-line.state-density
-  tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty
-  tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty  * tt-rvs-line.state-density
-.
+/*assign                                                                                           */
+/*  tt-rvs-line.state-measure-cli-qnty = tt-rvs-line.state-measure-qnty * tt-rvs-line.state-density*/
+/*  tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty   */
+/*  tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty  * tt-rvs-line.state-density       */
+/*.                                                                                                */
 abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
 display tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-calc-add-mass with frame {&frame-name}.
 /*display tt-rvs-line.state-brutto-cli-qnty with frame {&frame-name}.*/
@@ -2796,9 +2940,9 @@ PROCEDURE level-measure-water :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-display input frame {&frame-name} tt-rvs-line.level-total -
-        input frame {&frame-name} tt-rvs-line.level-petrol @
-        tt-rvs-line.level-water with frame {&frame-name}.
+/*display input frame {&frame-name} tt-rvs-line.level-total - */
+/*        input frame {&frame-name} tt-rvs-line.level-petrol @*/
+/*        tt-rvs-line.level-water with frame {&frame-name}.   */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2823,7 +2967,7 @@ PROCEDURE level-water :
 /*      return error.                                                                    */
 /*    end.                                                                               */
 /*  end.                                                                                 */
-  tt-rvs-line.state-level-petrol = input frame {&frame-name} tt-rvs-line.state-level-total - input frame {&frame-name} tt-rvs-line.state-level-water .
+/*  tt-rvs-line.state-level-petrol = input frame {&frame-name} tt-rvs-line.state-level-total - input frame {&frame-name} tt-rvs-line.state-level-water .*/
 /*  display input frame {&frame-name} tt-rvs-line.state-level-total  -*/
 /*          input frame {&frame-name} tt-rvs-line.state-level-petrol @*/
 /*                                    tt-rvs-line.state-level-water   */
@@ -3044,7 +3188,7 @@ if vartarirvalue = "yes" then do:
     
     varstate-sum-vol = input frame {&frame-name} tt-rvs-line.fact-calc-vol + varstate-water-qnty .
     
-    display  abs-delta-mass-add-qnty tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-sum-mass varstate-sum-vol with frame {&frame-name}.
+    display /* abs-delta-mass-add-qnty */ tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-sum-mass varstate-sum-vol with frame {&frame-name}.
 
     run volume-water.
 
@@ -3064,8 +3208,9 @@ PROCEDURE volume-measure-water :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-display input frame {&frame-name} tt-rvs-line.brutto-qnty -
-        input frame {&frame-name} tt-rvs-line.measure-qnty @
+display input frame {&frame-name} tt-rvs-line.sum-vol -
+        input frame {&frame-name} tt-rvs-line.calc-vol -
+        input frame {&frame-name} tt-rvs-line.add-qnty @
         varmeasure-water-qnty with frame {&frame-name}.
 END PROCEDURE.
 
@@ -3079,17 +3224,20 @@ PROCEDURE volume-water :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-if input frame {&frame-name} tt-rvs-line.state-brutto-qnty -
-   input frame {&frame-name} tt-rvs-line.state-measure-qnty <> ?
+if input frame {&frame-name} tt-rvs-line.fact-sum-vol -
+   input frame {&frame-name} tt-rvs-line.fact-calc-vol -
+   input frame {&frame-name} tt-rvs-line.state-add-qnty <> ?
 then
-display input frame {&frame-name} tt-rvs-line.state-brutto-qnty -
-        input frame {&frame-name} tt-rvs-line.state-measure-qnty @
+display input frame {&frame-name} tt-rvs-line.fact-sum-vol -
+        input frame {&frame-name} tt-rvs-line.fact-calc-vol -
+        input frame {&frame-name} tt-rvs-line.state-add-qnty @
         varstate-water-qnty with frame {&frame-name}.
 else
-if tt-rvs-line.state-brutto-qnty -
-   tt-rvs-line.state-measure-qnty <> ?
+if tt-rvs-line.fact-sum-vol -
+   tt-rvs-line.fact-calc-vol -
+   tt-rvs-line.state-add-qnty <> ?
 then
-display tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty @
+display tt-rvs-line.fact-sum-vol - tt-rvs-line.fact-calc-vol - tt-rvs-line.state-add-qnty @
         varstate-water-qnty with frame {&frame-name}.        
 /*        assign frame {&frame-name} tt-rvs-line.state-brutto-qnty  */
 /*                                   tt-rvs-line.state-measure-qnty.*/
@@ -3105,9 +3253,10 @@ PROCEDURE weath-measure-water :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-display input frame {&frame-name} tt-rvs-line.brutto-cli-qnty -
-        input frame {&frame-name} tt-rvs-line.measure-cli-qnty @
-        varmeasure-water-cli-qnty with frame {&frame-name}.
+/*display input frame {&frame-name} tt-rvs-line.brutto-cli-qnty -                                           */
+/*        input frame {&frame-name} tt-rvs-line.measure-cli-qnty -                                          */
+/*        (input frame {&frame-name} tt-rvs-line.add-qnty * input frame {&frame-name} tt-rvs-line.density) @*/
+/*        varmeasure-water-cli-qnty with frame {&frame-name}.                                               */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

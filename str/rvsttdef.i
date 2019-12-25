@@ -71,6 +71,8 @@ create: Булгаков Андрей Николаевич
     field meas-vol-oil   as logical initial no
     field meas-vol-water as logical initial no
     field water-qnty     like ub.rvs-line.measure-qnty
+    field vapor-density like ub.rvs-line.density
+    field vapor-pressure as decimal format ">>9.9<":U
     field log-brutto as logical
     index pi        as primary   unique loc1.
     

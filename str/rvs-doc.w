@@ -2531,6 +2531,7 @@ procedure proc_m-meas-1:
                       ).
         case varnum:
         when 3 then do:
+          run waitfram-hide in this-procedure.
           undo tr, return no-apply.
         end.
         when 2 then do:

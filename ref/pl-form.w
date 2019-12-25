@@ -165,7 +165,7 @@ DEFINE VARIABLE place-si AS INTEGER FORMAT ">>>,>>9":U INITIAL 0
      SIZE 8.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE place-twice-code AS CHARACTER FORMAT "x(8)" 
-     LABEL "Код сдвоенного резервуара" 
+     LABEL "Коды связанных резервуаров" 
      VIEW-AS FILL-IN 
      SIZE 18 BY 1 NO-UNDO.
 
@@ -265,7 +265,7 @@ DEFINE FRAME d-pl-form
           SIZE 11.63 BY 1
      error-mass AT Y 262 X 703 RIGHT-ALIGNED WIDGET-ID 38
      tt-place.max-qnty AT ROW 12.92 COL 30.63 COLON-ALIGNED
-          LABEL "Максимальное количество"
+          LABEL "Макс. кол-во/Макс. уровень СУГ"
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
      place-si AT ROW 12.92 COL 75.38 COLON-ALIGNED WIDGET-ID 16
