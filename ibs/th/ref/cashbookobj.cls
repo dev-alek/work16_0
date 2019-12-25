@@ -751,7 +751,8 @@ class ibs.th.ref.cashbookobj inherits Form :
         0
         false
         v-log2
-      }         
+      } 
+      define variable v-cntxt-db-num  as integer no-undo.        
       assign
         this-object:fMaskPko:ReadOnly = not (v-log and v-cntxt-db-num = 0)
         this-object:fMaskRko:ReadOnly = not (v-log and v-cntxt-db-num = 0)

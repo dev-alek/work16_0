@@ -108,7 +108,9 @@ class ibs.th.ref.bpa.BPA_browse inherits Form:
     super().
 
     pMode = iChange .
-   
+    if pMode = {&lookup} 
+    then
+       pMode = {&update} .
     InitializeComponent().
     Visual_form(pMode) .
     v-status = {&current-status}.
