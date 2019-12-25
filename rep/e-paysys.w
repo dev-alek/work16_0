@@ -88,7 +88,7 @@ DEFINE VARIABLE EDITOR-3 AS CHARACTER INITIAL "Все"
      SIZE 40.63 BY 3.71 NO-UNDO.
 
 DEFINE VARIABLE f-sum AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Ограничение по сумме" 
+/*     LABEL "Ограничение по сумме"*/
      VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
@@ -109,7 +109,7 @@ DEFINE RECTANGLE RECT-7
 DEFINE FRAME F-Main
      EDITOR-3 AT ROW 2.33 COL 25.13 NO-LABEL WIDGET-ID 12
      RADIO-SET-3 AT ROW 2.54 COL 3.5 NO-LABEL WIDGET-ID 14
-     f-sum AT ROW 6.96 COL 23.5 COLON-ALIGNED WIDGET-ID 20
+     f-sum AT ROW 6.96 COL 23.5 NO-LABEL WIDGET-ID 20
      "Выбор промоакций:" VIEW-AS TEXT
           SIZE 18.5 BY .67 AT ROW 1.38 COL 5 WIDGET-ID 34
      RECT-7 AT ROW 1.71 COL 2
@@ -310,8 +310,10 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
 DISPLAY
-      EDITOR-3 f-sum
+      EDITOR-3 
+/*      f-sum*/
       WITH FRAME {&frame-name}.
+disable f-sum with frame {&frame-name} .      
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -354,7 +356,7 @@ end.
 
     run rep/r-paysys.p
       (input my-handle 
-      ,input decimal (f-sum)   
+/*      ,input decimal (f-sum)*/
       ,input table tt-promo 
       ) .
 
@@ -371,7 +373,7 @@ PROCEDURE my-var :
     Purpose:     здесь происходит вызов  значений переменных
     например  Название отчета, может быть еще пример шапки ???
   ------------------------------------------------------------------------------*/
-  assign frame {&frame-name} f-sum.
+  assign frame {&frame-name} EDITOR-3.
 
 END PROCEDURE.
 

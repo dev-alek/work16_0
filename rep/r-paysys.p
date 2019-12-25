@@ -27,7 +27,7 @@ DEFINE TEMP-TABLE tt-promo like ub.PromoAction
   .
        
 define input parameter parparentproc           as handle           no-undo.
-define input parameter p-sum    as decimal .
+/*define input parameter p-sum    as decimal .*/
 define input parameter table for tt-promo .
 
 { cmp/str-glbl.i }
@@ -55,6 +55,7 @@ DEFINE TEMP-TABLE tt-promo-bin NO-UNDO
   field idAction as integer 
   field min_bin  as integer
   field max_bin  as integer
+  field idName   as character
   INDEX pi idAction .
 
 DEFINE TEMP-TABLE tt-code NO-UNDO 
@@ -72,6 +73,13 @@ DEFINE TEMP-TABLE tt-pay-sys NO-UNDO
   field pay-qnty   as decimal
   field pay-sum    as decimal
   INDEX pi pay-name.
+
+define temp-table tt-doc-code no-undo
+  field doc-code as character 
+  field log1     as logical
+  field log2     as logical
+  field log3     as logical
+  .
 
                     
 define stream Out-Stream.
@@ -101,6 +109,8 @@ define variable kk                  as integer   no-undo .
 define variable v-pay-sys           as character no-undo .
 define variable v-pay-name          as character no-undo .
 DEFINE variable text-string         as char      no-undo.
+define variable v-payname           as character no-undo .
+define variable v-nameAction        as character no-undo .
 
 define buffer buf_chk-doc       for ub.chk-doc .
 define buffer buf_chk-pay       for ub.chk-pay .
@@ -137,7 +147,7 @@ v-itog-tran = 0 .
 
 /*Сбор бинов платежной системы*/
 for each buf_code no-lock where buf_code.status_ = {&bef-current-status-int}:
-  if num-entries (buf_code.parent,{&delim-par}) > 1 then 
+  if num-entries (buf_code.parent,{&delim-par}) > 1 and entry(1,buf_code.parent,{&delim-par}) = "platsys" then 
   do:
     if num-entries (buf_code.code,",") > 1 then 
     do:
@@ -186,9 +196,9 @@ for each buf_code no-lock where buf_code.status_ = {&bef-current-status-int}:
     end.  
   end.  
 end.
-
 /*Сбор бинов акций*/
 for each buf_tt-promo no-lock where buf_tt-promo.end-date >= x-Date-Start and buf_tt-promo.beg-date <= x-Date-End:
+  v-nameAction = buf_tt-promo.nameAction .
   for each buf_PromoGoods no-lock where buf_PromoGoods.type = 5 and buf_PromoGoods.idAction = buf_tt-promo.id and buf_PromoGoods.db-num = buf_tt-promo.db-num:
     if num-entries (buf_PromoGoods.NameSet,"-") > 1 then 
     do:
@@ -197,6 +207,7 @@ for each buf_tt-promo no-lock where buf_tt-promo.end-date >= x-Date-Start and bu
         tt-promo-bin.min_bin  = MinInt(integer(entry(1,buf_PromoGoods.NameSet,"-")))
         tt-promo-bin.max_bin  = MaxInt(integer(entry(2,buf_PromoGoods.NameSet,"-")))
         tt-promo-bin.idAction = buf_PromoGoods.idAction
+        tt-promo-bin.idName   = v-nameAction
         .
     end.  
     else 
@@ -206,21 +217,11 @@ for each buf_tt-promo no-lock where buf_tt-promo.end-date >= x-Date-Start and bu
         tt-promo-bin.min_bin  = MinInt(integer(buf_PromoGoods.NameSet))
         tt-promo-bin.max_bin  = MaxInt(integer(buf_PromoGoods.NameSet))
         tt-promo-bin.idAction = buf_PromoGoods.idAction
+        tt-promo-bin.idName   = v-nameAction
         .
     end.      
   end.  
 end.
-/*output to c:\temp\promo-bin.txt.*/
-/*  for each tt-promo-bin:        */
-/*    export tt-promo-bin .       */
-/*  end.                          */
-/*output close.                   */
-/*                                */
-/*output to c:\temp\code.txt.     */
-/*  for each tt-code:             */
-/*    export tt-code .            */
-/*  end.                          */
-/*output close.                   */
 
 DEFINE VARIABLE v-dop   AS character NO-UNDO .
 DEFINE VARIABLE v-value AS character NO-UNDO.
@@ -299,6 +300,14 @@ end.
 procedure report:
   for each buf_chk-pay no-lock where buf_chk-pay.doc-code = buf_chk-doc.doc-code,
     first tt-cash-pay no-lock where tt-cash-pay.curr-code = buf_chk-pay.curr-code and tt-cash-pay.cdpay-code = buf_chk-pay.pay-code:
+    find first tt-doc-code no-lock where tt-doc-code.doc-code = buf_chk-pay.doc-code no-error .
+    if not available (tt-doc-code) then 
+    do:
+      create tt-doc-code .
+      assign
+        tt-doc-code.doc-code = buf_chk-pay.doc-code
+        .
+    end.  
     find first buf_tt-code no-lock where substring (buf_chk-pay.pay-card,1,6) >= string (buf_tt-code.min_code) and substring (buf_chk-pay.pay-card,1,6) <= string (buf_tt-code.max_code) no-error .
     if available (buf_tt-code) then 
     do:
@@ -315,22 +324,25 @@ procedure report:
         buf_pay-sys.pay-qnty   = 1
         buf_pay-sys.pay-sum    = buf_chk-pay.tot-sum
         .
+      tt-doc-code.log1 = yes.
     end.
     else 
     do:
       assign
-        buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1
-        buf_pay-sys.pay-sum  = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
-        .      
+        buf_pay-sys.pay-sum = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
+        .    
+      if tt-doc-code.log1 = no then buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1 .
+      tt-doc-code.log1 = yes .
     end.    
     for first buf_tt-promo-bin no-lock where substring (buf_chk-pay.pay-card,1,6) >= string (buf_tt-promo-bin.min_bin) and substring (buf_chk-pay.pay-card,1,6) >= string (buf_tt-promo-bin.max_bin):
       find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = "Премиальные карты " + v-pay-name no-error .
       if available (buf_pay-sys) then 
       do:
         assign
-          buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1
-          buf_pay-sys.pay-sum  = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
-          .      
+          buf_pay-sys.pay-sum = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
+          . 
+        if tt-doc-code.log2 = no then buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1 .
+        tt-doc-code.log2 = yes .
       end.
       else 
       do:
@@ -341,35 +353,40 @@ procedure report:
           buf_pay-sys.pay-qnty   = 1
           buf_pay-sys.pay-sum    = buf_chk-pay.tot-sum
           .        
+        tt-doc-code.log2 = yes .
       end.    
-      if p-sum <> ? and p-sum <> 0 then 
-      do:
-        if buf_chk-pay.tot-sum > p-sum or buf_chk-pay.tot-sum = p-sum then 
+      /*      if p-sum <> ? and p-sum <> 0 then*/
+      /*      do:                              */
+      /*        if buf_chk-pay.tot-sum > p-sum     */
+      /*        or buf_chk-pay.tot-sum = p-sum then*/
+      /*        do:                                */
+      for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-doc.doc-code and buf_chk-discnt.promo-id = string(tt-promo-bin.idAction) and buf_chk-discnt.record-type = 0 :
+        /*            find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = string("Премиальные карты " + v-pay-name + " более " + string(p-sum) + "р.") no-error .*/
+        find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = tt-promo-bin.idName and buf_pay-sys.pay-second = v-pay-name no-error .
+        if available (buf_pay-sys) then 
         do:
-          for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-doc.doc-code and buf_chk-discnt.promo-id = string(tt-promo-bin.idAction) and buf_chk-discnt.record-type = 0 :
-            find first buf_pay-sys exclusive-lock where buf_pay-sys.pay-name = string("Премиальные карты " + v-pay-name + " более " + string(p-sum) + "р.") no-error .
-            if available (buf_pay-sys) then 
-            do:
-              assign
-                buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1
-                buf_pay-sys.pay-sum  = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
-                .      
-            end.
-            else 
-            do:
-              create buf_pay-sys .
-              assign
-                buf_pay-sys.pay-second = v-pay-name
-                buf_pay-sys.pay-name   = string("Премиальные карты " + v-pay-name + " более " + string(p-sum)  + "р.")
-                buf_pay-sys.pay-qnty   = 1
-                buf_pay-sys.pay-sum    = buf_chk-pay.tot-sum
-                .
-            for each bf_chk-pay no-lock where bf_chk-pay.doc-code = buf_chk-pay.doc-code and bf_chk-pay.tot-sum < 0 : 
-              buf_pay-sys.pay-sum = buf_pay-sys.pay-sum + bf_chk-pay.tot-sum .
-            end.
-            end.    
-          end.
-        end.  
+          assign
+            buf_pay-sys.pay-sum = buf_pay-sys.pay-sum + buf_chk-pay.tot-sum
+            .      
+          if tt-doc-code.log3 = no then buf_pay-sys.pay-qnty = buf_pay-sys.pay-qnty + 1 .
+          tt-doc-code.log3 = yes .  
+        end.
+        else 
+        do:
+          create buf_pay-sys .
+          assign
+            buf_pay-sys.pay-second = v-pay-name
+            buf_pay-sys.pay-name   = tt-promo-bin.idName
+            buf_pay-sys.pay-qnty   = 1
+            buf_pay-sys.pay-sum    = buf_chk-pay.tot-sum
+            .
+        end.    
+        for each bf_chk-pay no-lock where bf_chk-pay.doc-code = buf_chk-pay.doc-code and bf_chk-pay.tot-sum < 0 : 
+          buf_pay-sys.pay-sum = buf_pay-sys.pay-sum + bf_chk-pay.tot-sum .
+        end.
+
+      /*          end.*/
+      /*        end.*/
       end.  
   
     end.
@@ -467,32 +484,28 @@ for each buf_pay-sys where buf_pay-sys.pay-name = buf_pay-sys.pay-second:
     .
   v-itog-sum = v-itog-sum + buf_pay-sys.pay-sum .
   v-itog-tran = v-itog-tran + buf_pay-sys.pay-qnty .
-  for each tt-pay-sys where tt-pay-sys.pay-second = buf_pay-sys.pay-name and tt-pay-sys.pay-second <> tt-pay-sys.pay-name:
-    if kk = 0 then 
-    do:
-      put stream OutStr-html unformatted
-        '<TR>' skip
-        '<TD text_wrap="true" style="text-align: right;">в том числе</TD>' skip
-        '<TD text_wrap="true">' + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + string(tt-pay-sys.pay-name) + '</TD>' skip
-        '<TD text_wrap="true" style="text-align: right;">' + string(tt-pay-sys.pay-qnty) + '</TD>' skip
-        '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-        '</TR>'skip     
-        .
-      kk = kk + 1 .
-    end.
-    else 
-    do:
-      put stream OutStr-html unformatted
-        '<TR>' skip
-        '<TD text_wrap="true" style="text-align: right;"></TD>' skip
-        '<TD text_wrap="true">' + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + string(tt-pay-sys.pay-name) + '</TD>' skip
-        '<TD text_wrap="true" style="text-align: right;">' + string(tt-pay-sys.pay-qnty) + '</TD>' skip
-        '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-        '</TR>'skip     
-        .
-      kk = kk + 1 .
-    end.
-  end.        
+  v-pay-name = "" .
+  for first tt-pay-sys where tt-pay-sys.pay-second = buf_pay-sys.pay-name and tt-pay-sys.pay-second <> tt-pay-sys.pay-name and tt-pay-sys.pay-name begins "Премиальные":
+    v-payname = tt-pay-sys.pay-name .
+    put stream OutStr-html unformatted
+      '<TR>' skip
+      '<TD text_wrap="true" style="text-align: right;">в том числе</TD>' skip
+      '<TD text_wrap="true">' + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + string(tt-pay-sys.pay-name) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: right;">' + string(tt-pay-sys.pay-qnty) + '</TD>' skip
+      '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '</TD>' skip
+      '</TR>'skip     
+      .
+  end.     
+  for each tt-pay-sys where tt-pay-sys.pay-second = buf_pay-sys.pay-name and tt-pay-sys.pay-second <> tt-pay-sys.pay-name and tt-pay-sys.pay-name <> v-payname:
+    put stream OutStr-html unformatted
+      '<TR>' skip
+      '<TD text_wrap="true" style="text-align: right;"></TD>' skip
+      '<TD text_wrap="true">' + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + string(tt-pay-sys.pay-name) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: right;">' + string(tt-pay-sys.pay-qnty) + '</TD>' skip
+      '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-pay-sys.pay-sum,"->>>>>>>>>>>9.99",2) + '</TD>' skip
+      '</TR>'skip     
+      .
+  end.
 end.
 
 put stream OutStr-html unformatted
