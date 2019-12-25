@@ -275,6 +275,7 @@ class ibs.th.ref.incas inherits Form:
 	end method.
    method public void settt (input table tt-cashBookOst bind):
       mtrgOst:settt(input table tt-cashBookOst).
+      
       OstCash:setbin().
    end.
    method public void gettt (output table tt-cashBookOst bind):

@@ -754,7 +754,7 @@ define variable v-err               as logical    no-undo .
          mCashbookName = string(ub.CashBook.id) + " (" + CashBook.CashBookName + ")".
       .
       define variable v-doc-rec as recid no-undo .
-      if buf_temp-fin-sum.tot-sum > 0  then do:
+      /*if buf_temp-fin-sum.tot-sum > 0  then do:
         run ref/finfnoco.p (
                        INPUT parParentProc
                       ,INPUT ? /*не надо нам*/
@@ -787,6 +787,7 @@ define variable v-err               as logical    no-undo .
                       ,output v-limit-access ) no-error .
         end.
         else do:
+           */
           run ref/finfnoco.p (
                       INPUT parParentProc
                       ,INPUT ? /*не надо нам*/
@@ -804,7 +805,7 @@ define variable v-err               as logical    no-undo .
                       ,input {&cmp} /*p-payer-type*/
                       ,input v-host-code /*p-payer-code*/
                       ,input 0 /*p-payer-code-schet*/
-                      ,input v-real-obj-type /*p-receiver-type*/
+                      ,input v-real-obj-type  /*p-receiver-type*/
                       ,input v-real-obj-code /*p-receiever-code*/
                       ,input 0 /*p-receiver-code-schet*/
                       ,input buf_temp-fin-sum.curr-code
@@ -817,7 +818,7 @@ define variable v-err               as logical    no-undo .
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr
                       ,output v-limit-access ) no-error .
-        end.
+       /* end. */ 
       if error-status:error then do:
         &scop my-message substitute("Ошибки при заполнении фин.док-та значениями по умолчанию:&1&2&1&3"  ~
                                   , ~{&new-line~}  ~
@@ -908,7 +909,7 @@ define variable v-err               as logical    no-undo .
       then do :
         p-by-cash-desk = ub.CashBook.FlagSepCash .
         p-by-petrol-goods = ub.CashBook.FlagSepFull .
-        p-by-osnovanie = if buf_temp-fin-sum.is-expense_cash then ub.CashBook.RuleOsnRko else ub.CashBook.RuleOsnPko .
+        p-by-osnovanie = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "BasisIncas") .
         p-by-pril = ub.CashBook.RulePril .
       end.
 
@@ -949,8 +950,8 @@ define variable v-err               as logical    no-undo .
       
       if available ub.CashBook
       then do :
-        tt-fin-doc.cor-acc-value  = if  buf_temp-fin-sum.tot-sum > 0 then ub.CashBook.CorrPko else ub.CashBook.OsnAcct .
-        tt-fin-doc.cor-acc1-value = if  buf_temp-fin-sum.tot-sum < 0 then ub.CashBook.CorrRko else ub.CashBook.OsnAcct.
+        tt-fin-doc.cor-acc-value  = ub.CashBook.OsnAcct .
+        tt-fin-doc.cor-acc1-value = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CorrAcctIncas") .
         
                
         FIND ub.fin-code-cor-acc WHERE

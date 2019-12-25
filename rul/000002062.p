@@ -272,8 +272,8 @@ procedure proc-main :
 define variable v-count         as integer   no-undo .
 define variable v-tot-r-b-chk   as decimal   no-undo .
 define variable v-tot-r-b-inkas as decimal   no-undo .
-define variable v-real-obj-type as character no-undo .
-define variable v-real-obj-code as integer   no-undo .
+/*define variable v-real-obj-type as character no-undo .
+define variable v-real-obj-code as integer   no-undo .*/
 define variable v-host-code     as integer   no-undo .
 define variable v-host-name     as character no-undo .
 define variable v-base-code     as integer   no-undo .
@@ -309,7 +309,9 @@ define buffer buf_fin-doc        for ub.fin-doc.
 define buffer buf_sysconf        for ub.sysconf.
 define buffer buf_shift-staff    for ub.shift-staff.
 define buffer buf_chk-gds        for ub.chk-gds.
-
+mCashBook = new ibs.th.ref.cashbookstorage () .
+      
+      
 _main:
 do
 on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -1086,10 +1088,10 @@ define variable v-err               as logical    no-undo .
         release buf_temp-tax.
       end. /*      for each buf_temp-gds no-lock where*/
      end. /*    for each buf_sale-doc no-lock where*/
-     assign
+    /* assign
      v-real-obj-type = buf_trn-doc.cli-type
      v-real-obj-code = buf_trn-doc.cli-code
-     .
+     . */
      empty temp-table temp-gds.
    end. /*   for each buf_inkas no-lock where*/
    
@@ -1154,8 +1156,8 @@ define variable v-err               as logical    no-undo .
                       ,input buf_shift-obj.obj-code
                       ,input 0 /*p-contract-code*/
                       ,input '' /*p-ob-doc-code*/
-                      ,input v-real-obj-type /*p-payer-type*/
-                      ,input v-real-obj-code /*p-payer-code*/
+                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-type")  /*p-receiver-type*/
+                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-code") /*p-receiever-code*/
                       ,input 0 /*p-payer-code-schet*/
                       ,input {&cmp} /*p-receiver-type*/
                       ,input v-host-code /*p-receiver-code*/
@@ -1172,6 +1174,7 @@ define variable v-err               as logical    no-undo .
                       ,output v-limit-access ) no-error .
         end.
         else do:
+           
           run ref/finfnoco.p (
                       INPUT parParentProc
                       ,INPUT ? /*не надо нам*/
@@ -1189,8 +1192,8 @@ define variable v-err               as logical    no-undo .
                       ,input {&cmp} /*p-payer-type*/
                       ,input v-host-code /*p-payer-code*/
                       ,input 0 /*p-payer-code-schet*/
-                      ,input v-real-obj-type /*p-receiver-type*/
-                      ,input v-real-obj-code /*p-receiever-code*/
+                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-type")  /*p-receiver-type*/
+                      ,input mCashBook:getSinglRule(buf_temp-fin-sum.cashbookid, {&by_all}, 0, "CountCash-code") /*p-receiever-code*/
                       ,input 0 /*p-receiver-code-schet*/
                       ,input buf_temp-fin-sum.curr-code
                       ,input 0 /*p-cor-acc*/
@@ -1371,7 +1374,7 @@ define variable v-err               as logical    no-undo .
       
       mCashBook = new ibs.th.ref.cashbookstorage () .
       o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
-      delete object mCashBook no-error .
+      
       
       find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.CashBookId no-error .
       if available ub.CashBook
@@ -1519,6 +1522,9 @@ define variable v-err               as logical    no-undo .
   /* ------------------------- &end-release-obj& -------------------------------------*/
 
 end. /*doe _main*/
+finally:
+   delete object mCashBook no-error .
+end finally.
 end procedure. /* proc-main */
 
 procedure load-ruleset-context :

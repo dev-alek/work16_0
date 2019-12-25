@@ -347,7 +347,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           tt-cashbookrule.uchet           = string(objImp:acc-shift)          when objImp:acc-shift <> ?
           tt-cashbookrule.Pin             = objImp:pin                        when objImp:pin <> ?
         .
-        v-storage:insertDBobj(input dataset ds-cashbookrule by-reference) .
+        v-storage:updateDBobj(input dataset ds-cashbookrule by-reference) .
         if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
           substitute("Ошибка импорта кассовой книги [&1]: &2", objImp:name_, v-storage:Msg)
         ) .
@@ -366,50 +366,35 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
        v-storage:getCashBookRule (tt-cashbook.id, buf_clients.obj-type, buf_clients.obj-code, output dataset ds-cashbookrule by-reference) .
        find first tt-cashbookrule no-error .
        if available tt-cashbookrule then do :
-         assign
-          tt-cashbookrule.RkoMask         = substitute("&1[NNNN]", objImp:pko-prefix) when objImp:pko-prefix <> ?
-          tt-cashbookrule.PkoMask         = substitute("&1[NNNN]", objImp:rko-prefix) when objImp:rko-prefix <> ?
-          tt-cashbookrule.ManagerPosition = string(objImp:post-chief) when objImp:post-chief <> ?
-          tt-cashbookrule.ManagerFIO      = string(objImp:fio-chief)       when objImp:fio-chief <> ?
-          tt-cashbookrule.BuhFIO          = string(objImp:fio-booker)      when objImp:fio-booker <> ?
-          tt-cashbookrule.Struct          = string(objImp:struct-unit) when objImp:struct-unit <> ?
-          tt-cashbookrule.DptName         = objImp:struct-unit-name           when objImp:struct-unit-name <> ?
-          tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
-          tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
-          tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
-          tt-cashbookrule.Pin             = objImp:pin                      when objImp:pin <> ?
-         .
-         v-storage:updateDBobj(input dataset ds-cashbookrule by-reference) .
-         if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
+         
+          create tt-cashbookrule .
+          assign
+             tt-cashbookrule.cashbookId      = tt-cashbook.id
+             tt-cashbookrule.obj-type        = buf_clients.obj-type
+             tt-cashbookrule.obj-code        = buf_clients.obj-code
+             tt-cashbookrule.obj             = substitute("&1&2", tt-cashbookrule.obj-type, tt-cashbookrule.obj-code)
+             tt-cashbookrule.host-code       = if buf_clients.obj-type = {&cmp} then string(buf_clients.obj-code) else string(buf_clients.host-code)
+         
+          .
+         
+        end .
+        assign
+           tt-cashbookrule.RkoMask         = substitute("&1[NNNN]", objImp:pko-prefix) when objImp:pko-prefix <> ?
+           tt-cashbookrule.PkoMask         = substitute("&1[NNNN]", objImp:rko-prefix) when objImp:rko-prefix <> ?
+           tt-cashbookrule.ManagerPosition = string(objImp:post-chief) when objImp:post-chief <> ?
+           tt-cashbookrule.ManagerFIO      = string(objImp:fio-chief)       when objImp:fio-chief <> ?
+           tt-cashbookrule.BuhFIO          = string(objImp:fio-booker)      when objImp:fio-booker <> ?
+           tt-cashbookrule.Struct          = string(objImp:struct-unit) when objImp:struct-unit <> ?
+           tt-cashbookrule.DptName         = objImp:struct-unit-name           when objImp:struct-unit-name <> ?
+           tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
+           tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
+           tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
+           tt-cashbookrule.Pin             = objImp:pin                      when objImp:pin <> ?
+        .
+        v-storage:updateDBobj(input dataset ds-cashbookrule by-reference) .
+        if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
            substitute("Ошибка импорта кассовой книги [&1]: &2", objImp:name_, v-storage:Msg)
          ) .
-       end .
-       else do :
-         create tt-cashbookrule .
-         assign
-          tt-cashbookrule.cashbookId      = tt-cashbook.id
-          tt-cashbookrule.obj-type        = buf_clients.obj-type
-          tt-cashbookrule.obj-code        = buf_clients.obj-code
-          tt-cashbookrule.obj             = substitute("&1&2", tt-cashbookrule.obj-type, tt-cashbookrule.obj-code)
-          tt-cashbookrule.host-code       = if buf_clients.obj-type = {&cmp} then string(buf_clients.obj-code) else string(buf_clients.host-code)
-          /* 05/III-2019 Маски формировать из Получаемого префикса + "[NNNN]" */
-          tt-cashbookrule.RkoMask         = substitute("&1[NNNN]", objImp:pko-prefix) when objImp:pko-prefix <> ?
-          tt-cashbookrule.PkoMask         = substitute("&1[NNNN]", objImp:rko-prefix) when objImp:rko-prefix <> ?
-          tt-cashbookrule.ManagerPosition = string(objImp:post-chief) when objImp:post-chief <> ?
-          tt-cashbookrule.ManagerFIO      = string(objImp:fio-chief)       when objImp:fio-chief <> ?
-          tt-cashbookrule.BuhFIO          = string(objImp:fio-booker)      when objImp:fio-booker <> ?
-          tt-cashbookrule.Struct          = string(objImp:struct-unit) when objImp:struct-unit <> ?
-          tt-cashbookrule.DptName         = objImp:struct-unit-name           when objImp:struct-unit-name <> ?
-          tt-cashbookrule.DptType         = objImp:struct-unit-type           when objImp:struct-unit-type <> ?
-          tt-cashbookrule.DptCode         = objImp:struct-unit-code           when objImp:struct-unit-code <> ?
-          tt-cashbookrule.uchet           = string(objImp:acc-shift)        when objImp:acc-shift <> ?
-          tt-cashbookrule.Pin             = objImp:pin                      when objImp:pin <> ?
-         .
-         v-storage:insertDBobj(input dataset ds-cashbookrule by-reference) .
-         if v-storage:Msg <> "" then undo, throw new Progress.Lang.AppError(        
-           substitute("Ошибка импорта кассовой книги [&1]: &2", objImp:name_, v-storage:Msg)
-         ) .
-       end .
       end . /* end_of for_each_clients */
     end .
 
