@@ -3264,6 +3264,17 @@ procedure m_action-role :
 
 end procedure. /* m_action-role */
 
+procedure m-smart-ref :
+  do
+  on error undo, return error
+  :
+    
+  run ref/codelay.p ( "", "", "SpravAttrSmart", "Справочник атрибутов SMART") no-error.
+  
+  end.
+
+end procedure. /* m-hdd-ref */
+
 procedure m_action-item :
 
   define variable v-rid-list         as character no-undo .
@@ -4628,6 +4639,19 @@ define variable v-rid-list as character no-undo .
   end.
 
 end procedure. /* m-platsys-exe */
+
+procedure m-corrsys-exe :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run ref/codelay.p ( "", "OsnovCorr", "Основание коррекции") no-error.
+    
+  end.
+
+end procedure. /* m-platsys-exe */
+
 
 procedure m-cash-wthser-del-exe :
 /*define input parameter p-pos-type as character no-undo .

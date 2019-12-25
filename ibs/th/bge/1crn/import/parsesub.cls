@@ -132,7 +132,7 @@ class ibs.th.bge.1crn.import.parsesub:
 
   define variable normlossSubjectObj                        as class normloss                  no-undo.
   define variable impnormlossEventHndlrObj                as class impnormloss                no-undo.
-
+  
   define variable trn-fuel-doc-inSubjectObj      as class trn-fuel-doc-in no-undo.
   define variable trn-gd-fuelSubjectObj          as class trn-gd-fuel     no-undo.
   define variable imptrn-fuel-docEventHndlrObj   as class imptrn-fuel-doc no-undo.
@@ -183,6 +183,8 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable payment-agent-gdSubjectObj            as class kass-book-gd            no-undo. // payment-agent:kb-gds:gd
   define variable imppayment-agentEventHndlrObj         as class imppayment-agent        no-undo.
 
+  define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
+  define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
@@ -429,6 +431,17 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
           v-iSubject = shopsSubjectObj .
           v-iImpSub  = impShopsEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "osnovcorr":U then do:
+          if not valid-object(OsnovCurrSubj)       then OsnovCurrSubj       = new osnovcorr(). // <promotion>
+          if not valid-object(impOsnocCorr) then do :
+            impOsnocCorr = new imposnovcorr ().
+          end .
+          v-iSubject = OsnovCurrSubj .
+          v-iImpSub  = impOsnocCorr .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
