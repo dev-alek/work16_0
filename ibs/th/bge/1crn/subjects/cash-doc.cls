@@ -25,6 +25,11 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
   
   define temp-table tt-fin-doc like ub.c-fin-doc .
   define temp-table tt-fin-doc-tax like ub.c-fin-doc-tax .
+  define temp-table tt-fin-doc-attr no-undo
+    field fin-doc      as integer
+    field contr-kb     as character init ?
+    index pi fin-doc
+    .
   
   define property Msg as character no-undo
     get.
@@ -47,6 +52,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
 
   method public void CrContentToSW (insw as handle):
   define buffer buf_fin-doc       for ub.fin-doc .
+  define buffer buf_fin-doc-attr  for ub.fin-doc-attr .
   define buffer buf_fin-doc-tax   for ub.fin-doc-tax .
   define buffer buf_c-fin-doc     for ub.c-fin-doc .
   define buffer buf_c-fin-doc-tax for ub.c-fin-doc-tax .
@@ -105,6 +111,26 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     if available buf_CashBook then do :
       if buf_CashBook.ext-code > "" then
         sw:write-data-element ("type-kb", buf_CashBook.ext-code). /* Код типа кассовой книги (Строка) */
+      find first buf_fin-doc-attr no-lock where buf_fin-doc-attr.fin-doc-code = tt-fin-doc.fin-doc-code and buf_fin-doc-attr.host-code = tt-fin-doc.host-code 
+      and buf_fin-doc-attr.attr-code = "contr-kb" no-error .
+      if available (buf_fin-doc-attr) then 
+      do:
+         find first tt-fin-doc-attr where tt-fin-doc-attr.fin-doc = buf_fin-doc-attr.fin-doc-code no-error .
+         if not available (tt-fin-doc-attr) then 
+         do:
+            create tt-fin-doc-attr .
+            assign
+               tt-fin-doc-attr.fin-doc = buf_fin-doc-attr.fin-doc-code 
+            .
+         end.
+         find first cashbook where cashbook.id eq int(buf_fin-doc-attr.attr-value)
+         no-lock no-error.
+         if available  cashbook
+         then   
+            assign
+              tt-fin-doc-attr.contr-kb = CashBook.ext-code. 
+            .
+       end.
     end .
     
     sw:write-data-element ("date", if tt-fin-doc.doc-date = ? then "" else ISO-DATE (tt-fin-doc.doc-date)).
@@ -158,6 +184,14 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       sw:write-data-element ("nds-code", string-mth(tt-fin-doc-tax.vat-pc)).
       sw:write-data-element ("sum-nds", string-mth(tt-fin-doc-tax.sum-vat-line-doc)).
       sw:end-element ("nds") .
+    end.
+    find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
+    if available (tt-fin-doc-attr) then do:
+    
+       if tt-fin-doc-attr.contr-kb ne ? 
+       then 
+          sw:write-data-element ("contr-kb",  tt-fin-doc-attr.contr-kb).
+    
     end.
     sw:end-element ("ndss")  .  
     sw:END-ELEMENT ("cash-doc") .  
