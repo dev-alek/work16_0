@@ -249,11 +249,15 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.CorrPko      = objImp:kredit      when objImp:kredit <> ? 
       tt-cashbook.CorrRko      = objImp:debit       when objImp:debit <> ?
       tt-cashbook.RuleOsnPko   = objImp:rule-reason when objImp:rule-reason <> ?
+      tt-cashbook.OsnAcct      = objImp:OsnAcct     when objImp:OsnAcct <> ? 
+      tt-cashbook.RuleOsnRko   = objImp:RuleOsnRko  when objImp:RuleOsnRko <> ?
+      
       tt-cashbook.cli-type     = {&cmp}             when objImp:code-payer <> ?
       tt-cashbook.cli-code     = objImp:code-payer  when objImp:code-payer <> ?
       tt-cashbook.RulePril     = string(objImp:rule-att)   when objImp:rule-att <> ?
       tt-cashbook.FlagSepCash  = (objImp:ind-kass-pko = 1) when objImp:ind-kass-pko <> ?
       tt-cashbook.FlagSepFull  = (objImp:apart-np-tnp = 1) when objImp:apart-np-tnp <> ?
+      
    /* tt-cashbook.Status_      = 0:"“екущий", 1:"”даленный"
       - при создании заполн€етс€ значением по умолчанию, при обновлении остаЄтс€ в прежнем значении */
     .

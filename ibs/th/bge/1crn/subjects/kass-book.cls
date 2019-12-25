@@ -26,6 +26,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   
   define property basic-kb      as integer      no-undo get. private set.
   define property rule-reason   as character    no-undo get. private set.
+  define property RuleOsnRko    as character    no-undo get. private set.
   define property code-payer    as integer      no-undo get. private set.
   define property rule-payer    as character    no-undo get. private set.
   define property rule-att      as integer      no-undo get. private set.
@@ -33,6 +34,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   define property apart-np-tnp  as integer      no-undo get. private set.
   define property kredit        as character    no-undo get. private set.
   define property debit         as character    no-undo get. private set.
+  define property OsnAcct         as character    no-undo get. private set.
   define property post-chief    as integer      no-undo get. private set.
   define property fio-chief     as integer      no-undo get. private set.
   define property fio-booker    as integer      no-undo get. private set.
@@ -71,6 +73,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "name"         then name_        = {&attr-str} .
       when "basic-kb"         then basic-kb         = {&attr-integer} .
       when "rule-reason"      then rule-reason      = {&attr-str} .
+      when "RuleOsnRko"       then RuleOsnRko       = {&attr-str} .
       when "code-payer"       then code-payer       = {&attr-integer} .
       when "rule-payer"       then rule-payer       = {&attr-str} .
       when "rule-att"         then rule-att         = {&attr-integer} .
@@ -78,6 +81,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "apart-np-tnp"     then apart-np-tnp     = {&attr-integer} .
       when "kredit"           then kredit           = {&attr-str} .
       when "debit"            then debit            = {&attr-str} .
+      when "OsnAcct"          then OsnAcct            = {&attr-str} .
       when "post-chief"       then post-chief       = {&attr-integer} .
       when "fio-chief"        then fio-chief        = {&attr-integer} .
       when "fio-booker"       then fio-booker       = {&attr-integer} .
@@ -156,6 +160,8 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       struct-unit-name = ?
       struct-unit-type = ?
       struct-unit-code = ?
+      RuleOsnRko       = ?
+      OsnAcct          = ?
     .
     if valid-object(kb-gds)        then delete object kb-gds .
   end method.
