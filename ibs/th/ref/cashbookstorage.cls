@@ -195,31 +195,32 @@ class ibs.th.ref.cashbookstorage final:
   end method .
   
   method public void ttCashbooksaturation (input iBuffer as handle):
-     define variable vBuffer  as handle no-undo.
      define variable vField as handle no-undo.
      define variable vitm  as integer no-undo.
      define buffer buf_file  for _file.
      define buffer buf_field for _field.
       find first buf_file where buf_file._file-name eq "cashbook" no-lock.
      
-     do vitm = 1 to vBuffer:num-fields:
-         vField = vBuffer:buffer-field(vItm).
-         find first buf_field where buf_field._file-recid eq recid(buf_file) 
-                                and buf_field._Field-Name eq vField:name
-         no-lock no-error.
-         if not available buf_field
+     do vitm = 1 to iBuffer:num-fields:
+         vField = iBuffer:buffer-field(vItm).
+         if lookup (vField:name,{&cashbookSysField}) eq 0
          then do:
-            find first ub.CashBookrule where ub.CashBookRule.CashBookID eq ub.CashBook.id
-                                         and ub.CashBookRule.Obj-type   eq {&by_all}
-                                         and ub.CashBookRule.Obj-code   eq 0
-                                         and ub.CashBookRule.Code       eq vField:name
+            find first buf_field where buf_field._file-recid eq recid(buf_file) 
+                                   and buf_field._Field-Name eq vField:name
             no-lock no-error.
-            if  available  ub.CashBookrule
+            if not available buf_field
             then do:
-               vField:buffer-value () =  ub.CashBookRule.RuleValue.             
-            end.                            
+               find first ub.CashBookrule where ub.CashBookRule.CashBookID eq iBuffer:buffer-field ("id"):buffer-value ()
+                                            and ub.CashBookRule.Obj-type   eq {&by_all}
+                                            and ub.CashBookRule.Obj-code   eq 0
+                                            and ub.CashBookRule.Code       eq vField:name
+               no-lock no-error.
+               if  available  ub.CashBookrule
+               then do:
+                  vField:buffer-value () =  ub.CashBookRule.RuleValue.             
+               end.                            
+            end.
          end.
-         
       end.
   end.
   
@@ -233,31 +234,33 @@ class ibs.th.ref.cashbookstorage final:
      
      do vitm = 1 to iBuffer:num-fields:
          vField = iBuffer:buffer-field(vItm).
-         find first buf_field where buf_field._file-recid eq recid(buf_file) 
-                                and buf_field._Field-Name eq vField:name
-         no-lock no-error.
-         if not available buf_field
+         if lookup (vField:name,{&cashbookSysField}) eq 0
          then do:
-            find first ub.CashBookrule where ub.CashBookRule.CashBookID eq ub.CashBook.id
-                                         and ub.CashBookRule.Obj-type   eq {&by_all}
-                                         and ub.CashBookRule.Obj-code   eq 0
-                                         and ub.CashBookRule.Code       eq vField:name
+            find first buf_field where buf_field._file-recid eq recid(buf_file) 
+                                   and buf_field._Field-Name eq vField:name
             no-lock no-error.
-            if not available  ub.CashBookrule
+            if not available buf_field
             then do:
-               create ub.CashBookRule.
-               assign
-                  ub.CashBookRule.CashBookID = ub.CashBook.id
-                  ub.CashBookRule.Obj-type   = {&by_all}
-                  ub.CashBookRule.Obj-code   = 0
-                  ub.CashBookRule.Code       = vField:name
-                  ub.CashBookRule.Status_    = 0
-               .
-               
+               find first ub.CashBookrule where ub.CashBookRule.CashBookID eq iBuffer:buffer-field ("id"):buffer-value ()
+                                            and ub.CashBookRule.Obj-type   eq {&by_all}
+                                            and ub.CashBookRule.Obj-code   eq 0
+                                            and ub.CashBookRule.Code       eq vField:name
+               exclusive-lock no-error.
+               if not available  ub.CashBookrule
+               then do:
+                  create ub.CashBookRule.
+                  assign
+                     ub.CashBookRule.CashBookID = iBuffer:buffer-field ("id"):buffer-value ()
+                     ub.CashBookRule.Obj-type   = {&by_all}
+                     ub.CashBookRule.Obj-code   = 0
+                     ub.CashBookRule.Code       = vField:name
+                     ub.CashBookRule.Status_    = 0
+                  .
+                  
+               end.
+               ub.CashBookRule.RuleValue =  vField:buffer-value ().                          
             end.
-            ub.CashBookRule.RuleValue =  vField:buffer-value ().                          
          end.
-         
       end.
   end.
   method public void insertDBobj (input dataset for ds-cashbookrule) :
@@ -656,7 +659,8 @@ class ibs.th.ref.cashbookstorage final:
               tt-cashbook.RulePril = getRulePrilName(integer(buf_cashbook.RulePril)) .
               tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
               ttCashbooksaturation(buffer tt-cashbook:handle).
-              for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
+              for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id
+                                                  and  buf_cashbookrule.obj-type ne {&by_all}
                                                   break by buf_cashbookrule.obj-type desc
                                                         by buf_cashbookrule.obj-code:
                 if first-of(buf_cashbookrule.obj-type)
@@ -683,6 +687,7 @@ class ibs.th.ref.cashbookstorage final:
               ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.status_ = 0
+                                                  and buf_cashbookrule.obj-type ne {&by_all}
                                                   break by buf_cashbookrule.obj-type desc
                                                         by buf_cashbookrule.obj-code:
                 if first-of(buf_cashbookrule.obj-type)
@@ -709,6 +714,7 @@ class ibs.th.ref.cashbookstorage final:
               ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.status_ = 1
+                                                  and  buf_cashbookrule.obj-type ne {&by_all}
                                                   break by buf_cashbookrule.obj-type desc
                                                         by buf_cashbookrule.obj-code:
                 if first-of(buf_cashbookrule.obj-type)
@@ -740,6 +746,7 @@ class ibs.th.ref.cashbookstorage final:
               ttCashbooksaturation(buffer tt-cashbook:handle).
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.host-code = v-firm 
+                                                  and buf_cashbookrule.obj-type ne {&by_all}
                                                   break by buf_cashbookrule.obj-type desc
                                                         by buf_cashbookrule.obj-code:
                 if first-of(buf_cashbookrule.obj-type)
@@ -769,6 +776,7 @@ class ibs.th.ref.cashbookstorage final:
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.host-code = v-firm
                                                   and buf_cashbookrule.status_ = 0
+                                                  and  buf_cashbookrule.obj-type ne {&by_all}
                                                   break by buf_cashbookrule.obj-type desc
                                                         by buf_cashbookrule.obj-code:
                 if first-of(buf_cashbookrule.obj-type)
@@ -796,6 +804,7 @@ class ibs.th.ref.cashbookstorage final:
               for each buf_cashbookrule no-lock where buf_cashbookrule.cashbookId = buf_cashbook.id 
                                                   and buf_cashbookrule.host-code = v-firm 
                                                   and buf_cashbookrule.status_ = 1
+                                                  and buf_cashbookrule.obj-type ne {&by_all}
                                                   break by buf_cashbookrule.obj-type desc
                                                         by buf_cashbookrule.obj-code:
                 if first-of(buf_cashbookrule.obj-type)

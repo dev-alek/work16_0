@@ -1663,7 +1663,19 @@ class ibs.th.ref.cashbookbrw inherits Form :
       wait-for this-object:ShowDialog().
 
    end method.
+ 
+   method public void getobj(input iText as character,output oType as character , output oCode as integer    ):
+      if iText begins {&by_all}
+      then
+         assign
+         oCode = 0
+         oType = {&by_all} .
+      else
+      assign
+         oCode = integer(substring(iText, 4)) 
+         oType = substring(iText, 1, 3) .
 
+   end method.
 
  
 end class.

@@ -11,7 +11,7 @@
     Created     : Fri Feb 15 14:44:11 AST 2019
     Notes       :
   ----------------------------------------------------------------------*/
-
+&global-define cashbookSysField "stat,mark,basic-kb"
 define temp-table tt-cashbook like ub.cashbook
   field stat               as character
   field mark               as character
@@ -20,6 +20,7 @@ define temp-table tt-cashbook like ub.cashbook
   field SourceCode         as character
   field BankRecip-host     as integer
   field BankRecip-code     as integer
+  field BankRecip-acct     as character 
   field BankDepos-host     as integer
   field BankDepos-code     as integer
   field CountCollect-code  as integer

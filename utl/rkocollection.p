@@ -749,8 +749,8 @@ define variable v-err               as logical    no-undo .
       define variable mCashbookName as character no-undo.     
       mCashbookName = string(ub.CashBook.id).                            
       if available CashBook then assign
-         v-real-obj-type = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "CountCollect-type") . 
-         v-real-obj-code = int(mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "CountCollect-code") ).
+         v-real-obj-type = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CountCollect-type") . 
+         v-real-obj-code = int(mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CountCollect-code") ).
          mCashbookName = string(ub.CashBook.id) + " (" + CashBook.CashBookName + ")".
       .
       define variable v-doc-rec as recid no-undo .
@@ -1048,13 +1048,14 @@ define variable v-err               as logical    no-undo .
       
       mPin   = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "Pin") .
       
-      fin-doc-attr.attr-value = substitute("&1;&2;&3;&4;&5;&6"
+      fin-doc-attr.attr-value = substitute("&1;&2;&3;&4;&5;&6;&7"
                                           ,mOsnbag
                                           ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankDepos-code")
                                           ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-code") 
                                           ,mPin
                                           ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "SourceCode")
-                                          ,msumInc-save).
+                                          ,msumInc-save
+                                          ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-acct")).
       define variable Vparentrec as character no-undo. 
       if Vparentrec eq ""
       then

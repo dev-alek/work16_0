@@ -44,6 +44,7 @@ class ibs.th.ref.ostcashbook inherits UserControl:
    constructor public ostcashbook ( input itrgOst as ibs.th.ref.ostcashbook_trg):
       super().
       trgOst = itrgOst.
+      mFLAG = trgOst:ChekSumm. 
       InitializeComponent().
       this-object:ComponentsCollection:ADD(this-object:components).
       catch e as Progress.Lang.Error:
@@ -251,6 +252,7 @@ class ibs.th.ref.ostcashbook inherits UserControl:
    method public void setbin( ):
       
      bindOst:handle = trgOst:getQuery().
+     fitog:text = string(trgOst:getsumost()).
 
    end method.
 

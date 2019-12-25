@@ -16,6 +16,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
   
   { ibs/th/ref/ttCashBook.i }
   
+   define private variable BankRecipacct as System.Windows.Forms.TextBox no-undo.
   define private variable bChooseCli as System.Windows.Forms.Button no-undo.
    define private variable bChooseCorRko as System.Windows.Forms.Button no-undo.
    define private variable bChooseCorPko as System.Windows.Forms.Button no-undo.
@@ -41,6 +42,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
   define private variable fTakenFrom as System.Windows.Forms.TextBox no-undo.
   define private variable label1 as System.Windows.Forms.Label no-undo.
    define private variable label10 as System.Windows.Forms.Label no-undo.
+   define private variable label12 as System.Windows.Forms.Label no-undo.
    define private variable label14 as System.Windows.Forms.Label no-undo.
    define private variable label13 as System.Windows.Forms.Label no-undo.
    define private variable label11 as System.Windows.Forms.Label no-undo.
@@ -105,6 +107,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
         buffer-copy buf_cashbook except buf_cashbook.RulePril buf_cashbook.RuleOsnPko to tt-cashbook .
         tt-cashbook.RulePril = getRulePrilName(integer (buf_cashbook.RulePril)) .
         tt-cashbook.RuleOsnPko = getRuleOsnName(buf_cashbook.RuleOsnPko) .
+        mCashBook:ttCashbooksaturation(buffer tt-cashbook:handle).
       end. 
     end case .
 
@@ -484,6 +487,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:lbankrec = new System.Windows.Forms.Label().
       this-object:btbankdep = new System.Windows.Forms.Button().
       this-object:btbankrec = new System.Windows.Forms.Button().
+      this-object:label12 = new System.Windows.Forms.Label().
+      this-object:BankRecipacct = new System.Windows.Forms.TextBox().
       cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:SuspendLayout().
       /*  */
@@ -535,7 +540,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar0 = new "Progress.Data.TableDesc[]"(0).
       tableDesc1:ChildTables = arrayvar0.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 14 no-undo.
+      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 15 no-undo.
       arrayvar1[1] = new Progress.Data.ColumnPropDesc("CashBookName", "Наименование", Progress.Data.DataType:CHARACTER).
       arrayvar1[2] = new Progress.Data.ColumnPropDesc("corrPko", "Корсчет для ПКО", Progress.Data.DataType:CHARACTER).
       arrayvar1[3] = new Progress.Data.ColumnPropDesc("osnAcct", "дебит", Progress.Data.DataType:CHARACTER).
@@ -550,6 +555,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar1[12] = new Progress.Data.ColumnPropDesc("CorrRko", "Корсчет для ПКО", Progress.Data.DataType:CHARACTER).
       arrayvar1[13] = new Progress.Data.ColumnPropDesc("RuleOsnRko", "Прав. запол.РКО", Progress.Data.DataType:CHARACTER).
       arrayvar1[14] = new Progress.Data.ColumnPropDesc("SourceCode", "Код источника поступления", Progress.Data.DataType:CHARACTER).
+      arrayvar1[15] = new Progress.Data.ColumnPropDesc("BankRecip-acct", "Счет в банке получателе", Progress.Data.DataType:CHARACTER).
       tableDesc1:Columns = arrayvar1.
       this-object:bindingSource1:TableSchema = tableDesc1.
       /*  */
@@ -846,7 +852,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label15 */
       /*  */
-      this-object:label15:Location = new System.Drawing.Point(12, 458).
+      this-object:label15:Location = new System.Drawing.Point(12, 488).
       this-object:label15:Name = "label15".
       this-object:label15:Size = new System.Drawing.Size(156, 23).
       this-object:label15:TabIndex = 44.
@@ -862,7 +868,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar6[1] = "02".
       arrayvar6[2] = "32".
       this-object:fSourceCode:Items:AddRange(arrayvar6).
-      this-object:fSourceCode:Location = new System.Drawing.Point(174, 457).
+      this-object:fSourceCode:Location = new System.Drawing.Point(174, 487).
       this-object:fSourceCode:Name = "fSourceCode".
       this-object:fSourceCode:Size = new System.Drawing.Size(240, 21).
       this-object:fSourceCode:TabIndex = 45.
@@ -895,7 +901,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* btbankrec */
       /*  */
-      this-object:btbankrec:Location = new System.Drawing.Point(375, 416).
+      this-object:btbankrec:Location = new System.Drawing.Point(375, 425).
       this-object:btbankrec:Name = "btbankrec".
       this-object:btbankrec:Size = new System.Drawing.Size(23, 23).
       this-object:btbankrec:TabIndex = 49.
@@ -903,11 +909,30 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:btbankrec:UseVisualStyleBackColor = true.
       this-object:btbankrec:Click:Subscribe(this-object:btbankrec_Click).
       /*  */
+      /* label12 */
+      /*  */
+      this-object:label12:Location = new System.Drawing.Point(12, 459).
+      this-object:label12:Name = "label12".
+      this-object:label12:Size = new System.Drawing.Size(100, 23).
+      this-object:label12:TabIndex = 50.
+      this-object:label12:Text = "Счет получателя:".
+      this-object:label12:UseCompatibleTextRendering = true.
+      /*  */
+      /* BankRecipacct */
+      /*  */
+      this-object:BankRecipacct:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "BankRecip-acct", true)).
+      this-object:BankRecipacct:Location = new System.Drawing.Point(174, 459).
+      this-object:BankRecipacct:Name = "BankRecipacct".
+      this-object:BankRecipacct:Size = new System.Drawing.Size(239, 20).
+      this-object:BankRecipacct:TabIndex = 51.
+      /*  */
       /* cashbookfrm */
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:CancelButton = this-object:buttonCancel.
-      this-object:ClientSize = new System.Drawing.Size(425, 492).
+      this-object:ClientSize = new System.Drawing.Size(425, 519).
+      this-object:Controls:Add(this-object:BankRecipacct).
+      this-object:Controls:Add(this-object:label12).
       this-object:Controls:Add(this-object:btbankrec).
       this-object:Controls:Add(this-object:btbankdep).
       this-object:Controls:Add(this-object:lbankrec).
