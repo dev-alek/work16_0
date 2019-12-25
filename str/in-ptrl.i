@@ -30,6 +30,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     { str/rvsttdef.i rvs           }
     { ref/gds-attr.i }
     { str/is-gas.i }
+    { str/is-sug.i }
     { str/placelib.i }
     
     define variable infoSectionsTotal       as class InfoSectionsTotal no-undo.
@@ -681,14 +682,29 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             
             else do:
-            if p-rvs-type = {&rvs-before-doc}  then do:
-                if v-prt-start-real-date = ? then v-prt-start-real-date = today.
-                if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
-            end.
-            else do:
-                if v-prt-end-real-date = ? then v-prt-end-real-date = today.
-                if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
-            end.
+              if p-rvs-type = {&rvs-before-doc}  then do:
+                  if v-prt-start-real-date = ? then v-prt-start-real-date = today.
+                  if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
+              end.
+              else do:
+                  if v-prt-end-real-date = ? then v-prt-end-real-date = today.
+                  if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
+              end.
+              if available buf_goods
+              and is-sug(buf_goods.gds-code) then do:
+                 
+                  run str/rvs-lin-sug.w
+                    (input  parparentproc
+                    ,input  recid( buf_rvs-line )
+                    ,input  p-action
+                    ,input  substitute(" # &1 товар &2 &3 &4  складское место &5"
+                                      ,buf_rvs-doc.rvs-code
+                                      ,buf_goods.artic
+                                      ,buf_goods.prod-type
+                                      ,buf_goods.prod-code
+                                      ,v-pl-code)) no-error.
+              end.
+              else do :
                 run str/rvs-lin.w
                   (input  parparentproc
                   ,input  recid( buf_rvs-line )
@@ -699,6 +715,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                     ,buf_goods.prod-type
                                     ,buf_goods.prod-code
                                     ,v-pl-code)) no-error.
+              end.
             end.
             
             if error-status :error then do:

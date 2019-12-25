@@ -53,6 +53,7 @@ define variable vss-description as character no-undo initial "Обработка документ
 { str/rvsttdef.i file }
 { ref/gds-attr.i      }
 { str/is-gas.i        }
+{ str/is-sug.i        }
 { str/placelib.i      }
 
 define buffer r-doc          for ub.rvs-doc.
@@ -1737,6 +1738,22 @@ else do:
     end.
     
     else do:
+      if available buf_goods
+      and is-sug(buf_goods.gds-code) then do:
+         
+          run str/rvs-lin-sug.w
+            (input  parparentproc
+            ,input  recid(ub.rvs-line)
+            ,input  {&update}
+            ,input  " # "     + r-doc.rvs-code +
+                    " товар " + buf_goods.artic     + " " +
+                                buf_goods.prod-type + " " +
+                                string(buf_goods.prod-code) +
+                    " складское место " + string(ub.rvs-line.pl-code)
+            ) no-error.
+         
+      end.
+      else do:
         run str/rvs-lin.w
         (input  parparentproc
         ,input  recid(ub.rvs-line)
@@ -1747,6 +1764,7 @@ else do:
                             string(buf_goods.prod-code) +
                 " складское место " + string(ub.rvs-line.pl-code)
         ) no-error.
+      end.
     end.
     
 end.
@@ -2372,7 +2390,7 @@ if varlog <> yes then do: return error. end.
 find first buf_goods where buf_goods.gds-code = ub.rvs-line.gds-code no-lock.
 
 if not error-status :error 
-   and is-gas(buf_goods.gds-code) then do:
+and is-gas(buf_goods.gds-code) then do:
    
     run str/rvs-lin-mask.w
       (input  parparentproc
@@ -2386,7 +2404,22 @@ if not error-status :error
       ) no-error.
    
 end.
-
+else
+if not error-status :error 
+and is-sug(buf_goods.gds-code) then do:
+   
+    run str/rvs-lin-sug.w
+      (input  parparentproc
+      ,input  recid(ub.rvs-line)
+      ,input  {&lookup}
+      ,input  " # "     + r-doc.rvs-code +
+              " товар " + buf_goods.artic     + " " +
+                          buf_goods.prod-type + " " +
+                          string(buf_goods.prod-code) +
+              " складское место " + string(ub.rvs-line.pl-code)
+      ) no-error.
+   
+end.
 else do:
 
 run str/rvs-lin.w
