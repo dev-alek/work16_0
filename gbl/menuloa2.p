@@ -396,6 +396,17 @@ define variable vss-description as character no-undo init "".
   "yes"
 }
 
+{gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Отчет для контроля возвратных операций'"
+  "'rep/g-vbbr_return.p'"
+  " "
+  " "
+  " "
+  "'Yukos,Rosneft-*'"
+  "yes"
+}
+
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Остатки на опр. дату товаров, оприход. за данный период'"
