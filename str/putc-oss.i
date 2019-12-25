@@ -62,7 +62,7 @@ define variable v-sum        as decimal   no-undo .
           run bgelib-tag-put in this-procedure ( input 3, input "OSAgntSign":U, input string(buf_OperServ.AgentFlag), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgntPhn":U, input string(buf_OperServ.AgentTel), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgntSgn":U, input string(buf_OperServ.AgentFlagRasch), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgnttrnsct":U, input string(buf_OperServ.AgentOpere), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgntTrnsct":U, input string(buf_OperServ.AgentOpere), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperName":U, input string(buf_OperServ.OperName), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperAddr":U, input string(buf_OperServ.OperAddr), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperINN":U, input string(buf_OperServ.OperInn), input 1 ).
@@ -123,7 +123,7 @@ define variable v-sum        as decimal   no-undo .
           run bgelib-tag-put in this-procedure ( input 3, input "OSAgntSign":U, input string(buf_OperServ.AgentFlag), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgntPhn":U, input string(buf_OperServ.AgentTel), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgntSgn":U, input string(buf_OperServ.AgentFlagRasch), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgnttrnsct":U, input string(buf_OperServ.AgentOpere), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSPayAgntTrnsct":U, input string(buf_OperServ.AgentOpere), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperName":U, input string(buf_OperServ.OperName), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperAddr":U, input string(buf_OperServ.OperAddr), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperINN":U, input string(buf_OperServ.OperInn), input 1 ).

@@ -536,7 +536,6 @@ procedure report-exec :
         ,output  Fact-order-2)
         no-error .
 
-
  for each buf_arh-fin-doc-schet-nal-obj no-lock
     where buf_arh-fin-doc-schet-nal-obj.host-code         = v-host-code
       and buf_arh-fin-doc-schet-nal-obj.obj-type          = p-obj-type
@@ -581,9 +580,18 @@ procedure report-exec :
                         .
                       end.
                       else do:
+                        find first ub.CashBook no-lock where ub.CashBook.cli-code = buf_fin-doc.payer-code
+                        and ub.CashBook.cli-type = buf_fin-doc.payer-type no-error .
+                        if available (ub.CashBook) then do:
+                        assign
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
+                        .
+                        end.
+                        else do:  
                         assign
                           v-income-other = v-income-other + buf_fin-doc.sum-doc
                         .
+                        end.
                       end.
                 end.
                 else do :
@@ -722,10 +730,20 @@ for each buf_cashbook no-lock where buf_cashbook.Status_ = 0:
                         .
                       end.
                       else do:
+                        find first ub.CashBook no-lock where ub.CashBook.cli-code = buf_fin-doc.payer-code
+                        and ub.CashBook.cli-type = buf_fin-doc.payer-type no-error .
+                        if available (ub.CashBook) then do:
+                        assign
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
+                        .
+                        end.
+                        else do:  
                         assign
                           v-income-other = v-income-other + buf_fin-doc.sum-doc
                         .
+                        end.
                       end.
+
                 end.
                 else do :
                     find first buf_clients-attr
@@ -760,7 +778,7 @@ for each buf_cashbook no-lock where buf_cashbook.Status_ = 0:
                 temp-fin-doc.expense-other  = v-expense-other
                 temp-fin-doc.ost-end        = v-ost-begin + ( v-income-realiZ + v-income-other ) - ( v-expense-bank + v-expense-other )
         .
-        if buf_cashbook.id = 0 then temp-fin-doc.cashbook       = "Основная деятельность" .        
+        if buf_cashbook.id = 0 then temp-fin-doc.cashbook       = "Основная деятельность" . else temp-fin-doc.cashbook = buf_cashbook.CashBookName .        
 end. 
 end. 
 

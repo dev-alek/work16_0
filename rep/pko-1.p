@@ -551,7 +551,7 @@ on error undo, return error return-value
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip
     '<td></td>' skip
     '<td colspan="9" style="text-align: left;">Принято от</td>' skip
-    '<td colspan="32" style="text-align: left; border-bottom: 1px solid black;">' + v-payer-name-p1 + '</td>' skip
+    '<td colspan="32" style="text-align: left; border-bottom: 1px solid black;">' + if v-payer-name-p1 = ? then " "  + '</td>' else v-payer-name-p1 + '</td>' skip
     '</tr>' skip .
       put stream OutStr-html unformatted
     '<tr>' skip
@@ -659,7 +659,7 @@ on error undo, return error return-value
       put stream OutStr-html unformatted
     '<tr>' skip
     '<td colspan="10" style="text-align: left;">Принято от</td>' skip
-    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + buf_fin-doc.payer-name + '</td>' skip
+    '<td colspan="55" style="text-align: left; border-bottom: 1px solid black;">' + if buf_fin-doc.payer-name = ? then " "  + '</td>' else buf_fin-doc.payer-name + '</td>' skip
     '<td></td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black; text-align: center;">о</td>' skip
     '<td style="border-left: 1px solid black; border-right: 1px solid black;"></td>' skip

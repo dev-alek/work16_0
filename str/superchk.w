@@ -92,6 +92,7 @@ define variable vss-description AS CHAR NO-UNDO INIT "чек : добавление, изменени
 {gbl/tmprecid.i }
 { str/is-corr.i }
 
+
 DEFINE VARIABLE var-mode as character no-undo.
 /*настройка - разрешено ли менять на бар-код с другой текущей прейскурантной ценой*/
 DEFINE VARIABLE ch-bc-ck as logical no-undo init no.

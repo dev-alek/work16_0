@@ -1040,11 +1040,11 @@ assign
             for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
             and ub.fin-code-cor-acc.host-code = p-curr-host-code :
             tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
-            end.  
+            end.
             for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
             and ub.fin-code-cor-acc.host-code = p-curr-host-code :
             tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
-            end.  
+            end.
           end.
       
         end.

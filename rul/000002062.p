@@ -1571,20 +1571,14 @@ PROCEDURE StrTax :
     for each tt0-fin-doc-tax :
       if tt0-fin-doc-tax.with-vat = no then next.
       if str <> " В т.ч.: " then str = str + "," .
-      if tt0-fin-doc-tax.vat-pc = 0 or tt0-fin-doc-tax.vat-pc = -1 then do:
-        for first ub.tax-rate-value no-lock where ub.tax-rate-value.tax-code = integer({&vat-tax-code}),
-        first ub.tax-rate-attr where ub.tax-rate-attr.attr-code = "envd" and ub.tax-rate-attr.rate-code = ub.tax-rate-value.rate-code
-        and ub.tax-rate-attr.tax-code = ub.tax-rate-value.tax-code:
-          v-envd = yes .                    
-        end.  
-      end.  
+      
       if tt-fin-doc.curr-code = 0 then do:
-        if v-envd then assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+        if tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
         else 
         assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
       end.
       else do:
-        if v-envd then 
+        if tt0-fin-doc-tax.with-vat then 
         assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
         else assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
       end.  

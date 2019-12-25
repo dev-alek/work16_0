@@ -152,7 +152,7 @@ define variable v-tab110       as character no-undo .
 define variable v-num-page     as character no-undo .
 define variable x-store-code   like ub.clients.obj-code no-undo.
 define variable x-store-type   like ub.clients.obj-type no-undo.
-
+define variable v-payer        as character no-undo .
 define variable Fact-order-1   like ub.stk-tot.Fact-order no-undo.
 define variable Fact-order-2   like ub.stk-tot.Fact-order no-undo.
 define variable Fact-order-0   like ub.stk-tot.Fact-order no-undo.
@@ -329,7 +329,7 @@ do:
   end.  
 end.   
 /*Касссовые книги*/
-run gbl/inidebug.p.
+
 do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
   
   /*Печать титульного листа по кассовой книге*/
@@ -809,12 +809,15 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
 assign 
     v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
 
-    .     
+    .   
+      
       for each buf_temp-fin-doc where buf_temp-fin-doc.cashbook_id = temp-fin-doc.cashbook_id:
+        if buf_temp-fin-doc.fin-doc-type = {&income-cash} then v-payer = buf_temp-fin-doc.payer.  else v-payer = buf_temp-fin-doc.receiver .
+        if v-payer = ? then v-payer = "" . 
         put stream OutStr-html unformatted
           '<tr>' skip
           '<td colspan="2" style="text-align: center;">' + buf_temp-fin-doc.prn-doc-code + '</td>' skip
-          '<td text_wrap="true" style="text-align: center;">' + if buf_temp-fin-doc.fin-doc-type = {&income-cash} then buf_temp-fin-doc.payer  + '</td>' else buf_temp-fin-doc.receiver + '</td>' skip
+          '<td text_wrap="true" style="text-align: center;">' + v-payer + '</td>' skip
           '<td text_wrap="true" style="text-align: center;">' + buf_temp-fin-doc.cor-acc + '</td>' skip
           '<td text_wrap="true" style="text-align: center;">' + if buf_temp-fin-doc.fin-doc-type = {&income-cash} then string(buf_temp-fin-doc.sum-rubl, "->>>>>>>>9.99")  + '</td>' else "         -" + '</td>' skip
           '<td text_wrap="true" style="text-align: center;">' + if buf_temp-fin-doc.fin-doc-type = {&expense-cash} then string(buf_temp-fin-doc.sum-rubl, "->>>>>>>>9.99")  + '</td>' else "         -" + '</td>' skip
@@ -1090,11 +1093,13 @@ run prn-lib-reportviewer-report-name in this-procedure (
 procedure report-exec :
   define input  parameter p-date        as date    no-undo .
   define input parameter p-cash-book as integer no-undo .
-run gbl/inidebug.p.
+
   assign
     v-ost-begin = 0
     v-num-obj   = 0
     .
+ empty temp-table temp-fin-sum .
+ empty temp-table temp-fin-doc .
  
   for each buf_obj-list no-lock :
     { gbl/hostcode.i buf_obj-list.obj-type buf_obj-list.obj-code v-host-code }
