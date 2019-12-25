@@ -192,6 +192,7 @@ num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid
 .
 
 define temp-table temp-gds no-undo
+field with-vat as logical init yes
 field b-code as integer
 field node-code as integer
 field doc-code as character
@@ -219,6 +220,7 @@ curr-code
 /*is-petrol*/
 .
 define temp-table temp-tax no-undo
+field with-vat as logical init yes
 field curr-code as integer
 field vat-pc as decimal
 field slt-pc as decimal
@@ -926,6 +928,10 @@ define variable v-err               as logical    no-undo .
                 buf_temp-gds.node-code = buf_bar-code.node-code
                 buf_temp-gds.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
                 .
+                find first chk-gds where chk-gds.doc-code eq buf_chk-gds-pay.doc-code
+                                     and chk-gds.line-num eq buf_chk-gds-pay.line-num
+                                    no-lock no-error.
+                buf_temp-gds.with-vat = available chk-gds and chk-gds.VAT-pc >= 0.                    
              end.
           end.
         end. /*if not available buf_temp-gds then do:*/
@@ -1050,6 +1056,7 @@ define variable v-err               as logical    no-undo .
           buf_temp-tax.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
           buf_temp-tax.is-expense_cash = (buf_temp-gds.tot-doc < 0 and ub.CashBook.id ne 0)
           buf_temp-tax.num-expense_cash = 0
+          buf_temp-tax.with-vat  = buf_temp-gds.with-vat
           .
         end. /*if not available buf_temp-tax then do:*/
          /*получаем НДС*/
@@ -1071,6 +1078,7 @@ define variable v-err               as logical    no-undo .
         buf_temp-tax.vat-rubl = buf_temp-tax.vat-rubl + buf_temp-gds.vat-rubl
         buf_temp-tax.vat-base = buf_temp-tax.vat-base + buf_temp-gds.vat-base
         buf_temp-tax.vat-doc  = buf_temp-tax.vat-doc  + buf_temp-gds.vat-doc
+        
         .
 
         release buf_temp-tax.
@@ -1223,6 +1231,7 @@ define variable v-err               as logical    no-undo .
         tt0-fin-doc-tax.slt-pc             = buf_temp-tax.slt-pc
         tt0-fin-doc-tax.sum-line-contr     = 0
         tt0-fin-doc-tax.sum-vat-line-contr = 0
+        tt0-fin-doc-tax.with-vat           = buf_temp-tax.with-vat
         .
         if buf_temp-fin-sum.tot-sum > 0  then do :
           assign
@@ -1569,16 +1578,16 @@ PROCEDURE StrTax :
     assign str = " В т.ч.: "  .
 
     for each tt0-fin-doc-tax :
-      if tt0-fin-doc-tax.with-vat = no then next.
+      
       if str <> " В т.ч.: " then str = str + "," .
       
       if tt-fin-doc.curr-code = 0 then do:
-        if tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+        if not tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
         else 
         assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
       end.
       else do:
-        if tt0-fin-doc-tax.with-vat then 
+        if not tt0-fin-doc-tax.with-vat then 
         assign str = str + "без НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
         else assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
       end.  
