@@ -192,7 +192,7 @@ do:
     and buf_tax-rate-attr.attr-code = "envd": 
     find last ub.tax-rate-value no-lock where ub.tax-rate-value.rate-code = buf_tax-rate-attr.rate-code
       and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
-      and ub.tax-rate-value.status_ = {&current-status}
+      and ub.tax-rate-value.status_ <> {&deleted-status} 
       use-index i-status no-error .                                    
     if available ub.tax-rate-value and v-nds-rate-code = ? then v-nds-rate-code = ub.tax-rate-value.rate-code .   
   end.     
@@ -201,7 +201,7 @@ else
 do:
   for each ub.tax-rate-value no-lock where ub.tax-rate-value.rate-value = p-GdsObj:nds-code
     and ub.tax-rate-value.tax-code = integer({&vat-tax-code})
-    and ub.tax-rate-value.status_ = {&current-status}
+    and ub.tax-rate-value.status_ <> {&deleted-status}
     use-index i-status by ub.tax-rate-value.corr-date desc:                
     if available ub.tax-rate-value then 
     do:
