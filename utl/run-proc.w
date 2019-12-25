@@ -35,7 +35,7 @@ define variable vss-description as character no-undo init "Выполнить процедуру".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/showinf.i  }
-
+define stream sReadfile.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -206,6 +206,104 @@ DO:
         MESSAGE "Процедура ~"" + proc-name + "~" не найдена!" VIEW-AS ALERT-BOX ERROR.
         RETURN NO-APPLY.
     END.
+    define variable VRcode as logical no-undo.
+    define variable vKey as integer no-undo.
+    define variable vtext as character no-undo.
+    define variable vlogfile as character no-undo.
+    define variable vCheksum as character no-undo.
+    define variable vError as logical no-undo.
+    VRcode = search("gbl/d-runpro.r") ne ?.
+    if VRcode
+    then do:
+       vKey = random(1,999999999).
+       define variable vFileHelper as class ibs.th.file.filehelperth no-undo.
+       vFileHelper = new ibs.th.file.filehelperth().
+       vFileHelper:user-passwd = "".
+       vFileHelper:MyBachMode = no.
+       vFileHelper:AsyncProc("utl/proc-chekproc", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U + {&delim-par} + "&4":U + {&delim-par} + "&5":U + {&delim-par} + "&6":U + {&delim-par} + "&7":U  + {&delim-par} + "&9":U 
+                                                                    , search(proc-name) ,"0", no, vKey,"","","" ),1).
+       vFileHelper:myTimeOut = 300.
+       
+       vFileHelper:WaitFor("proc-chekproc", 1,"Проверка процедуры.").
+       vtext = "Процедура имеет не правильную подпись.".
+       vlogfile = vFileHelper:myWorkDir + "proc-chekprocerror.log".
+       if vFileHelper:FileExists(vlogfile)
+       then do:
+          input stream sReadfile FROM  VALUE(vlogfile).
+          repeat:
+             import stream sReadfile unformatted vText.
+             if vtext begins "error" 
+             then assign
+                vtext = substring(vtext,7)
+   /*                   vError = yes*/
+             .
+             else do: 
+                vCheksum = vText.
+                
+                if (vCheksum ne {utl/chekproc.i vKey})
+                then assign
+                   vtext = "Процедура имеет не правильную подпись."
+   /*                      vError = yes*/
+                .
+                else
+                   vError = no.
+             end.    
+          end.
+          input stream sReadfile close  .
+          os-delete value(vlogfile).
+       end.
+       else assign
+           vtext = "Не получен результат проверки."
+           vError = yes.
+       vFileHelper:delworkdir().
+       delete object vFileHelper.
+    end.
+    else
+       vError = no.
+    if vError
+    then do:
+        run trg/userlog.p (
+                input 'run-proc'
+                , input (substitute( "&1. Не прошла проверка подписи. &2", vss-workfile, vtext)  + {&delim-key} + proc-name )
+                , input ?
+                , input ?
+                , input "") no-error.
+           message substitute( "&1. Не прошла проверка подписи. &2", vss-workfile, vtext) 
+           view-as alert-box.
+       return no-apply.
+    end.           
+    RUN VALUE( proc-name )(input vkey
+                         ,output vCheksum )no-error .
+    if not error-status :error
+    then do:
+       run trg/userlog.p (
+                input 'run-proc'
+                , input ("Выполнена процедура"  + {&delim-key} + proc-name )
+                , input ?
+                , input ?
+                , input "") no-error. 
+       return.
+    end.
+    else if  vrcode
+    then do:
+       run trg/userlog.p (
+                input 'run-proc'
+                , input ("Не выполнена процедура"  + {&delim-key} + proc-name )
+                , input ?
+                , input ?
+                , input "") no-error. 
+       message substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) ) 
+       view-as alert-box. 
+       return no-apply.
+    end. 
+    message "Данная процедура не запустится у клиент."
+        view-as alert-box warning .
+    run trg/userlog.p (
+                input 'run-proc'
+                , input ("Выполнена процедура"  + {&delim-key} + proc-name )
+                , input ?
+                , input ?
+                , input "") no-error.
     RUN VALUE( proc-name ).
 END.
 

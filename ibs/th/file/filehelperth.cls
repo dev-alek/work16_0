@@ -84,6 +84,11 @@ get.
     get.
     set.
     
+    define public property user-passwd as character initial ? no-undo 
+    get.
+    set.
+    
+    
    constructor filehelperth ( ):
    
       super ().
@@ -268,12 +273,15 @@ end method.
       get-key-value section "REP-SETS" key "ConPar" value mConPar.
       
       vprocname =   entry(num-entries(iProc,"/"),iProc,"/"). 
-      assign
-      v-user-passwd = substitute("-U &1 -P &2":U
+      if user-passwd ne ?
+      then 
+         v-user-passwd = user-passwd.
+      else
+         v-user-passwd = substitute("-U &1 -P &2":U
                                 ,"sysadm"
                                 ,{&paswordcur}
                                 )
-    .
+         .
       mConPar = substitute(mConPar, v-user-passwd).
       if not FileExists  (MyWorkDir + vprocname + ".txt" )
       then do:

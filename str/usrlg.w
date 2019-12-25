@@ -762,6 +762,7 @@ FUNCTION get-unique-key RETURNS CHARACTER
     DEFINE variable v-unique-key-string AS CHARACTER NO-UNDO.
     if p-unique-key-rec begins 'report':U 
         or p-unique-key-rec begins 'utl':U  
+        or p-unique-key-rec begins 'run-proc':U  
         or p-unique-key-rec begins 'prtdoc:':U  then return p-unique-key-rec.
     run get-unique-key-proc in this-procedure (
         input p-unique-key-rec

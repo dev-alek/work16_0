@@ -473,7 +473,12 @@ define variable vss-description as character no-undo init "Информация об объекте
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Выполнить процедуру'"
-  "'utl/run-proc.w'"
+  "'gbl/d-runpro.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
 }
 
 { gbl/menuload.i

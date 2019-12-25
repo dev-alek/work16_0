@@ -119,6 +119,12 @@ procedure SetPwdsysadm :
 end.
 
 run SetPwdsysadm .
+find first _user exclusive-lock
+                 where _user._userid    = "user-flt"
+            no-error.
+if available _user
+then
+   delete _user.
 
 find first sys-ctrl  no-lock.
 run  procedure-user-login-change-password in this-procedure (sys-ctrl.db-num,userid ("ub")) no-error.
