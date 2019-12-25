@@ -64,9 +64,11 @@ class ibs.th.ref.cashbookfrm inherits Form :
    define private variable label19        as System.Windows.Forms.Label       no-undo.
    define private variable label17        as System.Windows.Forms.Label       no-undo.
    define private variable label2         as System.Windows.Forms.Label       no-undo.
+   define private variable label20 as System.Windows.Forms.Label no-undo.
    define private variable label23        as System.Windows.Forms.Label       no-undo.
    define private variable label22        as System.Windows.Forms.Label       no-undo.
    define private variable label21        as System.Windows.Forms.Label       no-undo.
+   define private variable label24 as System.Windows.Forms.Label no-undo.
    define private variable label4         as System.Windows.Forms.Label       no-undo.
    define private variable label3         as System.Windows.Forms.Label       no-undo.
    define private variable label6         as System.Windows.Forms.Label       no-undo.
@@ -82,6 +84,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
    define private variable lclitrans      as System.Windows.Forms.Label       no-undo.
    define private variable Lincasagent    as System.Windows.Forms.Label       no-undo.
    define         variable mCashBook      as class                            ibs.th.ref.cashbookstorage no-undo .
+   define private variable textBox2 as System.Windows.Forms.TextBox no-undo.
+   define private variable textBox1 as System.Windows.Forms.TextBox no-undo.
    define         variable v-cashbookId   as int64                            no-undo .
   
    define buffer buf_cashbook     for ub.cashbook .
@@ -463,7 +467,6 @@ class ibs.th.ref.cashbookfrm inherits Form :
          tt-CashBook.contr-code-transf = ub.clients.obj-code
          .
       return.
-      return.
 
    end method.
 
@@ -579,6 +582,18 @@ class ibs.th.ref.cashbookfrm inherits Form :
 
    end method.
 
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void label8_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
    /*------------------------------------------------------------------------------
     Purpose:
     Notes:
@@ -692,6 +707,10 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fcorrtrans = new System.Windows.Forms.TextBox().
       this-object:label22 = new System.Windows.Forms.Label().
       this-object:label23 = new System.Windows.Forms.Label().
+      this-object:label20 = new System.Windows.Forms.Label().
+      this-object:textBox1 = new System.Windows.Forms.TextBox().
+      this-object:label24 = new System.Windows.Forms.Label().
+      this-object:textBox2 = new System.Windows.Forms.TextBox().
       cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:groupBox1:SuspendLayout().
       this-object:groupBox2:SuspendLayout().
@@ -747,7 +766,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar0 = new "Progress.Data.TableDesc[]"(0).
       tableDesc1:ChildTables = arrayvar0.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 19 no-undo.
+      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 21 no-undo.
       arrayvar1[1] = new Progress.Data.ColumnPropDesc("CashBookName", "Наименование", Progress.Data.DataType:CHARACTER).
       arrayvar1[2] = new Progress.Data.ColumnPropDesc("corrPko", "Корсчет для ПКО", Progress.Data.DataType:CHARACTER).
       arrayvar1[3] = new Progress.Data.ColumnPropDesc("osnAcct", "дебит", Progress.Data.DataType:CHARACTER).
@@ -767,6 +786,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar1[17] = new Progress.Data.ColumnPropDesc("CorrAcctIncas", "Кор. Счет для инкассации", Progress.Data.DataType:CHARACTER).
       arrayvar1[18] = new Progress.Data.ColumnPropDesc("Corr-transf", "корсчет", Progress.Data.DataType:CHARACTER).
       arrayvar1[19] = new Progress.Data.ColumnPropDesc("rule-osn-transf", "правило", Progress.Data.DataType:CHARACTER).
+      arrayvar1[20] = new Progress.Data.ColumnPropDesc("rule-payer-transf", "Выдать\Принять от", Progress.Data.DataType:CHARACTER).
+      arrayvar1[21] = new Progress.Data.ColumnPropDesc("rule-payer-rko", "Выдать", Progress.Data.DataType:CHARACTER).
       tableDesc1:Columns = arrayvar1.
       this-object:bindingSource1:TableSchema = tableDesc1.
       /*  */
@@ -908,17 +929,18 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label8 */
       /*  */
-      this-object:label8:Location = new System.Drawing.Point(12, 134).
+      this-object:label8:Location = new System.Drawing.Point(6, 69).
       this-object:label8:Name = "label8".
-      this-object:label8:Size = new System.Drawing.Size(103, 23).
+      this-object:label8:Size = new System.Drawing.Size(103, 15).
       this-object:label8:TabIndex = 28.
-      this-object:label8:Text = "Принято от (авто):".
+      this-object:label8:Text = "Принято от:".
       this-object:label8:UseCompatibleTextRendering = true.
+      this-object:label8:Click:Subscribe(this-object:label8_Click).
       /*  */
       /* fTakenFrom */
       /*  */
       this-object:fTakenFrom:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "takenfrom", true)).
-      this-object:fTakenFrom:Location = new System.Drawing.Point(132, 134).
+      this-object:fTakenFrom:Location = new System.Drawing.Point(121, 66).
       this-object:fTakenFrom:Name = "fTakenFrom".
       this-object:fTakenFrom:Size = new System.Drawing.Size(292, 20).
       this-object:fTakenFrom:TabIndex = 29.
@@ -935,9 +957,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* lCli */
       /*  */
-      this-object:lCli:Location = new System.Drawing.Point(206, 17).
+      this-object:lCli:Location = new System.Drawing.Point(206, 22).
       this-object:lCli:Name = "lCli".
-      this-object:lCli:Size = new System.Drawing.Size(178, 23).
+      this-object:lCli:Size = new System.Drawing.Size(178, 15).
       this-object:lCli:TabIndex = 31.
       this-object:lCli:UseCompatibleTextRendering = true.
       this-object:lCli:Click:Subscribe(this-object:lCli_Click).
@@ -1017,18 +1039,18 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* label11 */
       /*  */
-      this-object:label11:Location = new System.Drawing.Point(140, 14).
+      this-object:label11:Location = new System.Drawing.Point(140, 19).
       this-object:label11:Name = "label11".
-      this-object:label11:Size = new System.Drawing.Size(70, 23).
+      this-object:label11:Size = new System.Drawing.Size(70, 18).
       this-object:label11:TabIndex = 39.
       this-object:label11:Text = "Контрагент:".
       this-object:label11:UseCompatibleTextRendering = true.
       /*  */
       /* lcashcli */
       /*  */
-      this-object:lcashcli:Location = new System.Drawing.Point(206, 11).
+      this-object:lcashcli:Location = new System.Drawing.Point(216, 19).
       this-object:lcashcli:Name = "lcashcli".
-      this-object:lcashcli:Size = new System.Drawing.Size(178, 23).
+      this-object:lcashcli:Size = new System.Drawing.Size(168, 15).
       this-object:lcashcli:TabIndex = 40.
       this-object:lcashcli:UseCompatibleTextRendering = true.
       /*  */
@@ -1090,7 +1112,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:lbankdep:AutoEllipsis = true.
       this-object:lbankdep:Location = new System.Drawing.Point(111, 73).
       this-object:lbankdep:Name = "lbankdep".
-      this-object:lbankdep:Size = new System.Drawing.Size(273, 23).
+      this-object:lbankdep:Size = new System.Drawing.Size(273, 15).
       this-object:lbankdep:TabIndex = 46.
       this-object:lbankdep:UseCompatibleTextRendering = true.
       /*  */
@@ -1099,7 +1121,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:lbankrec:AutoEllipsis = true.
       this-object:lbankrec:Location = new System.Drawing.Point(112, 105).
       this-object:lbankrec:Name = "lbankrec".
-      this-object:lbankrec:Size = new System.Drawing.Size(272, 23).
+      this-object:lbankrec:Size = new System.Drawing.Size(272, 15).
       this-object:lbankrec:TabIndex = 47.
       this-object:lbankrec:UseCompatibleTextRendering = true.
       /*  */
@@ -1209,9 +1231,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* Lincasagent */
       /*  */
-      this-object:Lincasagent:Location = new System.Drawing.Point(206, 17).
+      this-object:Lincasagent:Location = new System.Drawing.Point(206, 19).
       this-object:Lincasagent:Name = "Lincasagent".
-      this-object:Lincasagent:Size = new System.Drawing.Size(178, 23).
+      this-object:Lincasagent:Size = new System.Drawing.Size(178, 15).
       this-object:Lincasagent:TabIndex = 58.
       this-object:Lincasagent:UseCompatibleTextRendering = true.
       /*  */
@@ -1231,12 +1253,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox1:Controls:Add(this-object:bChooseCli).
       this-object:groupBox1:Controls:Add(this-object:label2).
       this-object:groupBox1:Controls:Add(this-object:bChooseCorPko).
+      this-object:groupBox1:Controls:Add(this-object:fTakenFrom).
       this-object:groupBox1:Controls:Add(this-object:fCorpko).
+      this-object:groupBox1:Controls:Add(this-object:label8).
       this-object:groupBox1:Controls:Add(this-object:label4).
       this-object:groupBox1:Controls:Add(this-object:label5).
       this-object:groupBox1:Location = new System.Drawing.Point(12, 190).
       this-object:groupBox1:Name = "groupBox1".
-      this-object:groupBox1:Size = new System.Drawing.Size(428, 76).
+      this-object:groupBox1:Size = new System.Drawing.Size(428, 97).
       this-object:groupBox1:TabIndex = 60.
       this-object:groupBox1:TabStop = false.
       this-object:groupBox1:Text = "ПКО (авто)".
@@ -1244,6 +1268,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* groupBox2 */
       /*  */
+      this-object:groupBox2:Controls:Add(this-object:textBox1).
+      this-object:groupBox2:Controls:Add(this-object:label20).
       this-object:groupBox2:Controls:Add(this-object:label10).
       this-object:groupBox2:Controls:Add(this-object:fRuleOsnRko).
       this-object:groupBox2:Controls:Add(this-object:label9).
@@ -1252,12 +1278,12 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox2:Controls:Add(this-object:label11).
       this-object:groupBox2:Controls:Add(this-object:lcashcli).
       this-object:groupBox2:Controls:Add(this-object:btcash).
-      this-object:groupBox2:Location = new System.Drawing.Point(11, 272).
+      this-object:groupBox2:Location = new System.Drawing.Point(14, 293).
       this-object:groupBox2:Name = "groupBox2".
-      this-object:groupBox2:Size = new System.Drawing.Size(428, 79).
+      this-object:groupBox2:Size = new System.Drawing.Size(428, 94).
       this-object:groupBox2:TabIndex = 61.
       this-object:groupBox2:TabStop = false.
-      this-object:groupBox2:Text = "РКО (cash as pos)".
+      this-object:groupBox2:Text = "РКО (авто)".
       this-object:groupBox2:UseCompatibleTextRendering = true.
       this-object:groupBox2:Enter:Subscribe(this-object:groupBox2_Enter).
       /*  */
@@ -1281,7 +1307,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox3:Controls:Add(this-object:label15).
       this-object:groupBox3:Controls:Add(this-object:label14).
       this-object:groupBox3:Controls:Add(this-object:label13).
-      this-object:groupBox3:Location = new System.Drawing.Point(11, 357).
+      this-object:groupBox3:Location = new System.Drawing.Point(14, 393).
       this-object:groupBox3:Name = "groupBox3".
       this-object:groupBox3:Size = new System.Drawing.Size(428, 198).
       this-object:groupBox3:TabIndex = 62.
@@ -1301,6 +1327,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* groupBox4 */
       /*  */
+      this-object:groupBox4:Controls:Add(this-object:textBox2).
+      this-object:groupBox4:Controls:Add(this-object:label24).
       this-object:groupBox4:Controls:Add(this-object:fosntrans).
       this-object:groupBox4:Controls:Add(this-object:lclitrans).
       this-object:groupBox4:Controls:Add(this-object:button2).
@@ -1309,12 +1337,12 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox4:Controls:Add(this-object:fcorrtrans).
       this-object:groupBox4:Controls:Add(this-object:label22).
       this-object:groupBox4:Controls:Add(this-object:label23).
-      this-object:groupBox4:Location = new System.Drawing.Point(11, 561).
+      this-object:groupBox4:Location = new System.Drawing.Point(14, 597).
       this-object:groupBox4:Name = "groupBox4".
-      this-object:groupBox4:Size = new System.Drawing.Size(428, 76).
+      this-object:groupBox4:Size = new System.Drawing.Size(428, 103).
       this-object:groupBox4:TabIndex = 61.
       this-object:groupBox4:TabStop = false.
-      this-object:groupBox4:Text = "РКО (перемещения ДС)".
+      this-object:groupBox4:Text = "ПКО/РКО (перемещения ДС)".
       this-object:groupBox4:UseCompatibleTextRendering = true.
       /*  */
       /* fosntrans */
@@ -1334,9 +1362,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       /* lclitrans */
       /*  */
-      this-object:lclitrans:Location = new System.Drawing.Point(206, 17).
+      this-object:lclitrans:Location = new System.Drawing.Point(206, 20).
       this-object:lclitrans:Name = "lclitrans".
-      this-object:lclitrans:Size = new System.Drawing.Size(178, 23).
+      this-object:lclitrans:Size = new System.Drawing.Size(178, 15).
       this-object:lclitrans:TabIndex = 31.
       this-object:lclitrans:UseCompatibleTextRendering = true.
       /*  */
@@ -1394,18 +1422,50 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label23:Text = "Правило заполнения графы ~"Основание~":".
       this-object:label23:UseCompatibleTextRendering = true.
       /*  */
+      /* label20 */
+      /*  */
+      this-object:label20:Location = new System.Drawing.Point(6, 70).
+      this-object:label20:Name = "label20".
+      this-object:label20:Size = new System.Drawing.Size(103, 15).
+      this-object:label20:TabIndex = 44.
+      this-object:label20:Text = "Выдать:".
+      this-object:label20:UseCompatibleTextRendering = true.
+      /*  */
+      /* textBox1 */
+      /*  */
+      this-object:textBox1:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "rule-payer-rko", true)).
+      this-object:textBox1:Location = new System.Drawing.Point(121, 67).
+      this-object:textBox1:Name = "textBox1".
+      this-object:textBox1:Size = new System.Drawing.Size(292, 20).
+      this-object:textBox1:TabIndex = 39.
+      /*  */
+      /* label24 */
+      /*  */
+      this-object:label24:Location = new System.Drawing.Point(6, 72).
+      this-object:label24:Name = "label24".
+      this-object:label24:Size = new System.Drawing.Size(109, 15).
+      this-object:label24:TabIndex = 45.
+      this-object:label24:Text = "Выдать\Принято от:".
+      this-object:label24:UseCompatibleTextRendering = true.
+      /*  */
+      /* textBox2 */
+      /*  */
+      this-object:textBox2:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "rule-payer-transf", true)).
+      this-object:textBox2:Location = new System.Drawing.Point(121, 69).
+      this-object:textBox2:Name = "textBox2".
+      this-object:textBox2:Size = new System.Drawing.Size(292, 20).
+      this-object:textBox2:TabIndex = 45.
+      /*  */
       /* cashbookfrm */
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:CancelButton = this-object:buttonCancel.
-      this-object:ClientSize = new System.Drawing.Size(447, 648).
+      this-object:ClientSize = new System.Drawing.Size(458, 708).
       this-object:Controls:Add(this-object:groupBox4).
       this-object:Controls:Add(this-object:groupBox3).
       this-object:Controls:Add(this-object:groupBox2).
       this-object:Controls:Add(this-object:groupBox1).
       this-object:Controls:Add(this-object:label17).
-      this-object:Controls:Add(this-object:fTakenFrom).
-      this-object:Controls:Add(this-object:label8).
       this-object:Controls:Add(this-object:bChooseOsnAcct).
       this-object:Controls:Add(this-object:fRulePril).
       this-object:Controls:Add(this-object:fOsnacct).
@@ -1517,6 +1577,11 @@ class ibs.th.ref.cashbookfrm inherits Form :
             this-object:bChooseCorPko:Enabled  = false
             this-object:bChooseCorRko:Enabled  = false
             this-object:bChooseCli:Enabled     = false
+            this-object:groupBox4:Enabled      = false
+            this-object:groupBox3:Enabled      = false
+            this-object:groupBox2:Enabled      = false
+            this-object:groupBox1:Enabled      = false
+            
             .
       end.
       return.

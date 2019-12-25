@@ -35,6 +35,9 @@ define temp-table tt-cashbook like ub.cashbook
   field rule-osn-transf    as character 
   field contr-type-transf  as character 
   field contr-code-transf  as integer 
+  field rule-payer-transf  as character
+  field rule-payer-rko     as character 
+  field rule-payer-inkass  as character  
 .
 
 define dataset ds-cashbook for tt-cashbook .

@@ -989,7 +989,13 @@ define variable v-err               as logical    no-undo .
           .
         end.
       end.
-      
+      if tt-fin-doc.cor-acc1-value eq "" or tt-fin-doc.cor-acc1-value eq ?
+      then do:
+         &scop my-message substitute("Не задан счет для инкасации" ~
+                                     )
+       {&DISPLAY-MESSAGE}.
+       undo _main, return error.
+      end.
       if o-uchet = "0"
       then v-uchet = "cal" .
       else v-uchet = "smen" . 

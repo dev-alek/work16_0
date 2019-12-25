@@ -1788,7 +1788,7 @@ class ibs.th.ref.bpa.BPA_form inherits Form:
         end.
       when "Выдача наличных" then 
         do:
-          tt-OperServ.OsType = 4 .
+          tt-OperServ.OsType = 5 .
         end.
     end case .
     case this-object:type_OperServ2:Text:
@@ -1887,7 +1887,7 @@ class ibs.th.ref.bpa.BPA_form inherits Form:
         end.
        when "Выдача наличных" then 
         do:
-          tt-OperServ.OsType = 4 .
+          tt-OperServ.OsType = 5 .
         end.            
     end case .
     return.
@@ -1919,7 +1919,7 @@ class ibs.th.ref.bpa.BPA_form inherits Form:
         end.
       when "Выдача наличных" then 
         do:
-          tt-OperServ.OsType = 4 .
+          tt-OperServ.OsType = 5 .
         end.          
     end case .
     return.
@@ -1951,7 +1951,7 @@ class ibs.th.ref.bpa.BPA_form inherits Form:
         end.
          when "Выдача наличных" then 
         do:
-          tt-OperServ.OsType = 4 .
+          tt-OperServ.OsType = 5 .
         end.          
     end case .
     return.
@@ -2127,7 +2127,7 @@ class ibs.th.ref.bpa.BPA_form inherits Form:
         do:
           p-OsType = "Пополнение ВБРР" .
         end.
-      when 4 then 
+      when 5 then 
         do:
           p-OsType = "Выдача наличных" .
         end.

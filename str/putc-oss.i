@@ -84,7 +84,7 @@ define variable v-sum        as decimal   no-undo .
             when 3 then do:
               v-OsType = "remittance".
             end.  
-            when 4 then do:
+            when 5 then do:
               v-OsType = "cashingout" .
             end.  
           end.  
@@ -145,7 +145,7 @@ define variable v-sum        as decimal   no-undo .
             when 3 then do:
               v-OsType = "remittance".
             end.  
-            when 4 then do:
+            when 5 then do:
               v-OsType = "cashingout" .
             end.              
           end.  

@@ -82,8 +82,8 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Правило заполнения графы Приложение не может быть пустым!" .
       return .
     end.
-    if trim(tt-cashbook.cli-type) = ""
-    or tt-cashbook.cli-code = ? or tt-cashbook.cli-code <= 0
+    if (trim(tt-cashbook.cli-type) = ""
+    or tt-cashbook.cli-code = ? or tt-cashbook.cli-code <= 0) and tt-cashbook.id eq 0
     then do :
       Msg = "Выберите контрагента для автоматического формирования платежей. Поле Контрагент (авто)." .
       return .
@@ -176,7 +176,9 @@ class ibs.th.ref.cashbookstorage final:
   end method .
   
   method public void insertDB (buffer tt-cashbook for tt-cashbook, output p-id as int64) :
-    
+      if not tt-cashbook.basic-kb 
+      then  
+         tt-cashbook.id = -1. 
       checkCashBook(buffer tt-cashbook) .
       if Msg <> ""
       then return .
@@ -187,7 +189,8 @@ class ibs.th.ref.cashbookstorage final:
         ub.CashBook.id = if tt-cashbook.basic-kb then 0 else next-value(s-cashbook-id)
         ub.CashBook.Status_ = 0
         ub.CashBook.RulePril = getRulePrilID(tt-cashbook.RulePril)
-        ub.CashBook.RuleOsnPko = getRuleOsnID(tt-cashbook.RuleOsnPko) 
+        ub.CashBook.RuleOsnPko = getRuleOsnID(tt-cashbook.RuleOsnPko)
+        tt-cashbook.id         = ub.CashBook.id  
       .
       updateAttrForcashbook (buffer tt-cashbook:handle).
       p-id = ub.CashBook.id .
@@ -199,6 +202,7 @@ class ibs.th.ref.cashbookstorage final:
      define variable vitm  as integer no-undo.
      define buffer buf_file  for _file.
      define buffer buf_field for _field.
+     define buffer CashBookrule for CashBookrule.
       find first buf_file where buf_file._file-name eq "cashbook" no-lock.
      
      do vitm = 1 to iBuffer:num-fields:
@@ -230,6 +234,7 @@ class ibs.th.ref.cashbookstorage final:
      define variable vitm  as integer no-undo.
      define buffer buf_file  for _file.
      define buffer buf_field for _field.
+     define buffer CashBookrule for CashBookrule.
       find first buf_file where buf_file._file-name eq "cashbook" no-lock.
      
      do vitm = 1 to iBuffer:num-fields:

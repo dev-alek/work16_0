@@ -88,6 +88,16 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   private set.
   define property contr-code-transf       as integer    no-undo get.
   private set.
+  define property rule-payer-transf       as character    no-undo get.
+  private set.
+  define property rule-payer-rko          as character     no-undo get.
+  private set.
+  define property rule-payer-inkass       as character     no-undo get.
+  private set.
+  
+  
+  
+  
   
   define property kb-gds            as ibs.th.bge.1crn.subjects.subjects no-undo
     get. 
@@ -169,7 +179,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "bank-deposit" then 
         bank-deposit = {&attr-integer} .
       when "cont-inkass" then 
-        cont-inkass = {&attr-str} .
+        cont-inkass = {&attr-integer} .
       when "contr-code-rko" then 
         contr-code-rko = {&attr-integer} .
         when "Corr-transf" then 
@@ -178,6 +188,12 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
         rule-osn-transf = {&attr-str} .
         when "contr-code-transf" then 
         contr-code-transf = {&attr-integer} .
+        when "rule-payer-transf" then 
+        rule-payer-transf = {&attr-str} .
+        when "rule-payer-rko" then 
+        rule-payer-rko = {&attr-str} .
+        when "rule-payer-inkass" then 
+        rule-payer-inkass = {&attr-str} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -262,6 +278,9 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       Corr-transf       = ?
       rule-osn-transf   = ?
       contr-code-transf = ?
+      rule-payer-transf = ?
+      rule-payer-rko    = ?
+      rule-payer-inkass = ?
       .
     if valid-object(kb-gds)        then delete object kb-gds .
   end method.

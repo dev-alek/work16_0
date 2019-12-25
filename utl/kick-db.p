@@ -1170,6 +1170,21 @@ define variable v-name as character no-undo .
       buf_firm.firm-code = 800000002
       buf_firm.ind       = 0
     .
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000008
+      buf_clients.obj-name = "Перемещение денежных средств"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000008
+      buf_firm.ind       = 0
+    .
+    
     /* Выставить атрибут Расходы отдельной строкой в yes */
     &scop proc-name clntattr-write
     {&run_proc_attr-lib}

@@ -245,32 +245,40 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     end .
 
     assign
-      tt-cashbook.CashBookName = objImp:name_       when objImp:name_ <> ?
-      tt-cashbook.CorrPko      = objImp:kredit      when objImp:kredit <> ? 
-      tt-cashbook.CorrRko      = objImp:Corr-Rko     when objImp:Corr-Rko <> ?
-      tt-cashbook.RuleOsnPko   = objImp:rule-reason when objImp:rule-reason <> ?
-      tt-cashbook.OsnAcct      = objImp:debit       when objImp:debit <> ? 
-      tt-cashbook.RuleOsnRko   = objImp:Rule-Osn-Rko  when objImp:Rule-Osn-Rko <> ?
+      tt-cashbook.CashBookName       = objImp:name_               when objImp:name_ <> ?
+      tt-cashbook.CorrPko            = objImp:kredit              when objImp:kredit <> ? 
+      tt-cashbook.CorrRko            = objImp:Corr-Rko            when objImp:Corr-Rko <> ?
+      tt-cashbook.RuleOsnPko         = objImp:rule-reason         when objImp:rule-reason <> ?
+      tt-cashbook.OsnAcct            = objImp:debit               when objImp:debit <> ? 
+      tt-cashbook.RuleOsnRko         = objImp:Rule-Osn-Rko        when objImp:Rule-Osn-Rko <> ?
+      tt-cashbook.cli-type           = {&cmp}                     when objImp:code-payer <> ?
+      tt-cashbook.cli-code           = objImp:code-payer          when objImp:code-payer <> ?
+      tt-cashbook.RulePril           = string(objImp:rule-att)    when objImp:rule-att <> ?
+      tt-cashbook.FlagSepCash        = (objImp:ind-kass-pko = 1)  when objImp:ind-kass-pko <> ?
+      tt-cashbook.FlagSepFull        = (objImp:apart-np-tnp = 1)  when objImp:apart-np-tnp <> ?
+      tt-cashbook.SourceCode         = string(objImp:code-symbol) when objImp:code-symbol <> ?
+      tt-cashbook.BankRecip-code     = objImp:bank-resive         when objImp:bank-resive <> ?
+      tt-cashbook.BankDepos-code     = objImp:bank-deposit        when objImp:bank-deposit <> ?
+      tt-cashbook.CountCollect-type  = {&cmp}                     when  objImp:cont-inkass <> ? 
+      tt-cashbook.CountCollect-Code  = objImp:cont-inkass         when objImp:cont-inkass <> ?
+      tt-cashbook.CountCash-type     = {&cmp}                     when objImp:contr-code-rko <> ?
+      tt-cashbook.CountCash-code     = objImp:contr-code-rko      when objImp:contr-code-rko <> ?
+      tt-cashbook.Corr-transf        = objImp:Corr-transf         when objImp:Corr-transf <> ?
+      tt-cashbook.contr-type-transf  = {&cmp}                     when objImp:contr-code-transf <> ?
+      tt-cashbook.contr-code-transf  = objImp:contr-code-transf   when objImp:contr-code-transf <> ?
+      tt-cashbook.rule-payer-transf  = objImp:rule-payer-transf   when objImp:rule-payer-transf <> ?
+      tt-cashbook.rule-payer-rko     = objImp:rule-payer-rko      when objImp:rule-payer-rko    <> ?
+      tt-cashbook.rule-payer-inkass  = objImp:rule-payer-inkass   when objImp:rule-payer-inkass <> ?
       
-      tt-cashbook.cli-type     = {&cmp}             when objImp:code-payer <> ?
-      tt-cashbook.cli-code     = objImp:code-payer  when objImp:code-payer <> ?
-      tt-cashbook.RulePril     = string(objImp:rule-att)   when objImp:rule-att <> ?
-      tt-cashbook.FlagSepCash  = (objImp:ind-kass-pko = 1) when objImp:ind-kass-pko <> ?
-      tt-cashbook.FlagSepFull  = (objImp:apart-np-tnp = 1) when objImp:apart-np-tnp <> ?
-      tt-cashbook.SourceCode   = string(objImp:code-symbol)       when objImp:code-symbol <> ?
-      tt-cashbook.BankRecip-code   = objImp:bank-resive   when objImp:bank-resive <> ?
-      tt-cashbook.BankDepos-code   = objImp:bank-deposit  when objImp:bank-deposit <> ?
-      tt-cashbook.CountCollect-type  = {&cmp} when  objImp:cont-inkass <> ? 
-      tt-cashbook.CountCollect-Code  = objImp:cont-inkass   when objImp:cont-inkass <> ?
-      tt-cashbook.CountCash-type      = {&cmp}   when objImp:contr-code-rko <> ?
-      tt-cashbook.CountCash-code      = objImp:contr-code-rko   when objImp:contr-code-rko <> ?
-      tt-cashbook.Corr-transf        = objImp:Corr-transf   when objImp:Corr-transf <> ?
-      tt-cashbook.rule-osn-transf    = objImp:rule-osn-transf   when objImp:rule-osn-transf <> ?
-      tt-cashbook.contr-type-transf  = {&cmp}   when objImp:rule-osn-transf <> ?
-      tt-cashbook.contr-code-transf  = objImp:contr-code-transf   when objImp:rule-osn-transf <> ?
+      
       
    /* tt-cashbook.Status_      = 0:"Текущий", 1:"Удаленный"
       - при создании заполняется значением по умолчанию, при обновлении остаётся в прежнем значении */
+    .
+    assign
+       tt-cashbook.rule-osn-transf    = objImp:rule-reason         when objImp:rule-reason <> ?  and tt-cashbook.id ne 0
+       tt-cashbook.rule-osn-transf    = objImp:Rule-Osn-Rko        when objImp:Rule-Osn-Rko <> ? and tt-cashbook.id eq 0
+       tt-cashbook.rule-osn-transf    = objImp:rule-osn-transf     when objImp:rule-osn-transf <> ?
     .
     /* Текст поля «Принято от» для ПКО.
        Если не указано, то в ПКО проставляется наименование контрагента (см. п. 4.3.4.3) */
@@ -372,7 +380,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
        empty temp-table tt-cashbookrule .
        v-storage:getCashBookRule (tt-cashbook.id, buf_clients.obj-type, buf_clients.obj-code, output dataset ds-cashbookrule by-reference) .
        find first tt-cashbookrule no-error .
-       if available tt-cashbookrule then do :
+       if not available tt-cashbookrule then do :
          
           create tt-cashbookrule .
           assign
@@ -468,7 +476,15 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
         ) no-error .
         */
       end. // end_of_gds
-
+      else do:
+         for each buf_goods-attr exclusive-lock
+             where buf_goods-attr.attr-code  = {&attr-cash-book-id}
+               and buf_goods-attr.attr-value = v-str-kb-id :
+            
+              delete buf_goods-attr.
+          end .
+      end. 
+         
     end .
     
     

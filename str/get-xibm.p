@@ -1943,7 +1943,7 @@ on error undo, return error
     define variable vCSTaxValue as decimal no-undo.*/
    // run proc-01-tax in this-procedure (output ub.chk-gds.VAT-pc, output ub.chk-gds.VAT-sum-rubl).
     
-    if v-oss-code <> ""then do:
+    if v-oss-code <> "" then do:
       case p-pos-type:
         when {&cd-type-autotank} then do:
           find first buf_ext-classif where buf_ext-classif.CharKey_One = v-oss-code no-error.
@@ -1963,6 +1963,17 @@ on error undo, return error
       .
       v-oss-code = "".
     end.
+    
+      
+      create ub.chk-gds-attr.
+      assign
+        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.line-num = ub.chk-gds.line-num
+        ub.chk-gds-attr.attr-code = "cstype"
+        ub.chk-gds-attr.attr-value =  string(cstype_)
+      .
+      
+    
     if price-old <> 0 then do:
      create ub.chk-gds-attr.
       assign

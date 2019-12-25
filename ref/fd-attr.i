@@ -144,7 +144,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop news-fd-attr-cover_sheet no
 
 &scop bef-fd-attr-ParentMoney ParentMoney
-&glob fd-attr-cover_sheet '{&bef-fd-attr-ParentMoney}':U
+&glob fd-attr-ParentMoney '{&bef-fd-attr-ParentMoney}':U
 &scop type-fd-attr-ParentMoney {&type-char}
 &scop format-fd-attr-ParentMoney "X(4000)"
 &scop label-fd-attr-ParentMoney "Ссылка на документ с распределением купюр"
@@ -152,10 +152,21 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scop user-can-edit-fd-attr-ParentMoney false
 &scop output-display-fd-attr-ParentMoney true
 &scop other-fd-attr-ParentMoney '':u
-&scop news-fd-attr-cParentMoney no
+&scop news-fd-attr-ParentMoney no
+
+&scop bef-fd-attr-contr-kb contr-kb
+&glob fd-attr-contr-kb '{&bef-fd-attr-contr-kb}':U
+&scop type-fd-attr-contr-kb {&type-int}
+&scop format-fd-attr-contr-kb ">>>9"
+&scop label-fd-attr-contr-kb "Код кассовой книги получателя\отправителя при перемещении ДС между кассами"
+&scop tooltip-fd-attr-contr-kb "Код кассовой книги получателя\отправителя при перемещении ДС между кассами"
+&scop user-can-edit-fd-attr-contr-kb false
+&scop output-display-fd-attr-contr-kb true
+&scop other-fd-attr-contr-kb '':u
+&scop news-fd-attr-contr-kbno
 
 &glob fd-attr-list '{&bef-fd-attr-shift-date},{&bef-fd-attr-shift-num},{&bef-fd-attr-shift-name},~
-{&bef-fd-attr-pre-vedom},{&bef-fd-attr-cover_sheet},~
+{&bef-fd-attr-pre-vedom},{&bef-fd-attr-cover_sheet},{&bef-fd-attr-ParentMoney},~
 {&bef-fd-attr-barcode},{&bef-fd-attr-lockid},{&bef-fd-attr-bank-recipient},{&bef-fd-attr-bank-deposit},{&bef-fd-attr-obj-inkas}':u
 
 
@@ -217,6 +228,10 @@ procedure fd-attr-code :
       {&attr-temp-full-code}
       &scop attr-code fd-attr-pre-vedom
       {&attr-temp-full-code}
+      &scop attr-code fd-attr-contr-kb
+      {&attr-temp-full-code}
+
+
 
       /* сюда добавлять новые параметры */
       otherwise do:
@@ -251,6 +266,9 @@ procedure fd-attr-tooltip :
       {&attr-temp-code}
       &scop attr-code fd-attr-pre-vedom
       {&attr-temp-code}
+      &scop attr-code fd-attr-contr-kb
+      {&attr-temp-code}
+
 
 
       /* сюда добавлять новые параметры */

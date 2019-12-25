@@ -797,7 +797,7 @@ super().
           do:
             type_ = "Пополнение ВБРР" .
           end. 
-        when 4 then 
+        when 5 then 
           do:
             type_ = "Выдача наличных" .
           end.          
@@ -935,7 +935,7 @@ super().
           do:
             tt-query.OsType = "Пополнение ВБРР" .
           end.
-          when 4 then 
+          when 5 then 
           do:
             tt-query.OsType = "Выдача наличных" .
           end.
