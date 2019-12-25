@@ -190,6 +190,20 @@ ADD FIELD "status_" OF "Code" AS integer
   COLUMN-LABEL "Статус"
   ORDER 180
 
+ADD FIELD "export_" OF "Code" AS logical
+  DESCRIPTION "Выгружать запись"
+  FORMAT "yes/no"
+  POSITION 20
+  INITIAL "no"
+  LABEL "Выгружать запись"
+  COLUMN-LABEL "Выгружать запись"
+  ORDER 190
+  MAX-WIDTH 1
+
+ADD INDEX "export-rec" ON "Code"
+  AREA "Primary_index"
+  INDEX-FIELD "export_" ASCENDING
+
 ADD INDEX "pi" ON "Code" 
   AREA "Primary_index"
   UNIQUE

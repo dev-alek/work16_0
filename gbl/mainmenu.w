@@ -1509,7 +1509,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       undo, return no-apply return-value .
    end.
    release buf_sys-ctrl.
-
+   run gbl/code-upd.p  no-error .
+   if error-status :error
+   then do:
+      message
+         vss-workfile vss-revision vss-description skip
+         "Ошибка при обновлении справочников" skip
+         error-status :get-message(1) skip
+         return-value skip
+         view-as alert-box error .
+      undo, return no-apply return-value .
+   end.
 
   run get-last-context in this-procedure
     (output v-cntxt-db-num

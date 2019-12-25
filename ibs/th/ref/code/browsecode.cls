@@ -99,15 +99,29 @@ class ibs.th.ref.code.browsecode inherits Form final:
 
    method private void BrwMode( input imode as character  ):
       if iMode eq {&select}
-      then assign 
+      then do:
+         assign 
          bAdd   :visible = false
          bdel   :visible = false
          bedit  :visible = false
          bexport:visible = false
          bimport:visible = false
          bselect:visible = true
-         this-object:dataGridView1:Columns[18]:Visible = yes.
+         this-object:dataGridView1:Columns[1]:Visible = yes.
       .
+      end.
+      else do: 
+         if iMode eq "sysadm"
+         then assign 
+            bAdd   :visible = yes
+            bdel   :visible = yes
+            bedit  :visible = yes
+            bexport:visible = true
+            bimport:visible = true
+            bselect:visible = false
+            this-object:dataGridView1:Columns[1]:Visible = no.
+         .
+      end.
       return.
 
    end method.
@@ -284,6 +298,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       define variable resources as Progress.Util.ResourceManager no-undo.
       resources = new Progress.Util.ResourceManager("ibs.th.ref.code.browsecode").
       this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
+      this-object:dataGridViewCheckBoxColumn1 = new System.Windows.Forms.DataGridViewCheckBoxColumn().
       this-object:codeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
       this-object:codeNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
       this-object:codeValueDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
@@ -302,7 +317,6 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:procdelDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
       this-object:proceditDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
       this-object:statusrow = new System.Windows.Forms.DataGridViewTextBoxColumn().
-      this-object:dataGridViewCheckBoxColumn1 = new System.Windows.Forms.DataGridViewCheckBoxColumn().
       this-object:bindCode = new Progress.Data.BindingSource(this-object:components).
       this-object:toolStrip1 = new System.Windows.Forms.ToolStrip().
       this-object:bexit = new System.Windows.Forms.ToolStripButton().
@@ -330,25 +344,25 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 19 no-undo.
-      arrayvar0[1] = this-object:codeDataGridViewTextBoxColumn.
-      arrayvar0[2] = this-object:codeNameDataGridViewTextBoxColumn.
-      arrayvar0[3] = this-object:codeValueDataGridViewTextBoxColumn.
-      arrayvar0[4] = this-object:misc1DataGridViewTextBoxColumn.
-      arrayvar0[5] = this-object:misc2DataGridViewTextBoxColumn.
-      arrayvar0[6] = this-object:misc3DataGridViewTextBoxColumn.
-      arrayvar0[7] = this-object:misc4DataGridViewTextBoxColumn.
-      arrayvar0[8] = this-object:misc5DataGridViewTextBoxColumn.
-      arrayvar0[9] = this-object:misc6DataGridViewTextBoxColumn.
-      arrayvar0[10] = this-object:misc7DataGridViewTextBoxColumn.
-      arrayvar0[11] = this-object:misc8DataGridViewTextBoxColumn.
-      arrayvar0[12] = this-object:misc9DataGridViewTextBoxColumn.
-      arrayvar0[13] = this-object:misc10DataGridViewTextBoxColumn.
-      arrayvar0[14] = this-object:procviewDataGridViewTextBoxColumn.
-      arrayvar0[15] = this-object:parentDataGridViewTextBoxColumn.
-      arrayvar0[16] = this-object:procdelDataGridViewTextBoxColumn.
-      arrayvar0[17] = this-object:proceditDataGridViewTextBoxColumn.
-      arrayvar0[18] = this-object:statusrow.
-      arrayvar0[19] = this-object:dataGridViewCheckBoxColumn1.
+      arrayvar0[1] = this-object:dataGridViewCheckBoxColumn1.
+      arrayvar0[2] = this-object:codeDataGridViewTextBoxColumn.
+      arrayvar0[3] = this-object:codeNameDataGridViewTextBoxColumn.
+      arrayvar0[4] = this-object:codeValueDataGridViewTextBoxColumn.
+      arrayvar0[5] = this-object:misc1DataGridViewTextBoxColumn.
+      arrayvar0[6] = this-object:misc2DataGridViewTextBoxColumn.
+      arrayvar0[7] = this-object:misc3DataGridViewTextBoxColumn.
+      arrayvar0[8] = this-object:misc4DataGridViewTextBoxColumn.
+      arrayvar0[9] = this-object:misc5DataGridViewTextBoxColumn.
+      arrayvar0[10] = this-object:misc6DataGridViewTextBoxColumn.
+      arrayvar0[11] = this-object:misc7DataGridViewTextBoxColumn.
+      arrayvar0[12] = this-object:misc8DataGridViewTextBoxColumn.
+      arrayvar0[13] = this-object:misc9DataGridViewTextBoxColumn.
+      arrayvar0[14] = this-object:misc10DataGridViewTextBoxColumn.
+      arrayvar0[15] = this-object:procviewDataGridViewTextBoxColumn.
+      arrayvar0[16] = this-object:parentDataGridViewTextBoxColumn.
+      arrayvar0[17] = this-object:procdelDataGridViewTextBoxColumn.
+      arrayvar0[18] = this-object:proceditDataGridViewTextBoxColumn.
+      arrayvar0[19] = this-object:statusrow.
       this-object:dataGridView1:Columns:AddRange(arrayvar0).
       this-object:dataGridView1:DataSource = this-object:bindCode.
       this-object:dataGridView1:Dock = System.Windows.Forms.DockStyle:Bottom.
@@ -361,6 +375,15 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:dataGridView1:TabIndex = 0.
       this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
       this-object:dataGridView1:CellContentDoubleClick:Subscribe(this-object:dataGridView1_CellContentDoubleClick).
+      /*  */
+      /* dataGridViewCheckBoxColumn1 */
+      /*  */
+      this-object:dataGridViewCheckBoxColumn1:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCells.
+      this-object:dataGridViewCheckBoxColumn1:DataPropertyName = "fchange".
+      this-object:dataGridViewCheckBoxColumn1:HeaderText = "".
+      this-object:dataGridViewCheckBoxColumn1:Name = "dataGridViewCheckBoxColumn1".
+      this-object:dataGridViewCheckBoxColumn1:ReadOnly = true.
+      this-object:dataGridViewCheckBoxColumn1:Width = 21.
       /*  */
       /* codeDataGridViewTextBoxColumn */
       /*  */
@@ -511,15 +534,6 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:statusrow:ReadOnly = true.
       this-object:statusrow:Width = 66.
       /*  */
-      /* dataGridViewCheckBoxColumn1 */
-      /*  */
-      this-object:dataGridViewCheckBoxColumn1:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCells.
-      this-object:dataGridViewCheckBoxColumn1:DataPropertyName = "fchange".
-      this-object:dataGridViewCheckBoxColumn1:HeaderText = "".
-      this-object:dataGridViewCheckBoxColumn1:Name = "dataGridViewCheckBoxColumn1".
-      this-object:dataGridViewCheckBoxColumn1:ReadOnly = true.
-      this-object:dataGridViewCheckBoxColumn1:Visible = false.
-      /*  */
       /* bindCode */
       /*  */
       this-object:bindCode:MaxDataGuess = 0.
@@ -531,25 +545,25 @@ class ibs.th.ref.code.browsecode inherits Form final:
       tableDesc1:ChildTables = arrayvar1.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 19 no-undo.
-      arrayvar2[1] = new Progress.Data.ColumnPropDesc("code", "Код", Progress.Data.DataType:CHARACTER).
-      arrayvar2[2] = new Progress.Data.ColumnPropDesc("CodeName", "Наименование", Progress.Data.DataType:CHARACTER).
-      arrayvar2[3] = new Progress.Data.ColumnPropDesc("CodeValue", "Значение", Progress.Data.DataType:CHARACTER).
-      arrayvar2[4] = new Progress.Data.ColumnPropDesc("misc1", "Доп поле 1", Progress.Data.DataType:CHARACTER).
-      arrayvar2[5] = new Progress.Data.ColumnPropDesc("misc2", "Доп поле 2", Progress.Data.DataType:CHARACTER).
-      arrayvar2[6] = new Progress.Data.ColumnPropDesc("misc3", "Доп поле 3", Progress.Data.DataType:CHARACTER).
-      arrayvar2[7] = new Progress.Data.ColumnPropDesc("misc4", "Доп поле 4", Progress.Data.DataType:CHARACTER).
-      arrayvar2[8] = new Progress.Data.ColumnPropDesc("misc5", "Доп поле 5", Progress.Data.DataType:CHARACTER).
-      arrayvar2[9] = new Progress.Data.ColumnPropDesc("misc6", "Доп поле 6", Progress.Data.DataType:CHARACTER).
-      arrayvar2[10] = new Progress.Data.ColumnPropDesc("misc7", "Доп поле 7", Progress.Data.DataType:CHARACTER).
-      arrayvar2[11] = new Progress.Data.ColumnPropDesc("misc8", "Доп поле 8", Progress.Data.DataType:CHARACTER).
-      arrayvar2[12] = new Progress.Data.ColumnPropDesc("misc9", "Доп поле 9", Progress.Data.DataType:CHARACTER).
-      arrayvar2[13] = new Progress.Data.ColumnPropDesc("misc10", "Доп поле 10", Progress.Data.DataType:CHARACTER).
-      arrayvar2[14] = new Progress.Data.ColumnPropDesc("procview", "Процедура просмотра", Progress.Data.DataType:CHARACTER).
-      arrayvar2[15] = new Progress.Data.ColumnPropDesc("parent", "", Progress.Data.DataType:CHARACTER).
-      arrayvar2[16] = new Progress.Data.ColumnPropDesc("procdel", "Процедура удаления", Progress.Data.DataType:CHARACTER).
-      arrayvar2[17] = new Progress.Data.ColumnPropDesc("procedit", "процедура редактирования", Progress.Data.DataType:CHARACTER).
-      arrayvar2[18] = new Progress.Data.ColumnPropDesc("fstatus", "Статус", Progress.Data.DataType:CHARACTER).
-      arrayvar2[19] = new Progress.Data.ColumnPropDesc("fchange", "", Progress.Data.DataType:LOGICAL).
+      arrayvar2[1] = new Progress.Data.ColumnPropDesc("fchange", "", Progress.Data.DataType:LOGICAL).
+      arrayvar2[2] = new Progress.Data.ColumnPropDesc("code", "Код", Progress.Data.DataType:CHARACTER).
+      arrayvar2[3] = new Progress.Data.ColumnPropDesc("CodeName", "Наименование", Progress.Data.DataType:CHARACTER).
+      arrayvar2[4] = new Progress.Data.ColumnPropDesc("CodeValue", "Значение", Progress.Data.DataType:CHARACTER).
+      arrayvar2[5] = new Progress.Data.ColumnPropDesc("misc1", "Доп поле 1", Progress.Data.DataType:CHARACTER).
+      arrayvar2[6] = new Progress.Data.ColumnPropDesc("misc2", "Доп поле 2", Progress.Data.DataType:CHARACTER).
+      arrayvar2[7] = new Progress.Data.ColumnPropDesc("misc3", "Доп поле 3", Progress.Data.DataType:CHARACTER).
+      arrayvar2[8] = new Progress.Data.ColumnPropDesc("misc4", "Доп поле 4", Progress.Data.DataType:CHARACTER).
+      arrayvar2[9] = new Progress.Data.ColumnPropDesc("misc5", "Доп поле 5", Progress.Data.DataType:CHARACTER).
+      arrayvar2[10] = new Progress.Data.ColumnPropDesc("misc6", "Доп поле 6", Progress.Data.DataType:CHARACTER).
+      arrayvar2[11] = new Progress.Data.ColumnPropDesc("misc7", "Доп поле 7", Progress.Data.DataType:CHARACTER).
+      arrayvar2[12] = new Progress.Data.ColumnPropDesc("misc8", "Доп поле 8", Progress.Data.DataType:CHARACTER).
+      arrayvar2[13] = new Progress.Data.ColumnPropDesc("misc9", "Доп поле 9", Progress.Data.DataType:CHARACTER).
+      arrayvar2[14] = new Progress.Data.ColumnPropDesc("misc10", "Доп поле 10", Progress.Data.DataType:CHARACTER).
+      arrayvar2[15] = new Progress.Data.ColumnPropDesc("procview", "Процедура просмотра", Progress.Data.DataType:CHARACTER).
+      arrayvar2[16] = new Progress.Data.ColumnPropDesc("parent", "", Progress.Data.DataType:CHARACTER).
+      arrayvar2[17] = new Progress.Data.ColumnPropDesc("procdel", "Процедура удаления", Progress.Data.DataType:CHARACTER).
+      arrayvar2[18] = new Progress.Data.ColumnPropDesc("procedit", "процедура редактирования", Progress.Data.DataType:CHARACTER).
+      arrayvar2[19] = new Progress.Data.ColumnPropDesc("fstatus", "Статус", Progress.Data.DataType:CHARACTER).
       tableDesc1:Columns = arrayvar2.
       this-object:bindCode:TableSchema = tableDesc1.
       /*  */
@@ -740,7 +754,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
           }
           if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
           else mode-erprn = no.
-          if mode-erprn
+          if mode-erprn and mCodeTrg:mode ne "sysadm"
           then do:
              assign
              this-object:bAdd:Visible    = no

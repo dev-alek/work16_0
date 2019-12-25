@@ -1030,6 +1030,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Номер точки интеграции для ERPRN */
 { cmp/cr-prep.i 1 attr-int-point              int-point             " " int-point            }
 
+/* Номер точки интеграции для ERPRN */
+{ cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code            }
 /* сюда добавлять новые названия атрибутов баз данных */
 
 &glob db-attr-list '~

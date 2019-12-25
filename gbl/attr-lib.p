@@ -13461,6 +13461,17 @@ end procedure.
 &scop manual-edit-attr-int-point 0
 &scop batch-edit-attr-int-point 0
 
+ /* Версия справочников */
+&scop type-attr-ver-code {&type-int}
+&scop format-attr-ver-code "999999999"
+&scop label-attr-ver-code "Версия справочников"
+&scop tooltip-attr-ver-code "Версия справочников"
+&scop user-can-edit-attr-ver-code false
+&scop output-display-attr-ver-code true
+&scop other-attr-ver-code '':u
+&scop news-attr-ver-code no
+&scop manual-edit-attr-ver-code 0
+&scop batch-edit-attr-ver-code 0
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -13561,6 +13572,8 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-int-point
       {&attr-temp-full-code}
+      &scop attr-code attr-ver-code
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13624,6 +13637,8 @@ procedure db-attr-tooltip :
       &scop attr-code attr-mess-id-video
       {&attr-temp-code}
       &scop attr-code attr-int-point
+      {&attr-temp-code}
+      &scop attr-code attr-ver-code
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -14405,6 +14420,8 @@ procedure ext-system-attr-news :
       &scop attr-code attr-esys-cert-sign-issuer
       {&attr-news-code}
       &scop attr-code attr-esys-cert-file-ext
+      {&attr-news-code}
+       &scop attr-code attr-ver-code
       {&attr-news-code}
 
 

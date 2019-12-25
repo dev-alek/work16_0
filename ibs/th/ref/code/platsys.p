@@ -25,7 +25,7 @@ define variable vss-description as character no-undo init "".
 define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
 
 mCodeTrg = new ibs.th.ref.code.code_trg().
-
+mCodeTrg:Mode =imode.
 mCodeTrg:formLable(1, 1, "Код системы").
 mCodeTrg:formLable(1, 2, "Наименование системы").
 mCodeTrg:MaxLevel = 2.

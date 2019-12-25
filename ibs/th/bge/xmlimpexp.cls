@@ -70,7 +70,33 @@ class ibs.th.bge.xmlimpexp final:
       define buffer buf_XML-node   for temp_testXML-node.
       define buffer buf_XML-entity for temp_testXML-entity.
       define buffer buf_XML-field for temp_testXML-entity.
-      
+      vNodeName = "File-info".
+      find first buf_XML-node
+          where buf_XML-node.xmhNodName = vNodeName
+      no-error.
+      if not available buf_XML-node
+      then do:
+         assign
+            v-xmldom-key = v-xmldom-key + 1
+         .
+         create buf_XML-node.
+         assign
+            buf_XML-node.xmh-key    = v-xmldom-key
+            buf_XML-node.xmhNodName = vNodeName
+            
+         .
+         assign
+            v-xmldom-key = v-xmldom-key + 1
+            vNodeName = "version"
+         .
+         create buf_XML-entity.
+         assign
+            buf_XML-entity.xme-key      = v-xmldom-key
+            buf_XML-entity.xmh-key      = buf_XML-node.xmh-key
+            buf_XML-entity.xmeEntName   = vNodeName
+            buf_XML-entity.xmeEntValue  = "000"
+         .
+      end.
       ihquery:get-first().
       vBuffer = ihquery:get-buffer-handle ().
       VTAbleName = vBuffer:table.

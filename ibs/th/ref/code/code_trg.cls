@@ -67,9 +67,9 @@ class ibs.th.ref.code.code_trg final:
       mode = imode.
       if mode eq {&select}
       then
-         rid-keep (). 
-      formLable(0, 1, "Код ").
-      formLable(0, 2, "Наименование").
+      rid-keep ().
+      formLable(0, 2, "Код ").
+      formLable(0, 3, "Наименование").
    end constructor.
    
    destructor public code_trg ( ):
@@ -92,10 +92,12 @@ class ibs.th.ref.code.code_trg final:
                rid-rest ().
          end.
          else do:
-            assign
-               parent  = code.parent + {&delim-par} + code.code
-               parent  = left-trim(parent,{&delim-par})
-            .
+            if not endLevel
+            then
+               assign
+                  parent  = code.parent + {&delim-par} + code.code
+                  parent  = left-trim(parent,{&delim-par})
+               .
             getQuery("code").
          end.
       end.
@@ -476,11 +478,12 @@ class ibs.th.ref.code.code_trg final:
       
       create query hQuery.
       hQuery:set-buffers(buffer buf_code:HANDLE). 
-      hQuery:query-prepare("FOR EACH buf_code where (buf_code.parent eq " + quoter(tt-code-brw.parent) +
+      /*hQuery:query-prepare("FOR EACH buf_code where (buf_code.parent eq " + quoter(tt-code-brw.parent) +
                                                           " and buf_code.code   eq " + quoter(tt-code-brw.code)  +
                                                           " ) or ( buf_code.parent begins " + quoter((if tt-code-brw.parent eq "" then "" else (tt-code-brw.parent + {&delim-par})) + tt-code-brw.code ) + ")").
-      
-     
+      */
+      hQuery:query-prepare("FOR EACH buf_code where buf_code.export_ "  
+                                                          ).
       hQuery:query-open ().
       
       vexpot:updatetableforxml(hQuery).
