@@ -290,21 +290,6 @@ on error  undo, return error
   create buf_c-sale-doc.
   buffer-copy locb-c-sale-doc to buf_c-sale-doc.
 end.
-
-/* ------------------------------- chk-doc-attr --------------------------------------------- */
-for each buf_chk-doc-attr where buf_chk-doc-attr.out-code = wt-inkas.inkas-code
-on error  undo, return error
-:
-  delete buf_chk-doc-attr.
-end.
-for each locb-chk-doc-attr where locb-chk-doc-attr.out-code = wt-inkas.inkas-code
-                      no-lock
-on error  undo, return error
-:
-  create buf_chk-doc-attr.
-  buffer-copy locb-chk-doc-attr to buf_chk-doc-attr.
-end.
-
 /* ------------------------------- chk-gds-pay --------------------------------------------- */
 for each buf_chk-gds-pay where buf_chk-gds-pay.out-code = wt-inkas.inkas-code
 on error  undo, return error
@@ -323,8 +308,15 @@ end.
 for each buf_chk-doc where buf_chk-doc.out-code = wt-inkas.inkas-code
 on error  undo, return error
 :
+  for each buf_chk-doc-attr where buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
+  on error  undo, return error
+  :
+    delete buf_chk-doc-attr.
+  end.
   delete buf_chk-doc.
 end.
+
+
 v-need-saledc = no.
 for each locb-chk-doc where locb-chk-doc.out-code = wt-inkas.inkas-code
                       no-lock
@@ -332,6 +324,13 @@ on error  undo, return error
 :
   create buf_chk-doc.
   buffer-copy locb-chk-doc to buf_chk-doc.
+  for each locb-chk-doc-attr where locb-chk-doc-attr.doc-code = buf_chk-doc.doc-code
+                      no-lock
+  on error  undo, return error
+  :
+     create buf_chk-doc-attr.
+     buffer-copy locb-chk-doc-attr to buf_chk-doc-attr.
+  end.
   if buf_chk-doc.d-card <> ""
   and not v-need-saledc
   then do:
