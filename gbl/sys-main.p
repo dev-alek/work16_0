@@ -213,27 +213,27 @@ on error undo, return error return-value
         buf_user-login.last-login-mjd               = v-last-login-mjd
       .
     end.
-  end.
-
-  run gbl/set-gbl.p
+   /* нельзя переносить ниже так как тогда создастся не правильно история по пользователю */
+    run gbl/set-gbl.p
     (input false                  /* p-auto        */
     ,input buf_user-login.user-id /* p-user-id     */
     ,input p-user-password        /* p-user-passwd */
     ) no-error .
-  if error-status :error
-  then do:
-    v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=114" + {&delim-par} + "Description=Ошибка при установке глобальных переменных." .
-    run trg/video-action.p (input 50,
+    if error-status :error
+    then do:
+       v-vid-param = "Login=" + p-user-login + {&delim-par} + "RESULT=114" + {&delim-par} + "Description=Ошибка при установке глобальных переменных." .
+       run trg/video-action.p (input 50,
                             input v-vid-param,
                             output v-vid-ok,
                             output v-vid-mes) .
-    message
+       message
       vss-workfile vss-revision vss-description skip
       "Ошибка при установке глобальных переменных" skip
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
-    return .
+       return .
+     end.
   end.
 
   do transaction:

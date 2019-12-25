@@ -274,7 +274,13 @@ DO:
       end.
     end.
   end.
-
+  run trg/userlog.p (
+                input 'run-proc'
+                , input ('Выполнена процедура' + (if error-status:error then ' с ошибкой "' else ' без ошибок "')  
+                + br-proc.proc-name +  '"' + {&delim-key} + br-proc.proc-file )
+                , input ?
+                , input ?
+                , input "") no-error.
   apply "ENTRY":U to br-proc in frame {&frame-name}.
   return no-apply.
 

@@ -50,7 +50,7 @@ class ibs.th.adm.upd.observupd:
 
   define property IsErr as logical no-undo
     get.
-    private set.
+    private set. 
 
   define property Msg as character no-undo
     get.

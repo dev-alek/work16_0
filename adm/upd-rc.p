@@ -65,6 +65,9 @@ define variable v-time              as integer   no-undo .
 define variable v-comment           as character no-undo .
 define variable v-file-date         as date      no-undo .
 define variable v-file-time         as integer   no-undo .
+define variable v-releace           as integer   no-undo.
+define variable v-patch             as integer  no-undo.
+define variable v-branch            as integer   no-undo.
 
 define variable v-program-tag     as character no-undo .
 
@@ -80,6 +83,9 @@ run gbl/vertag.p (
     , output v-comment
     , output v-file-date
     , output v-file-time
+    , output v-releace
+    , output v-patch
+    , output v-branch
 ) .
 
 run waitfram-show in this-procedure ( input "Идет обновление программ ТН. Ждите..." ).

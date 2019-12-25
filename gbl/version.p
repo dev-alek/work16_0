@@ -32,6 +32,10 @@ define buffer buf_db for ub.db .
     define variable v-comment           as character no-undo .
     define variable v-file-date         as date      no-undo .
     define variable v-file-time         as integer   no-undo .
+    define variable v-releace           as integer   no-undo.
+    define variable v-patch             as integer   no-undo.
+    define variable v-branch            as integer   no-undo.
+  
     
     define variable v-program-tag       as character    no-undo .
     define variable v-read-only         as logical      no-undo .
@@ -49,6 +53,9 @@ on error undo, return error return-value
         , output v-comment
         , output v-file-date
         , output v-file-time
+        , output v-releace
+        , output v-patch
+        , output v-branch
     ) .
     case v-locale
     :

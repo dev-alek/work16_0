@@ -29,7 +29,10 @@
     define variable v-THVer             as character no-undo .
     define variable v-file-date         as date      no-undo .
     define variable v-file-time         as integer   no-undo .
-
+    define variable v-releace           as integer   no-undo.
+    define variable v-patch             as integer   no-undo.
+    define variable v-branch            as integer  no-undo.
+  
     define variable mstep as integer no-undo.
     define variable mCountVer as integer no-undo.
 
@@ -49,7 +52,9 @@ function update-attr returns logical (iDb-num as integer,
        , output v-version 
        , output v-file-date
        , output v-file-time
-      
+       , output v-releace
+       , output v-patch
+       , output v-branch     
    ) .
    find first sys-ctrl.
    if    v-version eq ""
@@ -138,8 +143,20 @@ function update-attr returns logical (iDb-num as integer,
    update-attr(upgrade.db-num,
                upgrade.version-num,
                "user",
-               userid("ub")).             
-                
+               userid("ub")).
+   update-attr(upgrade.db-num,
+               upgrade.version-num,
+               "releace",
+               string(v-releace)).
+   update-attr(upgrade.db-num,
+               upgrade.version-num,
+               "patch",
+               string(v-patch)).
+   update-attr(upgrade.db-num,
+               upgrade.version-num,
+               "branch",
+               string(v-branch)).             
+               
     release upgrade.
     end.           
 

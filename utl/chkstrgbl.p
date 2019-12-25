@@ -81,9 +81,12 @@ then do:
          view-as alert-box.
          return.                                 
       end.
-      output to value( search("cmp/str-glbl.i")).
-            put "удален" skip.
-      output close.
+      if search("cmp/str-glbl.i") ne ?
+      then do:
+         output to value( search("cmp/str-glbl.i")).
+               put "удален" skip.
+         output close.
+      end.
       /*os-delete value( search("cmp/str-glbl.i")).
       if search("cmp/str-glbl.i") ne ? 
       then do:
@@ -186,7 +189,8 @@ then do:
             saveparam(tt-file-ver.filename + "|ver" ,string(tt-file-ver.filever)).
       end.
       output close.
-   end.   
+   end.
+   run utl/crpwd.p(no).   
 end.
 define stream sinp .
 procedure getverfile:

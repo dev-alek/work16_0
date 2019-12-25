@@ -17,7 +17,7 @@ class ibs.th.adm.upd.updschm:
 
   {cmp/str-glbl.i class}
   
-  
+
   define variable loadDFprocFile as character no-undo.
 
   /*------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ class ibs.th.adm.upd.updschm:
     private set.
   
   
-    
+
   define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
   define variable analisdfObj as class analisdf no-undo.

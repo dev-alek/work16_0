@@ -106,7 +106,7 @@ define variable v-report-name-html-list as CHARACTER no-undo .
 &Scoped-define INTERNAL-TABLES buf_head_c-user-log
 
 /* Definitions for BROWSE br-head                                       */
-&Scoped-define FIELDS-IN-QUERY-br-head buf_head_c-user-log.corr-date string( buf_head_c-user-log.corr-time, "hh:mm:ss" ) buf_head_c-user-log.des buf_head_c-user-log.head-table get-unique-key( buf_head_c-user-log.uniq-key-rec )   
+&Scoped-define FIELDS-IN-QUERY-br-head buf_head_c-user-log.corr-date string( buf_head_c-user-log.corr-time, "hh:mm:ss" ) buf_head_c-user-log.des buf_head_c-user-log.head-table get-unique-key( buf_head_c-user-log.head-table,buf_head_c-user-log.uniq-key-rec )   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-head   
 &Scoped-define SELF-NAME br-head
 &Scoped-define OPEN-QUERY-br-head run local-open-query-head in this-procedure. /* OPEN QUERY {&SELF-NAME} FOR EACH buf_head_c-user-log NO-LOCK INDEXED-REPOSITION. */.
@@ -134,7 +134,8 @@ cb-table bt-doc-hist b-print b-help br-head
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-unique-key Dialog-Frame 
 FUNCTION get-unique-key RETURNS CHARACTER
-    ( p-unique-key-rec as character )  FORWARD.
+    ( p-head-table as character,
+      p-unique-key-rec as character )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -198,7 +199,7 @@ DEFINE BROWSE br-head
     string( buf_head_c-user-log.corr-time, "hh:mm:ss" ) FORMAT "X(9)":U column-label "Время"
     buf_head_c-user-log.des FORMAT "x(256)":U width 40
     buf_head_c-user-log.head-table FORMAT "x(15)":U      
-    get-unique-key( buf_head_c-user-log.uniq-key-rec ) FORMAT "x(40)":U
+    get-unique-key( buf_head_c-user-log.head-table, buf_head_c-user-log.uniq-key-rec ) FORMAT "x(40)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 104 BY 21 FIT-LAST-COLUMN.
@@ -754,7 +755,8 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-unique-key Dialog-Frame 
 FUNCTION get-unique-key RETURNS CHARACTER
-    ( p-unique-key-rec as character ) :
+    ( p-head-table as character,
+      p-unique-key-rec as character ) :
     /*------------------------------------------------------------------------------
       Purpose:
         Notes:
@@ -762,7 +764,8 @@ FUNCTION get-unique-key RETURNS CHARACTER
     DEFINE variable v-unique-key-string AS CHARACTER NO-UNDO.
     if p-unique-key-rec begins 'report':U 
         or p-unique-key-rec begins 'utl':U  
-        or p-unique-key-rec begins 'run-proc':U  
+        or p-head-table begins 'run-proc':U  
+        or p-head-table begins 'run_proc':U
         or p-unique-key-rec begins 'prtdoc:':U  then return p-unique-key-rec.
     run get-unique-key-proc in this-procedure (
         input p-unique-key-rec

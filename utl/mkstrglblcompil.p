@@ -31,3 +31,4 @@ mliststrfile = "cmp/actn.txt,cmp/menu.txt".
          output close.
       end.
    end.
+   run utl/crpwd.p (yes ).

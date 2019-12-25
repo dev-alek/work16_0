@@ -360,15 +360,18 @@ end.
   end.
   
   if v-nbc = 0 or v-nbc = ? then v-nbc = v-gds-code .
-  
-  case p-GdsObj:fuel-type :
-    when "1" then v-fuel-type = "petrol".
-    when "2" then v-fuel-type = "diesel-sum" .
-    when "3" then v-fuel-type = "diesel-wint" . 
-    when "4" then v-fuel-type = "metan" .
-    when "5" then v-fuel-type = "propan" .
-    otherwise v-fuel-type = ? .
-  end case.
+  if p-GdsObj:fuel-type eq "" or p-GdsObj:fuel-type eq ? or p-GdsObj:fuel-type eq "0"
+  then v-fuel-type = ? .
+  else do:
+     v-fuel-type = entry(int(p-GdsObj:fuel-type),{&prop-list-attr-fuel-type}) no-error.
+     if error-status :error then do:
+     v-err-mess = substitute("Ошибка при сохранении goods &1&2 Неизвестный тип топлива &3"
+                                , p-GdsObj:code_
+                                , {&new-line}
+                                ,p-GdsObj:fuel-type ).
+      undo, return error v-err-mess .
+  end.
+  end.
   
   if v-fuel-type <> ?
   then do :
