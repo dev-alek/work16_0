@@ -76,6 +76,8 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
   define property okpo as character no-undo
     get.
     private set.
+  define property post-np     as integer    no-undo get. 
+    private set.    
 
   define override property InitTag as character no-undo init "contractor"
     get. 
@@ -116,6 +118,9 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
         leg-adr   = if inValue >= "" then inValue else "" .
       when "okpo"      then 
         okpo      = if inValue >= "" then inValue else "" .
+      when "post-np"      then 
+        post-np      = if inValue >= "" then int(inValue) else 0 .
+
     end case.
   end method.
   
@@ -173,6 +178,7 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
       e-mail    = ?
       leg-adr   = ?
       okpo      = ?
+      post-np   = ?
       .
   end method.
   

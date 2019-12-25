@@ -296,7 +296,34 @@ class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsu
       Msg     = ""
       v-retfl = true
       .
-
+    find first bf_clients no-lock where recid(bf_clients) eq v-rid  no-error .
+    if avail bf_clients 
+    then do:
+    find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                              and clients-attr.obj-code  eq bf_clients.obj-code
+                              and clients-attr.attr-code eq {&attr-supp-np}
+    exclusive-lock no-error.
+    if avail clients-attr 
+    then do:
+       if objImp:post-np eq 1
+       then
+          clients-attr.attr-value = "yes".
+       else 
+          delete clients-attr.
+    end.
+    else do:
+       if objImp:post-np eq 1
+       then do:
+          create clients-attr.
+          assign 
+             clients-attr.obj-type  = bf_clients.obj-type
+             clients-attr.obj-code  = bf_clients.obj-code
+             clients-attr.attr-code = {&attr-supp-np}
+             clients-attr.attr-value = "yes"
+          .
+       end.
+    end.
+    end.
     if valid-object (v_carrier) then 
     do:
       /*удаление клиента из атрибута*/
