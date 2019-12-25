@@ -1188,11 +1188,9 @@ procedure print-total .
           end. /* last-of( ctreal-2.is-pay ) and is-pay <> ? */
         END. /* for each actreal-2 */
       END. /* if can-find first actreal */
-      output stream OutStr-html close. 
     END. /* IF LAST t-2.main-code */
   END. /* FOR EACH t-2 */
 
-  output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted                                                                     
     substitute (
     '
@@ -1836,11 +1834,9 @@ procedure print-sug .
           end. /* last-of( ctreal-2.is-pay ) and is-pay <> ? */
         END. /* for each actreal-2 */
       END. /* if can-find first actreal */
-      output stream OutStr-html close. 
     END. /* IF LAST t-2.main-code */
   END. /* FOR EACH t-2 */
 
-  output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted                                                                     
     substitute (
     '
