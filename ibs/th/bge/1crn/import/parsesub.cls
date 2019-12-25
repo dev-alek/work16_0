@@ -163,6 +163,12 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable imppromotionEventHndlrObj                as class imppromotion                no-undo.
 /*---------------- ќбъекты дл€ скидок ---------- конец*/  
   
+  define variable kass-bookSubjectObj                   as class kass-book               no-undo. // <kass-book>
+  define variable kass-book-gdListSubjectsObj           as class subjects                no-undo. // kass-book:kb-gds
+  define variable kass-book-gdSubjectObj                as class kass-book-gd            no-undo. // kass-book:kb-gds:gd
+  define variable payment-agentSubjectObj               as class payment-agent           no-undo. // kass-book:payment-agent
+  define variable impkass-bookEventHndlrObj             as class impkass-book            no-undo.
+
   
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
@@ -277,6 +283,7 @@ class ibs.th.bge.1crn.import.parsesub:
        - ј« 
        - промо-акций
        - срецификаций к договорам поставки
+       - типов кассовых книг
     */
 
     trn-gd-doc-inSubjectObj = new trn-gd-doc-in ().
@@ -340,7 +347,6 @@ class ibs.th.bge.1crn.import.parsesub:
     delete object hRoot.
     return result.
   end method.
-  
   
   method private void GetChildren (
     input hParent as handle,
@@ -435,6 +441,17 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
           v-iSubject = contr-price-docsSubjectObj .
           v-iImpSub  = impcontr-price-docsEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "kass-book" then do:
+          if not valid-object(kass-bookSubjectObj) then kass-bookSubjectObj = new kass-book (). // <kass-book>
+          if not valid-object(impkass-bookEventHndlrObj) then do :
+            impkass-bookEventHndlrObj = new impkass-book ().
+          end .
+          v-iSubject = kass-bookSubjectObj .
+          v-iImpSub  = impkass-bookEventHndlrObj .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
@@ -880,6 +897,13 @@ class ibs.th.bge.1crn.import.parsesub:
             end.
           end case.
         end.
+        when "kb-gds" then do : // kass-book:kb-gds
+          if kass-bookSubjectObj:IsInitSubForWrite then do:
+            kass-book-gdListSubjectsObj = new subjects ("kb-gds") .
+            GetChildrenSub (hNoderef, (level + 1), ?).
+            kass-bookSubjectObj:SetProp (kass-book-gdListSubjectsObj).
+          end .
+        end.
         when "gd" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
           case true : 
             when trn-gd-doc-inSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
@@ -938,6 +962,11 @@ class ibs.th.bge.1crn.import.parsesub:
                 end case .
               end .  
             end . // end_of_promotionSubjectObj
+            when kass-bookSubjectObj:IsInitSubForWrite then do: // kass-book:kb-gds:gd
+              kass-book-gdListSubjectsObj:Add(  new kass-book-gd()  ).
+              kass-book-gdSubjectObj = cast (kass-book-gdListSubjectsObj:SubjectObjCurr, kass-book-gd).
+              GetChildrenSub (hNoderef, (level + 1), kass-book-gdSubjectObj).
+            end . // end_of_kass-bookSubjectObj
             otherwise do:
               
             end.
@@ -1001,6 +1030,13 @@ class ibs.th.bge.1crn.import.parsesub:
             good_unitaddSubjectObj = cast (unitaddsSubjectsObj:SubjectObjCurr, unit-add-code).
             GetChildrenSub (hNoderef, (level + 1), good_unitaddSubjectObj).
         end.
+        when "payment-agent" then do: // kass-book:payment-agent
+          if not valid-object(payment-agentSubjectObj) then
+            payment-agentSubjectObj = new payment-agent().
+          GetChildrenSub (hNoderef, (level + 1), payment-agentSubjectObj).
+          kass-bookSubjectObj:SetProp (payment-agentSubjectObj).
+        end .
+
         
         /* ----- конечный уровень
                  (не коллекции, не классы, только сами пол€ классов скал€рного типа) ----- */

@@ -1,0 +1,155 @@
+/*
+
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
+
+Информация по типам кассовых книг из 1С
+
+Автор: Молотков Сергей
+Дата создания: 12/02/19
+Author: Molotkov Sergey
+Creation date: 12/02/19
+
+*/
+block-level on error undo, throw.
+ 
+
+class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubject:
+  
+  define property code_         as character    no-undo get. private set.
+  define property del-l         as integer      no-undo get. private set.
+  define property del-f         as integer      no-undo get. private set.
+  define property name_         as character    no-undo get. private set.
+  
+  define property basic-kb      as integer      no-undo get. private set.
+  define property rule-reason   as integer      no-undo get. private set.
+  define property rule-att      as integer      no-undo get. private set.
+  define property ind-kass-pko  as integer      no-undo get. private set.
+  define property apart-np-tnp  as integer      no-undo get. private set.
+  define property kredit        as character    no-undo get. private set.
+  define property debit         as character    no-undo get. private set.
+  define property post-chief    as integer      no-undo get. private set.
+  define property fio-chief     as integer      no-undo get. private set.
+  define property fio-booker    as integer      no-undo get. private set.
+  define property acc-shift     as integer      no-undo get. private set.
+  define property pko-prefix    as character    no-undo get. private set.
+  define property rko-prefix    as character    no-undo get. private set.
+  define property struct-unit   as integer      no-undo get. private set.
+  define property struct-unit-name as character    no-undo get. private set.
+  define property struct-unit-type as character    no-undo get. private set.
+  define property struct-unit-code as integer      no-undo get. private set.
+
+  define property kb-gds            as ibs.th.bge.1crn.subjects.subjects no-undo
+    get. 
+    private set.
+  define property payment-agent     as ibs.th.bge.1crn.subjects.payment-agent no-undo
+    get. 
+    private set.
+
+  define override property InitTag as character no-undo init "kass-book"
+    get.
+  
+  constructor public kass-book ():
+    InitListTag = "kb-gds,payment-agent".
+  end constructor.
+  
+  &scoped-define attr-str      if inValue >= "" then inValue else ""
+  &scoped-define attr-integer  if inValue >= "" then integer (inValue) else 0
+  &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
+  &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
+  method override protected void SetPropProtected (inTag as char, inValue as char):
+    case inTag:
+      when "code"         then code_        = {&attr-str} .
+      when "del-l"        then del-l        = {&attr-integer} .
+      when "del-f"        then del-f        = {&attr-integer} .
+      when "name"         then name_        = {&attr-str} .
+      when "basic-kb"         then basic-kb         = {&attr-integer} .
+      when "rule-reason"      then rule-reason      = {&attr-integer} .
+      when "rule-att"         then rule-att         = {&attr-integer} .
+      when "ind-kass-pko"     then ind-kass-pko     = {&attr-integer} .
+      when "apart-np-tnp"     then apart-np-tnp     = {&attr-integer} .
+      when "kredit"           then kredit           = {&attr-str} .
+      when "debit"            then debit            = {&attr-str} .
+      when "post-chief"       then post-chief       = {&attr-integer} .
+      when "fio-chief"        then fio-chief        = {&attr-integer} .
+      when "fio-booker"       then fio-booker       = {&attr-integer} .
+      when "acc-shift"        then acc-shift        = {&attr-integer} .
+      when "pko-prefix"       then pko-prefix       = {&attr-str} .
+      when "rko-prefix"       then rko-prefix       = {&attr-str} .
+      when "struct-unit"      then struct-unit      = {&attr-integer} .
+      when "struct-unit-name" then struct-unit-name = {&attr-str} .
+      when "struct-unit-type" then struct-unit-type = {&attr-str} .
+      when "struct-unit-code" then struct-unit-code = {&attr-integer} .
+    end case.
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
+  end method.
+
+  method override protected void SetPropProtected (SubObj as ibs.th.bge.1crn.subjects.isubject):
+    case SubObj:InitTag:
+      when "payment-agent" then
+        payment-agent = cast (SubObj, ibs.th.bge.1crn.subjects.payment-agent) .
+    end case .    
+  end method.
+  
+  method override protected void SetPropProtected (SubsObj as ibs.th.bge.1crn.subjects.subjects):
+    /* вызывается для переприсваивания коллекции после каждого добавления элемента в коллекцию;
+       указатель на объект коллекции приходит с одним и тем же значением */
+    case SubsObj:InitTag:
+      when "kb-gds"   then kb-gds   = SubsObj.            
+    end case.
+  end method.
+
+  method override protected void CheckData ():
+    def var v-str as char no-undo.
+    
+    assign
+      v-str = ",code" when (basic-kb = 1 and code_ = ?) /* Условно-обязательное поле. Добавлено в ТР вер.2.5 от 07/III-2019 */
+      v-str = v-str + ",name" when name_ = ?
+    .
+    v-str = substring(v-str, 2).
+    if v-str > "" then undo, throw new Progress.Lang.AppError(
+      substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
+    ) .
+  end method.
+  
+  method override protected void ClearSub():
+    assign
+      code_ = ?
+      del-l = ?
+      del-f = ?
+      name_ = ?
+      basic-kb         = ?
+      rule-reason      = ?
+      rule-att         = ?
+      ind-kass-pko     = ?
+      apart-np-tnp     = ?
+      kredit           = ?
+      debit            = ?
+      post-chief       = ?
+      fio-chief        = ?
+      fio-booker       = ?
+      acc-shift        = ?
+      pko-prefix       = ?
+      rko-prefix       = ?
+      struct-unit      = ?
+      struct-unit-name = ?
+      struct-unit-type = ?
+      struct-unit-code = ?
+    .
+    if valid-object(kb-gds)        then delete object kb-gds .
+    if valid-object(payment-agent) then delete object payment-agent .
+  end method.
+      
+end class.
