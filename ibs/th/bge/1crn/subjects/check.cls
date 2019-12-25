@@ -246,6 +246,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define variable v-is-nds       as integer no-undo . /* 0/1 признак распределения НДС по платежу */
     define variable v-ex-Nds       as logical no-undo.
     define variable v-chk-pay-is-nds as logical no-undo . /* true: в чеке есть платёж с is-nds=1 */
+    define variable v-sum-s        as decimal no-undo .
+    define variable v-parts-qnty   as decimal no-undo .
 
     insw:start-element ({&tag-message}) .
 
@@ -459,6 +461,32 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           else  left-trim( string(buf_chk-gds.sum-base, "->>>>>>>>9.99") )
         ) . /* Сумма (Число 15,2) */
         
+        if available buf_goods
+        then do :
+          assign
+            v-sum-s = 0
+            v-parts-qnty = 0
+          .
+          for each buf_parts no-lock where buf_parts.out-code   = p-buf_chk-doc.out-code
+                                         and buf_parts.artic      = buf_goods.artic
+                                         and buf_parts.prod-code  = buf_goods.prod-code
+                                         and buf_parts.prod-type  = buf_goods.prod-type :
+            assign
+              v-parts-qnty = v-parts-qnty + buf_parts.fact-qnty
+              v-sum-s = v-sum-s + (buf_parts.fact-qnty * buf_parts.price-rubl / (1 + (buf_parts.VAT-pc / 100)))
+            .
+          end.
+          if v-parts-qnty > 0 then v-sum-s = v-sum-s / v-parts-qnty * buf_chk-gds.doc-qnty .
+          if v-sum-s <> 0
+          then do :
+            insw:write-data-element (  "sum-s",
+              left-trim( string(v-sum-s, "->>>>>>>>9.99") )
+            ) . 
+          end.
+          else do :
+            insw:write-data-element (  "sum-s", "0" ) .
+          end.
+        end. /* Себестоимость (Число 15,2) */
         
         /* далее обязательность 0-1 */
 
