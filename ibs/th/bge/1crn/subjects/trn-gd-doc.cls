@@ -28,6 +28,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { cmp/library.i  class }
+  { str/trdcalib.i class }
   
   &scop create-record find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element (buf_doc-attr.attr-code, buf_doc-attr.attr-value).
@@ -88,6 +89,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   define variable v-bufhnd         as handle    no-undo.
   define variable v-user-name      as character no-undo.
 
+  define variable v-value             as character no-undo.
+  define variable v-type              as character no-undo.
+  define variable v-is-lgas-trn       as logical   no-undo.
+  define variable v-is-lgas-corr-trn  as logical   no-undo.
 
   method public void CrContentToSW (insw as handle):
 
@@ -133,9 +138,37 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
           v-is-petrol-trn
           v-is-pieces
       }
-      if v-is-petrol-trn 
+      if v-is-petrol-trn and not v-is-pieces
         then leave.
     end.
+    
+    { str/tdat-val.i
+      DocCode
+      {&trdcattr-is-lgas}
+      v-value
+      v-type
+      no-error
+    }
+   
+    if v-value = "yes" then 
+    do:
+      assign
+        v-is-lgas-trn = true.
+    end.
+ 
+    { str/tdat-val.i
+      DocCode
+      {&trdcattr-is-lgas-corr}
+      v-value
+      v-type
+      no-error
+    }
+    if v-value = "yes" then 
+    do:
+      assign
+        v-is-lgas-corr-trn = true.
+    end.
+    
     
     if valid-handle (BufTableHndlOld) and BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value = {&TDEDT_Pri_Perem}
       then buf_trn-doc.ext-doc-type = BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value.
@@ -345,6 +378,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     define variable infoSecObjFirst as class InfoSection       no-undo.
     define variable ii as integer no-undo.
     define variable is-exist-sec as logical no-undo.
+    define variable v-date as date no-undo.
+    define variable v-int  as integer no-undo.
+    
     
     
     infoSecsObj = new InfoSectionsTotal(). 
@@ -451,60 +487,142 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
           if infoSecObj:FactQnty = 0  or infoSecObj:FactQnty = ?
             then next.
           sw:start-element ("sc").
-            write-data-element ("sc-num", string (infoSecObj:SectionName)).
-            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
-            write-data-element ("cap-doc", string-mth (infoSecObj:DocQnty)).
-            write-data-element ("dnsty-doc", string-mth (infoSecObj:DocDensity)).
-            write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
-            write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
-            write-data-element ("sz-nck", string (infoSecObj:Diameter)).
-            write-data-element ("lvl", string-mth (infoSecObj:ABTarir)).
-            write-data-element ("cap-nck", string-mth (infoSecObj:Mouth)).
-            write-data-element ("cap", string-mth (infoSecObj:TankVol)).
-            write-data-element ("dnsty-f", string-mth (infoSecObj:TankDensity)).
-            write-data-element ("cap-wtr", string-mth (infoSecObj:TankWater)).
-            write-data-element ("t-cap", string-mth (infoSecObj:TankTemp)).
-            write-data-element ("t-dnsty", string-mth (infoSecObj:DensTemp)).
-            write-data-element ("ms-code", string-mth (infoSecObj:PlaceSi)).
-            write-data-element ("pv-date", string (iso-date (infoSecObj:DatePovPlotn))).
-            write-data-element ("dnsty-pr", string-mth (infoSecObj:TankDensityPomi)).
-            write-data-element ("cap-pr", string-mth (infoSecObj:TankVolPomi)).
-            write-data-element ("wght-pr", string-mth (infoSecObj:TankWeight)).
-            write-data-element ("wght-eu", string-mth (infoSecObj:NaturalLoss)).
-            write-data-element ("wght-vpr", string-mth (infoSecObj:AccAbsFact)).
-            write-data-element ("ned", string-mth (infoSecObj:Deficit)).
-            write-data-element ("izl", string-mth (infoSecObj:Excess)).
-            write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
-            write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
-            write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
-            write-data-element ("sl-date-s", string (iso-date (infoSecObjFirst:DateStart))).
-            write-data-element ("sl-time-s", string (infoSecObjFirst:TimeStart, "HH:MM")).
-            write-data-element ("sl-date-e", string (iso-date (infoSecObjFirst:DateEnd))).
-            write-data-element ("sl-time-e", string (infoSecObjFirst:TimeEnd, "HH:MM")).
-            write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
-            write-data-element ("er-ms", string-mth (infoSecObj:AccPomi)).
-            /*нормативный документ завода изготовителя*/
-            write-data-element ("norm-doc", string (infoSecObj:NormDoc)).
-            /*паспорт качества*/
-            write-data-element ("passport-num", string (infoSecObj:NumPassport)).
-            /*сертификат соответствия*/
-            write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
-            /*срок действия сертификата*/
-            write-data-element ("validity-certif", string (infoSecObj:ValidityCertif)).
-            /*номер пробы*/
-            write-data-element ("tests", if string (infoSecObj:Tests) = "" then "0" else string (infoSecObj:Tests)).
-            /*номер печати пробы*/
-            write-data-element ("num-print-prob", string (infoSecObj:NumPrintProb)).
-            /*количество проб*/
-            write-data-element ("prob-kol", string-mth (infoSecObj:KolProb)).
-            /*дата отбора пробы*/
-            write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
-            /*время отбора пробы часы/минут HourProb MinProb*/
-            write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
-            write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
-            write-data-element ("tp-norm", string (infoSecObj:TPNorm)).
-            write-data-element ("tp-tank-norm", string-mth (infoSecObj:TPNormPL)).
-            write-data-element ("tp-nsn-norm", string-mth (infoSecObj:TPNormAuto)).
+
+            
+            if v-is-lgas-trn or v-is-lgas-corr-trn
+            then do:
+              write-data-element ("sc-num", "1").
+              write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
+              write-data-element ("cap-doc", string-mth (buf_doc-line.doc-qnty)).
+              write-data-element ("dnsty-doc", string-mth (buf_doc-line.doc-density)).
+              write-data-element ("wght-doc", string-mth (buf_doc-line.cli-qnty)).
+              write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
+              write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
+              write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
+              
+              { str/tdat-val.i
+                  DocCode
+                  {&trdcattr-date-start}
+                  v-value
+                  v-type
+                  no-error 
+              }
+              v-date = date (v-value) no-error.
+              if v-date <> ?
+                then v-value = iso-date (v-date).
+                else v-value = "".
+              write-data-element ("sl-date-s", v-value).
+
+              { str/tdat-val.i
+                  DocCode
+                  {&trdcattr-time-start}
+                  v-value
+                  v-type
+                  no-error 
+              }
+              assign 
+                v-int = integer(substring(v-value, 1, 2)) 
+                v-int = integer(substring(v-value, 4, 2)) 
+              no-error.
+              if not error-status:error
+                then do: 
+                  write-data-element ("sl-time-s", v-value).
+                end.
+                else do:
+                  write-data-element ("sl-time-s", "").
+                end.
+
+              
+
+              { str/tdat-val.i
+                  DocCode
+                  {&trdcattr-date-end}
+                  v-value
+                  v-type
+                  no-error 
+              }
+              v-date = date (v-value) no-error.
+              if v-date <> ?
+                then v-value = iso-date (v-date).
+                else v-value = "".
+              write-data-element ("sl-date-e", string (iso-date (infoSecObjFirst:DateEnd))).
+              
+              
+              { str/tdat-val.i
+                  DocCode
+                  {&trdcattr-time-end}
+                  v-value
+                  v-type
+                  no-error 
+              }
+              assign 
+                v-int = integer(substring(v-value, 1, 2)) 
+                v-int = integer(substring(v-value, 4, 2)) 
+              no-error.
+              if not error-status:error
+                then do: 
+                  write-data-element ("sl-time-e", v-value).
+                end.
+                else do:
+                  write-data-element ("sl-time-e", "").
+                end.
+            end.
+            else do:
+              write-data-element ("sc-num", string (infoSecObj:SectionName)).
+              write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
+              write-data-element ("cap-doc", string-mth (infoSecObj:DocQnty)).
+              write-data-element ("dnsty-doc", string-mth (infoSecObj:DocDensity)).
+              write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
+              write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
+              write-data-element ("sz-nck", string (infoSecObj:Diameter)).
+              write-data-element ("lvl", string-mth (infoSecObj:ABTarir)).
+              write-data-element ("cap-nck", string-mth (infoSecObj:Mouth)).
+              write-data-element ("cap", string-mth (infoSecObj:TankVol)).
+              write-data-element ("dnsty-f", string-mth (infoSecObj:TankDensity)).
+              write-data-element ("cap-wtr", string-mth (infoSecObj:TankWater)).
+              write-data-element ("t-cap", string-mth (infoSecObj:TankTemp)).
+              write-data-element ("t-dnsty", string-mth (infoSecObj:DensTemp)).
+              write-data-element ("ms-code", string-mth (infoSecObj:PlaceSi)).
+              write-data-element ("pv-date", string (iso-date (infoSecObj:DatePovPlotn))).
+              write-data-element ("dnsty-pr", string-mth (infoSecObj:TankDensityPomi)).
+              write-data-element ("cap-pr", string-mth (infoSecObj:TankVolPomi)).
+              write-data-element ("wght-pr", string-mth (infoSecObj:TankWeight)).
+              write-data-element ("wght-eu", string-mth (infoSecObj:NaturalLoss)).
+              write-data-element ("wght-vpr", string-mth (infoSecObj:AccAbsFact)).
+              write-data-element ("ned", string-mth (infoSecObj:Deficit)).
+              write-data-element ("izl", string-mth (infoSecObj:Excess)).
+              write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
+              write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
+              write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
+              write-data-element ("sl-date-s", string (iso-date (infoSecObjFirst:DateStart))).
+              write-data-element ("sl-time-s", string (infoSecObjFirst:TimeStart, "HH:MM")).
+              write-data-element ("sl-date-e", string (iso-date (infoSecObjFirst:DateEnd))).
+              write-data-element ("sl-time-e", string (infoSecObjFirst:TimeEnd, "HH:MM")).
+              write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
+              write-data-element ("er-ms", string-mth (infoSecObj:AccPomi)).
+              /*нормативный документ завода изготовителя*/
+              write-data-element ("norm-doc", string (infoSecObj:NormDoc)).
+              /*паспорт качества*/
+              write-data-element ("passport-num", string (infoSecObj:NumPassport)).
+              /*сертификат соответствия*/
+              write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
+              /*срок действия сертификата*/
+              write-data-element ("validity-certif", string (infoSecObj:ValidityCertif)).
+              /*номер пробы*/
+              write-data-element ("tests", if string (infoSecObj:Tests) = "" then "0" else string (infoSecObj:Tests)).
+              /*номер печати пробы*/
+              write-data-element ("num-print-prob", string (infoSecObj:NumPrintProb)).
+              /*количество проб*/
+              write-data-element ("prob-kol", string-mth (infoSecObj:KolProb)).
+              /*дата отбора пробы*/
+              write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
+              /*время отбора пробы часы/минут HourProb MinProb*/
+              write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
+              write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
+              write-data-element ("tp-norm", string (infoSecObj:TPNorm)).
+              write-data-element ("tp-tank-norm", string-mth (infoSecObj:TPNormPL)).
+              write-data-element ("tp-nsn-norm", string-mth (infoSecObj:TPNormAuto)).
+            end.
           sw:end-element ("sc").
         end.
       end.
@@ -656,7 +774,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("del-f", string (isDel, "1/0") ).
         write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))).
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
-        write-data-element ("doc-type", v-doc-type-ERPRN).
+        write-data-element ("doc-type", (if v-is-lgas-corr-trn then "9" else v-doc-type-ERPRN)).
         write-data-element ("doc-rsn-code", string-mth (buf_trn-doc.reason-code)).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
