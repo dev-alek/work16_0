@@ -223,6 +223,7 @@ curr-code
 vat-pc
 slt-pc
 is-petrol
+cashbookId
 .
 
 define temp-table temp-z-number no-undo
@@ -821,6 +822,7 @@ define variable v-err               as logical    no-undo .
               and buf_temp-tax.slt-pc = buf_doc-line.slt-pc
               and buf_temp-tax.cash-desk = buf_temp-gds.cash-desk
               and buf_temp-tax.is-petrol = buf_temp-gds.is-petrol
+              and buf_temp-tax.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
 /*              and (p-by-cash-desk = no or buf_temp-tax.cash-desk = buf_temp-gds.cash-desk)   */
 /*              and (p-by-petrol-goods = no or buf_temp-tax.is-petrol = buf_temp-gds.is-petrol)*/
              no-error.
@@ -895,7 +897,6 @@ define variable v-err               as logical    no-undo .
      assign
      temp-z-number-list.naznach-plat = substitute("Z &1 от &2г.", temp-z-number-list.naznach-plat, if v-uchet = "smen" then string(buf_shift-obj.shift-date, "99/99/99") else string(TODAY, "99/99/99")).
    end.
-
 
    /*теперь создадим fin-doc*/
    _temp-fin-sum:

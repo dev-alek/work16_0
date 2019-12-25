@@ -882,7 +882,7 @@ then do:
    
   case buf_fin-doc.fin-ext-doc-type:
     when {&FDEDT_Income_Cash} then do:
-      find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
+      find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
                                            and ub.CashBookRule.Obj-type = buf_fin-doc.obj-type
                                            and ub.CashBookRule.Obj-code = buf_fin-doc.obj-code
                                            and ub.CashBookRule.Code = 3
@@ -895,13 +895,13 @@ then do:
           ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
           ub.CashBookRule.Obj-type = buf_fin-doc.obj-type    
           ub.CashBookRule.Obj-code = buf_fin-doc.obj-code    
-          ub.CashBookRule.Code = 4    
+          ub.CashBookRule.Code = 3    
           ub.CashBookRule.Status_ = 0
           ub.CashBookRule.RuleValue = "1"                       
         .
       end.                                    
       assign
-        current-pko-rko = ub.CashBookRule.RuleValue 
+        current-pko-rko = "currPKO" 
         current-ruleID = string(ub.CashBookRule.id)
       .
       run utl/maskproc.p(parparentproc, mask-pko, "cashbook", buf_fin-doc.CashBookId, output mValue).
@@ -911,7 +911,7 @@ then do:
       else ub.CashBookRule.RuleValue = string(integer(ub.CashBookRule.RuleValue) + 1) .
     end.
     when {&FDEDT_expense_cash} then do:
-      find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
+      find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId
                                            and ub.CashBookRule.Obj-type = buf_fin-doc.obj-type
                                            and ub.CashBookRule.Obj-code = buf_fin-doc.obj-code
                                            and ub.CashBookRule.Code = 4
@@ -930,7 +930,7 @@ then do:
         .
       end.                                     
       assign
-        current-pko-rko = ub.CashBookRule.RuleValue 
+        current-pko-rko = "currRKO" 
         current-ruleID = string(ub.CashBookRule.id)
       .
       run utl/maskproc.p(parparentproc, mask-rko, "cashbook", buf_fin-doc.CashBookId, output mValue).
