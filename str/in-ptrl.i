@@ -753,7 +753,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
         is-vir = if (v-ok and logical(v-value)) then true else false.
         
-        if not is-gas(buf_goods.gds-code) and not is-vir then do:
+        if not is-gas(buf_goods.gds-code)
+        and not is-vir then do:
         
             if p-action = {&update} then do:
               if p-action-type = "meas":U then do:
@@ -812,11 +813,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 if v-rvs-cli-qnty-after = ?
                   or v-rvs-cli-qnty-after = 0
                 then do:
-                  /* ругаемся на плотность потому что в строке редактирования сверки у нас открыто поле плотность */
-                  message
-                    "Не задана плотность в сверке <<после_док>>"
-                    "по резервуару" v-pl-code "."
-                    view-as alert-box error .
+                  if is-sug(buf_goods.gds-code)
+                  then do :
+                    message
+                      "Не задана масса в сверке <<после_док>>"
+                      "по резервуару" v-pl-code "."
+                      view-as alert-box error .
+                  end.
+                  else do :
+                    /* ругаемся на плотность потому что в строке редактирования сверки у нас открыто поле плотность */
+                    message
+                      "Масса не рассчитана. Не задана плотность в сверке <<после_док>>"
+                      "по резервуару" v-pl-code "."
+                      view-as alert-box error .
+                  end.
                   undo block_tr, return error .
                 end.
               end.
@@ -831,6 +841,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     substitute( "Ошибка по результатам сверки." ) skip
                     substitute( "Место хранения: &1 .", v-pl-code ) skip
                     substitute( "Количество залитого топлива: &1 (&2).", v-rvs-qnty-after - v-rvs-qnty-before, buf_goods.unit-base ) skip
+                    substitute( "Объем в сверке до: &1 ", v-rvs-qnty-before ) skip
+                    substitute( "Объем в сверке после: &1 ", v-rvs-qnty-after ) skip
                     view-as alert-box .
                   undo block_tr, return error .
                 end.
@@ -841,29 +853,28 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     substitute( "Ошибка по результатам сверки." ) skip
                     substitute( "Место хранения: &1 .", v-pl-code ) skip
                     substitute( "Количество залитого топлива: &1 (&2).", v-rvs-cli-qnty-after - v-rvs-cli-qnty-before, buf_goods.unit-cli ) skip
+                    substitute( "Масса в сверке до: &1 ", v-rvs-cli-qnty-before ) skip
+                    substitute( "Масса в сверке после: &1 ", v-rvs-cli-qnty-after ) skip
                     view-as alert-box .
                   undo block_tr, return error .
                 end.
     
-                assign
-                  v-rvs-density = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before) / (v-rvs-qnty-after - v-rvs-qnty-before)
-                .
-                if Valid-Density( v-rvs-density, (buf_goods.unit-base = buf_goods.unit-cli)  ) <> true then do:
-                  message
-                    substitute( "Ошибка по результатам сверки." ) skip
-                    substitute( "Место хранения: &1 .", v-pl-code ) skip
-                    substitute( "Плотность залитого топлива: &1.", v-rvs-density ) skip
-                    view-as alert-box .
-                  undo block_tr, return error .
+                if not is-sug(buf_goods.gds-code)
+                then do :
+                  assign
+                    v-rvs-density = (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before) / (v-rvs-qnty-after - v-rvs-qnty-before)
+                  .
+                  if Valid-Density( v-rvs-density, (buf_goods.unit-base = buf_goods.unit-cli)  ) <> true then do:
+                    message
+                      substitute( "Ошибка по результатам сверки." ) skip
+                      substitute( "Место хранения: &1 .", v-pl-code ) skip
+                      substitute( "Плотность залитого топлива: &1.", v-rvs-density ) skip
+                      view-as alert-box .
+                    undo block_tr, return error .
+                  end.
                 end.
                 
-                run gds-attr-value in this-procedure
-                  (  input buf_goods.gds-code
-                    ,input {&attr-fuel-type}
-                    ,output v-attr-value
-                    ,output v-attr-type
-                   ) .
-                if v-attr-value = "lgas" then 
+                if is-sug(buf_goods.gds-code) then 
                 do:
                   def var dmdop as decimal no-undo.
                   def var dM    as decimal no-undo.
