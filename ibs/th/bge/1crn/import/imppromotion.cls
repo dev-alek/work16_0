@@ -371,7 +371,7 @@ else do :
       v-promo-sched:Mode         = {&h-create}      
       v-promo-sched:status_      = getSchedStatus (v-promo-action:status_enum) // обработка enum при взаимодействии со справочниками реализована в обход
       v-promo-sched:dispname     = "Расписание для акции " + string(v-promo-action:ID)
-      v-promo-sched:schedType    = 1
+      v-promo-sched:schedType    = 0
     .
     v-promo-action:Schedule     = v-promo-sched .
     
