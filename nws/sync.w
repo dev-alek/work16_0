@@ -56,6 +56,11 @@ define variable v-curr-obj-code as integer no-undo .
 define variable v-corr-date             as date         no-undo.
 define variable v-corr-time             as integer      no-undo.
 
+define variable v-cmd-proc-handle as handle no-undo .
+define variable v-command as character no-undo .
+define variable v-cmd-code as integer no-undo .
+define variable v-db-list as character no-undo .
+
 define buffer buf_c-user-log for c-user-log .
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
@@ -189,7 +194,7 @@ DO:
   if v-last-rcv-pack = v-real-last-sent-pck
   and v-last-sent-pack = v-real-last-rcv-pck
   then do :
-    message "Номер последних пакетов в ГБД и УБД совпадают. Синхронизация не требуется." view-as alert-box .
+    message "Номера последних пакетов в ГБД и УБД совпадают. Синхронизация не требуется." view-as alert-box .
     return no-apply .
   end.
   
@@ -528,6 +533,216 @@ procedure create-routes :
   
   for each ub.cash-desk-attr no-lock where ub.cash-desk-attr.db-num = p-dbnum :
     run nws/cr-route.p ( input {&send-tbl}, input {&table_cash-desk-attr}, input (buffer ub.cash-desk-attr:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  for each ub.cashbook no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_cashbook}, input (buffer ub.cashbook:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+    for each ub.goods-attr exclusive-lock where ub.goods-attr.attr-code = {&attr-cash-book-id}
+                                            and ub.goods-attr.attr-value = string(ub.cashbook.id):
+      run nws/cr-route.p ( input {&send-tbl}, input {&table_goods-attr}, input (buffer ub.goods-attr:handle), input string(p-dbnum) ) no-error. 
+      if error-status :error then do:
+        return error return-value.
+      end.                                        
+    end.                                          
+  end.
+  
+  for each ub.cashbookrule no-lock where ub.CashBookRule.Obj-type = v-curr-obj-type
+                                     and ub.CashBookRule.Obj-code = v-curr-obj-code :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_cashbookrule}, input (buffer ub.cashbookrule:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  for each ub.OperServ no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_OperServ}, input (buffer ub.OperServ:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+    for each ub.goods-attr exclusive-lock where ub.goods-attr.attr-code = {&attr-oper-serv-id}
+                                            and ub.goods-attr.attr-value = string(ub.OperServ.id):
+      run nws/cr-route.p ( input {&send-tbl}, input {&table_goods-attr}, input (buffer ub.goods-attr:handle), input string(p-dbnum) ) no-error. 
+      if error-status :error then do:
+        return error return-value.
+      end.                                        
+    end.                                          
+  end.
+  
+  for each ub.OperServAttr no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_OperServAttr}, input (buffer ub.OperServAttr:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  run nws/cmd-bush.p persistent set v-cmd-proc-handle no-error .
+  if error-status :error
+  then do:
+    delete procedure v-cmd-proc-handle .
+    return error substitute("&1 &2 &3&4Ошибка при запуске процедуры cmd-bush.p&4" +
+                                        "&5&4&6"
+                                        ,vss-workfile
+                                        ,vss-revision
+                                        ,vss-description
+                                        ,{&new-line}
+                                        ,error-status:get-message(1)
+                                        ,return-value ).
+  end.
+  
+  define buffer buf_rp-by-call for ub.rp-by-call.
+  define buffer buf_rule-by-call for ub.rule-by-call.
+  define buffer buf_rule-call-param for ub.rule-call-param.
+  
+  for each db no-lock
+  where db.db-num > 0
+  :
+    assign
+    v-db-list = v-db-list + {&delim-nws} + string(db.db-num).
+  end.
+  v-db-list = trim(v-db-list, {&delim-nws}).
+
+  for each ub.dis-card-type no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-card-type}, input (buffer ub.dis-card-type:handle), input string(p-dbnum) ) no-error.
+    if error-status :error then do:
+      return error return-value.
+    end.
+    assign
+    v-command =  substitute("&2&1&3&1&4"
+                           , {&delim-cmd}
+                           , {&cmd-dct-send}
+                           , ub.dis-card-type.emitent-host-code
+                           , ub.dis-card-type.type
+                           ).
+    run begin-create-command in v-cmd-proc-handle
+      (input v-command /* p-command-name */
+      ,input "":U                /* p-db-list      */
+      ,output v-cmd-code        /* p-command-code */
+      ) no-error.
+    if error-status :error
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        substitute( "Ошибка при создании команды &1", {&cmd-dct-send} ) skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+      delete procedure v-cmd-proc-handle .
+      return error return-value .
+    end.
+    
+    run send-command in v-cmd-proc-handle
+      ( input v-cmd-code  /* p-command-code */
+        ,input v-db-list
+        ) no-error .
+    if error-status:error then do:
+      delete procedure v-cmd-proc-handle .
+      message
+      vss-workfile vss-revision vss-description skip
+      substitute( "Ошибка при отсылке команды &1", {&cmd-dct-send} ) skip
+      error-status :get-message(1) skip
+      return-value skip
+      view-as alert-box error .
+      return error return-value .
+    end.
+    
+    for each buf_rp-by-call where buf_rp-by-call.call_id = ub.dis-card-type.uniq-key-rec :
+      run nws/cr-route.p ( input {&send-tbl}, input {&table_rp-by-call}, input (buffer buf_rp-by-call:handle), input string(p-dbnum) ) no-error.
+      if error-status :error then do:
+        return error return-value.
+      end.
+    end.
+    
+    for each buf_rule-by-call where buf_rule-by-call.call_id = ub.dis-card-type.uniq-key-rec :
+      run nws/cr-route.p ( input {&send-tbl}, input {&table_rule-by-call}, input (buffer buf_rule-by-call:handle), input string(p-dbnum) ) no-error.
+      if error-status :error then do:
+        return error return-value.
+      end.
+    end.
+    
+    for each buf_rule-call-param where buf_rule-call-param.call_id = ub.dis-card-type.uniq-key-rec :
+      run nws/cr-route.p ( input {&send-tbl}, input {&table_rule-call-param}, input (buffer buf_rule-call-param:handle), input string(p-dbnum) ) no-error.
+      if error-status :error then do:
+        return error return-value.
+      end.
+    end.
+    
+  end.
+  
+  delete procedure v-cmd-proc-handle no-error .
+  
+  for each ub.dis-card-mask no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-card-mask}, input (buffer ub.dis-card-mask:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  for each ub.dis-card no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-card}, input (buffer ub.dis-card:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+    run str/saledc.p
+        (
+          input parparentproc
+        ,input this-procedure :handle
+        ,input ? /*p-log-handle*/
+        ,input {&dct-proc_one-card-add}
+        ,input ?  /*p-emitent-host-code*/
+        ,input '':U /*p-type*/
+        ,input 0 /*p-profile-id*/
+        ,input 0 /*p-codex-id*/
+        ,input 0 /*p-ruleset-id*/
+        ,input g#db-num
+        ,input ub.dis-card.d-card
+        ,input ? /*doc-date - выставим внутри*/
+        ,input ? /*fact-date - выставим внутри*/
+        ,input ? /*cre-pay*/
+        ,input 1 /*p-sign*/
+        ,input 1 /* p-direction */
+        ,input yes /*p-save*/
+        ) no-error .
+    if error-status:error then do:
+      return error return-value .
+    end.
+  end.
+  
+  for each ub.dis-host no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-host}, input (buffer ub.dis-host:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  for each ub.dis-card-property no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-card-property}, input (buffer ub.dis-card-property:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  for each ub.dis-rule no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-rule}, input (buffer ub.dis-rule:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  for each ub.dis-gds-rule no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-gds-rule}, input (buffer ub.dis-gds-rule:handle), input string(p-dbnum) ) no-error. 
+    if error-status :error then do:
+      return error return-value.
+    end.
+  end.
+  
+  for each ub.dis-time-rule no-lock :
+    run nws/cr-route.p ( input {&send-tbl}, input {&table_dis-time-rule}, input (buffer ub.dis-time-rule:handle), input string(p-dbnum) ) no-error. 
     if error-status :error then do:
       return error return-value.
     end.
