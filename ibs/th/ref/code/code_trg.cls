@@ -32,9 +32,10 @@ class ibs.th.ref.code.code_trg final:
   
   define temp-table tt-code-brw like code
     field Frecid as int64 init ?
-    field fstatus as character 
+    field fstatus as character
+    field fchange as logical  
     .
-    
+  {gbl/tmprecid.i }
   define public variable parent as character no-undo.
   define public variable title  as character no-undo init ?.
   define public variable startlevel as integer no-undo.
@@ -50,15 +51,27 @@ class ibs.th.ref.code.code_trg final:
   define property chek-erpRN as logical no-undo
    get. 
    set.
+   
+  define property Mode as character  no-undo
+   get. 
+   set.
   
   define variable v-code-brw as class ibs.th.ref.code.browsecode no-undo .
   
    constructor public code_trg (  ):
+      this-object({&update}).
+   end constructor.
+   
+   constructor public code_trg (imode as character   ):
       super ().
+      mode = imode.
+      if mode eq {&select}
+      then
+         rid-keep (). 
       formLable(0, 1, "Код ").
       formLable(0, 2, "Наименование").
    end constructor.
-
+   
    destructor public code_trg ( ):
 
    end destructor.
@@ -69,8 +82,15 @@ class ibs.th.ref.code.code_trg final:
       then do:
          
          if code.procview ne ""
-         then
-            run value( code.procview) (code.parent , code.code,Code.CodeName).
+         then do:
+            if mode eq {&select}
+            then
+               rid-keep ().
+            run value( code.procview) (Mode, code.parent , code.code,Code.CodeName).
+            if mode eq {&select}
+            then
+               rid-rest ().
+         end.
          else do:
             assign
                parent  = code.parent + {&delim-par} + code.code
@@ -79,6 +99,40 @@ class ibs.th.ref.code.code_trg final:
             getQuery("code").
          end.
       end.
+   end.
+   
+   method public void rid-keep ():
+      define buffer buf_tt-code-brw for tt-code-brw.
+      for each buf_tt-code-brw:
+         find first tmprecid where tmprecid.fTable eq "code"
+                               and tmprecid.Frecid eq buf_tt-code-brw.Frecid
+         no-error.
+         if     available tmprecid
+            and not buf_tt-code-brw.fchange
+         then
+            delete tmprecid.
+         else if not available tmprecid
+                 and buf_tt-code-brw.fchange
+         then do:
+            create tmprecid.
+            assign
+               tmprecid.Frecid = buf_tt-code-brw.Frecid
+               tmprecid.fTable = "code"
+            .
+         end.
+      end.
+      run gbl/rid-keep.p (input table tmprecid) no-error.
+   end.
+   
+   method public void rid-rest ():
+      define buffer buf_tt-code-brw for tt-code-brw.
+      run gbl/rid-rest.p (output table tmprecid) no-error.
+      for each buf_tt-code-brw:
+         find first tmprecid where tmprecid.fTable eq "code"
+                               and tmprecid.Frecid eq buf_tt-code-brw.Frecid
+         no-error.
+      end.
+      
    end.
    
    method public logical PrevLevel ():
@@ -91,8 +145,16 @@ class ibs.th.ref.code.code_trg final:
          .
          
          if num-entries(parent,{&delim-par}) < startlevel
-         then
+         then do:
+            if mode eq {&select}
+            then do:
+               for each tmprecid:
+                  delete tmprecid.
+               end.  
+               run gbl/rid-keep.p (input table tmprecid) no-error.
+            end.
             return no.
+         end.
          else do:   
             getQuery("code").
             return yes.
@@ -219,7 +281,7 @@ class ibs.th.ref.code.code_trg final:
     end.
     method public void  brwcode ():
          
-       v-code-brw = new ibs.th.ref.code.browsecode (input this-object).
+       v-code-brw = new ibs.th.ref.code.browsecode (input mode, input this-object).
        v-code-brw:chek-erpRN = chek-erpRN.
        v-code-brw:Text = if this-object:title eq ? then "Справочники" else this-object:title. 
        
@@ -445,5 +507,22 @@ class ibs.th.ref.code.code_trg final:
          
       end finally. 
      end method. 
-    
+     
+     method public void changeRow(input iAll as logical):
+       define variable vFlag as logical no-undo.
+       vFlag = if     available tt-code-brw
+                  and tt-code-brw.fchange
+               then no
+               else yes.
+       if iAll 
+       then
+           for each   tt-code-brw:
+               tt-code-brw.fchange = vFlag.
+           end.
+       else
+            if avail tt-code-brw
+            then
+                tt-code-brw.fchange = vFlag.
+               
+   end.
 end class.

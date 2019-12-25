@@ -28,12 +28,12 @@ find first code where code.parent eq iparent
 if     available code
    and code.procview ne ""
 then do:
-   run value( code.procview) (code.parent , code.code,Code.CodeName).
+   run value( code.procview) (imode, code.parent , code.code,Code.CodeName).
 end.
 else do on error undo, leave:                  
    define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
 
-   mCodeTrg = new ibs.th.ref.code.code_trg().
+   mCodeTrg = new ibs.th.ref.code.code_trg(imode).
    mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).
    mCodeTrg:startlevel = num-entries(mCodeTrg:parent,{&delim-par}).
    if ititle ne "" and ititle ne ?
