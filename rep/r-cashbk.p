@@ -721,8 +721,8 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
             end.
     end.*/
     /***********************************************************/
-
-    v-num-page = "______".     /* За нумерацию листов отчёта - берётся кол-во дней от начала Месяца до тек.даты. */
+    v-num-page = string(v-date-start - date("01/01/" + string(year(v-date-start))) + 1).    /* За нумерацию листов отчёта - берётся кол-во дней от начала Uода до тек.даты. */
+    
                   
     /*Печать*/
     put stream OutStr-html unformatted
