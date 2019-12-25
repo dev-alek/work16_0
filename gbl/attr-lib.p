@@ -5994,8 +5994,8 @@ end procedure.
 
 &scop type-attr-ban-bonus {&type-log}
 &scop format-attr-ban-bonus  "+/ "
-&scop label-attr-ban-bonus   "Запрет на участие в бонусных программах"
-&scop tooltip-attr-ban-bonus   "Запрет на участие в бонусных программах"
+&scop label-attr-ban-bonus   "Запрет на участие в бонусных программах\участие в скидке на итог"
+&scop tooltip-attr-ban-bonus   "Запрет на участие в бонусных программах\участие в скидке на итог"
 &scop user-can-edit-attr-ban-bonus  true
 &scop output-display-attr-ban-bonus  true
 &scop other-attr-ban-bonus  ""

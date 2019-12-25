@@ -471,7 +471,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Перечисление в систему лояльности */
 { cmp/cr-prep.i 1 attr-is-loyalty-payment is-loyalty-payment " " is-loyalty-payment }
 
-/* Запрет на участие в бонусных программах */
+/* Запрет на участие в бонусных программах\участие в скидке на итог */
 { cmp/cr-prep.i 1 attr-ban-bonus ban-bonus " " ban-bonus }
 
 /* Разрешена нулевая цена */
@@ -2193,7 +2193,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define hn-subjec
 /*27=NCR-GM,NCR-AS@R*/
 { cmp/cr-prep.i 1 dgr-pcnt-date           pcnt-date   "Скидка по дате"        pcnt-date "Date discount"   }
 /*55=NCR-GSM,NCR-AS@R,IBM-XML*/
-{ cmp/cr-prep.i 1 dgr-without-disc        without-disc  "Запрет на участие в скидке на итог" without-disc "Exclude from Subtot Discount" }
+{ cmp/cr-prep.i 1 dgr-without-disc        without-disc  "Запрет на участие в бонусных программах\участие в скидке на итог" without-disc "Exclude from Subtot Discount" }
 /*56=IBM-XML*/
 { cmp/cr-prep.i 1 dgr-without-gds-disc    without-gds-disc  "Запрет скидки на товар" without-gds-disc "Discount prohibition"   }
 /*66=*/
