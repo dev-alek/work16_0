@@ -72,7 +72,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-objlist8       as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:promoset:ps-sections:ps-section:gds[]
     define variable v-promoset-gd    as class ibs.th.bge.1crn.subjects.promotion_gd no-undo .
     define variable v-objlist9       as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:gifts[]
-
+    define variable v-PaymentSystems as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:payment-systems[]
+    define variable v-PaymentSystem  as class ibs.th.bge.1crn.subjects.payment-system no-undo . // imp:payment-systems:payment-system[]
+    define variable v-bins-tokens    as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:payment-systems:payment-system:bins-tokens[]
+    define variable v-bin-token      as class ibs.th.bge.1crn.subjects.bin-token no-undo . // imp:payment-systems:payment-system:bins-tokens:bin-token[]
+    
     define variable v-promotion-code as character no-undo . /* like ub.PromoAction.ext-code */
     define variable v-schedule-code  as character no-undo . /* like ub.promo-schedule.ext-code-sched */
     define variable v-promo-delete   as class ibs.th.ref.promo.promoactionsub no-undo .
@@ -269,6 +273,7 @@ end. // end_of заголовок_промоакции
       v-objlist5 = objImp:gds-addcond
       v-promoset = objImp:promoset
       v-objlist9 = objImp:gifts
+      v-PaymentSystems = objImp:Payment-Systems
     .
 
 
@@ -439,45 +444,52 @@ end. // end_of_gds
 
         
 if valid-object(v-objlist5) then do: // gds-addcond - товары для независимых условий
-   if v-promo-action:TypeDiscontenum eq ibs.th.ref.promo.enum-type-discount:envisa
-   then do:
-      v-promo-goods = v-promo-action:CardsBin.
-      v-i-counter = v-objlist5:iCounter .
-      do v-i-num = 1 to v-i-counter :
-         v-stub = v-objlist5:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
-         v-addcond-gd = cast(v-objlist5:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_gd) .
+  
+   v-promo-goods = v-promo-action:GoodsCrits .
+   v-i-counter = v-objlist5:iCounter .
+   do v-i-num = 1 to v-i-counter :
+      v-stub = v-objlist5:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
+      v-addcond-gd = cast(v-objlist5:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_gd) .
+      assign
+         v-promo-good = new ibs.th.ref.promo.promogoodssub ()
+         v-gds-code   = integer(v-addcond-gd:gd-code)
+      .
+      if not can-find (first buf_goods where buf_goods.gds-code = v-gds-code) then
+         undo, throw new Progress.Lang.AppError( substitute(
+           "Код товара [&1] из промо-акции [&2] отсутствует в справочнике товаров."
+           , v-gds-code, objImp:name_
+        ) ) .
+      assign
+         v-promo-good:GdsCode = v-gds-code
+         v-promo-good:Mode    = {&h-create}
+      .
+      v-promo-goods:AddItem (v-promo-good) .
+   end . // end_of_objImp:gds-addcond[]
+   
+end. // end_of_gds-addcond
+
+if valid-object(v-paymentsystems) then do: // gds-addcond - товары для независимых условий
+   v-promo-goods = v-promo-action:CardsBin.
+   v-i-counter = v-paymentsystems:iCounter .
+   do v-i-num = 1 to v-i-counter :
+      v-stub = v-paymentsystems:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
+      v-paymentsystem = cast(v-paymentsystems:SubjectObjCurr, ibs.th.bge.1crn.subjects.payment-system) .
+      v-bins-tokens = v-paymentsystem:bins-tokens. 
+      v-j-counter = v-bins-tokens:iCounter .
+      do v-j-num = 1 to v-j-counter :
+         v-stub = v-bins-tokens:Get(v-j-num) .
+         v-bin-token = cast(v-bins-tokens:SubjectObjCurr, ibs.th.bge.1crn.subjects.bin-token) .
          assign
            v-promo-good = new ibs.th.ref.promo.promogoodssub ()
-           v-promo-good:NameSet = v-addcond-gd:gd-code
+           v-promo-good:NameSet = v-bin-token:code_
            v-promo-good:Mode    = {&h-create}
          .
          v-promo-goods:AddItem (v-promo-good) .
       end . // end_of_objImp:gds-addcond[]
       
    end.
-   else do:
-      v-promo-goods = v-promo-action:GoodsCrits .
-      v-i-counter = v-objlist5:iCounter .
-      do v-i-num = 1 to v-i-counter :
-         v-stub = v-objlist5:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
-         v-addcond-gd = cast(v-objlist5:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_gd) .
-         assign
-           v-promo-good = new ibs.th.ref.promo.promogoodssub ()
-           v-gds-code   = integer(v-addcond-gd:gd-code)
-         .
-         if not can-find (first buf_goods where buf_goods.gds-code = v-gds-code) then
-         undo, throw new Progress.Lang.AppError( substitute(
-           "Код товара [&1] из промо-акции [&2] отсутствует в справочнике товаров."
-           , v-gds-code, objImp:name_
-         ) ) .
-         assign
-           v-promo-good:GdsCode = v-gds-code
-           v-promo-good:Mode    = {&h-create}
-         .
-         v-promo-goods:AddItem (v-promo-good) .
-      end . // end_of_objImp:gds-addcond[]
-   end.
-end. // end_of_gds-addcond
+end.
+   
 
 
 if valid-object(v-promoset) then do: // promoset - промо-набор

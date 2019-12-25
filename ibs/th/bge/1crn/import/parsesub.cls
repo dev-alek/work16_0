@@ -160,8 +160,18 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable promotion_giftListSubjectsObj         as class subjects                no-undo. // promotion:gifts
   define variable promotion_giftSubjectObj              as class promotion_gift-gd       no-undo. // promotion:gifts:gd
   
+  
   define variable imppromotionEventHndlrObj                as class imppromotion                no-undo.
 /*---------------- ќбъекты дл€ скидок ---------- конец*/  
+  define variable payment-systems-SubjectObj             as class subjects                no-undo. // <payment-system>
+  define variable payment-system-SubjectObj              as class payment-system          no-undo. // <payment-system>
+  define variable bin-ranges-SubjectsObj                 as class subjects                no-undo. // payment-system:bins-range
+  define variable bin-range-SubjectObj                   as class bin-range               no-undo. // payment-system:bins-range:bin-range
+  define variable bins-tokens-SubjectsObj                as class subjects                no-undo. // payment-system:bins-range
+  define variable bin-token-SubjectObj                   as class bin-token               no-undo. // payment-system:bins-range:bin-range
+  
+  define variable imppayment-systemEventHndlrObj        as class imppayment-system       no-undo.
+  
   
   define variable kass-bookSubjectObj                   as class kass-book               no-undo. // <kass-book>
   define variable kass-book-gdListSubjectsObj           as class subjects                no-undo. // kass-book:kb-gds
@@ -435,6 +445,21 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
+        when "payment-system":U then do:
+          if level < 4 // если загрузка не из промоакций
+          then do: 
+             if not valid-object(payment-system-SubjectObj)       then payment-system-SubjectObj       = new payment-system(). // <payment-system>
+             if not valid-object(imppayment-systemEventHndlrObj) then do :
+               impPayment-SystemEventHndlrObj = new impPayment-System ().
+              /* imppayment-systemEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) .*/
+             end .
+             v-iSubject = payment-system-SubjectObj .
+             v-iImpSub  = imppayment-systemEventHndlrObj .
+             // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+             GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+             ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+           end.
+        end.
         when "contr-price-doc":U then do:
           if not valid-object(contr-price-docsSubjectObj) then contr-price-docsSubjectObj = new contr-price-docs (). // <contr-price-doc>
           if not valid-object(impcontr-price-docsEventHndlrObj) then do :
@@ -637,6 +662,7 @@ class ibs.th.bge.1crn.import.parsesub:
           // вместо тега <sch-code> могу прислать аттрибут "sch-code"
           subjectObj:SetProp( "sch-code" , hparent:get-attribute ("sch-code") ).
         end .
+        
         otherwise .
       end case .
     end. // end_of_valid_object_subjectObj
@@ -935,6 +961,73 @@ class ibs.th.bge.1crn.import.parsesub:
             end.
           end case.
         end.
+        when    "bin-ranges" 
+        then do : // payment-system:bins-range
+          v-need-parse = true . 
+          if     v-need-parse 
+             and valid-object (payment-system-SubjectObj) 
+             and payment-system-SubjectObj:IsInitSubForWrite 
+          then do: // payment-system:bins-range
+                                            
+              bin-ranges-SubjectsObj = new subjects ("bin-ranges" ) .
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              payment-system-SubjectObj:SetProp (bin-ranges-SubjectsObj).
+              v-need-parse = false .
+          end .
+        end.
+        when    "bins-tokens"
+        then do : // payment-system:bins-range
+          v-need-parse = true . 
+          if     v-need-parse 
+             and valid-object (payment-system-SubjectObj) 
+             and payment-system-SubjectObj:IsInitSubForWrite
+          then do: // payment-system:bins-range
+                                            
+              bins-tokens-SubjectsObj = new subjects ("bins-tokens" ) .
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              payment-system-SubjectObj:SetProp (bins-tokens-SubjectsObj).
+              v-need-parse = false .
+            
+          end .
+        end.
+        when "bin-range" then do : // payment-system:bins-range:bin-range
+          v-need-parse = true . 
+          if v-need-parse and valid-object (payment-system-SubjectObj) 
+          then do: // payment-system:bins-range
+                                            
+            if payment-system-SubjectObj:IsInitSubForWrite 
+            then do:
+              if v-need-parse and valid-object (bin-ranges-SubjectsObj) 
+              then do : 
+                 // payment-system:bins-range:bin-range
+                 bin-ranges-SubjectsObj:Add(  new  bin-range()  ).
+                 bin-range-SubjectObj = cast (bin-ranges-SubjectsObj:SubjectObjCurr, bin-range).
+                 GetChildrenSub (hNoderef, (level + 1), bin-range-SubjectObj).
+                 v-need-parse = false .
+               
+              end .
+            end .
+          end .
+        end.
+        when "bin-token" then do : // payment-system:bins-range:bin-range
+           v-need-parse = true . 
+           if     v-need-parse 
+              and valid-object (payment-system-SubjectObj)
+              and payment-system-SubjectObj:IsInitSubForWrite 
+           then do: // payment-system:bins-range
+              if v-need-parse and valid-object (bins-tokens-SubjectsObj) 
+              then do : 
+                 payment-system-SubjectObj:validateCodeOnly = yes.
+                 // payment-system:bins-range:bin-range
+                 bins-tokens-SubjectsObj:Add(  new  bin-token()  ).
+                 bin-token-SubjectObj = cast (bins-tokens-SubjectsObj:SubjectObjCurr, bin-token).
+                 GetChildrenSub (hNoderef, (level + 1), bin-token-SubjectObj).
+                 v-need-parse = false .
+               
+              end.
+            
+           end.
+        end.
         when "kb-gds" then do : // kass-book:kb-gds
           v-need-parse = true . 
           if v-need-parse and valid-object (kass-bookSubjectObj) then do: // kass-book:kb-gds
@@ -973,6 +1066,36 @@ class ibs.th.bge.1crn.import.parsesub:
               v-need-parse = false .
             end .
           end .
+        end.
+        when "payment-systems":U then do:
+          v-need-parse = true .
+          if     v-need-parse 
+             and valid-object (promotionSubjectObj) 
+             and promotionSubjectObj:IsInitSubForWrite
+          then do: // все :gd, пр€мо или косвенно вложенные в promotion
+               payment-systems-SubjectObj = new subjects ("payment-systems") .
+               GetChildrenSub (hNoderef, (level + 1), ?).
+               promotionSubjectObj:SetProp (payment-systems-SubjectObj).
+               v-need-parse = false .
+             
+          end.
+          
+        end.
+        when "payment-system":U then do:
+           v-need-parse = true .
+          if     v-need-parse 
+             and valid-object (promotionSubjectObj) 
+             and promotionSubjectObj:IsInitSubForWrite
+          then do: // все :gd, пр€мо или косвенно вложенные в promotion
+                payment-systems-SubjectObj:Add(  new payment-system( )  ).
+                payment-system-SubjectObj = cast (payment-systems-SubjectObj:SubjectObjCurr, payment-system).
+                
+                GetChildrenSub (hNoderef, (level + 1), payment-system-SubjectObj).
+                
+                v-need-parse = false .
+             
+          end.
+          
         end.
         when "gd" then do:
           v-need-parse = true . 
@@ -1094,7 +1217,7 @@ class ibs.th.bge.1crn.import.parsesub:
             good_unitaddSubjectObj = cast (unitaddsSubjectsObj:SubjectObjCurr, unit-add-code).
             GetChildrenSub (hNoderef, (level + 1), good_unitaddSubjectObj).
         end.
-
+        
         
         /* ----- конечный уровень
                  (не коллекции, не классы, только сами пол€ классов скал€рного типа) ----- */

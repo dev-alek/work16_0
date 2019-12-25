@@ -6695,7 +6695,9 @@ procedure gds-attr-write :
     assign
     buf_goods-attr.attr-value = p-value no-error
     .
-
+    if error-status :error then do:
+      undo, return error return-value .
+    end.
   end.
 
 end procedure.

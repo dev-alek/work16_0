@@ -1,0 +1,700 @@
+ 
+ /*------------------------------------------------------------------------
+    File        : browsecode
+    Purpose     : 
+    Syntax      : 
+    Description : 
+    Author(s)   : druban
+    Created     : Sun Jul 28 02:55:47 MSK 2019
+    Notes       : 
+  ----------------------------------------------------------------------*/
+
+using Progress.Lang.*.
+using Progress.Windows.Form.
+
+block-level on error undo, throw.
+
+class ibs.th.ref.code.browsecode inherits Form final: 
+   
+   define private variable bdel as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable bedit as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable bAdd as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable bexit as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable bexport as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable bfilt as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable bimport as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable bindCode as Progress.Data.BindingSource no-undo.
+   define private variable bnext as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable codeValueDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable codeNameDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable codeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable components as System.ComponentModel.IContainer no-undo.
+   define private variable dataGridView1 as System.Windows.Forms.DataGridView no-undo.
+   define private variable openFileDialog1 as System.Windows.Forms.OpenFileDialog no-undo.
+   define private variable saveFileDialog1 as System.Windows.Forms.SaveFileDialog no-undo.
+   define private variable statusrow as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable toolStrip1 as System.Windows.Forms.ToolStrip no-undo.
+   define private variable procviewDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable proceditDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable procdelDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable parentDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc9DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc8DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc7DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc6DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc5DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc4DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc3DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc2DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc1DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define private variable misc10DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
+   define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
+   define variable mcretrg  as logical no-undo.
+   { cmp/library.i  class}
+   define property chek-erpRN as logical no-undo
+    
+   set(input ichek-erpRN as logical):
+    if ichek-erpRN 
+    then
+       chek1cerp().
+    
+  end.
+   constructor public browsecode (  ):
+      
+      
+      super().
+      InitializeComponent().
+      mCodeTrg = new ibs.th.ref.code.code_trg().
+      mcretrg  = yes.
+      bindCode:handle = mCodeTrg:getQuery("code").
+      this-object:ComponentsCollection:ADD(this-object:components).
+      catch e as Progress.Lang.Error:
+         undo, throw e.
+      end catch.
+
+   end constructor.
+   
+   constructor public browsecode ( itrg as class ibs.th.ref.code.code_trg ):
+      
+      
+      super().
+      InitializeComponent().
+      mCodeTrg = itrg.
+      bindCode:handle = mCodeTrg:getQuery("code").
+      this-object:ComponentsCollection:ADD(this-object:components).
+      catch e as Progress.Lang.Error:
+         undo, throw e.
+      end catch.
+
+   end constructor.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bAdd_Click( input sender as System.Object, input e as System.EventArgs ):
+		mCodeTrg:addCode().
+		mCodeTrg:getQuery("code").
+		bindcode:RefreshAll().
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bdel_Click( input sender as System.Object, input e as System.EventArgs ):
+		mCodeTrg:delCode().
+		mCodeTrg:getQuery("code").
+      bindcode:RefreshAll().
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bedit_Click( input sender as System.Object, input e as System.EventArgs ):
+		mCodeTrg:editCode().
+		bindcode:Refresh().
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bexit_Click( input sender as System.Object, input e as System.EventArgs ):
+		if mCodeTrg:PrevLevel()
+		then do:
+		   bnext:visible = not mCodeTrg:endLevel.
+         bindCode:RefreshAll().
+      end.
+      else
+         Close().
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bexport_Click( input sender as System.Object, input e as System.EventArgs ):
+	   saveFileDialog1:Filter = "xml files (*.xml)|*.xml|All files (*.*)|*.*"  .
+	  
+		wait-for this-object:saveFileDialog1:ShowDialog().
+		
+		if   this-object:saveFileDialog1:FileName ne ""
+		then
+		   mCodeTrg:codeexport(this-object:saveFileDialog1:FileName).
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bfilt_Click( input sender as System.Object, input e as System.EventArgs ):
+	   
+		mCodeTrg:mviewdel = not mCodeTrg:mviewdel.
+		mCodeTrg:getQuery("code").
+		bindCode:RefreshAll().
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bimport_Click( input sender as System.Object, input e as System.EventArgs ):
+		wait-for this-object:openFileDialog1:ShowDialog().
+      
+      if   this-object:openFileDialog1:FileName ne ""
+      then
+         mCodeTrg:codeimport(this-object:openFileDialog1:FileName).
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bnext_Click( input sender as System.Object, input e as System.EventArgs ):
+	
+	   mCodeTrg:NextLevel().
+	   bnext:visible = not mCodeTrg:endLevel.
+      bindCode:RefreshAll().
+		return.
+
+	end method.
+
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void dataGridView1_RowPostPaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPostPaintEventArgs ):
+	   /*
+	   output to "c:\11\111sss.txt" append.
+	   define variable vrow as integer no-undo.
+	   define variable vSharerow as class System.Windows.Forms.DataGridViewRow no-undo.
+	   put unformatted "e:RowIndex " e:RowIndex skip.
+	   
+	   vSharerow = dataGridView1:Rows:SharedRow(e:RowIndex).
+	   dataGridView1:CurrentCell = vSharerow:Cells[17].
+	   put unformatted "vSharerow:Cells[17]:Value " vSharerow:Cells[17]:Value skip.
+		//vSharerow:Cells[17]:Value =   mCodeTrg:getstatus(e:RowIndex).
+		
+		 
+		return.
+      finally:
+             output close.   
+      end finally.
+      */
+	end method.
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void dataGridView1_RowPrePaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPrePaintEventArgs ):
+		 
+		return.
+
+	end method.
+
+   method private void InitializeComponent(  ):
+      
+      /* NOTE: The following method is automatically generated.
+      
+      We strongly suggest that the contents of this method only be modified using the
+      Visual Designer to avoid any incompatible modifications.
+      
+      Modifying the contents of this method using a code editor will invalidate any support for this file. */
+      this-object:components = new System.ComponentModel.Container().
+      @VisualDesigner.FormMember (NeedsInitialize="true").
+      define variable tableDesc1 as Progress.Data.TableDesc no-undo.
+      tableDesc1 = new Progress.Data.TableDesc("Code").
+      @VisualDesigner.FormMember (NeedsInitialize="true").
+      define variable resources as Progress.Util.ResourceManager no-undo.
+      resources = new Progress.Util.ResourceManager("ibs.th.ref.code.browsecode").
+      this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
+      this-object:codeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:codeNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:codeValueDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc1DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc2DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc3DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc4DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc5DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc6DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc7DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc8DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc9DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:misc10DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:procviewDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:parentDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:procdelDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:proceditDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:statusrow = new System.Windows.Forms.DataGridViewTextBoxColumn().
+      this-object:bindCode = new Progress.Data.BindingSource(this-object:components).
+      this-object:toolStrip1 = new System.Windows.Forms.ToolStrip().
+      this-object:bexit = new System.Windows.Forms.ToolStripButton().
+      this-object:bnext = new System.Windows.Forms.ToolStripButton().
+      this-object:bAdd = new System.Windows.Forms.ToolStripButton().
+      this-object:bedit = new System.Windows.Forms.ToolStripButton().
+      this-object:bexport = new System.Windows.Forms.ToolStripButton().
+      this-object:bimport = new System.Windows.Forms.ToolStripButton().
+      this-object:bdel = new System.Windows.Forms.ToolStripButton().
+      this-object:bfilt = new System.Windows.Forms.ToolStripButton().
+      this-object:openFileDialog1 = new System.Windows.Forms.OpenFileDialog().
+      this-object:saveFileDialog1 = new System.Windows.Forms.SaveFileDialog().
+      cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
+      cast(this-object:bindCode, System.ComponentModel.ISupportInitialize):BeginInit().
+      this-object:toolStrip1:SuspendLayout().
+      this-object:SuspendLayout().
+      /*  */
+      /* dataGridView1 */
+      /*  */
+      this-object:dataGridView1:AccessibleRole = System.Windows.Forms.AccessibleRole:None.
+      this-object:dataGridView1:AllowUserToAddRows = false.
+      this-object:dataGridView1:AutoGenerateColumns = false.
+      this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
+      this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 18 no-undo.
+      arrayvar0[1] = this-object:codeDataGridViewTextBoxColumn.
+      arrayvar0[2] = this-object:codeNameDataGridViewTextBoxColumn.
+      arrayvar0[3] = this-object:codeValueDataGridViewTextBoxColumn.
+      arrayvar0[4] = this-object:misc1DataGridViewTextBoxColumn.
+      arrayvar0[5] = this-object:misc2DataGridViewTextBoxColumn.
+      arrayvar0[6] = this-object:misc3DataGridViewTextBoxColumn.
+      arrayvar0[7] = this-object:misc4DataGridViewTextBoxColumn.
+      arrayvar0[8] = this-object:misc5DataGridViewTextBoxColumn.
+      arrayvar0[9] = this-object:misc6DataGridViewTextBoxColumn.
+      arrayvar0[10] = this-object:misc7DataGridViewTextBoxColumn.
+      arrayvar0[11] = this-object:misc8DataGridViewTextBoxColumn.
+      arrayvar0[12] = this-object:misc9DataGridViewTextBoxColumn.
+      arrayvar0[13] = this-object:misc10DataGridViewTextBoxColumn.
+      arrayvar0[14] = this-object:procviewDataGridViewTextBoxColumn.
+      arrayvar0[15] = this-object:parentDataGridViewTextBoxColumn.
+      arrayvar0[16] = this-object:procdelDataGridViewTextBoxColumn.
+      arrayvar0[17] = this-object:proceditDataGridViewTextBoxColumn.
+      arrayvar0[18] = this-object:statusrow.
+      this-object:dataGridView1:Columns:AddRange(arrayvar0).
+      this-object:dataGridView1:DataSource = this-object:bindCode.
+      this-object:dataGridView1:Dock = System.Windows.Forms.DockStyle:Bottom.
+      this-object:dataGridView1:Location = new System.Drawing.Point(0, 42).
+      this-object:dataGridView1:Name = "dataGridView1".
+      this-object:dataGridView1:Size = new System.Drawing.Size(657, 312).
+      this-object:dataGridView1:TabIndex = 0.
+      this-object:dataGridView1:RowPostPaint:Subscribe(this-object:dataGridView1_RowPostPaint).
+      this-object:dataGridView1:RowPrePaint:Subscribe(this-object:dataGridView1_RowPrePaint).
+      /*  */
+      /* codeDataGridViewTextBoxColumn */
+      /*  */
+      this-object:codeDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCells.
+      this-object:codeDataGridViewTextBoxColumn:DataPropertyName = "code".
+      this-object:codeDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(159.8984833).
+      this-object:codeDataGridViewTextBoxColumn:HeaderText = "Код".
+      this-object:codeDataGridViewTextBoxColumn:Name = "codeDataGridViewTextBoxColumn".
+      this-object:codeDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:codeDataGridViewTextBoxColumn:Width = 51.
+      /*  */
+      /* codeNameDataGridViewTextBoxColumn */
+      /*  */
+      this-object:codeNameDataGridViewTextBoxColumn:DataPropertyName = "CodeName".
+      this-object:codeNameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(70.0507584).
+      this-object:codeNameDataGridViewTextBoxColumn:HeaderText = "Наименование".
+      this-object:codeNameDataGridViewTextBoxColumn:Name = "codeNameDataGridViewTextBoxColumn".
+      this-object:codeNameDataGridViewTextBoxColumn:ReadOnly = true.
+      /*  */
+      /* codeValueDataGridViewTextBoxColumn */
+      /*  */
+      this-object:codeValueDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCells.
+      this-object:codeValueDataGridViewTextBoxColumn:DataPropertyName = "CodeValue".
+      this-object:codeValueDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(70.0507584).
+      this-object:codeValueDataGridViewTextBoxColumn:HeaderText = "Значение".
+      this-object:codeValueDataGridViewTextBoxColumn:Name = "codeValueDataGridViewTextBoxColumn".
+      this-object:codeValueDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:codeValueDataGridViewTextBoxColumn:Width = 80.
+      /*  */
+      /* misc1DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc1DataGridViewTextBoxColumn:DataPropertyName = "misc1".
+      this-object:misc1DataGridViewTextBoxColumn:HeaderText = "Доп поле 1".
+      this-object:misc1DataGridViewTextBoxColumn:Name = "misc1DataGridViewTextBoxColumn".
+      this-object:misc1DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc1DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc2DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc2DataGridViewTextBoxColumn:DataPropertyName = "misc2".
+      this-object:misc2DataGridViewTextBoxColumn:HeaderText = "Доп поле 2".
+      this-object:misc2DataGridViewTextBoxColumn:Name = "misc2DataGridViewTextBoxColumn".
+      this-object:misc2DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc2DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc3DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc3DataGridViewTextBoxColumn:DataPropertyName = "misc3".
+      this-object:misc3DataGridViewTextBoxColumn:HeaderText = "Доп поле 3".
+      this-object:misc3DataGridViewTextBoxColumn:Name = "misc3DataGridViewTextBoxColumn".
+      this-object:misc3DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc3DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc4DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc4DataGridViewTextBoxColumn:DataPropertyName = "misc4".
+      this-object:misc4DataGridViewTextBoxColumn:HeaderText = "Доп поле 4".
+      this-object:misc4DataGridViewTextBoxColumn:Name = "misc4DataGridViewTextBoxColumn".
+      this-object:misc4DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc4DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc5DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc5DataGridViewTextBoxColumn:DataPropertyName = "misc5".
+      this-object:misc5DataGridViewTextBoxColumn:HeaderText = "Доп поле 5".
+      this-object:misc5DataGridViewTextBoxColumn:Name = "misc5DataGridViewTextBoxColumn".
+      this-object:misc5DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc5DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc6DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc6DataGridViewTextBoxColumn:DataPropertyName = "misc6".
+      this-object:misc6DataGridViewTextBoxColumn:HeaderText = "Доп поле 6".
+      this-object:misc6DataGridViewTextBoxColumn:Name = "misc6DataGridViewTextBoxColumn".
+      this-object:misc6DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc6DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc7DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc7DataGridViewTextBoxColumn:DataPropertyName = "misc7".
+      this-object:misc7DataGridViewTextBoxColumn:HeaderText = "Доп поле 7".
+      this-object:misc7DataGridViewTextBoxColumn:Name = "misc7DataGridViewTextBoxColumn".
+      this-object:misc7DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc7DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc8DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc8DataGridViewTextBoxColumn:DataPropertyName = "misc8".
+      this-object:misc8DataGridViewTextBoxColumn:HeaderText = "Доп поле 8".
+      this-object:misc8DataGridViewTextBoxColumn:Name = "misc8DataGridViewTextBoxColumn".
+      this-object:misc8DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc8DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc9DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc9DataGridViewTextBoxColumn:DataPropertyName = "misc9".
+      this-object:misc9DataGridViewTextBoxColumn:HeaderText = "Доп поле 9".
+      this-object:misc9DataGridViewTextBoxColumn:Name = "misc9DataGridViewTextBoxColumn".
+      this-object:misc9DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc9DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* misc10DataGridViewTextBoxColumn */
+      /*  */
+      this-object:misc10DataGridViewTextBoxColumn:DataPropertyName = "misc10".
+      this-object:misc10DataGridViewTextBoxColumn:HeaderText = "Доп поле 10".
+      this-object:misc10DataGridViewTextBoxColumn:Name = "misc10DataGridViewTextBoxColumn".
+      this-object:misc10DataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:misc10DataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* procviewDataGridViewTextBoxColumn */
+      /*  */
+      this-object:procviewDataGridViewTextBoxColumn:DataPropertyName = "procview".
+      this-object:procviewDataGridViewTextBoxColumn:HeaderText = "Процедура просмотра".
+      this-object:procviewDataGridViewTextBoxColumn:Name = "procviewDataGridViewTextBoxColumn".
+      this-object:procviewDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:procviewDataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* parentDataGridViewTextBoxColumn */
+      /*  */
+      this-object:parentDataGridViewTextBoxColumn:DataPropertyName = "parent".
+      this-object:parentDataGridViewTextBoxColumn:HeaderText = "parent".
+      this-object:parentDataGridViewTextBoxColumn:Name = "parentDataGridViewTextBoxColumn".
+      this-object:parentDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:parentDataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* procdelDataGridViewTextBoxColumn */
+      /*  */
+      this-object:procdelDataGridViewTextBoxColumn:DataPropertyName = "procdel".
+      this-object:procdelDataGridViewTextBoxColumn:HeaderText = "Процедура удаления".
+      this-object:procdelDataGridViewTextBoxColumn:Name = "procdelDataGridViewTextBoxColumn".
+      this-object:procdelDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:procdelDataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* proceditDataGridViewTextBoxColumn */
+      /*  */
+      this-object:proceditDataGridViewTextBoxColumn:DataPropertyName = "procedit".
+      this-object:proceditDataGridViewTextBoxColumn:HeaderText = "процедура редактирования".
+      this-object:proceditDataGridViewTextBoxColumn:Name = "proceditDataGridViewTextBoxColumn".
+      this-object:proceditDataGridViewTextBoxColumn:ReadOnly = true.
+      this-object:proceditDataGridViewTextBoxColumn:Visible = false.
+      /*  */
+      /* statusrow */
+      /*  */
+      this-object:statusrow:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:DisplayedCells.
+      this-object:statusrow:DataPropertyName = "fstatus".
+      this-object:statusrow:HeaderText = "Статус".
+      this-object:statusrow:Name = "statusrow".
+      this-object:statusrow:Width = 66.
+      /*  */
+      /* bindCode */
+      /*  */
+      this-object:bindCode:MaxDataGuess = 0.
+      this-object:bindCode:NoLOBs = false.
+      this-object:bindCode:Position = 0.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
+      arrayvar1 = new "Progress.Data.TableDesc[]"(0).
+      tableDesc1:ChildTables = arrayvar1.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 18 no-undo.
+      arrayvar2[1] = new Progress.Data.ColumnPropDesc("code", "Код", Progress.Data.DataType:CHARACTER).
+      arrayvar2[2] = new Progress.Data.ColumnPropDesc("CodeName", "Наименование", Progress.Data.DataType:CHARACTER).
+      arrayvar2[3] = new Progress.Data.ColumnPropDesc("CodeValue", "Значение", Progress.Data.DataType:CHARACTER).
+      arrayvar2[4] = new Progress.Data.ColumnPropDesc("misc1", "Доп поле 1", Progress.Data.DataType:CHARACTER).
+      arrayvar2[5] = new Progress.Data.ColumnPropDesc("misc2", "Доп поле 2", Progress.Data.DataType:CHARACTER).
+      arrayvar2[6] = new Progress.Data.ColumnPropDesc("misc3", "Доп поле 3", Progress.Data.DataType:CHARACTER).
+      arrayvar2[7] = new Progress.Data.ColumnPropDesc("misc4", "Доп поле 4", Progress.Data.DataType:CHARACTER).
+      arrayvar2[8] = new Progress.Data.ColumnPropDesc("misc5", "Доп поле 5", Progress.Data.DataType:CHARACTER).
+      arrayvar2[9] = new Progress.Data.ColumnPropDesc("misc6", "Доп поле 6", Progress.Data.DataType:CHARACTER).
+      arrayvar2[10] = new Progress.Data.ColumnPropDesc("misc7", "Доп поле 7", Progress.Data.DataType:CHARACTER).
+      arrayvar2[11] = new Progress.Data.ColumnPropDesc("misc8", "Доп поле 8", Progress.Data.DataType:CHARACTER).
+      arrayvar2[12] = new Progress.Data.ColumnPropDesc("misc9", "Доп поле 9", Progress.Data.DataType:CHARACTER).
+      arrayvar2[13] = new Progress.Data.ColumnPropDesc("misc10", "Доп поле 10", Progress.Data.DataType:CHARACTER).
+      arrayvar2[14] = new Progress.Data.ColumnPropDesc("procview", "Процедура просмотра", Progress.Data.DataType:CHARACTER).
+      arrayvar2[15] = new Progress.Data.ColumnPropDesc("parent", "", Progress.Data.DataType:CHARACTER).
+      arrayvar2[16] = new Progress.Data.ColumnPropDesc("procdel", "Процедура удаления", Progress.Data.DataType:CHARACTER).
+      arrayvar2[17] = new Progress.Data.ColumnPropDesc("procedit", "процедура редактирования", Progress.Data.DataType:CHARACTER).
+      arrayvar2[18] = new Progress.Data.ColumnPropDesc("fstatus", "Статус", Progress.Data.DataType:CHARACTER).
+      tableDesc1:Columns = arrayvar2.
+      this-object:bindCode:TableSchema = tableDesc1.
+      /*  */
+      /* toolStrip1 */
+      /*  */
+      this-object:toolStrip1:ImageScalingSize = new System.Drawing.Size(32, 32).
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar3 as System.Windows.Forms.ToolStripItem extent 8 no-undo.
+      arrayvar3[1] = this-object:bexit.
+      arrayvar3[2] = this-object:bnext.
+      arrayvar3[3] = this-object:bAdd.
+      arrayvar3[4] = this-object:bedit.
+      arrayvar3[5] = this-object:bexport.
+      arrayvar3[6] = this-object:bimport.
+      arrayvar3[7] = this-object:bdel.
+      arrayvar3[8] = this-object:bfilt.
+      this-object:toolStrip1:Items:AddRange(arrayvar3).
+      this-object:toolStrip1:Location = new System.Drawing.Point(0, 0).
+      this-object:toolStrip1:Name = "toolStrip1".
+      this-object:toolStrip1:Size = new System.Drawing.Size(657, 39).
+      this-object:toolStrip1:TabIndex = 1.
+      this-object:toolStrip1:Text = "toolStrip1".
+      /*  */
+      /* bexit */
+      /*  */
+      this-object:bexit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bexit:Image = cast(resources:GetObject("bexit.Image"), System.Drawing.Image).
+      this-object:bexit:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bexit:Name = "bexit".
+      this-object:bexit:Size = new System.Drawing.Size(36, 36).
+      this-object:bexit:Text = "Выход".
+      this-object:bexit:Click:Subscribe(this-object:bexit_Click).
+      /*  */
+      /* bnext */
+      /*  */
+      this-object:bnext:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bnext:Image = cast(resources:GetObject("bnext.Image"), System.Drawing.Image).
+      this-object:bnext:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bnext:Name = "bnext".
+      this-object:bnext:Size = new System.Drawing.Size(36, 36).
+      this-object:bnext:Text = "Подпараметры".
+      this-object:bnext:Click:Subscribe(this-object:bnext_Click).
+      /*  */
+      /* bAdd */
+      /*  */
+      this-object:bAdd:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bAdd:Image = cast(resources:GetObject("bAdd.Image"), System.Drawing.Image).
+      this-object:bAdd:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bAdd:Name = "bAdd".
+      this-object:bAdd:Size = new System.Drawing.Size(36, 36).
+      this-object:bAdd:Text = "Добавить".
+      this-object:bAdd:Click:Subscribe(this-object:bAdd_Click).
+      /*  */
+      /* bedit */
+      /*  */
+      this-object:bedit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bedit:Image = cast(resources:GetObject("bedit.Image"), System.Drawing.Image).
+      this-object:bedit:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bedit:Name = "bedit".
+      this-object:bedit:Size = new System.Drawing.Size(36, 36).
+      this-object:bedit:Text = "Изменить".
+      this-object:bedit:Click:Subscribe(this-object:bedit_Click).
+      /*  */
+      /* bexport */
+      /*  */
+      this-object:bexport:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bexport:Image = cast(resources:GetObject("bexport.Image"), System.Drawing.Image).
+      this-object:bexport:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bexport:Name = "bexport".
+      this-object:bexport:Size = new System.Drawing.Size(36, 36).
+      this-object:bexport:Text = "Экспорт".
+      this-object:bexport:Click:Subscribe(this-object:bexport_Click).
+      /*  */
+      /* bimport */
+      /*  */
+      this-object:bimport:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bimport:Image = cast(resources:GetObject("bimport.Image"), System.Drawing.Image).
+      this-object:bimport:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bimport:Name = "bimport".
+      this-object:bimport:Size = new System.Drawing.Size(36, 36).
+      this-object:bimport:Text = "Импорт".
+      this-object:bimport:Click:Subscribe(this-object:bimport_Click).
+      /*  */
+      /* bdel */
+      /*  */
+      this-object:bdel:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bdel:Image = cast(resources:GetObject("bdel.Image"), System.Drawing.Image).
+      this-object:bdel:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bdel:Name = "bdel".
+      this-object:bdel:Size = new System.Drawing.Size(36, 36).
+      this-object:bdel:Text = "Удалить".
+      this-object:bdel:Click:Subscribe(this-object:bdel_Click).
+      /*  */
+      /* bfilt */
+      /*  */
+      this-object:bfilt:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+      this-object:bfilt:Image = cast(resources:GetObject("bfilt.Image"), System.Drawing.Image).
+      this-object:bfilt:ImageTransparentColor = System.Drawing.Color:Magenta.
+      this-object:bfilt:Name = "bfilt".
+      this-object:bfilt:Size = new System.Drawing.Size(36, 36).
+      this-object:bfilt:Text = "Фильтр удаленные/все".
+      this-object:bfilt:Click:Subscribe(this-object:bfilt_Click).
+      /*  */
+      /* openFileDialog1 */
+      /*  */
+      this-object:openFileDialog1:FileName = "openFileDialog1".
+      /*  */
+      /* browsecode */
+      /*  */
+      this-object:ClientSize = new System.Drawing.Size(657, 354).
+      this-object:Controls:Add(this-object:toolStrip1).
+      this-object:Controls:Add(this-object:dataGridView1).
+      this-object:Name = "browsecode".
+      this-object:Text = "Справочники".
+      cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
+      cast(this-object:bindCode, System.ComponentModel.ISupportInitialize):EndInit().
+      this-object:toolStrip1:ResumeLayout(false).
+      this-object:toolStrip1:PerformLayout().
+      this-object:ResumeLayout(false).
+      this-object:PerformLayout().
+      catch e as Progress.Lang.Error:
+         undo, throw e.
+      end catch.
+   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	
+
+   destructor public browsecode ( ):
+      if mcretrg 
+      then
+         delete object mCodeTrg.
+   end destructor.
+   method  public void Visual_Columns(input inum as integer ,iName as character ): 
+        inum = inum - 1.
+        if iname eq ?
+        then 
+           this-object:dataGridView1:Columns[inum]:Visible = no.
+        else assign
+            this-object:dataGridView1:Columns[inum]:Visible = yes
+            this-object:dataGridView1:Columns[inum]:HeaderText    = iName
+        .
+        
+
+    end method.
+        
+    method  public void defColumn(): 
+       Visual_Columns(1,"Код").
+       Visual_Columns(2,"Наименование").
+       Visual_Columns(3,"Значение").
+       
+    end method.
+    
+    method  public void chek1CERP(): 
+       define variable conf-par as character no-undo.
+       define variable mode-erprn as logical no-undo.
+       define variable par-type as character no-undo.
+       { gbl/conf-rd.i
+         "'is-erpRN'"
+          0
+          "''"
+          0
+          "''"
+          "''"
+          "''"
+          NO
+          conf-par
+          par-type
+          no-error
+          }
+          if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+          else mode-erprn = no.
+          if mode-erprn
+          then do:
+             assign
+             this-object:bAdd:Visible    = no
+             this-object:bdel:Visible    = no
+             this-object:bedit:Visible   = no
+             this-object:bexport:Visible = no
+             
+             this-object:bimport:Visible = no
+             .
+          end.
+  
+       
+    end method.
+end class.

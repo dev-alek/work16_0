@@ -52,11 +52,15 @@ class ibs.th.bge.1crn.subjects.promotion inherits ibs.th.bge.1crn.subjects.asubj
     get. 
     private set.
    
+  define property payment-systems        as subjects no-undo
+    get. 
+    private set.
+    
   define override property InitTag as character no-undo init "promotion"
     get.
   
   constructor public promotion ():
-    InitListTag = "shedule,thresholds,gds,gds-addcond,promoset,gifts".
+    InitListTag = "shedule,thresholds,gds,gds-addcond,promoset,gifts,payment-systems".
   end constructor.
   
   &scoped-define attr-str      if inValue >= "" then inValue else ""
@@ -114,10 +118,11 @@ class ibs.th.bge.1crn.subjects.promotion inherits ibs.th.bge.1crn.subjects.asubj
     /* вызывается для переприсваивания коллекции после каждого добавления элемента в коллекцию;
        указатель на объект коллекции приходит с одним и тем же значением */
     case SubsObj:InitTag:
-      when "thresholds"   then thresholds   = SubsObj.            
-      when "gds"          then gds          = SubsObj.            
-      when "gds-addcond"  then gds-addcond  = SubsObj.            
-      when "gifts"        then gifts        = SubsObj.            
+      when "thresholds"      then thresholds      = SubsObj.            
+      when "gds"             then gds             = SubsObj.            
+      when "gds-addcond"     then gds-addcond     = SubsObj.            
+      when "gifts"           then gifts           = SubsObj.
+      when "payment-systems" then payment-systems = SubsObj.           
     end case.
   end method.
 
@@ -161,12 +166,13 @@ class ibs.th.bge.1crn.subjects.promotion inherits ibs.th.bge.1crn.subjects.asubj
       pmnt-types   = ?
       status_      = ?
     .
-    if valid-object(schedule) then delete object schedule .
-    if valid-object(thresholds) then delete object thresholds .
-    if valid-object(gds) then delete object gds .
-    if valid-object(gds-addcond) then delete object gds-addcond .
-    if valid-object(promoset) then delete object promoset .
-    if valid-object(gifts) then delete object gifts .
+    if valid-object(schedule)        then delete object schedule .
+    if valid-object(thresholds)      then delete object thresholds .
+    if valid-object(gds)             then delete object gds .
+    if valid-object(gds-addcond)     then delete object gds-addcond .
+    if valid-object(promoset)        then delete object promoset .
+    if valid-object(gifts)           then delete object gifts .
+    if valid-object(payment-systems) then delete object payment-systems .
   end method.
 
   method private date date-mth (inValue as character) : // возвращает дату из строки iso-date

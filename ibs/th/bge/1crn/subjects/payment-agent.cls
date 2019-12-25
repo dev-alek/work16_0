@@ -52,6 +52,10 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
   define property min-num         as integer      no-undo get. private set.
   define property oper-type       as integer      no-undo get. private set.
 
+  define property del-l         as integer      no-undo get. private set.
+  define property del-f         as integer      no-undo get. private set.
+
+
   define property kb-gds            as ibs.th.bge.1crn.subjects.subjects no-undo
     get. 
     private set.
@@ -70,6 +74,8 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "code"         then code_        = {&attr-str} .
+      when "del-l"        then del-l        = {&attr-integer} .
+      when "del-f"        then del-f        = {&attr-integer} .
       when "name"         then name_        = {&attr-str} .
       when "adr-trans-op"    then adr-trans-op    = {&attr-str} .
       when "inn-trans-op"    then inn-trans-op    = {&attr-str} .
@@ -149,6 +155,8 @@ class ibs.th.bge.1crn.subjects.payment-agent inherits ibs.th.bge.1crn.subjects.a
   method override protected void ClearSub():
     assign
       code_           = ?
+      del-l = ?
+      del-f = ?
       name_           = ?
       adr-trans-op    = ?
       inn-trans-op    = ?

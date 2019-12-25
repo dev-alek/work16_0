@@ -48,7 +48,7 @@ class ibs.th.adm.upd.analisdf final:
    end destructor.
 
  define stream sReadfile.
-  //define variable mMode as character no-undo. 
+/*  define variable mMode as character no-undo.*/
   define variable mBuffer     as handle    no-undo.
   define variable mBufferName as character no-undo.
   define variable mName       as character no-undo.
@@ -298,7 +298,6 @@ define temp-table {&prefixtt}INDEX
             delete object mBuffer.
             
          create buffer mBuffer for table "{&prefixtt}" + mBufferName no-error.
-         //mBuffer =  mBuffer:GET-BUFFER-HANDLE ("{&prefixtt}" + vBufferName) no-error.
          if error-status:error
          then do: 
             message "Не известный буфер " "{&prefixtt}" + mBufferName
@@ -349,7 +348,6 @@ define temp-table {&prefixtt}INDEX
             then do:
                vposih = mBuffer::{&prefixfil}localIndex + 1.
                mBuffer:buffer-release ().
-               //mBuffer::{&prefixfil}Name = entry(5,istr, " ").
             end.    
             else if vmode eq "add" 
             then do: 
@@ -595,7 +593,7 @@ method private logical CheckOneTable(iTable as  handle):
          vBufferName = "_Sequence".
       else
          return no.   
-     //    _field._Field-Name
+     
          
       create buffer vBufferDB for table  vBufferName no-error.
       vFieldPref = length("{&prefixfil}") + 1. 

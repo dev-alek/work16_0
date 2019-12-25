@@ -42,8 +42,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable objImp    as class {&impclass} no-undo.
     define variable v-retfl   as logical no-undo .
     define variable v-mode    as character no-undo. /* create/update */
-    define variable v-storage as class ibs.th.ref.cashbookstorage no-undo .
-
+  
     define variable v-pay-agent as class ibs.th.bge.1crn.subjects.{&impclass} no-undo .
     define variable v-code      as character no-undo .
     define variable v-name      as character no-undo .
@@ -296,7 +295,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       undo, throw exAnyErrors .
     end catch .
     finally :
-      if valid-object(v-storage) then delete object v-storage .
       return v-retfl .
     end finally .
   end method. /* end_of Excute */

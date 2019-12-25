@@ -4617,6 +4617,17 @@ define variable v-rid-list as character no-undo .
 
 end procedure. /* m_gds-ef-exe */
 
+procedure m-platsys-exe :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run ref/codelay.p ( "", "platsys", "Платежные системы") no-error.
+    
+  end.
+
+end procedure. /* m-platsys-exe */
 
 procedure m-cash-wthser-del-exe :
 /*define input parameter p-pos-type as character no-undo .
