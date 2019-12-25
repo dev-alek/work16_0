@@ -3059,7 +3059,7 @@ if f-num-corr = "" then do:
 end. 
 if f-cause-corr = "" then do:
   message
-  "В чеке нет причины основания корректировки" skip
+  "В чеке нет описания корректировки" skip
   "Такой чек не может быть сохранен"
   view-as alert-box error .
   return error.  
