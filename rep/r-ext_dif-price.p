@@ -35,8 +35,9 @@ define variable vss-description as character no-undo init "Отчет по изменению уч
 { rep/w-rep.i    }
 { rep/fmtcli.i   }
 { rep/torgconf.i }
+
 { str/getctxtp.i def }
-{ gbl/getsect.i def }
+
 { gbl/paramls.i  }
 { ref/gds-attr.i }
 { gbl/prn-lib.i     }
