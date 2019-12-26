@@ -491,16 +491,35 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   /* Получим из секции Складские документы   нужные переменные */
   find first buf_trn-doc no-lock where buf_trn-doc.doc-code = pardoc-code .
-  def var is-fuel as logical no-undo.
+  def var is-fuel as logical no-undo. /* для топлива и СУГ */
   def var v-value as character no-undo.
   def var v-type as logical no-undo.
   { str/tdat-val.i                                    
    buf_trn-doc.doc-code
    {&trdcattr-is-fuel}
-   is-fuel 
+   v-value 
    v-type no-error}
   assign
     is-fuel = yes when v-value = "yes".
+  if not is-fuel then do:
+    { str/tdat-val.i                                    
+     buf_trn-doc.doc-code
+     {&trdcattr-is-lgas}
+     v-value 
+     v-type no-error}
+    assign
+      is-fuel = yes when v-value = "yes".
+  end.
+  if not is-fuel
+  then do:
+    { str/tdat-val.i                                    
+     buf_trn-doc.doc-code
+     {&trdcattr-is-lgas-corr}
+     v-value 
+     v-type no-error}
+    assign
+      is-fuel = yes when v-value = "yes".
+  end.
   v-attr-mandat-wayb = "".
   { gbl/getsect.i run buf_trn-doc.obj-type buf_trn-doc.obj-code {&attr-nakl_par} }  
 
