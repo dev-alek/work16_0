@@ -2806,6 +2806,14 @@ FUNCTION get-input-type RETURNS CHARACTER
     and not can-do(v-input-type-list, 'ï') 
     then v-doc-input-type = 'ð'.
     
+    if v-doc-input-type = 'à'
+    and can-do(v-input-type-list, 'ð') 
+    then v-doc-input-type = 'àê'.
+    
+    if v-doc-input-type = 'ô'
+    and can-do(v-input-type-list, 'ð') 
+    then v-doc-input-type = 'ôê'.
+    
     if v-doc-input-type = ? then v-doc-input-type = '' .
     return v-doc-input-type .
 END FUNCTION.

@@ -269,9 +269,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.rule-payer-transf  = objImp:rule-payer-transf   when objImp:rule-payer-transf <> ?
       tt-cashbook.rule-payer-rko     = objImp:rule-payer-rko      when objImp:rule-payer-rko    <> ?
       tt-cashbook.rule-payer-inkass  = objImp:rule-payer-inkass   when objImp:rule-payer-inkass <> ?
-      
-      
-      
+      tt-cashbook.BankRecip-acct     = objImp:bank-resive-acc     when objImp:bank-resive-acc  <> ?
+      tt-cashbook.CorrAcctIncas      = objImp:Corr-incass         when objImp:Corr-incass  <> ?
+      tt-cashbook.BasisIncas         = objImp:rule-osn-incass     when objImp:rule-osn-incass  <> ?
+       
    /* tt-cashbook.Status_      = 0:"“екущий", 1:"”даленный"
       - при создании заполн€етс€ значением по умолчанию, при обновлении остаЄтс€ в прежнем значении */
     .

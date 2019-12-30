@@ -94,8 +94,12 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   private set.
   define property rule-payer-inkass       as character     no-undo get.
   private set.
-  
-  
+  define property Corr-incass       as character    no-undo get.
+  private set.
+  define property rule-osn-incass       as character    no-undo get.
+  private set.
+  define property bank-resive-acc      as character    no-undo get.
+  private set.
   
   
   
@@ -194,6 +198,13 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
         rule-payer-rko = {&attr-str} .
         when "rule-payer-inkass" then 
         rule-payer-inkass = {&attr-str} .
+        when "bank-resive-acc" then 
+        bank-resive-acc = {&attr-str} .
+        when "rule-osn-incass" then 
+        rule-osn-incass = {&attr-str} .
+        when "Corr-incass" then 
+        Corr-incass = {&attr-str} .
+        
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -281,6 +292,9 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       rule-payer-transf = ?
       rule-payer-rko    = ?
       rule-payer-inkass = ?
+      bank-resive-acc   = ?
+      rule-osn-incass   = ?
+      Corr-incass       = ?
       .
     if valid-object(kb-gds)        then delete object kb-gds .
   end method.

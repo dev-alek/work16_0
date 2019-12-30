@@ -2339,13 +2339,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     in frame Dialog-Frame.
   end.
 
-  if tt-rvs-line.system-qnty <> tt-rvs-line.orig-system-qnty
-    and tt-rvs-line.system-cli-qnty <> tt-rvs-line.orig-system-cli-qnty
-  then do:
-    assign
-      tt-rvs-line.orig-system-cli-qnty :label in frame Dialog-Frame = "":U
-    .
-  end.
+/*  if tt-rvs-line.system-qnty <> tt-rvs-line.orig-system-qnty              */
+/*    and tt-rvs-line.system-cli-qnty <> tt-rvs-line.orig-system-cli-qnty   */
+/*  then do:                                                                */
+/*    assign                                                                */
+/*      tt-rvs-line.orig-system-cli-qnty :label in frame Dialog-Frame = "":U*/
+/*    .                                                                     */
+/*  end.                                                                    */
   if tt-rvs-line.system-qnty <> tt-rvs-line.orig-system-qnty then do:
     display
       tt-rvs-line.orig-system-qnty
@@ -2908,6 +2908,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.fact-calc-vol
     with frame {&frame-name}.
   end.
+  
   assign frame {&frame-name} :title = frame {&frame-name} :title + " - " + parmode
                                     + " - " +  partitle.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.

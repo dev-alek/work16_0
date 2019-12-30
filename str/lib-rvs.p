@@ -2587,7 +2587,7 @@ then do:
                 .
               end.
               
-            end.
+            
               assign
                sug-density = sug-density / 2
                vapor-density = vapor-density / 2
@@ -2699,9 +2699,9 @@ then do:
                   bf_rvs-line.state-measure-tc-qnty  = bf_rvs-line.measure-tc-qnty
                   bf_rvs-line.state-brutto-tc-qnty   = bf_rvs-line.brutto-tc-qnty
                 .
-              end.
-            
+            end.
           end.
+        end.
     end.
     
     if is-sug(bf_rvs-line.gds-code)

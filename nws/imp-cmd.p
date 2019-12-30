@@ -1363,6 +1363,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_PromoGift}
             or when {&table_PromoGoods}
             or when {&table_PromoObject}
+            or when {&table_promo-schedule}
+            or when {&table_promo-schedule-week}
             or when {&table_devisPC}
             or when {&table_devisPC-attr}
             then do:

@@ -217,7 +217,7 @@ define variable vsdStr as class vsdtostorage no-undo.
 define variable keyrecObj as class keyrec no-undo.
 define variable v-error-attr  as character no-undo .
 define variable is-fuel          as   character            no-undo.
-def var isFuel as logical no-undo init false.
+def var isFuel as logical no-undo init false. /* топливо и СУГ*/
 define variable parisfueltype    as   character            no-undo.
 define variable v-valuetype    as   character            no-undo.
 define variable v-value        as   character            no-undo.
@@ -358,6 +358,29 @@ end.
  parisfueltype no-error}
 assign
   isFuel = yes when is-fuel = "yes".
+
+if not isFuel then do:
+  { str/tdat-val.i                                    
+   bf_trn-doc.doc-code
+   {&trdcattr-is-lgas}
+   is-fuel 
+   parisfueltype no-error}
+  assign
+    isFuel = yes when is-fuel = "yes".
+end.
+if not isFuel
+then do:
+  { str/tdat-val.i                                    
+   bf_trn-doc.doc-code
+   {&trdcattr-is-lgas-corr}
+   is-fuel 
+   parisfueltype no-error}
+  assign
+    isFuel = yes when is-fuel = "yes".
+end.
+
+
+
 v-reasonme  = "".
 v-attr-mandat-wayb = "".
 v-attr-dop-info = "".
@@ -913,7 +936,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       if not can-find (first buf_doc-attr no-lock where buf_doc-attr.doc-code = pardoc-code 
         and lookup (buf_doc-attr.attr-code, v-attr-mandat-wayb) > 0)
       then v-error-attr = "empty".
-      
+
       if bf_trn-doc.VAT-rubl = 0
       then do:
          if 

@@ -2893,6 +2893,14 @@ if varrvs-place = yes then do:
 /*     , output v-normal-wastage-summer*/
 /*     , output v-normal-wastage       */
 
+    if v-is-lgas or v-is-lgas-corr
+    then do:
+      hide
+        b-docsec
+        b-addinf
+        in frame {&frame-name}.
+    end.
+
     infoSectionsTotal = new InfoSectionsTotal(t-doc.doc-code, buf_goods.gds-code, parline-mode).
     
         

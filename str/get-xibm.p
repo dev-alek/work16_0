@@ -878,20 +878,23 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           string(temp-cash-desk.last-chk-num, "-999999999")
   .
   define variable vTimestring as character no-undo.
+  define variable veffDate as date no-undo.
+  define variable veffTime as integer  no-undo.
   Vtimestring = string(chk-time_, "HH:MM:SS").
+  veffDate = chk-date_ .
   entry(1,Vtimestring,":") = string(int(entry(1,Vtimestring,":")) - 1,"99") no-error. 
   if    vTimestring begins "?"
      or error-status:error
   then do:
      entry(1,Vtimestring,":") = "00".
-     chk-date_ = chk-date_ - 1. 
+     veffDate = chk-date_ - 1. 
   end.
   else
-     chk-time_ = chk-time_ - 1 * 60 * 60. 
+     veffTime = chk-time_ - 1 * 60 * 60. 
   assign
-  v-new = string(year(chk-date_), "9999") +
-          string(month(chk-date_), "99") +
-          string(day(chk-date_), "99") +
+  v-new = string(year(veffDate), "9999") +
+          string(month(veffDate), "99") +
+          string(day(veffDate), "99") +
           Vtimestring +    /* В связи с тем, что стали появляться запросы о том, что последний чек не всегда корректно закачивается, сделаем так, чтобы время последнего принятого чека фиксировалось на час раньще, также надо обновить не завершенные чеки пришедшие с ТСО */ 
           string(integer(shift-name_), "99") +
           string(z-num_, "99999") +
@@ -899,8 +902,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   .
   if v-new > v-old then do:
     assign
-    temp-cash-desk.last-date       = chk-date_
-    temp-cash-desk.last-time       = chk-time_
+    temp-cash-desk.last-date       = veffDate
+    temp-cash-desk.last-time       = veffTime
     temp-cash-desk.last-shift-num  = integer(shift-name_)
     temp-cash-desk.last-z-count    = z-num_
     temp-cash-desk.last-chk-num    = chk-num_

@@ -250,8 +250,7 @@ FOR EACH t-2 USE-INDEX pi :
   /* чтобы прописать ii для тех у кого ii = ? */
   FIND LAST treal-2 NO-LOCK WHERE
     treal-2.gds-code = t-2.gds-code AND
-    treal-2.is-pay   = YES          
-    and not is-sug(treal-2.gds-code) USE-INDEX vi NO-ERROR.
+    treal-2.is-pay   = YES          USE-INDEX vi NO-ERROR.
   if available treal-2 then 
   do:
     assign 
@@ -261,8 +260,7 @@ FOR EACH t-2 USE-INDEX pi :
 
   /* родим записи таблицы treal-2 - подитоги */
   IF CAN-FIND( FIRST treal-2 WHERE
-    treal-2.gds-code = t-2.gds-code
-    and not is-sug(treal-2.gds-code)  ) THEN 
+    treal-2.gds-code = t-2.gds-code ) THEN 
   DO:
     /* если есть вообще оплаченный расход */
     do v-step = 1 to 2:
@@ -418,8 +416,21 @@ END. /* FOR EACH t-2 */
   
 /* родим записи таблицы tincome-2 - итоги */
 /* если есть вообще оплаченный расход */
+loc-real-ii  = 1.
+curr-real-ii = 1.  
 for each t-2-not-sug: 
   loc-income-ii = 0 .
+
+  FIND LAST treal-2 NO-LOCK WHERE
+    treal-2.gds-code = t-2-not-sug.gds-code AND
+    treal-2.is-pay   = YES          USE-INDEX vi NO-ERROR.
+  if available treal-2 then 
+  do:
+    assign 
+      loc-real-ii  = treal-2.ii + 1
+      curr-real-ii = treal-2.ii + 1.
+  end.
+
   for EACH tincome-2 WHERE
     tincome-2.gds-code = t-2-not-sug.gds-code
     USE-INDEX vi
@@ -465,9 +476,19 @@ for each t-2-not-sug:
                         , loc-income-ii, 1 ).
 
 end.
-
+loc-real-ii  = 1.
+curr-real-ii = 1.
 for each t-2-sug: 
   loc-income-sug-ii = 0 .
+    FIND LAST treal-2 NO-LOCK WHERE
+    treal-2.gds-code = t-2-not-sug.gds-code AND
+    treal-2.is-pay   = YES          USE-INDEX vi NO-ERROR.
+  if available treal-2 then 
+  do:
+    assign 
+      loc-real-ii  = treal-2.ii + 1
+      curr-real-ii = treal-2.ii + 1.
+  end.
   for EACH tincome-2 WHERE
     tincome-2.gds-code = t-2-sug.gds-code
     USE-INDEX vi
