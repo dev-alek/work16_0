@@ -1170,6 +1170,81 @@ define variable v-name as character no-undo .
       buf_firm.firm-code = 800000002
       buf_firm.ind       = 0
     .
+    
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000003
+      buf_clients.obj-name = "Отбор проб"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000003
+      buf_firm.ind       = 0
+    .
+    
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000004
+      buf_clients.obj-name = "Программа лояльности"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000004
+      buf_firm.ind       = 0
+    .
+    
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000005
+      buf_clients.obj-name = "Ввод первоначальных остатков"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000005
+      buf_firm.ind       = 0
+    .
+    
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000006
+      buf_clients.obj-name = 'Банк "ВБРР" АО'
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000006
+      buf_firm.ind       = 0
+    .
+    
+    create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000007
+      buf_clients.obj-name = "Банк ВБРР (агентская выручка)"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000007
+      buf_firm.ind       = 0
+    .
     create buf_clients.
     assign
       buf_clients.obj-type = {&cmp}
@@ -1185,6 +1260,20 @@ define variable v-name as character no-undo .
       buf_firm.ind       = 0
     .
     
+     create buf_clients.
+    assign
+      buf_clients.obj-type = {&cmp}
+      buf_clients.obj-code = 800000009
+      buf_clients.obj-name = "Выдача наличных денежных средств"
+      buf_clients.stts     = 0
+      buf_clients.grp-code = 5
+      buf_clients.grp-name = v-name
+    .
+    create buf_firm.
+    assign
+      buf_firm.firm-code = 800000009
+      buf_firm.ind       = 0
+    .
     /* Выставить атрибут Расходы отдельной строкой в yes */
     &scop proc-name clntattr-write
     {&run_proc_attr-lib}
