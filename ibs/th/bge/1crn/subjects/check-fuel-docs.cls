@@ -220,24 +220,27 @@ sw = insw .
     
     if can-do(v-input-type-list, 'à')
     and not can-do(v-input-type-list, 'ô')
-    and not can-do(v-input-type-list, 'ê')
+    and not can-do(v-input-type-list, 'àê')
+    and not can-do(v-input-type-list, 'ôê')
     and not can-do(v-input-type-list, 'ï') 
     then v-doc-input-type = 'à'.
     
     if can-do(v-input-type-list, 'ô')
     and not can-do(v-input-type-list, 'à')
-    and not can-do(v-input-type-list, 'ê')
+    and not can-do(v-input-type-list, 'àê')
+    and not can-do(v-input-type-list, 'ôê')
     and not can-do(v-input-type-list, 'ï') 
     then v-doc-input-type = 'ô'.
     
-    if can-do(v-input-type-list, 'à')
-    and can-do(v-input-type-list, 'ô')
-    and not can-do(v-input-type-list, 'ê')
+    if  not can-do(v-input-type-list, 'ô')
+    and can-do(v-input-type-list, 'àê')
     and not can-do(v-input-type-list, 'ï') 
     then v-doc-input-type = 'àê'.
     
-    if can-do(v-input-type-list, 'ê')
-    or can-do(v-input-type-list, 'ï') 
+    if ((can-do(v-input-type-list, 'ô')
+    or can-do(v-input-type-list, 'ï')) 
+    and can-do(v-input-type-list, 'à'))
+    or can-do(v-input-type-list, 'ôê')
     then v-doc-input-type = 'ôê'.
     
     if can-do(v-input-type-list, 'ğ')
@@ -246,6 +249,14 @@ sw = insw .
     and not can-do(v-input-type-list, 'ê')
     and not can-do(v-input-type-list, 'ï') 
     then v-doc-input-type = 'ğ'.
+    
+    if v-doc-input-type = 'à'
+    and can-do(v-input-type-list, 'ğ') 
+    then v-doc-input-type = 'àê'.
+    
+    if v-doc-input-type = 'ô'
+    and can-do(v-input-type-list, 'ğ') 
+    then v-doc-input-type = 'ôê'.
 
     /*    sw:start-element ("check-fuel-docs") .*/
 
@@ -287,6 +298,7 @@ sw = insw .
           when "input-type" then
             do:
               v-line-input-type = buf_rvs-line-attr.attr-value .
+              if length(v-line-input-type) = 2 then v-line-input-type = substring(v-line-input-type, 2, 1) .
             end.
           when "dens-pf-sug" then
             do:
