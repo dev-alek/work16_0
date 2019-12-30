@@ -260,11 +260,12 @@ define variable v-date_to   as character no-undo .
       temp_db-list.db-num = integer(entry (jj,p-db-list, {&comma-char})) .
     end.
   end.    
+
   for each temp_db-list,
     last buf_db no-lock where buf_db.db-num = temp_db-list.db-num:
     _next:
     for each buf_upgrade where buf_upgrade.db-num = buf_db.db-num and entry(1,buf_upgrade.version-num," ") >= v-date_from and entry(1,buf_upgrade.version-num," ") <= v-date_to
-    and (lookup ("Patch",buf_upgrade.version-num," ") > 0 or buf_upgrade.version-num = "v16_0000.000.000")
+    and (lookup ("Rel",buf_upgrade.version-num," ") > 0 or buf_upgrade.version-num = "v16_0000.000.000")
     by buf_upgrade.UpgDate desc by buf_upgrade.UpgTime desc:
 /*    for each buf_upgrade where buf_upgrade.db-num = buf_db.db-num and buf_upgrade.UpgDate >= p-date_from and buf_upgrade.UpgDate <= p-date_to*/
 /*    and (lookup ("Patch",buf_upgrade.version-num," ") > 0 or buf_upgrade.version-num = "v16_0000.000.000")                                   */
