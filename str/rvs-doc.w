@@ -2427,7 +2427,7 @@ and is-gas(buf_goods.gds-code) then do:
    
 end.
 else
-if not error-status :error 
+if available buf_goods
 and is-sug(buf_goods.gds-code) then do:
    
     run str/rvs-lin-sug.w
