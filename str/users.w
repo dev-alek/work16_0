@@ -94,8 +94,6 @@ define variable v-only-lookup           as logical      no-undo.
 
 define buffer buf_init_user-account      for user-account.
 define buffer buf_init_user-login        for user-login.
-define buffer buf_global-state-attr for ub.global-state-attr .
-define buffer buf_global-state for ub.global-state .
 
 define stream out-stream.
 define stream OutStr-html.
@@ -113,6 +111,10 @@ define variable v-report-name-html-list   as CHARACTER            no-undo .
     field last-login-mjd like ub.user-login.last-login-mjd
     field last-name  as character
   .
+
+define buffer buf_global-state      for ub.global-state .
+define buffer buf_global-state-attr for ub.global-state-attr .
+define variable v-action-gbl    as logical      no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -2701,7 +2703,6 @@ on error undo, return error
         end.        /* for each buf_temp_user-login-obj */
         
         define variable v-have-login    as logical      no-undo .
-        define variable v-action-gbl    as logical      no-undo .
 
         assign
             v-have-login = no
@@ -3447,20 +3448,20 @@ on error undo, return error
       for each buf_init_user-login where buf_init_user-login.user-id = buf_init_user-account.user-id:
           assign v-first = yes 
                  v-ok2 = no.
-          
-          
+     
           FOR EACH buf_user-login-action-role
             WHERE buf_user-login-action-role.action-head-code    = {&action-head-code-main}
-            AND buf_user-login-action-role.db-num              = buf_init_user-login.db-num
             AND buf_user-login-action-role.user-id             = buf_init_user-login.user-id
             NO-LOCK:
+              if not v-action-gbl and buf_user-login-action-role.db-num              <> buf_init_user-login.db-num then next .
               
+      
               find FIRST buf_action-role
                 WHERE buf_action-role.action-head-code    = {&action-head-code-main}
                 AND buf_action-role.action-role-code    = buf_user-login-action-role.action-role-code
-                AND buf_action-role.db-num              = buf_init_user-login.db-num
                 NO-LOCK no-error.
                 if AVAILABLE buf_action-role then do:
+/*                  if not v-action-gbl and buf_action-role.db-num              <> buf_init_user-login.db-num then next .*/
                 assign 
                   ii = ii + 1
                   jj = jj + 1 
