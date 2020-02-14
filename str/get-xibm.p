@@ -2740,8 +2740,9 @@ define variable disc-gds-reason as int no-undo .
   do
   on error undo, return error
   :
-  if ub.chk-doc.chk-type = integer({&rcpt-annu}) then return.  /* Для аннулированных чеков не будет закачивать скидки, а то дальше куча ошибок лезет */     
     if not exist then do:
+      if ub.chk-doc.chk-type = integer({&rcpt-annu}) then return.  /* Для аннулированных чеков не будет закачивать скидки, а то дальше куча ошибок лезет */     
+  
       for each buf_temp-temp where
               buf_temp-temp.record-name = "CDisc":U
         AND buf_temp-temp.id = v-id:

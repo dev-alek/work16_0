@@ -26,6 +26,7 @@ define input parameter loc-exist as logical no-undo .
   :
     assign
     v-end-of-check = yes
+    pay-card_ = ""
     .
     if not loc-exist then do:
       assign
