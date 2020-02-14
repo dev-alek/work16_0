@@ -164,6 +164,9 @@ ExpiryDate-2-3 ExpiryDate-2-4 Qnty NumPart Note EDITOR-1
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+
+
+
 DEFINE BUTTON Btn_Cancel 
      LABEL "Отмена" 
      SIZE 15 BY 1.13
@@ -313,7 +316,7 @@ DEFINE VARIABLE NumPart AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 14.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE Qnty AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE Qnty AS DECIMAL FORMAT "->>,>>9.999":U INITIAL 0 
      LABEL "          Количество" 
      VIEW-AS FILL-IN 
      SIZE 14.75 BY 1 NO-UNDO.
@@ -491,7 +494,8 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
 ON choose OF Btn_Cancel IN FRAME Dialog-Frame /* Отмена */
 do:
-
+  if not v-scan-str = "" 
+    then return no-apply.
   delete object vsdSts no-error.
   delete object vsdstrObj no-error.
   apply "go" to frame {&FRAME-NAME}.
@@ -528,12 +532,12 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
 ON choose OF Btn_OK IN FRAME Dialog-Frame /* Сохранить */
 do:
   
-
+  if not v-scan-str = "" 
+    then return no-apply.
   if vsdsubCurr:StatusErr
     then return no-apply.
   p-isSave = true.
@@ -546,12 +550,10 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
 ON return OF Btn_OK IN FRAME Dialog-Frame /* Сохранить */
 do:
   def var str as character no-undo.
-  
   run str/qr2uuid.p (input v-scan-str, output str).
   run setscruuid (input str).
     
@@ -560,12 +562,35 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &Scoped-define SELF-NAME Btn_Serv
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Serv Dialog-Frame
 ON choose OF Btn_Serv IN FRAME Dialog-Frame /* Служебные */
 do:
+  if not v-scan-str = "" 
+    then return no-apply.
   run str/vsdserv.w (input vsdsubCurr).
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_Serv
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Serv Dialog-Frame
+ON return OF Btn_Serv IN FRAME Dialog-Frame /* Служебные */
+do:
+  def var str as character no-undo.
+  run str/qr2uuid.p (input v-scan-str, output str).
+  run setscruuid (input str).
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME Btn_Serv
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Serv Dialog-Frame
+ON any-printable OF Btn_Serv IN FRAME Dialog-Frame /* Служебные */
+do:
+  run proc-any-key.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -719,7 +744,6 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
         v-isManualVcd = thbjattr_thbj-attr.property-value-logical .
       end case.
   end.
-  
   run initialize-folder (v-section-names).
   run initialize-section.
   run show-current-page(input 1).
@@ -905,7 +929,7 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 PROCEDURE proc-any-key :
-v-scan-str = v-scan-str + last-event:label.
+  v-scan-str = v-scan-str + last-event:label.
 end.
 
 /* _UIB-CODE-BLOCK-END */
