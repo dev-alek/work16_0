@@ -539,7 +539,40 @@ FOR EACH t-3 No-LOCK WHERE (pclassify <> "totals":U or t-3.grp-code-sheet = 0)
 
       end. /*if p-batch > 0 */
   
-        put stream OutStr-html unformatted
+    END.
+    if not available tincome-3 and not available treal-3 then do:
+            put stream OutStr-html unformatted
+            substitute (
+            '  <tr>
+                    <td text_wrap="true">&1</td>
+                    <td style="text-align: right;">&2</td>
+                    <td style="text-align: right;">&3</td>
+                    <td text_wrap="true"></td>
+                    <td></td>
+                    <td style="text-align: right;"></td>
+                    <td style="text-align: right;"></td>
+                    <td text_wrap="true"></td>
+                    <td style="text-align: right;"></td>
+                    <td style="text-align: right;"></td>
+                    <td style="text-align: right;">&4</td>
+                    <td style="text-align: right;">&5</td>
+                    <td style="text-align: right;">&6</td>
+                    <td style="text-align: right;">&7</td>
+                    <td style="text-align: right;">&8</td>
+                </tr>'
+            ,
+            pol1,
+            string(pol2,"->>>>>>>>>>>9.99"),
+            string(pol3,"->>>>>>>>>>>9.99"),
+            if pol11_1 = 0 then "" else string(pol11_1,"->>>>>>>>>>>9.99"),
+            if pol11_2 = 0 then "" else string(pol11_2,"->>>>>>>>>>>9.99"),
+            if pol11_3 = 0 then "" else string(pol11_3,"->>>>>>>>>>>9.99"),
+            string(pol12,"->>>>>>>>>>>9.99"),
+            string(pol13,"->>>>>>>>>>>9.99")
+            ).
+    end.
+    else do:
+              put stream OutStr-html unformatted
             substitute (
             '  <tr>
                     <td text_wrap="true">&1</td>
@@ -581,38 +614,7 @@ FOR EACH t-3 No-LOCK WHERE (pclassify <> "totals":U or t-3.grp-code-sheet = 0)
             if main-line = no then "" else string(pol12,"->>>>>>>>>>>9.99"),
             if main-line = no then "" else string(pol13,"->>>>>>>>>>>9.99")
             ).
-    END.
-    if not available tincome-3 and not available treal-3 then do:
-            put stream OutStr-html unformatted
-            substitute (
-            '  <tr>
-                    <td text_wrap="true">&1</td>
-                    <td style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
-                    <td text_wrap="true"></td>
-                    <td></td>
-                    <td style="text-align: right;"></td>
-                    <td style="text-align: right;"></td>
-                    <td text_wrap="true"></td>
-                    <td style="text-align: right;"></td>
-                    <td style="text-align: right;"></td>
-                    <td style="text-align: right;">&4</td>
-                    <td style="text-align: right;">&5</td>
-                    <td style="text-align: right;">&6</td>
-                    <td style="text-align: right;">&7</td>
-                    <td style="text-align: right;">&8</td>
-                </tr>'
-            ,
-            pol1,
-            string(pol2,"->>>>>>>>>>>9.99"),
-            string(pol3,"->>>>>>>>>>>9.99"),
-            if pol11_1 = 0 then "" else string(pol11_1,"->>>>>>>>>>>9.99"),
-            if pol11_2 = 0 then "" else string(pol11_2,"->>>>>>>>>>>9.99"),
-            if pol11_3 = 0 then "" else string(pol11_3,"->>>>>>>>>>>9.99"),
-            string(pol12,"->>>>>>>>>>>9.99"),
-            string(pol13,"->>>>>>>>>>>9.99")
-            ).
-    end.
+    end.  
 
     if jj < t-3.lines then do:
         if main-line then do:
