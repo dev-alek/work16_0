@@ -13,7 +13,7 @@ ADD INDEX "prt-parts" ON "c-bar-code"
 DROP INDEX "temp-36034" ON "c-bar-code"
 
 UPDATE FIELD "reserve1-char" OF "db"
-  INITIAL "7"
+  INITIAL "17"
 
 .
 PSC
