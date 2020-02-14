@@ -481,7 +481,7 @@ curr-real-ii = 1.
 for each t-2-sug: 
   loc-income-sug-ii = 0 .
     FIND LAST treal-2 NO-LOCK WHERE
-    treal-2.gds-code = t-2-not-sug.gds-code AND
+    treal-2.gds-code = t-2-sug.gds-code AND
     treal-2.is-pay   = YES          USE-INDEX vi NO-ERROR.
   if available treal-2 then 
   do:
