@@ -470,7 +470,7 @@ DEFINE VARIABLE prod-name-r LIKE ub.clients.obj-name
 
 DEFINE VARIABLE prod-name-v LIKE ub.clients.obj-name
       VIEW-AS TEXT
-     SIZE 50 BY 1 NO-UNDO.
+     SIZE 35 BY 1 NO-UNDO.
 
 DEFINE VARIABLE for-discnt-chr as character
       VIEW-AS TEXT
