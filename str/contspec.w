@@ -1451,6 +1451,23 @@ DO:
  define variable v-printed     as logical      no-undo.
  define variable is-ok-all     as logical      no-undo.
  define variable v-file-err    as character    no-undo.
+   { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_fin-contract_modernization':U
+    {&cntxt-firm}
+    p-host-code
+    '':U
+    0
+    0
+    0
+    0
+    true
+    g-log
+  }
+  if not g-log then  return .
+  
  v-file-err = string(session:TEMP-DIRECTORY) + '/writeSpec.err':U .
  if search (v-file-err) <> ? then do:
    os-delete value(v-file-err).
@@ -1589,6 +1606,22 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-func-vat-all Dialog-Frame
 ON CHOOSE OF MENU-ITEM m-func-vat-all
 DO:
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_fin-contract_modernization':U
+    {&cntxt-firm}
+    p-host-code
+    '':U
+    0
+    0
+    0
+    0
+    true
+    g-log
+  }
+  if not g-log then  return .
   GET FIRST spec-List NO-LOCK .
   if not available buf_contract-specif then return no-apply.
   message "Вы действительно хотите изменить %НДС по всей спецификации по карточке товара ?" view-as alert-box QUESTION BUTTONS YES-NO UPDATE g-log .
