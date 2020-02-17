@@ -1870,10 +1870,43 @@ v-cntxt-userid
 0
 0
 0
-true
+false
 glog
 }
-if NOT glog then  return no-apply .
+if NOT glog
+and p-option = "staff":U
+and X_staff.role = {&role-cashier}
+then do :
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_cashdesk-cashiers_update':U
+  {&cntxt-object}
+  v-cntxt-host-code-obj
+  v-cntxt-obj-type
+  v-cntxt-obj-code
+  0
+  0
+  0
+  false
+  glog
+  }
+  if NOT glog
+  then do :
+    message "У вас не хватает прав на изменение." skip
+            "(actn_cashdesk-cashiers_update)"
+    view-as alert-box error .
+    return no-apply .
+  end .
+end.
+if NOT glog
+then do :
+  message "У вас не хватает прав на изменение." skip
+          "(actn_client-reference_update)"
+  view-as alert-box error .
+  return no-apply .
+end .
 assign
 ric = recid( X_clients )
 ri = recid( X_staff )

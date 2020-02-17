@@ -41,7 +41,8 @@ define variable vCPWithdrawal as character no-undo.
     if not loc-exist then do:
       for each buf_temp-temp where
               buf_temp-temp.record-name = "CPay":U
-        AND buf_temp-temp.id = v-id:
+        and buf_temp-temp.id = v-id:
+        pay-card_ = "".
         CASE buf_temp-temp.field-name:
           when "CPCode":U then do:
 

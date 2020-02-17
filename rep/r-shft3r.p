@@ -55,6 +55,7 @@ define variable v-value as character no-undo .
 define variable v-type as character no-undo .
 define variable v-upper-code  like ub.gds-grp.node-code no-undo .
 define variable v-p-accsup    as   character            no-undo .
+define variable v-grp-name    as    character           no-undo .
 
 define buffer buf_gds-grp   for ub.gds-grp  .
 define buffer from-stk-line for ub.stk-line .
@@ -165,11 +166,13 @@ for each  ub.gds-obj no-lock where
             to-stk-line.fact-order <= fo                   use-index category no-error .
 
   /* определение группы по товару в curr-grp-code */
+ 
+v-grp-name = replace (ub.goods.grp-name," /","/") .
   if pclassify    = "totals":U and
      X-selectgood = {&g-grp}
   then do:
     find first buf_t-3 where
-               ub.goods.grp-name begins buf_t-3.serv-name no-error .
+               v-grp-name begins buf_t-3.serv-name no-error .
     if not available buf_t-3
     then do:
       next .
@@ -177,7 +180,7 @@ for each  ub.gds-obj no-lock where
   end.
   else do:
     find first t-3 where
-               ub.goods.grp-name begins     t-3.serv-name no-error .
+               v-grp-name begins     t-3.serv-name no-error .
     if not available t-3
     then do:
       next .
@@ -276,6 +279,7 @@ for each  ub.gds-obj no-lock where
   :
     delete tt-stk-line .
   end.
+
   run stk-lnrv in this-procedure
     (  input       pobj-type
     ,  input       pobj-code

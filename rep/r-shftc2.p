@@ -74,6 +74,7 @@ define variable v-value-decimal as decimal no-undo .
 define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-param-type as character no-undo .
+define variable v-grp-name    as    character           no-undo .
 
 define buffer buf_dis-card    for ub.dis-card.
 define buffer buf_goods       for ub.goods.
@@ -609,12 +610,13 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                     do:
                         FIND FIRST buf_goods No-LOCK WHERE
                             buf_goods.gds-code = buf_bar-code.gds-code No-ERROR.
+                            v-grp-name = replace (buf_goods.grp-name," /","/") .
                         if pclassify then 
                         do:
                             if pselectgood then 
                             do:
                                 FIND FIRST buf_t-3 where
-                                    buf_goods.grp-name begins buf_t-3.serv-name No-ERROR.
+                                   v-grp-name begins t-3.serv-name No-ERROR.
                                 if not avail buf_t-3 then 
                                 do:
                                 end.
@@ -623,7 +625,7 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                         else 
                         dO:
                             FIND FIRST t-3 where
-                                buf_goods.grp-name begins t-3.serv-name No-ERROR.
+                                v-grp-name begins t-3.serv-name No-ERROR.
                             if not avail t-3 then 
                             do:
                             end.
@@ -651,7 +653,6 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                 v-upper-code = ub.gds-grp.upper-code.
           end. 
           /* ------ */
-          
                         if avail t-3 and v-value <> "yes"  then 
                         do:
                             FIND FIRST treal-3 No-LOCK WHERE
@@ -739,6 +740,7 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                       
                         end.
                     end. /*if avail t-3*/
+                    
                 END.
         
             /*                END.*/

@@ -36,6 +36,7 @@ if v-b-c <> ? then do:
                 or buf_chk-doc.chk-type = integer({&rcpt-trans-cancell})
                )
            )
+  and not {&prefix}pos-type = {&cd-type-autotank} and not {&prefix}pos-type = {&cd-type-ibm-xml} and not {&prefix}pos-type = {&cd-type-ibm}
   then do:
     /*случай когда возвращают или списывают на возварте чек в котором было списание - второй раз списать нельз
     положим товар для информативности

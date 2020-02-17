@@ -21,10 +21,11 @@ Creation date: 06/01/10
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 define variable chk-shift-open-time as logical no-undo init yes. /* если нету даты начала смены, то каждый раз обновляем время первого чека (да - если есть, нет - если нет)*/
+
 for each ub.inkas no-lock where ub.inkas.obj-code = tt-cash-desk.obj-code
 and ub.inkas.obj-type =  {&shop} and ub.inkas.shift-date = x-date-start and ub.inkas.shift-num = x-shift-alone,
  each buf_chk-doc
-    where buf_chk-doc.out-code    = ub.inkas.inkas-code
+    where buf_chk-doc.out-code    = ub.inkas.inkas-code and buf_chk-doc.pay-desk = tt-cash-desk.cash-num
       no-lock use-index sale:
 /*      if X-tog-shift then do:                             */
 /*        if ub.inkas.shift-num <> x-shift-alone then next .*/
@@ -33,7 +34,7 @@ and ub.inkas.obj-type =  {&shop} and ub.inkas.shift-date = x-date-start and ub.i
 /*        if buf_chk-doc.chk-date <> x-date-start then next.*/
 /*      end.                                                */
         find first temp-str
-            where temp-str.cash-num = buf_chk-doc.pay-desk
+            where temp-str.cash-num = tt-cash-desk.cash-num
               no-error.
           if available temp-str then do :
             if buf_chk-doc.z-number > temp-str.z-number then do :

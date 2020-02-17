@@ -65,6 +65,7 @@ define variable vss-description as character no-undo init "Редактирование данных
 { gbl/cur-time.i } /* 21/I-2019 - cur-time.i убрано из gbclcode.i */
 DEFINE VARIABLE v-tab-order AS CHARACTER NO-UNDO.
 define variable is-temp as logical no-undo .
+define variable glog as logical no-undo .
 
 define variable v-obj-db-num like ub.db.db-num no-undo .
 DEFINE VARIABLE v-modified AS LOGICAL NO-UNDO.
@@ -705,6 +706,35 @@ else do:
   in frame {&frame-name} .
 end.
 run fill-codes IN THIS-PROCEDURE NO-ERROR.
+if p-role = {&role-cashier}
+then do :
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_client-reference_update':U
+  {&cntxt-global}
+  0
+  '':U
+  0
+  0
+  0
+  0
+  false
+  glog
+  }
+  if not glog
+  then do :
+    disable
+      b-db
+      b-host
+      b-obj
+      CB-obj-type
+      f-date-start
+      f-date-end
+    with frame {&frame-name} .
+  end.
+end .
 VIEW FRAME {&FRAME-NAME}.
 APPLY "TAB" TO b-help.
 END PROCEDURE.
