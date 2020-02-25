@@ -497,6 +497,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
               end.
               if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
               then do:
+                /* при нормальной работе системы записей buf_esys-pck-keys не должно быть
                 find last buf_esys-pck-keys no-lock use-index pi no-error.
                 if available buf_esys-pck-keys then do:
                   find first tt-espcknum where tt-espcknum.tt-espr-pack-num > buf_esys-pck-keys.espr-pack-num use-index inum no-error.
@@ -504,7 +505,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     v-espr-pack-num = tt-espcknum.tt-espr-pack-num.
                   end.
                 end.
-
+                 */
                 /* оставляем только файлы, подлежащие обработке
                 23/VII-2019 чистка файлов выполнена внутри get-num-namepack()
                 for each temp-filelist :
