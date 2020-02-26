@@ -215,12 +215,14 @@ field vat-rubl as decimal
 field vat-doc as decimal
 field curr-code as integer
 field cash-desk  as integer
+field pay-type as char
 field is-petrol as logical
 index pi is unique primary
 cash-desk
 b-code
 doc-kind
 curr-code
+pay-type
 /*is-petrol*/
 .
 define temp-table temp-tax no-undo
@@ -238,6 +240,7 @@ field cash-desk  as integer
 field is-petrol as logical
 field cashbookId as int64
 field is-expense_cash as logical
+field pay-type as char
 field num-expense_cash as int
 index pi is unique primary
 num-expense_cash
@@ -248,6 +251,7 @@ vat-pc
 slt-pc
 is-petrol
 cashbookId
+pay-type
 .
 
 define temp-table temp-z-number no-undo
@@ -751,7 +755,11 @@ define variable v-err               as logical    no-undo .
                                                 output is-petrolium
                                                 ).
           end.
-          
+          find first chk-gds-attr where ub.chk-gds-attr.doc-code = buf_chk-gds-pay.doc-code
+                                                and ub.chk-gds-attr.line-num = buf_chk-gds-pay.line-num
+                                                and ub.chk-gds-attr.attr-code = "cstype"
+                      no-lock no-error.
+          mTypePay          = if available chk-gds-attr and integer (chk-gds-attr.attr-value) eq 37 then 'Cash' else "".
         find first buf_temp-gds no-lock where
                  buf_temp-gds.b-code = buf_chk-gds-pay.b-code
               and buf_temp-gds.doc-kind = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
@@ -760,6 +768,7 @@ define variable v-err               as logical    no-undo .
              and buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
              and (p-by-cash-desk = no or buf_temp-gds.cash-desk = buf_inkas-pay-desk.pay-desk)
              and (p-by-petrol-goods = no or buf_temp-gds.is-petrol = is-petrolium)
+             and buf_temp-gds.pay-type = mTypePay 
              no-error.
         if not available buf_temp-gds then do:
           find first buf_bar-code no-lock where
@@ -787,6 +796,7 @@ define variable v-err               as logical    no-undo .
                 buf_temp-gds.cash-desk = (if p-by-cash-desk
                                                       then buf_inkas-pay-desk.pay-desk
                                                       else 0)
+                buf_temp-gds.pay-type = mTypePay 
                 buf_temp-gds.node-code = buf_bar-code.node-code
                 buf_temp-gds.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
                 .
@@ -897,7 +907,8 @@ define variable v-err               as logical    no-undo .
               and buf_temp-tax.cash-desk = buf_temp-gds.cash-desk
               and buf_temp-tax.is-petrol = buf_temp-gds.is-petrol
               and buf_temp-tax.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
-              and buf_temp-tax.is-expense_cash = (buf_temp-gds.tot-doc < 0 and buf_temp-fin-sum.pay-type eq "cash")
+              and buf_temp-tax.is-expense_cash = (buf_temp-gds.tot-doc < 0 and buf_temp-gds.pay-type eq "cash")
+              and buf_temp-tax.pay-type = buf_temp-gds.pay-type
               and buf_temp-tax.num-expense_cash = 0
               
 /*              and (p-by-cash-desk = no or buf_temp-tax.cash-desk = buf_temp-gds.cash-desk)   */
@@ -916,8 +927,9 @@ define variable v-err               as logical    no-undo .
                                     then buf_temp-gds.is-petrol
                                     else no)
           buf_temp-tax.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
-          buf_temp-tax.is-expense_cash = (buf_temp-gds.tot-doc < 0 and buf_temp-fin-sum.pay-type eq "cash")
+          buf_temp-tax.is-expense_cash = (buf_temp-gds.tot-doc < 0 and buf_temp-gds.pay-type eq "cash")
           buf_temp-tax.num-expense_cash = 0
+          buf_temp-tax.pay-type = buf_temp-gds.pay-type
           buf_temp-tax.with-vat  = buf_temp-gds.with-vat
           .
         end. /*if not available buf_temp-tax then do:*/
@@ -1302,6 +1314,7 @@ define variable v-err               as logical    no-undo .
            and buf_temp-tax.cashbookId       = buf_temp-fin-sum.cashbookId
            and buf_temp-tax.is-expense_cash  = buf_temp-fin-sum.is-expense_cash
            and buf_temp-tax.num-expense_cash = buf_temp-fin-sum.num-expense_cash
+           and buf_temp-tax.pay-type = buf_temp-fin-sum.pay-type
               :
         v-line-num = v-line-num + 1.
         create tt0-fin-doc-tax .

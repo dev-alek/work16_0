@@ -5237,7 +5237,7 @@ procedure rest-tcc :
             .
           end.
         end.
-
+        /* мешает при обмене новостями , скорее всего это была защита от повторой выгрузки 
         assign
           v-command = "command":U + {&delim-nws}
                       + "two-commit":U + {&delim-nws}
@@ -5258,7 +5258,7 @@ procedure rest-tcc :
           &CreDate=v-today
           &CreTimeInt=v-time
           &CreUserName="'rest-rdb'":U
-        }
+        } */
       end.
     end.
   end.
