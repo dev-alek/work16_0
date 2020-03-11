@@ -2857,6 +2857,14 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
           {&create-thbj-attr}.
       end.
+      
+      v-prop-code = "{&bef-attr-petrol_CriticalDifInLgas}".
+&scop ptype decimal
+&scop prop-value 0.65
+&scop prop-code entry(v-ii, v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+          {&create-thbj-attr}.
+      end.
 
       v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens}".
 &scop ptype logical
