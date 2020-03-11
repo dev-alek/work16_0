@@ -73,6 +73,14 @@ define stream OutStr-html.
 define VARIABLE p-report-id         as character no-undo .
 define variable v-file-name-rep-htm as character no-undo .
 
+define variable v-value-character as character no-undo .
+define variable v-CriticalDifInLgas as decimal no-undo .
+define variable v-value-date as date no-undo .
+define variable v-value-integer as integer no-undo .
+define variable v-value-logical as logical no-undo .
+define variable v-param-type as character no-undo .
+define variable v-tth as handle no-undo .
+
 define temp-table tt-sug
   field gds-code as integer
   field gds-name as character
@@ -311,9 +319,25 @@ procedure data-print :
       tt-sug.qnty1 = tt-sug.volue-pl * tt-sug.density
       tt-sug.pl-type  = "трубопровод"
       .
+      
+run adm/shattri.p (
+    input "get":U
+    ,input  bf_rvs-line.obj-type
+    ,input  bf_rvs-line.obj-code
+    ,input  {&attr-petrol}
+    ,input  {&attr-petrol_CriticalDifInLgas} /*p-param-code*/
+    ,output v-value-character
+    ,output v-value-date
+    ,output v-CriticalDifInLgas
+    ,output v-value-integer
+    ,output v-value-logical
+    ,output v-param-type
+    ,INPUT-OUTPUT table-handle v-tth
+) no-error .
+    if v-CriticalDifInLgas = ? then v-CriticalDifInLgas = 0 .
     tt-sug.log-pl = if tt-sug.volue-pl <> 0 then "заполнено" else "не заполнено" .
-    tt-sug.delta  = (tt-sug.qnty * 0.65)/ 100 .
-    tt-sug.delta1  = (tt-sug.qnty1 * 0.3)/ 100 .
+    tt-sug.delta  = (tt-sug.qnty * v-CriticalDifInLgas)/ 100 .
+    tt-sug.delta1  = (tt-sug.qnty1 * v-CriticalDifInLgas)/ 100 .
     define variable v-value as character no-undo.
     define variable v-ok    as logical   no-undo.
       
