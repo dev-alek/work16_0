@@ -602,12 +602,24 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       if buf_chk-pay.pay-card > "" then 
       insw:write-data-element (  "pay-card",  string(buf_chk-pay.pay-card)  ) . /* Номер платежной карты (Строка) */
       
-      find first buf_chk-pay-attr no-lock
+      for first buf_chk-pay-attr no-lock
            where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
              and buf_chk-pay-attr.attr-code = "cpdoc":U
-             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num no-error.
-      if available buf_chk-pay-attr then 
-      insw:write-data-element (  "rrn",  buf_chk-pay-attr.attr-value  ) . /* RNN платежа (Строка) */
+             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num :      
+        insw:write-data-element (  "rrn",  buf_chk-pay-attr.attr-value  ) . /* RNN платежа (Строка) */
+      end.
+      for first buf_chk-pay-attr no-lock
+           where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
+             and buf_chk-pay-attr.attr-code = "RRN":U
+             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num :      
+        insw:write-data-element (  "rrn",  buf_chk-pay-attr.attr-value  ) . /* RNN платежа (Строка) */
+      end.
+      for first buf_chk-pay-attr no-lock
+           where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
+             and buf_chk-pay-attr.attr-code = "RRN-VBRR":U
+             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num :      
+        insw:write-data-element (  "rrn",  buf_chk-pay-attr.attr-value  ) . /* RNN платежа (Строка) */
+      end.
       
       find first buf_chk-pay-attr no-lock
            where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
