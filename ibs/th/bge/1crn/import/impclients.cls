@@ -323,6 +323,32 @@ class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsu
           .
        end.
     end.
+    find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                              and clients-attr.obj-code  eq bf_clients.obj-code
+                              and clients-attr.attr-code eq {&attr-supp-lgas}
+    exclusive-lock no-error.
+    if avail clients-attr 
+    then do:
+       if objImp:post-sug eq 1
+       then
+          clients-attr.attr-value = "yes".
+       else 
+          delete clients-attr.
+    end.
+    else do:
+       if objImp:post-sug eq 1
+       then do:
+          create clients-attr.
+          assign 
+             clients-attr.obj-type  = bf_clients.obj-type
+             clients-attr.obj-code  = bf_clients.obj-code
+             clients-attr.attr-code = {&attr-supp-lgas}
+             clients-attr.attr-value = "yes"
+          .
+       end.
+    end.
+    
+    
     end.
     if valid-object (v_carrier) then 
     do:

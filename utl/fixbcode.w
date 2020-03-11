@@ -42,6 +42,10 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Просмотр и изменение диапазонов кодов".
+define variable conf-par as character no-undo.
+define variable mode-erprn as logical no-undo.
+define variable par-type as character no-undo.
+
 { cmp/vssrevis.i }
 { cmp/showinf.i  }
 { cmp/trg-def.i  }
@@ -469,6 +473,25 @@ END.
 ON VALUE-CHANGED OF sel-type-code-range IN FRAME D-Dialog /* Диапазоны */
 DO:
   assign sel-type-code-range .
+mode-erprn = yes.
+  if mode-erprn 
+     and can-do("{&bef-gbl-bc-code},{&bef-gbl-fm-code},{&bef-gbl-pn-code},{&bef-gbl-fd-code},{&bef-gbl-ct-code},{&bef-gbl-dr-code},{&bef-loc-sc-code},{&bef-loc-ss-code},{&bef-loc-pg-code},{&bef-gbl-ca-code}",sel-type-code-range)
+  then
+     assign
+        b-active:SENSITIVE = no
+        b-gen-free:SENSITIVE = no
+        b-f-u:SENSITIVE = no
+        b-coderg:SENSITIVE = no
+
+     .
+  else
+     assign
+        b-active:SENSITIVE = yes
+        b-gen-free:SENSITIVE = yes
+        b-f-u:SENSITIVE = yes
+        b-coderg:SENSITIVE = yes
+
+     .
   assign
   v-curr-type-cdrg = sel-type-code-range .
   run fill-temp-b-code-info .
@@ -487,6 +510,22 @@ END.
 /* ***************************  Main Block  *************************** */
 
 { gbl/app_help.i }
+       { gbl/conf-rd.i
+         "'is-erpRN'"
+          0
+          "''"
+          0
+          "''"
+          "''"
+          "''"
+          NO
+          conf-par
+          par-type
+          no-error
+          }
+          if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+          else mode-erprn = no.
+       
 
 define buffer buf_sys-ctrl for ub.sys-ctrl .
 assign

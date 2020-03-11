@@ -878,13 +878,41 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 do:
                   def var dmdop as decimal no-undo.
                   def var dM    as decimal no-undo.
+                  
+                  define variable v-value-character as character no-undo .
+                  define variable v-value-date as date no-undo .
+                  define variable v-value-integer as integer no-undo .
+                  define variable v-value-logical as logical no-undo .
+                  define variable v-param-type as character no-undo .
+                  define variable v-tth as handle no-undo .
+                  
+                  def var v-cardifLgas as decimal no-undo.
                   def var infoSectionObj as class infosection no-undo.
+                  
                   find first buf_doc-line no-lock where buf_doc-line.doc-code = t-doc.doc-code
                       and buf_goods.artic = buf_doc-line.artic
                       and buf_goods.prod-type = buf_doc-line.prod-type
                       and buf_goods.prod-code = buf_doc-line.prod-code no-error.
+                  
+                  run adm/shattri.p (
+                      input "get":U
+                      ,input  buf_doc-line.obj-type
+                      ,input  buf_doc-line.obj-code
+                      ,input  {&attr-petrol}
+                      ,input  {&attr-petrol_CriticalDifInLgas} /*p-param-code*/
+                      ,output v-value-character
+                      ,output v-value-date
+                      ,output v-cardifLgas
+                      ,output v-value-integer
+                      ,output v-value-logical
+                      ,output v-param-type
+                      ,INPUT-OUTPUT table-handle v-tth
+                  ) no-error .
+                  if v-cardifLgas = ?
+                    then v-cardifLgas = 0.
+                  
                   dM = buf_doc-line.cli-qnty - (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
-                  dmdop = SQRT ((v-rvs-cli-qnty-after *  0.65) * (v-rvs-cli-qnty-after *  0.65) + (v-rvs-cli-qnty-before *  0.65) * (v-rvs-cli-qnty-before *  0.65)) / 100.
+                  dmdop = SQRT ((v-rvs-cli-qnty-after *  v-cardifLgas) * (v-rvs-cli-qnty-after *  v-cardifLgas) + (v-rvs-cli-qnty-before *  v-cardifLgas) * (v-rvs-cli-qnty-before *  v-cardifLgas)) / 100.
 /*                  message "dM - " dM "dmdop - " dmdop "v-rvs-cli-qnty-before - " v-rvs-cli-qnty-before "v-rvs-cli-qnty-after - " v-rvs-cli-qnty-after view-as alert-box.*/
                   if absolute (dM) <= dmdop  
                   then do:

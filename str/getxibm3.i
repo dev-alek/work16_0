@@ -23,6 +23,7 @@ define input parameter par-mode as integer no-undo .
 define input parameter loc-exist as logical no-undo .
 define variable lnp-spl as integer no-undo .
 define buffer buf_temp-temp for temp-temp.
+define variable i-cpdoc      as int no-undo.
 
 /*0 - ub.chk-doc  ub.chk-pay
   1- ub.chk-doc ub.chk-pay
@@ -112,20 +113,17 @@ define variable vCPWithdrawal as character no-undo.
             no-error .
           end.
           when "CPDOC":U then do:
-            case true:
-              when buf_temp-temp.field-value begins "RRN" then do:
-                    c-attr-code  = "RRN-VBRR".
-                    c-attr-value = replace(buf_temp-temp.field-value,"RRN=","").
-              end.
-              when buf_temp-temp.field-value begins "RTA_RefundExport" then do:
-                    c-attr-code  = "RTA_RefundExport".
-                    c-attr-value = replace(buf_temp-temp.field-value,"RTA_RefundExport=","").
-              end.
-              otherwise do:
+            do i-cpdoc = 1 to num-entries(buf_temp-temp.field-value,',':U):
+                if num-entries(entry(i-cpdoc,buf_temp-temp.field-value),'=':U) >= 2 then do:
+                    c-attr-code  = entry(1,entry(i-cpdoc,buf_temp-temp.field-value,','),'=':U).
+                    c-attr-value = entry(2,entry(i-cpdoc,buf_temp-temp.field-value,','),'=':U).
+                end.    
+                
+              else do:
                     c-attr-code  = "CPDOC".
-                    c-attr-value = buf_temp-temp.field-value.               
+                    c-attr-value = entry(i-cpdoc,buf_temp-temp.field-value,',').               
               end.
-            end case.
+            end.
           end. /*when "CPDOC":U then do:*/
           when "CPAgreement" then do:
              vCPAgreement = buf_temp-temp.field-value.
