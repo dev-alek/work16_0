@@ -2619,6 +2619,11 @@ define variable v-ischg-ext-type as logical no-undo .
                   else v-prev-sts = ?.  
               end.
               else next f_ml.
+            create ub.gen-attr.
+              ub.gen-attr.table-name = "inv-doc-mark".
+              ub.gen-attr.attr-code = bf_doc-line.doc-code.
+              ub.gen-attr.p-key = ub.marking.mark.
+              ub.gen-attr.attr-value = string(ub.marking.gds-code).
             chg-qnty = ub.marking.box-qnty.
                         run trg/rsrv-dtl.p
               ( input        parparentproc
@@ -2668,7 +2673,11 @@ define variable v-ischg-ext-type as logical no-undo .
                   else v-prev-sts = ?.
                 next f_ml2.
               end.
-                
+              create ub.gen-attr.
+                ub.gen-attr.table-name = "inv-doc-mark".
+                ub.gen-attr.attr-code = bf_doc-line.doc-code.
+                ub.gen-attr.p-key = ub.marking.mark.
+                ub.gen-attr.attr-value = string(ub.marking.gds-code).
               chg-qnty = ub.marking.box-qnty.
               run trg/rsrv-dtl.p
                 ( input        parparentproc

@@ -29,6 +29,9 @@ define variable vss-description as character no-undo initial "Триггер на удалени
 { cmp/vssrevis.i "substitute('&1|&2', ub.trn-doc.doc-code, ub.trn-doc.status_) " }
 { cmp/trg-def.i }
 
+define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
+
 define variable v-message as character no-undo .
 define buffer bufz_trn-doc for ub.trn-doc.
 
@@ -147,7 +150,21 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
   for each ub.marking-attr exclusive-lock where (ub.marking-attr.attr-code = "inv-doc" or ub.marking-attr.attr-code = "inv-doc-scan") and ub.marking-attr.attr-value = ub.trn-doc.doc-code:
     delete ub.marking-attr. 
   end.
-
+  if ub.trn-doc.ext-doc-type = {&TDEDT_Inv}
+  then do: 
+    find first ub.utd exclusive-lock where ub.utd.doc-code = ub.trn-doc.doc-code no-error.
+    if available (ub.utd)
+      then delete ub.utd.
+  end.
+  else do:
+    find first ub.utd exclusive-lock where ub.utd.doc-code = ub.trn-doc.doc-code no-error.
+    for each ub.utd-marking-lines where ub.utd-marking-lines.doc-id =  ub.utd.doc-id and ub.utd-marking-lines.db-num = ub.utd.db-num:
+      find first ub.marking where ub.marking.mark = ub.utd-marking-lines.mark no-error.
+      if not ub.marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+        then next.
+      ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
+    end.    
+  end.
   /* удаляем суммы по документу */
   for each ub.trn-doc-sum exclusive-lock where
            ub.trn-doc-sum.doc-code = ub.trn-doc.doc-code
