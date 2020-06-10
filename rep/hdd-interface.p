@@ -320,6 +320,7 @@ do
     '</TR>' skip .
     
   put stream OutStr-html unformatted  
+    '<TR>' skip 
     '<TD text_wrap="true" style="text-align: center;">Название</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Value</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Thresh</TD>' skip
