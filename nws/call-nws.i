@@ -293,6 +293,8 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,devisPC~
 ,devisPC-attr~
 ,c-user-log~
+,marking-lines~
+,marking~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -407,7 +409,8 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,PromoObject~
 ,promo-schedule-week~
 ,promo-schedule~
-
+,marking~
+,marking-attr~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -701,6 +704,7 @@ define variable v-custom-list as character no-undo initial
 ,user-login~
 ,vsd~
 ,vsd-attr~
+,utd~
 ":U.
 
 /*-------------исключения из маршрутизации на параметре, таблицы не будут ходить ни при каких условиях (кроме таблиц которые ходят только из ГБД указанные v-custom-0-rdb_rbd-0-not-news)*/
@@ -1212,6 +1216,27 @@ v-custom-except-list-erprn =
 ,PromoAttr~
 ,promo-schedule~
 ,promo-schedule-week~
+,c-utd~
+,c-utd-attr~
+,c-utd-err~
+,c-utd-err-attr~
+,c-utd-head~
+,c-utd-lines~
+,c-utd-lines-attr~
+,c-utd-marking-lines~
+,c-utd-marking-lines-attr~
+,marking~
+,marking-attr~
+,marking-chk~
+,marking-lines~
+,utd~
+,utd-attr~
+,utd-err~
+,utd-err-attr~
+,utd-lines~
+,utd-lines-attr~
+,utd-marking-lines~
+,utd-marking-lines-attr~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/

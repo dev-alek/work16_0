@@ -51,6 +51,7 @@ abc-analysis-attr~
 ,c-chk-doc-attr~
 ,chk-gds~
 ,chk-gds-attr~
+,marking-chk~
 ,c-chk-gds~
 ,chk-pay~
 ,chk-gds-attr~
@@ -232,6 +233,15 @@ abc-analysis-attr~
 ,xyz-analysis-goods-attr~
 ,xyz-analysis-obj~
 ,xyz-analysis-period~
+,utd-lines~
+,utd-marking-lines~
+,utd-err~
+,utd-attr~
+,utd-lines-attr~
+,utd-marking-lines-attr~
+,utd-err-attr~
+,marking~
+,marking-lines~
 ':U .
 
 
@@ -549,6 +559,8 @@ abc-analysis~
 ,lvl-name~
 ,menu-user~
 ,menu-user-call~
+,marking~
+,marking-lines~
 ,nozzle~
 ,c-nozzle~
 ,nozzle-attr~
@@ -797,6 +809,18 @@ abc-analysis~
 ,code~
 ,devisPC~
 ,devisPC-attr~
+,utd~
+,c-utd-head~
+,c-utd~
+,c-utd-head~
+,c-utd-lines~
+,c-utd-marking-lines~
+,c-utd-err~
+,c-utd-attr~
+,c-utd-lines-attr~
+,c-utd-marking-lines-attr~
+,c-utd-err-attr~
+,marking-attr
 ':U .
 
 

@@ -24,6 +24,8 @@ define buffer buf_goods                   for ub.goods .
 define buffer buf_trn-doc-sum             for ub.trn-doc-sum.
 define buffer buf_gds-dtl                 for ub.gds-dtl.
 define buffer buf_parts                   for ub.parts.
+define buffer buf_marking-lines           for ub.marking-lines.
+define buffer buf_gen-attr                for ub.gen-attr.
 define buffer buf_doc-prts                for ub.doc-prts.
 define buffer buf_doc-pl                  for ub.doc-pl.
 define buffer buf_doc-pl-attr             for ub.doc-pl-attr.
@@ -136,4 +138,16 @@ for each locb-arh-trn-doc-contract
 on error undo, return error
 :
   delete locb-arh-trn-doc-contract.
+end.
+
+for each locb-gen-attr
+on error  undo, return error
+:
+  delete locb-gen-attr.
+end.
+
+for each locb-marking-lines
+on error  undo, return error
+:
+  delete locb-marking-lines.
 end.

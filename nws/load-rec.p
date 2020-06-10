@@ -3075,3 +3075,39 @@ PROCEDURE proc-load-xyz-analysis: /* 83 */
   end.                                                                                 
 END PROCEDURE. /* proc-load-xyz-analysis 83 */
 
+{ nws/inc/imp/def-out/utd.i }
+define temp-table wt-utd no-undo like ub.utd. 
+PROCEDURE proc-load-utd: /* 84 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-utd. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-utd. stop" )   
+  on endkey undo, return error substitute( "$proc-load-utd. endkey" ) 
+  :                                                   
+    define buffer tb-utd for ub.utd.            
+    define variable compare-log as logical no-undo.   
+    { nws/inc/imp/def-ins/utd.i }
+    for each wt-utd  
+    on error undo, return error substitute( "$proc-load-utd(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-utd . 
+    end. 
+    create wt-utd.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_utd}          
+       ,input (buffer wt-utd:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+    find first tb-utd                 
+      where tb-utd.db-num = wt-utd.db-num
+        and tb-utd.doc-id = wt-utd.doc-id
+      exclusive-lock no-error.
+    { nws/inc/imp/utd.i } 
+    delete wt-utd.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-utd 84 */
+

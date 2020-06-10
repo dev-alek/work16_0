@@ -685,8 +685,8 @@ Creation date: 01/29/07
 &glob table_c-obj-grp-obj-price-full '{&bef-table_c-obj-grp-obj-price-full}':U
 &glob bef-table_c-OperServ-full Операторы
 &glob table_c-OperServ-full '{&bef-table_c-OperServ-full}':U
-&glob bef-table_c-operServAttr-full атрибуты кассовой книги
-&glob table_c-operServAttr-full '{&bef-table_c-operServAttr-full}':U
+&glob bef-table_c-OperServAttr-full атрибуты кассовой книги
+&glob table_c-OperServAttr-full '{&bef-table_c-OperServAttr-full}':U
 &glob bef-table_c-ord-doc-full История заказа
 &glob table_c-ord-doc-full '{&bef-table_c-ord-doc-full}':U
 &glob bef-table_c-ord-doc-attr-full История атрибутов заказа

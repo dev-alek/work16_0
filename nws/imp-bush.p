@@ -463,8 +463,50 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         return error substitute( "&1. ошибка при вызове процедуры cmdnw2es.p! &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message( error-status :num-messages )  ).
       end.
     end.
+    when {&cmd-chg-utd-sts}
+    then do:
+      define buffer buf_utd for ub.utd.
+      define variable v-db-num-utd   as integer   no-undo .
+      define variable v-doc-id       as integer   no-undo .
+      define variable v-sts          as integer   no-undo .
+      define variable v-sts-edi      as integer   no-undo .
+      define variable v-trn-doc-code as character no-undo .
+      
+      def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+      run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
-
+      assign
+        v-db-num-utd = integer (entry( 2, p-full-cmd, {&delim-cmd} ))
+        v-doc-id     = integer (entry( 3, p-full-cmd, {&delim-cmd} ))
+        v-sts        = integer (entry( 4, p-full-cmd, {&delim-cmd} ))
+        v-sts-edi    = integer (entry( 5, p-full-cmd, {&delim-cmd} ))
+        v-doc-code   = (entry( 6, p-full-cmd, {&delim-cmd} ))
+      no-error.
+      
+      if error-status:error
+        then 
+      do:
+        {&gate-clear}.
+        return error substitute( "&1. ошибка при обработке комманды на изменения статуса УТД! &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message( error-status :num-messages )  ).
+      end.
+  
+      find first buf_utd exclusive-lock where buf_utd.db-num = v-db-num-utd
+        and buf_utd.doc-id = v-doc-id no-error.
+      
+      if not available (buf_utd)
+        then 
+      do:
+        {&gate-clear}.
+        return error substitute( "&1. ошибка при обработке комманды на изменения статуса УТД! &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message( error-status :num-messages )  ).
+      end.
+      
+      assign
+        buf_utd.sts = v-sts
+        buf_utd.sts-edi = v-sts-edi
+        buf_utd.doc-code = v-trn-doc-code
+      .
+      
+    end.
 
     otherwise do:
       {&gate-clear}.

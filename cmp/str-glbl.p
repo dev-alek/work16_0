@@ -252,6 +252,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-pdf-f
 run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-parts-fact-corr {&cmd-parts-fact-corr}" ).
 &glob cmd-nws2esys-general 'cmd-nws2esys-general':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-nws2esys-general {&cmd-nws2esys-general}" ).
+&glob cmd-chg-utd-sts 'cmd-chg-utd-sts':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-chg-utd-sts {&cmd-chg-utd-sts}" ).
 
 
 

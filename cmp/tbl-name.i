@@ -351,7 +351,7 @@ Creation date: 04/05/06
 &glob table_c-nzl-hist 'c-nzl-hist':U
 &glob table_c-obj-grp-obj-price 'c-obj-grp-obj-price':U
 &glob table_c-OperServ 'c-OperServ':U
-&glob table_c-operServAttr 'c-operServAttr':U
+&glob table_c-OperServAttr 'c-OperServAttr':U
 &glob table_c-ord-doc 'c-ord-doc':U
 &glob table_c-ord-doc-attr 'c-ord-doc-attr':U
 &glob table_c-ord-dtl 'c-ord-dtl':U

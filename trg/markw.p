@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Триггер на изменение таблицы abc-analysis-doc-attr
+Триггер на изменение таблицы ub.marking
 
 Автор: 
 Дата создания: 
@@ -35,6 +35,33 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+
+define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
+
+if (old-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+  or old-marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB)
+  and
+   not (ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
+then do:
+  ub.marking.sts = old-marking.sts.
+end.
 
 /*define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.       */
 /*run gbl/getobjsrvhndl.p (input-output ObjSrv).                       */
