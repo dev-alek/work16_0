@@ -1363,6 +1363,25 @@ end.
         {&create-thbj-attr}.
       end.
     end.
+    
+    when {&attr-marking} then do:
+      v-prop-code = "{&bef-attr-marking_marking-EDO}".
+&scop ptype logical
+&scop prop-value no
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-marking_marking-type}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+    end.        
+    
     when {&attr-ord-global} then do:
       v-prop-code = "{&bef-attr-ord-global_ord-log},{&bef-attr-ord-global_ord-ofof},{&bef-attr-ord-global_ord-oobj},{&bef-attr-ord-global_ord-op},{&bef-attr-ord-global_ord-min-ost-day},{&bef-attr-ord-global_ordcyclg}" .
 

@@ -570,6 +570,12 @@ attr-srv-auth-ASU
 "egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys"
 attr-egais-host }
 
+/*Ёлектронный документооборот*/
+{ cmp/cr-prep.i 1 attr-marking marking " " marking }
+{ cmp/cr-prepc.i 1 prop-list-attr-marking
+"marking-EDO,marking-type"
+attr-marking }
+
 /*набор опций работы с документами ћ÷*/
 { cmp/cr-prep.i 1 attr-mercur                 mercur                  " " mercur }
 { cmp/cr-prepc.i 1 prop-list-attr-mercur
@@ -642,6 +648,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
 ,{&bef-attr-mercur}~
+,{&bef-attr-marking}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list {&thbjattr-list}" ).
 
@@ -712,6 +719,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
 ,{&bef-attr-mercur}~
+,{&bef-attr-marking}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list-all {&thbjattr-list-all}" ).
 

@@ -3845,6 +3845,24 @@ logical~
 &scop level-way-attr-egais-host "obj,,global"
 &scop up-way-attr-egais-host "egais,egais,egais,egais,egais"
 
+/* Ёлектронный документооборот */
+&scop type-attr-marking               {&type-char}
+&scop format-attr-marking             "x(40)"
+&scop label-attr-marking           "Ёлектронный документооборот"
+&scop tooltip-attr-marking         "Ёлектронный документооборот"
+&scop user-can-edit-attr-marking   true
+&scop output-display-attr-marking  true
+&scop other-attr-marking           'spr-ext=gbl\marking.w':U
+&scop prop-type-list-attr-marking  'logical,character':U
+&scop prop-label-list-attr-marking '¬ключена работа с Ёƒќ,“ипы маркировок дл€ помарочного учета'
+&scop prop-list-attr-marking       'marking-EDO,marking-type'
+&scop global-attr-marking true
+&scop host-attr-marking false
+&scop shop-attr-marking true
+&scop store-attr-marking true
+&scop db-attr-marking false
+&scop level-way-attr-marking "obj,,global"
+&scop up-way-attr-marking "marking,marking,marking"
 
 /* ќбщие параметры по ј–’»¬јћ */
 &scop type-attr-arh-global            {&type-char}
@@ -4884,6 +4902,8 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-egais-host
       {&attr-temp-full-code}
+      &scop attr-code attr-marking
+      {&attr-temp-full-code}
       &scop attr-code attr-mercur
       {&attr-temp-full-code}
       
@@ -5065,6 +5085,8 @@ on error undo, return error return-value
     &scop attr-code attr-srv-auth-ASU
     {&attr-temp-code}
     &scop attr-code attr-egais-host
+    {&attr-temp-code}
+    &scop attr-code attr-marking
     {&attr-temp-code}
     &scop attr-code attr-mercur
     {&attr-temp-code}
@@ -5775,6 +5797,8 @@ on error undo, return error return-value
     &scop attr-code attr-srv-auth-ASU
     {&attr-legacy-code}
     &scop attr-code attr-egais-host
+    {&attr-legacy-code}
+	&scop attr-code attr-marking
     {&attr-legacy-code}
     &scop attr-code attr-mercur
     {&attr-legacy-code}
