@@ -32,7 +32,8 @@ define input parameter p-status as integer no-undo .
 define input parameter p-ProcDisk as integer no-undo .
 define input parameter p-UserDisk as integer no-undo .
 define input parameter p-Date     as date no-undo .
-define input parameter p-Time     as character no-undo .
+define input parameter p-Time     as integer no-undo .
+define input parameter p-Time-end as integer no-undo .
 define input parameter p-db-list  as character no-undo .
 define input parameter p-ValueDisk  as decimal no-undo .
 define input parameter p-TreshDisk  as decimal no-undo .
@@ -59,7 +60,7 @@ define temp-table tt-devicePC no-undo
   field UserProc    as decimal
   field status_     as character
   field db-num      as integer 
-  index pi id .
+  index pi id db-num.
   
 define temp-table tt-devicePCAttr no-undo
   field id        as integer
@@ -70,6 +71,7 @@ define temp-table tt-devicePCAttr no-undo
   field raw_value as character
   field date_     as date
   field time_     as integer
+  field db-num    as integer
   index pi id
   .
         
@@ -97,174 +99,164 @@ define variable v-color             as character no-undo .
 do
   on error undo, return error return-value
   :
+
   if p-db-list = "" then p-db-list = string(v-cntxp-db-num) .      
   do ii = 1 to num-entries (p-db-list, {&comma-char}):
-
     for each buf_devisPC no-lock where buf_devisPC.DB-num = integer(entry(ii, p-db-list, {&comma-char})):
-        
       if buf_devisPC.namepc begins p-namePk and buf_devisPC.modeldevice begins p-ModelDisk then 
       do:
         next_:
-        for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date = p-Date:
-          if p-Time <> "" then 
+        for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date >= p-Date:
+          if buf_devisPCAttr.time_ < p-Time then next next_.
+          if buf_devisPCAttr.time_ > p-Time-end then next next_.  
+          if buf_devisPCattr.attr-code ="ProcDisk" or buf_devisPCattr.attr-code = "UserProc" or buf_devisPCattr.attr-code = "testStatus" then 
           do: 
-            if integer(entry (2,p-Time,":")) > 0 then 
+            v-ProcDisk = 0 .
+            v-UserDisk = 0 .
+            v-TestStatus = "" .
+            if buf_devisPCAttr.attr-code = "ProcDisk" then 
             do:
-              v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") .
-              v-TimeST1 = entry (1,p-Time,":") + ":" + entry (2,p-Time,":") .
+              v-ProcDisk = decimal(entry(1,buf_devisPCAttr.attr-value,"%")) .
             end.
-            else  
+            if buf_devisPCAttr.attr-code = "UserProc" then 
             do:
-              v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) .
-              v-TimeST1 = entry (1,p-Time,":") .
+              v-UserDisk = decimal(entry(1,buf_devisPCAttr.attr-value,"%")) .
+            end.  
+            if buf_devisPCAttr.attr-code = "TestStatus" then 
+            do:
+              v-TestStatus = buf_devisPCAttr.attr-value .
+            end.  
+            find first tt-devicePC exclusive-lock where tt-devicePC.id = buf_devisPC.id and tt-devicePC.modeldevice = buf_devisPC.modeldevice
+              and tt-devicePC.ModelPC     = buf_devisPC.ModelPC and 
+              tt-devicePC.namepc      = buf_devisPC.namepc and
+              tt-devicePC.date_       = buf_devisPCAttr.date and 
+              tt-devicePC.db-num      = buf_devisPC.DB-num and
+              tt-devicePC.time_int  = buf_devisPCAttr.time_
+              no-error .
+            if not available (tt-devicePC) then 
+            do: 
+              create tt-devicePC .
+              assign
+                tt-devicePC.id          = buf_devisPC.id
+                tt-devicePC.modeldevice = buf_devisPC.modeldevice
+                tt-devicePC.ModelPC     = buf_devisPC.ModelPC
+                tt-devicePC.namepc      = buf_devisPC.namepc
+                tt-devicePC.date_       = buf_devisPCAttr.date
+                tt-devicePC.time_int    = buf_devisPCAttr.time_
+                tt-devicePC.db-num      = buf_devisPC.DB-num
+                tt-devicePC.time_       = string(truncate (buf_devisPCattr.time_ / 3600, 0)) + ":" + string((buf_devisPCattr.time_ modulo 3600) / 60,"99") + ":" + string((buf_devisPCattr.time_ modulo 3600) / 360,"99")
+                .
             end.
+            if v-ProcDisk <> 0 then tt-devicePC.ProcDisk    = v-ProcDisk .
+            if v-UserDisk <> 0 then tt-devicePC.UserProc    = v-UserDisk .
+            if v-TestStatus <> "" then tt-devicePC.status_  = v-TestStatus .
           end.
           else 
           do:
-            v-TimeST1 = "0" .
-            v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) .
-          end.
-          if v-TimeST <> v-TimeST1 then next next_ .          
-          if buf_devisPCAttr.attr-code = "ProcDisk" then 
-          do:
-            v-ProcDisk = decimal(entry(1,buf_devisPCAttr.attr-value,"%")) .
-          end.
-          if buf_devisPCAttr.attr-code = "UserProc" then 
-          do:
-            v-UserDisk = decimal(entry(1,buf_devisPCAttr.attr-value,"%")) .
+            find first tt-devicePCAttr where           tt-devicePCAttr.id        = buf_devisPCattr.id and
+              tt-devicePCAttr.name_     = buf_devisPCattr.attr-code and
+              tt-devicePCAttr.raw_value = buf_devisPCattr.attr-Raw-value and
+              tt-devicePCAttr.tresh     = decimal(buf_devisPCattr.tresh) and
+              tt-devicePCAttr.value_    = decimal(buf_devisPCattr.attr-value) and
+              tt-devicePCAttr.type_     = buf_devisPCattr.type and
+              tt-devicePCAttr.date_     = buf_devisPCattr.date and
+              tt-devicePCAttr.db-num    = buf_devisPC.DB-num and
+              tt-devicePCAttr.time_     = buf_devisPCattr.time_ no-error .
+          
+            if not available (tt-devicePCAttr) then 
+            do:
+              create tt-devicePCAttr .
+              assign
+                tt-devicePCAttr.id        = buf_devisPCattr.id
+                tt-devicePCAttr.name_     = buf_devisPCattr.attr-code
+                tt-devicePCAttr.raw_value = buf_devisPCattr.attr-Raw-value
+                tt-devicePCAttr.tresh     = decimal(buf_devisPCattr.tresh)
+                tt-devicePCAttr.value_    = decimal(buf_devisPCattr.attr-value)
+                tt-devicePCAttr.type_     = buf_devisPCattr.type 
+                tt-devicePCAttr.db-num    = buf_devisPC.DB-num
+                tt-devicePCAttr.date_     = buf_devisPCattr.date
+                tt-devicePCAttr.time_     = buf_devisPCattr.time_ 
+                .  
+            end.
           end.  
-          if buf_devisPCAttr.attr-code = "TestStatus" then 
-          do:
-            v-TestStatus = if buf_devisPCAttr.attr-value = "1" then "Не пройдена" else "Пройдена" .
-          end.  
-            
-          find first tt-devicePC exclusive-lock where tt-devicePC.id = buf_devisPC.id and tt-devicePC.modeldevice = buf_devisPC.modeldevice
-            and tt-devicePC.ModelPC     = buf_devisPC.ModelPC and 
-            tt-devicePC.namepc      = buf_devisPC.namepc and
-            tt-devicePC.date_       = p-Date and 
-            tt-devicePC.db-num      = buf_devisPC.DB-num and
-            tt-devicePC.time_ = string(truncate (buf_devisPCattr.time_ / 3600, 0)) + ":" + string((buf_devisPCattr.time_ modulo 3600) / 60,"99") + ":" + string((buf_devisPCattr.time_ modulo 3600) / 360,"99")
-             no-error .
-          if not available (tt-devicePC) then 
-          do: 
-            create tt-devicePC .
-            assign
-              tt-devicePC.id          = buf_devisPC.id
-              tt-devicePC.modeldevice = buf_devisPC.modeldevice
-              tt-devicePC.ModelPC     = buf_devisPC.ModelPC
-              tt-devicePC.namepc      = buf_devisPC.namepc
-              tt-devicePC.date_       = p-Date
-              tt-devicePC.time_int       = buf_devisPCAttr.time_
-              tt-devicePC.db-num      = buf_devisPC.DB-num
-              tt-devicePC.time_ = string(truncate (buf_devisPCattr.time_ / 3600, 0)) + ":" + string((buf_devisPCattr.time_ modulo 3600) / 60,"99") + ":" + string((buf_devisPCattr.time_ modulo 3600) / 360,"99")
-              .
-          end.
-          if v-ProcDisk <> 0 then tt-devicePC.ProcDisk    = v-ProcDisk .
-          if v-UserDisk <> 0 then tt-devicePC.UserProc    = v-UserDisk .
-          if v-TestStatus <> "" then tt-devicePC.status_  = v-TestStatus .
         end.
-        if p-ProcDisk > 0 then 
-        do:
-          for each tt-devicePC exclusive-lock where tt-devicePC.ProcDisk <> p-ProcDisk:
-            delete tt-devicePC .
-          end.  
-        end.   
-        if p-UserDisk > 0 then 
-        do:
-          for each tt-devicePC exclusive-lock where tt-devicePC.UserProc <> p-UserDisk:
-            delete tt-devicePC .
-          end.  
-        end.  
-        if p-status > -1 then 
-        do:
-          if p-status = 1 then 
-          do:
-            for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена":
-              delete tt-devicePC .
-            end.  
-          end.
-          else 
-          do:
-            for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Не пройдена":
-              delete tt-devicePC .
-            end.  
-
-          end.  
-        end.  
       end. 
-      next_attr: 
-      for each tt-devicePC,      
-        each buf_devisPC-attr no-lock where buf_devisPC-attr.id = tt-devicePC.id and buf_devisPC-attr.date = tt-devicePC.date_
-        and buf_devisPC-attr.attr-code <> "ProcDisk" and buf_devisPC-attr.attr-code <> "UserProc" and buf_devisPC-attr.attr-code <> "testStatus" :
-        if p-Time <> "" then 
-        do: 
-          if integer(entry (2,p-Time,":")) > 0 then 
-          do:
-            v-TimeST-attr = string(truncate (buf_devisPC-attr.time_ / 3600, 0)) + ":" + string((buf_devisPC-Attr.time_ modulo 3600) / 60,"99") .
-            v-TimeST1-attr = entry (1,p-Time,":") + ":" + entry (2,p-Time,":") .
-          end.
-          else  
-          do:
-            v-TimeST-attr = string(truncate (buf_devisPC-Attr.time_ / 3600, 0)) .
-            v-TimeST1-attr = entry (1,p-Time,":") .
-          end.
-        end.
-        else 
-        do:
-          v-TimeST1-attr = "0" .
-          v-TimeST-attr = string(truncate (buf_devisPC-Attr.time_ / 3600, 0)) .
-        end.
-        if v-TimeST-attr <> v-TimeST1-attr then next next_attr . 
-        find first tt-devicePCAttr where           tt-devicePCAttr.id        = buf_devisPC-attr.id and
-          tt-devicePCAttr.name_     = buf_devisPC-attr.attr-code and
-          tt-devicePCAttr.raw_value = buf_devisPC-attr.attr-Raw-value and
-          tt-devicePCAttr.tresh     = decimal(buf_devisPC-attr.tresh) and
-          tt-devicePCAttr.value_    = decimal(buf_devisPC-attr.attr-value) and
-          tt-devicePCAttr.type_     = buf_devisPC-attr.type and
-          tt-devicePCAttr.date_     = buf_devisPC-attr.date and
-          tt-devicePCAttr.time_     = buf_devisPC-attr.time_ no-error .
-        if not available (tt-devicePCAttr) then 
-        do:
-         
-          create tt-devicePCAttr .
-          assign
-            tt-devicePCAttr.id        = buf_devisPC-attr.id
-            tt-devicePCAttr.name_     = buf_devisPC-attr.attr-code
-            tt-devicePCAttr.raw_value = buf_devisPC-attr.attr-Raw-value
-            tt-devicePCAttr.tresh     = decimal(buf_devisPC-attr.tresh)
-            tt-devicePCAttr.value_    = decimal(buf_devisPC-attr.attr-value)
-            tt-devicePCAttr.type_     = buf_devisPC-attr.type 
-            tt-devicePCAttr.date_     = buf_devisPC-attr.date
-            tt-devicePCAttr.time_     = buf_devisPC-attr.time_ 
-            .  
-        end.
+
+    end.
+  end.
+  if p-ProcDisk > 0 then 
+  do:
+    for each tt-devicePC exclusive-lock where tt-devicePC.ProcDisk < p-ProcDisk:
+      delete tt-devicePC .
+    end.  
+  end.   
+  if p-UserDisk > 0 then 
+  do:
+    for each tt-devicePC exclusive-lock where tt-devicePC.UserProc < p-UserDisk:
+      delete tt-devicePC .
+    end.  
+  end.  
+  if p-status > -1 then 
+  do:
+    if p-status = 1 then 
+    do:
+      for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена":
+        delete tt-devicePC .
+      end.  
+    end.
+    else 
+    do:
+      for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
+        delete tt-devicePC .
+      end.  
+
+    end.  
+  end.  
+
+  if p-ValueDisk > 0 then 
+  do:
+    for each tt-devicePCAttr where tt-devicePCAttr.value_ < p-ValueDisk:
+      delete tt-devicePCAttr .
+    end.  
+  end.  
+  if p-TreshDisk > 0 then 
+  do:
+    for each tt-devicePCAttr where tt-devicePCAttr.tresh < p-TreshDisk:
+      delete tt-devicePCAttr .
+    end.  
+  end.  
+  if p-Delta > 0 then 
+  do:
+    for each tt-devicePCAttr where abs(tt-devicePCAttr.value_ - tt-devicePCAttr.tresh) > p-Delta:
+      delete tt-devicePCAttr .
+    end.  
+  end.  
+      
+  
+  for each tt-devicePC:
+    find first tt-devicePCAttr where tt-devicePCAttr.id = tt-devicePC.id and tt-devicePCAttr.db-num = tt-devicePC.db-num and tt-devicePCAttr.date_ = tt-devicePC.date_ and tt-devicePCAttr.time_ = tt-devicePC.time_int no-error .
+    if not available (tt-devicePCAttr) then 
+    do:
+      if tt-devicePC.status_ = "не закончена" then do:
+        create tt-devicePCAttr.
+        assign
+        tt-devicePCAttr.date_ = tt-devicePC.date_
+        tt-devicePCAttr.time_ = tt-devicePC.time_int
+        tt-devicePCAttr.db-num  = tt-devicePC.db-num
+        tt-devicePCAttr.id = tt-devicePC.id
+        .
+      end.  
+      else do:
+      delete tt-devicePC .
       end.
     end.
-    if p-ValueDisk > 0 then 
-    do:
-      for each tt-devicePCAttr where tt-devicePCAttr.value_ <> p-ValueDisk:
-        delete tt-devicePCAttr .
-      end.  
-    end.  
-    if p-TreshDisk > 0 then 
-    do:
-      for each tt-devicePCAttr where tt-devicePCAttr.tresh <> p-TreshDisk:
-        delete tt-devicePCAttr .
-      end.  
-    end.  
-    if p-Delta > 0 then 
-    do:
-      for each tt-devicePCAttr where abs(tt-devicePCAttr.value_ - tt-devicePCAttr.tresh) <> p-Delta:
-        delete tt-devicePCAttr .
-      end.  
-    end.  
   end.
 
   /*печать*/
   run get-report-num (output p-report-id).
     
   v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
-                        
+           
   output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
   put stream OutStr-html unformatted
     "<!DOCTYPE HTML>" skip
@@ -289,14 +281,19 @@ do
   put stream OutStr-html unformatted
     '<tr>' skip
     '<td style="width: 50px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 60px;"></td>' skip
+    '<td style="width: 60px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 170px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
     '</tr>' skip
     '<tr><td colspan="14" style="text-align: center;">Результаты проверки HDD</td></tr>'
     .
@@ -307,7 +304,6 @@ do
     '<tbody>' skip
     .
   put stream OutStr-html unformatted
-    
     '<TR>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">АЗК</TD>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Дата теста</TD>' skip
@@ -320,6 +316,7 @@ do
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Статус проверки</TD>' skip
     '<TD text_wrap="true" colspan="5" style="text-align: center;">Атрибуты диска</TD>' skip
     '</TR>' skip .
+    
   put stream OutStr-html unformatted  
     '<TD text_wrap="true" style="text-align: center;">Название</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Value</TD>' skip
@@ -329,58 +326,33 @@ do
     '</TR>'skip       
     .
   for each tt-devicePC:
+    if tt-devicePC.ProcDisk = 100 or tt-devicePC.UserProc = 100 or tt-devicePC.status_ <> "Пройдена" then v-color = "red" .
+    else v-color = "white" .
+    
     put stream OutStr-html unformatted
       '<TR>' skip
-      '<TD text_wrap="true" style="text-align: center;">' + string(tt-devicePC.db-num) + '</TD>' skip
-      '<TD text_wrap="true" style="text-align: center;">' + string(tt-devicePC.date_) + '</TD>' skip
-      '<TD text_wrap="true" style="text-align: center;">' + string(tt-devicePC.time_) + '</TD>' skip
-      '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.namepc) + '</TD>' skip
-      '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.ModelPC) + '</TD>' skip
-      '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.modeldevice) + '</TD>' skip.
-    if tt-devicePC.ProcDisk = 100 then 
-    do:
-      put stream OutStr-html unformatted
-        '<TD text_wrap="true" style="text-align: center; background-color: red;">' + string (tt-devicePC.ProcDisk) + '</TD>' skip.
-    end.
-    else 
-    do:
-      put stream OutStr-html unformatted
-        '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.ProcDisk) + '</TD>' skip.
-    end.  
-    if tt-devicePC.UserProc = 100 then 
-    do: 
-      put stream OutStr-html unformatted  
-        '<TD text_wrap="true" style="text-align: center; background-color: red;">' + string (tt-devicePC.UserProc) + '</TD>' skip.
-    end.
-    else 
-    do:
-      put stream OutStr-html unformatted  
-        '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.UserProc) + '</TD>' skip.
-    end.  
-    if tt-devicePC.status_ = "Не пройдена" then 
-    do:
-      put stream OutStr-html unformatted      
-        '<TD text_wrap="true" style="text-align: center; background-color: red;">' + string (tt-devicePC.status_) + '</TD>' skip
-        .                     
-    end.
-    else 
-    do:
-      put stream OutStr-html unformatted      
-        '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.status_) + '</TD>' skip
-        .                     
-    end.  
-
-    for each tt-devicePCAttr no-lock where tt-devicePCAttr.id = tt-devicePC.id and tt-devicePCAttr.time_ = tt-devicePC.time_int break by tt-devicePCAttr.id:
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string(tt-devicePC.db-num) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string(tt-devicePC.date_) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string(tt-devicePC.time_) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePC.namepc) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePC.ModelPC) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePC.modeldevice) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePC.ProcDisk) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePC.UserProc) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePC.status_) + '</TD>' skip
+      .                     
+    for each tt-devicePCAttr no-lock where tt-devicePCAttr.id = tt-devicePC.id and tt-devicePCAttr.db-num = tt-devicePC.db-num and tt-devicePCAttr.date_ = tt-devicePC.date_ 
+    and tt-devicePCAttr.time_ = tt-devicePC.time_int break by tt-devicePCAttr.id :
       if tt-devicePCAttr.value_ <= tt-devicePCAttr.tresh then v-color = "red" .
       else v-color = "white" .   
       if first-of (tt-devicePCAttr.id ) then 
       do:      
         put stream OutStr-html unformatted
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.name_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.name_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.value_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.tresh) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.type_) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.type_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
           '</tr>'                          
           .
       end.
@@ -389,11 +361,11 @@ do
         put stream OutStr-html unformatted
           '<TR>' skip
           '<TD text_wrap="true" colspan="9" style="text-align: center;"></TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.name_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.name_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.value_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.tresh) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.type_) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.type_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
           '</tr>'                          
           .                           
       end.  

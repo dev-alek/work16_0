@@ -71,8 +71,8 @@ define temp-table tt-devicePCAttr no-undo
   index pi id
   .
 define temp-table tt-attrDevis like ub.devisPC-attr
-index pi id db-num 
-asc date asc time_.
+  index pi id db-num 
+  asc date asc time_.
   
 define buffer buf_devisPC        for ub.devisPC .
 define buffer buf_devisPCAttr    for ub.devisPC-attr .
@@ -80,7 +80,7 @@ define buffer bf_devisPCAttr     for ub.devisPC-attr .
 define buffer bt_devisPCAttr     for ub.devisPC-attr .
 define buffer buf_devisPC-attr   for ub.devisPC-attr .
 define buffer buf_tt-devisPCAttr for tt-devicePCAttr .
-define buffer buf_tt-devicePC     for tt-devicePC .
+define buffer buf_tt-devicePC    for tt-devicePC .
 
 define stream Out-Stream.
 define stream OutStr-html.
@@ -102,21 +102,36 @@ define variable v-time-end1         as character no-undo .
 define variable v-date-start        as date      no-undo .
 define variable v-date-end          as date      no-undo .
 define variable v-color             as character no-undo .
+define variable v-host-name         as character no-undo .
+define variable v-obj-name          as character no-undo .
+define variable v-period            as character no-undo .
 
 do
   on error undo, return error return-value
   :
+  for first ub.sysconf, first ub.clients no-lock where ub.clients.obj-code = ub.sysconf.host-code and ub.clients.obj-type = {&cmp}:
+    v-host-name = ub.clients.obj-name .
+  end.
+  
+  if p-Date-start = ? then p-Date-start = today .
+  if p-Date-end = ? then p-Date-end = today .
+         
+  v-period = "c: " + string (p-Date-start,"99.99.9999") + " по " + string (p-Date-end,"99.99.9999") .
   if p-obj-list = "" then p-obj-list = "0" .      
   do ii = 1 to num-entries (p-obj-list, {&comma-char}):
+    for first ub.clients no-lock where ub.clients.obj-code = integer(entry(ii, p-obj-list, {&comma-char})) and ub.clients.obj-type = {&shop}:
+      v-obj-name = v-obj-name + "," + ub.clients.obj-name .
+    end.  
+    
     for each buf_devisPC no-lock where buf_devisPC.DB-num = integer(entry(ii, p-obj-list, {&comma-char})):
-        create tt-devicePC .
-        assign
-          tt-devicePC.id          = buf_devisPC.id
-          tt-devicePC.db-num      = buf_devisPC.DB-num
-          tt-devicePC.modeldevice = buf_devisPC.modeldevice
-          tt-devicePC.ModelPC     = buf_devisPC.ModelPC
-          tt-devicePC.namepc      = buf_devisPC.namepc
-          .
+      create tt-devicePC .
+      assign
+        tt-devicePC.id          = buf_devisPC.id
+        tt-devicePC.db-num      = buf_devisPC.DB-num
+        tt-devicePC.modeldevice = buf_devisPC.modeldevice
+        tt-devicePC.ModelPC     = buf_devisPC.ModelPC
+        tt-devicePC.namepc      = buf_devisPC.namepc
+        .
       empty temp-table tt-attrDevis .
 
       for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = tt-devicePC.id and buf_devisPCAttr.db-num = tt-devicePC.DB-num
@@ -137,9 +152,9 @@ do
         do:
           create tt-devicePCAttr .
           assign
-            tt-devicePCAttr.id    = tt-attrDevis.id
-            tt-devicePCAttr.name_ = tt-attrDevis.attr-code
-            tt-devicePCAttr.type_ = tt-attrDevis.type 
+            tt-devicePCAttr.id        = tt-attrDevis.id
+            tt-devicePCAttr.name_     = tt-attrDevis.attr-code
+            tt-devicePCAttr.type_     = tt-attrDevis.type 
             tt-devicePCAttr.value_    = decimal(tt-attrDevis.attr-value)
             tt-devicePCAttr.raw_value = tt-attrDevis.attr-Raw-value
             .
@@ -151,24 +166,25 @@ do
           if available (tt-devicePCAttr) then 
           do:
             assign
-              tt-devicePCAttr.tresh  = decimal(tt-attrDevis.tresh)
-            .
+              tt-devicePCAttr.tresh = decimal(tt-attrDevis.tresh)
+              .
             decimal (tt-attrDevis.attr-Raw-value) no-error .
-            if not error-status:error then do:
-             tt-devicePCAttr.ch_raw = abs(decimal(tt-devicePCAttr.raw_value) - decimal(tt-attrDevis.attr-Raw-value)).
+            if not error-status:error then 
+            do:
+              tt-devicePCAttr.ch_raw = decimal(tt-devicePCAttr.raw_value) - decimal(tt-attrDevis.attr-Raw-value).
             end.  
             
-            tt-devicePCAttr.ch_val = abs(tt-devicePCAttr.value_ - decimal(tt-attrDevis.attr-value)) .
+            tt-devicePCAttr.ch_val = tt-devicePCAttr.value_ - decimal(tt-attrDevis.attr-value) .
             tt-devicePCAttr.raw_value = tt-attrDevis.attr-Raw-value.
             tt-devicePCAttr.value_    = decimal(tt-attrDevis.attr-value).
           end.  
         end.  
       end. 
       assign
-      v-time-start1 = ""
-      v-date-end = ? 
-      v-date-start = ? 
-      . 
+        v-time-start1 = ""
+        v-date-end    = ? 
+        v-date-start  = ? 
+        . 
       for each tt-attrDevis no-lock where tt-attrDevis.id = tt-devicePC.id and tt-attrDevis.db-num = tt-devicePC.db-num break by tt-attrDevis.date by tt-attrDevis.time_:
         if first-of (tt-attrDevis.date) then 
         do:
@@ -187,10 +203,10 @@ do
         end.        
       end.   /*for each tt-attrDevis no-lock where tt-attrDevis.id = buf_devisPC.id and tt-attrDevis.db-num = buf_devisPC.db-num break by tt-attrDevis.date by tt-attrDevis.time_:*/
     end. /*for each buf_devisPC no-lock where buf_devisPC.DB-num = integer(entry(ii, p-obj-list, {&comma-char})):*/
-for each tt-devicePC:
+    for each tt-devicePC:
       find first tt-devicePCAttr where tt-devicePCAttr.id = tt-devicePC.id no-error .
       if not available (tt-devicePCAttr) then delete tt-devicePC .
-end.
+    end.
     output stream Outhtmllog to value(p-folder + "\" + p-file + ".txt") append convert target 'UTF-8'.
   
     if not available (tt-devicePCAttr) then 
@@ -211,8 +227,8 @@ end.
   /*печать*/
   run get-report-num (output p-report-id).
     
-  v-file-name-rep-htm = p-folder + "\" + string(p-file) + string(p-Date-end,"99999999") + string (time) + ".html".   
-                        
+  v-file-name-rep-htm = p-folder + "\" + string(p-file) + string(p-Date-end,"99999999") + replace (string(time,"HH:MM:SS"),":","") + ".html".   
+  v-obj-name = trim(v-obj-name,",").                        
   output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
   put stream OutStr-html unformatted
     "<!DOCTYPE HTML>" skip
@@ -237,19 +253,22 @@ end.
   put stream OutStr-html unformatted
     '<tr>' skip
     '<td style="width: 50px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 170px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
     '</tr>' skip
     '<tr><td colspan="12" style="text-align: center;">Результаты проверки HDD</td></tr>'
+    '<tr><td colspan="12" style="text-align: left;">По фирме: ' + v-host-name + '</td></tr>'
+    '<tr><td colspan="12" style="text-align: left;">По объектам: ' + v-obj-name + '</td></tr>'
+    '<tr><td colspan="12" style="text-align: left;">За период ' + v-period + '</td></tr>'
     .
                         
   put stream OutStr-html unformatted
@@ -264,7 +283,7 @@ end.
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Конец периода</TD>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Имя ПК</TD>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Модель диска</TD>' skip
-    '<TD text_wrap="true" colspan="5" style="text-align: center;">Атрибуты диска</TD>' skip
+    '<TD text_wrap="true" colspan="7" style="text-align: center;">Атрибуты диска</TD>' skip
     '</TR>' skip .
   put stream OutStr-html unformatted  
     '<TD text_wrap="true" style="text-align: center;">Название</TD>' skip
@@ -295,13 +314,13 @@ end.
       if first-of (tt-devicePCAttr.id ) then 
       do:         
         put stream OutStr-html unformatted
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.name_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.name_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.value_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.tresh) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.type_) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.ch_raw) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.ch_val) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.type_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.ch_raw) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.ch_val) + '</TD>' skip
           '</tr>'                          
           .
       end.
@@ -310,13 +329,13 @@ end.
         put stream OutStr-html unformatted
           '<TR>' skip
           '<TD text_wrap="true" colspan="5" style="text-align: center;"></TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.name_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.name_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.value_) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.tresh) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.type_) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.ch_raw) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePCAttr.ch_val) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.type_) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.raw_value) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.ch_raw) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center; background-color:' + v-color + ';">' + string (tt-devicePCAttr.ch_val) + '</TD>' skip
           '</tr>'                          
           .                           
       end.  

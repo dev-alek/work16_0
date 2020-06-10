@@ -4682,9 +4682,8 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run gbl/inidebug.p. 
     
-    run ref/codelay.p ( "", "SpravDevice", "Справочник устройств") no-error.
+    run ref/codelay.p ( "", "", "SpravDevice", "Справочник устройств") no-error.
     
   end.
 
@@ -7793,7 +7792,7 @@ procedure m-rep-shiftOld-exe :
   do
   on error undo, return error return-value
   :
-    run rep/g-shift.p (input parparentproc, input '') .
+    run rep/g-new-shift.p (input parparentproc, input '') .
   end.
 
 end procedure. /* m-rep-shift4-exe */

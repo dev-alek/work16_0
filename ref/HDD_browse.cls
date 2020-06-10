@@ -30,12 +30,14 @@ class ref.HDD_browse inherits Form:
     field namepc      like ub.devisPC.namepc
     field date_       as date
     field time_       as character
+    field time_int    as integer
     field ProcDisk    as decimal
     field UserProc    as decimal
     field status_     as character
     field db-num      as integer 
     field ii          as integer
-    index pi id .
+    index pi id db-num asc date_ asc time_int 
+    .
   
   define temp-table tt-devicePCAttr no-undo
     field id        as integer
@@ -45,6 +47,9 @@ class ref.HDD_browse inherits Form:
     field type_     as character
     field raw_value as character
     field ii        as integer
+    field date_     as date
+    field db-num    as integer
+    field time_     as integer
     index pi name_
     .
 
@@ -74,6 +79,8 @@ class ref.HDD_browse inherits Form:
   define private variable label3                                as System.Windows.Forms.Label                     no-undo.
   define private variable label2                                as System.Windows.Forms.Label                     no-undo.
   define private variable label4                                as System.Windows.Forms.Label                     no-undo.
+  define private variable label6                                as System.Windows.Forms.Label                     no-undo.
+  define private variable label5                                as System.Windows.Forms.Label                     no-undo.
   define private variable lnamePK                               as System.Windows.Forms.Label                     no-undo.
   define private variable lobj_list                             as System.Windows.Forms.Label                     no-undo.
   define private variable lProcDisk                             as System.Windows.Forms.Label                     no-undo.
@@ -104,6 +111,7 @@ class ref.HDD_browse inherits Form:
   define private variable pMode                                 as character                                      no-undo .
   define         variable hQuery1                               as handle                                         no-undo .
   define         variable hQuery2                               as handle                                         no-undo .
+  define private variable sort_time_end                         as System.Windows.Forms.DateTimePicker            no-undo.
   define private variable statusDataGridViewTextBoxColumn       as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
   define private variable statusDataGridViewTextBoxColumn1      as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
   define private variable timeDataGridViewTextBoxColumn         as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
@@ -118,7 +126,8 @@ class ref.HDD_browse inherits Form:
   define private variable ValueDisk                             as System.Windows.Forms.NumericUpDown             no-undo.
   
   define         variable v-SortDate                            as date                                           no-undo .
-  define         variable v-SortTime                            as character                                      no-undo .
+  define         variable v-SortTime                            as integer                                        no-undo .
+  define         variable v-SortTime-end                        as integer                                        no-undo .
   define         variable v-SortTimeInt                         as integer                                        no-undo .
   define         variable v-NamePK                              as character                                      no-undo .
   define         variable v-ModelDisk                           as character                                      no-undo .
@@ -168,11 +177,16 @@ class ref.HDD_browse inherits Form:
     this-object:sort_date:Value = today .
     if v-SortDate = ? then v-SortDate = today .
     this-object:sort_time:Value = today .
+    this-object:sort_time_end:text = "23:59:59" .
+    /*      v-time-start = mtime (p-Time-start) / 1000 .*/
+    /*  v-time-end  = mtime (p-Time-end) / 1000 .       */
+    if v-SortTime = ? then v-SortTime = time.
+    if v-SortTime-end = ? then v-SortTime-end = time.
+    v-SortTime = mtime (this-object:sort_time:value) / 1000 .
+    v-SortTime-end = mtime (this-object:sort_time_end:value) / 1000 .
     
-    if v-SortTime = ? then v-SortTime = string(today) .
-    v-SortTime = string(this-object:sort_time:Text) .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
 
 
@@ -213,32 +227,55 @@ class ref.HDD_browse inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void browseHDD_RowPostPaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPostPaintEventArgs ):
-    define variable kk as integer no-undo .
     define buffer tt-devicePC for tt-devicePC .
+    define variable kk as integer no-undo .
+      
+    for each tt-devicePC:
+      tt-devicePC.ii = kk .
+      kk = kk + 1.
+    end.  
     if e:RowIndex > -1 then 
     do:
-      for each tt-devicePC no-lock:
-        if kk = e:RowIndex then 
+      for each tt-devicePC no-lock where tt-devicePC.ii = e:RowIndex and 
+        (tt-devicePC.UserProc = 100 or
+        tt-devicePC.ProcDisk = 100 or
+        tt-devicePC.status_ <> "Пройдена"):
+        if p-db-num <> 0 then 
         do:
-          if tt-devicePC.UserProc = 100 then 
-          do:
-            browsehdd:Rows[e:RowIndex]:cells[6]:Style:BackColor = System.Drawing.Color:Red.
-            browsehdd:Rows[e:RowIndex]:cells[6]:Style:ForeColor = System.Drawing.Color:White.
-          end.
-          if tt-devicePC.ProcDisk = 100 then 
-          do:
-            browsehdd:Rows[e:RowIndex]:cells[5]:Style:BackColor = System.Drawing.Color:Red.
-            browsehdd:Rows[e:RowIndex]:cells[5]:Style:ForeColor = System.Drawing.Color:White.
-          end.
-          if tt-devicePC.status_ = "Не пройдена" then 
-          do:
-            browsehdd:Rows[e:RowIndex]:cells[7]:Style:BackColor = System.Drawing.Color:Red.
-            browsehdd:Rows[e:RowIndex]:cells[7]:Style:ForeColor = System.Drawing.Color:White.
-          end.
-          kk = kk + 1 .
+          browseHDD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
+          browseHDD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
         end.
+        else 
+        do:
+          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
+          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
+        end.  
       end.  
     end.
+    /*    if e:RowIndex > -1 then                                                                  */
+    /*    do:                                                                                      */
+    /*      for each tt-devicePC no-lock:                                                          */
+    /*        if kk = e:RowIndex then                                                              */
+    /*        do:                                                                                  */
+    /*          if tt-devicePC.UserProc = 100 then                                                 */
+    /*          do:                                                                                */
+    /*            browsehdd:Rows[e:RowIndex]:cells[6]:Style:BackColor = System.Drawing.Color:Red.  */
+    /*            browsehdd:Rows[e:RowIndex]:cells[6]:Style:ForeColor = System.Drawing.Color:White.*/
+    /*          end.                                                                               */
+    /*          if tt-devicePC.ProcDisk = 100 then                                                 */
+    /*          do:                                                                                */
+    /*            browsehdd:Rows[e:RowIndex]:cells[5]:Style:BackColor = System.Drawing.Color:Red.  */
+    /*            browsehdd:Rows[e:RowIndex]:cells[5]:Style:ForeColor = System.Drawing.Color:White.*/
+    /*          end.                                                                               */
+    /*          if tt-devicePC.status_ = "Не пройдена" then                                        */
+    /*          do:                                                                                */
+    /*            browsehdd:Rows[e:RowIndex]:cells[7]:Style:BackColor = System.Drawing.Color:Red.  */
+    /*            browsehdd:Rows[e:RowIndex]:cells[7]:Style:ForeColor = System.Drawing.Color:White.*/
+    /*          end.                                                                               */
+    /*          kk = kk + 1 .                                                                      */
+    /*        end.                                                                                 */
+    /*      end.                                                                                   */
+    /*    end.                                                                                     */
     return.
 
   end method.
@@ -373,9 +410,10 @@ class ref.HDD_browse inherits Form:
         assign
           p-obj-list = p-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code )
           .
-        for first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type:
-          v-db-list = v-db-list + "," + string( ub.clients.db-num).
-        end.
+        find first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type no-error .
+        if available (ub.clients) and ub.clients.db-num <> ? then v-db-list = v-db-list + "," + string( ub.clients.db-num).
+        else v-db-list = v-db-list + "," + string (temp_obj-list.obj-code) . 
+        
  
       end.
       v-db-list = trim (v-db-list,",") .
@@ -383,7 +421,7 @@ class ref.HDD_browse inherits Form:
     end.    
     this-object:obj_list:Text = string(p-obj-list) .
 
-    bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
+    bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta).
     
     return.
@@ -397,7 +435,7 @@ class ref.HDD_browse inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void Click_print( input sender as System.Object, input e as System.EventArgs ):
-    if v-SortTime = "" then v-SortTime = "00:00" .
+    
     run rep/hdd-interface.p(input parparentproc,
       input v-NamePK,
       input v-ModelDisk,
@@ -406,6 +444,7 @@ class ref.HDD_browse inherits Form:
       input v-UserDisk,
       input v-SortDate,
       input v-SortTime,
+      input v-SortTime-end,
       input v-db-list,
       input v-ValueDisk,
       input v-TreshDisk,
@@ -436,6 +475,9 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void delta_ValueChanged( input sender as System.Object, input e as System.EventArgs ):
     v-Delta = decimal(this-object:delta:Text) .
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
 
@@ -472,13 +514,15 @@ class ref.HDD_browse inherits Form:
 		
     define variable kk as integer no-undo .
     define buffer tt-devicePCAttr for tt-devicePCAttr.
-
+    for each tt-devicePCAttr:
+      tt-devicePCAttr.ii = kk .
+      kk = kk + 1 .
+    end.  
     if e:RowIndex > -1 then 
     do:
       for each tt-devicePCAttr no-lock where tt-devicePCAttr.ii = e:RowIndex and tt-devicePCAttr.value_ <= tt-devicePCAttr.tresh:
         drowseHDDAttr:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
         drowseHDDAttr:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
-        kk = kk + 1 .
       end.  
     end.
     return.
@@ -492,10 +536,21 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void enter_NamePK( input sender as System.Object, input e as System.EventArgs ):
     v-NamePK = this-object:NamePK:Text .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
 
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta).
+		
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void groupBox1_Enter( input sender as System.Object, input e as System.EventArgs ):
 		
     return.
 
@@ -519,15 +574,40 @@ class ref.HDD_browse inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void HDDbrowse_CellPainting( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellPaintingEventArgs ):
+
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void HDDbrowseGBD_RowPostPaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPostPaintEventArgs ):
+    define buffer tt-devicePC for tt-devicePC .
     define variable kk as integer no-undo .
-    run gbl/inidebug.p.
-    if e:RowIndex > 0 then 
+
+    for each tt-devicePC:
+      tt-devicePC.ii = kk .
+      kk = kk + 1.
+    end.  
+    if e:RowIndex > -1 then 
     do:
-      kk = 0 .
-      for each tt-devicePC no-lock where tt-devicePC.UserProc = 100 or tt-devicePC.ProcDisk = 100 or tt-devicePC.status_ = "Не пройдена":
-        kk = kk + 1 .
-        if kk = e:RowIndex then
+      for each tt-devicePC no-lock where tt-devicePC.ii = e:RowIndex and 
+        (tt-devicePC.UserProc = 100 or
+        tt-devicePC.ProcDisk = 100 or
+        tt-devicePC.status_ <> "Пройдена"):
+        if p-db-num <> 0 then 
+        do:
+          browseHDD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
+          browseHDD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
+        end.
+        else 
+        do:
           HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
+          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
+        end.  
       end.  
     end.
     return.
@@ -539,21 +619,8 @@ class ref.HDD_browse inherits Form:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
-  method private void HDDbrowseGBD_RowPostPaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPostPaintEventArgs ):
-    define variable kk as integer no-undo .
-    define buffer tt-devicePC for tt-devicePC.
-
-    if e:RowIndex > -1 then 
-    do:
-      kk = 0 .
-      for each tt-devicePC no-lock where tt-devicePC.UserProc = 100 or tt-devicePC.ProcDisk = 100 or tt-devicePC.status_ = "Не пройдена":
-        
-        if kk = e:RowIndex then
-          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
-        HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
-        kk = kk + 1 .
-      end.  
-    end.
+  method private void label5_Click( input sender as System.Object, input e as System.EventArgs ):
+		
     return.
 
   end method.
@@ -565,8 +632,8 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void leave_ModelDisk( input sender as System.Object, input e as System.EventArgs ):
     v-ModelDisk = this-object:ModelDisk:Text .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
 
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
@@ -581,8 +648,8 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void leave_NamePK( input sender as System.Object, input e as System.EventArgs ):
     v-NamePK = this-object:NamePK:Text .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
 
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
@@ -597,8 +664,8 @@ class ref.HDD_browse inherits Form:
   method private void leave_ProcDisk( input sender as System.Object, input e as System.EventArgs ):
 
     v-ProcDisk = decimal(this-object:ProcDisk:Text) .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
 
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
@@ -612,9 +679,15 @@ class ref.HDD_browse inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void leave_sort_date( input sender as System.Object, input e as System.EventArgs ):
+    if date(this-object:sort_date:Value) > date(today) then 
+    do:
+      message "Дата больше текущей даты."
+        view-as alert-box.
+      return no-apply .
+    end.  
     v-SortDate = date(this-object:sort_date:Text) .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
 
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
@@ -627,14 +700,12 @@ class ref.HDD_browse inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void leave_sort_time( input sender as System.Object, input e as System.EventArgs ):
-    /*    v-SortTime = this-object:sort_time:Text .        */
-    /*    v-SortTimeInt = time(this-object:sort_time:Text .*/
-    /*    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTimeInt, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status).*/
-    /*    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTimeInt, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status).              */
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-
+    v-SortTime = mtime (this-object:sort_time:value) / 1000 . 
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
+  
     return.
 
   end method.
@@ -646,6 +717,9 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void leave_Tresh( input sender as System.Object, input e as System.EventArgs ):
     v-TreshDisk = decimal(this-object:TreshDisk:Text) .
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
 
@@ -658,8 +732,8 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void leave_UserDisk( input sender as System.Object, input e as System.EventArgs ):
     v-UserDisk = decimal(this-object:UserDisk:Text) .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error.
 
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
@@ -673,6 +747,9 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void leave_Value( input sender as System.Object, input e as System.EventArgs ):
     v-ValueDisk = decimal(this-object:ValueDisk:Text) .
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     return.
 
@@ -717,6 +794,9 @@ class ref.HDD_browse inherits Form:
     this-object:statusDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:b_exit = new System.Windows.Forms.Button().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+    this-object:label6 = new System.Windows.Forms.Label().
+    this-object:label5 = new System.Windows.Forms.Label().
+    this-object:sort_time_end = new System.Windows.Forms.DateTimePicker().
     this-object:sort_time = new System.Windows.Forms.DateTimePicker().
     this-object:sort_date = new System.Windows.Forms.DateTimePicker().
     this-object:b_print = new System.Windows.Forms.Button().
@@ -808,6 +888,7 @@ class ref.HDD_browse inherits Form:
     this-object:browseHDD:BorderStyle = System.Windows.Forms.BorderStyle:None.
     this-object:browseHDD:ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode:Disable.
     this-object:browseHDD:ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle:Single.
+    this-object:browseHDD:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     define variable arrayvar2 as System.Windows.Forms.DataGridViewColumn extent 8 no-undo.
     arrayvar2[1] = this-object:dateDataGridViewTextBoxColumn.
@@ -830,7 +911,7 @@ class ref.HDD_browse inherits Form:
     this-object:browseHDD:RowHeadersVisible = false.
     this-object:browseHDD:ScrollBars = System.Windows.Forms.ScrollBars:Vertical.
     this-object:browseHDD:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
-    this-object:browseHDD:Size = new System.Drawing.Size(786, 196).
+    this-object:browseHDD:Size = new System.Drawing.Size(828, 196).
     this-object:browseHDD:TabIndex = 13.
     this-object:browseHDD:CellClick:Subscribe(this-object:dataGridView1_CellClick).
     this-object:browseHDD:CellContentClick:Subscribe(this-object:browseHDD_CellContentClick).
@@ -907,6 +988,9 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* groupBox1 */
     /*  */
+    this-object:groupBox1:Controls:Add(this-object:label6).
+    this-object:groupBox1:Controls:Add(this-object:label5).
+    this-object:groupBox1:Controls:Add(this-object:sort_time_end).
     this-object:groupBox1:Controls:Add(this-object:sort_time).
     this-object:groupBox1:Controls:Add(this-object:sort_date).
     this-object:groupBox1:Controls:Add(this-object:b_print).
@@ -924,41 +1008,71 @@ class ref.HDD_browse inherits Form:
     this-object:groupBox1:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:groupBox1:Location = new System.Drawing.Point(5, -6).
     this-object:groupBox1:Name = "groupBox1".
-    this-object:groupBox1:Size = new System.Drawing.Size(786, 109).
+    this-object:groupBox1:Size = new System.Drawing.Size(828, 109).
     this-object:groupBox1:TabIndex = 22.
     this-object:groupBox1:TabStop = false.
     this-object:groupBox1:UseCompatibleTextRendering = true.
+    this-object:groupBox1:Enter:Subscribe(this-object:groupBox1_Enter).
+    /*  */
+    /* label6 */
+    /*  */
+    this-object:label6:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label6:Location = new System.Drawing.Point(218, 75).
+    this-object:label6:Name = "label6".
+    this-object:label6:Size = new System.Drawing.Size(23, 23).
+    this-object:label6:TabIndex = 17.
+    this-object:label6:Text = "по:".
+    this-object:label6:UseCompatibleTextRendering = true.
+    /*  */
+    /* label5 */
+    /*  */
+    this-object:label5:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label5:Location = new System.Drawing.Point(117, 75).
+    this-object:label5:Name = "label5".
+    this-object:label5:Size = new System.Drawing.Size(16, 23).
+    this-object:label5:TabIndex = 16.
+    this-object:label5:Text = "с:".
+    this-object:label5:UseCompatibleTextRendering = true.
+    this-object:label5:Click:Subscribe(this-object:label5_Click).
+    /*  */
+    /* sort_time_end */
+    /*  */
+    this-object:sort_time_end:AllowDrop = true.
+    this-object:sort_time_end:DropDownAlign = System.Windows.Forms.LeftRightAlignment:Right.
+    this-object:sort_time_end:Format = System.Windows.Forms.DateTimePickerFormat:Time.
+    this-object:sort_time_end:Location = new System.Drawing.Point(242, 75).
+    this-object:sort_time_end:Name = "sort_time_end".
+    this-object:sort_time_end:ShowUpDown = true.
+    this-object:sort_time_end:Size = new System.Drawing.Size(75, 21).
+    this-object:sort_time_end:TabIndex = 5.
+    this-object:sort_time_end:Leave:Subscribe(this-object:sort_time_end_Leave).
     /*  */
     /* sort_time */
     /*  */
     this-object:sort_time:AllowDrop = true.
     this-object:sort_time:DropDownAlign = System.Windows.Forms.LeftRightAlignment:Right.
     this-object:sort_time:Format = System.Windows.Forms.DateTimePickerFormat:Time.
-    this-object:sort_time:Location = new System.Drawing.Point(113, 75).
+    this-object:sort_time:Location = new System.Drawing.Point(137, 75).
     this-object:sort_time:Name = "sort_time".
     this-object:sort_time:ShowUpDown = true.
-    this-object:sort_time:Size = new System.Drawing.Size(109, 21).
+    this-object:sort_time:Size = new System.Drawing.Size(75, 21).
     this-object:sort_time:TabIndex = 4.
-    this-object:sort_time:ValueChanged:Subscribe(this-object:sort_time_ValueChanged).
-    this-object:sort_time:TabIndexChanged:Subscribe(this-object:leave_sort_time).
     this-object:sort_time:Leave:Subscribe(this-object:leave_sort_time).
     /*  */
     /* sort_date */
     /*  */
     this-object:sort_date:Format = System.Windows.Forms.DateTimePickerFormat:Short.
-    this-object:sort_date:Location = new System.Drawing.Point(113, 48).
+    this-object:sort_date:Location = new System.Drawing.Point(175, 48).
     this-object:sort_date:Name = "sort_date".
     this-object:sort_date:Size = new System.Drawing.Size(109, 21).
     this-object:sort_date:TabIndex = 3.
     this-object:sort_date:Value = Progress.Util.DateTimeHelper:Create(2019, 9, 16, 0, 0, 0, 0).
-    this-object:sort_date:ValueChanged:Subscribe(this-object:leave_sort_date).
-    this-object:sort_date:TabIndexChanged:Subscribe(this-object:leave_sort_date).
     this-object:sort_date:Leave:Subscribe(this-object:leave_sort_date).
     /*  */
     /* b_print */
     /*  */
     this-object:b_print:Image = cast(resources:GetObject("b_print.Image"), System.Drawing.Image).
-    this-object:b_print:Location = new System.Drawing.Point(757, 17).
+    this-object:b_print:Location = new System.Drawing.Point(798, 17).
     this-object:b_print:Name = "b_print".
     this-object:b_print:Size = new System.Drawing.Size(25, 21).
     this-object:b_print:TabIndex = 13.
@@ -968,10 +1082,10 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* UserDisk */
     /*  */
-    this-object:UserDisk:Location = new System.Drawing.Point(715, 77).
+    this-object:UserDisk:Location = new System.Drawing.Point(756, 77).
     this-object:UserDisk:Name = "UserDisk".
     this-object:UserDisk:Size = new System.Drawing.Size(67, 21).
-    this-object:UserDisk:TabIndex = 8.
+    this-object:UserDisk:TabIndex = 9.
     this-object:UserDisk:ValueChanged:Subscribe(this-object:leave_UserDisk).
     this-object:UserDisk:Enter:Subscribe(this-object:leave_UserDisk).
     this-object:UserDisk:Leave:Subscribe(this-object:leave_UserDisk).
@@ -980,7 +1094,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:lUserDisk:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:lUserDisk:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:lUserDisk:Location = new System.Drawing.Point(562, 77).
+    this-object:lUserDisk:Location = new System.Drawing.Point(616, 77).
     this-object:lUserDisk:Name = "lUserDisk".
     this-object:lUserDisk:Size = new System.Drawing.Size(136, 23).
     this-object:lUserDisk:TabIndex = 11.
@@ -989,10 +1103,10 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* ProcDisk */
     /*  */
-    this-object:ProcDisk:Location = new System.Drawing.Point(715, 48).
+    this-object:ProcDisk:Location = new System.Drawing.Point(756, 48).
     this-object:ProcDisk:Name = "ProcDisk".
     this-object:ProcDisk:Size = new System.Drawing.Size(67, 21).
-    this-object:ProcDisk:TabIndex = 7.
+    this-object:ProcDisk:TabIndex = 8.
     this-object:ProcDisk:ValueChanged:Subscribe(this-object:leave_ProcDisk).
     this-object:ProcDisk:Enter:Subscribe(this-object:leave_ProcDisk).
     this-object:ProcDisk:Leave:Subscribe(this-object:leave_ProcDisk).
@@ -1001,7 +1115,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:lProcDisk:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:lProcDisk:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:lProcDisk:Location = new System.Drawing.Point(562, 48).
+    this-object:lProcDisk:Location = new System.Drawing.Point(616, 48).
     this-object:lProcDisk:Name = "lProcDisk".
     this-object:lProcDisk:Size = new System.Drawing.Size(136, 23).
     this-object:lProcDisk:TabIndex = 8.
@@ -1012,7 +1126,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:lModelDisk:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:lModelDisk:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:lModelDisk:Location = new System.Drawing.Point(229, 75).
+    this-object:lModelDisk:Location = new System.Drawing.Point(326, 75).
     this-object:lModelDisk:Name = "lModelDisk".
     this-object:lModelDisk:Size = new System.Drawing.Size(95, 23).
     this-object:lModelDisk:TabIndex = 7.
@@ -1021,10 +1135,10 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* ModelDisk */
     /*  */
-    this-object:ModelDisk:Location = new System.Drawing.Point(330, 75).
+    this-object:ModelDisk:Location = new System.Drawing.Point(426, 75).
     this-object:ModelDisk:Name = "ModelDisk".
-    this-object:ModelDisk:Size = new System.Drawing.Size(226, 21).
-    this-object:ModelDisk:TabIndex = 6.
+    this-object:ModelDisk:Size = new System.Drawing.Size(184, 21).
+    this-object:ModelDisk:TabIndex = 7.
     this-object:ModelDisk:TextChanged:Subscribe(this-object:leave_ModelDisk).
     this-object:ModelDisk:Enter:Subscribe(this-object:leave_ModelDisk).
     this-object:ModelDisk:Leave:Subscribe(this-object:leave_ModelDisk).
@@ -1033,7 +1147,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:lnamePK:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:lnamePK:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:lnamePK:Location = new System.Drawing.Point(229, 48).
+    this-object:lnamePK:Location = new System.Drawing.Point(326, 48).
     this-object:lnamePK:Name = "lnamePK".
     this-object:lnamePK:Size = new System.Drawing.Size(95, 23).
     this-object:lnamePK:TabIndex = 5.
@@ -1042,10 +1156,10 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* NamePK */
     /*  */
-    this-object:NamePK:Location = new System.Drawing.Point(330, 48).
+    this-object:NamePK:Location = new System.Drawing.Point(426, 48).
     this-object:NamePK:Name = "NamePK".
-    this-object:NamePK:Size = new System.Drawing.Size(226, 21).
-    this-object:NamePK:TabIndex = 5.
+    this-object:NamePK:Size = new System.Drawing.Size(184, 21).
+    this-object:NamePK:TabIndex = 6.
     this-object:NamePK:TextChanged:Subscribe(this-object:leave_NamePK).
     this-object:NamePK:Enter:Subscribe(this-object:enter_NamePK).
     this-object:NamePK:Leave:Subscribe(this-object:leave_NamePK).
@@ -1056,16 +1170,16 @@ class ref.HDD_browse inherits Form:
     this-object:label1:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:label1:Location = new System.Drawing.Point(6, 75).
     this-object:label1:Name = "label1".
-    this-object:label1:Size = new System.Drawing.Size(106, 23).
+    this-object:label1:Size = new System.Drawing.Size(105, 23).
     this-object:label1:TabIndex = 3.
-    this-object:label1:Text = "Время проверки:".
+    this-object:label1:Text = "Время проверки".
     this-object:label1:UseCompatibleTextRendering = true.
     /*  */
     /* lsortDate */
     /*  */
     this-object:lsortDate:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:lsortDate:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:lsortDate:Location = new System.Drawing.Point(6, 48).
+    this-object:lsortDate:Location = new System.Drawing.Point(68, 48).
     this-object:lsortDate:Name = "lsortDate".
     this-object:lsortDate:Size = new System.Drawing.Size(100, 23).
     this-object:lsortDate:TabIndex = 1.
@@ -1076,7 +1190,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:label4:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:label4:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label4:Location = new System.Drawing.Point(367, 340).
+    this-object:label4:Location = new System.Drawing.Point(409, 344).
     this-object:label4:Name = "label4".
     this-object:label4:Size = new System.Drawing.Size(51, 23).
     this-object:label4:TabIndex = 32.
@@ -1086,7 +1200,14 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* delta */
     /*  */
-    this-object:delta:Location = new System.Drawing.Point(421, 342).
+    this-object:delta:Location = new System.Drawing.Point(463, 346).
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true", Type="System.Int32").
+    define variable arrayvar3 as INTEGER extent 4 no-undo.
+    arrayvar3[1] = -1981284353.
+    arrayvar3[2] = -1966660860.
+    arrayvar3[3] = 0.
+    arrayvar3[4] = 0.
+    this-object:delta:Maximum = Progress.Util.DecimalHelper:Create(arrayvar3).
     this-object:delta:Name = "delta".
     this-object:delta:Size = new System.Drawing.Size(70, 21).
     this-object:delta:TabIndex = 0.
@@ -1096,7 +1217,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:label3:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:label3:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label3:Location = new System.Drawing.Point(516, 340).
+    this-object:label3:Location = new System.Drawing.Point(558, 344).
     this-object:label3:Name = "label3".
     this-object:label3:Size = new System.Drawing.Size(51, 23).
     this-object:label3:TabIndex = 30.
@@ -1106,7 +1227,14 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* ValueDisk */
     /*  */
-    this-object:ValueDisk:Location = new System.Drawing.Point(575, 342).
+    this-object:ValueDisk:Location = new System.Drawing.Point(617, 346).
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true", Type="System.Int32").
+    define variable arrayvar4 as INTEGER extent 4 no-undo.
+    arrayvar4[1] = 1874919423.
+    arrayvar4[2] = 2328306.
+    arrayvar4[3] = 0.
+    arrayvar4[4] = 0.
+    this-object:ValueDisk:Maximum = Progress.Util.DecimalHelper:Create(arrayvar4).
     this-object:ValueDisk:Name = "ValueDisk".
     this-object:ValueDisk:Size = new System.Drawing.Size(70, 21).
     this-object:ValueDisk:TabIndex = 1.
@@ -1118,7 +1246,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:label2:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:label2:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label2:Location = new System.Drawing.Point(667, 340).
+    this-object:label2:Location = new System.Drawing.Point(709, 344).
     this-object:label2:Name = "label2".
     this-object:label2:Size = new System.Drawing.Size(51, 23).
     this-object:label2:TabIndex = 28.
@@ -1128,7 +1256,14 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* TreshDisk */
     /*  */
-    this-object:TreshDisk:Location = new System.Drawing.Point(720, 342).
+    this-object:TreshDisk:Location = new System.Drawing.Point(762, 346).
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true", Type="System.Int32").
+    define variable arrayvar5 as INTEGER extent 4 no-undo.
+    arrayvar5[1] = -159383553.
+    arrayvar5[2] = 46653770.
+    arrayvar5[3] = 5421.
+    arrayvar5[4] = 0.
+    this-object:TreshDisk:Maximum = Progress.Util.DecimalHelper:Create(arrayvar5).
     this-object:TreshDisk:Name = "TreshDisk".
     this-object:TreshDisk:Size = new System.Drawing.Size(70, 21).
     this-object:TreshDisk:TabIndex = 2.
@@ -1154,8 +1289,8 @@ class ref.HDD_browse inherits Form:
     this-object:radioButton3:Location = new System.Drawing.Point(691, 106).
     this-object:radioButton3:Name = "radioButton3".
     this-object:radioButton3:Size = new System.Drawing.Size(99, 24).
-    this-object:radioButton3:TabIndex = 12.
-    this-object:radioButton3:Text = "Не пройдена".
+    this-object:radioButton3:TabIndex = 13.
+    this-object:radioButton3:Text = "Ошибка".
     this-object:radioButton3:UseCompatibleTextRendering = true.
     this-object:radioButton3:UseVisualStyleBackColor = true.
     this-object:radioButton3:CheckedChanged:Subscribe(this-object:r_status_Checked).
@@ -1166,7 +1301,7 @@ class ref.HDD_browse inherits Form:
     this-object:radioButton2:Location = new System.Drawing.Point(594, 106).
     this-object:radioButton2:Name = "radioButton2".
     this-object:radioButton2:Size = new System.Drawing.Size(83, 24).
-    this-object:radioButton2:TabIndex = 11.
+    this-object:radioButton2:TabIndex = 12.
     this-object:radioButton2:Text = "Пройдена".
     this-object:radioButton2:UseCompatibleTextRendering = true.
     this-object:radioButton2:UseVisualStyleBackColor = true.
@@ -1179,7 +1314,7 @@ class ref.HDD_browse inherits Form:
     this-object:radioButton1:Location = new System.Drawing.Point(540, 106).
     this-object:radioButton1:Name = "radioButton1".
     this-object:radioButton1:Size = new System.Drawing.Size(49, 24).
-    this-object:radioButton1:TabIndex = 10.
+    this-object:radioButton1:TabIndex = 11.
     this-object:radioButton1:TabStop = true.
     this-object:radioButton1:Text = "Все".
     this-object:radioButton1:UseCompatibleTextRendering = true.
@@ -1198,13 +1333,13 @@ class ref.HDD_browse inherits Form:
     this-object:drowseHDDAttr:ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode:Disable.
     this-object:drowseHDDAttr:ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle:Single.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar3 as System.Windows.Forms.DataGridViewColumn extent 5 no-undo.
-    arrayvar3[1] = this-object:nameDataGridViewTextBoxColumn.
-    arrayvar3[2] = this-object:valueDataGridViewTextBoxColumn.
-    arrayvar3[3] = this-object:treshDataGridViewTextBoxColumn.
-    arrayvar3[4] = this-object:typeDataGridViewTextBoxColumn.
-    arrayvar3[5] = this-object:rawvalueDataGridViewTextBoxColumn.
-    this-object:drowseHDDAttr:Columns:AddRange(arrayvar3).
+    define variable arrayvar6 as System.Windows.Forms.DataGridViewColumn extent 5 no-undo.
+    arrayvar6[1] = this-object:nameDataGridViewTextBoxColumn.
+    arrayvar6[2] = this-object:valueDataGridViewTextBoxColumn.
+    arrayvar6[3] = this-object:treshDataGridViewTextBoxColumn.
+    arrayvar6[4] = this-object:typeDataGridViewTextBoxColumn.
+    arrayvar6[5] = this-object:rawvalueDataGridViewTextBoxColumn.
+    this-object:drowseHDDAttr:Columns:AddRange(arrayvar6).
     this-object:drowseHDDAttr:DataSource = this-object:bindingSource2.
     this-object:drowseHDDAttr:EnableHeadersVisualStyles = false.
     this-object:drowseHDDAttr:ImeMode = System.Windows.Forms.ImeMode:NoControl.
@@ -1216,7 +1351,7 @@ class ref.HDD_browse inherits Form:
     this-object:drowseHDDAttr:RowHeadersVisible = false.
     this-object:drowseHDDAttr:ScrollBars = System.Windows.Forms.ScrollBars:Vertical.
     this-object:drowseHDDAttr:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
-    this-object:drowseHDDAttr:Size = new System.Drawing.Size(786, 206).
+    this-object:drowseHDDAttr:Size = new System.Drawing.Size(828, 206).
     this-object:drowseHDDAttr:TabIndex = 14.
     this-object:drowseHDDAttr:CellPainting:Subscribe(this-object:drowseHDDAttr_CellPainting).
     this-object:drowseHDDAttr:RowPostPaint:Subscribe(this-object:drowseHDDAttr_RowPostPaint).
@@ -1263,17 +1398,17 @@ class ref.HDD_browse inherits Form:
     this-object:bindingSource2:NoLOBs = false.
     this-object:bindingSource2:Position = 0.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar4 as "Progress.Data.TableDesc[]" no-undo.
-    arrayvar4 = new "Progress.Data.TableDesc[]"(0).
-    tableDesc2:ChildTables = arrayvar4.
+    define variable arrayvar7 as "Progress.Data.TableDesc[]" no-undo.
+    arrayvar7 = new "Progress.Data.TableDesc[]"(0).
+    tableDesc2:ChildTables = arrayvar7.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar5 as Progress.Data.ColumnPropDesc extent 5 no-undo.
-    arrayvar5[1] = new Progress.Data.ColumnPropDesc("name_", "Название", Progress.Data.DataType:CHARACTER).
-    arrayvar5[2] = new Progress.Data.ColumnPropDesc("value_", "Value", Progress.Data.DataType:DECIMAL).
-    arrayvar5[3] = new Progress.Data.ColumnPropDesc("tresh", "Tresh", Progress.Data.DataType:DECIMAL).
-    arrayvar5[4] = new Progress.Data.ColumnPropDesc("type_", "Тип", Progress.Data.DataType:CHARACTER).
-    arrayvar5[5] = new Progress.Data.ColumnPropDesc("raw_value", "Raw_Value", Progress.Data.DataType:CHARACTER).
-    tableDesc2:Columns = arrayvar5.
+    define variable arrayvar8 as Progress.Data.ColumnPropDesc extent 5 no-undo.
+    arrayvar8[1] = new Progress.Data.ColumnPropDesc("name_", "Название", Progress.Data.DataType:CHARACTER).
+    arrayvar8[2] = new Progress.Data.ColumnPropDesc("value_", "Value", Progress.Data.DataType:DECIMAL).
+    arrayvar8[3] = new Progress.Data.ColumnPropDesc("tresh", "Tresh", Progress.Data.DataType:DECIMAL).
+    arrayvar8[4] = new Progress.Data.ColumnPropDesc("type_", "Тип", Progress.Data.DataType:CHARACTER).
+    arrayvar8[5] = new Progress.Data.ColumnPropDesc("raw_value", "Raw_Value", Progress.Data.DataType:CHARACTER).
+    tableDesc2:Columns = arrayvar8.
     this-object:bindingSource2:TableSchema = tableDesc2.
     /*  */
     /* obj_list */
@@ -1315,21 +1450,21 @@ class ref.HDD_browse inherits Form:
     this-object:bindingSource3:NoLOBs = false.
     this-object:bindingSource3:Position = 0.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar6 as "Progress.Data.TableDesc[]" no-undo.
-    arrayvar6 = new "Progress.Data.TableDesc[]"(0).
-    tableDesc3:ChildTables = arrayvar6.
+    define variable arrayvar9 as "Progress.Data.TableDesc[]" no-undo.
+    arrayvar9 = new "Progress.Data.TableDesc[]"(0).
+    tableDesc3:ChildTables = arrayvar9.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar7 as Progress.Data.ColumnPropDesc extent 9 no-undo.
-    arrayvar7[1] = new Progress.Data.ColumnPropDesc("modeldevice", "Модель диска", Progress.Data.DataType:CHARACTER).
-    arrayvar7[2] = new Progress.Data.ColumnPropDesc("ModelPC", "Модель ПК", Progress.Data.DataType:CHARACTER).
-    arrayvar7[3] = new Progress.Data.ColumnPropDesc("namepc", "Имя ПК", Progress.Data.DataType:CHARACTER).
-    arrayvar7[4] = new Progress.Data.ColumnPropDesc("date_", "", Progress.Data.DataType:DATE).
-    arrayvar7[5] = new Progress.Data.ColumnPropDesc("time_", "", Progress.Data.DataType:CHARACTER).
-    arrayvar7[6] = new Progress.Data.ColumnPropDesc("ProcDisk", "", Progress.Data.DataType:DECIMAL).
-    arrayvar7[7] = new Progress.Data.ColumnPropDesc("UserProc", "", Progress.Data.DataType:DECIMAL).
-    arrayvar7[8] = new Progress.Data.ColumnPropDesc("status_", "", Progress.Data.DataType:CHARACTER).
-    arrayvar7[9] = new Progress.Data.ColumnPropDesc("db-num", "", Progress.Data.DataType:INTEGER).
-    tableDesc3:Columns = arrayvar7.
+    define variable arrayvar10 as Progress.Data.ColumnPropDesc extent 9 no-undo.
+    arrayvar10[1] = new Progress.Data.ColumnPropDesc("modeldevice", "Модель диска", Progress.Data.DataType:CHARACTER).
+    arrayvar10[2] = new Progress.Data.ColumnPropDesc("ModelPC", "Модель ПК", Progress.Data.DataType:CHARACTER).
+    arrayvar10[3] = new Progress.Data.ColumnPropDesc("namepc", "Имя ПК", Progress.Data.DataType:CHARACTER).
+    arrayvar10[4] = new Progress.Data.ColumnPropDesc("date_", "", Progress.Data.DataType:DATE).
+    arrayvar10[5] = new Progress.Data.ColumnPropDesc("time_", "", Progress.Data.DataType:CHARACTER).
+    arrayvar10[6] = new Progress.Data.ColumnPropDesc("ProcDisk", "", Progress.Data.DataType:DECIMAL).
+    arrayvar10[7] = new Progress.Data.ColumnPropDesc("UserProc", "", Progress.Data.DataType:DECIMAL).
+    arrayvar10[8] = new Progress.Data.ColumnPropDesc("status_", "", Progress.Data.DataType:CHARACTER).
+    arrayvar10[9] = new Progress.Data.ColumnPropDesc("db-num", "", Progress.Data.DataType:INTEGER).
+    tableDesc3:Columns = arrayvar10.
     this-object:bindingSource3:TableSchema = tableDesc3.
     /*  */
     /* HDDbrowseGBD */
@@ -1345,21 +1480,21 @@ class ref.HDD_browse inherits Form:
     this-object:HDDbrowseGBD:ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle:Single.
     this-object:HDDbrowseGBD:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar8 as System.Windows.Forms.DataGridViewColumn extent 9 no-undo.
-    arrayvar8[1] = this-object:Column1.
-    arrayvar8[2] = this-object:dataGridViewTextBoxColumn1.
-    arrayvar8[3] = this-object:dataGridViewTextBoxColumn2.
-    arrayvar8[4] = this-object:dataGridViewTextBoxColumn3.
-    arrayvar8[5] = this-object:dataGridViewTextBoxColumn4.
-    arrayvar8[6] = this-object:dataGridViewTextBoxColumn5.
-    arrayvar8[7] = this-object:dataGridViewTextBoxColumn6.
-    arrayvar8[8] = this-object:dataGridViewTextBoxColumn7.
-    arrayvar8[9] = this-object:dataGridViewTextBoxColumn8.
-    this-object:HDDbrowseGBD:Columns:AddRange(arrayvar8).
+    define variable arrayvar11 as System.Windows.Forms.DataGridViewColumn extent 9 no-undo.
+    arrayvar11[1] = this-object:Column1.
+    arrayvar11[2] = this-object:dataGridViewTextBoxColumn1.
+    arrayvar11[3] = this-object:dataGridViewTextBoxColumn2.
+    arrayvar11[4] = this-object:dataGridViewTextBoxColumn3.
+    arrayvar11[5] = this-object:dataGridViewTextBoxColumn4.
+    arrayvar11[6] = this-object:dataGridViewTextBoxColumn5.
+    arrayvar11[7] = this-object:dataGridViewTextBoxColumn6.
+    arrayvar11[8] = this-object:dataGridViewTextBoxColumn7.
+    arrayvar11[9] = this-object:dataGridViewTextBoxColumn8.
+    this-object:HDDbrowseGBD:Columns:AddRange(arrayvar11).
     this-object:HDDbrowseGBD:DataSource = this-object:bindingSource3.
     this-object:HDDbrowseGBD:EnableHeadersVisualStyles = false.
     this-object:HDDbrowseGBD:ImeMode = System.Windows.Forms.ImeMode:NoControl.
-    this-object:HDDbrowseGBD:Location = new System.Drawing.Point(5, 135).
+    this-object:HDDbrowseGBD:Location = new System.Drawing.Point(5, 134).
     this-object:HDDbrowseGBD:MultiSelect = false.
     this-object:HDDbrowseGBD:Name = "HDDbrowseGBD".
     this-object:HDDbrowseGBD:ReadOnly = true.
@@ -1368,7 +1503,7 @@ class ref.HDD_browse inherits Form:
     this-object:HDDbrowseGBD:RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode:AutoSizeToAllHeaders.
     this-object:HDDbrowseGBD:ScrollBars = System.Windows.Forms.ScrollBars:Vertical.
     this-object:HDDbrowseGBD:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
-    this-object:HDDbrowseGBD:Size = new System.Drawing.Size(786, 196).
+    this-object:HDDbrowseGBD:Size = new System.Drawing.Size(828, 196).
     this-object:HDDbrowseGBD:TabIndex = 25.
     this-object:HDDbrowseGBD:CellContentClick:Subscribe(this-object:HDDbrowseGBD_CellContentClick).
     this-object:HDDbrowseGBD:RowPostPaint:Subscribe(this-object:HDDbrowseGBD_RowPostPaint).
@@ -1438,7 +1573,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* HDD_browse */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(797, 592).
+    this-object:ClientSize = new System.Drawing.Size(838, 592).
     this-object:Controls:Add(this-object:label4).
     this-object:Controls:Add(this-object:HDDbrowseGBD).
     this-object:Controls:Add(this-object:bobj_list).
@@ -1486,7 +1621,7 @@ class ref.HDD_browse inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void obj_list_TextChanged( input sender as System.Object, input e as System.EventArgs ):
-    v-db-list = this-object:obj_list:Text .
+    
     return.
 
   end method.
@@ -1500,8 +1635,8 @@ class ref.HDD_browse inherits Form:
     if this-object:radioButton1:Checked = true then v-status = -1 .
     if this-object:radioButton2:Checked = true then v-status = 0 .
     if this-object:radioButton3:Checked = true then v-status = 1 .
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
     
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
     
@@ -1509,7 +1644,7 @@ class ref.HDD_browse inherits Form:
 
   end method.
   
-  method private handle browse_HDD(date_ as date, time_ as character, namePk_ as character, ModelDisk_ as character, ProcDisk_ as decimal, UserDisk_ as decimal, Status_ as integer):
+  method private handle browse_HDD(date_ as date, time_ as integer, time_end as integer, namePk_ as character, ModelDisk_ as character, ProcDisk_ as decimal, UserDisk_ as decimal, Status_ as integer, ValueDisk_ as decimal, TreshDisk_ as decimal, Delta_ as decimal):
   
     define buffer buf_devisPC     for ub.devisPC .
     define buffer buf_devisPCAttr for ub.devisPC-attr .
@@ -1524,24 +1659,18 @@ class ref.HDD_browse inherits Form:
     define variable ii           as integer   no-undo .
     
     empty temp-table tt-devicePC .
+    empty temp-table tt-devicePCAttr .
 
     for each buf_devisPC no-lock where buf_devisPC.DB-num = p-db-num:
       if buf_devisPC.namepc begins namePk_ and buf_devisPC.modeldevice begins ModelDisk_ then 
       do:
         next_:
-        for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date = date_:
-          if integer(entry (2,time_,":")) > 0 then 
-          do:
-            v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") .
-            v-TimeST1 = entry (1,time_,":") + ":" + entry (2,time_,":") .
-          end.
-          else  
-          do:
-            v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) .
-            v-TimeST1 = entry (1,time_,":") .
-          end.
-          if v-TimeST <> v-TimeST1 then next next_ .
-          
+        for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date >= date_:
+          if buf_devisPCAttr.time_ < time_ then next next_.
+          if buf_devisPCAttr.time_ > time_end then next next_.          
+          v-ProcDisk = 0 .
+          v-UserDisk = 0 .
+          v-TestStatus = "" .
           if buf_devisPCAttr.attr-code = "ProcDisk" then 
           do:
             v-ProcDisk = decimal(entry(1,buf_devisPCAttr.attr-value,"%")) .
@@ -1552,24 +1681,46 @@ class ref.HDD_browse inherits Form:
           end.  
           if buf_devisPCAttr.attr-code = "TestStatus" then 
           do:
-            v-TestStatus = if buf_devisPCAttr.attr-value = "1" then "Не пройдена" else "Пройдена" .
+            v-TestStatus = buf_devisPCAttr.attr-value .
           end.
           find first tt-devicePC exclusive-lock where tt-devicePC.id = buf_devisPC.id and tt-devicePC.modeldevice = buf_devisPC.modeldevice
             and tt-devicePC.ModelPC     = buf_devisPC.ModelPC and tt-devicePC.namepc      = buf_devisPC.namepc and tt-devicePC.date_       = buf_devisPCAttr.date and 
-            tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 360,"99") no-error .
+            tt-devicePC.time_int       = buf_devisPCAttr.time_ and tt-devicePC.db-num = p-db-num no-error .
           if not available (tt-devicePC) then 
           do: 
-            ii = ii + 1 .
             create tt-devicePC .
             assign
               tt-devicePC.id          = buf_devisPC.id
+              tt-devicePC.db-num      = p-db-num
               tt-devicePC.modeldevice = buf_devisPC.modeldevice
               tt-devicePC.ModelPC     = buf_devisPC.ModelPC
               tt-devicePC.namepc      = buf_devisPC.namepc
               tt-devicePC.date_       = buf_devisPCAttr.date
               tt-devicePC.ii          = ii
+              tt-devicePC.time_int    = buf_devisPCAttr.time_
               tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 360,"99")
               .
+            ii = ii + 1 .
+          end.
+          find first tt-devicePCAttr exclusive-lock where tt-devicePCAttr.id = buf_devisPCattr.id and tt-devicePCAttr.name_ = buf_devisPCattr.attr-code and tt-devicePCAttr.date_  = buf_devisPCAttr.date
+            and    tt-devicePCAttr.time_       = buf_devisPCAttr.time_ and tt-devicePCAttr.db-num = p-db-num no-error .
+          if not available (tt-devicePCAttr) then 
+          do:
+            if buf_devisPCattr.attr-code <> "ProcDisk" and buf_devisPCattr.attr-code <> "UserProc" and buf_devisPCattr.attr-code <> "TestStatus" then 
+            do:
+              create tt-devicePCAttr .
+              assign
+                tt-devicePCAttr.id        = buf_devisPCattr.id
+                tt-devicePCAttr.db-num    = p-db-num
+                tt-devicePCAttr.name_     = buf_devisPCattr.attr-code
+                tt-devicePCAttr.raw_value = buf_devisPCattr.attr-Raw-value
+                tt-devicePCAttr.tresh     = decimal(buf_devisPCattr.tresh)
+                tt-devicePCAttr.value_    = decimal(buf_devisPCattr.attr-value)
+                tt-devicePCAttr.type_     = buf_devisPCattr.type
+                tt-devicePCAttr.date_     = buf_devisPCAttr.date
+                tt-devicePCAttr.time_     = buf_devisPCAttr.time_
+                .  
+            end.
           end.
           if v-TestStatus <> "" then tt-devicePC.status_  = v-TestStatus .
           if v-ProcDisk <> 0 then tt-devicePC.ProcDisk = v-ProcDisk .
@@ -1579,14 +1730,14 @@ class ref.HDD_browse inherits Form:
     end.
     if ProcDisk_ > 0 then 
     do:
-      for each tt-devicePC exclusive-lock where tt-devicePC.ProcDisk <> ProcDisk_:
-        delete tt-devicePC .
+      for each tt-devicePC exclusive-lock where tt-devicePC.ProcDisk < ProcDisk_:
+        delete tt-devicePC . 
       end.  
     end.   
     if UserDisk_ > 0 then 
     do:
-      for each tt-devicePC exclusive-lock where tt-devicePC.UserProc <> UserDisk_:
-        delete tt-devicePC .
+      for each tt-devicePC exclusive-lock where tt-devicePC.UserProc < UserDisk_:
+        delete tt-devicePC . 
       end.  
     end.  
     if Status_ > -1 then 
@@ -1599,12 +1750,41 @@ class ref.HDD_browse inherits Form:
       end.
       else 
       do:
-        for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Не пройдена":
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
           delete tt-devicePC .
         end.  
 
       end.  
+    end.     
+    if v-ValueDisk > 0 then 
+    do:
+      for each tt-devicePCAttr where tt-devicePCAttr.value_ < v-ValueDisk:
+        delete tt-devicePCAttr .
+      end.  
+    end.         
+    if v-TreshDisk > 0 then 
+    do:
+      for each tt-devicePCAttr where tt-devicePCAttr.tresh < v-TreshDisk:
+        delete tt-devicePCAttr .
+      end.  
+    end.
+    if v-Delta > 0 then 
+    do:
+      for each tt-devicePCAttr where abs(tt-devicePCAttr.value_ - tt-devicePCAttr.tresh) > v-Delta:
+        delete tt-devicePCAttr .
+      end.  
     end.       
+
+    for each tt-devicePC:
+      find first tt-devicePCAttr where tt-devicePCAttr.id = tt-devicePC.id and tt-devicePCAttr.date_ = tt-devicePC.date_ and tt-devicePCAttr.time_ = tt-devicePC.time_int no-error .
+      if not available (tt-devicePCAttr) then 
+      do:
+        if tt-devicePC.status_ = "не закончена" then next . 
+        delete tt-devicePC .
+      end.
+    end.
+
+
     vPos = bindingSource1:Position.
     if valid-handle(hQuery1)  THEN DELETE object hQuery1.
     create query hQuery1. 
@@ -1617,7 +1797,7 @@ class ref.HDD_browse inherits Form:
   
   end method .  
 
-  method private handle browse_HDDGBD(date_ as date, time_ as character, namePk_ as character, ModelDisk_ as character, ProcDisk_ as decimal, UserDisk_ as decimal, Status_ as integer):
+  method private handle browse_HDDGBD(date_ as date, time_ as integer, time_end as integer, namePk_ as character, ModelDisk_ as character, ProcDisk_ as decimal, UserDisk_ as decimal, Status_ as integer, ValueDisk_ as decimal, TreshDisk_ as decimal, Delta_ as decimal):
   
     define buffer buf_devisPC     for ub.devisPC .
     define buffer buf_devisPCAttr for ub.devisPC-attr .
@@ -1633,24 +1813,19 @@ class ref.HDD_browse inherits Form:
     define variable v-TimeST1    as character no-undo .   
 
     empty temp-table tt-devicePC .
+    empty temp-table tt-devicePCAttr .
     if v-db-list = "" then v-db-list = string (v-cntxt-db-num) .
-    do ii = 1 to num-entries (v-db-list, {&comma-char}):
-      for each buf_devisPC no-lock where buf_devisPC.DB-num = integer(entry(ii,v-db-list,{&comma-char})):
+    do ii = 1 to num-entries (v-db-list,","):
+      for each buf_devisPC no-lock where buf_devisPC.DB-num = integer(entry(ii,v-db-list,",")):
         if buf_devisPC.namepc begins namePk_ and buf_devisPC.modeldevice begins ModelDisk_ then 
         do:
           next_:
-          for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date = date_:
-            if integer(entry (2,time_,":")) > 0 then 
-            do:
-              v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") .
-              v-TimeST1 = entry (1,time_,":") + ":" + entry (2,time_,":") .
-            end.
-            else  
-            do:
-              v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) .
-              v-TimeST1 = entry (1,time_,":") .
-            end.
-            if v-TimeST <> v-TimeST1 then next next_ .
+          for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date >= date_:
+            if buf_devisPCAttr.time_ < time_ then next next_.
+            if buf_devisPCAttr.time_ > time_end then next next_.    
+            v-ProcDisk = 0 .
+            v-UserDisk = 0 .
+            v-TestStatus = "" .
             if buf_devisPCAttr.attr-code = "ProcDisk" then 
             do:
               v-ProcDisk = decimal(entry(1,buf_devisPCAttr.attr-value,"%")) .
@@ -1661,41 +1836,63 @@ class ref.HDD_browse inherits Form:
             end.  
             if buf_devisPCAttr.attr-code = "TestStatus" then 
             do:
-              v-TestStatus = if buf_devisPCAttr.attr-value = "1" then "Не пройдена" else "Пройдена" .
+              v-TestStatus = buf_devisPCAttr.attr-value .
             end.  
             find first tt-devicePC exclusive-lock where tt-devicePC.id = buf_devisPC.id and tt-devicePC.modeldevice = buf_devisPC.modeldevice
               and tt-devicePC.ModelPC     = buf_devisPC.ModelPC and tt-devicePC.namepc      = buf_devisPC.namepc and tt-devicePC.date_       = buf_devisPCAttr.date and 
-              tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") no-error .
+              tt-devicePC.time_int       = buf_devisPCAttr.time_ and tt-devicePC.db-num      = integer(entry(ii,v-db-list,",")) no-error .
             if not available (tt-devicePC) then 
             do: 
               create tt-devicePC .
               assign
                 tt-devicePC.id          = buf_devisPC.id
-                tt-devicePC.db-num      = integer(entry(ii,v-db-list,{&comma-char}))
+                tt-devicePC.db-num      = integer(entry(ii,v-db-list,","))
                 tt-devicePC.modeldevice = buf_devisPC.modeldevice
                 tt-devicePC.ModelPC     = buf_devisPC.ModelPC
+                tt-devicePC.ii          = jj
                 tt-devicePC.namepc      = buf_devisPC.namepc
                 tt-devicePC.date_       = buf_devisPCAttr.date
+                tt-devicePC.time_int    = buf_devisPCAttr.time_
                 tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99")
                 .
+              jj = jj + 1 . 
+            end.
+            find first tt-devicePCAttr exclusive-lock where tt-devicePCAttr.id = buf_devisPCattr.id and tt-devicePCAttr.name_ = buf_devisPCattr.attr-code and tt-devicePCAttr.date_  = buf_devisPCAttr.date
+              and    tt-devicePCAttr.time_       = buf_devisPCAttr.time_ and tt-devicePCAttr.db-num      = integer(entry(ii,v-db-list,",")) no-error .
+            if not available (tt-devicePCAttr) then 
+            do:
+              if buf_devisPCattr.attr-code <> "ProcDisk" and buf_devisPCattr.attr-code <> "UserProc" and buf_devisPCattr.attr-code <> "TestStatus" then 
+              do:
+                create tt-devicePCAttr .
+                assign
+                  tt-devicePCAttr.id        = buf_devisPCattr.id
+                  tt-devicePCAttr.db-num    = integer(entry(ii,v-db-list,","))
+                  tt-devicePCAttr.name_     = buf_devisPCattr.attr-code
+                  tt-devicePCAttr.raw_value = buf_devisPCattr.attr-Raw-value
+                  tt-devicePCAttr.tresh     = decimal(buf_devisPCattr.tresh)
+                  tt-devicePCAttr.value_    = decimal(buf_devisPCattr.attr-value)
+                  tt-devicePCAttr.type_     = buf_devisPCattr.type
+                  tt-devicePCAttr.date_     = buf_devisPCAttr.date
+                  tt-devicePCAttr.time_     = buf_devisPCAttr.time_
+                  .  
+              end.
             end.
             if v-TestStatus <> "" then tt-devicePC.status_  = v-TestStatus .
             if v-ProcDisk <> 0 then tt-devicePC.ProcDisk = v-ProcDisk .
             if v-UserDisk <> 0 then tt-devicePC.UserProc = v-UserDisk .
-
           end.
         end.
       end.
       if ProcDisk_ > 0 then 
       do:
-        for each tt-devicePC exclusive-lock where tt-devicePC.ProcDisk <> ProcDisk_:
-          delete tt-devicePC .
+        for each tt-devicePC exclusive-lock where tt-devicePC.ProcDisk < ProcDisk_:
+          delete tt-devicePC . 
         end.  
       end.   
       if UserDisk_ > 0 then 
       do:
-        for each tt-devicePC exclusive-lock where tt-devicePC.UserProc <> UserDisk_:
-          delete tt-devicePC .
+        for each tt-devicePC exclusive-lock where tt-devicePC.UserProc < UserDisk_:
+          delete tt-devicePC . 
         end.  
       end.  
       if Status_ > -1 then 
@@ -1708,13 +1905,44 @@ class ref.HDD_browse inherits Form:
         end.
         else 
         do:
-          for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Не пройдена":
+          for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
             delete tt-devicePC .
           end.  
 
         end.  
+      end.     
+      if v-ValueDisk > 0 then 
+      do:
+        for each tt-devicePCAttr where tt-devicePCAttr.value_ < v-ValueDisk:
+          delete tt-devicePCAttr .
+        end.  
+      end.         
+      if v-TreshDisk > 0 then 
+      do:
+        for each tt-devicePCAttr where tt-devicePCAttr.tresh < v-TreshDisk:
+          delete tt-devicePCAttr .
+        end.  
+      end.
+      if v-Delta > 0 then 
+      do:
+        for each tt-devicePCAttr where abs(tt-devicePCAttr.value_ - tt-devicePCAttr.tresh) > v-Delta:
+          delete tt-devicePCAttr .
+        end.  
       end.       
     end.
+
+
+    for each tt-devicePC:
+      find first tt-devicePCAttr where tt-devicePCAttr.id = tt-devicePC.id and tt-devicePCAttr.date_ = tt-devicePC.date_ and tt-devicePCAttr.time_ = tt-devicePC.time_int and tt-devicePCAttr.db-num = tt-devicePC.db-num no-error .
+      if not available (tt-devicePCAttr) then 
+      do:
+        if tt-devicePC.status_ = "не закончена" then next . 
+        delete tt-devicePC .
+      end.
+    end.
+
+    
+
     vPos = bindingSource3:Position.
     if valid-handle(hQuery1)  THEN DELETE object hQuery1.
     create query hQuery1. 
@@ -1729,51 +1957,45 @@ class ref.HDD_browse inherits Form:
     define variable v-TimeST  as character no-undo .
     define variable v-TimeST1 as character no-undo .   
     define buffer buf_devisPC-attr for ub.devisPC-attr .
-    
+    define variable ii as integer no-undo .
     empty temp-table tt-devicePCAttr .
     next_:
     for each buf_devisPC-attr no-lock where buf_devisPC-attr.id = tt-devicePC.id and buf_devisPC-attr.date = tt-devicePC.date_  
       and buf_devisPC-attr.attr-code <> "ProcDisk" and buf_devisPC-attr.attr-code <> "UserProc" and buf_devisPC-attr.attr-code <> "testStatus" :
-
-      if integer(entry (2,tt-devicePC.time_,":")) > 0 then 
-      do:
-        v-TimeST = string(truncate (buf_devisPC-attr.time_ / 3600, 0)) + ":" + string((buf_devisPC-attr.time_ modulo 3600) / 60,"99") .
-        v-TimeST1 = entry (1,tt-devicePC.time_,":") + ":" + entry (2,tt-devicePC.time_,":") .
-      end.
-      else  
-      do:
-        v-TimeST = string(truncate (buf_devisPC-attr.time_ / 3600, 0)) .
-        v-TimeST1 = entry (1,tt-devicePC.time_,":") .
-      end.
-      if v-TimeST <> v-TimeST1 then next next_ .
+      if buf_devisPC-Attr.time_ <> tt-devicePC.time_int then next next_.
+       
       create tt-devicePCAttr .
       assign
         tt-devicePCAttr.id        = buf_devisPC-attr.id
+        tt-devicePCAttr.db-num    = buf_devisPC-attr.db-num
+        tt-devicePCAttr.ii        = ii
         tt-devicePCAttr.name_     = buf_devisPC-attr.attr-code
         tt-devicePCAttr.raw_value = buf_devisPC-attr.attr-Raw-value
         tt-devicePCAttr.tresh     = decimal(buf_devisPC-attr.tresh)
         tt-devicePCAttr.value_    = decimal(buf_devisPC-attr.attr-value)
         tt-devicePCAttr.type_     = buf_devisPC-attr.type 
-        .  
+        . 
+      ii = ii + 1 . 
     end.   
     if v-ValueDisk > 0 then 
     do:
-      for each tt-devicePCAttr where tt-devicePCAttr.value_ <> v-ValueDisk:
+      for each tt-devicePCAttr where tt-devicePCAttr.value_ < v-ValueDisk:
         delete tt-devicePCAttr .
       end.  
     end.         
     if v-TreshDisk > 0 then 
     do:
-      for each tt-devicePCAttr where tt-devicePCAttr.tresh <> v-TreshDisk:
+      for each tt-devicePCAttr where tt-devicePCAttr.tresh < v-TreshDisk:
         delete tt-devicePCAttr .
       end.  
     end.
     if v-Delta > 0 then 
     do:
-      for each tt-devicePCAttr where abs(tt-devicePCAttr.value_ - tt-devicePCAttr.tresh) <> v-Delta:
+      for each tt-devicePCAttr where abs(tt-devicePCAttr.value_ - tt-devicePCAttr.tresh) > v-Delta:
         delete tt-devicePCAttr .
       end.  
     end.    
+
     if valid-handle(hQuery2)  THEN DELETE object hQuery2.
     create query hQuery2. 
     hQuery2:set-buffers(buffer tt-devicePCAttr:HANDLE).
@@ -1789,16 +2011,18 @@ class ref.HDD_browse inherits Form:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
-  method private void sort_time_ValueChanged( input sender as System.Object, input e as System.EventArgs ):
-    v-SortTime = this-object:sort_time:Text .	
-    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
-    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
+  method private void sort_time_end_Leave( input sender as System.Object, input e as System.EventArgs ):
+    v-SortTime-end = mtime (this-object:sort_time_end:value) / 1000 . 
+    if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
+    else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
     
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
-	
+  
     return.
 
   end method.
+
+
 
   /*------------------------------------------------------------------------------
      Purpose:

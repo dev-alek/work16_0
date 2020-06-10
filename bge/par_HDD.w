@@ -162,7 +162,7 @@ DEFINE VARIABLE EDITOR-1 AS CHARACTER
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
      SIZE 40.6 BY 4 NO-UNDO.
 
-DEFINE VARIABLE num-days AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 0 
+DEFINE VARIABLE num-days AS INTEGER FORMAT ">>>>>>>>9":U INITIAL 1 
      LABEL "За последние" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -794,6 +794,7 @@ PROCEDURE init-param-values :
               RADIO-SET-1 = INTEGER( ENTRY(3, v-param-list, {&delim-par}) )
               num-days    = INTEGER( ENTRY(4, v-param-list, {&delim-par}) )
               .
+              if num-days = 0 then num-days = 1 .
             if RADIO-SET-1 = 0 then RADIO-SET-1 = 2 .
 
             DISPLAY

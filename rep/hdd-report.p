@@ -65,6 +65,7 @@ define temp-table tt-devicePCAttr no-undo
   field date_     as date
   field time_     as integer
   field name_     as character
+  field db-num    as integer
   field value_    as decimal
   field tresh     as decimal
   field type_     as character
@@ -104,16 +105,32 @@ define variable v-time-start1       as character no-undo .
 define variable v-time-end1         as character no-undo .
 define variable v-date-start        as date      no-undo .
 define variable v-date-end          as date      no-undo .
+define variable v-period            as character no-undo .
 define variable v-color             as character no-undo .
+define variable v-host-name         as character no-undo .
+define variable v-obj-name          as character no-undo .
 
 do
   on error undo, return error return-value
   :
-  p-obj-list = trim(p-obj-list,",") .  
+
+  for first ub.clients no-lock where ub.clients.obj-code = v-cntxp-curr-host-code and ub.clients.obj-type = {&cmp}:
+    v-host-name = ub.clients.obj-name .
+  end.     
+  
+  p-obj-list = trim(p-obj-list,",") .
+    
   v-time-start = mtime (p-Time-start) / 1000 .
   v-time-end  = mtime (p-Time-end) / 1000 .
+  
+  if p-Date-start = ? then p-Date-start = today .
+  if p-Date-end = ? then p-Date-end = today .
+  v-period = "c: " + string (p-date-start,"99.99.9999") + " " + string (v-time-start,"HH:MM:SS") + " по " + string (p-date-end,"99.99.9999") + " " + string (v-time-end,"HH:MM:SS") . 
   if p-obj-list = "" then p-obj-list = string(v-cntxp-db-num) .      
   do ii = 1 to num-entries (p-obj-list, {&comma-char}):
+    for first ub.clients no-lock where ub.clients.obj-code = integer(entry(ii, p-obj-list, {&comma-char})) and ub.clients.obj-type = {&shop}:
+      v-obj-name = v-obj-name + "," + ub.clients.obj-name .
+    end.  
     for each buf_devisPC no-lock where buf_devisPC.DB-num = integer(entry(ii, p-obj-list, {&comma-char})):
       if buf_devisPC.namepc begins p-namePk and buf_devisPC.modeldevice begins p-ModelDisk then 
       do:
@@ -168,10 +185,10 @@ do
             .
             decimal (tt-attrDevis.attr-Raw-value) no-error .
             if not error-status:error then do:
-             tt-devicePCAttr.ch_raw = abs(decimal(tt-devicePCAttr.raw_value) - decimal(tt-attrDevis.attr-Raw-value)).
+             tt-devicePCAttr.ch_raw = decimal(tt-attrDevis.attr-Raw-value) - decimal(tt-devicePCAttr.raw_value) .
             end.  
             
-            tt-devicePCAttr.ch_val = abs(tt-devicePCAttr.value_ - decimal(tt-attrDevis.attr-value)) .
+            tt-devicePCAttr.ch_val = decimal(tt-attrDevis.attr-value) - tt-devicePCAttr.value_ .
             tt-devicePCAttr.raw_value = tt-attrDevis.attr-Raw-value.
             tt-devicePCAttr.value_    = decimal(tt-attrDevis.attr-value).
           end.  
@@ -223,6 +240,7 @@ do
   run get-report-num (output p-report-id).
     
   v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+  v-obj-name = trim(v-obj-name,",").
                         
   output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
   put stream OutStr-html unformatted
@@ -248,19 +266,22 @@ do
   put stream OutStr-html unformatted
     '<tr>' skip
     '<td style="width: 50px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 170px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
+    '<td style="width: 70px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
-    '<td style="width: 50px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
     '</tr>' skip
     '<tr><td colspan="12" style="text-align: center;">Результаты проверки HDD</td></tr>'
+    '<tr><td colspan="12" style="text-align: left;">По фирме: ' + v-host-name + '</td></tr>'
+    '<tr><td colspan="12" style="text-align: left;">По объектам: ' + v-obj-name + '</td></tr>'
+    '<tr><td colspan="12" style="text-align: left;">За период ' + v-period + '</td></tr>'
     .
                         
  

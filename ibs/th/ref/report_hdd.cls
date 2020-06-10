@@ -279,6 +279,36 @@ class ibs.th.ref.report_hdd inherits Form:
 
   end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void date_end_Leave( input sender as System.Object, input e as System.EventArgs ):
+		  if this-object:date_start:Value > this-object:date_end:Value then do:
+      message "Дата " + this-object:date_start:Text + " больше даты " + this-object:date_end:Text 
+      view-as alert-box.
+      return no-apply .
+    end.  
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void date_start_Leave( input sender as System.Object, input e as System.EventArgs ):
+		if date(this-object:date_start:Value) > date(today) then do:
+		  message "Дата больше текущей даты."
+      view-as alert-box.
+      return no-apply .
+		end.  
+		return.
+
+	end method.
+
   method private void InitializeComponent(  ):
     
     /* NOTE: The following method is automatically generated.
@@ -306,11 +336,11 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:label4 = new System.Windows.Forms.Label().
     this-object:label5 = new System.Windows.Forms.Label().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+    this-object:label7 = new System.Windows.Forms.Label().
     this-object:label10 = new System.Windows.Forms.Label().
     this-object:attr_type = new System.Windows.Forms.TextBox().
     this-object:label6 = new System.Windows.Forms.Label().
     this-object:attr_name = new System.Windows.Forms.TextBox().
-    this-object:label7 = new System.Windows.Forms.Label().
     this-object:groupBox1:SuspendLayout().
     this-object:SuspendLayout().
     /*  */
@@ -322,6 +352,7 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:date_start:Size = new System.Drawing.Size(93, 20).
     this-object:date_start:TabIndex = 4.
     this-object:date_start:Value = Progress.Util.DateTimeHelper:Create(2019, 10, 29, 0, 0, 0, 0).
+    this-object:date_start:Leave:Subscribe(this-object:date_start_Leave).
     /*  */
     /* bobj_list */
     /*  */
@@ -413,6 +444,7 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:date_end:Size = new System.Drawing.Size(93, 20).
     this-object:date_end:TabIndex = 6.
     this-object:date_end:Value = Progress.Util.DateTimeHelper:Create(2019, 10, 29, 0, 0, 0, 0).
+    this-object:date_end:Leave:Subscribe(this-object:date_end_Leave).
     /*  */
     /* time_end */
     /*  */
@@ -483,6 +515,18 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:groupBox1:Text = "Атрибуты диска:".
     this-object:groupBox1:UseCompatibleTextRendering = true.
     /*  */
+    /* label7 */
+    /*  */
+    this-object:label7:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label7:Location = new System.Drawing.Point(22, 25).
+    this-object:label7:Name = "label7".
+    this-object:label7:Size = new System.Drawing.Size(93, 23).
+    this-object:label7:TabIndex = 32.
+    this-object:label7:Text = "Название:".
+    this-object:label7:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label7:UseCompatibleTextRendering = true.
+    this-object:label7:UseMnemonic = false.
+    /*  */
     /* label10 */
     /*  */
     this-object:label10:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
@@ -523,18 +567,6 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:attr_name:Name = "attr_name".
     this-object:attr_name:Size = new System.Drawing.Size(278, 23).
     this-object:attr_name:TabIndex = 10.
-    /*  */
-    /* label7 */
-    /*  */
-    this-object:label7:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label7:Location = new System.Drawing.Point(22, 25).
-    this-object:label7:Name = "label7".
-    this-object:label7:Size = new System.Drawing.Size(93, 23).
-    this-object:label7:TabIndex = 32.
-    this-object:label7:Text = "Название:".
-    this-object:label7:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-    this-object:label7:UseCompatibleTextRendering = true.
-    this-object:label7:UseMnemonic = false.
     /*  */
     /* report_hdd */
     /*  */
