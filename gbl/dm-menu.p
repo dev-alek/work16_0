@@ -4676,6 +4676,20 @@ define variable v-rid-list as character no-undo .
 
 end procedure. /* m-platsys-exe */
 
+procedure m-device-ref :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run gbl/inidebug.p. 
+    
+    run ref/codelay.p ( "", "SpravDevice", "Справочник устройств") no-error.
+    
+  end.
+
+end procedure. /* m-platsys-exe */
+
 
 procedure m-cash-wthser-del-exe :
 /*define input parameter p-pos-type as character no-undo .
