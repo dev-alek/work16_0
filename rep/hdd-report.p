@@ -108,6 +108,7 @@ define variable v-date-end          as date      no-undo .
 do
   on error undo, return error return-value
   :
+
   p-obj-list = trim(p-obj-list,",") .  
   v-delta = p-ValueDisk - p-TreshDisk .
   v-time-start = mtime (p-Time-start) / 1000 .
@@ -135,34 +136,36 @@ do
         create tt-attrDevis .
         buffer-copy buf_devisPCAttr to tt-attrDevis . 
       end.
+      next_attr:
       for each tt-attrDevis break by tt-attrDevis.attr-code by tt-attrDevis.date by tt-attrDevis.time_:
-        if first-of (tt-attrDevis.date) then 
-        do: 
-          if v-time-start1 = "" then v-time-start1  = string(truncate (tt-attrDevis.time_ / 3600, 0)) + ":" + string((tt-attrDevis.time_ modulo 3600) / 60,"99") .
-          if v-date-start = ? then v-date-start = tt-attrDevis.date . 
-        end.          
         if p-RawValue <> 0 then 
         do:
-          if decimal(tt-attrDevis.attr-Raw-value) <> p-RawValue then do:
-            delete tt-attrDevis .
+          if decimal(tt-attrDevis.attr-Raw-value) <> p-RawValue then 
+          do:
+            delete tt-attrDevis . 
+            next next_attr .
           end.  
         end.
         if p-TreshDisk <> 0 then 
         do:
-          if decimal(tt-attrDevis.tresh) <> p-TreshDisk then do:
-            delete tt-attrDevis .
+          if decimal(tt-attrDevis.tresh) <> p-TreshDisk then 
+          do:
+            delete tt-attrDevis . 
+            next next_attr .
           end.  
         end.  
         if p-ValueDisk <> 0 then 
         do:
-          if decimal(tt-attrDevis.attr-value) <> p-ValueDisk then do:
-            delete tt-attrDevis .
+          if decimal(tt-attrDevis.attr-value) <> p-ValueDisk then 
+          do:
+            delete tt-attrDevis . 
+            next next_attr .
           end.  
         end.  
         find first tt-devicePCAttr where tt-devicePCAttr.name_ = tt-attrDevis.attr-code and
           tt-devicePCAttr.id = tt-attrDevis.id no-error .
-                v-ok-Raw = 0 .
-                v-ok-Value = 0 .  
+        v-ok-Raw = 0 .
+        v-ok-Value = 0 .  
         if available (tt-devicePCAttr) then 
         do:
           for last buf_tt-devisPCAttr exclusive-lock where tt-attrDevis.id = buf_tt-devisPCAttr.id
@@ -170,16 +173,22 @@ do
 
             if buf_tt-devisPCAttr.raw_value <> decimal(tt-attrDevis.attr-Raw-value) then v-ok-Raw = abs(buf_tt-devisPCAttr.raw_value - decimal(tt-attrDevis.attr-Raw-value)) . 
             else v-ok-Raw = 0 .
-            if p-ChangeRaw then do:
-              if v-ok-Raw = 0 then do:
-                delete tt-attrDevis .
+            if p-ChangeRaw then 
+            do:
+              if v-ok-Raw = 0 then 
+              do:
+                delete tt-attrDevis . 
+                next next_attr .
               end.  
             end.   
             if buf_tt-devisPCAttr.value_ <> decimal(tt-attrDevis.attr-value) then v-ok-Value = abs(buf_tt-devisPCAttr.value_ - decimal(tt-attrDevis.attr-value)) . 
             else v-ok-Value = 0 .
-            if p-ChangeValue then do:
-              if v-ok-Value = 0 then do:
-                delete tt-attrDevis .
+            if p-ChangeValue then 
+            do:
+              if v-ok-Value = 0 then 
+              do:
+                delete tt-attrDevis . 
+                next next_attr .
               end.  
             end.  
           end.    
@@ -187,15 +196,22 @@ do
         else 
         do:
           if decimal(tt-attrDevis.attr-Raw-value) <> 0 then v-ok-Raw = decimal(tt-attrDevis.attr-Raw-value) .
-          if p-ChangeRaw then do: 
-            if v-ok-Raw = 0 then do:
-              delete tt-attrDevis .
+          if p-ChangeRaw then 
+          do: 
+            if v-ok-Raw = 0 then 
+            do:
+              delete tt-attrDevis . 
+              next next_attr .
             end.  
           end.  
           if decimal(tt-attrDevis.attr-value) <> 0 then v-ok-Value = decimal(tt-attrDevis.attr-value) .
-          if p-ChangeValue then do:
-            if v-ok-Value = 0 then do:
-              delete tt-attrDevis .
+          if p-ChangeValue then 
+          do:
+            if v-ok-Value = 0 then 
+            do:
+              delete tt-attrDevis . 
+              next next_attr .
+              
             end.  
           end.  
         end.     
@@ -210,6 +226,8 @@ do
           tt-devicePCAttr.type_     = tt-attrDevis.type 
           tt-devicePCAttr.ch_raw    = v-ok-Raw
           tt-devicePCAttr.ch_val    = v-ok-Value
+          tt-devicePCAttr.date_     = tt-attrDevis.date
+          tt-devicePCAttr.time_     = tt-attrDevis.time_
           .
         find first tt-devicePC where      
           tt-devicePC.id          = buf_devisPC.id and
@@ -219,19 +237,32 @@ do
           tt-devicePC.namepc      = buf_devisPC.namepc
           
           no-error  .
-        if available (tt-devicePC) then 
-        do:
-          if last-of (tt-attrDevis.date) then 
-          do:
-            tt-devicePC.time_end = string(truncate (tt-attrDevis.time_ / 3600, 0)) + ":" + string((tt-attrDevis.time_ modulo 3600) / 60,"99") .
-            tt-devicePC.date_end = string(tt-attrDevis.date) .
-            tt-devicePC.time_start = v-time-start1 .
-            tt-devicePC.date_start = string(v-date-start) .
-          end.
-        end.
       end.
-      
+
     end.
+
+
+
+    for each tt-devicePC:
+     for each buf_tt-devisPCAttr no-lock where buf_tt-devisPCAttr.id = tt-devicePC.id break by buf_tt-devisPCAttr.date_ by buf_tt-devisPCAttr.time_:
+        
+      if first-of (buf_tt-devisPCAttr.date_) then 
+      do:
+        if v-time-start1 = "" then v-time-start1  = string(truncate (buf_tt-devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_tt-devisPCAttr.time_ modulo 3600) / 60,"99") .
+        if v-date-start = ? then v-date-start = buf_tt-devisPCAttr.date_ . 
+      end.  
+      if last-of (buf_tt-devisPCAttr.date_) then 
+      do:
+        assign
+          tt-devicePC.time_end   = string(truncate (buf_tt-devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_tt-devisPCAttr.time_ modulo 3600) / 60,"99") 
+          tt-devicePC.date_end   = string(buf_tt-devisPCAttr.date_) 
+          tt-devicePC.time_start = v-time-start1
+          tt-devicePC.date_start = string(v-date-start)
+          .
+      end.        
+    end.   
+    end.
+    
     find first tt-devicePCAttr no-error .   
     if not available (tt-devicePCAttr) then 
     do:
@@ -293,11 +324,12 @@ do
     '<td style="width: 50px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
     '</tr>' skip
+    '<tr><td colspan="14" style="text-align: center;">Результаты проверки HDD</td></tr>'
     .
                         
  
   put stream OutStr-html unformatted
-    '<TR><TD colspan="9"></TD></TR>' skip
+    '<TR><TD colspan="14"></TD></TR>' skip
     '</thead>' skip
     '<tbody>' skip
     .
@@ -332,7 +364,7 @@ do
       '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.namepc) + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + string (tt-devicePC.modeldevice) + '</TD>' skip
       .                     
-    for each tt-devicePCAttr no-lock where tt-devicePCAttr.id = tt-devicePC.id break by tt-devicePCAttr.id
+    for each tt-devicePCAttr no-lock where tt-devicePCAttr.id = tt-devicePC.id break by tt-devicePCAttr.id by tt-devicePCAttr.name_ by tt-devicePCAttr.date_ by tt-devicePCAttr.time_
       :
       if first-of (tt-devicePCAttr.id ) then 
       do:         

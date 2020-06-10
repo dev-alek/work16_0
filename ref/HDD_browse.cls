@@ -65,13 +65,13 @@ class ref.HDD_browse inherits Form:
   define private variable dataGridViewTextBoxColumn1            as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
   define private variable dateDataGridViewTextBoxColumn         as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
   define private variable dateDataGridViewTextBoxColumn1        as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
-  define private variable delta as System.Windows.Forms.NumericUpDown no-undo.
+  define private variable delta                                 as System.Windows.Forms.NumericUpDown             no-undo.
   define private variable drowseHDDAttr                         as System.Windows.Forms.DataGridView              no-undo.
   define private variable groupBox1                             as System.Windows.Forms.GroupBox                  no-undo.
   define private variable HDDbrowseGBD                          as System.Windows.Forms.DataGridView              no-undo.
   define private variable label3                                as System.Windows.Forms.Label                     no-undo.
   define private variable label2                                as System.Windows.Forms.Label                     no-undo.
-  define private variable label4 as System.Windows.Forms.Label no-undo.
+  define private variable label4                                as System.Windows.Forms.Label                     no-undo.
   define private variable lnamePK                               as System.Windows.Forms.Label                     no-undo.
   define private variable lobj_list                             as System.Windows.Forms.Label                     no-undo.
   define private variable lProcDisk                             as System.Windows.Forms.Label                     no-undo.
@@ -159,7 +159,6 @@ class ref.HDD_browse inherits Form:
   
   constructor public HDD_browse (pdb-num as integer):
     super().
-    
     InitializeComponent().
     Visual_form(pdb-num) .
     p-db-num = pdb-num .
@@ -167,6 +166,7 @@ class ref.HDD_browse inherits Form:
     this-object:sort_date:Value = today .
     if v-SortDate = ? then v-SortDate = today .
     this-object:sort_time:Value = today .
+    
     if v-SortTime = ? then v-SortTime = string(today) .
     v-SortTime = string(this-object:sort_time:Text) .
     if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
@@ -303,40 +303,50 @@ class ref.HDD_browse inherits Form:
       message
         "Объект не выбран"
         view-as alert-box information .
-      return no-apply .
-    end.
-
-    for each temp_obj-list:
-      delete temp_obj-list.
-    end.
-
-    for each buf_userobjs_temp-user-obj
-      on error undo, return no-apply
-      :
-      create temp_obj-list.
       assign
-        temp_obj-list.obj-type = buf_userobjs_temp-user-obj.obj-type
-        temp_obj-list.obj-code = buf_userobjs_temp-user-obj.obj-code
+        p-obj-list = ""
+        v-db-list  = ""
         .
     end.
+    else 
+    do:
+    
+      for each temp_obj-list:
+        delete temp_obj-list.
+      end.
 
-    assign
-      p-obj-list = ""
-      v-db-list  = ""
-      .
-    for each temp_obj-list
-      :
+      for each buf_userobjs_temp-user-obj
+        on error undo, return no-apply
+        :
+        create temp_obj-list.
+        assign
+          temp_obj-list.obj-type = buf_userobjs_temp-user-obj.obj-type
+          temp_obj-list.obj-code = buf_userobjs_temp-user-obj.obj-code
+          .
+      end.
+
       assign
-        p-obj-list = p-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code )
-        v-db-list  = v-db-list + "," + string(temp_obj-list.obj-code) 
+        p-obj-list = ""
+        v-db-list  = ""
         .
-    end.
-    v-db-list = trim (v-db-list,",") .
-    p-obj-list = trim (p-obj-list,",") .    
+      for each temp_obj-list
+        :
+        assign
+          p-obj-list = p-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code )
+          .
+        for first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type:
+          v-db-list = v-db-list + "," + string( ub.clients.db-num).
+        end.
+ 
+      end.
+      v-db-list = trim (v-db-list,",") .
+      p-obj-list = trim (p-obj-list,",") .
+    end.    
     this-object:obj_list:Text = string(p-obj-list) .
 
     bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error .
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta).
+    
     return.
 
   end method.
@@ -348,7 +358,7 @@ class ref.HDD_browse inherits Form:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void Click_print( input sender as System.Object, input e as System.EventArgs ):
-    
+    if v-SortTime = "" then v-SortTime = "00:00" .
     run rep/hdd-interface.p(input parparentproc,
       input v-NamePK,
       input v-ModelDisk,
@@ -380,17 +390,17 @@ class ref.HDD_browse inherits Form:
   end method.
 
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void delta_ValueChanged( input sender as System.Object, input e as System.EventArgs ):
-		v-Delta = decimal(this-object:delta:Text) .
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void delta_ValueChanged( input sender as System.Object, input e as System.EventArgs ):
+    v-Delta = decimal(this-object:delta:Text) .
     bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta) no-error.
-		return.
+    return.
 
-	end method.
+  end method.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -1531,9 +1541,9 @@ class ref.HDD_browse inherits Form:
                 tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99")
                 .
             end.
-          if v-TestStatus <> "" then tt-devicePC.status_  = v-TestStatus .
-          if v-ProcDisk <> 0 then tt-devicePC.ProcDisk = v-ProcDisk .
-          if v-UserDisk <> 0 then tt-devicePC.UserProc = v-UserDisk .
+            if v-TestStatus <> "" then tt-devicePC.status_  = v-TestStatus .
+            if v-ProcDisk <> 0 then tt-devicePC.ProcDisk = v-ProcDisk .
+            if v-UserDisk <> 0 then tt-devicePC.UserProc = v-UserDisk .
 
           end.
         end.
@@ -1578,8 +1588,8 @@ class ref.HDD_browse inherits Form:
   end method .  
 
   method private handle browse_HDDattr(ValueDisk_ as decimal, TreshDisk_ as decimal, Delta_ as decimal):
-    define variable v-TimeST     as character no-undo .
-    define variable v-TimeST1    as character no-undo .   
+    define variable v-TimeST  as character no-undo .
+    define variable v-TimeST1 as character no-undo .   
     define buffer buf_devisPC-attr for ub.devisPC-attr .
     
     empty temp-table tt-devicePCAttr .
@@ -1587,17 +1597,17 @@ class ref.HDD_browse inherits Form:
     for each buf_devisPC-attr no-lock where buf_devisPC-attr.id = tt-devicePC.id and buf_devisPC-attr.date = tt-devicePC.date_  
       and buf_devisPC-attr.attr-code <> "ProcDisk" and buf_devisPC-attr.attr-code <> "UserProc" and buf_devisPC-attr.attr-code <> "testStatus" :
 
-            if integer(entry (2,tt-devicePC.time_,":")) > 0 then 
-            do:
-              v-TimeST = string(truncate (buf_devisPC-attr.time_ / 3600, 0)) + ":" + string((buf_devisPC-attr.time_ modulo 3600) / 60,"99") .
-              v-TimeST1 = entry (1,tt-devicePC.time_,":") + ":" + entry (2,tt-devicePC.time_,":") .
-            end.
-            else  
-            do:
-              v-TimeST = string(truncate (buf_devisPC-attr.time_ / 3600, 0)) .
-              v-TimeST1 = entry (1,tt-devicePC.time_,":") .
-            end.
-            if v-TimeST <> v-TimeST1 then next next_ .
+      if integer(entry (2,tt-devicePC.time_,":")) > 0 then 
+      do:
+        v-TimeST = string(truncate (buf_devisPC-attr.time_ / 3600, 0)) + ":" + string((buf_devisPC-attr.time_ modulo 3600) / 60,"99") .
+        v-TimeST1 = entry (1,tt-devicePC.time_,":") + ":" + entry (2,tt-devicePC.time_,":") .
+      end.
+      else  
+      do:
+        v-TimeST = string(truncate (buf_devisPC-attr.time_ / 3600, 0)) .
+        v-TimeST1 = entry (1,tt-devicePC.time_,":") .
+      end.
+      if v-TimeST <> v-TimeST1 then next next_ .
       create tt-devicePCAttr .
       assign
         tt-devicePCAttr.id        = buf_devisPC-attr.id
@@ -1608,17 +1618,20 @@ class ref.HDD_browse inherits Form:
         tt-devicePCAttr.type_     = buf_devisPC-attr.type 
         .  
     end.   
-    if v-ValueDisk > 0 then do:
+    if v-ValueDisk > 0 then 
+    do:
       for each tt-devicePCAttr where tt-devicePCAttr.value_ <> v-ValueDisk:
         delete tt-devicePCAttr .
       end.  
     end.         
-    if v-TreshDisk > 0 then do:
+    if v-TreshDisk > 0 then 
+    do:
       for each tt-devicePCAttr where tt-devicePCAttr.tresh <> v-TreshDisk:
         delete tt-devicePCAttr .
       end.  
     end.
-    if v-Delta > 0 then do:
+    if v-Delta > 0 then 
+    do:
       for each tt-devicePCAttr where abs(tt-devicePCAttr.value_ - tt-devicePCAttr.tresh) <> v-Delta:
         delete tt-devicePCAttr .
       end.  

@@ -90,7 +90,7 @@ define variable v-TimeST            as character no-undo .
 define variable v-TimeST1           as character no-undo . 
 define variable v-TimeST-attr       as character no-undo .
 define variable v-TimeST1-attr      as character no-undo . 
-   
+define variable v-titul             as character no-undo .   
 
 do
   on error undo, return error return-value
@@ -186,9 +186,10 @@ do
 
           end.  
         end.  
-
-        next_attr:     
-        for each buf_devisPC-attr no-lock where buf_devisPC-attr.id = tt-devicePC.id and buf_devisPC-attr.date = tt-devicePC.date_
+  end. 
+        next_attr: 
+        for each tt-devicePC,      
+        each buf_devisPC-attr no-lock where buf_devisPC-attr.id = tt-devicePC.id and buf_devisPC-attr.date = tt-devicePC.date_
           and buf_devisPC-attr.attr-code <> "ProcDisk" and buf_devisPC-attr.attr-code <> "UserProc" and buf_devisPC-attr.attr-code <> "testStatus" :
           if p-Time <> "" then 
           do: 
@@ -253,7 +254,7 @@ do
         end.  
       end.  
     end.
-  end.  
+
   /*печать*/
   run get-report-num (output p-report-id).
     
@@ -292,15 +293,17 @@ do
     '<td style="width: 50px;"></td>' skip
     '<td style="width: 50px;"></td>' skip
     '</tr>' skip
+    '<tr><td colspan="14" style="text-align: center;">Результаты проверки HDD</td></tr>'
     .
                         
  
   put stream OutStr-html unformatted
-    '<TR><TD colspan="9"></TD></TR>' skip
+    '<TR><TD colspan="14"></TD></TR>' skip
     '</thead>' skip
     '<tbody>' skip
     .
   put stream OutStr-html unformatted
+    
     '<TR>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">АЗК</TD>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Дата теста</TD>' skip

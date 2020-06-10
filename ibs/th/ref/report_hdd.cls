@@ -154,16 +154,16 @@ class ibs.th.ref.report_hdd inherits Form:
 
   end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void change_odject( input sender as System.Object, input e as System.EventArgs ):
-/*	p-obj-list = this-object:obj_list:Text .	*/
-		return.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void change_odject( input sender as System.Object, input e as System.EventArgs ):
+    /*	p-obj-list = this-object:obj_list:Text .	*/
+    return.
 
-	end method.
+  end method.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -251,37 +251,44 @@ class ibs.th.ref.report_hdd inherits Form:
       message
         "Объект не выбран"
         view-as alert-box information .
-      return no-apply .
-    end.
-
-    for each temp_obj-list:
-      delete temp_obj-list.
-    end.
-
-    for each buf_userobjs_temp-user-obj
-      on error undo, return no-apply
-      :
-      create temp_obj-list.
       assign
-        temp_obj-list.obj-type = buf_userobjs_temp-user-obj.obj-type
-        temp_obj-list.obj-code = buf_userobjs_temp-user-obj.obj-code
-        temp_obj-list.db-num   = buf_userobjs_temp-user-obj.db-num
+        p-obj-list = ""
+        v-obj-list = ""
         .
     end.
+    else 
+    do:
+    
+      for each temp_obj-list:
+        delete temp_obj-list.
+      end.
 
-    assign
-      p-obj-list = ""
-      v-obj-list = ""
-      .
-    for each temp_obj-list
-      :
+      for each buf_userobjs_temp-user-obj
+        on error undo, return no-apply
+        :
+        create temp_obj-list.
+        assign
+          temp_obj-list.obj-type = buf_userobjs_temp-user-obj.obj-type
+          temp_obj-list.obj-code = buf_userobjs_temp-user-obj.obj-code
+          .
+      end.
+
       assign
-        p-obj-list = p-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code )
-        v-obj-list = v-obj-list + "," + string(temp_obj-list.obj-code) 
+        p-obj-list = ""
+        v-obj-list = ""
         .
-    end.
-    v-obj-list = trim(v-obj-list,",").
-    p-obj-list = trim (p-obj-list,",") .  
+      for each temp_obj-list
+        :
+        assign
+          p-obj-list = p-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code )
+          .
+        for first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type:
+          v-obj-list = v-obj-list + "," + string( ub.clients.db-num).
+        end.
+      end.
+      p-obj-list = trim (p-obj-list,",") .
+      v-obj-list = trim(v-obj-list,",").
+    end.    
     this-object:obj_list:Text = string(p-obj-list) .
     
     return.
@@ -680,16 +687,16 @@ class ibs.th.ref.report_hdd inherits Form:
     end catch.
   end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void time_start_ValueChanged( input sender as System.Object, input e as System.EventArgs ):
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void time_start_ValueChanged( input sender as System.Object, input e as System.EventArgs ):
 		
-		return.
+    return.
 
-	end method.
+  end method.
 
   destructor public report_hdd ( ):
 

@@ -146,13 +146,13 @@ do
     if not available (tt-devicePCAttr) then 
     do:
       put stream Outhtmllog unformatted
-        "По АЗК №" + entry(ii, p-obj-list, {&comma-char}) + " отсутствуют данные за выбранный период c " + string(p-Date-start,"99/99/9999") + " по "  + string(p-Date-end,"99/99/99999") skip .
+        "По АЗК №" + entry(ii, p-obj-list, {&comma-char}) + " отсутствуют данные за выбранный период c " + string(p-Date-start,"99/99/9999") + " по "  + string(p-Date-end,"99/99/9999") skip .
       return .
     end.
     else 
     do:
       put stream Outhtmllog unformatted
-        "По АЗК №" + entry(ii, p-obj-list, {&comma-char}) + " данные за выбранный период c " + string(p-Date-start,"99/99/9999") + " по "  + string(p-Date-end,"99/99/99999") + "выгружены" skip .
+        "По АЗК №" + entry(ii, p-obj-list, {&comma-char}) + " данные за выбранный период c " + string(p-Date-start,"99/99/9999") + " по "  + string(p-Date-end,"99/99/9999") + "выгружены" skip .
     end.    
     output stream Outhtmllog close.    
   end.
