@@ -377,6 +377,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,c-alc-type-gds~
 ,contract~
 ,c-contract~
+,contract-attr~
 ,contract-specif~
 ,c-contract-specif~
 ,some-lk~

@@ -359,6 +359,7 @@ abc-analysis~
 ,c-config~
 ,contract~
 ,c-contract~
+,contract-attr~
 ,contract-specif~
 ,c-contract-specif~
 ,country~
@@ -1060,7 +1061,6 @@ abc-analysis-doc-attr~
 ,cli-grp-attr~
 ,clob-data~
 ,condition-keeping-attr~
-,contract-attr~
 ,contract-line-attr~
 ,country-attr~
 ,criterion-analysis-attr~

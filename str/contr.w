@@ -125,7 +125,10 @@ define buffer b_contract for ub.contract.
 define buffer buf_c-contract for ub.c-contract.
 define buffer buf_firm for ub.firm.
 define buffer buf_clients for ub.clients.
+define buffer buf_contract-attr for ub.contract-attr .
+define variable v-log as logical no-undo. /* ТН-2356. 2014г. Арн. */
 
+/* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
@@ -151,7 +154,7 @@ define buffer buf_clients for ub.clients.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-OK RECT-8 RECT-9 b-exit b-spec B-transport ~
-b-hist B-Help contract-prn-code contract-date contract-city contract-name ~
+b-hist B-Help contract-prn-code contract-date contract-city contract-name T-edi ~
 BUTTON-curr contract-date-beg contract-date-end curr-code COMBO-type-contr ~
 b-bank-own b-bank-cli cli-code cli-type BUTTON-cli b-bank-posr posr-code ~
 posr-type BUTTON-posr b-bank-agnt agnt-code agnt-type BUTTON-agnt mngr-code ~
@@ -512,6 +515,11 @@ DEFINE VARIABLE kredit-limit AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 22.25 BY 1 NO-UNDO.
 
+DEFINE VARIABLE T-edi AS LOGICAL INITIAL no 
+     LABEL "Поставки через ЭДО" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 21.5 BY .83 NO-UNDO.
+
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY Dialog-Frame FOR 
@@ -530,6 +538,7 @@ DEFINE FRAME Dialog-Frame
      B-Add-Inf AT ROW 1 COL 59 WIDGET-ID 10
      b-hist AT ROW 1 COL 78
      B-Help AT ROW 1 COL 88
+     T-edi AT ROW 1.13 COL 70 WIDGET-ID 12
      contract-prn-code AT ROW 2.5 COL 12 COLON-ALIGNED
      contract-date AT ROW 2.5 COL 37.5 COLON-ALIGNED
      contract-city AT ROW 2.5 COL 59.5 COLON-ALIGNED
@@ -1063,7 +1072,7 @@ DO:
     assign
       contract-date COMBO-type-contr COMBO-usl-opl srok-opl contract-name contract-prn-code contract-city own-name
       contract-date-beg  contract-date-end  curr-code cli-type cli-code posr-type posr-code  agnt-type
-      agnt-code mngr-code str-uslov-oplat COMBO-auto-pay RADIO-SET-1 COMBO-usl-opl-2 COMBO-auto-pay-2 srok-opl-2
+      agnt-code mngr-code str-uslov-oplat COMBO-auto-pay RADIO-SET-1 COMBO-usl-opl-2 COMBO-auto-pay-2 srok-opl-2 T-edi
     .
     run create-proc in this-procedure no-error .
     if error-status:error then return no-apply.
@@ -1541,6 +1550,19 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME T-edi
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-edi Dialog-Frame
+ON VALUE-CHANGED OF T-edi IN FRAME Dialog-Frame /* Поставки через ЭДО */
+DO:
+  
+  assign t-edi .
+        
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -1837,6 +1859,8 @@ PROCEDURE create-proc :
   assign kredit-sum .
 
   assign
+    b_contract.cli-name          = cli-name
+
     b_contract.str-uslov-oplat   = str-uslov-oplat
     b_contract.usl-opl           = COMBO-usl-opl
     b_contract.srok-opl          = srok-opl
@@ -2009,8 +2033,21 @@ PROCEDURE create-proc :
     when "платеж факт"  then b_contract.auto-pay = 4 .
   end.
 
-  /* Если производится модификация мастер договора - модифицируем все подчиненные договора  */ 
-  IF ref-mode = {&update} AND Is-MS-Contract-Int (BUFFER b_Contract) = 1 
+  find first buf_contract-attr exclusive-lock where buf_contract-attr.contract-code = b_contract.contract-code
+  and buf_contract-attr.host-code = b_contract.host-code and buf_contract-attr.attr-code = "contract-edi" no-error .
+  if available (buf_contract-attr) then buf_contract-attr.attr-value = string(T-edi) .
+  else do:
+    create buf_contract-attr .
+    assign
+    buf_contract-attr.host-code = b_contract.host-code
+    buf_contract-attr.contract-code = b_contract.contract-code
+    buf_contract-attr.attr-code = "contract-edi"
+    buf_contract-attr.attr-value = string (T-edi)
+    .
+  end.  
+  
+  /* Если производится модификация мастер договора - модифицируем все подчиненные договора  */
+  IF ref-mode = {&update} AND Is-MS-Contract-Int (BUFFER b_Contract) = 1
      THEN DO:
      /* */ 
      MESSAGE
@@ -2070,7 +2107,7 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY contract-prn-code contract-date contract-city contract-name 
+  DISPLAY T-edi contract-prn-code contract-date contract-city contract-name 
           contract-date-beg contract-date-end curr-code COMBO-type-contr 
           cli-code cli-type posr-code posr-type agnt-code agnt-type mngr-code 
           COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 
@@ -2079,7 +2116,7 @@ PROCEDURE enable_UI :
           cor-acc-2 contract-code curr-name own-code own-name cli-name posr-name 
           agnt-name mngr-name 
       WITH FRAME Dialog-Frame.
-  ENABLE b-OK RECT-8 RECT-9 b-exit b-spec B-transport b-hist B-Help 
+  ENABLE b-OK b-exit b-spec B-transport b-hist B-Help RECT-8 RECT-9 T-edi 
          contract-prn-code contract-date contract-city contract-name 
          BUTTON-curr contract-date-beg contract-date-end curr-code 
          COMBO-type-contr b-bank-own b-bank-cli cli-code cli-type BUTTON-cli 
@@ -2492,13 +2529,17 @@ assign
         when 4 then COMBO-auto-pay:screen-value = "платеж факт" .
       end.
 
-
+      for first buf_contract-attr no-lock where buf_contract-attr.host-code = b_contract.host-code and
+      buf_contract-attr.contract-code = b_contract.contract-code and buf_contract-attr.attr-code = "contract-edi":
+        T-edi = logical (buf_contract-attr.attr-value) .
+      end.
+      display t-edi with frame {&frame-name} .
       if ref-mode = {&lookup} then do:
 
         disable contract-prn-code contract-date contract-city contract-name contract-date-beg contract-date-end  fin-VAT-pc b-nal
           agnt-code agnt-type BUTTON-agnt BUTTON-mngr posr-code posr-type BUTTON-posr  mngr-code  b-cor-acc b-cor-acc-2 b-an-uchet
           b-cel-nazn COMBO-usl-opl COMBO-usl-opl-2 str-uslov-oplat COMBO-auto-pay COMBO-auto-pay-2 RADIO-SET-1 kredit-sum contract-code kredit-limit
-          srok-opl
+          srok-opl T-edi
 
         with frame {&frame-name}.
         b-OK:label in frame {&frame-name} = "&Выход" .
