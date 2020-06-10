@@ -3275,6 +3275,17 @@ procedure m-smart-ref :
 
 end procedure. /* m-hdd-ref */
 
+procedure m-hdd-ref :
+  do
+  on error undo, return error
+  :
+    
+  run ref/hdd.p ( input parparentproc, input v-cntxt-db-num) no-error.
+  
+  end.
+
+end procedure. /* m-hdd-ref */
+
 procedure m_action-item :
 
   define variable v-rid-list         as character no-undo .
