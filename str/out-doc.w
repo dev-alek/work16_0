@@ -1689,8 +1689,15 @@ do while v-del:
         end.
         else 
         do:
+/*          prt-rec  = recid (gds-dtl) .*/
+/*          find gds-dtl where recid (gds-dtl) = prt-rec exclusive.*/
+        
+          find gds-dtl exclusive-lock where gds-dtl.doc-code = t-doc.doc-code and 
+                                                 gds-dtl.artic = buf_goods.artic and
+                                                 gds-dtl.prod-code = buf_goods.prod-code and 
+                                                 gds-dtl.prod-type = buf_goods.prod-type .
           prt-rec  = recid (gds-dtl) .
-          find gds-dtl where recid (gds-dtl) = prt-rec exclusive.                                                                                                
+          find gds-dtl where recid (gds-dtl) = prt-rec exclusive.
           find doc-line where doc-line.doc-code = gds-dtl.doc-code
             and doc-line.prod-code = gds-dtl.prod-code
             and doc-line.prod-type = gds-dtl.prod-type
