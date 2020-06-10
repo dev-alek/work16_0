@@ -24,8 +24,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 FOR EACH pbc-list NO-LOCK BREAK BY pbc-list.b-code:
   if first-of(pbc-list.b-code) then new-good = yes.
   else new-good = no.
-  if pbc-list.bc-on AND ACTION = "D" then NEXT.
-  IF NOT pbc-list.bc-on AND ACTION = "U" then NEXT.
 &else
   if NOT (ub.shop.cd-pb-base OR ub.shop.cd-pb-alt OR ub.shop.cd-sc-base ) then NEXT _shop.
 &endif

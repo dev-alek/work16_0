@@ -67,8 +67,7 @@ end.
 /*вообще хоть какие-нибудь ДОПБК надо посылать*/
 if {5}.cd-pb-base or {5}.cd-pb-alt or {5}.cd-sc-base OR petrol-trk then do:
   FOR EACH ub.prod-bc NO-LOCK WHERE
-           ub.prod-bc.b-code = {2}.b-code AND
-           ub.prod-bc.bc-on = TRUE
+           ub.prod-bc.b-code = {2}.b-code 
               :
       if  ub.prod-bc.b-str = string( {2}.b-code )
           AND
@@ -94,10 +93,10 @@ if {5}.cd-pb-base or {5}.cd-pb-alt or {5}.cd-sc-base OR petrol-trk then do:
     {2}.unit-cli = {1}.unit-base then do:
       /*проверим - это и вправду весовой???*/
       if not ub.prod-bc.bc-on-type = {&loc-pg-code} then do:
-      { gbl/prodbcat.i ub.prod-bc
-      "(if LOOKUP({&weight}, ub.units.type) > 0 then 'weight=request':U  else 'petrolium=request':U )"
-      g#log no-error }
-      if error-status:error or not g#log then NEXT.
+        { gbl/prodbcat.i ub.prod-bc
+        "(if LOOKUP({&weight}, ub.units.type) > 0 then 'weight=request':U  else 'petrolium=request':U )"
+        g#log no-error }
+        if error-status:error or not g#log then NEXT.
       end.
       run asc-gds in this-procedure (
 &if "{&bbc}" <> '':U &then
@@ -201,8 +200,7 @@ then do:
      /*нужно ли посылать ДОП БК НА неосновные*/
      if {5}.cd-pb-alt then do:
        FOR EACH ub.prod-bc NO-LOCK WHERE
-                ub.prod-bc.b-code = b-bc.b-code AND
-                ub.prod-bc.bc-on = TRUE
+                ub.prod-bc.b-code = b-bc.b-code
                :
         /*если у bar-code такой же b-code и есть настройка на его пересылку то пропускаем*/
         if ub.prod-bc.b-str = string( b-bc.b-code ) AND {5}.cd-loc-alt then NEXT.
