@@ -82,6 +82,8 @@ define buffer buf_gen-attr for ub.gen-attr .
 define buffer bf_parts     for ub.parts .
 
 define variable v-scan-str       as character no-undo.
+define VARIABLE v-manual         as logical   no-undo .
+DEFINE VARIABLE v-timedelay as integer no-undo .
 
 define stream str-err .
 define stream in-stream.
@@ -348,8 +350,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   find first trn-doc exclusive-lock where trn-doc.doc-code = p-doc-code no-error .  
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsManual
-    then enable v-mark with frame {&frame-name}.
-    else disable v-mark with frame {&frame-name}.
+    then v-manual = yes.
+    else do:
+        v-manual = no .
+        v-mark:READ-ONLY IN FRAME {&frame-name}        = TRUE .
+    end.    
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -772,7 +777,14 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 PROCEDURE proc-any-key :
-  v-scan-str = v-scan-str + last-event:label.
+    if not v-manual
+        then
+        if v-scan-str = ""
+            then etime(yes).
+        else
+            if etime > 500
+                then v-scan-str = "".
+    v-scan-str = v-scan-str + last-event:label.
 end.
 
 /* _UIB-CODE-BLOCK-END */

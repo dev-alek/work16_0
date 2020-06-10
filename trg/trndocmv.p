@@ -898,6 +898,13 @@ end case .
                   buf_marking.obj-type = buf_trn-doc.obj-type
                   buf_marking.sts      = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
                 .
+                run str/callnews.p                                         
+                  (input {&table_marking}
+                  ,input (buffer buf_marking :handle)
+                  ) no-error .
+                if error-status:error then 
+                do:
+                end.
             end.  
         end.  /* for each ub.marking-lines */
     end.
