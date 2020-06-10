@@ -271,7 +271,10 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                                                             ,input v-curr-r-b
                                                             ,input v-cmd-proc-handle
                                                             ,input 0 /*temp-cmd.cmd-code пока*/
-                                                            ) no-error .
+                                                            ) .
+/*        эта конструкция не отлавливает ошибку
+
+no-error.
         if error-status:error
         then do:
           undo _main, return error substitute("&1&2Ошибка при обработке данных справочников&2" +
@@ -280,8 +283,9 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                                               ,{&new-line}
                                               , error-status:get-message(1)
                                               , return-value
-                                                ).
-        end. /*if error-status:error then do:*/
+                                                ).          
+
+        end. /*if error-status:error then do:*/          */
         if v-stop-leave-status > '' then do:
           undo _main, return error substitute("&1&2Процесс обработки данных справочников&2" +
                                               "&3&2&4"
