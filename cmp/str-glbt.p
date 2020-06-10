@@ -573,7 +573,7 @@ attr-egais-host }
 /*Ёлектронный документооборот*/
 { cmp/cr-prep.i 1 attr-marking marking " " marking }
 { cmp/cr-prepc.i 1 prop-list-attr-marking
-"marking-EDO,marking-type"
+"marking-EDO,marking-type,marking-manual"
 attr-marking }
 
 /*набор опций работы с документами ћ÷*/

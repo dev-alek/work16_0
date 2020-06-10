@@ -40,6 +40,8 @@ define variable vss-description as character no-undo init "Редактирование секции
 { cmp/showinf.i  }
 { gbl/thbjattr.i }
 
+def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 
@@ -72,8 +74,8 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit RECT-1 t-edo S-type 
-&Scoped-Define DISPLAYED-OBJECTS t-edo S-type 
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit RECT-1 t-edo t-manual S-type 
+&Scoped-Define DISPLAYED-OBJECTS t-edo t-manual S-type 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -117,16 +119,22 @@ DEFINE VARIABLE t-edo AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 30.5 BY .83 NO-UNDO.
 
+DEFINE VARIABLE t-manual AS LOGICAL INITIAL no 
+     LABEL "Ручной ввод марок" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 30.5 BY .83 NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      B-quit AT ROW 1 COL 11
-     t-edo AT ROW 3.08 COL 5.75 WIDGET-ID 142
-     S-type AT ROW 4 COL 46 NO-LABEL WIDGET-ID 144
+     t-edo AT ROW 2.79 COL 5.75 WIDGET-ID 142
+     t-manual AT ROW 3.88 COL 5.75 WIDGET-ID 148
+     S-type AT ROW 4.63 COL 46 NO-LABEL WIDGET-ID 144
      "Типы маркировки для помарочного учета:" VIEW-AS TEXT
-          SIZE 39 BY .67 AT ROW 4.25 COL 6 WIDGET-ID 146
+          SIZE 39 BY .67 AT ROW 4.88 COL 6 WIDGET-ID 146
      RECT-1 AT ROW 2.25 COL 1.5 WIDGET-ID 116
      SPACE(0.62) SKIP(0.57)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -166,7 +174,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON GO OF FRAME Dialog-Frame /* Настройки для обмена с ЕГАИС */
+ON GO OF FRAME Dialog-Frame /* Настройки для Электронного документооборота */
 DO:
   run save-proc in this-procedure no-error.
   if error-status :error then return no-apply.
@@ -177,7 +185,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Настройки для обмена с ЕГАИС */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Настройки для Электронного документооборота */
 DO:
   APPLY "END-ERROR":U TO SELF.
 END.
@@ -190,7 +198,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL S-type Dialog-Frame
 ON VALUE-CHANGED OF S-type IN FRAME Dialog-Frame
 DO:
-  assign s-type.
+  assign S-type.
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -202,6 +211,17 @@ END.
 ON VALUE-CHANGED OF t-edo IN FRAME Dialog-Frame /* Включена работа с ЭДО */
 DO:
   assign t-edo .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME t-manual
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-manual Dialog-Frame
+ON VALUE-CHANGED OF t-manual IN FRAME Dialog-Frame /* Ручной ввод марок */
+DO:
+  assign t-manual .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -271,9 +291,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-edo S-type 
+  DISPLAY t-edo t-manual S-type 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit RECT-1 t-edo S-type 
+  ENABLE B-exit B-quit RECT-1 t-edo t-manual S-type 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -333,8 +353,13 @@ FOR EACH temp-thbj-attr
       t-edo = temp-thbj-attr.property-value-logical .
       display t-edo with frame {&frame-name} .
     END.
+    IF temp-thbj-attr.prop-code = {&attr-marking_marking-manual} THEN DO:
+      t-manual = temp-thbj-attr.property-value-logical .
+      display t-manual with frame {&frame-name} .
+    END.
+    
     IF temp-thbj-attr.prop-code = {&attr-marking_marking-type} THEN DO:
-       S-type = temp-thbj-attr.property-value-character.
+       S-type = temp-thbj-attr.property-value-character .
        display s-type with frame {&frame-name} .
     END.
 END.
@@ -384,12 +409,14 @@ IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 ASSIGN FRAME {&FRAME-NAME}
     t-edo
     S-type 
+    t-manual
     .
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} .
     temp-thbj-attr.property-value-logical = t-edo.
-
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-manual} .
+    temp-thbj-attr.property-value-logical = t-manual.
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} .
-    temp-thbj-attr.property-value-character = s-type.
+    temp-thbj-attr.property-value-character = trim(s-type,",").
     
     
     do transaction:
@@ -404,6 +431,7 @@ ASSIGN FRAME {&FRAME-NAME}
             view-as alert-box.
             undo, return error.
         end.
+        ObjSrv:Env:ParametrsOfSection:ResetEdo().        
     end.
 
 

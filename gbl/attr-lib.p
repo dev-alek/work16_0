@@ -3853,9 +3853,9 @@ logical~
 &scop user-can-edit-attr-marking   true
 &scop output-display-attr-marking  true
 &scop other-attr-marking           'spr-ext=gbl\marking.w':U
-&scop prop-type-list-attr-marking  'logical,character':U
-&scop prop-label-list-attr-marking 'Включена работа с ЭДО,Типы маркировок для помарочного учета'
-&scop prop-list-attr-marking       'marking-EDO,marking-type'
+&scop prop-type-list-attr-marking  'logical,character,logical':U
+&scop prop-label-list-attr-marking 'Включена работа с ЭДО,Типы маркировок для помарочного учета,Ручной ввод марок'
+&scop prop-list-attr-marking       'marking-EDO,marking-type,marking-manual'
 &scop global-attr-marking true
 &scop host-attr-marking false
 &scop shop-attr-marking true
