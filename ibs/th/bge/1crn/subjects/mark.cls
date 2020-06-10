@@ -61,6 +61,7 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
       when "qnty-box"     then qnty-box         = {&attr-dec} .
       when "stts"         then stts             = {&attr-str} .
       when "mark_parent"  then mark-parent      = {&attr-str} .
+      when "mark-parent"  then mark-parent      = {&attr-str} .
       when "stts-desc"    then stts-desc        = {&attr-str} .
       when "GTIN"         then GTIN             = {&attr-str} .
       when "gds-code"     then gds-code         = {&attr-integer} .

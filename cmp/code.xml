@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251" ?>
 <Root>
    <File-info>
-      <version>05</version>
+      <version>06</version>
    </File-info>
    <table-Code>
       <record-Code>
@@ -488,6 +488,38 @@
 			<parent>CodeErrorUTDCheckShip</parent>
 			<record-delete>no</record-delete>
 			<status_>0</status_>
-		</record-Code>   </table-Code>
+		</record-Code>   
+                <record-Code>
+			<code>Load1C</code>
+			<CodeName>Загрузка из 1С</CodeName>
+			<export_>yes</export_>
+			<parent>CodeErrorUTD</parent>
+			<record-delete>no</record-delete>
+			<status_>0</status_>
+		</record-Code>
+		<record-Code>
+			<code>stts-desc-line</code>
+			<CodeName>Информация по строке </CodeName>
+			<CodeValue>&amp;1 Строка: &amp;2</CodeValue>
+			<misc1></misc1>
+			<misc2>0</misc2>
+			<export_>yes</export_>
+			<parent>CodeErrorUTDLoad1C</parent>
+			<record-delete>no</record-delete>
+			<status_>0</status_>
+		</record-Code>
+		<record-Code>
+			<code>stts-desc-mark</code>
+			<CodeName>Информация по марке </CodeName>
+			<CodeValue>&amp;1 Строка: &amp;2 Марка: &amp;3</CodeValue>
+			<misc1></misc1>
+			<misc2>0</misc2>
+			<export_>yes</export_>
+			<parent>CodeErrorUTDLoad1C</parent>
+			<record-delete>no</record-delete>
+			<status_>0</status_>
+		</record-Code>
+		
+</table-Code>
    
 </Root>

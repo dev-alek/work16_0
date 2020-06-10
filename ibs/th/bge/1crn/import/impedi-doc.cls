@@ -208,7 +208,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             .
             if v-gds-gd:stts-desc ne ?
             then
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"Load1C","stts-desc-line",v-gds-gd:stts-desc).
+               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"Load1C","stts-desc-line",v-gds-gd:stts-desc + {&delim-par} + string( utd-lines.LineNum)).
             define variable vqnty as integer no-undo.
             vqnty = 0.
             v-objlistmark = v-gds-gd:marks .
@@ -257,9 +257,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
                   if v-marks-mark:stts-desc ne ?
                   then
-                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"Load1C","stts-desc-mark",v-marks-mark:stts-desc).
+                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"Load1C","stts-desc-mark",v-marks-mark:stts-desc + {&delim-par} + string( utd-lines.LineNum) + {&delim-par} +  vmark).
                   create tt-mark.
                   tt-mark.mark = utd-marking-lines.mark .
+                  release utd-marking-lines.
                end.
                if utd-lines.Quantity ne vqnty
                then                        
@@ -281,6 +282,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   else
                      addMark( buffer utd-marking-lines).
                end.
+               release utd-lines.
             end. //
             else
                undo, throw new Progress.Lang.AppError(substitute("По линии &1 нет марок",utd-lines.LineNum)).
@@ -324,7 +326,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
        file-info:file-name = (v-file-name).    
        os-command no-wait value (file-info:full-pathname).
    end.
-   
+   release utd.
    v-retfl = true .
     define variable i as integer no-undo .
     catch exAppErrors as class Progress.Lang.AppError :
