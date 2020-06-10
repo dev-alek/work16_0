@@ -86,6 +86,16 @@ define variable vss-description as character no-undo init "".
 }
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
+  "'Импорт товаров'"
+  "'utl/rnpimpgds.p'"
+  "no"
+  "'11.1'"
+  "'1'"
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
   "'Экспорт в формате импорта приходной накладной (ПН)'"
   "'utl/exp-doc.p'"
   " "

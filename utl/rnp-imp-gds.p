@@ -15,7 +15,10 @@
 /* ***************************  Definitions  ************************** */
 
 define input parameter parparentproc as widget-handle no-undo .
-
+&if DEFINED(notchang) eq 0
+&then
+  &GLOBAL-DEFINE notchang no
+&endif
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author: SSlivenko$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -169,6 +172,7 @@ end.
 
 run ref/strtimp.w (
                        input parparentproc
+                      ,{&notchang}
                       ,input integer({&vat-tax-code})
                       ,input integer({&slt-tax-code})
                       ,input custvalue

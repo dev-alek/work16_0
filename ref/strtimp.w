@@ -24,30 +24,31 @@ Creation date: 04/10/06
 
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
-DEFINE INPUT PARAMETER vattaxcd as integer no-undo.
-DEFINE INPUT PARAMETER slttaxcd as integer no-undo.
-define input parameter custvalue as character no-undo .
-define input parameter tnvedimp as logical no-undo .
-DEFINE OUTPUT PARAMETER v_os-file   AS CHAR NO-UNDO INIT "".
-DEFINE OUTPUT PARAMETER choice      AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-artic     AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-prod      AS integer NO-UNDO.  /*в виде орг5 или чел182*/
-DEFINE OUTPUT PARAMETER p-name      AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-engl-name AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-unit-base AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-VAT-code  AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-SLT-code  AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-struct      AS integer NO-UNDO.
-define output parameter p-tnved     as integer no-undo .
+DEFINE INPUT PARAMETER iOnlyfile     as logical no-undo.
+DEFINE INPUT PARAMETER vattaxcd      as integer no-undo.
+DEFINE INPUT PARAMETER slttaxcd      as integer no-undo.
+define input parameter custvalue     as character no-undo .
+define input parameter tnvedimp      as logical no-undo .
+DEFINE OUTPUT PARAMETER v_os-file    AS CHAR    NO-UNDO INIT "".
+DEFINE OUTPUT PARAMETER choice       AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-artic      AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-prod       AS integer NO-UNDO.  /*в виде орг5 или чел182*/
+DEFINE OUTPUT PARAMETER p-name       AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-engl-name  AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-unit-base  AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-VAT-code   AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-SLT-code   AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-struct     AS integer NO-UNDO.
+define output parameter p-tnved      as integer no-undo .
 define output parameter p-attrib     as integer no-undo .
 define output parameter p-destin     as integer no-undo .
-define output parameter p-sert     as integer no-undo .
-define output parameter p-user-rule     as integer no-undo .
-define output parameter p-alpha1    as integer no-undo .
-define output parameter p-grp-code  as integer no-undo .
-define output parameter p-service   as integer no-undo .
-define output parameter p-gds-code  as integer no-undo .
-define output parameter p-mark  as integer no-undo .
+define output parameter p-sert       as integer no-undo .
+define output parameter p-user-rule  as integer no-undo .
+define output parameter p-alpha1     as integer no-undo .
+define output parameter p-grp-code   as integer no-undo .
+define output parameter p-service    as integer no-undo .
+define output parameter p-gds-code   as integer no-undo .
+define output parameter p-mark       as integer no-undo .
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":u .
@@ -186,17 +187,17 @@ DEFINE VARIABLE T-artic AS LOGICAL INITIAL yes
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
      
-DEFINE VARIABLE T-grp-code AS LOGICAL INITIAL no
+DEFINE VARIABLE T-grp-code AS LOGICAL INITIAL yes
      LABEL "Код группы"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
      
-DEFINE VARIABLE T-service AS LOGICAL INITIAL no
+DEFINE VARIABLE T-service AS LOGICAL INITIAL yes
      LABEL "Услуга"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.   
      
-DEFINE VARIABLE T-gds-code AS LOGICAL INITIAL no
+DEFINE VARIABLE T-gds-code AS LOGICAL INITIAL yes
      LABEL "Код товара"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.   
@@ -211,7 +212,7 @@ DEFINE VARIABLE T-destin AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-engl-name AS LOGICAL INITIAL no
+DEFINE VARIABLE T-engl-name AS LOGICAL INITIAL yes
      LABEL "Англ. название"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -221,7 +222,7 @@ DEFINE VARIABLE T-name AS LOGICAL INITIAL yes
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-prod AS LOGICAL INITIAL no
+DEFINE VARIABLE T-prod AS LOGICAL INITIAL yes
      LABEL "Произ-ль (например орг176)"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -246,7 +247,7 @@ DEFINE VARIABLE T-tnved AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-unit-base AS LOGICAL INITIAL no
+DEFINE VARIABLE T-unit-base AS LOGICAL INITIAL yes
      LABEL "Основная единица измерения"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -256,12 +257,12 @@ DEFINE VARIABLE T-user-rule AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-VAT-code AS LOGICAL INITIAL no
+DEFINE VARIABLE T-VAT-code AS LOGICAL INITIAL yes
      LABEL "Код НДС"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-Mark AS LOGICAL INITIAL no
+DEFINE VARIABLE T-Mark AS LOGICAL INITIAL yes
      LABEL "Тип маркировки"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -956,7 +957,13 @@ PROCEDURE enable_UI :
           T-SLT-code T-struct T-tnved T-destin T-attrib T-user-rule T-sert
           T-prod T-alpha1 T-grp-code T-service T-gds-code t-mark text-string
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-atribut B-exit b-quit B-check B-Help B-file file-name RS-codir
+  if iOnlyfile
+  then
+     ENABLE RECT-atribut B-exit b-quit B-check B-Help B-file file-name RS-codir
+         
+      WITH FRAME Dialog-Frame.
+  else
+     ENABLE RECT-atribut B-exit b-quit B-check B-Help B-file file-name RS-codir
          T-engl-name T-unit-base T-VAT-code T-SLT-code T-struct T-tnved
          T-destin T-attrib T-user-rule T-sert T-prod T-grp-code T-service T-gds-code t-mark text-string
       WITH FRAME Dialog-Frame.

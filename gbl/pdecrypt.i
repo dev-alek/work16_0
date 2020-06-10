@@ -20,6 +20,7 @@ Required:
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
+
 &if "{1}" eq "defproc" 
 &then
 &glob defproc_pdecrypt yes 

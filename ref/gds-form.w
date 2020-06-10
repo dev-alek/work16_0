@@ -171,6 +171,9 @@ define variable p-sert as integer no-undo .
 define variable p-user-rule as integer no-undo .
 define variable p-alpha1 as integer no-undo .
 define variable p-grp-code as integer no-undo .
+define variable p-service as integer no-undo .
+define variable p-gds-code like ub.goods.gds-code no-undo .
+define variable p-mark as integer  no-undo .
 define variable i-artic as char no-undo.
 define variable i-prod-type as character no-undo .
 define variable i-prod-code as integer no-undo .
@@ -4070,6 +4073,7 @@ PROCEDURE start-import:
     end.
     run ref/strtimp.w (
                            input parparentproc
+                          ,input no
                           ,input vattaxcd
                           ,input slttaxcd
                           ,input custvalue
@@ -4113,6 +4117,7 @@ END.
 
 
 PROCEDURE next-good:
+  
   assign
   v-flag-attr-obj-entry   = no
   v-flag-attr-host-entry  = no
