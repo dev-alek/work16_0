@@ -62,6 +62,7 @@ define temp-table tt-devicePCAttr no-undo
   field date_     as date
   field time_     as integer
   field name_     as character
+  field db-num    as integer
   field value_    as decimal
   field tresh     as decimal
   field type_     as character
@@ -89,6 +90,7 @@ define stream Outhtmllog.
 define VARIABLE p-report-id         as character no-undo .
 define variable v-file-name-rep-htm as character no-undo .
 define variable ii                  as integer   no-undo .
+define variable jj                  as integer   no-undo .
 define variable v-change-Raw        as decimal   no-undo .
 define variable v-change-Value      as decimal   no-undo .
 define variable v-ok-Raw            as decimal   no-undo .
@@ -153,6 +155,7 @@ do
           create tt-devicePCAttr .
           assign
             tt-devicePCAttr.id        = tt-attrDevis.id
+            tt-devicePCAttr.db-num    = tt-attrDevis.db-num
             tt-devicePCAttr.name_     = tt-attrDevis.attr-code
             tt-devicePCAttr.type_     = tt-attrDevis.type 
             tt-devicePCAttr.value_    = decimal(tt-attrDevis.attr-value)
@@ -161,7 +164,7 @@ do
         end.
         if last-of (tt-attrDevis.attr-code) and last-of (tt-attrDevis.date) then 
         do:
-          find first tt-devicePCAttr where tt-devicePCAttr.id = tt-attrDevis.id
+          find first tt-devicePCAttr where tt-devicePCAttr.id = tt-attrDevis.id and tt-devicePCAttr.db-num = tt-attrDevis.db-num
             and tt-devicePCAttr.name_ = tt-attrDevis.attr-code no-error .
           if available (tt-devicePCAttr) then 
           do:
@@ -209,6 +212,7 @@ do
     end.
     output stream Outhtmllog to value(p-folder + "\" + p-file + ".txt") append convert target 'UTF-8'.
   
+    find first tt-devicePCAttr no-error .
     if not available (tt-devicePCAttr) then 
     do:
       put stream Outhtmllog unformatted
