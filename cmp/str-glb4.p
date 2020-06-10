@@ -1039,6 +1039,16 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 
 /* Ќомер точки интеграции дл€ ERPRN */
 { cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code            }
+
+/* Ќомер MessageID дл€ видеонаблюдени€ */
+{ cmp/cr-prep.i 1 attr-asiip          asiip         " " asiip        }
+
+/* Ќомер MessageID дл€ видеонаблюдени€ */
+{ cmp/cr-prep.i 1 attr-asitype          asitype         " " asitype        }
+
+/* Ќомер MessageID дл€ видеонаблюдени€ */
+{ cmp/cr-prep.i 1 attr-asiport          asiport         " " asiport        }
+
 /* сюда добавл€ть новые названи€ атрибутов баз данных */
 
 &glob db-attr-list '~

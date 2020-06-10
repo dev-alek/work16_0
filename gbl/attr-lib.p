@@ -13533,6 +13533,38 @@ end procedure.
 &scop manual-edit-attr-hist-name 0
 &scop batch-edit-attr-hist-name 0
 
+&scop type-attr-ASIip {&type-char}
+&scop format-attr-ASIip "X(20)"
+&scop label-attr-ASIip "АСИ IP"
+&scop tooltip-attr-ASIip "АСИ IP"
+&scop user-can-edit-attr-ASIip false
+&scop output-display-attr-ASIip true
+&scop other-attr-ASIip '':u
+&scop news-attr-ASIip no
+&scop manual-edit-attr-ASIip 0
+&scop batch-edit-attr-ASIip 0
+
+&scop type-attr-ASIPort {&type-char}
+&scop format-attr-ASIPort "X(12)"
+&scop label-attr-ASIPort "АСИ Port"
+&scop tooltip-attr-ASIPort "АСИ port"
+&scop user-can-edit-attr-ASIPort false
+&scop output-display-attr-ASIPort true
+&scop other-attr-ASIPort '':u
+&scop news-attr-ASIPort no
+&scop manual-edit-attr-ASIPort 0
+&scop batch-edit-attr-ASIPort 0
+
+&scop type-attr-ASItype {&type-char}
+&scop format-attr-ASItype "X(12)"
+&scop label-attr-ASItype "АСИ Type"
+&scop tooltip-attr-ASItype "АСИ Type"
+&scop user-can-edit-attr-ASItype false
+&scop output-display-attr-ASItype true
+&scop other-attr-ASItype '':u
+&scop news-attr-ASItype no
+&scop manual-edit-attr-ASItype 0
+&scop batch-edit-attr-ASItype 0
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -13641,7 +13673,12 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-hist-name
       {&attr-temp-full-code}
-
+      &scop attr-code attr-asiip
+      {&attr-temp-full-code}
+      &scop attr-code attr-asiport
+      {&attr-temp-full-code}
+      &scop attr-code attr-asitype
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
@@ -13712,6 +13749,12 @@ procedure db-attr-tooltip :
       &scop attr-code attr-hist-code
       {&attr-temp-code}
       &scop attr-code attr-hist-name
+      {&attr-temp-code}
+      &scop attr-code attr-asiip
+      {&attr-temp-code}
+      &scop attr-code attr-asiport
+      {&attr-temp-code}
+      &scop attr-code attr-asitype
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -13971,6 +14014,13 @@ procedure db-attr-news :
       {&attr-news-code}
       &scop attr-code attr-hist-name
       {&attr-news-code}
+      &scop attr-code attr-asiip
+      {&attr-news-code}
+      &scop attr-code attr-asiport
+      {&attr-news-code}
+      &scop attr-code attr-asitype
+      {&attr-news-code}
+
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут БД &1", p-code) .
