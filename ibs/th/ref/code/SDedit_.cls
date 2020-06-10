@@ -215,6 +215,7 @@ class ibs.th.ref.code.SDedit_ inherits Form:
     this-object:label4:TabIndex = 17.
     this-object:label4:Text = "Дата".
     this-object:label4:UseCompatibleTextRendering = true.
+    this-object:label4:Visible = false.
     /*  */
     /* dateTimePicker2 */
     /*  */
@@ -225,6 +226,7 @@ class ibs.th.ref.code.SDedit_ inherits Form:
     this-object:dateTimePicker2:Size = new System.Drawing.Size(93, 20).
     this-object:dateTimePicker2:TabIndex = 19.
     this-object:dateTimePicker2:Value = Progress.Util.DateTimeHelper:Create(2019, 9, 29, 15, 34, 0, 0).
+    this-object:dateTimePicker2:Visible = false.
     /*  */
     /* dateTimePicker1 */
     /*  */
@@ -234,8 +236,9 @@ class ibs.th.ref.code.SDedit_ inherits Form:
     this-object:dateTimePicker1:ShowUpDown = true.
     this-object:dateTimePicker1:Size = new System.Drawing.Size(106, 20).
     this-object:dateTimePicker1:TabIndex = 20.
+    this-object:dateTimePicker1:Visible = false.
     /*  */
-    /* SDedit */
+    /* SDedit_ */
     /*  */
     this-object:ClientSize = new System.Drawing.Size(507, 160).
     this-object:Controls:Add(this-object:dateTimePicker1).
@@ -249,7 +252,7 @@ class ibs.th.ref.code.SDedit_ inherits Form:
     this-object:Controls:Add(this-object:textBox1).
     this-object:Controls:Add(this-object:buttonCancel).
     this-object:Controls:Add(this-object:buttonOk).
-    this-object:Name = "SDedit".
+    this-object:Name = "SDedit_".
     this-object:Text = "Справочник устройств".
     this-object:TextChanged:Subscribe(this-object:Change_datetime).
     cast(this-object:bindcode, System.ComponentModel.ISupportInitialize):EndInit().
@@ -267,7 +270,7 @@ class ibs.th.ref.code.SDedit_ inherits Form:
   @VisualDesigner.
   method private void okButton_Click( input sender as System.Object, input e as System.EventArgs ):
 
-    dateTimePicker2:Value = datetime(dateTimePicker2:Text + " " + dateTimePicker1:Text) . 
+/*    dateTimePicker2:Value = datetime(dateTimePicker2:Text + " " + dateTimePicker1:Text) .*/
 
     bindcode:Assign().
     
