@@ -2386,7 +2386,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-load Dialog-Frame 
 PROCEDURE proc-load :
-define variable v-list-names as character no-undo init "Не определен,Табачная продукция,Обувь".
+define variable v-list-names as character no-undo init "Не определен,Табачная продукция,Обувь,Духи и парфюмерия,Легпром,Шины,Лекарства,Фотокамеры/фотовспышки".
 define variable v-list as character no-undo.
 define variable i as integer no-undo.
 define variable v-val as character no-undo.

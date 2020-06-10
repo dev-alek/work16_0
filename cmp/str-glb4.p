@@ -612,7 +612,7 @@ attr-office-type
 
 /* типы маркировки */
 { cmp/cr-prepc.i 1 prop-list-attr-mark-type
-"not-type,tabak,shoes"
+"not-type,tabak,shoes,perfume,industry,tires,apteka,photo"
 attr-mark-type
 }
 

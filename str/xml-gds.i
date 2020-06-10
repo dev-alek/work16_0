@@ -447,6 +447,21 @@ find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code
         when "shoes" then do:
           run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "2", input 1 ).
         end.                
+        when "perfume" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "3", input 1 ).
+        end.                
+        when "industry" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "4", input 1 ).
+        end.                
+        when "tires" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "5", input 1 ).
+        end.                
+        when "apteka" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "6", input 1 ).
+        end.                
+        when "photo" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "7", input 1 ).
+        end.                
       end case .
     end.
     else do:
