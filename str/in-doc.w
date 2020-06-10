@@ -1801,6 +1801,7 @@ DO:
             tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
             tt-marking-lines.box-qnty = ub.marking.box-qnty .
             tt-marking-lines.unit = ub.marking.unit .
+            tt-marking-lines.unit-ext = ub.marking.unit-ext .
             tt-marking-lines.doc-level = ub.marking-lines.doc-level.
             tt-marking-lines.gds-name = ub.goods.gds-name.
             tt-marking-lines.mark-parent = ub.marking.mark-parent.
@@ -1823,6 +1824,8 @@ DO:
       end.
     end.
   end case.
+
+  run ui-on in this-procedure ( input "line" ).
 
 END.
 

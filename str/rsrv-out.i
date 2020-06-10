@@ -24,7 +24,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 assign
   chg-qnty = {2} - ub.gds-dtl.{1}-qnty
 .
-&if "{3}":U <> "not-rsrv":U &then
+&if "{3}":U <> "not-rsrv":U and "{3}":U <> "is-marks":U &then
   run trg/rsrv-dtl.p
     ( input        ParParentProc
     , input        {&rsrv-dtl_action_reserv}
@@ -33,7 +33,29 @@ assign
     , input-output ub.doc-line.price-base
     , input-output ub.doc-line.price-rubl
     , input        -1
-    ) no-error .
+    , input         "" ) no-error .
+  if error-status :error
+  then do:
+    message
+      vss-workfile vss-revision vss-description skip
+      error-status :get-message(1) skip
+      return-value skip
+      "rsrv-dtl.p {1}"
+      view-as alert-box error
+.
+    undo, return error return-value .
+  end.
+&endif
+&if "{3}":U = "is-marks":U &then
+  run trg/rsrv-dtl.p
+    ( input        ParParentProc
+    , input        {&rsrv-dtl_action_reserv}
+    , buffer       ub.gds-dtl
+    , input-output chg-qnty
+    , input-output ub.doc-line.price-base
+    , input-output ub.doc-line.price-rubl
+    , input        -1
+    , input         {4}) no-error .
   if error-status :error
   then do:
     message

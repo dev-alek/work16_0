@@ -1282,7 +1282,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
       input {&add-def},
       input v-message,
       output mark) no-error.
-    if error-status :error or mark = "" then 
+    if error-status :error or mark = "" or mark = ? then 
     do: 
       return no-apply. 
     end.
@@ -1500,7 +1500,7 @@ ON CHOOSE OF MENU-ITEM m_del-marks /* Удаление */
     define variable v-GTIN      as character no-undo .
     define variable v-qnty-doc  as decimal   no-undo .
     define variable v-qnty-fact as decimal   no-undo .
-    
+    define variable v-in-code   as character no-undo .
     define buffer bf_parts    for ub.parts .
     define buffer cpl_gds-prt for ub.gds-prt.  
     define buffer cpl_prt-obj for ub.prt-obj.       
@@ -1517,7 +1517,7 @@ do while v-del:
         input {&update},
         input v-message,
         output mark) no-error.
-      if error-status :error or mark = "" then 
+      if error-status :error or mark = "" or mark = ? then 
       do: 
         return no-apply. 
       end.
@@ -1626,7 +1626,20 @@ do while v-del:
                                       and bf_marking-lines.gds-code = v-gds-code no-error .
         if available (bf_marking-lines) then 
         do:
-
+          v-in-code = bf_marking-lines.in-code .
+                  for each buf_marking-lines exclusive-lock where buf_marking-lines.out-code = bf_marking-lines.out-code
+                                                     and buf_marking-lines.obj-code = bf_marking-lines.obj-code
+                                                     and buf_marking-lines.obj-type = bf_marking-lines.obj-type
+/*                                                     and buf_marking-lines.sts = 99*/
+                                                     and buf_marking-lines.gds-code = bf_marking-lines.gds-code:
+                                                                         
+          if  v-in-code <> buf_marking-lines.in-code then do:
+            message "Удаление марок по товару не возможно. Удалите полностью товар и просканируйте марки"
+            view-as alert-box.
+            return no-apply .
+          end. 
+                 v-in-code = buf_marking-lines.in-code        .                                        
+                  end.                                                       
          for each buf_marking-lines exclusive-lock where buf_marking-lines.out-code = bf_marking-lines.out-code
 /*                                                     and buf_marking-lines.in-code = bf_marking-lines.in-code*/
                                                      and buf_marking-lines.obj-code = bf_marking-lines.obj-code
@@ -1644,11 +1657,7 @@ do while v-del:
               buf_marking-lines.sts = 0 .
             end.  
           end.
-          if  jj = 0 then do:
-            message "Удаление марок по товару не возможен. Удалите полностью товар и просканируйте марки"
-            view-as alert-box.
-            return no-apply .
-          end.  
+ 
           find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
           if available (buf_goods) then 
           do:
@@ -2978,7 +2987,8 @@ on end-error of ub.gds-dtl.fact-qnty in browse {&browse-name} do:
   display ub.gds-dtl.fact-qnty with browse {&browse-name}.
   return no-apply.
 end.
-
+Tree = ObjSrv:Lib:MarkingTree .     
+  Marking = ObjSrv:Env:Marking:Sts:Mark .
 /* общие триггеры и процедуры для РН и ПН */
 { str/trn-tr.i out }
 on return, leave of t-doc.tot-calc in frame {&frame-name} do:
@@ -3652,6 +3662,19 @@ if error-status :error then do:
   return error.
 end.
 if prt-rec <> ? and pardoc-mode = {&lookup} then reposition br-dtl to recid prt-rec no-error.
+if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
+do:
+  menu-item m_no-marks:sensitive in menu m-marks = yes .
+end.
+else 
+do:
+  menu-item m_no-marks:sensitive in menu m-marks = no .
+end.
+      if pardoc-mode = {&lookup} or t-doc.status_  <> {&wayb} and t-doc.status_ <> {&inquiry} then 
+      do:
+        menu-item m_add-marks:sensitive in menu m-marks = no.
+        menu-item m_del-marks:sensitive in menu m-marks = no.
+      end.
 if pardoc-mode = {&add-def} then do:
   wait-for go of frame {&frame-name} focus t-doc.cli-code.
 end.
