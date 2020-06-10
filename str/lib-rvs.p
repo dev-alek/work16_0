@@ -3285,7 +3285,7 @@ THEN DO:
                     "    " SKIP
                     cur-time-string()           FORMAT "x(16)"    SKIP
                     'Процедура'                 v-proc                   FORMAT "x(128)"   SKIP
-                    'CODE_PL                = ' bf_rvs-line.pl-code                        SKIP
+                    'CODE_PL                = ' bf_rvs-line.pl-code format "99999999999":U SKIP
                     'H                      = ' v-mm:H                                     SKIP
                     'H_water                = ' v-mm:H_water                               SKIP
                     'CalibrationTable       = ' v-mm:CalibrationTable    FORMAT "x(2048)"  SKIP
