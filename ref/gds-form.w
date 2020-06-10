@@ -187,6 +187,9 @@ define variable i-sert like ub.goods.sert no-undo .
 define variable i-user-rule like ub.goods.user-rule no-undo .
 define variable i-alpha1 like ub.goods.alpha1 no-undo .
 define variable i-grp-code like ub.goods.grp-code no-undo .
+define variable i-service as logical no-undo .
+define variable i-gds-code like ub.goods.gds-code no-undo .
+define variable i-mark as integer  no-undo .
 
 /*режим копирования обязательно не no-undo!*/
 define variable copymode as logical.
@@ -4088,6 +4091,9 @@ PROCEDURE start-import:
                           ,OUTPUT p-user-rule
                           ,OUTPUT p-alpha1
                           ,OUTPUT p-grp-code
+                          ,OUTPUT p-service
+                          ,OUTPUT p-gds-code
+                          ,OUTPUT p-mark
                           ) no-error.
     if  error-status:error or f-name = "" then return error.
     CASE choice:
@@ -4150,6 +4156,9 @@ PROCEDURE next-good:
                              ,input p-user-rule
                              ,input p-alpha1
                              ,input p-grp-code
+                             ,input p-service
+                             ,input p-gds-code
+                             ,p-mark
                              ,input (impc + 1)
                              ,input-output i-artic
                              ,input-output i-prod-type
@@ -4167,6 +4176,9 @@ PROCEDURE next-good:
                              ,input-output i-user-rule
                              ,input-output i-alpha1
                              ,input-output i-grp-code
+                             ,input-output i-service
+                             ,input-output i-gds-code
+                             ,input-output i-mark
                               ) .
         assign
         impc = impc + 1

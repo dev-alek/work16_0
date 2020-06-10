@@ -167,6 +167,64 @@ on error undo, return error return-value
   vattaxcd = integer({&vat-tax-code})
   slttaxcd = integer({&slt-tax-code})
   .
+  if par-mode = {&autoupdate} 
+  then do on error undo, return error :
+     par-mode = {&update}.
+     find first buf_goods no-lock where
+               recid(buf_goods) = par-rec no-error .
+     if not available buf_goods then do:
+        find first buf_goods no-lock where
+                 buf_goods.gds-code = par-gds-code.
+     end.
+     if available buf_goods
+     then do:
+        assign 
+           par-tnved      = buf_goods.tnved when par-tnved eq ?
+           par-gds-name   = buf_goods.gds-name  when par-gds-name eq ? 
+           par-grp-code   = buf_goods.grp-code when par-grp-code eq ?
+           par-prod-type   = buf_goods.prod-type     when par-prod-type eq ?
+           par-prod-code   = buf_goods.prod-code     when par-prod-code eq ?
+            
+           is-goods = buf_goods.gds-type eq {&gds-goods} when is-goods eq ?
+           par-engl-name = buf_goods.engl-name     when par-engl-name eq ?
+           par-label-name = buf_goods.label-name   when par-label-name eq ? 
+           par-chk-name = buf_goods.chk-name   when par-chk-name eq ? 
+           par-fbr-grp-code = buf_goods.fbr-grp-code  when par-fbr-grp-code eq ?
+           par-unit-base = buf_goods.unit-base     when par-unit-base eq ?
+           par-unit-cli = buf_goods.unit-cli      when par-unit-cli eq ? 
+           par-min-rate = buf_goods.min-rate when par-min-rate eq ?
+           par-max-rate = buf_goods.max-rate when par-max-rate eq ?
+           par-cli-base-rate = buf_goods.cli-base-rate when par-cli-base-rate eq ?
+           par-calc-method = buf_goods.calc-method  when par-calc-method eq ?   
+           par-nationality = buf_goods.nationality   when par-nationality eq ?
+           par-unit-cst = buf_goods.unit-cst     when par-unit-cst eq ?
+           par-alpha1 = buf_goods.alpha1  when par-alpha1 eq ? 
+           par-okdp = buf_goods.okdp       when par-okdp eq ? 
+           par-increase-pc = buf_goods.increase-pc   when par-increase-pc eq ?
+           par-qnty-cart =  buf_goods.qnty-cart     when par-qnty-cart  eq ?
+           par-ms-base  = buf_goods.ms-base when  par-ms-base eq ?
+           par-wt-base =  buf_goods.wt-base when par-wt-base eq ? 
+           par-ms-cart = buf_goods.ms-cart when par-ms-cart eq ? 
+           par-wt-cart = buf_goods.wt-cart when par-wt-cart eq ? 
+           par-PS = buf_goods.PS      when par-PS  eq ? 
+           par-NegRest = buf_goods.negative-rest when par-NegRest eq ?
+           par-destin = buf_goods.destin        when par-destin  eq ? 
+           par-attrib = buf_goods.attrib        when par-attrib eq ?
+           par-user-rule = buf_goods.user-rule    when par-user-rule eq ?
+           par-sert = buf_goods.sert          when par-sert eq ? 
+           par-struct = buf_goods.struct        when par-struct eq ?
+           par-deadline = buf_goods.deadline     when par-deadline eq ? 
+           par-cond-keep-code = buf_goods.cond-keep-code when par-cond-keep-code eq ? 
+           par-sort  = buf_goods.sort          when par-sort eq ? 
+           par-proof = buf_goods.proof         when par-proof eq ? 
+           par-normal-wastage = buf_goods.normal-wastage when par-normal-wastage eq ?
+           par-normal-waste = buf_goods.normal-waste when par-normal-waste eq ? 
+      
+       
+        .
+     end.
+  end.
+  
   if par-gds-name = "" then do:
     run do-message in this-procedure(
                                       par-silence
@@ -690,7 +748,7 @@ on error undo, return error return-value
         undo _main, return error return-value.
       end.
     end.
-    if NOT is-goods AND
+    if NOT is-goods AND NOT par-file AND
       ( par-obj-price-base = 0 OR
         par-obj-price-rubl = 0 ) then do:
       run do-message in this-procedure(
@@ -965,15 +1023,15 @@ on error undo, return error return-value
                                             ,(if par-bardis = 1
                                               then substitute("Ќекорректный артикул товара &1 при создании товара с кодом=артикулу - невозможно сгенерить код &1&2&3"
                                                              , par-artic
-                                                             , {&new-line}
+                                                             ,{&new-line}
                                                              , return-value
                                                              )
                                               else substitute("Ќекорректный код товара &1 при создании товара с кодом, определенным пользователем - невозможно сгенерить код &1:&2&3"
                                                             , par-gds-code
-                                                             , {&new-line}
+                                                            , {&new-line}
                                                             , return-value
                                                             )
-                                                               )
+                                             )
                                             ,"error":U
                                             ) no-error .
           if error-status:error then do:
@@ -1103,7 +1161,7 @@ on error undo, return error return-value
         end.
       end.
       par-gds-code = v-gds-code.
-      if not is-goods then do:
+      if not is-goods and not par-file then do:
         /*услуга*/
         { gbl/gdscr.i par-obj-type par-obj-code  v-artic
                   buf_clients.obj-type buf_clients.obj-code  buf_gds-prt.node-code  ub.gds-obj ub.prt-obj }
@@ -1207,6 +1265,7 @@ on error undo, return error return-value
       end.
     end. /*do on error undo, return error :*/
   end. /*add-def */
+
   if par-mode = {&update} then do:
     do on error undo, return error :
       find first buf_goods exclusive-lock where
@@ -1218,19 +1277,21 @@ on error undo, return error return-value
       assign
       par-nbc = buf_goods.gds-code
       .
-      if buf_goods.gds-type = {&gds-office} then do:
-        if ( par-obj-price-base <> 0 ) AND
-          ( par-obj-price-rubl <> 0 ) AND
-          ( par-obj-price-base <> ? ) AND
-          ( par-obj-price-rubl <> ? ) then .
-        else do:
-          run do-message in this-procedure(
-                                              par-silence
-                                              ,"”четна€ цена не может быть нулевой !"
-                                              ,"error":U
-                                              ) no-error .
-          if error-status:error then do:
-            undo _main, return error return-value.
+      if buf_goods.gds-type = {&gds-office} and not par-file then do:
+        if not par-file then do :
+          if ( par-obj-price-base <> 0 ) AND
+            ( par-obj-price-rubl <> 0 ) AND
+            ( par-obj-price-base <> ? ) AND
+            ( par-obj-price-rubl <> ? ) then .
+          else do:
+            run do-message in this-procedure(
+                                                par-silence
+                                                ,"”четна€ цена не может быть нулевой !"
+                                                ,"error":U
+                                                ) no-error .
+            if error-status:error then do:
+              undo _main, return error return-value.
+            end.
           end.
         end.
         { gbl/gdscr.i par-obj-type par-obj-code  buf_goods.artic
@@ -1323,8 +1384,8 @@ on error undo, return error return-value
                                              , return-value
                                              , error-status:get-message(1))
                                             ,"error":U
-                    ) no-error.
-      if error-status:error then do:
+                                            ) no-error .
+        if error-status:error then do:
           undo _main, return error return-value.
         end.
       end.

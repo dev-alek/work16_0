@@ -19,10 +19,9 @@ create: Суслов Алексей Юрьевич
 "ITEM: артикул;[код-производителя];;;              [[доп-бар-код]];<цена>;<количество>;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];[цена производителя без НДС];[цена производителя с НДС]]"
 "SCALE:артикул;[код-производителя];признак;;       [[доп-бар-код]];<цена>;<количество>;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];]"
 "PART: артикул;[код-производителя];документ;партия;[[доп-бар-код]];<цена>;<количество>;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];[цена производителя без НДС];[цена производителя с НДС]]"
-"CODE: код;;;;                                     доп-бар-код;цена;количество;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];]"
+"CODE: код;;;;                                     доп-бар-код;цена;количество;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[Тип маркировки]"
 
 Автор : Андрей Исаков 12.05.98
-
 */
 define input  parameter parparentproc as handle              no-undo.
 define input  parameter InputMode     as char                no-undo. /* что импортируем: prod-bc, input-way-bill */
@@ -75,13 +74,10 @@ DEFINE BUFFER buf_price-doc-forming FOR ub.price-doc-forming.
 { str/lastincs.i }
 { trg/check-bc.i }
 { cmp/strcodec.i }
-
-
-
-define variable v-param-type                as character                no-undo.
-define variable v-tth                       as handle                   no-undo.
-define variable varis-petrolium as logical no-undo.
-define variable varis-pieces as logical no-undo.
+define variable v-param-type      as character  no-undo.
+define variable v-tth             as handle     no-undo.
+define variable varis-petrolium   as logical    no-undo.
+define variable varis-pieces      as logical    no-undo.
 define variable v-sec as integer   no-undo .
 define variable imp-save as integer   no-undo .
 
@@ -1114,6 +1110,8 @@ on stop  undo find-create-bc, return error:
     {&err-bar-code} "Коэффициент в собственном коде не совпадает с указанным в файле. Пропускаем." {&new-line}.
     undo find-create-bc, return error.
   end.
+  
+  
 end.
 end procedure.
 
@@ -1128,6 +1126,9 @@ procedure imp-prod-bc:
 def buffer same-prod-bc  for ub.prod-bc.
 def buffer same-bar-code for ub.bar-code.
 def buffer same-goods    for ub.goods.
+define buffer buf_prod-bc-attr for prod-bc-attr.
+define variable vMarkType as integer no-undo.
+vMarkType = int(i-cst-code)no-error.
 tr:
 do on error undo tr, return error SUBSTITUTE("Ошибка при импорте доп. бар-кода &1 &2 &3 ", i-prod-bc, error-status:get-message(1), error-status:get-message(2)):
 if  length (i-prod-bc) > 13 /* длинный доп. БК */ and
@@ -1218,140 +1219,267 @@ end.
 /* проверяем наличие такого доп. БК для той же привязки (товара, признака, партии) */
 find first  same-prod-bc where
             same-prod-bc.b-str  = i-prod-bc and
-            same-prod-bc.b-code = ub.bar-code.b-code no-lock no-error.
-if available same-prod-bc then do:
-  {&err-put} "Доп. БК: " + i-prod-bc + " уже есть в БД. Пропускаем." {&new-line}.
-  return.
-end.
-/*
-Добавление бар-кодов через import.
-
-|---------------|-----|--------------|---------------|-------------------|
-| Уже имеется в |Dpl- |  Добавляемый |     Статус    |    Статус         |
-|     базе      | off |  код включен |  старого кода | добавляемого      |
-|  включенный   |     |              |  после импорта| кода после импорта|
-|      код      |     |              |               |                   |
---------------------------------------------------------------------------
-|      Yes      | Yes |      Yes     |       No      |      No           |
---------------------------------------------------------------------------
-|      Yes      | Yes |      No      |      Yes      |      No           |
---------------------------------------------------------------------------
-|      Yes      | No  |      Yes     |       No      |     Yes           |
---------------------------------------------------------------------------
-|      Yes      | No  |      No      |      Yes      |      No           |
---------------------------------------------------------------------------
-|      No       | Yes |      Yes     |       No      |     Yes           |
---------------------------------------------------------------------------
-|      No       | Yes |      No      |       No      |      No           |
---------------------------------------------------------------------------
-|      No       | No  |      Yes     |       No      |     Yes           |
---------------------------------------------------------------------------
-|      No       | No  |      No      |       No      |      No           |
---------------------------------------------------------------------------
-*/
-/* ищем повторный включенный */
-find first same-prod-bc where
-           same-prod-bc.b-str = i-prod-bc and
-           same-prod-bc.bc-on = yes       no-lock no-error.
-if available same-prod-bc then do:
-  /* есть повторный включенный */
-  find same-bar-code where
-       same-bar-code.b-code = same-prod-bc.b-code no-lock.
-  find same-goods where
-       same-goods.gds-code = same-bar-code.gds-code no-lock.
-  if  same-goods.prod-type = ub.goods.prod-type AND
-      same-goods.prod-code = ub.goods.prod-code AND
-      par-dif-pdbc = yes /* запрет повторных доп. БК для одного производителя */ then do:
-    {&err-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic
-               ", он включен и соответствует тому же производителю. Пропускаем в соответствии с настройкой." {&new-line}.
-    return.
+            same-prod-bc.b-code = bar-code.b-code no-lock no-error.
+if available same-prod-bc then do trans:
+  find current  same-prod-bc  exclusive-lock no-error.
+  if available same-prod-bc
+  then do:
+     if i-bc-on eq yes
+     then do:
+         find first prod-bc where
+                   prod-bc.b-str = i-prod-bc and
+                   prod-bc.bc-on = yes       exclusive-lock no-error.
+         if available prod-bc
+         then do:
+            {&wrn-put} "В БД уже есть такой доп. БК для товара: код : " prod-bc.b-code 
+                         ", он включен. Добавляемый код тоже включен. ВЫключаем уже имеющийся в базе код. Добавляемый оставляем включенным." {&new-line}. 
+            prod-bc.bc-on = no.
+         end.
+     end.
+     same-prod-bc.bc-on = i-bc-on. /* Установим переданое значение  */
   end.
-  if par-dpl-off = yes then do:
-    if i-bc-on = no then do:
-      {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
-                 ", он включен. Добавляемый код вЫключен. Таким его и добавляем." {&new-line}.
-    end.
-    else do:
-      {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
-                 ", он включен. Добавляемый код тоже включен. Добавляем его вЫключеным в соответствии с настройкой." {&new-line}.
-      assign
-        i-bc-on = no.
-      {&wrn-put} "Имевшийся в БД доп. БК (см. предыдущее сообщение) для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
-                 ", который был включен, вЫключаем в соответствии с настройкой" {&new-line}.
-      do transaction on error undo, return error return-value:
-        find current same-prod-bc exclusive-lock.
+  if vMarkType eq 1 
+  then
+     same-prod-bc.bc-on-type = {&gtin}.
+  else
+     same-prod-bc.bc-on-type = "".
+  find first buf_prod-bc-attr
+     where
+            buf_prod-bc-attr.b-str  = i-prod-bc
+        and buf_prod-bc-attr.b-code = same-prod-bc.b-code 
+        and buf_prod-bc-attr.attr-code = {&mark}
+       /* buf_prod-bc-attr.attr-value = "yes" */
+     no-lock no-error.
+     
+  if vMarkType eq 2 
+  then do:
+     if available buf_prod-bc-attr
+     then do:
+        if buf_prod-bc-attr.attr-value = "yes"
+        then do:
+           find current buf_prod-bc-attr exclusive-lock no-error.
+            
+           if available buf_prod-bc-attr
+           then do:
+              buf_prod-bc-attr.attr-value = "yes". 
+           end.
+           else do: /* очень маловероятный случай */ 
+             create buf_prod-bc-attr.
+             assign
+                buf_prod-bc-attr.b-str  = i-prod-bc
+                buf_prod-bc-attr.b-code = same-prod-bc.b-code  
+                buf_prod-bc-attr.attr-code = {&mark}
+                buf_prod-bc-attr.attr-value = "yes"
+             .
+           end.
+        end.
+     end.
+     else do:
+        create buf_prod-bc-attr.
         assign
-          same-prod-bc.bc-on = no.
-      end.
-   end.
+           buf_prod-bc-attr.b-str  = i-prod-bc
+           buf_prod-bc-attr.b-code = same-prod-bc.b-code  
+           buf_prod-bc-attr.attr-code = {&mark}
+           buf_prod-bc-attr.attr-value = "yes"
+        .
+     end.
   end.
-  else do:
-    if i-bc-on = yes then do:
-      {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
-                 ", он включен. Добавляемый код тоже включен. ВЫключаем уже имеющийся в базе код. Добавляемый оставляем включенным." {&new-line}.
-      do transaction on error undo, return error return-value :
-        find current same-prod-bc exclusive-lock.
-        assign
-          same-prod-bc.bc-on = no.
-      end.
-      {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
-                 ", он включен. Добавляемый код вЫключен. Добавляем код без изменений." {&new-line}.
-    end.
-  end.
+  else if available buf_prod-bc-attr
+  then do:
+     find current buf_prod-bc-attr exclusive-lock no-error
+       . 
+     if available buf_prod-bc-attr
+     then 
+        delete buf_prod-bc-attr.
+  end.   
 end.
 else do:
-  find first same-prod-bc where
-             same-prod-bc.b-str = i-prod-bc and
-             recid (same-prod-bc) <> recid (prod-bc) no-lock no-error.
-  if available same-prod-bc then do:
-    /* есть повторный выключенный */
-    find  same-bar-code where
-          same-bar-code.b-code = same-prod-bc.b-code no-lock.
-    find same-goods where
-         same-goods.gds-code = same-bar-code.gds-code no-lock.
-    if  same-goods.prod-type = ub.goods.prod-type AND
-        same-goods.prod-code = ub.goods.prod-code AND
-        par-dif-pdbc = yes /* запрет повторных доп. БК для одного производителя */ then do:
-      {&err-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic
-                 ", он вЫключен и соответствует тому же производителю. Пропускаем в соответствии с настройкой dif-pdbc." {&new-line}.
-      return.
-    end.
-    if i-bc-on = yes then do:
-      {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
-                 ", он выключен. Добавляемый код включен. Добавляем код без изменений." {&new-line}.
+    /*
+    Добавление бар-кодов через import.
+    
+    |---------------|-----|--------------|---------------|-------------------|
+    | Уже имеется в |Dpl- |  Добавляемый |     Статус    |    Статус         |
+    |     базе      | off |  код включен |  старого кода | добавляемого      |
+    |  включенный   |     |              |  после импорта| кода после импорта|
+    |      код      |     |              |               |                   |
+    --------------------------------------------------------------------------
+    |      Yes      | Yes |      Yes     |       No      |      No           |
+    --------------------------------------------------------------------------
+    |      Yes      | Yes |      No      |      Yes      |      No           |
+    --------------------------------------------------------------------------
+    |      Yes      | No  |      Yes     |       No      |     Yes           |
+    --------------------------------------------------------------------------
+    |      Yes      | No  |      No      |      Yes      |      No           |
+    --------------------------------------------------------------------------
+    |      No       | Yes |      Yes     |       No      |     Yes           |
+    --------------------------------------------------------------------------
+    |      No       | Yes |      No      |       No      |      No           |
+    --------------------------------------------------------------------------
+    |      No       | No  |      Yes     |       No      |     Yes           |
+    --------------------------------------------------------------------------
+    |      No       | No  |      No      |       No      |      No           |
+    --------------------------------------------------------------------------
+    */
+    /* ищем повторный включенный */
+    find first same-prod-bc where
+               same-prod-bc.b-str = i-prod-bc and
+               same-prod-bc.bc-on = yes       no-lock no-error.
+    if available same-prod-bc then do:
+      /* есть повторный включенный */
+      find same-bar-code where
+           same-bar-code.b-code = same-prod-bc.b-code no-lock.
+      find same-goods where
+           same-goods.gds-code = same-bar-code.gds-code no-lock.
+      if  same-goods.prod-type = goods.prod-type AND
+          same-goods.prod-code = goods.prod-code AND
+          par-dif-pdbc = yes /* запрет повторных доп. БК для одного производителя */ then do:
+        {&err-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic
+                   ", он включен и соответствует тому же производителю. Пропускаем в соответствии с настройкой." {&new-line}.
+        return.
+      end.
+      if par-dpl-off = yes then do:
+        if i-bc-on = no then do:
+          {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                     ", он включен. Добавляемый код вЫключен. Таким его и добавляем." {&new-line}.
+        end.
+        else do:
+          {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                     ", он включен. Добавляемый код тоже включен. Добавляем его вЫключеным в соответствии с настройкой." {&new-line}.
+          assign
+            i-bc-on = no.
+          
+          do transaction on error undo, return error return-value:
+            find current same-prod-bc exclusive-lock.
+            if same-prod-bc.bc-on-type eq {&gtin}
+            then
+               delete same-prod-bc.
+            else
+            assign
+              same-prod-bc.bc-on = no.
+          end.
+          if available same-prod-bc
+          then do:
+          {&wrn-put} "Имевшийся в БД доп. БК (см. предыдущее сообщение) для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                     ", который был включен, вЫключаем в соответствии с настройкой" {&new-line}.
+          end.
+       end.
+      end.
+      else do:
+        if i-bc-on = yes then do:
+          {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                     ", он включен. Добавляемый код тоже включен. ВЫключаем уже имеющийся в базе код. Добавляемый оставляем включенным." {&new-line}.
+          do transaction on error undo, return error return-value :
+            find current same-prod-bc exclusive-lock.
+            if same-prod-bc.bc-on-type eq {&gtin}
+            then
+               delete same-prod-bc.
+            else
+                assign
+                  same-prod-bc.bc-on = no.
+          end.
+          if available same-prod-bc
+          then do: 
+              {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                         ", он включен. Добавляемый код выключен. Добавляем код без изменений." {&new-line}.
+           end.
+           else do: 
+              {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                         ". Переносим." {&new-line}.
+           end. 
+        end.
+      end.
     end.
     else do:
-      {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
-                 ", он выключен. Добавляемый код вЫключен. Добавляем код без изменений." {&new-line}.
+      find first same-prod-bc where
+                 same-prod-bc.b-str = i-prod-bc and
+                 recid (same-prod-bc) <> recid (prod-bc) no-lock no-error.
+      if available same-prod-bc then do:
+        /* есть повторный выключенный */
+        find  same-bar-code where
+              same-bar-code.b-code = same-prod-bc.b-code no-lock.
+        find same-goods where
+             same-goods.gds-code = same-bar-code.gds-code no-lock.
+        if  same-goods.prod-type = goods.prod-type AND
+            same-goods.prod-code = goods.prod-code AND
+            par-dif-pdbc = yes /* запрет повторных доп. БК для одного производителя */ then do:
+          {&err-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic
+                     ", он выключен и соответствует тому же производителю. Пропускаем в соответствии с настройкой dif-pdbc." {&new-line}.
+          return.
+        end.
+        if i-bc-on = yes then do:
+            do transaction on error undo, return error return-value:
+            find current same-prod-bc exclusive-lock.
+            if same-prod-bc.bc-on-type eq {&gtin}
+            then
+               delete same-prod-bc.
+            else
+            assign
+              same-prod-bc.bc-on = no.
+          end.
+          if available same-prod-bc
+          then 
+              {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                         ", он выключен. Добавляемый код включен. Добавляем код без изменений." {&new-line}.
+                         
+        end.
+        else do:
+            if same-prod-bc.bc-on-type eq {&gtin}
+            then do transaction on error undo, return error return-value:
+            find current same-prod-bc exclusive-lock.
+            
+               delete same-prod-bc.
+            
+             end.
+          if available same-prod-bc
+          then 
+          {&wrn-put} "В БД уже есть такой доп. БК для товара: арт. : " same-goods.artic ", пр-ль : " same-goods.prod-code
+                     ", он выключен. Добавляемый код вЫключен. Добавляем код без изменений." {&new-line}.
+        end.
+      end.
     end.
-  end.
-end.
-do transaction on error undo, return error return-value :
-  define variable rid as recid no-undo .
-  rid = ?.
-  run trg/prod-bc1.p (
+    if i-cst-code eq "1" and length (i-prod-bc) ne 14
+    then do:
+        {&err-put} " GTIN должен быть 14 символов. Импортированный GTIN: " i-prod-bc   {&new-line}.
+        return.
+    end.
+    do transaction on error undo, return error return-value :
+      define variable rid as recid no-undo .
+      rid = ?.
+  run trg/prod-bc2.p (
                       input  parparentproc
                       ,input yes /*p-silent*/
                       ,input par-dif-pdbc /* dif-pdbc */
                       ,input ? /*pbc-veto*/
                       ,input no /*send-ref*/
-                      ,input (if lookup ({&weight}, goods-units.type) > 0 then {&loc-sc-code} else '') /*cdrg-type*/
+                      ,input if i-cst-code eq "1" then {&gtin} else (if lookup ({&weight}, goods-units.type) > 0 then {&loc-sc-code} else '') /*cdrg-type*/
                       ,input ""
-                      ,buffer ub.goods
-                      ,input ub.bar-code.b-code
+                      ,buffer goods
+                      ,input bar-code.b-code
+                      ,input i-cst-code eq "2"
                       ,input-output i-prod-bc
                       ,output rid
                       ) no-error.
-  if error-status :error
-  then do:
-      {&wrn-put} "Ошибка при импорте доп. БК для товара: арт. : " ub.goods.artic ", пр-ль : " ub.goods.prod-code {&new-line}
-                 error-status:get-message(1) {&new-line} return-value  {&new-line}.
-
-  end.
-  else if rid = ? then do:
-      {&wrn-put} "Невозможно импортировать доп. БК для товара: арт. : " ub.goods.artic ", пр-ль : " ub.goods.prod-code {&new-line}
-                 error-status:get-message(1) {&new-line} return-value  {&new-line}.
-  end.
+      if error-status :error
+      then do:
+          {&err-put} "Ошибка при импорте доп. БК для товара: арт. : " goods.artic ", пр-ль : " goods.prod-code {&new-line}
+                     error-status:get-message(1) {&new-line} return-value  {&new-line}.
+          return.
+    
+      end.
+      else if rid = ? then do:
+          {&err-put} "Невозможно импортировать доп. БК для товара: арт. : " goods.artic ", пр-ль : " goods.prod-code {&new-line}
+                     error-status:get-message(1) {&new-line} return-value  {&new-line}.
+          return.
+      end.
+      else do :
+          find first  prod-bc where recid(prod-bc) eq rid
+          exclusive-lock no-error.
+          if available prod-bc
+          then do:
+             prod-bc.bc-on = i-bc-on. /* Установим переданое значение  */
+          end.
+      end.
+    end.
 end.
 assign
   counter = counter + 1.
