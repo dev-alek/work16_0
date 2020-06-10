@@ -77,7 +77,7 @@ define temp-table tt-place no-undo
   field t3            as decimal    label "T3"
   field density       as decimal decimals 10  label "Плотность (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
   field mass          as decimal    label "Масса (кг)"
-  field vapor-density as decimal decimals 10  label "Плотность СУГ (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
+  field vapor-density as decimal decimals 10  label "Плотность СУГ ПФ (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
   field vapor-pressure as decimal   label "Давление СУГ (мПа)" format ">>>9.99999"
   index pi as primary unique
     loc1
@@ -142,7 +142,7 @@ define buffer buf_pl-gds for ub.pl-gds .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-print
+&Scoped-Define ENABLED-OBJECTS b-exit b-req b-print
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -160,6 +160,11 @@ define buffer buf_pl-gds for ub.pl-gds .
 
 DEFINE BUTTON b-exit AUTO-END-KEY 
      LABEL "Выход" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
+     
+DEFINE BUTTON b-req
+     LABEL "Запрос" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
@@ -196,6 +201,7 @@ define stream MyWatch-strm. /* задать в области определения переменных */
 
 DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1.24 COL 2
+     b-req at row 1.24 col 12.1
      b-print AT ROW 1.24 COL 93 WIDGET-ID 10
      br-place at row 3 col 2
      v-status at row 18 col 2
@@ -246,7 +252,65 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-req
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-req Dialog-Frame
+ON CHOOSE OF b-req IN FRAME Dialog-Frame 
+DO:
+  case v-mode :
+    when 1
+    then do :
+      run get-from-struna no-error .
+      if error-status:error
+      then do :
+        v-status = return-value .
+      end .
+      else do :
+        v-status = "Данные получены " + string(NOW) .
+      end.
+    end .
+    when 2
+    then do :
+      run asi-send-cmd no-error .
+      if error-status:error
+      then do :
+        v-status = return-value .
+      end .
+      else do :
+        v-status = "Запрос отправлен " + string(NOW) .
+        display v-status with frame {&frame-name} .
+      end.
+    end .
+    when 3
+    then do :
+      run get-from-ifsf no-error .
+      if error-status:error
+      then do :
+        v-status = return-value .
+      end .
+      else do :
+        v-status = "Данные получены " + string(NOW) .
+      end.
+    end .
+  end case .
+  
+  if v-mode = 2
+  then do :
+    run sleep (500) .
+    run asi-read-sts no-error .
+    if error-status:error
+    then do :
+      v-status = return-value .
+    end .
+    else do :
+      v-status = "Данные получены " + string(NOW) .
+    end.
+  end.
+  open query br-place for each tt-place indexed-reposition .
+  display v-status with frame {&frame-name} .
+END.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-print
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
@@ -405,7 +469,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         v-status = return-value .
       end .
       else do :
-        v-status = "OK" .
+        v-status = "Данные получены " + string(NOW) .
       end.
     end .
     when 2
@@ -416,7 +480,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         v-status = return-value .
       end .
       else do :
-        v-status = "OK" .
+        v-status = "Запрос отправлен " + string(NOW) .
       end.
       run sleep (500) .
     end .
@@ -428,7 +492,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         v-status = return-value .
       end .
       else do :
-        v-status = "OK" .
+        v-status = "Данные получены " + string(NOW) .
       end.
     end .
   end case .
@@ -442,76 +506,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       v-status = return-value .
     end .
     else do :
-      v-status = "OK" .
+      v-status = "Данные получены " + string(NOW) .
     end.
   end.
   open query br-place for each tt-place indexed-reposition .
   display v-status with frame {&frame-name} .
   
-  do while not log-exit
-  on error undo, return error
-  :
-    wait-for
-      go of frame {&frame-name}
-      or close of this-procedure
-      or value-changed of br-place in frame {&frame-name}
-      focus frame {&frame-name}
-      pause 1
-    .
-    
-    v-time-str = string(time, "HH:MM:SS") .
-    if substring(v-time-str, 7) = "01"
-    then do :
-      case v-mode :
-        when 1
-        then do :
-          run get-from-struna no-error .
-          if error-status:error
-          then do :
-            v-status = return-value .
-          end .
-          else do :
-            v-status = "OK" .
-          end.
-        end .
-        when 2
-        then do :
-          run asi-send-cmd no-error .
-          if error-status:error
-          then do :
-            v-status = return-value .
-          end .
-          else do :
-            v-status = "OK" .
-          end.
-        end .
-        when 3
-        then do :
-          run get-from-ifsf no-error .
-          if error-status:error
-          then do :
-            v-status = return-value .
-          end .
-          else do :
-            v-status = "OK" .
-          end.
-        end .
-      end case .
-    end.
-    
-    if v-mode = 2
-    then do :
-      run asi-read-sts no-error .
-      if error-status:error
-      then do :
-        v-status = return-value .
-      end .
-      else do :
-        v-status = "OK" .
-      end.
-    end.
-    display v-status with frame {&frame-name} .
-  end.
+  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+   
 END.
 RUN disable_UI.
 
@@ -546,7 +548,7 @@ procedure asi-send-cmd :
                        
   output to value (  v-log-file-name  ) append .
   put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " cmd skip .
-       
+  output close .     
                   
   run sleep (500) .
   rv = IsProcessRunning(v-pid). 
@@ -574,50 +576,35 @@ procedure asi-send-cmd :
     else do :
       run parse-xml (input v-file,
                      input-output table tt-place) .
-      put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
-      for each tt-place no-lock :
-        put unformatted ("TANK = " + tt-place.loc1 ) skip .
-        if tt-place.level-total <> ? then
-          put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
-        if tt-place.level-water <> ? then
-          put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
-        if (tt-place.level-total - tt-place.level-water) <> ? then
-          put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
-        if tt-place.avrg-temp <> ? then
-          put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
-        if tt-place.density <> ? then
-          put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
-        if tt-place.total-vol <> ? then
-          put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
-        if tt-place.mass <> ? then
-          put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
-        if tt-place.t1 <> ? then
-          put unformatted ("T1 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
-        if tt-place.t2 <> ? then
-          put unformatted ("T2 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
-        if tt-place.t3 <> ? then
-          put unformatted ("T3 = " + string(tt-place.t3, "->>>>>9.9<<<")) skip .
-        if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ? then
-          put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>9.9<<<")) skip .
-        if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ? then
-          put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
-      end.
+      
     end.
   end.
-  output close .
+  
 end procedure .
 
 procedure asi-read-sts :
   define variable v-file    as character no-undo .
+  define variable jj as integer no-undo .
   v-file = v-temp-dir + "\asiresp_agnt.xml" .
   v-file = search(v-file) .
   if v-file = ? or trim(v-file) = ""
   then return error "Не могу получить данные от агента АСИ".
+  
+  jj_ :
+  do jj = 1 to 20 :
+    file-info:file-name = v-file .
+    if file-info:file-size = 0
+    then do :
+      run sleep(500) .
+    end.
+    else leave .
+  end.
+  
   file-info:file-name = v-file .
   if file-info:file-size = 0
   then do :
     os-delete value(v-file) .
-    return .
+    return error "Пустой ответ от агента АСИ".
   end.
   
   run parse-xml (input v-file,
@@ -645,6 +632,37 @@ procedure parse-xml :
   
   DELETE OBJECT hDoc.
   DELETE OBJECT hRoot.
+  
+  output to value (  v-log-file-name  ) append .
+  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
+  for each tt-place no-lock :
+    put unformatted ("TANK = " + tt-place.loc1 ) skip .
+    if tt-place.level-total <> ? then
+      put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
+    if tt-place.level-water <> ? then
+      put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
+    if (tt-place.level-total - tt-place.level-water) <> ? then
+      put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
+    if tt-place.avrg-temp <> ? then
+      put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
+    if tt-place.density <> ? then
+      put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>>>>>9.9<<<<<<<<<")) skip .
+    if tt-place.total-vol <> ? then
+      put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
+    if tt-place.mass <> ? then
+      put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
+    if tt-place.t1 <> ? then
+      put unformatted ("T1 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
+    if tt-place.t2 <> ? then
+      put unformatted ("T2 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
+    if tt-place.t3 <> ? then
+      put unformatted ("T3 = " + string(tt-place.t3, "->>>>>9.9<<<")) skip .
+    if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ? then
+      put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>>>>>9.9<<<<<<<<<")) skip .
+    if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ? then
+      put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
+  end.
+  output close .
   
 end procedure .
 
@@ -862,6 +880,8 @@ procedure get-from-struna :
   put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " v_command skip .
   
   if search( v_File-Name ) = ? then do:
+    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Файл с прибора не получен.  " v_command skip .
+    output close .
     return error 'Файл с прибора не получен.' .
   end.
   else do: 
@@ -990,6 +1010,9 @@ procedure get-from-ifsf :
   if v-log = false or error-status:get-message(1) <> ''
   then do:
     hSocket:disconnect() no-error.
+    output to value (  v-log-file-name  ) append .
+    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Не могу отправить команду на IFSF сервер.  " skip .
+    output close .
     return error "Не могу отправить команду на IFSF сервер." .
   end.
   
@@ -1003,6 +1026,9 @@ procedure get-from-ifsf :
   if v-log = false or error-status:get-message(1) <> ''
   then do:
     hSocket:disconnect() no-error.
+    output to value (  v-log-file-name  ) append .
+    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Не могу прочитать ответ от IFSF сервера.  " skip .
+    output close .
     return error "Не могу прочитать ответ от IFSF сервера." .
   end.
   
@@ -1010,11 +1036,17 @@ procedure get-from-ifsf :
   if v-out-data = ""
   then do :
     hSocket:disconnect() no-error.
+    output to value (  v-log-file-name  ) append .
+    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Не могу получить данные от IFSF сервера.  " skip .
+    output close .
     return error "Не могу получить данные от IFSF сервера." .
   end.
   if index(v-out-data, "Bad Request") > 0
   then do :
     hSocket:disconnect() no-error.
+    output to value (  v-log-file-name  ) append .
+    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  " v-out-data skip .
+    output close .
     return error v-out-data .
   end.
   
@@ -1190,7 +1222,7 @@ define variable Lines_Counter as integer no-undo .
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Т3 (°С)</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Плотность (кг/л)</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Масса (кг)</th>' skip
-      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Плотность СУГ (кг/л)</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Плотность СУГ ПФ (кг/л)</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Давление СУГ (мПа)</th>' skip
       '       </tr>' skip
       '       <tr>' skip
@@ -1226,9 +1258,9 @@ define variable Lines_Counter as integer no-undo .
       '         <th style="text-align: center;">' + (if tt-place.t1 <> ? then string(tt-place.t1,  "->>>>>9.9<") else " ") + '</th>' skip
       '         <th style="text-align: center;">' + (if tt-place.t2 <> ? then string(tt-place.t2,  "->>>>>9.9<") else " ") + '</th>' skip
       '         <th style="text-align: center;">' + (if tt-place.t3 <> ? then string(tt-place.t3,  "->>>>>9.9<") else " ") + '</th>' skip
-      '         <th style="text-align: center;">' + (if tt-place.density <> ? then string(tt-place.density,   ">>>>>9.9<<<<<<<<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.density <> ? then string(tt-place.density,   ">>>>>>>>>9.9<<<<<<<<<") else " ") + '</th>' skip
       '         <th style="text-align: center;">' + (if tt-place.mass <> ? then string(tt-place.mass,        ">>>>>9.9<<") else " ") + '</th>' skip
-      '         <th style="text-align: center;">' + (if tt-place.vapor-density <> ? then string(tt-place.vapor-density, ">>>>>9.9<<<<<<<<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.vapor-density <> ? then string(tt-place.vapor-density, ">>>>>>>>>9.9<<<<<<<<<") else " ") + '</th>' skip
       '         <th style="text-align: center;">' + (if tt-place.vapor-pressure <> ? then string(tt-place.vapor-pressure, ">>>>>9.99999") else " ") + '</th>' skip
       '       </tr>' skip
     . /* Точка для закрытия Put */
@@ -1353,7 +1385,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE b-exit b-print br-place v-status
+  ENABLE b-exit b-req b-print br-place v-status
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
