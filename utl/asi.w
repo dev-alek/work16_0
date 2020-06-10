@@ -8,8 +8,10 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE TEMP-TABLE tt-asi NO-UNDO LIKE Code.
-DEFINE TEMP-TABLE tt-tank NO-UNDO LIKE Code.
+DEFINE TEMP-TABLE tt-asi NO-UNDO LIKE Code
+       index parent parent code.
+DEFINE TEMP-TABLE tt-tank NO-UNDO LIKE Code
+       index parent parent code.
 
 
 
@@ -36,8 +38,10 @@ DEFINE TEMP-TABLE tt-tank NO-UNDO LIKE Code.
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-
+define input  parameter parparentproc as handle no-undo.
 /* Local Variable Definitions ---                                       */
+{ gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
 {cmp/str-glbl.i}
 { cmp/library.i }
 {gbl/db-attr.i }
@@ -100,9 +104,9 @@ tt-asi.misc1 tt-asi.misc2 tt-asi.misc3
 &Scoped-define FIELDS-IN-QUERY-BROWSE-5 tt-tank.code tt-tank.CodeValue 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-5 
 &Scoped-define QUERY-STRING-BROWSE-5 FOR EACH tt-tank ~
-      WHERE tt-tank.parent = tt-asi.parent + {&delim-par} + tt-asi.code NO-LOCK INDEXED-REPOSITION
+      WHERE tt-tank.parent = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6 NO-LOCK INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BROWSE-5 OPEN QUERY BROWSE-5 FOR EACH tt-tank ~
-      WHERE tt-tank.parent = tt-asi.parent + {&delim-par} + tt-asi.code NO-LOCK INDEXED-REPOSITION.
+      WHERE tt-tank.parent = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6 NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BROWSE-5 tt-tank
 &Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-5 tt-tank
 
@@ -149,7 +153,7 @@ DEFINE BUTTON Btn_Cancel-2 AUTO-END-KEY
      SIZE 15 BY 1.
 
 DEFINE BUTTON Btn_OK 
-     LABEL "Сохратить в реестр" 
+     LABEL "Сохранить в реестр" 
      SIZE 20 BY 1.
 
 DEFINE BUTTON Bt_ok AUTO-GO 
@@ -207,7 +211,8 @@ DEFINE VARIABLE fchet AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE fCom AS CHARACTER FORMAT "X(256)":U 
      LABEL "COM порт" 
      VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEMS ""Ethernet","COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9"
+     LIST-ITEMS "Ethernet","COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9","COM10","COM11","COM12","COM13","COM14","COM15","COM16","COM17","COM18","COM19","COM20","COM21","COM22","COM23","","COM24","COM25","COM26","COM27","COM28","COM29","COM30","COM31","COM32","COM33","COM34","COM35","COM36","COM37","COM38","COM39","COM40","COM41","COM42","COM43","COM44","COM45","COM46","COM47","COM48","COM49","COM50","COM51","COM52","COM53","COM54","COM55","COM56","COM57","COM58","COM59","COM60","COM61","COM62","COM63","COM64","COM65","COM66","COM67","COM68","COM69","COM70","COM71","COM72","COM73","COM74","COM75","COM76","COM77","COM78","COM79","COM80","COM81","COM82","COM83","COM84","COM85","COM86","COM87","COM88","COM89","COM90","COM91","COM92","COM93","COM94","COM95","COM96","COM97","COM98","COM99","COM100","COM101","COM102","COM103","COM104","COM105","COM106","COM107","COM108","COM109","COM110","COM111","COM112","COM113","COM114","COM115","COM116","COM117","COM118","COM119","COM120","COM121","COM122","COM123","COM124","COM125","COM126","COM127","COM128","COM129","COM130","COM131","COM132","COM133","COM134","COM135","COM136","COM137","COM138","COM139","COM140","COM141","COM142","COM143","COM144","COM145","COM146","COM147","COM148","COM149","COM150","COM151","COM152","COM153","COM154","COM155","COM156","COM157","COM158","COM159","COM160","COM161","COM162","COM163","COM164","COM165","COM166","COM167","COM168","COM169","COM170","COM171","COM172","COM173","COM174","COM175","COM176","COM177","COM178","COM179","COM180","COM181","COM182","COM183","COM184","COM185","COM186","COM187","COM188","COM189","COM190","COM191","COM192","COM193","COM194","COM195","COM196","COM197","COM198","COM199","COM200","COM201","COM202","COM203","COM204","COM205","COM206","COM207","COM208","COM209","COM210","COM211","COM212","COM213","COM214","COM215","COM216","COM217","COM218","COM219","COM220","COM221","COM222","COM223","COM224","COM225","COM226","COM227","COM228","COM229","COM230","COM231","COM232","COM233","COM234","COM235","COM236","COM237","COM238","COM239","COM240","COM241","COM242","COM243","COM244","COM245","COM246","COM247","COM248","COM249","COM250","COM251","COM252","COM253","COM254","COM255","COM256"
+ 
      DROP-DOWN-LIST
      SIZE 16 BY 1 NO-UNDO.
 
@@ -221,7 +226,7 @@ DEFINE VARIABLE fspeed AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE ftypeasi AS CHARACTER FORMAT "X(256)":U 
      LABEL "Тип АСИ/Протокол" 
      VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEMS "Modbus","Kedr","Veeder-root","DOMS" 
+     LIST-ITEMS "Modbus","Kedr","Veeder-root","DOMS","ifsfserver" 
      DROP-DOWN-LIST
      SIZE 16 BY 1 NO-UNDO.
 
@@ -229,11 +234,6 @@ DEFINE VARIABLE fipasi AS CHARACTER FORMAT "X(256)":U
      LABEL "IP-адрес" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
-
-DEFINE VARIABLE Flic AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Лицензия" 
-     VIEW-AS FILL-IN 
-     SIZE 50.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE fportasi AS CHARACTER FORMAT "X(256)":U 
      LABEL "Порт" 
@@ -257,10 +257,22 @@ DEFINE BUTTON bt-edit-2
      LABEL "Сохранить/Изменить" 
      SIZE 23 BY 1.
 
+DEFINE BUTTON BUTTON-2 
+     IMAGE-UP FILE "cmp/select.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE VARIABLE fnompres AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 1 
+     LABEL "Номер датчика для давления ПФ" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEMS "1","2","3","4","5","6","7","8","9"
+     DROP-DOWN-LIST
+     SIZE 17 BY 1 NO-UNDO.
+
 DEFINE VARIABLE Faddr AS CHARACTER FORMAT "x(8)" 
      LABEL "Номер канала" 
      VIEW-AS FILL-IN 
-     SIZE 20 BY 1.
+     SIZE 12.5 BY 1.
 
 DEFINE VARIABLE Fcoor AS CHARACTER FORMAT "x(20)" 
      LABEL "Коорд1" 
@@ -308,7 +320,7 @@ DEFINE FRAME Dialog-Frame
      Bt_ok AT ROW 2.5 COL 2 WIDGET-ID 12
      bsavefile AT ROW 2.5 COL 18.5 WIDGET-ID 8
      btloabfile AT ROW 2.5 COL 40 WIDGET-ID 10
-     SPACE(5.12) SKIP(27.24)
+     SPACE(4.99) SKIP(26.87)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры подключения уровнемеров" WIDGET-ID 100.
@@ -319,12 +331,14 @@ DEFINE FRAME FRAME-C
      bt-del-2 AT ROW 6.5 COL 19.5 WIDGET-ID 12
      bt-edit-2 AT ROW 6.5 COL 36 WIDGET-ID 14
      Faddr AT ROW 7.75 COL 14.5 COLON-ALIGNED WIDGET-ID 4
-     Fcoor AT ROW 7.75 COL 44 COLON-ALIGNED WIDGET-ID 22
+     Fcoor AT ROW 7.75 COL 36.5 COLON-ALIGNED WIDGET-ID 22
+     BUTTON-2 AT ROW 7.75 COL 57 WIDGET-ID 26
+     fnompres AT ROW 9 COL 36.5 COLON-ALIGNED WIDGET-ID 28
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.5 ROW 21
-         SIZE 64 BY 9
-         TITLE "Параметры резервуара" WIDGET-ID 600.
+         AT COL 1.5 ROW 19.5
+         SIZE 64 BY 10.5
+         TITLE "Параметры резервуарного парка" WIDGET-ID 600.
 
 DEFINE FRAME FRAME-B
      BROWSE-3 AT ROW 1.5 COL 2 WIDGET-ID 300
@@ -339,11 +353,10 @@ DEFINE FRAME FRAME-B
      fportasi AT ROW 9.25 COL 40 COLON-ALIGNED WIDGET-ID 10
      fspeed AT ROW 9.5 COL 11 COLON-ALIGNED WIDGET-ID 18
      fipasi AT ROW 9.5 COL 11 COLON-ALIGNED WIDGET-ID 8
-     Flic AT ROW 11 COL 3 WIDGET-ID 22
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.5 ROW 8.5
-         SIZE 64 BY 12.25
+         SIZE 64 BY 10.75
          TITLE "Параметры подключения" WIDGET-ID 400.
 
 DEFINE FRAME FRAME-A
@@ -354,7 +367,7 @@ DEFINE FRAME FRAME-A
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.5 ROW 4
          SIZE 64 BY 4.25
-         TITLE "Параметры для нешних запросов" WIDGET-ID 200.
+         TITLE "Параметры для внешних запросов" WIDGET-ID 200.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -366,7 +379,13 @@ DEFINE FRAME FRAME-A
    Other Settings: COMPILE
    Temp-Tables and Buffers:
       TABLE: tt-asi T "?" NO-UNDO ub Code
+      ADDITIONAL-FIELDS:
+          index parent parent code
+      END-FIELDS.
       TABLE: tt-tank T "?" NO-UNDO ub Code
+      ADDITIONAL-FIELDS:
+          index parent parent code
+      END-FIELDS.
    END-TABLES.
  */
 &ANALYZE-RESUME _END-PROCEDURE-SETTINGS
@@ -415,8 +434,6 @@ ASSIGN
 ASSIGN 
        fCom:HIDDEN IN FRAME FRAME-B           = TRUE.
 
-/* SETTINGS FOR FILL-IN Flic IN FRAME FRAME-B
-   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN fportasi IN FRAME FRAME-B
    NO-DISPLAY                                                           */
 /* SETTINGS FOR FILL-IN fSlaveId IN FRAME FRAME-B
@@ -457,7 +474,7 @@ ASSIGN
 /* Query rebuild information for BROWSE BROWSE-5
      _TblList          = "Temp-Tables.tt-tank"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
-     _Where[1]         = "Temp-Tables.tt-tank.parent = tt-asi.parent + {&delim-par} + tt-asi.code"
+     _Where[1]         = "Temp-Tables.tt-tank.parent = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6"
      _FldNameList[1]   > Temp-Tables.tt-tank.code
 "tt-tank.code" "Адрес / Номер канала" "x(30)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > Temp-Tables.tt-tank.CodeValue
@@ -501,10 +518,11 @@ do:
          fspeed  :screen-value in frame FRAME-B = tt-asi.Misc1  
          fchet   :screen-value in frame FRAME-B = tt-asi.Misc2 
          fbit    :screen-value in frame FRAME-B = tt-asi.Misc3
-         flic    :screen-value in frame FRAME-B = tt-asi.Misc4
+       /*  flic    :screen-value in frame FRAME-B = tt-asi.Misc4*/
          fipasi  :screen-value in frame FRAME-B = tt-asi.misc5
          fportasi:screen-value in frame FRAME-B = tt-asi.misc6
          fSlaveId:screen-value in frame FRAME-B = tt-asi.misc7 
+         
         .  
       {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
        apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C. 
@@ -524,7 +542,8 @@ do:
   if available tt-tank
   then assign
        Faddr:screen-value = tt-tank.code      
-       Fcoor:screen-value = tt-tank.CodeValue 
+       Fcoor:screen-value = tt-tank.CodeValue
+       fnompres:screen-value = if tt-tank.misc1 eq "" then "1" else tt-tank.misc1 
        .
 end.
 
@@ -573,27 +592,43 @@ do:
      view-as alert-box.
      return no-apply.
   end.
-  find first tt-asi_buf where tt-asi_buf.parent = ftypeasi:screen-value in frame FRAME-B
-                      and tt-asi_buf.code   = fCom    :screen-value in frame FRAME-B
-                      no-lock no-error.
-  if available tt-asi_buf
+  
+  if fCom    :screen-value in frame FRAME-B eq "Ethernet" 
   then do:
-     message "Уже есть запись с тип АСИ "  tt-asi_buf.parent " Порт " tt-asi_buf.code
-     view-as alert-box.
-     return no-apply.
+     find first tt-asi_buf where tt-asi_buf.misc5 = fipasi      :screen-value in frame FRAME-B
+                             and tt-asi_buf.misc6 = fportasi    :screen-value in frame FRAME-B
+                        no-lock no-error.
+     if available tt-asi_buf
+     then do:
+        message "Уже есть запись с тип IP "  tt-asi.misc5 " Порт " tt-asi.misc6
+        view-as alert-box.
+        return no-apply.
+     end.
+  end.
+  else do:
+     find first tt-asi_buf where tt-asi_buf.parent = ftypeasi:screen-value in frame FRAME-B
+                             and tt-asi_buf.code   = fCom    :screen-value in frame FRAME-B
+                        no-lock no-error.
+     if available tt-asi_buf
+     then do:
+        message "Уже есть запись с тип АСИ "  tt-asi_buf.parent " Порт " tt-asi_buf.code
+        view-as alert-box.
+        return no-apply.
+     end.
   end.
   
   create tt-asi.
   assign
      tt-asi.parent = ftypeasi:screen-value in frame FRAME-B
      tt-asi.code   = fCom    :screen-value in frame FRAME-B
-     tt-asi.Misc1  = fspeed  :screen-value in frame FRAME-B
-     tt-asi.Misc2  = fchet   :screen-value in frame FRAME-B
-     tt-asi.Misc3  = fbit    :screen-value in frame FRAME-B
-     tt-asi.Misc4  = flic    :screen-value in frame FRAME-B 
+     tt-asi.Misc1  = fspeed  :screen-value in frame FRAME-B when not fCom    :screen-value in frame FRAME-B eq "Ethernet"
+     tt-asi.Misc2  = fchet   :screen-value in frame FRAME-B when not fCom    :screen-value in frame FRAME-B eq "Ethernet"
+     tt-asi.Misc3  = fbit    :screen-value in frame FRAME-B when not fCom    :screen-value in frame FRAME-B eq "Ethernet"
+  /*   tt-asi.Misc4  = flic    :screen-value in frame FRAME-B */ 
      tt-asi.misc5  = fipasi  :screen-value in frame FRAME-B 
      tt-asi.misc6  = fportasi:screen-value in frame FRAME-B
      tt-asi.misc7  = fSlaveId:screen-value in frame FRAME-B
+     
   .
   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
   apply  "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
@@ -620,7 +655,7 @@ do:
         view-as alert-box.
         return no-apply.
      end.
-     find first tt-tank_buf where tt-tank_buf.parent    = tt-asi.parent + {&delim-par} + tt-asi.code
+     find first tt-tank_buf where tt-tank_buf.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6
                               and tt-tank_buf.code      = Faddr:screen-value
      no-lock no-error.
      if available tt-tank_buf
@@ -629,14 +664,31 @@ do:
         "Уже есть адрес " tt-tank_buf.code " для " tt-asi.parent tt-asi.code
         view-as alert-box.
      else do:
-        create tt-tank.
-        assign
-           tt-tank.parent    = tt-asi.parent + {&delim-par} + tt-asi.code
-           tt-tank.code      = Faddr:screen-value
-           tt-tank.CodeValue = Fcoor:screen-value
-        . 
-        {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
-        apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C. 
+        find first tt-tank_buf where tt-tank_buf.CodeValue = Fcoor:screen-value
+        no-lock no-error.
+        if available tt-tank_buf
+        then
+           message 
+             "Уже есть  " Fcoor:label tt-tank_buf.CodeValue " для " replace (tt-tank_buf.parent, {&delim-par}," ")
+           view-as alert-box.
+        else do:
+           /*FIND FIRST ub.place No-LOCK WHERE ub.place.loc1 = Fcoor:screen-value in frame FRAME-C NO-ERROR.
+           if not  available ub.place 
+           then
+              message "Не найден резервуар с Коорд1 " Fcoor:screen-value
+              view-as alert-box.
+           else do:*/
+              create tt-tank.
+              assign
+                 tt-tank.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6 
+                 tt-tank.code      = Faddr:screen-value
+                 tt-tank.CodeValue = Fcoor:screen-value
+                 tt-tank.misc1  = fnompres:screen-value when ftypeasi    :screen-value in frame FRAME-B eq "kedr"
+              . 
+              {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
+              apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C.
+           /*end.*/
+        end. 
      end.
   end.
 end.
@@ -652,13 +704,27 @@ ON choose OF bt-del IN FRAME FRAME-B /* Удалить */
 do:
   if avail tt-asi
   then do:
-      for each tt-tank where tt-tank.parent    = tt-asi.parent + {&delim-par} + tt-asi.code:
+      for each tt-tank where tt-tank.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6: 
          delete tt-tank. 
       end.
        
       delete tt-asi.
-      {&OPEN-BROWSERS-IN-QUERY-FRAME-B}  
+      assign
+         ftypeasi:screen-value in frame FRAME-B = ""
+         fCom    :screen-value in frame FRAME-B = ""
+         fspeed  :screen-value in frame FRAME-B = ""
+         
+         fchet   :screen-value in frame FRAME-B = ""
+         fbit    :screen-value in frame FRAME-B = ""
+      /* flic    :screen-value in frame FRAME-B = ""*/ 
+         fipasi  :screen-value in frame FRAME-B = ""
+         fportasi:screen-value in frame FRAME-B = ""
+         fSlaveId:screen-value in frame FRAME-B = ""
+      .
+      {&OPEN-BROWSERS-IN-QUERY-FRAME-B} 
+      apply  "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B.  
       {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
+      apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-c. 
    end.
 end.
 
@@ -685,7 +751,8 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-edit Dialog-Frame
 ON choose OF bt-edit IN FRAME FRAME-B /* Сохранить/Изменить */
 do:
-  define buffer tt-asi_buf for tt-asi.  
+  define buffer tt-asi_buf for tt-asi.
+  define buffer tt-tank_buf for tt-tank.  
   if    ftypeasi:screen-value eq ?
      or fCom    :screen-value eq ?
   then do:
@@ -693,30 +760,55 @@ do:
      view-as alert-box.
      return no-apply.
   end.
-  find first tt-asi_buf where tt-asi_buf.parent = ftypeasi:screen-value in frame FRAME-B
-                      and tt-asi_buf.code   = fCom    :screen-value in frame FRAME-B
-                      and recid (tt-asi_buf) ne recid(tt-asi)
-                      no-lock no-error.
-  if available tt-asi_buf
+  if fCom    :screen-value in frame FRAME-B eq "Ethernet" 
   then do:
-     message "Уже есть запись с тип АСИ "  tt-asi_buf.parent " Порт " tt-asi_buf.code
-     view-as alert-box.
-     return no-apply.
+     find first tt-asi_buf where tt-asi_buf.misc5 = fipasi      :screen-value in frame FRAME-B
+                             and tt-asi_buf.misc6 = fportasi    :screen-value in frame FRAME-B
+                             and recid (tt-asi_buf) ne recid(tt-asi)
+                        no-lock no-error.
+     if available tt-asi_buf
+     then do:
+        message "Уже есть запись с тип IP "  tt-asi.misc5 " Порт " tt-asi.misc6
+        view-as alert-box.
+        return no-apply.
+     end.
   end.
-                        
+  else do:
+     find first tt-asi_buf where tt-asi_buf.parent = ftypeasi:screen-value in frame FRAME-B
+                         and tt-asi_buf.code   = fCom    :screen-value in frame FRAME-B
+                         and recid (tt-asi_buf) ne recid(tt-asi)
+                         no-lock no-error.
+     if available tt-asi_buf
+     then do:
+        message "Уже есть запись с тип АСИ "  tt-asi_buf.parent " Порт " tt-asi_buf.code
+        view-as alert-box.
+        return no-apply.
+     end.
+  end.                      
   if available tt-asi 
                        
   then do:
+     for each tt-tank_buf where tt-tank_buf.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6: 
+         tt-tank_buf.parent = ftypeasi:screen-value in frame FRAME-B + {&delim-par} 
+                            + fCom    :screen-value in frame FRAME-B + {&delim-par} 
+                            + fipasi  :screen-value in frame FRAME-B  + {&delim-par} 
+                            + fportasi:screen-value in frame FRAME-B. 
+     end.
      assign
+     tt-asi.Misc1 = ""
+     tt-asi.Misc2 = ""
+     tt-asi.Misc3 = ""
+     tt-asi.misc8 = ""
      tt-asi.parent = ftypeasi:screen-value in frame FRAME-B
      tt-asi.code   = fCom    :screen-value in frame FRAME-B
-     tt-asi.Misc1  = fspeed  :screen-value in frame FRAME-B
-     tt-asi.Misc2  = fchet   :screen-value in frame FRAME-B
-     tt-asi.Misc3  = fbit    :screen-value in frame FRAME-B
-     tt-asi.Misc4  = flic    :screen-value in frame FRAME-B 
+     tt-asi.Misc1  = fspeed  :screen-value in frame FRAME-B when not fCom    :screen-value in frame FRAME-B eq "Ethernet"
+     tt-asi.Misc2  = fchet   :screen-value in frame FRAME-B when not fCom    :screen-value in frame FRAME-B eq "Ethernet"
+     tt-asi.Misc3  = fbit    :screen-value in frame FRAME-B when not fCom    :screen-value in frame FRAME-B eq "Ethernet"
+   /*  tt-asi.Misc4  = flic    :screen-value in frame FRAME-B */ 
      tt-asi.misc5  = fipasi  :screen-value in frame FRAME-B 
      tt-asi.misc6  = fportasi:screen-value in frame FRAME-B
      tt-asi.misc7  = fSlaveId:screen-value in frame FRAME-B
+     
   .
      {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
      apply  "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
@@ -738,13 +830,14 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-edit-2 Dialog-Frame
 ON choose OF bt-edit-2 IN FRAME FRAME-C /* Сохранить/Изменить */
 do:
+   define buffer tt-tank_buf for tt-tank.
   if     available tt-asi
      and available tt-tank
   then do:
-     define buffer tt-tank_buf for tt-tank.
-     find first tt-tank_buf where tt-tank_buf.parent    = tt-asi.parent + {&delim-par} + tt-asi.code
-                              and tt-tank_buf.code      = Faddr:screen-value
-                              and recid(tt-tank_buf)    = recid(tt-tank)  
+     
+     find first tt-tank_buf where tt-tank_buf.parent    eq tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6
+                              and tt-tank_buf.code      eq Faddr:screen-value
+                              and recid(tt-tank_buf)    ne recid(tt-tank)  
      no-lock no-error.
      if available tt-tank_buf
      then
@@ -752,13 +845,23 @@ do:
         "Уже есть адрес " tt-tank_buf.code " для " tt-asi.parent tt-asi.code
         view-as alert-box.
      else do:
-        assign
-           tt-tank.parent    = tt-asi.parent + {&delim-par} + tt-asi.code
-           tt-tank.code      = Faddr:screen-value
-           tt-tank.CodeValue = Fcoor:screen-value
-        . 
-        {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
-        apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C. 
+        FIND FIRST tt-tank_buf No-LOCK WHERE tt-tank_buf.CodeValue  = Fcoor:screen-value in frame FRAME-C 
+                                         and recid(tt-tank_buf)    ne recid(tt-tank) NO-ERROR.
+        if available tt-tank_buf
+        then
+          message 
+             "Уже есть  " Fcoor:label tt-tank_buf.CodeValue " для " replace (tt-tank_buf.parent, {&delim-par}," ")
+                view-as alert-box.
+        else do:
+           assign
+              tt-tank.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6
+              tt-tank.code      = Faddr:screen-value
+              tt-tank.CodeValue = Fcoor:screen-value
+              tt-tank.misc1  = fnompres:screen-value when ftypeasi    :screen-value in frame FRAME-B eq "kedr"
+           . 
+           {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
+           apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C.
+        end. 
      end.
   end.
    
@@ -830,6 +933,30 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define FRAME-NAME FRAME-C
+&Scoped-define SELF-NAME BUTTON-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-2 Dialog-Frame
+ON CHOOSE OF BUTTON-2 IN FRAME FRAME-C
+DO:
+  define variable place-list as character no-undo .
+  run ref/pl-list.w (
+                 input parparentproc
+                ,input "b-sel"
+                ,input v-cntxt-obj-type
+                ,input v-cntxt-obj-code
+                ,input {&g___object}
+               , input-output place-list).
+  if place-list <> '':U then do:
+     FIND FIRST ub.place No-LOCK WHERE recid(ub.place) = integer(entry(1, place-list)) NO-ERROR.
+     if available ub.place 
+     then Fcoor:screen-value in frame FRAME-C = ub.place.loc1.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define FRAME-NAME FRAME-B
 &Scoped-define SELF-NAME fCom
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fCom Dialog-Frame
@@ -870,18 +997,16 @@ do:
    else if fcom:screen-value eq "Ethernet"
   then do with frame FRAME-B:
       assign
+         fportasi:screen-value = ""
+         fipasi  :screen-value = ""
          fspeed:visible = no
          fchet:visible  = no
          fbit:visible   = no
-         fspeed:screen-value = ""
-         fchet:screen-value = ""
-         fbit:screen-value = ""
-         fportasi:screen-value = ""
-         fipasi  :screen-value = ""
          fipasi:visible     = yes
          fportasi:visible   = yes
       
       .
+      
    end.
    else 
     do with frame FRAME-B:
@@ -916,6 +1041,7 @@ DOMS POS,4,
   fCom:screen-value = "".
   fCom:visible   = no.
   fSlaveId:visible = no.
+  fnompres:visible IN FRAME FRAME-C = ftypeasi:screen-value eq "kedr".
   assign ftypeasi.
   if    ftypeasi:screen-value eq "Modbus"
      or ftypeasi:screen-value eq "kedr"
@@ -926,7 +1052,8 @@ DOMS POS,4,
          fSlaveId:visible = ftypeasi:screen-value eq "Modbus"     
      . 
   end.
-  else if ftypeasi:screen-value eq "DOMS"
+  else if    ftypeasi:screen-value eq "DOMS"
+          or ftypeasi:screen-value eq "ifsfserver"
   then
      assign
          fCom:visible   = no 
@@ -1023,15 +1150,15 @@ PROCEDURE enable_UI :
   ENABLE fip ftype FPort 
       WITH FRAME FRAME-A.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-A}
-  DISPLAY ftypeasi fipasi  
+  DISPLAY ftypeasi fipasi 
       WITH FRAME FRAME-B.
   ENABLE BROWSE-3 bt-add bt-del bt-edit ftypeasi fSlaveId fCom fchet fbit 
-         fportasi fspeed fipasi Flic 
+         fportasi fspeed fipasi 
       WITH FRAME FRAME-B.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
-  DISPLAY Faddr Fcoor 
+  DISPLAY Faddr Fcoor fnompres 
       WITH FRAME FRAME-C.
-  ENABLE BROWSE-5 bt-add-2 bt-del-2 bt-edit-2 Faddr Fcoor 
+  ENABLE BROWSE-5 bt-add-2 bt-del-2 bt-edit-2 Faddr Fcoor BUTTON-2 fnompres 
       WITH FRAME FRAME-C.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
 END PROCEDURE.
@@ -1049,6 +1176,8 @@ PROCEDURE proc-load :
 define input  parameter iFile as character no-undo.
 
 define variable vtxt as character no-undo.
+define variable vip as character no-undo.
+define variable vport as character no-undo.
 for each tt-asi_exp:
    delete tt-asi_exp.
 end.
@@ -1080,9 +1209,14 @@ end.
       then do:
           if index (vtxt,"TankTop") ne 0
           then
-             mObj = "tank".
+          assign
+             mObj  = "tank".
+             
           else
-             mObj = "asi".
+          assign
+             mObj = "asi"
+             vip   = ""
+             vport = "".
           vtxt = entry(4,vtxt,"\"). 
           
           mtypeasi = entry(1,vtxt," ") .
@@ -1094,6 +1228,9 @@ end.
           then 
              message "Ошибка загрузки данных из реестра"
               view-as alert-box.
+          if MCom begins "Ethernet"
+          then
+             MCom = "Ethernet".
           if mObj = "asi" 
           then do:
              create tt-asi_exp.
@@ -1142,14 +1279,18 @@ end.
                then
                   tt-asi_exp.misc4 = mvalue.
                else if mteg = "ip" 
-               then
+               then do:
+                  vip               = mvalue.
                   tt-asi_exp.misc5  = mvalue.
+               end.
                else if mteg = "Port"
-               then
+               then assign
+                  vport            = mvalue
                   tt-asi_exp.misc6 = mvalue. 
                else if mteg = "SlaveId"
                then
-                  tt-asi_exp.misc7 = mvalue. 
+                  tt-asi_exp.misc7 = mvalue.
+              
                 
             end.
             else if mObj = "tank"
@@ -1158,10 +1299,11 @@ end.
                then do:
                   create tt-tank_exp.
                   assign 
-                     tt-tank_exp.parent = mtypeasi + {&delim-par} + mcom
+                     tt-tank_exp.parent = mtypeasi + {&delim-par} + mcom + {&delim-par} + Vip + {&delim-par} + vport
                      tt-tank_exp.code   = substring(mteg,4)
-                     tt-tank_exp.CodeValue = mvalue
-                  .
+                     tt-tank_exp.CodeValue = entry(1,mvalue,":")
+                     tt-tank_exp.misc1     = entry(2,mvalue,":")
+                  no-error.
                end. 
             end.
          end.    
@@ -1186,6 +1328,9 @@ PROCEDURE proc-save :
 ------------------------------------------------------------------------------*/
 define input  parameter iFile as character no-undo.
 define variable vhead as character no-undo.
+define buffer tt-asi for tt-asi.
+define buffer tt-tank for tt-tank.
+define variable vi as integer no-undo.
 output to value(if iFile ne ? then iFile else "measurer_par_imp.reg").
 do with frame FRAME-A:
    put unformatted  "Windows Registry Editor Version 5.00" skip.
@@ -1196,10 +1341,14 @@ do with frame FRAME-A:
    substitute('"CodePage"="&1"', "1251"             ) skip(1).
 end.
 for each tt-asi:
-   vhead = substitute("[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\&1 &2" , 
+   if tt-asi.code begins "Ethernet"
+   then
+      vi = vi + 1.
+   vhead = substitute("[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\&1 &2&3" , 
                       tt-asi.parent ,  
                       (/*if tt-asi.code begins "com" then  "COM"   else*/ tt-asi.code),
-                      chr(0) ) .
+                      if tt-asi.code begins "Ethernet" then string(vi) else "") .
+      
    put unformatted vhead + "]" skip.
    if tt-asi.code begins "com"
    then
@@ -1216,9 +1365,17 @@ for each tt-asi:
    if tt-asi.misc4 ne "" and tt-asi.misc4 ne ?
    then
       put unformatted substitute('"License"="&1"', tt-asi.misc4 ) skip(1).
+   if tt-asi.misc8 ne "" and tt-asi.misc8 ne ?
+   then
+      put unformatted substitute('"PRES_SENSOR_NUM"="&1"', tt-asi.misc8 ) skip(1).
+     
    put unformatted vhead + "\TankTop]" skip.
-   for each tt-tank where tt-tank.parent eq tt-asi.parent + {&delim-par} + tt-asi.code :
-       put unformatted substitute('"ID_&1"="&2"',tt-tank.code, tt-tank.CodeValue) skip.
+   for each tt-tank where tt-tank.parent eq tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6:
+       if tt-tank.misc1 eq ""
+       then
+          put unformatted substitute('"ID_&1"="&2"',tt-tank.code, tt-tank.CodeValue) skip.
+       else
+          put unformatted substitute('"ID_&1"="&2:&3"',tt-tank.code, tt-tank.CodeValue, tt-tank.misc1) skip.
    end.
    
    put unformatted skip(1).
@@ -1227,6 +1384,12 @@ end.
   output close.
   if iFile eq ?
   then do:
+     run trg/userlog.p (
+                  input 'MEASURER_PAR'
+                , input ("Запущено сохранение настроек для АСИ в реестр"  + {&delim-key} + userid("ub"))
+                , input ?
+                , input ?
+                , input "") no-error.
      os-command silent value ("reg delete HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR /f /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_del.rez").
      os-command silent value ("reg import " + search("measurer_par_imp.reg")      + " /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_imp.rez").
   end.
