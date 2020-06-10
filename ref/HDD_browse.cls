@@ -34,6 +34,7 @@ class ref.HDD_browse inherits Form:
     field UserProc    as decimal
     field status_     as character
     field db-num      as integer 
+    field ii          as integer
     index pi id .
   
   define temp-table tt-devicePCAttr no-undo
@@ -42,8 +43,9 @@ class ref.HDD_browse inherits Form:
     field value_    as decimal
     field tresh     as decimal
     field type_     as character
-    field raw_value as decimal
-    index pi id
+    field raw_value as character
+    field ii        as integer
+    index pi name_
     .
 
   define private variable b_exit                                as System.Windows.Forms.Button                    no-undo.
@@ -200,6 +202,43 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void browseHDD_CellContentClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
 		
+    return.
+
+  end method.
+
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void browseHDD_RowPostPaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPostPaintEventArgs ):
+    define variable kk as integer no-undo .
+    define buffer tt-devicePC for tt-devicePC .
+    if e:RowIndex > -1 then 
+    do:
+      for each tt-devicePC no-lock:
+        if kk = e:RowIndex then 
+        do:
+          if tt-devicePC.UserProc = 100 then 
+          do:
+            browsehdd:Rows[e:RowIndex]:cells[6]:Style:BackColor = System.Drawing.Color:Red.
+            browsehdd:Rows[e:RowIndex]:cells[6]:Style:ForeColor = System.Drawing.Color:White.
+          end.
+          if tt-devicePC.ProcDisk = 100 then 
+          do:
+            browsehdd:Rows[e:RowIndex]:cells[5]:Style:BackColor = System.Drawing.Color:Red.
+            browsehdd:Rows[e:RowIndex]:cells[5]:Style:ForeColor = System.Drawing.Color:White.
+          end.
+          if tt-devicePC.status_ = "Не пройдена" then 
+          do:
+            browsehdd:Rows[e:RowIndex]:cells[7]:Style:BackColor = System.Drawing.Color:Red.
+            browsehdd:Rows[e:RowIndex]:cells[7]:Style:ForeColor = System.Drawing.Color:White.
+          end.
+          kk = kk + 1 .
+        end.
+      end.  
+    end.
     return.
 
   end method.
@@ -407,6 +446,50 @@ class ref.HDD_browse inherits Form:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
+  method private void drowseHDDAttr_CellPainting( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellPaintingEventArgs ):
+		
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void drowseHDDAttr_CursorChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void drowseHDDAttr_RowPostPaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPostPaintEventArgs ):
+		
+    define variable kk as integer no-undo .
+    define buffer tt-devicePCAttr for tt-devicePCAttr.
+
+    if e:RowIndex > -1 then 
+    do:
+      for each tt-devicePCAttr no-lock where tt-devicePCAttr.ii = e:RowIndex and tt-devicePCAttr.value_ <= tt-devicePCAttr.tresh:
+        drowseHDDAttr:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
+        drowseHDDAttr:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
+        kk = kk + 1 .
+      end.  
+    end.
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
   method private void enter_NamePK( input sender as System.Object, input e as System.EventArgs ):
     v-NamePK = this-object:NamePK:Text .
     if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status) no-error.
@@ -425,6 +508,52 @@ class ref.HDD_browse inherits Form:
   @VisualDesigner.
   method private void HDDbrowseGBD_CellContentClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
 		
+    return.
+
+  end method.
+
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void HDDbrowse_CellPainting( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellPaintingEventArgs ):
+    define variable kk as integer no-undo .
+    run gbl/inidebug.p.
+    if e:RowIndex > 0 then 
+    do:
+      kk = 0 .
+      for each tt-devicePC no-lock where tt-devicePC.UserProc = 100 or tt-devicePC.ProcDisk = 100 or tt-devicePC.status_ = "Не пройдена":
+        kk = kk + 1 .
+        if kk = e:RowIndex then
+          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
+      end.  
+    end.
+    return.
+
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void HDDbrowseGBD_RowPostPaint( input sender as System.Object, input e as System.Windows.Forms.DataGridViewRowPostPaintEventArgs ):
+    define variable kk as integer no-undo .
+    define buffer tt-devicePC for tt-devicePC.
+
+    if e:RowIndex > -1 then 
+    do:
+      kk = 0 .
+      for each tt-devicePC no-lock where tt-devicePC.UserProc = 100 or tt-devicePC.ProcDisk = 100 or tt-devicePC.status_ = "Не пройдена":
+        
+        if kk = e:RowIndex then
+          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
+        HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
+        kk = kk + 1 .
+      end.  
+    end.
     return.
 
   end method.
@@ -588,25 +717,25 @@ class ref.HDD_browse inherits Form:
     this-object:statusDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:b_exit = new System.Windows.Forms.Button().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
-    this-object:label4 = new System.Windows.Forms.Label().
     this-object:sort_time = new System.Windows.Forms.DateTimePicker().
     this-object:sort_date = new System.Windows.Forms.DateTimePicker().
-    this-object:delta = new System.Windows.Forms.NumericUpDown().
     this-object:b_print = new System.Windows.Forms.Button().
     this-object:UserDisk = new System.Windows.Forms.NumericUpDown().
-    this-object:label3 = new System.Windows.Forms.Label().
     this-object:lUserDisk = new System.Windows.Forms.Label().
-    this-object:ValueDisk = new System.Windows.Forms.NumericUpDown().
     this-object:ProcDisk = new System.Windows.Forms.NumericUpDown().
-    this-object:label2 = new System.Windows.Forms.Label().
     this-object:lProcDisk = new System.Windows.Forms.Label().
-    this-object:TreshDisk = new System.Windows.Forms.NumericUpDown().
     this-object:lModelDisk = new System.Windows.Forms.Label().
     this-object:ModelDisk = new System.Windows.Forms.TextBox().
     this-object:lnamePK = new System.Windows.Forms.Label().
     this-object:NamePK = new System.Windows.Forms.TextBox().
     this-object:label1 = new System.Windows.Forms.Label().
     this-object:lsortDate = new System.Windows.Forms.Label().
+    this-object:label4 = new System.Windows.Forms.Label().
+    this-object:delta = new System.Windows.Forms.NumericUpDown().
+    this-object:label3 = new System.Windows.Forms.Label().
+    this-object:ValueDisk = new System.Windows.Forms.NumericUpDown().
+    this-object:label2 = new System.Windows.Forms.Label().
+    this-object:TreshDisk = new System.Windows.Forms.NumericUpDown().
     this-object:lStatus = new System.Windows.Forms.Label().
     this-object:radioButton3 = new System.Windows.Forms.RadioButton().
     this-object:radioButton2 = new System.Windows.Forms.RadioButton().
@@ -635,10 +764,10 @@ class ref.HDD_browse inherits Form:
     cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:browseHDD, System.ComponentModel.ISupportInitialize):BeginInit().
     this-object:groupBox1:SuspendLayout().
-    cast(this-object:delta, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:UserDisk, System.ComponentModel.ISupportInitialize):BeginInit().
-    cast(this-object:ValueDisk, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:ProcDisk, System.ComponentModel.ISupportInitialize):BeginInit().
+    cast(this-object:delta, System.ComponentModel.ISupportInitialize):BeginInit().
+    cast(this-object:ValueDisk, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:TreshDisk, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:drowseHDDAttr, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:bindingSource2, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -705,6 +834,7 @@ class ref.HDD_browse inherits Form:
     this-object:browseHDD:TabIndex = 13.
     this-object:browseHDD:CellClick:Subscribe(this-object:dataGridView1_CellClick).
     this-object:browseHDD:CellContentClick:Subscribe(this-object:browseHDD_CellContentClick).
+    this-object:browseHDD:RowPostPaint:Subscribe(this-object:browseHDD_RowPostPaint).
     /*  */
     /* dateDataGridViewTextBoxColumn */
     /*  */
@@ -777,20 +907,14 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* groupBox1 */
     /*  */
-    this-object:groupBox1:Controls:Add(this-object:label4).
     this-object:groupBox1:Controls:Add(this-object:sort_time).
     this-object:groupBox1:Controls:Add(this-object:sort_date).
-    this-object:groupBox1:Controls:Add(this-object:delta).
     this-object:groupBox1:Controls:Add(this-object:b_print).
     this-object:groupBox1:Controls:Add(this-object:UserDisk).
-    this-object:groupBox1:Controls:Add(this-object:label3).
     this-object:groupBox1:Controls:Add(this-object:b_exit).
     this-object:groupBox1:Controls:Add(this-object:lUserDisk).
-    this-object:groupBox1:Controls:Add(this-object:ValueDisk).
     this-object:groupBox1:Controls:Add(this-object:ProcDisk).
-    this-object:groupBox1:Controls:Add(this-object:label2).
     this-object:groupBox1:Controls:Add(this-object:lProcDisk).
-    this-object:groupBox1:Controls:Add(this-object:TreshDisk).
     this-object:groupBox1:Controls:Add(this-object:lModelDisk).
     this-object:groupBox1:Controls:Add(this-object:ModelDisk).
     this-object:groupBox1:Controls:Add(this-object:lnamePK).
@@ -804,18 +928,6 @@ class ref.HDD_browse inherits Form:
     this-object:groupBox1:TabIndex = 22.
     this-object:groupBox1:TabStop = false.
     this-object:groupBox1:UseCompatibleTextRendering = true.
-    /*  */
-    /* label4 */
-    /*  */
-    this-object:label4:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
-    this-object:label4:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label4:Location = new System.Drawing.Point(276, 15).
-    this-object:label4:Name = "label4".
-    this-object:label4:Size = new System.Drawing.Size(51, 23).
-    this-object:label4:TabIndex = 32.
-    this-object:label4:Text = "Delta:".
-    this-object:label4:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-    this-object:label4:UseCompatibleTextRendering = true.
     /*  */
     /* sort_time */
     /*  */
@@ -843,14 +955,6 @@ class ref.HDD_browse inherits Form:
     this-object:sort_date:TabIndexChanged:Subscribe(this-object:leave_sort_date).
     this-object:sort_date:Leave:Subscribe(this-object:leave_sort_date).
     /*  */
-    /* delta */
-    /*  */
-    this-object:delta:Location = new System.Drawing.Point(330, 17).
-    this-object:delta:Name = "delta".
-    this-object:delta:Size = new System.Drawing.Size(70, 21).
-    this-object:delta:TabIndex = 0.
-    this-object:delta:ValueChanged:Subscribe(this-object:delta_ValueChanged).
-    /*  */
     /* b_print */
     /*  */
     this-object:b_print:Image = cast(resources:GetObject("b_print.Image"), System.Drawing.Image).
@@ -872,18 +976,6 @@ class ref.HDD_browse inherits Form:
     this-object:UserDisk:Enter:Subscribe(this-object:leave_UserDisk).
     this-object:UserDisk:Leave:Subscribe(this-object:leave_UserDisk).
     /*  */
-    /* label3 */
-    /*  */
-    this-object:label3:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
-    this-object:label3:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label3:Location = new System.Drawing.Point(425, 15).
-    this-object:label3:Name = "label3".
-    this-object:label3:Size = new System.Drawing.Size(51, 23).
-    this-object:label3:TabIndex = 30.
-    this-object:label3:Text = "Value:".
-    this-object:label3:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-    this-object:label3:UseCompatibleTextRendering = true.
-    /*  */
     /* lUserDisk */
     /*  */
     this-object:lUserDisk:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
@@ -895,16 +987,6 @@ class ref.HDD_browse inherits Form:
     this-object:lUserDisk:Text = "% исп. сист. раздела:".
     this-object:lUserDisk:UseCompatibleTextRendering = true.
     /*  */
-    /* ValueDisk */
-    /*  */
-    this-object:ValueDisk:Location = new System.Drawing.Point(484, 17).
-    this-object:ValueDisk:Name = "ValueDisk".
-    this-object:ValueDisk:Size = new System.Drawing.Size(70, 21).
-    this-object:ValueDisk:TabIndex = 1.
-    this-object:ValueDisk:ValueChanged:Subscribe(this-object:leave_Value).
-    this-object:ValueDisk:Enter:Subscribe(this-object:leave_Value).
-    this-object:ValueDisk:Leave:Subscribe(this-object:leave_Value).
-    /*  */
     /* ProcDisk */
     /*  */
     this-object:ProcDisk:Location = new System.Drawing.Point(715, 48).
@@ -914,18 +996,6 @@ class ref.HDD_browse inherits Form:
     this-object:ProcDisk:ValueChanged:Subscribe(this-object:leave_ProcDisk).
     this-object:ProcDisk:Enter:Subscribe(this-object:leave_ProcDisk).
     this-object:ProcDisk:Leave:Subscribe(this-object:leave_ProcDisk).
-    /*  */
-    /* label2 */
-    /*  */
-    this-object:label2:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
-    this-object:label2:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label2:Location = new System.Drawing.Point(576, 15).
-    this-object:label2:Name = "label2".
-    this-object:label2:Size = new System.Drawing.Size(51, 23).
-    this-object:label2:TabIndex = 28.
-    this-object:label2:Text = "Thresh:".
-    this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
-    this-object:label2:UseCompatibleTextRendering = true.
     /*  */
     /* lProcDisk */
     /*  */
@@ -937,16 +1007,6 @@ class ref.HDD_browse inherits Form:
     this-object:lProcDisk:TabIndex = 8.
     this-object:lProcDisk:Text = "% заполнения диска:".
     this-object:lProcDisk:UseCompatibleTextRendering = true.
-    /*  */
-    /* TreshDisk */
-    /*  */
-    this-object:TreshDisk:Location = new System.Drawing.Point(629, 17).
-    this-object:TreshDisk:Name = "TreshDisk".
-    this-object:TreshDisk:Size = new System.Drawing.Size(70, 21).
-    this-object:TreshDisk:TabIndex = 2.
-    this-object:TreshDisk:ValueChanged:Subscribe(this-object:leave_Tresh).
-    this-object:TreshDisk:Enter:Subscribe(this-object:leave_Tresh).
-    this-object:TreshDisk:Leave:Subscribe(this-object:leave_Tresh).
     /*  */
     /* lModelDisk */
     /*  */
@@ -1011,6 +1071,70 @@ class ref.HDD_browse inherits Form:
     this-object:lsortDate:TabIndex = 1.
     this-object:lsortDate:Text = "Дата проверки:".
     this-object:lsortDate:UseCompatibleTextRendering = true.
+    /*  */
+    /* label4 */
+    /*  */
+    this-object:label4:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
+    this-object:label4:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label4:Location = new System.Drawing.Point(367, 340).
+    this-object:label4:Name = "label4".
+    this-object:label4:Size = new System.Drawing.Size(51, 23).
+    this-object:label4:TabIndex = 32.
+    this-object:label4:Text = "Delta:".
+    this-object:label4:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label4:UseCompatibleTextRendering = true.
+    /*  */
+    /* delta */
+    /*  */
+    this-object:delta:Location = new System.Drawing.Point(421, 342).
+    this-object:delta:Name = "delta".
+    this-object:delta:Size = new System.Drawing.Size(70, 21).
+    this-object:delta:TabIndex = 0.
+    this-object:delta:ValueChanged:Subscribe(this-object:delta_ValueChanged).
+    /*  */
+    /* label3 */
+    /*  */
+    this-object:label3:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
+    this-object:label3:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label3:Location = new System.Drawing.Point(516, 340).
+    this-object:label3:Name = "label3".
+    this-object:label3:Size = new System.Drawing.Size(51, 23).
+    this-object:label3:TabIndex = 30.
+    this-object:label3:Text = "Value:".
+    this-object:label3:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label3:UseCompatibleTextRendering = true.
+    /*  */
+    /* ValueDisk */
+    /*  */
+    this-object:ValueDisk:Location = new System.Drawing.Point(575, 342).
+    this-object:ValueDisk:Name = "ValueDisk".
+    this-object:ValueDisk:Size = new System.Drawing.Size(70, 21).
+    this-object:ValueDisk:TabIndex = 1.
+    this-object:ValueDisk:ValueChanged:Subscribe(this-object:leave_Value).
+    this-object:ValueDisk:Enter:Subscribe(this-object:leave_Value).
+    this-object:ValueDisk:Leave:Subscribe(this-object:leave_Value).
+    /*  */
+    /* label2 */
+    /*  */
+    this-object:label2:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
+    this-object:label2:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label2:Location = new System.Drawing.Point(667, 340).
+    this-object:label2:Name = "label2".
+    this-object:label2:Size = new System.Drawing.Size(51, 23).
+    this-object:label2:TabIndex = 28.
+    this-object:label2:Text = "Thresh:".
+    this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label2:UseCompatibleTextRendering = true.
+    /*  */
+    /* TreshDisk */
+    /*  */
+    this-object:TreshDisk:Location = new System.Drawing.Point(720, 342).
+    this-object:TreshDisk:Name = "TreshDisk".
+    this-object:TreshDisk:Size = new System.Drawing.Size(70, 21).
+    this-object:TreshDisk:TabIndex = 2.
+    this-object:TreshDisk:ValueChanged:Subscribe(this-object:leave_Tresh).
+    this-object:TreshDisk:Enter:Subscribe(this-object:leave_Tresh).
+    this-object:TreshDisk:Leave:Subscribe(this-object:leave_Tresh).
     /*  */
     /* lStatus */
     /*  */
@@ -1084,7 +1208,7 @@ class ref.HDD_browse inherits Form:
     this-object:drowseHDDAttr:DataSource = this-object:bindingSource2.
     this-object:drowseHDDAttr:EnableHeadersVisualStyles = false.
     this-object:drowseHDDAttr:ImeMode = System.Windows.Forms.ImeMode:NoControl.
-    this-object:drowseHDDAttr:Location = new System.Drawing.Point(5, 336).
+    this-object:drowseHDDAttr:Location = new System.Drawing.Point(5, 373).
     this-object:drowseHDDAttr:MultiSelect = false.
     this-object:drowseHDDAttr:Name = "drowseHDDAttr".
     this-object:drowseHDDAttr:ReadOnly = true.
@@ -1094,6 +1218,9 @@ class ref.HDD_browse inherits Form:
     this-object:drowseHDDAttr:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
     this-object:drowseHDDAttr:Size = new System.Drawing.Size(786, 206).
     this-object:drowseHDDAttr:TabIndex = 14.
+    this-object:drowseHDDAttr:CellPainting:Subscribe(this-object:drowseHDDAttr_CellPainting).
+    this-object:drowseHDDAttr:RowPostPaint:Subscribe(this-object:drowseHDDAttr_RowPostPaint).
+    this-object:drowseHDDAttr:CursorChanged:Subscribe(this-object:drowseHDDAttr_CursorChanged).
     /*  */
     /* nameDataGridViewTextBoxColumn */
     /*  */
@@ -1112,7 +1239,7 @@ class ref.HDD_browse inherits Form:
     /* treshDataGridViewTextBoxColumn */
     /*  */
     this-object:treshDataGridViewTextBoxColumn:DataPropertyName = "tresh".
-    this-object:treshDataGridViewTextBoxColumn:HeaderText = "Tresh".
+    this-object:treshDataGridViewTextBoxColumn:HeaderText = "Thresh".
     this-object:treshDataGridViewTextBoxColumn:Name = "treshDataGridViewTextBoxColumn".
     this-object:treshDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
@@ -1145,7 +1272,7 @@ class ref.HDD_browse inherits Form:
     arrayvar5[2] = new Progress.Data.ColumnPropDesc("value_", "Value", Progress.Data.DataType:DECIMAL).
     arrayvar5[3] = new Progress.Data.ColumnPropDesc("tresh", "Tresh", Progress.Data.DataType:DECIMAL).
     arrayvar5[4] = new Progress.Data.ColumnPropDesc("type_", "Тип", Progress.Data.DataType:CHARACTER).
-    arrayvar5[5] = new Progress.Data.ColumnPropDesc("raw_value", "Raw_Value", Progress.Data.DataType:DECIMAL).
+    arrayvar5[5] = new Progress.Data.ColumnPropDesc("raw_value", "Raw_Value", Progress.Data.DataType:CHARACTER).
     tableDesc2:Columns = arrayvar5.
     this-object:bindingSource2:TableSchema = tableDesc2.
     /*  */
@@ -1244,6 +1371,7 @@ class ref.HDD_browse inherits Form:
     this-object:HDDbrowseGBD:Size = new System.Drawing.Size(786, 196).
     this-object:HDDbrowseGBD:TabIndex = 25.
     this-object:HDDbrowseGBD:CellContentClick:Subscribe(this-object:HDDbrowseGBD_CellContentClick).
+    this-object:HDDbrowseGBD:RowPostPaint:Subscribe(this-object:HDDbrowseGBD_RowPostPaint).
     /*  */
     /* Column1 */
     /*  */
@@ -1310,18 +1438,24 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* HDD_browse */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(797, 549).
+    this-object:ClientSize = new System.Drawing.Size(797, 592).
+    this-object:Controls:Add(this-object:label4).
     this-object:Controls:Add(this-object:HDDbrowseGBD).
     this-object:Controls:Add(this-object:bobj_list).
     this-object:Controls:Add(this-object:lobj_list).
+    this-object:Controls:Add(this-object:delta).
     this-object:Controls:Add(this-object:obj_list).
     this-object:Controls:Add(this-object:drowseHDDAttr).
+    this-object:Controls:Add(this-object:label3).
     this-object:Controls:Add(this-object:groupBox1).
     this-object:Controls:Add(this-object:browseHDD).
     this-object:Controls:Add(this-object:radioButton2).
+    this-object:Controls:Add(this-object:ValueDisk).
     this-object:Controls:Add(this-object:radioButton1).
     this-object:Controls:Add(this-object:radioButton3).
+    this-object:Controls:Add(this-object:label2).
     this-object:Controls:Add(this-object:lStatus).
+    this-object:Controls:Add(this-object:TreshDisk).
     this-object:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:Name = "HDD_browse".
     this-object:Text = "Результаты проверки HDD".
@@ -1330,10 +1464,10 @@ class ref.HDD_browse inherits Form:
     cast(this-object:browseHDD, System.ComponentModel.ISupportInitialize):EndInit().
     this-object:groupBox1:ResumeLayout(false).
     this-object:groupBox1:PerformLayout().
-    cast(this-object:delta, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:UserDisk, System.ComponentModel.ISupportInitialize):EndInit().
-    cast(this-object:ValueDisk, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:ProcDisk, System.ComponentModel.ISupportInitialize):EndInit().
+    cast(this-object:delta, System.ComponentModel.ISupportInitialize):EndInit().
+    cast(this-object:ValueDisk, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:TreshDisk, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:drowseHDDAttr, System.ComponentModel.ISupportInitialize):EndInit().
     cast(this-object:bindingSource2, System.ComponentModel.ISupportInitialize):EndInit().
@@ -1387,6 +1521,8 @@ class ref.HDD_browse inherits Form:
     define variable v-Date       as decimal   no-undo .
     define variable v-TimeST     as character no-undo .
     define variable v-TimeST1    as character no-undo .          
+    define variable ii           as integer   no-undo .
+    
     empty temp-table tt-devicePC .
 
     for each buf_devisPC no-lock where buf_devisPC.DB-num = p-db-num:
@@ -1394,7 +1530,6 @@ class ref.HDD_browse inherits Form:
       do:
         next_:
         for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date = date_:
-
           if integer(entry (2,time_,":")) > 0 then 
           do:
             v-TimeST = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") .
@@ -1421,9 +1556,10 @@ class ref.HDD_browse inherits Form:
           end.
           find first tt-devicePC exclusive-lock where tt-devicePC.id = buf_devisPC.id and tt-devicePC.modeldevice = buf_devisPC.modeldevice
             and tt-devicePC.ModelPC     = buf_devisPC.ModelPC and tt-devicePC.namepc      = buf_devisPC.namepc and tt-devicePC.date_       = buf_devisPCAttr.date and 
-            tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") no-error .
+            tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 360,"99") no-error .
           if not available (tt-devicePC) then 
           do: 
+            ii = ii + 1 .
             create tt-devicePC .
             assign
               tt-devicePC.id          = buf_devisPC.id
@@ -1431,7 +1567,8 @@ class ref.HDD_browse inherits Form:
               tt-devicePC.ModelPC     = buf_devisPC.ModelPC
               tt-devicePC.namepc      = buf_devisPC.namepc
               tt-devicePC.date_       = buf_devisPCAttr.date
-              tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99")
+              tt-devicePC.ii          = ii
+              tt-devicePC.time_       = string(truncate (buf_devisPCAttr.time_ / 3600, 0)) + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 60,"99") + ":" + string((buf_devisPCAttr.time_ modulo 3600) / 360,"99")
               .
           end.
           if v-TestStatus <> "" then tt-devicePC.status_  = v-TestStatus .
@@ -1487,6 +1624,7 @@ class ref.HDD_browse inherits Form:
     define buffer bf_devisPCAttr  for ub.devisPC-attr .
     define buffer bt_devisPCAttr  for ub.devisPC-attr .
     define variable ii           as integer   no-undo .
+    define variable jj           as integer   no-undo .
     define variable v-ProcDisk   as decimal   no-undo .
     define variable v-UserDisk   as decimal   no-undo .
     define variable v-TestStatus as character no-undo .
@@ -1612,7 +1750,7 @@ class ref.HDD_browse inherits Form:
       assign
         tt-devicePCAttr.id        = buf_devisPC-attr.id
         tt-devicePCAttr.name_     = buf_devisPC-attr.attr-code
-        tt-devicePCAttr.raw_value = decimal(buf_devisPC-attr.attr-Raw-value)
+        tt-devicePCAttr.raw_value = buf_devisPC-attr.attr-Raw-value
         tt-devicePCAttr.tresh     = decimal(buf_devisPC-attr.tresh)
         tt-devicePCAttr.value_    = decimal(buf_devisPC-attr.attr-value)
         tt-devicePCAttr.type_     = buf_devisPC-attr.type 

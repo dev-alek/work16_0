@@ -21,14 +21,9 @@ class ibs.th.ref.report_hdd inherits Form:
   define private variable b_run         as System.Windows.Forms.Button         no-undo.
   define private variable bobj_list     as System.Windows.Forms.Button         no-undo.
   define private variable b_exit        as System.Windows.Forms.Button         no-undo.
-  define private variable change_Raw    as System.Windows.Forms.CheckBox       no-undo.
-  define private variable changeValue   as System.Windows.Forms.CheckBox       no-undo.
   define private variable components    as System.ComponentModel.IContainer    no-undo.
   define private variable date_start    as System.Windows.Forms.DateTimePicker no-undo.
   define private variable date_end      as System.Windows.Forms.DateTimePicker no-undo.
-  define private variable label9        as System.Windows.Forms.Label          no-undo.
-  define private variable label8        as System.Windows.Forms.Label          no-undo.
-  define private variable label7        as System.Windows.Forms.Label          no-undo.
   define private variable label6        as System.Windows.Forms.Label          no-undo.
   define private variable label5        as System.Windows.Forms.Label          no-undo.
   define private variable label4        as System.Windows.Forms.Label          no-undo.
@@ -37,12 +32,10 @@ class ibs.th.ref.report_hdd inherits Form:
   define private variable label10       as System.Windows.Forms.Label          no-undo.
   define private variable label1        as System.Windows.Forms.Label          no-undo.
   define private variable groupBox1     as System.Windows.Forms.GroupBox       no-undo.
-  define private variable Raw_Value     as System.Windows.Forms.NumericUpDown  no-undo.
+  define private variable label7 as System.Windows.Forms.Label no-undo.
   define private variable obj_list      as System.Windows.Forms.TextBox        no-undo.
   define private variable time_start    as System.Windows.Forms.DateTimePicker no-undo.
   define private variable time_end      as System.Windows.Forms.DateTimePicker no-undo.
-  define private variable ThreshDisk    as System.Windows.Forms.NumericUpDown  no-undo.
-  define private variable ValueDisk     as System.Windows.Forms.NumericUpDown  no-undo.
   define private variable NamePK        as System.Windows.Forms.TextBox        no-undo.
   define private variable ModelDisk     as System.Windows.Forms.TextBox        no-undo.
   
@@ -127,11 +120,6 @@ class ibs.th.ref.report_hdd inherits Form:
       v-ModelDisk   = this-object:ModelDisk:Text
       v-AttrName    = this-object:attr_name:Text
       v-AttrType    = this-object:attr_type:Text
-      v-ChahgeRaw   = this-object:change_Raw:Checked
-      v-ChahgeValue = this-object:changeValue:Checked
-      v-RawValue    = decimal(this-object:Raw_Value:Text) 
-      v-ThreshDisk  = decimal(this-object:ThreshDisk:Text)
-      v-ValueDisk   = decimal(this-object:ValueDisk:Text)
       .
 
     run rep/hdd-report.p (input parparentproc,
@@ -143,12 +131,7 @@ class ibs.th.ref.report_hdd inherits Form:
       input v-ModelDisk,
       input v-AttrName,
       input v-AttrType,
-      input v-ChahgeRaw,
-      input v-ChahgeValue,
-      input v-obj-list,
-      input v-RawValue,
-      input v-ThreshDisk,
-      input v-ValueDisk ) no-error .
+      input v-obj-list) no-error .
 
     return.
 
@@ -282,9 +265,10 @@ class ibs.th.ref.report_hdd inherits Form:
         assign
           p-obj-list = p-obj-list + "," + temp_obj-list.obj-type + "," + string( temp_obj-list.obj-code )
           .
-        for first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type:
-          v-obj-list = v-obj-list + "," + string( ub.clients.db-num).
-        end.
+        find first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type no-error .
+          if available (ub.clients) then v-obj-list = v-obj-list + "," + string( ub.clients.db-num).
+          else v-obj-list = v-obj-list + "," + string(temp_obj-list.obj-code ).
+        
       end.
       p-obj-list = trim (p-obj-list,",") .
       v-obj-list = trim(v-obj-list,",").
@@ -307,11 +291,9 @@ class ibs.th.ref.report_hdd inherits Form:
     define variable resources as Progress.Util.ResourceManager no-undo.
     resources = new Progress.Util.ResourceManager("ibs.th.ref.report_hdd").
     this-object:date_start = new System.Windows.Forms.DateTimePicker().
-    this-object:ValueDisk = new System.Windows.Forms.NumericUpDown().
     this-object:bobj_list = new System.Windows.Forms.Button().
     this-object:obj_list = new System.Windows.Forms.TextBox().
     this-object:time_start = new System.Windows.Forms.DateTimePicker().
-    this-object:ThreshDisk = new System.Windows.Forms.NumericUpDown().
     this-object:ModelDisk = new System.Windows.Forms.TextBox().
     this-object:NamePK = new System.Windows.Forms.TextBox().
     this-object:b_exit = new System.Windows.Forms.Button().
@@ -324,20 +306,12 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:label4 = new System.Windows.Forms.Label().
     this-object:label5 = new System.Windows.Forms.Label().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
-    this-object:change_Raw = new System.Windows.Forms.CheckBox().
-    this-object:changeValue = new System.Windows.Forms.CheckBox().
     this-object:label10 = new System.Windows.Forms.Label().
     this-object:attr_type = new System.Windows.Forms.TextBox().
-    this-object:label9 = new System.Windows.Forms.Label().
-    this-object:Raw_Value = new System.Windows.Forms.NumericUpDown().
-    this-object:label8 = new System.Windows.Forms.Label().
-    this-object:label7 = new System.Windows.Forms.Label().
     this-object:label6 = new System.Windows.Forms.Label().
     this-object:attr_name = new System.Windows.Forms.TextBox().
-    cast(this-object:ValueDisk, System.ComponentModel.ISupportInitialize):BeginInit().
-    cast(this-object:ThreshDisk, System.ComponentModel.ISupportInitialize):BeginInit().
+    this-object:label7 = new System.Windows.Forms.Label().
     this-object:groupBox1:SuspendLayout().
-    cast(this-object:Raw_Value, System.ComponentModel.ISupportInitialize):BeginInit().
     this-object:SuspendLayout().
     /*  */
     /* date_start */
@@ -348,20 +322,6 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:date_start:Size = new System.Drawing.Size(93, 20).
     this-object:date_start:TabIndex = 4.
     this-object:date_start:Value = Progress.Util.DateTimeHelper:Create(2019, 10, 29, 0, 0, 0, 0).
-    /*  */
-    /* ValueDisk */
-    /*  */
-    this-object:ValueDisk:Location = new System.Drawing.Point(124, 97).
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true", Type="System.Int32").
-    define variable arrayvar0 as INTEGER extent 4 no-undo.
-    arrayvar0[1] = -1486618625.
-    arrayvar0[2] = 232830643.
-    arrayvar0[3] = 0.
-    arrayvar0[4] = 0.
-    this-object:ValueDisk:Maximum = Progress.Util.DecimalHelper:Create(arrayvar0).
-    this-object:ValueDisk:Name = "ValueDisk".
-    this-object:ValueDisk:Size = new System.Drawing.Size(67, 23).
-    this-object:ValueDisk:TabIndex = 12.
     /*  */
     /* bobj_list */
     /*  */
@@ -393,20 +353,6 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:time_start:Size = new System.Drawing.Size(67, 20).
     this-object:time_start:TabIndex = 5.
     this-object:time_start:ValueChanged:Subscribe(this-object:time_start_ValueChanged).
-    /*  */
-    /* ThreshDisk */
-    /*  */
-    this-object:ThreshDisk:Location = new System.Drawing.Point(124, 128).
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true", Type="System.Int32").
-    define variable arrayvar1 as INTEGER extent 4 no-undo.
-    arrayvar1[1] = -1486618625.
-    arrayvar1[2] = 232830643.
-    arrayvar1[3] = 0.
-    arrayvar1[4] = 0.
-    this-object:ThreshDisk:Maximum = Progress.Util.DecimalHelper:Create(arrayvar1).
-    this-object:ThreshDisk:Name = "ThreshDisk".
-    this-object:ThreshDisk:Size = new System.Drawing.Size(67, 23).
-    this-object:ThreshDisk:TabIndex = 13.
     /*  */
     /* ModelDisk */
     /*  */
@@ -523,48 +469,19 @@ class ibs.th.ref.report_hdd inherits Form:
     /*  */
     /* groupBox1 */
     /*  */
-    this-object:groupBox1:Controls:Add(this-object:change_Raw).
-    this-object:groupBox1:Controls:Add(this-object:changeValue).
+    this-object:groupBox1:Controls:Add(this-object:label7).
     this-object:groupBox1:Controls:Add(this-object:label10).
     this-object:groupBox1:Controls:Add(this-object:attr_type).
-    this-object:groupBox1:Controls:Add(this-object:label9).
-    this-object:groupBox1:Controls:Add(this-object:Raw_Value).
-    this-object:groupBox1:Controls:Add(this-object:label8).
-    this-object:groupBox1:Controls:Add(this-object:label7).
     this-object:groupBox1:Controls:Add(this-object:label6).
     this-object:groupBox1:Controls:Add(this-object:attr_name).
-    this-object:groupBox1:Controls:Add(this-object:ValueDisk).
-    this-object:groupBox1:Controls:Add(this-object:ThreshDisk).
     this-object:groupBox1:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(10), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:groupBox1:Location = new System.Drawing.Point(7, 154).
     this-object:groupBox1:Name = "groupBox1".
-    this-object:groupBox1:Size = new System.Drawing.Size(622, 207).
+    this-object:groupBox1:Size = new System.Drawing.Size(622, 130).
     this-object:groupBox1:TabIndex = 41.
     this-object:groupBox1:TabStop = false.
     this-object:groupBox1:Text = "Атрибуты диска:".
     this-object:groupBox1:UseCompatibleTextRendering = true.
-    /*  */
-    /* change_Raw */
-    /*  */
-    this-object:change_Raw:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:change_Raw:Location = new System.Drawing.Point(391, 134).
-    this-object:change_Raw:Name = "change_Raw".
-    this-object:change_Raw:Size = new System.Drawing.Size(225, 37).
-    this-object:change_Raw:TabIndex = 16.
-    this-object:change_Raw:Text = "изменение значения Raw_Value".
-    this-object:change_Raw:UseCompatibleTextRendering = true.
-    this-object:change_Raw:UseVisualStyleBackColor = true.
-    /*  */
-    /* changeValue */
-    /*  */
-    this-object:changeValue:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:changeValue:Location = new System.Drawing.Point(391, 91).
-    this-object:changeValue:Name = "changeValue".
-    this-object:changeValue:Size = new System.Drawing.Size(225, 37).
-    this-object:changeValue:TabIndex = 15.
-    this-object:changeValue:Text = "изменение значения Value".
-    this-object:changeValue:UseCompatibleTextRendering = true.
-    this-object:changeValue:UseVisualStyleBackColor = true.
     /*  */
     /* label10 */
     /*  */
@@ -585,53 +502,6 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:attr_type:Size = new System.Drawing.Size(158, 23).
     this-object:attr_type:TabIndex = 11.
     /*  */
-    /* label9 */
-    /*  */
-    this-object:label9:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label9:Location = new System.Drawing.Point(42, 161).
-    this-object:label9:Name = "label9".
-    this-object:label9:Size = new System.Drawing.Size(76, 23).
-    this-object:label9:TabIndex = 29.
-    this-object:label9:Text = "Raw_Value:".
-    this-object:label9:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label9:UseCompatibleTextRendering = true.
-    /*  */
-    /* Raw_Value */
-    /*  */
-    this-object:Raw_Value:Location = new System.Drawing.Point(124, 161).
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true", Type="System.Int32").
-    define variable arrayvar2 as INTEGER extent 4 no-undo.
-    arrayvar2[1] = -1486618625.
-    arrayvar2[2] = 232830643.
-    arrayvar2[3] = 0.
-    arrayvar2[4] = 0.
-    this-object:Raw_Value:Maximum = Progress.Util.DecimalHelper:Create(arrayvar2).
-    this-object:Raw_Value:Name = "Raw_Value".
-    this-object:Raw_Value:Size = new System.Drawing.Size(98, 23).
-    this-object:Raw_Value:TabIndex = 14.
-    /*  */
-    /* label8 */
-    /*  */
-    this-object:label8:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label8:Location = new System.Drawing.Point(61, 128).
-    this-object:label8:Name = "label8".
-    this-object:label8:Size = new System.Drawing.Size(57, 23).
-    this-object:label8:TabIndex = 27.
-    this-object:label8:Text = "Thresh:".
-    this-object:label8:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label8:UseCompatibleTextRendering = true.
-    /*  */
-    /* label7 */
-    /*  */
-    this-object:label7:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label7:Location = new System.Drawing.Point(72, 97).
-    this-object:label7:Name = "label7".
-    this-object:label7:Size = new System.Drawing.Size(47, 23).
-    this-object:label7:TabIndex = 26.
-    this-object:label7:Text = "Value:".
-    this-object:label7:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label7:UseCompatibleTextRendering = true.
-    /*  */
     /* label6 */
     /*  */
     define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
@@ -640,7 +510,7 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:label6:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:label6:Location = new System.Drawing.Point(21, 25).
     this-object:label6:Name = "label6".
-    this-object:label6:Size = new System.Drawing.Size(101, 23).
+    this-object:label6:Size = new System.Drawing.Size(101, 0).
     this-object:label6:TabIndex = 1.
     this-object:label6:Text = "Название:".
     this-object:label6:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
@@ -654,9 +524,21 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:attr_name:Size = new System.Drawing.Size(278, 23).
     this-object:attr_name:TabIndex = 10.
     /*  */
+    /* label7 */
+    /*  */
+    this-object:label7:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label7:Location = new System.Drawing.Point(22, 25).
+    this-object:label7:Name = "label7".
+    this-object:label7:Size = new System.Drawing.Size(93, 23).
+    this-object:label7:TabIndex = 32.
+    this-object:label7:Text = "Название:".
+    this-object:label7:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+    this-object:label7:UseCompatibleTextRendering = true.
+    this-object:label7:UseMnemonic = false.
+    /*  */
     /* report_hdd */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(636, 380).
+    this-object:ClientSize = new System.Drawing.Size(636, 301).
     this-object:Controls:Add(this-object:groupBox1).
     this-object:Controls:Add(this-object:label5).
     this-object:Controls:Add(this-object:label4).
@@ -675,11 +557,8 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:Controls:Add(this-object:NamePK).
     this-object:Name = "report_hdd".
     this-object:Text = "Результаты проверки HDD".
-    cast(this-object:ValueDisk, System.ComponentModel.ISupportInitialize):EndInit().
-    cast(this-object:ThreshDisk, System.ComponentModel.ISupportInitialize):EndInit().
     this-object:groupBox1:ResumeLayout(false).
     this-object:groupBox1:PerformLayout().
-    cast(this-object:Raw_Value, System.ComponentModel.ISupportInitialize):EndInit().
     this-object:ResumeLayout(false).
     this-object:PerformLayout().
     catch e as Progress.Lang.Error:
