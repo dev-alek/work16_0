@@ -609,36 +609,37 @@ end. // end_of_gifts
        delete object  mStorsed.
        v-storage:deleteDB(v-promo-delete) .
     end.
+    
     v-storage:insertDB(v-promo-action) .
-    // акции с датой досрочного завершени€ отправл€ютс€ на кассу тутже
-    if v-promo-action:changeDate <> ? then do :
-    if v-promo-action:changeDate <= today then do :
-      define variable v-promo-actions as class ibs.th.ref.promo.promoactionsubs no-undo .
-      v-promo-actions = new ibs.th.ref.promo.promoactionsubs() .
-      v-promo-actions:AddItem(v-promo-action) .
-      define variable log-file-name as character no-undo init "send-cd.txt":U .
-      define variable v-view-log    as logical no-undo .
-      v-view-log = yes .
-      
-      run str/send-promo.p (
-                 // 1. указатели проброшены из 2098.p через parsesub.cls 
-                    input parparentproc
-                   ,input p-parent-handle
-                   ,input p-log-handle
-                 // 2. obj-code прочитан выше, после заголовка промо-акции                   
-                   ,input v-obj-code
-                 // 3. action дл€ досрочного завершени€ всегда 'D'                   
-                   ,input 'D':U
-                 // 4. да, valid, специально создали коллекцию с одним элементом                 
-                   ,input 1
-                  , input v-promo-actions
-                 // 5. лог-файл используетс€ тот же, что и в promosend.p                  
-                  , input log-file-name
-                  , input-output v-view-log
-                  ) no-error .
-    end .
-    end .
-
+    
+    define variable mAction as character no-undo.
+    if     (v-promo-action:changeDate <> ? 
+       and v-promo-action:changeDate <= today)
+       or  v-promo-action:end-date  < today
+    then 
+       mAction = "D".
+    else
+       mAction = "U".
+    
+    run str/diallog.w (
+        input parparentproc
+      , input p-parent-handle
+      , input "str/promosendoxml.p":U  + {&delim-par} +
+                "1":U  + {&delim-par} +  /*error-message-option*/
+                "1":U + {&delim-par} +  /*auto-go-option*/
+                "1":U                  /*return-value-option*/
+      , input ({&cd-type-IBm-XML} + {&delim-par} + v-obj-type + {&delim-par} + string(v-obj-code) + {&delim-par} + mAction + {&delim-par} + string(v-promo-action:db-num) + {&delim-par} + string(v-promo-action:ID))
+      , input yes /*p-auto-go*/
+      , input "":U
+      , input substitute("ќтсылка промоакций на кассы &1", {&cd-type-IBm-XML})
+  ) no-error.
+  if error-status:error 
+  then
+     undo, throw new Progress.Lang.AppError( substitute(
+           "ќшибку при отправке акции '&1' на кассу &2"
+           , v-promo-action:NameAction , return-value
+        ) ) .
+    
 do: // предыдуща€ верси€ (ранее 24/VI-2018)
 /*    
       define variable v-profile             as integer          no-undo .

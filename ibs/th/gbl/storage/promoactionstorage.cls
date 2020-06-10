@@ -255,6 +255,30 @@ class ibs.th.gbl.storage.promoactionstorage:
      
     return promoactionsubsObj.
   end method.
+  method public class promoactionsubs getpromoactionsubs (input iDb as integer ,input iId as int64  ):
+    define buffer buf_promoaction for ub.promoaction.
+    define variable hQuery   as handle  no-undo .
+    define variable vStrWhere as character no-undo.
+    define variable promoactionsubsObj as class promoactionsubs.
+    promoactionsubsObj = new promoactionsubs ().
+    vStrWhere = "buf_PromoAction.db-num eq " + string(iDb) + " and buf_PromoAction.id eq " + string(iId).
+    
+    vStrWhere = (if vStrWhere eq "" then "" else " where " + vStrWhere).
+    create query hQuery.  
+    hQuery:set-buffers(buffer buf_promoaction:HANDLE).
+     
+    hQuery:query-prepare("FOR EACH buf_promoaction " + vStrWhere).
+    hQuery:query-open ().
+    hQuery:get-first ().
+    do while hQuery:query-off-end = false :
+        promoactionsubsObj:AddItem(getDataStorage (buffer buf_promoaction)).
+        hQuery:get-next().
+    end.
+    hQuery:query-close() .
+    delete object hQuery.
+     
+    return promoactionsubsObj.
+  end method.
   
    method public class promoactionsub CopyObject (input inpromoactionObj as class promoactionsub):
     define variable promoactionsubObj  as class promoactionsub.
