@@ -31,7 +31,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   { cmp/library.i  class }
   { gbl/attr-lib.i class}
   { str/trdcalib.i class }
-  
+  { utl/gtin.i class }
   &scop create-record find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element (buf_doc-attr.attr-code, buf_doc-attr.attr-value).
     
@@ -139,7 +139,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
     DocCode = buf_trn-doc.doc-code.
     for first buf_utd no-lock where buf_utd.doc-code = DocCode:
-      edoc-id = string(buf_utd.doc-id) .
+      edoc-id = string(buf_utd.DocumentExt) .
     end.
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       { str/is-petrl.i
@@ -339,7 +339,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   method private void PriVneshLine ():
     
     sw:start-element ("gds").
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
       
       find first buf_gds no-lock where
             buf_gds.artic = buf_doc-line.artic 
@@ -376,6 +376,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("sum-s", string-mth (sum_ - sum-nds)).
         end.
         
+        Marks(buf_doc-line.line-num) .
       sw:end-element ("gd").
       
     end.
@@ -383,7 +384,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     sw:end-element ("gds").
     
     writeprts ().
-    Marks() .
+    
   end.
 
   method private void PriVneshLineFuel ():
@@ -449,7 +450,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     {&create-record-cust}
     
     sw:start-element ("gds").
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
       
       find first buf_gds where
             buf_gds.artic = buf_doc-line.artic 
@@ -645,7 +646,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     end.
     
     sw:start-element ("tanks").
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
       find first buf_gds where
             buf_gds.artic = buf_doc-line.artic 
         and buf_gds.prod-code = buf_doc-line.prod-code
@@ -670,10 +671,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   end.
 
   method private void Ras ():
-    
     sw:start-element ("gds").
-    for each buf_gds-dtl no-lock where buf_gds-dtl.doc-code = buf_trn-doc.doc-code:
-      find first buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code
+  for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
+      find first buf_gds-dtl where buf_gds-dtl.doc-code = buf_doc-line.doc-code
         and buf_doc-line.artic = buf_gds-dtl.artic 
         and buf_doc-line.prod-code = buf_gds-dtl.prod-code
         and buf_doc-line.prod-type = buf_gds-dtl.prod-type.
@@ -692,7 +692,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
         write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
         write-data-element ("sum-s", string-mth (round (buf_doc-line.price-rubl * buf_gds-dtl.fact-qnty / (1 + (buf_doc-line.VAT-pc / 100)), 2))).
+      Marks(buf_doc-line.line-num) .
       sw:end-element ("gd").
+      
     end.
     sw:end-element ("gds").
     
@@ -730,7 +732,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     sw:end-element ("gds").
     
     sw:start-element ("tanks").
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
       find first buf_gds where
             buf_gds.artic = buf_doc-line.artic 
         and buf_gds.prod-code = buf_doc-line.prod-code
@@ -809,12 +811,14 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
   end.
 
-  method private void Marks ():
+  method private void Marks (p-line-num as integer):
+    
     define variable v-gds-attr-value-old as character no-undo .
     define variable v-gds-attr-type      as character no-undo .
     
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = DocCode,
-      first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and 
+    for first buf_doc-line no-lock where buf_doc-line.doc-code = DocCode
+                                    and buf_doc-line.line-num = p-line-num,
+      first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
       buf_goods.prod-code = buf_doc-line.prod-code and
       buf_goods.prod-type = buf_doc-line.prod-type  :
     
@@ -832,9 +836,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
          undo, return error return-value .
       end.
       define variable vAvailMarks as logical no-undo.
-      message 
-      view-as alert-box.                 
-      
+/*      message           */
+/*      view-as alert-box.*/
+
       for each buf_parts no-lock where buf_parts.out-code  = buf_doc-line.doc-code
                                    and buf_parts.artic     = buf_doc-line.artic
                                    and buf_parts.prod-type = buf_doc-line.prod-type
@@ -857,7 +861,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
             sw:start-element ("mark").      
             write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
             write-data-element ("prt-id", buf_parts.part-code).
-            write-data-element ("mark-code", string (buf_marking-lines.mark)).
+            write-data-element ("mark-code", addBracketForCode(buf_marking-lines.mark)).
             sw:end-element ("mark").
           end.
         end.
@@ -1052,7 +1056,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     vsdstr = new vsdtostorage ().
     vsdsts = new vsdstatustype ().
     
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
   
       find first buf_gds no-lock where
             buf_gds.artic = buf_doc-line.artic 
