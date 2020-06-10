@@ -20,6 +20,7 @@ using ibs.th.bge.1crn.subjects.*.
 using ibs.th.str.*.
 using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
+using ibs.th.gbl.sys.objsrv.
 
 block-level on error undo, throw.
 
@@ -56,7 +57,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   define buffer buf_doc-pl for ub.doc-pl.
   define buffer buf_gds for ub.goods.
   define buffer buf_doc-attr for ub.doc-attr.
-  
+  define buffer buf_utd for ub.utd .
+  define buffer buf_marking-lines for ub.marking-lines .
+  define buffer buf_goods for ub.goods .
   define property Msg as character no-undo
     get:
       return trim (Msg, {&new-line}).
@@ -93,6 +96,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   define variable v-type              as character no-undo.
   define variable v-is-lgas-trn       as logical   no-undo.
   define variable v-is-lgas-corr-trn  as logical   no-undo.
+  define variable edoc-id             as character no-undo .
+  
+  define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+/*def var Marking as class mark no-undo .*/
+/*Marking = ObjSrv:Env:Marking:Sts:Mark. */
 
   method public void CrContentToSW (insw as handle):
 
@@ -129,7 +137,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     end.
     
     DocCode = buf_trn-doc.doc-code.
-    
+    for first buf_utd no-lock where buf_utd.doc-code = DocCode:
+      edoc-id = string(buf_utd.doc-id) .
+    end.
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       { str/is-petrl.i
           buf_doc-line.artic
@@ -372,7 +382,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     sw:end-element ("gds").
     
     writeprts ().
-    
+    Marks() .
   end.
 
   method private void PriVneshLineFuel ():
@@ -745,6 +755,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
 
   method private void StartDocTrn ():
       InitSecTag =  "trn-gd-docs".
+      
       sw:start-element ("trn-gd-doc") .
         write-data-element ("doc-code", buf_trn-doc.doc-code).
         write-data-element ("doc-num", buf_trn-doc.doc-code).
@@ -753,6 +764,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("doc-type", v-doc-type-ERPRN).
         write-data-element ("doc-rsn-code", (if buf_trn-doc.reason-code = ? then "0" else string-mth (buf_trn-doc.reason-code))).
+        write-data-element ("edoc-id", edoc-id).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
         write-data-element ("contr-code", string-mth (buf_trn-doc.cli-code)).
@@ -796,6 +808,47 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     
   end.
 
+  method private void Marks ():
+    define variable v-gds-attr-value-old as character no-undo .
+    define variable v-gds-attr-type      as character no-undo .
+    sw:start-element ("marks").
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = DocCode,
+      first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and 
+      buf_goods.prod-code = buf_doc-line.prod-code and
+      buf_goods.prod-type = buf_doc-line.prod-type  :
+    
+      RUN gds-attr-value (
+        INPUT buf_goods.gds-code,
+        INPUT {&attr-mark-type},
+        OUTPUT v-gds-attr-value-old,
+        OUTPUT v-gds-attr-type
+        ).
+                         
+      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then 
+      do:
+        for each buf_parts no-lock where buf_parts.out-code = buf_doc-line.doc-code
+          and buf_parts.artic = buf_doc-line.artic
+          and buf_parts.prod-type = buf_doc-line.prod-type
+          and buf_parts.prod-code = buf_doc-line.prod-code:
+          for each buf_marking-lines no-lock where buf_marking-lines.doc-level = 1 and
+            buf_marking-lines.gds-code = buf_goods.gds-code and
+            buf_marking-lines.in-code = buf_parts.in-code and
+            buf_marking-lines.obj-code = buf_parts.obj-code and
+            buf_marking-lines.obj-type = buf_parts.obj-type and
+            buf_marking-lines.out-code = buf_parts.out-code and
+            buf_marking-lines.part-code = buf_parts.part-code:
+            sw:start-element ("mark").      
+            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
+            write-data-element ("prt-id", buf_parts.part-code).
+            write-data-element ("mark-code", string (buf_marking-lines.mark)).
+            sw:end-element ("mark").
+          end.
+        end.
+      end.
+    end.
+    sw:end-element ("marks").
+    
+  end.
   method private void write-data-element (inTag as char, inValue as char):
     
     if inValue = ?
@@ -1038,7 +1091,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
     
     delete object vsdsts no-error.
     delete object vsdstr no-error.    
-
+    
     
   end.
 
