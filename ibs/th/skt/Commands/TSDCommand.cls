@@ -46,6 +46,9 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
   define private variable userId_     as character no-undo.
   define private variable sn          as character no-undo.
   define private variable hndlSocket  as handle    no-undo.
+  define private variable duration    as integer   no-undo.
+  define private variable millisec    as integer   no-undo.
+  
 /*  define private variable isDocMarkOn as logical   no-undo.*/
   
     /*------------------------------------------------------------------------------
@@ -54,10 +57,25 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
   ------------------------------------------------------------------------------*/
     
   constructor public TSDCommand (  ):
-    
+
     super ().
     
   end constructor.
+
+  method private void startStep(msg as char):
+    output to logduraton.txt append.
+    duration = etime.
+    put unformatted string (string (now) + "   " + msg + {&new-line}).
+    output close.
+  end.
+  
+  method private void endStep(msg as char):
+    output to logduraton.txt append.
+    duration = etime - duration.
+    put unformatted string ('Время выполнения шага - ' + string (int64 (duration / 1000), "HH:MM:SS") + "." + string ((duration / 1000 - int64 (duration / 1000)) * 1000) + {&new-line}).
+    put unformatted string (string (now) + "   " + msg  + {&new-line}).
+    output close.    
+  end.
 
   method public void Execute_( input req as memptr, output resp as class IResponse, hndlsocket1 as handle, list-par as char ):
     
@@ -120,6 +138,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     parseCSV().
     
     tsd:getWB().
+    tsd:getUTDDoc().
     
     delete object tsd no-error.
     
@@ -210,16 +229,28 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         end.
       when "TH_ALL" then 
         do:
+          startStep('Начало кеширования справочника пользователей.').
           tsd:WriteUsers().
+          endStep('Завершено кеширование справочника пользователей.').
+          startStep('Начало кеширования справочника объектов.').
           tsd:WriteObjects().
+          endStep('Завершено кеширование справочника объектов.').
+          startStep('Начало кеширования справочника контрагентов.').          
           tsd:WriteClients().
+          endStep('Завершено кеширование справочника контрагентов.').
+          startStep('Начало кеширования справочника товаров.').
           tsd:WriteGoods().
+          endStep('Завершено кеширование справочника товаров.').
+          startStep('Начало кеширования справочника штрих-кодов.').
           tsd:WriteBarcodes().
+          endStep('Завершено кеширование справочника штрих-кодов.').
           str = 'dictionaries'.
         end.
       when "TH_WB" then 
         do:
+          startStep('Начало кеширования документов.').
           tsd:GetWB().
+          endStep('Завершено кеширование справочника штрих-кодов.').
         end.
       when "TH_users" then 
         do:
@@ -387,7 +418,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       import TempTrnLineMT .
     end. 
     input close.
-
+ 
     input from value(search("MT_MarkLinesSend.txt")) convert source "UTF-8".
     repeat:  
       create TempMarkLineMT.
@@ -400,7 +431,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       empty temp-table TempTrnDoc.
       empty temp-table TempDocLine.
       empty temp-table TempMarkLine.
-      
+
       case TempTrnDocMT.DocType:
         when "ExtSalesWB" then do:
           docType = {&TDEDT_Ras_Vnesh}.
@@ -417,7 +448,20 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         when "Inv" then do:
           docType = {&TDEDT_Inv}.
         end.
+        when "Introduce" then do:
+          docType = "UTD_Introduce".
+        end.
+        when "UTD" then do:
+          docType = "UTD_DOC".
+        end.
+        when "InvMarks" then do:
+          docType = "invmark".
+        end.
+        when "InvIntroduce" then do:
+          docType = "InvIntroduce".
+        end.
       end case.
+        
       userId_ = TempTrnDocMT.UserID_.
       
       find first ub.user-login where ub.user-login.db-num = iDbNum and ub.user-login.user-id = userId_ no-lock no-error.  
@@ -508,6 +552,34 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
             else ErrStatus = true.
 
           end.
+        when "UTD_DOC" then 
+          do:
+            if tsd:ImpUTDDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "InvIntroduce" then 
+          do:
+            if tsd:ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "invmark" then 
+          do:
+            if tsd:ImpInvMarksDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "UTD_Introduce" then 
+          do:
+            if tsd:ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
         otherwise  
         do:
           for each TempDocLine no-lock where not TempDocLine.b-code matches ("*" + string (TempDocLine.gds-code) + "*"):
@@ -561,9 +633,6 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
             .
             
           end.
-          
-          
-          
           
           if tsd:ImpWB(table TempTrnDoc, table TempDocLine, table TempMarkLine, userId_)
           then ErrStatus = false.
@@ -743,9 +812,8 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
       then assign is-ProcArch64 = true.
     input close.
-
+    startStep("Начало конвертации справочника.").
     os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
-    
     if is-ProcArch64 
     then do:
       os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
@@ -768,6 +836,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       input from value (file-info:file-name) binary no-convert.
       import mbuffer1.
       input close.
+      endStep("Завершена конвертация справочника.").
     end.
     else 
     do:
@@ -822,6 +891,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     set-size(mbuffer) = 0.
     set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
     put-string(mbuffer,1) = tempLongCh.
+    startStep("Начало отправки справочника на ТСД.").
     assign
       glog = hndlsocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
     if not glog 
@@ -836,6 +906,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
         ErrStatus = true.
       end.
+    endStep("Завершена отправка справочника на ТСД.").
     return true.
       
   end method.
