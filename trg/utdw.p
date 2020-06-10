@@ -316,18 +316,20 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         undo main-block,  return error return-value .
       end.
     end.
-    if g#db-num = 0 and (new-{&main-tbl}.sts-edi <> old-utd.sts-edi
-      and (
-            new-{&main-tbl}.sts = utdEDISts:RevocationAccepted:KeyIntDB
-      ))
+    if new-{&main-tbl}.sts <> ? and new-{&main-tbl}.sts <> 0 and old-{&main-tbl}.sts-edi <> ? and new-{&main-tbl}.sts-edi <> ? 
     then do:
-      run nws/cmdchgutd.p (buffer new-{&main-tbl}).
+      if g#db-num = 0 and (new-{&main-tbl}.sts-edi <> old-{&main-tbl}.sts-edi
+        and (
+              new-{&main-tbl}.sts = utdEDISts:RevocationAccepted:KeyIntDB
+        ))
+      then do:
+        run nws/cmdchgutd.p (buffer new-{&main-tbl}).
+      end.
+      if g#db-num ne 0 and (new-{&main-tbl}.sts-edi <> old-{&main-tbl}.sts-edi)
+      then do:
+        run nws/cmdchgutd.p (buffer new-{&main-tbl}).
+      end.
     end.
-    if g#db-num ne 0 and (new-{&main-tbl}.sts-edi <> old-utd.sts-edi)
-    then do:
-      run nws/cmdchgutd.p (buffer new-{&main-tbl}).
-    end.
-    
   end.
 
 
