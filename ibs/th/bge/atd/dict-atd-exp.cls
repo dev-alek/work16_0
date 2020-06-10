@@ -48,6 +48,7 @@ class ibs.th.bge.atd.dict-atd-exp:
       field TankNumber as int64
       field Grade      as int64
       field Grade_Name as character
+      field Max_volume as decimal
    index ndx TankNumber. 
    
    constructor public dict-atd-exp (iFilePath as character, 
@@ -264,7 +265,8 @@ class ibs.th.bge.atd.dict-atd-exp:
                   tttanks.Grade         = if available bprod-bc 
                                           then int64(bprod-bc.b-str)
                                           else bbar-code.b-code
-                  tttanks.Grade_Name    = bgoods.gds-name               
+                  tttanks.Grade_Name    = bgoods.gds-name 
+                  tttanks.Max_volume    = bplace.max-qnty              
                no-error.
       end.
    end method.
