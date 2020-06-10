@@ -195,6 +195,10 @@ DEFINE BUTTON b-ruleset
      LABEL "Точка вызова"
      SIZE 14 BY 1.
 
+DEFINE BUTTON b-set
+     LABEL "~!"
+     SIZE 4 BY 1.
+
 DEFINE VARIABLE E-param-des AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 98 BY 2 NO-UNDO.
@@ -288,6 +292,7 @@ DEFINE FRAME Dialog-Frame
      b-lkp AT ROW 1 COL 58 WIDGET-ID 8
      b-rule AT ROW 1 COL 68 WIDGET-ID 14
      b-ruleset AT ROW 1 COL 78 WIDGET-ID 16
+     b-set AT ROW 1 COL 92 WIDGET-ID 18
      B-Help AT ROW 1 COL 95
      BR-rcp AT ROW 3 COL 1 WIDGET-ID 100
      BR-callee AT ROW 12 COL 1 WIDGET-ID 200
@@ -404,6 +409,16 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-add
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-set Dialog-Frame
+ON CHOOSE OF b-set IN FRAME Dialog-Frame /* Добавить */
+DO:
+  RUN proc-b-set IN THIS-PROCEDURE NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg Dialog-Frame
@@ -528,6 +543,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-rcp Dialog-Frame
 ON VALUE-CHANGED OF BR-rcp IN FRAME Dialog-Frame
 DO:
+
   RUN OpenbrCAllee IN THIS-PROCEDURE.
   IF NOT AVAILABLE tt-rule-call-param THEN DO:
      ASSIGN
@@ -536,9 +552,15 @@ DO:
      .
      DISABLE
      b-add
+     b-set
      b-chg
      b-del
      with FRAME {&FRAME-NAME}.
+ENABLE
+      b-set
+      b-add
+      WITH FRAME {&FRAME-NAME}.
+      
   END.
   ELSE DO:
     find first X_rule no-lock where
@@ -572,6 +594,7 @@ DO:
     AND term_tt-rule-call-param.p-index = 0 THEN DO:
       ENABLE
       b-add
+      b-set
       WITH FRAME {&FRAME-NAME}.
       disable
       b-chg
@@ -588,11 +611,17 @@ DO:
     AND term_tt-rule-call-param.p-index = 0 ) THEN DO:
       disable
       b-add
+      b-set
       WITH FRAME {&FRAME-NAME}.
       enable
       b-chg
       b-del
       WITH FRAME {&FRAME-NAME}.
+ENABLE
+      b-add
+      b-set
+      WITH FRAME {&FRAME-NAME}.
+      
     END.
   END.
 END.
@@ -798,7 +827,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     &prev-order-column_2 = "'1,2,3,4,5,6,7,8,9,10,11,12,13,14'"
     &prev-order-column-condition_2 = " p-call-id = '':U "
     }
+
   */
+ENABLE
+      b-add
+      b-set
+      WITH FRAME {&FRAME-NAME}.
+      
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -1142,6 +1177,105 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   assign
   buf2_tt-rule-call-param.p-index = v-ind + 1
   .
+end.
+run Openbr in this-procedure .
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-set Dialog-Frame
+PROCEDURE proc-b-set :
+define variable v-ind as integer no-undo .
+define buffer buf_tt-rule-call-param for tt-rule-call-param.
+define buffer buf2_tt-rule-call-param for tt-rule-call-param.
+define buffer buf3_tt-rule-call-param for tt-rule-call-param.
+define buffer buf_rp-rule-param for ub.rp-rule-param.
+IF NOT AVAILABLE tt-rule-call-param THEN do:
+  BELL.
+  RETURN.
+END.
+IF lookup("LIST", tt-rule-call-param.param-3-data-type) = 0
+and lookup("SORTED-LIST", tt-rule-call-param.param-3-data-type) = 0
+THEN DO:
+  BELL.
+  RETURN.
+END.
+IF tt-rule-call-param.p-index <> 0 THEN DO:
+  BELL.
+  RETURN.
+END.
+for each buf3_tt-rule-call-param where
+         buf3_tt-rule-call-param.call_id = tt-rule-call-param.call_id
+     and buf3_tt-rule-call-param.codex_id = tt-rule-call-param.codex_id
+     and buf3_tt-rule-call-param.ruleset_id = tt-rule-call-param.ruleset_id
+     and buf3_tt-rule-call-param.order_id = tt-rule-call-param.order_id
+     and buf3_tt-rule-call-param.param-num = tt-rule-call-param.param-num 
+no-lock:
+   if      (lookup("LIST", buf3_tt-rule-call-param.param-3-data-type) > 0
+      or
+            lookup("SORTED-LIST", buf3_tt-rule-call-param.param-3-data-type) > 0
+         )
+      and buf3_tt-rule-call-param.p-index > 0 
+   then do:
+      v-ind = buf3_tt-rule-call-param.p-index.
+   
+      for each buf_rp-rule-param where
+               buf_rp-rule-param.rp-param-name = X_rp-rule-param.rp-param-name
+           and buf_rp-rule-param.profile_id = X_rp-rule-param.profile_id
+      on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+      on stop   undo, return error substitute( "&1. stop", vss-workfile )
+      on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+      :
+         find first buf_tt-rule-call-param where
+               buf_tt-rule-call-param.call_id = tt-rule-call-param.call_id
+           and buf_tt-rule-call-param.profile_id = buf_rp-rule-param.profile_id
+           and buf_tt-rule-call-param.codex_id = buf_rp-rule-param.codex_id
+           and buf_tt-rule-call-param.ruleset_id = buf_rp-rule-param.ruleset_id
+           and buf_tt-rule-call-param.rule_id = buf_rp-rule-param.rule_id
+           and buf_tt-rule-call-param.param-name = buf_rp-rule-param.rule-param-name
+           and buf_tt-rule-call-param.once-more = tt-rule-call-param.once-more
+           and buf_tt-rule-call-param.p-index = v-ind no-error.
+         if not avail buf_tt-rule-call-param
+         then do:
+            find first buf_tt-rule-call-param where
+                     buf_tt-rule-call-param.call_id = tt-rule-call-param.call_id
+                 and buf_tt-rule-call-param.profile_id = buf_rp-rule-param.profile_id
+                 and buf_tt-rule-call-param.codex_id = buf_rp-rule-param.codex_id
+                 and buf_tt-rule-call-param.ruleset_id = buf_rp-rule-param.ruleset_id
+                 and buf_tt-rule-call-param.rule_id = buf_rp-rule-param.rule_id
+                 and buf_tt-rule-call-param.param-name = buf_rp-rule-param.rule-param-name
+                 and buf_tt-rule-call-param.once-more = tt-rule-call-param.once-more
+                 and buf_tt-rule-call-param.p-index = 0.
+   
+            create buf2_tt-rule-call-param.
+            buffer-copy buf_tt-rule-call-param
+            except p-index
+            to buf2_tt-rule-call-param
+            assign
+            buf2_tt-rule-call-param.p-index = v-ind
+            .
+
+            RUN set-value IN THIS-PROCEDURE (
+                                       INPUT buf2_tt-rule-call-param.profile_id
+                                      ,INPUT buf2_tt-rule-call-param.once-more
+                                      ,INPUT buf_rp-rule-param.rp-param-name
+                                      ,INPUT buf2_tt-rule-call-param.call_id
+                                      ,INPUT buf2_tt-rule-call-param.codex_id
+                                      ,INPUT buf2_tt-rule-call-param.ruleset_id
+                                      ,INPUT buf2_tt-rule-call-param.order_id
+                                      ,INPUT buf2_tt-rule-call-param.param-name
+                                      ,INPUT buf2_tt-rule-call-param.p-index
+                                      ,INPUT buf3_tt-rule-call-param.param-value-character
+                                      ,INPUT buf3_tt-rule-call-param.param-value-date
+                                      ,INPUT buf3_tt-rule-call-param.param-value-decimal
+                                      ,INPUT buf3_tt-rule-call-param.param-value-integer
+                                      ,INPUT buf3_tt-rule-call-param.param-value-logical).
+                                       
+          
+         end.
+      end.
+   end.
 end.
 run Openbr in this-procedure .
 END PROCEDURE.
