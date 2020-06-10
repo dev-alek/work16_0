@@ -511,7 +511,7 @@ define variable v-1C     as logical   no-undo .
               if buf_marking.sts <> ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
               or buf_marking.unit-ext = "UNIT"
               then do :  
-                if buf_marking.sts <> ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB   
+                if not (buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB and buf_marking.unit-ext = "LEVEL1")   
                 then do :                 
                   create buf_marking-lines .
                   assign
@@ -580,6 +580,7 @@ define variable v-1C     as logical   no-undo .
                                                             and buf_marking-lines-childs.in-code     = buf_parts.in-code
                                                             and buf_marking-lines-childs.out-code    = buf_parts.out-code
                                                             and buf_marking-lines-childs.part-code   = buf_parts.part-code
+                                                            and buf_marking-lines-childs.prt-code    = buf_parts.prt-code
                                                             no-error .
               if not available buf_marking-lines-childs
               then do :  
@@ -592,6 +593,7 @@ define variable v-1C     as logical   no-undo .
                   buf_marking-lines-childs.in-code     = buf_parts.in-code
                   buf_marking-lines-childs.out-code    = buf_parts.out-code
                   buf_marking-lines-childs.part-code   = buf_parts.part-code
+                  buf_marking-lines-childs.prt-code    = buf_parts.prt-code
                   buf_marking-lines-childs.doc-level   = buf_utd-marking-lines-childs.doc-level
     /*                buf_marking-lines.sts         = ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB*/
                 .
@@ -705,9 +707,14 @@ define variable v-1C     as logical   no-undo .
     if thbjattr_thbj-attr.prop-code = {&attr-marking_marking-type}
     then do :
       v-mark-type = thbjattr_thbj-attr.property-value-character.
+      if v-mark-type = ? then v-mark-type = "" .
       if lookup (v-mark-type, "tabak") = 0
       then do :
-        thbjattr_thbj-attr.property-value-character = v-mark-type + ",tabak" .
+        if v-mark-type = ""
+        then
+          thbjattr_thbj-attr.property-value-character = "tabak" .
+        else
+          thbjattr_thbj-attr.property-value-character = v-mark-type + ",tabak" .
       end .
     end .
   end .
