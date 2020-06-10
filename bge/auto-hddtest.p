@@ -47,6 +47,7 @@ define temp-table HddTest no-undo
   field hddModule   as character
   field testStatus  as character
   field hddFilling  as character
+  field hddSysFilling  as character
   field hddName     as character
   field hddSerial   as character
   field dt          as datetime
@@ -66,6 +67,8 @@ define temp-table hddAttributes no-undo
   index i1 as unique
     hddSerial hddModule name_ dt
 .
+
+define buffer buf_hddAttributes for hddAttributes .
 
 define variable v-ind                    as integer   no-undo .
 define variable v-err-gen-pack           as integer   no-undo .
@@ -231,6 +234,13 @@ on error undo, return error
                             , v-response-file-name) .
     os-command silent value (v-command) .  
     
+    file-info:file-name = v-response-file-name .
+    if file-info:file-size = 0
+    then do :
+      run write-to-log( "Пустой ответ от устройства " + string(buf_code.CodeName) + ". IP: " +  trim(buf_code.misc1)) .
+      next.
+    end.
+    
     empty temp-table HddTest .
     empty temp-table hddAttributes .
     
@@ -271,6 +281,25 @@ on error undo, return error
         .
       end.
       assign buf_devisPC-attr.attr-value = string(HddTest.hddFilling) .
+      
+      find last buf_devisPC-attr exclusive-lock where buf_devisPC-attr.db-num = buf_devisPC.DB-num
+                                                  and buf_devisPC-attr.id = buf_devisPC.id
+                                                  and buf_devisPC-attr.attr-code = "UserProc"
+                                                  and buf_devisPC-attr.date = date(HddTest.dt)
+                                                  and buf_devisPC-attr.time_ = integer( truncate( MTIME( HddTest.dt ) / 1000, 0 ) )
+                                                  no-error.
+      if not available buf_devisPC-attr
+      then do :                                           
+        create buf_devisPC-attr .
+        assign
+          buf_devisPC-attr.db-num = buf_devisPC.DB-num
+          buf_devisPC-attr.id = buf_devisPC.id
+          buf_devisPC-attr.attr-code = "UserProc"
+          buf_devisPC-attr.date = date(HddTest.dt)
+          buf_devisPC-attr.time_ = integer( truncate( MTIME( HddTest.dt ) / 1000, 0 ) )
+        .
+      end.
+      assign buf_devisPC-attr.attr-value = string(HddTest.hddSysFilling) .
       
       find last buf_devisPC-attr exclusive-lock where buf_devisPC-attr.db-num = buf_devisPC.DB-num
                                                   and buf_devisPC-attr.id = buf_devisPC.id
@@ -378,6 +407,8 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     
     IF hNoderef:NAME = "hddFilling" then assign HddTest.hddFilling = hText:node-value no-error .
     
+    IF hNoderef:NAME = "hddSysFilling" then assign HddTest.hddSysFilling = hText:node-value no-error .
+    
     IF hNoderef:NAME = "hddName" then assign HddTest.hddName = hText:node-value no-error .
     
     IF hNoderef:NAME = "hddSerial"
@@ -395,7 +426,20 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
       .
     end.
     
-    IF hNoderef:NAME = "name" then assign hddAttributes.name_ = hText:node-value no-error .
+    IF hNoderef:NAME = "name"
+    then do :
+      find first buf_hddAttributes where buf_hddAttributes.hddModule = hddAttributes.hddModule
+                                     and buf_hddAttributes.hddSerial = hddAttributes.hddSerial
+                                     and buf_hddAttributes.dt        = hddAttributes.dt
+                                     and buf_hddAttributes.name_     = hText:node-value
+                                     no-error .
+      if available buf_hddAttributes
+      then do :
+        delete buf_hddAttributes .
+      end. 
+      assign hddAttributes.name_ = hText:node-value no-error .
+    end.
+
     
     IF hNoderef:NAME = "value" then assign hddAttributes.value_ = integer(hText:node-value) no-error .
     
