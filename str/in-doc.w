@@ -4087,6 +4087,10 @@ assign
   varlns-cnt = 1.
 cycle:
 do while varlns-cnt <= num-entries (varnotes):
+  
+  def var varvalue as character no-undo.
+  def var vartype as character no-undo.
+  
   assign  gds-rec = integer (entry (varlns-cnt, varnotes)).
   if t-doc.purch-code = {&bef-responsible-storage-code} then do:
     find first bf_goods where recid(bf_goods) = gds-rec no-lock.
@@ -4116,10 +4120,28 @@ do while varlns-cnt <= num-entries (varnotes):
       next.
     end.
   end.
+  
+  find first bf_goods where recid(bf_goods) = gds-rec no-lock.
+  run gds-attr-value in this-procedure
+    (  input bf_goods.gds-code
+    ,  input {&attr-fuel-type}
+    , output varvalue
+    , output vartype
+    ) no-error .
+  
+  if varvalue = "metan"
+  then do:
+    message "“овар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+            "нельз€ приходывать в ручном режиме."
+    view-as alert-box error.
+    assign varlns-cnt = varlns-cnt + 1.
+    next.
+  end.
+  
   if can-find (FIRST ub.clients-attr no-lock where (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})
                                                and ub.clients-attr.attr-value = "yes")
   then do :
-    find first bf_goods where recid(bf_goods) = gds-rec no-lock.
+/*    find first bf_goods where recid(bf_goods) = gds-rec no-lock.*/
     { str/is-petrl.i bf_goods.artic bf_goods.prod-type bf_goods.prod-code v-is-petrol v-is-pieces no-error }
     if v-is-petrol then do :
       if not can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type   = t-doc.cli-type
