@@ -70,7 +70,7 @@ class ibs.th.str.utd.sts.th inherits objth:
     Canceled             = crProp(10, "Canceled", "Аннулирован").
     Rejection            = crProp(11, "Rejection", "Отказ").
     LackOfMarkingCodesInCirculation = crProp(31, "LackOfMarkingCodesInCirculation", "Отсутствие КМ в обороте").
-    DeliveryCodeMismatch = crProp(32, "DeliveryCodeMismatch", "Несоответствие кодов маркировки при поставке").
+    DeliveryCodeMismatch = crProp(32, "DeliveryCodeMismatch", "Частичная приемка").
     InconsistencyWithSupplyContract = crProp(33, "InconsistencyWithTheSupplyContract", "Несоответсвие договору поставки ").
     LoadError            = crProp(34, "LoadError", "Ошибка загрузки ").
     edocError            = crProp(35, "edocError", "Ошибка").
