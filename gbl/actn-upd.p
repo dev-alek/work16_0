@@ -71,7 +71,9 @@ define temp-table temp-action-item-attr no-undo
 
   index xpk is primary unique action-item-code
 .
-
+  define buffer buf_global-state             for ub.global-state .
+  define buffer buf_global-state-attr        for ub.global-state-attr .
+  define variable v-action-gbl               as logical no-undo .
 
 define buffer buf_batchprocess for ub.batchprocess .
 
@@ -85,7 +87,17 @@ on error undo, return error return-value
   assign
     v-action-head-code = {&action-head-code-main}
   .
-
+       FIND FIRST buf_global-state
+        NO-LOCK
+        .
+   FIND FIRST buf_global-state-attr
+        WHERE buf_global-state-attr.gls-id    = buf_global-state.gls-id
+          AND buf_global-state-attr.attr-code = "action-gbl"
+        NO-LOCK
+        NO-error
+        .
+        if available (buf_global-state-attr) then v-action-gbl = logical (buf_global-state-attr.attr-value) .
+        
   run check-action-item in this-procedure
     .
 end.
@@ -967,15 +979,62 @@ procedure update-action-role-item :
   define buffer buf_action-item              for ub.action-item .
   define buffer buf_action-role-item-gds     for ub.action-role-item-gds .
   define buffer buf_action-role-item-gds-grp for ub.action-role-item-gds-grp .
-
   do
   on error undo, return error return-value
   :
-    { gbl/curdbnum.i
-      v-current-db-num
-    }
 
-    for each buf_action-role-item exclusive-lock
+            { gbl/curdbnum.i
+              v-current-db-num
+            }
+
+/*    for each buf_action-role-item exclusive-lock                                                              */
+/*      where buf_action-role-item.db-num           = v-current-db-num                                          */
+/*        and buf_action-role-item.action-head-code = v-action-head-code                                        */
+/*    on error undo, return error return-value                                                                  */
+/*    :                                                                                                         */
+/*      find first buf_action-item no-lock                                                                      */
+/*        where buf_action-item.action-head-code = buf_action-role-item.action-head-code                        */
+/*          and buf_action-item.action-item-id   = buf_action-role-item.action-item-id                          */
+/*        no-error .                                                                                            */
+/*      if available buf_action-item                                                                            */
+/*      then do:                                                                                                */
+/*        assign                                                                                                */
+/*          buf_action-role-item.action-item-code = buf_action-item.action-item-code                            */
+/*        .                                                                                                     */
+/*        FOR EACH  buf_action-role-item-gds                                                                    */
+/*            where buf_action-role-item-gds.action-head-code       = buf_action-role-item.action-head-code     */
+/*              and buf_action-role-item-gds.action-role-code       = buf_action-role-item.action-role-code     */
+/*              and buf_action-role-item-gds.action-role-item-code  = buf_action-role-item.action-role-item-code*/
+/*              and buf_action-role-item-gds.action-item-id         = buf_action-role-item.action-item-id       */
+/*            exclusive-lock                                                                                    */
+/*            :                                                                                                 */
+/*            assign                                                                                            */
+/*               buf_action-role-item-gds.action-item-code = buf_action-item.action-item-code                   */
+/*            .                                                                                                 */
+/*        END.                                                                                                  */
+/*      end.                                                                                                    */
+/*      else do:                                                                                                */
+/*        FOR EACH  buf_action-role-item-gds                                                                    */
+/*            where buf_action-role-item-gds.action-head-code       = buf_action-role-item.action-head-code     */
+/*              and buf_action-role-item-gds.action-role-code       = buf_action-role-item.action-role-code     */
+/*              and buf_action-role-item-gds.action-role-item-code  = buf_action-role-item.action-role-item-code*/
+/*              and buf_action-role-item-gds.action-item-id         = buf_action-role-item.action-item-id       */
+/*            exclusive-lock                                                                                    */
+/*            :                                                                                                 */
+/*            assign                                                                                            */
+/*               buf_action-role-item-gds.action-item-code = 0                                                  */
+/*            .                                                                                                 */
+/*        END.                                                                                                  */
+/*        assign                                                                                                */
+/*          buf_action-role-item.action-item-code = 0                                                           */
+/*        .                                                                                                     */
+/*      end.                                                                                                    */
+/*    end.                                                                                                      */
+    
+    if v-current-db-num <> 0 and v-action-gbl then do:
+       disable triggers for load of buf_action-role-item .
+       v-current-db-num = 0 .
+       for each buf_action-role-item exclusive-lock
       where buf_action-role-item.db-num           = v-current-db-num
         and buf_action-role-item.action-head-code = v-action-head-code
     on error undo, return error return-value
@@ -1018,6 +1077,8 @@ procedure update-action-role-item :
         .
       end.
     end.
+/*    enable triggers buf_action-role-item .*/
+    end.  
   end.
 
 end procedure. /* update-action-role-item */
@@ -1033,6 +1094,7 @@ procedure update-user-login-action-item :
   do
   on error undo, return error return-value
   :
+    
     { gbl/curdbnum.i
       v-current-db-num
     }
