@@ -17,7 +17,7 @@ class ibs.th.adm.upd.updschm:
 
   {cmp/str-glbl.i class}
   
-
+  
   define variable loadDFprocFile as character no-undo.
 
   /*------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ class ibs.th.adm.upd.updschm:
     private set.
   
   
-
+    
   define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
   define variable analisdfObj as class analisdf no-undo.
@@ -105,7 +105,7 @@ class ibs.th.adm.upd.updschm:
     if loadDFProcFile <> ?
     then isRcode = true.
     else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
-    if not isRcode and CurrDBShm < TargetDBShm and not IsComp
+    if not IsComp and not isRcode and CurrDBShm < TargetDBShm 
     then do:
        message "Îáíîâèòü áàçó ñ âåðñèè " CurrDBShm  " äî " TargetDBShm "?" view-as alert-box question 
           buttons yes-no title "[ ÂÍÈÌÀÍÈÅ! ]" update vupd.
@@ -148,7 +148,6 @@ class ibs.th.adm.upd.updschm:
       then */
          disconnect value ('ub').
          m-Batch = yes. 
-         
       do vi = 1 to num-entries(mDfUpdaLL):
          
          upddbshm-1(entry(vi,mDfUpdaLL)).

@@ -7,11 +7,11 @@ run gbl/set-gbl.p (yes,"sysadm",{&paswordcur}).
 output to "error.log".
    put unformatted "error   Не удалось получить счетсчи".
 output close.
-define variable mFileHelper as class ibs.th.file.filehelperth. 
-mFileHelper = new ibs.th.file.filehelperth().
-mFileHelper:creatProcInfo(1,1,1).
-if    not mFileHelper:FileExists("stop.txt")
-   or not mFileHelper:FileExists("param.txt")
+define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
+mAsyncHelper = new ibs.th.file.AsyncHelperth().
+mAsyncHelper:creatProcInfo(1,1,1).
+if    not mAsyncHelper:FileExists("stop.txt")
+   or not mAsyncHelper:FileExists("param.txt")
 then do:
    output to "error.log".
    put unformatted "error   Получение счетчика было преврвано пользователем или по TimeOut.".
@@ -20,12 +20,12 @@ then do:
 end.
 
 define variable  mfilename as character no-undo.
-mfilename = mFileHelper:GetPARAM("param.txt", "ParamProc_1").
+mfilename = mAsyncHelper:GetPARAM("param.txt", "ParamProc_1").
 define variable mKey as character   no-undo.
-mkey = mFileHelper:GetPARAM("param.txt", "ParamProc_2").
+mkey = mAsyncHelper:GetPARAM("param.txt", "ParamProc_2").
 define variable  mCode as character no-undo.
-mCode  = mFileHelper:GetPARAM("param.txt", "ParamProc_3").
-delete object mFileHelper.
+mCode  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_3").
+delete object mAsyncHelper.
 if     mfilename ne ? 
    and mkey      ne ? 
    and mCode     ne ?

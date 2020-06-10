@@ -47,6 +47,20 @@ class ibs.th.adm.upd.analisdf final:
       delete object obsrvdbObj.
    end destructor.
 
+   method public character  objExists  (input  ifolder as character,
+                                     input  iType   as character  ):
+      define variable vPureName  as character no-undo.
+      define variable vFullPath as character no-undo.
+      define variable vFileType as character no-undo.                                  
+      file-information:file-name = ifolder.
+      if index( file-information:file-type, iType ) > 0 then return file-information:full-pathname .
+      file-information:file-name = "./" + ifolder.
+      if index( file-information:file-type, iType ) > 0 then return file-information:full-pathname .
+
+      return ? .
+
+   end method.
+
  define stream sReadfile.
 /*  define variable mMode as character no-undo.*/
   define variable mBuffer     as handle    no-undo.
@@ -96,6 +110,8 @@ class ibs.th.adm.upd.analisdf final:
       field {&prefixfil}HELP as char
       field {&prefixfil}ORDER as char
       field {&prefixfil}MANDATORY as char
+      field {&prefixfil}CASE-SENSITIVE as char
+
       field {&prefixfil}NULL-ALLOWED as char
       
       field {&prefixfil}localIndex as integer 
@@ -171,7 +187,7 @@ define temp-table {&prefixtt}INDEX
         vi = minimum(iTargetDBShm,TargetDBShm).
      create {&prefixtt}FIELD.
      assign
-       {&prefixfil}mode       = "UPDATE"   // дополнительные кавычки нужны для выгрузки DF
+       {&prefixfil}mode       = "UPDATE"   /* дополнительные кавычки нужны для выгрузки DF*/
        {&prefixfil}Name       = '"reserve1-char"'
        {&prefixfil}Table      = '"db"'
        {&prefixfil}initial    = '"' + string(vi) + '"' 
@@ -180,7 +196,7 @@ define temp-table {&prefixtt}INDEX
      
      vFileDf = substitute ("&1_&2_&3.df","update",iCurrDBShm,vi).
      dumpTable(vFileDf).
-     mFileDf   = vFileDf.
+     mFileDf   = objExists(vFileDf,"f").
      mUpdateTo = vi.
      return yes.   
   end.
@@ -401,9 +417,9 @@ define temp-table {&prefixtt}INDEX
             end.
          end.
       end.             
-      else do: // can-do("add,update,drop", vStrTmp)
+      else do: /* can-do("add,update,drop", vStrTmp) */
          if    mBufferName eq "table" and can-do("AREA,LABEL,DESCRIPTION,DUMP-NAME,TABLE-TRIGGER,CAN-CREATE,CAN-DELETE,CAN-READ,CAN-WRITE,CAN-DUMP,CAN-LOAD",trim(vMode,'"'))
-            or mBufferName eq "field" and can-do("DESCRIPTION,FORMAT,INITIAL,LABEL,POSITION,MAX-WIDTH,COLUMN-LABEL,DECIMALS,HELP,ORDER,MANDATORY,NULL-ALLOWED",trim(vMode,'"'))
+            or mBufferName eq "field" and can-do("DESCRIPTION,FORMAT,INITIAL,LABEL,POSITION,MAX-WIDTH,COLUMN-LABEL,DECIMALS,HELP,ORDER,MANDATORY,NULL-ALLOWED,CASE-SENSITIVE",trim(vMode,'"'))
             or mBufferName eq "INDEX" and can-do("AREA,DESCRIPTION,UNIQUE,PRIMARY,INDEX-FIELD",trim(vMode,'"'))          
             or mBufferName eq "SEQUENCE" and can-do("INITIAL,INCREMENT,CYCLE-ON-LIMIT,MIN-VAL,MAX-VAL",trim(vMode,'"'))
          then do:
@@ -446,22 +462,34 @@ define temp-table {&prefixtt}INDEX
                return yes.
          end.
          
-      end.     // can-do("add,upddate,drop", vStrTmp)
+      end.     /* can-do("add,upddate,drop", vStrTmp) */
    
    end method.
    method public void dumpTable(ifile  as character):
       output to value(ifile).
       output close.
-      dumpOneTable(ifile,temp-table {&prefixtt}Table:handle ).
-      dumpOneTable(ifile,temp-table {&prefixtt}field:handle ).
-      dumpOneTable(ifile,temp-table {&prefixtt}index:handle ).
-      dumpOneTable(ifile,temp-table {&prefixtt}SEQUENCE:handle ).
+      find first {&prefixtt}Table no-error.
+      if available {&prefixtt}Table
+      then
+         dumpOneTable(ifile,buffer {&prefixtt}Table:handle ).
+      find first {&prefixtt}field no-error.
+      if available {&prefixtt}field
+      then
+         dumpOneTable(ifile,buffer {&prefixtt}field:handle ).
+      find first {&prefixtt}index no-error.
+      if available {&prefixtt}index
+      then
+         dumpOneTable(ifile,buffer {&prefixtt}index:handle ).
+      find first {&prefixtt}SEQUENCE no-error.
+      if available {&prefixtt}SEQUENCE
+      then
+         dumpOneTable(ifile,buffer {&prefixtt}SEQUENCE:handle ).
       output to value(ifile) append.
       put unformatted "." skip "PSC" skip "cpstream=1251" skip "." skip .
       output close.                                
    end.
    method private void dumpOneTable(ifile  as character,
-                                   iTable as  handle):
+                                   iBuffer as  handle):
    
    define var vItm   as int64  no-undo.
    define var vJ   as int64  no-undo.
@@ -473,7 +501,7 @@ define temp-table {&prefixtt}INDEX
    define variable vFieldName as character no-undo.
    define variable vFieldPref as integer   no-undo.
    
-   vBuffer = iTable:default-buffer-handle.
+   vBuffer = iBuffer.
    output to value(ifile) append.
    create query vQuery.
    vQuery:add-buffer(vBuffer).
@@ -531,8 +559,6 @@ define temp-table {&prefixtt}INDEX
    output close.
 end method.
 method public logical CheckTable(ifile  as character):
-   /* message "!!!!!!"
-               view-as alert-box.*/
       define variable vOk as logical no-undo.
       define variable oOK as logical no-undo.
       oOK = CheckOneTable(temp-table {&prefixtt}Table:handle ).
@@ -657,6 +683,9 @@ method private logical CheckOneTable(iTable as  handle):
                else if vFieldName eq "_COLUMN-LABEL"
                then
                   vFieldName = "_Col-label".
+               else if vFieldName eq "_CASE-SENSITIVE"
+               then
+                  vFieldName = "_fld-case".
                   
                
                if     not can-do("_mode,_name,_table,_localindex",vFieldName)
@@ -787,6 +816,7 @@ method private void addFieldHist(iTableName as character ):
       {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = "4"
       {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
       {&prefixtt}FIELD.{&prefixfil}MANDATORY  = "{&logicalfield}"
+      
    .
 
    /*ADD FIELD "corr-date" OF "c-PromoCriterion" AS date */

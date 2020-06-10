@@ -62,7 +62,7 @@ class ibs.th.adm.upd.observupd:
 
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 17
+  &scop NumWorkBase 18
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -81,6 +81,7 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/19092301.df"
             ,"cmp/19102401.df"
             ,"cmp/19122301.df"
+            ,"cmp/20041001.df"
             ] 
      get.
   define public property m-upd-list-chk      as character extent {&NumWorkBase} no-undo
@@ -101,6 +102,7 @@ class ibs.th.adm.upd.observupd:
             ,"FIELD:cashbook.CorrRko"
             ,"Table:devisPC"
             ,"Initial:db.reserve1-char=17"
+            ,"TABLE:Utd"
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
@@ -159,6 +161,14 @@ class ibs.th.adm.upd.observupd:
     end.
     
     CurrDBShm = max(vVerDB,vVerStuct).
+    if     avail buf_db 
+       and string(CurrDBShm) ne buf_db.reserve1-char
+    THEN DO TRANS:
+       on write of ub.db override do: end.
+       find first buf_db EXCLUSIVE-lock where buf_db.db-num = DbNum no-error.
+       buf_db.reserve1-char = string(CurrDBShm).
+    
+    END.
    /* CurrDBShm = 8.*/
     find first buf_db no-lock where buf_db.db-num = 0 no-error.
     CurrDB0Shm = integer (buf_db.reserve1-char) no-error.

@@ -1,6 +1,6 @@
  
  /*------------------------------------------------------------------------
-    File        : filehelper
+    File        : AsyncHelper
     Purpose     : 
     Syntax      : 
     Description : 
@@ -13,7 +13,7 @@ using Progress.Lang.*.
 
 
 
-class ibs.th.file.filehelperth: 
+class ibs.th.file.AsyncHelperth: 
    { cmp/str-glbl.i class}
    {utl/ttprocdef.i}
    {utl/ttfileList.i  ttfile  }
@@ -71,7 +71,7 @@ get.
             if vpid ne 0 and vpid ne ?
             then do:
                
-               MyWorkDir = "pid_" + string(vpid) + "_" + string(random(1,9999999)).
+               MyWorkDir = substitute("pid_&1_&2" , string(vpid) , string(random(1,9999999))).
                os-create-dir VALUE(MyWorkDir).
             end. 
          end.
@@ -83,17 +83,56 @@ get.
     define public property myTimeOut as int no-undo
     get.
     set.
+    define temp-table tt-User no-undo
+       field usr as character 
+       field pwd as character
+    index usr usr.
     
     define public property user-passwd as character initial ? no-undo 
-    get.
-    set.
+    get:
+       if user-passwd eq ?
+       then do: 
+          if not available tt-User
+          then 
+             create tt-User.
+          run utl/syspwd.p(input buffer tt-User:handle).
+          return  substitute("-U &1 -P &2 ",tt-User.usr,tt-User.pwd). 
+       end.
+       else 
+          return user-passwd.
+    end.
+    set (arg as char):
+       if arg eq "current"
+       then do:
+          if not available tt-User
+          then 
+             create tt-User.
+          run utl/getuserpwd.p( input buffer tt-User:handle) no-error.
+          if not error-status:error
+          then do:
+             user-passwd =  substitute("-U &1 -P &2 ",tt-User.usr,tt-User.pwd).
+          end.
+          else do:
+             run utl/getuserpwdauto.p(input buffer tt-User:handle) no-error.
+             if not error-status:error
+             then do:
+                user-passwd =  substitute("-U &1 -P &2 ",tt-User.usr,tt-User.pwd).
+             end.
+             else
+                user-passwd = substitute("-U &1 -P &2 ",GetStartupParam("-U"),GetStartupParam("-P")).
+          end.
+          
+       end.
+       else
+          user-passwd = arg.
+    end.
     
     
-   constructor filehelperth ( ):
+   constructor AsyncHelperth ( ):
    
       super ().
       m-prowin32FileName =  search ("bin/prowin32.exe").
-      MyWorkDir = "pid_".
+/*      MyWorkDir = "pid_".*/
     /*  creatTTForDir("c:\11").
       updateFolder("c:\22", input table ttfile).
       message "ok"
@@ -256,12 +295,17 @@ end method.
    define variable mProcFile as character no-undo.
    define variable mIniFile as character no-undo.
    define variable mConPar as character no-undo.
+   define variable mFirstrun as logical no-undo init yes.
          
    method public int64 AsyncProc (
       iProc    as character,
       iParam   as character,
       iCount as int64):
-         
+      if mFirstrun
+      then do: /*создадим рабочуюю директорию */ 
+         MyWorkDir = "pid_".
+         mFirstrun = no.
+      end.
       define variable vi as integer no-undo.
       define variable vj as integer no-undo.
       define variable vTask as character no-undo.
@@ -273,15 +317,7 @@ end method.
       get-key-value section "REP-SETS" key "ConPar" value mConPar.
       
       vprocname =   entry(num-entries(iProc,"/"),iProc,"/"). 
-      if user-passwd ne ?
-      then 
-         v-user-passwd = user-passwd.
-      else
-         v-user-passwd = substitute("-U &1 -P &2":U
-                                ,"sysadm"
-                                ,{&paswordcur}
-                                )
-         .
+      v-user-passwd = user-passwd.
       mConPar = substitute(mConPar, v-user-passwd).
       if not FileExists  (MyWorkDir + vprocname + ".txt" )
       then do:
@@ -305,6 +341,10 @@ end method.
                 SavePARAM("ParamProc_" + string(vj),entry(vj,iParam, {&delim-par} )).
              end.
            output close.
+           output to value(MyWorkDir + vTask + v-path-tls-dir-delim +  "error.log").
+                
+           put unformatted "error Ошибка запуска сессии." skip.
+           output close.
            output to value(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt").
             output close.
             AsyncRun(vTask, iProc).
@@ -312,6 +352,7 @@ end method.
             assign
                ttrun.proc = vprocname
                ttrun.num  = vi
+               ttrun.runtime = now
             .
             
          end.
@@ -330,8 +371,21 @@ end method.
      define variable vFile as character no-undo.
      define variable vCount as character  no-undo. 
      define variable oCount as integer no-undo. 
+     define variable vtime as int  no-undo.
      for each ttrun where ttrun.proc eq iSched no-lock:
-             
+        vFile = MyWorkDir + ttrun.proc + string(ttrun.num) + "/procrec.txt".
+        vtime =  (now - ttrun.runtime) / 1000.
+         /* ждем 2 минуты если процес не создал файл  считаем что произошла ошибка запуска */ 
+        /*vvv = vvv and not FileExists(vFile).*/
+        if    myTimeOut    ne 0
+          and myTimeOut    ne ?
+          and vtime > 7200
+          and not FileExists(vFile)
+        then do:
+           vFile = MyWorkDir + ttrun.proc + string(ttrun.num) + "/endproc.txt".
+           output to value(vFile).
+           output close.
+        end.    
         vFile = MyWorkDir + ttrun.proc + string(ttrun.num) + "/procrec.txt".
         if FileExists(vFile)
         then do:
@@ -351,7 +405,9 @@ end method.
            vCountEnd = vCountend +   int(vCount) no-error.
            copylog(ttrun.proc ,ttrun.num).
           /* os-delete value(vFile).*/
-          os-delete value (MyWorkDir + ttrun.proc + string(ttrun.num)) recursive.  
+          
+          os-delete value (MyWorkDir + ttrun.proc + string(ttrun.num)) recursive.
+            
           os-delete value (MyWorkDir + ttrun.proc + string(ttrun.num) + ".bat").
            delete ttrun.
         end.        
@@ -362,14 +418,25 @@ end method.
         leave.
      end.
      if WAIT-FOR-COMPLETE
-     then
+     then do:
+        os-delete  value( MyWorkDir + iSched + "/stop.txt") .
         os-delete  value( MyWorkDir + iSched + ".txt") .
+     end.
      return oCount.     
    end.  
+   
+   method public character  getErrLog (iSched as character):
+       return MyWorkDir + iSched + "error.log".
+   end.
+   
+   method public character  getProcDir (iSched as character):
+       return MyWorkDir + iSched .
+   end.
+    
    method public logical copylog ( input iSched as character,input iItem as integer ):
       
       define variable vStr as character no-undo.
-      output to value (MyWorkDir + iSched + "error.log" ) append.
+      output to value (getErrLog(iSched)) append.
       
       if FileExists(MyWorkDir + iSched + string (iItem) + "/error.log")
          then 
@@ -382,14 +449,14 @@ end method.
       end.
       output close.
    end. 
-   define variable mStop as logical no-undo.  
+   define public variable mStop as logical no-undo.  
    method public logical WaitFor ( input iSched as character, input ipInterval as int64):
        define variable vNowTask as character  no-undo.
        define variable vCountOld as integer init -1 no-undo.
        define variable vCount as integer no-undo.
        define variable vOK as logical no-undo initial true.
        
-      output to value (MyWorkDir + iSched + "error.log" ).
+      output to value (getErrLog(iSched) ).
       define variable vStart  as datetime-tz no-undo.
       vStart = now.
       output close.
@@ -438,7 +505,7 @@ end method.
       
 end.
 
-define public event MyPause   //10 прогрес не поддерживает публикацию событий
+define public event MyPause   /*10 прогрес не поддерживает публикацию событий */
     signature void ( input pcInterval as int64 ). 
    method public void AsyncRunpause (input iInterval as int64):
      define variable vStart  as datetime-tz no-undo.
@@ -500,7 +567,7 @@ define public event MyPause   //10 прогрес не поддерживает публикацию событий
       
    end.
    method public void delworkdir():
-      os-delete   value(MyWorkDir).
+      os-delete   value(trim(MyWorkDir,v-path-tls-dir-delim )) RECURSIVE.
      
    end method.    
    method public character GetStartupParam (input iParam as character  ):

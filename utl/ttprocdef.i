@@ -6,5 +6,7 @@ define temp-table ttRun no-undo
    field fmaxitem as integer 
    field fpid as integer 
    field fmax as integer
-   field favail as logical 
+   field favail as logical
+   field runtime as datetime-tz
+   field fstatus as char 
 index proc proc num.

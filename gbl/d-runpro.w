@@ -639,18 +639,18 @@ PROCEDURE run-procedure :
        if VRcode
        then do:
           vKey = random(1,999999999).
-          define variable vFileHelper as class ibs.th.file.filehelperth no-undo.
-          vFileHelper = new ibs.th.file.filehelperth().
-          vFileHelper:user-passwd = "".
-          vFileHelper:MyBachMode = no.
-          vFileHelper:AsyncProc("utl/proc-chekproc", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U + {&delim-par} + "&4":U + {&delim-par} + "&5":U + {&delim-par} + "&6":U + {&delim-par} + "&7":U  + {&delim-par} + "&9":U 
+          define variable vAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
+          vAsyncHelper = new ibs.th.file.AsyncHelperth().
+          vAsyncHelper:user-passwd = "".
+          vAsyncHelper:MyBachMode = no.
+          vAsyncHelper:AsyncProc("utl/proc-chekproc", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U + {&delim-par} + "&4":U + {&delim-par} + "&5":U + {&delim-par} + "&6":U + {&delim-par} + "&7":U  + {&delim-par} + "&9":U 
                                                                        , search(v-proc-name) ,v-num-parameters, t-parparentproc :checked, vKey,v-parameter1,v-parameter2,v-parameter3 ),1).
-          vFileHelper:myTimeOut = 300.
+          vAsyncHelper:myTimeOut = 300.
           
-          vFileHelper:WaitFor("proc-chekproc", 1,"Проверка процедуры.").
+          vAsyncHelper:WaitFor("proc-chekproc", 1,"Проверка процедуры.").
           vtext = "Процедура имеет не правильную подпись.".
-          vlogfile = vFileHelper:myWorkDir + "proc-chekprocerror.log".
-          if vFileHelper:FileExists(vlogfile)
+          vlogfile = vAsyncHelper:myWorkDir + "proc-chekprocerror.log".
+          if vAsyncHelper:FileExists(vlogfile)
           then do:
              input stream sReadfile FROM  VALUE(vlogfile).
              repeat:
@@ -679,8 +679,8 @@ PROCEDURE run-procedure :
               vtext = "Не получен результат проверки."
               vError = yes.
             
-          vFileHelper:delworkdir().
-          delete object vFileHelper.
+          vAsyncHelper:delworkdir().
+          delete object vAsyncHelper.
        end.
        else
           vError = no.

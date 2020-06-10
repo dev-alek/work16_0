@@ -86,19 +86,19 @@ class ibs.th.ref.counter.counterstorage final:
    define stream sReadfile.
    method public int64 GetAsuncNextcount (iFileName as character , iKey as character,icode as character  ):
       
-      define variable vFileHelper as class ibs.th.file.filehelperth no-undo.
+      define variable vAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
       define variable vText as character no-undo.
       define variable vlogfile as character no-undo.
       define variable vError as logical no-undo.
       define variable vCount   as int64 no-undo init ?.
       if trans
       then do:
-         vFileHelper = new ibs.th.file.filehelperth().
-         vFileHelper:AsyncProc("utl/proc-getnextcount", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U , iFileName ,ikey, icode ),1).
-         vFileHelper:myTimeOut = 300.
-         vFileHelper:WaitFor("proc-getnextcount", 1,"Получаем значение счетчика.").
-         vlogfile = vFileHelper:myWorkDir + "proc-getnextcounterror.log".
-         if vFileHelper:FileExists(vlogfile)
+         vAsyncHelper = new ibs.th.file.AsyncHelperth().
+         vAsyncHelper:AsyncProc("utl/proc-getnextcount", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U , iFileName ,ikey, icode ),1).
+         vAsyncHelper:myTimeOut = 300.
+         vAsyncHelper:WaitFor("proc-getnextcount", 1,"Получаем значение счетчика.").
+         vlogfile = vAsyncHelper:myWorkDir + "proc-getnextcounterror.log".
+         if vAsyncHelper:FileExists(vlogfile)
          then do:
             input stream sReadfile FROM  VALUE(vlogfile).
             repeat:
@@ -117,8 +117,8 @@ class ibs.th.ref.counter.counterstorage final:
           end.
           else
              vError = yes.
-          vFileHelper:delworkdir().
-          delete object vFileHelper.
+          vAsyncHelper:delworkdir().
+          delete object vAsyncHelper.
        end.
        else
           vError = yes.
