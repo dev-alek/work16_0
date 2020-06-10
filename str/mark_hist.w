@@ -531,6 +531,8 @@ PROCEDURE enable_mark :
   display 
     f-status
     f-gds-code
+    f-obj-code
+    f-obj-type
     f-gds-name
     f-unit
     f-unit-2
@@ -660,7 +662,7 @@ PROCEDURE init-temp :
   v-marking = GetCodeIdent(v-mark) .
 
   v-mark-2   = v-marking .
-  if v-marking <> "" then do:
+  if v-marking <> "" and v-marking <> ? then do:
     find first buf_marking no-lock where buf_marking.mark begins v-marking 
 /*    and buf_marking.obj-code = v-cntxt-obj-code and buf_marking.obj-type = v-cntxt-obj-type*/
     no-error .
@@ -734,7 +736,18 @@ PROCEDURE init-temp :
 
   end. 
   end.  
-
+  else do:
+      f-GTIN = "" .
+      f-gds-code = "" .
+      f-gds-name = "" .
+      f-status = "" .
+      /*соответствие товаров*/
+      f-unit     = "" .     
+      f-unit-2   = "" . 
+      f-obj-code = ? .
+      f-obj-type = "" .   
+      v-mark-2 = "" .
+  end.      
   {&OPEN-QUERY-br-mark}
 END PROCEDURE.
 

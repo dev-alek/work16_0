@@ -83,7 +83,7 @@ define variable recid_utd   as integer   no-undo .
 define variable ii          as integer   no-undo .
 define variable v-time      as integer   no-undo .
 define variable time_old_start as datetime-tz no-undo.
-define variable v-Token-error as logical no-undo .
+define variable v-Token-error as logical no-undo initial false.
 define variable time_motp as datetime-tz no-undo.
 define variable v-obj-active as logical   no-undo .
 define variable vtime as int64 no-undo.
@@ -95,7 +95,7 @@ define variable v-current-sertif-string as character no-undo .
 define variable mode-erprn as logical no-undo .
 define variable conf-par as character no-undo .
 define variable par-type as character no-undo .
-
+define VARIABLE v-mes-Token as LOGICAL no-undo .
 define buffer buf_utd for ub.utd .
 define buffer buf_clients for ub.clients .
 define temp-table tt-obj-list no-undo
@@ -417,16 +417,17 @@ DEFINE BROWSE br-utd
       X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(15)":U
       X_utd.EDoTypeName COLUMN-LABEL "Тип" FORMAT "X(30)":U width 10
       X_utd.DocumentDate COLUMN-LABEL "Дата док-та" FORMAT "99/99/9999":U
+      X_utd.obj-name COLUMN-LABEL "Объект" FORMAT "X(30)":U width 7
       X_utd.cli-code COLUMN-LABEL "Код! пост-ка" FORMAT "9999999":U
       X_utd.cli-name COLUMN-LABEL "Название!поставщика" FORMAT "X(30)":U width 19
       X_utd.total COLUMN-LABEL "Сумма" FORMAT "->>>>>>>>>>99.99":U width 9
       X_utd.vat COLUMN-LABEL "Сумма! НДС" FORMAT "->>>>>>>>>>99.99":U width 9
-      X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(40)":U width 20
-      X_utd.stts-edi COLUMN-LABEL "Статус EDI" FORMAT "X(40)":U width 20
+      X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(40)":U width 16
+      X_utd.stts-edi COLUMN-LABEL "Статус EDI" FORMAT "X(40)":U width 16
       (if X_utd.AmendmentRequested then "+":U else "") format "X(1)":U LABEL "И"
       X_utd.ModifyTime_ column-label "Время!послед.!измен." format "X(7)":U
-      X_utd.doc-code COLUMN-LABEL "Номер!документа ТН" FORMAT "x(15)":U
-      X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 50
+      X_utd.doc-code COLUMN-LABEL "Номер!документа ТН" FORMAT "x(15)":U width 15
+      X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 15
       X_utd.LoadDate COLUMN-LABEL "Дата загр" FORMAT "99/99/9999":U
       X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(80)":U WIDTH 50
       X_utd.doc-id COLUMN-LABEL "Внутр.номер" FORMAT "99999":U
@@ -658,26 +659,27 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON ROW-DISPLAY OF br-utd IN FRAME d-utd
   DO:
-    if X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:HaveToCreateReceipt:KeyIntDB or
-       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:RequestsMyRevocation:KeyIntDB or
-       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:WaitingForRecipientSignature:KeyIntDB
-    then do:
-          X_utd.DocumentNumber:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.EDoTypeName:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.DocumentDate:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.cli-code:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.cli-name:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.total:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.vat:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.stts:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.stts-edi:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.ModifyTime_:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.doc-code:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.
-          X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.    
-    end.       
+if AVAILABLE (X_utd) then do:      
+/*    if X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:HaveToCreateReceipt:KeyIntDB or      */
+/*       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:RequestsMyRevocation:KeyIntDB or     */
+/*       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:WaitingForRecipientSignature:KeyIntDB*/
+/*    then do:                                                                       */
+/*          X_utd.DocumentNumber:fGCOLOR in browse br-utd = CYAN_COLOR.              */
+/*          X_utd.EDoTypeName:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
+/*          X_utd.DocumentDate:fGCOLOR in browse br-utd = CYAN_COLOR.                */
+/*          X_utd.cli-code:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+/*          X_utd.cli-name:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+/*          X_utd.total:fGCOLOR in browse br-utd = CYAN_COLOR.                       */
+/*          X_utd.vat:fGCOLOR in browse br-utd = CYAN_COLOR.                         */
+/*          X_utd.stts:fGCOLOR in browse br-utd = CYAN_COLOR.                        */
+/*          X_utd.stts-edi:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+/*          X_utd.ModifyTime_:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
+/*          X_utd.doc-code:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+/*          X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.                   */
+/*          X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+/*          X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
+/*          X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.                      */
+/*    end.                                                                           */
     if X_utd.GrayZone then do:
           X_utd.DocumentNumber:bGCOLOR in browse br-utd = GRAY_COLOR.
           X_utd.EDoTypeName:bGCOLOR in browse br-utd = GRAY_COLOR.
@@ -693,8 +695,10 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
           X_utd.orig-code:bGCOLOR in browse br-utd = GRAY_COLOR.
           X_utd.LoadDate:bGCOLOR in browse br-utd = GRAY_COLOR.
           X_utd.DocumentExt:bGCOLOR in browse br-utd = GRAY_COLOR.
-          X_utd.doc-id:bGCOLOR in browse br-utd = GRAY_COLOR.    
+          X_utd.doc-id:bGCOLOR in browse br-utd = GRAY_COLOR.
+          X_utd.obj-name:bGCOLOR in browse br-utd = GRAY_COLOR.        
     end.  
+    if X_utd.edoctype = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then do:
     case X_utd.sts:
       when ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or
       when ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or
@@ -716,27 +720,51 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
           X_utd.LoadDate:fGCOLOR in browse br-utd = RED_COLOR.
           X_utd.DocumentExt:fGCOLOR in browse br-utd = RED_COLOR.
           X_utd.doc-id:fGCOLOR in browse br-utd = RED_COLOR.
+          X_utd.obj-name:fGCOLOR in browse br-utd = RED_COLOR.
         end.
+    when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB or
+    when ObjSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB
+    then do:
+          X_utd.DocumentNumber:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.EDoTypeName:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.DocumentDate:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.cli-code:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.cli-name:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.total:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.vat:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.stts:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.stts-edi:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.ModifyTime_:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.doc-code:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.
+          X_utd.obj-name:fGCOLOR in browse br-utd = CYAN_COLOR.        
+    end.               
       when ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB
       then
         do:
-          X_utd.DocumentNumber:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.EDoTypeName:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.DocumentDate:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.cli-code:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.cli-name:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.total:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.vat:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.stts:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.stts-edi:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.ModifyTime_:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.doc-code:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.orig-code:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.LoadDate:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.DocumentExt:fGCOLOR in browse br-utd = BROWN_COLOR.
-          X_utd.doc-id:fGCOLOR in browse br-utd = BROWN_COLOR.
+          X_utd.DocumentNumber:fGCOLOR in browse br-utd = 13.
+          X_utd.EDoTypeName:fGCOLOR in browse br-utd = 13.
+          X_utd.DocumentDate:fGCOLOR in browse br-utd = 13.
+          X_utd.cli-code:fGCOLOR in browse br-utd = 13.
+          X_utd.cli-name:fGCOLOR in browse br-utd = 13.
+          X_utd.total:fGCOLOR in browse br-utd = 13.
+          X_utd.vat:fGCOLOR in browse br-utd = 13.
+          X_utd.stts:fGCOLOR in browse br-utd = 13.
+          X_utd.stts-edi:fGCOLOR in browse br-utd = 13.
+          X_utd.ModifyTime_:fGCOLOR in browse br-utd = 13.
+          X_utd.doc-code:fGCOLOR in browse br-utd = 13.
+          X_utd.orig-code:fGCOLOR in browse br-utd = 13.
+          X_utd.LoadDate:fGCOLOR in browse br-utd = 13.
+          X_utd.DocumentExt:fGCOLOR in browse br-utd = 13.
+          X_utd.doc-id:fGCOLOR in browse br-utd = 13.
+          X_utd.obj-name:fGCOLOR in browse br-utd = 13.
         end.        
   end.
+end.
+end.
  end. 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME         
@@ -750,7 +778,7 @@ DO:
   define buffer bf_utd-marking-lines for ub.utd-marking-lines .
   define buffer bf_marking for ub.marking .
   define variable Log-Res      as      logical     no-undo.
-
+if AVAILABLE (X_utd) then do:
    /*Проверка прав */
    { gbl/chk-actg.i
   v-cntxt-db-num
@@ -783,7 +811,12 @@ if log-res then do:
   end.    
     run init-sort .
     {&OPEN-QUERY-br-utd}
-end.    
+end.   
+end.
+else do:
+        message "Нет документа для удаления"
+    view-as alert-box.
+end.     
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -933,7 +966,8 @@ DO:
   define var db-num like ub.utd.db-num no-undo .
   define var EDocType like ub.utd.EDocType no-undo .
   define variable Log-Res      as      logical     no-undo.
-
+    if available (x_utd) then 
+    do:
    /*Проверка прав */
    { gbl/chk-actg.i
   v-cntxt-db-num
@@ -951,8 +985,7 @@ DO:
   log-res
 }
 if log-res then do:  
-    if available (x_utd) then 
-    do:
+
       row_utd = rowid(X_utd) . 
         assign
         doc-id = x_utd.doc-id
@@ -1002,7 +1035,8 @@ end.
 ON choose OF b-utd IN FRAME d-utd /* Просмотр */
 DO:
   define variable Log-Res      as      logical     no-undo.
-
+    if available (x_utd) then 
+    do:
    /*Проверка прав */
    { gbl/chk-actg.i
   v-cntxt-db-num
@@ -1020,8 +1054,7 @@ DO:
   log-res
 }
 if log-res then do:    
-    if available (x_utd) then 
-    do:
+
       row_utd = rowid (X_utd) .
       subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
       MySeqUtd = ?.
@@ -1182,7 +1215,7 @@ DO:
         view-as alert-box.
       return .
     end.       
-    
+    v-mes-Token = yes .
     run proc-Token .
     run enable_BUTTON .
   END.
@@ -1210,12 +1243,14 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON mouse-select-dblclick OF br-utd IN FRAME d-utd
 DO:
+if AVAILABLE (X_utd) then do:         
   if v-obj-active or X_utd.EDocType = EdocType:UTD:KeyIntDB or X_utd.EDocType = EdocType:UCD:KeyIntDB then do: 
     apply "Choose" to b-update in frame {&frame-name}.
   end.
   else do:
     apply "Choose" to b-utd in frame {&frame-name}.
   end.  
+end.  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2194,6 +2229,7 @@ PROCEDURE enable_UI :
     disable
     b-choose-sertif
     with frame {&frame-name} .
+    browse br-utd:GET-BROWSE-COLUMN(11):VISIBLE = no no-error.
   end.  
   
 END PROCEDURE.
@@ -2260,8 +2296,7 @@ PROCEDURE init-sort :
   define variable v-days2  as integer no-undo .
   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
   define buffer buf_marking for ub.marking .
-  
-  empty temp-table X_utd .
+  if AVAILABLE (X_utd) then empty temp-table X_utd .
 /*  if v-current-sort-string <> "" then do:                                */
 /*    c-status = string(entry(1,v-current-sort-string,{&delim-key})) .     */
 /*    c-status-edi = integer(entry(2,v-current-sort-string,{&delim-key})) .*/
@@ -2303,6 +2338,7 @@ PROCEDURE init-sort :
     X_utd.cli-name = CliName(X_utd.cli-code, X_utd.cli-type).
     X_utd.EdoTypeName = EdoTypeName(X_utd.EDocType).
     X_utd.GrayZone = no .
+    X_utd.obj-name = buf_utd.obj-type + " " + string(buf_utd.obj-code) .
 for first ub.utd no-lock where ub.utd.DocumentExt = buf_utd.parentDocumentExt and ub.utd.OrganizationExt = buf_utd.parentOrganizationExt:
       if ub.utd.DocumentNumber <> buf_utd.documentNumber then 
         X_utd.orig-code = ub.utd.DocumentNumber .
@@ -2536,12 +2572,16 @@ PROCEDURE proc-Token :
                                           no-error .
       if available buf_ext-system then leave .
     end .                                      
-    if not available buf_ext-system
+    if not available buf_ext-system 
     then do :
+        if v-mes-Token then do:
       message "Нет внешней системы с типом ИС МОТП" view-as alert-box .
       return .
-    end.               
-    
+      end. 
+      else return .     
+    end.     
+         
+    v-mes-Token = no .
     oMotp = new is_motp(buf_ext-system.db-num, buf_ext-system.esys-id) .
     time_motp = oMotp:currTokenDT .
     /*vToken = oMotp:authorize(input pKey, input pMode) .                                                        */
@@ -2559,8 +2599,13 @@ PROCEDURE proc-Token :
     if error-status:error
     then do:
 /*      time_motp = datetime-tz(now - 10500000) .*/
-      v-Token-error = true .
-      time_motp = oMotp:currTokenDT .
+    time_motp = oMotp:currTokenDT .
+    vtime = max(0,time_motp + 10500000 - now).
+    if vtime = 0 then v-Token-error = true .
+    else v-Token-error = false .
+
+/*      v-Token-error = true .         */
+/*      time_motp = oMotp:currTokenDT .*/
       message oMotp:MSG view-as alert-box .  
     end.  
     else do:

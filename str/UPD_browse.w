@@ -81,6 +81,7 @@ define variable v-gds-code   as integer   no-undo .
 define variable type_mark    as integer   no-undo .
 define variable iLang        as integer   no-undo .
 define variable Tree         as class     tree no-undo .
+define variable oMotp       as class     is_motp no-undo .
 /*define variable Check_      as class     check_ no-undo .*/
 define variable ungroup      as logical   no-undo .
 define variable vRecKey      as character no-undo .
@@ -89,6 +90,10 @@ define variable line-num-error  as integer no-undo .
 define variable qnty-gray    as integer   no-undo .
 define variable qnty-check   as integer   no-undo .
 define variable v-pred-status as integer  no-undo .
+define variable v-obj-active as logical   no-undo .
+define variable mode-erprn as logical no-undo .
+define variable conf-par as character no-undo .
+define variable par-type as character no-undo .
 
 define buffer buf_clients           for ub.clients .
 define buffer X_utd-lines           for tt-utd-lines .
@@ -105,6 +110,8 @@ define buffer buf_utd-err           for ub.utd-err .
 
 define variable v-scan-str       as character no-undo.
 define variable v-manual         as logical   no-undo .
+DEFINE VARIABLE v-timedelay as integer no-undo .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -218,338 +225,372 @@ FUNCTION StatusName RETURNS CHARACTER
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
 DEFINE MENU m_error 
-  MENU-ITEM m_error-utd    LABEL "Ошибки по документу"
-  MENU-ITEM m_error-lines  LABEL "Ошибки по строке".
+       MENU-ITEM m_error-utd    LABEL "Ошибки по документу"
+       MENU-ITEM m_error-lines  LABEL "Ошибки по строке".
 
 DEFINE MENU m_marks 
-  MENU-ITEM m_marks-utd    LABEL "Марки по документу"
-  MENU-ITEM m_marks-lines  LABEL "Марки по строке".
+       MENU-ITEM m_marks-utd    LABEL "Марки по документу"
+       MENU-ITEM m_marks-lines  LABEL "Марки по строке".
 
 DEFINE MENU POPUP-MENU-b-servis 
-  MENU-ITEM m_choose-status LABEL "Сменить статус документа"
-  MENU-ITEM m_check-akt     LABEL "Проверить по Акту приема-передачи".
+       MENU-ITEM m_choose-status LABEL "Сменить статус документа"
+       MENU-ITEM m_check-akt    LABEL "Проверить по Акту приема-передачи".
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-cancel auto-go
-  LABEL "&Отмена":L 
-  SIZE 15 BY 1.
+DEFINE BUTTON b-cancel AUTO-GO 
+     LABEL "&Отмена":L 
+     SIZE 15 BY 1.
 
-DEFINE BUTTON b-exit auto-go
-  LABEL "&Выход ":L 
-  SIZE 15 BY 1.
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Выход ":L 
+     SIZE 15 BY 1.
 
-DEFINE BUTTON b-save auto-go
-  LABEL "&Ввод ":L 
-  SIZE 15 BY 1.
+DEFINE BUTTON b-save AUTO-GO 
+     LABEL "&Ввод ":L 
+     SIZE 15 BY 1.
 
 DEFINE BUTTON b-servis 
-  LABEL "Сервис" 
-  SIZE 15 BY 1.
+     LABEL "Сервис" 
+     SIZE 15 BY 1.
 
 DEFINE BUTTON b_anul 
-  LABEL "Аннулировать" 
-  SIZE 36 BY 1.25.
+     LABEL "Аннулировать" 
+     SIZE 36 BY 1.25.
 
 DEFINE BUTTON b_back-check 
-  LABEL "Продолжить проверку" 
-  SIZE 36 BY 1.25.
+     LABEL "Продолжить проверку" 
+     SIZE 36 BY 1.25.
 
 DEFINE BUTTON b_correct 
-  LABEL "Запрос на изменение" 
-  SIZE 36 BY 1.25.
-
-DEFINE BUTTON b_error 
-  LABEL "Ошибки/проблемы" 
-  SIZE 20 BY 1.
-
-DEFINE BUTTON b_finish 
-  LABEL "Ввод в оборот" 
-  SIZE 36 BY 1.25.
-
-DEFINE BUTTON B_mark 
-  LABEL "Марки" 
-  SIZE 15 BY 1.
-
-DEFINE BUTTON b_prov-finish 
-  LABEL "Проверка завершена" 
-  SIZE 36 BY 1.25.
-
-DEFINE BUTTON b_recheck 
-  LABEL "Повторно проверить" 
-  SIZE 36 BY 1.25.
-
-DEFINE BUTTON b_write-cancel 
-  LABEL "Отказать в подписи" 
-  SIZE 36 BY 1.25.
+     LABEL "Запрос на изменение" 
+     SIZE 36 BY 1.25.
 
 DEFINE BUTTON b_deliv-cancel 
-  LABEL "Отказать в поставке" 
-  SIZE 36 BY 1.25.
-  
+     LABEL "Отказать в поставке" 
+     SIZE 36 BY 1.25.
+
+DEFINE BUTTON b_error 
+     LABEL "Ошибки/проблемы" 
+     SIZE 20 BY 1.
+
+DEFINE BUTTON b_finish 
+     LABEL "Ввод в оборот" 
+     SIZE 36 BY 1.25.
+
+DEFINE BUTTON B_mark 
+     LABEL "Марки" 
+     SIZE 15 BY 1.
+
+DEFINE BUTTON b_prov-finish 
+     LABEL "Проверка завершена" 
+     SIZE 36 BY 1.25.
+
+DEFINE BUTTON b_recheck 
+     LABEL "Повторно проверить" 
+     SIZE 36 BY 1.25.
+
+DEFINE BUTTON b_write-cancel 
+     LABEL "Отказать в подписи" 
+     SIZE 36 BY 1.25.
+
 DEFINE BUTTON r-agnt 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "r-acc" 
-  SIZE 3 BY 1.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-acc" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON r-boss 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "r-acc" 
-  SIZE 3 BY 1.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-acc" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON r-contr-TH 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "" 
-  SIZE 3 BY 1.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON r-obj-TH 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "" 
-  SIZE 3 BY 1.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON r-supp-TH 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "" 
-  SIZE 3 BY 1.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON r-wrkr 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "r-acc" 
-  SIZE 3 BY 1.
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-acc" 
+     SIZE 3 BY 1.
 
-DEFINE VARIABLE c-status        AS INTEGER   FORMAT "-999":U INITIAL 0 
-  LABEL "Статус ТН" 
-  VIEW-AS COMBO-BOX INNER-LINES 5
-  LIST-ITEM-PAIRS "Все",0,
-  "Получен от поставщика",2,
-  "Требует корректировки",3,
-  "Ожидает поставки",4,
-  "Требует подписания",5
-  DROP-DOWN-LIST
-  SIZE 55.5 BY 1 NO-UNDO.
+DEFINE VARIABLE c-status AS INTEGER FORMAT "-999":U INITIAL 0 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "Все",0,
+                     "Получен от поставщика",2,
+                     "Требует корректировки",3,
+                     "Ожидает поставки",4,
+                     "Требует подписания",5
+     DROP-DOWN-LIST
+     SIZE 55.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE c-status-edi    AS INTEGER   FORMAT "-999":U INITIAL 352 
-  LABEL "Статус EDI" 
-  VIEW-AS COMBO-BOX INNER-LINES 5
-  LIST-ITEM-PAIRS "Все",0,
-  "Получен от поставщика",2,
-  "Требует корректировки",3,
-  "Ожидает поставки",4,
-  "Требует подписания",5
-  DROP-DOWN-LIST
-  SIZE 58.5 BY 1 NO-UNDO.
+DEFINE VARIABLE c-status-edi AS INTEGER FORMAT "-999":U INITIAL 352 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "Все",0,
+                     "Получен от поставщика",2,
+                     "Требует корректировки",3,
+                     "Ожидает поставки",4,
+                     "Требует подписания",5
+     DROP-DOWN-LIST
+     SIZE 58.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE c-type          AS INTEGER   FORMAT "-999":U INITIAL 0 
-  LABEL "Тип" 
-  VIEW-AS COMBO-BOX INNER-LINES 5
-  LIST-ITEM-PAIRS "Все",0,
-  "Получен от поставщика",2,
-  "Требует корректировки",3,
-  "Ожидает поставки",4,
-  "Требует подписания",5
-  DROP-DOWN-LIST
-  SIZE 42 BY 1 NO-UNDO.
+DEFINE VARIABLE c-type AS INTEGER FORMAT "-999":U INITIAL 0 
+     LABEL "Тип" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "Все",0,
+                     "Получен от поставщика",2,
+                     "Требует корректировки",3,
+                     "Ожидает поставки",4,
+                     "Требует подписания",5
+     DROP-DOWN-LIST
+     SIZE 42 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-comment       AS CHARACTER 
-  VIEW-AS EDITOR SCROLLBAR-VERTICAL
-  SIZE 101 BY 1.46 NO-UNDO.
+DEFINE VARIABLE f-comment AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 100 BY 1.46 NO-UNDO.
 
-DEFINE VARIABLE f-info          AS CHARACTER 
-  VIEW-AS EDITOR SCROLLBAR-VERTICAL
-  SIZE 101 BY 1.96 NO-UNDO.
+DEFINE VARIABLE f-info AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 100 BY 1.96 NO-UNDO.
 
-DEFINE VARIABLE f-obj-name-2    AS CHARACTER 
-  VIEW-AS EDITOR SCROLLBAR-VERTICAL
-  SIZE 70.5 BY 2.17 NO-UNDO.
+DEFINE VARIABLE f-obj-name-2 AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 70.5 BY 2.17 NO-UNDO.
 
-DEFINE VARIABLE a-n-c-name      AS CHARACTER FORMAT "X(256)":U 
-  VIEW-AS FILL-IN 
-  SIZE 45 BY 1
-  FGCOLOR 12 NO-UNDO.
+DEFINE VARIABLE a-n-c-name AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 45 BY 1
+     FGCOLOR 12  NO-UNDO.
 
-DEFINE VARIABLE agnt-name       AS CHARACTER FORMAT "x(256)":U 
-  VIEW-AS TEXT 
-  SIZE 11 BY 1
-  BGCOLOR 15 NO-UNDO.
+DEFINE VARIABLE agnt-name AS CHARACTER FORMAT "x(256)":U 
+      VIEW-AS TEXT 
+     SIZE 11 BY 1
+     BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE boss-name       AS CHARACTER FORMAT "x(256)":U 
-  VIEW-AS TEXT 
-  SIZE 11 BY 1
-  BGCOLOR 15 NO-UNDO.
+DEFINE VARIABLE boss-name AS CHARACTER FORMAT "x(256)":U 
+      VIEW-AS TEXT 
+     SIZE 11 BY 1
+     BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE f-agnt          AS INTEGER   FORMAT "9999999999":U INITIAL 0 
-  LABEL "Исп" 
-  VIEW-AS FILL-IN 
-  SIZE 10 BY 1
-  BGCOLOR 15 NO-UNDO.
+DEFINE VARIABLE f-agnt AS INTEGER FORMAT "9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 11.25 BY 1
+     BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE f-boss          AS INTEGER   FORMAT "9999999999":U INITIAL 0 
-  LABEL "М-р" 
-  VIEW-AS FILL-IN 
-  SIZE 10 BY 1
-  BGCOLOR 15 NO-UNDO.
+DEFINE VARIABLE f-agnt-name AS CHARACTER FORMAT "X(256)":U INITIAL "Исп:" 
+     VIEW-AS FILL-IN 
+     SIZE 4.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-contr-name    AS CHARACTER FORMAT "X(150)" 
-  VIEW-AS FILL-IN 
-  SIZE 35.25 BY 1.
+DEFINE VARIABLE f-boss AS INTEGER FORMAT "9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 11.25 BY 1
+     BGCOLOR 15  NO-UNDO.
+
+DEFINE VARIABLE f-boss-name AS CHARACTER FORMAT "X(256)":U INITIAL "М-р:" 
+     VIEW-AS FILL-IN 
+     SIZE 4.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-comment-name AS CHARACTER FORMAT "X(256)":U INITIAL "Комментарий:" 
+     VIEW-AS FILL-IN 
+     SIZE 12.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-contr-name AS CHARACTER FORMAT "X(150)" 
+     VIEW-AS FILL-IN 
+     SIZE 35.25 BY 1.
 
 DEFINE VARIABLE f-contr-name-TH AS CHARACTER FORMAT "X(100)" 
-  VIEW-AS FILL-IN 
-  SIZE 48.5 BY 1.
+     VIEW-AS FILL-IN 
+     SIZE 48.5 BY 1.
 
-DEFINE VARIABLE f-contr-TH      AS INTEGER   FORMAT "->>>>>>" INITIAL 0 
-  VIEW-AS FILL-IN 
-  SIZE 19.5 BY 1.
+DEFINE VARIABLE f-contr-TH AS INTEGER FORMAT "->>>>>>" INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 19.5 BY 1.
 
-DEFINE VARIABLE f-date          AS DATE      FORMAT "99/99/9999":U 
-  LABEL "Дата" 
-  VIEW-AS FILL-IN 
-  SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-date AS DATE FORMAT "99/99/9999":U 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-date-2        AS DATE      FORMAT "99/99/9999":U 
-  LABEL "Дата" 
-  VIEW-AS FILL-IN 
-  SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-date-2 AS DATE FORMAT "99/99/9999":U 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-gruz          AS CHARACTER FORMAT "X(256)":U INITIAL "Грузополучатель:" 
-  VIEW-AS FILL-IN 
-  SIZE 17.38 BY .9 NO-UNDO.
+DEFINE VARIABLE f-date-name AS CHARACTER FORMAT "X(256)":U INITIAL "Дата:" 
+     VIEW-AS FILL-IN 
+     SIZE 6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-num           AS CHARACTER FORMAT "X(256)":U 
-  LABEL "№ документа" 
-  VIEW-AS FILL-IN 
-  SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-date-name-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Дата:" 
+     VIEW-AS FILL-IN 
+     SIZE 6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-num-2         AS CHARACTER FORMAT "X(256)":U 
-  LABEL "№" 
-  VIEW-AS FILL-IN 
-  SIZE 14 BY 1 NO-UNDO.
+DEFINE VARIABLE f-gruz AS CHARACTER FORMAT "X(256)":U INITIAL "Грузополучатель:" 
+     VIEW-AS FILL-IN 
+     SIZE 17.38 BY .92 NO-UNDO.
 
-DEFINE VARIABLE f-obj-code-TH   AS INTEGER   FORMAT "->>>>>>" INITIAL 0 
-  VIEW-AS FILL-IN 
-  SIZE 14.75 BY 1.
+DEFINE VARIABLE f-info-name AS CHARACTER FORMAT "X(256)":U INITIAL "Доп.инфо:" 
+     VIEW-AS FILL-IN 
+     SIZE 9.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-obj-name-TH   AS CHARACTER FORMAT "X(100)" 
-  VIEW-AS FILL-IN 
-  SIZE 48.5 BY 1.
+DEFINE VARIABLE f-mark AS CHARACTER FORMAT "X(256)":U INITIAL "Марка:" 
+     VIEW-AS FILL-IN 
+     SIZE 6.7 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-obj-type-TH   AS CHARACTER FORMAT "X(3)" 
-  VIEW-AS FILL-IN 
-  SIZE 4.13 BY 1.
+DEFINE VARIABLE f-num AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-status        AS CHARACTER FORMAT "X(256)":U 
-  LABEL "Статус ТН" 
-  VIEW-AS FILL-IN 
-  SIZE 58.5 BY 1 NO-UNDO.
+DEFINE VARIABLE f-num-2 AS CHARACTER FORMAT "X(256)":U 
+     LABEL "№" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-supp-code-TH  AS INTEGER   FORMAT "->>>>>>" INITIAL 0 
-  VIEW-AS FILL-IN 
-  SIZE 14.75 BY 1.
+DEFINE VARIABLE f-num-name AS CHARACTER FORMAT "X(256)":U INITIAL "№ документа:" 
+     VIEW-AS FILL-IN 
+     SIZE 12.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-supp-name-TH  AS CHARACTER FORMAT "X(100)" 
-  VIEW-AS FILL-IN 
-  SIZE 48.5 BY 1.
+DEFINE VARIABLE f-num-name-2 AS CHARACTER FORMAT "X(256)":U INITIAL "№:" 
+     VIEW-AS FILL-IN 
+     SIZE 3.25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-supp-type-TH  AS CHARACTER FORMAT "X(3)" 
-  VIEW-AS FILL-IN 
-  SIZE 4.13 BY 1.
+DEFINE VARIABLE f-obj-code-TH AS INTEGER FORMAT "->>>>>>" INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 14.75 BY 1.
 
-DEFINE VARIABLE F-text          AS CHARACTER FORMAT "X(256)":U 
-  VIEW-AS FILL-IN 
-  SIZE 80.5 BY 1.25
-  FGCOLOR 12 NO-UNDO.
+DEFINE VARIABLE f-obj-name AS CHARACTER FORMAT "X(256)":U INITIAL "Объект:" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY .75 NO-UNDO.
 
-DEFINE VARIABLE f-total         AS DECIMAL   FORMAT "->>,>>9.99":U INITIAL 0 
-  LABEL "Общая сумма" 
-  VIEW-AS FILL-IN 
-  SIZE 16.75 BY 1 NO-UNDO.
+DEFINE VARIABLE f-obj-name-TH AS CHARACTER FORMAT "X(100)" 
+     VIEW-AS FILL-IN 
+     SIZE 48.5 BY 1.
 
-DEFINE VARIABLE f-vat           AS DECIMAL   FORMAT "->>,>>9.99":U INITIAL 0 
-  LABEL "Сумма НДС" 
-  VIEW-AS FILL-IN 
-  SIZE 16.75 BY 1 NO-UNDO.
+DEFINE VARIABLE f-obj-type-TH AS CHARACTER FORMAT "X(3)" 
+     VIEW-AS FILL-IN 
+     SIZE 4.13 BY 1.
 
-DEFINE VARIABLE f-wrkr          AS INTEGER   FORMAT "9999999999":U INITIAL 0 
-  LABEL "Кл-к" 
-  VIEW-AS FILL-IN 
-  SIZE 10 BY 1
-  BGCOLOR 15 NO-UNDO.
+DEFINE VARIABLE f-status-EDI AS CHARACTER FORMAT "X(256)":U INITIAL "Статус EDI:" 
+     VIEW-AS FILL-IN 
+     SIZE 11.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-1       AS CHARACTER FORMAT "X(256)":U INITIAL "Поставщик:" 
-  VIEW-AS FILL-IN 
-  SIZE 14 BY .75 NO-UNDO.
+DEFINE VARIABLE f-status-TH AS CHARACTER FORMAT "X(256)":U INITIAL "Статус ТН:" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-2       AS CHARACTER FORMAT "X(256)":U INITIAL "Договор:" 
-  VIEW-AS FILL-IN 
-  SIZE 14 BY .75 NO-UNDO.
+DEFINE VARIABLE f-supp-code-TH AS INTEGER FORMAT "->>>>>>" INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 14.75 BY 1.
 
-DEFINE VARIABLE FILL-IN-3       AS CHARACTER FORMAT "X(256)":U INITIAL "Договор:" 
-  VIEW-AS FILL-IN 
-  SIZE 14 BY .75 NO-UNDO.
+DEFINE VARIABLE f-supp-name-TH AS CHARACTER FORMAT "X(100)" 
+     VIEW-AS FILL-IN 
+     SIZE 48.5 BY 1.
 
-/*DEFINE VARIABLE Numutd          AS CHARACTER FORMAT "X(256)":U*/
-/*  LABEL "Номер УПД"                                           */
-/*  VIEW-AS FILL-IN                                             */
-/*  SIZE 59 BY 1                                                */
-/*  FONT 4 NO-UNDO.                                             */
+DEFINE VARIABLE f-supp-type-TH AS CHARACTER FORMAT "X(3)" 
+     VIEW-AS FILL-IN 
+     SIZE 4.13 BY 1.
 
-DEFINE VARIABLE v-mark          AS CHARACTER FORMAT "X(255)" 
-  LABEL "Марка" 
-  VIEW-AS FILL-IN 
-  SIZE 101 BY 1.
+DEFINE VARIABLE F-text AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 80.5 BY 1.25
+     FGCOLOR 12  NO-UNDO.
 
-DEFINE VARIABLE wrkr-name       AS CHARACTER FORMAT "x(256)":U 
-  VIEW-AS TEXT 
-  SIZE 11 BY 1
-  BGCOLOR 15 NO-UNDO.
+DEFINE VARIABLE f-total AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Общая сумма" 
+     VIEW-AS FILL-IN 
+     SIZE 16.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE a-n-c           AS CHARACTER 
-  VIEW-AS RADIO-SET HORIZONTAL
-  RADIO-BUTTONS 
-  "Код", "code",
-  "Нач.назв", "name",
-  "Нач.слова", "context"
-  SIZE 37.63 BY 1 NO-UNDO.
+DEFINE VARIABLE f-vat AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
+     LABEL "Сумма НДС" 
+     VIEW-AS FILL-IN 
+     SIZE 16.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE R-error         AS INTEGER 
-  VIEW-AS RADIO-SET HORIZONTAL
-  RADIO-BUTTONS 
-  "Все", 1,
-  "Не проверено", 2
-  SIZE 25.38 BY 1 NO-UNDO.
+DEFINE VARIABLE f-wrkr AS INTEGER FORMAT "9999999999":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 11.25 BY 1
+     BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE R-error-2         AS INTEGER 
-  VIEW-AS RADIO-SET HORIZONTAL
-  RADIO-BUTTONS 
-  "Все", 1,
-  "Ошибки", 2
-  SIZE 25.38 BY 1 NO-UNDO.
-  
+DEFINE VARIABLE f-wrkr-name AS CHARACTER FORMAT "X(256)":U INITIAL "Кл-к:" 
+     VIEW-AS FILL-IN 
+     SIZE 5.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Поставщик:" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY .75 NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Договор:" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY .75 NO-UNDO.
+
+DEFINE VARIABLE FILL-IN-3 AS CHARACTER FORMAT "X(256)":U INITIAL "Договор:" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY .75 NO-UNDO.
+
+DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(255)" 
+     VIEW-AS FILL-IN 
+     SIZE 100 BY 1.
+
+DEFINE VARIABLE wrkr-name AS CHARACTER FORMAT "x(256)":U 
+      VIEW-AS TEXT 
+     SIZE 11 BY 1
+     BGCOLOR 15  NO-UNDO.
+
+DEFINE VARIABLE a-n-c AS CHARACTER 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Код", "code",
+"Нач.назв", "name",
+"Нач.слова", "context"
+     SIZE 37.63 BY 1 NO-UNDO.
+
+DEFINE VARIABLE R-error AS INTEGER 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Все", 1,
+"Не проверено", 2
+     SIZE 25.38 BY 1 NO-UNDO.
+
+DEFINE VARIABLE R-error-2 AS INTEGER 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Все", 1,
+"Ошибки", 2
+     SIZE 25.38 BY 1 NO-UNDO.
+
 DEFINE RECTANGLE R-TH
-  EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-  SIZE 73.5 BY 6.75 TOOLTIP "Данные ТН".
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 73.5 BY 6.75 TOOLTIP "Данные ТН".
 
 DEFINE RECTANGLE RECT-1
-  EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-  SIZE 147.5 BY 3.25.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 147.5 BY 3.25.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -604,85 +645,94 @@ DEFINE BROWSE br-utd
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-utd
-  b-cancel AT ROW 1 COL 2
-  b-exit AT ROW 1 COL 2
-  b-save AT ROW 1 COL 17
-  b-servis AT ROW 1 COL 99.88 WIDGET-ID 288
-  b_error AT ROW 1 COL 114.88 WIDGET-ID 282
-  B_mark AT ROW 1 COL 148.88 RIGHT-ALIGNED WIDGET-ID 80
-  c-type AT ROW 2.25 COL 5.13 COLON-ALIGNED WIDGET-ID 240
-  f-num AT ROW 2.25 COL 64.5 COLON-ALIGNED WIDGET-ID 284
-  f-date AT ROW 2.25 COL 85.25 COLON-ALIGNED WIDGET-ID 286
-  f-num-2 AT ROW 2.25 COL 112 COLON-ALIGNED WIDGET-ID 314
-  f-date-2 AT ROW 2.25 COL 132.75 COLON-ALIGNED WIDGET-ID 312
-/*  Numutd AT ROW 4.25 COL 86.5 COLON-ALIGNED WIDGET-ID 14*/
-  f-obj-type-TH AT ROW 5.21 COL 5.88 RIGHT-ALIGNED NO-LABEL WIDGET-ID 102
-  f-obj-code-TH AT ROW 5.21 COL 21.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 98
-  r-obj-TH AT ROW 5.21 COL 22.5 WIDGET-ID 104
-  f-obj-name-TH AT ROW 5.21 COL 73.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 100
-  f-gruz AT ROW 5.25 COL 77.13 NO-LABEL WIDGET-ID 310
-  f-obj-name-2 AT ROW 6.17 COL 77.25 NO-LABEL WIDGET-ID 270
-  FILL-IN-1 AT ROW 6.5 COL 2.5 NO-LABEL WIDGET-ID 242
-  f-supp-type-TH AT ROW 7.29 COL 5.88 RIGHT-ALIGNED NO-LABEL WIDGET-ID 96
-  f-supp-code-TH AT ROW 7.29 COL 21.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 86
-  r-supp-TH AT ROW 7.29 COL 22.5 WIDGET-ID 92
-  f-supp-name-TH AT ROW 7.29 COL 73.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 88
-  f-total AT ROW 8.42 COL 129 COLON-ALIGNED WIDGET-ID 320
-  FILL-IN-2 AT ROW 8.5 COL 2.5 NO-LABEL WIDGET-ID 244
-  FILL-IN-3 AT ROW 8.5 COL 77.13 NO-LABEL WIDGET-ID 248
-  f-contr-TH AT ROW 9.29 COL 21.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 106
-  r-contr-TH AT ROW 9.29 COL 22.5 WIDGET-ID 110
-  f-contr-name-TH AT ROW 9.29 COL 73.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 212
-  f-contr-name AT ROW 9.29 COL 77.25 NO-LABEL WIDGET-ID 214
-  f-vat AT ROW 9.5 COL 129 COLON-ALIGNED WIDGET-ID 322
-  f-status AT ROW 11.17 COL 15 COLON-ALIGNED WIDGET-ID 218
-  c-status-edi AT ROW 11.17 COL 87.5 COLON-ALIGNED WIDGET-ID 234
-  c-status AT ROW 11.21 COL 15 COLON-ALIGNED WIDGET-ID 238
-  f-comment AT ROW 12.25 COL 17 NO-LABEL WIDGET-ID 266
-  f-wrkr AT ROW 12.25 COL 122.5 COLON-ALIGNED WIDGET-ID 304
-  r-wrkr AT ROW 12.25 COL 145.5 WIDGET-ID 302
-  f-agnt AT ROW 13.46 COL 122.5 COLON-ALIGNED WIDGET-ID 290
-  r-agnt AT ROW 13.46 COL 145.5 WIDGET-ID 298
-  f-info AT ROW 13.75 COL 17 NO-LABEL WIDGET-ID 268
-  f-boss AT ROW 14.67 COL 122.5 COLON-ALIGNED WIDGET-ID 294
-  r-boss AT ROW 14.67 COL 145.5 WIDGET-ID 300
-  v-mark AT ROW 15.5 COL 15 COLON-ALIGNED WIDGET-ID 34
-  a-n-c AT ROW 16.71 COL 2.38 NO-LABEL WIDGET-ID 272
-  a-n-c-name AT ROW 16.75 COL 39.5 COLON-ALIGNED NO-LABEL WIDGET-ID 278
-  R-error AT ROW 16.79 COL 124.63 NO-LABEL WIDGET-ID 316
-  R-error-2 AT ROW 16.79 COL 124.63 NO-LABEL WIDGET-ID 316
-  br-utd AT ROW 17.75 COL 2
-  F-text AT ROW 28.75 COL 35.5 NO-LABEL WIDGET-ID 224
-  b_prov-finish AT ROW 30.5 COL 2.75 WIDGET-ID 70
-  b_recheck AT ROW 30.5 COL 39.5 WIDGET-ID 228
-  b_correct AT ROW 30.5 COL 76.13 WIDGET-ID 230
-  b_anul AT ROW 30.5 COL 112.75 WIDGET-ID 324
-  b_back-check AT ROW 31.88 COL 2.75 WIDGET-ID 236
-  b_finish AT ROW 31.88 COL 39.5 WIDGET-ID 252
-  b_write-cancel AT ROW 31.88 COL 76.13 WIDGET-ID 232
-  b_deliv-cancel AT ROW 31.88 COL 112.75 WIDGET-ID 230
-  wrkr-name AT ROW 12.25 COL 132.88 COLON-ALIGNED NO-LABEL WIDGET-ID 306
-  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-  SIDE-LABELS THREE-D  SCROLLABLE .
+     b-exit AT ROW 1 COL 2
+     b-cancel AT ROW 1 COL 2
+     b-save AT ROW 1 COL 17
+     b-servis AT ROW 1 COL 99.88 WIDGET-ID 288
+     b_error AT ROW 1 COL 114.88 WIDGET-ID 282
+     B_mark AT ROW 1 COL 148.88 RIGHT-ALIGNED WIDGET-ID 80
+     c-type AT ROW 2.25 COL 5.13 COLON-ALIGNED WIDGET-ID 240
+     f-num-name AT ROW 2.25 COL 53.75 NO-LABEL WIDGET-ID 328
+     f-num AT ROW 2.25 COL 64.5 COLON-ALIGNED NO-LABEL WIDGET-ID 284
+     f-date-name AT ROW 2.25 COL 81.13 NO-LABEL WIDGET-ID 330
+     f-date AT ROW 2.25 COL 85.25 COLON-ALIGNED NO-LABEL WIDGET-ID 286
+     f-num-name-2 AT ROW 2.25 COL 110.5 NO-LABEL WIDGET-ID 334
+     f-num-2 AT ROW 2.25 COL 112 COLON-ALIGNED NO-LABEL WIDGET-ID 314
+     f-date-name-2 AT ROW 2.25 COL 128.63 NO-LABEL WIDGET-ID 332
+     f-date-2 AT ROW 2.25 COL 132.75 COLON-ALIGNED NO-LABEL WIDGET-ID 312
+     f-obj-name AT ROW 4.38 COL 2.5 NO-LABEL WIDGET-ID 326
+     f-obj-type-TH AT ROW 5.21 COL 5.88 RIGHT-ALIGNED NO-LABEL WIDGET-ID 102
+     f-obj-code-TH AT ROW 5.21 COL 21.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 98
+     r-obj-TH AT ROW 5.21 COL 22.5 WIDGET-ID 104
+     f-obj-name-TH AT ROW 5.21 COL 73.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 100
+     f-gruz AT ROW 5.25 COL 77.13 NO-LABEL WIDGET-ID 310
+     f-obj-name-2 AT ROW 6.17 COL 77.25 NO-LABEL WIDGET-ID 270
+     FILL-IN-1 AT ROW 6.5 COL 2.5 NO-LABEL WIDGET-ID 242
+     f-supp-type-TH AT ROW 7.29 COL 5.88 RIGHT-ALIGNED NO-LABEL WIDGET-ID 96
+     f-supp-code-TH AT ROW 7.29 COL 21.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 86
+     r-supp-TH AT ROW 7.29 COL 22.5 WIDGET-ID 92
+     f-supp-name-TH AT ROW 7.29 COL 73.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 88
+     f-total AT ROW 8.42 COL 129 COLON-ALIGNED WIDGET-ID 320
+     FILL-IN-2 AT ROW 8.5 COL 2.5 NO-LABEL WIDGET-ID 244
+     FILL-IN-3 AT ROW 8.5 COL 77.13 NO-LABEL WIDGET-ID 248
+     f-contr-TH AT ROW 9.29 COL 21.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 106
+     r-contr-TH AT ROW 9.29 COL 22.5 WIDGET-ID 110
+     f-contr-name-TH AT ROW 9.29 COL 73.25 RIGHT-ALIGNED NO-LABEL WIDGET-ID 212
+     f-contr-name AT ROW 9.29 COL 77.25 NO-LABEL WIDGET-ID 214
+     f-vat AT ROW 9.5 COL 129 COLON-ALIGNED WIDGET-ID 322
+     f-status-TH AT ROW 11.17 COL 5.88 NO-LABEL WIDGET-ID 336
+     c-status AT ROW 11.17 COL 15 COLON-ALIGNED NO-LABEL WIDGET-ID 238
+     f-status-EDI AT ROW 11.17 COL 77.63 NO-LABEL WIDGET-ID 338
+     c-status-edi AT ROW 11.17 COL 87.5 COLON-ALIGNED NO-LABEL WIDGET-ID 234
+     f-comment AT ROW 12.25 COL 17 NO-LABEL WIDGET-ID 266
+     f-wrkr-name AT ROW 12.25 COL 117.25 NO-LABEL WIDGET-ID 346
+     f-wrkr AT ROW 12.25 COL 121.25 COLON-ALIGNED NO-LABEL WIDGET-ID 304
+     r-wrkr AT ROW 12.25 COL 145.5 WIDGET-ID 302
+     f-comment-name AT ROW 12.42 COL 4 NO-LABEL WIDGET-ID 340
+     f-agnt-name AT ROW 13.46 COL 118.25 NO-LABEL WIDGET-ID 348
+     f-agnt AT ROW 13.46 COL 121.25 COLON-ALIGNED NO-LABEL WIDGET-ID 290
+     r-agnt AT ROW 13.46 COL 145.5 WIDGET-ID 298
+     f-info AT ROW 13.71 COL 17 NO-LABEL WIDGET-ID 268
+     f-info-name AT ROW 14.04 COL 7 NO-LABEL WIDGET-ID 342
+     f-boss-name AT ROW 14.67 COL 118.25 NO-LABEL WIDGET-ID 350
+     f-boss AT ROW 14.67 COL 121.25 COLON-ALIGNED NO-LABEL WIDGET-ID 294
+     r-boss AT ROW 14.67 COL 145.5 WIDGET-ID 300
+     f-mark AT ROW 15.67 COL 10 NO-LABEL WIDGET-ID 344
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS THREE-D  SCROLLABLE .
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME d-utd
-  agnt-name AT ROW 13.46 COL 132.88 COLON-ALIGNED NO-LABEL WIDGET-ID 292
-  boss-name AT ROW 14.67 COL 132.88 COLON-ALIGNED NO-LABEL WIDGET-ID 296
-  "Комментарий:" VIEW-AS TEXT
-  SIZE 13 BY .67 AT ROW 12.63 COL 4 WIDGET-ID 260
-  "Доп.инфо:" VIEW-AS TEXT
-  SIZE 9.5 BY .67 AT ROW 14.17 COL 7 WIDGET-ID 264
-  "Данные ТН:" VIEW-AS TEXT
-  SIZE 11 BY .67 AT ROW 3.75 COL 32.63 WIDGET-ID 180
-  "Объект:" VIEW-AS TEXT
-  SIZE 8 BY .67 AT ROW 4.42 COL 3 WIDGET-ID 182
-  RECT-1 AT ROW 30.25 COL 2 WIDGET-ID 64
-  R-TH AT ROW 4 COL 2 WIDGET-ID 112
-  SPACE(0.87) SKIP(23.07)
-  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-  SIDE-LABELS THREE-D  SCROLLABLE 
-  TITLE "Проверка кодов маркировки":L.
+     v-mark AT ROW 15.67 COL 15 COLON-ALIGNED NO-LABEL WIDGET-ID 34
+     a-n-c AT ROW 16.71 COL 2.38 NO-LABEL WIDGET-ID 272
+     a-n-c-name AT ROW 16.75 COL 39.5 COLON-ALIGNED NO-LABEL WIDGET-ID 278
+     R-error AT ROW 16.79 COL 124.63 NO-LABEL WIDGET-ID 316
+     R-error-2 AT ROW 16.79 COL 124.63 NO-LABEL WIDGET-ID 316
+     br-utd AT ROW 17.75 COL 2
+     F-text AT ROW 28.75 COL 35.5 NO-LABEL WIDGET-ID 224
+     b_prov-finish AT ROW 30.5 COL 2.75 WIDGET-ID 70
+     b_recheck AT ROW 30.5 COL 39.5 WIDGET-ID 228
+     b_correct AT ROW 30.5 COL 76.13 WIDGET-ID 230
+     b_anul AT ROW 30.5 COL 112.75 WIDGET-ID 324
+     b_back-check AT ROW 31.88 COL 2.75 WIDGET-ID 236
+     b_finish AT ROW 31.88 COL 39.5 WIDGET-ID 252
+     b_write-cancel AT ROW 31.88 COL 76.13 WIDGET-ID 232
+     b_deliv-cancel AT ROW 31.88 COL 112.75 WIDGET-ID 230
+     wrkr-name AT ROW 12.25 COL 132.88 COLON-ALIGNED NO-LABEL WIDGET-ID 306
+     agnt-name AT ROW 13.46 COL 132.88 COLON-ALIGNED NO-LABEL WIDGET-ID 292
+     boss-name AT ROW 14.67 COL 132.88 COLON-ALIGNED NO-LABEL WIDGET-ID 296
+     "Доп.инфо:" VIEW-AS TEXT
+          SIZE 9.5 BY .67 AT ROW 14.17 COL 7 WIDGET-ID 264
+     "Объект:" VIEW-AS TEXT
+          SIZE 8 BY .67 AT ROW 4.42 COL 3 WIDGET-ID 182
+     "Данные ТН:" VIEW-AS TEXT
+          SIZE 11 BY .67 AT ROW 3.75 COL 32.63 WIDGET-ID 180
+     RECT-1 AT ROW 30.25 COL 2 WIDGET-ID 64
+     R-TH AT ROW 4 COL 2 WIDGET-ID 112
+     SPACE(74.51) SKIP(23.07)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS THREE-D  SCROLLABLE 
+         TITLE "Проверка кодов маркировки":L.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -703,9 +753,9 @@ DEFINE FRAME d-utd
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX d-utd
    FRAME-NAME UNDERLINE                                                 */
-/* BROWSE-TAB br-utd R-error d-utd */
+/* BROWSE-TAB br-utd R-error-2 d-utd */
 ASSIGN 
-  FRAME d-utd:SCROLLABLE = FALSE.
+       FRAME d-utd:SCROLLABLE       = FALSE.
 
 /* SETTINGS FOR FILL-IN a-n-c-name IN FRAME d-utd
    NO-ENABLE                                                            */
@@ -730,31 +780,55 @@ ASSIGN
 /* SETTINGS FOR BUTTON B_mark-utd IN FRAME d-utd
    ALIGN-R                                                              */
 
+/* SETTINGS FOR FILL-IN f-agnt-name IN FRAME d-utd
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-boss-name IN FRAME d-utd
+   ALIGN-L                                                              */
 ASSIGN 
-  f-comment:READ-ONLY IN FRAME d-utd = TRUE.
+       f-comment:READ-ONLY IN FRAME d-utd        = TRUE.
 
+/* SETTINGS FOR FILL-IN f-comment-name IN FRAME d-utd
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-contr-name IN FRAME d-utd
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-contr-name-TH IN FRAME d-utd
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN f-contr-TH IN FRAME d-utd
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-date-name IN FRAME d-utd
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-date-name-2 IN FRAME d-utd
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-gruz IN FRAME d-utd
    ALIGN-L                                                              */
 ASSIGN 
-  f-info:READ-ONLY IN FRAME d-utd = TRUE.
+       f-info:READ-ONLY IN FRAME d-utd        = TRUE.
 
+/* SETTINGS FOR FILL-IN f-info-name IN FRAME d-utd
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-mark IN FRAME d-utd
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-num-name IN FRAME d-utd
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-num-name-2 IN FRAME d-utd
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-obj-code-TH IN FRAME d-utd
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-obj-name IN FRAME d-utd
+   ALIGN-L                                                              */
 /* SETTINGS FOR EDITOR f-obj-name-2 IN FRAME d-utd
    NO-ENABLE                                                            */
 ASSIGN 
-  f-obj-name-2:READ-ONLY IN FRAME d-utd = TRUE.
+       f-obj-name-2:READ-ONLY IN FRAME d-utd        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-obj-name-TH IN FRAME d-utd
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN f-obj-type-TH IN FRAME d-utd
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-status-EDI IN FRAME d-utd
+   ALIGN-L                                                              */
+/* SETTINGS FOR FILL-IN f-status-TH IN FRAME d-utd
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-supp-code-TH IN FRAME d-utd
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN f-supp-name-TH IN FRAME d-utd
@@ -763,6 +837,8 @@ ASSIGN
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN F-text IN FRAME d-utd
    NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN f-wrkr-name IN FRAME d-utd
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN FILL-IN-1 IN FRAME d-utd
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN FILL-IN-2 IN FRAME d-utd
@@ -814,7 +890,7 @@ ASSIGN
 &Scoped-define SELF-NAME a-n-c
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL a-n-c d-utd
 ON VALUE-CHANGED OF a-n-c IN FRAME d-utd
-  DO:
+DO:
     assign a-n-c .
     apply "TAB":U to self .
     return no-apply .
@@ -827,7 +903,7 @@ ON VALUE-CHANGED OF a-n-c IN FRAME d-utd
 &Scoped-define SELF-NAME b-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel d-utd
 ON choose OF b-cancel IN FRAME d-utd /* Отмена */
-  DO:
+DO:
     if p-mode = {&add-def} and available (buf_utd) then 
     do:
       /*      for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num and buf_utd-lines.doc-id = buf_utd.doc-id:                                                        */
@@ -850,17 +926,18 @@ ON choose OF b-cancel IN FRAME d-utd /* Отмена */
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-utd
 ON choose OF b-exit IN FRAME d-utd /* Выход  */
-  DO:
+DO:
   /*    if f-status <> ObjSrv:Env:Utd:Sts:EDI:GetLabel(buf_utd.sts-edi) then buf_utd.sts-edi = "" .*/
   END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define SELF-NAME b-save
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-save d-utd
 ON choose OF b-save IN FRAME d-utd /* Ввод  */
-  DO:
+DO:
   define variable v-ok as logical no-undo .
     if p-mode <> {&lookup} and type_mark = 1 then 
     do:
@@ -931,20 +1008,11 @@ ON choose OF b-save IN FRAME d-utd /* Ввод  */
       end.  
       if c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then do:
         if f-num = "" then do:
-          message "Нет № счёт-фактуры"
+          message "Заполните номер документа"
           view-as alert-box.
           return no-apply .
         end.   
-        find first ub.utd no-lock where ub.utd.DocumentNumber = f-num
-                                    and ub.utd.DocumentDate = f-date 
-                                    and (ub.utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
-                                    or ub.utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)no-error .
-          if AVAILABLE (ub.utd) then do:
-              MESSAGE "Документ с № " + ub.utd.DocumentNumber + " от даты: " + string(ub.utd.DocumentDate) + " уже есть." skip
-              "Введите другой номер документа."
-              VIEW-AS ALERT-BOX.
-              return NO-APPLY .
-          end.    
+  
           assign
             buf_utd.DocumentNumber = f-num
             buf_utd.DocumentDate   = f-date
@@ -971,61 +1039,61 @@ ON choose OF b-save IN FRAME d-utd /* Ввод  */
 &Scoped-define SELF-NAME br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON ROW-DISPLAY OF br-utd IN FRAME d-utd
-  DO:
+DO:
     case X_utd-lines.stts:
       when "Проверен" then
         do:
           if type_mark = 1 then 
           do:
-            X_utd-lines.LineNum:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.gds-code:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.ProductCode:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.Gds-Name:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.UnitCode:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.Quantity:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.price:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.total:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.TaxRate_:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.qnty-scan:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.fact-qnty:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.qnty-mark:BGCOLOR in browse br-utd = GREEN_COLOR.
-            X_utd-lines.stts:BGCOLOR in browse br-utd = GREEN_COLOR.
+            X_utd-lines.LineNum:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.gds-code:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.ProductCode:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.UnitCode:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.Quantity:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.price:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.total:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.TaxRate_:fgCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.qnty-scan:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.qnty-mark:fGCOLOR in browse br-utd = CYAN_COLOR.
+            X_utd-lines.stts:fGCOLOR in browse br-utd = CYAN_COLOR.
           end.
         end.
-      when "Ожидает проверку" then
-        do:
-          if type_mark = 1 then 
-          do:
-            X_utd-lines.LineNum:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.gds-code:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.ProductCode:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.Gds-Name:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.UnitCode:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.Quantity:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.price:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.total:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.TaxRate_:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.qnty-scan:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.fact-qnty:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.qnty-mark:BGCOLOR in browse br-utd = YELLOW_COLOR.
-            X_utd-lines.stts:BGCOLOR in browse br-utd = YELLOW_COLOR.
-          end.
-        end.
-      otherwise 
+/*      when "Ожидает проверку" then                                          */
+/*        do:                                                                 */
+/*          if type_mark = 1 then                                             */
+/*          do:                                                               */
+/*            X_utd-lines.LineNum:fGCOLOR in browse br-utd = YELLOW_COLOR.    */
+/*            X_utd-lines.gds-code:fGCOLOR in browse br-utd = YELLOW_COLOR.   */
+/*            X_utd-lines.ProductCode:fGCOLOR in browse br-utd = YELLOW_COLOR.*/
+/*            X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = YELLOW_COLOR.   */
+/*            X_utd-lines.UnitCode:fGCOLOR in browse br-utd = YELLOW_COLOR.   */
+/*            X_utd-lines.Quantity:fGCOLOR in browse br-utd = YELLOW_COLOR.   */
+/*            X_utd-lines.price:fGCOLOR in browse br-utd = YELLOW_COLOR.      */
+/*            X_utd-lines.total:fGCOLOR in browse br-utd = YELLOW_COLOR.      */
+/*            X_utd-lines.TaxRate_:fGCOLOR in browse br-utd = YELLOW_COLOR.   */
+/*            X_utd-lines.qnty-scan:fGCOLOR in browse br-utd = YELLOW_COLOR.  */
+/*            X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = YELLOW_COLOR.  */
+/*            X_utd-lines.qnty-mark:fGCOLOR in browse br-utd = YELLOW_COLOR.  */
+/*            X_utd-lines.stts:fGCOLOR in browse br-utd = YELLOW_COLOR.       */
+/*          end.                                                              */
+/*        end.                                                                */
+      when "Ошибка" then 
       do:
-        X_utd-lines.LineNum:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.gds-code:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.ProductCode:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.Gds-Name:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.UnitCode:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.Quantity:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.price:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.total:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.TaxRate_:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.qnty-scan:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.fact-qnty:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.qnty-mark:BGCOLOR in browse br-utd = red_COLOR.
-        X_utd-lines.stts:BGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.LineNum:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.gds-code:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.ProductCode:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.UnitCode:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.Quantity:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.price:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.total:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.TaxRate_:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.qnty-scan:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.qnty-mark:fGCOLOR in browse br-utd = red_COLOR.
+        X_utd-lines.stts:fGCOLOR in browse br-utd = red_COLOR.
       end.      
     end case.
   END .
@@ -1036,12 +1104,12 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON VALUE-CHANGED OF br-utd IN FRAME d-utd
-  DO:
+DO:
     f-info = "" .
     
     if available (X_utd-lines) then 
     do:
-      br-utd :refresh().
+      br-utd :refresh() no-error .
       run gen-key-rec ("utd-lines", 
         input  buffer X_utd-lines:handle, 
         output vRecKey-line).
@@ -1100,7 +1168,6 @@ ON CHOOSE OF b_back-check IN FRAME d-utd /* Продолжить на проверку */
           b_recheck
           b_anul
           b_write-cancel
-          b_prov-finish
           b_finish
           b_prov-finish
           b_back-check
@@ -1117,7 +1184,7 @@ ON CHOOSE OF b_back-check IN FRAME d-utd /* Продолжить на проверку */
 &Scoped-define SELF-NAME b_correct
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_correct d-utd
 ON CHOOSE OF b_correct IN FRAME d-utd /* Запрос на изменение */
-  DO:
+DO:
     define variable v-ok as logical no-undo . 
    
     run ref/dialog-upd.w (input buf_utd.comment, input buf_utd.db-num, input buf_utd.doc-id, output v-comment, output v-ok) no-error.
@@ -1183,7 +1250,6 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* Аннулировать */
           b_write-cancel
           b_prov-finish
           b_finish
-          b_prov-finish
           b_back-check
           b_deliv-cancel
         with frame {&frame-name} .  
@@ -1231,7 +1297,7 @@ ON CHOOSE OF MENU-ITEM m_error-lines /* Ошибки товара */
 &Scoped-define SELF-NAME b_finish
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_finish d-utd
 ON CHOOSE OF b_finish IN FRAME d-utd /* Ввод в оборот */
-  DO:
+DO:
 define variable Log-Res      as      logical     no-undo.
 define variable quest-ok     as      logical     no-undo .
    /*Проверка прав */
@@ -1329,7 +1395,7 @@ ON CHOOSE OF menu-item m_marks-lines  /* Марки */
         message "Нет марок"
           view-as alert-box.
       end.    
-      br-utd :refresh().
+      br-utd :refresh() no-error .
       reposition br-utd to recid recid_utd no-error .
 
     end.
@@ -1393,7 +1459,7 @@ run enable_UI in this-procedure .
 &Scoped-define SELF-NAME b_prov-finish
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_prov-finish d-utd
 ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
-  DO:
+DO:
     define variable v-ok        as logical no-undo .
     define variable v-check     as logical no-undo .
     define variable v-qnty-mark as integer no-undo .
@@ -1440,11 +1506,13 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
         first buf_marking exclusive-lock where buf_marking.mark = bf_utd-marking-lines.mark:
           case bf_utd-marking-lines.sts:
             when Marking:Checked_:KeyIntDB then do:
+              if buf_marking.sts <> Marking:MarkError:KeyIntDB then
               buf_marking.sts = Marking:Checked_:KeyIntDB .
             end.
             when Marking:MarkError:KeyIntDB then do:
             end.    
             otherwise do:
+              if buf_marking.sts <> Marking:MarkError:KeyIntDB then  
               buf_marking.sts = Marking:NotAvailable:KeyIntDB .
             end.  
           end.  
@@ -1529,7 +1597,7 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
 &Scoped-define SELF-NAME b_recheck
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recheck d-utd
 ON CHOOSE OF b_recheck IN FRAME d-utd /* Повторно проверить */
-  DO:
+DO:
     define variable Log-Res      as      logical     no-undo.
     define buffer buf_c-utd for ub.c-utd .
 
@@ -1549,13 +1617,15 @@ ON CHOOSE OF b_recheck IN FRAME d-utd /* Повторно проверить */
   true
   log-res
 }
+
     if available (buf_utd) and log-res then 
     do:
         SaturateAndCheckUTD(buf_utd.db-num, buf_utd.doc-id) no-error .        
         if  error-status:error then 
         do: 
-          return return-value .
+          message return-value view-as alert-box.
         end.
+
       if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or /*ошибка загрузки*/
          buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
          buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
@@ -1575,7 +1645,13 @@ ON CHOOSE OF b_recheck IN FRAME d-utd /* Повторно проверить */
              buf_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB .
            end.  
              
-      end.     
+      end. 
+        oMotp = new is_motp() .
+        oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
+        if ERROR-STATUS:ERROR then do:
+          message return-value view-as alert-box.
+        end.    
+        delete OBJECT oMotp .    
     end.
 /*    run init-temp .*/
     assign
@@ -1588,18 +1664,8 @@ ON CHOOSE OF b_recheck IN FRAME d-utd /* Повторно проверить */
     run enable_UI in this-procedure .
     run mark-temp .
   {&OPEN-QUERY-br-utd}
-          disable          
-          b_correct
-          b_recheck
-          b_anul
-          b_write-cancel
-          b_prov-finish
-          b_finish
-          b_prov-finish
-          b_back-check
-          b_deliv-cancel
-        with frame {&frame-name} .  
-  END.
+  run enable_BUTTON in this-procedure .
+            END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1608,7 +1674,7 @@ ON CHOOSE OF b_recheck IN FRAME d-utd /* Повторно проверить */
 &Scoped-define SELF-NAME b_write-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_write-cancel d-utd
 ON CHOOSE OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */
-  DO:
+DO:
     if available (buf_utd) then 
     do:
       if p-connect <> ? then 
@@ -1640,7 +1706,6 @@ ON CHOOSE OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */
           b_write-cancel
           b_prov-finish
           b_finish
-          b_prov-finish
           b_back-check
           b_deliv-cancel
         with frame {&frame-name} .  
@@ -1697,7 +1762,6 @@ ON CHOOSE OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */
           b_write-cancel
           b_prov-finish
           b_finish
-          b_prov-finish
           b_back-check
           b_deliv-cancel
         with frame {&frame-name} .  
@@ -1706,10 +1770,11 @@ ON CHOOSE OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define SELF-NAME c-status
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-status d-utd
 ON VALUE-CHANGED OF c-status IN FRAME d-utd /* Статус ТН */
-  DO:
+DO:
     assign c-status .
     if c-type = 0 then 
     do:
@@ -1732,7 +1797,7 @@ ON VALUE-CHANGED OF c-status IN FRAME d-utd /* Статус ТН */
 &Scoped-define SELF-NAME c-status-edi
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-status-edi d-utd
 ON VALUE-CHANGED OF c-status-edi IN FRAME d-utd /* Статус EDI */
-  DO:
+DO:
     assign c-status-edi .
     if c-type = 0 then 
     do:
@@ -1755,7 +1820,7 @@ ON VALUE-CHANGED OF c-status-edi IN FRAME d-utd /* Статус EDI */
 &Scoped-define SELF-NAME c-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-type d-utd
 ON VALUE-CHANGED OF c-type IN FRAME d-utd /* Тип */
-  DO:
+DO:
     assign c-type .
     if available (buf_utd) then buf_utd.EDocType = c-type .
     F-text = "                            Просканируйте марку" . 
@@ -1774,7 +1839,7 @@ ON VALUE-CHANGED OF c-type IN FRAME d-utd /* Тип */
 &Scoped-define SELF-NAME f-agnt
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-agnt d-utd
 ON leave OF f-agnt IN FRAME d-utd /* Исп */
-  DO:
+DO:
     define buffer buf_clients for ub.clients .
     assign f-agnt .
     find first buf_clients no-lock where buf_clients.obj-code = f-agnt and buf_clients.obj-type = {&prs} no-error . 
@@ -1800,7 +1865,7 @@ ON leave OF f-agnt IN FRAME d-utd /* Исп */
 &Scoped-define SELF-NAME f-boss
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-boss d-utd
 ON leave OF f-boss IN FRAME d-utd /* М-р */
-  DO:
+DO:
     define buffer buf_clients for ub.clients .
     assign f-boss .
     find first buf_clients no-lock where buf_clients.obj-code = f-boss and buf_clients.obj-type = {&prs} no-error . 
@@ -1826,7 +1891,7 @@ ON leave OF f-boss IN FRAME d-utd /* М-р */
 &Scoped-define SELF-NAME f-wrkr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-wrkr d-utd
 ON leave OF f-wrkr IN FRAME d-utd /* Кл-к */
-  DO:
+DO:
     define buffer buf_clients for ub.clients .
     assign f-wrkr .
     find first buf_clients no-lock where buf_clients.obj-code = f-wrkr and buf_clients.obj-type = {&prs} no-error . 
@@ -1862,8 +1927,8 @@ ON CHOOSE OF MENU-ITEM m_choose-status /* Сменить статус документа */
 
 &Scoped-define SELF-NAME m_check-akt
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_check-akt d-utd
-ON CHOOSE OF MENU-ITEM m_check-akt /* Сменить статус документа */
-  DO:
+ON CHOOSE OF MENU-ITEM m_check-akt /* Проверить по Акту приема-передачи */
+DO:
     define buffer bf_utd for ub.utd .
     define variable v-rec-list as character no-undo .
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
@@ -1873,7 +1938,8 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Сменить статус документа */
       bf_utd.DocumentDate = buf_utd.DocumentDate and bf_utd.edoctype = objSrv:Env:Utd:EDocType:AKT:KeyIntDB no-error .
     if not available (bf_utd) then 
     do:
-      run str/UPD.w ( parparentproc, {&select}, objSrv:Env:Utd:EDocType:AKT:KeyIntDB, output v-rec-list)  no-error .
+      define variable vconnect as com-handle no-undo.
+      run str/UPD.w ( parparentproc, {&select}, objSrv:Env:Utd:EDocType:AKT:KeyIntDB, "", input-output vconnect, output v-rec-list)  no-error .
   
       find first bf_utd exclusive-lock where recid(bf_utd) = integer(v-rec-list) no-error .
     end.  
@@ -1936,7 +2002,7 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Сменить статус документа */
 &Scoped-define SELF-NAME r-agnt
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-agnt d-utd
 ON CHOOSE OF r-agnt IN FRAME d-utd /* r-acc */
-  DO:
+DO:
     run ref/cli-all.w (
       input parparentproc
       ,input "b-sel"
@@ -1966,7 +2032,7 @@ ON CHOOSE OF r-agnt IN FRAME d-utd /* r-acc */
 &Scoped-define SELF-NAME r-boss
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-boss d-utd
 ON CHOOSE OF r-boss IN FRAME d-utd /* r-acc */
-  DO:
+DO:
     run ref/cli-all.w (
       input parparentproc
       ,input "b-sel"
@@ -1996,7 +2062,7 @@ ON CHOOSE OF r-boss IN FRAME d-utd /* r-acc */
 &Scoped-define SELF-NAME r-contr-TH
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-contr-TH d-utd
 ON CHOOSE OF r-contr-TH IN FRAME d-utd
-  DO:
+DO:
     define buffer buf_contract for contract.
     define variable agnt-list as character no-undo .
     if f-supp-code-TH <> 0 then 
@@ -2091,7 +2157,7 @@ ON CHOOSE OF r-contr-TH IN FRAME d-utd
 &Scoped-define SELF-NAME r-obj-TH
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-obj-TH d-utd
 ON CHOOSE OF r-obj-TH IN FRAME d-utd
-  DO:
+DO:
     run ref/cli-all.w (
       input parparentproc
       ,input "b-sel"
@@ -2122,7 +2188,7 @@ ON CHOOSE OF r-obj-TH IN FRAME d-utd
 &Scoped-define SELF-NAME r-supp-TH
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-supp-TH d-utd
 ON CHOOSE OF r-supp-TH IN FRAME d-utd
-  DO:
+DO:
     run ref/cli-all.w (
       input parparentproc
       ,input "b-sel"
@@ -2205,10 +2271,44 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-num d-utd
+ON leave OF F-num IN FRAME d-utd
+DO:
+    assign f-num .
+    if f-date:SCREEN-VALUE <> "" and f-num:SCREEN-VALUE <> "" then do:
+        find first ub.utd no-lock where ub.utd.DocumentNumber = f-num
+            and ub.utd.DocumentDate = f-date 
+            and (ub.utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
+            or ub.utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)no-error .
+        if AVAILABLE (ub.utd) then 
+        do:
+            MESSAGE "Документ с № " + ub.utd.DocumentNumber + " от даты: " + string(ub.utd.DocumentDate) + " уже заведен в системе." skip
+                VIEW-AS ALERT-BOX.
+            return NO-APPLY .
+        end.    
+    end.      
+    display f-num with frame {&frame-name} .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME 
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date d-utd
 ON leave OF F-date IN FRAME d-utd
 DO:
     assign f-date .
+    if f-num:SCREEN-VALUE <> "" and f-num:SCREEN-VALUE <> ? then do:
+        find first ub.utd no-lock where ub.utd.DocumentNumber = f-num
+            and ub.utd.DocumentDate = f-date 
+            and (ub.utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
+            or ub.utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)no-error .
+        if AVAILABLE (ub.utd) then 
+        do:
+            MESSAGE "Документ с № " + ub.utd.DocumentNumber + " от даты: " + string(ub.utd.DocumentDate) + " уже заведен в системе." skip
+                VIEW-AS ALERT-BOX.
+            return NO-APPLY .
+        end.    
+    end.      
     display f-date with frame {&frame-name} .
 END.
 
@@ -2218,7 +2318,7 @@ END.
 &Scoped-define SELF-NAME r-wrkr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-wrkr d-utd
 ON CHOOSE OF r-wrkr IN FRAME d-utd /* r-acc */
-  DO:
+DO:
     run ref/cli-all.w (
       input parparentproc
       ,input "b-sel"
@@ -2248,7 +2348,7 @@ ON CHOOSE OF r-wrkr IN FRAME d-utd /* r-acc */
 &Scoped-define SELF-NAME v-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
 ON ENTRY OF v-mark IN FRAME d-utd /* Марка */
-  DO:
+DO:
     run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
     run ActivateKeyboardLayout (input iLang, input 0).
   END.
@@ -2259,7 +2359,7 @@ ON ENTRY OF v-mark IN FRAME d-utd /* Марка */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
 ON leave OF v-mark IN FRAME d-utd /* Марка */
-  DO:
+DO:
     v-mark = "" .
  
       F-text = "" .
@@ -2523,7 +2623,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   mDiadocConnection = p-connect . 
   Tree = ObjSrv:Lib:MarkingTree .
   Marking = ObjSrv:Env:Marking:Sts:Mark.
-  
+   
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
   run ActivateKeyboardLayout (input iLang, input 0).  
   
@@ -2543,7 +2643,30 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   false
   log-res-statch
 }
+{ gbl/objat.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      "'active=request'"
+      v-obj-active
+}
 
+
+{ gbl/conf-rd.i
+        "'is-erpRN'"
+          0
+          "''"
+          0
+          "''"
+          "''"
+          "''"
+          NO
+          conf-par
+          par-type
+          no-error
+          }
+       if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+       else mode-erprn = no.
+       
   run init-temp in this-procedure .
   if available (buf_utd) then 
   do:
@@ -2589,17 +2712,15 @@ run disable_UI in this-procedure .
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-utd  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-  /*------------------------------------------------------------------------------
-    Purpose:     DISABLE the User Interface
-    Parameters:  <none>
-    Notes:       Here we clean-up the user-interface by deleting
-                 dynamic widgets we have created and/or hide 
-                 frames.  This procedure is usually called when
-                 we are ready to "clean-up" after running.
-  ------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
+  Purpose:     DISABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we clean-up the user-interface by deleting
+               dynamic widgets we have created and/or hide 
+               frames.  This procedure is usually called when
+               we are ready to "clean-up" after running.
+------------------------------------------------------------------------------*/
   /* Hide all frames. */
-  /*  delete object tree .   */
-  /*  delete object marking .*/
   HIDE FRAME d-utd.
 END PROCEDURE.
 
@@ -2608,7 +2729,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_BUTTON d-utd 
 PROCEDURE enable_BUTTON :
-  /* --------------------------------------------------------------------
+/* --------------------------------------------------------------------
                             Purpose:     ENABLE the User Interface
                             Parameters:  <none>
                             Notes:       Here we display/view/enable the widgets in the
@@ -2732,9 +2853,16 @@ PROCEDURE enable_BUTTON :
   if v-cntxt-db-num <> 0 then do:
     disable
     b_write-cancel
+    b_back-check
     b_correct
     with frame {&frame-name} .
-  end.  
+  end. 
+  if not v-obj-active then do:
+      disable
+/*      b_back-check */
+      b_prov-finish
+      with frame {&frame-name} .
+  end.     
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2742,7 +2870,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-utd 
 PROCEDURE enable_UI :
-  /* --------------------------------------------------------------------
+/* --------------------------------------------------------------------
                             Purpose:     ENABLE the User Interface
                             Parameters:  <none>
                             Notes:       Here we display/view/enable the widgets in the
@@ -2762,7 +2890,16 @@ PROCEDURE enable_UI :
     a-n-c
     b_error
     with frame {&frame-name} .
-
+  display
+  f-comment-name
+  f-info-name
+  f-status-TH
+  f-num-name
+  f-date-name
+  f-wrkr-name
+  f-agnt-name
+  f-boss-name
+  with frame {&frame-name} .  
   case p-mode:
     when {&update} then 
       do:
@@ -2777,6 +2914,9 @@ PROCEDURE enable_UI :
             f-obj-type-TH
             R-TH
             WITH FRAME {&frame-name}.
+          display 
+            f-obj-name
+          with frame {&frame-name} .  
           hide 
             f-contr-TH
             b-exit
@@ -2788,8 +2928,6 @@ PROCEDURE enable_UI :
             c-status-edi
             r-contr-TH
             r-supp-TH
-            f-status
-
             RECT-1
             in frame {&frame-name} .
           display
@@ -2816,7 +2954,6 @@ PROCEDURE enable_UI :
             WITH FRAME {&frame-name}.
           hide 
             b-cancel
-            f-status
             in frame {&frame-name} .
           display
             FILL-IN-1
@@ -2824,6 +2961,7 @@ PROCEDURE enable_UI :
             FILL-IN-2
             FILL-IN-3
             c-status-edi
+            f-status-EDI
             b_finish
             with frame {&frame-name} .
 
@@ -2858,9 +2996,9 @@ PROCEDURE enable_UI :
             WITH FRAME {&frame-name}.
           hide 
             b-exit
-            f-status
             RECT-1
             c-status-edi
+            f-status-edi
             in frame {&frame-name} .
           display
             FILL-IN-1
@@ -2877,7 +3015,9 @@ PROCEDURE enable_UI :
             f-supp-type-TH
             r-contr-TH
             f-num
+            f-num-name
             f-date
+            f-date-name
             r-supp-TH
             with frame {&frame-name} .
           disable
@@ -2898,6 +3038,7 @@ PROCEDURE enable_UI :
             WITH FRAME {&frame-name}.
           display
             b_prov-finish
+            f-mark
             b_correct
             b_recheck
             b_write-cancel
@@ -2909,6 +3050,7 @@ PROCEDURE enable_UI :
             b_finish
             c-type
             c-status
+            f-status-TH
             b-servis
             with frame {&frame-name} .  
           hide 
@@ -2922,8 +3064,8 @@ PROCEDURE enable_UI :
             r-contr-TH
             b-save
             r-supp-TH
-            f-status
             c-status-edi
+            f-status-EDI
             RECT-1
             in frame {&frame-name} .
         end.
@@ -2948,15 +3090,16 @@ PROCEDURE enable_UI :
             b-save
             f-supp-type-TH
             c-status-edi
+            f-status-edi
             r-contr-TH
             r-obj-TH
             r-supp-TH
             R-TH
             v-mark
+            f-mark
             c-type
             WITH FRAME {&frame-name}.
           hide 
-            f-status
             b-save
             b-cancel
             in frame {&frame-name} .
@@ -2975,9 +3118,9 @@ PROCEDURE enable_UI :
             WITH FRAME {&frame-name}.
           hide 
             b-exit
-            f-status
             RECT-1
             c-status-edi
+            f-status-edi
             in frame {&frame-name} .
           display
             FILL-IN-1
@@ -2994,7 +3137,9 @@ PROCEDURE enable_UI :
             f-supp-type-TH
             r-contr-TH
             f-num
+            f-num-name
             f-date
+            f-date-name
             r-supp-TH
             with frame {&frame-name} .
           disable
@@ -3020,9 +3165,6 @@ PROCEDURE enable_UI :
             R-TH
             c-type
             WITH FRAME {&frame-name}.
-          disable
-            v-mark
-          with frame {&frame-name} .    
           hide 
             f-contr-TH
             b-exit
@@ -3034,9 +3176,10 @@ PROCEDURE enable_UI :
             r-contr-TH
             r-supp-TH
             v-mark
-            f-status
+            f-mark
             RECT-1
             c-status-edi
+            f-status-edi
             in frame {&frame-name} .
           if f-obj-type-TH <> "" then display r-obj-TH with frame {&frame-name} .
           else enable r-obj-TH with frame {&frame-name} .
@@ -3064,10 +3207,11 @@ PROCEDURE enable_UI :
             f-supp-type-TH
             r-contr-TH
             r-supp-TH
-            f-status
             RECT-1
             c-status-edi
+            f-status-edi
             in frame {&frame-name} .
+            display f-mark with frame {&frame-name} .
           if f-obj-type-TH <> "" then display r-obj-TH with frame {&frame-name} .
           else enable r-obj-TH with frame {&frame-name} .
         end.
@@ -3096,11 +3240,14 @@ PROCEDURE enable_UI :
             WITH FRAME {&frame-name}.
           hide 
             b-exit
-            f-status
             RECT-1
             c-status-edi
+            f-status-edi
             in frame {&frame-name} .
           display
+            f-mark
+            f-num-name
+            f-date-name
             FILL-IN-1
             FILL-IN-2
             with frame {&frame-name} .
@@ -3134,12 +3281,15 @@ PROCEDURE enable_UI :
       enable 
         v-mark
         with frame {&frame-name} .
-        
+     display
+     f-mark
+     with frame {&frame-name} .   
     end.  
     else 
     do:
       hide
         v-mark
+        f-mark
         in frame {&frame-name} .
     end.  
   end.
@@ -3158,6 +3308,12 @@ PROCEDURE enable_UI :
         f-agnt
         f-boss
         with frame {&frame-name} .
+      display
+      f-mark
+      f-wrkr-name
+      f-agnt-name
+      f-boss-name
+      with frame {&frame-name} .  
     end.  
   end.  
   if c-type <> objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then 
@@ -3173,9 +3329,17 @@ PROCEDURE enable_UI :
   do:
     hide 
       f-num-2
+      f-num-name-2
       f-date-2
+      f-date-name-2
       in frame {&frame-name} .
-  end.    
+  end.  
+  else do:
+    display 
+      f-num-name-2
+      f-date-name-2
+      with frame {&frame-name} .      
+  end.      
   if f-total = 0 then 
   do:
     hide 
@@ -3190,9 +3354,15 @@ PROCEDURE enable_UI :
     menu-item m_choose-status:sensitive in menu POPUP-MENU-b-servis = no.
   end.  
   if not v-manual then do:
-    disable v-mark with frame {&frame-name} .
+    v-mark:READ-ONLY IN FRAME d-utd        = TRUE .
   end.    
-
+if mode-erprn then do:
+  hide 
+   c-status-edi
+   f-status-EDI
+  in frame {&frame-name} .
+  browse br-utd:GET-BROWSE-COLUMN(3):VISIBLE = no no-error.
+end.  
   apply "VALUE-CHANGED" to br-utd in frame {&frame-name}.      
 
 END PROCEDURE.
@@ -3202,7 +3372,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-temp d-utd 
 PROCEDURE init-temp :
-  /* --------------------------------------------------------------------
+/* --------------------------------------------------------------------
                           Purpose:     ENABLE the User Interface
                           Parameters:  <none>
                           Notes:       Here we display/view/enable the widgets in the
@@ -3435,7 +3605,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE mark-temp d-utd 
 PROCEDURE mark-temp :
-  /* --------------------------------------------------------------------
+/* --------------------------------------------------------------------
                             Purpose:     ENABLE the User Interface
                             Parameters:  <none>
                             Notes:       Here we display/view/enable the widgets in the
@@ -3482,7 +3652,7 @@ end.
 
     /*Определить какие должны быть ошибочные статусы*/
     find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
-      buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum and (buf_utd-marking-lines.sts = Marking:UnknowSts:KeyIntDB or buf_utd-marking-lines.sts = Marking:MarkError:KeyIntDB) no-error .
+      buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum and buf_utd-marking-lines.sts = Marking:MarkError:KeyIntDB no-error .
     if available (buf_utd-marking-lines) 
     then X_utd-lines.stts = "Ошибка" .
     else 
@@ -3650,7 +3820,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save_mark d-utd 
 PROCEDURE save_mark :
-  /* --------------------------------------------------------------------
+/* --------------------------------------------------------------------
                           Purpose:     ENABLE the User Interface
                           Parameters:  <none>
                           Notes:       Here we display/view/enable the widgets in the
@@ -3698,7 +3868,7 @@ PROCEDURE save_mark :
       end.
     end.
     v-marking = GetCodeIdent(v-mark) .
-    if v-marking = "" then do:
+    if v-marking = "" or v-marking = ? then do:
                   F-text = "            Марка не найдена, просканируйте следующую" .
             display F-text with frame {&frame-name}.
             v-mark:screen-value = "" .
@@ -3743,14 +3913,15 @@ PROCEDURE save_mark :
           end.
           else
           do:
-            if buf_utd-marking-lines.sts <> Marking:PendingVerification:KeyIntDB and buf_utd-marking-lines.sts <> Marking:DeliveryControl:KeyIntDB then do:
-            F-text = "Товар не подлежит приемки, т.к. не прошел проверку на корректность" .
+          if can-find (buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:MarkError:KeyIntDB)
+          then do:
+              F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
             display F-text with frame {&frame-name}.
             v-mark:screen-value = "" .
             v-mark = "" .
-            return no-apply.              
-            end.
-
+            return no-apply.
+          end.                  
+            
           if can-find (buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:GrayZone:KeyIntDB)
           then do:
 /*            message "Упаковка с неполным составом марок, необходимо просканировать все индивидуальные упаковки"*/
@@ -3875,7 +4046,7 @@ PROCEDURE save_mark :
                     recid_utd = recid (X_utd-lines) .
             end.    
 
-          br-utd :refresh().
+          br-utd :refresh() no-error.
           reposition br-utd to recid recid_utd no-error .
           v-mark:screen-value = "" .
           v-mark = "" .
@@ -4109,7 +4280,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save_mol d-utd 
 PROCEDURE save_mol :
-  /* --------------------------------------------------------------------
+/* --------------------------------------------------------------------
                           Purpose:     ENABLE the User Interface
                           Parameters:  <none>
                           Notes:       Here we display/view/enable the widgets in the
@@ -4177,9 +4348,14 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 PROCEDURE proc-any-key :
-
-  v-scan-str = v-scan-str + last-event:label.
-
+    if not v-manual
+        then
+        if v-scan-str = ""
+            then etime(yes).
+        else
+            if etime > 500
+                then v-scan-str = "".
+    v-scan-str = v-scan-str + last-event:label.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -4275,3 +4451,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

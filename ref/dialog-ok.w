@@ -48,7 +48,7 @@ define variable vss-description as character no-undo init "Закрытие документа".
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-1 COMBO-BOX-1 Btn_OK Btn_Cancel 
+&Scoped-Define ENABLED-OBJECTS RECT-1 Btn_OK Btn_Cancel COMBO-BOX-1 
 &Scoped-Define DISPLAYED-OBJECTS COMBO-BOX-1 
 
 /* Custom List Definitions                                              */
@@ -77,10 +77,9 @@ DEFINE BUTTON Btn_OK AUTO-GO
 DEFINE VARIABLE COMBO-BOX-1 AS CHARACTER FORMAT "X(256)":U 
      LABEL "Причина" 
      VIEW-AS COMBO-BOX INNER-LINES 5
-     list-items "Нет товара",
-                     "Не корректная маркировка"
+     LIST-ITEMS "Товар отсутствует","Марка не читается","Марка отсутствует в документе","Ошибки, выявленные на уровне офиса" 
      DROP-DOWN-LIST
-     SIZE 31 BY 1 NO-UNDO.
+     SIZE 43 BY 1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -90,13 +89,13 @@ DEFINE RECTANGLE RECT-1
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     COMBO-BOX-1 AT ROW 6 COL 28 COLON-ALIGNED WIDGET-ID 12
-     Btn_OK AT ROW 8 COL 8
-     Btn_Cancel AT ROW 8 COL 46
+     Btn_OK AT ROW 2.25 COL 7.5
+     Btn_Cancel AT ROW 2.25 COL 45.5
+     COMBO-BOX-1 AT ROW 7.25 COL 16 COLON-ALIGNED WIDGET-ID 12
      "Вы уверены, что хотите завершить проверку документа" VIEW-AS TEXT
-          SIZE 53 BY 1.25 AT ROW 2.25 COL 7.38 WIDGET-ID 6
+          SIZE 53 BY 1.25 AT ROW 3.58 COL 7.38 WIDGET-ID 6
      "с недопоставкой?" VIEW-AS TEXT
-          SIZE 53 BY 1.25 AT ROW 3.79 COL 7.38 WIDGET-ID 10
+          SIZE 53 BY 1.25 AT ROW 5.04 COL 7.38 WIDGET-ID 10
      RECT-1 AT ROW 2 COL 3 WIDGET-ID 2
      SPACE(2.12) SKIP(0.99)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -137,7 +136,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* <insert dialog title> */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Причина закрытия */
 DO:
   APPLY "END-ERROR":U TO SELF.
 END.
@@ -220,7 +219,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY COMBO-BOX-1 
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-1 COMBO-BOX-1 Btn_OK Btn_Cancel 
+  ENABLE RECT-1 Btn_OK Btn_Cancel COMBO-BOX-1 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

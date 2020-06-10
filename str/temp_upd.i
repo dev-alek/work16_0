@@ -30,6 +30,7 @@ define temp-table tt-utd like ub.utd
   field ModifyTime_ as character
   field orig-code   as character
   field GrayZone    as logical
+  field obj-name    as character
   .
 
 

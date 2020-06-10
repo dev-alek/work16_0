@@ -405,23 +405,23 @@ PROCEDURE init-temp :
 define variable vCertificates     as component-handle no-undo.
 define variable vCertificate     as component-handle no-undo.
 define variable mDiadocApi as component-handle no-undo.
-define variable mReflector as component-handle no-undo.
+/*define variable mReflector as component-handle no-undo.*/
 define variable vCertificateName  as component-handle no-undo .
 define variable vi as integer no-undo.
 create "Diadoc.DiadocClient":U mDiadocApi.
-create "Diadoc.Reflector":U mReflector.
+/*create "Diadoc.Reflector":U mReflector.*/
    /*Задаем параметры подлючения к серверу*/
    /*Получение списка сертификатов*/
 
    vCertificates = mDiadocApi:GetPersonalCertificates(true).
    if vCertificates:count = 1 then do:
-     v-rid-list = vCertificate:SerialNumber .
+     v-rid-list = vCertificate:GetItem(0):SerialNumber .
      apply "GO" to FRAME {&frame-name} .
    end.
    else do:  
    do vi = 1 to  vCertificates:count:
       vCertificate = vCertificates:GetItem(vi - 1).
-      vCertificateName = mReflector:describe(vCertificate) .
+/*      vCertificateName = mReflector:describe(vCertificate) .*/
 
       create tt-sertif .
       tt-sertif.Name_ = vCertificate:name .

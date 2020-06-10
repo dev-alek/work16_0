@@ -90,7 +90,8 @@ DEFINE BUFFER X_marking             FOR tt-marking-lines.
 DEFINE BUFFER X_marking-line        FOR tt-marking-lines.
 
 define variable v-scan-str       as character no-undo.
-
+define variable v-manual         as logical   no-undo .
+DEFINE VARIABLE v-timedelay as integer no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -343,8 +344,8 @@ DEFINE BROWSE br-mark
   X_marking.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
   X_marking.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
-  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
   X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
+  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
   X_marking.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U
   X_marking.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U
   X_marking.site COLUMN-LABEL "" FORMAT "X(1)":U
@@ -361,8 +362,8 @@ DEFINE BROWSE br-mark-item
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
   X_marking-line.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
-  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
   X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
+  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
   X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U
   X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U
   
@@ -869,57 +870,69 @@ DO:
       case X_marking.sts-utd:
         when Marking:Checked_:KeyIntDB then
           do:
-            X_marking.gds-code:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.gds-name:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.mark:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.box-qnty:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.unit:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.stts:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.stts-utd:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.in-code:BGCOLOR in browse br-mark = GREEN_COLOR.
-            X_marking.out-code:BGCOLOR in browse br-mark = GREEN_COLOR.
+            X_marking.gds-code:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.gds-name:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.mark:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.box-qnty:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.unit:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.stts:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.stts-utd:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.in-code:fGCOLOR in browse br-mark = CYAN_COLOR.
+            X_marking.out-code:fGCOLOR in browse br-mark = CYAN_COLOR.
           end.
-        when Marking:PendingVerification:KeyIntDB or 
-        when Marking:DeliveryControl:KeyIntDB then
-          do:
-            X_marking.gds-code:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.gds-name:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.mark:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.box-qnty:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.unit:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.stts:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.stts-utd:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.in-code:BGCOLOR in browse br-mark = YELLOW_COLOR.
-            X_marking.out-code:BGCOLOR in browse br-mark = YELLOW_COLOR.
-          end.
+/*        when Marking:PendingVerification:KeyIntDB or                    */
+/*        when Marking:DeliveryControl:KeyIntDB then                      */
+/*          do:                                                           */
+/*            X_marking.gds-code:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+/*            X_marking.gds-name:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+/*            X_marking.mark:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
+/*            X_marking.box-qnty:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+/*            X_marking.unit:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
+/*            X_marking.stts:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
+/*            X_marking.stts-utd:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+/*            X_marking.in-code:BGCOLOR in browse br-mark = YELLOW_COLOR. */
+/*            X_marking.out-code:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+/*          end.                                                          */
         when Marking:MarkError:KeyIntDB then
           do:
-            X_marking.gds-code:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.gds-name:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.mark:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.box-qnty:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.unit:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.stts:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.stts-utd:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.in-code:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.out-code:BGCOLOR in browse br-mark = red_COLOR.
+            X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.
           end.    
       end case.
+       if X_marking.sts = Marking:MarkError:KeyIntDB then 
+          do:
+            X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.
+          end.       
     end.
     else 
     do:
       case X_marking.sts:
         when Marking:MarkError:KeyIntDB then
           do:
-            X_marking.gds-code:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.gds-name:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.mark:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.box-qnty:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.unit:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.stts:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.stts-utd:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.in-code:BGCOLOR in browse br-mark = red_COLOR.
-            X_marking.out-code:BGCOLOR in browse br-mark = red_COLOR.
+            X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR.
+            X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.
           end.  
       end case.
     end.
@@ -938,57 +951,70 @@ DO:
       case X_marking-line.sts-utd:
         when Marking:Checked_:KeyIntDB then
           do:
-            X_marking-line.gds-code:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.mark:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.unit:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.stts:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.in-code:BGCOLOR in browse br-mark-item = GREEN_COLOR.
-            X_marking-line.out-code:BGCOLOR in browse br-mark-item = GREEN_COLOR.
+            X_marking-line.gds-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.gds-name:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.mark:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.unit:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.stts:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.in-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+            X_marking-line.out-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.
           end.
-        when Marking:PendingVerification:KeyIntDB or 
-        when Marking:DeliveryControl:KeyIntDB then
-          do:
-            X_marking-line.gds-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.mark:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.unit:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.stts:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.in-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-            X_marking-line.out-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.
-          end.
+/*        when Marking:PendingVerification:KeyIntDB or                              */
+/*        when Marking:DeliveryControl:KeyIntDB then                                */
+/*          do:                                                                     */
+/*            X_marking-line.gds-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+/*            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+/*            X_marking-line.mark:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
+/*            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+/*            X_marking-line.unit:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
+/*            X_marking-line.stts:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
+/*            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+/*            X_marking-line.in-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR. */
+/*            X_marking-line.out-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+/*          end.                                                                    */
         when Marking:MarkError:KeyIntDB then 
           do:
-            X_marking-line.gds-code:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.mark:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.unit:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.stts:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.in-code:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.out-code:BGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.
           end. 
       end case.
+       if X_marking-line.sts = Marking:MarkError:KeyIntDB then 
+          do:
+            X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.
+          end. 
+
     end.
     else 
     do:
       case X_marking-line.sts:
         when Marking:MarkError:KeyIntDB then 
           do:
-            X_marking-line.gds-code:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.mark:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.unit:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.stts:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.in-code:BGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.out-code:BGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR.
+            X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.
           end. 
       end case.
     end.  
@@ -1255,11 +1281,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
   run ActivateKeyboardLayout (input iLang, input 0).
   /*  /*  run gbl/inidebug.p.            */*/
-/*  output to C:\temp\jhkjhkjh.txt.*/
-/*  for each tt-marking-lines:     */
-/*    export tt-marking-lines .    */
-/*  end.                           */
-/*  output close.                  */
+/*       output to C:\temp\hhhhhhh.txt.*/
+/*       for each tt-marking-lines:    */
+/*           export tt-marking-lines . */
+/*       end.                          */
+/*       output close.                 */
    /*Проверка прав */
   { gbl/chk-actg.i
   v-cntxt-db-num
@@ -1289,8 +1315,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   run enable_UI in this-procedure .
   apply "entry" to v-mark in FRAME {&FRAME-NAME}.
   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsManual
-    then enable v-mark with frame {&frame-name}.
-    else disable v-mark with frame {&frame-name}.
+    then v-manual = yes .
+    else do: 
+    v-manual = no .
+    v-mark:READ-ONLY IN FRAME {&frame-name}        = TRUE .
+    end.
   WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
 END.
 
@@ -1403,8 +1432,8 @@ PROCEDURE enable_UI :
   end.  
   if p-type = 0 then 
   do:
-    browse br-mark:GET-BROWSE-COLUMN(7):VISIBLE = no.
-    browse br-mark-item:GET-BROWSE-COLUMN(7):VISIBLE = no.
+    browse br-mark:GET-BROWSE-COLUMN(8):VISIBLE = no.
+    browse br-mark-item:GET-BROWSE-COLUMN(8):VISIBLE = no.
     hide 
       Status_
       v-mark
@@ -1623,19 +1652,21 @@ define variable v_list      as character no-undo .
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer X_utd-lines for tt-utd-lines .
     define buffer buf_utd-err for ub.utd-err .
-    
+
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
       v-mark:screen-value in frame {&frame-name} = v-scan-str.
+      
       v-scan-str = "". 
     end.
-          
+
     assign 
     v-mark = v-mark:screen-value in frame {&frame-name}.
     v-marking = GetCodeIdent(v-mark) .
+    
     f-text = "" .
     f-text:screen-value = "" .
-
+    if v-marking = "" or v-marking = ? then RETurn no-apply .
     ASSIGN 
       v_list = 'Ё,Й,Ц,У,К,Е,Н,Г,Ш,Щ,З,Х,Ъ,Ф,Ы,В,А,П,Р,О,Л,Д,Ж,Э,Я,Ч,С,М,И,Т,Ь,Б,Ю':U .
 
@@ -1851,7 +1882,7 @@ define variable v_list      as character no-undo .
       find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-lines.doc-id and buf_utd-err.db-num = buf_utd-lines.db-num and buf_utd-err.reckey = vRecKeyLine no-error .
       if available (buf_utd-err) then 
       do:
-          F-text = "Товар не подлежит приемки, т.к. не прошел проверку на корректность" .
+          F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
             display F-text with frame {&frame-name}.
             v-mark:screen-value = "" .
             v-mark = "" .
@@ -1871,8 +1902,8 @@ define variable v_list      as character no-undo .
          
           else
           do:
-            if X_marking.sts-utd <> Marking:PendingVerification:KeyIntDB and X_marking.sts-utd <> Marking:DeliveryControl:KeyIntDB then do:
-            F-text = "Товар не подлежит приемки, т.к. не прошел проверку на корректность" .
+            if X_marking.sts = Marking:MarkError:KeyIntDB  then do:
+            F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
             display F-text with frame {&frame-name}.
             v-mark:screen-value = "" .
             v-mark = "" .
@@ -2132,8 +2163,14 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 PROCEDURE proc-any-key :
-  v-scan-str = v-scan-str + last-event:label.
-  
+    if not v-manual
+        then
+        if v-scan-str = ""
+            then etime(yes).
+        else
+            if etime > 500
+                then v-scan-str = "".
+    v-scan-str = v-scan-str + last-event:label.
 end.
 
 /* _UIB-CODE-BLOCK-END */

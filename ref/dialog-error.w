@@ -49,10 +49,12 @@ define variable vss-description as character no-undo init "Ошибки документа".
 {gbl/key-rec.i}
 define buffer buf_utd-err for ub.utd-err .
 define buffer utd-err for tt-utd-err .
+
+def var Marking as class mark no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-def var Marking as class mark no-undo .
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName Dialog-Frame
 FUNCTION StatusTHName RETURNS CHARACTER
   (input p-stsTH as integer)  .
@@ -60,6 +62,7 @@ FUNCTION StatusTHName RETURNS CHARACTER
 END FUNCTION .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
@@ -91,7 +94,7 @@ tt-utd-err.CheckObj
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel BROWSE-2 
-&Scoped-Define DISPLAYED-OBJECTS f-error 
+
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -106,15 +109,10 @@ tt-utd-err.CheckObj
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-
 DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "Выход" 
      SIZE 15 BY 1.13
      BGCOLOR 8 .
-
-DEFINE VARIABLE f-error AS CHARACTER 
-     VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
-     SIZE 79 BY 8.25 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -142,7 +140,6 @@ DEFINE BROWSE BROWSE-2
 
 DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1 COL 1
-     f-error AT ROW 3.5 COL 2 NO-LABEL WIDGET-ID 14
      BROWSE-2 AT ROW 3.5 COL 2 WIDGET-ID 200
      "Сформированные ошибки:" VIEW-AS TEXT
           SIZE 27 BY .67 AT ROW 2.5 COL 2.5 WIDGET-ID 16
@@ -170,14 +167,14 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BROWSE-2 f-error Dialog-Frame */
+/* BROWSE-TAB BROWSE-2 TEXT-1 Dialog-Frame */
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
 ASSIGN 
-       browse-2:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
-/* SETTINGS FOR EDITOR f-error IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
+       BROWSE-2:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -213,16 +210,6 @@ DO:
 
 
 &Scoped-define SELF-NAME Btn_OK
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
-ON choose OF Btn_OK IN FRAME Dialog-Frame /* Ввод */
-DO:
-
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME
 
@@ -284,8 +271,6 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-error 
-      WITH FRAME Dialog-Frame.
   ENABLE Btn_OK BROWSE-2 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
@@ -396,5 +381,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
