@@ -84,18 +84,29 @@ output to value (p-file-name) .
 
 for each tt-place no-lock :
   put unformatted ("TANK = " + tt-place.loc1 ) skip .
-  put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
-  put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
-  put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
-  put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
-  put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
-  put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
-  put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
-  if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ?
-  then
+  if tt-place.level-total <> ? then
+    put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
+  if tt-place.level-water <> ? then
+    put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
+  if (tt-place.level-total - tt-place.level-water) <> ? then
+    put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
+  if tt-place.avrg-temp <> ? then
+    put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
+  if tt-place.density <> ? then
+    put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
+  if tt-place.total-vol <> ? then
+    put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
+  if tt-place.mass <> ? then
+    put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
+  if tt-place.t1 <> ? then
+    put unformatted ("T1 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
+  if tt-place.t2 <> ? then
+    put unformatted ("T2 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
+  if tt-place.t3 <> ? then
+    put unformatted ("T3 = " + string(tt-place.t3, "->>>>>9.9<<<")) skip .
+  if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ? then
     put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>9.9<<<")) skip .
-  if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ?
-  then
+  if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ? then
     put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
 end.
 
@@ -105,6 +116,10 @@ output to value (  v-log-file-name  ) append .
 put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
 output close .
 os-append value(p-file-name) value(v-log-file-name).
+
+output to value (  v-log-file-name  ) append .
+put unformatted skip .
+output close .
 
 procedure parse-xml :
   define input parameter p-file as character .
@@ -153,6 +168,19 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
       then do :
         create tt-place .
         assign tt-place.loc1 = hText:node-value no-error .
+        assign
+          tt-place.t1             = ?
+          tt-place.t2             = ?
+          tt-place.t3             = ?
+          tt-place.level-total    = ?   
+          tt-place.level-water    = ?   
+          tt-place.total-vol      = ? 
+          tt-place.avrg-temp      = ?  
+          tt-place.density        = ? 
+          tt-place.mass           = ?
+          tt-place.vapor-density  = ?
+          tt-place.vapor-pressure = ?
+        .
       end.
     end.
     
@@ -164,6 +192,9 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     IF hNoderef:NAME = "MassTotal" then assign tt-place.mass = decimal(hText:node-value) no-error .
     IF hNoderef:NAME = "VaporDensity" then assign tt-place.vapor-density = decimal(hText:node-value) no-error .
     IF hNoderef:NAME = "VaporPressure" then assign tt-place.vapor-pressure = decimal(hText:node-value) no-error .
+    IF hNoderef:NAME = "Temperature1" then assign tt-place.t1 = decimal(hText:node-value) no-error .
+    IF hNoderef:NAME = "Temperature2" then assign tt-place.t2 = decimal(hText:node-value) no-error .
+    IF hNoderef:NAME = "Temperature3" then assign tt-place.t3 = decimal(hText:node-value) no-error .
            
     RUN GetChildren(hNoderef, (level + 1)).
 END.

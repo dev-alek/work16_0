@@ -53,6 +53,16 @@ define variable vss-description as character no-undo init "Толкач выгрузки на пр
 { gbl/waitfram.i }
 { str/placelib.i }
 
+function f-int-to-chr returns character (input v-int as integer) :
+  if v-int = 0 or v-int = ? then return "" .
+  return string(v-int) .
+end function .
+
+function f-dec-to-chr returns character (input v-dec as decimal) :
+  if v-dec = ? then return "" .
+  return string(v-dec, "->>>>>>>9.99<<<") .
+end function .
+
 define temp-table tt-place no-undo
   field loc1          as character  label "№ резервуара"
   field pl-code       as integer    label "Код резервуара" format ">>>>>>>>>9"
@@ -65,10 +75,10 @@ define temp-table tt-place no-undo
   field t1            as decimal    label "T1"
   field t2            as decimal    label "T2"
   field t3            as decimal    label "T3"
-  field density       as decimal    label "Плотность (кг/л)"
+  field density       as decimal decimals 10  label "Плотность (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
   field mass          as decimal    label "Масса (кг)"
-  field vapor-density as decimal    label "Плотность СУГ (кг/л)"
-  field vapor-pressure as decimal   label "Давление СУГ (мПа)"
+  field vapor-density as decimal decimals 10  label "Плотность СУГ (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
+  field vapor-pressure as decimal   label "Давление СУГ (мПа)" format ">>>9.99999"
   index pi as primary unique
     loc1
 .
@@ -165,16 +175,13 @@ define query br-place for tt-place scrolling .
 define browse br-place
   query br-place no-lock display
     tt-place.loc1
-    tt-place.pl-code
+    f-int-to-chr(tt-place.pl-code)  label "Код резервуара"
     tt-place.gds-name
-    tt-place.gds-code
+    f-int-to-chr(tt-place.gds-code)  label "Код продукта"
     tt-place.level-total
     tt-place.level-water
     tt-place.total-vol
     tt-place.avrg-temp
-/*    tt-place.t1*/
-/*    tt-place.t2*/
-/*    tt-place.t3*/
     tt-place.density
     tt-place.mass
     tt-place.vapor-density
@@ -323,6 +330,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+on row-display OF br-place IN FRAME Dialog-Frame
+do:
+  if  tt-place.level-total    = ? then tt-place.level-total:fgcolor in browse br-place = 15 . 
+  if  tt-place.level-water    = ? then tt-place.level-water:fgcolor in browse br-place = 15 .  
+  if  tt-place.total-vol      = ? then tt-place.total-vol:fgcolor in browse br-place = 15 . 
+  if  tt-place.avrg-temp      = ? then tt-place.avrg-temp:fgcolor in browse br-place = 15 .  
+  if  tt-place.density        = ? then tt-place.density:fgcolor in browse br-place = 15 . 
+  if  tt-place.mass           = ? then tt-place.mass:fgcolor in browse br-place = 15 .
+  if  tt-place.vapor-density  = ? then tt-place.vapor-density:fgcolor in browse br-place = 15 .
+  if  tt-place.vapor-pressure = ? then tt-place.vapor-pressure:fgcolor in browse br-place = 15 .
+end.
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -333,7 +352,6 @@ END.
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
-
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
@@ -559,18 +577,29 @@ procedure asi-send-cmd :
       put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
       for each tt-place no-lock :
         put unformatted ("TANK = " + tt-place.loc1 ) skip .
-        put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
-        put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
-        put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
-        put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
-        put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
-        put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
-        put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
-        if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ?
-        then
+        if tt-place.level-total <> ? then
+          put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
+        if tt-place.level-water <> ? then
+          put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
+        if (tt-place.level-total - tt-place.level-water) <> ? then
+          put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
+        if tt-place.avrg-temp <> ? then
+          put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
+        if tt-place.density <> ? then
+          put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
+        if tt-place.total-vol <> ? then
+          put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
+        if tt-place.mass <> ? then
+          put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
+        if tt-place.t1 <> ? then
+          put unformatted ("T1 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
+        if tt-place.t2 <> ? then
+          put unformatted ("T2 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
+        if tt-place.t3 <> ? then
+          put unformatted ("T3 = " + string(tt-place.t3, "->>>>>9.9<<<")) skip .
+        if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ? then
           put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>9.9<<<")) skip .
-        if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ?
-        then
+        if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ? then
           put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
       end.
     end.
@@ -649,17 +678,33 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
       then do :
         create tt-place .
         assign tt-place.loc1 = hText:node-value no-error .
+        assign
+          tt-place.t1             = ?
+          tt-place.t2             = ?
+          tt-place.t3             = ?
+          tt-place.level-total    = ?   
+          tt-place.level-water    = ?   
+          tt-place.total-vol      = ? 
+          tt-place.avrg-temp      = ?  
+          tt-place.density        = ? 
+          tt-place.mass           = ?
+          tt-place.vapor-density  = ?
+          tt-place.vapor-pressure = ?
+        .
       end.
     end.
     
-    IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) no-error .
+    IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) / 10 no-error .
+    IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) / 10 no-error .
     IF hNoderef:NAME = "Temperature" then assign tt-place.avrg-temp = decimal(hText:node-value) no-error .
     IF hNoderef:NAME = "Density" then assign tt-place.density = decimal(hText:node-value) no-error .
     IF hNoderef:NAME = "VolumeTotal" then assign tt-place.total-vol = decimal(hText:node-value) no-error .
     IF hNoderef:NAME = "MassTotal" then assign tt-place.mass = decimal(hText:node-value) no-error .
     IF hNoderef:NAME = "VaporDensity" then assign tt-place.vapor-density = decimal(hText:node-value) no-error .
     IF hNoderef:NAME = "VaporPressure" then assign tt-place.vapor-pressure = decimal(hText:node-value) / 1000 no-error .
+    IF hNoderef:NAME = "Temperature1" then assign tt-place.t1 = decimal(hText:node-value) no-error .
+    IF hNoderef:NAME = "Temperature2" then assign tt-place.t2 = decimal(hText:node-value) no-error .
+    IF hNoderef:NAME = "Temperature3" then assign tt-place.t3 = decimal(hText:node-value) no-error .
            
     RUN GetChildren(hNoderef, (level + 1)).
 END.
@@ -685,6 +730,19 @@ procedure init-tt :
       assign
         tt-place.loc1     = buf_place.loc1
         tt-place.pl-code  = buf_place.pl-code
+      .
+      assign
+        tt-place.t1             = ?
+        tt-place.t2             = ?
+        tt-place.t3             = ?
+        tt-place.level-total    = ?   
+        tt-place.level-water    = ?   
+        tt-place.total-vol      = ? 
+        tt-place.avrg-temp      = ?  
+        tt-place.density        = ? 
+        tt-place.mass           = ?
+        tt-place.vapor-density  = ?
+        tt-place.vapor-pressure = ?
       .
       find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
       if available (buf_pl-gds) then 
@@ -719,6 +777,19 @@ procedure init-tt :
             buf_tt-place.gds-code = tt-place.gds-code
             buf_tt-place.gds-name = tt-place.gds-name
           .
+          assign
+            buf_tt-place.t1             = ?
+            buf_tt-place.t2             = ?
+            buf_tt-place.t3             = ?
+            buf_tt-place.level-total    = ?   
+            buf_tt-place.level-water    = ?   
+            buf_tt-place.total-vol      = ? 
+            buf_tt-place.avrg-temp      = ?  
+            buf_tt-place.density        = ? 
+            buf_tt-place.mass           = ?
+            buf_tt-place.vapor-density  = ?
+            buf_tt-place.vapor-pressure = ?
+          .
         end.
       end.
       else do :
@@ -733,6 +804,19 @@ procedure init-tt :
         assign  
           buf_tt-place.gds-code = tt-place.gds-code
           buf_tt-place.gds-name = tt-place.gds-name
+        .
+        assign
+          buf_tt-place.t1             = ?
+          buf_tt-place.t2             = ?
+          buf_tt-place.t3             = ?
+          buf_tt-place.level-total    = ?   
+          buf_tt-place.level-water    = ?   
+          buf_tt-place.total-vol      = ? 
+          buf_tt-place.avrg-temp      = ?  
+          buf_tt-place.density        = ? 
+          buf_tt-place.mass           = ?
+          buf_tt-place.vapor-density  = ?
+          buf_tt-place.vapor-pressure = ?
         .
       end.
     end.
@@ -787,6 +871,9 @@ procedure get-from-struna :
   put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
   output close .
   os-append value(v_File-Name) value(v-log-file-name).
+  output to value (  v-log-file-name  ) append .
+  put unformatted skip .
+  output close .
   
   input from value(v_File-Name) .
   repeat :
@@ -810,6 +897,19 @@ procedure get-from-struna :
           then do :
             create tt-place .
             assign tt-place.loc1 = str2 no-error .
+            assign
+              tt-place.t1             = ?
+              tt-place.t2             = ?
+              tt-place.t3             = ?
+              tt-place.level-total    = ?   
+              tt-place.level-water    = ?   
+              tt-place.total-vol      = ? 
+              tt-place.avrg-temp      = ?  
+              tt-place.density        = ? 
+              tt-place.mass           = ?
+              tt-place.vapor-density  = ?
+              tt-place.vapor-pressure = ?
+            .
           end.
         end .
         when "level_total" then assign tt-place.level-total = decimal(str2) no-error .
@@ -949,6 +1049,19 @@ procedure get-from-ifsf :
           then do :
             create tt-place .
             assign tt-place.loc1 = str2 no-error .
+            assign
+              tt-place.t1             = ?
+              tt-place.t2             = ?
+              tt-place.t3             = ?
+              tt-place.level-total    = ?   
+              tt-place.level-water    = ?   
+              tt-place.total-vol      = ? 
+              tt-place.avrg-temp      = ?  
+              tt-place.density        = ? 
+              tt-place.mass           = ?
+              tt-place.vapor-density  = ?
+              tt-place.vapor-pressure = ?
+            .
           end.
         end .
         when "level_total" then assign tt-place.level-total = decimal(str2) no-error .
@@ -1101,23 +1214,22 @@ define variable Lines_Counter as integer no-undo .
   
   for each tt-place no-lock :
     put stream OutStr-html unformatted
-      '     <tbody>' skip
       '       <tr>' skip
       '         <th style="text-align: center;">' + tt-place.loc1 + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.pl-code, ">>>>>>>>>>9") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.pl-code > 0 then string(tt-place.pl-code, ">>>>>>>>>>9") else " ") + '</th>' skip
       '         <th style="text-align: center;">' + tt-place.gds-name + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.gds-code) + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.level-total, ">>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.level-water, ">>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.total-vol,   ">>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.avrg-temp,  "->>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.avrg-temp,  "->>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.avrg-temp,  "->>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.avrg-temp,  "->>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.density,   ">>>>>9.9<<<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.mass,        ">>>>>9.9<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.vapor-density, ">>>>>9.9<<<") + '</th>' skip
-      '         <th style="text-align: center;">' + string(tt-place.vapor-pressure, ">>>>>9.9<") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.gds-code > 0 then string(tt-place.gds-code) else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.level-total <> ? then string(tt-place.level-total, ">>>>>9.9<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.level-water <> ? then string(tt-place.level-water, ">>>>>9.9<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.total-vol <> ? then string(tt-place.total-vol,   ">>>>>9.9<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.avrg-temp <> ? then string(tt-place.avrg-temp,  "->>>>>9.9<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.t1 <> ? then string(tt-place.t1,  "->>>>>9.9<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.t2 <> ? then string(tt-place.t2,  "->>>>>9.9<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.t3 <> ? then string(tt-place.t3,  "->>>>>9.9<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.density <> ? then string(tt-place.density,   ">>>>>9.9<<<<<<<<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.mass <> ? then string(tt-place.mass,        ">>>>>9.9<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.vapor-density <> ? then string(tt-place.vapor-density, ">>>>>9.9<<<<<<<<<") else " ") + '</th>' skip
+      '         <th style="text-align: center;">' + (if tt-place.vapor-pressure <> ? then string(tt-place.vapor-pressure, ">>>>>9.99999") else " ") + '</th>' skip
       '       </tr>' skip
     . /* Точка для закрытия Put */
   end.
