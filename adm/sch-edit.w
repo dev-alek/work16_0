@@ -743,6 +743,12 @@ PROCEDURE fill-temp-table :
           when {&btpr-type-hddtest}
           then do:
           end.
+          when {&btpr-type-is_motp}
+          then do:
+          end.
+          when {&btpr-type-is_diadoc}
+          then do:
+          end.
           otherwise do:
             if p-action = {&update}
               or p-action = {&add-copy}

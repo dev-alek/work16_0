@@ -38,6 +38,21 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,{&bef-attr-esys-cert-sign-subject}~
 ,{&bef-attr-esys-cert-sign-issuer}~
 ,{&bef-attr-esys-cert-file-ext}~
+,{&bef-attr-esys-AuthToken}~
+,{&bef-attr-esys-AuthTokenDT}~
+,{&bef-attr-esys-host-code}~
+,{&bef-attr-esys-user-id}~
+,{&bef-attr-esys-server-addr}~
+,{&bef-attr-esys-proxy-addr}~
+,{&bef-attr-esys-proxy-login}~
+,{&bef-attr-esys-proxy-pswd}~
+,{&bef-attr-esys-proxy-ssl}~
+,{&bef-attr-esys-AuthToken-send}~
+,{&bef-attr-esys-mail-list}~
+,{&bef-attr-esys-diadoc-user}~
+,{&bef-attr-esys-diadoc-pwd}~
+,{&bef-attr-esys-diadoc-key}~
+,{&bef-attr-esys-diadoc-lastload}~
 ':U
 
 procedure ext-system-attr-code :

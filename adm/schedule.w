@@ -43,6 +43,7 @@ define variable vss-description as character no-undo init "Расписание автоматиче
 { ref/shd-attr.i }
 
 
+
 define buffer buf_schedule for ub.schedule .
 define buffer buf_sys-ctrl for ub.sys-ctrl .
 
@@ -79,6 +80,10 @@ define variable v-curr-db     as integer   no-undo .
 &scop mercury '{&bef-mercury}':U
 &scop bef-hddtest Мониторинг HDD
 &scop hddtest '{&bef-hddtest}':U
+&scop bef-is_motp ИС МОТП
+&scop is_motp '{&bef-is_motp}':U
+&scop bef-is_diadoc ИС Диадок
+&scop is_diadoc '{&bef-is_diadoc}':U
 &scop bef-sktsrv Сокет-Сервер
 &scop sktsrv '{&bef-sktsrv}':U
 
@@ -183,7 +188,7 @@ DEFINE VARIABLE v-cre-db-num AS INTEGER FORMAT "->>>>9":U INITIAL 0
      SIZE 9.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-task-type AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS COMBO-BOX INNER-LINES 10
+     VIEW-AS COMBO-BOX INNER-LINES 12
      DROP-DOWN-LIST
      SIZE 40.3 BY 1 NO-UNDO.
 
@@ -573,6 +578,12 @@ DO:
     when {&btpr-type-hddtest} then do:
 
     end.
+    when {&btpr-type-is_motp} then do:
+
+    end.
+    when {&btpr-type-is_diadoc} then do:
+
+    end.
     when {&btpr-type-autoarh} then do:
       run adm/arc-shdp.w
         (input  buf_schedule.cre-db-num
@@ -817,37 +828,24 @@ DO:
     v-btpr-type = v-task-type
   .
   case v-task-type:
-    when {&btpr-type-autonws} then do:
+       when {&btpr-type-autonws} 
+    or when {&btpr-type-autooxml}
+    or when {&btpr-type-mercury}
+    or when {&btpr-type-hddtest}
+    or when {&btpr-type-is_motp}
+    or when {&btpr-type-is_diadoc}
+    then do:
       disable bt-param with frame {&frame-name} .
     end.
-    when {&btpr-type-autoarh} then do:
-      enable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-autoexp} then do:
-      enable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-autooxml} then do:
-      disable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-mercury} then do:
-      disable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-hddtest} then do:
-      disable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-autogetcd} then do:
-      enable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-autosale} then do:
-      enable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-autosuz} then do:
-      enable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-autocbnk} then do:
-      enable bt-param with frame {&frame-name} .
-    end.
-    when {&btpr-type-autofree} then do:
+    
+       when {&btpr-type-autogetcd}
+    or when {&btpr-type-autoarh}
+    or when {&btpr-type-autoexp}
+    or when {&btpr-type-autosale}
+    or when {&btpr-type-autosuz}
+    or when {&btpr-type-autocbnk}
+    or when {&btpr-type-autofree} 
+    then do:
       enable bt-param with frame {&frame-name} .
     end.
     otherwise do:
@@ -908,7 +906,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                    {&autocbnk} + {&comma-char}  + {&btpr-type-autocbnk} + {&comma-char} +
                                    {&autofree} + {&comma-char}  + {&btpr-type-autofree} + {&comma-char} +
                                    {&mercury} + {&comma-char}  + {&btpr-type-mercury} + {&comma-char} +
-                                   {&hddtest} + {&comma-char}  + {&btpr-type-hddtest}
+                                   {&hddtest} + {&comma-char}  + {&btpr-type-hddtest} + {&comma-char} +
+                                   {&is_motp} + {&comma-char}  + {&btpr-type-is_motp} + {&comma-char} +
+                                   {&is_diadoc} + {&comma-char}  + {&btpr-type-is_diadoc}
+
     /*"{&bef-autonws},{&bef-autoarh},{&bef-autogcd},{&bef-autosale},{&bef-autosuz},{&bef-autocbnk},{&bef-autofree}":U*/
     v-task-type   = {&btpr-type-autonws}
     v-btpr-type   = {&btpr-type-autonws}
@@ -941,9 +942,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       v-log = v-task-type:add-last( {&autoexp} , {&btpr-type-autoexp}  ).
     .
   end.
-    assign
-      v-log = v-task-type:add-last( {&autooxml} , {&btpr-type-autooxml}  ).
-    .
+  assign
+    v-log = v-task-type:add-last( {&autooxml} , {&btpr-type-autooxml}  ).
+  .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -1045,6 +1046,7 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :

@@ -313,6 +313,99 @@ DEFINE VARIABLE tg-cert-sign AS LOGICAL INITIAL no
      LABEL "Использовать электронную подпись" 
      VIEW-AS TOGGLE-BOX
      SIZE 46 BY .81 NO-UNDO.
+DEFINE VARIABLE f-proxy-addres AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Адрес прокси-сервера" 
+     VIEW-AS FILL-IN 
+     SIZE 52 BY 1 TOOLTIP "Адрес прокси-сервера в формате <IP>:<Port>" NO-UNDO.
+
+DEFINE VARIABLE f-proxy-login AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Логин" 
+     VIEW-AS FILL-IN NATIVE 
+     SIZE 24 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-proxy-password AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Пароль" 
+     VIEW-AS FILL-IN NATIVE 
+     SIZE 24 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE f-proxy-password-screen AS CHARACTER FORMAT "X(256)":U
+      VIEW-AS TEXT
+     SIZE 24 BY 1
+     BGCOLOR 15  NO-UNDO.
+  
+     
+DEFINE VARIABLE f-diadoc-user AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Логин Диадок" 
+     VIEW-AS FILL-IN  
+     SIZE 24 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-diadoc-pwd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Пароль Диадок" 
+     VIEW-AS FILL-IN  
+     SIZE 24 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE f-diadoc-pwd-screen AS CHARACTER FORMAT "X(256)":U
+      VIEW-AS TEXT
+     SIZE 24 BY 1
+     BGCOLOR 15  NO-UNDO.
+     
+DEFINE VARIABLE f-diadoc-addres AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Адрес Диадок" 
+     VIEW-AS FILL-IN  
+     SIZE 52 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-diadoc-key AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Ключ разработчика" 
+     VIEW-AS FILL-IN  
+     SIZE 52 BY 1 NO-UNDO.     
+
+DEFINE VARIABLE f-diadoc-lastload AS date FORMAT "99/99/9999":U 
+     LABEL "Последнего загруженного документа" 
+     VIEW-AS FILL-IN  
+     SIZE 11 BY 1 NO-UNDO.     
+          
+DEFINE VARIABLE t-proxy-ssl AS LOGICAL 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.5 BY .83 NO-UNDO.     
+     
+DEFINE VARIABLE f-host-code AS integer FORMAT ">>>>>>>>9":U 
+     LABEL "Фирма" 
+     VIEW-AS FILL-IN  
+     SIZE 11 BY 1 NO-UNDO.     
+     
+DEFINE BUTTON b-host-code 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY 1.     
+     
+DEFINE VARIABLE f-server-addres AS CHARACTER FORMAT "X(256)":U 
+     LABEL "URL" 
+     VIEW-AS FILL-IN 
+     SIZE 52 BY 1 TOOLTIP "Адрес точки подключения к ИС МОТП" NO-UNDO. 
+     
+DEFINE VARIABLE f-user AS character FORMAT "X(256)":U 
+     LABEL "Пользователь" 
+     VIEW-AS FILL-IN  
+     SIZE 20 BY 1 NO-UNDO.   
+     
+define variable e-mail-list as character format "X(1000)":U
+     label "Список eMail"
+     view-as editor
+     size 50 by 3 no-undo .
+     
+define variable v-user-id as character no-undo .  
+     
+DEFINE BUTTON b-user 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY 1. 
+     
+             
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -433,6 +526,74 @@ DEFINE FRAME Dialog-Frame
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
 
+define frame motp-frame
+     b-exit AT ROW 1 COL 1
+     b-quit AT ROW 1 COL 11
+     tt-ext-system.esys-id AT ROW 2 COL 11 COLON-ALIGNED WIDGET-ID 26
+          LABEL "Код"
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+     tt-ext-system.esys-type AT ROW 2.08 COL 58.63 COLON-ALIGNED WIDGET-ID 58
+          LABEL "Тип ВС" FORMAT "->,>>>,>>9"
+          VIEW-AS COMBO-BOX INNER-LINES 11
+          LIST-ITEM-PAIRS "Item 1",0
+          DROP-DOWN-LIST
+          SIZE 35.63 BY 1
+     tt-ext-system.esys-name AT ROW 3.5 COL 3
+          LABEL "Название" FORMAT "X(30)"
+          VIEW-AS FILL-IN 
+          SIZE 29 BY 1
+     f-host-code at row 5 col 3
+     b-host-code at row 5 col 23
+     f-server-addres at row 6 col 3
+     f-user at row 7 col 3
+     b-user at row 7 col 22   
+     e-mail-list at row 8 col 3
+     f-proxy-addres at row 12 col 3
+     f-proxy-login at row 13 col 3
+     f-proxy-password at row 14 col 3
+     t-proxy-ssl at row 15.1 col 14 no-label
+     "SSL прокси:" at row 15 col 3 view-as text size 11 by 1   
+     SPACE(83.11) SKIP(5.12)  
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
+         
+define frame diadoc-frame
+     b-exit AT ROW 1 COL 1
+     b-quit AT ROW 1 COL 11
+     tt-ext-system.esys-id AT ROW 2 COL 11 COLON-ALIGNED WIDGET-ID 26
+          LABEL "Код"
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+     tt-ext-system.esys-type AT ROW 2.08 COL 58.63 COLON-ALIGNED WIDGET-ID 58
+          LABEL "Тип ВС" FORMAT "->,>>>,>>9"
+          VIEW-AS COMBO-BOX INNER-LINES 11
+          LIST-ITEM-PAIRS "Item 1",0
+          DROP-DOWN-LIST
+          SIZE 35.63 BY 1
+     tt-ext-system.esys-name AT ROW 3.5 COL 14
+          LABEL "Название" FORMAT "X(30)"
+          VIEW-AS FILL-IN 
+          SIZE 29 BY 1
+     f-host-code at row 5 col 17
+     b-host-code at row 5 col 37
+     f-diadoc-addres at row 6.5 col 10
+     f-diadoc-user at row 8 col 10
+     f-diadoc-pwd at row 9.5 col 9  blank
+     f-diadoc-pwd-screen at row 9.4 col 9.4  no-label
+     f-diadoc-key at row 11 col 5
+     
+     f-proxy-addres at row 12.5 col 2
+     f-proxy-login at row 14 col 17
+     f-proxy-password at row 15.5 col 16  blank
+     f-proxy-password-screen at row 15.4 col 16.4  no-label
+     f-diadoc-lastload at row 17 col 10
+     SPACE(83.11) SKIP(5.12)  
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
+
 /* *********************** Procedure Settings ************************ */
 
 &ANALYZE-SUSPEND _PROCEDURE-SETTINGS
@@ -541,6 +702,51 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME f-diadoc-pwd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-diadoc-pwd Dialog-Frame
+ON ANY-KEY OF f-diadoc-pwd IN FRAME diadoc-Frame /* Пароль */
+DO:
+    assign
+    f-diadoc-pwd-screen :screen-value = fill('*':u, length(f-diadoc-pwd :screen-value )).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-diadoc-pwd Dialog-Frame
+ON VALUE-CHANGED OF f-diadoc-pwd IN FRAME diadoc-Frame /* Пароль */
+DO:
+  assign
+    f-diadoc-pwd-screen :screen-value = fill('*':u, length(f-diadoc-pwd :screen-value )).
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME f-proxy-password
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-proxy-passwordDialog-Frame
+ON ANY-KEY OF f-proxy-password IN FRAME diadoc-Frame /* Пароль */
+DO:
+    assign
+    f-diadoc-pwd-screen :screen-value = fill('*':u, length(f-diadoc-pwd :screen-value )).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-proxy-password Dialog-Frame
+ON VALUE-CHANGED OF f-proxy-password IN FRAME diadoc-Frame /* Пароль */
+DO:
+  assign
+    f-proxy-password-screen :screen-value = fill('*':u, length(f-proxy-password :screen-value )).
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-db-export
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-db-export Dialog-Frame
@@ -616,6 +822,34 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-exit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit motp-Frame
+ON CHOOSE OF b-exit IN FRAME motp-Frame /* Ввод */
+DO:
+
+   run proc-save-motp in this-procedure no-error.
+   if error-status:error then return no-apply.
+   assign
+   p-success = yes.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-exit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit diadoc-Frame
+ON CHOOSE OF b-exit IN FRAME diadoc-Frame /* Ввод */
+DO:
+
+   run proc-save-diadoc in this-procedure no-error.
+   if error-status:error then return no-apply.
+   assign
+   p-success = yes.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-links
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-links Dialog-Frame
@@ -641,6 +875,31 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+on choose of b-host-code in frame motp-frame
+do :
+  run proc-b-host IN THIS-PROCEDURE NO-ERROR.
+  
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  DISPLAY
+    f-host-code
+  WITH FRAME motp-frame.
+end .
+
+on choose of b-host-code in frame diadoc-frame
+do :
+  run proc-b-host IN THIS-PROCEDURE NO-ERROR.
+  
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  DISPLAY
+    f-host-code
+  WITH FRAME diadoc-frame.
+end .
+
+on choose of b-user in frame motp-frame
+do :
+  
+end .
+
 
 &Scoped-define SELF-NAME b-quit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit Dialog-Frame
@@ -660,6 +919,25 @@ DO:
   ASSIGN
   tt-ext-system.delivery-method.
   run proc-value-change-method in this-procedure ( input tt-ext-system.delivery-method) no-error.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+&Scoped-define SELF-NAME b-quit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit motp-Frame
+ON CHOOSE OF b-quit IN FRAME motp-Frame /* Отмена */
+DO:
+{ gbl/stdbtn.i }
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-quit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit diadoc-Frame
+ON CHOOSE OF b-quit IN FRAME diadoc-Frame /* Отмена */
+DO:
+{ gbl/stdbtn.i }
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -712,6 +990,35 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME tt-ext-system.esys-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-ext-system.esys-type motp-Frame
+ON VALUE-CHANGED OF tt-ext-system.esys-type IN FRAME motp-Frame
+DO:
+  ASSIGN
+    tt-ext-system.esys-type 
+  .
+  RUN proc-value-changed-esys-type IN THIS-PROCEDURE ( input tt-ext-system.esys-type) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME tt-ext-system.esys-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-ext-system.esys-type diadoc-Frame
+ON VALUE-CHANGED OF tt-ext-system.esys-type IN FRAME diadoc-Frame
+DO:
+  ASSIGN
+    tt-ext-system.esys-type 
+  .
+  RUN proc-value-changed-esys-type IN THIS-PROCEDURE ( input tt-ext-system.esys-type) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME f-password
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-password Dialog-Frame
@@ -927,8 +1234,23 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           release tt-ext-system-attr.
        end.
     end.
-   run myenable in this-procedure .
-  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  if tt-ext-system.esys-type = integer({&openxml-type-is_motp})
+  then do :
+    run motp-enable in this-procedure .
+     
+  end .  
+  else do :
+     if tt-ext-system.esys-type = integer({&openxml-type-is_diadoc})
+     then do :
+        run diadoc-enable in this-procedure .
+     end .  
+     else do : 
+        run myenable in this-procedure .
+     end.
+  end .
+  
+  WAIT-FOR GO OF FRAME dialog-frame or go OF FRAME motp-frame or go OF FRAME diadoc-frame.
+ 
 END.
 RUN disable_UI.
 
@@ -1192,6 +1514,183 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+procedure MOTP-Enable :
+  DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
+  DEFINE VARIABLE v-ii AS integer NO-UNDO.
+  define buffer buf_db for ub.db.
+  do v-ii = 1 to num-entries({&openxml-special-type-list}):
+  &scop openxml-type-code string(v-ii)
+    assign
+    tt-ext-system.esys-type:list-item-pairs in frame Motp-frame =
+    (if v-ii = 1
+    then ({&openxml-type-name}  + {&comma-char} +  entry(v-ii, {&openxml-special-type-list}))
+    else (tt-ext-system.esys-type:list-item-pairs + {&comma-char} +
+           {&openxml-type-name}  + {&comma-char} +  entry(v-ii, {&openxml-special-type-list}))
+  
+    )
+    .
+  end.
+  for each tt-ext-system-attr:
+    case tt-ext-system-attr.esya-attr-code:
+      when {&attr-esys-host-code} then do:
+        assign f-host-code = integer(tt-ext-system-attr.esya-attr-value) .
+      end.
+      when {&attr-esys-user-id} then do:
+        assign v-user-id = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-server-addr} then do:
+        assign f-server-addres = tt-ext-system-attr.esya-attr-value.
+      end.
+      when {&attr-esys-proxy-addr} then do:
+        assign f-proxy-addres = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-proxy-login} then do:
+        assign f-proxy-login = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-proxy-pswd} then do:
+        assign f-proxy-password = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-proxy-ssl} then do:
+        assign t-proxy-ssl = logical(tt-ext-system-attr.esya-attr-value) .
+      end.
+      when {&attr-esys-mail-list} then do:
+        assign e-mail-list = tt-ext-system-attr.esya-attr-value .
+      end.
+    end case.
+  end.
+  DISPLAY
+    tt-ext-system.esys-id
+    tt-ext-system.esys-name
+    tt-ext-system.esys-type
+    f-host-code
+    f-server-addres
+    f-user
+    f-proxy-addres
+    f-proxy-login
+    f-proxy-password
+    t-proxy-ssl
+    e-mail-list
+  WITH FRAME MOTP-frame .
+  ENABLE
+    b-exit when p-mode <> {&lookup}
+    b-quit
+    b-host-code when p-mode <> {&lookup}
+    b-user when p-mode <> {&lookup}
+    tt-ext-system.esys-name when p-mode <> {&lookup}
+    tt-ext-system.esys-type when p-mode <> {&lookup}
+    f-server-addres when p-mode <> {&lookup}
+    f-proxy-addres when p-mode <> {&lookup}
+    f-proxy-login when p-mode <> {&lookup}
+    f-proxy-password when p-mode <> {&lookup}
+    t-proxy-ssl when p-mode <> {&lookup}
+    e-mail-list when p-mode <> {&lookup}
+  WITH FRAME Motp-frame .
+  view frame Motp-frame .
+end procedure .
+
+procedure Diadoc-Enable :
+  DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
+  DEFINE VARIABLE v-ii AS integer NO-UNDO.
+  define buffer buf_db for ub.db.
+  do v-ii = 1 to num-entries({&openxml-special-type-list}):
+  &scop openxml-type-code string(v-ii)
+    assign
+    tt-ext-system.esys-type:list-item-pairs in frame diadoc-frame =
+    (if v-ii = 1
+    then ({&openxml-type-name}  + {&comma-char} +  entry(v-ii, {&openxml-special-type-list}))
+    else (tt-ext-system.esys-type:list-item-pairs + {&comma-char} +
+           {&openxml-type-name}  + {&comma-char} +  entry(v-ii, {&openxml-special-type-list}))
+  
+    )
+    .
+  end.
+  for each tt-ext-system-attr:
+    case tt-ext-system-attr.esya-attr-code:
+      when {&attr-esys-host-code} then do:
+        assign f-host-code = integer(tt-ext-system-attr.esya-attr-value) .
+      end.
+      when {&attr-esys-diadoc-user} then do:
+        assign f-diadoc-user = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-diadoc-pwd} then do:
+        assign f-diadoc-pwd= tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-server-addr} then do:
+        assign f-diadoc-addres = tt-ext-system-attr.esya-attr-value.
+      end.
+      when {&attr-esys-diadoc-key} then do:
+        assign f-diadoc-key = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-diadoc-lastload} then do:
+        assign f-diadoc-lastload = date(tt-ext-system-attr.esya-attr-value) .
+      end.
+      
+      when {&attr-esys-proxy-addr} then do:
+        assign f-proxy-addres = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-proxy-login} then do:
+        assign f-proxy-login = tt-ext-system-attr.esya-attr-value .
+      end.
+      when {&attr-esys-proxy-pswd} then do:
+        assign f-proxy-password = tt-ext-system-attr.esya-attr-value .
+      end.
+      
+    end case.
+  end.
+  ASSIGN
+ f-diadoc-pwd-screen:WIDTH-CHARS IN FRAME diadoc-frame  = f-diadoc-pwd:WIDTH-CHARS IN FRAME diadoc-frame  - 0.5
+ f-diadoc-pwd-screen:HEIGHT-CHARS IN FRAME diadoc-frame  = f-diadoc-pwd:HEIGHT-CHARS IN FRAME diadoc-frame  - 0.6
+ f-diadoc-pwd-screen:row IN FRAME diadoc-frame  = f-diadoc-pwd:row IN FRAME diadoc-frame  + 0.2
+ f-diadoc-pwd-screen:COL IN FRAME diadoc-frame  = f-diadoc-pwd:col IN FRAME diadoc-frame  + 0.2
+ .
+ ASSIGN
+ f-proxy-password-screen:WIDTH-CHARS IN FRAME diadoc-frame  = f-proxy-password:WIDTH-CHARS IN FRAME diadoc-frame  - 0.5
+ f-proxy-password-screen:HEIGHT-CHARS IN FRAME diadoc-frame  = f-proxy-password:HEIGHT-CHARS IN FRAME diadoc-frame  - 0.6
+ f-proxy-password-screen:row IN FRAME diadoc-frame  = f-proxy-password:row IN FRAME diadoc-frame  + 0.2
+ f-proxy-password-screen:COL IN FRAME diadoc-frame  = f-proxy-password:col IN FRAME diadoc-frame  + 0.2
+ .
+ f-diadoc-pwd-screen      = fill('*':u, length(f-diadoc-pwd )).
+ f-proxy-password-screen  = fill('*':u, length(f-proxy-password )).
+  DISPLAY
+    tt-ext-system.esys-id
+    tt-ext-system.esys-name
+    tt-ext-system.esys-type
+    f-diadoc-user
+    f-diadoc-pwd
+    f-host-code 
+    f-diadoc-addres
+    f-diadoc-key
+    f-proxy-addres
+    f-proxy-login
+    f-proxy-password
+    f-proxy-password-screen
+    f-diadoc-pwd-screen
+    f-diadoc-lastload
+    
+  WITH FRAME diadoc-frame .
+  ENABLE
+    b-exit when p-mode <> {&lookup}
+    b-quit
+    tt-ext-system.esys-name when p-mode <> {&lookup}
+    tt-ext-system.esys-type when p-mode <> {&lookup}
+    f-diadoc-user           when p-mode <> {&lookup}
+    f-diadoc-pwd            when p-mode <> {&lookup}
+    f-diadoc-addres         when p-mode <> {&lookup}
+    f-diadoc-key            when p-mode <> {&lookup}
+    f-proxy-addres          when p-mode <> {&lookup}
+    f-proxy-login           when p-mode <> {&lookup}
+    f-proxy-password        when p-mode <> {&lookup}
+    f-proxy-password-screen when p-mode <> {&lookup}
+    f-diadoc-pwd-screen     when p-mode <> {&lookup}
+    f-diadoc-lastload       when p-mode <> {&lookup}
+    f-host-code             when p-mode <> {&lookup}
+    b-host-code             when p-mode <> {&lookup}
+  WITH FRAME diadoc-frame .
+  view frame diadoc-frame .
+end procedure .
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 define variable v-list-item-pairs as character no-undo .
@@ -1383,6 +1882,41 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-host Dialog-Frame 
+PROCEDURE proc-b-host :
+define variable ref-list as char no-undo.
+DEFINE VARIABLE new-host-code AS INTEGE no-undo.
+DEFINE BUFFER buf_sysclients FOR ub.clients.
+  run adm/sconfs.w (
+                 input parParentProc
+                ,input "b-sel":U
+                ,input no
+                ,input v-cntxt-host-code-obj
+                ,output new-host-code
+                ,input-output ref-list ) .
+  .
+if new-host-code = ?
+or new-host-code = 0
+then do:
+   ASSIGN
+   f-host-code = ?
+   .
+END.
+ELSE DO:
+
+  find first buf_sysclients where
+            buf_sysclients.obj-type = {&cmp}
+        and buf_sysclients.obj-code = new-host-code no-lock.
+    ASSIGN
+    f-host-code = buf_sysclients.obj-code
+    .
+END.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-rec as recid no-undo .
@@ -1557,6 +2091,278 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
+PROCEDURE proc-save-motp :
+define variable v-rec as recid no-undo .
+define variable psw-buf as character no-undo .
+define buffer buf_ext-system for ub.ext-system.
+if p-mode = {&lookup} then return.
+assign
+frame motp-frame
+tt-ext-system.esys-name
+tt-ext-system.esys-type
+f-host-code
+f-user
+f-server-addres
+f-proxy-addres
+f-proxy-login
+f-proxy-password
+t-proxy-ssl
+e-mail-list
+.
+if tt-ext-system.esys-type = 0 then do:
+    MESSAGE
+    "Задайте тип ВС"
+    VIEW-AS ALERT-BOX ERROR.
+    UNDO, RETURN ERROR.
+end.
+if p-mode = {&update} then do:
+   v-rec = recid(locked_ext-system).
+end.
+IF f-proxy-password:VISIBLE IN FRAME motp-frame THEN DO:
+    ASSIGN
+    f-proxy-password.
+    if f-proxy-password <> '':U
+    then do:
+      run ref/per-pswd.w ( output psw-buf ) .
+      if f-proxy-password <> psw-buf then do:
+        message
+        "Пароль не подтвержден"
+        view-as alert-box ERROR .
+        apply "ENTRY":U to f-proxy-password IN frame motp-frame.
+        return error.
+      end.
+   end.
+END.
+if p-mode = {&add-def} then do:
+  do v-ii = 1 to num-entries({&form-esys-attr}):
+    find first tt-ext-system-attr where
+            tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr}) no-error.
+    if not available tt-ext-system-attr then do:
+      create tt-ext-system-attr.
+      assign
+      tt-ext-system-attr.esys-id = 0
+      tt-ext-system-attr.db-num = 0
+      tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr})
+      .
+      release tt-ext-system-attr.
+    end.
+  end.
+end.
+
+for each tt-ext-system-attr:
+  case tt-ext-system-attr.esya-attr-code:
+     when {&attr-esys-host-code} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value = string(f-host-code).
+     end.
+     when {&attr-esys-user-id} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value =  v-user-id.
+     end.
+     when {&attr-esys-server-addr} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value = f-server-addres.
+     end.
+     when {&attr-esys-proxy-addr} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value = f-proxy-addres.
+     end.
+     when {&attr-esys-proxy-login} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value = f-proxy-login.
+     end.
+     when {&attr-esys-proxy-pswd} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value = f-proxy-password.
+     end.
+     when {&attr-esys-proxy-ssl} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value = string(t-proxy-ssl).
+     end.
+     when {&attr-esys-mail-list} then do:
+        assign
+        tt-ext-system-attr.esya-attr-value = trim(e-mail-list).
+     end.
+  end case.
+end.
+
+
+run bge/extsyss1.p ( input p-mode
+                    ,input no /*p-silent*/
+                    ,input-output v-rec
+                    ,input tt-ext-system.esys-id
+                    ,input 0 /*p-db-num*/
+                    ,input tt-ext-system.esys-name
+                    ,input tt-ext-system.esys-des
+                    ,input tt-ext-system.esys-have-export
+                    ,input tt-ext-system.esys-db-num-exp
+                    ,input tt-ext-system.esys-send-news-exp
+                    ,input tt-ext-system.esys-num-days-keep-exp
+                    ,input tt-ext-system.esys-have-import
+                    ,input tt-ext-system.esys-db-num-imp
+                    ,input tt-ext-system.esys-send-news-imp
+                    ,input tt-ext-system.esys-num-days-keep-imp
+                    ,input tt-ext-system.esys-type
+                    ,input tt-ext-system.whole-send-news
+                    ,input table tt-ext-system-attr
+                                        ) no-error.
+if error-status:error then do:
+  undo, return error.
+end.
+else do:
+  find first buf_ext-system no-lock where
+          recid(buf_ext-system) = v-rec no-error.
+  if available buf_ext-system then do:
+    assign
+    p-esys-id = buf_ext-system.esys-id.
+  end.
+end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-diadoc Dialog-Frame 
+PROCEDURE proc-save-diadoc :
+   define variable v-rec as recid no-undo .
+   define variable psw-buf as character no-undo .
+   define buffer buf_ext-system for ub.ext-system.
+   if p-mode = {&lookup} then return.
+   assign
+   frame diadoc-frame
+   tt-ext-system.esys-name
+   tt-ext-system.esys-type
+   f-diadoc-user
+   f-diadoc-pwd 
+   f-diadoc-addres
+   f-diadoc-key
+   f-diadoc-lastload 
+   f-proxy-addres
+   f-proxy-login
+   f-proxy-password
+   f-host-code
+   .
+   if tt-ext-system.esys-type = 0 then do:
+       MESSAGE
+       "Задайте тип ВС"
+       VIEW-AS ALERT-BOX ERROR.
+       UNDO, RETURN ERROR.
+   end.
+   if p-mode = {&update} then do:
+      v-rec = recid(locked_ext-system).
+   end.
+   /*IF f-proxy-password:VISIBLE IN FRAME diadoc-frame THEN DO:
+       ASSIGN
+       f-proxy-password.
+       if f-proxy-password <> '':U
+       then do:
+         run ref/per-pswd.w ( output psw-buf ) .
+         if f-proxy-password <> psw-buf then do:
+           message
+           "Пароль не подтвержден"
+           view-as alert-box ERROR .
+           apply "ENTRY":U to f-proxy-password IN frame diadoc-frame.
+           return error.
+         end.
+      end.
+   END.*/
+   if p-mode = {&add-def} then do:
+     do v-ii = 1 to num-entries({&form-esys-attr}):
+       find first tt-ext-system-attr where
+               tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr}) no-error.
+       if not available tt-ext-system-attr then do:
+         create tt-ext-system-attr.
+         assign
+         tt-ext-system-attr.esys-id = 0
+         tt-ext-system-attr.db-num = 0
+         tt-ext-system-attr.esya-attr-code = entry(v-ii, {&form-esys-attr})
+         .
+         release tt-ext-system-attr.
+       end.
+     end.
+   end.
+
+   for each tt-ext-system-attr:
+     case tt-ext-system-attr.esya-attr-code:
+        when {&attr-esys-host-code} then do:
+           assign
+              tt-ext-system-attr.esya-attr-value = string(f-host-code).
+        end.
+        when {&attr-esys-diadoc-user} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = f-diadoc-user.
+        end.
+        when {&attr-esys-server-addr} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value =  f-diadoc-addres.
+        end.
+        when {&attr-esys-diadoc-pwd} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = f-diadoc-pwd.
+        end.
+        when {&attr-esys-diadoc-key} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = f-diadoc-key.
+        end.
+        when {&attr-esys-diadoc-lastload} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = string(f-diadoc-lastload).
+        end.
+        when {&attr-esys-proxy-addr} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = f-proxy-addres.
+        end.
+        when {&attr-esys-proxy-login} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = f-proxy-login.
+        end.
+        when {&attr-esys-proxy-pswd} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = f-proxy-password.
+        end.
+        
+     end case.
+   end.
+
+
+run bge/extsyss1.p ( input p-mode
+                    ,input no /*p-silent*/
+                    ,input-output v-rec
+                    ,input tt-ext-system.esys-id
+                    ,input 0 /*p-db-num*/
+                    ,input tt-ext-system.esys-name
+                    ,input tt-ext-system.esys-des
+                    ,input tt-ext-system.esys-have-export
+                    ,input tt-ext-system.esys-db-num-exp
+                    ,input tt-ext-system.esys-send-news-exp
+                    ,input tt-ext-system.esys-num-days-keep-exp
+                    ,input tt-ext-system.esys-have-import
+                    ,input tt-ext-system.esys-db-num-imp
+                    ,input tt-ext-system.esys-send-news-imp
+                    ,input tt-ext-system.esys-num-days-keep-imp
+                    ,input tt-ext-system.esys-type
+                    ,input tt-ext-system.whole-send-news
+                    ,input table tt-ext-system-attr
+                                        ) no-error.
+if error-status:error then do:
+  undo, return error.
+end.
+else do:
+  find first buf_ext-system no-lock where
+          recid(buf_ext-system) = v-rec no-error.
+  if available buf_ext-system then do:
+    assign
+    p-esys-id = buf_ext-system.esys-id.
+  end.
+end.
+
+END PROCEDURE.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-value-change-method Dialog-Frame 
 PROCEDURE proc-value-change-method :
 define input parameter p-delivery-method as integer no-undo.
@@ -1673,31 +2479,48 @@ END PROCEDURE.
 PROCEDURE proc-value-changed-esys-type :
 DEFINE INPUT PARAMETER p-esys-type AS INTEGER NO-UNDO.
 define variable v-dm-method as integer   no-undo .
-case p-esys-type:
-   when integer({&openxml-type-oracle-retail}) then do:
-     v-dm-method = integer({&esys-dm-oracle-retail}).
-  end.
-  when integer({&openxml-type-edoc-nn}) then do:
-     v-dm-method = integer({&esys-dm-nn}).
-  end.
-  when integer({&openxml-type-com-dashboard})
-  or
-  when integer({&openxml-type-dklink}) then do:
-    v-dm-method = integer({&esys-dm-cdash}).
-  end.
-  when integer({&openxml-type-exite-edi}) then do:
-    v-dm-method = integer({&esys-dm-exite-edi}).
-  end.
-  otherwise do:
-    v-dm-method = integer({&esys-dm-ordinal}).
-  end.
-end case.
-assign
-tt-ext-system.delivery-method = v-dm-method.
-display
-tt-ext-system.delivery-method
-with frame {&frame-name} .
-run proc-value-change-method in this-procedure ( input  v-dm-method).
+if p-esys-type = integer({&openxml-type-is_motp})
+then do :
+  hide frame Dialog-Frame .
+  hide frame diadoc-frame .
+  run Motp-Enable .
+end .
+else if p-esys-type = {&bef-openxml-type-is_diadoc}
+then do :
+  hide frame Dialog-Frame .
+  hide frame motp-frame .
+  run diadoc-Enable .
+end .
+else do :
+  hide frame motp-frame .
+  hide frame diadoc-frame .
+  run myenable .
+  case p-esys-type:
+     when integer({&openxml-type-oracle-retail}) then do:
+       v-dm-method = integer({&esys-dm-oracle-retail}).
+    end.
+    when integer({&openxml-type-edoc-nn}) then do:
+       v-dm-method = integer({&esys-dm-nn}).
+    end.
+    when integer({&openxml-type-com-dashboard})
+    or
+    when integer({&openxml-type-dklink}) then do:
+      v-dm-method = integer({&esys-dm-cdash}).
+    end.
+    when integer({&openxml-type-exite-edi}) then do:
+      v-dm-method = integer({&esys-dm-exite-edi}).
+    end.
+    otherwise do:
+      v-dm-method = integer({&esys-dm-ordinal}).
+    end.
+  end case.
+  assign
+  tt-ext-system.delivery-method = v-dm-method.
+  display
+  tt-ext-system.delivery-method
+  with frame {&frame-name} .
+  run proc-value-change-method in this-procedure ( input  v-dm-method).
+end .  
 
 END PROCEDURE.
 

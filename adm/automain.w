@@ -622,7 +622,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable v-list-key            as character no-undo .
   define variable v-list-db             as character no-undo .
   define variable v-for-db              as character no-undo .
-  define variable v-for-extsys              as character no-undo .
+  define variable v-for-extsys          as character no-undo .
   define variable v-for-proc            as character no-undo .
   define variable start-time            as int64     no-undo .
   define variable v-session-begin       as logical   no-undo .
@@ -694,8 +694,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       .
       leave block_db-list .
     end.
-
-       if entry( 1, entry( v-ind, p-mode, "+":U), ":":U ) = "ExtSys":U then do:
+    
+    if entry( 1, entry( v-ind, p-mode, "+":U), ":":U ) = "ExtSys":U then do:
       assign
         v-for-extsys = entry( 2, entry( v-ind, p-mode, "+":U), ":":U )
       .
@@ -760,6 +760,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
     if p-auto-type = {&btpr-type-autonws}
       or p-auto-type = {&btpr-type-autooxml}
+      or p-auto-type = {&btpr-type-is_motp}
+      or p-auto-type = {&btpr-type-is_diadoc}
     then do:
       assign
         g#auto = false
@@ -877,6 +879,42 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           .
         end.
       end.
+      when {&btpr-type-is_motp}
+   or when {&btpr-type-is_diadoc}
+      then do:
+        define variable vTitle as character no-undo.
+         vTitle = if p-auto-type eq  {&btpr-type-is_diadoc}
+                  then "ИС Диадок"
+                  else "ИС МОТП.".
+        
+        assign
+          {&window-name}:title = {&window-name}:title + vTitle
+/*          g#auto = FALSE*/
+
+        .
+        run write-to-log ( "Запущен автоматический режим обмена данныи c " + vTitle).
+        
+/*        run write-to-log ( "Запущен обмен с " + vTitle ).                                         */
+/*        if v-hidden-mode = false then do:                                                         */
+/*          run write-to-log ( "Через 5 секунд будет запущен автоматический режим обмена данными" ).*/
+/*          wait-for                                                                                */
+/*            go of frame {&frame-name}                                                             */
+/*            or close of this-procedure                                                            */
+/*            or choose of b-hand in frame {&frame-name}                                            */
+/*            or choose of b-help in frame {&frame-name}                                            */
+/*            or choose of b-prop in frame {&frame-name}                                            */
+/*            focus frame {&frame-name}                                                             */
+/*            pause 5                                                                               */
+/*            .                                                                                     */
+/*        end.                                                                                      */
+/*        if not log-exit                                                                           */
+/*        then do:                                                                                  */
+/*          run write-to-log ( "Запущен автоматический режим обмена данныи" ).                      */
+/*          assign                                                                                  */
+/*            g#auto = TRUE                                                                         */
+/*          .                                                                                       */
+/*        end.                                                                                      */
+      end.
       when {&btpr-type-autogetcd}
       then do:
         assign
@@ -925,6 +963,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           {&window-name}:title = {&window-name}:title + "ФГИС Меркурий"
         .
         run write-to-log ( "Запущена система Меркурий" ).
+      end.
+      when {&btpr-type-is_motp}
+   or when {&btpr-type-is_diadoc}
+      then do:
+        assign
+          {&window-name}:title = {&window-name}:title + vTitle
+        .
+        run write-to-log ( "Запущена система " + vTitle).
       end.
       when {&btpr-type-hddtest}
       then do:
@@ -1124,6 +1170,43 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                      ,input g#auto-user-password
                      ,input v-list-db
                   ) no-error.
+               end.
+               when {&btpr-type-is_motp}
+               then do:
+                  run bge/auto-motp.p
+                     (input g#auto-user-id
+                     ,input g#auto-user-password
+                     ,input v-list-db
+                  ) no-error.
+               end.
+               when {&btpr-type-is_diadoc}
+               then do:
+                  run gbl/dbdiscon.p no-error.
+                  if error-status :error then do:
+                     run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ) no-error.
+                     if error-status:error
+                     then do:
+                        run write-to-screen (return-value).
+                     end.
+                  end.
+                  run bge/auto-diadoc.p
+                     (input this-procedure
+/*                     ,input g#auto-user-password*/
+                     , input v-list-db
+                     ) no-error.
+                  /*define variable vi as integer no-undo.
+                  define variable vText as character no-undo.
+                  vText = return-value.
+                  do vi = 1 to num-entries(vText):
+                     run write-to-log(entry(vi,vText)).
+                  end.*/
+                  run adm/autoconn.p no-error.
+                  if error-status :error then do:
+                     run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
+                     assign
+                        {&window-name}:title = v-title
+                     .
+                  end.
                end.
                when {&btpr-type-hddtest}
                then do:
@@ -1512,6 +1595,18 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     when {&btpr-type-autofree}
     then do:
       run write-to-log ( "Закончен сеанс работы с системой автоматической выполнения произвольных заданий" ).
+    end.
+    when {&btpr-type-mercury}
+    then do:
+      run write-to-log ( "Закончен сеанс работы с ФГИС Меркурий" ).
+    end.
+    when {&btpr-type-is_motp}
+    then do:
+      run write-to-log ( "Закончен сеанс работы с ИС МОТП" ).
+    end.
+    when {&btpr-type-is_diadoc}
+    then do:
+      run write-to-log ( "Закончен сеанс работы с ИС Диадок" ).
     end.
     otherwise do:
       run write-to-log ( "Закончен сеанс работы с системой ....." ).

@@ -1001,6 +1001,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Наличие расписания мониторинга HDD */
 { cmp/cr-prep.i 1 attr-schedule-hdd           schedule-hdd          " " schedule-hdd         }
 
+/* Наличие расписания обмена с ИС МОТП */
+{ cmp/cr-prep.i 1 attr-schedule-motp          schedule-motp         " " schedule-motp        }
+
+/* Наличие расписания обмена с ИС МОТП */
+{ cmp/cr-prep.i 1 attr-schedule-diadoc        schedule-diadoc       " " schedule-diadoc        }
+
 /* Дата по которую усечены документы по БД в ГБД */
 { cmp/cr-prep.i 1 attr-cut-date               cut-date              " " cut-date             }
 
@@ -1037,7 +1043,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Номер точки интеграции для ERPRN */
 { cmp/cr-prep.i 1 attr-int-point              int-point             " " int-point            }
 
-/* Номер точки интеграции для ERPRN */
+/* версия code.xml  */
 { cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code            }
 
 /* Номер MessageID для видеонаблюдения */
@@ -1090,6 +1096,21 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-no-sent-ftp        no-sent-ftp          " " no-sent-ftp     }
 { cmp/cr-prep.i 1 attr-esys-gln-net            gln-net              " " gln-net         }
 { cmp/cr-prep.i 1 attr-esys-gln-provider       gln-provider         " " gln-provider    }
+{ cmp/cr-prep.i 1 attr-esys-AuthToken          AuthToken            " " AuthToken    }
+{ cmp/cr-prep.i 1 attr-esys-AuthTokenDT        AuthTokenDT          " " AuthTokenDT  }
+{ cmp/cr-prep.i 1 attr-esys-host-code          host-code            " " host-code    }
+{ cmp/cr-prep.i 1 attr-esys-user-id            user-id              " " user-id      }
+{ cmp/cr-prep.i 1 attr-esys-server-addr        server-addr          " " server-addr  }
+{ cmp/cr-prep.i 1 attr-esys-proxy-addr         proxy-addr           " " proxy-addr   }
+{ cmp/cr-prep.i 1 attr-esys-proxy-login        proxy-login          " " proxy-login  }
+{ cmp/cr-prep.i 1 attr-esys-proxy-pswd         proxy-pswd           " " proxy-pswd   }
+{ cmp/cr-prep.i 1 attr-esys-proxy-ssl          proxy-ssl            " " proxy-ssl    }
+{ cmp/cr-prep.i 1 attr-esys-AuthToken-send     AuthToken-send       " " AuthToken-send }
+{ cmp/cr-prep.i 1 attr-esys-mail-list          mail-list            " " mail-list    }
+{ cmp/cr-prep.i 1 attr-esys-diadoc-user        diadoc-user          " " diadoc-user  }
+{ cmp/cr-prep.i 1 attr-esys-diadoc-pwd         diadoc-pwd           " " diadoc-pwd   }
+{ cmp/cr-prep.i 1 attr-esys-diadoc-key         diadoc-key           " " diadoc-key   }
+{ cmp/cr-prep.i 1 attr-esys-diadoc-lastload    diadoc-lastload      " " diadoc-lastload    }
 /* Использование цифровой подписи при обмене с ВС */
 { cmp/cr-prep.i 1 attr-esys-cert-sign          cert-sign            " " cert-sign         }
 { cmp/cr-prep.i 1 attr-esys-cert-sign-subject  cert-sign-subject    " " cert-sign-subject }
@@ -1117,6 +1138,21 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 ,{&bef-attr-esys-no-sent-ftp}~
 ,{&bef-attr-esys-gln-net}~
 ,{&bef-attr-esys-gln-provider}~
+,{&bef-attr-esys-AuthToken}~
+,{&bef-attr-esys-AuthTokenDT}~
+,{&bef-attr-esys-host-code}~
+,{&bef-attr-esys-user-id}~
+,{&bef-attr-esys-server-addr}~
+,{&bef-attr-esys-proxy-addr}~
+,{&bef-attr-esys-proxy-login}~
+,{&bef-attr-esys-proxy-pswd}~
+,{&bef-attr-esys-proxy-ssl}~
+,{&bef-attr-esys-AuthToken-send}~
+,{&bef-attr-esys-mail-list}~
+,{&bef-attr-esys-diadoc-user}~
+,{&bef-attr-esys-diadoc-pwd}~
+,{&bef-attr-esys-diadoc-key}~
+,{&bef-attr-esys-diadoc-lastload}~
 ,{&bef-attr-esys-cert-sign}~
 ,{&bef-attr-esys-cert-sign-subject}~
 ,{&bef-attr-esys-cert-sign-issuer}~
@@ -1585,6 +1621,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define calc-petr
 { cmp/cr-prep.i 1 openxml-type-1c            8         "1C"                  8                    "1C"   }
 { cmp/cr-prep.i 1 openxml-type-exite-edi     9         "EDI"                 9                    "EDI"   }
 { cmp/cr-prep.i 1 openxml-type-mercury       10        "Меркурий"            10                   "Mercury"   }
+{ cmp/cr-prep.i 1 openxml-type-is_motp       11        "ИС МОТП"             11                   "Is_motp"   }
+{ cmp/cr-prep.i 1 openxml-type-is_diadoc     12        "ИС Диадок"           12                   "Is_diadoc"   }
 
 &glob openxml-type-list '~
 {&bef-openxml-type-ordinal}~
@@ -1598,6 +1636,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define calc-petr
 ,{&bef-openxml-type-1c}~
 ,{&bef-openxml-type-exite-edi}~
 ,{&bef-openxml-type-mercury}~
+,{&bef-openxml-type-is_motp}~
+,{&bef-openxml-type-is_diadoc}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-type-list {&openxml-type-list}" ).
 
@@ -1613,6 +1653,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-t
 ,{&bef-openxml-type-1c-full}~
 ,{&bef-openxml-type-exite-edi-full}~
 ,{&bef-openxml-type-mercury-full}~
+,{&bef-openxml-type-is_motp-full}~
+,{&bef-openxml-type-is_diadoc-full}~
 ':U
 
 run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-type-list-full {&openxml-type-list-full}" ).
@@ -1633,6 +1675,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-t
 ,{&bef-openxml-type-1c}~
 ,{&bef-openxml-type-exite-edi}~
 ,{&bef-openxml-type-mercury}~
+,{&bef-openxml-type-is_motp}~
+,{&bef-openxml-type-is_diadoc}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define openxml-special-type-list {&openxml-special-type-list}" ).
 

@@ -1060,6 +1060,18 @@ create X_auto-session .
   .
   create X_auto-session .
   assign
+    X_auto-session.session-type = {&btpr-type-is_motp}
+    X_auto-session.session-name = "ИС МОТП"
+    X_auto-session.proc-name    = "adm/l-i-motp.w":U
+  .
+  create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-is_diadoc}
+    X_auto-session.session-name = "ИС Diadoc"
+    X_auto-session.proc-name    = "adm/l-i-diadoc.w":U
+  .
+  create X_auto-session .
+  assign
     X_auto-session.session-type = {&btpr-type-hddtest}
     X_auto-session.session-name = "Мониторинг HDD"
     X_auto-session.proc-name    = "adm/l-i-hddtest.w":U
