@@ -5,7 +5,9 @@
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-
+using ibs.th.gbl.env.prmtrs.edo.
+using ibs.th.gbl.sys.objsrv.
+using ibs.th.str.marking.sts.*.
 
 /* Temp-Table and Buffer definitions                                    */
 DEFINE BUFFER buf_cash-desk FOR cash-desk.
@@ -91,7 +93,9 @@ define variable vss-description AS CHAR NO-UNDO INIT "чек : добавление, изменени
 { gbl/sel-date.i }
 {gbl/tmprecid.i }
 { str/is-corr.i }
-
+{ ref/gds-attr.i }
+{ str/temp_upd.i }
+{ utl/gtin.i }
 
 DEFINE VARIABLE var-mode as character no-undo.
 /*настройка - разрешено ли менять на бар-код с другой текущей прейскурантной ценой*/
@@ -132,7 +136,8 @@ define variable v-tax-type as character no-undo label "Вид налога" FORMAT "X(10)
 define variable v-OVDtax-type as character no-undo label "Вид налога ОФД" FORMAT "X(14)".
 define buffer buf_shop for ub.shop.
 define variable v-host-code as integer   no-undo .
-
+define variable v-gds-attr-value as character no-undo .
+define variable v-gds-attr-type as character no-undo .
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
 define variable v-value-decimal as decimal no-undo .
@@ -150,6 +155,11 @@ define variable p-view-log as logical no-undo.
 define variable p-pos-type as character no-undo .
 { str/paycardv.i }
 
+define buffer buf_marking-chk for ub.marking-chk .
+def var objSrv as class objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
+def var Marking as class mark no-undo .
+define variable EDOParSec as class edo.
 &SCOP discnt-v-code string(tt-chk-discnt.value-type)
 &scop discnt-target-code string(tt-chk-discnt.line-type)
 &scop discnt-type-code string(tt-chk-discnt.discnt-type)
@@ -335,11 +345,11 @@ tt-chk-doc.shift-date
 &Scoped-define ENABLED-TABLES tt-chk-doc
 &Scoped-define FIRST-ENABLED-TABLE tt-chk-doc
 &Scoped-Define ENABLED-OBJECTS B-exit B-quit B-prev B-next Cb-chk-type ~
-br-attr B-print B-hist B-help RECT-1 fhour fmin fsec B-card b-cd ~
+br-attr b-func B-print B-hist B-help RECT-1 fhour fmin fsec B-card b-cd ~
 v-corr-osnov v-corr-type v-doc-osnov corr-date f-num-corr BUTTON-1 ~
 b-choose-date f-cause-corr v-src-d-card b-addbonus B-adddiscnt B-addgds ~
 BR-corr BR-gds BR-discnt BR-pay B-addpay b-cf F-cashier F-salesman Btn_sht-from~
-f-cli-name 
+f-cli-name B_mark 
 &Scoped-Define DISPLAYED-FIELDS tt-chk-doc.src-tot-doc tt-chk-doc.chk-date ~
 tt-chk-doc.cashier tt-chk-doc.sales-man tt-chk-doc.obj-code ~
 tt-chk-doc.d-card tt-chk-doc.pay-desk tt-chk-doc.doc-num ~
@@ -363,6 +373,17 @@ F-cashier F-salesman f-cli-name
 
 
 /* ************************  Function Prototypes ********************** */
+
+
+/* Browse definitions                                                   */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName d-utd
+FUNCTION StatusTHName RETURNS CHARACTER
+  (input p-stsTH as integer)  .
+  Return Marking:GetLabel(p-stsTH) .
+END FUNCTION .
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-good Dialog-Frame 
 FUNCTION get-good RETURNS CHARACTER
@@ -432,6 +453,10 @@ FUNCTION get-salesman RETURNS CHARACTER
 FUNCTION get-templ-rl-name RETURNS CHARACTER
   ( INPUT p-templ-rl-root AS INTEGER )  FORWARD.
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD GdsName Dialog-Frame 
+FUNCTION GdsName RETURNS CHARACTER
+  ( input p-gds-code as integer)  FORWARD.  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -462,6 +487,12 @@ DEFINE MENU MENU-B-adddiscnt
 DEFINE MENU MENU-BR-pay 
        MENU-ITEM m-pay          LABEL "Оплата"        .
 
+DEFINE MENU m_marks 
+       MENU-ITEM m_marks-utd    LABEL "Марки по чеку"
+       MENU-ITEM m_marks-lines  LABEL "Марки по линии".
+
+DEFINE MENU m-func 
+       MENU-ITEM m-add-blocked-marks       LABEL "Автозаполнение по заблок. маркам".
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-addbonus 
@@ -539,6 +570,9 @@ DEFINE BUTTON B-quit AUTO-END-KEY
 DEFINE BUTTON br-attr 
      LABEL "Атр" 
      SIZE 4 BY 1.
+define button b-func
+    label "функ."
+    size 6 by 1 .
 
 DEFINE BUTTON Btn_sht-from 
      IMAGE-UP FILE "btn-down-arrow":U
@@ -553,6 +587,10 @@ DEFINE BUTTON BUTTON-1
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "" 
      SIZE 2.63 BY 1 TOOLTIP "Выбор оснований".
+
+DEFINE BUTTON B_mark 
+     LABEL "Марки" 
+     SIZE 13.75 BY 1.
 
 DEFINE VARIABLE Cb-chk-type AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS COMBO-BOX INNER-LINES 10
@@ -801,6 +839,7 @@ DEFINE FRAME Dialog-Frame
      B-next AT ROW 1 COL 25
      Cb-chk-type AT ROW 1 COL 36 COLON-ALIGNED NO-LABEL
      br-attr AT ROW 1 COL 89.75 WIDGET-ID 8
+     b-func at row 1 col 83.45
      B-print AT ROW 1 COL 93.75
      B-hist AT ROW 1 COL 96.75
      B-help AT ROW 1 COL 99.75
@@ -903,6 +942,7 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 86.38 BY 2
      B-addpay AT ROW 26.04 COL 88.63
+     B_mark AT ROW 27 COL 102.13 RIGHT-ALIGNED WIDGET-ID 80
      b-cf AT ROW 27.04 COL 88.63 WIDGET-ID 4
      F-cashier AT ROW 2.08 COL 43.13 COLON-ALIGNED NO-LABEL
      tt-chk-doc.tot-doc AT ROW 2.08 COL 81 COLON-ALIGNED
@@ -1011,7 +1051,14 @@ ASSIGN
 
 ASSIGN 
        BR-pay:POPUP-MENU IN FRAME Dialog-Frame             = MENU MENU-BR-pay:HANDLE.
+/* SETTINGS FOR BUTTON B_mark IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
+ASSIGN 
+       B_mark:POPUP-MENU IN FRAME Dialog-Frame       = MENU m_marks:HANDLE.
+ASSIGN b_mark:MENU-MOUSE = 1.
 
+assign b-func:popup-menu IN FRAME Dialog-Frame       = MENU m-func:HANDLE.
+ASSIGN b-func:MENU-MOUSE = 1.
 /* SETTINGS FOR FILL-IN tt-chk-doc.cash-rate IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-chk-doc.cash-scale IN FRAME Dialog-Frame
@@ -2477,6 +2524,77 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME m-add-blocked-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-add-blocked-marks Dialog-Frame
+ON CHOOSE OF MENU-ITEM m-add-blocked-marks /* "Автозаполнение по заблок. маркам" */
+DO:
+  run add-blocked-marks .
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+&Scoped-define SELF-NAME m_marks-lines
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_marks-lines Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_marks-lines /* Марки по линии */
+DO:
+    if available (tt-chk-gds) then 
+    do:
+       run temp-mark (input 1) .  
+      if available (tt-marking-lines) then 
+      do:
+        
+        run str/mark_browse.w (input parparentproc,
+          input-output table tt-marking-lines by-reference,
+          input {&lookup},
+          input "Марки по чеку: " + tt-chk-doc.doc-code + " по товару " + string(tt-gds-info.gds-name) + " " + tt-gds-info.gds-name,
+          input 4,
+          input "" /*тип продукции*/
+          ) no-error .
+
+      end.
+      else 
+      do:
+        message "Нет марок"
+          view-as alert-box.
+      end.    
+    end.
+    else message "Нет марок"
+        view-as alert-box.  
+    return no-apply .
+
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_marks-utd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_marks-utd Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_marks-utd /* Марки по документу */
+DO:
+    run temp-mark (input 2) .
+    if available (tt-marking-lines) then 
+    do:
+      run str/mark_browse.w (input parparentproc,
+        input-output table tt-marking-lines by-reference,
+        input {&lookup},
+        input "Марки по чеку: " + tt-chk-doc.doc-code,
+        input 4,
+        input "" /*тип продукции*/
+        ) no-error .
+        
+    end.
+    else 
+    do:
+      message "Нет марок по документу УПД"
+        view-as alert-box.
+    end.    
+
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME tt-chk-doc.sales-man
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-chk-doc.sales-man Dialog-Frame
 ON LEAVE OF tt-chk-doc.sales-man IN FRAME Dialog-Frame /* Продавец */
@@ -2659,6 +2777,29 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
         with browse br-gds.
         undo, return no-apply.
       end.
+      find first buf_marking-chk no-lock where buf_marking-chk.doc-code = tt-chk-gds.doc-code
+                                           and buf_marking-chk.line-num = tt-chk-gds.line-num
+                                           no-error .
+      if available buf_marking-chk
+      then do :
+        assign
+          tt-chk-gds.b-code     =   old-b-code
+          tt-chk-gds.src-code   =   old-src-code
+          tt-chk-gds.src-qnty   =   old-src-qnty
+          tt-chk-gds.doc-qnty   =   old-doc-qnty
+          tt-chk-gds.src-price  =   old-src-price
+          tt-chk-gds.src-sum    =   old-src-sum
+          tt-chk-gds.src-discnt =   old-src-discnt
+        .
+        display
+          tt-chk-gds.b-code
+          tt-chk-gds.src-code
+          tt-chk-gds.src-qnty
+          tt-chk-gds.doc-qnty
+          tt-chk-gds.src-price
+          tt-chk-gds.src-discnt
+        with browse br-gds.
+      end .                                     
     end.
 end.
 
@@ -2963,6 +3104,108 @@ else do:
       if not glog then return error.
   end.
 end.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE temp-mark d-utd 
+PROCEDURE temp-mark :
+  /* --------------------------------------------------------------------
+                          Purpose:     ENABLE the User Interface
+                          Parameters:  <none>
+                          Notes:       Here we display/view/enable the widgets in the
+                                       user-interface.  In addition, OPEN all queries
+                                       associated with each FRAME and BROWSE.
+                                       These statements here are based on the "Other
+                                       Settings" section of the widget Property Sheets.
+                           -------------------------------------------------------------------- */
+  define input parameter p-id as integer no-undo .
+  define buffer buf_marking     for ub.marking .
+  define buffer buf_marking-chk for ub.marking-chk .
+  define buffer bf_marking      for ub.marking .
+  define variable v-marking as character no-undo .
+  empty temp-table tt-marking-lines .
+  
+
+  if p-id = 1 then 
+  do:
+    for each buf_marking-chk no-lock where buf_marking-chk.doc-code = tt-chk-doc.doc-code and buf_marking-chk.line-num = tt-chk-gds.line-num:
+      v-marking = GetCodeIdent(buf_marking-chk.mark).
+      for first buf_marking no-lock where buf_marking.mark begins v-marking :
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = GdsName(buf_marking.gds-code)
+          tt-marking-lines.stts        = StatusTHName(buf_marking.sts)
+          tt-marking-lines.mark        = buf_marking.mark
+          tt-marking-lines.mark-parent = buf_marking.mark-parent
+          tt-marking-lines.gds-code    = buf_marking.gds-code
+          tt-marking-lines.sts-utd     = buf_marking.sts
+          tt-marking-lines.unit        = buf_marking.unit
+          tt-marking-lines.box-qnty    = buf_marking.box-qnty
+          tt-marking-lines.LineNum     = buf_marking-chk.line-num
+          tt-marking-lines.doc-level   = 1
+          .
+        if buf_marking-chk.unit <> "UNIT" then 
+        do:
+          for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:
+            create tt-marking-lines .
+            assign
+              tt-marking-lines.gds-name    = GdsName(bf_marking.gds-code)
+              tt-marking-lines.stts        = StatusTHName(bf_marking.sts)
+              tt-marking-lines.mark        = bf_marking.mark
+              tt-marking-lines.mark-parent = bf_marking.mark-parent
+              tt-marking-lines.gds-code    = bf_marking.gds-code
+              tt-marking-lines.sts-utd     = bf_marking.sts
+              tt-marking-lines.unit        = bf_marking.unit
+              tt-marking-lines.box-qnty    = bf_marking.box-qnty
+              tt-marking-lines.LineNum     = buf_marking-chk.line-num
+              tt-marking-lines.doc-level   = 2
+              .
+          end.  
+        end.  
+      end.   
+    end.  
+  end.
+  else 
+  do:
+    for each buf_marking-chk no-lock where buf_marking-chk.doc-code = tt-chk-doc.doc-code:
+      v-marking = GetCodeIdent(buf_marking-chk.mark).
+      for first buf_marking no-lock where buf_marking.mark begins v-marking :
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = GdsName(buf_marking.gds-code)
+          tt-marking-lines.stts-utd    = StatusTHName(buf_marking.sts)
+          tt-marking-lines.mark        = buf_marking.mark
+          tt-marking-lines.mark-parent = buf_marking.mark-parent
+          tt-marking-lines.gds-code    = buf_marking.gds-code
+          tt-marking-lines.sts-utd     = buf_marking.sts
+          tt-marking-lines.unit        = buf_marking.unit
+          tt-marking-lines.box-qnty    = buf_marking.box-qnty
+          tt-marking-lines.LineNum     = buf_marking-chk.line-num
+          tt-marking-lines.doc-level   = 1
+          .
+        if buf_marking-chk.unit <> "UNIT" then 
+        do:
+          for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:
+            create tt-marking-lines .
+            assign
+              tt-marking-lines.gds-name    = GdsName(bf_marking.gds-code)
+              tt-marking-lines.stts-utd    = StatusTHName(bf_marking.sts)
+              tt-marking-lines.mark        = bf_marking.mark
+              tt-marking-lines.mark-parent = bf_marking.mark-parent
+              tt-marking-lines.gds-code    = bf_marking.gds-code
+              tt-marking-lines.sts-utd     = bf_marking.sts
+              tt-marking-lines.unit        = bf_marking.unit
+              tt-marking-lines.box-qnty    = bf_marking.box-qnty
+              tt-marking-lines.LineNum     = buf_marking-chk.line-num
+              tt-marking-lines.doc-level   = 2
+              .
+          end.  
+        end.  
+      end.   
+    end.  
+  end.  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3760,7 +4003,7 @@ PROCEDURE enable_UI :
           tt-chk-doc.tot-doc tt-chk-doc.discnt tt-chk-doc.sub-discnt 
           tt-chk-doc.netto tt-chk-doc.d-pcnt tt-chk-doc.shift-date 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit B-prev B-next Cb-chk-type br-attr B-print B-hist B-help 
+  ENABLE B-exit B-quit B-prev B-next Cb-chk-type br-attr b-func B-print B-hist B-help 
          tt-chk-doc.src-tot-doc RECT-1 tt-chk-doc.chk-date tt-chk-doc.cashier 
          fhour fmin fsec tt-chk-doc.sales-man tt-chk-doc.obj-code 
          tt-chk-doc.d-card B-card tt-chk-doc.pay-desk b-cd v-corr-osnov 
@@ -5290,6 +5533,7 @@ case PAR-MODE:
     B-quit
     B-exit
     br-attr
+    b-func
     cb-chk-type
     B-help
     B-card
@@ -5400,6 +5644,7 @@ case PAR-MODE:
     b-hist
     b-cf WHEN tt-chk-doc.chk-type = INTEGER({&rcpt-z-rep})
     b-card
+    b-func
     v-doc-osnov
     BUTTON-1
     f-cause-corr 
@@ -5533,6 +5778,26 @@ f-cause-corr
 f-num-corr
 with frame {&frame-name} . 
 
+for each tt-gds-info no-lock:
+
+
+EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(tt-chk-doc.obj-type, tt-chk-doc.obj-code).
+      RUN gds-attr-value (
+                          INPUT tt-gds-info.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT v-gds-attr-value,
+                          OUTPUT v-gds-attr-type
+                          ).
+      if v-gds-attr-value > ""
+      and EDOParSec:GetIsMarkingForType(v-gds-attr-value)
+      then do : /* нужна марка */
+      enable 
+      B_mark
+      with frame {&frame-name} .
+      leave .
+      end.
+      
+end.      
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -6097,6 +6362,9 @@ define variable varrid-list as character no-undo.
 define variable ii as integer no-undo.
 DEFINE VARIABLE varline-rid as recid  no-undo.
 define variable v-wro-code as integer no-undo .
+define variable v-mark as character no-undo .
+define variable v-ok as logical no-undo .
+define variable v-b-code like ub.bar-code.b-code no-undo .
 define buffer lng_chk-gds for ub.chk-gds.
 define buffer loc_tt-chk-gds for tt-chk-gds.
 define buffer loc_bar-code for ub.bar-code.
@@ -6218,6 +6486,68 @@ FIND LAST lng_chk-gds No-LOCK WHERE
       tt-chk-gds.pump = 0
       tt-chk-gds.loc1 = '':U
       .
+      
+      EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(tt-chk-doc.obj-type, tt-chk-doc.obj-code).
+      RUN gds-attr-value (
+                          INPUT loc_goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT v-gds-attr-value,
+                          OUTPUT v-gds-attr-type
+                          ).
+      if v-gds-attr-value > ""
+      and EDOParSec:GetIsMarkingForType(v-gds-attr-value)
+      then do : /* нужна марка */
+        run str/enter-mark.w (input loc_goods.gds-code,
+                              output v-mark,
+                              output v-ok,
+                              output v-b-code) .
+        if v-ok
+        then do :
+          find first buf_marking-chk exclusive-lock where buf_marking-chk.doc-code = tt-chk-gds.doc-code
+                                                      and buf_marking-chk.line-num = tt-chk-gds.line-num
+                                                      and buf_marking-chk.mark     = v-mark
+                                                      no-error .
+          if not available buf_marking-chk
+          then do :                                            
+            create buf_marking-chk .
+            assign 
+              buf_marking-chk.doc-code = tt-chk-gds.doc-code
+              buf_marking-chk.line-num = tt-chk-gds.line-num
+              buf_marking-chk.mark     = v-mark
+            .
+          end .
+          assign
+            buf_marking-chk.date-modify = today
+            buf_marking-chk.time-modify = time
+          . 
+          assign
+            tt-chk-gds.src-qnty = 1
+            tt-chk-gds.doc-qnty = 1
+            tt-chk-gds.b-code = v-b-code 
+            tt-chk-gds.src-code = string(v-b-code)
+          .
+          for first ub.marking no-lock where ub.marking.mark = buf_marking-chk.mark :
+            assign buf_marking-chk.unit = ub.marking.unit-ext .
+            if buf_marking-chk.unit = "LEVEL1"
+            then
+            assign
+              tt-chk-gds.doc-qnty = tt-chk-gds.src-qnty * 10
+              tt-chk-gds.src-price  = tt-chk-gds.src-price * 10
+              tt-chk-gds.src-sum    = tt-chk-gds.src-sum * 10
+              tt-chk-gds.src-discnt = tt-chk-gds.src-discnt * 10
+            .
+          end .
+          enable 
+          B_mark
+          with frame {&frame-name} .
+        end .
+        else do :
+          delete tt-chk-gds .
+          ii = ii + 1 .
+          undo _ii, next _ii.
+        end .
+      end .
+      
       create locked_chk-gds.
       buffer-copy tt-chk-gds to locked_chk-gds.
       create tt-gds-info.
@@ -6621,6 +6951,178 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-blocked-marks Dialog-Frame 
+PROCEDURE add-blocked-marks :
+  define buffer buf_marking for ub.marking .
+  define buffer lng_chk-gds for chk-gds.
+  define buffer loc_tt-chk-gds for tt-chk-gds.
+  define buffer loc_bar-code for bar-code.
+  define buffer loc_goods for goods.
+  define buffer buf_prod-bc for ub.prod-bc .
+  
+  define variable v-GTIN as character no-undo .
+  define variable v-wro-code as integer no-undo .
+  define variable v-mark as character no-undo .
+  DEFINE VARIABLE varline-rid as recid  no-undo.
+  define variable ii as integer no-undo .
+  
+  FIND LAST lng_chk-gds No-LOCK WHERE
+            lng_chk-gds.doc-code = TT-CHK-doc.doc-code
+            USE-INDEX ln NO-ERROR.
+  if avail lng_chk-gds then lng = lng_chk-gds.line-num.
+  else lng = 0.
+  
+  
+  ii = 0 .
+  _ii:
+  for each buf_marking no-lock where buf_marking.obj-type = v-cntxt-obj-type
+                                 and buf_marking.obj-code = v-cntxt-obj-code
+                                 and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+/*                                 and (   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB    */
+/*                                      or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB*/
+/*                                      or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB      */
+/*                                      or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB  */
+/*                                      )                                                                       */
+                                 :
+    FIND FIRST loc_goods WHERE
+               loc_goods.gds-code = buf_marking.gds-code NO-LOCK .
+    FIND FIRST gds-prt WHERE
+               gds-prt.upper-code = loc_goods.prt-root NO-LOCK .
+               
+    v-GTIN = getGtinByDM(buf_marking.mark) .           
+    for each loc_bar-code no-lock WHERE
+              loc_bar-code.gds-code = loc_goods.gds-code AND
+              loc_bar-code.in-code = "" AND
+              loc_bar-code.part-code = "",
+    each buf_prod-bc no-lock where buf_prod-bc.b-code = loc_bar-code.b-code
+                               and buf_prod-bc.b-str  = v-GTIN :
+      leave .                      
+    end . 
+    if not available loc_bar-code
+    then do :
+      FIND FIRST loc_bar-code WHERE
+               loc_bar-code.node-code = gds-prt.node-code AND
+              loc_bar-code.gds-code = loc_goods.gds-code AND
+              loc_bar-code.in-code = "" AND
+              loc_bar-code.part-code = ""  AND
+              loc_bar-code.unit-cli = loc_goods.unit-base no-lock .
+    end .          
+    run get-price1 in this-procedure ( input loc_goods.gds-code, input loc_bar-code.node-code) No-ERROR.
+    if error-status:error then return no-apply.
+    assign
+    lng = lng + 1
+    .
+    CASE tt-chk-doc.chk-type:
+      when INTEGER({&rcpt-return-write-off}) then do:
+        v-wro-code = INTEGER({&wro-cancell-all}).
+      end.
+      when INTEGER({&rcpt-write-off})  then do:
+        v-wro-code = INTEGER({&wro-without-payment}).
+      end.
+      when INTEGER({&rcpt-tech-refuell})  then do:
+        v-wro-code = INTEGER({&wro-r-tech-refuell}).
+      end.
+    END CASE.
+    create tt-chk-gds.
+    assign
+    tt-chk-gds.doc-code = tt-chk-doc.doc-code
+    tt-chk-gds.line-num = lng
+    tt-chk-gds.src-code = string(loc_bar-code.b-code)
+    tt-chk-gds.src-price = ( if gp-price-sale <> ? then gp-price-sale else 0)
+    tt-chk-gds.src-discnt = 0
+    tt-chk-gds.src-qnty = 0
+    tt-chk-gds.src-sum = 0
+    tt-chk-gds.price-base = 0
+    tt-chk-gds.doc-qnty = 0
+    tt-chk-gds.discnt = 0
+    tt-chk-gds.sum-base = 0
+    tt-chk-gds.is-error = no
+    tt-chk-gds.b-code = loc_bar-code.b-code
+    tt-chk-gds.pass-gds = integer({&gds-manual})
+    tt-chk-gds.write-off-code = v-wro-code
+    tt-chk-gds.nozzle-code = 0
+    tt-chk-gds.src-pl-code = 0
+    tt-chk-gds.pl-code = 0
+    tt-chk-gds.density = 0
+    tt-chk-gds.pump = 0
+    tt-chk-gds.loc1 = '':U
+    .
+    
+    v-mark = buf_marking.mark .
+    find first buf_marking-chk exclusive-lock where buf_marking-chk.doc-code = tt-chk-gds.doc-code
+                                                and buf_marking-chk.line-num = tt-chk-gds.line-num
+                                                and buf_marking-chk.mark     = v-mark
+                                                no-error .
+    if not available buf_marking-chk
+    then do :                                            
+      create buf_marking-chk .
+      assign 
+        buf_marking-chk.doc-code = tt-chk-gds.doc-code
+        buf_marking-chk.line-num = tt-chk-gds.line-num
+        buf_marking-chk.mark     = v-mark
+      .
+    end .
+    assign
+      buf_marking-chk.date-modify = today
+      buf_marking-chk.time-modify = time
+    . 
+    assign
+      tt-chk-gds.src-qnty = 1
+      tt-chk-gds.doc-qnty = 1
+    .
+    
+    assign buf_marking-chk.unit = buf_marking.unit-ext .
+    if buf_marking-chk.unit = "LEVEL1"
+    then
+    assign
+      tt-chk-gds.doc-qnty = tt-chk-gds.src-qnty * 10
+      tt-chk-gds.src-price  = tt-chk-gds.src-price * 10
+      tt-chk-gds.src-sum    = tt-chk-gds.src-sum * 10
+      tt-chk-gds.src-discnt = tt-chk-gds.src-discnt * 10
+    .
+    
+    create locked_chk-gds.
+    buffer-copy tt-chk-gds to locked_chk-gds.
+    create tt-gds-info.
+    buffer-copy tt-chk-gds to tt-gds-info
+    assign
+    tt-gds-info.artic = loc_goods.artic
+    tt-gds-info.gds-name = loc_goods.gds-name
+    tt-gds-info.prt-name = "-":U
+    ii = ii + 1
+    varline-rid = recid(tt-chk-gds)
+    .
+    
+    {&OPEN-QUERY-BR-gds}
+    REPOSITION Br-gds to recid varline-rid no-error.
+    if error-status:error then do:
+      undo _ii, next _ii.
+    end.
+    if shop.doc-prt and gds-prt.node-name <> {&empty-scale} then do:
+        run setprts in this-procedure ( input recid(loc_goods), input recid(loc_bar-code), input loc_goods.prt-root, input yes) no-error.
+        if error-status:error then do:
+          undo _ii, next _ii.
+        end.
+    end.                               
+  end .
+  
+  if ii = 0
+  then do :
+    message "Нет заблокированных марок на объекте" view-as alert-box .
+  end .
+  else do :
+    message "Добавлены товары по " string(ii) " заблокированным маркам" view-as alert-box .
+    enable 
+    B_mark
+    with frame {&frame-name} .
+  end .
+  
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-pcnt-discnt Dialog-Frame 
 PROCEDURE proc-pcnt-discnt :
@@ -7326,6 +7828,22 @@ if p-templ-rl-root = 0 then return "".
 FIND FIRST buf_dis-rule NO-LOCK WHERE buf_dis-rule.rule-num = p-templ-rl-root NO-ERROR.
 IF AVAILABLE buf_dis-rule THEN RETURN buf_dis-rule.des.
 RETURN "!!!Неизвестный шаблон скидки".   /* Function return value. */
+
+END FUNCTION.
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION GdsName Dialog-Frame 
+FUNCTION GdsName RETURNS CHARACTER
+  ( input p-gds-code as integer) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+  define variable v-gds-name as character no-undo .
+  define buffer buf_goods for ub.goods .
+  
+  find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+  if available (buf_goods) then v-gds-name = buf_goods.gds-name .
+  RETURN v-gds-name.   /* Function return value. */
 
 END FUNCTION.
 
