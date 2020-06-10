@@ -645,7 +645,13 @@ DO:
           end.  
           else do :
             ub.esys-all-attr.key3 = "Запрос отклонён" .
-            message "UUID ВСД:  " ub.esys-all-attr.attr-value skip v-Msg view-as alert-box.
+            if v-Msg = "MERC14561"
+            or v-Msg = "MERC14562"
+            or v-Msg = "MERC14563"
+            then
+              message "UUID ВСД:  " ub.esys-all-attr.attr-value skip "Ошибка наименования продукции " v-Msg ". ВСД будет погашено с актом несоответсвия." view-as alert-box.
+            else  
+              message "UUID ВСД:  " ub.esys-all-attr.attr-value skip v-Msg view-as alert-box.
           end. 
         end.
       end.  
@@ -717,6 +723,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     message "Нет внешней системы с типом Меркурий." view-as alert-box .
     return .
   end.
+  
+  SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
 
   journal = new Journal().
   

@@ -706,14 +706,16 @@ class ibs.th.bge.mercury.mercury:
                   sw:end-element ("vd:accompanyingForms") .
                 sw:end-element ("merc:returnedDelivery") .
               end. 
-/*/*                Акт о несоответствии              */                                                                                            */
-/*              if p-qnty < (inVsdSubs:VsdObjCurr:Qnty * 0.95)                                                                                      */
-/*              then do :                                                                                                                           */
-/*                sw:start-element ("merc:discrepancyReport") .                                                                                     */
-/*                  sw:write-data-element ("vd:description", ("Oбъем в ВСД больше фактического на " + string(inVsdSubs:VsdObjCurr:Qnty - p-qnty))) .*/
-/*                  inVsdSubs:VsdObjCurr:Note = ("Oбъем в ВСД больше фактического на " + string(inVsdSubs:VsdObjCurr:Qnty - p-qnty)) .              */
-/*                sw:end-element ("merc:discrepancyReport") .                                                                                       */
-/*              end.                                                                                                                                */
+/*                Акт о несоответствии              */
+              if inVsdSubs:VsdObjCurr:MsgErr = "MERC14561"
+              or inVsdSubs:VsdObjCurr:MsgErr = "MERC14562"
+              or inVsdSubs:VsdObjCurr:MsgErr = "MERC14563"
+              then do :
+                sw:start-element ("merc:discrepancyReport") .
+                  sw:write-data-element ("vd:description", inVsdSubs:VsdObjCurr:MsgErr ) .
+                  inVsdSubs:VsdObjCurr:Note = inVsdSubs:VsdObjCurr:MsgErr + " | Гашение с актом несоответсвия." .
+                sw:end-element ("merc:discrepancyReport") .
+              end.
               sw:end-element ("merc:processIncomingConsignmentRequest") .
             sw:end-element ("apl:data") .
           sw:end-element ("apl:application") .
@@ -769,6 +771,7 @@ class ibs.th.bge.mercury.mercury:
     
     define variable is-err as logical no-undo .
     define variable v-found-unit as logical no-undo .
+    define variable v-found-cli as logical no-undo .
     define variable v-calc-qnty as decimal no-undo .
     define variable jj as integer no-undo .
     
@@ -818,37 +821,46 @@ class ibs.th.bge.mercury.mercury:
         Msg = Msg + chr(10) + "GUID'ы хоз. субъекта получателя не совпадают." .
         is-err = true .  
       end.
-      find first buf_ext-classif no-lock
+      
+      v-found-cli = no .
+      for each buf_ext-classif no-lock
         where buf_ext-classif.classif-subject = {&table_clients}
           and buf_ext-classif.classif-name = {&extclass_clients_esys}
           and buf_ext-classif.db-num = 0
           and buf_ext-classif.key#_one = esysId
           and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + vsds:VsdObjCurr:ObjType + {&delim-key} + string (vsds:VsdObjCurr:ObjCode)
-          no-error.
-      if entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) <> vsds:VsdObjCurr:ObjEntGuid
+          :
+        if entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) = vsds:VsdObjCurr:ObjEntGuid  
+        then do :
+          v-found-cli = yes .
+          leave.
+        end.   
+      end.
+      if v-found-cli = no
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы предприятия получателя не совпадают." .
         is-err = true .  
       end.    
-      find first buf_ext-classif no-lock
+      v-found-cli = no .
+      for each buf_ext-classif no-lock
         where buf_ext-classif.classif-subject = {&table_clients}
           and buf_ext-classif.classif-name = {&extclass_clients_esys}
           and buf_ext-classif.db-num = 0
           and buf_ext-classif.key#_one = esysId
           and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + vsds:VsdObjCurr:CliType + {&delim-key} + string (vsds:VsdObjCurr:CliCode)
-          no-error.
-      if entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) <> vsds:VsdObjCurr:CliBeGuid
+          :
+        if ( entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) = vsds:VsdObjCurr:CliBeGuid or vsds:VsdObjCurr:CliType = 'маг' ) 
+        and entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) = vsds:VsdObjCurr:CliEntGuid 
+        then do :
+          v-found-cli = yes .
+          leave.
+        end. 
+      end .
+      if v-found-cli = no
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
-      and vsds:VsdObjCurr:CliType <> 'маг'
       then do :
-        Msg = Msg + chr(10) + "GUID'ы хоз. субъекта отправителя не совпадают." .
-        is-err = true .  
-      end.
-      if entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) <> vsds:VsdObjCurr:CliEntGuid
-      and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
-      then do :
-        Msg = Msg + chr(10) + "GUID'ы предприятия отправителя не совпадают." .
+        Msg = Msg + chr(10) + "GUID'ы хоз. субъекта и/или предприятия отправителя не совпадают." .
         is-err = true .  
       end.
       
@@ -975,7 +987,13 @@ class ibs.th.bge.mercury.mercury:
         vsds = vsdStorage:getVSDsubs (buffer buf_vsd) .
         do ii = 1 to vsds:GetItem(ii):
           Msg = left-trim(Msg, chr(10)) .
-          vsds:VsdObjCurr:Status_ = vsdStat:IsErrUtilized .
+          if Msg = "MERC14561"
+          or Msg = "MERC14562"
+          or Msg = "MERC14563"
+          then
+            vsds:VsdObjCurr:Status_ = vsdStat:IsNeedUtilized .
+          else
+            vsds:VsdObjCurr:Status_ = vsdStat:IsErrUtilized .
           vsds:VsdObjCurr:MsgErr = Msg .
           vsdStorage:updateDB(vsds:VsdObjCurr) .
         end.

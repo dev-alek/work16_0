@@ -29,6 +29,8 @@ define variable v-status as character no-undo .
 define variable v-mess as character no-undo .
 define variable v-issuerId as character no-undo .
 
+define variable v-errcode as character no-undo .
+
 define variable v-parsesub as character no-undo .
 define variable v-parsesub2 as character no-undo .
 
@@ -78,6 +80,11 @@ procedure getVsds:
   .
   p-Vsds = vsdsTHObj .
   
+  if v-errcode = "MERC14561"
+  or v-errcode = "MERC14562"
+  or v-errcode = "MERC14563"
+  then p-mess = v-errcode .
+  
 /*  delete object vsdsTHObj no-error. */
 /*  delete object vsdStorage no-error.*/
 /*  delete object vsdsTHObj no-error. */
@@ -97,6 +104,7 @@ DEFINE INPUT PARAMETER hAttributes  AS HANDLE NO-UNDO.
     when "merc:stockEntry" then v-ignorSect = yes .
     
     when "message" then v-mess = "" .
+    when "apl:error" then v-errcode = hAttributes:get-value-by-qname("code") no-error .
     when "applicationId" then v-appId = "" .
     when "status" then v-status = "" .
     when "issuerId" THEN v-issuerId = "" .
@@ -479,9 +487,13 @@ PROCEDURE EndElement:
     when "vd:referencedDocument"
     then do :
       v-parsesub2 = "" .
-      if num-entries(vsdsTHObj:VsdObjCurr:TTNissueSeries, chr(4)) < num-entries(vsdsTHObj:VsdObjCurr:TTNtype, chr(4))
+      if valid-object(vsdsTHObj)
+      and valid-object(vsdsTHObj:VsdObjCurr)
       then do :
-        vsdsTHObj:VsdObjCurr:TTNissueSeries = vsdsTHObj:VsdObjCurr:TTNissueSeries + chr(4) .
+        if num-entries(vsdsTHObj:VsdObjCurr:TTNissueSeries, chr(4)) < num-entries(vsdsTHObj:VsdObjCurr:TTNtype, chr(4))
+        then do :
+          vsdsTHObj:VsdObjCurr:TTNissueSeries = vsdsTHObj:VsdObjCurr:TTNissueSeries + chr(4) .
+        end.
       end.
     end.  
     when "vd:authentication" then v-parsesub2 = "" .

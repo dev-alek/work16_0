@@ -35,7 +35,8 @@ procedure pencrypt :
    assign
       crypto-value  = encrypt(ip-value-to-enc)
       op-char-value = base64-encode(crypto-value)
-   .
+   no-error.
+   if error-status:error then op-char-value = ? .
    end.
 end procedure. /* pencrypt */
 &else

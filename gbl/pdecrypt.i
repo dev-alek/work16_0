@@ -39,7 +39,8 @@ procedure pdecrypt :
       long-char-value = ip-value-to-dec
       op-char-value   = get-string(decrypt(base64-decode(long-char-value)),1)
       long-char-value = ""
-   .
+   no-error.
+   if error-status:error then op-char-value = ? .
    end.
 end procedure. /* pdecrypt */
 &else

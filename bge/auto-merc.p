@@ -51,6 +51,11 @@ on error undo, return error
   define variable v-step-num               as integer   no-undo .
   define variable v-action                 as character no-undo .
   define variable v-message                as character no-undo .
+  define variable v-proc-handle            as handle    no-undo .
+  define variable v-main-proc-name         as character no-undo .
+
+  define variable v-count-main-prc         as integer   no-undo .
+  define variable v-pers-proc-name         as character no-undo .
   
   define variable v-apiKey              as character no-undo .
   define variable v-issuerId            as character no-undo .
@@ -96,10 +101,45 @@ on error undo, return error
     return error .
   end.
   if valid-handle( session :first-procedure ) then do:
-    message
-      substitute( "&1. Вызов данной процедуры невозможен при наличии определений persistent prosedures (&2)", vss-workfile, session:first-procedure:file-name )
-      view-as alert-box error .
-    return error .
+    assign
+      v-main-proc-name = "gbl/mainproc.p":U
+      v-proc-handle    = session :first-procedure
+      v-count-main-prc = 0
+      v-pers-proc-name = "":U
+    .
+    do while valid-handle( v-proc-handle )
+    :
+      if v-proc-handle :file-name = v-main-proc-name then do:
+        assign
+          v-count-main-prc = v-count-main-prc + 1
+        .
+      end.
+      else do:
+        assign
+          v-pers-proc-name = v-pers-proc-name + {&comma-char} + v-proc-handle :file-name
+        .
+      end.
+      assign
+        v-proc-handle = v-proc-handle:next-sibling no-error
+      .
+    end.
+    if v-count-main-prc > 1
+      or v-pers-proc-name <> "":U
+    then do:
+      message
+        substitute( "&1. Вызов данной процедуры невозможен при наличии определений persistent prosedures &2"
+                    + "Список недопустимых процедур: &3&2"
+                    + "Исключение - единственная процедура &4&2"
+                    + "Определений данной процедуры &5&2"
+                    , vss-workfile
+                    , {&new-line}
+                    , v-pers-proc-name
+                    , v-main-proc-name
+                    , v-count-main-prc
+                   )
+        view-as alert-box error .
+      return error .
+    end.
   end.
 
   assign
@@ -132,6 +172,8 @@ on error undo, return error
     run write-to-log( "Нет внешней системы с типом Меркурий." ) .
     return .
   end.
+  
+  SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
   
   objThObj = new clisub ().
   vsdStsType = new vsdstatustype().
@@ -256,7 +298,13 @@ on error undo, return error
           end.  
           else do :
             ub.esys-all-attr.key3 = "Запрос отклонён" .
-            run write-to-log( "UUID ВСД:  " + ub.esys-all-attr.attr-value + chr(10) + v-Msg ) .
+            if v-Msg = "MERC14561"
+            or v-Msg = "MERC14562"
+            or v-Msg = "MERC14563"
+            then
+              run write-to-log( "UUID ВСД:  " + ub.esys-all-attr.attr-value + chr(10) + "Ошибка наименования продукции " + v-Msg + ". ВСД будет погашено с актом несоответсвия." ) .
+            else  
+              run write-to-log( "UUID ВСД:  " + ub.esys-all-attr.attr-value + chr(10) + v-Msg ) .
           end. 
         end.
       end.  

@@ -407,6 +407,8 @@ if error-status:error then do:
   undo, return error .
 end.
 
+SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
+
 FOR EACH temp-thbj-attr
   :
     IF temp-thbj-attr.prop-code = {&attr-mercur_apikey} THEN DO:
@@ -563,14 +565,24 @@ ASSIGN FRAME {&FRAME-NAME}
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_proxy-addres} .
     temp-thbj-attr.property-value-character = v-proxy-addres.
     def var v-proxy-enc as char no-undo. 
+    
+    SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
+    
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_proxy-login} .
-     {gbl/pencrypt.i v-proxy-login v-proxy-enc no-error}
-    temp-thbj-attr.property-value-character = if v-proxy-addres > '' then v-proxy-enc else "":U.
+    if v-proxy-login > ''
+    then do :
+      {gbl/pencrypt.i v-proxy-login v-proxy-enc no-error}
+      temp-thbj-attr.property-value-character = if v-proxy-addres > '' then v-proxy-enc else "":U.
+    end.
+    else temp-thbj-attr.property-value-character = "":U .
     
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_proxy-pswd} .
+    if v-proxy-pswd > ''
+    then do :
       {gbl/pencrypt.i v-proxy-pswd v-proxy-enc no-error }
-    temp-thbj-attr.property-value-character = if v-proxy-addres > '' then v-proxy-enc else "":U.
-    
+      temp-thbj-attr.property-value-character = if v-proxy-addres > '' then v-proxy-enc else "":U.
+    end.
+    else temp-thbj-attr.property-value-character = "":U .
         
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (
