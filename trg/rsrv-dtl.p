@@ -107,6 +107,8 @@ cost-rubl   Учетная цена в р_у_блях
 p-b-code    b-code на партию
 
 */
+using ibs.th.str.alcohol.*.
+
 define input        parameter parparentproc as widget-handle no-undo.
 define input        parameter p-action      as character no-undo .
 define parameter    buffer    rsrv-gds-dtl  for ub.gds-dtl .
@@ -114,6 +116,7 @@ define input-output parameter chg-qnty      as   decimal no-undo .
 define input-output parameter cost-base     as   decimal no-undo .
 define input-output parameter cost-rubl     as   decimal no-undo .
 define input        parameter p-b-code      as   integer no-undo .
+define input        parameter p-mark        as   character  no-undo .
 
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
@@ -130,6 +133,7 @@ define variable vss-description as character no-undo initial "Процедура резервир
 { str/lib-trn.i  }
 
 define stream alc-rsrv .
+define stream tobacco-rsrv .
 
 { trg/partrqst.i }
 { trg/rsrgdsck.i }

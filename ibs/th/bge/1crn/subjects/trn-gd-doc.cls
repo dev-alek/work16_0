@@ -20,15 +20,16 @@ using ibs.th.bge.1crn.subjects.*.
 using ibs.th.str.*.
 using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
-using ibs.th.gbl.sys.objsrv.
+
 
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
+class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implements iexpsubject:
 
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { cmp/library.i  class }
+  { gbl/attr-lib.i class}
   { str/trdcalib.i class }
   
   &scop create-record find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
@@ -98,7 +99,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   define variable v-is-lgas-corr-trn  as logical   no-undo.
   define variable edoc-id             as character no-undo .
   
-  define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+  
 /*def var Marking as class mark no-undo .*/
 /*Marking = ObjSrv:Env:Marking:Sts:Mark. */
 
@@ -811,32 +812,48 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
   method private void Marks ():
     define variable v-gds-attr-value-old as character no-undo .
     define variable v-gds-attr-type      as character no-undo .
-    sw:start-element ("marks").
+    
     for each buf_doc-line no-lock where buf_doc-line.doc-code = DocCode,
       first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and 
       buf_goods.prod-code = buf_doc-line.prod-code and
       buf_goods.prod-type = buf_doc-line.prod-type  :
     
-      RUN gds-attr-value (
-        INPUT buf_goods.gds-code,
-        INPUT {&attr-mark-type},
-        OUTPUT v-gds-attr-value-old,
-        OUTPUT v-gds-attr-type
-        ).
-                         
-      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then 
-      do:
-        for each buf_parts no-lock where buf_parts.out-code = buf_doc-line.doc-code
-          and buf_parts.artic = buf_doc-line.artic
-          and buf_parts.prod-type = buf_doc-line.prod-type
-          and buf_parts.prod-code = buf_doc-line.prod-code:
+    
+    
+      &scop proc-name gds-attr-value
+      {&run_proc_attr-lib}
+        ( input buf_goods.gds-code
+         ,input {&attr-mark-type} 
+         ,output v-gds-attr-value-old
+         ,output v-gds-attr-type
+        )        no-error .
+      if error-status :error
+      then do:
+         undo, return error return-value .
+      end.
+      define variable vAvailMarks as logical no-undo.
+      message 
+      view-as alert-box.                 
+      
+      for each buf_parts no-lock where buf_parts.out-code  = buf_doc-line.doc-code
+                                   and buf_parts.artic     = buf_doc-line.artic
+                                   and buf_parts.prod-type = buf_doc-line.prod-type
+                                   and buf_parts.prod-code = buf_doc-line.prod-code:
+        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) 
+        then do:
           for each buf_marking-lines no-lock where buf_marking-lines.doc-level = 1 and
             buf_marking-lines.gds-code = buf_goods.gds-code and
             buf_marking-lines.in-code = buf_parts.in-code and
             buf_marking-lines.obj-code = buf_parts.obj-code and
             buf_marking-lines.obj-type = buf_parts.obj-type and
             buf_marking-lines.out-code = buf_parts.out-code and
-            buf_marking-lines.part-code = buf_parts.part-code:
+            buf_marking-lines.part-code = buf_parts.part-code and
+            buf_marking-lines.prt-code = buf_parts.prt-code  :
+            if not vAvailMarks
+            then do:
+               sw:start-element ("marks").
+               vAvailMarks = yes.
+            end.
             sw:start-element ("mark").      
             write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
             write-data-element ("prt-id", buf_parts.part-code).
@@ -846,7 +863,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc implements iexpsubject:
         end.
       end.
     end.
-    sw:end-element ("marks").
+    if vAvailMarks
+    then
+       sw:end-element ("marks").
     
   end.
   method private void write-data-element (inTag as char, inValue as char):

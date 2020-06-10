@@ -1277,6 +1277,7 @@ define buffer buf_place for ub.place.
 define buffer buf_goods for ub.goods.
 define buffer buf_gds-prt for ub.gds-prt.
 define buffer buf_units for ub.units.
+define buffer buf_marking-chk for ub.marking-chk .
 
 &glob display-message  if valid-handle({&prefix}p-log-handle) then run write-log-and-file in {&prefix}p-log-handle ( ~
               input 1 ~
@@ -2531,6 +2532,17 @@ if avail buf_bar-code then do:
             and
             buf_chk-gds.doc-qnty <> 0) then do:
           { str/set-tgds.i  }
+        end.
+        for each buf_marking-chk exclusive-lock where buf_marking-chk.doc-code = chk-gds.doc-code
+                                                  and buf_marking-chk.line-num = chk-gds.line-num  
+                                                  :
+          if v-units-rate = 10
+          then do :  
+            assign buf_marking-chk.unit = "LEVEL1" .                                       
+          end .
+          else do :
+            assign buf_marking-chk.unit = "UNIT" .
+          end .
         end.
       end. /*товарная строка*/
       otherwise do: /*группы*/

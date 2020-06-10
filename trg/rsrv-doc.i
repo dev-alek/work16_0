@@ -24,6 +24,7 @@ create: Перваков Михаил Сергеевич
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 { gbl/std-func.i {&f-l} }
 { str/marks.i }
+{ utl/gtin.i }
 
   define temp-table tt-alc-codes
     field alc-code      as character
@@ -34,8 +35,29 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
   
   define temp-table tt-marks
     field mark as character
+    field qnty as integer
     index pi as primary unique
       mark
+  .
+  
+  define temp-table tt-tobacco-marks
+    field mark as character case-sensitive
+    field unit as character
+    field qnty as integer
+    field to-ungroup as logical
+    index pi as primary unique
+      mark
+    index un
+      unit ascending
+  .
+  
+  define buffer buf_tt-tobacco-marks for tt-tobacco-marks .
+  
+  define temp-table tt-tobacco-part-qnty
+    field part-row as rowid
+    field qnty as decimal
+    index pi as primary unique
+      part-row
   .
 
 procedure rsrv-doc :
@@ -89,6 +111,9 @@ procedure rsrv-doc :
   define variable v-mark-alchol     as logical no-undo .
   define variable v-tth             as handle no-undo .
   define variable v-type            as character no-undo .
+  define variable v-attr-value      as character no-undo .
+  
+  define variable vCodeIdent        as character no-undo .
   
   define variable v-mark as character no-undo .
   define variable v-mark-list as character no-undo .
@@ -96,6 +121,21 @@ procedure rsrv-doc :
   define variable mark-ii as integer  no-undo .
   define variable jj as integer  no-undo .
   define variable v-alc-qnty as decimal no-undo .
+  
+  define variable v-tobacco-mark      as character  no-undo .
+  define variable v-tobacco-mark-list as character  no-undo .
+  define variable v-mark-tobacco      as logical    no-undo .
+  define variable v-box-qnty          as integer    no-undo .
+  
+  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+  define buffer buf_marking         for ub.marking .
+  define buffer buf_marking-childs  for ub.marking .
+  define buffer buf_marking-lines   for ub.marking-lines .
+  define buffer buf_marking-chk     for ub.marking-chk .
+  define variable v-copy-doc-code     as character  no-undo .
+  define buffer buf_copy-trn-doc    for ub.trn-doc .
+  define buffer buf_utd-lines       for ub.utd-lines .
+  define buffer buf_utd-marking-lines for ub.utd-marking-lines .
   
   define variable varb-code like ub.bar-code.b-code .
   define variable vardoc-num     like ub.price-list.doc-num    no-undo .
@@ -142,27 +182,29 @@ procedure rsrv-doc :
     end.
 /*    run gbl/inidebug.p .*/
     
-    delete object v-tth no-error.
-    run adm/shattri.p (
-       input "get":U
-      ,input buf_trn-doc.obj-type
-      ,input buf_trn-doc.obj-code
-      ,input {&attr-nakl_par}
-      ,input  "mark-alchol"
-      ,output v-value-character
-      ,output v-value-date
-      ,output v-value-decimal
-      ,output v-value-integer
-      ,output v-mark-alchol
-      ,output v-type
-      ,INPUT-OUTPUT table-handle v-tth
-      ) no-error .
-      delete object v-tth no-error.
-    if error-status:error then do:
-      message "Ошибка при получение параметра mark-alchol"
-      view-as alert-box.
-      return error.
-    end.
+/*    delete object v-tth no-error.                         */
+/*    run adm/shattri.p (                                   */
+/*       input "get":U                                      */
+/*      ,input buf_trn-doc.obj-type                         */
+/*      ,input buf_trn-doc.obj-code                         */
+/*      ,input {&attr-nakl_par}                             */
+/*      ,input  "mark-alchol"                               */
+/*      ,output v-value-character                           */
+/*      ,output v-value-date                                */
+/*      ,output v-value-decimal                             */
+/*      ,output v-value-integer                             */
+/*      ,output v-mark-alchol                               */
+/*      ,output v-type                                      */
+/*      ,INPUT-OUTPUT table-handle v-tth                    */
+/*      ) no-error .                                        */
+/*      delete object v-tth no-error.                       */
+/*    if error-status:error then do:                        */
+/*      message "Ошибка при получение параметра mark-alchol"*/
+/*      view-as alert-box.                                  */
+/*      return error.                                       */
+/*    end.                                                  */
+    
+    v-mark-alchol = true .
     
     if buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
     then do :
@@ -197,46 +239,184 @@ procedure rsrv-doc :
     then
     v-izlcstpr = false .
     
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
+
     empty temp-table tt-alc-codes .
-    find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
-                                   and buf1_goods.prod-type  = buf_doc-line.prod-type
-                                   and buf1_goods.prod-code  = buf_doc-line.prod-code .
-    find first buf1_doc-line-attr exclusive-lock where buf1_doc-line-attr.doc-code = buf_doc-line.doc-code
-                                                  and buf1_doc-line-attr.gds-code = buf1_goods.gds-code
-                                                  and buf1_doc-line-attr.attr-code = 'mark-code'
-                                                  no-error.
-    if available buf1_doc-line-attr and buf1_doc-line-attr.attr-value <> ''
+    
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}
+    and buf_doc-line.unit-cli > ""
     then do :
-      do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
-        entry(mark-ii, buf1_doc-line-attr.attr-value) = trim(entry(mark-ii, buf1_doc-line-attr.attr-value)) .
-        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
-        if v-mark begins "-"
-        then do jj = 1 to num-entries(buf1_doc-line-attr.attr-value) :
-            if entry(jj, buf1_doc-line-attr.attr-value) = left-trim(v-mark, "-")
-            then do :
-               entry(jj, buf1_doc-line-attr.attr-value) = "del=" + entry(jj, buf1_doc-line-attr.attr-value) .
-               leave . 
-            end.
-        end.  
-      end.
-      do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :
-        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
-        if not (v-mark begins "-" or v-mark begins "del=")
-        then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .
-      end.
-      buf1_doc-line-attr.attr-value = v-mark-list .
-      do mark-ii = 1 to min(num-entries(buf1_doc-line-attr.attr-value), buf_doc-line.fact-qnty) :
-        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .
-        run ProcAlcCode (input v-mark, output v-alc-code) no-error.
-        if v-alc-code = ? or v-alc-code = ''
-        then do :
-          message
-            vss-workfile vss-revision vss-description skip
-            "Ошибка определения алкогольного кода" skip
-            "Марка - " v-mark skip
-            view-as alert-box error .
-          undo, return error return-value .  
+      find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
+                                     and buf1_goods.prod-type  = buf_doc-line.prod-type
+                                     and buf1_goods.prod-code  = buf_doc-line.prod-code .
+      find first bar-code no-lock where bar-code.gds-code = buf1_goods.gds-code
+                                    and bar-code.unit-cli = buf_doc-line.unit-cli . 
+      for each ub.chk-doc no-lock where ub.chk-doc.out-code = buf_doc-line.doc-code
+        and not ub.chk-doc.chk-type = integer ({&rcpt-annu}):
+        for each chk-gds no-lock where chk-gds.doc-code = ub.chk-doc.doc-code 
+                                   and chk-gds.b-code = bar-code.b-code:
+          for each chk-gds-attr no-lock where chk-gds-attr.doc-code = chk-gds.doc-code
+                                          and chk-gds-attr.line-num = chk-gds.line-num
+                                          and chk-gds-attr.attr-code = "mark-code":
+            do mark-ii = 1 to num-entries(chk-gds-attr.attr-value) :
+              v-mark = entry(mark-ii, chk-gds-attr.attr-value) .
+              find first tt-marks exclusive-lock where tt-marks.mark = v-mark no-error .
+              if not available tt-marks
+              then do :
+                create tt-marks.
+                tt-marks.mark = v-mark.
+                tt-marks.qnty = 0 .
+              end .
+              tt-marks.qnty = tt-marks.qnty + (chk-gds.doc-qnty / abs(chk-gds.doc-qnty)) .
+            end .
+          end .
+        end .
+      end . /* ub.chk-doc */
+    end .
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}
+    and buf_doc-line.unit-cli > ""
+    then do :
+      find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
+                                     and buf1_goods.prod-type  = buf_doc-line.prod-type
+                                     and buf1_goods.prod-code  = buf_doc-line.prod-code .
+      RUN gds-attr-value (
+                          INPUT buf1_goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT v-attr-value,
+                          OUTPUT v-type
+                          ).
+      if v-attr-value > ""
+      and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):GetIsMarkingForType(v-attr-value)
+      then do :                               
+        find first bar-code no-lock where bar-code.gds-code = buf1_goods.gds-code
+                                      and bar-code.unit-cli = buf_doc-line.unit-cli .
+        for each ub.chk-doc no-lock where ub.chk-doc.out-code = buf_doc-line.doc-code
+          and ub.chk-doc.chk-type = integer ({&rcpt-sale}):
+          for each chk-gds no-lock where chk-gds.doc-code = ub.chk-doc.doc-code 
+                                     and chk-gds.b-code = bar-code.b-code:
+            for each buf_marking-chk no-lock where buf_marking-chk.doc-code = chk-gds.doc-code
+                                               and buf_marking-chk.line-num = chk-gds.line-num
+  /*                                             and buf_marking-chk.sts = 0*/
+                                               :
+              if chg-qnty > 0 and buf_marking-chk.sts = 1 then next .
+              if chg-qnty < 0 and buf_marking-chk.sts = 0 then next .
+              if buf_marking-chk.sts = 2 then next .
+              assign vCodeIdent = GetCodeIdent(buf_marking-chk.mark) .
+              find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = vCodeIdent no-error .
+              find first buf_marking no-lock where buf_marking.mark = vCodeIdent no-error .
+              if not available tt-tobacco-marks
+              then do :
+                create tt-tobacco-marks.
+                tt-tobacco-marks.mark = vCodeIdent .
+                tt-tobacco-marks.qnty = 0 .
+              end .
+              if available buf_marking then tt-tobacco-marks.unit = buf_marking.unit-ext .
+              tt-tobacco-marks.qnty = tt-tobacco-marks.qnty + (chk-gds.doc-qnty / abs(chk-gds.doc-qnty)) .                                   
+            end . 
+          end .
+        end . /* chk-doc */
+      end .
+    end . /* есть чеки (продажа) */
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass}
+    and buf_doc-line.unit-cli > ""
+    then do :
+      find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
+                                     and buf1_goods.prod-type  = buf_doc-line.prod-type
+                                     and buf1_goods.prod-code  = buf_doc-line.prod-code .
+      find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
+                                     and buf1_goods.prod-type  = buf_doc-line.prod-type
+                                     and buf1_goods.prod-code  = buf_doc-line.prod-code .
+      RUN gds-attr-value (
+                          INPUT buf1_goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT v-attr-value,
+                          OUTPUT v-type
+                          ).
+      if v-attr-value > ""
+      and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):GetIsMarkingForType(v-attr-value)
+      then do :
+        find first bar-code no-lock where bar-code.gds-code = buf1_goods.gds-code
+                                      and bar-code.unit-cli = buf_doc-line.unit-cli . 
+        for each ub.chk-doc no-lock where ub.chk-doc.out-code = buf_trn-doc.out-code
+          and (ub.chk-doc.chk-type = integer ({&rcpt-return}) or ub.chk-doc.chk-type = integer ({&rcpt-write-off}) ):
+          for each chk-gds no-lock where chk-gds.doc-code = ub.chk-doc.doc-code 
+                                     and chk-gds.b-code = bar-code.b-code:
+            for each buf_marking-chk no-lock where buf_marking-chk.doc-code = chk-gds.doc-code
+                                               and buf_marking-chk.line-num = chk-gds.line-num
+  /*                                             and buf_marking-chk.sts = 1*/
+                                               :
+              if buf_marking-chk.sts = 2 then next .
+              assign vCodeIdent = GetCodeIdent(buf_marking-chk.mark) .
+              find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = vCodeIdent no-error .
+              find first buf_marking no-lock where buf_marking.mark = vCodeIdent no-error .
+              if not available tt-tobacco-marks
+              then do :
+                create tt-tobacco-marks.
+                tt-tobacco-marks.mark = vCodeIdent .
+                tt-tobacco-marks.qnty = 0 .
+              end .
+              if available buf_marking then tt-tobacco-marks.unit = buf_marking.unit-ext .
+              tt-tobacco-marks.qnty = tt-tobacco-marks.qnty + 1 .                                   
+            end . 
+          end .
+        end .
+      end .
+    end .
+        
+    define variable v-keyrec   as character no-undo .
+    for each ub.fbr-line no-lock where buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Prvo}
+      and ub.fbr-line.doc-code = buf_doc-line.doc-code
+      and ub.fbr-line.artic = buf_doc-line.artic
+      and ub.fbr-line.prod-type = buf_doc-line.prod-type
+      and ub.fbr-line.prod-code = buf_doc-line.prod-code
+      :
+        run gen-key-rec(input "fbr-line",input buffer ub.fbr-line:handle ,output v-keyrec).
+        for each buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark-fbr}
+                                        and buf_gen-attr.p-key = v-keyrec
+                                        :
+          find first buf2_gen-attr no-lock where 
+                buf2_gen-attr.table-name = {&excise-mark-fbr}
+            and buf2_gen-attr.p-key = v-keyrec
+            and buf2_gen-attr.attr-code = buf_gen-attr.attr-code no-error.
+          find current buf2_gen-attr exclusive-lock.
+          buf2_gen-attr.table-name = {&excise-mark}.
+          buf2_gen-attr.p-key = buf2_gen-attr.attr-value.
+          buf2_gen-attr.attr-value = "".
+          create tt-marks.
+          tt-marks.mark = buf2_gen-attr.attr-code.
+          tt-marks.qnty = 1.
         end.
+    end.  
+    
+    
+    for each tt-marks exclusive-lock :
+      if tt-marks.qnty = 0 then delete tt-marks .
+      else
+      if tt-marks.qnty <> 1
+      then do :
+        message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка задания входных параметров" skip
+        "Не правильное количество по марке - " string(tt-marks.qnty) skip
+        "Марка " tt-marks.mark skip
+        view-as alert-box error .
+        undo, return error return-value .
+      end.
+    end.      
+    
+    for each tt-marks no-lock :
+      run ProcAlcCode (input tt-marks.mark, output v-alc-code) no-error.
+      if v-alc-code = '' or v-alc-code = ?
+      then do :
+        message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка определения алкогольного кода" skip
+          "Марка - " v-mark skip
+          view-as alert-box error .
+        undo, return error return-value .  
+      end.
+      if v-alc-code > ''
+      then do :
         find first tt-alc-codes exclusive-lock where tt-alc-codes.alc-code = v-alc-code no-error.
         if not available tt-alc-codes
         then do :
@@ -244,14 +424,238 @@ procedure rsrv-doc :
             assign tt-alc-codes.alc-code = v-alc-code .
         end.
         tt-alc-codes.qnty = tt-alc-codes.qnty + 1 .
-        
-        create tt-marks.
-        assign tt-marks.mark = v-mark .
+      end.
+    end.   
+    
+    if p-mark = "tech-marks"
+    then do :
+      assign
+        p-mark = ""
+      .
+      find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
+                                      and buf1_goods.prod-type  = buf_doc-line.prod-type
+                                      and buf1_goods.prod-code  = buf_doc-line.prod-code .
+      for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf1_goods.gds-code
+                                           and buf_marking-lines.obj-type = buf_doc-line.obj-type
+                                           and buf_marking-lines.obj-code = buf_doc-line.obj-code
+                                           and buf_marking-lines.out-code = {&free-code}
+                                           and buf_marking-lines.mark begins {&tech-mark-prefix}
+                                           :
+        find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = buf_marking-lines.mark no-error .
+        find first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark no-error .
+        if not available tt-tobacco-marks
+        then do :
+          create tt-tobacco-marks.
+          tt-tobacco-marks.mark = buf_marking-lines.mark  .
+          tt-tobacco-marks.qnty = 1 .
+        end .
+        if available buf_marking then tt-tobacco-marks.unit = buf_marking.unit-ext .                                     
+      end .                                
+    end .
+    
+    if p-mark <> ""
+    and num-entries(p-mark, {&delim-par}) = 2
+    and entry(1, p-mark, {&delim-par}) = "copy-ret"  
+    then do : /* Копирование из поля Источник в складских документах */
+      assign
+        v-copy-doc-code = entry(2, p-mark, {&delim-par})
+        p-mark = ""
+      .
+      find first buf_copy-trn-doc no-lock where buf_copy-trn-doc.doc-code = v-copy-doc-code no-error .
+      if available buf_copy-trn-doc
+      then do :
+        find first buf1_goods no-lock where buf1_goods.artic      = buf_doc-line.artic
+                                        and buf1_goods.prod-type  = buf_doc-line.prod-type
+                                        and buf1_goods.prod-code  = buf_doc-line.prod-code .
+        for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf1_goods.gds-code
+                                             and buf_marking-lines.obj-type = buf_copy-trn-doc.obj-type
+                                             and buf_marking-lines.obj-code = buf_copy-trn-doc.obj-code
+                                             and buf_marking-lines.out-code = buf_copy-trn-doc.doc-code
+                                             :
+          find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = buf_marking-lines.mark no-error .
+          find first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark no-error .
+          if not available tt-tobacco-marks
+          then do :
+            create tt-tobacco-marks.
+            tt-tobacco-marks.mark = buf_marking-lines.mark  .
+            tt-tobacco-marks.qnty = 1 .
+          end .
+          if available buf_marking then tt-tobacco-marks.unit = buf_marking.unit-ext .                                     
+        end .
+      end . /* if available buf_copy-trn-doc */
+    end . /* Копирование из поля Источник в складских документах */
+    
+    if p-mark <> ""
+    and num-entries(p-mark, {&delim-par}) = 2
+    and entry(1, p-mark, {&delim-par}) = "copy-utd-line"  
+    then do : /* Копирование из поля Источник в складских документах */
+      assign
+        v-copy-doc-code = entry(2, p-mark, {&delim-par})
+        p-mark = ""
+      .
+      find first buf_utd-lines no-lock where recid(buf_utd-lines) = integer(v-copy-doc-code) no-error .
+      if available buf_utd-lines
+      then do :
+        for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num   = buf_utd-lines.db-num
+                                                 and buf_utd-marking-lines.doc-id   = buf_utd-lines.doc-id
+                                                 and buf_utd-marking-lines.LineNum  = buf_utd-lines.LineNum
+                                                 and doc-level = 1
+                                                 :
+          find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = buf_utd-marking-lines.mark no-error .
+          find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark no-error .
+          if not available tt-tobacco-marks
+          then do :
+            create tt-tobacco-marks.
+            tt-tobacco-marks.mark = buf_marking-lines.mark  .
+            tt-tobacco-marks.qnty = 1 .
+          end .
+          if available buf_marking then tt-tobacco-marks.unit = buf_marking.unit-ext .                                     
+        end .
+      end . /* if available buf_copy-trn-doc */
+    end . /* Копирование из поля Источник в складских документах */
+    
+    for each tt-tobacco-marks no-lock where tt-tobacco-marks.qnty = -1
+                                        and tt-tobacco-marks.unit = "UNIT",
+    first buf_marking-childs no-lock where buf_marking-childs.mark = tt-tobacco-marks.mark,
+    first buf_tt-tobacco-marks exclusive-lock where buf_tt-tobacco-marks.mark = buf_marking-childs.mark-parent :
+      buf_tt-tobacco-marks.to-ungroup = true .                                           
+    end .
+    
+    for each buf_tt-tobacco-marks exclusive-lock where buf_tt-tobacco-marks.to-ungroup :
+      for each buf_marking-childs no-lock where buf_marking-childs.mark-parent = buf_tt-tobacco-marks.mark :
+        find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = buf_marking-childs.mark no-error .
+        if not available tt-tobacco-marks
+        then do :
+          create tt-tobacco-marks.
+          tt-tobacco-marks.mark = buf_marking-childs.mark .
+          tt-tobacco-marks.unit = buf_marking-childs.unit-ext .
+          tt-tobacco-marks.qnty = 0 .
+        end .
+        tt-tobacco-marks.qnty = tt-tobacco-marks.qnty + 1 .
+      end .
+      delete buf_tt-tobacco-marks .
+    end .
+   
+    for each tt-tobacco-marks exclusive-lock :
+      if tt-tobacco-marks.qnty = 0 then delete tt-tobacco-marks .
+      else
+      if tt-tobacco-marks.qnty <> 1
+      then do :
+        message
+        vss-workfile vss-revision vss-description skip
+        "Неправильное количество по марке - " string(tt-tobacco-marks.qnty) skip
+        "Марка " tt-tobacco-marks.mark skip
+        "Вероятно она была продана, возвращена, и снова продана." skip
+        "В этом случае товар зарезервируется при закрытии продажи" skip
+        view-as alert-box error .
+        undo, return error return-value .
       end.
     end.
-    release buf1_goods no-error .
-    release buf1_doc-line-attr no-error .
-/* run gbl/inidebug.p . */
+    
+    if p-mark <> "" and not buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+    then do :
+      find first buf_marking no-lock where buf_marking.mark begins p-mark no-error .
+      find first tt-tobacco-marks no-lock where tt-tobacco-marks.mark = p-mark no-error .
+      if available buf_marking
+      and not available tt-tobacco-marks
+      then do :
+        create tt-tobacco-marks .
+        assign
+          tt-tobacco-marks.mark = buf_marking.mark
+          tt-tobacco-marks.qnty = 1
+          tt-tobacco-marks.unit = buf_marking.unit-ext
+          p-mark = ""
+          v-mark-tobacco = true
+        .
+      end .
+    end .
+    
+    
+    
+    for each buf_tt-tobacco-marks exclusive-lock where buf_tt-tobacco-marks.unit = "LEVEL2" :
+/*    first buf_marking no-lock where buf_marking.mark = tt-tobacco-marks.mark*/
+/*                                and buf_marking.unit-ext = "LEVEL1" :       */
+      assign v-box-qnty = 0 .
+      for each buf_marking-childs no-lock where buf_marking-childs.mark-parent = buf_tt-tobacco-marks.mark :
+        find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = buf_marking-childs.mark no-error .
+        if not available tt-tobacco-marks
+        then do :
+          create tt-tobacco-marks .
+          assign
+            tt-tobacco-marks.mark = buf_marking-childs.mark
+            tt-tobacco-marks.unit = "LEVEL1"
+            tt-tobacco-marks.qnty = 0
+          .
+        end. 
+        assign
+          tt-tobacco-marks.qnty = tt-tobacco-marks.qnty + 1
+          v-box-qnty = v-box-qnty + 1
+        .
+      end . 
+      if  v-box-qnty <> 50
+      then do :
+        /* error */
+      end.    
+      delete buf_tt-tobacco-marks .
+    end . 
+    
+    /*p-mark = v-mark.*/ /* ?????? S.Slivenko: Я вообще не знаю и не понимаю, зачем сюда добавили p-mark (то есть одиночную марку). Логики не вижу. Вопросы к Шкляр/Морозову*/            
+                                   
+/*    find first buf1_doc-line-attr exclusive-lock where buf1_doc-line-attr.doc-code = buf_doc-line.doc-code   */
+/*                                                  and buf1_doc-line-attr.gds-code = buf1_goods.gds-code      */
+/*                                                  and buf1_doc-line-attr.attr-code = 'mark-code'             */
+/*                                                  no-error.                                                  */
+/*    if available buf1_doc-line-attr and buf1_doc-line-attr.attr-value <> ''                                  */
+/*    then do :                                                                                                */
+/*      do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :                                         */
+/*        entry(mark-ii, buf1_doc-line-attr.attr-value) = trim(entry(mark-ii, buf1_doc-line-attr.attr-value)) .*/
+/*        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .                                             */
+/*        if v-mark begins "-"                                                                                 */
+/*        then do jj = 1 to num-entries(buf1_doc-line-attr.attr-value) :                                       */
+/*            if entry(jj, buf1_doc-line-attr.attr-value) = left-trim(v-mark, "-")                             */
+/*            then do :                                                                                        */
+/*               entry(jj, buf1_doc-line-attr.attr-value) = "del=" + entry(jj, buf1_doc-line-attr.attr-value) .*/
+/*               leave .                                                                                       */
+/*            end.                                                                                             */
+/*        end.                                                                                                 */
+/*      end.                                                                                                   */
+/*      do mark-ii = 1 to num-entries(buf1_doc-line-attr.attr-value) :                                         */
+/*        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .                                             */
+/*        if not (v-mark begins "-" or v-mark begins "del=")                                                   */
+/*        then v-mark-list = v-mark-list + (if v-mark-list = '' then '' else ',') + v-mark .                   */
+/*      end.                                                                                                   */
+/*      buf1_doc-line-attr.attr-value = v-mark-list .                                                          */
+/*      do mark-ii = 1 to min(num-entries(buf1_doc-line-attr.attr-value), buf_doc-line.fact-qnty) :            */
+/*        v-mark = entry(mark-ii, buf1_doc-line-attr.attr-value) .                                             */
+/*        run ProcAlcCode (input v-mark, output v-alc-code) no-error.                                          */
+/*        if v-alc-code = ''                                                                                   */
+/*        then do :                                                                                            */
+/*          message                                                                                            */
+/*            vss-workfile vss-revision vss-description skip                                                   */
+/*            "Ошибка определения алкогольного кода" skip                                                      */
+/*            "Марка - " v-mark skip                                                                           */
+/*            view-as alert-box error .                                                                        */
+/*          undo, return error return-value .                                                                  */
+/*        end.                                                                                                 */
+/*        if v-alc-code > ''                                                                                   */
+/*        then do :                                                                                            */
+/*          find first tt-alc-codes exclusive-lock where tt-alc-codes.alc-code = v-alc-code no-error.          */
+/*          if not available tt-alc-codes                                                                      */
+/*          then do :                                                                                          */
+/*              create tt-alc-codes.                                                                           */
+/*              assign tt-alc-codes.alc-code = v-alc-code .                                                    */
+/*          end.                                                                                               */
+/*          tt-alc-codes.qnty = tt-alc-codes.qnty + 1 .                                                        */
+/*        end.                                                                                                 */
+/*                                                                                                             */
+/*        p-mark = v-mark .                                                                                    */
+/*        create tt-marks.                                                                                     */
+/*        assign tt-marks.mark = v-mark .                                                                      */
+/*      end.                                                                                                   */
+/*    end.                                                                                                     */
+/*    release buf1_goods no-error .                                                                            */
+/*    release buf1_doc-line-attr no-error .                                                                    */
+/* run gbl/inidebug.p .
     if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
         for each buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
@@ -261,8 +665,8 @@ procedure rsrv-doc :
             assign tt-marks.mark = buf_gen-attr.attr-code .                                
         end.
     end.
-    
-    find first tt-marks no-error.
+    */
+    find first tt-marks no-error.                         
     if not available tt-marks then v-mark-alchol = false .
     
     v-alc-qnty = 0 .
@@ -292,7 +696,11 @@ procedure rsrv-doc :
             find first tt-alc-codes exclusive-lock where tt-alc-codes.alc-code = entry(3, buf2_parts.alc-ref-ab-path) no-error.
             if not available tt-alc-codes
             then do :
+              find first tt-alc-codes exclusive-lock where tt-alc-codes.alc-code <> "new-mark" no-error.
+              if not available tt-alc-codes
+              then do :
                 find first tt-alc-codes exclusive-lock .
+              end.
             end.
             tt-alc-codes.qnty = tt-alc-codes.qnty - min(buf2_parts.fact-qnty, tt-alc-codes.qnty) .
             v-alc-qnty = v-alc-qnty - min(buf2_parts.fact-qnty, tt-alc-codes.qnty) .
@@ -327,6 +735,11 @@ procedure rsrv-doc :
             end.
         end.
     end.
+    
+    find first tt-tobacco-marks no-error.                         
+    if not available tt-tobacco-marks
+    then v-mark-tobacco = false .
+    else v-mark-tobacco = true .
 
     /* определяем знак изменяемого количества */
     assign
@@ -420,6 +833,60 @@ procedure rsrv-doc :
           use-index FIFO
           no-error.
       end.
+      
+      if p-mark <> "" and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+      then do:
+  
+        find first buf_marking no-lock where buf_marking.mark = p-mark no-error .
+        if not available buf_marking
+        then do :
+          put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                  " . В БД не найдена запись для марки " p-mark  skip .
+          undo, return error ("В БД не найдена запись для марки " + p-mark) .
+        end .
+        
+        if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+        and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB   
+        and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+        and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+        and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+        and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB   
+        and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+        and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB           
+        then do :
+          put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                  " . Марка " p-mark " в статусе " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip .
+          undo, return error ("Марка " + p-mark + " в статусе " + objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) ) .    
+        end .
+        
+        find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark
+                                               and buf_marking-lines.obj-type = buf_doc-line.obj-type
+                                               and buf_marking-lines.obj-code = buf_doc-line.obj-code
+                                               and buf_marking-lines.in-code <> buf_marking-lines.out-code
+                                               no-error .
+        if not available buf_marking-lines
+        then do :
+          put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                  " . В БД не найдена запись для марки в линии документа " p-mark  skip .
+          undo, return error ("В БД не найдена запись для марки в линии документа " + p-mark) .
+        end.
+        find first buf_goods no-lock where buf_goods.gds-code = buf_marking-lines.gds-code .
+        find first buf_parts
+          where buf_parts.obj-type  = buf_marking-lines.obj-type
+            and buf_parts.obj-code  = buf_marking-lines.obj-code
+            and buf_parts.artic     = buf_goods.artic
+            and buf_parts.prod-type = buf_goods.prod-type
+            and buf_parts.prod-code = buf_goods.prod-code
+            and buf_parts.in-code   = buf_marking-lines.in-code
+            and buf_parts.out-code  = buf_marking-lines.out-code
+            and buf_parts.part-code = buf_marking-lines.part-code 
+          use-index FIFO
+          no-error.
+        if available buf_parts
+        then v-fifo = false .
+        else v-fifo = true . 
+                
+      end. 
 
       do while p-chg-qnty <> 0
       and available buf_parts
@@ -477,6 +944,7 @@ procedure rsrv-doc :
             ,buffer buf_trn-doc     /* buf_trn-doc     */
             ,output v-real-chg-qnty /* p-real-chg-qnty */
             ,output v-parts-recid   /* p-parts-recid   */
+            ,input  p-mark
             ) no-error .
           if error-status :error
           then do:
@@ -546,7 +1014,7 @@ procedure rsrv-doc :
     run partlist_use-get in this-procedure
       (output v-partlist-use
       ) .
-      
+/*      
     find first tt-alc-codes no-error.
     if available tt-alc-codes
     then do :
@@ -561,7 +1029,7 @@ procedure rsrv-doc :
            release tt-marks no-error .
        end.
     end.  
-
+*/
     if p-chg-qnty < 0
     then do:
       if buf_trn-doc.doc-type = {&inventory}
@@ -591,6 +1059,14 @@ procedure rsrv-doc :
         if buf_trn-doc.doc-type = {&expense}
         or buf_trn-doc.doc-type = {&write-off}
         then do:
+          find first tt-alc-codes no-error.
+          if available tt-alc-codes
+          then do :
+            v-alc-rsrv = true .
+          end.
+          else do :
+             v-alc-rsrv = false .  
+          end. 
           assign
             v-fifo = false
           .
@@ -631,6 +1107,17 @@ procedure rsrv-doc :
       .
       if v-rsrv-code = {&free-code}
       then do:
+/*        find first tt-marks no-error.                         */
+/*        if not available tt-marks then v-mark-alchol = false .*/
+        
+        find first tt-alc-codes no-error.
+        if available tt-alc-codes
+        then do :
+          v-alc-rsrv = true .
+        end.
+        else do :
+           v-alc-rsrv = false .  
+        end.  
         assign
           v-fifo = true
         .
@@ -682,6 +1169,7 @@ procedure rsrv-doc :
     define variable v-partlist-in-code   as character no-undo .
     define variable v-partlist-part-code as character no-undo .
     define variable v-partlist-rsrv-qnty as decimal   no-undo .
+    define variable v-msg                as character no-undo .
 
     assign
       v-find-first = true
@@ -690,7 +1178,8 @@ procedure rsrv-doc :
     .
     
     output stream alc-rsrv to value ("alc-rsrv.log") .
-
+    output stream tobacco-rsrv to value ("tobacco-rsrv.log") .
+/*run gbl/inidebug.p .*/
     rsrv_cycle:
     do while p-chg-qnty <> 0
     :
@@ -711,18 +1200,45 @@ procedure rsrv-doc :
               v-find-first = false
             .
             
-            if v-mark-alchol
+            if p-mark <> ""
+            or v-mark-alchol
             then do :
-              find first tt-marks .
+              find first tt-marks no-error .
               assign
                 v-iteration-chg-qnty = v-chg-qnty-sign
               .
               find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
-                                                and buf_gen-attr.attr-code = tt-marks.mark
+                                                and buf_gen-attr.attr-code = (if available tt-marks then tt-marks.mark else p-mark)
                                                 and num-entries(buf_gen-attr.p-key, {&delim-key}) >= 8
                                                 and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code no-error .
+              
+              
+              
               if available buf_gen-attr
               then do :
+                  if not 
+                    (
+                        entry(4, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.artic
+                    and entry(5, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.prod-type  
+                    and entry(6, buf_gen-attr.p-key, {&delim-key}) = string (buf_doc-line.prod-code)
+                    )
+                  then do:
+                    v-msg = "Артикул товара в чеке " + buf_doc-line.artic + " " + buf_doc-line.prod-type + string(buf_doc-line.prod-code)
+                      + substitute ("  не сооотвествует артиклу &1 &2&3 с маркой в свободной зоне " 
+                      , entry(4, buf_gen-attr.p-key, {&delim-key})
+                      , entry(5, buf_gen-attr.p-key, {&delim-key})
+                      , entry(6, buf_gen-attr.p-key, {&delim-key})) + tt-marks.mark.
+
+                    put stream alc-rsrv unformatted v-msg skip .
+                    message
+                      vss-workfile vss-revision vss-description skip
+                      v-msg skip
+                      error-status :get-message(1) skip
+                      return-value skip
+                      view-as alert-box error .
+                    undo, return error return-value .
+
+                  end.
                   find first  buf_parts
                         where buf_parts.obj-type  = entry(2, buf_gen-attr.p-key, {&delim-key})
                           and buf_parts.obj-code  = integer(entry(3, buf_gen-attr.p-key, {&delim-key}))
@@ -730,7 +1246,10 @@ procedure rsrv-doc :
                           and buf_parts.prod-type = entry(5, buf_gen-attr.p-key, {&delim-key})
                           and buf_parts.prod-code = integer(entry(6, buf_gen-attr.p-key, {&delim-key}))
                           and buf_parts.in-code   = entry(7, buf_gen-attr.p-key, {&delim-key})
-                          and buf_parts.out-code  = entry(8, buf_gen-attr.p-key, {&delim-key})
+                          and (
+                           (buf_parts.out-code  = entry(8, buf_gen-attr.p-key, {&delim-key})and available tt-marks)
+                            or p-mark <> ""
+                               )
                           and buf_parts.part-code = entry(9, buf_gen-attr.p-key, {&delim-key})
                           and buf_parts.status_   = no
                           and buf_parts.fact-qnty > 0
@@ -745,14 +1264,26 @@ procedure rsrv-doc :
               then do :
                   if not available buf_gen-attr
                   then do :
+                    if available tt-marks
+                    then
                       put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
                         "  марка " tt-marks.mark " не найдена в свободной зоне. Ищем партию по алкокоду..." skip .
+                    else
+                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        "  марка " p-mark " не найдена в свободной зоне. Ищем партию по алкокоду..." skip .
                   end.
                   else do :
+                    if available tt-marks
+                    then
                       put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
                         "  марка " tt-marks.mark ". Не найдена партия свободной зоны. Ищем партию по алкокоду..." skip .
+                    else
+                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        "  марка " p-mark ". Не найдена партия свободной зоны. Ищем партию по алкокоду..." skip .
                   end.
-                  run ProcAlcCode (input tt-marks.mark, output v-alc-code) no-error.
+                  if available tt-marks
+                  then run ProcAlcCode (input tt-marks.mark, output v-alc-code) no-error.
+                  else run ProcAlcCode (input p-mark, output v-alc-code) no-error.
                   if v-alc-code <> "" and v-alc-code <> ? 
                   then
                   find first buf_parts
@@ -772,8 +1303,13 @@ procedure rsrv-doc :
                   then v-fifo = false .
                   else do :
                     v-fifo = true .
-                    put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                    if available tt-marks
+                    then
+                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
                         "  марка " tt-marks.mark ". Алкокод " v-alc-code ". Не найдена партия по алкокоду. Берём по ФИФО." skip .
+                    else
+                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        "  марка " p-mark ". Алкокод " v-alc-code ". Не найдена партия по алкокоду. Берём по ФИФО." skip .
                   end.  
               end.                       
             end.
@@ -802,6 +1338,75 @@ procedure rsrv-doc :
               else v-fifo = true .  
             end.
             
+            if v-mark-tobacco
+            then do :
+              find first tt-tobacco-marks use-index un no-error .
+              if tt-tobacco-marks.unit = "UNIT"
+              then do :
+                assign
+                  v-iteration-chg-qnty = v-chg-qnty-sign
+                .
+              end .
+              else
+              if tt-tobacco-marks.unit = "LEVEL1"
+              then do :
+                assign
+                  v-iteration-chg-qnty = v-chg-qnty-sign * 10
+                .
+              end .
+              find first buf_marking no-lock where buf_marking.mark = tt-tobacco-marks.mark no-error .
+              if not available buf_marking
+              then do :
+                put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        " . В БД не найдена запись для марки " tt-tobacco-marks.mark  skip .
+                undo, return error ("В БД не найдена запись для марки " + tt-tobacco-marks.mark) .
+              end .
+              
+              if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB   
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB   
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB           
+              then do :
+                put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        " . Марка " tt-tobacco-marks.mark " в статусе " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip .
+                undo, return error ("Марка " + tt-tobacco-marks.mark + " в статусе " + objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) ) .    
+              end .
+              
+              find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark
+                                                     and buf_marking-lines.obj-type = buf_doc-line.obj-type
+                                                     and buf_marking-lines.obj-code = buf_doc-line.obj-code
+                                                     and buf_marking-lines.out-code = v-rsrv-code
+                                                     no-error .
+              if not available buf_marking-lines
+              then do :
+                put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        " . В БД не найдена запись для марки в линии документа " tt-tobacco-marks.mark  skip .
+                undo, return error ("В БД не найдена запись для марки в линии документа " + tt-tobacco-marks.mark) .
+              end.
+              find first buf_goods no-lock where buf_goods.gds-code = buf_marking-lines.gds-code .
+              find first buf_parts
+                where buf_parts.obj-type  = buf_marking-lines.obj-type
+                  and buf_parts.obj-code  = buf_marking-lines.obj-code
+                  and buf_parts.artic     = buf_goods.artic
+                  and buf_parts.prod-type = buf_goods.prod-type
+                  and buf_parts.prod-code = buf_goods.prod-code
+                  and buf_parts.in-code   = buf_marking-lines.in-code
+                  and buf_parts.out-code  = buf_marking-lines.out-code
+                  and buf_parts.part-code = buf_marking-lines.part-code 
+                  and buf_parts.prt-code  = buf_marking-lines.prt-code
+                  and buf_parts.status_   = no
+                  and buf_parts.fact-qnty > 0
+                use-index FIFO
+                no-error.
+              if available buf_parts
+              then v-fifo = false .
+              else v-fifo = true .                                       
+            end .
+            
             if v-fifo = true
             then do:
               find first buf_parts
@@ -816,9 +1421,9 @@ procedure rsrv-doc :
                 use-index FIFO
                 no-error.
             end.
-            else if not v-alc-rsrv
+            else if not v-alc-rsrv and not v-mark-tobacco
             then do:
-              if not (v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}) or (v-izlcstpr and p-action = {&rsrv-dtl_action_reserv-sozdanie}) then
+              if p-mark = "" and not (v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}) or (v-izlcstpr and p-action = {&rsrv-dtl_action_reserv-sozdanie}) then
               find last buf_parts
                 where buf_parts.obj-type  = buf_doc-line.obj-type
                   and buf_parts.obj-code  = buf_doc-line.obj-code
@@ -834,20 +1439,37 @@ procedure rsrv-doc :
           end.
           else do:
             /* ищем следующую доступную партию */
-            if v-mark-alchol
+            if p-mark <> ""
+            or v-mark-alchol
             then do :
                 find next tt-marks no-error .
                 if available tt-marks
+                or p-mark <> ""
                 then do :
                   assign
                     v-iteration-chg-qnty = v-chg-qnty-sign
                   .
                   find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
-                                                    and buf_gen-attr.attr-code = tt-marks.mark
+                                                    and buf_gen-attr.attr-code = (if available tt-marks then tt-marks.mark else p-mark)
                                                     and num-entries(buf_gen-attr.p-key, {&delim-key}) >= 8
                                                     and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code no-error .
                   if available buf_gen-attr
                   then do :
+                    
+                      if not 
+                        (
+                            entry(4, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.artic
+                        and entry(5, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.prod-type  
+                        and entry(6, buf_gen-attr.p-key, {&delim-key}) = string (buf_doc-line.prod-code)
+                        )
+                      then do:
+                        put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                          substitute ("  не сооотвествует артиклу &1 &2&3 с маркой в свободной зоне " 
+                          , entry(4, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.artic
+                          , entry(5, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.artic
+                          , entry(6, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.artic) tt-marks.mark  skip .
+                        next rsrv_cycle . /* --->>>--- */
+                      end.
                       find first  buf_parts
                             where buf_parts.obj-type  = entry(2, buf_gen-attr.p-key, {&delim-key})
                               and buf_parts.obj-code  = integer(entry(3, buf_gen-attr.p-key, {&delim-key}))
@@ -869,15 +1491,27 @@ procedure rsrv-doc :
                   or (available buf_gen-attr and not available buf_parts)     
                   then do :
                       if not available buf_gen-attr
-                      then do :
-                          put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
-                            "  марка " tt-marks.mark " не найдена в свободной зоне. Ищем партию по алкокоду..." skip .
-                      end.
-                      else do :
-                          put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
-                            "  марка " tt-marks.mark ". Не найдена партия свободной зоны. Ищем партию по алкокоду..." skip .
-                      end.
-                      run ProcAlcCode (input tt-marks.mark, output v-alc-code) no-error.
+	                  then do :
+	                    if available tt-marks
+	                    then
+	                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+	                        "  марка " tt-marks.mark " не найдена в свободной зоне. Ищем партию по алкокоду..." skip .
+	                    else
+	                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+	                        "  марка " p-mark " не найдена в свободной зоне. Ищем партию по алкокоду..." skip .
+	                  end.
+	                  else do :
+	                    if available tt-marks
+	                    then
+	                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+	                        "  марка " tt-marks.mark ". Не найдена партия свободной зоны. Ищем партию по алкокоду..." skip .
+	                    else
+	                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+	                        "  марка " p-mark ". Не найдена партия свободной зоны. Ищем партию по алкокоду..." skip .
+	                  end.
+	                  if available tt-marks
+	                  then run ProcAlcCode (input tt-marks.mark, output v-alc-code) no-error.
+	                  else run ProcAlcCode (input p-mark, output v-alc-code) no-error.
                       if v-alc-code <> "" and v-alc-code <> ? 
                       then
                       find first buf_parts
@@ -897,8 +1531,13 @@ procedure rsrv-doc :
                       then v-fifo = false .
                       else do :
                         v-fifo = true .
-                        put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
-                            "  марка " tt-marks.mark ". Алкокод " v-alc-code ". Не найдена партия по алкокоду. Берём по ФИФО." skip .
+                        if available tt-marks
+	                    then
+	                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+	                        "  марка " tt-marks.mark ". Алкокод " v-alc-code ". Не найдена партия по алкокоду. Берём по ФИФО." skip .
+	                    else
+	                      put stream alc-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+	                        "  марка " p-mark ". Алкокод " v-alc-code ". Не найдена партия по алкокоду. Берём по ФИФО." skip .
                       end.
                   end.
                 end.
@@ -958,9 +1597,85 @@ procedure rsrv-doc :
                   else v-fifo = true . 
               end. 
             end.
+            
+            if v-mark-tobacco
+            then do :
+              find next tt-tobacco-marks use-index un no-error .
+              if available tt-tobacco-marks
+              then do :
+                if tt-tobacco-marks.unit = "UNIT"
+                then do :
+                  assign
+                    v-iteration-chg-qnty = v-chg-qnty-sign
+                  .
+                end .
+                else
+                if tt-tobacco-marks.unit = "LEVEL1"
+                then do :
+                  assign
+                    v-iteration-chg-qnty = v-chg-qnty-sign * 10
+                  .
+                end .
+                find first buf_marking no-lock where buf_marking.mark = tt-tobacco-marks.mark no-error .
+                if not available buf_marking
+                then do :
+                  put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        " . В БД не найдена запись для марки " tt-tobacco-marks.mark  skip .
+                  undo, return error ("В БД не найдена запись для марки " + tt-tobacco-marks.mark) .
+                end .
+                if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+                and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB   
+                and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+                and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+                and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+                and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
+                and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+                and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB 
+                then do :
+                  put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                          " . Марка " tt-tobacco-marks.mark " в статусе " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip .
+                  undo, return error ("Марка " + tt-tobacco-marks.mark + " в статусе " + objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) ) .    
+                end .
+                
+                find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark
+                                                       and buf_marking-lines.obj-type = buf_doc-line.obj-type
+                                                       and buf_marking-lines.obj-code = buf_doc-line.obj-code
+                                                       and buf_marking-lines.out-code = v-rsrv-code
+                                                       no-error .
+                if not available buf_marking-lines
+                then do :
+                  put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
+                        " . В БД не найдена запись для марки в линии документа " tt-tobacco-marks.mark  skip .
+                  undo, return error ("В БД не найдена запись для марки в линии документа " + tt-tobacco-marks.mark) .
+                end.
+                find first buf_goods no-lock where buf_goods.gds-code = buf_marking-lines.gds-code .
+                find first buf_parts
+                  where buf_parts.obj-type  = buf_marking-lines.obj-type
+                    and buf_parts.obj-code  = buf_marking-lines.obj-code
+                    and buf_parts.artic     = buf_goods.artic
+                    and buf_parts.prod-type = buf_goods.prod-type
+                    and buf_parts.prod-code = buf_goods.prod-code
+                    and buf_parts.in-code   = buf_marking-lines.in-code
+                    and buf_parts.out-code  = buf_marking-lines.out-code
+                    and buf_parts.part-code = buf_marking-lines.part-code 
+                    and buf_parts.prt-code  = buf_marking-lines.prt-code
+                    and buf_parts.status_   = no
+                    and buf_parts.fact-qnty > 0
+                  use-index FIFO
+                  no-error.
+                if available buf_parts
+                then v-fifo = false .
+                else v-fifo = true .
+              end .
+              else do :
+                v-fifo = true .
+              end .
+            end .
+            
             if v-fifo = true
             then do:
               if v-alc-rsrv
+              or v-mark-tobacco
               then  
               find first buf_parts
                 where buf_parts.obj-type  = buf_doc-line.obj-type
@@ -986,7 +1701,7 @@ procedure rsrv-doc :
                 use-index FIFO
                 no-error.
             end.
-            else if not v-alc-rsrv 
+            else if not v-alc-rsrv and not v-mark-tobacco
             then do:
               find prev buf_parts
                 where buf_parts.obj-type  = buf_doc-line.obj-type
@@ -1302,7 +2017,7 @@ procedure rsrv-doc :
 
       if v-process-part = true
       then do:
-          
+        /*  
         if v-mark-alchol and available buf_gen-attr
         then do :
             find current buf_gen-attr exclusive-lock no-error.
@@ -1322,6 +2037,7 @@ procedure rsrv-doc :
                 end.
             end.
         end.  
+        */
         /* Резервирование или снятие резервов */
         run partrsrv in this-procedure
           (input  v-iteration-chg-qnty /* p-chg-qnty      */
@@ -1336,6 +2052,7 @@ procedure rsrv-doc :
           ,buffer buf_trn-doc     /* buf_trn-doc     */
           ,output v-real-chg-qnty /* p-real-chg-qnty */
           ,output v-parts-recid   /* p-parts-recid   */
+          ,input (if available tt-marks then tt-marks.mark else if available tt-tobacco-marks then tt-tobacco-marks.mark else p-mark)
           ) no-error .
         if error-status :error
         then do:
@@ -1358,6 +2075,7 @@ procedure rsrv-doc :
     end.
     
     output stream alc-rsrv close .
+    output stream tobacco-rsrv close .
 
     if p-chg-qnty = 0
     then do:
@@ -1404,7 +2122,7 @@ procedure rsrv-doc :
           { gbl/pftxvalg.i
             buf_goods.gds-code
             {&vat-tax-code}
-            ?
+            buf_trn-doc.doc-date
             buf_trn-doc.host-code
             buf_trn-doc.obj-type
             buf_trn-doc.obj-code
@@ -1471,7 +2189,7 @@ procedure rsrv-doc :
       end.
     end.
   end.
-
+  
   return .
 
 end procedure.
@@ -1660,7 +2378,16 @@ PROCEDURE ProcAlcCode :
   define variable v-result as character no-undo .
   define variable ii as integer no-undo .  
 
-  alc-code = SUBSTRing (p-mark-alc, 8, 12) .
+  if length(p-mark-alc) = 150 then 
+  do:
+    p-alc-code = "new-mark" .
+    return .
+  end.
+  else 
+  do:  
+    alc-code = SUBSTRing (p-mark-alc, 8, 12) .
+  end.
+  
   p-alc-code = string (Base2Int64 (alc-code, 36) ) no-error.
   if (Base2Int64 (alc-code, 36) ) < 0 then 
   do:

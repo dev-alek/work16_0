@@ -18,6 +18,7 @@ Creation date: 05/04/07
 Первоначальный автор неизвестен
 
 */
+using ibs.th.str.alcohol.*.
 
 TRIGGER PROCEDURE FOR WRITE OF ub.trn-doc OLD BUFFER old-doc .
 
@@ -27,6 +28,8 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Триггер на запись документа":U .
+
+define variable chg-qnty      as   decimal no-undo .
 
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4',ub.trn-doc.doc-code,ub.trn-doc.ext-doc-type,ub.trn-doc.status_,ub.trn-doc.flag_)" }
 { cmp/trg-def.i  }
@@ -3064,6 +3067,8 @@ procedure validate-trn-doc :
           gds-obj совпадает с корневым prt-obj  и
           с партиями свободной зоны и зарезервированными из свободной зоны
         */
+        /* уберем ка, а то 500 раз это делаем при закрытии
+        if not g#news then do:
         { gbl/gdscheck.i
           buf_doc-line.obj-type
           buf_doc-line.obj-code
@@ -3088,6 +3093,8 @@ procedure validate-trn-doc :
             view-as alert-box error .
           undo, return error return-value .
         end.
+        end.
+        */
       end. /* if buf_goods.gds-type = {&gds-goods} */
 
       /* проверка целостности признаков в накладной */

@@ -14,9 +14,14 @@ Author: Svetlana Chernova
 Creation date: 10/03/07
 
 */
+using ibs.th.str.alcohol.*.
+using ibs.th.gbl.sys.*.
+
 define input  parameter p-doc-code  like ub.trn-doc.doc-code no-undo .
 define output parameter p-err       as logical   no-undo .
 define output parameter p-mess      as character no-undo .
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .

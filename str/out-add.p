@@ -226,6 +226,7 @@ define variable varcli-doc-qnty-doc-pl                    as   decimal          
 define variable varcli-fact-qnty-doc-pl                   as   decimal                    no-undo.
 define variable v-round-vat-sum                           as   logical                    no-undo.
 define variable v-sum-vat                                 as   decimal                    no-undo.
+define variable v-node-type                               as   character                  no-undo.
 { str/sclspref.i }
 
 define temp-table old-gds-dtl no-undo like ub.gds-dtl.
@@ -646,12 +647,20 @@ on error undo, return error return-value
       when "update-parts":u or
       when "lookup-parts":u
       then do:
+        if      t-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh_VP}
+            and parvalue begins 'scan-marks'
+        then do: 
+           Find first marking where marking.mark begins entry(2,parvalue,{&delim-key})
+           no-lock no-error.
+        end.
+           
         if (
             /* возврат поставщику,
                конкретная работа по партиям,
                товар с двумя единицами измерени
              */
-            t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
+                t-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh_VP}
+            and not avail Marking
             and t-doc.status_ <> {&inquiry}
             and work-mode <> "update-scale":u
             and work-mode <> "lookup-scale":u
@@ -882,6 +891,7 @@ on error undo, return error return-value
               if work-mode = {&update}
               or work-mode = {&lookup}
               then do:
+                if parvalue begins 'scan-marks' then v-node-type = parvalue. else v-node-type = {&g#term}. 
                 run str/out-prt.w (
                   ParParentProc ,
                   pardoc-rec    ,
@@ -889,12 +899,13 @@ on error undo, return error return-value
                   pargds-rec       ,
                   (if work-mode = {&update} then {&prt-def} else {&lookup}) + (if v-is-return then ({&delim-par} + "return") else "") ,
                   recid(ub.gds-prt),
-                  {&g#term}) no-error.
+                  v-node-type) no-error.
               end.
             end.
           end.
           else do:
             /* движение товара мб только без признаков */
+            if parvalue begins 'scan-marks' then v-node-type = parvalue. else v-node-type = {&g#root}.
             run str/out-prt.w (
               ParParentProc ,
               pardoc-rec    ,
@@ -902,14 +913,14 @@ on error undo, return error return-value
               pargds-rec       ,
               (if work-mode <> {&lookup} then {&inv-def} else {&lookup}) + (if v-is-return then ({&delim-par} + "return") else "") ,
               recid(ub.gds-prt),
-              {&g#root}) no-error.
+              v-node-type) no-error.
             if error-status :error
             then do:
                   return error return-value.
             end.
           end.
         end.
-
+        if parvalue begins 'scan-marks' then. else do:
         if parvalue <> ? then do:
            if num-entries(parvalue) = 1 then
                 run str/florline.p (
@@ -919,6 +930,7 @@ on error undo, return error return-value
                     input t-doc.doc-code ,
                     input p-goods.gds-code ,
                     input integer(parvalue)  ) .
+        end.
         end.
 
       end.
@@ -1001,6 +1013,7 @@ on error undo, return error return-value
               , input-output p-doc-line.price-base
               , input-output p-doc-line.price-rubl
               , input        -1
+              , input       if parvalue begins 'scan-mark' then entry(2,parvalue,{&delim-key}) else ""
               ) no-error .
             if error-status :error
             then do:
@@ -1024,6 +1037,7 @@ on error undo, return error return-value
             , input-output p-doc-line.price-base
             , input-output p-doc-line.price-rubl
             , input        -1
+            , input        if parvalue begins 'scan-mark' then entry(2,parvalue,{&delim-key}) else ""
             ) no-error .
           if error-status :error
           then do:

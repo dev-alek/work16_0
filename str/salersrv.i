@@ -394,7 +394,7 @@ if cashplace then do: /*складскоместный*/
                       ,input-output old-pl-qnty
                       ,input-output cost-base
                       ,input-output cost-rubl
-                      ,-1 ) no-error.
+                      ,-1, "" ) no-error.
       if error-status :error then do:
         assign
         v-err-msg = substitute( "Ошибка при разрезервировании.&1&2"
@@ -447,7 +447,8 @@ if cashplace then do: /*складскоместный*/
                       ,input-output new-pl-qnty
                       ,input-output cost-base
                       ,input-output cost-rubl
-                      ,-1 ) no-error.
+                      ,-1 
+                      ,"") no-error.
       if error-status :error then do:
         assign
         v-err-msg = substitute( "Ошибка при резервировании.&1&2"
@@ -624,7 +625,8 @@ end.
                         ,input-output ser-chg-qnty
                         ,input-output cost-base
                         ,input-output cost-rubl
-                        ,input (if loc-doc-prts.b-code < 0 then ? else loc-doc-prts.b-code) ) no-error.
+                        ,input (if loc-doc-prts.b-code < 0 then ? else loc-doc-prts.b-code)
+                        , "" ) no-error.
       if error-status:error then  do:
 &if "{2}" = "auto" &then
 &scop my-message return-value
@@ -831,7 +833,8 @@ if ( num_rec modulo 10 ) = 0 then
                       ,input-output chg-qnty
                       ,input-output cost-base
                       ,input-output cost-rubl
-                      , -1 ) no-error.
+                      , -1
+                      , "" ) no-error.
       if error-status:error then  do:
 &if "{2}" = "auto" &then
 &scop my-message return-value

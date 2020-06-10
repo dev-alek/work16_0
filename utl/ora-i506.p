@@ -35,6 +35,8 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Импорт инвентаризаций из временной таблицы".
 
+define variable chg-qnty        as decimal   no-undo .
+
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }

@@ -42,6 +42,9 @@ Creation date: 05/08/07
 а значит gds-dtl.fact-qnty может быть больше gds-dtl.doc-qnty.
 
 */
+using Progress.Lang.*.
+using ibs.th.gbl.*.
+using ibs.th.gbl.sys.*.
 
 define input parameter v-doc-code like ub.trn-doc.doc-code no-undo .
 
@@ -845,6 +848,7 @@ end case .
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ub.parts.obj-type, ub.parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then do:
       for each ub.marking-lines no-lock where ub.marking-lines.gds-code = ub.goods.gds-code
                                             and ub.marking-lines.part-code = ub.parts.part-code
+                                            and ub.marking-lines.prt-code = ub.parts.prt-code
                                             and ub.marking-lines.in-code = ub.parts.in-code
                                             and ub.marking-lines.out-code = ub.parts.out-code
                                             and ub.marking-lines.obj-code = ub.parts.obj-code
@@ -854,6 +858,7 @@ end case .
             find first buf_marking-lines no-lock where buf_marking-lines.in-code    = buf_parts.in-code
                                                    and buf_marking-lines.out-code   = buf_parts.out-code
                                                    and buf_marking-lines.part-code  = buf_parts.part-code
+                                                   and buf_marking-lines.prt-code   = buf_parts.prt-code
                                                    and buf_marking-lines.obj-code   = buf_parts.obj-code
                                                    and buf_marking-lines.obj-type   = buf_parts.obj-type
                                                    and buf_marking-lines.gds-code   = ub.marking-lines.gds-code

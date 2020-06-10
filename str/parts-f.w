@@ -33,6 +33,7 @@ create: Перваков Михаил Сергеевич
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
+using ibs.th.str.alcohol.*.
 
 define input  parameter parparentproc       as widget-handle no-undo.
 define input  parameter h-call-prog         as handle    no-undo .
@@ -1465,7 +1466,7 @@ if available (buf_goods) then do:
                                                             and buf_marking-lines-parent.in-code  = buf_marking-lines.in-code
                                                             and buf_marking-lines-parent.out-code = buf_marking-lines.out-code
                                                             and buf_marking-lines-parent.part-code = buf_marking-lines.part-code
-                                                            and buf_marking-lines-parent.prt-code = buf_marking-lines.prt-code
+                                                            and buf_marking-lines-parent.prt-code = buf_marking-lines.prt-code 
                                                             and buf_marking-lines-parent.doc-level > 0
                                                             no-error .
               if available buf_marking-lines-parent

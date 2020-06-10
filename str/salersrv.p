@@ -57,6 +57,7 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Резервирование продажи".
+{ gbl/objsrv.i }
 { cmp/vssrevis.i "substitute('&1':u,p-inkas-code)" }
 { cmp/trg-def.i }
 

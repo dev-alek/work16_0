@@ -69,6 +69,7 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "«акрытие продажи".
+{ gbl/objsrv.i }
 { cmp/vssrevis.i "substitute('&1':u,p-inkas-code)" }
 { cmp/trg-def.i }
 
@@ -100,6 +101,7 @@ define variable v-input-error as logical no-undo .
 { str/lib-trn.i }
 { str/chksplin.i }
 { gbl/thbjattr.i }
+{ utl/gtin.i }
 
 define variable v-obj-type like ub.inkas.obj-type no-undo .
 define variable v-obj-code like ub.inkas.obj-code no-undo .
@@ -250,6 +252,27 @@ if p-auto = 0 then do:
 end.
 else do:
   log-file-name = 'ext-sale.log'.
+end.
+
+for each chk-doc no-lock where chk-doc.out-code = p-inkas-code :
+  if lookup(string(chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next .
+  find first chk-gds no-lock where chk-gds.doc-code = chk-doc.doc-code no-error.
+  if not available chk-gds
+  then do :
+    run write-log-and-file in p-log-handle (
+          input 1
+        , input log-file-name
+        , input 1
+        , input substitute("¬ чеке &1 нет строк!&2&3&4"
+                           , chk-doc.doc-code
+                           , {&new-line}
+                           , v-esm
+                           , return-value
+                           )).
+    assign
+    v-view-log = yes.
+    {&view-log}.
+  end.
 end.
 
 { str/sale-oth.i }
@@ -732,6 +755,9 @@ on error undo, return error return-value
     if error-status:error then undo f-close, return error.
     else compensed = yes.
     run set-compensed in p-parent-handle(input compensed) no-error .
+    
+    run compense-tabak in this-procedure (input p-inkas-code) no-error .
+    if error-status:error then undo f-close, return error.
     
     v-gas-income-created = "" .
     
@@ -1490,6 +1516,238 @@ end. /*doe*/
 
 end procedure. /* proc-main */
 
+procedure compense-tabak :
+  define input parameter p-inkas-code as character no-undo .
+  
+  define variable cv as decimal no-undo.
+  define variable unresv as decimal no-undo.
+  define variable unresr as decimal no-undo.
+  define buffer b-goods for goods.
+  define buffer b-gds-dtl for gds-dtl.
+  define buffer brw-gds-dtl for gds-dtl.
+  define buffer br-gds-dtl for gds-dtl.
+  define buffer b-doc-line for doc-line.
+  define buffer br-doc-line for doc-line.
+  define buffer brw-doc-line for doc-line.
+  define buffer b-doc for trn-doc.
+  define buffer b-doc-prts for doc-prts.
+  define buffer brw-doc-prts for doc-prts.
+  define buffer b-doc-pl for doc-pl.
+  define buffer brw-doc-pl for doc-pl.
+  define buffer b-gds-prt for gds-prt.
+  define variable qnty-compense as decimal no-undo.
+  define variable qnty-compense-abs as decimal no-undo.
+  define variable tsall as decimal no-undo.
+  
+  define variable v-type as character no-undo .
+  define variable v-attr-value as character no-undo .
+  
+  define variable vCodeIdent as character no-undo .
+  
+  define buffer buf_marking for ub.marking .
+  define buffer buf_gds-prt for ub.gds-prt.
+  define buffer buf_doc-prts  for ub.doc-prts.
+  define buffer buf_sale-doc for ub.sale-doc.
+  define buffer b_marking-chk for ub.marking-chk .
+  define buffer br_marking-chk for ub.marking-chk .
+  define buffer b_chk-doc for ub.chk-doc .
+  define buffer br_chk-doc for ub.chk-doc .
+  define buffer b_chk-gds for ub.chk-gds .
+  define buffer br_chk-gds for ub.chk-gds .
+  
+  find first buf_sale-doc NO-lock where
+            buf_Sale-doc.inkas-code = p-inkas-code
+        and buf_sale-doc.doc-kind = {&TDEDT_vozvrat_vnesh_kass} no-error .
+  if not available buf_sale-doc then return.
+  
+  &scop my-message "ѕроведем компенсацию незарезервированных маркированных товаров"
+  {&display-message}.
+  
+  _docline:
+  for each br-doc-line where
+         br-doc-line.doc-code = buf_ret-doc.doc-code
+  on error  undo _docline, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+  on stop   undo _docline, return error substitute( "&1. stop", vss-workfile )
+  on endkey undo _docline, return error substitute( "&1. endkey", vss-workfile )
+  :
+    assign
+      cv = 0
+    .
+    FIND FIRST b-doc-line where
+               b-doc-line.artic = br-doc-line.artic AND
+               b-doc-line.prod-type = br-doc-line.prod-type AND
+               b-doc-line.prod-code = br-doc-line.prod-code and 
+               b-doc-line.doc-code = buf_trn-doc.doc-code NO-ERROR.
+    IF NOT AVAILABLE b-doc-line then NEXT _docline.
+    if b-doc-line.doc-qnty = b-doc-line.fact-qnty then next _docline .
+    
+    find first goods no-lock where goods.artic = br-doc-line.artic
+                               and goods.prod-type = br-doc-line.prod-type
+                               and goods.prod-code = br-doc-line.prod-code
+                               .
+    RUN gds-attr-value (
+                        INPUT goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT v-attr-value,
+                        OUTPUT v-type
+                        ).
+    if v-attr-value > ""
+    and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(b-doc-line.obj-type, b-doc-line.obj-code):GetIsMarkingForType(v-attr-value)
+    then do :
+      find first bar-code no-lock where bar-code.gds-code = goods.gds-code
+                                    and bar-code.unit-cli = b-doc-line.unit-cli
+                                    no-error .
+      if available bar-code
+      then do :
+        for each b_chk-doc no-lock where b_chk-doc.out-code = b-doc-line.doc-code
+                                     and b_chk-doc.chk-type = integer ({&rcpt-sale})
+                                     : 
+          for each b_chk-gds no-lock where b_chk-gds.doc-code = b_chk-doc.doc-code 
+                                       and b_chk-gds.b-code = bar-code.b-code
+                                       and b_chk-gds.doc-qnty < 0 :
+            for each b_marking-chk exclusive-lock where b_marking-chk.doc-code = b_chk-gds.doc-code
+                                                     and b_marking-chk.line-num = b_chk-gds.line-num
+                                                     and b_marking-chk.sts = 0
+                                                     :  
+              for first br_marking-chk exclusive-lock where br_marking-chk.mark = b_marking-chk.mark
+                                                        and br_marking-chk.doc-code = b_marking-chk.doc-code
+                                                        and br_marking-chk.line-num <> b_marking-chk.line-num
+                                                        and br_marking-chk.sts = 0,
+              first br_chk-gds no-lock where br_chk-gds.doc-code = b_chk-gds.doc-code
+                                         and br_chk-gds.line-num = br_marking-chk.line-num
+                                         and br_chk-gds.doc-qnty = - b_chk-gds.doc-qnty                                       
+                                         :
+                assign
+                  b_marking-chk.sts = 2  
+                  br_marking-chk.sts = 2
+                . 
+              end .                                         
+            end .
+          end .                                                                        
+        end . /* b_chk-doc */
+        for each br_chk-doc no-lock where br_chk-doc.out-code = b-doc-line.doc-code
+                                      and br_chk-doc.chk-type = integer ({&rcpt-return})
+                                       :
+          for each br_chk-gds no-lock where br_chk-gds.doc-code = br_chk-doc.doc-code 
+                                        and br_chk-gds.b-code = bar-code.b-code:
+            mark_ :                              
+            for each br_marking-chk exclusive-lock where br_marking-chk.doc-code = br_chk-gds.doc-code
+                                                     and br_marking-chk.line-num = br_chk-gds.line-num
+                                                     and br_marking-chk.sts = 0
+                                                     :
+              for each b_chk-doc no-lock where b_chk-doc.out-code = b-doc-line.doc-code
+                                           and b_chk-doc.chk-type = integer ({&rcpt-sale}),
+              each b_chk-gds no-lock where b_chk-gds.doc-code = b_chk-doc.doc-code
+                                       and b_chk-gds.b-code = bar-code.b-code,
+              first b_marking-chk exclusive-lock where b_marking-chk.mark = br_marking-chk.mark
+                                                   and b_marking-chk.doc-code = b_chk-gds.doc-code
+                                                   and b_marking-chk.line-num = b_chk-gds.line-num
+                                                   and b_marking-chk.sts = 0
+                                                   and rowid(b_marking-chk) <> rowid(br_marking-chk)  
+                                                   :                                                                                          
+                assign vCodeIdent = GetCodeIdent(b_marking-chk.mark) .
+                find first buf_marking no-lock where buf_marking.mark = vCodeIdent no-error .
+                if not available buf_marking then next .
+                assign
+                  b_marking-chk.sts = 2  
+                  br_marking-chk.sts = 2
+                  cv = cv + buf_marking.box-qnty
+                .
+                next mark_ .
+              end .                                         
+            end . 
+          end . /* br_chk-gds */
+        end . /*br_chk-doc */
+      end . /*bar-code */
+      
+      FIND FIRST buf_gds-prt NO-LOCK WHERE
+                 buf_gds-prt.upper-code = goods.prt-root NO-ERROR.
+      FIND FIRST b-gds-dtl where
+                  b-gds-dtl.doc-code = buf_ret-doc.doc-code AND
+                  b-gds-dtl.artic = b-doc-line.artic AND
+                  b-gds-dtl.prod-type = b-doc-line.prod-type AND
+                  b-gds-dtl.prod-code = b-doc-line.prod-code AND
+                  b-gds-dtl.prt-code = buf_gds-prt.node-code No-ERROR.
+      FIND FIRST br-gds-dtl where
+                  br-gds-dtl.doc-code = buf_trn-doc.doc-code AND
+                  br-gds-dtl.artic = br-doc-line.artic AND
+                  br-gds-dtl.prod-type = br-doc-line.prod-type AND
+                  br-gds-dtl.prod-code = br-doc-line.prod-code AND
+                  br-gds-dtl.prt-code = buf_gds-prt.node-code  No-ERROR.           
+      assign
+        tsall =  if v-curr-r-b = {&r-b-base}
+                 then  (br-gds-dtl.fact-qnty * (br-gds-dtl.price-base - br-gds-dtl.discnt-base) -
+                        b-gds-dtl.fact-qnty * (b-gds-dtl.price-base - b-gds-dtl.discnt-base)
+                       )
+                 else   (br-gds-dtl.fact-qnty * (br-gds-dtl.price-rubl - br-gds-dtl.discnt-rubl) -
+                        b-gds-dtl.fact-qnty * (b-gds-dtl.price-rubl - b-gds-dtl.discnt-rubl)
+                       )
+        b-gds-dtl.fact-qnty = b-gds-dtl.fact-qnty - cv
+        br-gds-dtl.fact-qnty = br-gds-dtl.fact-qnty - cv
+        br-doc-line.fact-qnty = br-doc-line.fact-qnty - cv
+        b-doc-line.fact-qnty = b-doc-line.fact-qnty - cv
+        qnty-compense = qnty-compense + cv
+        qnty-compense-abs = qnty-compense-abs + abs(cv)
+      .
+      if (v-curr-r-b = {&r-b-base} and b-gds-dtl.discnt-base <> br-gds-dtl.discnt-base)
+      OR (v-curr-r-b = {&r-b-rubl} and b-gds-dtl.discnt-rubl <> br-gds-dtl.discnt-rubl)
+      then do:
+      /*если скидки у расхода/возврата не равны то пересчитаем их*/
+        if v-curr-r-b = {&r-b-base} then do:
+          assign
+          br-gds-dtl.discnt-base = (if br-gds-dtl.fact-qnty <> 0
+                                    then (br-gds-dtl.price-base - ( b-gds-dtl.fact-qnty * (b-gds-dtl.price-base - b-gds-dtl.discnt-base) +
+                                                                 tsall )  / br-gds-dtl.fact-qnty )
+                                    else br-gds-dtl.discnt-base )
+          b-gds-dtl.discnt-base = (if br-gds-dtl.fact-qnty = 0 and b-gds-dtl.fact-qnty <> 0
+                                    then (b-gds-dtl.price-base - ( br-gds-dtl.fact-qnty * (br-gds-dtl.price-base - br-gds-dtl.discnt-base) -
+                                                                 tsall ) / b-gds-dtl.fact-qnty  )
+                                    else b-gds-dtl.discnt-base )
+          br-gds-dtl.discnt-rubl =  br-gds-dtl.discnt-BASE * (buf_trn-doc.base-rate / buf_trn-doc.base-scale)
+          b-gds-dtl.discnt-rubl =   b-gds-dtl.discnt-BASE * (buf_trn-doc.base-rate / buf_trn-doc.base-scale)
+          .
+        end.
+        else do:
+          assign
+          br-gds-dtl.discnt-rubl = (if br-gds-dtl.fact-qnty <> 0
+                                    then (br-gds-dtl.price-rubl -
+                                                                ( b-gds-dtl.fact-qnty * (b-gds-dtl.price-rubl - b-gds-dtl.discnt-rubl) +
+                                                               tsall )  / br-gds-dtl.fact-qnty
+                                                                 )
+                                   else br-gds-dtl.discnt-rubl
+                                   )
+          b-gds-dtl.discnt-rubl = (if br-gds-dtl.fact-qnty = 0 and b-gds-dtl.fact-qnty <> 0
+                                   then (b-gds-dtl.price-rubl -
+                                                             ( br-gds-dtl.fact-qnty * (br-gds-dtl.price-rubl - br-gds-dtl.discnt-rubl) -
+                                                           tsall ) / b-gds-dtl.fact-qnty
+                                         )
+                                  else b-gds-dtl.discnt-rubl
+                                  )
+          br-gds-dtl.discnt-base =  br-gds-dtl.discnt-rubl / buf_trn-doc.base-rate * buf_trn-doc.base-scale
+          b-gds-dtl.discnt-base =   b-gds-dtl.discnt-rubl / buf_trn-doc.base-rate * buf_trn-doc.base-scale
+          .
+        end.
+      end.
+      release b-gds-dtl.
+      release br-gds-dtl.
+    end . /* */
+  end .
+  FIND FIRST b-doc where b-doc.doc-code = buf_trn-doc.doc-code No-ERROR.
+    assign
+      b-doc.fact-qnty = b-doc.fact-qnty - qnty-compense
+    .
+  FIND FIRST b-doc where b-doc.doc-code = buf_ret-doc.doc-code No-ERROR.
+  if available b-doc then do:
+    assign
+      b-doc.fact-qnty = b-doc.fact-qnty - qnty-compense
+    .
+  end.
+  run waitfram-hide in this-procedure .
+  if p-auto = 0 then do:
+    run UI-on in p-parent-handle.
+    run ui-2 in p-parent-handle.
+  end.
+end procedure .
 
 PROCEDURE compense:
 define input parameter p-inkas-code as character no-undo .
@@ -1530,6 +1788,7 @@ define variable saled-by-parts-rw as decimal no-undo.
 define variable v-retur-write-off-code as character no-undo .
 define variable v-type as character no-undo .
 define variable v-return-write-off-code like ub.trn-doc.doc-code no-undo .
+define variable v-attr-value as character no-undo .
 define buffer b-temp-prts for temp-prts.
 define buffer b-temp-pl for temp-pl.
 define buffer buf_units for ub.units.
@@ -1577,6 +1836,22 @@ on endkey undo _docline, return error substitute( "&1. endkey", vss-workfile )
                br-doc-line.prod-code = b-doc-line.prod-code AND
                br-doc-line.doc-code = buf_trn-doc.doc-code NO-ERROR.
     IF NOT AVAILABLE br-doc-line then NEXT _docline.
+    
+    find first goods no-lock where goods.artic = br-doc-line.artic
+                               and goods.prod-type = br-doc-line.prod-type
+                               and goods.prod-code = br-doc-line.prod-code
+                               .
+    RUN gds-attr-value (
+                        INPUT goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT v-attr-value,
+                        OUTPUT v-type
+                        ).
+    if v-attr-value > ""
+    and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(br-doc-line.obj-type, br-doc-line.obj-code):GetIsMarkingForType(v-attr-value)
+    then do :
+      next _docline .
+    end .
 
     FIND FIRST brw-doc-line where
                brw-doc-line.artic = b-doc-line.artic AND
@@ -2337,6 +2612,9 @@ define variable varchip-code2 as integer   no-undo .
 define variable v-gds-amount as integer no-undo .
 DEFINE VARIABLE v-today as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
+define variable v-attr-value as character no-undo .
+define variable v-type as character no-undo .
+define variable v-run-tpsi-line as logical no-undo .
 
 define variable v-is-petrol as logical   no-undo .
 define variable v-is-pieces as logical   no-undo .
@@ -2354,6 +2632,7 @@ define buffer buf_goods for ub.goods.
 define buffer buf_sale-doc for ub.sale-doc.
 define buffer locked_trn-doc for ub.trn-doc.
 define buffer buf_doc-line for ub.doc-line.
+define buffer upd_doc-line for ub.doc-line.
 define buffer buf_gds-dtl  for ub.gds-dtl.
 define buffer buf-in for ub.trn-doc.
 define buffer buf_chk-doc for ub.chk-doc .
@@ -2578,6 +2857,73 @@ DO ON ERROR undo _main, return error:
                                        and goods.prod-type = buf_doc-line.prod-type
                                        and goods.prod-code = buf_doc-line.prod-code
                                        .
+                                       
+            RUN gds-attr-value (
+                                INPUT goods.gds-code,
+                                INPUT {&attr-mark-type},
+                                OUTPUT v-attr-value,
+                                OUTPUT v-type
+                                ).
+            if v-attr-value > ""
+            and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType(v-attr-value) 
+            and buf_doc-line.doc-qnty <> buf_doc-line.fact-qnty
+            and (buf_sale-doc.doc-kind = {&TDEDT_Vozvrat_Vnesh_Kass} or buf_sale-doc.doc-kind = {&TDEDT_Ras_Vnesh_Kass})
+            then do:
+              find first upd_doc-line exclusive-lock where rowid(upd_doc-line) = rowid(buf_doc-line) .
+              FIND FIRST gds-prt NO-LOCK WHERE
+                        gds-prt.upper-code = goods.prt-root NO-ERROR.
+              if buf_sale-doc.doc-kind = {&TDEDT_Ras_Vnesh_Kass}
+              then do :
+                run RSRV-line in this-procedure (
+                      input 1,
+                      input no,
+                      input no /*p-rsrv-prop-goods*/,
+                      input no,
+                      input no,
+                      input "",
+                      input no,
+                      input no,
+                      input yes, /*резерв*/
+                      input goods.gds-code,
+                      input (if available gds-prt then gds-prt.node-code else ?),
+                      output v-run-tpsi-line,
+                      buffer upd_doc-line,
+                      buffer buf_trn-doc,
+                      buffer buf_sale-doc
+                      ) no-error.
+              end .
+              else do :
+                run RSRV-line in this-procedure (
+                      input -1,
+                      input no,
+                      input no /*p-rsrv-prop-goods*/,
+                      input no,
+                      input no,
+                      input "",
+                      input no,
+                      input no,
+                      input yes, /*резерв*/
+                      input goods.gds-code,
+                      input (if available gds-prt then gds-prt.node-code else ?),
+                      output v-run-tpsi-line,
+                      buffer upd_doc-line,
+                      buffer buf_ret-doc,
+                      buffer buf_sale-doc
+                      ) no-error.
+              end .
+              if error-status:error
+              then do :
+                &scop my-message substitute("&1 (&2) Ќе все товары зарезервированы... &3 &4&5" ~
+                                        , buf_sale-doc.doc-code                           ~
+                                        , ~{&sale-doc-name~}                           ~
+                                        , buf_doc-line.artic, buf_doc-line.prod-type, buf_doc-line.prod-code ~
+                                        )
+                {&display-message}.
+                undo _main, return error.
+              end .  
+              release upd_doc-line no-error .    
+            end .
+            else do :
             if buf_sale-doc.doc-kind = {&TDEDT_ras_vnesh_kass}
             then do :                           
               find first buf_doc-fbr-gds no-lock where buf_doc-fbr-gds.out-code = buf_Doc-line.doc-code
@@ -2664,6 +3010,7 @@ DO ON ERROR undo _main, return error:
                 undo _main, return error.
               end.
             end.
+            end .
           end.
           for each buf_gds-dtl no-lock where
                   buf_gds-dtl.doc-code = buf_sale-doc.doc-code

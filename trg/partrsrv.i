@@ -52,12 +52,15 @@ procedure partrsrv :
   define parameter buffer buf_trn-doc     for ub.trn-doc .
   define output parameter p-real-chg-qnty as decimal   no-undo .
   define output parameter p-parts-recid   as recid     no-undo .
+  define input  parameter p-mark          as character  no-undo .
 
   define variable vss-description as character no-undo init "$Workfile$ Резервирование и снятие резервов по одной партии".
 
   define buffer buf_parts  for ub.parts .
   define buffer rsrv-parts for ub.parts .
   define buffer unrsrv-parts for ub.parts .
+  
+  define buffer free_marking-lines for ub.marking-lines .
 
   define variable lok                as logical   no-undo .
   define variable v-sign-chg-qnty    as integer   no-undo .
@@ -76,6 +79,9 @@ procedure partrsrv :
   define variable v-tth             as handle no-undo .
   define variable v-type            as character no-undo .
   define variable part-key-rec      as character no-undo .
+  
+  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
   do transaction
   on error undo, return error
@@ -147,6 +153,7 @@ procedure partrsrv :
       ,input  buf_trn-doc.doc-code /* p-out-code         */
       ,buffer buf_orig_parts       /* buf_orig_parts     */
       ,buffer buf_parts            /* buf_parts          */
+      ,input  p-mark
       ) no-error .
     if error-status :error then do:
       message
@@ -306,6 +313,7 @@ procedure partrsrv :
               ,input  v-new-rsrv-code /* p-out-code         */
               ,buffer buf_parts       /* buf_orig_parts     */
               ,buffer rsrv-parts      /* buf_parts          */
+              ,input p-mark
               ) no-error .
             if error-status :error then do:
               message
@@ -421,6 +429,7 @@ procedure partrsrv :
               ,input  v-new-unrsrv-code /* p-out-code         */
               ,buffer buf_parts         /* buf_orig_parts     */
               ,buffer unrsrv-parts      /* buf_parts          */
+              ,input  p-mark
               ) no-error .
             if error-status :error then do:
               message
@@ -536,12 +545,61 @@ procedure partrsrv :
           undo, return error .
         end.
       end.
+
+      define variable origpart-key-rec as character no-undo .
+      define buffer buf_gen-attr for ub.gen-attr .
+      define buffer buf1_gen-attr for ub.gen-attr .
       run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
                                         ,input (buffer unrsrv-parts:handle)
-                                        ,output part-key-rec).                                
-      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                        ,output part-key-rec).
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output origpart-key-rec).
+
+      if  v-new-rsrv-code <> {&output-code} then do:
+      /*Меняем free-code на номер документа*/
+        for each ub.gen-attr no-lock where ub.gen-attr.table-name = {&excise-mark}
                                             and ub.gen-attr.p-key =  part-key-rec :
-            delete ub.gen-attr .                               
+          find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
+                                            and buf_gen-attr.p-key =  origpart-key-rec
+                                            and buf_gen-attr.attr-code = ub.gen-attr.attr-code no-error .
+        if not available (buf_gen-attr) then do:
+            create buf_gen-attr .
+            buffer-copy ub.gen-attr to buf_gen-attr
+            assign
+                buf_gen-attr.p-key = origpart-key-rec
+            no-error .                                  
+        end.                                                 
+          find first buf1_gen-attr no-lock where recid (buf1_gen-attr) = recid (ub.gen-attr).
+          find current buf1_gen-attr exclusive-lock.                                                   
+          delete buf1_gen-attr .
+      end.
+      end.    
+/*      else do:                                                                         */
+/*      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}*/
+/*                                            and ub.gen-attr.p-key =  part-key-rec :    */
+/*         delete ub.gen-attr .                                                          */
+/*                                                                                       */
+/*      end.                                                                             */
+/*      end.                                                                             */
+      define variable v-gds-code as integer   no-undo .
+
+      { gbl/gds-code.i
+        unrsrv-parts.artic
+        unrsrv-parts.prod-type
+        unrsrv-parts.prod-code
+        v-gds-code
+        no-error
+      }
+      
+      for each ub.marking-lines where ub.marking-lines.gds-code = v-gds-code
+        and ub.marking-lines.obj-type = unrsrv-parts.obj-type
+        and ub.marking-lines.obj-code = unrsrv-parts.obj-code
+        and ub.marking-lines.in-code = unrsrv-parts.in-code
+        and ub.marking-lines.out-code = unrsrv-parts.out-code
+        and ub.marking-lines.part-code = unrsrv-parts.part-code
+        and ub.marking-lines.prt-code = unrsrv-parts.prt-code:
+          delete ub.marking-lines.
       end.
       delete unrsrv-parts .
     end.
@@ -574,10 +632,31 @@ procedure partrsrv :
       run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
                                         ,input (buffer rsrv-parts:handle)
                                         ,output part-key-rec).                                
-      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+      for each ub.gen-attr no-lock where ub.gen-attr.table-name = {&excise-mark}
                                             and ub.gen-attr.p-key =  part-key-rec :
-            delete ub.gen-attr .                               
+            find first buf_gen-attr no-lock where recid (buf_gen-attr) = recid (ub.gen-attr).
+            find current buf_gen-attr exclusive-lock.
+            delete buf_gen-attr.                               
       end.
+
+      { gbl/gds-code.i
+        rsrv-parts.artic
+        rsrv-parts.prod-type
+        rsrv-parts.prod-code
+        v-gds-code
+        no-error
+      }
+      
+      for each ub.marking-lines where ub.marking-lines.gds-code = v-gds-code
+        and ub.marking-lines.obj-type = rsrv-parts.obj-type
+        and ub.marking-lines.obj-code = rsrv-parts.obj-code
+        and ub.marking-lines.in-code = rsrv-parts.in-code
+        and ub.marking-lines.out-code = rsrv-parts.out-code
+        and ub.marking-lines.part-code = rsrv-parts.part-code
+        and ub.marking-lines.prt-code = rsrv-parts.prt-code:
+          delete ub.marking-lines.
+      end.
+      
       delete rsrv-parts .
     end.
     else do:
@@ -604,13 +683,88 @@ procedure partrsrv :
           undo, return error .
         end.
       end.
+
+      define variable part-key-rec_free as character no-undo .
       run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
                                         ,input (buffer buf_parts:handle)
-                                        ,output part-key-rec).                                
-      for each ub.gen-attr exclusive-lock where ub.gen-attr.table-name = {&excise-mark}
+                                        ,output part-key-rec).
+                                            
+      for each ub.gen-attr no-lock where ub.gen-attr.table-name = {&excise-mark}
                                             and ub.gen-attr.p-key =  part-key-rec :
-            delete ub.gen-attr .                               
+        if (entry (8,part-key-rec,{&delim-key}) <> {&free-code}) and (entry (8,part-key-rec,{&delim-key}) <> entry (7,part-key-rec,{&delim-key})) then do: /*расход*/
+        part-key-rec_free = part-key-rec .     
+        entry (8,part-key-rec_free,{&delim-key}) = {&free-code} .
+
+        find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
+                    and buf_gen-attr.attr-code = ub.gen-attr.attr-code
+                    and num-entries (buf_gen-attr.p-key, {&delim-key}) >= 8
+                    and entry(8, buf_gen-attr.p-key, {&delim-key}) = {&free-code}
+                    no-error .
+                if not available (buf_gen-attr) then 
+                do:
+                    create buf_gen-attr.
+                    buffer-copy ub.gen-attr except ub.gen-attr.p-key to buf_gen-attr .
+                    assign
+                        buf_gen-attr.p-key = part-key-rec_free
+                        . 
+                end.  
+                                               
+        end.                                                    
+        find first buf1_gen-attr no-lock where recid (buf1_gen-attr) = recid (ub.gen-attr).
+        find current buf1_gen-attr exclusive-lock.                                                   
+        delete buf1_gen-attr .
+            
       end.
+      release buf_gen-attr.
+      
+      { gbl/gds-code.i
+        buf_parts.artic
+        buf_parts.prod-type
+        buf_parts.prod-code
+        v-gds-code
+        no-error
+      }
+      
+      for each ub.marking-lines where ub.marking-lines.gds-code = v-gds-code
+        and ub.marking-lines.obj-type = buf_parts.obj-type
+        and ub.marking-lines.obj-code = buf_parts.obj-code
+        and ub.marking-lines.in-code = buf_parts.in-code
+        and ub.marking-lines.out-code = buf_parts.out-code
+        and ub.marking-lines.part-code = buf_parts.part-code
+        and ub.marking-lines.prt-code = buf_parts.prt-code:
+          if chg-qnty < 0
+          then do :
+            for first ub.marking exclusive-lock where ub.marking.mark = ub.marking-lines.mark :
+              find first free_marking-lines no-lock where free_marking-lines.mark       = ub.marking-lines.mark
+                                                      and free_marking-lines.gds-code   = ub.marking-lines.gds-code
+                                                      and free_marking-lines.obj-type   = ub.marking-lines.obj-type
+                                                      and free_marking-lines.obj-code   = ub.marking-lines.obj-code
+                                                      and free_marking-lines.in-code    = ub.marking-lines.in-code
+                                                      and free_marking-lines.out-code   = {&free-code}
+                                                      and free_marking-lines.part-code  = ub.marking-lines.part-code
+                                                      and free_marking-lines.prt-code   = ub.marking-lines.prt-code
+                                                      no-error .
+              if not available free_marking-lines
+              then do :
+                create free_marking-lines .
+                assign
+                  free_marking-lines.mark       = ub.marking-lines.mark
+                  free_marking-lines.doc-level  = ub.marking-lines.doc-level
+                  free_marking-lines.gds-code   = ub.marking-lines.gds-code
+                  free_marking-lines.obj-type   = ub.marking-lines.obj-type
+                  free_marking-lines.obj-code   = ub.marking-lines.obj-code
+                  free_marking-lines.in-code    = ub.marking-lines.in-code
+                  free_marking-lines.out-code   = {&free-code}
+                  free_marking-lines.part-code  = ub.marking-lines.part-code
+                  free_marking-lines.prt-code   = ub.marking-lines.prt-code
+                .
+              end .
+              assign ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+            end .
+          end .
+          delete ub.marking-lines.
+      end.
+      
       delete buf_parts .
     end.
     else do:

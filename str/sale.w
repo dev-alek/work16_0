@@ -36,7 +36,7 @@ define variable vss-date        as character no-undo initial "$Date$":u .
 define variable vss-workfile    as character no-undo initial "$Workfile$":u .
 define variable vss-archive     as character no-undo initial "$Archive$":u .
 define variable vss-description as character no-undo initial "Главная форма интерфейса продаж" .
-
+{ gbl/objsrv.i }
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { cmp/library.i  }

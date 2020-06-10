@@ -19,9 +19,13 @@ Creation date: 05/08/07
 Должна вызываться из интерфейса и из новостей
 
 */
+using ibs.th.str.alcohol.*.
+
 
 define input  parameter p-doc-code like ub.trn-doc.doc-code   no-undo .
 define input  parameter p-chip-num like ub.c-trn-doc.chip-num no-undo .
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -54,7 +58,11 @@ on error undo, return error return-value
   define buffer buf_parts     for ub.parts .
   define buffer buf_price-doc for ub.price-doc.
   define buffer buf_rvs-doc   for ub.rvs-doc .
-
+  define buffer buf_gen-attr  for ub.gen-attr .
+  define buffer buf_marking-lines for ub.marking-lines .
+  define buffer free_marking-lines for ub.marking-lines .
+  define buffer buf_marking   for ub.marking .
+  
   define variable v-root-node         like ub.gds-prt.node-code no-undo .
 
   define variable v-ind-goods            as integer   no-undo .
@@ -65,6 +73,8 @@ on error undo, return error return-value
   define variable v-doc-line-artic       like ub.doc-line.artic no-undo .
   
   define variable part-key-rec as character no-undo .
+  define variable part-key-rec_free as character no-undo .
+  define variable part-key-rec_out as character no-undo .
 
   /* для показа процесса закрытия документа */
   define frame a
@@ -439,6 +449,55 @@ on error undo, return error return-value
       where buf_parts.out-code = buf_trn-doc.doc-code
     on error undo, return error return-value
     :
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).
+      part-key-rec_free = part-key-rec .
+      part-key-rec_out = part-key-rec .
+      entry(8,part-key-rec_free,{&delim-key}) = {&free-code} .
+      entry(8,part-key-rec_out,{&delim-key}) = {&output-code} .
+      
+      for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                                     and ub.gen-attr.p-key =  part-key-rec
+      on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+      :
+          delete ub.gen-attr.
+      end.   
+      /*удаление прихода*/
+      if buf_trn-doc.doc-type = {&income} then do:
+         
+      for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                                     and ub.gen-attr.p-key =  part-key-rec_free
+      on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+      :
+          delete ub.gen-attr.
+      end.   
+          
+      end.    
+      else do:
+         
+      for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                                     and ub.gen-attr.p-key =  part-key-rec_out
+      on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+      :
+                find first buf_gen-attr exclusive-lock where buf_gen-attr.table-name = {&excise-mark}
+                    and buf_gen-attr.attr-code = ub.gen-attr.attr-code
+                    and num-entries (buf_gen-attr.p-key, {&delim-key}) >= 8
+                    and entry(8, buf_gen-attr.p-key, {&delim-key}) = {&free-code}
+                    no-error .
+                if not available (buf_gen-attr) then do:
+                   buffer-copy ub.gen-attr except ub.gen-attr.p-key to buf_gen-attr .
+                    assign
+                        buf_gen-attr.p-key = part-key-rec_free
+                        . 
+                end.
+          delete ub.gen-attr.
+      end.   
+          
+      end.    
+      
+      
+      
       define variable vsds as class ibs.th.str.mercury.vsdsubs no-undo.
       define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
       define variable ii as integer no-undo.
@@ -450,15 +509,61 @@ on error undo, return error return-value
       end.
       delete object vsds no-error.
       delete object vsdstr no-error.
+      define variable v-gds-code as integer   no-undo .
 
-      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
-                                        ,input (buffer buf_parts:handle)
-                                        ,output part-key-rec).
-      for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
-                                     and ub.gen-attr.p-key =  part-key-rec
-      on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
-      :
-          delete ub.gen-attr.
+      { gbl/gds-code.i
+        buf_parts.artic
+        buf_parts.prod-type
+        buf_parts.prod-code
+        v-gds-code
+        no-error
+      }
+   
+      define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
+      run gbl/getobjsrvhndl.p (input-output ObjSrv).
+
+      for each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = v-gds-code
+                                                  and buf_marking-lines.obj-type = buf_parts.obj-type
+                                                  and buf_marking-lines.obj-code = buf_parts.obj-code
+                                                  and buf_marking-lines.in-code  = buf_parts.in-code
+                                                  and buf_marking-lines.out-code = buf_parts.out-code
+                                                  and buf_marking-lines.part-code = buf_parts.part-code
+                                                  and buf_marking-lines.prt-code = buf_parts.prt-code:
+        for first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark :
+          if buf_trn-doc.doc-type = {&income}
+          or buf_trn-doc.doc-type = {&return}
+          then do :
+            
+          end .
+          else do : 
+            find first free_marking-lines no-lock where free_marking-lines.mark       = buf_marking-lines.mark
+                                                    and free_marking-lines.gds-code   = buf_marking-lines.gds-code
+                                                    and free_marking-lines.obj-type   = buf_marking-lines.obj-type
+                                                    and free_marking-lines.obj-code   = buf_marking-lines.obj-code
+                                                    and free_marking-lines.in-code    = buf_marking-lines.in-code
+                                                    and free_marking-lines.out-code   = {&free-code}
+                                                    and free_marking-lines.part-code  = buf_marking-lines.part-code
+                                                    and free_marking-lines.prt-code   = buf_marking-lines.prt-code
+                                                    no-error .
+            if not available free_marking-lines
+            then do :
+              create free_marking-lines .
+              assign
+                free_marking-lines.mark       = buf_marking-lines.mark
+                free_marking-lines.doc-level  = buf_marking-lines.doc-level
+                free_marking-lines.gds-code   = buf_marking-lines.gds-code
+                free_marking-lines.obj-type   = buf_marking-lines.obj-type
+                free_marking-lines.obj-code   = buf_marking-lines.obj-code
+                free_marking-lines.in-code    = buf_marking-lines.in-code
+                free_marking-lines.out-code   = {&free-code}
+                free_marking-lines.part-code  = buf_marking-lines.part-code
+                free_marking-lines.prt-code   = buf_marking-lines.prt-code
+              .
+            end .
+            assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+          end .
+        end . 
+        delete buf_marking-lines .
       end.
 
       delete buf_parts .
@@ -495,7 +600,7 @@ on error undo, return error return-value
                                       ).
       end.
 
-      for each buf_parts no-lock
+      if not g#news then for each buf_parts no-lock
         where buf_parts.artic     = buf_goods.artic
           and buf_parts.prod-type = buf_goods.prod-type
           and buf_parts.prod-code = buf_goods.prod-code

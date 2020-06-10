@@ -23,12 +23,14 @@ TODO - добавить проверки, что нельзя удалять документы перемещени
 
 */
 
-
+using ibs.th.str.alcohol.*.
 
 define input  parameter p-doc-code  like ub.doc-line.doc-code  no-undo .
 define input  parameter p-artic     like ub.doc-line.artic     no-undo .
 define input  parameter p-prod-type like ub.doc-line.prod-type no-undo .
 define input  parameter p-prod-code like ub.doc-line.prod-code no-undo .
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo initial "$Revision$":U.
 define variable vss-author      as character no-undo initial "$Author$":U.
@@ -67,8 +69,10 @@ define buffer buf_doc-pl      for ub.doc-pl .
 define buffer buf_doc-pl-pump for ub.doc-pl-pump .
 define buffer buf_doc-fbr-gds for ub.doc-fbr-gds .
 define buffer buf_inv-line    for ub.inv-line .
+define buffer buf_marking-lines for ub.marking-lines .
+define buffer buf_marking     for ub.marking .
 define variable part-key-rec as character no-undo .
-
+ 
 do transaction
 on error undo, return error return-value
 :
@@ -250,6 +254,16 @@ on error undo, return error return-value
         and buf_parts.prod-code = buf_doc-line.prod-code
     on error undo, return error return-value
     :
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                        ,input (buffer buf_parts:handle)
+                                        ,output part-key-rec).
+      for each ub.gen-attr where ub.gen-attr.table-name = {&excise-mark}
+                                     and ub.gen-attr.p-key =  part-key-rec
+      on error undo, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+      :
+          delete ub.gen-attr.
+      end.
+      
       define variable vsds as class ibs.th.str.mercury.vsdsubs no-undo.
       define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
       define variable ii as integer no-undo.
@@ -261,7 +275,21 @@ on error undo, return error return-value
       end.
       delete object vsds no-error.
       delete object vsdstr no-error.
-        
+      
+/*      define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .*/
+/*      run gbl/getobjsrvhndl.p (input-output ObjSrv).                 */
+      for each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = v-gds-code
+                                                  and buf_marking-lines.obj-type = buf_parts.obj-type
+                                                  and buf_marking-lines.obj-code = buf_parts.obj-code
+                                                  and buf_marking-lines.in-code  = buf_parts.in-code
+                                                  and buf_marking-lines.out-code = buf_parts.out-code
+                                                  and buf_marking-lines.part-code = buf_parts.part-code
+                                                  and buf_marking-lines.prt-code = buf_parts.prt-code:
+/*        for first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark :*/
+/*            assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .          */
+/*        end .                                                                                 */
+        delete buf_marking-lines .
+      end.
       delete buf_parts .
     end.
 
@@ -571,6 +599,7 @@ on error undo, return error return-value
       view-as alert-box error .
     undo, return error .
   end.
+  
 end.
 
 procedure get-after-cli-qnty :

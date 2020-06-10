@@ -585,7 +585,9 @@ define buffer dop_trn-doc for ub.trn-doc.
 
 define variable v-user-action  as character no-undo .
 define variable v-printed      as logical   no-undo .
-define variable v-old-num_rec  as integer no-undo .
+define variable v-old-num_rec as integer no-undo .
+define variable v-attr-value              as character no-undo .
+define variable v-type                   as character no-undo .
 
 if buf_trn-doc.status_ = {&inquiry} then return.
 
@@ -747,6 +749,17 @@ on error undo _buf_sale-doc, next _buf_sale-doc:
       end.
     end.
     else do:
+      RUN gds-attr-value (
+                          INPUT ub.goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT v-attr-value,
+                          OUTPUT v-type
+                          ).
+      if v-attr-value > ""
+      and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType(v-attr-value) 
+      then do :
+        next _doc-line .
+      end .
       run RSRV-line in this-procedure (
                     input -1,
                     input no,
@@ -903,12 +916,15 @@ define output parameter b-close-enabled as logical no-undo .
 define variable v-is-dish as character no-undo .
 define variable v-doc-ii as integer no-undo .
 define variable v-curr-doc-code like ub.trn-doc.doc-code no-undo .
+define variable v-attr-value              as character no-undo .
+define variable v-type                   as character no-undo .
 define buffer buf_gds-dtl for ub.gds-dtl.
 define buffer buf_goods for ub.goods.
 define buffer buf_doc-line for ub.doc-line.
 define buffer dop_trn-doc for ub.trn-doc.
 define buffer buf_sale-doc for ub.sale-doc.
 define buffer buf_units for ub.units.
+
 if buf_trn-doc.status_ = {&inquiry} then do:
   &scop my-message "Проверка отсутствия зарезервированного товара..."
   {&display-message}.
@@ -933,6 +949,17 @@ else do:
             AND buf_goods.prod-type = buf_gds-dtl.prod-type
             AND buf_goods.prod-code = buf_gds-dtl.prod-code:
           if is-gas(buf_goods.gds-code) then next.
+          RUN gds-attr-value (
+                              INPUT buf_goods.gds-code,
+                              INPUT {&attr-mark-type},
+                              OUTPUT v-attr-value,
+                              OUTPUT v-type
+                              ).
+          if v-attr-value > ""
+          and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType(v-attr-value) 
+          then do :
+            next .
+          end .
           { gbl/fgdsobjt.i buf_gds-dtl.obj-type buf_gds-dtl.obj-code buf_goods.gds-code "'is-dish=request,is-modificator=request'" v-is-dish no-error }
           if error-status:error or lookup('1':U, v-is-dish) = 0 then do:
             assign
@@ -957,6 +984,18 @@ else do:
                   buf_goods.artic = buf_gds-dtl.artic
               AND buf_goods.prod-type = buf_gds-dtl.prod-type
               AND buf_goods.prod-code = buf_gds-dtl.prod-code .
+            RUN gds-attr-value (
+                                INPUT buf_goods.gds-code,
+                                INPUT {&attr-mark-type},
+                                OUTPUT v-attr-value,
+                                OUTPUT v-type
+                                ).
+            if v-attr-value > ""
+            and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType(v-attr-value) 
+            then do :
+              
+            end .
+            else
             if not is-gas(buf_goods.gds-code)
             then do :
               assign
@@ -1029,6 +1068,7 @@ else do:
       end. /*TPSI*/
       /*обычная ситуация*/
       else do:
+        _gds-dtl:
         for each buf_gds-dtl NO-LOCK where
                     buf_gds-dtl.doc-code = buf_sale-doc.doc-code
                 AND buf_gds-dtl.doc-qnty <> buf_gds-dtl.fact-qnty USE-INDEX pi :
@@ -1036,6 +1076,17 @@ else do:
                                      and goods.prod-type = buf_gds-dtl.prod-type
                                      and goods.prod-code = buf_gds-dtl.prod-code
                                      .
+          RUN gds-attr-value (
+                              INPUT goods.gds-code,
+                              INPUT {&attr-mark-type},
+                              OUTPUT v-attr-value,
+                              OUTPUT v-type
+                              ).
+          if v-attr-value > ""
+          and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType(v-attr-value) 
+          then do :
+            next _gds-dtl .
+          end .
           if buf_sale-doc.doc-kind = {&tdEDT_vozvrat_vnesh_kass} 
           then do :
             find first doc-fbr-gds no-lock where doc-fbr-gds.out-code = replace(buf_gds-dtl.doc-code, "=", "-")
