@@ -52,9 +52,13 @@ define buffer buf_marking-chk for ub.marking-chk .
 define temp-table tt-utd-marking-lines like ub.utd-marking-lines .
 define buffer buf_utd-marking-lines-childs for tt-utd-marking-lines .
 
+define buffer buf_utd-lines for ub.utd-lines .
+define buffer buf_utd-lines-attr for ub.utd-lines-attr .
+
 define temp-table tt-mark-qnty no-undo
   field gds-code  as integer
   field marq-qnty as integer
+  field tech-qnty as integer
   index pi as primary unique
     gds-code
 .
@@ -69,7 +73,7 @@ define variable v-marks-qnty  as integer no-undo .
 define variable v-delta-qnty  as integer no-undo .
 define variable ii            as integer no-undo .
 
-define variable v-err-packs     as integer no-undo .
+define variable v-err-gds       as integer no-undo .
 define variable v-err-units     as integer no-undo .
 define variable v-ok-packs      as integer no-undo .
 define variable v-ok-units      as integer no-undo .
@@ -93,11 +97,32 @@ define variable v-mark-type as character no-undo .
 
 define variable v-tth     as handle no-undo .
 
+define variable conf-par as character no-undo .
+define variable par-type as character no-undo .
+define variable v-1C     as logical   no-undo .
 
 /* ***************************  Main Block  *************************** */
-  
 
-
+  { gbl/conf-rd.i
+       "'is-erpRN'"
+       0
+       "''"
+       0
+       "''"
+       "''"
+       "''"
+       NO
+       conf-par
+       par-type
+       no-error
+  }
+  IF not error-status:error and conf-par = "yes":U 
+  then do: 
+    v-1C = true .
+  end .
+  else do :
+    v-1C = false .
+  end .
   assign v-ok = true .
   find first buf_utd no-lock where buf_utd.db-num = pDb-num
                                and buf_utd.doc-id = pDoc-id
@@ -109,12 +134,51 @@ define variable v-tth     as handle no-undo .
   end.       
   
   assign
-    v-err-packs     = 0 
+    v-err-gds       = 0 
     v-err-units     = 0
     v-ok-packs      = 0
     v-ok-units      = 0
     v-created-units = 0
   .
+  
+  for each buf_utd-lines no-lock where buf_utd-lines.db-num = pDb-num
+                                   and buf_utd-lines.doc-id = pDoc-id
+                                   :
+    find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num   = buf_utd-lines.db-num        
+                                               and buf_utd-marking-lines.doc-id   = buf_utd-lines.doc-id
+                                               and buf_utd-marking-lines.LineNum  = buf_utd-lines.LineNum
+                                               and buf_utd-marking-lines.gds-code = buf_utd-lines.gds-code
+                                               no-error .
+    if not available buf_utd-marking-lines
+    then do :
+      find first buf_utd-lines-attr no-lock where buf_utd-lines-attr.db-num    = buf_utd-lines.db-num
+                                              and buf_utd-lines-attr.doc-id    = buf_utd-lines.doc-id
+                                              and buf_utd-lines-attr.LineNum   = buf_utd-lines.LineNum
+                                              and buf_utd-lines-attr.attr-code = "NoMarking"
+                                              no-error .
+      if available buf_utd-lines-attr
+      and buf_utd-lines-attr.attr-value > ""
+      then do :
+        find first tt-mark-qnty exclusive-lock where tt-mark-qnty.gds-code  = buf_utd-lines.gds-code no-error .
+        if not available tt-mark-qnty
+        then do :
+          create tt-mark-qnty .
+          assign
+            tt-mark-qnty.gds-code  = buf_utd-lines.gds-code
+            tt-mark-qnty.tech-qnty = integer(buf_utd-lines-attr.attr-value)
+          no-error .
+          if error-status:error
+          then do :
+            delete tt-mark-qnty .
+            v-err-gds = v-err-gds + 1 .
+          end .
+        end.
+      end .
+      else do :
+        v-err-gds = v-err-gds + 1 .
+      end .                                        
+    end .                                                                    
+  end .
   
   empty temp-table tt-utd-marking-lines .
   for each buf_utd-marking-lines no-lock where  buf_utd-marking-lines.db-num = pDb-num
@@ -194,6 +258,7 @@ define variable v-tth     as handle no-undo .
     if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
     and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
     and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+    and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
     then do :
       assign v-ok = false .
       MSG = "Марка " + buf_marking.mark + " в статусе " + objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) .
@@ -252,14 +317,33 @@ define variable v-tth     as handle no-undo .
       create tt-mark-qnty .
       assign
         tt-mark-qnty.gds-code  = buf_marking.gds-code
+        tt-mark-qnty.tech-qnty = 0
       .
+      for first buf_utd-lines no-lock where buf_utd-lines.db-num    = buf_utd.db-num
+                                        and buf_utd-lines.doc-id    = buf_utd.doc-id
+                                        and buf_utd-lines.gds-code  = tt-mark-qnty.gds-code,
+      first buf_utd-lines-attr no-lock where buf_utd-lines-attr.db-num    = buf_utd-lines.db-num
+                                         and buf_utd-lines-attr.doc-id    = buf_utd-lines.doc-id
+                                         and buf_utd-lines-attr.LineNum   = buf_utd-lines.LineNum
+                                         and buf_utd-lines-attr.attr-code = "NoMarking"                                  
+                                         :
+        assign
+          tt-mark-qnty.tech-qnty = integer(buf_utd-lines-attr.attr-value)
+        no-error .                                  
+      end .
     end .
+    if buf_marking.unit-ext = "UNIT"
+    then
     assign tt-mark-qnty.marq-qnty = tt-mark-qnty.marq-qnty + 1 .                                  
   end . 
   
   for each tt-mark-qnty no-lock :
     find first tt-bad-gds where tt-bad-gds.gds-code = tt-mark-qnty.gds-code no-error .
-    if available tt-bad-gds then next .
+    if available tt-bad-gds
+    then do :
+      v-err-gds = v-err-gds + 1 .
+      next .
+    end .
     assign
       v-parts-qnty = 0
       v-curr-created-units = 0
@@ -287,6 +371,22 @@ define variable v-tth     as handle no-undo .
     end .
     
     assign v-marks-qnty = tt-mark-qnty.marq-qnty .
+    assign v-delta-qnty = v-parts-qnty - v-marks-qnty .
+    
+    if v-delta-qnty <> tt-mark-qnty.tech-qnty
+    then do :
+      AddUtdErr(input buf_utd.db-num,
+                input buf_utd.doc-id,
+                input buffer buf_goods:handle,
+                input "FirstInput",
+                input "QntyErr",
+                input string(buf_goods.gds-code) + {&delim-par} + 
+                      string(v-marks-qnty) + {&delim-par} + 
+                      string(tt-mark-qnty.tech-qnty) + {&delim-par} + 
+                      string(v-parts-qnty) ) .
+      v-err-gds = v-err-gds + 1 .
+      next .
+    end .
     
     if v-parts-qnty > v-marks-qnty
     then do :
@@ -294,7 +394,7 @@ define variable v-tth     as handle no-undo .
       if available ub.marking
       then assign v-curr-cnt = integer(entry(3, ub.marking.mark, "_")) + 1 .
       else assign v-curr-cnt = 1 .
-      assign v-delta-qnty = v-parts-qnty - v-marks-qnty .
+      
       do ii = 1 to v-delta-qnty :
         create new_marking .
         assign
@@ -309,6 +409,25 @@ define variable v-tth     as handle no-undo .
           v-created-units = v-created-units + 1
           v-curr-created-units = v-curr-created-units + 1
         .
+        if v-1C
+        then do :
+          { gbl/rum-runa.i
+            ?
+            this-procedure:handle
+            ?
+            {&edoc-proc_event_mark}
+            " buffer new_marking:handle "
+            ?
+              ''
+            ''
+            no-error
+          }
+        end .
+        else do :
+          run str/callnews.p (  input {&table_marking}
+                               ,input (buffer new_marking:handle )
+                              ) no-error .
+        end . 
         create tt-utd-marking-lines .
         assign
           tt-utd-marking-lines.mark = new_marking.mark
@@ -327,7 +446,11 @@ define variable v-tth     as handle no-undo .
                 input buffer buf_goods:handle,
                 input "FirstInput",
                 input "QntyErr",
-                input string(buf_goods.gds-code)) .
+                input string(buf_goods.gds-code) + {&delim-par} + 
+                      string(v-marks-qnty) + {&delim-par} + 
+                      string(tt-mark-qnty.tech-qnty) + {&delim-par} + 
+                      string(v-parts-qnty) ) .
+      v-err-gds = v-err-gds + 1 .
       next .
     end .
     else do :
@@ -386,22 +509,29 @@ define variable v-tth     as handle no-undo .
             end .
             else do :       
               if buf_marking.sts <> ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
-              then do :                      
-                create buf_marking-lines .
-                assign
-                  buf_marking-lines.gds-code    = tt-utd-marking-lines.gds-code
-                  buf_marking-lines.mark        = tt-utd-marking-lines.mark
-                  buf_marking-lines.obj-type    = buf_utd.obj-type
-                  buf_marking-lines.obj-code    = buf_utd.obj-code
-                  buf_marking-lines.in-code     = buf_parts.in-code
-                  buf_marking-lines.out-code    = buf_parts.out-code
-                  buf_marking-lines.part-code   = buf_parts.part-code
-                  buf_marking-lines.doc-level   = tt-utd-marking-lines.doc-level
+              or buf_marking.unit-ext = "UNIT"
+              then do :  
+                if buf_marking.sts <> ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB   
+                then do :                 
+                  create buf_marking-lines .
+                  assign
+                    buf_marking-lines.gds-code    = tt-utd-marking-lines.gds-code
+                    buf_marking-lines.mark        = tt-utd-marking-lines.mark
+                    buf_marking-lines.obj-type    = buf_utd.obj-type
+                    buf_marking-lines.obj-code    = buf_utd.obj-code
+                    buf_marking-lines.in-code     = buf_parts.in-code
+                    buf_marking-lines.out-code    = buf_parts.out-code
+                    buf_marking-lines.part-code   = buf_parts.part-code
+                    buf_marking-lines.doc-level   = tt-utd-marking-lines.doc-level
     /*                buf_marking-lines.sts         = ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB*/
-                .
-                run str/callnews.p (  input {&table_marking-lines}
-                                     ,input (buffer buf_marking-lines:handle )
-                                    ) no-error .
+                  .
+                  if not v-1C
+                  then do :
+                    run str/callnews.p (  input {&table_marking-lines}
+                                         ,input (buffer buf_marking-lines:handle )
+                                        ) no-error .
+                  end .
+                end.                    
               end .
             end .
           end .
@@ -418,15 +548,31 @@ define variable v-tth     as handle no-undo .
 /*                buf_marking.loc-key = ""*/
             .
           end .
-          run str/callnews.p (  input {&table_marking}
-                               ,input (buffer buf_marking:handle )
-                              ) no-error .
+          if v-1C
+          then do :
+            { gbl/rum-runa.i
+              ?
+              this-procedure:handle
+              ?
+              {&edoc-proc_event_mark}
+              " buffer buf_marking:handle "
+              ?
+                ''
+              ''
+              no-error
+            }
+          end .
+          else do :
+            run str/callnews.p (  input {&table_marking}
+                                 ,input (buffer buf_marking:handle )
+                                ) no-error .
+          end .                    
           if buf_marking.unit-ext = "LEVEL1"
           then do :
             for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark,
             first buf_utd-marking-lines-childs exclusive-lock where buf_utd-marking-lines-childs.gds-code = buf_goods.gds-code
                                                                 and buf_utd-marking-lines-childs.mark = buf_marking-childs.mark
-                                                                :
+                                                                break by buf_utd-marking-lines-childs.mark :
               find first buf_marking-lines-childs no-lock where buf_marking-lines-childs.gds-code    = buf_utd-marking-lines-childs.gds-code
                                                             and buf_marking-lines-childs.mark        = buf_utd-marking-lines-childs.mark
                                                             and buf_marking-lines-childs.obj-type    = buf_utd.obj-type
@@ -449,9 +595,12 @@ define variable v-tth     as handle no-undo .
                   buf_marking-lines-childs.doc-level   = buf_utd-marking-lines-childs.doc-level
     /*                buf_marking-lines.sts         = ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB*/
                 .
-                run str/callnews.p (  input {&table_marking-lines}
-                                     ,input (buffer buf_marking-lines-childs:handle )
-                                    ) no-error .
+                if not v-1C
+                then do :
+                  run str/callnews.p (  input {&table_marking-lines}
+                                       ,input (buffer buf_marking-lines-childs:handle )
+                                      ) no-error .
+                end .                      
               end .    
               if buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
               then do :
@@ -469,16 +618,37 @@ define variable v-tth     as handle no-undo .
                   buf_marking-childs.sts = ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
     /*                buf_marking.loc-key = ""*/
                 .
+                v-err-units = v-err-units + 1 .
               end .
-              run str/callnews.p (  input {&table_marking}
-                                   ,input (buffer buf_marking-childs:handle )
-                                  ) no-error .
+              if v-1C
+              then do :
+                { gbl/rum-runa.i
+                  ?
+                  this-procedure:handle
+                  ?
+                  {&edoc-proc_event_mark}
+                  " buffer buf_marking-childs:handle "
+                  ?
+                    ''
+                  ''
+                  no-error
+                }
+              end .
+              else do :
+                run str/callnews.p (  input {&table_marking}
+                                     ,input (buffer buf_marking-childs:handle )
+                                    ) no-error .
+              end .
               assign
                 v-parts-qnty = v-parts-qnty - 1
                 v-marks-qnty = v-marks-qnty - 1
               .    
               v-ok-units = v-ok-units + 1 .
-              delete buf_utd-marking-lines-childs . 
+              delete buf_utd-marking-lines-childs no-error . 
+              if last-of(buf_utd-marking-lines-childs.mark)
+              then do :
+                delete tt-utd-marking-lines no-error .
+              end .
               if v-marks-qnty = 0 then leave allocation_ .
               if v-parts-qnty < 1 then next allocation_ .                                  
             end .
@@ -491,8 +661,11 @@ define variable v-tth     as handle no-undo .
               v-marks-qnty = v-marks-qnty - 1
             .
             v-ok-units = v-ok-units + 1 .
+            if buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+            then
+              v-err-units = v-err-units + 1 .
           end .
-          delete tt-utd-marking-lines .
+          delete tt-utd-marking-lines no-error .
           if v-marks-qnty = 0 then leave allocation_ .
           if v-parts-qnty < 1 then next allocation_ .
         end .                           
@@ -569,8 +742,21 @@ define variable v-tth     as handle no-undo .
     os-command silent value (cmd) .                       
   end .
   
-  message
-    "Ввод в оборот завершен!" skip
-    "Распределено " string(v-ok-units) " пачек." skip
-    "Создано " string(v-created-units) " технических марок."
-  view-as alert-box .
+  if v-err-gds > 0
+  then do :
+    message
+      "Ввод в оборот завершен!" skip
+      "Распределено " string(v-ok-units) " пачек." skip
+      "Из них ошибочных - " string(v-err-units) skip
+      "Создано " string(v-created-units) " технических марок." skip
+      "НЕ распределено " string(v-err-gds) " товаров."
+    view-as alert-box .
+  end .
+  else do :
+    message
+      "Ввод в оборот завершен!" skip
+      "Распределено " string(v-ok-units) " пачек." skip
+      "Из них ошибочных - " string(v-err-units) skip
+      "Создано " string(v-created-units) " технических марок." skip
+    view-as alert-box .
+  end .
