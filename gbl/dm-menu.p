@@ -3629,6 +3629,14 @@ procedure m-collection-exe :
 
 end procedure. /* m-season-exe */
 
+procedure m-marking-exe :
+  do
+  on error undo, return error return-value
+  :
+    run str/mark_hist.w (input parparentproc , input "", input "") .
+  end.
+
+end procedure. /* m-marking-exe */
 
 procedure m-assmatr-exe :
 
@@ -12161,6 +12169,19 @@ procedure m-group-qnty-pr-exe :
   end.
 
 end procedure. /* m-group-qnty-pr-exe */
+
+procedure m-utd-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    define variable v-rec-list as character no-undo .
+    define variable vconnect as com-handle no-undo.
+    run str/UPD.w ( parparentproc, "", 0, ?, input-output vconnect , output v-rec-list) .
+    release object vconnect no-error.
+  end.
+
+end procedure. /* m-docs-pricelists-exe */
 
 procedure m-docs-pricelists-exe :
 define variable v-ok as logical   no-undo .
