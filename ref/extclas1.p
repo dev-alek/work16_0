@@ -463,6 +463,76 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
             undo _main, return error (if p-silent = yes then v-mess else '':U).
           end.
         end. /*when {&extclass_clients_gln} then do:*/
+        when {&extclass_code_id_diadok_client} then 
+            do:
+              find first buf2_ext-classif no-lock where
+                buf2_ext-classif.classif-subject = p-classif-subject
+                and buf2_ext-classif.classif-name = p-classif-name
+                and buf2_ext-classif.uniq-key-rec = p-uniq-key-rec
+                and (p-mode = {&add-def}
+                or
+                (p-mode <> {&add-def}
+                and
+                recid(buf2_ext-classif) <> recid(buf_ext-classif))
+                ) no-error.
+              if available buf2_ext-classif then 
+              do:
+                v-mess = substitute("Нельзя завести более одного ИД ДИАДОК для одного клиента").
+                run err-mess in this-procedure ( input-output v-mess).
+                undo _main, return error (if p-silent = yes then v-mess else '':U).
+              end.
+              if p-mode = {&add-def} then 
+              do:
+                find first buf2_ext-classif no-lock where
+                  buf2_ext-classif.classif-subject = p-classif-subject
+                  and buf2_ext-classif.classif-name = p-classif-name
+                  and buf2_ext-classif.CharKey_Three = p-CharKey_three no-error.
+                if available buf2_ext-classif then 
+                do:
+                  v-mess = "Уже есть клиент с ДИАДОК: " + p-CharKey_three .
+                  run err-mess in this-procedure ( input-output v-mess).
+                  undo _main, return error (if p-silent = yes then v-mess else '':U).
+                end.
+              end. /*if p-mode = {&add-def} then do:*/
+              assign
+                v-obj-type = entry(lookup("obj-type":U
+                                            , v-field-list
+                                            , {&delim-key})
+                                      , v-value-list, {&delim-key})
+                v-obj-code = integer(entry(lookup("obj-code":U
+                                            , v-field-list
+                                            , {&delim-key})
+                                      , v-value-list, {&delim-key}))
+          no-error .
+            /*          if trim(p-charkey_one, "0123456789") <> "" then do:                  */
+            /*            v-mess = substitute("Не верно введен GLN (&1)", p-charkey_one).    */
+            /*            run err-mess in this-procedure ( input-output v-mess).             */
+            /*            undo _main, return error (if p-silent = yes then v-mess else '':U).*/
+            /*          end.                                                                 */
+            /*          define variable v-v-gln as decimal no-undo .                         */
+            /*          define variable v-v-gln1 as decimal no-undo .                        */
+            /*          assign                                                               */
+            /*          v-v-gln = decimal(p-charkey_one)                                     */
+            /*          v-v-gln1 = decimal(substring(p-charkey_one, 1 ,12))                  */
+            /*          .                                                                    */
+            /*          run str/chk-sum.p ( input-output v-v-gln1 ) no-error .               */
+            /*          if error-status :error then do:                                      */
+            /*            v-mess = substitute("Ошибка при проверке GLN (&1)&2&3&2&4"         */
+            /*                                , p-charkey_one                                */
+            /*                                , {&new-line}                                  */
+            /*                                , error-status:get-message(1)                  */
+            /*                                , return-value                                 */
+            /*                                ).                                             */
+            /*            run err-mess in this-procedure ( input-output v-mess).             */
+            /*            undo _main, return error (if p-silent = yes then v-mess else '':U).*/
+            /*          end.                                                                 */
+            /*          if v-v-gln  <>  v-v-gln1 then do:                                    */
+            /*            v-mess = substitute("Неверная КЦ в GLN (&1)", p-charkey_one).      */
+            /*            run err-mess in this-procedure ( input-output v-mess).             */
+            /*            undo _main, return error (if p-silent = yes then v-mess else '':U).*/
+            /*          end.                                                                 */
+            end. /*when {&extclass_clients_gln} then do:*/
+        
         when {&extclass_code_firm_in_ext_client} then do:
           if g#db-num > 0 then do:
             v-mess = substitute("Запрещено добавлять соответствия номеров фирм в ТН номерам наших фирм в системах клиентов в УБД").

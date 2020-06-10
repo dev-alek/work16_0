@@ -13503,6 +13503,20 @@ define variable v-rid-list as character no-undo .
 
 end procedure. /* m_clients-enum-exe */
 
+procedure m_clients-diadok-exe :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run cus/diadok-cli.w ( input parparentproc
+                        ,input (if v-cntxt-db-num > 0 then '':U else "b-add")
+                        ,input {&all}
+                        ,input '':U
+                        ,input-output v-rid-list) no-error.
+  end.
+
+end procedure. /* m_clients-enum-exe */
 
 procedure m_clients-gln-exe :
 define variable v-rid-list as character no-undo .
