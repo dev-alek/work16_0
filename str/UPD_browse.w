@@ -432,7 +432,7 @@ DEFINE VARIABLE f-contr-name-TH AS CHARACTER FORMAT "X(100)"
      VIEW-AS FILL-IN 
      SIZE 48.5 BY 1.
 
-DEFINE VARIABLE f-contr-TH AS INTEGER FORMAT "->>>>>>" INITIAL 0 
+DEFINE VARIABLE f-contr-TH AS INTEGER FORMAT ">>>>9999999" INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 19.5 BY 1.
 
@@ -1493,6 +1493,7 @@ DO:
     do:  
       run ref/dialog-ok.w (output v-comment
         ) no-error .
+      if v-comment = "" then return NO-APPLY .  
     end .  
     /*Если тип УПД*/
     if c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB then 
@@ -2063,7 +2064,8 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-contr-TH d-utd
 ON CHOOSE OF r-contr-TH IN FRAME d-utd
 DO:
-    define buffer buf_contract for contract.
+    define buffer buf_contract for ub.contract.
+    define buffer buf_contract-attr for ub.contract-attr .
     define variable agnt-list as character no-undo .
     if f-supp-code-TH <> 0 then 
     do:
@@ -2107,7 +2109,9 @@ DO:
  /*Если есть параметр*/
         if v-FlagEdo then 
         do:
-          if buf_contract.whole-send-news = 1 then 
+          find first buf_contract-attr exclusive-lock where buf_contract-attr.contract-code = buf_contract.contract-code
+            and buf_contract-attr.host-code = buf_contract.host-code and buf_contract-attr.attr-code = "contract-edi" no-error .
+          if buf_contract-attr.attr-value = "yes" then 
           do:
             assign
               f-contr-TH      = buf_contract.contract-code
@@ -2361,10 +2365,10 @@ DO:
 ON leave OF v-mark IN FRAME d-utd /* Марка */
 DO:
     v-mark = "" .
- 
+    if f-text <> "                            Просканируйте марку" then do:
       F-text = "" .
       f-text:screen-value = "" .
-
+    end.
   END.
 
 /* _UIB-CODE-BLOCK-END */

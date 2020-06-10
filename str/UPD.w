@@ -418,7 +418,7 @@ DEFINE BROWSE br-utd
       X_utd.EDoTypeName COLUMN-LABEL "Тип" FORMAT "X(30)":U width 10
       X_utd.DocumentDate COLUMN-LABEL "Дата док-та" FORMAT "99/99/9999":U
       X_utd.obj-name COLUMN-LABEL "Объект" FORMAT "X(30)":U width 7
-      X_utd.cli-code COLUMN-LABEL "Код! пост-ка" FORMAT "9999999":U
+      X_utd.cli-code COLUMN-LABEL "Код! пост-ка" FORMAT ">>>>9999999":U
       X_utd.cli-name COLUMN-LABEL "Название!поставщика" FORMAT "X(30)":U width 19
       X_utd.total COLUMN-LABEL "Сумма" FORMAT "->>>>>>>>>>99.99":U width 9
       X_utd.vat COLUMN-LABEL "Сумма! НДС" FORMAT "->>>>>>>>>>99.99":U width 9
@@ -2647,6 +2647,7 @@ PROCEDURE proc-Token :
     end.
     buf_ext-system-attr.esya-attr-value = vToken .
     */
+    delete object oMotp.
  END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

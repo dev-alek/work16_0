@@ -1281,7 +1281,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
   run ActivateKeyboardLayout (input iLang, input 0).
   /*  /*  run gbl/inidebug.p.            */*/
-/*       output to C:\temp\hhhhhhh.txt.*/
+/*       output to hhhhhhh.txt.*/
 /*       for each tt-marking-lines:    */
 /*           export tt-marking-lines . */
 /*       end.                          */
