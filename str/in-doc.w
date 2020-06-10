@@ -224,6 +224,7 @@ define variable choice as integer no-undo.
 define variable isEgais  as logical   no-undo .
 define variable v-mercury-value as character no-undo .
 define variable v-mercury-type  as character no-undo .
+define variable v-is-mercury-value as logical no-undo .
 define variable vsdstrObj as class vsdtostorage no-undo.
 define variable bcol as handle extent no-undo.
 define variable hBrowse as handle no-undo.
@@ -2305,12 +2306,19 @@ assign
   v-mercury-type
   no-error
 }
+if v-mercury-value ne "no" and v-mercury-value ne "" and v-mercury-value ne ?
+then do: 
+  v-is-mercury-value = true.
+  vsdstrObj = new vsdtostorage ().
+end.
 hbrowse = browse br-dtl:handle.
 extent (bcol) = hbrowse:num-columns.
 bcol[1] = hbrowse:first-column.
 do ii = 1 to extent (bcol).  
   bcol[ii] = hbrowse:get-browse-column (ii).
 end.
+
+
 
 { gbl/conf-rd.i  "'is-ptrl'" "''" "''" 0 "''" "''" "''" no v-is-ptrl v-data-type no-error }
 if error-status :error or v-data-type <> "L" or lookup( v-is-ptrl, "yes,no" ) = 0 then do:
@@ -7377,15 +7385,15 @@ FUNCTION get-vsdsts RETURNS CHARACTER
 (buffer local-doc-line for doc-line ):
   
   def var v-mercury-prod as logical no-undo.
-  def buffer bf_gds for ub.goods.
-  
-  find first bf_gds where 
-        local-doc-line.artic = bf_gds.artic
-    and local-doc-line.prod-type = bf_gds.prod-type
-    and local-doc-line.prod-code = bf_gds.prod-code.
-  
-  if lookup(v-mercury-value, 'no':u) = 0
+ 
+  if v-is-mercury-value
   then do:
+    def buffer bf_gds for ub.goods.
+    
+    find first bf_gds where 
+          local-doc-line.artic = bf_gds.artic
+      and local-doc-line.prod-type = bf_gds.prod-type
+      and local-doc-line.prod-code = bf_gds.prod-code.
     { gbl/gdscdat.i
       bf_gds.gds-code
       "'mercur_FGIS=request':u"
@@ -7406,14 +7414,11 @@ FUNCTION get-vsdsts RETURNS CHARACTER
     end.
     if v-mercury-prod
     then do:
-      vsdstrObj = new vsdtostorage ().
       if vsdstrObj:exsistvsd( buffer local-doc-line )
       then do:
-        delete object vsdstrObj no-error.
         return "+".
       end.
       else do with frame {&FRAME-NAME}:
-        delete object vsdstrObj no-error.
         return "-".
       end.
     end.
@@ -7423,7 +7428,7 @@ FUNCTION get-vsdsts RETURNS CHARACTER
   
 end function.
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-vsdsts d-in-doc 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-vat-sum d-in-doc 
 FUNCTION get-vat-sum RETURNS decimal
 (buffer local-doc-line for doc-line ):
   
@@ -7438,13 +7443,18 @@ end function.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rowdisp d-in-doc 
 procedure rowdisp :
   
-  do ii = 1 to extent (bcol).  
+  def var v-vsdsts-fail as logical no-undo. 
+  assign
+    v-vsdsts-fail = (get-vsdsts(buffer ub.doc-line) = "-").
+  
+  if v-vsdsts-fail
+  then do ii = 1 to extent (bcol):  
     if valid-handle (bcol[ii]) 
     then do:
       assign
-        bcol[ii]:bgcolor = RED_COLOR when get-vsdsts(buffer ub.doc-line) = "-".
+        bcol[ii]:bgcolor = RED_COLOR.
     end.
-  end.  
+  end.
   
 end procedure.
 
