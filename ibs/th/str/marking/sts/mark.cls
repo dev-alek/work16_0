@@ -147,7 +147,10 @@ class ibs.th.str.marking.sts.mark inherits objth:
   end method. 
   
   method class propmap GetProp(inKey as int):
-    return GetProp(string (inKey)).
+    def var prop as class propmap no-undo.
+    if valid-object (MarkMap:GetItemKeyInt(inKey))
+      then return cast(MarkMap:SubjectObjCurr, propmap). 
+      else return UnknowSts.
   end method. 
 
   method private class propmap GetProp(inKeyStr as char):
