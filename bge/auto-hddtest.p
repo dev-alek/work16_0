@@ -209,10 +209,10 @@ on error undo, return error
     
 /*    v-tms = 1546300800. /* 1 января 2019 */*/
     v-tms = interval( now, v-start-DT , "seconds" ) .
-    v-tms = v-tms - 604800 . /* За неделю до сегодня */
-    find first buf_devisPC no-lock where buf_devisPC.db-num = p-db-num
-                                     and buf_devisPC.ModelPC = buf_code.CodeName
-                                     no-error.
+    v-tms = v-tms - 604800 - (timezone * 60) . /* За неделю до сегодня */
+    find last buf_devisPC no-lock where buf_devisPC.db-num = p-db-num
+                                    and buf_devisPC.namepc = buf_code.CodeName
+                                    no-error.
     if available buf_devisPC
     then do :
       find last buf_devisPC-attr exclusive-lock where buf_devisPC-attr.db-num = buf_devisPC.DB-num
@@ -222,7 +222,7 @@ on error undo, return error
       then do :
         v-test-DT = dateTime(buf_devisPC-attr.date, (buf_devisPC-attr.time_ * 1000)) .
         v-tms = interval( v-test-DT, v-start-DT , "seconds" ) .
-        v-tms = v-tms - 10000. /* На всякий случай возьмём пораньше */
+        v-tms = v-tms - 10000 - (timezone * 60) . /* На всякий случай возьмём пораньше */
       end.
     end.
     
@@ -329,7 +329,7 @@ on error undo, return error
           buf_devisPC-attr.time_ = integer( truncate( MTIME( HddTest.dt ) / 1000, 0 ) )
         .
       end.
-      assign buf_devisPC-attr.attr-value = (if HddTest.testStatus = "Пройдена" or HddTest.testStatus = "without error" then "0" else "1") .
+      assign buf_devisPC-attr.attr-value = HddTest.testStatus .
               
       for each hddAttributes no-lock where hddAttributes.hddModule   = HddTest.hddModule
                                        and hddAttributes.hddSerial   = HddTest.hddSerial
