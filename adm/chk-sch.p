@@ -14,13 +14,20 @@ Author: Dmitry Ukhanov
 Creation date: 03/22/03
 
 */
-
-define input  parameter p-task-type as character no-undo .
-define input  parameter p-for-db    as character no-undo .
-define output parameter p-list-db   as character no-undo .
-define output parameter p-list-key  as character no-undo .
+/*define temp-table tt-BatchProcess  like ub.BatchProcess .*/
+define temp-table tt-BatchProcess  
+ field CharKey_One as char
+ field BP_ExecSysDate as date
+ field BP_ExecSysTimeInt as int
+ index dt BP_ExecSysDate BP_ExecSysTimeInt.
+ 
+define input  parameter p-task-type   as character no-undo .
+define input  parameter p-for-db      as character no-undo .
+define output parameter p-list-db     as character no-undo .
+define output parameter p-list-key     as character no-undo .
 define input  parameter p-for-extsys  as character no-undo .
 define input  parameter p-for-proc    as character no-undo .
+define output parameter table for tt-BatchProcess .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -31,6 +38,7 @@ define variable vss-description as character no-undo init "проверка необходимост
 { cmp/vssrevis.i }
 { adm/auto-def.i }
 { gbl/db-attr.i  }
+{ cmp/ini-lib.i  }
 { adm/push-m.i "with-attr-code" }
 
 do
@@ -64,6 +72,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-user-id       as character no-undo .
   define variable v-process       as character no-undo .
   define variable v-chg-manual    as logical   no-undo .
+  define variable v-out           as character no-undo.
+  define variable vWaitNextRunTime as logical no-undo.
 
   run cur-time( output v-today
                ,output v-time
@@ -73,7 +83,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                       + "Ошибка при определении текущего времени"
                     ) .
   end.
-
+  run verify-ini-entry in this-procedure (
+                                         input  'WaitNextRunTime'
+                                        ,input    'schedule-free'
+                                        ,input substitute("отсутствует параметр &1 секция &2 в ini-файле"
+                                                          , 'WaitNextRunTime'
+                                                          , 'schedule-free')
+                                        ,input yes
+                                        ,output v-out) no-error.
+  if    not error-status:error 
+     and v-out ne ?
+     and v-out ne ""
+  then
+     vWaitNextRunTime =  logical( v-out) no-error.
   assign
     v-str          = get-str-type( p-task-type )
     v-db-attr-code = get-attr-code( p-task-type )
@@ -111,11 +133,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     if buf_schedule.active = true then do:
       run gbl/prcs-lst.p
         ( input buf_schedule.db-num-char
-        ,input 0
-        ,input 99999  /* (максимальное значение db.db-num) */
-        ,input false
-        ,input (buffer tt-db:handle)
-        ,input "db-num":U
+        , input 0
+        , input 99999  /* (максимальное значение db.db-num) */
+        , input false
+        , input (buffer tt-db:handle)
+        , input "db-num":U
         ) no-error .
     end.
   end.
@@ -439,7 +461,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       no-error
     .
     if available buf_BatchProcess then do:
-      if p-list-db = "":U then do:
+       if p-list-db = "":U then do:
         assign
           p-list-db  = string( buf_db.db-num )
           p-list-key = buf_BatchProcess.CharKey_Three
@@ -451,9 +473,48 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           p-list-key = p-list-key + {&delim-nws} + buf_BatchProcess.CharKey_Three
         .
       end.
+       
     end.
+    if vWaitNextRunTime
+    then do:
+        for each buf_BatchProcess no-lock
+            where buf_BatchProcess.BP_Status         = {&btpr-normal}
+              and buf_BatchProcess.BP_Type           = p-task-type
+              and buf_BatchProcess.CharKey_One       = string( buf_db.db-num )
+              and buf_BatchProcess.CharKey_Two       = "auto":U
+              and ( buf_BatchProcess.BP_ExecSysDate > v-today
+                    or (buf_BatchProcess.BP_ExecSysDate = v-today
+                        and buf_BatchProcess.BP_ExecSysTimeInt > v-time
+                      )
+                  )
+              and (p-task-type <> {&btpr-type-autooxml} or 
+                    (p-task-type = {&btpr-type-autooxml} and 
+                      (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                          ) 
+                      or (p-for-extsys <> "" 
+                          and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                          and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                          )
+                       )
+                     )
+                   )
+              and (p-task-type <> {&btpr-type-autofree} or 
+                    (p-task-type = {&btpr-type-autofree} and 
+                      (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                          ) 
+                      or (p-for-proc <> "" 
+                          and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                          and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
+                          )
+                       )
+                     )
+                   )
+        :
+           create tt-BatchProcess.
+             buffer-copy buf_BatchProcess to tt-BatchProcess .
+        end.
+     end.
   end.
-
   run gbl/delatrlb.p .
 end.
 

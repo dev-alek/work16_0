@@ -50,6 +50,14 @@ define variable vss-description as character no-undo init "Главное окно запуска 
 { gbl/getcntxa.i }
 { gbl/mainproc.i def }
 
+define temp-table tt-BatchProcess  
+ field CharKey_One as char
+ field BP_ExecSysDate as date
+ field BP_ExecSysTimeInt as int
+ index dt BP_ExecSysDate BP_ExecSysTimeInt.
+define variable v-time          as integer   no-undo .
+define variable v-today         as date      no-undo .
+
 define variable log-exit as logical   no-undo .
 define variable v-hidden-mode as logical   no-undo .
 
@@ -947,386 +955,444 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end.
   end.
 
-  main-cycl:
-  do while not log-exit
-  on error  undo, leave main-cycl
-  on stop   undo, next
-  on endkey undo, next
-  :
-
-    run adm/autoconn.p no-error.
-    if error-status :error then do:
-      run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
-      assign
-        {&window-name}:title = v-title
-      .
-    end.
-    else do:
-      run adm/chk-db.p no-error .
-      if error-status :error then do:
-        run write-to-log (  substitute( "&1. Проверка возможности работы сессии.&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
-        run gbl/dbdiscon.p no-error.
-        if error-status :error then do:
-          run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
-        end.
-        assign
-          log-exit = true
-        .
-        leave main-cycl .
+   define variable vRun as logical no-undo.
+   main-cycl:
+   do while not log-exit
+   on error  undo, leave main-cycl
+   on stop   undo, next
+   on endkey undo, next
+   :
+      run cur-time( output v-today
+                   ,output v-time
+                ) no-error.
+      vRun = no.
+      find first tt-BatchProcess no-lock
+       where 
+        /*and buf_BatchProcess.CharKey_One       = string( buf_db.db-num )
+        and */ ( tt-BatchProcess.BP_ExecSysDate < v-today
+              or (tt-BatchProcess.BP_ExecSysDate = v-today
+                  and tt-BatchProcess.BP_ExecSysTimeInt < v-time
+                )
+            )
+      no-error.
+      if available tt-BatchProcess
+      then
+         vRun = yes.
+      else do:
+         find first tt-BatchProcess no-lock no-error.
+         if not available tt-BatchProcess
+         then 
+            vRun = yes.
       end.
-      if v-socket = false
+ 
+      if vRun
       then do:
-        if p-auto-type = {&btpr-type-autonws}
-        then do:
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute( 'В параметрах соединения с БД отсутствуют параметры "-S" и "-1".' ) skip
-            substitute( 'Работа СПН возможна только в ручном режиме.' ) skip
-            substitute( 'Продолжить работу в ручном режиме?' ) skip
-            view-as alert-box question buttons yes-no update v-log
-          .
-          if v-log = true
-          then do:
-            run gbl/dbdiscon.p no-error.
+         for each  tt-BatchProcess :
+            delete tt-BatchProcess .
+         end. 
+         run adm/autoconn.p no-error.
+         if error-status :error 
+         then do:
+            run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
+            assign
+               {&window-name}:title = v-title
+            .
+         end.
+         else do:
+            run adm/chk-db.p no-error .
             if error-status :error then do:
-              run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
+               run write-to-log (  substitute( "&1. Проверка возможности работы сессии.&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
+               run gbl/dbdiscon.p no-error.
+               if error-status :error then do:
+                  run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
+               end.
+               log-exit = true.
+               leave main-cycl .
             end.
-            apply "choose" to b-hand in frame {&frame-name}.
-          end.
-        end.
-        else do:
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute( 'В параметрах соединения с БД отсутствуют параметры "-S" и "-1".' ) skip
-            substitute( '&1 работать не может.', {&window-name}:title ) skip
-            view-as alert-box error
-          .
-        end.
-        assign
-          log-exit = true
-        .
-        leave main-cycl .
-      end.
-
-      run adm/chk-sch.p
-        ( input  p-auto-type
-        , input  v-for-db
-        , output v-list-db
-        , output v-list-key
-        , input v-for-extsys
-        , input v-for-proc
-        ) no-error.
-      if error-status :error
-      then do:
-        run write-to-log( vss-workfile + {&space-char}
-                          + "Ошибка при чтении расписания." + {&new-line}
-                          + error-status :get-message(error-status :num-messages) + {&new-line}
-                          + return-value
-                        ) .
-        run gbl/dbdiscon.p no-error.
-        if error-status :error then do:
-          run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
-        end.
-        assign
-          log-exit = true
-        .
-        leave main-cycl .
-      end.
-
-      run adm/db-info.p ( output v-db-num ) no-error.
-      if error-status :error
-      then do:
-        if v-mess = true then do:
-          run write-to-log( vss-workfile + {&space-char}
-                            + "Ошибка при считывании информации о текущей БД." + {&new-line}
+            if v-socket = false
+            then do:
+               if p-auto-type = {&btpr-type-autonws}
+               then do:
+                  message
+                     vss-workfile vss-revision vss-description skip
+                     substitute( 'В параметрах соединения с БД отсутствуют параметры "-S" и "-1".' ) skip
+                     substitute( 'Работа СПН возможна только в ручном режиме.' ) skip
+                     substitute( 'Продолжить работу в ручном режиме?' ) skip
+                     view-as alert-box question buttons yes-no update v-log
+                  .
+                  if v-log = true
+                  then do:
+                     run gbl/dbdiscon.p no-error.
+                     if error-status :error then do:
+                     run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
+                  end.
+                  apply "choose" to b-hand in frame {&frame-name}.
+               end.
+            end.
+            else do:
+               message
+                  vss-workfile vss-revision vss-description skip
+                  substitute( 'В параметрах соединения с БД отсутствуют параметры "-S" и "-1".' ) skip
+                  substitute( '&1 работать не может.', {&window-name}:title ) skip
+                  view-as alert-box error
+               .
+            end.
+            assign
+               log-exit = true
+            .
+            leave main-cycl .
+         end.
+ 
+         run adm/chk-sch.p
+           ( input  p-auto-type
+           , input  v-for-db
+           , output v-list-db
+           , output v-list-key
+           , input v-for-extsys
+           , input v-for-proc
+           , output table tt-BatchProcess
+           ) no-error.
+         if error-status :error
+         then do:
+            run write-to-log( vss-workfile + {&space-char}
+                            + "Ошибка при чтении расписания." + {&new-line}
                             + error-status :get-message(error-status :num-messages) + {&new-line}
                             + return-value
-                          ) .
-          assign
-            v-mess = false
-          .
-        end.
-        next main-cycl .
-      end.
-      else do:
-        assign
-          v-mess = true
-        .
-      end.
-
-      assign
-        v-db-info = return-value
-        {&window-name}:title = v-title + {&space-char} + v-db-info
-      .
-      if num-entries( v-list-db ) > 0
-      then do:
-        run write-to-log ( "Текущая" + {&space-char} + v-db-info ) no-error.
-        if error-status:error
-        then do:
-          run write-to-screen (return-value).
-        end.
-
-        { gbl/mainproc.i }
-
-        assign
-          v-num-entries-db-list = num-entries(v-list-db, {&comma-char})
-        .
-        case p-auto-type :
-          when {&btpr-type-autonws}
-          then do:
-            run nws/exch-nws.p
-              ( input this-procedure:handle
-              , input g#auto-user-id
-              , input g#auto-user-password
-              , input v-list-db
-              ) no-error.
-          end.
-          when {&btpr-type-mercury}
-          then do:
-            run bge/auto-merc.p
-              (input g#auto-user-id
-              ,input g#auto-user-password
-              ,input v-list-db
-              ) no-error.
-          end.
-          when {&btpr-type-hddtest}
-          then do:
-            run bge/auto-hddtest.p
-              (input g#auto-user-id
-              ,input g#auto-user-password
-              ,input v-db-num
-              ) no-error.
-          end.
-          when {&btpr-type-autoarh}
-          then do:
-            do v-ind = 1 to v-num-entries-db-list
-            :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run adm/calc-arc.p
-                (input v-db-num
-                ,input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ) no-error.
-              if error-status :error
-              then do:
-                run write-to-log in this-procedure
-                  (input vss-workfile + {&space-char}
-                          + "Ошибка при расчете архива" + {&new-line}
-                          + error-status :get-message(error-status :num-messages) + {&new-line}
-                          + return-value
-                  ) .
-              end.
+                           ) .
+            run gbl/dbdiscon.p no-error.
+            if error-status :error then do:
+               run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
             end.
-          end.
-          when {&btpr-type-autoexp}
-          then do:
-            do v-ind = 1 to v-num-entries-db-list :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run bge/bge-shd.p
-                (input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ,input v-db-num
-                ) no-error.
-            end. /* do v-ind = 1... */
-          end.
-          when {&btpr-type-autooxml}
-          then do:
-            do v-ind = 1 to v-num-entries-db-list :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run bge/oxmlshd.p
-                (input this-procedure:handle
-                ,input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ,input v-db-num
-                ,input v-for-extsys
-                ) no-error.
-            end. /* do v-ind = 1... */
-          end.
-          when {&btpr-type-autogetcd}
-          then do:
-            do v-ind = 1 to v-num-entries-db-list :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run str/gcd-shd.p
-                (input this-procedure:handle
-                ,input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ,input v-db-num
-                ) no-error.
-            end. /* do v-ind = 1... */
-          end.
-          when {&btpr-type-autosuz}
-          then do:
-            do v-ind = 1 to v-num-entries-db-list
-            :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run str/suz-shd.p
-                (
-                 input this-procedure:handle
-                ,input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ,input v-db-num
-                ) no-error.
-              if error-status :error
-              then do:
-                run write-to-log in this-procedure
-                  (input vss-workfile + {&space-char}
-                          + "Ошибка при запуске отчета" + {&new-line}
-                          + error-status :get-message(error-status :num-messages) + {&new-line}
-                          + return-value
-                  ) .
-              end.
+            assign
+               log-exit = true
+            .
+            leave main-cycl .
+         end.
+   
+         run adm/db-info.p ( output v-db-num ) no-error.
+         if error-status :error
+         then do:
+            if v-mess = true then do:
+               run write-to-log( vss-workfile + {&space-char}
+                               + "Ошибка при считывании информации о текущей БД." + {&new-line}
+                               + error-status :get-message(error-status :num-messages) + {&new-line}
+                               + return-value
+                             ) .
+               assign
+                  v-mess = false
+               .
             end.
-          end.
-          when {&btpr-type-autosale}
-          then do:
-            do v-ind = 1 to num-entries( v-list-db, {&comma-char} ) :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run str/sal-shd.p
-                (input this-procedure:handle
-                ,input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ,input v-db-num
-                ) no-error.
-            end. /* do v-ind = 1... */
-          end.
-          when {&btpr-type-autocbnk}
-          then do:
-            do v-ind = 1 to num-entries( v-list-db, {&comma-char} ) :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run bge/clb-shd.p
-                (input this-procedure:handle
-                ,input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ,input v-db-num
-                ) no-error.
-            end. /* do v-ind = 1... */
-          end.
-          when {&btpr-type-autofree}
-          then do:
-            do v-ind = 1 to num-entries( v-list-db, {&comma-char} ) :
-              assign
-                v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
-                v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
-                v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
-                v-task-type  = entry( 2, v-rec-key, {&delim-key} )
-                v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
-              .
-              run adm/freeshdr.p
-                (input this-procedure:handle
-                ,input v-cre-db-num
-                ,input v-task-type
-                ,input v-task-num
-                ,input v-db-num
-                ) no-error.
-            end. /* do v-ind = 1... */
-          end.
-        end case.
-      end.
+            next main-cycl .
+         end.
+         else do:
+            assign
+               v-mess = true
+            .
+         end.
+   
+         assign
+            v-db-info = return-value
+            {&window-name}:title = v-title + {&space-char} + v-db-info
+         .
+         if num-entries( v-list-db ) > 0
+         then do:
+            run write-to-log ( "Текущая" + {&space-char} + v-db-info ) no-error.
+            if error-status:error
+            then do:
+               run write-to-screen (return-value).
+            end.
 
-      run adm/wr-n-bp.p
-        ( input this-procedure:handle
-         ,input v-session-begin
-         ,input p-auto-type
-         ,input v-list-db
-         ,input v-for-extsys
-         ,input v-for-proc
-        ) no-error.
-      if error-status :error
-      then do:
-        run write-to-log( vss-workfile + {&space-char}
-                          + "Ошибка при анализе начала следующего сеанса" + {&new-line}
-                          + error-status :get-message(error-status :num-messages) + {&new-line}
-                          + return-value
+         { gbl/mainproc.i }
+
+            assign
+               v-num-entries-db-list = num-entries(v-list-db, {&comma-char})
+            .
+            case p-auto-type :
+               when {&btpr-type-autonws}
+               then do:
+                  run nws/exch-nws.p
+                        ( input this-procedure:handle
+                        , input g#auto-user-id
+                        , input g#auto-user-password
+                        , input v-list-db
                         ) no-error.
-        if error-status:error
-        then do:
-          run write-to-screen (return-value).
-        end.
+               end.
+               when {&btpr-type-mercury}
+               then do:
+                  run bge/auto-merc.p
+                     (input g#auto-user-id
+                     ,input g#auto-user-password
+                     ,input v-list-db
+                  ) no-error.
+               end.
+               when {&btpr-type-hddtest}
+               then do:
+                  run bge/auto-hddtest.p
+                     (input g#auto-user-id
+                     ,input g#auto-user-password
+                     ,input v-db-num
+                  ) no-error.
+               end.
+               when {&btpr-type-autoarh}
+               then do:
+                  do v-ind = 1 to v-num-entries-db-list
+                  :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run adm/calc-arc.p
+                        (input v-db-num
+                        ,input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
+                     ) no-error.
+                     if error-status :error
+                     then do:
+                     run write-to-log in this-procedure
+                        (input vss-workfile + {&space-char}
+                             + "Ошибка при расчете архива" + {&new-line}
+                             + error-status :get-message(error-status :num-messages) + {&new-line}
+                             + return-value
+                        ) .
+                     end.
+                  end.
+               end.
+               when {&btpr-type-autoexp}
+               then do:
+                  do v-ind = 1 to v-num-entries-db-list :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run bge/bge-shd.p
+                        (input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
+                        ,input v-db-num
+                     ) no-error.
+                  end. /* do v-ind = 1... */
+               end.
+               when {&btpr-type-autooxml}
+               then do:
+                  do v-ind = 1 to v-num-entries-db-list :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run bge/oxmlshd.p
+                     (input this-procedure:handle
+                     ,input v-cre-db-num
+                     ,input v-task-type
+                     ,input v-task-num
+                     ,input v-db-num
+                     ,input v-for-extsys
+                     ) no-error.
+                  end. /* do v-ind = 1... */
+               end.
+               when {&btpr-type-autogetcd}
+               then do:
+                  do v-ind = 1 to v-num-entries-db-list :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run str/gcd-shd.p
+                        (input this-procedure:handle
+                        ,input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
+                        ,input v-db-num
+                        ) no-error.
+                  end. /* do v-ind = 1... */
+               end.
+               when {&btpr-type-autosuz}
+               then do:
+                  do v-ind = 1 to v-num-entries-db-list
+                  :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run str/suz-shd.p
+                        (
+                        input this-procedure:handle
+                        ,input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
+                        ,input v-db-num
+                     ) no-error.
+                     if error-status :error
+                     then do:
+                        run write-to-log in this-procedure
+                           (input vss-workfile + {&space-char}
+                             + "Ошибка при запуске отчета" + {&new-line}
+                             + error-status :get-message(error-status :num-messages) + {&new-line}
+                             + return-value
+                        ) .
+                     end.
+                  end.
+               end.
+               when {&btpr-type-autosale}
+               then do:
+                  do v-ind = 1 to num-entries( v-list-db, {&comma-char} ) :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run str/sal-shd.p
+                        (input this-procedure:handle
+                        ,input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
+                        ,input v-db-num
+                        ) no-error.
+                  end. /* do v-ind = 1... */
+               end.
+               when {&btpr-type-autocbnk}
+               then do:
+                  do v-ind = 1 to num-entries( v-list-db, {&comma-char} ) :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run bge/clb-shd.p
+                        (input this-procedure:handle
+                        ,input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
+                        ,input v-db-num
+                     ) no-error.
+                  end. /* do v-ind = 1... */
+               end.
+               when {&btpr-type-autofree}
+               then do:
+                  do v-ind = 1 to num-entries( v-list-db, {&comma-char} ) :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run adm/freeshdr.p
+                        (input this-procedure:handle
+                        ,input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
+                        ,input v-db-num
+                     ) no-error.
+                  end. /* do v-ind = 1... */
+               end.
+            end case.
+         end.
+   
+         run adm/wr-n-bp.p
+           ( input this-procedure:handle
+            ,input v-session-begin
+            ,input p-auto-type
+            ,input v-list-db
+            ,input v-for-extsys
+            ,input v-for-proc
+           ) no-error.
+         if error-status :error
+         then do:
+            run write-to-log( vss-workfile + {&space-char}
+                             + "Ошибка при анализе начала следующего сеанса" + {&new-line}
+                             + error-status :get-message(error-status :num-messages) + {&new-line}
+                             + return-value
+                           ) no-error.
+            if error-status:error
+            then do:
+               run write-to-screen (return-value).
+            end.
+         end.
+         else do:
+            assign
+               v-session-begin = false
+            .
+         end.
+         find first tt-BatchProcess no-lock
+         where 
+        /*and buf_BatchProcess.CharKey_One       = string( buf_db.db-num )
+        and */ ( tt-BatchProcess.BP_ExecSysDate > v-today
+              or (tt-BatchProcess.BP_ExecSysDate = v-today
+                  and tt-BatchProcess.BP_ExecSysTimeInt > v-time
+                )
+            )
+         no-error.
+         if not available tt-BatchProcess
+         then do:
+            run adm/chk-sch.p
+               ( input  p-auto-type
+               , input  v-for-db
+               , output v-list-db
+               , output v-list-key
+               , input v-for-extsys
+               , input v-for-proc
+               , output table tt-BatchProcess
+               ) no-error.
+            if error-status :error
+            then do:
+               run write-to-log( vss-workfile + {&space-char}
+                             + "Ошибка при чтении расписания." + {&new-line}
+                             + error-status :get-message(error-status :num-messages) + {&new-line}
+                             + return-value
+                           ) .
+         
+           end.
+         end.
+         run gbl/dbdiscon.p no-error.
+         if error-status :error then do:
+           run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ) no-error.
+           if error-status:error
+           then do:
+             run write-to-screen (return-value).
+           end.
+         end.
       end.
-      else do:
-        assign
-          v-session-begin = false
+   end.
+   assign
+      start-time = etime
+    .
+    do while not log-exit:
+      if v-hidden-mode = false then do:
+        wait-for
+          go of frame {&frame-name}
+          or close of this-procedure
+          or choose of b-hand in frame {&frame-name}
+          or choose of b-help in frame {&frame-name}
+          or choose of b-prop in frame {&frame-name}
+          focus frame {&frame-name}
+          pause 1
         .
-      end.
-
-      run gbl/dbdiscon.p no-error.
-      if error-status :error then do:
-        run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ) no-error.
-        if error-status:error
-        then do:
-          run write-to-screen (return-value).
-        end.
-      end.
-    end.
-      assign
-        start-time = etime
-      .
-      do while not log-exit:
-        if v-hidden-mode = false then do:
-          wait-for
-            go of frame {&frame-name}
-            or close of this-procedure
-            or choose of b-hand in frame {&frame-name}
-            or choose of b-help in frame {&frame-name}
-            or choose of b-prop in frame {&frame-name}
-            focus frame {&frame-name}
-            pause 1
-          .
-          display
-            string( time, "HH:MM:SS" ) @ curr-time
-            today @ curr-date
-            with frame {&frame-name}
-            no-error
-          .
+        display
+          string( time, "HH:MM:SS" ) @ curr-time
+          today @ curr-date
+          with frame {&frame-name}
+          no-error
+        .
       end.
       else do:
         wait-for
