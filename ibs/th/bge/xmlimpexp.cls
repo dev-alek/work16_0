@@ -159,9 +159,17 @@ class ibs.th.bge.xmlimpexp final:
       ihquery:query-close().
       /*delete object ihquery.*/
    end.
-
+   define variable mfirst as logical no-undo init yes.
    method private void put-log (itext as character ):
-      
+      output to "xmlimpexp.log" append.
+      if mfirst
+      then do:
+         put unformatted now skip.
+         mfirst = no.
+      end.
+      put unformatted itext skip.
+      output close.
+    
    end.
 
    method public void updatetablefordb():

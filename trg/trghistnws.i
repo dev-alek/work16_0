@@ -68,7 +68,7 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
    if new(new-{&main-tbl}) 
    then do:
       if not available buf_c-{&main-tbl}
-      then
+      then do:
          create buf_c-{&main-tbl}.
       buffer-copy new-{&main-tbl} to buf_c-{&main-tbl}
       assign
@@ -81,6 +81,12 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
          buf_c-{&main-tbl}.action             = {&bef-hn-create}
          buf_c-{&main-tbl}.is-del             = false
       .
+      end.
+      else 
+         if buf_c-{&main-tbl}.action eq {&bef-hn-delete} 
+         then 
+            buf_c-{&main-tbl}.action = {&bef-hn-update}.
+     
    end.
    else do:
       if not available buf_c-{&main-tbl}
@@ -105,6 +111,8 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
     if v-Seq = ?
     then
        v-Seq  = next-value ({&seqnamehist}, {&db-name_schema}).
+    else
+       vFlagSeq = yes.
   
     /* пишем историю */
     if vFlagseq
@@ -141,12 +149,27 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
       buf_c-{&main-tbl}.is-del             = true
     .
   &endif
+ 
   &if defined (histheadtbl) ne 0
   &then
       if vFlagSeq
-      then
-         find first buf_{&histheadtbl}  where buf_{&histheadtbl}.chip-num           eq v-Seq
-         exclusive-lock no-error.
+      then do:
+         define variable vhn{&histheadtbl} as handle no-undo.
+         run gen-hn-keyr-tab(input "{&histheadtbl}"
+                            ,input substring("{&histheadtbl}",1,length("{&histheadtbl}") - 5)
+                            ,input  vuniq-key-rec /*uniq-key-rec смены*/
+                            ,input ? /*p-key-handle буфер записи которую будем искать. если ищем по key-rec то ? */
+                            ,input  "{&db-name_schema}"
+                            ,input  ? /*p-tt-handle   буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+                            ,input  no-lock
+                            ,output vhn{&histheadtbl}
+                        ) .
+         if vhn{&histheadtbl}:available
+         then
+            find first buf_{&histheadtbl}  where rowid(buf_{&histheadtbl})           eq vhn{&histheadtbl}:rowid
+            exclusive-lock no-error.
+         delete object vhn{&histheadtbl} no-error.
+      end.
       if not available  buf_{&histheadtbl} 
       then do:
          create buf_{&histheadtbl}.
