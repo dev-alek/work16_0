@@ -59,7 +59,7 @@ define variable vss-description as character no-undo initial "Список документов"
 { gbl/usr-flt.i      }
 { gbl/fltopend.i defproc }
 { cmp/strcodec.i }
-
+{str\utdreturn.i}
 define variable v-sale             as   logical               no-undo.
 
 { str/all-docs.i }
@@ -502,6 +502,8 @@ DEFINE MENU POPUP-MENU-b-pay
   MENU-ITEM m_gen-16 LABEL "Отказаться от генерации счета-фактуры"
   MENU-ITEM m_gen-17 LABEL "Снять признак - есть генерация счета-фактуры"
   MENU-ITEM m_gen-18 LABEL "Снять 'не опред'"
+  RULE
+  MENU-ITEM m_gen-23 LABEL "УПД"
 .
 
 DEFINE MENU POPUP-MENU-b-f-ed
@@ -1856,6 +1858,18 @@ on choose of menu-item m_gen-18 in menu popup-menu-b-pay do:
   assign
     pardoc-rec = recid(t-doc).
   run UI-on ("open").
+end.
+
+on choose of menu-item m_gen-23 in menu popup-menu-b-pay do:
+  if crUtdReturn(t-doc.doc-code)
+  then 
+     message "Созданы документы УПД" 
+     view-as alert-box.
+  else
+     message "По документу нет марок" 
+     view-as alert-box.
+  run local-value-changed .
+  {&SetCursorno}
 end.
 
 

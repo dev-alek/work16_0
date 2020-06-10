@@ -65,7 +65,8 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 { gbl/clntattr.i   }
 { ref/gds-attr.i }
 { gbl/getsect.i  def }
-
+{ gbl/key-rec.i }
+{str/utdreturn.i }
 define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
@@ -2502,7 +2503,11 @@ vartechproliv = no
           assign
             bf_trn-doc.status_ = varstatus
             bf_trn-doc.flag_   = varflag.
-
+          if     bf_trn-doc.status_ eq {&wayb} 
+                   and bf_trn-doc.flag_
+                then do:
+                   crUtdReturn(bf_trn-doc.doc-code).
+                end.
            /* На внутренний приходный запрос создадим внутренний расходный запрос Если Контрагент АКТИВЕН
              , если нет то  и в новостях */
            if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem } and
