@@ -34,6 +34,8 @@ Creation date: 01/30/15
     field obj-code      as integer
     field ps            as character
     field doc-id        as character
+    field Status_       as character
+    field Flags_        as integer
     index pi line-num ext-doc-code .
 
   define temp-table TempTrnDocMT no-undo
@@ -45,10 +47,11 @@ Creation date: 01/30/15
     field ClientType as character
     field ObjectID   as integer
     field ObjectType as character
-    field UserID_     as character
+    field UserID_    as character
     field UserName   as character
     field FactSum    as decimal
     field StartDate  as character
+    field Flags_     as integer
   .
   
   define temp-table TempDocLine no-undo
@@ -66,7 +69,8 @@ Creation date: 01/30/15
     field vsd-uuid     as character
     field part-id      as character
     field aclMarksList as character
-    field PartIDTH as character
+    field PartIDTH     as character
+    field Flags_        as integer
     index pi
     line-num
     gds-code

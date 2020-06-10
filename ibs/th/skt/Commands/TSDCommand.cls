@@ -46,6 +46,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
   define private variable userId_     as character no-undo.
   define private variable sn          as character no-undo.
   define private variable hndlSocket  as handle    no-undo.
+/*  define private variable isDocMarkOn as logical   no-undo.*/
   
     /*------------------------------------------------------------------------------
    Purpose:
@@ -82,7 +83,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     tsd:ObjType = entry (1, list-par, "?")
     tsd:ReqType = entry (3, list-par, "?")
     tsd:CurrDecSeparator = entry (4, list-par, "?")
-    tsd:IsAlcWB = if entry (5, list-par, "?") = "true" then true else false
+    tsd:IsMarkOn = if entry (5, list-par, "?") = "true" then true else false
     .
 
     os-command silent value( 'set pro >>procarch') .
@@ -198,7 +199,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       tsd:ObjType = substring (hRoot:get-attribute("to"), 1, 3)
       tsd:ReqType = hRoot:get-attribute("item")
       tsd:CurrDecSeparator = hRoot:get-attribute("currDecSeparator")
-      tsd:IsAlcWB = if hRoot:get-attribute("MarksReg") = "true" then true else false
+      tsd:IsMarkOn = if hRoot:get-attribute("MarksReg") = "true" then true else false
       .
     hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
     case tsd:ReqType :
@@ -366,7 +367,9 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     define buffer buf_prod-bc   for ub.prod-bc.
     define buffer buf_place     for ub.place.
     define buffer bfTempDocLine for TempDocLine.
+    define variable myflagsDoc     as class flagsdoc     no-undo.
     
+    myflagsDoc = new flagsdoc ().
 
     iDbNum = tsd:GetDbNum().
 
@@ -428,8 +431,11 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         TempTrnDoc.cli-code     = integer(TempTrnDocMT.ClientID)
         TempTrnDoc.obj-type     = TempTrnDocMT.ObjectType
         TempTrnDoc.obj-code     = TempTrnDocMT.ObjectID
-        TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + hRow:get-attribute("UserName")
+        TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + TempTrnDocMT.UserName
+        TempTrnDoc.Status_      = TempTrnDocMT.Status_
+        TempTrnDoc.Flags_       = TempTrnDocMT.Flags_
       .
+      myflagsDoc:setFlagsToInt(TempTrnDocMT.Flags_).
 
       for each TempTrnLineMT where TempTrnLineMT.docname = TempTrnDocMT.DocName:
 
@@ -440,7 +446,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
           RowSum    =  decimal (cFactQnty) * decimal (cPriceRubl)
           .
         /* для помарочного учета объеденим все линии по товару и будем резервировать количество по маркам в rsrv-dtl.p*/
-        if tsd:IsAlcWB and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
+        if myflagsDoc:isDocMarkOn and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
         then do:
           find first TempDocLine no-lock 
             where TempDocLine.gds-code = integer (TempTrnLineMT.goodsid) 
@@ -456,11 +462,13 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               TempDocLine.doc-qnty     = decimal(cDocQnty)
               TempDocLine.price-rubl   = ?
               TempDocLine.RowSum       = ?
+              TempDocLine.PartIDTH     = TempTrnLineMT.PartIDTH
               .
           end.
           else do:
             assign
               TempDocLine.fact-qnty    = TempDocLine.fact-qnty + decimal(cFactQnty)
+              TempDocLine.PartIDTH     = TempDocLine.PartIDTH + {&delim-par} + TempTrnLineMT.PartIDTH 
             .
           end.
   
@@ -480,7 +488,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         end.
       end.
       
-      for each TempMarkLineMT where TempMarkLineMT.DocName = TempMarkLine.DocName:
+      for each TempMarkLineMT where TempMarkLineMT.DocName = TempTrnDoc.ext-doc-code:
       
         create TempMarkLine.
         assign
@@ -622,6 +630,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               TempTrnDoc.obj-type     = hRow:get-attribute("ObjectType")
               TempTrnDoc.obj-code     = integer (hRow:get-attribute("ObjectID"))
               TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + hRow:get-attribute("UserName")
+              TempTrnDoc.Status_      = hRow:get-attribute("Status")
               .
             find first ub.user-login where ub.user-login.db-num = iDbNum and ub.user-login.user-id = userId_ no-lock no-error.  
             userId_ = hRow:get-attribute("UserID").
@@ -636,7 +645,8 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               .
 
             /* для помарочного учета объеденим все линии по товару и будем резервировать количество по маркам в rsrv-dtl.p*/
-            if tsd:IsAlcWB and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
+            if (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
+            and not TempTrnDoc.Status_ = "НОВ"
             then do:
               find first TempDocLine no-lock where TempDocLine.gds-code = integer (hRow:get-attribute("GoodsID")) and TempDocLine.b-code = (hRow:get-attribute("BC")) no-error.
               if not available (TempDocLine)
