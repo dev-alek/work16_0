@@ -1409,6 +1409,24 @@ info
 &glob chkdocfi-ord 'chk-doc.doc-code,chk-doc.obj-code,chk-doc.#chk-type-name,chk-doc.tot-doc,chk-doc.netto,chk-doc.chk-date,chk-doc.#chk-time-chr':U
 &glob chkdocfi-siz '?,?,?,?,?,?,?':U
 
+&scop bef-uf-UPD                UPD
+&glob uf-UPD                   '{&bef-uf-UPD}':U
+&glob label-uf-UPD             "Настройки справочника Электронного документоборота"
+&glob tooltip-uf-UPD           "Настройки справочника Электронного документоборота"
+&glob List_-use-uf-UPD        yes
+&glob List_-type-uf-UPD        {&type-char}
+&glob List_-format-uf-UPD      "X(256)"
+/*"in-date=":U +  string(v-in-date , "99/99/9999") +   ";" +  "fact-qnty=":U + string(v-fact-qnty)*/
+&glob Naim-use-uf-UPD         no
+&glob Naim-type-uf-UPD         {&type-char}
+&glob Naim-format-uf-UPD       "X(256)"
+&glob print-graft-use-uf-UPD  no
+&glob sort-gr-use-uf-UPD      no
+&glob type-price-use-uf-UPD   no
+&glob type-val-use-uf-UPD     no
+&glob user-can-edit-uf-UPD     no
+&glob output-display-uf-UPD    no
+&glob other-uf-UPD             ""
 
 &scop bef-uf-barcodfi             barcodfi
 &glob uf-barcodfi                 '{&bef-uf-barcodfi}':U
@@ -1535,6 +1553,7 @@ info
 ,{&bef-uf-chkgdsfi}~
 ,{&bef-uf-chkdocfi}~
 ,{&bef-uf-barcodfi}~
+,{&bef-uf-UPD}~
 ':u
 
 
@@ -1724,10 +1743,8 @@ procedure uf-name :
       {&uf-temp-full-code}
       &scop uf-code uf-barcodfi
       {&uf-temp-full-code}
-
-
-
-
+       &scop uf-code uf-UPD
+      {&uf-temp-full-code}
 
        /* сюда добавлять новые параметры */
       otherwise do:
