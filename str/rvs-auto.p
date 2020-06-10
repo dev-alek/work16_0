@@ -55,6 +55,7 @@ if mRVSNull eq ? then mRVSNull = no.
 { str/placelib.i }
 { gbl/ptrlprop.i def }
 { ref/gds-attr.i }
+{ gbl/db-attr.i }
 
 define variable v-ret-msg   as character no-undo.
 
@@ -73,6 +74,8 @@ define variable v-curr-obj    as character no-undo.
 define variable jj            as integer   no-undo.
 define variable v-ok          as logical      no-undo.
 
+define variable varcur-data   as integer   no-undo.
+
 define buffer buf_icnt-doc      for ub.icnt-doc.
 define buffer buf_rvs-doc       for ub.rvs-doc.
 define buffer buf_rvs-line      for ub.rvs-line.
@@ -87,6 +90,11 @@ define variable v-full as logical no-undo.
 define variable v-wrkr    as integer no-undo .
 define variable v-agnt    as integer no-undo .
 define variable v-boss    as integer no-undo .
+
+define variable v-asi-ip  as character no-undo .
+define variable v-asi-port as character no-undo .
+define variable v-asi-type as character no-undo .
+define variable v-attr-type as character no-undo .
 
 define temp-table obj-list no-undo
   field obj-type  as character
@@ -453,12 +461,33 @@ end.
          
         then do:
     
-          /* varcur-data = true - при автоматическом создании всегда читаем текущие данные */
+          find first sys-ctrl no-lock.
+	      run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
+	      run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
+	      run db-attr-value(sys-ctrl.db,"AsiType",output v-asi-type,output v-attr-type).
+	      if trim(v-asi-ip) <> ''
+	      and trim(v-asi-port) <> ''
+	      and trim(v-asi-type) <> ''
+	      then do :
+	        case v-asi-type :
+	          when "1"
+	          then do :
+	            varcur-data = 2 .
+	          end.
+	          when "2"
+	          then do :
+	            varcur-data = 3 .
+	          end.
+	        end case .
+	      end.
+	      else do :
+            varcur-data = 1 .
+          end.
           { str/rvsplace.i
             buf_rvs-doc.obj-type
             buf_rvs-doc.obj-code
             ?
-            true
+            varcur-data
             false
             tt-meas-file
             tt-meas

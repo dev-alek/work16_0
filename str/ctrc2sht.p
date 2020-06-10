@@ -192,7 +192,8 @@ do on error undo Main-Block, return error return-value :
 
   for each bf_place  no-lock where
            bf_place.obj-type = ctrl_rvs-doc.obj-type and
-           bf_place.obj-code = ctrl_rvs-doc.obj-code
+           bf_place.obj-code = ctrl_rvs-doc.obj-code and
+           bf_place.status_  = ""
     , each bf_pl-gds no-lock where
            bf_pl-gds.obj-type = bf_place.obj-type and
            bf_pl-gds.obj-code = bf_place.obj-code and
@@ -210,6 +211,7 @@ do on error undo Main-Block, return error return-value :
                bf_place-error.obj-code =  bf_place.obj-code and
                bf_place-error.is-meas  =  yes               and
                bf_place-error.loc1     =  bf_place.loc1     and
+               bf_place-error.status_  =  ""                and
         recid( bf_place-error )        <> recid( bf_place ) no-error .
     if available bf_place-error then do:
       return error substitute( 'В измеряемом резервуаре &1 задан локальный номер &2, установленный также в резервуаре &3.'

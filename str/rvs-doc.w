@@ -55,6 +55,7 @@ define variable vss-description as character no-undo initial "Обработка документ
 { str/is-gas.i        }
 { str/is-sug.i        }
 { str/placelib.i      }
+{ gbl/db-attr.i       }
 
 define buffer r-doc          for ub.rvs-doc.
 define buffer cur_shift-obj  for ub.shift-obj.
@@ -178,14 +179,19 @@ define variable varres            as   logical              no-undo initial ?.
 define variable varrecid          as   recid                no-undo.
 define variable ptoldfilvalue     as   character            no-undo.
 define variable ptoldfiltype      as   character            no-undo.
-define variable varcur-data       as   logical              no-undo.
+define variable varcur-data       as   integer              no-undo.
 define variable varnum            as   integer              no-undo.
-define variable varcur-rvs        as   logical              no-undo.
+define variable varcur-rvs        as   integer              no-undo.
 define variable varcur-pump       as   logical              no-undo.
 define variable gds-rec           as   recid                no-undo.
 define variable notes             as   character            no-undo.
 define variable rep-rec           as   recid                no-undo.
 define variable lns-cnt           as   integer              no-undo.
+
+define variable v-asi-ip  as character no-undo .
+define variable v-asi-port as character no-undo .
+define variable v-asi-type as character no-undo .
+define variable v-attr-type as character no-undo .
 
 define buffer cli-buf          for ub.clients.
 define buffer del-rvs-line for ub.rvs-line.
@@ -1254,33 +1260,54 @@ case pardoc-mode :
              run waitfram-hide in this-procedure.
              undo tr, return error.
           end.
-          if ptoldfilvalue = "yes":u then do:
-            run gbl/d-askw.w ( input "Выбор источника данных с информацией по резервуарам и ТРК",
-                          "Будем читать текущие данные с резервуаров и ТРК или возьмем данные из файла?",
-                          "|^",
-                          "Текущие данные|Из файлов|Отмена",
-                          "Запускается программа для обращения к датчикам резервуаров и ТРК|Берутся уже сохраненные данные из файла|Ничего не делаем",
-                          1,
-                          3,
-                          output varnum
-                          ).
-            case varnum:
-            when 3 then do:
-              return error.
-            end.
-            when 2 then do:
-              assign
-                varcur-data = no.
-            end.
-            when 1 then do:
-              assign
-                varcur-data = yes.
-            end.
-            end case.
+          find first sys-ctrl no-lock.
+          run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
+          run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
+          run db-attr-value(sys-ctrl.db,"AsiType",output v-asi-type,output v-attr-type).
+          if trim(v-asi-ip) <> ''
+          and trim(v-asi-port) <> ''
+          and trim(v-asi-type) <> ''
+          then do :
+            case v-asi-type :
+              when "1"
+              then do :
+                varcur-data = 2 .
+              end.
+              when "2"
+              then do :
+                varcur-data = 3 .
+              end.
+            end case .
           end.
-          else do:
-              assign
-                varcur-data = yes.
+          else do :
+            if ptoldfilvalue = "yes":u then do:
+              run gbl/d-askw.w ( input "Выбор источника данных с информацией по резервуарам и ТРК",
+                            "Будем читать текущие данные с резервуаров и ТРК или возьмем данные из файла?",
+                            "|^",
+                            "Текущие данные|Из файлов|Отмена",
+                            "Запускается программа для обращения к датчикам резервуаров и ТРК|Берутся уже сохраненные данные из файла|Ничего не делаем",
+                            1,
+                            3,
+                            output varnum
+                            ).
+              case varnum:
+              when 3 then do:
+                return error.
+              end.
+              when 2 then do:
+                assign
+                  varcur-data = 0.
+              end.
+              when 1 then do:
+                assign
+                  varcur-data = 1.
+              end.
+              end case.
+            end.
+            else do:
+                assign
+                  varcur-data = 1.
+            end.
           end.
 /*run gbl/inidebug.p.*/
           if can-find(first tt-meas) then do:
@@ -1344,7 +1371,7 @@ case pardoc-mode :
                   rvs-line-attr.attr-code = "input-type"
                 .
               end.
-              if varcur-data then rvs-line-attr.attr-value = 'а' .
+              if varcur-data > 0 then rvs-line-attr.attr-value = 'а' .
               else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
              end.
              release rvs-line-attr no-error .
@@ -1386,16 +1413,31 @@ case pardoc-mode :
           end.
           if can-find( first tt-pump-nozzle ) then do:
             run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
-            { str/rvs-pump.i
-              parParentProc
-              r-doc.obj-type
-              r-doc.obj-code
-              r-doc.rvs-code
-              varcur-data
-              tt-pump-nozzle-file
-              tt-pump-nozzle
-              no-error
-            }
+            if varcur-data = 1
+            then do :
+              { str/rvs-pump.i
+                parParentProc
+                r-doc.obj-type
+                r-doc.obj-code
+                r-doc.rvs-code
+                yes
+                tt-pump-nozzle-file
+                tt-pump-nozzle
+                no-error
+              }
+            end.
+            else do :
+              { str/rvs-pump.i
+                parParentProc
+                r-doc.obj-type
+                r-doc.obj-code
+                r-doc.rvs-code
+                no
+                tt-pump-nozzle-file
+                tt-pump-nozzle
+                no-error
+              }
+            end.
             if error-status :error then do:
               message "Ошибка при получении данных с приборов на ТРК." skip
                       return-value
@@ -2113,33 +2155,54 @@ if available ub.rvs-line then do:
           tt-meas.pl-code  = ub.rvs-line.pl-code.
    tr:
    do transaction on error undo tr, return error :
-      if ptoldfilvalue = "yes":u then do:
-        run gbl/d-askw.w ( input "Выбор источника данных с информацией по резервуарам",
-                      "Будем читать текущие данные с резервуаров или возьмем данные из файла?",
-                      "|^",
-                      "Текущие данные|Из файлов|Отмена",
-                      "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем",
-                      1,
-                      3,
-                      output varnum
-                      ).
-        case varnum:
-        when 3 then do:
-          undo tr, return no-apply.
-        end.
-        when 2 then do:
-          assign
-            varcur-rvs = no.
-        end.
-        when 1 then do:
-          assign
-            varcur-rvs = yes.
-        end.
-        end case.
+      find first sys-ctrl no-lock.
+      run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
+      run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
+      run db-attr-value(sys-ctrl.db,"AsiType",output v-asi-type,output v-attr-type).
+      if trim(v-asi-ip) <> ''
+      and trim(v-asi-port) <> ''
+      and trim(v-asi-type) <> ''
+      then do :
+        case v-asi-type :
+          when "1"
+          then do :
+            varcur-rvs = 2 .
+          end.
+          when "2"
+          then do :
+            varcur-rvs = 3 .
+          end.
+        end case .
       end.
-      else do:
-          assign
-            varcur-rvs = yes.
+      else do :
+        if ptoldfilvalue = "yes":u then do:
+          run gbl/d-askw.w ( input "Выбор источника данных с информацией по резервуарам",
+                        "Будем читать текущие данные с резервуаров или возьмем данные из файла?",
+                        "|^",
+                        "Текущие данные|Из файлов|Отмена",
+                        "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем",
+                        1,
+                        3,
+                        output varnum
+                        ).
+          case varnum:
+          when 3 then do:
+            undo tr, return no-apply.
+          end.
+          when 2 then do:
+            assign
+              varcur-rvs = 0.
+          end.
+          when 1 then do:
+            assign
+              varcur-rvs = 1.
+          end.
+          end case.
+        end.
+        else do:
+            assign
+              varcur-rvs = 1.
+        end.
       end.
       { str/rvsplace.i
          r-doc.obj-type
@@ -2191,7 +2254,7 @@ if available ub.rvs-line then do:
           rvs-line-attr.attr-code = "input-type"
         .
       end.
-      if varcur-rvs then rvs-line-attr.attr-value = 'а' .
+      if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
       else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
       find first olddens_rvs-line-attr no-lock
            where olddens_rvs-line-attr.obj-code  = ub.rvs-line.obj-code
@@ -2541,36 +2604,56 @@ procedure proc_m-meas-1:
    run waitfram-show in this-procedure ( input "Делаем сверку по всем резервуарам" ).
    tr:
    do transaction on error undo tr, return error :
-      if ptoldfilvalue = "yes":u then do:
-        run gbl/d-askw.w ( input "Выбор источника данных с информацией по резервуарам",
-                      "Будем читать текущие данные с резервуаров или возьмем данные из файла?",
-                      "|^",
-                      "Текущие данные|Из файлов|Отмена",
-                      "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем",
-                      1,
-                      3,
-                      output varnum
-                      ).
-        case varnum:
-        when 3 then do:
-          run waitfram-hide in this-procedure.
-          undo tr, return no-apply.
-        end.
-        when 2 then do:
-          assign
-            varcur-rvs = no.
-        end.
-        when 1 then do:
-          assign
-            varcur-rvs = yes.
-        end.
-        end case.
+      find first sys-ctrl no-lock.
+      run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
+      run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
+      run db-attr-value(sys-ctrl.db,"AsiType",output v-asi-type,output v-attr-type).
+      if trim(v-asi-ip) <> ''
+      and trim(v-asi-port) <> ''
+      and trim(v-asi-type) <> ''
+      then do :
+        case v-asi-type :
+          when "1"
+          then do :
+            varcur-rvs = 2 .
+          end.
+          when "2"
+          then do :
+            varcur-rvs = 3 .
+          end.
+        end case .
       end.
-      else do:
-          assign
-            varcur-rvs = yes.
+      else do :
+        if ptoldfilvalue = "yes":u then do:
+          run gbl/d-askw.w ( input "Выбор источника данных с информацией по резервуарам",
+                        "Будем читать текущие данные с резервуаров или возьмем данные из файла?",
+                        "|^",
+                        "Текущие данные|Из файлов|Отмена",
+                        "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем",
+                        1,
+                        3,
+                        output varnum
+                        ).
+          case varnum:
+          when 3 then do:
+            run waitfram-hide in this-procedure.
+            undo tr, return no-apply.
+          end.
+          when 2 then do:
+            assign
+              varcur-rvs = 0.
+          end.
+          when 1 then do:
+            assign
+              varcur-rvs = 1.
+          end.
+          end case.
+        end.
+        else do:
+            assign
+              varcur-rvs = 1.
+        end.
       end.
-      
       { str/rvsplace.i
           r-doc.obj-type
           r-doc.obj-code
@@ -2630,7 +2713,7 @@ procedure proc_m-meas-1:
             rvs-line-attr.attr-code = "input-type"
           .
         end.
-        if varcur-rvs then rvs-line-attr.attr-value = 'а' .
+        if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
         else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
       end.
       release rvs-line-attr no-error .

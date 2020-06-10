@@ -67,7 +67,7 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { gbl/cur-time.i }
 { gbl/getsect.i def }
 { str/is-sug.i }
-
+{ gbl/db-attr.i }
 
 define stream str-anl.
 define stream str-err.
@@ -1223,7 +1223,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
   define input        parameter           p-obj-type   like ub.rvs-doc.obj-type no-undo.
   define input        parameter           p-obj-code   like ub.rvs-doc.obj-code no-undo.
   define input        parameter           p-one-place  as   logical             no-undo.
-  define input        parameter           p-read-cur   as   logical             no-undo.
+  define input        parameter           p-read-cur   as   integer             no-undo.
   define input        parameter           p-message-on as   logical             no-undo.
   define input-output parameter table for tt-meas-file.
   define input-output parameter table for tt-meas.
@@ -1312,41 +1312,111 @@ define variable      v-water-qnty as decimal no-undo.
         anl-loc = '0':U
       .
     end.
-    if p-read-cur = ? then do:
-      if p-message-on = no then do:
+/*    if p-read-cur = ? then do:                                                             */
+/*      if p-message-on = no then do:                                                        */
+/*        assign                                                                             */
+/*          p-read-cur = yes                                                                 */
+/*        .                                                                                  */
+/*      end.                                                                                 */
+/*      else do:                                                                             */
+/*        run gbl/d-askw.w                                                                   */
+/*          (  input 'Выбор источника данных с информацией по резервуарам'                   */
+/*          ,  input 'Будем читать текущие данные с резервуаров или возьмем данные из файла?'*/
+/*          ,  input '|^'                                                                    */
+/*          ,  input 'Текущие данные|Из файлов|Отмена'                                       */
+/*          ,  input 'Запускается программа для обращения к датчикам резервуаров|'           */
+/*          +        'Берутся уже сохраненные данные из файла|Ничего не делаем'              */
+/*          ,  input 1                                                                       */
+/*          ,  input 3                                                                       */
+/*          , output j_num                                                                   */
+/*          ) .                                                                              */
+/*        case j_num :                                                                       */
+/*          when 3 then do:                                                                  */
+/*            return error .                                                                 */
+/*          end.                                                                             */
+/*          when 2 then do:                                                                  */
+/*            assign                                                                         */
+/*              p-read-cur = yes                                                             */
+/*            .                                                                              */
+/*          end.                                                                             */
+/*          when 1 then do:                                                                  */
+/*            assign                                                                         */
+/*              p-read-cur = no                                                              */
+/*            .                                                                              */
+/*          end.                                                                             */
+/*        end case.                                                                          */
+/*      end.                                                                                 */
+/*    end.                                                                                   */
+    case p-read-cur :
+      when 0
+      then do :
+        get-key-value section 'revision'
+                      key     'dirflrvs'
+                      value   v_DirFilervs.
+        if v_DirFilervs = '':U
+          or v_DirFilervs = ?
+        then do:
+          assign
+            v_DirFilervs = '.':U
+          .
+        end.
+        system-dialog get-file v_File-Name
+          initial-dir v_DirFilervs
+          title 'Выберите файл с данными из резервуаров'
+          update l_log.
+        if l_log <> yes then do:
+          return error .
+        end.
+        
+      end.
+      when 1
+      then do :
         assign
-          p-read-cur = yes
+          v_File-Name = 'revis.txt':U
         .
+        os-delete value( v_File-Name ) .
+        if v_comstring = '':U
+          or v_comstring = ?
+        then do:
+          return error 'Не задан парам. comstr в секции revision ini файла.' .
+        end.
+        assign
+          anl-loc = '0':U
+        .
+        assign
+          v_command = substitute( "&1 &2 &3 &4", v_comstring, string( anl-loc ), v_File-Name, p-obj-code)
+        .
+        os-command silent value( v_command ) .
+        if search( v_File-Name ) = ? then do:
+          return error 'Файл с прибора не получен.' .
+        end.
+        else do: 
+          v_File-Name  = search( v_File-Name ) . 
+        end.
+  
+        
       end.
-      else do:
-        run gbl/d-askw.w
-          (  input 'Выбор источника данных с информацией по резервуарам'
-          ,  input 'Будем читать текущие данные с резервуаров или возьмем данные из файла?'
-          ,  input '|^'
-          ,  input 'Текущие данные|Из файлов|Отмена'
-          ,  input 'Запускается программа для обращения к датчикам резервуаров|'
-          +        'Берутся уже сохраненные данные из файла|Ничего не делаем'
-          ,  input 1
-          ,  input 3
-          , output j_num
-          ) .
-        case j_num :
-          when 3 then do:
-            return error .
-          end.
-          when 2 then do:
-            assign
-              p-read-cur = yes
-            .
-          end.
-          when 1 then do:
-            assign
-              p-read-cur = no
-            .
-          end.
-        end case.
+      when 2 /* Агент */
+      then do :
+        run str/getAsiDataAgent.p (output v_File-Name) no-error.
+        if error-status:error
+        then do :
+          return error return-value .
+        end.
+        
       end.
-    end.
+      when 3 /* ifsf */
+      then do :
+        run get-from-ifsf no-error.
+        if error-status:error
+        then do :
+          return error return-value .
+        end.
+        v_File-Name = "revis.ifsf" .
+        
+      end.
+    end case .
+    /*
     if p-read-cur = yes then do:
       assign
         v_File-Name = 'revis.txt':U
@@ -1390,7 +1460,7 @@ define variable      v-water-qnty as decimal no-undo.
         return error .
       end.
     end.
-
+*/
     v-err-file-name = substitute('&1revis.err', ibs.th.gbl.gbl-inipar:logDir) .
     input  stream str-anl from  value (  v_File-Name  )  .
     output stream str-err to    value (  v-err-file-name  ) .
@@ -4937,6 +5007,101 @@ procedure lib-rvs_hstc-rvs :
   end.
   return .
 end procedure.
+
+procedure get-from-ifsf :
+  define variable v-asi-ip  as character no-undo .
+  define variable v-asi-port as character no-undo .
+  define variable v-attr-type as character no-undo .
+  define variable v_command     as   character     no-undo.
+  define variable v_File-Name   as   character     no-undo.
+  define variable v-log     as logical no-undo .
+  define variable v-bytes   as integer no-undo .
+  define variable v-out-data as character no-undo .
+  define variable v-line-str as character no-undo .
+  define variable ii        as integer no-undo .
+  define variable str       as character no-undo .
+  define variable str1      as character no-undo .
+  
+  define variable hSocket   as handle no-undo .
+  define variable mDataIn   as memptr no-undo .
+  define variable mDataout  as memptr no-undo .
+  define variable cmd       as character no-undo .
+  define variable connStr   as character no-undo .
+  
+  define variable StrFrFile-list as character no-undo initial '':U.
+  
+  StrFrFile-list = 'tank,level_total,level_water,level_oil,t1,t2,t3,temperature,density,'
+                   + 'volume_total,volume_total_tc,mass_total,volume_oil,volume_water,vapor_density,vapor_pressure' .
+  
+  assign
+    v_File-Name = 'revis.ifsf':U
+  .
+  os-delete value( v_File-Name ) .
+  
+  cmd = 'KOI8-R 1 0 1' + {&new-line} .
+  set-size(mDataIn) = 0 .
+  set-size(mDataIn) = length(cmd , "RAW":U) + 1 .
+  put-string(mDataIn,1) = cmd .
+  
+  find first sys-ctrl no-lock.
+  run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
+  run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
+  
+  create socket hSocket .
+  connStr = '-H ' + v-asi-ip + ' -S ' + v-asi-port .
+  hSocket:connect(connStr) no-error.
+  
+  if hSocket:connected() = false
+  then do :
+    return error "Не могу подключиться к IFSF серверу." .
+  end.
+  
+  hSocket:set-socket-option('TCP-NODELAY', 'true').
+  hSocket:set-socket-option('SO-KEEPALIVE', 'true').
+  hSocket:set-socket-option('SO-REUSEADDR', 'true').
+  
+  v-log = hSocket:write(mDataIn, 1, get-size(mDataIn)) no-error.
+  if v-log = false or error-status:get-message(1) <> ''
+  then do:
+    return error "Не могу отправить команду на IFSF сервер." .
+  end.
+  run sleep (1000) .
+  
+  set-size(mDataOut) = 0 .
+  v-bytes = hSocket:get-bytes-available() .
+  set-size(mDataOut) = v-bytes + 1 .
+  
+  v-log = hSocket:read(mDataOut, 1, v-bytes, 2) no-error.
+  if v-log = false or error-status:get-message(1) <> ''
+  then do:
+    return error "Не могу прочитать ответ от IFSF сервера." .
+  end.
+  
+  v-out-data = get-string(mDataOut,1) .
+  
+  hSocket:disconnect() no-error.
+  delete object hSocket.
+  set-size(mDataIn) = 0.
+  set-size(mDataOut)   = 0.
+  
+  output to value(v_File-Name) .
+  
+  do ii = 1 to num-entries(v-out-data, {&new-line}) :
+    str = entry(ii, v-out-data, {&new-line}) .
+    str1 = trim(entry(1, str, "=")) .
+    if can-do(StrFrFile-list, str1)
+    then do :
+      put unformatted str skip .
+    end.
+  end.
+  
+  output close.
+
+end procedure .
+
+PROCEDURE Sleep EXTERNAL "kernel32.DLL":
+  DEFINE INPUT PARAMETER intMilliseconds AS LONG.
+END PROCEDURE.
 
 
 /* $Workfile$   E n d */
