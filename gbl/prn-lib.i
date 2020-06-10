@@ -196,7 +196,7 @@ procedure prn-lib-reportviewer-report-name :
   define variable ii                  as integer no-undo .
   define variable v-report-name       as character no-undo .
   define variable v-fill-path-RepView as character no-undo.
-  
+    
   if search("exe\ReportViewer\reportviewer.exe") <> ? then
   do:
     v-fill-path-RepView = search("exe\ReportViewer\reportviewer.exe").
@@ -215,7 +215,7 @@ procedure prn-lib-reportviewer-report-name :
     end.
   end.
 
-  os-command no-wait value(v-fill-path-RepView + " " + p-report-name-html).
+  os-command no-wait value(v-fill-path-RepView + " true " + p-report-name-html).
 
 end procedure. /* prn-lib-reportviewer-report-name */
 
