@@ -25,9 +25,9 @@ define variable vss-description as character no-undo init "".
     define temp-table tt-code-frm like code
     field Frecid as int64 init ?. 
 
-define variable mSDedit as class ibs.th.ref.code.SDedit no-undo.
+define variable mSDedit as class ibs.th.ref.code.SDedit_ no-undo.
     
-mSDedit = new ibs.th.ref.code.SDedit(iMode).
+mSDedit = new ibs.th.ref.code.SDedit_(iMode).
 mSDedit:bindcode:Handle = IBuffer .
 
   wait-for  mSDedit:ShowDialog() .

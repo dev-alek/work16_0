@@ -11,10 +11,12 @@
 
 using Progress.Lang.*.
 using Progress.Windows.Form.
+using ibs.th.ref.code.SDedit_ from propath.
+using ibs.th.ref.code.SDedit_ from propath.
 
 block-level on error undo, throw.
 
-class ibs.th.ref.code.SDedit inherits Form: 
+class ibs.th.ref.code.SDedit_ inherits Form: 
   
   define public variable bindcode        as Progress.Data.BindingSource         no-undo.
   define private variable buttonOk        as System.Windows.Forms.Button         no-undo.
@@ -32,7 +34,7 @@ class ibs.th.ref.code.SDedit inherits Form:
   define public  variable p-list          as character                           no-undo .
   
   define         variable McodeTrg        as class                               ibs.th.ref.code.code_trg NO-UNDO.    
-  constructor public SDedit (iChange as character):
+  constructor public SDedit_ (iChange as character):
     
     super().
     InitializeComponent().
@@ -288,7 +290,7 @@ class ibs.th.ref.code.SDedit inherits Form:
 
   end method.
 
-  destructor public SDedit ( ):
+  destructor public SDedit_ ( ):
 
   end destructor.
 
