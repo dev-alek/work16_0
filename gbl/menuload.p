@@ -396,6 +396,25 @@ define variable vss-description as character no-undo init "Информация об объекте
   " "
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Утилита отката помарочного учета'"
+  "'utl/rollback-mark.p'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Выравнивание статусов марок в свободной зоне'"
+  "'utl/free-mark.p'"
+}
+
+/*{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Создание статусов марок в серой зоне'"
+  "'utl/gray-zone.p'"
+}
+*/
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Изменение товаров по списку'"
