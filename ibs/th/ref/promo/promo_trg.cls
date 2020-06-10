@@ -885,6 +885,12 @@ end . /* end_of низ таблицы и html-файла */
   define variable v-sub   as class promoActionsub no-undo .
       dataset ds-promoaction-one:empty-dataset ( ) .   
       
+      if (  p-mode eq {&add-def}
+         or p-mode eq {&update} )
+         and  chek1CERP ()
+      then
+         undo, throw new Progress.Lang.AppError("Создание/изменение акций невозможно при интеграции с 1С-ERP") .
+      
       // вызвать в storage создание экземпляра класса sub и его заполнение или инициализацию
       if p-mode eq {&add-def} and not modecopy then do:
          v-sub = new promoActionsub().
@@ -2540,5 +2546,28 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
           tt-promoaction-one.TypeDiscontvisa  = ivisa
        .
     end.
+    
+    method  public logical chek1CERP(): 
+       define variable conf-par as character no-undo.
+       define variable mode-erprn as logical no-undo.
+       define variable par-type as character no-undo.
+       { gbl/conf-rd.i
+         "'is-erpRN'"
+          0
+          "''"
+          0
+          "''"
+          "''"
+          "''"
+          NO
+          conf-par
+          par-type
+          no-error
+          }
+       if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+       else mode-erprn = no.
+       
+       return mode-erprn .
+    end method.
     
 end class .
