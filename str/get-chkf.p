@@ -112,7 +112,7 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
 define variable v-disp-msg as character no-undo .
-
+define variable vi as INTEGER no-undo .
 
 
 if num-entries(p-parameter, {&delim-par}) < 3
@@ -1067,6 +1067,30 @@ with frame a :
           end.
         end.
         else do:
+/* Удаляем ошибочные чеки */
+          block-del:
+          for each chk-doc where (chk-doc.obj-type eq p-obj-type
+                             and chk-doc.obj-code eq p-obj-code
+                             and chk-doc.pay-desk eq cash-desk.cash-num
+                             and chk-doc.out-code  = ?)
+                             or (chk-doc.obj-type eq p-obj-type
+                             and chk-doc.obj-code eq p-obj-code
+                             and chk-doc.pay-desk eq cash-desk.cash-num
+                             and chk-doc.out-code  = ?):
+             if     (chk-doc.chk-date eq v-date
+                and chk-doc.chk-time  ge v-time)
+                or   chk-doc.chk-date gt v-date
+             then do:
+                do vi = 1 to num-entries(chk-doc.office):
+                   if can-do({&chk-err-list},entry(vi,chk-doc.office))
+                   then do:
+                      delete chk-doc.
+                      next block-del.
+                   end.
+                end.
+             end.                               
+          end.                     
+   
           run str/getxibmf.p (
                          input parparentproc
                         ,input p-log-handle
