@@ -201,7 +201,7 @@ DEFINE BROWSE br-ext-contragent
   QUERY br-ext-contragent NO-LOCK DISPLAY
       mark-string(recid(X_ext-classif), v-rid-list) COLUMN-LABEL "" FORMAT "X(1)"
 X_ext-classif.CharKey_One COLUMN-LABEL "Тип!клиента" FORMAT "X(3)"
-X_ext-classif.KEY#_one  COLUMN-LABEL "Код!клиента" FORMAT ">>>>>>>9"
+X_ext-classif.KEY#_one  COLUMN-LABEL "Код!клиента" FORMAT ">>>>>>>>>>>9"
 X_clients.obj-name COLUMN-LABEL "Название клиента" FORMAT "X(30)"
 X_ext-classif.charkey_three COLUMN-LABEL "ИД  Диадок" FORMAT "X(50)"
 /*X_ext-classif.db-num COLUMN-LABEL "Номер!БД" FORMAT "->>>>9"*/

@@ -85,7 +85,7 @@ DEFINE BUTTON b-choose-client
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "b-choose-client" 
-     SIZE 4.4 BY 1.
+     SIZE 3 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
      LABEL "&Ввод " 
@@ -102,21 +102,21 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE fi-ext-obj-code AS CHARACTER FORMAT "X(150)" 
+DEFINE VARIABLE fi-ext-obj-code AS CHARACTER FORMAT "X(150)" INITIAL "" 
      LABEL "ИД Диадок" 
      VIEW-AS FILL-IN 
-     SIZE 48.6 BY 1 TOOLTIP "ИД Диадок"
+     SIZE 48.5 BY 1 TOOLTIP "ИД Диадок"
      BGCOLOR 15 .
 
-DEFINE VARIABLE fi-obj-code AS INTEGER FORMAT ">>>>>>9" INITIAL 0 
+DEFINE VARIABLE fi-obj-code AS INTEGER FORMAT ">>>>>>>>>>>9" INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 8.2 BY 1 TOOLTIP "код клиента"
+     SIZE 8.25 BY 1 TOOLTIP "код клиента"
      BGCOLOR 15 .
 
 DEFINE VARIABLE fi-obj-type AS CHARACTER FORMAT "X(3)" 
      LABEL "Клиент в ТН" 
      VIEW-AS FILL-IN 
-     SIZE 5.6 BY 1 TOOLTIP "тип клиента"
+     SIZE 5.63 BY 1 TOOLTIP "тип клиента"
      BGCOLOR 15 .
 
 
@@ -126,11 +126,11 @@ DEFINE FRAME d-add-ext-client
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      B-help AT ROW 1 COL 50
-     fi-obj-type AT ROW 2.43 COL 13 COLON-ALIGNED
-     fi-obj-code AT ROW 2.43 COL 19.6 COLON-ALIGNED NO-LABEL WIDGET-ID 2
-     b-choose-client AT ROW 2.43 COL 30.6
-     fi-ext-obj-code AT ROW 3.86 COL 13 COLON-ALIGNED WIDGET-ID 4
-     SPACE(1.77) SKIP(1.78)
+     fi-obj-type AT ROW 2.42 COL 13 COLON-ALIGNED
+     fi-obj-code AT ROW 2.42 COL 19.63 COLON-ALIGNED NO-LABEL WIDGET-ID 2
+     b-choose-client AT ROW 2.42 COL 29.63
+     fi-ext-obj-code AT ROW 3.88 COL 13 COLON-ALIGNED WIDGET-ID 4
+     SPACE(1.87) SKIP(1.76)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Синхронизация клиентов ДИАДОК"
@@ -256,6 +256,7 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-quit
 &Scoped-define SELF-NAME fi-ext-obj-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-ext-obj-code d-add-ext-client
 ON LEAVE OF fi-ext-obj-code IN FRAME d-add-ext-client /* ИД Диадок */
