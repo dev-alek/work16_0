@@ -577,8 +577,8 @@ attr-egais-host }
 attr-mercur }
 /* сюда добавлять новые названия атрибутов объектов TH */
 
-run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn-vbrr,cpdoc,CPWithdrawal':U" ) .
-run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-name 'РРН-ВБРР,Остальные,Суммы для выдачи наличными':U" ) .
+run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn,cpdoc,RTA_RefundExport,CPAgreement,CPWithdrawal':U" ) .
+run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-name 'РРН,Остальные,Перевод на моб.счет(ТСО),По аннулированному чеку,Суммы для выдачи наличными':U" ) .
 
 
 /* список атрибутов объектов TH */
