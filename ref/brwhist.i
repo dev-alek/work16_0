@@ -9,8 +9,20 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER find_c-obj-hist FOR {&buf_obj-hist}.
+
+&if defined (brwhistparam) eq 0
+&then
+&glob brwhistparam yes
+&if defined ( objtt) ne 0
+&then
+define temp-table X_c-obj-hist like {&buf_obj-hist}.
+DEFINE BUFFER find_c-obj-hist FOR X_c-obj-hist.
+&else
 DEFINE BUFFER X_c-obj-hist FOR {&buf_obj-hist}.
+DEFINE BUFFER find_c-obj-hist FOR {&buf_obj-hist}.
+&endif
+
+
 
 DEFINE BUFFER X_curr-sysconf FOR sysconf.
 DEFINE BUFFER X_db FOR db.
@@ -42,11 +54,26 @@ Creation date: 01/22/04
 
 /* Parameters Definitions ---                                           */
 
-
+define input     parameter parParentProc  as widget-handle no-undo.
+/*контекст сессии*/
+define input parameter p-curr-host-code like ub.sysconf.host-code no-undo.
+define input parameter p-curr-obj-type like ub.clients.obj-type no-undo.
+define input parameter p-curr-obj-code like ub.clients.obj-code no-undo.
+define input parameter bttns  as char   no-undo .
+/*кнопки для нажатия*/
+define input parameter p-mode  as char   no-undo .
+define input parameter p-corr-user-db-num  like ub.c-cli-hist.corr-user-db-num no-undo .
+define input parameter p-corr-user-name  like ub.c-cli-hist.corr-user-name no-undo .
+define input parameter p-subject  like ub.c-cli-hist.subject no-undo .
+/*стартуем с текущей БД обычно*/
+define input parameter p-db-num  like ub.c-cli-hist.corr-user-db-num no-undo .
+define input parameter p-chip-num-utd  as int64 no-undo.
 
 /*записи в выборке*/
 define input-output param p-rid-list    as  char no-undo .
-
+&endif
+&if defined(Paramonly) eq 0
+&then
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
 define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
@@ -67,6 +94,7 @@ define variable vss-description AS CHAR NO-UNDO INIT "Список полной истории":U.
 { gbl/prn-lib.i }
 { cmp/mrk-strf.i }
 { gbl/usrfulnf.i }
+{ gbl/color.i }
 { gbl/fltopend.i defproc }
 /* define buffer X_cli-grp for ub.cli-grp. */
 define variable filter-point as character no-undo init "cobjhist" .
@@ -144,7 +172,7 @@ define buffer X_clients-obj for ub.clients.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel v-corr-user-db-num ~
 b-reason B-print B-sch B-Help br-obj-hist sch-db-num sch-corr-date ~
-sch-obj-code sch-corr-user-name BR-changes mark-num 
+sch-obj-code sch-corr-user-name BR-changes mark-num b-nextlevel
 &Scoped-Define DISPLAYED-OBJECTS v-corr-user-db-num sch-db-num ~
 sch-corr-date sch-obj-code sch-corr-user-name mark-num 
 
@@ -224,6 +252,11 @@ DEFINE BUTTON b-sel AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE BUTTON b-nextlevel 
+     LABEL "Детали" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
+
 DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 6 BY 1
@@ -267,9 +300,10 @@ DEFINE QUERY br-obj-hist FOR
 DEFINE BROWSE BR-changes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-changes Dialog-Frame _FREEFORM
   QUERY BR-changes DISPLAY
-      temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(40)"
+      temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(200)" width 40
 temp-changes.v_old COLUMn-LABEL "Было" format "X(255)"
 temp-changes.v_new COLUMn-LABEL "Стало" format "X(255)"
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 7.25.
@@ -287,7 +321,7 @@ DEFINE BROWSE br-obj-hist
       X_c-obj-hist.is-news FORMAT "+/":U COLUMN-LABEL "Прием.!нов."
       
       get-source-type(X_c-obj-hist.source-type) COLUMN-LABEL "Источн.!измен."
-      X_c-obj-hist.source-ref FORMAT "X(14)":U COLUMN-LABEL "Ссылка на  источник."
+      X_c-obj-hist.source-ref FORMAT "X(20)":U COLUMN-LABEL "Ссылка на!источник." WIDTH 10
        get-subject(X_c-obj-hist.subject) COLUMN-LABEL {&label-subject} FORMAT "X(35)":U WIDTH 15
       &endif
   ENABLE
@@ -304,7 +338,7 @@ DEFINE FRAME Dialog-Frame
      B-mark AT ROW 1 COL 11
      b-sel AT ROW 1 COL 21
      v-corr-user-db-num AT ROW 1 COL 37 COLON-ALIGNED
-    
+     b-nextlevel AT ROW 1 COL 70
      b-reason AT ROW 1 COL 59
      B-print AT ROW 1 COL 89
      B-sch AT ROW 1 COL 92
@@ -441,6 +475,40 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-nextlevel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-nextlavel Dialog-Frame
+ON CHOOSE OF b-nextlevel IN FRAME Dialog-Frame /* * */
+DO:
+   
+   run value(this-procedure:file-name)
+      (
+       &if defined(param_1) &then {&param_1}, &endif
+       &if defined(param_2) &then {&param_2}, &endif
+       &if defined(param_3) &then {&param_3}, &endif
+       &if defined(param_4) &then {&param_4}, &endif
+       &if defined(param_5) &then {&param_5}, &endif
+       &if defined(param_6) &then {&param_6}, &endif
+       &if defined(param_7) &then {&param_7}, &endif
+       &if defined(param_8) &then {&param_8}, &endif
+       &if defined(param_9) &then {&param_9}, &endif
+       parParentProc,
+      /*контекст сессии*/
+       p-curr-host-code,
+       p-curr-obj-type,
+       p-curr-obj-code,
+       bttns,
+      /*кнопки для нажатия*/
+       p-mode,
+       p-corr-user-db-num,
+       p-corr-user-name,
+       p-subject,
+      /*стартуем с текущей БД обычно*/
+       p-db-num,
+       X_c-obj-hist.chip-num ,
+       input-output p-rid-list ).
+   apply "entry" to br-obj-hist in frame {&frame-name}.
+END.
+
 
 &Scoped-define SELF-NAME B-print
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-print Dialog-Frame
@@ -520,6 +588,31 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&if defined(VisibleKeyField) ne 0
+&then
+&Scoped-define SELF-NAME sch-obj-code
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sch-obj-code Dialog-Frame
+ON ROW-DISPLAY OF BR-changes IN FRAME Dialog-Frame /* коду */
+DO:
+   if temp-changes.fNotChange
+   then do:
+      temp-changes.l_name:fGCOLOR in browse BR-changes = GRAY_COLOR.
+      temp-changes.v_old:fGCOLOR in browse BR-changes  = GRAY_COLOR.
+      temp-changes.v_new:fGCOLOR in browse BR-changes  = GRAY_COLOR.
+   end.
+   else do:
+      temp-changes.l_name:fGCOLOR in browse BR-changes = BLACK_COLOR.
+      temp-changes.v_old:fGCOLOR in browse BR-changes = BLACK_COLOR.
+      temp-changes.v_new:fGCOLOR in browse BR-changes = BLACK_COLOR.
+   end.
+   
+          
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&endif
 
 &Scoped-define SELF-NAME sch-obj-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sch-obj-code Dialog-Frame
@@ -841,7 +934,7 @@ PROCEDURE enable_UI :
       WITH FRAME Dialog-Frame.
   ENABLE b-quit B-mark b-sel v-corr-user-db-num B-print B-sch 
          B-Help br-obj-hist sch-db-num sch-corr-date sch-obj-code 
-         sch-corr-user-name BR-changes mark-num 
+         sch-corr-user-name BR-changes mark-num b-nextlevel
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -899,6 +992,7 @@ sch-corr-user-name
 sch-obj-code when p-mode = {&all}
 sch-db-num when p-mode = {&all}
 BR-changes mark-num
+b-nextlevel
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
 
@@ -1404,10 +1498,12 @@ for each temp-changes:
     delete temp-changes.
 END.
 if not available X_c-obj-hist then do:
+  b-nextlevel:visible IN FRAME Dialog-Frame = no.
   Open QUery br-changes for each temp-changes.
   return.
 end.
 
+b-nextlevel:visible IN FRAME Dialog-Frame = &if defined (objhead) ne 0 &then X_c-obj-hist.subject eq "*" &ELSE no &ENDIF. 
 /*
 run ref/cclihisv.p (
                    input X_c-cli-hist.obj-type
@@ -1421,7 +1517,7 @@ run ref/cclihisv.p (
                   ,output v-description
                ) no-error . */
 run local-view-cange in this-procedure (output v-description) .              
-Open QUery br-changes for each temp-changes.
+Open QUery br-changes for each temp-changes by temp-changes.fNotChange.
 assign
 br-changes:title in frame {&frame-name} = v-description
 .
@@ -1473,4 +1569,4 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
+&endif

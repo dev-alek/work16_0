@@ -31,6 +31,12 @@ def var vss-description as character no-undo init "Программа авторизации пользов
 { cmp/str-glbl.i }
 { gbl/cur-time.i }
 
+if ibs.th.gbl.gbl-var:rcode
+then do:
+   p-permit = yes.
+   return.
+end.
+
 
 define variable v-today as date      no-undo.
 define variable v-time  as integer   no-undo.

@@ -150,18 +150,18 @@ class ibs.th.ref.cashbookbrw inherits Form :
 	@VisualDesigner.
 	method private void bhist_Click( input sender as System.Object, input e as System.EventArgs ):
 	   define variable v-rid-list as character no-undo.
-		run ref/ccbhist.w (parparentproc,
+		run ref/ccbhist.w (v-id, // id
+                   parparentproc,
                    0,
                    "",
                    0,
                    "",
                    "one",
-                   v-id, // id
                    ?,
-                   
                    "",
                    "",
                    ibs.th.gbl.gbl-var:g#db-num,
+                   ?,
                    input-output v-rid-list ).
 		return.
 
@@ -200,20 +200,21 @@ class ibs.th.ref.cashbookbrw inherits Form :
          if     available clients
             and clients.db-num ne ?
          then
-            run ref/ccounhist.w (parparentproc,
+            run ref/ccounhist.w (clients.db-num, // id
+                               "cashbookrule",
+                               v-cashbookrule-key-rec,
+                               "currPKO",
+                               parparentproc,
                                0,
                                "",
                                0,
                                "",
                                "one",
-                               clients.db-num, // id
-                               "cashbookrule",
-                               v-cashbookrule-key-rec,
-                               "currPKO",
                                ?,
                                "",
                                "",
                                ibs.th.gbl.gbl-var:g#db-num,
+                               ?,
                                input-output v-rid-list ).
       end.
       return.

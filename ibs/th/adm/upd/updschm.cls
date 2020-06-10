@@ -147,7 +147,7 @@ class ibs.th.adm.upd.updschm:
          
       then */
          disconnect value ('ub').
-         m-Batch = yes. 
+/*         m-Batch = yes.*/
       do vi = 1 to num-entries(mDfUpdaLL):
          
          upddbshm-1(entry(vi,mDfUpdaLL)).
@@ -271,9 +271,18 @@ class ibs.th.adm.upd.updschm:
     then do:
       analisdfObj = new analisdf ().
       analisdfObj:IsComp = IsComp.
+      if  analisdfObj:createDF(CurrDBShm,CurrDBShm + 1)
+      then do:
+         assign
+            m-FileDf     = analisdfObj:mFileDf
+            NewCurrDBShm = analisdfObj:mUpdateTo
+         .
+      end.
+      else
+         isErr = yes.
       if not m-FileDf begins "proc:"
       then 
-         m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1).
+         m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1). 
       delete object analisdfObj no-error.
       disconnect value ('ub').
       upddbshm-1(m-FileDf).

@@ -50,7 +50,7 @@ class ibs.th.adm.upd.observupd:
 
   define property IsErr as logical no-undo
     get.
-    private set. 
+    private set.
 
   define property Msg as character no-undo
     get.
@@ -62,7 +62,7 @@ class ibs.th.adm.upd.observupd:
 
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 19
+  &scop NumWorkBase 20
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -83,6 +83,7 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/19122301.df"
             ,"cmp/20041001.df"
             ,"cmp/20041002.df"
+            ,"cmp/20051501.df"
             ] 
      get.
   define public property m-upd-list-chk      as character extent {&NumWorkBase} no-undo
@@ -105,6 +106,7 @@ class ibs.th.adm.upd.observupd:
             ,"Initial:db.reserve1-char=17"
             ,"TABLE:Utd"
             ,"FIELD:marking-lines.prt-code"
+            ,"FIELD:c-utd-head.CheckObj"
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 

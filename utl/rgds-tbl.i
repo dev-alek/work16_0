@@ -232,6 +232,13 @@ abc-analysis-gds-obj~
 ,OperServ~
 ,c-OperServ~
 ,c-goods-attr-any~
+,utd-lines~
+,c-utd-marking-lines~
+,c-utd-lines~
+,marking-lines~
+,utd-marking-lines~
+,marking~
+,c-contract-specif-attr~
 ":U
 
 procedure valid-ren-gdsc-tbl-list :

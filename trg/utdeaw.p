@@ -15,7 +15,7 @@ Creation date: 17/02/19
 
 */
 
-&Glob main-tbl c-utd-err-attr
+&Glob main-tbl utd-err-attr
 trigger procedure for write of ub.{&main-tbl}
   new buffer new-{&main-tbl}
   old buffer old-{&main-tbl}

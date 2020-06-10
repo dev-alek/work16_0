@@ -28,9 +28,37 @@ end.
 
 &if "{1}" = "class"
 &then
-method public logical GetLastUTDinPack
+method public logical GetprevUTDForPac
 &else
-function GetLastUTDinPack returns logical 
+function GetprevUTDForPac returns logical 
+&endif
+(iPackegeId as character ,
+ iTimestamp as datetime,
+ output odb-num as integer,
+ output odoc-id as integer ):
+   define buffer buf_utd for utd.
+   find last buf_utd where Buf_utd.PackageId eq iPackegeId
+                             and Buf_utd.EDocType  eq objSrv:Env:Utd:EDocType:UTD:KeyIntDB
+                             and Buf_utd.Timestamp < iTimestamp
+   no-lock no-error.
+   if available  buf_utd
+   then
+      assign
+         odb-num = buf_utd.db-num
+         odoc-id = buf_utd.doc-id
+      no-error.
+   else
+      assign
+         odb-num = ?
+         odoc-id = ?
+      no-error.
+end.
+
+&if "{1}" = "class"
+&then
+method public logical GetLastUTDinPackAft
+&else
+function GetLastUTDinPackAft returns logical 
 &endif
 (input idb-num as integer, 
  input idoc-id as integer,
@@ -63,7 +91,94 @@ function GetLastUTDinPack returns logical
             return yes.
          end. 
          else
-            return no.
+            return odoc-id = utd.doc-id.
+      end.  
+   end.
+   return ?.
+end.
+
+
+&if "{1}" = "class"
+&then
+method public logical GetLastUTDinPackbef
+&else
+function GetLastUTDinPackbef returns logical 
+&endif
+(input idb-num as integer, 
+ input idoc-id as integer,
+ output odb-num as integer,
+ output odoc-id as integer ):
+   define buffer buf_utd for utd.
+   define buffer     utd for utd.
+   find first utd where utd.db-num eq idb-num
+                    and utd.doc-id eq idoc-id
+   no-lock no-error.
+   if available utd
+   then do:
+      if utd.PackageId eq ""
+      then do:
+         assign
+            odb-num = utd.db-num
+            odoc-id = utd.doc-id
+         .
+         return yes.
+      end.
+      else do:
+         GetprevUTDForPac(utd.PackageId,utd.Timestamp,output odb-num,output odoc-id ).
+         if    odb-num eq ?
+            or odoc-id eq ?
+         then do:
+            assign
+               odb-num = utd.db-num
+               odoc-id = utd.doc-id
+            .
+            return yes.
+         end. 
+         else
+            return odoc-id = utd.doc-id.
+      end.  
+   end.
+   return ?.
+end.
+
+&if "{1}" = "class"
+&then
+method public logical GetLastUTDinPack
+&else
+function GetLastUTDinPack returns logical 
+&endif
+(input idb-num as integer, 
+ input idoc-id as integer,
+ output odb-num as integer,
+ output odoc-id as integer ):
+   define buffer buf_utd for utd.
+   define buffer     utd for utd.
+   find first utd where utd.db-num eq idb-num
+                    and utd.doc-id eq idoc-id
+   no-lock no-error.
+   if available utd
+   then do:
+      if utd.PackageId eq ""
+      then do:
+         assign
+            odb-num = utd.db-num
+            odoc-id = utd.doc-id
+         .
+         return yes.
+      end.
+      else do:
+         GetLastUTDForPac(utd.PackageId,datetime("01/01/1900"),output odb-num,output odoc-id ).
+         if    odb-num eq ?
+            or odoc-id eq ?
+         then do:
+            assign
+               odb-num = utd.db-num
+               odoc-id = utd.doc-id
+            .
+            return yes.
+         end. 
+         else
+            return odoc-id = utd.doc-id.
       end.  
    end.
    return ?.
@@ -121,7 +236,7 @@ function addMark returns logical
          assign
             buf_utd-marking-line.doc-level = utd-marking-lines.doc-level + 1
             buf_utd-marking-line.mark      = marking.mark
-            buf_utd-marking-line.sts       = marking.sts
+/*            buf_utd-marking-line.sts       = marking.sts*/
          .
          
       end.
@@ -259,3 +374,94 @@ function SetLockUTDMark returns logical
    
 end.
 
+&if "{1}" = "class"
+&then
+method public char getattrUtd
+&else
+function getattrUtd returns char 
+&endif
+(idb-num   as integer,
+ idoc-id   as integer,
+ iattrcode as character ):
+   define buffer utd-attr for utd-attr.
+   find first utd-attr where utd-attr.db-num eq idb-num
+                         and utd-attr.doc-id eq idoc-id
+                         and utd-attr.attr-code eq iattrcode
+   no-lock no-error.
+   return if not available utd-attr  then ?    else  utd-attr.attr-value.     
+end.
+
+&if "{1}" = "class"
+&then
+method public void setattrUtd
+&else
+function setattrUtd returns logical 
+&endif
+(idb-num   as integer,
+ idoc-id   as integer,
+ iattrcode as character, 
+ iattrval  as character ):
+   define buffer utd-attr for utd-attr.
+   find first utd-attr where utd-attr.db-num eq idb-num
+                         and utd-attr.doc-id eq idoc-id
+                         and utd-attr.attr-code eq iattrcode
+   no-lock no-error.
+   if not available utd-attr
+   then do:
+      create utd-attr.
+      assign
+         utd-attr.db-num    = idb-num
+         utd-attr.doc-id    = idoc-id
+         utd-attr.attr-code = iattrcode
+         utd-attr.attr-value = iattrval
+      . 
+   end.
+   else do:
+      if utd-attr.attr-value ne iattrval
+      then do:
+         find current utd-attr exclusive-lock no-error.
+         if available utd-attr
+         then
+            utd-attr.attr-value = iattrval.
+      end.
+   end.     
+end.
+
+&if "{1}" = "class"
+&then
+method public void setattrUtdlines
+&else
+function setattrUtdlines returns logical 
+&endif
+(idb-num   as integer,
+ idoc-id   as integer,
+ ilinenum  as integer, 
+ iattrcode as character, 
+ iattrval  as character ):
+   define buffer utd-attr for utd-attr.
+   find first utd-lines-attr where utd-lines-attr.db-num    eq idb-num
+                               and utd-lines-attr.doc-id    eq idoc-id
+                               and utd-lines-attr.lineNum   eq ilineNum
+                               and utd-lines-attr.attr-code eq iattrcode
+   no-lock no-error.
+   if not available utd-lines-attr
+   then do:
+      create utd-lines-attr.
+      assign
+         utd-lines-attr.db-num    = idb-num
+         utd-lines-attr.doc-id    = idoc-id
+         utd-lines-attr.lineNum   = ilineNum
+         utd-lines-attr.attr-code = iattrcode
+         utd-lines-attr.attr-value = iattrval
+      . 
+   end.
+   else do:
+      if utd-lines-attr.attr-value ne iattrval
+      then do:
+         find current utd-lines-attr exclusive-lock no-error.
+         if available utd-lines-attr
+         then
+            utd-lines-attr.attr-value = iattrval.
+      end.
+   end.      
+end.

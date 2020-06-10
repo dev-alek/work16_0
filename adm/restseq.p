@@ -5317,6 +5317,10 @@ procedure restore-{&sequence-name} :
     &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
     {&validate-sequence}
 
+    &scoped-define table-name      c-utd-head
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
     {&update-sequence}
   end.
 end procedure. /* restore-s-c-cashbook-chip-num */

@@ -16,7 +16,7 @@ Creation date: 11/07/18
 */
 
 
-&scoped-define main-tbl c-utd-err-attr
+&scoped-define main-tbl utd-err-attr
 trigger procedure for delete of ub.{&main-tbl}.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .

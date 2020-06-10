@@ -25,5 +25,21 @@ define temp-table locb-utd-err-attr no-undo like  ub.utd-err-attr.
 define temp-table locb-marking no-undo like  ub.marking.
 define temp-table locb-marking-attr no-undo like  ub.marking-attr.
 
-
+define variable mySeqUtd as int64 no-undo init ?.
+procedure MySeqForUtd:
+   define input  parameter iTable       as character no-undo.
+   define input  parameter iseqnamehist as character no-undo.
+   define input  parameter idb-name     as character no-undo.
+   define output parameter Oseq         as int64 no-undo.
+   if iTable begins "utd"
+   then do:
+      if myseqUtd eq ?
+      then 
+         myseqUtd = dynamic-next-value(iseqnamehist,idb-name).
+      Oseq = myseqUtd.
+   end.
+   else
+      Oseq = ?. 
+   return.
+end.
 

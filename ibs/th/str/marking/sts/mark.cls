@@ -108,7 +108,10 @@ class ibs.th.str.marking.sts.mark inherits objth:
   ------------------------------------------------------------------------------*/
 
   method public char GetLabel(inKey as int):
-    return GetLabel(string (inKey)).
+    def var prop as class propmap no-undo.    
+    if valid-object (MarkMap:GetItemKeyInt(inKey))
+      then return cast (MarkMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
+      else return string(inKey). /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
   end method. 
 
   method private char GetLabel(inKeyStr as char):
