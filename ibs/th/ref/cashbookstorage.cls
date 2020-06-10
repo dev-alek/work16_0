@@ -285,10 +285,10 @@ class ibs.th.ref.cashbookstorage final:
   end method .
   method private void CrRuleDBobj (buffer tt-cashbookrule for tt-cashbookrule  , icode as character  ) :
      find first ub.CashBookRule exclusive-lock where ub.CashBookRule.CashBookID  = tt-cashbookrule.CashBookID 
-                                                 and ub.CashBookRule.host-code   = tt-cashbookrule.host-code
+                                                 
                                                  and ub.CashBookRule.Obj-type    = tt-cashbookrule.obj-type
                                                  and ub.CashBookRule.Obj-code    = tt-cashbookrule.obj-code
-                                                 and ub.CashBookRule.Status_     = tt-cashbookrule.Status_
+
                                                  and ub.CashBookRule.Code        = icode 
         no-error .
      if not available ub.CashBookRule 
@@ -296,13 +296,15 @@ class ibs.th.ref.cashbookstorage final:
         create ub.CashBookRule.
         assign
            ub.CashBookRule.CashBookID  = tt-cashbookrule.CashBookID 
-           ub.CashBookRule.host-code   = tt-cashbookrule.host-code
+           
            ub.CashBookRule.Obj-type    = tt-cashbookrule.obj-type
            ub.CashBookRule.Obj-code    = tt-cashbookrule.obj-code
-           ub.CashBookRule.Status_     = tt-cashbookrule.Status_
+
            ub.CashBookRule.Code        = icode
         .
      end.
+     ub.CashBookRule.host-code   = tt-cashbookrule.host-code.
+     ub.CashBookRule.Status_     = tt-cashbookrule.Status_ .
      ub.CashBookRule.RuleValue = if      icode eq "PkoMask" 
                                   then tt-cashbookrule.PkoMask 
                                   else if icode eq "RkoMask" 
