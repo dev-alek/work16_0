@@ -33,6 +33,8 @@ class ibs.th.str.marking.sts.mark inherits objth:
   define public property  SaleWaitLock  as class propmap no-undo get.  protected set.
   define public property  ReturnWaitLock  as class propmap no-undo get.  protected set.
   define public property  Ungrouped as class propmap no-undo get.  protected set.
+  define public property  GrayZone as class propmap no-undo get.  protected set.
+  
   define public property  UnknowSts as class propmap no-undo get.  protected set.
   
   /*
@@ -80,6 +82,8 @@ class ibs.th.str.marking.sts.mark inherits objth:
     ReturnWaitLock   = crProp(15,"ReturnWaitLock","Блокировка идет возврат").
     Reserved   = crProp(13,"Reserved","Зарезервирован").
     Ungrouped  = crProp(20,"Ungrouped","Разгруппирован").
+    
+    GrayZone  = crProp(21,"GrayZone","Серая зона").
     
     
     UnknowSts  = crProp(0,"UnknowSts","Неизвестный статус маркированного товара.").
