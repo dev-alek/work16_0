@@ -183,6 +183,14 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable payment-agent-gdSubjectObj            as class kass-book-gd            no-undo. // payment-agent:kb-gds:gd
   define variable imppayment-agentEventHndlrObj         as class imppayment-agent        no-undo.
 
+
+  define variable edi-doc-SubjectObj               as class edi-doc                 no-undo. // <edi-doc>
+  define variable edi-doc-gd-SubjectsObj       as class subjects                no-undo. // edi-doc:gds
+  define variable edi-doc-gd-SubjectObj            as class edi-gd                  no-undo. // edi-doc:gds:gd
+  define variable edi-doc-mark-SubjectsObj     as class subjects                no-undo. // edi-doc:gds:gd:marks
+  define variable edi-doc-mark-SubjectObj          as class mark                    no-undo. // edi-doc:gds:gd:marks:mark
+  define variable impedi-docEventHndlrObj         as class impedi-doc              no-undo.
+
   define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
   define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
@@ -483,6 +491,21 @@ class ibs.th.bge.1crn.import.parsesub:
              ReceivedSubjectPublish(v-iSubject, v-iImpSub).
            end.
         end.
+        when "edi-doc":U 
+     or when "edi-doc-stts" then do:
+           if not valid-object(edi-doc-SubjectObj)       then edi-doc-SubjectObj       = new edi-doc(). // <payment-system>
+           edi-doc-SubjectObj:obj-load = hNoderef:name.
+           if not valid-object(impedi-docEventHndlrObj) then do :
+               impedi-docEventHndlrObj = new impedi-doc ().
+              /* imppayment-systemEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) .*/
+           end .
+           v-iSubject = edi-doc-SubjectObj .
+           v-iImpSub  = impedi-docEventHndlrObj .
+             // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+           
+        end.
         when "contr-price-doc":U then do:
           if not valid-object(contr-price-docsSubjectObj) then contr-price-docsSubjectObj = new contr-price-docs (). // <contr-price-doc>
           if not valid-object(impcontr-price-docsEventHndlrObj) then do :
@@ -749,6 +772,18 @@ class ibs.th.bge.1crn.import.parsesub:
             good_barcodeSubjectObj = cast (barcodesSubjectsObj:SubjectObjCurr, goods_barcode).
             GetChildrenSub (hNoderef, (level + 1), good_barcodeSubjectObj).
         end.
+        when "marks" then do :
+          // _SubjectObj[]: валидный только для коллекций, чьи теги присутствуют в импортируемом сейчас пакете;
+          v-need-parse = true . 
+          if v-need-parse and valid-object (edi-doc-gd-SubjectObj) then do: // edi-doc:gds
+            if edi-doc-gd-SubjectObj:IsInitSubForWrite then do: 
+              edi-doc-mark-SubjectsObj = new subjects ("marks") .
+               GetChildrenSub (hNoderef, (level + 1), ?).
+              edi-doc-gd-SubjectObj:SetProp (edi-doc-mark-SubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+        end.
         when "gds" then do :
           // _SubjectObj[]: валидный только для коллекций, чьи теги присутствуют в импортируемом сейчас пакете;
           v-need-parse = true . 
@@ -758,6 +793,14 @@ class ibs.th.bge.1crn.import.parsesub:
               promotion_p_gdListSubjectsObj = new subjects ("gds") .
                GetChildrenSub (hNoderef, (level + 1), ?).
               promotion_psSubjectObj:SetProp (promotion_p_gdListSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse and valid-object (edi-doc-SubjectObj) then do: // edi-doc:gds
+            if edi-doc-SubjectObj:IsInitSubForWrite then do: 
+              edi-doc-gd-SubjectsObj = new subjects ("gds") .
+               GetChildrenSub (hNoderef, (level + 1), ?).
+              edi-doc-SubjectObj:SetProp (edi-doc-gd-SubjectsObj).
               v-need-parse = false .
             end .
           end .
@@ -1128,8 +1171,31 @@ class ibs.th.bge.1crn.import.parsesub:
           end.
           
         end.
+        when "mark" then do:
+          v-need-parse = true .
+          if v-need-parse and valid-object (edi-doc-SubjectObj) then do: // edi-doc:gds:gd
+            if edi-doc-SubjectObj:IsInitSubForWrite then do:
+              edi-doc-mark-SubjectObj = new mark().
+              edi-doc-mark-SubjectObj:obj-load = "utd-mark".
+              edi-doc-mark-SubjectsObj:Add(  edi-doc-mark-SubjectObj  ).
+              /*edi-doc-marks-SubjectsObj:Add(  new mark()  ).
+              edi-doc-mark-SubjectObj = cast (edi-doc-mark-SubjectsObj:SubjectObjCurr, mark).*/
+              
+              GetChildrenSub (hNoderef, (level + 1), edi-doc-mark-SubjectObj).
+              v-need-parse = false .
+            end .
+          end . 
+        end.
         when "gd" then do:
-          v-need-parse = true . 
+          v-need-parse = true .
+          if v-need-parse and valid-object (edi-doc-SubjectObj) then do: // edi-doc:gds:gd
+            if edi-doc-SubjectObj:IsInitSubForWrite then do:
+              edi-doc-gd-SubjectsObj:Add(  new edi-gd()  ).
+              edi-doc-gd-SubjectObj = cast (edi-doc-gd-SubjectsObj:SubjectObjCurr, edi-gd).
+              GetChildrenSub (hNoderef, (level + 1), edi-doc-gd-SubjectObj).
+              v-need-parse = false .
+            end .
+          end . 
           if v-need-parse and valid-object (trn-gd-doc-inSubjectObj) then do: // trn-gd-doc:gds:gd
             if trn-gd-doc-inSubjectObj:IsInitSubForWrite then do:
               trn-gd-doc-inlistSubjectsObj:Add(  new trn-gd()  ).
