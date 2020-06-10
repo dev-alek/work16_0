@@ -21,8 +21,6 @@ Creation date: 09/07/05
 { cmp/r-page0.i new }
 { gbl/getcntxt.i def }
 
-
-
 define NEW SHARED variable cas-shft as logical no-undo init no.
 define variable conf-attr as char no-undo.                  /* дл€ чтени€ параметра конфигурации */
 define variable conf-par as char no-undo.                  /* дл€ чтени€ параметра конфигурации */
@@ -56,12 +54,27 @@ if not glog then return "NO".
 { gbl/cas-shft.i v-cntxt-obj-type v-cntxt-obj-code cas-shft }
 
 { gbl/basecode.i v-cntxt-host-code-obj v-base-code }
+
+if method = "b-code":U then do:
 run rep/d-report.w (
                     input parparentproc
-                    ,input 'rep/e-toppay.p'
-                    ,input (if method = "b-code":U
-                              then 'ѕродажи топлива по видам оплаты'
-                              else '“опливные платежи по видам топлива')
+                    ,input 'rep/e-toppay_pay.w'
+                    ,input 'ѕродажи топлива по видам оплаты'
+                    ,input 4
+                    ,input ""
+                    ,input "*"
+                    ,input ""
+                    ,input if v-curr-r-b = {&r-b-base}
+                            then (if v-base-code = 0 then "" else "{&v-base},{&v-all}")
+                            else "":U
+                    ,input "shop" /*было убрано: ,{&send-check}*/
+                    ,input no).
+end.
+else do:                    
+run rep/d-report.w (
+                    input parparentproc
+                    ,input 'rep/e-toppay1.p'
+                    ,input '“опливные платежи по видам топлива'
                     ,input (if cas-shft then 5 else 6)
                     ,input ""
                     ,input "*"
@@ -69,7 +82,7 @@ run rep/d-report.w (
                     ,input if v-curr-r-b = {&r-b-base}
                             then (if v-base-code = 0 then "" else "{&v-base},{&v-all}")
                             else "":U
-                    ,input "shop" /*было убрано: ,{&send-check}*/ 
+                    ,input "shop" /*было убрано: ,{&send-check}*/
                     ,input yes).
-
+end.
 /* $Workfile$ e n d */
