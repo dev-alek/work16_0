@@ -121,7 +121,8 @@ class ibs.th.str.utd.sts.th inherits objth:
     def var prop as class propmap no-undo.
     prop = new propmap (string(inKeyInt), inLabel).
     prop:KeyIntDB = inKeyInt.
-    THMap:AddItem(prop, string(inKeyInt)).
+    prop:KeyCharDB = inNameProp.
+    THMap:AddItem(prop, inKeyInt,inNameProp).
     return prop.
     
   end method.

@@ -100,7 +100,8 @@ class ibs.th.str.utd.edoctype:
     def var prop as class propmap no-undo.
     prop = new propmap (string(inKeyInt), inLabel).
     prop:KeyIntDB = inKeyInt.
-    EDocTypeMap:AddItem(prop, string(inKeyInt)).
+    prop:KeyCharDB = inNameProp.
+    EDocTypeMap:AddItem(prop,  inKeyInt,inNameProp).
     return prop.
     
   end method. 
