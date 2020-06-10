@@ -34,6 +34,9 @@ class ibs.th.str.utd.sts.th inherits objth:
   define public property  DeliveryCodeMismatch as class propmap no-undo get.  protected set.
   define public property  InconsistencyWithSupplyContract as class propmap no-undo get.  protected set.
   define public property  LoadError as class propmap no-undo get.  protected set.
+  define public property  edocError as class propmap no-undo get.  protected set.
+  define public property  RejectionUtd as class propmap no-undo get.  protected set.
+  define public property  ConfirmedUcd as class propmap no-undo get.  protected set.
   define public property  Rejection as class propmap no-undo get. 
     protected set.    
 
@@ -70,6 +73,11 @@ class ibs.th.str.utd.sts.th inherits objth:
     DeliveryCodeMismatch = crProp(32, "DeliveryCodeMismatch", "Несоответствие кодов маркировки при поставке").
     InconsistencyWithSupplyContract = crProp(33, "InconsistencyWithTheSupplyContract", "Несоответсвие договору поставки ").
     LoadError            = crProp(34, "LoadError", "Ошибка загрузки ").
+    edocError            = crProp(35, "edocError", "Ошибка").
+    RejectionUtd         = crProp(36, "RejectionUtd", "Отказать").
+    ConfirmedUcd         = crProp(37, "ConfirmedUcd", "Подтвердить").
+    
+    
   end.
 
   /*------------------------------------------------------------------------------

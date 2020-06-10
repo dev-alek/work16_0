@@ -374,7 +374,9 @@ define menu m-outs
 DEFINE MENU m-marks 
   MENU-ITEM m_add-marks          LABEL "Добавить"      
   MENU-ITEM m_del-marks          LABEL "Удалить"      
-  MENU-ITEM m_lookup-marks       LABEL "Просмотр"      .
+  MENU-ITEM m_lookup-marks       LABEL "Просмотр"      
+  MENU-ITEM m_no-marks           LABEL "Немаркированная продукция"
+.
 
 define menu m-acc_price
     menu-item m-ap-1 label "без НДС"              accelerator "alt-1"
@@ -1328,7 +1330,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
         end.
         else 
         do:
-          v-message = "Марка " + mark + " не привязана к этому документу" . 
+          v-message = "Марка " + mark + " отсутствует в документе" . 
         end.  
       end.
 
@@ -1557,7 +1559,7 @@ do while v-del:
           end.
           else
           do:
-            v-message = "Марка " + mark + " не привязана к этому документу" .
+            v-message = "Марка " + mark + " отсутствует в документе" .
           end.
       end.
       else 
@@ -1786,6 +1788,159 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
         delete tt-marking-lines.
       end.
     end.        
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_no-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_no-marks d-out-doc
+ON CHOOSE OF MENU-ITEM m_no-marks /* Просмотр */
+  DO:
+    define buffer bf_doc-line for ub.doc-line .
+    define buffer bf_goods    for ub.goods.
+    define buffer buf_marking-lines for ub.marking-lines .
+    define buffer buf_marking       for ub.marking .
+    define buffer buf_goods         for ub.goods .
+    define buffer buf_doc-line      for ub.doc-line .
+    define buffer buf_gds-dtl       for ub.gds-dtl .
+    define buffer buf_parts         for ub.parts .
+    define buffer bf_parts          for ub.parts .
+    define buffer cpl_gds-dtl       for ub.gds-dtl .
+    define variable mark       as character no-undo .
+    define variable jj         as integer   no-undo .
+    define variable v-GTIN     as character no-undo .
+    define variable v-gds-code as integer   no-undo . 
+    define variable ungroup    as logical   no-undo .
+    define variable v-message  as character no-undo .
+    
+    define variable qnty-mark-doc as integer no-undo .
+    define variable qnty-mark-fact as integer no-undo .
+    define variable ii as integer no-undo .
+    define variable v-ok as logical no-undo .
+      if available (t-doc) then 
+      do:
+       for each bf_doc-line no-lock where bf_doc-line.doc-code = t-doc.doc-code,
+        first bf_goods no-lock where bf_goods.artic = bf_doc-line.artic
+                                 and bf_goods.prod-code = bf_doc-line.prod-code
+                                 and bf_goods.prod-type = bf_doc-line.prod-type:
+         qnty-mark-doc = 0 .
+         qnty-mark-fact = 0 .                          
+        for each ub.marking-lines no-lock where
+          ub.marking-lines.obj-type = t-doc.obj-type
+          and ub.marking-lines.obj-code = t-doc.obj-code
+          and ub.marking-lines.out-code = t-doc.doc-code
+          and ub.marking-lines.gds-code = bf_goods.gds-code
+          and ub.marking-lines.mark begins {&tech-mark-prefix}:
+
+          find first ub.marking no-lock where ub.marking.mark = ub.marking-lines.mark and ub.marking.unit-ext = "UNIT" no-error.
+          if available (ub.marking)
+            then 
+          do:
+            qnty-mark-doc = qnty-mark-doc + 1 .
+            if ub.marking-lines.sts = Marking:Checked_:KeyIntDB then qnty-mark-fact = qnty-mark-fact + 1 . 
+          end.
+        end.
+        if qnty-mark-doc > 0 then do:
+        create tt-tech-mark.
+        assign
+          tt-tech-mark.doc-code  = bf_doc-line.doc-code 
+          tt-tech-mark.line-num  = bf_doc-line.line-num
+          tt-tech-mark.gds-code  = bf_goods.gds-code 
+          tt-tech-mark.gds-name  = bf_goods.gds-name
+          tt-tech-mark.qnty-doc  = qnty-mark-doc
+          tt-tech-mark.qnty-fact = qnty-mark-fact
+          .
+          end.
+      end.
+
+      if available (tt-tech-mark) then
+      do:
+        run str/no_mark.w (input parparentproc,
+          input-output table tt-tech-mark by-reference,
+          input pardoc-mode,
+          output v-ok
+          ) 
+          .
+/*Сброс статусов технических марок*/
+if v-ok then do:
+for each ub.marking-lines exclusive-lock where
+          ub.marking-lines.obj-type = t-doc.obj-type
+          and ub.marking-lines.obj-code = t-doc.obj-code
+          and ub.marking-lines.out-code = t-doc.doc-code
+          and ub.marking-lines.mark begins {&tech-mark-prefix}:
+          ub.marking-lines.sts = Marking:PendingVerification:KeyIntDB .  
+end.
+for each tt-tech-mark:
+ii = 0 .
+for each ub.marking-lines exclusive-lock where
+          ub.marking-lines.obj-type = t-doc.obj-type
+          and ub.marking-lines.obj-code = t-doc.obj-code
+          and ub.marking-lines.out-code = tt-tech-mark.doc-code
+          and ub.marking-lines.gds-code = tt-tech-mark.gds-code
+          and ub.marking-lines.mark begins {&tech-mark-prefix}:
+          ii = ii + 1 .
+          if ii > tt-tech-mark.qnty-fact then leave .
+          ub.marking-lines.sts = Marking:Checked_:KeyIntDB .
+end.            
+                  
+end.   
+    ii = 0 .
+
+        for each buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code,
+          first buf_gds-dtl exclusive-lock where buf_gds-dtl.doc-code = buf_doc-line.doc-code and 
+                                                 buf_gds-dtl.artic = buf_doc-line.artic and
+                                                 buf_gds-dtl.prod-code = buf_doc-line.prod-code and 
+                                                 buf_gds-dtl.prod-type = buf_doc-line.prod-type:
+          jj = 0 .        
+          
+          find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
+                                             buf_goods.prod-code = buf_doc-line.prod-code and
+                                             buf_goods.prod-type = buf_doc-line.prod-type no-error .
+          
+          for each buf_marking-lines exclusive-lock where buf_marking-lines.obj-code = buf_doc-line.obj-code and 
+                                                          buf_marking-lines.obj-type = buf_doc-line.obj-type and 
+                                                          buf_marking-lines.out-code = buf_doc-line.doc-code and 
+                                                          buf_marking-lines.gds-code = buf_goods.gds-code,
+            first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark and 
+                                            buf_marking.obj-code = buf_marking-lines.obj-code and
+                                            buf_marking.obj-type = buf_marking-lines.obj-type and buf_marking.unit-ext = "UNIT": 
+          if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then do:
+          jj = jj + 1 .
+          ii = ii + 1 . 
+          end.
+          buf_doc-line.fact-qnty = jj .
+          buf_gds-dtl.fact-qnty = buf_doc-line.fact-qnty .          
+          for first buf_parts exclusive-lock where buf_parts.out-code = buf_marking-lines.out-code and 
+                                                   buf_parts.artic = buf_doc-line.artic and
+                                                   buf_parts.prod-code = buf_doc-line.prod-code and 
+                                                   buf_parts.prod-type = buf_doc-line.prod-type and 
+                                                   buf_parts.obj-code = buf_marking-lines.obj-code and
+                                                   buf_parts.obj-type = buf_marking-lines.obj-type and
+                                                   buf_parts.part-code = buf_marking-lines.part-code and 
+                                                   buf_parts.in-code = buf_marking-lines.in-code :
+            buf_parts.fact-qnty = buf_doc-line.fact-qnty .
+          end. 
+          
+          end.
+        
+        t-doc.fact-qnty = ii .                                     
+        end.               
+        
+ end.
+ 
+
+ 
+      end.
+      else 
+      do:
+        message "Нет технических марок"
+          view-as alert-box.
+      end.  
+    
+    end.
+    empty temp-table tt-tech-mark .   
+    run ui-on in this-procedure ( input "line" ).       
   END.
 
 /* _UIB-CODE-BLOCK-END */

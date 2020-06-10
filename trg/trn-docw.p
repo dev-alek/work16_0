@@ -1505,7 +1505,9 @@ end.
         undo main-block, return error v-message .
       end.
       if ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:
-        for each ub.marking-lines exclusive-lock where ub.marking-lines.out-code = ub.trn-doc.out-code:
+       for each ub.marking-lines exclusive-lock where ub.marking-lines.out-code = ub.trn-doc.doc-code 
+                                                  and ub.marking-lines.obj-code = ub.trn-doc.obj-code
+                                                  and ub.marking-lines.obj-type = ub.trn-doc.obj-type:
           for each ub.marking exclusive-lock where ub.marking.mark = ub.marking-lines.mark:
             find first ub.clients where ub.clients.obj-type = ub.trn-doc.obj-type and ub.clients.obj-code = ub.trn-doc.obj-code.
             run nws/cr-route.p 
