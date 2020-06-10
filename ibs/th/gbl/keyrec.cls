@@ -23,15 +23,23 @@ class ibs.th.gbl.keyrec:
   define property ReturnMsg as character no-undo
     get.
     private set.
-  define property Err as logical  no-undo
+
+  define property Err as logical no-undo
     get.
     private set.
+
+  define property g#news as logical no-undo
+    get.
+    private set.
+  
   define variable hndl-proc-key-rec as handle.
  
   constructor public keyrec ():
     
     run gbl\key-rec.p persistent (output hndl-proc-key-rec) no-error.
-    
+    if error-status:error
+    then
+       message error-status:get-message(1) view-as alert-box. 
   end constructor.
 
   method public void GenKeyRec (  

@@ -47,6 +47,7 @@ define variable vss-description as character no-undo initial "Удаление всех библ
 { ref/gds-matl.i }
 { gbl/lib-gate.i }
 { gbl/lib-log.i  }
+define new global shared variable g#libobj  as handle no-undo .
 
 do
 on error undo, return error return-value
@@ -132,7 +133,9 @@ run delete-procedure in this-procedure
   run delete-procedure in this-procedure
     (input g#lib-log
     ) .
-
+  run delete-procedure in this-procedure
+    (input g#libobj
+    ) .
 end.
 
 

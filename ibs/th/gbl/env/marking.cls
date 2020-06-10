@@ -1,0 +1,44 @@
+ 
+ /*------------------------------------------------------------------------
+    File        : marking
+    Purpose     : 
+    Syntax      : 
+    Description : 
+    Author(s)   : asmorozov
+    Created     : Tue Feb 25 13:03:00 MSK 2020
+    Notes       : 
+  ----------------------------------------------------------------------*/
+
+using Progress.Lang.*.
+using ibs.th.str.marking.sts.
+
+
+class ibs.th.gbl.env.marking: 
+  
+  define public property Sts as class sts no-undo 
+    get.
+    set.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+    
+  constructor public marking (  ):
+    super ().
+    Sts = new sts ().
+    
+  end constructor.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  destructor public marking ( ):
+/*    if valid-object (EDI)    */
+/*      then delete object EDI.*/
+/*    if valid-object (TH)     */
+/*      then delete object TH. */
+  end destructor.
+
+end class.
