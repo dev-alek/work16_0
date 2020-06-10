@@ -388,6 +388,16 @@ define variable vss-description as character no-undo init "Информация об объекте
 }
 { gbl/menuload.i
   {&bef-menuload_adm_function}
+  "'Утилита проверки целостности свободной зоны марок'"
+  "'rep/g-alcmarks.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
   "'Изменение товаров по списку'"
   "'utl/gdsuform.w'"
   " "
