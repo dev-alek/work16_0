@@ -290,6 +290,7 @@ do
     '<TD text_wrap="true" colspan="7" style="text-align: center;">Атрибуты диска</TD>' skip
     '</TR>' skip .
   put stream OutStr-html unformatted  
+    '<TR>' skip 
     '<TD text_wrap="true" style="text-align: center;">Название</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Value</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Thresh</TD>' skip
@@ -358,10 +359,18 @@ do
                             
   output stream OutStr-html close.     
                                                                                                                 
-/*  run prn-lib-reportviewer-report-name in this-procedure (*/
-/*    input THIS-PROCEDURE                                  */
-/*    ,input v-file-name-rep-htm                            */
-/*    ).                                                    */
+  define variable v-report-name       as character no-undo .
+  define variable v-fill-path-RepView as character no-undo.
+    if search("exe\ReportViewer\reportviewer.exe") <> ? then
+  do:
+    v-fill-path-RepView = search("exe\ReportViewer\reportviewer.exe").
+  end.
+  else
+  do:
+    message "Не найдена программа просмотра отчёта!" view-as alert-box error.
+  end.
+
+  os-command no-wait value(v-fill-path-RepView + " false " + v-file-name-rep-htm).
 
 end.
 
