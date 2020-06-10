@@ -551,7 +551,8 @@ define frame motp-frame
      e-mail-list at row 8 col 3
      f-proxy-addres at row 12 col 3
      f-proxy-login at row 13 col 3
-     f-proxy-password at row 14 col 3
+     f-proxy-password at row 14 col 3 blank
+     f-proxy-password-screen at row 14 col 3  no-label
      t-proxy-ssl at row 15.1 col 14 no-label
      "SSL прокси:" at row 15 col 3 view-as text size 11 by 1   
      SPACE(83.11) SKIP(5.12)  
@@ -730,7 +731,7 @@ END.
 ON ANY-KEY OF f-proxy-password IN FRAME diadoc-Frame /* Пароль */
 DO:
     assign
-    f-diadoc-pwd-screen :screen-value = fill('*':u, length(f-diadoc-pwd :screen-value )).
+    f-proxy-password-screen :screen-value = fill('*':u, length(f-proxy-password :screen-value )).
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -742,6 +743,30 @@ ON VALUE-CHANGED OF f-proxy-password IN FRAME diadoc-Frame /* Пароль */
 DO:
   assign
     f-proxy-password-screen :screen-value = fill('*':u, length(f-proxy-password :screen-value )).
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME f-proxy-password
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-proxy-password Dialog-Frame
+ON ANY-KEY OF f-proxy-password IN FRAME motp-frame /* Пароль */
+DO:
+    assign
+      f-proxy-password-screen :screen-value = fill('*':u, length(f-proxy-password :screen-value ))
+    .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-proxy-password Dialog-Frame
+ON VALUE-CHANGED OF f-proxy-password IN FRAME motp-frame /* Пароль */
+DO:
+  assign
+    f-proxy-password-screen :screen-value = fill('*':u, length(f-proxy-password :screen-value ))
   .
 END.
 
@@ -1559,6 +1584,15 @@ procedure MOTP-Enable :
       end.
     end case.
   end.
+  
+  ASSIGN
+   f-proxy-password-screen:WIDTH-CHARS IN FRAME motp-frame  = f-proxy-password:WIDTH-CHARS IN FRAME motp-frame  - 0.5
+   f-proxy-password-screen:HEIGHT-CHARS IN FRAME motp-frame  = f-proxy-password:HEIGHT-CHARS IN FRAME motp-frame  - 0.6
+   f-proxy-password-screen:row IN FRAME motp-frame  = f-proxy-password:row IN FRAME motp-frame  + 0.2
+   f-proxy-password-screen:COL IN FRAME motp-frame  = f-proxy-password:col IN FRAME motp-frame  + 0.2
+  .
+  f-proxy-password-screen  = fill('*':u, length(f-proxy-password )).
+  
   DISPLAY
     tt-ext-system.esys-id
     tt-ext-system.esys-name
@@ -1569,6 +1603,7 @@ procedure MOTP-Enable :
     f-proxy-addres
     f-proxy-login
     f-proxy-password
+    f-proxy-password-screen
     t-proxy-ssl
     e-mail-list
   WITH FRAME MOTP-frame .
@@ -1583,6 +1618,7 @@ procedure MOTP-Enable :
     f-proxy-addres when p-mode <> {&lookup}
     f-proxy-login when p-mode <> {&lookup}
     f-proxy-password when p-mode <> {&lookup}
+    f-proxy-password-screen when p-mode <> {&lookup}
     t-proxy-ssl when p-mode <> {&lookup}
     e-mail-list when p-mode <> {&lookup}
   WITH FRAME Motp-frame .
@@ -2119,6 +2155,7 @@ end.
 if p-mode = {&update} then do:
    v-rec = recid(locked_ext-system).
 end.
+/*
 IF f-proxy-password:VISIBLE IN FRAME motp-frame THEN DO:
     ASSIGN
     f-proxy-password.
@@ -2134,6 +2171,7 @@ IF f-proxy-password:VISIBLE IN FRAME motp-frame THEN DO:
       end.
    end.
 END.
+*/
 if p-mode = {&add-def} then do:
   do v-ii = 1 to num-entries({&form-esys-attr}):
     find first tt-ext-system-attr where

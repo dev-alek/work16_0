@@ -14216,6 +14216,170 @@ end procedure.
 &scop           news-attr-esys-cert-file-ext yes
 &scop    manual-edit-attr-esys-cert-file-ext 0
 &scop     batch-edit-attr-esys-cert-file-ext 0
+&scop type-attr-esys-AuthToken {&type-char}
+&scop format-attr-esys-AuthToken "X(16000)"
+&scop label-attr-esys-AuthToken "Токен авторизации"
+&scop tooltip-attr-esys-AuthToken "Токен авторизации"
+&scop user-can-edit-attr-esys-AuthToken false
+&scop output-display-attr-esys-AuthToken false
+&scop other-attr-esys-AuthToken '':u
+&scop news-attr-esys-AuthToken false
+&scop manual-edit-attr-esys-AuthToken 0
+&scop batch-edit-attr-esys-AuthToken 0
+
+&scop type-attr-esys-AuthTokenDT {&type-char}
+&scop format-attr-esys-AuthTokenDT "X(256)"
+&scop label-attr-esys-AuthTokenDT "Дата и время запроса токена авторизации"
+&scop tooltip-attr-esys-AuthTokenDT "Дата и время запроса токена авторизации"
+&scop user-can-edit-attr-esys-AuthTokenDT false
+&scop output-display-attr-esys-AuthTokenDT false
+&scop other-attr-esys-AuthTokenDT '':u
+&scop news-attr-esys-AuthTokenDT false
+&scop manual-edit-attr-esys-AuthTokenDT 0
+&scop batch-edit-attr-esys-AuthTokenDT 0
+
+&scop type-attr-esys-proxy-ssl {&type-log}
+&scop format-attr-esys-proxy-ssl "+/-"
+&scop label-attr-esys-proxy-ssl "SSL прокси"
+&scop tooltip-attr-esys-proxy-ssl "SSL прокси"
+&scop user-can-edit-attr-esys-proxy-ssl true
+&scop output-display-attr-esys-proxy-ssl false
+&scop other-attr-esys-proxy-ssl '':u
+&scop news-attr-esys-proxy-ssl false
+&scop manual-edit-attr-esys-proxy-ssl 0
+&scop batch-edit-attr-esys-proxy-ssl 0
+
+&scop type-attr-esys-server-addr {&type-char}
+&scop format-attr-esys-server-addr "X(256)"
+&scop label-attr-esys-server-addr "Адрес сервера МОТП или Диадок"
+&scop tooltip-attr-esys-server-addr "Адрес сервера МОТП или Диадок"
+&scop user-can-edit-attr-esys-server-addr true
+&scop output-display-attr-esys-server-addr false
+&scop other-attr-esys-server-addr '':u
+&scop news-attr-esys-server-addr false
+&scop manual-edit-attr-esys-server-addr 0
+&scop batch-edit-attr-esys-server-addr 0
+
+&scop type-attr-esys-proxy-addr {&type-char}
+&scop format-attr-esys-proxy-addr "X(256)"
+&scop label-attr-esys-proxy-addr "Адрес прокси"
+&scop tooltip-attr-esys-proxy-addr "Адрес прокси"
+&scop user-can-edit-attr-esys-proxy-addr true
+&scop output-display-attr-esys-proxy-addr false
+&scop other-attr-esys-proxy-addr '':u
+&scop news-attr-esys-proxy-addr false
+&scop manual-edit-attr-esys-proxy-addr 0
+&scop batch-edit-attr-esys-proxy-addr 0
+
+&scop type-attr-esys-proxy-login {&type-char}
+&scop format-attr-esys-proxy-login "X(256)"
+&scop label-attr-esys-proxy-login "Логин прокси"
+&scop tooltip-attr-esys-proxy-login "Логин прокси"
+&scop user-can-edit-attr-esys-proxy-login true
+&scop output-display-attr-esys-proxy-login false
+&scop other-attr-esys-proxy-login '':u
+&scop news-attr-esys-proxy-login false
+&scop manual-edit-attr-esys-proxy-login 0
+&scop batch-edit-attr-esys-proxy-login 0
+
+&scop type-attr-esys-proxy-pswd {&type-char}
+&scop format-attr-esys-proxy-pswd "X(256)"
+&scop label-attr-esys-proxy-pswd "Пароль прокси"
+&scop tooltip-attr-esys-proxy-pswd "Пароль прокси"
+&scop user-can-edit-attr-esys-proxy-pswd true
+&scop output-display-attr-esys-proxy-pswd false
+&scop other-attr-esys-proxy-pswd '':u
+&scop news-attr-esys-proxy-pswd yes
+&scop manual-edit-attr-esys-proxy-pswd 0
+&scop batch-edit-attr-esys-proxy-pswd 0
+
+&scop type-attr-esys-host-code {&type-int}
+&scop format-attr-esys-host-code ">>>>>>>>>9"
+&scop label-attr-esys-host-code "Код фирмы"
+&scop tooltip-attr-esys-host-code "Код фирмы"
+&scop user-can-edit-attr-esys-host-code true
+&scop output-display-attr-esys-host-code false
+&scop other-attr-esys-host-code '':u
+&scop news-attr-esys-host-code false
+&scop manual-edit-attr-esys-host-code 0
+&scop batch-edit-attr-esys-host-code 0
+
+&scop type-attr-esys-user-id {&type-char}
+&scop format-attr-esys-user-id "X(256)"
+&scop label-attr-esys-user-id "Пользователь"
+&scop tooltip-attr-esys-user-id "Пользователь"
+&scop user-can-edit-attr-esys-user-id true
+&scop output-display-attr-esys-user-id false
+&scop other-attr-esys-user-id '':u
+&scop news-attr-esys-user-id false
+&scop manual-edit-attr-esys-user-id 0
+&scop batch-edit-attr-esys-user-id 0
+
+&scop type-attr-esys-AuthToken-send {&type-char}
+&scop format-attr-esys-AuthToken-send "X(16000)"
+&scop label-attr-esys-AuthToken-send "Просроченный токен авторизации"
+&scop tooltip-attr-esys-AuthToken-send "Просроченный токен авторизации"
+&scop user-can-edit-attr-esys-AuthToken-send false
+&scop output-display-attr-esys-AuthToken-send false
+&scop other-attr-esys-AuthToken-send '':u
+&scop news-attr-esys-AuthToken-send false
+&scop manual-edit-attr-esys-AuthToken-send 0
+&scop batch-edit-attr-esys-AuthToken-send 0
+
+&scop type-attr-esys-mail-list {&type-char}
+&scop format-attr-esys-mail-list "X(1000)"
+&scop label-attr-esys-mail-list "Список адресов эл. почты"
+&scop tooltip-attr-esys-mail-list "Список адресов эл. почты для отправки уведомлений. Указывать через запятую."
+&scop user-can-edit-attr-esys-mail-list true
+&scop output-display-attr-esys-mail-list false
+&scop other-attr-esys-mail-list '':u
+&scop news-attr-esys-mail-list false
+&scop manual-edit-attr-esys-mail-list 0
+&scop batch-edit-attr-esys-mail-list 0
+
+&scop type-attr-esys-diadoc-user {&type-char}
+&scop format-attr-esys-diadoc-user "X(256)"
+&scop label-attr-esys-diadoc-user "Пользователь Диадок"
+&scop tooltip-attr-esys-diadoc-user "Пользователь Диадок"
+&scop user-can-edit-attr-esys-diadoc-user true
+&scop output-display-attr-esys-diadoc-user false
+&scop other-attr-esys-diadoc-user '':u
+&scop news-attr-esys-diadoc-user false
+&scop manual-edit-attr-esys-diadoc-user 0
+&scop batch-edit-attr-esys-diadoc-user 0
+
+&scop type-attr-esys-diadoc-pwd {&type-char}
+&scop format-attr-esys-diadoc-pwd "X(256)"
+&scop label-attr-esys-diadoc-pwd "Пароль пользователя Диадок"
+&scop tooltip-attr-esys-diadoc-pwd "Пароль пользователя Диадок"
+&scop user-can-edit-attr-esys-diadoc-pwd true
+&scop output-display-attr-esys-diadoc-pwd false
+&scop other-attr-esys-diadoc-pwd '':u
+&scop news-attr-esys-diadoc-pwd false
+&scop manual-edit-attr-esys-diadoc-pwd 0
+&scop batch-edit-attr-esys-diadoc-pwd 0
+
+&scop type-attr-esys-diadoc-key {&type-char}
+&scop format-attr-esys-diadoc-key "X(256)"
+&scop label-attr-esys-diadoc-key "Ключ разработчика Диадок"
+&scop tooltip-attr-esys-diadoc-key "Ключ разработчика Диадок"
+&scop user-can-edit-attr-esys-diadoc-key true
+&scop output-display-attr-esys-diadoc-key false
+&scop other-attr-esys-diadoc-key '':u
+&scop news-attr-esys-diadoc-key false
+&scop manual-edit-attr-esys-diadoc-key 0
+&scop batch-edit-attr-esys-diadoc-key 0
+
+&scop type-attr-esys-diadoc-lastload {&type-date}
+&scop format-attr-esys-diadoc-lastload "99/99/9999"
+&scop label-attr-esys-diadoc-lastload "Дата последнего загруженого документа Диадок"
+&scop tooltip-attr-esys-diadoc-lastload "Дата последнего загруженого документа Диадок"
+&scop user-can-edit-attr-esys-diadoc-lastload true
+&scop output-display-attr-esys-diadoc-lastload false
+&scop other-attr-esys-diadoc-lastload '':u
+&scop news-attr-esys-diadoc-lastload false
+&scop manual-edit-attr-esys-diadoc-lastload 0
+&scop batch-edit-attr-esys-diadoc-lastload 0
 
 /* сюда добавлять новые параметры атрибутов ВС */
 
@@ -14295,6 +14459,36 @@ procedure ext-system-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-esys-cert-file-ext
       {&attr-temp-full-code}
+      &scop attr-code attr-esys-AuthToken
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-AuthTokenDT
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-host-code
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-user-id
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-server-addr
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-proxy-addr
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-proxy-login
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-proxy-pswd
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-proxy-ssl
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-AuthToken-send
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-mail-list
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-diadoc-user
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-diadoc-pwd 
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-diadoc-key
+      {&attr-temp-full-code}
+      &scop attr-code attr-esys-diadoc-lastload
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов ВС */
       otherwise do:
@@ -14335,6 +14529,36 @@ procedure ext-system-attr-tooltip :
       &scop attr-code attr-esys-cert-sign-issuer
       {&attr-temp-code}
       &scop attr-code attr-esys-cert-file-ext
+      {&attr-temp-code}
+      &scop attr-code attr-esys-AuthToken
+      {&attr-temp-code}
+      &scop attr-code attr-esys-AuthTokenDT
+      {&attr-temp-code}
+      &scop attr-code attr-esys-host-code
+      {&attr-temp-code}
+      &scop attr-code attr-esys-user-id
+      {&attr-temp-code}
+      &scop attr-code attr-esys-server-addr
+      {&attr-temp-code}
+      &scop attr-code attr-esys-proxy-addr
+      {&attr-temp-code}
+      &scop attr-code attr-esys-proxy-login
+      {&attr-temp-code}
+      &scop attr-code attr-esys-proxy-pswd
+      {&attr-temp-code}
+      &scop attr-code attr-esys-proxy-ssl
+      {&attr-temp-code}
+      &scop attr-code attr-esys-AuthToken-send
+      {&attr-temp-code}
+      &scop attr-code attr-esys-mail-list
+      {&attr-temp-code}
+      &scop attr-code attr-esys-diadoc-user
+      {&attr-temp-code}
+      &scop attr-code attr-esys-diadoc-pwd
+      {&attr-temp-code}
+      &scop attr-code attr-esys-diadoc-key
+      {&attr-temp-code}
+      &scop attr-code attr-esys-diadoc-lastload
       {&attr-temp-code}
 
 
@@ -14574,6 +14798,36 @@ procedure ext-system-attr-news :
       &scop attr-code attr-esys-cert-file-ext
       {&attr-news-code}
        &scop attr-code attr-ver-code
+      {&attr-news-code}
+      &scop attr-code attr-esys-AuthToken
+      {&attr-news-code}
+      &scop attr-code attr-esys-AuthTokenDT
+      {&attr-news-code}
+      &scop attr-code attr-esys-host-code
+      {&attr-news-code}
+      &scop attr-code attr-esys-user-id
+      {&attr-news-code}
+      &scop attr-code attr-esys-server-addr
+      {&attr-news-code}
+      &scop attr-code attr-esys-proxy-addr
+      {&attr-news-code}
+      &scop attr-code attr-esys-proxy-login
+      {&attr-news-code}
+      &scop attr-code attr-esys-proxy-pswd
+      {&attr-news-code}
+      &scop attr-code attr-esys-proxy-ssl
+      {&attr-news-code}
+      &scop attr-code attr-esys-AuthToken-send
+      {&attr-news-code}
+      &scop attr-code attr-esys-mail-list
+      {&attr-news-code}
+      &scop attr-code attr-esys-diadoc-user
+      {&attr-news-code}
+      &scop attr-code attr-esys-diadoc-pwd
+      {&attr-news-code}
+      &scop attr-code attr-esys-diadoc-key
+      {&attr-news-code}
+      &scop attr-code attr-esys-diadoc-lastload
       {&attr-news-code}
 
 
