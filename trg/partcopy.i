@@ -582,7 +582,7 @@ procedure partcopy :
                                                                           and orig_marking-lines-childs.in-code    = buf_orig_parts.in-code
                                                                           and orig_marking-lines-childs.out-code   = buf_orig_parts.out-code
                                                                           and orig_marking-lines-childs.part-code  = buf_orig_parts.part-code
-                                                                          and orig_marking-lines-childs.prt-code   = buf_orig_parts.part-code
+                                                                          and orig_marking-lines-childs.prt-code   = buf_orig_parts.prt-code
                                                                           no-error . 
                     if available orig_marking-lines-childs
                     then do :
@@ -1921,7 +1921,6 @@ procedure partcopy-update-parts-delete :
             /* и взять оттуда значения полей, */
             /* которые были присвоены при закрытии документа до статуса {&fact} */
 
-            define variable v-gds-code as integer   no-undo .
 
             { gbl/gds-code.i
               p-artic
