@@ -409,12 +409,12 @@ define variable vss-description as character no-undo init "Информация об объекте
   "'utl/free-mark.p'"
 }
 
-/*{ gbl/menuload.i
+{ gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Создание статусов марок в серой зоне'"
   "'utl/gray-zone.p'"
 }
-*/
+
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Изменение товаров по списку'"
