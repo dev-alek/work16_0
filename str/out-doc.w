@@ -4456,8 +4456,8 @@ PROCEDURE proc-m-outs-9 :
   
   define buffer buf_utd       for ub.utd  .
   define buffer buf_utd-lines for ub.utd-lines .
-  
-  run str/UPD.w ( parparentproc, {&select}, 0, output v-rec-list)  .
+  define variable vconnect as com-handle no-undo.  
+  run str/UPD.w ( parparentproc, {&select}, 0,"" , input-output vconnect , output v-rec-list)  .
   if trim(v-rec-list) = ""
   or v-rec-list = ?
   then

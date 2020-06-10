@@ -345,7 +345,7 @@ tt-chk-doc.shift-date
 &Scoped-define ENABLED-TABLES tt-chk-doc
 &Scoped-define FIRST-ENABLED-TABLE tt-chk-doc
 &Scoped-Define ENABLED-OBJECTS B-exit B-quit B-prev B-next Cb-chk-type ~
-br-attr b-func B-print B-hist B-help RECT-1 fhour fmin fsec B-card b-cd ~
+b-func br-attr B-print B-hist B-help RECT-1 fhour fmin fsec B-card b-cd ~
 v-corr-osnov v-corr-type v-doc-osnov corr-date f-num-corr BUTTON-1 ~
 b-choose-date f-cause-corr v-src-d-card b-addbonus B-adddiscnt B-addgds ~
 BR-corr BR-gds BR-discnt BR-pay B-addpay b-cf F-cashier F-salesman Btn_sht-from~
@@ -488,7 +488,7 @@ DEFINE MENU MENU-BR-pay
        MENU-ITEM m-pay          LABEL "Оплата"        .
 
 DEFINE MENU m_marks 
-       MENU-ITEM m_marks-utd    LABEL "Марки по чеку"
+       MENU-ITEM m_marks-utd    LABEL "Марки по чеку" 
        MENU-ITEM m_marks-lines  LABEL "Марки по линии".
 
 DEFINE MENU m-func 
@@ -590,7 +590,7 @@ DEFINE BUTTON BUTTON-1
 
 DEFINE BUTTON B_mark 
      LABEL "Марки" 
-     SIZE 13.75 BY 1.
+     SIZE 9.13 BY 1.
 
 DEFINE VARIABLE Cb-chk-type AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS COMBO-BOX INNER-LINES 10
@@ -838,8 +838,8 @@ DEFINE FRAME Dialog-Frame
      B-prev AT ROW 1 COL 21
      B-next AT ROW 1 COL 25
      Cb-chk-type AT ROW 1 COL 36 COLON-ALIGNED NO-LABEL
+     b-func AT ROW 1 COL 83.5
      br-attr AT ROW 1 COL 89.75 WIDGET-ID 8
-     b-func at row 1 col 83.45
      B-print AT ROW 1 COL 93.75
      B-hist AT ROW 1 COL 96.75
      B-help AT ROW 1 COL 99.75
@@ -934,15 +934,15 @@ DEFINE FRAME Dialog-Frame
      B-adddiscnt AT ROW 13.88 COL 75.5
      B-addgds AT ROW 13.88 COL 89.5
      Btn_sht-from AT ROW 13.96 COL 23.13 WIDGET-ID 34
-     BR-discnt AT ROW 14.96 COL 1
-     BR-gds AT ROW 14.96 COL 1
      BR-corr AT ROW 14.96 COL 1
+     BR-gds AT ROW 14.96 COL 1
+     BR-discnt AT ROW 14.96 COL 1
      BR-pay AT ROW 21.67 COL 1
      tt-chk-doc.PS AT ROW 26 COL 1 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 86.38 BY 2
      B-addpay AT ROW 26.04 COL 88.63
-     B_mark AT ROW 27 COL 102.13 RIGHT-ALIGNED WIDGET-ID 80
+     B_mark AT ROW 27 COL 97.51 RIGHT-ALIGNED WIDGET-ID 80
      b-cf AT ROW 27.04 COL 88.63 WIDGET-ID 4
      F-cashier AT ROW 2.08 COL 43.13 COLON-ALIGNED NO-LABEL
      tt-chk-doc.tot-doc AT ROW 2.08 COL 81 COLON-ALIGNED
@@ -974,11 +974,11 @@ DEFINE FRAME Dialog-Frame
           FGCOLOR 12 
      "Основание корректировки" VIEW-AS TEXT
           SIZE 24 BY .67 AT ROW 7.83 COL 41.5 WIDGET-ID 28
-     "Время:" VIEW-AS TEXT
-          SIZE 6.63 BY 1 AT ROW 3 COL 5.63
      "Тип чека" VIEW-AS TEXT
           SIZE 8.63 BY 1.04 AT ROW 1 COL 29
           FGCOLOR 4 
+     "Время:" VIEW-AS TEXT
+          SIZE 6.63 BY 1 AT ROW 3 COL 5.63
      RECT-1 AT ROW 8 COL 2 WIDGET-ID 26
      SPACE(1.24) SKIP(16.82)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -1051,6 +1051,7 @@ ASSIGN
 
 ASSIGN 
        BR-pay:POPUP-MENU IN FRAME Dialog-Frame             = MENU MENU-BR-pay:HANDLE.
+
 /* SETTINGS FOR BUTTON B_mark IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 ASSIGN 
@@ -1094,8 +1095,6 @@ ASSIGN b-func:MENU-MOUSE = 1.
 /* SETTINGS FOR FILL-IN tt-chk-doc.shift-name IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-chk-doc.shift-num IN FRAME Dialog-Frame
-   EXP-LABEL                                                            */
-/* SETTINGS FOR FILL-IN tt-chk-doc.src-d-card IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-chk-doc.src-d-pcnt IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
@@ -2569,7 +2568,7 @@ DO:
 
 &Scoped-define SELF-NAME m_marks-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_marks-utd Dialog-Frame
-ON CHOOSE OF MENU-ITEM m_marks-utd /* Марки по документу */
+ON CHOOSE OF MENU-ITEM m_marks-utd /* Марки по чеку */
 DO:
     run temp-mark (input 2) .
     if available (tt-marking-lines) then 
