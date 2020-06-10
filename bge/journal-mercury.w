@@ -92,6 +92,8 @@ define variable objKeyRec as keyrec.
 define variable v-part-rowid as rowid no-undo .
 define variable v-tbl-name as character no-undo .
 
+define variable date1 as datetime no-undo .
+define variable date2 as datetime no-undo .
 
 define variable ii as integer no-undo.
 
@@ -169,6 +171,21 @@ DEFINE VARIABLE RADIO-SET-1 AS INTEGER INITIAL 1
 "Новые", 2,
 "Закрытые", 3
      SIZE 50 BY 1.25 NO-UNDO.
+     
+DEFINE BUTTON btRef 
+     LABEL "Обновить" 
+     SIZE 15 BY 1.13.
+
+DEFINE VARIABLE v-date-end AS DATE FORMAT "99/99/9999":U 
+     LABEL "По" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-date-start AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата C" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
+     
 { gbl/color.i }
 { cmp/library.i  }
 
@@ -189,7 +206,10 @@ DEFINE FRAME Dialog-Frame
      b-request at row 1 col 32
      b-response at row 1 col 47.5
      RADIO-SET-1 AT ROW 2.3 COL 1 NO-LABEL WIDGET-ID 2
-     BROWSE-Journal-mercury AT ROW 4.5 COL 1 WIDGET-ID 200
+     v-date-start at row 2.3 col 55
+     v-date-end at row 2.3 col 76
+     btRef at row 2.15 col 94
+     BROWSE-Journal-mercury AT ROW 4 COL 1 WIDGET-ID 200
      SPACE(0.50) SKIP(0.24)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -231,6 +251,15 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Журнал ВСД */
 DO:
+    delete object journal no-error .
+    delete object mercury no-error .
+    delete object vsdStorage no-error .
+    delete object vsdsTHObj no-error .
+    delete object vsdTHObj no-error .
+    delete object vsdStsType no-error .
+    delete object objThObj no-error .
+    delete object objKeyRec no-error .
+    
     APPLY "END-ERROR":U TO SELF.
 END.
 
@@ -243,11 +272,28 @@ END.
 ON VALUE-CHANGED OF RADIO-SET-1 IN FRAME Dialog-Frame
 DO:
   assign RADIO-SET-1 .
-   RUN enable_UI.
+  run openBR.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME btRef
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btRef Dialog-Frame
+ON choose OF btRef IN FRAME Dialog-Frame
+do:
+  assign
+    v-date-end
+    v-date-start
+  .
+  date1 = datetime(v-date-start, 0) . 
+  date2 = datetime(v-date-end, 86399999) . 
+  
+  bh-journal-mercury = journal:GetHndlTable(input date1, input date2).
+  
+  apply "value-changed" to radio-set-1 .
+  
+end.
 
 &Scoped-define SELF-NAME Btn-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn-del Dialog-Frame
@@ -507,8 +553,15 @@ DO:
   delete object objThObj no-error . 
   delete object vsdStsType no-error . 
   
-  bh-journal-mercury = journal:GetHndlTable().
-  RUN enable_UI.
+  assign
+    v-date-end
+    v-date-start
+  .
+  date1 = datetime(v-date-start, 0) . 
+  date2 = datetime(v-date-end, 86399999) .
+  
+  bh-journal-mercury = journal:GetHndlTable(input date1, input date2).
+  RUN openBR.
 
 END.
 
@@ -663,8 +716,15 @@ DO:
   
   delete object vsdStsType no-error .
   
-  bh-journal-mercury = journal:GetHndlTable().
-  RUN enable_UI.
+  assign
+    v-date-end
+    v-date-start
+  .
+  date1 = datetime(v-date-start, 0) . 
+  date2 = datetime(v-date-end, 86399999) .
+  
+  bh-journal-mercury = journal:GetHndlTable(input date1, input date2).
+  RUN openBR.
   
 END.
 
@@ -695,23 +755,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         no-error
       }
       
-      
-/*  { gbl/chk-actg.i          */
-/*    v-cntxt-db-num          */
-/*    v-cntxt-userid          */
-/*    {&action-head-code-main}*/
-/*    'actn_egais-adm':U      */
-/*    {&cntxt-object}         */
-/*    v-cntxt-host-code-obj   */
-/*    v-cntxt-obj-type        */
-/*    v-cntxt-obj-code        */
-/*    0                       */
-/*    0                       */
-/*    0                       */
-/*    true                    */
-/*    glog                    */
-/*  }                         */
-/*  if not glog then  return .*/
 
   { gbl/diasize.i &browse-name=BROWSE-Journal-mercury }
   run diasize_init in this-procedure .
@@ -724,23 +767,35 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     return .
   end.
   
+  assign
+    v-date-end = today
+    v-date-start = today - 30
+  .
+  
+  date1 = datetime(v-date-start, 0) . 
+  date2 = datetime(v-date-end, 86399999) .
+  
+  assign
+    v-date-end = today
+    v-date-start = today - 30
+  .
+  
+  date1 = datetime(v-date-start, 0) . 
+  date2 = datetime(v-date-end, 86399999) .
+  
   SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
 
   journal = new Journal().
   
   
-/*  egais:EGAISImpl = journal.*/
-  
-  bh-journal-mercury = journal:GetHndlTable().
+  bh-journal-mercury = journal:GetHndlTable(input date1, input date2).
 
 
-    create query gh-journal-mercury.
-  
-  
-    gh-journal-mercury:SET-BUFFERS (bh-journal-mercury ).
-    gh-journal-mercury:query-prepare ("for each tt_journal-merc").
-    gh-journal-mercury:QUERY-OPEN.
-    BROWSE-Journal-mercury:QUERY = gh-journal-mercury.
+  create query gh-journal-mercury.
+
+
+  gh-journal-mercury:SET-BUFFERS (bh-journal-mercury ).
+  BROWSE-Journal-mercury:QUERY = gh-journal-mercury.
 
 
   do ii = 1 to bh-journal-mercury:num-fields - 1:
@@ -756,8 +811,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           
           bcol5 = browse-journal-mercury:get-browse-column(5).
           
-on row-display of browse-journal-mercury IN FRAME Dialog-Frame  /* - */
-DO:
+  on row-display of browse-journal-mercury IN FRAME Dialog-Frame  /* - */
+  DO:
     if bh-journal-mercury:buffer-field ("jou-status"):buffer-value  = "Запрос отправлен" then do:
         bcol1:bgcolor = YELLOW_COLOR.
         bcol2:bgcolor = YELLOW_COLOR.
@@ -774,9 +829,12 @@ DO:
         bcol:bgcolor  = RED_COLOR .
         bcol5:bgcolor = RED_COLOR .  
     end.
-end.    
+  end.   
+
 
   RUN enable_UI.  
+  
+  run openBr .
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -816,36 +874,39 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY RADIO-SET-1 
+  DISPLAY RADIO-SET-1 v-date-end v-date-start
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_Cancel Btn_del RADIO-SET-1 b-request b-response 
+  ENABLE Btn_Cancel Btn_del RADIO-SET-1 b-request b-response btRef v-date-end v-date-start
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   ENABLE BROWSE-journal-mercury 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   
-   case RADIO-SET-1 :
-      when 1  then do:
-            gh-journal-mercury:SET-BUFFERS (bh-journal-mercury).
-            gh-journal-mercury:query-prepare ("for each tt_journal-merc by tt_journal-merc.jou-time desc").
-            gh-journal-mercury:QUERY-OPEN.
-      end.
-      when 2  then do:
-            gh-journal-mercury:SET-BUFFERS (bh-journal-mercury).
-            gh-journal-mercury:query-prepare ("for each tt_journal-merc where tt_journal-merc.jou-status = 'Запрос отправлен'  by tt_journal-merc.jou-time desc").
-            gh-journal-mercury:QUERY-OPEN.
-      end.
-      when 3 then do:
-            gh-journal-mercury:SET-BUFFERS (bh-journal-mercury).
-            gh-journal-mercury:query-prepare ("for each tt_journal-merc where tt_journal-merc.jou-status = 'Ответ получен'  by tt_journal-merc.jou-time desc").
-            gh-journal-mercury:QUERY-OPEN.
-      end.
-    end.
- 
-   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+procedure openBr :
+  
+  case RADIO-SET-1 :
+    when 1  then do:
+          gh-journal-mercury:SET-BUFFERS (bh-journal-mercury).
+          gh-journal-mercury:query-prepare ("for each tt_journal-merc by tt_journal-merc.jou-time desc").
+          gh-journal-mercury:QUERY-OPEN.
+    end.
+    when 2  then do:
+          gh-journal-mercury:SET-BUFFERS (bh-journal-mercury).
+          gh-journal-mercury:query-prepare ("for each tt_journal-merc where tt_journal-merc.jou-status = 'Запрос отправлен'  by tt_journal-merc.jou-time desc").
+          gh-journal-mercury:QUERY-OPEN.
+    end.
+    when 3 then do:
+          gh-journal-mercury:SET-BUFFERS (bh-journal-mercury).
+          gh-journal-mercury:query-prepare ("for each tt_journal-merc where tt_journal-merc.jou-status = 'Ответ получен'  by tt_journal-merc.jou-time desc").
+          gh-journal-mercury:QUERY-OPEN.
+    end.
+  end.
+  
+end procedure .
 
