@@ -66,11 +66,11 @@ define variable v-sum        as decimal   no-undo .
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperName":U, input string(buf_OperServ.OperName), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperAddr":U, input string(buf_OperServ.OperAddr), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperINN":U, input string(buf_OperServ.OperInn), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperPhn":U, input string(buf_OperServ.OperTelTran), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperPhn":U, input string(if buf_OperServ.OperTelTran <> ? then buf_OperServ.OperTelTran else ""), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSProvidName":U, input string(buf_OperServ.SuppName), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSProvidPhn":U, input string(buf_OperServ.SuppTel), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSProvidPhn":U, input string(if buf_OperServ.SuppTel <> ? then buf_OperServ.SuppTel else ""), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSProvidINN":U, input string(buf_OperServ.InnSupp), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSObtainOperPhn":U, input string(buf_OperServ.OperTel), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSObtainOperPhn":U, input string(if buf_OperServ.OperTel <> ? then buf_OperServ.OperTel else ""), input 1 ).
           case buf_OperServ.OsType:
             when 0 then do:
               v-OsType = "".
@@ -89,7 +89,7 @@ define variable v-sum        as decimal   no-undo .
             end.  
           end.  
           run bgelib-tag-put in this-procedure ( input 3, input "OSExtHndl":U, input string(v-OsType), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSItemCode":U, input string(buf_OperServ.gds-code), input 1 ).  
+          run bgelib-tag-put in this-procedure ( input 3, input "OSItemCode":U, input string(if buf_OperServ.gds-code <> ? then buf_OperServ.gds-code else 0), input 1 ).  
         run bgelib-tag-close in this-procedure ( input 2, input "OperServ").    
       end. /*for each buf_OperServ where buf_OperServ.Status_ = 0:*/
       end.
@@ -127,11 +127,12 @@ define variable v-sum        as decimal   no-undo .
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperName":U, input string(buf_OperServ.OperName), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperAddr":U, input string(buf_OperServ.OperAddr), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperINN":U, input string(buf_OperServ.OperInn), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperPhn":U, input string(buf_OperServ.OperTelTran), input 1 ).
+		  run bgelib-tag-put in this-procedure ( input 3, input "OSTrnsfOperPhn":U, input string(if buf_OperServ.OperTelTran <> ? then buf_OperServ.OperTelTran else ""), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSProvidName":U, input string(buf_OperServ.SuppName), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSProvidPhn":U, input string(buf_OperServ.SuppTel), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSProvidPhn":U, input string(if buf_OperServ.SuppTel <> ? then buf_OperServ.SuppTel else ""), input 1 ).
           run bgelib-tag-put in this-procedure ( input 3, input "OSProvidINN":U, input string(buf_OperServ.InnSupp), input 1 ).
-          run bgelib-tag-put in this-procedure ( input 3, input "OSObtainOperPhn":U, input string(buf_OperServ.OperTel), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSObtainOperPhn":U, input string(if buf_OperServ.OperTel <> ? then buf_OperServ.OperTel else ""), input 1 ).
+
           case buf_OperServ.OsType:
             when 0 then do:
               v-OsType = "".
@@ -150,7 +151,7 @@ define variable v-sum        as decimal   no-undo .
             end.              
           end.  
           run bgelib-tag-put in this-procedure ( input 3, input "OSExtHndl":U, input string(v-OsType), input 1 ). 
-          run bgelib-tag-put in this-procedure ( input 3, input "OSItemCode":U, input string(buf_OperServ.gds-code), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 3, input "OSItemCode":U, input string(if buf_OperServ.gds-code <> ? then buf_OperServ.gds-code else 0), input 1 ).  
         run bgelib-tag-close in this-procedure ( input 2, input "OperServ").    
   
       end. /*for each buf_OperServ where buf_OperServ.Status_ = 0:*/
