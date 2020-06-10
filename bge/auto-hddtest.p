@@ -37,7 +37,7 @@ def var vss-description as character no-undo init "Работа с ФГИС меркурий".
 &scop xml-req "<?xml version='1.0' encoding='windows-1251'?>~
 <data type='dsw'>~
 <HddTest ctrl='READ' tms = '&1'></HddTest>~
-<Count>100</Count>~
+<Count>500</Count>~
 </data>"
 
 define temp-table HddTest no-undo
@@ -50,7 +50,8 @@ define temp-table HddTest no-undo
   field hddSysFilling  as character
   field hddName     as character
   field hddSerial   as character
-  field dt          as datetime
+  field sysInfo     as character
+  field dt          as datetime-tz
   index i1 as unique
     hddSerial hddModule dt
 .
@@ -60,13 +61,15 @@ define temp-table hddAttributes no-undo
   field value_      as integer
   field thresh      as integer
   field type_       as character
-  field raw_value   as integer
+  field raw_value   as character
   field hddModule   as character
   field hddSerial   as character
-  field dt          as datetime
+  field dt          as datetime-tz
   index i1 as unique
     hddSerial hddModule name_ dt
 .
+
+function my-date returns datetime-tz (input v-str as character) forward .
 
 define buffer buf_hddAttributes for hddAttributes .
 
@@ -103,6 +106,7 @@ define buffer buf_devisPC-attr for ub.devisPC-attr .
 define variable v-start-DT as datetime no-undo initial 1/1/1970 .
 define variable v-test-DT as datetime no-undo .
 define variable v-epoch-time as integer no-undo .
+define variable v-str-dt as character no-undo .
 define variable v-tms as integer no-undo .
 
 define variable hDoc              as handle     no-undo .
@@ -114,7 +118,6 @@ define variable ii as integer no-undo.
 do
 on error undo, return error
 :
-
   if transaction then do:
     message
       substitute( "&1. Вызов данной процедуры невозможен при наличии транзакции", vss-workfile )
@@ -193,7 +196,7 @@ on error undo, return error
   v-response-file-name = "hdd-test-result.xml" .
 /*  run write-to-log( "Получение данных " ) .*/
   
-    
+   
   run write-to-log( "Работа с БД " + string(p-db-num) ) .
 
   for each buf_code no-lock where buf_code.parent = "SpravDevice"
@@ -204,7 +207,9 @@ on error undo, return error
       next.
     end.    
     
-    v-tms = 1546300800. /* 1 января 2019 */
+/*    v-tms = 1546300800. /* 1 января 2019 */*/
+    v-tms = interval( now, v-start-DT , "seconds" ) .
+    v-tms = v-tms - 604800 . /* За неделю до сегодня */
     find first buf_devisPC no-lock where buf_devisPC.db-num = p-db-num
                                      and buf_devisPC.ModelPC = buf_code.CodeName
                                      no-error.
@@ -244,11 +249,17 @@ on error undo, return error
     empty temp-table HddTest .
     empty temp-table hddAttributes .
     
-    run parse-xml (input v-response-file-name) .
+    run parse-xml (input v-response-file-name) no-error.
+    if error-status:error
+    then do :
+      run write-to-log( "Не могу разобрать ответ от устройства " + string(buf_code.CodeName) + ". IP: " +  trim(buf_code.misc1)) .
+      next.
+    end.
     
     for each HddTest no-lock break by HddTest.dt :
-      find first buf_devisPC no-lock where buf_devisPC.modeldevice = HddTest.hddModule
-                                       and buf_devisPC.SerialNumber = HddTest.hddSerial
+      find first buf_devisPC no-lock where buf_devisPC.modeldevice = trim(HddTest.hddModule)
+                                       and buf_devisPC.SerialNumber = trim(HddTest.hddSerial)
+                                       and buf_devisPC.ModelPC = trim(HddTest.sysInfo)
                                        and buf_devisPC.DB-num = p-db-num
                                        no-error .
       if not available buf_devisPC
@@ -257,10 +268,10 @@ on error undo, return error
         assign
           buf_devisPC.id = next-value(s-devisPC-id)
           buf_devisPC.DB-num = p-db-num
-          buf_devisPC.ModelPC = buf_code.CodeName
+          buf_devisPC.ModelPC = trim(HddTest.sysInfo)
           buf_devisPC.namepc = buf_code.CodeName
-          buf_devisPC.modeldevice = HddTest.hddModule
-          buf_devisPC.SerialNumber = HddTest.hddSerial
+          buf_devisPC.modeldevice = trim(HddTest.hddModule)
+          buf_devisPC.SerialNumber = trim(HddTest.hddSerial)
         .
       end. 
       find last buf_devisPC-attr exclusive-lock where buf_devisPC-attr.db-num = buf_devisPC.DB-num
@@ -318,7 +329,7 @@ on error undo, return error
           buf_devisPC-attr.time_ = integer( truncate( MTIME( HddTest.dt ) / 1000, 0 ) )
         .
       end.
-      assign buf_devisPC-attr.attr-value = (if HddTest.testStatus = "Пройдена" then "0" else "1") .
+      assign buf_devisPC-attr.attr-value = (if HddTest.testStatus = "Пройдена" or HddTest.testStatus = "without error" then "0" else "1") .
               
       for each hddAttributes no-lock where hddAttributes.hddModule   = HddTest.hddModule
                                        and hddAttributes.hddSerial   = HddTest.hddSerial
@@ -356,15 +367,33 @@ end.
 
 procedure parse-xml :
   define input parameter p-file as character .
-  
+ 
   CREATE X-DOCUMENT hDoc.
   CREATE X-NODEREF hRoot.
      
-  hDoc:LOAD("file",p-file,FALSE).
+  hDoc:LOAD("file",p-file,FALSE) no-error.
+  if error-status:error
+  then do :
+    DELETE OBJECT hDoc no-error.
+    DELETE OBJECT hRoot no-error.
+    return error .
+  end .
      
-  hDoc:GET-DOCUMENT-ELEMENT(hRoot).
+  hDoc:GET-DOCUMENT-ELEMENT(hRoot) no-error.
+  if error-status:error
+  then do :
+    DELETE OBJECT hDoc no-error.
+    DELETE OBJECT hRoot no-error.
+    return error .
+  end .
       
-  RUN GetChildren(hRoot, 1).
+  RUN GetChildren(hRoot, 1) no-error.
+  if error-status:error
+  then do :
+    DELETE OBJECT hDoc no-error.
+    DELETE OBJECT hRoot no-error.
+    return error .
+  end .
   
   DELETE OBJECT hDoc.
   DELETE OBJECT hRoot.
@@ -383,6 +412,14 @@ define variable client as character no-undo.
 CREATE X-NODEREF hNoderef.
 CREATE X-NODEREF hText .
 
+i = hParent:num-children no-error .
+if error-status:error
+or i = ?
+then do :
+  DELETE OBJECT hNoderef no-error .
+  DELETE OBJECT hText no-error .
+  return error .
+end .
 
 REPEAT i = 1 TO hParent:NUM-CHILDREN:
     good = hParent:GET-CHILD(hNoderef,i).
@@ -397,8 +434,16 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     IF hNoderef:NAME = "HddTest"
     then do :
       create HddTest .
-      assign v-epoch-time = integer(hNoderef:get-attribute("tstamp")) .
-      assign HddTest.dt = ADD-INTERVAL(v-start-DT, v-epoch-time, "SECONDS").
+      assign v-str-dt = hNoderef:get-attribute("tstamp") .
+      integer(v-str-dt) no-error .
+      if error-status:error
+      then do :
+        assign HddTest.dt = my-date(v-str-dt).
+      end.
+      else do :
+        assign v-epoch-time = integer(v-str-dt) .
+        assign HddTest.dt = ADD-INTERVAL(v-start-DT, v-epoch-time, "SECONDS").
+      end.
     end.
     
     IF hNoderef:NAME = "hddModule" then assign HddTest.hddModule = hText:node-value no-error .
@@ -408,6 +453,8 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     IF hNoderef:NAME = "hddFilling" then assign HddTest.hddFilling = hText:node-value no-error .
     
     IF hNoderef:NAME = "hddSysFilling" then assign HddTest.hddSysFilling = hText:node-value no-error .
+    
+    IF hNoderef:NAME = "systemInfo" then assign HddTest.sysInfo = hText:node-value no-error .
     
     IF hNoderef:NAME = "hddName" then assign HddTest.hddName = hText:node-value no-error .
     
@@ -447,7 +494,7 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     
     IF hNoderef:NAME = "type" then assign hddAttributes.type_ = hText:node-value no-error .
     
-    IF hNoderef:NAME = "raw_value" then assign hddAttributes.raw_value = integer(hText:node-value) no-error .
+    IF hNoderef:NAME = "raw_value" then assign hddAttributes.raw_value = hText:node-value no-error .
            
     RUN GetChildren(hNoderef, (level + 1)).
 END.
@@ -455,5 +502,38 @@ END.
 DELETE OBJECT hNoderef.
 DELETE OBJECT hText.
 END PROCEDURE.
+
+function my-date returns datetime-tz (input v-str as character) :
+  define variable v-year    as integer no-undo .
+  define variable v-month   as integer no-undo .
+  define variable v-day     as integer no-undo .
+  define variable v-hour    as integer no-undo .
+  define variable v-min     as integer no-undo .
+  define variable v-sec     as integer no-undo .
+  define variable v-tz-hour as integer no-undo .
+  define variable v-tz-min  as integer no-undo .
+  define variable v-sign    as character no-undo .
+  define variable v-time-delta as integer no-undo .
+  define variable v-dttz    as datetime-tz no-undo .
+  
+  assign
+    v-year    = integer(substring(v-str, 1, 4))
+    v-month   = integer(substring(v-str, 6, 2))
+    v-day     = integer(substring(v-str, 9, 2))
+    v-hour    = integer(substring(v-str, 12, 2))
+    v-min     = integer(substring(v-str, 15, 2))
+    v-sec     = integer(substring(v-str, 18, 2))
+    v-tz-hour = integer(substring(v-str, 21, 2))
+    v-tz-min  = integer(substring(v-str, 23, 2))
+    v-sign    = substring(v-str, 20, 1)
+    v-time-delta = (v-tz-hour) * 60 + v-tz-min
+  .
+  if v-sign = "-" then v-time-delta = v-time-delta * -1 .
+  
+  v-dttz = datetime-tz(v-month, v-day, v-year, v-hour, v-min, v-sec, 0, v-time-delta) .
+  
+  return v-dttz .
+  
+end function.
 
 /* $Workfile$ end */
