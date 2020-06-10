@@ -2662,7 +2662,7 @@ END.
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
-
+  Marking = ObjSrv:Env:Marking:Sts:Mark.
 { gbl/app_help.i &disable_diasize=true }
 
 { gbl/diasize.i  &browse-name="br-gds" }
