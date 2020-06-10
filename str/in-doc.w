@@ -4197,6 +4197,8 @@ define variable varext-cycle    as logical no-undo.
 define variable v-is-petrol     as logical no-undo.
 define variable v-is-pieces     as logical no-undo.
 define variable v-log           as logical no-undo.
+define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 assign
   varlns-cnt = 1.
@@ -4252,6 +4254,24 @@ do while varlns-cnt <= num-entries (varnotes):
     assign varlns-cnt = varlns-cnt + 1.
     next.
   end.
+  
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
+  EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+  RUN gds-attr-value (
+                      INPUT bf_goods.gds-code,
+                      INPUT {&attr-mark-type},
+                      OUTPUT varvalue,
+                      OUTPUT vartype
+                      ).
+  if varvalue > ""
+  and EDOParSec:GetIsMarkingForType(varvalue)
+  then do :
+    message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+            "нельзя добавлять в ручном режиме, так как он подлежит маркировке и должен добавляться помарочно."
+    view-as alert-box error.
+    assign varlns-cnt = varlns-cnt + 1.
+    next.
+  end .
   
   if can-find (FIRST ub.clients-attr no-lock where (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})
                                                and ub.clients-attr.attr-value = "yes")

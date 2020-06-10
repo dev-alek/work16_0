@@ -342,6 +342,10 @@ define variable varis-perm       as   logical       initial no        no-undo.
 define buffer bf-f_contract-specif    for ub.contract-specif.
 define variable v-master as character no-undo.
 
+define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
+define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+
 define buffer bf_shop for ub.shop.
 do on error undo, return error return-value :
 { gbl/curr-r-b.i varr-b }
@@ -595,6 +599,18 @@ if ( varis-fin = "yes":u
           view-as alert-box error.
           return error.
         end.
+        
+        if t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+        then do :
+          EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+          if EDOParSec:IsEdo
+          and bf_contract.whole-send-news = 1 
+          then do :
+            message "Договор рассчитан на поставки через ЭДО. Ручной приход по нему невозможен!" view-as alert-box .
+            return error.
+          end .
+        end .
+        
         assign
           t-doc.contract-code = varcontract-code
           t-doc.exch-code     = bf_contract.curr-code

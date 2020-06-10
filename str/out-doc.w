@@ -368,6 +368,8 @@ define menu m-outs
     menu-item m-outs-6 label "Остатки по списку партий"     accelerator "alt-6"
     menu-item m-outs-4 label "Сброс"                accelerator "alt-4"
 	menu-item m-outs-8 label "Импорт акцизных марок"                accelerator "alt-8"
+    menu-item m-outs-9 label "УПД по объекту"                accelerator "alt-9"
+    menu-item m-outs-10 label "Немаркированные остатки по списку товаров"                accelerator "alt-0"
 .
 DEFINE MENU m-marks 
   MENU-ITEM m_add-marks          LABEL "Добавить"      
@@ -2910,6 +2912,53 @@ run ui-on ("line").
 apply "entry" to br-dtl in frame {&frame-name}.
 end.
 
+on choose of menu-item m-outs-10 
+  do:
+    define variable old-mode     as character no-undo.
+    define variable old-handle   as handle    no-undo.
+    define variable old-type     as character no-undo.
+    define variable old-stat     as character no-undo.
+    define variable old-flag     as logical   no-undo.
+    define variable old-internal as logical   no-undo.
+    if not b-add:sensitive in frame {&frame-name} then 
+    do:
+      message "Добавление строк для этого статуса запрещено.".
+      return no-apply.
+    end.
+    /*Не убирать. Иначе не обновляются поля в updateble browse*/
+    apply "row-leave" to browse {&browse-name}.
+    /* Список товаров */
+    do transaction:
+      run check-rate no-error.
+      if error-status :error then return no-apply.
+      run str/gds-list.w (parparentproc, t-doc.host-code, t-doc.obj-type, t-doc.obj-code).
+      pardoc-rec = recid (t-doc).   /* ломается в gds-list.w */
+      run waitfram-show in this-procedure (input "ЖДИТЕ.  Список добавляется в документ...").
+      run copy-lst in this-procedure (
+        input t-doc.doc-code,
+        input ub.sysconf.cash-pay,
+        input v-cntxp-doc-prt,
+        input table gds-list,
+        input "tech-marks")
+        no-error.
+      if error-status :error then 
+      do:
+        apply "entry" to b-add in frame {&frame-name}.
+        run waitfram-hide in this-procedure .
+        return no-apply.
+      end.
+      run waitfram-hide in this-procedure .
+      run gbl/calc-trn.p (input parparentproc, input recid(t-doc)) no-error.
+      if error-status :error then 
+      do:
+        undo, return no-apply.
+      end.
+    end. /*transaction*/
+    pardoc-mode = {&update}.
+    run ui-on ("line").
+    apply "entry" to br-dtl in frame {&frame-name}.
+  end.
+
 on choose of menu-item m-outs-5 do:
 if not b-add:sensitive in frame {&frame-name} then do:
   message "Добавление строк для этого статуса запрещено.".
@@ -2995,7 +3044,8 @@ do transaction:
      input t-doc.doc-code,
      input ub.sysconf.cash-pay,
      input v-cntxp-doc-prt,
-     input table gds-list)
+     input table gds-list,
+     input "")
      no-error.
    if error-status :error then do:
      apply "entry" to b-add in frame {&frame-name}.
@@ -3096,6 +3146,19 @@ do:
     return no-apply.
   end.
 end.
+
+on choose of menu-item m-outs-9
+  do:
+    if not b-add:sensitive in frame {&frame-name} then 
+    do:
+      message "Добавление строк для этого статуса запрещено.".
+      return no-apply.
+    end.
+    /*Не убирать. Иначе не обновляются поля в updateble browse*/
+    apply "row-leave" to browse {&browse-name}.
+    
+    run proc-m-outs-9 in this-procedure no-error.
+  end.
 
 on choose of menu-item m-ap-1 in menu m-acc_price  /*Простановка учетных цен без налогов*/
 do:
@@ -4191,6 +4254,181 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-m-outs-9 d-out-doc 
+PROCEDURE proc-m-outs-9 :
+  define variable chg-qnty    like gds-dtl.doc-qnty no-undo.
+  define variable legal-node  like gds-prt.node-code no-undo.
+  define variable varcount    as integer no-undo.
+  define variable varchg-qnty like ub.gds-dtl.doc-qnty no-undo.
+  define variable vardoc-qnty like ub.gds-dtl.doc-qnty no-undo.
+  define variable v-is-petrol as logical no-undo.
+  define variable v-is-pieces as logical no-undo.
+  define variable var-kg-qnty like ub.gds-dtl.doc-qnty no-undo.
+  define variable rr-inv-line as recid   no-undo.
+  define variable v-rec-list as character no-undo .
+  define variable ii as integer no-undo .
+
+  define buffer cpl_goods    for ub.goods   .
+  define buffer cpl_gds-obj  for ub.gds-obj .
+  define buffer cpl_prt-obj  for ub.prt-obj .
+  define buffer cpl_gds-prt  for ub.gds-prt .
+  define buffer cpl_gds-dtl  for ub.gds-dtl .
+  define buffer cpl_doc-line for ub.doc-line.
+  define buffer cpl_inv-line for ub.inv-line.
+  
+  define buffer buf_utd       for ub.utd  .
+  define buffer buf_utd-lines for ub.utd-lines .
+  
+  run str/UPD.w ( parparentproc, {&select}, 0, output v-rec-list)  .
+  if trim(v-rec-list) = ""
+  or v-rec-list = ?
+  then
+  return .
+  
+  do ii = 1 to num-entries (v-rec-list) :
+    find first buf_utd no-lock where recid(buf_utd) = integer(entry(ii,v-rec-list)) no-error .
+    if not available buf_utd then next .
+    c-l:
+    do on error undo c-l, return error :
+      r-l:
+      for each buf_utd-lines no-lock where buf_utd-lines.db-num = buf_utd.db-num
+                                       and buf_utd-lines.doc-id = buf_utd.doc-id,
+      first cpl_goods no-lock where cpl_goods.gds-code = buf_utd-lines.gds-code :
+        assign 
+          varcount = varcount + 1
+        .
+        if varcount modulo 100 = 0 then 
+        do:
+          run waitfram-show in this-procedure (input "ЖДИТЕ.  Обработано строк списка : " + string (varcount)).
+        end.        
+                                 
+        { str/crdoclno.i
+         t-doc.doc-code
+         t-doc.obj-type
+         t-doc.obj-code
+         cpl_goods.artic
+         cpl_goods.prod-type
+         cpl_goods.prod-code
+         cpl_goods.gds-name
+         cpl_goods.prt-root
+         ?
+         ?
+         ub.sysconf.cash-pay
+         no-error }
+        if error-status :error then 
+        do:
+          message
+            vss-workfile vss-revision vss-description skip
+            "Ошибка при создании строки." skip
+            return-value skip
+            trim(error-status :get-message(1))
+            trim(error-status :get-message(2))
+            trim(error-status :get-message(3))
+            trim(error-status :get-message(4))
+            trim(error-status :get-message(5)) skip
+            view-as alert-box error.
+          undo c-l, return error return-value.
+        end.
+        if return-value = "next" then 
+        do:
+          next r-l.
+        end.
+        find first cpl_doc-line where cpl_doc-line.doc-code  = t-doc.doc-code and
+          cpl_doc-line.artic     = cpl_goods.artic      and
+          cpl_doc-line.prod-type = cpl_goods.prod-type  and
+          cpl_doc-line.prod-code = cpl_goods.prod-code .
+        find first cpl_gds-prt where cpl_gds-prt.upper-code = cpl_goods.prt-root no-lock.
+        find first  cpl_prt-obj where cpl_prt-obj.obj-type  = t-doc.obj-type
+          and cpl_prt-obj.obj-code  = t-doc.obj-code
+          and cpl_prt-obj.artic     = cpl_goods.artic
+          and cpl_prt-obj.prod-type = cpl_goods.prod-type
+          and cpl_prt-obj.prod-code = cpl_goods.prod-code no-error .
+        if error-status :error then 
+        do:
+        /* создать */
+        end.
+  
+        assign 
+          legal-node = if available cpl_prt-obj then cpl_prt-obj.prt-code else cpl_gds-prt.node-code .
+  
+        { str/crgdsdtl.i
+      t-doc.obj-code
+      t-doc.obj-type
+      t-doc.doc-code
+      cpl_goods.artic
+      cpl_goods.prod-code
+      cpl_goods.prod-type
+      legal-node
+      yes
+      no-error }
+  
+        find first cpl_gds-dtl where cpl_gds-dtl.doc-code  = t-doc.doc-code and
+          cpl_gds-dtl.artic     = cpl_goods.artic      and
+          cpl_gds-dtl.prod-code = cpl_goods.prod-code  and
+          cpl_gds-dtl.prod-type = cpl_goods.prod-type  and
+          cpl_gds-dtl.prt-code  = legal-node.
+        assign
+          cpl_gds-dtl.ov = no.
+    /* подстановка цены, по цене магазина */
+    /* если ошибка при установке цены переходим к следующему товару                 */
+    { str/set-pr.i recid(cpl_gds-dtl) no ? no-error }
+        if error-status :error then 
+        do:
+          message
+            vss-workfile vss-revision vss-description skip
+            error-status :get-message(1) skip
+            return-value skip
+            ""
+            view-as alert-box error
+            .
+        /* undo, next r-l. */
+        end.
+        assign
+          chg-qnty = buf_utd-lines.Quantity
+        .
+        run trg/rsrv-dtl.p (input parparentproc,
+                            {&rsrv-dtl_action_reserv},
+                            buffer cpl_gds-dtl,
+                            input-output chg-qnty,
+                            input-output cpl_doc-line.price-base,
+                            input-output cpl_doc-line.price-rubl,
+                            -1,
+                            input ("copy-utd-line" + {&delim-par} + string(recid(buf_utd-lines)))) no-error.
+        if error-status :error then undo c-l, return error.
+        assign
+          cpl_doc-line.doc-qnty  = cpl_doc-line.doc-qnty + chg-qnty
+          cpl_gds-dtl.doc-qnty   = cpl_gds-dtl.doc-qnty  + chg-qnty
+          cpl_gds-dtl.fact-qnty  = cpl_gds-dtl.doc-qnty
+          cpl_doc-line.fact-qnty = cpl_doc-line.doc-qnty.
+        /* считаем суммарное количество, которое удалось скопировать */
+        assign
+          varchg-qnty = varchg-qnty + chg-qnty
+          vardoc-qnty = vardoc-qnty + cpl_gds-dtl.doc-qnty.
+        if cpl_gds-dtl.doc-qnty = 0 then delete cpl_gds-dtl.
+      end .
+    end.
+  end.
+
+  run gbl/calc-trn.p (input parparentproc, input recid(t-doc)) no-error.
+  if error-status :error then 
+  do:
+    message
+      "Ошибка при копировании документа (расчет шапки документа)." skip
+      return-value skip
+      error-status:get-message(1) skip
+      view-as alert-box error.
+    return error .
+  end.
+
+  pardoc-mode = {&update}.
+  run ui-on ("line").
+  apply "entry" to br-dtl in frame {&frame-name}.
+  
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-reason d-out-doc
 PROCEDURE check-reason :
 /*------------------------------------------------------------------------------
@@ -4421,6 +4659,7 @@ define input parameter pardoc-code like ub.trn-doc.doc-code no-undo.
   define input parameter parcash-pay like ub.sysconf.cash-pay no-undo.
   define input parameter pardoc-prt  as   logical             no-undo.
   define input parameter table for tt-gds-list.
+  define input parameter p-marks-par as character no-undo .
 
   define variable chg-qnty    like ub.gds-dtl.doc-qnty    no-undo.
   define variable legal-node  like ub.gds-prt.node-code   no-undo.
@@ -4431,6 +4670,7 @@ define input parameter pardoc-code like ub.trn-doc.doc-code no-undo.
   define variable v-is-pieces as   logical             no-undo.
   define variable var-kg-qnty like ub.gds-dtl.doc-qnty no-undo.
   define variable rr-inv-line as   recid               no-undo.
+  define variable v-tech-marks-qnty like gds-dtl.doc-qnty no-undo.
 
   define buffer cpl_goods    for ub.goods.
   define buffer cpl_gds-obj  for ub.gds-obj.
@@ -4440,6 +4680,7 @@ define input parameter pardoc-code like ub.trn-doc.doc-code no-undo.
   define buffer cpl_gds-dtl  for ub.gds-dtl.
   define buffer cpl_doc-line for ub.doc-line.
   define buffer cpl_inv-line for ub.inv-line.
+  define buffer buf_marking-lines for ub.marking-lines .
 
 c-l:
 do on error undo c-l, return error :
@@ -4453,6 +4694,23 @@ for each tt-gds-list,
   if varcount modulo 100 = 0 then do:
     run waitfram-show in this-procedure (input "ЖДИТЕ.  Обработано строк списка : " + string (varcount)).
   end.
+  if p-marks-par = "tech-marks"
+  then do :
+    assign
+      v-tech-marks-qnty = 0
+    .
+    for each buf_marking-lines no-lock where buf_marking-lines.gds-code = cpl_goods.gds-code
+                                         and buf_marking-lines.obj-type = cpl_trn-doc.obj-type
+                                         and buf_marking-lines.obj-code = cpl_trn-doc.obj-code
+                                         and buf_marking-lines.out-code = {&free-code}
+                                         and buf_marking-lines.mark begins {&tech-mark-prefix}
+                                         : 
+      assign
+        v-tech-marks-qnty = v-tech-marks-qnty + 1
+      .
+    end . 
+    if v-tech-marks-qnty = 0 then next r-l.                                      
+  end .
   find cpl_gds-obj where cpl_gds-obj.obj-type  = cpl_trn-doc.obj-type
                      and cpl_gds-obj.obj-code  = cpl_trn-doc.obj-code
                      and cpl_gds-obj.prod-type = cpl_goods.prod-type
@@ -4529,8 +4787,22 @@ for each tt-gds-list,
       { str/set-pr.i recid(cpl_gds-dtl) no ? no-error }
       if error-status :error then undo, next r-l.
       assign
-        chg-qnty = cpl_prt-obj.fact-qnty.
-      run trg/rsrv-dtl.p (input parparentproc, {&rsrv-dtl_action_reserv}, buffer cpl_gds-dtl, input-output chg-qnty, input-output cpl_doc-line.price-base, input-output cpl_doc-line.price-rubl, -1) no-error.
+        chg-qnty = cpl_prt-obj.fact-qnty
+      .
+      if p-marks-par = "tech-marks"
+      then do :
+        assign
+          chg-qnty = v-tech-marks-qnty
+        .
+      end .
+      run trg/rsrv-dtl.p (input parparentproc,
+                          {&rsrv-dtl_action_reserv},
+                          buffer cpl_gds-dtl,
+                          input-output chg-qnty,
+                          input-output cpl_doc-line.price-base,
+                          input-output cpl_doc-line.price-rubl,
+                          -1,
+                          input p-marks-par) no-error.      
       if error-status :error then undo c-l, return error.
       assign
         cpl_doc-line.doc-qnty  = cpl_doc-line.doc-qnty + chg-qnty
@@ -5355,6 +5627,8 @@ define variable varnotes as character no-undo.
 define buffer bbb_goods for ub.goods  .
 define variable  var_is-petrol as logical   no-undo .
 define variable  var_is-pieces as logical   no-undo .
+define variable varvalue        as character no-undo .
+define variable vartype         as character no-undo .
 
 define variable v-type-mode-spr as character no-undo .
 define variable varschartic like doc-line.artic initial " " no-undo.
@@ -5362,6 +5636,9 @@ define variable v-choice    as   integer                    no-undo.
 define variable v-rid       as   integer                    no-undo.
 define variable v-rid-list  as   char                       no-undo.
 define variable i           as   integer                    no-undo.
+
+define variable ObjSrv          as class     ibs.th.gbl.sys.objsrv     no-undo.
+define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo .
 
 do on error undo, return error return-value :
 run check-rate no-error.
@@ -5560,6 +5837,27 @@ do while varlns-cnt <= num-entries (varnotes):
     }
      if var_is-petrol = true then return error "Топливо нельзя продавать через ЗАПРОС ! " .
   end.
+  
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
+  EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+  find first bf_goods where recid(bf_goods) = gds-rec no-lock.
+  RUN gds-attr-value (
+          INPUT bf_goods.gds-code,
+          INPUT {&attr-mark-type},
+          OUTPUT varvalue,
+          OUTPUT vartype
+          ).
+  if varvalue > ""
+  and EDOParSec:GetIsMarkingForType(varvalue)
+  then 
+  do :
+          message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+            "нельзя добавлять в ручном режиме, так как он подлежит маркировке и должен добавляться помарочно."
+            view-as alert-box error.
+    assign 
+      varlns-cnt = varlns-cnt + 1.
+    next.
+  end .
   
   if v-choice = 5
   then do :
