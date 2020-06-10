@@ -48,7 +48,7 @@ class ibs.th.str.utd.edoctype:
     UCD       = crProp(4, "UСD", "УКД").
     Returns   = crProp(5, "return", "Возврат поставщику").
     AKT       = crProp(6, "akt", "Акт приема").
-    EDoc      = crProp(7, "EDoc", "Эл.Док").
+    EDoc      = crProp(7, "EDoc", "еУПД").
   end.
 
   /*------------------------------------------------------------------------------

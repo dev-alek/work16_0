@@ -40,8 +40,9 @@ ________________________________________________________________________________
 
 \* ************************************************************************************************************* */
 
-using ibs.th.str.ptrl.* from propath.
-using ibs.th.gbl.ptrl.par.* from propath.
+using ibs.th.str.ptrl.*.
+using ibs.th.gbl.ptrl.par.*.
+using ibs.th.str.utd.handlers.introduce.
 
 define input        parameter parparentproc   as   handle                  no-undo.
 define input-output parameter pardoc-rec      as   recid                   no-undo.
@@ -81,6 +82,8 @@ define variable vss-description as character no-undo initial "Документ инвентари
 { str/getctxtp.i def }
 { str/getctxtp.i get }
 { gbl/thbjattr.i }
+{ ref/gds-attr.i }
+{ str/temp_upd.i }
 
 define temp-table tt-gds-list no-undo like ub.goods
 field nn as integer
@@ -168,6 +171,12 @@ first ub.goods no-lock where ~
 &SCOP clmn_32-br-list       ub.doc-line.inv-peresort-qnty
 &SCOP label-clmn_33-br-list  'НДС'
 &SCOP clmn_33-br-list        ub.doc-line.vat-pc
+&SCOP label-clmn_34-br-list  'Кол-во марок'
+&SCOP clmn_34-br-list        markqnty( buffer ub.doc-line )
+&SCOP label-clmn_35-br-list  'Проверено марок'
+&SCOP clmn_35-br-list        markqntycheckinv( buffer ub.doc-line )
+&SCOP label-clmn_36-br-list  'Тех. марки'
+&SCOP clmn_36-br-list        markqntytech( buffer ub.doc-line )
 
 &SCOP NUM-LOCKED-COLUMNS-br-list 3
 &SCOP disp-list ~
@@ -175,6 +184,10 @@ first ub.goods no-lock where ~
  {&clmn_2-br-list}   @ prt-mark              column-label {&label-clmn_2-br-list} format "x(1)":U ~
  {&clmn_3-br-list}                           column-label {&label-clmn_3-br-list} ~
  {&clmn_4-br-list}                           column-label {&label-clmn_4-br-list} format "x(150)":U ~
+ {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
+ {&clmn_34-br-list}  @ var-qnty-mark         column-label {&label-clmn_34-br-list} format ">>>>9":U ~
+ {&clmn_35-br-list}  @ var-qnty-mark-chk     column-label {&label-clmn_35-br-list} format ">>>>9":U ~
+ {&clmn_36-br-list}  @ var-qnty-mark-tech    column-label {&label-clmn_36-br-list} format ">>>>9":U ~
  {&clmn_29-br-list}  @ varwas-qnty-kg        column-label {&label-clmn_29-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_30-br-list}  @ varare-qnty-kg        column-label {&label-clmn_30-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
@@ -278,6 +291,9 @@ define variable vardocmiss-base                     like ub.trn-doc.tot-rubl    
 define variable vardocmiss-rubl                     like ub.trn-doc.tot-rubl           no-undo.
 define variable vardocmiss-rb                       like ub.trn-doc.tot-rubl           no-undo.
 define variable vardocwast-rb                       like ub.trn-doc.tot-rubl           no-undo.
+define variable var-qnty-mark                       as   integer                       no-undo.
+define variable var-qnty-mark-chk                   as   integer                       no-undo.
+define variable var-qnty-mark-tech                  as   integer                       no-undo.
 define variable varinvclcspvalue                    as   character                     no-undo.
 define variable varinvclcsptype                     as   character                     no-undo.
 define variable prtvalue                            as   character                     no-undo.
@@ -297,6 +313,19 @@ define variable chk-doc-option                      as   character              
 define variable v-handl-tt                          as   handle                        no-undo.
 define variable is-petrol                           as   logical                       no-undo.
 define variable is-pieces                           as   logical                       no-undo.
+define variable v-marking-type                      as   character                     no-undo.
+define variable v-type                              as   character                     no-undo.
+define variable v-is-marking                        as   logical                       no-undo init false.
+define variable v-is-introduce                      as   logical                       no-undo init false.
+define variable bcol                                as   handle                        extent no-undo.
+define variable hBrowse                             as   handle                        no-undo.
+define variable ii                                  as   integer                       no-undo.
+
+def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
+
+
+
 
 DEFINE VARIABLE f-acc as decimal format "->>>,>>>,>>9.999":U
      LABEL "Погр. изм., кг " 
@@ -879,6 +908,90 @@ function fncdiffqntykg returns decimal ( buffer local-doc-line for ub.doc-line )
   return ( if error-status :error then ? else d_out-qnty-kg ).
 end function.
 
+function markqnty returns integer ( buffer local-doc-line for ub.doc-line ) :
+  define variable ii as integer no-undo.
+  define buffer buf_marking-lines for ub.marking-lines.
+  define buffer buf_marking for ub.marking.
+  define buffer buf_gds for ub.goods.
+  if v-is-marking = false
+    then return 0.
+  
+  find first buf_gds no-lock where buf_gds.artic = local-doc-line.artic
+    and buf_gds.prod-type = local-doc-line.prod-type
+    and buf_gds.prod-code = local-doc-line.prod-code.
+  
+  for each buf_marking-lines where buf_marking-lines.obj-type = local-doc-line.obj-type and buf_marking-lines.obj-code = local-doc-line.obj-code
+    and buf_marking-lines.gds-code = buf_gds.gds-code and buf_marking-lines.out-code = {&free-code} and not buf_marking-lines.mark begins {&tech-mark-prefix}
+    :
+    if not can-find (first ub.marking where ub.marking.mark = buf_marking-lines.mark and ub.marking.unit-ext = "UNIT")
+    then next.
+      
+    ii = ii + 1.
+  end.
+  return ii.
+  
+end function.
+
+function markqntytech returns integer ( buffer local-doc-line for ub.doc-line ) :
+  define variable ii as integer no-undo.
+  define buffer buf_marking-lines for ub.marking-lines.
+  define buffer buf_marking for ub.marking.
+  define buffer buf_gds for ub.goods.
+  if v-is-marking = false
+    then return 0.
+  
+  find first buf_gds no-lock where buf_gds.artic = local-doc-line.artic
+    and buf_gds.prod-type = local-doc-line.prod-type
+    and buf_gds.prod-code = local-doc-line.prod-code.
+  
+  for each buf_marking-lines where buf_marking-lines.obj-type = local-doc-line.obj-type and buf_marking-lines.obj-code = local-doc-line.obj-code
+    and buf_marking-lines.gds-code = buf_gds.gds-code and buf_marking-lines.out-code = {&free-code} and buf_marking-lines.mark begins {&tech-mark-prefix}
+    :
+    if not can-find (first ub.marking where ub.marking.mark = buf_marking-lines.mark and ub.marking.unit-ext = "UNIT")
+    then next.
+      
+    ii = ii + 1.
+  end.
+  return ii.
+
+end function.
+
+function markqntycheckinv returns integer ( buffer local-doc-line for ub.doc-line ) :
+  define variable ii as integer no-undo.  
+  run procmarkqntycheckinv (buffer local-doc-line, output ii).
+  return ii.
+end function.
+
+procedure procmarkqntycheckinv:
+
+  define parameter buffer local-doc-line for ub.doc-line.
+  define output parameter ii as integer no-undo.
+  
+  define buffer buf_marking-lines for ub.marking-lines.
+  define buffer buf_marking for ub.marking.
+  define buffer buf_gds for ub.goods.
+  if v-is-marking = false
+    then ii = 0.
+
+  find first buf_gds no-lock where buf_gds.artic = local-doc-line.artic
+    and buf_gds.prod-type = local-doc-line.prod-type
+    and buf_gds.prod-code = local-doc-line.prod-code.
+  
+  for each ub.marking-attr no-lock where (marking-attr.attr-code = "inv-doc" or marking-attr.attr-code = "inv-doc-scan")  and ub.marking-attr.attr-value = ub.doc-line.doc-code:
+    if not can-find (first ub.marking no-lock where ub.marking.mark = ub.marking-attr.mark and ub.marking.unit-ext = "UNIT" and ub.marking.gds-code = buf_gds.gds-code) 
+      then next.
+    ii = ii + 1.
+  end.
+  for each ub.utd no-lock where ub.utd.doc-code = local-doc-line.doc-code:
+    for each ub.utd-marking-lines no-lock where ub.utd-marking-lines.doc-id = ub.utd.doc-id and ub.utd-marking-lines.db-num = ub.utd.db-num and ub.utd-marking-lines.gds-code = buf_gds.gds-code:
+      for each ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark.
+        ii = ii + ub.marking.box-qnty.
+      end.
+    end.
+  end.
+
+end.
+
 /* ***********************  Control Definitions  ********************** */
 define button b-inv-prsrt
      label "ИПерср":l
@@ -990,6 +1103,10 @@ define button r-sht
      image-down        file "btn-down-arrow":u
      image-insensitive file "btn-down-arrow":u
      size 3 by .88.
+     
+define button b-marks
+     label "Марки":l
+     size 9 by 1.
 
 define button r-boss like r-agnt.
 define button r-wrkr like r-agnt.
@@ -1015,17 +1132,22 @@ DEFINE MENU m-chk-doc
       MENU-ITEM m-chk-gds         LABEL "Строки"  ACCELERATOR "ALT-3"
       .
 
+define menu m-marks 
+  menu-item m_add-marks           label "Добавить"      
+  menu-item m_introduce-marks     label "Установить флаг первоначального ввода".
+  menu-item m_lookup              label "Просмотр".
+
 define variable agnt-name as character format "x(256)":U
       view-as text
-     size 10 by 1 no-undo.
+     size 9 by 1 no-undo.
 
 define variable boss-name as character format "x(256)":U
       view-as text
-     size 10 by 1 no-undo.
+     size 9 by 1 no-undo.
 
 define variable wrkr-name as character format "x(256)":U
       view-as text
-     size 10 by 1 no-undo.
+     size 9 by 1 no-undo.
 
 define variable rsn-name as character no-undo format "x(256)":U view-as fill-in size 60.5 by .88 fgcolor 4.
 
@@ -1043,8 +1165,9 @@ define variable dif-only as character view-as radio-set vertical radio-buttons
 "Все&.", "all":u,
 "И&зл", "surplus":u,
 "Нед&", "shortage":u,
-"Со&в", "coincidence":u
-size 6 by 4 no-undo.
+"Со&в", "coincidence":u,
+"Ма&р", "markseqdocqnty":u
+size 7 by 4 no-undo.
 
 define variable prt-mark as   character            no-undo. /* символ в колонке Ш */
 define variable inv-mark as   character            no-undo. /* символ в колонке К */
@@ -1189,6 +1312,7 @@ define frame {&FRAME-NAME}
   r-boss                       at row 6   col 96                 no-label
   t-doc.reason-code            at row 11  col 8   colon-aligned    label "Осн.д."   view-as fill-in    size 3 by  .88 format ">>9":U
   r-reas                       at row 11  col 14
+  b-marks                      at row 2   col 55 
   rsn-name                     at row 11  col 18                 no-label
   {&BROWSE-NAME}               at row 12  col 1.5
   dif-only                     at row 4   col 68   colon-aligned no-label
@@ -1216,6 +1340,11 @@ with view-as dialog-box keep-tab-order
      default-button b-exit.
 
 /* ***************  runtime attributes and uib settings  ************** */
+
+assign 
+  b-marks:popup-menu in frame {&frame-name} = menu m-marks:handle.
+assign 
+  b-marks:menu-mouse = 1.
 
 assign
   frame {&FRAME-NAME} :scrollable                    = false
@@ -1262,7 +1391,7 @@ ub.doc-line.inv-peresort:visible in browse {&browse-name}  = (if v-inv-prsr = "y
     &BROWSE-NAME          = {&BROWSE-NAME}
     &FRAME-NAME           = {&FRAME-NAME}
     &table-name           = "ub.doc-line"
-    &ext-col              = 33
+    &ext-col              = 36
     &start-column         = "{&num-locked-columns-br-list} + 1"
     &label-clmn_1         = "{&label-clmn_1-br-list}"
     &sort-clmn_1          = "{&clmn_1-br-list}"
@@ -1330,6 +1459,8 @@ ub.doc-line.inv-peresort:visible in browse {&browse-name}  = (if v-inv-prsr = "y
     &sort-clmn_32         = "{&clmn_32-br-list} DESCENDING"
     &label-clmn_33        = "{&label-clmn_33-br-list}"
     &sort-clmn_33         = "{&clmn_33-br-list} DESCENDING"
+    &label-clmn_34        = "{&label-clmn_34-br-list}"
+    &sort-clmn_34         = "{&clmn_34-br-list} DESCENDING"
     &before-sort          = "ASSIGN dif-only = ""all"". DISPLAY dif-only WITH FRAME {&FRAME-NAME}."
     &open-query           = "{&OPEN-QUERY-br-list} BY ~{&sort-clmn_~{&clmn_num~}~}."
     &open-query-otherwise = "{&OPEN-QUERY-br-list} BY ub.doc-line.line-num."
@@ -1345,6 +1476,162 @@ ub.doc-line.inv-peresort:visible in browse {&browse-name}  = (if v-inv-prsr = "y
 { str/sch-line.i doc-line {&BROWSE-NAME} }
 end.
 
+&Scoped-define SELF-NAME m_lookup
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_lookup {&FRAME-NAME}
+ON CHOOSE OF MENU-ITEM m_lookup /* Просмотр */
+DO:
+  define buffer buf_utd-marking-lines for ub.utd-marking-lines.
+  define buffer buf_marking for ub.marking.
+
+  if available (t-doc) then do:
+      for each ub.marking-attr no-lock where
+            ub.marking-attr.attr-value = t-doc.doc-code
+        and (ub.marking-attr.attr-code = "inv-doc" or ub.marking-attr.attr-code = "inv-doc-scan"):
+
+      for each ub.marking-lines no-lock where
+        ub.marking-lines.obj-type = t-doc.obj-type
+        and ub.marking-lines.obj-code = t-doc.obj-code
+        and ub.marking-lines.out-code = {&free-code}
+        and ub.marking-lines.mark = ub.marking-attr.mark
+        :
+
+        find first ub.marking no-lock where ub.marking.mark = ub.marking-lines.mark and ub.marking.sts <> ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB no-error.
+        if available (ub.marking)
+          then 
+        do:
+          create tt-marking-lines.
+          buffer-copy ub.marking-lines to tt-marking-lines.
+          tt-marking-lines.sts = ub.marking.sts.
+          tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
+          tt-marking-lines.sts-utd = ub.marking-lines.sts.
+          tt-marking-lines.stts-utd = objSrv:Env:Marking:Sts:Mark:Checked_:Label_.
+          tt-marking-lines.box-qnty = ub.marking.box-qnty .
+          tt-marking-lines.unit = ub.marking.unit .
+          tt-marking-lines.unit-ext = ub.marking.unit-ext .
+          if ub.marking-attr.attr-code = "inv-doc-scan"
+            then tt-marking-lines.doc-level = 1.
+            else tt-marking-lines.doc-level = 2.
+          
+          tt-marking-lines.mark-parent = ub.marking.mark-parent.
+          tt-marking-lines.out-code = t-doc.doc-code.
+        end.
+
+      end.
+    end.
+  
+    for each ub.utd no-lock where
+            ub.utd.doc-code = t-doc.doc-code
+        :
+      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = ub.utd.db-num and buf_utd-marking-lines.doc-id = ub.utd.doc-id and buf_utd-marking-lines.mark <> "",
+        each buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark:
+        find first ub.goods where buf_marking.gds-code = ub.goods.gds-code.
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = ub.goods.gds-name
+          tt-marking-lines.stts-utd    = objSrv:Env:Marking:Sts:Mark:GetLabel(buf_utd-marking-lines.sts)
+          tt-marking-lines.stts        = objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)
+          tt-marking-lines.mark        = buf_marking.mark
+          tt-marking-lines.mark-parent = buf_marking.mark-parent
+          tt-marking-lines.gds-code    = buf_utd-marking-lines.gds-code
+          tt-marking-lines.sts         = buf_marking.sts
+          tt-marking-lines.sts-utd     = buf_utd-marking-lines.sts
+          tt-marking-lines.unit        = buf_marking.unit
+          tt-marking-lines.unit-ext    = buf_marking.unit-ext
+          tt-marking-lines.box-qnty    = buf_marking.box-qnty
+          tt-marking-lines.LineNum     = buf_utd-marking-lines.LineNum
+          tt-marking-lines.db-num      = buf_utd-marking-lines.db-num
+          tt-marking-lines.doc-id      = buf_utd-marking-lines.doc-id
+          tt-marking-lines.doc-level   = buf_utd-marking-lines.doc-level
+          . 
+      end.
+    end.
+
+
+
+    if available (tt-marking-lines) then
+    do:
+      run str/mark_browse.w (input parparentproc,
+        input-output table tt-marking-lines by-reference,
+        input {&lookup},
+        input "Марки по документу: " + t-doc.doc-code,
+        input "0",
+        input "" /*тип продукции*/
+        )  .
+    end.
+
+    for each tt-marking-lines:
+      delete tt-marking-lines.
+    end.
+  end.
+  
+END.
+
+&Scoped-define SELF-NAME m_introduce-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_introduce-marks {&FRAME-NAME}
+ON CHOOSE OF MENU-ITEM m_introduce-marks /* Добавить марки */
+DO:
+
+  if v-is-introduce then do:
+    message "Флаг уже установлен." view-as alert-box information.
+    return no-apply.
+  end.
+
+  find first ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code no-error.
+  if available (ub.doc-line)
+  then do:
+/*    find first ub.goods no-lock where                                                                                         */
+/*          ub.goods.artic     = ub.doc-line.artic     and                                                                      */
+/*          ub.goods.prod-type = ub.doc-line.prod-type and                                                                      */
+/*          ub.goods.prod-code = ub.doc-line.prod-code.                                                                         */
+/*    run gds-attr-value (                                                                                                      */
+/*                          input ub.goods.gds-code,                                                                            */
+/*                          input {&attr-mark-type},                                                                            */
+/*                          output v-marking-type,                                                                              */
+/*                          output v-type                                                                                       */
+/*                          ).                                                                                                  */
+/*    if not v-marking-type = "tabak"                                                                                           */
+/*    then do:                                                                                                                  */
+/*      message "Невозможно установить флаг так как присутсвуют товары не подлижащие маркировки." view-as alert-box information.*/
+/*      return.                                                                                                                 */
+/*    end.                                                                                                                      */
+    message "В инвентаризации присутсвуют товары. Невозможно установить флаг." view-as alert-box information.
+    return no-apply.
+  end.
+  
+
+/*  if can-find(first ub.marking-attr where ub.marking-attr.attr-code begins "inv-doc" and ub.marking-attr.attr-value = t-doc.doc-code)       */
+/*  then do:                                                                                                                                  */
+/*    message "Было сканирование в режиме инвентаризации. Флаг первоночального ввода не может быть установлен." view-as alert-box information.*/
+/*    return.                                                                                                                                 */
+/*  end.                                                                                                                                      */
+  { str/tdat-wrt.i
+      t-doc.doc-code
+      {&trdcattr-inv-introduce}
+      "yes"
+      no-error
+  }
+  if error-status:error
+  then do:
+    message "Ошибка установки флага. " + return-value view-as alert-box error.
+    return no-apply.
+  end.
+  def var introdUtd as class introduce no-undo.
+  introdUtd = new introduce() no-error.
+  if not valid-object (introdUtd)
+  then do:
+    message "Ошибка создания объекта introdUtd. " + return-value view-as alert-box error.
+    return no-apply.    
+  end.
+  v-is-introduce = true.
+  def var v-utd-num as character no-undo.
+  v-utd-num = introdUtd:CrUTDIntroduce(t-doc.doc-code).
+  delete object introdUtd.
+  run ui-on in this-procedure ( input "all" ).
+  message "Флаг установлен. Создан документ первоначального ввода № " + v-utd-num view-as alert-box information.
+  
+END.
+
+
 on choose of b-alcmark in frame {&FRAME-NAME} do:
 
   run str/inv-marks.w (parparentproc, t-doc.doc-code, ?).
@@ -1355,6 +1642,94 @@ on choose of b-alcmark in frame {&FRAME-NAME} do:
   run ui-on in this-procedure ( input "" ).
 
 end.
+
+&Scoped-define SELF-NAME m_add-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_add-maks {&FRAME-NAME}
+ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
+DO:
+  def var v-mode as char no-undo.
+  if not can-find(first ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code)
+  then do:
+    message "В документе нет строк." view-as alert-box information.
+    return no-apply.
+  end. 
+  if not v-is-introduce and not v-is-marking
+  then do:
+    message "Не включен помарочный учет либо первоначальный ввод." view-as alert-box information.
+    return no-apply.
+  end.  
+  if v-is-introduce
+    then v-mode = "introduce".
+  run str/chs-marks.w (parparentproc, t-doc.doc-code, v-mode, this-procedure).
+  run UI-on in this-procedure ( input "":U ).  
+
+END.
+
+
+&Scoped-define SELF-NAME m_introduce-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_introduce-marks {&FRAME-NAME}
+ON CHOOSE OF MENU-ITEM m_introduce-marks /* Добавить марки */
+DO:
+
+  if v-is-introduce then do:
+    message "Флаг уже установлен." view-as alert-box information.
+    return no-apply.
+  end.
+
+  find first ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code no-error.
+  if available (ub.doc-line)
+  then do:
+/*    find first ub.goods no-lock where                                                                                         */
+/*          ub.goods.artic     = ub.doc-line.artic     and                                                                      */
+/*          ub.goods.prod-type = ub.doc-line.prod-type and                                                                      */
+/*          ub.goods.prod-code = ub.doc-line.prod-code.                                                                         */
+/*    run gds-attr-value (                                                                                                      */
+/*                          input ub.goods.gds-code,                                                                            */
+/*                          input {&attr-mark-type},                                                                            */
+/*                          output v-marking-type,                                                                              */
+/*                          output v-type                                                                                       */
+/*                          ).                                                                                                  */
+/*    if not v-marking-type = "tabak"                                                                                           */
+/*    then do:                                                                                                                  */
+/*      message "Невозможно установить флаг так как присутсвуют товары не подлижащие маркировки." view-as alert-box information.*/
+/*      return.                                                                                                                 */
+/*    end.                                                                                                                      */
+    message "В инвентаризации присутсвуют товары. Невозможно установить флаг." view-as alert-box information.
+    return no-apply.
+  end.
+  
+
+/*  if can-find(first ub.marking-attr where ub.marking-attr.attr-code begins "inv-doc" and ub.marking-attr.attr-value = t-doc.doc-code)       */
+/*  then do:                                                                                                                                  */
+/*    message "Было сканирование в режиме инвентаризации. Флаг первоночального ввода не может быть установлен." view-as alert-box information.*/
+/*    return.                                                                                                                                 */
+/*  end.                                                                                                                                      */
+  { str/tdat-wrt.i
+      t-doc.doc-code
+      {&trdcattr-inv-introduce}
+      "yes"
+      no-error
+  }
+  if error-status:error
+  then do:
+    message "Ошибка установки флага. " + return-value view-as alert-box error.
+    return no-apply.
+  end.
+  def var introdUtd as class introduce no-undo.
+  introdUtd = new introduce() no-error.
+  if not valid-object (introdUtd)
+  then do:
+    message "Ошибка создания объекта introdUtd. " + return-value view-as alert-box error.
+    return no-apply.    
+  end.
+  v-is-introduce = true.
+  def var v-utd-num as character no-undo.
+  v-utd-num = introdUtd:CrUTDIntroduce(t-doc.doc-code).
+  delete object introdUtd.
+  run ui-on in this-procedure ( input "all" ).
+  message "Флаг установлен. Создан документ первоначального ввода № " + v-utd-num view-as alert-box information.
+  
+END.
 
 on choose of b-inv-prsrt in frame {&FRAME-NAME}
 do:
@@ -1670,6 +2045,27 @@ on leave of t-doc.shift-name in frame {&frame-name} do:
   end.
 end.
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL {&BROWSE-NAME} {&frame-name}
+ON row-display OF {&BROWSE-NAME} IN FRAME {&frame-name}
+DO:
+
+  if not ((v-is-introduce or v-is-marking) and (t-doc.status_ = {&wayb}))
+    then return.
+  
+  if doc-line.doc-qnty - doc-line.fact-qnty ne markqntycheckinv( buffer ub.doc-line ) + markqntytech( buffer ub.doc-line )
+  then do ii = 1 to extent (bcol):  
+    if valid-handle (bcol[ii]) 
+    then do:
+      assign
+        bcol[ii]:bgcolor = RED_COLOR.
+    end.
+  end.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 /* ***************************  Main Block  *************************** */
 
 if valid-handle( active-window ) and frame {&FRAME-NAME} :parent eq ?
@@ -1761,7 +2157,19 @@ do while parnext-prev :
     assign
       varinvclcspvalue = "no"
     .
-
+    def var v-attr-value as character no-undo.
+    def var v-attr-type as character no-undo. 
+    { str/tdat-val.i
+      t-doc.doc-code
+      {&trdcattr-inv-introduce}
+      v-attr-value
+      v-attr-type
+      no-error
+    }
+    if not error-status:error and v-attr-value = "yes" then do:
+      v-is-introduce = true.
+    end.
+   
     run str/invdcfrd.p (  input t-doc.doc-code,
                      output varinvclcspvalue,
                      output prtvalue,
@@ -1862,7 +2270,7 @@ define variable p-type  as character no-undo.
   assign
   menu-item m-chk-doc-add:sensitive in menu m-chk-doc = (pardoc-mode <> {&lookup}).
   enable
-    b-exit b-history b-arch b-sum-doc b-sum-goods b-help {&BROWSE-NAME} b-lkp a-n-c b-notes b-unscn b-cnt
+    b-exit b-history b-arch b-sum-doc b-sum-goods b-help {&BROWSE-NAME} b-lkp a-n-c b-notes b-unscn b-cnt b-marks
     b-chk-doc when is-cdinv = "yes" and t-doc.obj-type = {&shop}
     with frame {&FRAME-NAME}.
 
@@ -2119,15 +2527,77 @@ else do:
  end.
  if t-doc.status_ = {&permitted}
  then do:
-  enable b-alcmark with frame {&frame-name}.
+  hide b-alcmark in frame {&frame-name}.
  end.
 end.
+
+  v-is-marking = false.
+  assign
+    var-qnty-mark  :visible in browse {&browse-name} = false
+    var-qnty-mark-chk  :visible in browse {&browse-name} = false
+    var-qnty-mark-tech  :visible in browse {&browse-name} = false
+  . 
+  
+  if t-doc.status_ = {&wayb} and not t-doc.flag_ and not pardoc-mode = {&lookup}
+    then do:
+      MENU-ITEM m_add-marks:SENSITIVE IN MENU m-marks = TRUE.
+      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):IsMarking
+        then MENU-ITEM m_introduce-marks:SENSITIVE IN MENU m-marks = FALSE.
+        else MENU-ITEM m_introduce-marks:SENSITIVE IN MENU m-marks = TRUE.
+      MENU-ITEM m_lookup:SENSITIVE IN MENU m-marks = TRUE.
+/*      b-marks:visible = true.*/
+    end.
+    else do:
+      MENU-ITEM m_add-marks:SENSITIVE IN MENU m-marks = FALSE.
+      MENU-ITEM m_introduce-marks:SENSITIVE IN MENU m-marks = FALSE.
+      MENU-ITEM m_lookup:SENSITIVE IN MENU m-marks = TRUE.
+/*      b-marks:visible = false.*/
+    end.
+    
+  find first ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code no-error.
+  if available (ub.doc-line)
+  then do:
+    find first ub.goods no-lock where
+          ub.goods.artic     = ub.doc-line.artic     and
+          ub.goods.prod-type = ub.doc-line.prod-type and
+          ub.goods.prod-code = ub.doc-line.prod-code.
+    run gds-attr-value (
+                          input ub.goods.gds-code,
+                          input {&attr-mark-type},
+                          output v-marking-type,
+                          output v-type
+                          ).
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ub.doc-line.obj-type, ub.doc-line.obj-code):GetIsMarkingForType(v-marking-type) or v-is-introduce
+    then do:
+      v-is-marking = true.
+      if t-doc.status_ = {&wayb} and not v-is-introduce
+        then
+          assign
+            var-qnty-mark  :visible in browse {&browse-name} = true
+            var-qnty-mark-chk  :visible in browse {&browse-name} = true
+            var-qnty-mark-tech :visible in browse {&browse-name} = true
+          .
+      if v-is-introduce
+        then
+          assign
+            var-qnty-mark-chk  :visible in browse {&browse-name} = true
+          .
+    end.
+
+  end.
+  extent (bcol) = ?.
+  hbrowse = browse {&BROWSE-NAME}:handle.
+  extent (bcol) = hbrowse:num-columns.
+  bcol[1] = hbrowse:first-column.
+  do ii = 1 to extent (bcol).  
+    bcol[ii] = hbrowse:get-browse-column (ii).
+  end.
 
 if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-clr b-parts-  in frame {&frame-name} .
 
   assign
     frame {&FRAME-NAME} :title = t-doc.obj-type + " ":U + string( t-doc.obj-code, ">>>>9":U ) + "  : " + "ИНВЕНТАРИЗАЦИЯ " + t-doc.status_ +
-                                                " ":U + string( t-doc.flag_, "+/-":U ) + "     № " + t-doc.doc-code +
+                                                " ":U + string( t-doc.flag_, "+/-":U ) + "     № " + t-doc.doc-code + (if v-is-introduce then ". ПЕРВОНАЧАЛЬНЫЙ ВВОД" else "") +
                                                 "                - ":U.
   assign frame {&frame-name} :title = frame {&frame-name} :title +
     ( if parext-doc-mode = "":U          then pardoc-mode       else ( caps( '{&bef-fact-edit}':U ) +
@@ -2148,6 +2618,17 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
       end.
       when "coincidence" then do:
         &scop dif-cond and ub.doc-line.fact-qnty = 0
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+      when "markseqdocqnty" then do:
+        def var v-qnty as integer no-undo.
+        def var v-rec-list as character no-undo.
+        for each ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code:
+          run procmarkqntycheckinv (buffer ub.doc-line, output v-qnty). 
+          if ub.doc-line.doc-qnty - ub.doc-line.fact-qnty ne v-qnty
+            then v-rec-list = string (recid(ub.doc-line)) + "," + v-rec-list.
+        end.
+        &scop dif-cond and lookup (string (recid (ub.doc-line)), v-rec-list) > 0 
         {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
       end.
     end case.
@@ -2368,7 +2849,9 @@ procedure local-add :
   define variable varartic   like ub.doc-line.artic no-undo initial " ":U.
   define variable varmessage as   character         no-undo.
   define variable varnotes   as   character         no-undo.
+  define variable vismsg     as logical   no-undo init true.
   define buffer bf_doc-line for ub.doc-line.
+  define buffer buf_marking-lines for ub.marking-lines.
   do
   on error undo, return error return-value
   :
@@ -2456,6 +2939,48 @@ procedure local-add :
       assign
         lns-cnt = lns-cnt + 1
       .
+
+      run gds-attr-value (
+                            input ub.goods.gds-code,
+                            input {&attr-mark-type},
+                            output v-marking-type,
+                            output v-type
+                            ).
+      if not v-marking-type = "tabak" and v-is-introduce
+      then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          substitute("Ошибка при добавлении строки инвентаризации. Запрещено добавлять товары, неподлежащие обязательной маркировки. Включен флаг первоначального ввода.") skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        undo tr, next tr.
+      end.
+      if v-marking-type = "tabak" and vismsg and can-find (first buf_marking-lines no-lock 
+                                                  where buf_marking-lines.gds-code = ub.goods.gds-code and buf_marking-lines.out-code = {&free-code} and buf_marking-lines.mark begins {&tech-mark-prefix})
+      then do:
+        vismsg = false.
+        message
+          substitute("Есть товары с техническими марками") skip
+          view-as alert-box warning title "Информация".
+      end.
+      
+      if can-find (first ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code)
+      then do:
+        if not v-is-introduce and
+        ((not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):GetIsMarkingForType(v-marking-type) and (v-is-marking = true))
+        or (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):GetIsMarkingForType(v-marking-type) and v-is-marking = false))
+        then do:
+          message
+            substitute("Ошибка при добавлении строки инвентаризации. Совместное добавление товаров, подлежащих маркировке и не подлежащих маркировке, запрещено.") skip
+            view-as alert-box error .
+          undo tr, next tr.
+        end.
+      end.
+      else do: 
+        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):GetIsMarkingForType(v-marking-type)
+          then v-is-marking = true.
+      end. 
 
       find first bf_doc-line where
                  bf_doc-line.doc-code  = t-doc.doc-code         and
@@ -2714,7 +3239,8 @@ procedure m-parts-1 :
                      input-output unrv-qnty,
                      input-output ub.doc-line.price-base,
                      input-output ub.doc-line.price-rubl,
-                     input        -1 ).
+                     input        -1,
+                     input        "" ).
     find first ub.doc-line no-lock where recid( ub.doc-line ) = line-rec no-error.
     if available ub.doc-line then do:
       run local-reclcinv in this-procedure ( input "update":U ).
@@ -2851,7 +3377,8 @@ procedure m-parts-2 :
                        input-output unrv-qnty,
                        input-output ub.doc-line.price-base,
                        input-output ub.doc-line.price-rubl,
-                       input        -1 ) NO-ERROR.
+                       input        -1,
+                       input        "" ) NO-ERROR.
       if error-status :error then do:
         { cmp/gds-list.i gds-list assign }
         run waitfram-hide in this-procedure no-error.
@@ -2914,6 +3441,29 @@ procedure local-delete :
     reposition {&BROWSE-NAME} to recid line-rec no-error.
     find ub.doc-line where recid( ub.doc-line ) = line-rec.
     do transaction on error undo, return error return-value :
+      find first ub.goods where ub.goods.artic     = ub.doc-line.artic     and
+                               ub.goods.prod-type = ub.doc-line.prod-type and
+                               ub.goods.prod-code = ub.doc-line.prod-code no-lock.
+      for each ub.marking-attr exclusive-lock where (ub.marking-attr.attr-code = "inv-doc" or ub.marking-attr.attr-code = "inv-doc-scan")
+        and can-find (first ub.marking where ub.marking.mark = ub.marking-attr.mark and ub.marking.gds-code = ub.goods.gds-code):
+        delete ub.marking-attr.
+      end.
+      for each ub.utd no-lock where ub.utd.doc-code = ub.doc-line.doc-code:
+        for each ub.utd-lines exclusive-lock where ub.utd-lines.db-num = ub.utd.db-num
+          and ub.utd-lines.doc-id =  ub.utd-lines.doc-id and ub.utd-lines.gds-code = ub.goods.gds-code:
+          for each ub.utd-lines-attr exclusive-lock where ub.utd-lines-attr.db-num = ub.utd-lines.db-num
+            and ub.utd-lines-attr.doc-id = ub.utd-lines.doc-id
+            and ub.utd-lines-attr.LineNum = ub.utd-lines.LineNum:
+            delete ub.utd-lines-attr.
+          end.
+          for each ub.utd-marking-lines exclusive-lock where ub.utd-marking-lines.db-num = ub.utd-lines.db-num
+            and ub.utd-marking-lines.doc-id = ub.utd-lines.doc-id
+            and ub.utd-marking-lines.LineNum = ub.utd-lines.LineNum:
+            delete ub.utd-marking-lines.
+          end.
+          delete ub.utd-lines.
+        end.
+      end.
       run local-reclcinv in this-procedure ( input "old":U    ).
       run local-reclcinv in this-procedure ( input "delete":U ).
       run str/dellninv.p ( buffer ub.doc-line ).
@@ -2933,6 +3483,14 @@ procedure local-chg :
               view-as alert-box.
       return error.
     end.
+    
+    if v-is-marking and not v-is-introduce
+    then do:
+      message "Запрещено менять кол-во вручную для продукции подлежащей обязательной маркировке."
+              view-as alert-box.
+      return.      
+    end.
+
     assign
       line-rec = recid( ub.doc-line )
     .
@@ -3843,3 +4401,13 @@ define buffer buf_gds-dtl for ub.gds-dtl  .
   end.
 
 end procedure. /* ver-price */
+
+procedure go-line :
+  
+  define input parameter rec as recid no-undo.
+
+  run UI-on in this-procedure ( input "":U ).
+  if rec ne ?
+    then reposition {&BROWSE-NAME} to recid rec .
+  
+end procedure.

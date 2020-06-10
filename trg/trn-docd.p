@@ -144,6 +144,10 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
     delete ub.inv-doc.
   end.
 
+  for each ub.marking-attr exclusive-lock where (ub.marking-attr.attr-code = "inv-doc" or ub.marking-attr.attr-code = "inv-doc-scan") and ub.marking-attr.attr-value = ub.trn-doc.doc-code:
+    delete ub.marking-attr. 
+  end.
+
   /* удаляем суммы по документу */
   for each ub.trn-doc-sum exclusive-lock where
            ub.trn-doc-sum.doc-code = ub.trn-doc.doc-code

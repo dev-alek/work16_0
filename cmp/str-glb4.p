@@ -1411,6 +1411,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Признак накладной сформированной автоматически */
 { cmp/cr-prep.i 1 trdcattr-is-auto-trn "is-auto-trn" " " "is-auto-trn" }
 
+/* Документ инвентаризации с первоначальным вводом марок */
+{ cmp/cr-prep.i 1 trdcattr-inv-introduce "trdcattr-inv-introduce" " " "trdcattr-inv-introduce" }
+
 &glob trdcattr-list '~
 {&bef-trdcattr-hold-part-code}~
 ,{&bef-trdcattr-dov}~

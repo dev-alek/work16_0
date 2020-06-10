@@ -221,7 +221,8 @@ procedure rsrvindl :
             buf_marking-lines.prt-code   = buf_parts.prt-code
           . 
         end .
-        for first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark :
+        for first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark 
+          and not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
             assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
         end . 
         delete orig_marking-lines .

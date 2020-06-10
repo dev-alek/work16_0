@@ -38,6 +38,7 @@ define variable vss-description as character no-undo initial "библиотека процеду
 { cmp/gds-list.i gds-list def }
 { gbl/getsect.i def }
 { str/cont-ms-def.i }
+{ str/trdcalib.i }
 
 
 
@@ -2454,6 +2455,253 @@ define variable v-ischg-ext-type as logical no-undo .
         view-as alert-box question buttons yes-no update varlog .
         if varlog then run str/gds-list.w (input parparentproc, input buf_trn-doc.host-code, input buf_trn-doc.obj-type, input buf_trn-doc.obj-code).
       end.
+      
+      define buffer buf_marking-lines for ub.marking-lines.
+      define buffer bf_doc-line       for ub.doc-line.
+      define buffer bf_gds-dtl        for ub.gds-dtl.
+      def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+      def var v-attr-value as character no-undo.
+      def var v-attr-type as character no-undo.
+      def var v-is-introduce  as logical no-undo.
+      def var v-is-wroff-tech-m as logical no-undo.
+      def var v-prev-sts        as integer no-undo.
+      
+      { str/tdat-val.i
+        buf_trn-doc.doc-code
+        {&trdcattr-inv-introduce}
+        v-attr-value
+        v-attr-type
+        no-error
+      }
+      if not error-status:error and v-attr-value = "yes" then do:
+        v-is-introduce = true.
+      end.
+      
+      run gbl/getobjsrvhndl.p (input-output ObjSrv).
+        if not v-is-introduce and 
+          ((ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType("tabak") 
+            or can-find (first ub.marking-attr where ub.marking-attr.attr-code = "inv-doc" and ub.marking-attr.attr-value = buf_trn-doc.doc-code))
+          and buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and varstatus = {&permitted})
+        then do:
+          def var chg-qnty as int no-undo.
+          v-is-wroff-tech-m = true.
+          /*if can-find (first buf_marking-lines no-lock where buf_marking-lines.mark begins {&tech-mark-prefix} and buf_marking-lines.out-code = {&free-code})
+          then do:
+            
+            message "В наличии имеется немаркированная продукция. Оставить ее на остатках?" view-as alert-box buttons yes-no-cancel update varlog.
+            if varlog = ?
+              then undo, return error "Отмена пользователем.".
+
+            if varlog
+            then do:
+              { gbl/chk-actg.i
+                v-cntxt-db-num
+                v-cntxt-userid
+                {&action-head-code-main}
+                'actn_income_petrol-сommission':U
+                {&cntxt-object}
+                buf_trn-doc.host-code
+                buf_trn-doc.obj-type
+                buf_trn-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+                }
+              if not varlog
+                then do:
+                  message 'Отсутсвует право "Включение в инвентаризацию немаркированной продукции."' view-as alert-box error.
+                  undo, return error 'Отсутсвует право "Включение в инвентаризацию немаркированной продукции."'.
+                end.
+                else v-is-wroff-tech-m = true.
+                  
+            end.
+          end.*/
+        
+
+
+        for each bf_doc-line where bf_doc-line.doc-code = buf_trn-doc.doc-code:
+      
+          find first ub.goods no-lock where 
+            bf_doc-line.artic = ub.goods.artic
+            and bf_doc-line.prod-type = ub.goods.prod-type
+            and bf_doc-line.prod-code = ub.goods.prod-code.
+      
+    
+          define variable n-c like ub.gds-prt.node-code          no-undo.
+          find first bf_gds-dtl where
+                     bf_gds-dtl.doc-code  = bf_doc-line.doc-code  and
+                     bf_gds-dtl.artic     = bf_doc-line.artic     and
+                     bf_gds-dtl.prod-code = bf_doc-line.prod-code and
+                     bf_gds-dtl.prod-type = bf_doc-line.prod-type no-error.
+          
+          if not available bf_gds-dtl then do:
+            { gbl/termnode.i ub.goods.prt-root n-c }
+            { str/crgdsdtl.i
+                bf_doc-line.obj-code
+                bf_doc-line.obj-type
+                buf_trn-doc.doc-code
+                bf_doc-line.artic
+                bf_doc-line.prod-code
+                bf_doc-line.prod-type
+                n-c
+                yes
+            }
+            find first bf_gds-dtl where
+                       bf_gds-dtl.doc-code  = bf_doc-line.doc-code  and
+                       bf_gds-dtl.artic     = bf_doc-line.artic     and
+                       bf_gds-dtl.prod-code = bf_doc-line.prod-code and
+                       bf_gds-dtl.prod-type = bf_doc-line.prod-type and
+                       bf_gds-dtl.prt-code  = n-c.
+            assign
+              bf_gds-dtl.fact-qnty = bf_doc-line.doc-qnty
+              bf_gds-dtl.doc-qnty  = 0
+            .
+          end.
+          define variable old-val        like ub.gds-dtl.fact-qnty no-undo.
+          old-val = bf_gds-dtl.fact-qnty.         
+          chg-qnty = (bf_doc-line.fact-qnty - bf_doc-line.doc-qnty).
+          run trg/rsrv-dtl.p
+            ( input        parparentproc
+             ,input        {&rsrv-dtl_action_reserv}
+             ,buffer       bf_gds-dtl
+             ,input-output chg-qnty
+             ,input-output bf_doc-line.price-base
+             ,input-output bf_doc-line.price-rubl
+             ,input        -1
+             ,input        ""
+            ) no-error.
+          if error-status:error
+          then do:
+            undo, return error return-value.
+          end.
+          assign bf_gds-dtl.fact-qnty  = bf_gds-dtl.fact-qnty  + chg-qnty
+                bf_gds-dtl.doc-qnty   = bf_gds-dtl.fact-qnty  - old-val
+                bf_doc-line.doc-qnty  = bf_doc-line.doc-qnty  + chg-qnty
+                bf_doc-line.fact-qnty = bf_doc-line.fact-qnty + chg-qnty.
+          for each buf_marking-lines where
+            buf_marking-lines.gds-code = ub.goods.gds-code
+            and buf_marking-lines.out-code = buf_trn-doc.doc-code
+            and buf_marking-lines.obj-type = buf_trn-doc.obj-type
+            and buf_marking-lines.obj-code = buf_trn-doc.obj-code
+            :
+            for each ub.marking exclusive-lock where ub.marking.mark = buf_marking-lines.mark and not ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+              and not ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB:
+              ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+            end.
+          end.
+
+          f_ml:
+          for each buf_marking-lines where
+            buf_marking-lines.gds-code = ub.goods.gds-code
+            and buf_marking-lines.out-code = buf_trn-doc.doc-code
+            and buf_marking-lines.obj-type = buf_trn-doc.obj-type
+            and buf_marking-lines.obj-code = buf_trn-doc.obj-code
+            :
+      
+            find first ub.marking-attr where ub.marking-attr.mark = buf_marking-lines.mark 
+              and ub.marking-attr.attr-code = "inv-doc-scan" 
+              and ub.marking-attr.attr-value = buf_trn-doc.doc-code no-error.
+            
+            if available (ub.marking-attr)
+              then do:
+                find first ub.marking where ub.marking.mark = ub.marking-attr.mark no-error.
+                if not available ( ub.marking ) 
+                then do:
+                  next f_ml.
+                end.
+                if not ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+                  then do:
+                    v-prev-sts = ub.marking.sts.
+                    ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+                  end.
+                  else v-prev-sts = ?.  
+              end.
+              else next f_ml.
+            chg-qnty = ub.marking.box-qnty.
+                        run trg/rsrv-dtl.p
+              ( input        parparentproc
+               ,input        {&rsrv-dtl_action_reserv}
+               ,buffer       bf_gds-dtl
+               ,input-output chg-qnty
+               ,input-output bf_doc-line.price-base
+               ,input-output bf_doc-line.price-rubl
+               ,input        -1
+               ,input        buf_marking-lines.mark
+              ) no-error.
+            if error-status:error
+            then do:
+              undo, return error return-value.
+            end.
+            assign bf_gds-dtl.fact-qnty  = bf_gds-dtl.fact-qnty  + chg-qnty
+                  bf_gds-dtl.doc-qnty   = bf_gds-dtl.fact-qnty  - old-val
+                  bf_doc-line.doc-qnty  = bf_doc-line.doc-qnty  + chg-qnty
+                  bf_doc-line.fact-qnty = bf_doc-line.fact-qnty + chg-qnty.
+            if v-prev-sts ne ?
+            then do:
+              ub.marking.sts = v-prev-sts.
+              v-prev-sts = ?.
+            end.
+            release ub.marking.
+          end.
+          
+          if v-is-wroff-tech-m
+          then do:
+            f_ml2:
+            for each buf_marking-lines where
+              buf_marking-lines.gds-code = ub.goods.gds-code
+              and buf_marking-lines.out-code = buf_trn-doc.doc-code
+              and buf_marking-lines.obj-type = buf_trn-doc.obj-type
+              and buf_marking-lines.obj-code = buf_trn-doc.obj-code
+              and buf_marking-lines.mark begins {&tech-mark-prefix}
+              :
+                
+              find first ub.marking where ub.marking.mark = ub.buf_marking-lines.mark no-error.
+              if not available ( ub.marking ) 
+              then do:
+                if not ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+                  then do:
+                    v-prev-sts = ub.marking.sts.
+                    ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+                  end.
+                  else v-prev-sts = ?.
+                next f_ml2.
+              end.
+                
+              chg-qnty = ub.marking.box-qnty.
+              run trg/rsrv-dtl.p
+                ( input        parparentproc
+                 ,input        {&rsrv-dtl_action_reserv}
+                 ,buffer       bf_gds-dtl
+                 ,input-output chg-qnty
+                 ,input-output bf_doc-line.price-base
+                 ,input-output bf_doc-line.price-rubl
+                 ,input        -1
+                 ,input        buf_marking-lines.mark
+                ) no-error.
+              if error-status:error
+              then do:
+                undo, return error return-value.
+              end.
+              assign bf_gds-dtl.fact-qnty  = bf_gds-dtl.fact-qnty  + chg-qnty
+                    bf_gds-dtl.doc-qnty   = bf_gds-dtl.fact-qnty  - old-val
+                    bf_doc-line.doc-qnty  = bf_doc-line.doc-qnty  + chg-qnty
+                    bf_doc-line.fact-qnty = bf_doc-line.fact-qnty + chg-qnty.
+              if v-prev-sts ne ?
+              then do:
+                ub.marking.sts = v-prev-sts.
+                v-prev-sts = ?.
+              end.
+              release ub.marking.
+            end.
+          end.
+        end.
+        run gbl/calc-trn.p ( input parparentproc, input recid( buf_trn-doc ) ).
+        run str/clcsumga.p ( input buf_trn-doc.doc-code ).
+      end.
+
+      
       
       if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} and buf_trn-doc.status_ = {&fact} then do :
           define variable v-income-doc-code as character no-undo .

@@ -504,6 +504,8 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-date-end
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-inv-introduce
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры */
       otherwise do:
         undo, return error substitute( 'неизвестный атрибут документа "&1"', p-code ).

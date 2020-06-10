@@ -168,7 +168,7 @@ DEFINE FRAME {&FRAME-NAME}
   ub.gds-dtl.fact-qnty      AT ROW  7.50 COL 14.00 COLON-ALIGNED    LABEL "Стало"
                                                                           VIEW-AS FILL-IN SIZE-CHARS 16.00 BY 1.00
   ub.goods.unit-base        AT ROW  7.50 COL 32.50 COLON-ALIGNED NO-LABEL VIEW-AS FILL-IN SIZE-CHARS  8.00 BY 1.00
-  ub.gds-dtl.doc-qnty       AT ROW  7.50 COL 48.00 COLON-ALIGNED    LABEL "Разница"
+  ub.gds-dtl.doc-qnty       AT ROW  7.50 COL 50.00 COLON-ALIGNED    LABEL "Разница"
                                                                           VIEW-AS FILL-IN SIZE-CHARS 16.00 BY 1.00
   v-inv_peresort            AT ROW  8.50 COL 15.00 COLON-ALIGNED    LABEL "&Пересортица" FORMAT "->>>>>>>>>>9.<<<"
                                                                           VIEW-AS FILL-IN SIZE-CHARS 16.00 BY 1.00
@@ -713,6 +713,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             ,input-output ub.doc-line.price-base
             ,input-output ub.doc-line.price-rubl
             ,-1
+            ,""
             ) no-error.
           if error-status :error then do:
             assign
@@ -756,6 +757,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             ,input-output ub.doc-line.price-base
             ,input-output ub.doc-line.price-rubl
             ,-1
+            ,""
           ) no-error.
           if error-status :error then do:
             assign
@@ -815,7 +817,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                         input-output chg-qnty,
                         input-output ub.doc-line.price-base,
                         input-output ub.doc-line.price-rubl,
-                        input        -1                         ).
+                        input        -1,
+                        input ""                         ).
         assign ub.gds-dtl.fact-qnty  = ub.gds-dtl.fact-qnty  + chg-qnty
               ub.gds-dtl.doc-qnty   = ub.gds-dtl.fact-qnty  - old-val
               ub.doc-line.doc-qnty  = ub.doc-line.doc-qnty  + chg-qnty
@@ -829,7 +832,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                         input-output chg-qnty,
                         input-output ub.doc-line.price-base,
                         input-output ub.doc-line.price-rubl,
-                        input        -1                         ).
+                        input        -1,
+                        input ""                         ).
         assign ub.gds-dtl.fact-qnty  = ub.gds-dtl.fact-qnty  + chg-qnty
               ub.gds-dtl.doc-qnty   = ub.gds-dtl.doc-qnty   + chg-qnty
               ub.doc-line.doc-qnty  = ub.doc-line.doc-qnty  + chg-qnty

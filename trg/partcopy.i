@@ -181,7 +181,7 @@ procedure partcopy :
                 objMarks:RezervMarkForParts(buffer buf_parts, buffer buf_orig_parts, p-mark) .
               end.
               else do:  
-              objMarks:RezervMarkForParts(buffer buf_orig_parts, buffer buf_parts, p-mark) .
+                objMarks:RezervMarkForParts(buffer buf_orig_parts, buffer buf_parts, p-mark) .
               end.
               if objMarks:StatusErr
                 then
@@ -305,7 +305,9 @@ procedure partcopy :
               ub.marking-lines.fact-order = pri_trn-doc.fact-order when available pri_trn-doc
             .
           end .
-          for first buf_marking exclusive-lock where buf_marking.mark = buf_orig_ml.mark :
+          for first buf_marking exclusive-lock where buf_marking.mark = buf_orig_ml.mark 
+            and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
+            
             assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
 /*            if buf_marking.mark-parent <> ""                                                                      */
 /*            and buf_marking.unit-ext = "UNIT"                                                                     */
@@ -655,7 +657,8 @@ procedure partcopy :
               find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_parts.out-code no-error .
               if available buf_trn-doc then buf_marking-lines.fact-order = buf_trn-doc.fact-order .
             end .
-            for first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark :
+            for first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark 
+              and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
               assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB .
 /*              if buf_marking.mark-parent <> ""                                                                      */
 /*              and buf_marking.unit-ext = "UNIT"                                                                     */
@@ -710,9 +713,9 @@ procedure partcopy :
                                                  no-error .
           
           for each ub.marking where ub.marking.mark = buf_marking-lines.mark:
-            if p-out-code = {&free-code}
+            if p-out-code = {&free-code} and not ub.marking.sts = oMarkSts:MarkError:KeyIntDB
               then assign ub.marking.sts = oMarkSts:FreeZone:KeyIntDB.
-            if p-out-code = {&output-code}
+            if p-out-code = {&output-code} and not ub.marking.sts = oMarkSts:MarkError:KeyIntDB
               then assign ub.marking.sts = oMarkSts:OutZone:KeyIntDB.
           end.
           
@@ -774,9 +777,9 @@ procedure partcopy-to-childs-mark :
   define buffer buf_ml-childs for ub.marking-lines .
 
   for each ub.marking where ub.marking.mark-parent = buf_ml.mark:
-    if p-out-code = {&free-code}
+    if p-out-code = {&free-code} and not ub.marking.sts = THMarkSts:MarkError:KeyIntDB
       then assign ub.marking.sts = THMarkSts:FreeZone:KeyIntDB.
-    if p-out-code = {&output-code}
+    if p-out-code = {&output-code} and not ub.marking.sts = THMarkSts:MarkError:KeyIntDB
       then assign ub.marking.sts = THMarkSts:OutZone:KeyIntDB.
     for each buf_ml-childs exclusive-lock where buf_ml-childs.mark = ub.marking.mark
       and buf_ml-childs.obj-type  = buf_orig-ml.obj-type
@@ -2370,7 +2373,8 @@ procedure partcopy-update-parts-delete :
                   free_marking-lines.prt-code   = buf_parts.prt-code      
                 .
               end .
-              assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+              if not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv})
+                then assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}
               then do :
                 assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB .

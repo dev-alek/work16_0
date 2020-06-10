@@ -81,6 +81,13 @@ class ibs.th.str.utd.sts.edi inherits objth:
     define public property SignatureNotAccepted as class propmap no-undo get. 
     protected set.
     
+    define public property SendAutoRejected as class propmap no-undo get. 
+    protected set.
+    
+    define public property SignatureAutoRejected as class propmap no-undo get. 
+    protected set.
+    
+    
                         
   define public property EDIMap as class mapstring no-undo get. 
     protected set.
@@ -124,7 +131,9 @@ class ibs.th.str.utd.sts.edi inherits objth:
     sendRecipient                        = crProp(275,"sendRecipient","Отправлена подпись").
     sendRevocation                       = crProp(276,"sendRevocation","Отправлена ответ на аннуляцию").
     sendAdjustment                       = crProp(277,"sendAdjustment","Отправлена корректировка").
+    sendAutoRejected                     = crProp(278,"sendAutoRejected","Отправлен отказ авт.").
     
+    SignatureAutoRejected                = crProp(379,"SignatureAutoRejected","Отказ авт.").
     Changed                              = crProp(374,"Changed","Изменен").
     AvailAdjustment                      = crProp(378,"AvailAdjustment","По документу нельзя запросить корректировку").
 

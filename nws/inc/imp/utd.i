@@ -82,6 +82,9 @@ on endkey undo, return error :
     end.
   END CASE.
 end.
+
+subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
+MySeqUtd = ?.
 /* ------------------------------- utd-attr ---------------------------------------------- */
 for each buf_utd-attr where buf_utd-attr.db-num     = wt-utd.db-num
                                    and buf_utd-attr.doc-id = wt-utd.doc-id
@@ -89,6 +92,10 @@ for each buf_utd-attr where buf_utd-attr.db-num     = wt-utd.db-num
 on error  undo, return error
 :
   delete buf_utd-attr.
+  validate buf_utd-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 for each locb-utd-attr where locb-utd-attr.db-num     = wt-utd.db-num
                                    and locb-utd-attr.doc-id = wt-utd.doc-id
@@ -98,6 +105,10 @@ on error  undo, return error
 :
   create buf_utd-attr.
   buffer-copy locb-utd-attr to buf_utd-attr.
+  validate buf_utd-attr  no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 
@@ -108,6 +119,10 @@ for each buf_utd-lines where buf_utd-lines.db-num     = wt-utd.db-num
 on error  undo, return error
 :
   delete buf_utd-lines.
+  validate buf_utd-lines no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 for each locb-utd-lines where locb-utd-lines.db-num     = wt-utd.db-num
                                    and locb-utd-lines.doc-id = wt-utd.doc-id
@@ -117,6 +132,10 @@ on error  undo, return error
 :
   create buf_utd-lines.
   buffer-copy locb-utd-lines to buf_utd-lines.
+  validate buf_utd-lines no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 /* ------------------------------- utd-lines-attr ---------------------------------------------- */
 for each buf_utd-lines-attr where buf_utd-lines-attr.db-num     = wt-utd.db-num
@@ -125,6 +144,10 @@ for each buf_utd-lines-attr where buf_utd-lines-attr.db-num     = wt-utd.db-num
 on error  undo, return error
 :
   delete buf_utd-lines-attr.
+  validate buf_utd-lines-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 for each locb-utd-lines-attr where locb-utd-lines-attr.db-num     = wt-utd.db-num
                                    and locb-utd-lines-attr.doc-id = wt-utd.doc-id
@@ -134,6 +157,10 @@ on error  undo, return error
 :
   create buf_utd-lines-attr.
   buffer-copy locb-utd-lines-attr to buf_utd-lines-attr.
+  validate buf_utd-lines-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 /* ------------------------------- utd-err ---------------------------------------------- */
@@ -143,6 +170,10 @@ for each buf_utd-err where buf_utd-err.db-num     = wt-utd.db-num
 on error  undo, return error
 :
   delete buf_utd-err.
+  validate buf_utd-err no-error.
+  if error-status:error
+  then
+     return error return-value. 
 end.
 
 for each locb-utd-err where locb-utd-err.db-num     = wt-utd.db-num
@@ -153,6 +184,10 @@ on error  undo, return error
 :
   create buf_utd-err.
   buffer-copy locb-utd-err to buf_utd-err.
+  validate buf_utd-err no-error.
+  if error-status:error
+  then
+     return error return-value. 
 end.
 
 /* ------------------------------- utd-err-attr ---------------------------------------------- */
@@ -162,6 +197,10 @@ for each buf_utd-err-attr where buf_utd-err-attr.db-num     = wt-utd.db-num
 on error  undo, return error
 :
   delete buf_utd-err-attr.
+  validate buf_utd-err-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 for each locb-utd-err-attr where locb-utd-err-attr.db-num     = wt-utd.db-num
@@ -172,6 +211,10 @@ on error  undo, return error
 :
   create buf_utd-err-attr.
   buffer-copy locb-utd-err-attr to buf_utd-err-attr.
+  validate buf_utd-err-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 /* ------------------------------- utd-marking-lines ---------------------------------------------- */
@@ -181,6 +224,10 @@ for each buf_utd-marking-lines where buf_utd-marking-lines.db-num     = wt-utd.d
 on error  undo, return error
 :
   delete buf_utd-marking-lines.
+  validate buf_utd-marking-lines no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 for each locb-utd-marking-lines where locb-utd-marking-lines.db-num     = wt-utd.db-num
@@ -191,7 +238,10 @@ on error  undo, return error
 :
   create buf_utd-marking-lines.
   buffer-copy locb-utd-marking-lines to buf_utd-marking-lines.
-  
+  validate buf_utd-marking-lines no-error.
+  if error-status:error
+  then
+     return error return-value.
   for each locb-marking where locb-marking.mark     = buf_utd-marking-lines.mark
   no-lock
   on error  undo, return error
@@ -200,6 +250,10 @@ on error  undo, return error
     if not available buf_marking
       then create buf_marking.
     buffer-copy locb-marking to buf_marking.
+    validate buf_marking no-error.
+  if error-status:error
+  then
+     return error return-value.
     for each locb-marking-attr where locb-marking-attr.mark     = buf_utd-marking-lines.mark
       no-lock
       on error  undo, return error
@@ -208,6 +262,10 @@ on error  undo, return error
         if not available buf_marking-attr
           then create buf_marking-attr.
         buffer-copy locb-marking-attr to buf_marking-attr.
+        validate buf_marking-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
     end.
   end.
 end.
@@ -221,6 +279,10 @@ for each buf_utd-marking-lines-attr where buf_utd-marking-lines-attr.db-num     
 on error  undo, return error
 :
   delete buf_utd-marking-lines-attr.
+  validate buf_utd-marking-lines-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 for each locb-utd-marking-lines-attr where locb-utd-marking-lines-attr.db-num     = wt-utd.db-num
@@ -231,6 +293,10 @@ on error  undo, return error
 :
   create buf_utd-marking-lines-attr.
   buffer-copy locb-utd-marking-lines-attr to buf_utd-marking-lines-attr.
+  validate buf_utd-marking-lines-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 /* ------------------------------- utd-lines ---------------------------------------------- */
@@ -240,6 +306,10 @@ for each buf_utd-lines where buf_utd-lines.db-num     = wt-utd.db-num
 on error  undo, return error
 :
   delete buf_utd-lines.
+  validate buf_utd-lines no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 for each buf_utd-lines-attr where buf_utd-lines-attr.db-num     = wt-utd.db-num
@@ -248,6 +318,10 @@ for each buf_utd-lines-attr where buf_utd-lines-attr.db-num     = wt-utd.db-num
 on error  undo, return error
 :
   delete buf_utd-lines-attr.
+  validate buf_utd-lines-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 
@@ -259,6 +333,10 @@ on error  undo, return error
 :
   create buf_utd-lines.
   buffer-copy locb-utd-lines to buf_utd-lines.
+  validate buf_utd-lines no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 for each locb-utd-lines-attr where locb-utd-lines-attr.db-num     = wt-utd.db-num
@@ -269,17 +347,28 @@ on error  undo, return error
 :
   create buf_utd-lines-attr.
   buffer-copy locb-utd-lines-attr to buf_utd-lines-attr.
+  validate buf_utd-lines-attr no-error.
+  if error-status:error
+  then
+     return error return-value.
 end.
 
 /* ------------------------------- utd ---------------------------------------------- */
 if not available tb-utd then do:
   create tb-utd.
 end.
+
 buffer-copy wt-utd to tb-utd.
+validate tb-utd no-error.
+  if error-status:error
+  then
+     return error return-value.
+unsubscribe "getNextseq".
 
 define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
 run gbl/getobjsrvhndl.p (input-output ObjSrv).
-if g#db-num ne 0 and tb-utd.doc-code = "" and tb-utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and tb-utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB
+if g#db-num ne 0 and tb-utd.doc-code = "" and tb-utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
+  and (tb-utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
 then do:
   def var v-file-name as character no-undo.
   def var v-msg as character no-undo.
@@ -290,10 +379,9 @@ then do:
     ) no-error.
   if not error-status:error
   then do:
-    run nws/cmdchgutd.p (buffer tb-utd).
-    v-msg = substitute ('MsgBox "Докумет № &1 от &2. Сформирована ПН: &3. &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate) , tb-utd.doc-code, return-value).
+    v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate) , tb-utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
   end.
-    else v-msg = substitute ('MsgBox "Докумет: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate), return-value).
+    else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate), return-value).
   
   v-file-name = string (guid(generate-uuid)) + ".vbs".
   output to value (v-file-name).
@@ -303,6 +391,18 @@ then do:
   os-command no-wait value (file-info:full-pathname).
 
 end.
+
+if g#db-num ne 0 and tb-utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and tb-utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
+then do:
+    v-msg = substitute ('MsgBox "Документ № &1 от &2. &3Обратитесь в Техническую поддержку.", ,"Получен документ первоначального ввода."', tb-utd.DocumentNumber, string (tb-utd.DocumentDate),  '" & vbCrLf &  "').
+    v-file-name = string (guid(generate-uuid)) + ".vbs".
+    output to value (v-file-name).
+    put unformatted v-msg. 
+    output close.
+    file-info:file-name = (v-file-name).    
+    os-command no-wait value (file-info:full-pathname).
+end.
+
 
 /*------------------------- почиcтим за cобой ----------------------------------------------- */
 
