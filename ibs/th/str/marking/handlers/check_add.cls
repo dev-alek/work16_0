@@ -191,17 +191,14 @@ method public character AddMarkUTD(mark as char, doc-id as integer, db-num as in
         buf_utd-lines.Quantity  = buf_utd-lines.Quantity  + buf_marking.box-qnty . 
       end.
       else 
+        do:
+          return error "Товара с GTIN - " + v-GTIN + " нет".  
+        end.  
+      end.      
+      else 
       do:
-        message "Товара с GTIN - " + v-GTIN + " нет"
-                                          view-as alert-box.  
-                                      end.  
- 
-                                    end.      
-                                    else 
-                                    do:
-                                      message "Не определился GTIN"
-        view-as alert-box.
-    end. 
+        return error "Не определился GTIN".
+      end. 
   end method. 
 
 end class.
