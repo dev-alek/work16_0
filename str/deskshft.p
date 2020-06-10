@@ -14,6 +14,8 @@ Author: Bakhtadze Natalya
 Creation date: 01/18/06
 
 */
+using ibs.th.gbl.sys.*.
+using ibs.th.str.marking.sts.*.
 
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-silent as logical no-undo .
@@ -50,9 +52,13 @@ define variable par-type as character no-undo .
 define variable varshift-name-num as character no-undo.
 
 define buffer buf_chk-doc for ub.chk-doc.
+
 define buffer buf_shift-cash for ub.shift-cash.
 define buffer buf_cash-desk for ub.cash-desk.
-
+define buffer buf_marking for ub.marking .
+def var Marking as class mark no-undo .
+define variable objSrv as class objsrv no-undo .
+run gbl/getobjsrvhndl.p (input-output ObjSrv). 
 /*докачать все чеки*/
 /*если это не маркетер*/
 do
@@ -113,6 +119,56 @@ for each buf_chk-doc No-lock where
   end.
 end.
 
+
+
+if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(p-obj-type, p-obj-code):IsMarking then do:
+/*проверка марок*/
+  Marking = ObjSrv:Env:Marking:Sts:Mark.
+for first buf_marking no-lock where 
+          buf_marking.obj-code = p-obj-code and 
+          buf_marking.obj-type = p-obj-type and
+          buf_marking.sts = Marking:SaleLock:KeyIntDB:
+     vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
+                        ,varshift-name-num
+                        ,string(p-shift-date, "99/99/9999")
+                        ).
+    return error vreason.         
+ 
+end.
+for first buf_marking no-lock where 
+          buf_marking.obj-code = p-obj-code and 
+          buf_marking.obj-type = p-obj-type and
+          buf_marking.sts = Marking:ReturnLock:KeyIntDB:
+     vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
+                        ,varshift-name-num
+                        ,string(p-shift-date, "99/99/9999")
+                        ).
+    return error vreason.         
+ 
+end.
+for first buf_marking no-lock where 
+          buf_marking.obj-code = p-obj-code and 
+          buf_marking.obj-type = p-obj-type and
+          buf_marking.sts = Marking:SaleWaitLock:KeyIntDB:
+     vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
+                        ,varshift-name-num
+                        ,string(p-shift-date, "99/99/9999")
+                        ).
+    return error vreason.         
+ 
+end.
+for first buf_marking no-lock where 
+          buf_marking.obj-code = p-obj-code and 
+          buf_marking.obj-type = p-obj-type and
+          buf_marking.sts = Marking:ReturnWaitLock:KeyIntDB:
+     vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
+                        ,varshift-name-num
+                        ,string(p-shift-date, "99/99/9999")
+                        ).
+    return error vreason.         
+ 
+end.
+end.
 
 /*проверка на всех ли кассах магазина закрыты смены*/
 { gbl/getcntxt.i get }
