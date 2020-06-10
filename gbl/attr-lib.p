@@ -13334,6 +13334,19 @@ end procedure.
 &scop news-attr-schedule-merc no
 &scop manual-edit-attr-schedule-merc 0
 &scop batch-edit-attr-schedule-merc 0
+
+/* Наличие расписания мониторинга HDD для БД */
+&scop type-attr-schedule-hdd {&type-log}
+&scop format-attr-schedule-hdd "+/-"
+&scop label-attr-schedule-hdd "Расписание мониторинга HDD для БД"
+&scop tooltip-attr-schedule-hdd "Составлено ли расписание мониторинга HDD для базы данных"
+&scop user-can-edit-attr-schedule-hdd false
+&scop output-display-attr-schedule-hdd true
+&scop other-attr-schedule-hdd '':u
+&scop news-attr-schedule-hdd no
+&scop manual-edit-attr-schedule-hdd 0
+&scop batch-edit-attr-schedule-hdd 0
+
  /* Дата по которую усечены документы по БД в ГБД */
 &scop type-attr-cut-date {&type-date}
 &scop format-attr-cut-date "99.99.9999"
@@ -13580,6 +13593,8 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-merc
       {&attr-temp-full-code}
+      &scop attr-code attr-schedule-hdd
+      {&attr-temp-full-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-exp
@@ -13649,6 +13664,8 @@ procedure db-attr-tooltip :
       &scop attr-code attr-schedule-nws
       {&attr-temp-code}
       &scop attr-code attr-schedule-merc
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-hdd
       {&attr-temp-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-code}
@@ -13907,6 +13924,8 @@ procedure db-attr-news :
       &scop attr-code attr-schedule-nws
       {&attr-news-code}
       &scop attr-code attr-schedule-merc
+      {&attr-news-code}
+      &scop attr-code attr-schedule-hdd
       {&attr-news-code}
       &scop attr-code attr-schedule-arc
       {&attr-news-code}

@@ -110,6 +110,11 @@ task-type
             buf_temp-autotask.task-name = "Меркурий"
             .
           end.
+          when {&btpr-type-hddtest} then do:
+            assign
+            buf_temp-autotask.task-name = "Мониторинг HDD"
+            .
+          end.
         END CASE.
     END.
 

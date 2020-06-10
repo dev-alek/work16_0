@@ -77,6 +77,8 @@ define variable v-curr-db     as integer   no-undo .
 &scop autofree '{&bef-autofree}':U
 &scop bef-mercury Меркурий
 &scop mercury '{&bef-mercury}':U
+&scop bef-hddtest Мониторинг HDD
+&scop hddtest '{&bef-hddtest}':U
 &scop bef-sktsrv Сокет-Сервер
 &scop sktsrv '{&bef-sktsrv}':U
 
@@ -568,6 +570,9 @@ DO:
     when {&btpr-type-mercury} then do:
 
     end.
+    when {&btpr-type-hddtest} then do:
+
+    end.
     when {&btpr-type-autoarh} then do:
       run adm/arc-shdp.w
         (input  buf_schedule.cre-db-num
@@ -827,6 +832,9 @@ DO:
     when {&btpr-type-mercury} then do:
       disable bt-param with frame {&frame-name} .
     end.
+    when {&btpr-type-hddtest} then do:
+      disable bt-param with frame {&frame-name} .
+    end.
     when {&btpr-type-autogetcd} then do:
       enable bt-param with frame {&frame-name} .
     end.
@@ -899,7 +907,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                    {&autosuz} + {&comma-char}  + {&btpr-type-autosuz} + {&comma-char} +
                                    {&autocbnk} + {&comma-char}  + {&btpr-type-autocbnk} + {&comma-char} +
                                    {&autofree} + {&comma-char}  + {&btpr-type-autofree} + {&comma-char} +
-                                   {&mercury} + {&comma-char}  + {&btpr-type-mercury}
+                                   {&mercury} + {&comma-char}  + {&btpr-type-mercury} + {&comma-char} +
+                                   {&hddtest} + {&comma-char}  + {&btpr-type-hddtest}
     /*"{&bef-autonws},{&bef-autoarh},{&bef-autogcd},{&bef-autosale},{&bef-autosuz},{&bef-autocbnk},{&bef-autofree}":U*/
     v-task-type   = {&btpr-type-autonws}
     v-btpr-type   = {&btpr-type-autonws}

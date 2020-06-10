@@ -1058,6 +1058,12 @@ create X_auto-session .
     X_auto-session.session-name = "Меркурий"
     X_auto-session.proc-name    = "adm/l-i-merc.w":U
   .
+  create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-hddtest}
+    X_auto-session.session-name = "Мониторинг HDD"
+    X_auto-session.proc-name    = "adm/l-i-hddtest.w":U
+  .
 
 END PROCEDURE.
 

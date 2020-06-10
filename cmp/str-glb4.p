@@ -998,6 +998,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Наличие расписания обмена с ФГИС Меркурий */
 { cmp/cr-prep.i 1 attr-schedule-merc          schedule-merc         " " schedule-merc        }
 
+/* Наличие расписания мониторинга HDD */
+{ cmp/cr-prep.i 1 attr-schedule-hdd           schedule-hdd          " " schedule-hdd         }
+
 /* Дата по которую усечены документы по БД в ГБД */
 { cmp/cr-prep.i 1 attr-cut-date               cut-date              " " cut-date             }
 

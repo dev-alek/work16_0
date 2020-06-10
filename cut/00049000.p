@@ -115,7 +115,8 @@ on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:ge
         when {&btpr-type-autosale} or
         when {&btpr-type-autocbnk} or
         when {&btpr-type-autofree} or
-        when {&btpr-type-mercury}
+        when {&btpr-type-mercury} or
+        when {&btpr-type-hddtest}
         then do:
         end.
         when {&btpr-type-cutdbs}

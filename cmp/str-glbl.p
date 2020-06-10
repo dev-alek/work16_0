@@ -422,6 +422,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define barcode-e
 { cmp/cr-prep.i 1 btpr-type-autocbnk   "autocbnk" " " "autocbnk" } /* "Автоматическая работа с системой клиент-банк" */
 { cmp/cr-prep.i 1 btpr-type-autofree   "autofree" " " "autofree" } /* "Выполнение по расписанию произвольного задания" */
 { cmp/cr-prep.i 1 btpr-type-mercury    "mercury" " " "mercury" } /* "Выполнение по расписанию обмена с ФГИС Меркурий" */
+{ cmp/cr-prep.i 1 btpr-type-hddtest    "hddtest" " " "hddtest" } /* "Выполнение по расписанию запросов на кассу о состоянии HDD" */
 { cmp/cr-prep.i 1 btpr-type-cutdbs     "cutdbs"  " " "cutdbs"  } /* "Обрезание документов по БД"      */
 { cmp/cr-prep.i 1 btpr-type-lock-route "lkrt"    " " "lkrt"    } /* блокировка маршрутизации          */
 { cmp/cr-prep.i 1 btpr-type-lock-ext-sys-route "lkes"    " " "lkes"  } /* блокировка маршрутизации внешней системы OpenXML  */

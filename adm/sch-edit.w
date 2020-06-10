@@ -740,6 +740,9 @@ PROCEDURE fill-temp-table :
           when {&btpr-type-mercury}
           then do:
           end.
+          when {&btpr-type-hddtest}
+          then do:
+          end.
           otherwise do:
             if p-action = {&update}
               or p-action = {&add-copy}
