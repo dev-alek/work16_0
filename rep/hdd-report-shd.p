@@ -174,10 +174,10 @@ do
             decimal (tt-attrDevis.attr-Raw-value) no-error .
             if not error-status:error then 
             do:
-              tt-devicePCAttr.ch_raw = decimal(tt-devicePCAttr.raw_value) - decimal(tt-attrDevis.attr-Raw-value).
+              tt-devicePCAttr.ch_raw = decimal(tt-attrDevis.attr-Raw-value) - decimal(tt-devicePCAttr.raw_value) .
             end.  
             
-            tt-devicePCAttr.ch_val = tt-devicePCAttr.value_ - decimal(tt-attrDevis.attr-value) .
+            tt-devicePCAttr.ch_val = decimal(tt-attrDevis.attr-value) - tt-devicePCAttr.value_ .
             tt-devicePCAttr.raw_value = tt-attrDevis.attr-Raw-value.
             tt-devicePCAttr.value_    = decimal(tt-attrDevis.attr-value).
           end.  

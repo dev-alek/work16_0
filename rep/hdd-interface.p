@@ -60,7 +60,7 @@ define temp-table tt-devicePC no-undo
   field UserProc    as decimal
   field status_     as character
   field db-num      as integer 
-  index pi id db-num.
+  index pi id date_ time_int db-num.
   
 define temp-table tt-devicePCAttr no-undo
   field id        as integer
@@ -72,7 +72,7 @@ define temp-table tt-devicePCAttr no-undo
   field date_     as date
   field time_     as integer
   field db-num    as integer
-  index pi id
+  index pi id db-num date_ time_
   .
         
 define buffer buf_devisPC      for ub.devisPC .
@@ -106,7 +106,7 @@ do
       if buf_devisPC.namepc begins p-namePk and buf_devisPC.modeldevice begins p-ModelDisk then 
       do:
         next_:
-        for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.date >= p-Date:
+        for each buf_devisPCAttr no-lock where buf_devisPCAttr.id = buf_devisPC.id and buf_devisPCAttr.db-num = buf_devisPC.db-num and buf_devisPCAttr.date >= p-Date:
           if buf_devisPCAttr.time_ < p-Time then next next_.
           if buf_devisPCAttr.time_ > p-Time-end then next next_.  
           if buf_devisPCattr.attr-code ="ProcDisk" or buf_devisPCattr.attr-code = "UserProc" or buf_devisPCattr.attr-code = "testStatus" then 
@@ -196,23 +196,25 @@ do
       delete tt-devicePC .
     end.  
   end.  
-  if p-status > -1 then 
-  do:
-    if p-status = 1 then 
+    case p-status:
+    when 0 then 
     do:
-      for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена":
-        delete tt-devicePC .
-      end.  
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Пройдена":
+          delete tt-devicePC .
+        end.  
     end.
-    else 
-    do:
-      for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
-        delete tt-devicePC .
+    when 1 then 
+      do:
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
+          delete tt-devicePC .
+        end.  
+    end.
+    when 2 then do:  
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена" or tt-devicePC.status_ = "Не пройдена":
+          delete tt-devicePC .
+        end.  
       end.  
-
-    end.  
-  end.  
-
+    end case .
   if p-ValueDisk > 0 then 
   do:
     for each tt-devicePCAttr where tt-devicePCAttr.value_ < p-ValueDisk:

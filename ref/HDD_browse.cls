@@ -39,19 +39,19 @@ class ref.HDD_browse inherits Form:
     index pi id db-num asc date_ asc time_int 
     .
   
-  define temp-table tt-devicePCAttr no-undo
-    field id        as integer
-    field name_     as character
-    field value_    as decimal
-    field tresh     as decimal
-    field type_     as character
-    field raw_value as character
-    field ii        as integer
-    field date_     as date
-    field db-num    as integer
-    field time_     as integer
-    index pi name_
-    .
+define temp-table tt-devicePCAttr no-undo
+  field id        as integer
+  field name_     as character
+  field value_    as decimal
+  field tresh     as decimal
+  field type_     as character
+  field raw_value as character
+  field date_     as date
+  field time_     as integer
+  field db-num    as integer
+  field ii        as integer
+  index pi id db-num date_ time_
+  .
 
   define private variable b_exit                                as System.Windows.Forms.Button                    no-undo.
   define private variable b_print                               as System.Windows.Forms.Button                    no-undo.
@@ -105,6 +105,7 @@ class ref.HDD_browse inherits Form:
   define private variable radioButton2                          as System.Windows.Forms.RadioButton               no-undo.
   define private variable radioButton1                          as System.Windows.Forms.RadioButton               no-undo.
   define private variable ProcDisk                              as System.Windows.Forms.NumericUpDown             no-undo.
+  define private variable radioButton4 as System.Windows.Forms.RadioButton no-undo.
   define private variable rawvalueDataGridViewTextBoxColumn     as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
   define private variable sort_date                             as System.Windows.Forms.DateTimePicker            no-undo.
   define private variable sort_time                             as System.Windows.Forms.DateTimePicker            no-undo.
@@ -240,42 +241,10 @@ class ref.HDD_browse inherits Form:
         (tt-devicePC.UserProc = 100 or
         tt-devicePC.ProcDisk = 100 or
         tt-devicePC.status_ <> "Пройдена"):
-        if p-db-num <> 0 then 
-        do:
           browseHDD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
           browseHDD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
-        end.
-        else 
-        do:
-          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
-          HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
-        end.  
       end.  
     end.
-    /*    if e:RowIndex > -1 then                                                                  */
-    /*    do:                                                                                      */
-    /*      for each tt-devicePC no-lock:                                                          */
-    /*        if kk = e:RowIndex then                                                              */
-    /*        do:                                                                                  */
-    /*          if tt-devicePC.UserProc = 100 then                                                 */
-    /*          do:                                                                                */
-    /*            browsehdd:Rows[e:RowIndex]:cells[6]:Style:BackColor = System.Drawing.Color:Red.  */
-    /*            browsehdd:Rows[e:RowIndex]:cells[6]:Style:ForeColor = System.Drawing.Color:White.*/
-    /*          end.                                                                               */
-    /*          if tt-devicePC.ProcDisk = 100 then                                                 */
-    /*          do:                                                                                */
-    /*            browsehdd:Rows[e:RowIndex]:cells[5]:Style:BackColor = System.Drawing.Color:Red.  */
-    /*            browsehdd:Rows[e:RowIndex]:cells[5]:Style:ForeColor = System.Drawing.Color:White.*/
-    /*          end.                                                                               */
-    /*          if tt-devicePC.status_ = "Не пройдена" then                                        */
-    /*          do:                                                                                */
-    /*            browsehdd:Rows[e:RowIndex]:cells[7]:Style:BackColor = System.Drawing.Color:Red.  */
-    /*            browsehdd:Rows[e:RowIndex]:cells[7]:Style:ForeColor = System.Drawing.Color:White.*/
-    /*          end.                                                                               */
-    /*          kk = kk + 1 .                                                                      */
-    /*        end.                                                                                 */
-    /*      end.                                                                                   */
-    /*    end.                                                                                     */
     return.
 
   end method.
@@ -556,6 +525,19 @@ class ref.HDD_browse inherits Form:
 
   end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void HDDbrowseGBD_CellClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
+
+    bindingSource2:Handle = browse_HDDattr(v-ValueDisk, v-TreshDisk, v-Delta).    
+    bindingSource2:Refresh() .
+		return.
+
+	end method.
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -598,16 +580,9 @@ class ref.HDD_browse inherits Form:
         (tt-devicePC.UserProc = 100 or
         tt-devicePC.ProcDisk = 100 or
         tt-devicePC.status_ <> "Пройдена"):
-        if p-db-num <> 0 then 
-        do:
-          browseHDD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
-          browseHDD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
-        end.
-        else 
-        do:
           HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:BackColor = System.Drawing.Color:Red.
           HDDbrowseGBD:Rows[e:RowIndex]:DefaultCellStyle:ForeColor = System.Drawing.Color:White.
-        end.  
+  
       end.  
     end.
     return.
@@ -841,6 +816,7 @@ class ref.HDD_browse inherits Form:
     this-object:dataGridViewTextBoxColumn6 = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:dataGridViewTextBoxColumn7 = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:dataGridViewTextBoxColumn8 = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:radioButton4 = new System.Windows.Forms.RadioButton().
     cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:browseHDD, System.ComponentModel.ISupportInitialize):BeginInit().
     this-object:groupBox1:SuspendLayout().
@@ -1275,7 +1251,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:lStatus:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
     this-object:lStatus:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:lStatus:Location = new System.Drawing.Point(411, 106).
+    this-object:lStatus:Location = new System.Drawing.Point(376, 106).
     this-object:lStatus:Name = "lStatus".
     this-object:lStatus:Size = new System.Drawing.Size(122, 23).
     this-object:lStatus:TabIndex = 26.
@@ -1286,9 +1262,9 @@ class ref.HDD_browse inherits Form:
     /* radioButton3 */
     /*  */
     this-object:radioButton3:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
-    this-object:radioButton3:Location = new System.Drawing.Point(691, 106).
+    this-object:radioButton3:Location = new System.Drawing.Point(743, 106).
     this-object:radioButton3:Name = "radioButton3".
-    this-object:radioButton3:Size = new System.Drawing.Size(99, 24).
+    this-object:radioButton3:Size = new System.Drawing.Size(69, 24).
     this-object:radioButton3:TabIndex = 13.
     this-object:radioButton3:Text = "Ошибка".
     this-object:radioButton3:UseCompatibleTextRendering = true.
@@ -1298,7 +1274,7 @@ class ref.HDD_browse inherits Form:
     /* radioButton2 */
     /*  */
     this-object:radioButton2:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
-    this-object:radioButton2:Location = new System.Drawing.Point(594, 106).
+    this-object:radioButton2:Location = new System.Drawing.Point(550, 106).
     this-object:radioButton2:Name = "radioButton2".
     this-object:radioButton2:Size = new System.Drawing.Size(83, 24).
     this-object:radioButton2:TabIndex = 12.
@@ -1311,7 +1287,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     this-object:radioButton1:Checked = true.
     this-object:radioButton1:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
-    this-object:radioButton1:Location = new System.Drawing.Point(540, 106).
+    this-object:radioButton1:Location = new System.Drawing.Point(499, 106).
     this-object:radioButton1:Name = "radioButton1".
     this-object:radioButton1:Size = new System.Drawing.Size(49, 24).
     this-object:radioButton1:TabIndex = 11.
@@ -1413,7 +1389,7 @@ class ref.HDD_browse inherits Form:
     /*  */
     /* obj_list */
     /*  */
-    this-object:obj_list:Location = new System.Drawing.Point(117, 109).
+    this-object:obj_list:Location = new System.Drawing.Point(85, 109).
     this-object:obj_list:Name = "obj_list".
     this-object:obj_list:Size = new System.Drawing.Size(254, 21).
     this-object:obj_list:TabIndex = 23.
@@ -1426,7 +1402,7 @@ class ref.HDD_browse inherits Form:
     this-object:lobj_list:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:lobj_list:Location = new System.Drawing.Point(12, 109).
     this-object:lobj_list:Name = "lobj_list".
-    this-object:lobj_list:Size = new System.Drawing.Size(100, 23).
+    this-object:lobj_list:Size = new System.Drawing.Size(67, 23).
     this-object:lobj_list:TabIndex = 24.
     this-object:lobj_list:Text = "Объект:".
     this-object:lobj_list:UseCompatibleTextRendering = true.
@@ -1435,7 +1411,7 @@ class ref.HDD_browse inherits Form:
     /* bobj_list */
     /*  */
     this-object:bobj_list:Image = cast(resources:GetObject("bobj_list.Image"), System.Drawing.Image).
-    this-object:bobj_list:Location = new System.Drawing.Point(377, 109).
+    this-object:bobj_list:Location = new System.Drawing.Point(345, 109).
     this-object:bobj_list:Name = "bobj_list".
     this-object:bobj_list:Size = new System.Drawing.Size(25, 23).
     this-object:bobj_list:TabIndex = 9.
@@ -1505,6 +1481,7 @@ class ref.HDD_browse inherits Form:
     this-object:HDDbrowseGBD:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
     this-object:HDDbrowseGBD:Size = new System.Drawing.Size(828, 196).
     this-object:HDDbrowseGBD:TabIndex = 25.
+    this-object:HDDbrowseGBD:CellClick:Subscribe(this-object:HDDbrowseGBD_CellClick).
     this-object:HDDbrowseGBD:CellContentClick:Subscribe(this-object:HDDbrowseGBD_CellContentClick).
     this-object:HDDbrowseGBD:RowPostPaint:Subscribe(this-object:HDDbrowseGBD_RowPostPaint).
     /*  */
@@ -1571,9 +1548,22 @@ class ref.HDD_browse inherits Form:
     this-object:dataGridViewTextBoxColumn8:Name = "dataGridViewTextBoxColumn8".
     this-object:dataGridViewTextBoxColumn8:ReadOnly = true.
     /*  */
+    /* radioButton4 */
+    /*  */
+    this-object:radioButton4:FlatStyle = System.Windows.Forms.FlatStyle:Popup.
+    this-object:radioButton4:Location = new System.Drawing.Point(634, 106).
+    this-object:radioButton4:Name = "radioButton4".
+    this-object:radioButton4:Size = new System.Drawing.Size(109, 24).
+    this-object:radioButton4:TabIndex = 33.
+    this-object:radioButton4:Text = "Не пройдена".
+    this-object:radioButton4:UseCompatibleTextRendering = true.
+    this-object:radioButton4:UseVisualStyleBackColor = true.
+    this-object:radioButton4:CheckedChanged:Subscribe(this-object:r_status_Checked).
+    /*  */
     /* HDD_browse */
     /*  */
     this-object:ClientSize = new System.Drawing.Size(838, 592).
+    this-object:Controls:Add(this-object:radioButton4).
     this-object:Controls:Add(this-object:label4).
     this-object:Controls:Add(this-object:HDDbrowseGBD).
     this-object:Controls:Add(this-object:bobj_list).
@@ -1634,7 +1624,8 @@ class ref.HDD_browse inherits Form:
   method private void r_status_Checked( input sender as System.Object, input e as System.EventArgs ):
     if this-object:radioButton1:Checked = true then v-status = -1 .
     if this-object:radioButton2:Checked = true then v-status = 0 .
-    if this-object:radioButton3:Checked = true then v-status = 1 .
+    if this-object:radioButton4:Checked = true then v-status = 1 .
+    if this-object:radioButton3:Checked = true then v-status = 2 .
     if p-db-num <> 0 then bindingSource1:Handle = browse_HDD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
     else bindingSource3:Handle = browse_HDDGBD(v-SortDate, v-SortTime, v-SortTime-end, v-NamePK, v-ModelDisk, v-ProcDisk, v-UserDisk, v-status, v-ValueDisk, v-TreshDisk, v-Delta) no-error .
     
@@ -1740,22 +1731,25 @@ class ref.HDD_browse inherits Form:
         delete tt-devicePC . 
       end.  
     end.  
-    if Status_ > -1 then 
+    case Status_:
+    when 0 then 
     do:
-      if Status_ = 1 then 
-      do:
-        for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена":
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Пройдена":
           delete tt-devicePC .
         end.  
-      end.
-      else 
+    end.
+    when 1 then 
       do:
         for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
           delete tt-devicePC .
         end.  
-
+    end.
+    when 2 then do:  
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена" or tt-devicePC.status_ = "Не пройдена":
+          delete tt-devicePC .
+        end.  
       end.  
-    end.     
+    end case .
     if v-ValueDisk > 0 then 
     do:
       for each tt-devicePCAttr where tt-devicePCAttr.value_ < v-ValueDisk:
@@ -1895,22 +1889,25 @@ class ref.HDD_browse inherits Form:
           delete tt-devicePC . 
         end.  
       end.  
-      if Status_ > -1 then 
-      do:
-        if Status_ = 1 then 
-        do:
-          for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена":
-            delete tt-devicePC .
-          end.  
-        end.
-        else 
-        do:
-          for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
-            delete tt-devicePC .
-          end.  
-
+    case Status_:
+    when 0 then 
+    do:
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Пройдена":
+          delete tt-devicePC .
         end.  
-      end.     
+    end.
+    when 1 then 
+      do:
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ <> "Не пройдена":
+          delete tt-devicePC .
+        end.  
+    end.
+    when 2 then do:  
+        for each tt-devicePC exclusive-lock where tt-devicePC.status_ = "Пройдена" or tt-devicePC.status_ = "Не пройдена":
+          delete tt-devicePC .
+        end.  
+      end.  
+    end case .   
       if v-ValueDisk > 0 then 
       do:
         for each tt-devicePCAttr where tt-devicePCAttr.value_ < v-ValueDisk:
@@ -1949,6 +1946,7 @@ class ref.HDD_browse inherits Form:
     hQuery1:set-buffers(buffer tt-devicePC:HANDLE).
     hQuery1:query-prepare("FOR EACH tt-devicePC").
     hQuery1:query-open.
+    bindingSource1:Refresh() .
     return hQuery1 .                        
   
   end method .  
@@ -1959,8 +1957,9 @@ class ref.HDD_browse inherits Form:
     define buffer buf_devisPC-attr for ub.devisPC-attr .
     define variable ii as integer no-undo .
     empty temp-table tt-devicePCAttr .
+
     next_:
-    for each buf_devisPC-attr no-lock where buf_devisPC-attr.id = tt-devicePC.id and buf_devisPC-attr.date = tt-devicePC.date_  
+    for each buf_devisPC-attr no-lock where buf_devisPC-attr.id = tt-devicePC.id and buf_devisPC-attr.date = tt-devicePC.date_ and buf_devisPC-attr.db-num = tt-devicePC.db-num  
       and buf_devisPC-attr.attr-code <> "ProcDisk" and buf_devisPC-attr.attr-code <> "UserProc" and buf_devisPC-attr.attr-code <> "testStatus" :
       if buf_devisPC-Attr.time_ <> tt-devicePC.time_int then next next_.
        
