@@ -232,14 +232,17 @@ class ibs.th.adm.upd.updschm:
     
      analisdfObj = new analisdf ().
      analisdfObj:IsComp = IsComp.
+     def var m-FileDf_new as char no-undo.
      if analisdfObj:createDF(CurrDBShm)
      then do:
         m-FileDf     = analisdfObj:mFileDf.
-        if not analisdfObj:CheckTable("new_" + m-FileDf)
+        m-FileDf_new = replace (m-FileDf,"~/","~\").
+        entry(num-entries (m-FileDf_new,"~\"),m-FileDf_new,"~\") = "new_" + entry(num-entries (m-FileDf_new,"~\"),m-FileDf_new,"~\").
+        if not analisdfObj:CheckTable(m-FileDf_new)
         then do:
            IsErr = true.
            delete object analisdfObj no-error.
-           message "Поля не прошедшие проверку выгружены в файл" "new_" + m-FileDf "(" search("new_" + m-FileDf) ")" 
+           message "Поля не прошедшие проверку выгружены в файл" m-FileDf_new 
            
            view-as alert-box.
            return.

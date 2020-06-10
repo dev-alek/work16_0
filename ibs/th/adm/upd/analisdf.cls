@@ -185,6 +185,11 @@ define temp-table {&prefixtt}INDEX
      if vi > minimum(iTargetDBShm,TargetDBShm) 
      then 
         vi = minimum(iTargetDBShm,TargetDBShm).
+     find first {&prefixtt}FIELD where {&prefixfil}Table      = '"db"'
+                                   and {&prefixfil}Name       = '"reserve1-char"'
+     no-lock no-error.
+     if not avail {&prefixtt}FIELD
+     then do:
      create {&prefixtt}FIELD.
      assign
        {&prefixfil}mode       = "UPDATE"   /* дополнительные кавычки нужны для выгрузки DF*/
@@ -193,7 +198,7 @@ define temp-table {&prefixtt}INDEX
        {&prefixfil}initial    = '"' + string(vi) + '"' 
        {&prefixfil}localIndex = 1
      .
-     
+     end.
      vFileDf = substitute ("&1_&2_&3.df","update",iCurrDBShm,vi).
      dumpTable(vFileDf).
      mFileDf   = objExists(vFileDf,"f").
