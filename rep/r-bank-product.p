@@ -243,7 +243,8 @@ procedure My-Rep:
     '<td style="width: 100px;"></td>' skip
     '<td style="width: 120px;"></td>' skip
     '<td style="width: 140px;"></td>' skip
-    '<td style="width: 180px;"></td>' skip
+    '<td style="width: 90px;"></td>' skip
+    '<td style="width: 90px;"></td>' skip
     '<td style="width: 140px;"></td>' skip
     '<td style="width: 120px;"></td>' skip
     '<td style="width: 100px;"></td>' skip
@@ -253,19 +254,19 @@ procedure My-Rep:
  
   put stream OutStr-html unformatted
     '<tr>' skip
-    '<td colspan="7" style="text-align: center; font-weight:bold;">Информация о совершенных действиях</td>' skip
+    '<td colspan="8" style="text-align: center; font-weight:bold;">Информация о совершенных действиях</td>' skip
     '</tr>' skip   
     '<tr>' skip
-    '<td colspan="7" style="text-align: left; font-weight:bold;">' + v-period + '</td>' skip
+    '<td colspan="8" style="text-align: left; font-weight:bold;">' + v-period + '</td>' skip
     '</tr>' skip  
     '<tr>' skip
-    '<td colspan="7" style="text-align: left; font-weight:bold;">' + v-oss-list + '</td>' skip
+    '<td colspan="8" style="text-align: left; font-weight:bold;">' + v-oss-list + '</td>' skip
     '</tr>' skip 
     '<tr>' skip
-    '<td colspan="7" style="text-align: left; font-weight:bold;"><br></td>' skip
+    '<td colspan="8" style="text-align: left; font-weight:bold;"><br></td>' skip
     '</tr>' skip
     '<tr>' skip
-    '<td colspan="7" style="text-align: left; font-weight:bold;"><br></td>' skip
+    '<td colspan="8" style="text-align: left; font-weight:bold;"><br></td>' skip
     '</tr>' skip
     '</thead>' skip
   .  
@@ -276,7 +277,8 @@ procedure My-Rep:
       '         <th style="text-align: center; font-weight:bold; background-color: silver; height: 30px">№ АЗС</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Наименование продукта</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Уникальный номер Сертификата</th>' skip
-      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Дата-время оплаты</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Дата оплаты</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Время оплаты</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Сумма оплаты</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Тип оплаты</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">RRN операции</th>' skip
@@ -289,6 +291,7 @@ procedure My-Rep:
       '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">5</th>' skip
       '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">6</th>' skip
       '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">7</th>' skip
+      '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">8</th>' skip
       '       </tr>' skip
   . /* Точка для закрытия Put */
 
@@ -353,7 +356,8 @@ procedure My-Rep:
                 '         <th style="text-align: center;">' + obj-list.obj-name + '</th>' skip
                 '         <th style="text-align: center;">' + tt-gds-list.gds-name + '</th>' skip
                 '         <th style="text-align: center;">' + (if available (buf_chk-gds-attr) then buf_chk-gds-attr.attr-value else "") + '</th>' skip
-                '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then (string(buf_chk-gds-pay.chk-date) + " " + string(buf_chk-doc.chk-time,"HH:MM:SS")) else "") + '</th>' skip
+                '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then string(buf_chk-gds-pay.chk-date) else "") + '</th>' skip
+                '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then string(buf_chk-doc.chk-time,"HH:MM:SS") else "") + '</th>' skip
                 '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then string(buf_chk-gds-pay.tot-r-b, "->>>>>>>>9.99") else "") + '</th>' skip
                 '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then (if buf_chk-gds-pay.pay-code <> 1 then "Электронные" else "Наличные") else "") + '</th>' skip
                 '         <th style="text-align: center;">' + v-rrn + '</th>' skip
@@ -421,7 +425,8 @@ procedure My-Rep:
                 '         <th style="text-align: center;">' + obj-list.obj-name + '</th>' skip
                 '         <th style="text-align: center;">' + tt-gds-list.gds-name + '</th>' skip
                 '         <th style="text-align: center;">' + (if available (buf_chk-gds-attr) then buf_chk-gds-attr.attr-value else "") + '</th>' skip
-                '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then (string(buf_chk-gds-pay.chk-date) + " " + string(buf_chk-doc.chk-time,"HH:MM:SS")) else "") + '</th>' skip
+                '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then string(buf_chk-gds-pay.chk-date) else "") + '</th>' skip
+                '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then string(buf_chk-doc.chk-time,"HH:MM:SS") else "") + '</th>' skip
                 '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then string(buf_chk-gds-pay.tot-r-b, "->>>>>>>>9.99") else "") + '</th>' skip
                 '         <th style="text-align: center;">' + (if available (buf_chk-gds-pay) then (if buf_chk-gds-pay.pay-code <> 1 then "Электронные" else "Наличные") else "") + '</th>' skip
                 '         <th style="text-align: center;">' + v-rrn + '</th>' skip
@@ -437,38 +442,38 @@ procedure My-Rep:
                 '     </tbody>' skip
                 '     <tfoot>' skip
                 '       <tr>' skip
-                '       <td colspan="7" style="text-align: center;"><br></td>' skip
+                '       <td colspan="8" style="text-align: center;"><br></td>' skip
                 '       </tr>' skip
                 '       <tr>' skip
-                '       <td colspan="7" style="text-align: center;"><br></td>' skip
+                '       <td colspan="8" style="text-align: center;"><br></td>' skip
                 '       </tr>' skip
                 '       <tr>' skip
-                '       <td colspan="7" style="text-align: center; font-weight:bold;">ПОДПИСИ СТОРОН</td>' skip
+                '       <td colspan="8" style="text-align: center; font-weight:bold;">ПОДПИСИ СТОРОН</td>' skip
                 '       </tr>' skip  
                 '       <tr>' skip
-                '       <td colspan="7" style="text-align: center;"><br></td>' skip
+                '       <td colspan="8" style="text-align: center;"><br></td>' skip
                 '       </tr>' skip
                 '       <tr>' skip
                 '         <td colspan="3" style="text-align: left;">От имени Банка:</td>' skip
                 '         <td style="text-align: center;"></td>' skip
-                '         <td colspan="3" style="text-align: left;">От имени Банковского платежного агента:</td>' skip
+                '         <td colspan="4" style="text-align: left;">От имени Банковского платежного агента:</td>' skip
                 '       </tr>' skip
                 '       <tr>' skip
                 '         <td colspan="3" style="{&css_border_bottom}"><br /></td>' skip
                 '         <td style="text-align: center;"></td>' skip
-                '         <td colspan="3" style="{&css_border_bottom}"><br /></td>' skip
+                '         <td colspan="4" style="{&css_border_bottom}"><br /></td>' skip
                 '       </tr>' skip
                 '       <tr>' skip
                 '         <td colspan="2" style="text-align: center; font-style:italic;">(должность)</td>' skip
                 '         <td style="text-align: center;"></td>' skip
                 '         <td style="text-align: center;"></td>' skip
-                '         <td colspan="2" style="text-align: center; font-style:italic;">(должность)</td>' skip
+                '         <td colspan="3" style="text-align: center; font-style:italic;">(должность)</td>' skip
                 '         <td style="text-align: center;"></td>' skip
                 '       </tr>' skip
                 '       <tr>' skip
                 '         <td colspan="3" style="{&css_border_bottom}"><br /></td>' skip
                 '         <td style="text-align: center;"></td>' skip
-                '         <td colspan="3" style="{&css_border_bottom}"><br /></td>' skip
+                '         <td colspan="4" style="{&css_border_bottom}"><br /></td>' skip
                 '       </tr>' skip
                 '       <tr>' skip
                 '         <td style="text-align: left; font-style:italic;">(Ф.И.О.)</td>' skip

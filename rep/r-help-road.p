@@ -180,7 +180,7 @@ do
         if available (buf_chk-pay) then 
         do: 
           put stream out-stream unformatted
-            string(buf_chk-pay.chk-date) " " string(buf_chk-doc.chk-time,"HH:MM:SS") ";" 
+            string(buf_chk-pay.chk-date) ";" string(buf_chk-doc.chk-time,"HH:MM:SS") ";" 
             string(buf_chk-pay.tot-sum) ";"
             .
           find first buf_cash-pay-attr where buf_cash-pay-attr.cdpay-code = buf_chk-pay.pay-code
