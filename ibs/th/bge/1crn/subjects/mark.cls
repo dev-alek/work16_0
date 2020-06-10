@@ -29,6 +29,7 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
   define property GTIN            as character    no-undo get. private set.
   define property gds-code        as integer      no-undo get. private set.
   define property mrc             as decimal      no-undo get. private set.
+  define property stts-desc             as character    no-undo get. private set.
 
   define property del-l         as integer      no-undo get. private set.
   define property del-f         as integer      no-undo get. private set.
@@ -60,6 +61,7 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
       when "qnty-box"     then qnty-box         = {&attr-dec} .
       when "stts"         then stts             = {&attr-str} .
       when "mark_parent"  then mark-parent      = {&attr-str} .
+      when "stts-desc"    then stts-desc        = {&attr-str} .
       when "GTIN"         then GTIN             = {&attr-str} .
       when "gds-code"     then gds-code         = {&attr-integer} .
       when "mrc"          then mrc              = {&attr-dec} .
@@ -92,6 +94,7 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
       v-str = v-str + ",gds-code"           when gds-code          = ? and obj-load eq "mark"
       v-str = v-str + ",stts"               when stts              = ? 
     .
+   
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
@@ -110,6 +113,7 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
       GTIN               = ?
       gds-code           = ?
       mrc                = ?
+      stts-desc          = ?
     .
     
     

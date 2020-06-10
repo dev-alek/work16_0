@@ -932,8 +932,12 @@ CASE p-option:
                             ,input 0 /*p-ruleset-id*/
                             ,input ? /*order_id*/
                             ,input 0
-                            ,input substitute("Ïאנאלוענû גûחמגא ןנמפאיכא &1 הכÿ ןאנאלוענא &2", v-profile-id, X_ruledict-param.param-name)
+                            ,input substitute("Ïאנאלוענû גûחמגא ןנמפאיכא &1 הכÿ ןאנאלוענא &2", v-profile-id, IF p-list-mode = {&update}
+                                       THEN tt-ruledict-param.param-name else X_ruledict-param.param-name)
                             ,input-output table tt0-rule-call-param ) no-error.
+if error-status:error
+then
+   message return-value error-status:get-message(1)  view-as alert-box.
 
       end.
     end case.

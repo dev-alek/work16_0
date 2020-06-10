@@ -78,7 +78,10 @@ class ibs.th.str.utd.sts.th inherits objth:
   ------------------------------------------------------------------------------*/
 
   method public char GetLabel(inKey as int):
-    return GetLabel(string (inKey)).
+    def var prop as class propmap no-undo.    
+    if valid-object (THMap:GetItemKeyInt(inKey))
+      then return cast (THMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
+      else return string(inKey). /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
   end method. 
 
   method private char GetLabel(inKeyStr as char):
@@ -117,6 +120,13 @@ class ibs.th.str.utd.sts.th inherits objth:
       else return ?.
   end method.
   
+  method public char GetKeyStrDB(inKeyint as int):
+    def var prop as class propmap no-undo.
+    if valid-object (THMap:GetItemKeyint(inKeyint))
+      then return cast (THMap:SubjectObjCurr, ibs.th.gbl.propmap):KeycharDB. 
+      else return ?.
+  end method. 
+   
   method private class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
     def var prop as class propmap no-undo.
     prop = new propmap (string(inKeyInt), inLabel).

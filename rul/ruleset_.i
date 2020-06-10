@@ -79,6 +79,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &global-define edoc-proc_18_event_icnt-doc_145                  145
 &global-define edoc-proc_18_event_fin-doc_150                   150
 &global-define edoc-proc_18_event_fbr-doc_155                   155
+&global-define edoc-proc_18_event_utd_160                       160
+&global-define edoc-proc_18_event_mark_165                      165
 &global-define edoc-proc_18_text-export_specif_223              223
 &global-define edoc-proc_18_text-import_specif_224              224
 &global-define edoc-proc_18_excel-export_specif_225             225

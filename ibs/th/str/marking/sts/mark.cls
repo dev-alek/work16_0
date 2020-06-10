@@ -76,8 +76,8 @@ class ibs.th.str.marking.sts.mark inherits objth:
     FreeZone  = crProp(10,"FreeZone","Свободная зона").
     SaleLock   = crProp(11,"SaleLock","Продан на кассе").
     ReturnLock   = crProp(12,"ReturnLock","Возвращен на кассе").
-    SaleWaitLock   = crProp(14,"SaleLock","Идет продажа").
-    ReturnWaitLock   = crProp(15,"ReturnLock","Блокировка идет возврат").
+    SaleWaitLock   = crProp(14,"SaleWaitLock","Идет продажа").
+    ReturnWaitLock   = crProp(15,"ReturnWaitLock","Блокировка идет возврат").
     Reserved   = crProp(13,"Reserved","Зарезервирован").
     Ungrouped  = crProp(20,"Ungrouped","Разгруппирован").
     
@@ -125,6 +125,13 @@ class ibs.th.str.marking.sts.mark inherits objth:
       else return ?.
   end method. 
 
+  method public char GetKeystrDB(inKeyint as integer ):
+    def var prop as class propmap no-undo.
+    if valid-object (MarkMap:GetItemKeyInt(inKeyint))
+      then return cast (MarkMap:SubjectObjCurr, ibs.th.gbl.propmap):KeycharDB. 
+      else return ?.
+  end method. 
+  
   method public int GetKeyIntDB(inKeyStr as char):
     def var prop as class propmap no-undo.
     if valid-object (MarkMap:GetItemKeyStr(inKeyStr))
@@ -147,7 +154,8 @@ class ibs.th.str.marking.sts.mark inherits objth:
     def var prop as class propmap no-undo.
     prop = new propmap (string(inKeyInt), inLabel).
     prop:KeyIntDB = inKeyInt.
-    MarkMap:AddItem(prop, string(inKeyInt)).
+    prop:KeyCharDB = inNameProp.
+    MarkMap:AddItem(prop, inKeyInt,inNameProp).
     return prop.
     
   end method. 

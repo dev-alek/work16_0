@@ -170,6 +170,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define delim-nws
 &glob delim-key chr(3)
 run filwrlib_append-new-line in this-procedure ( input "&global-define delim-key {&delim-key}  /* Разделитель для формирования уникального ключа записи */ /* И ТОЛЬКО ДЛЯ ЭТОГО!!! */ " ).
 
+/* Разделитель для формирования замены delim-key  в key-rec уникального ключа записи */ /* И ТОЛЬКО ДЛЯ ЭТОГО!!! */
+&glob delim-key-rep chr(2) + chr(9) + chr (2)
+run filwrlib_append-new-line in this-procedure ( input "&global-define delim-key-rep {&delim-key-rep}  /* Разделитель для формирования замены delim-key  в key-rec уникального ключа записи */ /* И ТОЛЬКО ДЛЯ ЭТОГО!!! */ " ).
+
+
 /* Разделитель для формирования списка параметров */
 &glob delim-par chr(4)
 run filwrlib_append-new-line in this-procedure ( input "&global-define delim-par {&delim-par}" ).

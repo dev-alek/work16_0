@@ -1,6 +1,7 @@
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 {cmp\str-glbl.i {1}}
+define variable mMRCCode as logical no-undo.
 &if "{1}" = "class"
 &then
 method private character repSpecSimbforDm
@@ -8,8 +9,8 @@ method private character repSpecSimbforDm
 function repSpecSimbforDm return char 
 &endif
 (iDM as char ):
-    define variable vReplist_old as character no-undo init "),(".
-    define variable vReplist_new as character no-undo init  ",".
+    define variable vReplist_old as character no-undo init "),(,&gt;,&lt;,&amp;,&apos;,&quot;".
+    define variable vReplist_new as character no-undo init  ",,>,<,&,~',~"".
     define variable vi as integer no-undo.
     
     do vi = 1 to num-entries(vReplist_old):
@@ -115,7 +116,9 @@ method private character  GetNextElement
 &else
 function GetNextElement return character  
 &endif
-  (input-output pstr    as character 
+  (output oteg          as character 
+  ,output otegval       as character
+  ,input-output pstr    as character 
   /*,input        iLength as character*/ ):
      define variable vlistElem as character no-undo    init "00,01,02,21,17,11,13,(01),(02),(21),(17),(11),(13)". /* ,(8005),8005".*/
      define variable vlistallleng as character no-undo init "00,00,00,00,00,00,00,0000,0000,0000,0000,0000,0000".  /* ,000000,0000". */
@@ -125,14 +128,24 @@ function GetNextElement return character
      define variable vLength as integer no-undo.
      define variable vi as integer no-undo.
      define variable vj as integer no-undo.
+     if mMRCCode
+     then
+        assign
+           vlistElem     = vlistElem    + ",(8005),8005"
+           vlistallleng  = vlistallleng + ",000000,0000"
+           vlistleng1    = vlistleng1   + ",000006,0006"
+           vlistleng2    = vlistleng2   + ",000006,0006"
+        .
+     
      if length(pstr) eq 4
      then
         return "".
         block-elem:
     do vi = 1 to num-entries(vlistElem):
        vTeg = entry(vi,vlistElem).
-       if pstr begins entry(vi,vlistElem)
+       if pstr begins vTeg
        then do:
+          
           vLength = int(entry(vi,vlistallleng)) no-error.
           if vLength eq 0
              and not error-status:error
@@ -152,7 +165,11 @@ function GetNextElement return character
              end.
              vLength = int(entry(vi,if vLength ne ? then vlistleng1 else vlistleng2)).
           end.
-          vTeg = substring (pstr,1,length(vTeg) + vLength).
+          oteg = entry(vi,vlistElem).
+          otegval = substring (pstr,length(oteg) + 1, vLength).
+          vTeg = oteg + otegval.
+          oteg = replace(replace(oteg,")",""),"(","").
+          
           pstr = substring (pstr,length(vTeg)+ 1).
           leave block-elem.
        end.
@@ -171,9 +188,14 @@ function GetCodeIdent return character
 (iDm as char):
    define variable Velement   as character no-undo init "first".
    define variable oCodeIdent as character no-undo.
+   define variable vteg as character no-undo.
+   define variable vtegval as character no-undo.
    if iDm begins {&tech-mark-prefix}
    then
       oCodeIdent = iDm.
+   else if length(iDm) < 21
+   then
+      oCodeIdent = ?.
    else if     length(iDm) eq 29
       and not iDm begins "01"
       and not iDm begins "02"
@@ -185,7 +207,7 @@ function GetCodeIdent return character
    then
       oCodeIdent = substring(iDm,1,21).
    else do while Velement ne "" and idm ne "":
-      Velement = GetNextElement(idm).
+      Velement = GetNextElement(output vteg, output vtegval, input-output idm).
       oCodeIdent = oCodeIdent + Velement.
    end.
    return oCodeIdent.
@@ -201,6 +223,8 @@ function GetTegCod return character
 (icodeIdent as char, iTeg as char):
    define variable Velement   as character no-undo init "first".
    define variable oTeg as character no-undo.
+   define variable vteg as character no-undo.
+   define variable vtegval as character no-undo.
    
    if     ((length(icodeIdent) eq 21
       and not icodeIdent begins "01"
@@ -221,10 +245,10 @@ function GetTegCod return character
    else do: 
       block-teg: 
          do while Velement ne "" and icodeIdent ne "":
-         Velement = GetNextElement(icodeIdent).
+         Velement = GetNextElement(output vteg, output vtegval, input-output icodeIdent).
          if Velement begins iTeg
          then do:
-            oTeg = substring(Velement,length(iTeg) + 1).
+            oTeg = vtegval.
             leave block-teg.
          end.
       end.
@@ -232,6 +256,40 @@ function GetTegCod return character
    return oTeg.
 
 end.
+
+&if "{1}" = "class"
+&then
+method private character  addBracketForCode
+&else
+function addBracketForCode return character  
+&endif
+(icodeIdent as char):
+   define variable Velement   as character no-undo init "first".
+   define variable oTeg as character no-undo.
+   define variable vteg as character no-undo.
+   define variable vtegval as character no-undo.
+   
+   if     length(icodeIdent) le 24
+   then do:
+      oTeg = icodeIdent.
+   end.
+   else do:
+      mMRCCode = yes. 
+      block-teg:
+      do while Velement ne "" and icodeIdent ne "":
+         Velement = GetNextElement(output vteg, output vtegval, input-output icodeIdent).
+         if vteg ne ""
+         then
+            oTeg = oTeg + "(" + vteg + ")" + vtegval .
+         
+      end.
+      mMRCCode = no.
+   end.
+   return oTeg.
+
+end.
+
+
 
 &if "{1}" = "class"
 &then
@@ -436,7 +494,8 @@ function getMRCByDM return decimal
    define variable vMRC     as character no-undo.
    define variable oMrc     as decimal no-undo init ?.
    define variable Velement as character no-undo.
-   
+   define variable vteg as character no-undo.
+   define variable vtegval as character no-undo.
    
    if    length(idm) eq 14 + 7 + 4 + 4
       or length(idm) eq 14 + 7 + 4 
@@ -448,7 +507,7 @@ function getMRCByDM return decimal
    else do:
        block-mrc:
        do while Velement ne "" and idm ne "":
-          Velement = GetNextElement(idm).
+          Velement = GetNextElement(output vteg, output vtegval, input-output idm).
           if Velement begins "8005"
           then do:
              vMRC = substring(idm,5,6).

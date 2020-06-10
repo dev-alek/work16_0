@@ -57,7 +57,10 @@ class ibs.th.str.utd.edoctype:
   ------------------------------------------------------------------------------*/
 
   method public char GetLabel(inKey as int):
-    return GetLabel(string (inKey)).
+    def var prop as class propmap no-undo.    
+    if valid-object (EDocTypeMap:GetItemKeyInt(inKey))
+      then return cast (EDocTypeMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
+      else return string(inKey). /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
   end method. 
 
   method private char GetLabel(inKeyStr as char):
@@ -88,6 +91,14 @@ class ibs.th.str.utd.edoctype:
   method class propmap GetProp(inKey as int):
     return GetProp(string (inKey)).
   end method. 
+
+  method public char GetKeyStrDB(inKeyint as int):
+    def var prop as class propmap no-undo.
+    if valid-object (EDocTypeMap:GetItemKeyInt(inKeyint))
+      then return cast (EDocTypeMap:SubjectObjCurr, ibs.th.gbl.propmap):KeycharDB. 
+      else return ?.
+  end method. 
+  
 
   method private class propmap GetProp(inKeyStr as char):
     def var prop as class propmap no-undo.

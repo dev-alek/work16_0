@@ -24,8 +24,9 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property line-num        as integer      no-undo get. private set.
   define property qnty-ttn        as decimal      no-undo get. private set.
   define property sum             as decimal      no-undo get. private set.
-  define property nds-code        as integer      no-undo get. private set.
+  define property nds-code        as decimal      no-undo get. private set.
   define property price-nonds     as decimal      no-undo get. private set.
+  define property stts-desc       as character    no-undo get. private set.
 
   define property del-l         as integer      no-undo get. private set.
   define property del-f         as integer      no-undo get. private set.
@@ -59,8 +60,10 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       when "del-f"        then del-f            = {&attr-integer} .
       when "qnty-ttn"     then qnty-ttn         = {&attr-dec} .
       when "sum"          then sum              = {&attr-dec} .
-      when "nds-code"     then nds-code         = {&attr-integer} .
+      when "nds-code"     then nds-code         = {&attr-dec} .
       when "price-nonds"  then price-nonds      = {&attr-dec} .
+      when "stts-desc"    then stts-desc        = {&attr-str} .
+      
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -109,6 +112,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       nds-code           = ?
       price-nonds        = ?
       gds-code           = ?
+      stts-desc          = ?
     .
     if valid-object(marks)        then delete object marks .
   end method.

@@ -178,6 +178,36 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   then do:
     new-{&main-tbl}.ModifyDate = date (now).
     new-{&main-tbl}.ModifyTime = time.
+    if new-{&main-tbl}.sts <> old-utd.sts
+       and not g#esys
+    then do:
+       { gbl/rum-runa.i
+           ?
+           this-procedure:handle
+           ?
+           {&edoc-proc_event_utd}
+           " buffer new-{&main-tbl}:handle "
+           ?
+           ''
+           ''
+           no-error
+       }
+       if error-status:error 
+       then do:
+          message return-value view-as alert-box.
+       end.
+       for each utd-marking-lines where utd-marking-lines.db-num eq new-{&main-tbl}.db-num
+                                    and utd-marking-lines.doc-id eq new-{&main-tbl}.doc-id
+                                    and utd-marking-lines.doc-level eq 1
+       no-lock:
+          find first marking where marking.mark eq utd-marking-lines.mark
+          no-lock no-error.
+          if     available marking
+             and marking.sts eq objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB 
+          then
+             run sendmark(marking.mark).
+       end.
+    end.
     if g#db-num = 0 and 
       (
       (new-{&main-tbl}.sts <> old-utd.sts
@@ -195,6 +225,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 /*      )*/
       )
     then do: 
+      
       run str/callnews.p
         (input {&table_utd}
         ,input (buffer new-{&main-tbl}:handle)
@@ -234,3 +265,36 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
 
 end. /* main-block */
+
+procedure sendmark:
+   define input  parameter iMark as character no-undo.
+   define buffer marking for marking.
+   find first marking where marking.mark eq imark
+   no-lock no-error.
+   if     available marking
+   then do:
+      { gbl/rum-runa.i
+           ?
+           this-procedure:handle
+           ?
+           {&edoc-proc_event_mark}
+           " buffer marking:handle "
+           ?
+           ''
+           ''
+           no-error
+      }
+      if error-status:error 
+      then
+         message return-value view-as alert-box.
+      else do:
+         if marking.sts eq objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB 
+         then do:
+            for each marking where marking.mark-parent eq imark
+            no-lock:
+               run sendmark (marking.mark).
+            end.
+         end.
+      end.
+   end.
+end.

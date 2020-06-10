@@ -1427,7 +1427,10 @@ end.
     def var v-gnews as logical no-undo.
     v-gnews = g#news.
     g#news = false.
-    run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+    if new_trn-doc.status_ <> {&fact}
+    then do :
+       run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+    end.
     
     if error-status:error
       then p-msg  = "Ошибка закрытия на факт: " + replace (replace (return-value, {&new-line}, " "), '"', "'").

@@ -191,6 +191,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable edi-doc-mark-SubjectObj          as class mark                    no-undo. // edi-doc:gds:gd:marks:mark
   define variable impedi-docEventHndlrObj         as class impedi-doc              no-undo.
 
+  define variable mark-SubjectObj          as class mark                    no-undo. // edi-doc:gds:gd:marks:mark
+  define variable impmarkEventHndlrObj         as class impmark              no-undo.
+
   define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
   define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
@@ -493,6 +496,7 @@ class ibs.th.bge.1crn.import.parsesub:
         end.
         when "edi-doc":U 
      or when "edi-doc-stts" then do:
+           publish "startStopGroupRec" from p-parent-handle.
            if not valid-object(edi-doc-SubjectObj)       then edi-doc-SubjectObj       = new edi-doc(). // <payment-system>
            edi-doc-SubjectObj:obj-load = hNoderef:name.
            if not valid-object(impedi-docEventHndlrObj) then do :
@@ -504,8 +508,26 @@ class ibs.th.bge.1crn.import.parsesub:
              // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
            GetChildrenSub (hNoderef, (level + 1), v-iSubject).
            ReceivedSubjectPublish(v-iSubject, v-iImpSub).
-           
+           publish "startStopGroupRec" from p-parent-handle.
         end.
+        when "mark":U 
+        then do:
+           if level < 4 // если загрузка не из в составе edoc
+           then do:
+              if not valid-object(mark-SubjectObj)       then mark-SubjectObj       = new mark(). // <payment-system>
+              mark-SubjectObj:obj-load = hNoderef:name.
+              if not valid-object(impmarkEventHndlrObj) then do :
+                  impmarkEventHndlrObj = new impmark ().
+                 /* imppayment-systemEventHndlrObj:setParent (parparentproc, p-parent-handle, p-log-handle) .*/
+              end .
+              v-iSubject = mark-SubjectObj .
+              v-iImpSub  = impmarkEventHndlrObj .
+                // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+              GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+              ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+           end.
+        end.
+        
         when "contr-price-doc":U then do:
           if not valid-object(contr-price-docsSubjectObj) then contr-price-docsSubjectObj = new contr-price-docs (). // <contr-price-doc>
           if not valid-object(impcontr-price-docsEventHndlrObj) then do :
@@ -1176,8 +1198,9 @@ class ibs.th.bge.1crn.import.parsesub:
           if v-need-parse and valid-object (edi-doc-SubjectObj) then do: // edi-doc:gds:gd
             if edi-doc-SubjectObj:IsInitSubForWrite then do:
               edi-doc-mark-SubjectObj = new mark().
-              edi-doc-mark-SubjectObj:obj-load = "utd-mark".
+              
               edi-doc-mark-SubjectsObj:Add(  edi-doc-mark-SubjectObj  ).
+              edi-doc-mark-SubjectObj:obj-load = "utd-mark".
               /*edi-doc-marks-SubjectsObj:Add(  new mark()  ).
               edi-doc-mark-SubjectObj = cast (edi-doc-mark-SubjectsObj:SubjectObjCurr, mark).*/
               

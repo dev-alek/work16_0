@@ -68,6 +68,28 @@ function GetLastUTDinPack returns logical
    end.
    return ?.
 end.
+&if "{1}" = "class"
+&then
+method public void delMark
+&else
+function delMark returns logical 
+&endif
+( buffer utd-marking-lines for utd-marking-lines ):
+   define buffer buf_utd-marking-line for utd-marking-lines.
+   for each marking where marking.mark-parent eq utd-marking-lines.mark no-lock:
+      find first buf_utd-marking-line where buf_utd-marking-line.db-num    eq utd-marking-lines.db-num
+                                        and buf_utd-marking-line.doc-id    eq utd-marking-lines.doc-id
+/*                                        and buf_utd-marking-line.linenume  eq utd-marking-lines.LineNum*/
+                                        and buf_utd-marking-line.mark      eq marking.mark
+      no-lock no-error.
+      if available  buf_utd-marking-line
+      then do:
+         delMark(buffer buf_utd-marking-line).
+         delete buf_utd-marking-line.
+      end.
+      
+   end.
+end.
 
 &if "{1}" = "class"
 &then

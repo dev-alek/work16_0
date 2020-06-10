@@ -163,6 +163,13 @@ class ibs.th.str.utd.sts.edi inherits objth:
       then return cast (EDIMap:SubjectObjCurr, ibs.th.gbl.propmap):KeyIntDB. 
       else return ?.
   end method. 
+
+  method public char GetKeyStrDB(inKeyInt as int):
+    def var prop as class propmap no-undo.
+    if valid-object (EDIMap:GetItemKeyInt(inKeyInt))
+      then return cast (EDIMap:SubjectObjCurr, ibs.th.gbl.propmap):KeycharDB. 
+      else return ?.
+  end method. 
   
   method class propmap GetProp(inKey as int):
     def var prop as class propmap no-undo.

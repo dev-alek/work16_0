@@ -27,6 +27,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
   {str\utd-err.i class}
   {str\utd.i class}
+  {utl\gtin.i class}
+  
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
   .
@@ -79,7 +81,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
        чтобы при изменении записи не затирать поля из необязательных тегов, которые пришли из 1С, пустыми значениями -
        читаем их значения из исходной записи.
     */
-    
+  
+   
    find first utd where utd.OrganizationExt eq ""
                     and utd.DocumentExt     eq objImp:edoc-id
    exclusive-lock no-error.
@@ -90,14 +93,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
          undo, throw new Progress.Lang.AppError(substitute("Создание &1 не предусмотрено",objImp:obj-load)) .
       create utd.
       utd.DocumentExt     = objImp:edoc-id.
-      validate utd.
+      validate utd no-error.
+      if error-status:error
+      then
+         undo, throw new Progress.Lang.AppError(substitute("&1 &2",return-value,error-status:get-message (1))) .
+         
    end.
    if objImp:obj-load eq "edi-doc-stts"
    then
-      utd.sts-edi  = ObjSrv:Env:Utd:Sts:edi:GetKeyIntDB(objImp:edoc-stts).
+      utd.sts  = ObjSrv:Env:Utd:Sts:th:GetKeyIntDB(objImp:edoc-stts).
    else do:
-      message 111
-      view-as alert-box.
       assign
          utd.comment  = objImp:comment
          utd.CounteragentId  = objImp:contr-code                  when objImp:contr-code ne ?
@@ -105,13 +110,27 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
          utd.DocumentDate  = objImp:edoc-date
          utd.DocumentNumber  = objImp:edoc-num
          utd.sts  = ObjSrv:Env:Utd:Sts:th:GetKeyIntDB(objImp:edoc-stts)
+         utd.sts-edi  = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB
          utd.EDocType  = ObjSrv:Env:Utd:edoctype:GetKeyIntDB(objImp:edoc-type)
          utd.parentDocumentExt  = objImp:orig-edoc-id             when objImp:orig-edoc-id ne ?
          utd.PackageId          = objImp:orig-edoc-id             when objImp:orig-edoc-id ne ?
          utd.total  = objImp:sum                                  when objImp:sum ne ?
          utd.vat  = utd.total - objImp:sum-nonds                  when objImp:sum ne ? and objImp:sum-nonds ne ?
       .
-     
+      
+      define variable vflag as logical no-undo.
+      for first buf_clients no-lock
+            where buf_clients.obj-type = {&cmp}
+              and buf_clients.obj-code = int(objImp:contr-code) :
+         assign 
+            utd.cli-type   = buf_clients.obj-type
+            utd.cli-code   = buf_clients.obj-code
+           vflag = yes
+         .
+      end.
+      if  not vflag
+      then
+         undo, throw new Progress.Lang.AppError(substitute("Не найдена организация с кодом &1 в БД &2",int(objImp:contr-code),ibs.th.gbl.gbl-var:g#db-num)) .
       for first buf_clients no-lock
             where buf_clients.db-num   = ibs.th.gbl.gbl-var:g#db-num
               and buf_clients.obj-type = {&shop}
@@ -120,8 +139,37 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             utd.obj-type   = buf_clients.obj-type
             utd.obj-code   = buf_clients.obj-code
             utd.host-code  = buf_clients.host-code
+            
          .
+         find first shop where shop.obj-code eq buf_clients.obj-code
+         no-lock no-error.
+         if available shop
+         then
+            utd.obj-info = shop.addres1.
       end.
+      find first contract  where contract.host-code eq utd.host-code
+                             and contract.contract-code eq utd.contract-code
+      no-lock no-error.
+      if     contract.cli-type  ne utd.cli-type
+         or  contract.cli-code  ne utd.cli-code
+      then
+         undo, throw new Progress.Lang.AppError(substitute("В договоре &1 и в УПД разные контр агенты",utd.contract-code)) .
+      Utd.BaseDocumentNumber = contract.contract-prn-code.
+      utd.BaseDocumentDate       = contract-date.                      
+      /*define variable VContractEdo as logical no-undo init yes.
+      VContractEdo = contract.whole-send-news eq 1. /* договор Едо*/
+      if not VContractEdo
+      then
+         undo, throw new Progress.Lang.AppError(substitute("Договор с кодом &1 не ЭДО",utd.contract-code)).
+      */
+     /* find first contract-attr exclusive-lock where contract-attr.contract-code = contract.contract-code
+                                                and contract-attr.host-code    = contract.host-code 
+                                                and contract-attr.attr-code = "contract-edi" no-error .
+      if    not available contract-attr
+         or logical(contract-attr.attr-value) ne yes
+      then 
+         undo, throw new Progress.Lang.AppError(substitute("Договор с кодом &1 не ЭДО",utd.contract-code)).
+     */
       v-objlist = objImp:gds .
       if valid-object(v-objlist) 
       then do :
@@ -142,71 +190,141 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   utd-lines.LineNum  = v-gds-gd:line-num
                .
             end.
-            find last tax-rate-value where    /*Значение ставки налога    НДС    */
-                        tax-rate-value.tax-code = 1 and
-                        tax-rate-value.rate-code = v-gds-gd:nds-code no-lock no-error.
-            if available tax-rate-value then do:
-                utd-lines.TaxRate = tax-rate-value.rate-value.
-            end.
+            utd-lines.TaxRate = v-gds-gd:nds-code.
+            find first goods where goods.gds-code eq v-gds-gd:gds-code
+            no-lock no-error.
+            if not available goods
+            then
+               undo, throw new Progress.Lang.AppError(substitute("Нет товара с кодом &1",v-gds-gd:gds-code)).
+        
             assign
-               utd-lines.gds-code  = v-gds-gd:gds-code
-               utd-lines.TaxRate  = v-gds-gd:nds-code
+               utd-lines.gds-code  = goods.gds-cod
+               utd-lines.UnitCode  = goods.unit-base
+               utd-lines.GdsName   = goods.gds-name
                utd-lines.Price  = v-gds-gd:price-nonds
                utd-lines.Quantity  = v-gds-gd:qnty-ttn
                utd-lines.Total  = v-gds-gd:sum
                utd-lines.TotalWithVatExcluded  = utd-lines.Price * utd-lines.Quantity
             .
+            if v-gds-gd:stts-desc ne ?
+            then
+               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"Load1C","stts-desc-line",v-gds-gd:stts-desc).
+            define variable vqnty as integer no-undo.
+            vqnty = 0.
             v-objlistmark = v-gds-gd:marks .
             if valid-object(v-objlistmark) 
             then do :
                v-i-counter2 = v-objlistmark:iCounter .
+               if v-i-counter2 < 1
+               then
+                  undo, throw new Progress.Lang.AppError(substitute("По линии &1 нет марок",utd-lines.LineNum)).
+               for each tt-mark:
+                  delete tt-mark.
+               end.
+                  
                do v-i-num2 = 1 to v-i-counter2 :
-                  v-objlistmark:Get(v-i-num) .
+                  v-objlistmark:Get(v-i-num2) .
                   v-marks-mark = cast(v-objlistmark:SubjectObjCurr, ibs.th.bge.1crn.subjects.mark) .
-                  for each tt-mark:
-                     delete tt-mark.
-                  end.
+                  define variable vmark as character no-undo.
+                  vmark = repSpecSimbforDm(v-marks-mark:mark-code).
                   find first utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                                  and utd-marking-lines.doc-id  eq utd-lines.doc-id
                                                  and utd-marking-lines.LineNum eq utd-lines.LineNum
-                                                 and utd-marking-lines.mark    eq v-marks-mark:mark-code
+                                                 and utd-marking-lines.mark    eq vmark
                   exclusive-lock no-error.
+                  find first marking where marking.mark eq vmark
+                     no-lock no-error.
+                  if not available marking
+                  then
+                     undo, throw new Progress.Lang.AppError(substitute("Нет марки &1 .",v-marks-mark:mark-code)) .
                   if not available utd-marking-lines
                   then do:
-                     find first marking where marking.mark eq v-marks-mark:mark-code
-                     no-lock no-error.
-                     if not available marking
-                     then
-                        undo, throw new Progress.Lang.AppError(substitute("Нет марки &1 .",v-marks-mark:mark-code)) .
+                     
+                     
                      create utd-marking-lines.
                      assign
                         utd-marking-lines.db-num  = utd-lines.db-num
                         utd-marking-lines.doc-id  = utd-lines.doc-id
                         utd-marking-lines.LineNum = utd-lines.LineNum
-                        utd-marking-lines.mark    = v-marks-mark:mark-code
-                        utd-marking-lines.doc-level = 1        
+                        utd-marking-lines.mark    = vmark
+                        utd-marking-lines.doc-level = 1
+                        utd-marking-lines.gds-code  =   goods.gds-cod     
                      .
                   end.
+                  if utd-marking-lines.doc-level eq 1
+                  then
+                     vqnty = vqnty + marking.box-qnty.
                   utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
+                  if v-marks-mark:stts-desc ne ?
+                  then
+                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"Load1C","stts-desc-mark",v-marks-mark:stts-desc).
                   create tt-mark.
                   tt-mark.mark = utd-marking-lines.mark .
                end.
+               if utd-lines.Quantity ne vqnty
+               then                        
+                  undo, throw new Progress.Lang.AppError(substitute("Количество &2 по линии &1 не совпадает с количеством &3 по маркам ",utd-lines.LineNum,utd-lines.Quantity,vqnty)).
+   
                for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                             and utd-marking-lines.doc-id  eq utd-lines.doc-id
                                             and utd-marking-lines.LineNum eq utd-lines.LineNum
+                                            and utd-marking-lines.doc-level = 1 
                exclusive-lock:
                   
-                  find first tt-mark where tt-mark.mark = utd-marking-lines.mark.
+                  find first tt-mark where tt-mark.mark = utd-marking-lines.mark
+                  no-error.
                   if not available tt-mark
-                  then
+                  then do:
+                     delMark(buffer utd-marking-lines).
                      delete utd-marking-lines.
+                  end.
                   else
                      addMark( buffer utd-marking-lines).
                end.
-            end. // 
+            end. //
+            else
+               undo, throw new Progress.Lang.AppError(substitute("По линии &1 нет марок",utd-lines.LineNum)).
          end.
       end.
    end.
+   
+   if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.doc-code = "" and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
+      and (utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB )
+   then do:
+     def var v-file-name as character no-undo.
+     def var v-msg as character no-undo.
+     run ibs\th\str\utd\adaputd.p
+       (utd.db-num, /*db-num*/
+       utd.doc-id, /* doc-id*/
+       ibs.th.gbl.gbl-var:g#userid /*User-Id*/
+       ) no-error.
+     if not error-status:error
+     then do:
+      /* run nws/cmdchgutd.p (buffer utd). */
+       v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, replace (return-value,'"',"'"), "Товары данной поставки можно продавать на кассе.").
+     end.
+       else v-msg = substitute ('MsgBox "Докумет: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), replace (return-value,'"',"'")).
+     
+     v-file-name = string (guid(generate-uuid)) + ".vbs".
+     output to value (v-file-name).
+     put unformatted v-msg. 
+     output close.
+     file-info:file-name = (v-file-name).    
+     os-command no-wait value (file-info:full-pathname).
+   
+   end.
+
+   if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.doc-code = "" and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
+   then do:
+       v-msg = substitute ('MsgBox "Докумет № &1 от &2. ", ,"Получен документ первоначального ввода"', utd.DocumentNumber, string (utd.DocumentDate)).
+       v-file-name = string (guid(generate-uuid)) + ".vbs".
+       output to value (v-file-name).
+       put unformatted v-msg. 
+       output close.
+       file-info:file-name = (v-file-name).    
+       os-command no-wait value (file-info:full-pathname).
+   end.
+   
    v-retfl = true .
     define variable i as integer no-undo .
     catch exAppErrors as class Progress.Lang.AppError :
@@ -229,7 +347,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       undo, throw exProErrors .
     end catch .
     catch exAnyErrors as class Progress.Lang.Error:
-      Msg = "Unexpected error в edi-docг" .
+      Msg = "Unexpected error в edi-doc" .
       v-retfl = false .
       undo, throw exAnyErrors .
     end catch .
@@ -238,5 +356,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       return v-retfl .
     end finally .
   end method. /* end_of Excute */
-    
+  method public void MySeqForUtd():
+  end.
 end class.

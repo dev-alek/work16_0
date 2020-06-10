@@ -1684,6 +1684,13 @@ procedure restore-s-action-role-chip :
 
     &scoped-define sequence-name   s-action-role-chip
 
+    &scoped-define table-name      c-action-role-item
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    &undefine not-include-in-seq-records
+
     &scoped-define table-name      c-action-role
     &scoped-define seq-field-name  action-role-code
     &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
@@ -5244,3 +5251,72 @@ procedure restore-{&sequence-name} :
     {&update-sequence}
   end.
 end procedure. /* restore-s-operserv-id */
+
+procedure restore-s-utd-doc-code :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+
+    {&init-validation}
+
+    &scoped-define sequence-name   s-utd-doc-code
+
+    &scoped-define table-name      gds-mercury
+    &scoped-define seq-field-name  id
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+
+    &undefine not-include-in-seq-records
+    {&update-sequence}
+  end.
+end procedure.
+
+&scoped-define sequence-name s-c-utd-chip-num
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-utd
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-utd-err
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-utd-lines
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-utd-marking-lines
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-utd-attr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-utd-err-attr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-utd-lines-attr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-utd-marking-lines-attr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-c-cashbook-chip-num */

@@ -80,7 +80,7 @@ procedure gen-key-rec :
       :
         assign
           fh = p-bh_tbl-name:buffer-field( entry( 4 + v-ind, v-inform, ",":U ) ).
-          p-key-rec = p-key-rec + {&delim-key} + substitute("&1", fh:buffer-value())
+          p-key-rec = p-key-rec + {&delim-key} + substitute("&1", replace(fh:buffer-value(),{&delim-key},{&delim-key-rep}))
         .
       end.
     end.
@@ -232,7 +232,7 @@ procedure gen-row-keyr :
 /*      end.*/
       if p-key-handle = ? then do:
         assign
-          v-field-val = entry( v-count-fld + 1 , p-key-rec, {&delim-key} )
+          v-field-val = replace (entry( v-count-fld + 1 , p-key-rec, {&delim-key} ),{&delim-key-rep},{&delim-key})
         .
       end.
       else do:
