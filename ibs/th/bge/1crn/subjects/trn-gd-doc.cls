@@ -858,9 +858,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
                sw:start-element ("marks").
                vAvailMarks = yes.
             end.
-            sw:start-element ("mark").      
-            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
+            sw:start-element ("mark").   
+/*            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
+            if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:
             write-data-element ("prt-id", buf_parts.part-code).
+            end.
             write-data-element ("mark-code", addBracketForCode(buf_marking-lines.mark)).
             sw:end-element ("mark").
           end.
