@@ -88,6 +88,7 @@ define variable v-out-str         as character  no-undo .
 define variable v-pid-list        as character  no-undo .
 define variable v-time-str        as character  no-undo .
 define variable v-del-file        as character  no-undo .
+define variable v-log-file-name   as character  no-undo .
 
 define variable v-parsesub        as character  no-undo .
 define variable hDoc              as handle     no-undo .
@@ -341,6 +342,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   { gbl/getcntxt.i get }
   
+  v-log-file-name = substitute('&1rvs.log', ibs.th.gbl.gbl-inipar:logDir) .
   v-temp-dir = "ASI_temp-cmd" .
   os-delete value (v-temp-dir) recursive no-error .
   os-create-dir value(v-temp-dir) .
@@ -522,7 +524,12 @@ procedure asi-send-cmd :
       
   run gbl/run-gpid.p (  input bat-file
                        ,input '':U
-                       ,output v-pid). 
+                       ,output v-pid).
+                       
+  output to value (  v-log-file-name  ) append .
+  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " cmd skip .
+       
+                  
   run sleep (500) .
   rv = IsProcessRunning(v-pid). 
   if rv >= 0 then do :
@@ -536,6 +543,39 @@ procedure asi-send-cmd :
     create tt-pids.
     tt-pids.pid = v-pid .
   end.                      
+  
+  v-file = search(v-file) .
+  if v-file = ? or trim(v-file) = ""
+  then do :
+  end .
+  else do :
+    file-info:file-name = v-file .
+    if file-info:file-size = 0
+    then do :
+    end.
+    else do :
+      run parse-xml (input v-file,
+                     input-output table tt-place) .
+      put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
+      for each tt-place no-lock :
+        put unformatted ("TANK = " + tt-place.loc1 ) skip .
+        put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
+        put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
+        put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
+        put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
+        put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
+        put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
+        put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
+        if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ?
+        then
+          put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>9.9<<<")) skip .
+        if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ?
+        then
+          put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
+      end.
+    end.
+  end.
+  output close .
 end procedure .
 
 procedure asi-read-sts :
@@ -547,7 +587,6 @@ procedure asi-read-sts :
   file-info:file-name = v-file .
   if file-info:file-size = 0
   then do :
-/*      tt-tso.FiscalStatus = "НЕ ОТВЕЧАЕТ" .*/
     os-delete value(v-file) .
     return .
   end.
@@ -734,12 +773,20 @@ procedure get-from-struna :
     v_command = substitute( "&1 &2 &3 &4", v-comstring, string(0), v_File-Name, v-cntxt-obj-code)
   .
   os-command silent value( v_command ) .
+  
+  output to value (  v-log-file-name  ) append .
+  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " v_command skip .
+  
   if search( v_File-Name ) = ? then do:
     return error 'Файл с прибора не получен.' .
   end.
   else do: 
     v_File-Name  = search( v_File-Name ) . 
   end.
+  
+  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
+  output close .
+  os-append value(v_File-Name) value(v-log-file-name).
   
   input from value(v_File-Name) .
   repeat :
@@ -826,6 +873,10 @@ procedure get-from-ifsf :
   connStr = '-H ' + v-asi-ip + ' -S ' + v-asi-port .
   hSocket:connect(connStr) no-error.
   
+  output to value (  v-log-file-name  ) append .
+  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  connStr='-H " v-asi-ip " -S " v-asi-port "'  cmd='KOI8-R 1 0 1'" skip .
+  output close .
+  
   if hSocket:connected() = false
   then do :
     return error "Не могу подключиться к IFSF серверу." .
@@ -871,6 +922,11 @@ procedure get-from-ifsf :
   delete object hSocket.
   set-size(mDataIn) = 0.
   set-size(mDataOut)   = 0.
+  
+  output to value (  v-log-file-name  ) append .
+  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
+  put unformatted v-out-data skip .
+  output close .
   
   do ii = 1 to num-entries(v-out-data, {&new-line}) :
     str = entry(ii, v-out-data, {&new-line}) .

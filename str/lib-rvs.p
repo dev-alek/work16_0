@@ -71,6 +71,7 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 
 define stream str-anl.
 define stream str-err.
+define stream str-log.
 define stream outstream.
 define stream sinp .
 define VARIABLE ii as integer no-undo .
@@ -1249,6 +1250,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
     define variable v_command     as   character     no-undo.
     define variable v_File-Name   as   character     no-undo.
     define variable v-err-file-name as character no-undo .
+    define variable v-log-file-name as character no-undo .
     define variable is_FatalError as   logical       no-undo.
     define variable l_read        as   logical       no-undo.
     define variable j_num         as   integer       no-undo.
@@ -1347,6 +1349,8 @@ define variable      v-water-qnty as decimal no-undo.
 /*        end case.                                                                          */
 /*      end.                                                                                 */
 /*    end.                                                                                   */
+    
+    v-log-file-name = substitute('&1rvs.log', ibs.th.gbl.gbl-inipar:logDir) .
     case p-read-cur :
       when 0
       then do :
@@ -1387,13 +1391,17 @@ define variable      v-water-qnty as decimal no-undo.
           v_command = substitute( "&1 &2 &3 &4", v_comstring, string( anl-loc ), v_File-Name, p-obj-code)
         .
         os-command silent value( v_command ) .
+        output stream str-log to    value (  v-log-file-name  ) append .
+        put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " v_command skip .
         if search( v_File-Name ) = ? then do:
           return error 'Файл с прибора не получен.' .
         end.
         else do: 
           v_File-Name  = search( v_File-Name ) . 
         end.
-  
+        put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
+        output stream str-log close .
+        os-append value(v_File-Name) value(v-log-file-name).
         
       end.
       when 2 /* Агент */
@@ -1413,7 +1421,10 @@ define variable      v-water-qnty as decimal no-undo.
           return error return-value .
         end.
         v_File-Name = "revis.ifsf" .
-        
+        output stream str-log to    value (  v-log-file-name  ) append .
+        put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
+        output stream str-log close .
+        os-append value(v_File-Name) value(v-log-file-name).
       end.
     end case .
     /*
@@ -1543,20 +1554,20 @@ define variable      v-water-qnty as decimal no-undo.
           
           if   pl-twice-code = "" and available bf_place then 
           do: 
-              if bf_place.is-meas = no   then 
-              do:
-          put stream str-err unformatted
-            substitute( '&3 Получены данные с приборов по резервуару &1 '
-                      + 'с локальным кодом(коорд1) &2, определенного в системе как неизмеряемый.'
-                      , bf_place.pl-code
-                      , trim( entry( 2, v_string-tmp, '=' ) ) 
-                      , cur-time-string-sec()
-                      ) skip .
-          assign
-            is_FatalError = yes
-          .
-          next rpt .
-        end.
+            if bf_place.is-meas = no   then 
+            do:
+              put stream str-err unformatted
+                substitute( '&3 Получены данные с приборов по резервуару &1 '
+                          + 'с локальным кодом(коорд1) &2, определенного в системе как неизмеряемый.'
+                          , bf_place.pl-code
+                          , trim( entry( 2, v_string-tmp, '=' ) ) 
+                          , cur-time-string-sec()
+                          ) skip .
+              assign
+                is_FatalError = yes
+              .
+              next rpt .
+            end.
           end.
           if   pl-twice-code = "" then 
           do: 
@@ -5028,10 +5039,14 @@ procedure get-from-ifsf :
   define variable cmd       as character no-undo .
   define variable connStr   as character no-undo .
   
+  define variable v-log-file-name as character no-undo .
+  
   define variable StrFrFile-list as character no-undo initial '':U.
   
   StrFrFile-list = 'tank,level_total,level_water,level_oil,t1,t2,t3,temperature,density,'
                    + 'volume_total,volume_total_tc,mass_total,volume_oil,volume_water,vapor_density,vapor_pressure' .
+  
+  v-log-file-name = substitute('&1rvs.log', ibs.th.gbl.gbl-inipar:logDir) .
   
   assign
     v_File-Name = 'revis.ifsf':U
@@ -5050,6 +5065,10 @@ procedure get-from-ifsf :
   create socket hSocket .
   connStr = '-H ' + v-asi-ip + ' -S ' + v-asi-port .
   hSocket:connect(connStr) no-error.
+  
+  output to value (  v-log-file-name  ) append .
+  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  connStr='-H " v-asi-ip " -S " v-asi-port "'  cmd='KOI8-R 1 0 1'" skip .
+  output close .
   
   if hSocket:connected() = false
   then do :

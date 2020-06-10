@@ -47,6 +47,7 @@ define variable good              as logical    no-undo .
 define variable curl-path         as character  no-undo .
 define variable v-command         as character  no-undo .
 define variable v-addr            as character  no-undo .
+define variable v-log-file-name   as character  no-undo .
 
 define variable v-asi-ip  as character no-undo .
 define variable v-asi-port as character no-undo .
@@ -56,6 +57,7 @@ define variable v-attr-type as character no-undo .
 /* ***************************  Main Block  *************************** */
 
 p-file-name = "revis.agnt" .
+v-log-file-name = substitute('&1rvs.log', ibs.th.gbl.gbl-inipar:logDir) .
 
 find first sys-ctrl no-lock.
 run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
@@ -65,6 +67,9 @@ v-addr = v-asi-ip + ":" + v-asi-port + "/getmeas/?loclist=1,2,3,4,5,6,7,8,9,10,1
 v-command = substitute ('&1 --connect-timeout 5 "&3" >&2', search ("exe/curl.exe"), "asidata.xml", v-addr).
 
 os-command silent value(v-command) .
+output to value (  v-log-file-name  ) append .
+put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " v-command skip .
+output close .
 
 file-info:file-name = "asidata.xml" .
 if file-info:file-size = 0
@@ -96,6 +101,10 @@ end.
 
 output close .
 
+output to value (  v-log-file-name  ) append .
+put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
+output close .
+os-append value(p-file-name) value(v-log-file-name).
 
 procedure parse-xml :
   define input parameter p-file as character .
