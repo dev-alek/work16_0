@@ -61,8 +61,25 @@ end.
         ,output v-type
         ,INPUT-OUTPUT table-handle v-tth
         ) no-error .
-        
-        
+ define variable Log-Res      as      logical     no-undo.
+
+   /*Проверка прав */
+ { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_mark_print':U
+  {&cntxt-firm}
+  v-cntxt-host-code-obj
+  '':U
+  0
+  0
+  0
+  0
+  false
+  log-res
+}        
+   
 /*-ИНВЕНТАРИЗАЦИЯ----------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /* 60- 89 */
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись'"                                           "'cost,sale,rubl,base'" "'rep/inv-3p.p'"     "'invent,no,no'"            "'+-+++-+'"  "''"        "''"          "''"     "v-izlish = yes"  }
@@ -104,6 +121,7 @@ end.
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Расчет естественной убыли нефтепродуктов. Форма 34-НП'"              "'cost,sale,rubl,base'" "'rep/r-np34.p'"    "''"                        "'+-+----'"  "'Rosneft-*'"   "''"          "''"     "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись нефти и нефтепродуктов'"                    "'cost,sale,rubl,base'" "'rep/r-orioxl.p'"  "''"                        "'--+----'"  "'Rosneft-*'"   "''"          "''"     "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись СУГ'"                                       "'cost,sale,rubl,base'" "'rep/r-orioxl-sug.p'"  "''"                    "'--+----'"  "'yukos,Rosneft-*'"       "'HTML'"      "''"     "is-ptrl = 'yes'" }
+{ rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Печать датаматриксов по излишкам'"                                     "'cost,sale,rubl,base'" "'rep/r-print-marks.p'"  "''"                             "'--+----'"  "''"                 "'HTML'"      "''"                   "log-res = yes" }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Сличительная ведомость (РН-регионы) результатов инв. нефтепродуктов'"  "'cost,sale,rubl,base'" "'rep/r-orsvx1.p'"  "''"                      "'--+----'"  "'Rosneft-*'"   "''"      "'Rosneft-Moscow'"     "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись (по поставщикам)'"                          "'cost,sale,rubl,base'" "'rep/inv-pst.p'"   "'invent,no,no,no'"         "'+-+++--'"  "''"        "''"          "''"     ? }
 { rep/menu-doc.i {&TDEDT_Inv} "'*'" "'*'" "'*'"              "'Инвентаризационная опись (по поставщикам)'"                          "'cost,sale,rubl,base'" "'rep/inv-pst.p'"   "'invent,no,no,yes'"        "'+-+++--'"  "''"        "''"          "''"     ? }
