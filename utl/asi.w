@@ -1193,8 +1193,7 @@ end.
       put unformatted "reg export HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR " + search("measurer_par_exp.reg")  + " /y >> measurer_par_exp.rez "  skip .
       output close.
       os-command value (search("measurer_par_exp.bat")).*/
-      
-      os-command silent value ("reg export HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR " + search("measurer_par_exp.reg") + " /y /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_exp.rez ").
+      os-command silent value ("reg export HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR " + search("measurer_par_exp.reg") + " /y /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_exp.rez 2>&1").
    end.
    input STREAM sReadfile FROM  VALUE(iFile). 
    repeat:
@@ -1390,8 +1389,15 @@ end.
                 , input ?
                 , input ?
                 , input "") no-error.
-     os-command silent value ("reg delete HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR /f /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_del.rez").
-     os-command silent value ("reg import " + search("measurer_par_imp.reg")      + " /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_imp.rez").
+     os-command silent value ("reg delete HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR /f /reg:" + (if is-ProcArch64 then "64" else "32") + " > measurer_par_del.rez 2>&1").
+     os-command silent value ("reg import " + search("measurer_par_imp.reg")      + " /reg:" + (if is-ProcArch64 then "64" else "32") + " > measurer_par_imp.rez 2>&1").
+     /* reg import measurer_par_imp.reg /reg:64>> C:\WRK\dlc101b\measurer_par_imp.rez */
+     define variable vtxt as character no-undo.
+     input STREAM sReadfile FROM  VALUE("measurer_par_imp.rez") CONVERT TARGET  "1251" source 'ibm866'.  
+     import stream sReadfile unformatted vtxt.
+     input close.   
+     message vtxt
+     view-as alert-box.
   end.
 end procedure.
 
