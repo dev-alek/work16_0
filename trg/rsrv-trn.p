@@ -37,6 +37,7 @@ Creation date: 09/24/07
     run trg/rsrv-trn.p (input ub.trn-doc.doc-code).
   end.
 */
+using ibs.th.str.alcohol.*.
 
 define input parameter p-doc-code like ub.trn-doc.doc-code no-undo .
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -45,6 +46,8 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Резервирование по партиям".
+
+define variable chg-qnty      as   decimal no-undo .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
@@ -160,6 +163,7 @@ on error undo, return error
             ,input  unrv-code /* p-out-code         */
             ,buffer ub.parts  /* buf_orig_parts     */
             ,buffer buf_parts /* buf_parts          */
+            ,input ""
             ) no-error .
           if error-status :error then do:
             message

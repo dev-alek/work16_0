@@ -29,6 +29,8 @@ on endkey undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
     rec-name = entry( 1, rec-full, {&delim-nws} )
     .
 
+  define variable part-key-rec as character no-undo.
+
   {&test-count}
 
   CASE rec-name :
@@ -134,6 +136,10 @@ on endkey undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
       create tdlocb-chk-gds-attr.
       { nws/impl-nws.i "chk-gds-attr" "tdlocb-" }
     end.
+    when "marking-chk" then do:
+      create tdlocb-marking-chk.
+      { nws/impl-nws.i "marking-chk" "tdlocb-" }
+    end.
     when "chk-doc-attr" then do:
       create tdlocb-chk-doc-attr.
       { nws/impl-nws.i "chk-doc-attr" "tdlocb-" }
@@ -154,6 +160,16 @@ on endkey undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
     then do:
       create locb-ord-chain.
       { nws/impl-nws.i "ord-chain" "locb-" }
+    end.
+    when {&table_gen-attr}
+    then do:
+      create locb-gen-attr.
+      { nws/impl-nws.i "gen-attr" "locb-" }
+    end.
+    when {&table_marking-lines}
+    then do:
+      create locb-marking-lines.
+      { nws/impl-nws.i "marking-lines" "locb-" }
     end.
 
     otherwise do:
@@ -413,8 +429,27 @@ for each buf_parts exclusive-lock
     and buf_parts.obj-type = wt-trn-doc.obj-type
 on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
 :
+  run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                    ,input (buffer buf_parts:handle)
+                                    ,output part-key-rec).                                
+
+  
+  for each buf_gen-attr exclusive-lock
+    where buf_gen-attr.p-key = part-key-rec
+  on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  :
+    delete buf_gen-attr.
+  end.
   delete buf_parts .
 end.
+for each buf_marking-lines where
+      buf_marking-lines.obj-type = wt-trn-doc.obj-type
+  and buf_marking-lines.obj-code = wt-trn-doc.obj-code
+  and buf_marking-lines.out-code = wt-trn-doc.doc-code
+on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+  delete buf_marking-lines.        
+end.   
+
 
 for each locb-parts no-lock
   where locb-parts.out-code = wt-trn-doc.doc-code
@@ -453,6 +488,35 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}
     buf_parts.status_   = yes
     buf_parts.rsrv-free = ?
   .
+  
+
+  run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+                                    ,input (buffer buf_parts:handle)
+                                    ,output part-key-rec).                                
+
+  
+  for each locb-gen-attr no-lock
+    where locb-gen-attr.p-key = part-key-rec
+  on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  :
+    create buf_gen-attr.
+    buffer-copy locb-gen-attr to buf_gen-attr.
+  end.
+
+  for each locb-marking-lines where
+        locb-marking-lines.obj-type = buf_parts.obj-type
+    and locb-marking-lines.obj-code = buf_parts.obj-code
+    and locb-marking-lines.in-code = buf_parts.in-code
+    and locb-marking-lines.out-code = buf_parts.out-code
+    and locb-marking-lines.part-code = buf_parts.part-code
+    and locb-marking-lines.prt-code = buf_parts.prt-code
+    and locb-marking-lines.gds-code = v-gds-code
+  on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  :
+    create buf_marking-lines.
+    buffer-copy locb-marking-lines to buf_marking-lines.
+  end. 
+
 
 end.
 /* ------------------------------- doc-prts ---------------------------------------------- */
@@ -813,5 +877,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq},
 :
   delete locb-arh-trn-doc-contract.
 end.
-
+for each locb-gen-attr
+on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+:
+  delete locb-gen-attr.
+end.
+for each locb-marking-lines
+on error  undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( 1 ) )
+:
+  delete locb-marking-lines.
+end.
 /* $Workfile$ e n d */

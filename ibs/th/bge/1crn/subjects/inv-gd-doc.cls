@@ -41,6 +41,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define buffer buf_units for ub.units.
   define buffer bf_rvs-line for ub.rvs-line.
   define buffer bf_rvs-doc for ub.rvs-doc.
+  define buffer bf_gen-attr for ub.gen-attr.
+  
   
   define property Msg as character no-undo
     get:
@@ -87,6 +89,8 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define variable prc-density      as decimal   no-undo .
   define variable dLoss-qnty       as decimal   no-undo .
   define variable dLoss-sum        as decimal   no-undo .
+  define temp-table tt-marks no-undo
+    field mark as character.
   
   method public void CrContentToSW (insw as handle):
     
@@ -218,6 +222,19 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-b-s", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-a-s", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        if can-find (first bf_gen-attr no-lock where bf_gen-attr.table-name = "inv-doc-mark" and bf_gen-attr.attr-code = buf_trn-doc.doc-code)
+        then do:
+          sw:start-element ("marks").
+          for each bf_gen-attr no-lock where bf_gen-attr.table-name = "inv-doc-mark" and bf_gen-attr.attr-code = buf_trn-doc.doc-code
+            and bf_gen-attr.attr-value = string(buf_gds.gds-code):
+            sw:start-element ("mark").
+    /*        write-data-element ("gd-line-num", bf_gen-attr.attr-value).*/
+            write-data-element ("mark-code", bf_gen-attr.p-key).
+            sw:end-element ("mark").
+          end.
+          sw:end-element ("marks").
+
+        end.
       sw:end-element ("gd").
     end.
     sw:end-element ("gds").

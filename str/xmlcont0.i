@@ -25,6 +25,7 @@ initial "@(#)$Workfile$ $Revision$".
 /*  define variable v-curr-name       like ub.currency.curr-name no-undo .*/
 
   define buffer buf_contract for ub.contract.
+  define buffer buf_contract-attr for ub.contract-attr .
   define buffer buf_contract-specif for ub.contract-specif.
 /*  define buffer buf_contract-line for ub.contract-line.*/
 
@@ -371,7 +372,12 @@ end.
 &scop tag-name spec-check
 &scop tag-value buf_contract.spec-check
 {&tag-put}
-
+for first buf_contract-attr no-lock where buf_contract-attr.host-code = buf_contract.host-code and buf_contract-attr.contract-code = buf_contract.contract-code and
+buf_contract-attr.attr-code = "contract-edi":
+&scop tag-name edi
+&scop tag-value if buf_contract-attr.attr-value = "yes" then "1" else "0"
+{&tag-put}
+end.
 &scop tag-level 0
 
 &scop tag-name  contract

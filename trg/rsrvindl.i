@@ -28,6 +28,7 @@ procedure rsrvindl :
   define input  parameter p-reserv-pl-code as logical   no-undo .
 
   define variable v-sign as decimal no-undo .
+  define variable v-gds-code as integer no-undo .
 
   define buffer buf_doc-parts for ub.parts .
   define buffer buf_parts     for ub.parts .
@@ -35,6 +36,9 @@ procedure rsrvindl :
   define buffer buf_doc-line  for ub.doc-line .
   define buffer buf_doc-pl    for ub.doc-pl .
   define buffer buf_goods     for ub.goods .
+  define buffer orig_marking-lines for ub.marking-lines .
+  define buffer buf_marking-lines for ub.marking-lines .
+  define buffer buf_marking   for ub.marking .
 
   do
   on error undo, return error return-value
@@ -137,6 +141,7 @@ procedure rsrvindl :
           ,input  v-rsrv-code   /* p-out-code         */
           ,buffer buf_doc-parts /* buf_orig_parts     */
           ,buffer buf_parts     /* buf_parts          */
+          ,input  ""
           ) no-error .
         if error-status :error then do:
           message
@@ -163,6 +168,66 @@ procedure rsrvindl :
         buf_doc-parts.real-qnty = 0
         buf_doc-parts.cli-qnty  = 0
       .
+      
+      define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
+      run gbl/getobjsrvhndl.p (input-output ObjSrv).
+      
+      { gbl/gds-code.i
+        buf_doc-parts.artic
+        buf_doc-parts.prod-type
+        buf_doc-parts.prod-code
+        v-gds-code
+        no-error
+      }
+      if error-status :error
+      then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка при кода товара" skip
+          "Документ" p-doc-code skip
+          "Артикул" p-artic p-prod-type p-prod-code skip
+          view-as alert-box error .
+        undo, return error .
+      end.
+  
+      for each orig_marking-lines exclusive-lock where orig_marking-lines.gds-code = v-gds-code
+                                                  and orig_marking-lines.obj-type = buf_doc-parts.obj-type
+                                                  and orig_marking-lines.obj-code = buf_doc-parts.obj-code
+                                                  and orig_marking-lines.in-code  = buf_doc-parts.in-code
+                                                  and orig_marking-lines.out-code = buf_doc-parts.out-code
+                                                  and orig_marking-lines.part-code = buf_doc-parts.part-code
+                                                  and orig_marking-lines.prt-code = buf_doc-parts.prt-code:
+        find first buf_marking-lines no-lock where  buf_marking-lines.mark       = orig_marking-lines.mark
+                                                and buf_marking-lines.gds-code   = buf_goods.gds-code
+                                                and buf_marking-lines.obj-type   = buf_parts.obj-type
+                                                and buf_marking-lines.obj-code   = buf_parts.obj-code
+                                                and buf_marking-lines.in-code    = buf_parts.in-code
+                                                and buf_marking-lines.out-code   = buf_parts.out-code
+                                                and buf_marking-lines.part-code  = buf_parts.part-code
+                                                and buf_marking-lines.prt-code   = buf_parts.prt-code
+                                                no-error .
+        if not available buf_marking-lines
+        then do :
+          create buf_marking-lines .
+          assign
+            buf_marking-lines.mark       = orig_marking-lines.mark
+            buf_marking-lines.doc-level  = orig_marking-lines.doc-level
+            buf_marking-lines.gds-code   = buf_goods.gds-code
+            buf_marking-lines.obj-type   = buf_parts.obj-type
+            buf_marking-lines.obj-code   = buf_parts.obj-code
+            buf_marking-lines.in-code    = buf_parts.in-code
+            buf_marking-lines.out-code   = buf_parts.out-code
+            buf_marking-lines.part-code  = buf_parts.part-code
+            buf_marking-lines.prt-code   = buf_parts.prt-code
+          . 
+        end .
+        for first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark 
+          and not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
+            assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+        end . 
+        delete orig_marking-lines .
+      end.
+      
       delete buf_doc-parts .
     end.
 

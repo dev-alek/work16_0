@@ -14,6 +14,7 @@
 "exp-VBRR" "Выгрузка товарного классификатора. ВБРР" "bge/exp-VBRR-shd.p" "bge/exp-VBRR.w" "" yes yes no no "" "lkptpbLhiZjdkbhq" no
 "expkan3" "Экспорт текущих товарных остатков kan3" "cus/exp-kanp.p" "cus/exp-kanf.w" "" yes yes no no "" "GjpcllRbjiioijlb" no
 "goods_rum" "Работа с товарами в автоматическом режиме" "str/goodsrum.p" "" "" yes yes no no "" "bfatafbpQPjkbDcl" yes
+"hdd-rep" "Выгрузка результатов проверки HDD" "bge/rep_hdd.p" "bge/par_HDD.w" "" yes yes no no "" "JkajcTbjpsDjildc" no
 "help-road" "Выгрузка ВБРР" "bge/help-road.p" "bge/exp-help-road.w" "" yes yes no no "" "eSWkciclkjcXlHdk" no
 "img-search" "Загрузка фото товаров" "bge/imgsearch-shd.p" "" "" yes yes no no "" "kvaknraZMkstiEfr" no
 "log_arh" "Архивация логов" "bge/log_arh.p" "bge/log_arh-par.w" "" yes yes no no "" "bujfMuiabjKacilb" no

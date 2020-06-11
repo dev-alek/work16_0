@@ -1105,7 +1105,8 @@ T-remote
 WITH FRAME {&frame-name} .
 IF AVAILABLE tt-cash-desk THEN DO:
  combo-protocol:SCREEN-VALUE = (IF num-entries(tt-cash-desk.addr-path, {&delim-par}) > 1
-                                and tt-cash-desk.pos-type = {&cd-type-IBM-XML}
+                                and (tt-cash-desk.pos-type = {&cd-type-IBM-XML}
+                                     or tt-cash-desk.pos-type = {&cd-type-autotank})
                                 THEN ENTRY(1, tt-cash-desk.addr-path, {&delim-par})
                                 ELSE {&space-char}) .
  combo-protocol-maria:SCREEN-VALUE = (IF num-entries(tt-cash-desk.addr-path, {&delim-par}) > 1

@@ -20,9 +20,12 @@ p-rsrv-direction   false - производится снятие разервов
                    true  - производится резервирование по партиям и признакам
 
 */
+using ibs.th.str.alcohol.*.
 
 define input  parameter p-doc-code       like ub.trn-doc.doc-code no-undo .
 define input  parameter p-rsrv-direction as logical   no-undo .
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -99,8 +102,21 @@ on error undo, return error return-value
       where buf_goods.artic     = buf_doc-line.artic
         and buf_goods.prod-type = buf_doc-line.prod-type
         and buf_goods.prod-code = buf_doc-line.prod-code
-      .
-
+    no-error  .
+    
+    if error-status :error then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка при посике товара" skip
+        "Документ" buf_doc-line.doc-code skip
+        "Расширенный тип документа" buf_trn-doc.ext-doc-type skip
+        "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+      undo, return error .
+    end.
+    
     { gbl/rootnode.i
       buf_doc-line.artic
       buf_doc-line.prod-type

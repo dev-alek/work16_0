@@ -638,10 +638,10 @@ temp-param-obj      = param-obj.
 temp-param-pay      = param-pay.
 temp-param-pay-hide = param-pay-hide.
 temp-param-alon     = param-alon.
-if temp-param-date = 9 then do:
-   temp-param-date-type-period = radio-period.
-   if temp-param-date-type-period = ? or temp-param-date-type-period = "" then temp-param-date-type-period = {&period-type-yesterday}.
-end.
+/*if temp-param-date = 9 then do:                                                                                                       */
+/*   temp-param-date-type-period = radio-period.                                                                                        */
+/*   if temp-param-date-type-period = ? or temp-param-date-type-period = "" then temp-param-date-type-period = {&period-type-yesterday}.*/
+/*end.                                                                                                                                  */
 
 temp-str =  ReportHeader.
 

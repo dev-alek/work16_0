@@ -99,47 +99,26 @@ then do:
       run utl/mkstrglb.p.
       
    end.
+   
    /* MD5*/
    mliststrfile = "cmp/code.xml".
+   block-md5:
    do mi = 1 to num-entries(mliststrfile):
-      
+     /* пересоздаем всегда так как точно также провека происходин при загрузке */ 
       mfile = entry(mi,mliststrfile).
       if search (mfile) eq ?
       then
-         mfilesize = 0.
-      else do:
-         file-info:file-name = search (mfile).
-         mfilesize = file-info:file-size.
-      end.
-      create tt-file-ver.
-      assign
-         tt-file-ver.filename = entry(mi,mliststrfile)
-         tt-file-ver.filesize = mfilesize
-      .
-      if search ("{&fileparam}") ne ?
-      then do:
-         assign
-            msizeinfile = 0  
-            msizeinfile = int(getParam("{&fileparam}",mfile))
-         no-error.
-      end.
-      else
-         changmd5 = yes.
-       mfileNew = search (mfile).
-       entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
-      if    msizeinfile ne mfilesize
-         or search (mfilenew) eq ?
-      then do:
-         run gbl/md5.p(tt-file-ver.filename,output v-md5-signature).
+         next block-md5.
+      do:
+         mfileNew = search (mfile).
+         entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
+     
+         run gbl/md5.p(mfile,output v-md5-signature).
         
          output to value(mfileNew).
          put unformatted v-md5-signature.
          output close.
-         
-         changmd5 = yes.
       end.
-      
-      
    end.
    mliststrfile = "cmp/actn.txt,cmp/menu.txt".
    do mi = 1 to num-entries(mliststrfile):

@@ -65,7 +65,8 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 { gbl/clntattr.i   }
 { ref/gds-attr.i }
 { gbl/getsect.i  def }
-
+{ gbl/key-rec.i }
+{str/utdreturn.i }
 define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
@@ -102,7 +103,8 @@ define buffer bf_doc-line-attr  for ub.doc-line-attr.
 define buffer buf_doc-attr      for ub.doc-attr.
 define buffer buf_cash-pay      for ub.cash-pay.
 define buffer buf_cash-pay-attr for ub.cash-pay-attr.
-
+define buffer bf_utd            for ub.utd.
+define buffer bf_utd-l          for ub.utd-lines.
 
 define variable inv-shipvalue                as   logical                     no-undo.
 define variable par-gen-mrgn-ie              as   character                   no-undo.
@@ -225,6 +227,7 @@ define variable v-show-str       as character no-undo .
 define variable v-add-nat-gas    as logical no-undo .
 define variable var-is-auto-trn  as logical no-undo .
 define variable v-return-qnty    as decimal no-undo .
+{str/tt-nomark.i}
 
 
 define stream str-err.
@@ -731,7 +734,7 @@ then do:
             v-curr-db-num
             v-curr-userid
             {&action-head-code-main}
-            'actn_inventory_fact_not-peresort':U
+            'actn_income_petrol-сommission':U
             {&cntxt-object}
             bf_trn-doc.host-code
             bf_trn-doc.obj-type
@@ -1084,6 +1087,25 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
       end. /* available in_trn-doc */
     end. /*Возврат через расход*/
   end. 
+  
+  define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+  if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  then do :
+    find first ub.contract no-lock where ub.contract.contract-code = bf_trn-doc.contract-code
+                                     and ub.contract.host-code = bf_trn-doc.host-code
+                                     no-error .
+    find first ub.utd no-lock where ub.utd.doc-code = bf_trn-doc.doc-code no-error .                                 
+    if available ub.contract
+    and not available ub.utd
+    then do :
+      EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code).
+      if EDOParSec:IsEdo and ub.contract.whole-send-news = 1 
+      then do :
+        run waitfram-hide in this-procedure no-error.
+        undo, return error ("Договор " + ub.contract.contract-name + " рассчитан на поставки через ЭДО. Ручной приход по нему невозможен!") .
+      end .
+    end .                                 
+  end .
 
   if bf_trn-doc.status_ <> {&inquiry}                           and
         not (bf_trn-doc.status_  = {&wayb}   and
@@ -1293,6 +1315,99 @@ vartechproliv = no
             end.
           end.
         end.
+        { str/tdat-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-inv-introduce}
+          v-attr-value
+          v-attr-type
+          no-error
+        }
+
+        if not error-status:error and v-attr-value = "yes" then do:
+          find first bf_utd where bf_utd.doc-code = bf_trn-doc.doc-code no-error.
+          if available bf_utd 
+          then do:
+            bf_utd.sts = objSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB.
+            
+            for each bf_utd-l no-lock where bf_utd-l.db-num = bf_utd.db-num 
+              and bf_utd-l.doc-id = bf_utd.doc-id 
+              :
+              
+              find first bf_goods no-lock where bf_goods.gds-code = bf_utd-l.gds-code no-error.
+              if not available (bf_goods)
+              then do:
+                message
+                "По документу" bf_trn-doc.doc-code skip
+                "На объекте " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
+                "В документе первоначального ввода неизвестный товар " bf_utd-l.gds-code
+                view-as alert-box information .
+                  run waitfram-hide in this-procedure no-error.
+                  undo, return error.
+              end.
+              find first bf_doc-line no-lock where
+                               bf_doc-line.doc-code = bf_trn-doc.doc-code
+                           and bf_goods.artic= bf_doc-line.artic
+                           and bf_goods.prod-code = bf_doc-line.prod-code
+                           and bf_goods.prod-type = bf_doc-line.prod-type no-error.
+              if not available (bf_doc-line)
+              then do:
+                message
+                "По документу" bf_trn-doc.doc-code skip
+                "На объекте " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
+                "В инвентаризации отсутсвует линия из первоначального ввода с товаром " bf_utd-l.gds-code
+                view-as alert-box information .
+                  run waitfram-hide in this-procedure no-error.
+                  undo, return error.
+              end.
+              
+              create ub.utd-lines-attr.
+                ub.utd-lines-attr.doc-id = bf_utd-l.doc-id.
+                ub.utd-lines-attr.db-num = bf_utd-l.db-num.
+                ub.utd-lines-attr.LineNum = bf_utd-l.LineNum.
+                ub.utd-lines-attr.attr-code = "NoMarking".
+                ub.utd-lines-attr.attr-value = string (bf_doc-line.doc-qnty - bf_utd-l.Quantity).
+                if bf_doc-line.doc-qnty - bf_utd-l.Quantity > 0
+                then do:
+                  create tt-no-marking-gds.
+                  tt-no-marking-gds.artic = bf_goods.artic.
+                  tt-no-marking-gds.qnty = ub.utd-lines-attr.attr-value.
+                  tt-no-marking-gds.gds-name = bf_goods.gds-name.
+                end.
+
+              create ub.utd-lines-attr.
+              ub.utd-lines-attr.doc-id = bf_utd-l.doc-id.
+              ub.utd-lines-attr.db-num = bf_utd-l.db-num.
+              ub.utd-lines-attr.LineNum = bf_utd-l.LineNum.
+              ub.utd-lines-attr.attr-code = "utd-fact-qnty".
+              ub.utd-lines-attr.attr-value = string (bf_doc-line.doc-qnty).
+
+              if bf_doc-line.doc-qnty - bf_utd-l.Quantity < 0 and not g#news
+              then do:
+                message
+                "По документу" bf_trn-doc.doc-code skip
+                "На объекте " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
+                "Товар " bf_goods.gds-code skip
+                bf_goods.gds-name skip
+                substitute ("Кол-во марок &1 больше кол-ва товара &2.", bf_utd-l.Quantity,  bf_doc-line.doc-qnty)
+                view-as alert-box information .
+                  run waitfram-hide in this-procedure no-error.
+                  undo, return error.
+              end.
+              
+            end.
+            define variable v-not-accept as logical no-undo.
+            find first tt-no-marking-gds no-lock where integer (tt-no-marking-gds.qnty) > 0 no-error.
+            if not g#news and available (tt-no-marking-gds)
+              then run str/inv-br1.w (input table tt-no-marking-gds, output v-not-accept).
+            if v-not-accept
+              then undo, return.
+            
+          end.
+        end.
+        for each ub.marking-attr where (ub.marking-attr.attr-code = "inv-doc" or ub.marking-attr.attr-code = "inv-doc-scan") and ub.marking-attr.attr-value = bf_trn-doc.doc-code:
+          delete ub.marking-attr.
+        end.
+        
       end.
       /*Проверка цен в документе*/
       { str/chkprdtl.i bf_trn-doc.doc-code no-error }
@@ -2502,7 +2617,11 @@ vartechproliv = no
           assign
             bf_trn-doc.status_ = varstatus
             bf_trn-doc.flag_   = varflag.
-
+          if     bf_trn-doc.status_ eq {&wayb} 
+                   and bf_trn-doc.flag_
+                then do:
+                   crUtdReturn(bf_trn-doc.doc-code).
+                end.
            /* На внутренний приходный запрос создадим внутренний расходный запрос Если Контрагент АКТИВЕН
              , если нет то  и в новостях */
            if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem } and

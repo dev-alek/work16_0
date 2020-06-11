@@ -229,6 +229,8 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
 /* Now enable the interface and wait for the exit condition.            */
  { gbl/getcntxt.i get }
  
+  SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
+  
   { gbl/getsect.i run v-cntxt-obj-type v-cntxt-obj-code {&attr-mercur} }
 
   for each thbjattr_thbj-attr :

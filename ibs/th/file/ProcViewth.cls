@@ -29,7 +29,7 @@ class ibs.th.file.ProcViewth inherits Form:
     define private variable procDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable numDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable dataGridView1 as System.Windows.Forms.DataGridView no-undo.
-    define private variable mFileHelper as class ibs.th.file.filehelperth no-undo.
+    define private variable mAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
     define private variable timer1 as System.Windows.Forms.Timer no-undo.
     define public property MWorkDir as character no-undo
     get.
@@ -43,10 +43,10 @@ class ibs.th.file.ProcViewth inherits Form:
         
         
         super().
-        mFileHelper = new ibs.th.file.filehelperth().
+        mAsyncHelper = new ibs.th.file.AsyncHelperth().
         InitializeComponent().
         this-object:ComponentsCollection:ADD(this-object:components).
-        bindProc:handle = mFileHelper:getqueryttrun().
+        bindProc:handle = mAsyncHelper:getqueryttrun().
         catch e as Progress.Lang.Error:
             undo, throw e.
         end catch.
@@ -70,7 +70,7 @@ class ibs.th.file.ProcViewth inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void button2_Click( input sender as System.Object, input e as System.EventArgs ):
-		mfilehelper:Stopprc(MWorkDir).
+		mAsyncHelper:Stopprc(MWorkDir).
 		refreshgrid().
 		return.
 
@@ -82,7 +82,7 @@ class ibs.th.file.ProcViewth inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void button3_Click( input sender as System.Object, input e as System.EventArgs ):
-		mfilehelper:termprc(MWorkDir).
+		mAsyncHelper:termprc(MWorkDir).
 		refreshgrid().
 		return.
 
@@ -90,7 +90,7 @@ class ibs.th.file.ProcViewth inherits Form:
 
     method private void refreshgrid( ):
         bindProc:Handle:query-close().
-        mfilehelper:creatTTForProc(MWorkDir).
+        mAsyncHelper:creatTTForProc(MWorkDir).
         bindProc:Handle:query-open().
         bindProc:RefreshAll().
         return.
@@ -281,7 +281,7 @@ class ibs.th.file.ProcViewth inherits Form:
 	end method.
 
     destructor public ProcViewth ( ):
-
+       delete object mAsyncHelper.
     end destructor.
 
 end class.

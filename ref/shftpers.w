@@ -79,6 +79,9 @@ define variable v-vid-param         as longchar no-undo .
 define variable v-shift-staff-list  as character no-undo .
 define variable v-shift-manager     as character no-undo .
 
+define variable conf-par as character no-undo .
+define variable v-1C     as logical   no-undo .
+
 DEFINE BUFFER next-shift-obj for shift-obj.
 DEFINE BUFFER previous-shift-obj for shift-obj.
 DEFINE BUFFER previous-shift-obj2 for shift-obj.
@@ -388,7 +391,6 @@ DO:
     END.
     run fill-db in this-procedure no-error.
     if error-status:error then return no-apply.
-    
    
     for each ub.shift-staff no-lock where ub.shift-staff.obj-type = pobj-type
                                       and ub.shift-staff.obj-code = pobj-code
@@ -582,6 +584,41 @@ END.
 ON CHOOSE OF B-exit IN FRAME PERS-Frame /* Ввод */
 DO:
     { gbl/stdbtn.i }
+    if v-1C
+    then do :
+      find first shft-pers no-lock where shft-pers.next-shift = no
+                                     and shft-pers.psn-code <> -1
+                                     no-error .
+      if not available shft-pers
+      then do :
+        message "Включен обмен с 1С. Ввод персонала смены обязателен." view-as alert-box .
+        return no-apply .
+      end .                                  
+    end .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-quit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-quit PERS-Frame
+ON CHOOSE OF B-quit IN FRAME PERS-Frame /* Отмена */
+DO:
+    { gbl/stdbtn.i }
+    if v-1C
+    then do :
+      find first ub.shift-staff no-lock where ub.shift-staff.obj-type = pobj-type
+                                          and ub.shift-staff.obj-code = pobj-code
+                                          and ub.shift-staff.shift-num = pshift-num
+                                          and ub.shift-staff.shift-date = pshift-date
+                                          and ub.shift-staff.next-shift = no
+                                          no-error .
+      if not available ub.shift-staff
+      then do :                                    
+        message "Включен обмен с 1С. Ввод персонала смены обязателен." view-as alert-box .
+        return no-apply .
+      end .
+    end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -968,7 +1005,28 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ,INPUT-OUTPUT table-handle v-tth
     )  .
 
-delete object v-tth no-error.
+  delete object v-tth no-error.
+
+  { gbl/conf-rd.i
+       "'is-erpRN'"
+       0
+       "''"
+       0
+       "''"
+       "''"
+       "''"
+       NO
+       conf-par
+       par-type
+       no-error
+  }
+  IF not error-status:error and conf-par = "yes":U 
+  then do: 
+    v-1C = true .
+  end .
+  else do :
+    v-1C = false .
+  end .
 
   RUN MYenable in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.

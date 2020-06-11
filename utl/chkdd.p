@@ -369,7 +369,7 @@ on error undo, return error return-value
     "doc-attr,thbj-attr,shift-attr,gen-attr,db-rec-attr,rcs-attr,gds-host-attr,hold-attr,ord-cons-line-attr,ord-rcv-attr,~
 ord-rcv-line-attr,user-window-attr,esys-all-attr,trn-rsn-attr,bar-code-obj-attr,parts-obj-attr".
     define variable v-no-primary-table as character no-undo initial
-    "c-pl-gds-obj,c-gds-hist,c-cli-hist,c-dc-hist,c-tax-hist,c-gds-grp-hist,c-wth-hist,c-fbr-gds-grp-hist,c-plc-hist,~
+    "c-utd-head,c-pl-gds-obj,c-gds-hist,c-cli-hist,c-dc-hist,c-tax-hist,c-gds-grp-hist,c-wth-hist,c-fbr-gds-grp-hist,c-plc-hist,~
 c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-log,c-gds-obj-ref,c-cashbook-head,c-goods-attr-any,c-promo-head":U.
     define variable v-no-check-corr-user-name as character no-undo .
     define variable v-no-check-corr-user-db-num as character no-undo .

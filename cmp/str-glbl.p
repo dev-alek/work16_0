@@ -170,6 +170,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define delim-nws
 &glob delim-key chr(3)
 run filwrlib_append-new-line in this-procedure ( input "&global-define delim-key {&delim-key}  /* Разделитель для формирования уникального ключа записи */ /* И ТОЛЬКО ДЛЯ ЭТОГО!!! */ " ).
 
+/* Разделитель для формирования замены delim-key  в key-rec уникального ключа записи */ /* И ТОЛЬКО ДЛЯ ЭТОГО!!! */
+&glob delim-key-rep chr(2) + chr(9) + chr (2)
+run filwrlib_append-new-line in this-procedure ( input "&global-define delim-key-rep {&delim-key-rep}  /* Разделитель для формирования замены delim-key  в key-rec уникального ключа записи */ /* И ТОЛЬКО ДЛЯ ЭТОГО!!! */ " ).
+
+
 /* Разделитель для формирования списка параметров */
 &glob delim-par chr(4)
 run filwrlib_append-new-line in this-procedure ( input "&global-define delim-par {&delim-par}" ).
@@ -190,6 +195,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define delim-nps
 &glob delim-flf chr(8)
 run filwrlib_append-new-line in this-procedure ( input "&global-define delim-flf {&delim-flf} /* Разделитель полей соответствия имен полей, меток и формата для показа изменнений исторических таблиц */ " ).
 
+/* Префикс для технических марок (для маркированной продукции) */
+&glob tech-mark-prefix 'tech_':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define tech-mark-prefix {&tech-mark-prefix}" ).
 
 /* типы маршрутизации */
 &glob send-tbl-oxml 'send-tbl-oxml':U
@@ -244,6 +252,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-pdf-f
 run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-parts-fact-corr {&cmd-parts-fact-corr}" ).
 &glob cmd-nws2esys-general 'cmd-nws2esys-general':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-nws2esys-general {&cmd-nws2esys-general}" ).
+&glob cmd-chg-utd-sts 'cmd-chg-utd-sts':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define cmd-chg-utd-sts {&cmd-chg-utd-sts}" ).
 
 
 
@@ -422,6 +432,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define barcode-e
 { cmp/cr-prep.i 1 btpr-type-autocbnk   "autocbnk" " " "autocbnk" } /* "Автоматическая работа с системой клиент-банк" */
 { cmp/cr-prep.i 1 btpr-type-autofree   "autofree" " " "autofree" } /* "Выполнение по расписанию произвольного задания" */
 { cmp/cr-prep.i 1 btpr-type-mercury    "mercury" " " "mercury" } /* "Выполнение по расписанию обмена с ФГИС Меркурий" */
+{ cmp/cr-prep.i 1 btpr-type-is_motp    "is_motp" " " "is_motp" } /* "Выполнение по расписанию обмена с ИС МОТП" */
+{ cmp/cr-prep.i 1 btpr-type-is_diadoc    "is_diadoc" " " "is_diadoc" } /* "Выполнение по расписанию обмена с ИС МОТП" */
+{ cmp/cr-prep.i 1 btpr-type-hddtest    "hddtest" " " "hddtest" } /* "Выполнение по расписанию запросов на кассу о состоянии HDD" */
 { cmp/cr-prep.i 1 btpr-type-cutdbs     "cutdbs"  " " "cutdbs"  } /* "Обрезание документов по БД"      */
 { cmp/cr-prep.i 1 btpr-type-lock-route "lkrt"    " " "lkrt"    } /* блокировка маршрутизации          */
 { cmp/cr-prep.i 1 btpr-type-lock-ext-sys-route "lkes"    " " "lkes"  } /* блокировка маршрутизации внешней системы OpenXML  */
@@ -871,6 +884,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define without-S
 { cmp/cr-prep.i 1 c-work             уд_работа      " "                    del_work    }
 
 /* ошибки при приеме чеков */
+{ cmp/cr-prep.i 1 gds-err          0                " "                    0       } 
 { cmp/cr-prep.i 1 summa-err        сум-ош           " "                    Sum-Err }
 { cmp/cr-prep.i 1 card-err         карт-ош          " "                    Card-Err}
 { cmp/cr-prep.i 1 serial-err       сер-ош           " "                    Ser-Err }
@@ -885,7 +899,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define without-S
 
 &glob chk-err-list '{&bef-gds-err},{&bef-summa-err},{&bef-serial-err},{&bef-Dtl-Err},{&bef-Pay-Err},{&bef-discount-err},{&bef-goods-err},{&bef-amount-err},{&bef-Prt-Err}':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define chk-err-list {&chk-err-list}" ).
-
 
 /* Типы единиц измерения!!!Первые три буквы в длинном названии должны обязательно совпадать с коротким!!!*/
 { cmp/cr-prep.i 1 pieces           шту              штучный               pie pieces    }
@@ -1635,8 +1648,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define WDEDT_SUM
 run filwrlib_append-new-line in this-procedure ( input "&global-define WDEDT_SUM_Put-Out {&WDEDT_SUM_Put-Out}" ).
 
 
-{ cmp/cr-prep.i 1 declaration   декл                " " decl }
-{ cmp/cr-prep.i 1 exchange      обмен                " " exchange }
+{ cmp/cr-prep.i 1 declaration        декл                " " decl }
+{ cmp/cr-prep.i 1 exchange           обмен               " " exchange }
 
 
 /* типы source-type для payment */
@@ -1647,8 +1660,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define WDEDT_SUM
 
 
 /*типы source-type для wth-doc */
-{ cmp/cr-prep.i 1 wthd-cash-desk     касса                " " POS}
-{ cmp/cr-prep.i 1 wthd-wth-doc       док.МЦ               " " wealthdoc}
+{ cmp/cr-prep.i 1 wthd-cash-desk     касса               " " POS}
+{ cmp/cr-prep.i 1 wthd-wth-doc       док.МЦ              " " wealthdoc}
 
 /* константы для архивов */
 &glob arh-delta 0.0000000001

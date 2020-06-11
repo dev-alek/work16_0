@@ -967,6 +967,24 @@ Creation date: 01/29/07
 &glob table_c-user-login-full '{&bef-table_c-user-login-full}':U
 &glob bef-table_c-usr-hist-full c-usr-hist
 &glob table_c-usr-hist-full '{&bef-table_c-usr-hist-full}':U
+&glob bef-table_c-utd-full c-utd
+&glob table_c-utd-full '{&bef-table_c-utd-full}':U
+&glob bef-table_c-utd-attr-full c-utd-attr
+&glob table_c-utd-attr-full '{&bef-table_c-utd-attr-full}':U
+&glob bef-table_c-utd-err-full Ошибки УПД
+&glob table_c-utd-err-full '{&bef-table_c-utd-err-full}':U
+&glob bef-table_c-utd-err-attr-full c-utd-err-attr
+&glob table_c-utd-err-attr-full '{&bef-table_c-utd-err-attr-full}':U
+&glob bef-table_c-utd-head-full c-utd-head
+&glob table_c-utd-head-full '{&bef-table_c-utd-head-full}':U
+&glob bef-table_c-utd-lines-full c-utd-lines
+&glob table_c-utd-lines-full '{&bef-table_c-utd-lines-full}':U
+&glob bef-table_c-utd-lines-attr-full c-utd-lines-attr
+&glob table_c-utd-lines-attr-full '{&bef-table_c-utd-lines-attr-full}':U
+&glob bef-table_c-utd-marking-lines-full c-utd-marking-lines
+&glob table_c-utd-marking-lines-full '{&bef-table_c-utd-marking-lines-full}':U
+&glob bef-table_c-utd-marking-lines-attr-full c-utd-marking-lines-attr
+&glob table_c-utd-marking-lines-attr-full '{&bef-table_c-utd-marking-lines-attr-full}':U
 &glob bef-table_c-var-deliv-gr-per-val-full История вариантов доставки по срокам го
 &glob table_c-var-deliv-gr-per-val-full '{&bef-table_c-var-deliv-gr-per-val-full}':U
 &glob bef-table_c-variant-delivery-full История вариантов доставки
@@ -1709,6 +1727,14 @@ Creation date: 01/29/07
 &glob table_lvl-name-full '{&bef-table_lvl-name-full}':U
 &glob bef-table_lvl-name-attr-full Атрибуты для lvl-name
 &glob table_lvl-name-attr-full '{&bef-table_lvl-name-attr-full}':U
+&glob bef-table_marking-full marking
+&glob table_marking-full '{&bef-table_marking-full}':U
+&glob bef-table_marking-attr-full marking-attr
+&glob table_marking-attr-full '{&bef-table_marking-attr-full}':U
+&glob bef-table_marking-chk-full marking-chk
+&glob table_marking-chk-full '{&bef-table_marking-chk-full}':U
+&glob bef-table_marking-lines-full marking-lines
+&glob table_marking-lines-full '{&bef-table_marking-lines-full}':U
 &glob bef-table_menu-group-full menu-group
 &glob table_menu-group-full '{&bef-table_menu-group-full}':U
 &glob bef-table_menu-group-attr-full Атрибуты для menu-group
@@ -2449,6 +2475,22 @@ Creation date: 01/29/07
 &glob table_usr-stko-full '{&bef-table_usr-stko-full}':U
 &glob bef-table_usr-stko-attr-full Атрибуты для usr-stko
 &glob table_usr-stko-attr-full '{&bef-table_usr-stko-attr-full}':U
+&glob bef-table_utd-full utd
+&glob table_utd-full '{&bef-table_utd-full}':U
+&glob bef-table_utd-attr-full utd-attr
+&glob table_utd-attr-full '{&bef-table_utd-attr-full}':U
+&glob bef-table_utd-err-full Ошибки УПД
+&glob table_utd-err-full '{&bef-table_utd-err-full}':U
+&glob bef-table_utd-err-attr-full utd-err-attr
+&glob table_utd-err-attr-full '{&bef-table_utd-err-attr-full}':U
+&glob bef-table_utd-lines-full utd-lines
+&glob table_utd-lines-full '{&bef-table_utd-lines-full}':U
+&glob bef-table_utd-lines-attr-full utd-lines-attr
+&glob table_utd-lines-attr-full '{&bef-table_utd-lines-attr-full}':U
+&glob bef-table_utd-marking-lines-full utd-marking-lines
+&glob table_utd-marking-lines-full '{&bef-table_utd-marking-lines-full}':U
+&glob bef-table_utd-marking-lines-attr-full utd-marking-lines-attr
+&glob table_utd-marking-lines-attr-full '{&bef-table_utd-marking-lines-attr-full}':U
 &glob bef-table_var-deliv-gr-per-val-full Варианты доставки по срокам го
 &glob table_var-deliv-gr-per-val-full '{&bef-table_var-deliv-gr-per-val-full}':U
 &glob bef-table_var-deliv-gr-per-val-attr-full Атрибуты для var-deliv-gr-per-val

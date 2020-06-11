@@ -200,6 +200,20 @@ do iii = 1 to num-entries(mask_s-c) :
   if length(v-mask-full) = length(loc-prod-bc) and  substring(loc-prod-bc, 1, length(v-mask-short)) = v-mask-short then
     loc-prod-bc = "*" + substring(loc-prod-bc, length(v-mask-short) + 1).
 end.
+define variable vBc-on as logical no-undo.
+if loc-prod-bc ne ? 
+then do:
+    find first prod-bc where prod-bc.b-code eq loc-bar-code.b-code
+                         and prod-bc.b-str  eq loc-prod-bc
+                         no-lock no-error.
+    if available prod-bc
+    then
+       vBc-on = prod-bc.bc-on.
+    else
+       vBc-on = yes.
+end.
+else
+   vBc-on = yes.
 assign
 cash-gds.gds-code = loc-goods.gds-code
 cash-gds.artic = loc-goods.artic
@@ -208,6 +222,7 @@ cash-gds.main-prt-b-code = v-main-prt-b-code
 /*если loc-prod-bc <> значит это для prod-bc*/
 cash-gds.b-str = if loc-prod-bc = ? then "" else loc-prod-bc
 cash-gds.bc-on-type = loc-bc-on-type
+cash-gds.bc-on = vBc-on
 cash-gds.unit-cli = loc-bar-code.unit-cli
 cash-gds.cli-base-rate = loc-bar-code.cli-base-rate
 cash-gds.std-discnt-rule = std-discnt-rule_
@@ -221,6 +236,7 @@ cash-gds.gds-name = IF nam-2str
                                 then loc-goods.chk-name
                                 else loc-goods.gds-name)
                          )
+                 
 cash-gds.f-name = if NOT l-empty-scale then loc-gds-prt-term.f-name else ""
 cash-gds.unit-base = loc-goods.unit-base
 cash-gds.grp-code = for-grp-code
@@ -354,7 +370,7 @@ if how-temp-disc = {&dGR-temp-disc} then do:
       end.
       find first buf_temp-dis-gds-rule where
               buf_temp-dis-gds-rule.gds-code = cash-gds.gds-code
-          and buf_temp-dis-gds-rule.nonunique = string(disc-b-code) no-error.
+          and buf_temp-dis-gds-rule.nonunique = string( disc-b-code) no-error.
       if available buf_temp-dis-gds-rule then do:
           cash-gds.temp-discnt-rule = buf_temp-dis-gds-rule.rule-num.
       end.
@@ -397,105 +413,105 @@ run ibm-gdsc in this-procedure (input no /*p-zeros*/
 
 if new-good then new-good = not new-good.
 if action = "U" then do:
-if cash-gds.kat-discnt-rule <> 0
-and how-pcnt-kat = {&dthbjr-pcnt-kat-pdf}
-then do:
-  for each cash-dis-rule no-lock where
-        cash-dis-rule.upper-rule-num = cash-gds.kat-discnt-rule
-  :
-    /*получим % из соотношения cash-gds.price-sale и цены полученной из прайс-листа типа cash-dis-rule.charkey_one*/
-    run mpl-tpl-auto in this-procedure ( input cash-gds.b-code
-                                        ,input {&shop}
-                                        ,input i-obj-code
-                                        ,input integer(entry(1, cash-dis-rule.charkey_one,"-"))
-                                        ,input integer(entry(2, cash-dis-rule.charkey_one,"-"))
-                                        ,input ? /*fact-order*/
-                                        ,output v-disc-price-sale
-                                        ,output v-pdf-id
-                                        ,output v-pdf-db-num ) no-error.
-    if error-status:error
-    or v-disc-price-sale = 0
-    or v-disc-price-sale = ?
-    then do:
-      /*ничего*/
-    end.
-    else do:
-      find first  cash-gds-discnt where
+  if cash-gds.kat-discnt-rule <> 0
+  and how-pcnt-kat = {&dthbjr-pcnt-kat-pdf}
+  then do:
+    for each cash-dis-rule no-lock where
+          cash-dis-rule.upper-rule-num = cash-gds.kat-discnt-rule
+    :
+      /*получим % из соотношения cash-gds.price-sale и цены полученной из прайс-листа типа cash-dis-rule.charkey_one*/
+      run mpl-tpl-auto in this-procedure ( input cash-gds.b-code
+                                          ,input {&shop}
+                                          ,input i-obj-code
+                                          ,input integer(entry(1, cash-dis-rule.charkey_one,"-"))
+                                          ,input integer(entry(2, cash-dis-rule.charkey_one,"-"))
+                                          ,input ? /*fact-order*/
+                                          ,output v-disc-price-sale
+                                          ,output v-pdf-id
+                                          ,output v-pdf-db-num ) no-error.
+      if error-status:error
+      or v-disc-price-sale = 0
+      or v-disc-price-sale = ?
+      then do:
+        /*ничего*/
+      end.
+      else do:
+        find first  cash-gds-discnt where
                   cash-gds-discnt.b-code = cash-gds.b-code
                 and  cash-gds-discnt.rule-num = cash-dis-rule.rule-num
                 and cash-gds-discnt.obj-type = parobj-type
                 and cash-gds-discnt.obj-code = parobj-code No-ERROR.
         if not available cash-gds-discnt then do:
           find first  cash-gds-discnt where
-                cash-gds-discnt.crf = (crgd + 1) No-ERROR.
-      if not available cash-gds-discnt then do:
-        create cash-gds-discnt.
-        assign
-        cash-gds-discnt.crf = crgd + 1.
-      end.
+                    cash-gds-discnt.crf = (crgd + 1) No-ERROR.
+          if not available cash-gds-discnt then do:
+            create cash-gds-discnt.
+            assign
+            cash-gds-discnt.crf = crgd + 1.
+          end.
           crgd = crgd + 1.
-      assign
-      cash-gds-discnt.b-code = cash-gds.b-code
-      cash-gds-discnt.rule-num = cash-dis-rule.rule-num
-      cash-gds-discnt.obj-type = parobj-type
-      cash-gds-discnt.obj-code = parobj-code
-      cash-gds-discnt.discnt-value = v-disc-price-sale
-      .
+          assign
+          cash-gds-discnt.b-code = cash-gds.b-code
+          cash-gds-discnt.rule-num = cash-dis-rule.rule-num
+          cash-gds-discnt.obj-type = parobj-type
+          cash-gds-discnt.obj-code = parobj-code
+          cash-gds-discnt.discnt-value = v-disc-price-sale
+          .
           release cash-gds-discnt.
         end.
-    end.
-  end. /*for each cash-dis-rule no-lock where*/
-end.
-if cash-gds.temp-discnt-rule <> 0
-and how-temp-disc = {&dthbjr-temp-disc-pdf}
-then do:
-  for each cash-dis-rule no-lock where
-        (cash-dis-rule.upper-rule-num = cash-gds.temp-discnt-rule
-     or cash-dis-rule.rule-num = cash-gds.temp-discnt-rule)
-     and cash-dis-rule.is-term = yes
-  :
-    /*получим % из соотношения cash-gds.price-sale и цены полученной из прайс-листа типа cash-dis-rule.charkey_one*/
-    run mpl-tpl-auto in this-procedure ( input cash-gds.b-code
-                                        ,input {&shop}
-                                        ,input i-obj-code
-                                        ,input integer(entry(1, cash-dis-rule.charkey_one,"-"))
-                                        ,input integer(entry(2, cash-dis-rule.charkey_one,"-"))
-                                        ,input ? /*fact-order*/
-                                        ,output v-disc-price-sale
-                                        ,output v-pdf-id
-                                        ,output v-pdf-db-num ) no-error.
-    if error-status:error
-    or v-disc-price-sale = 0
-    or v-disc-price-sale = ?
-    then do:
-      /*ничего*/
-    end.
-    else do:
-      find first  cash-gds-discnt where
+      end.
+    end. /*for each cash-dis-rule no-lock where*/
+  end.
+  if cash-gds.temp-discnt-rule <> 0
+  and how-temp-disc = {&dthbjr-temp-disc-pdf}
+  then do:
+    for each cash-dis-rule no-lock where
+          (cash-dis-rule.upper-rule-num = cash-gds.temp-discnt-rule
+      or cash-dis-rule.rule-num = cash-gds.temp-discnt-rule)
+      and cash-dis-rule.is-term = yes
+    :
+      /*получим % из соотношения cash-gds.price-sale и цены полученной из прайс-листа типа cash-dis-rule.charkey_one*/
+      run mpl-tpl-auto in this-procedure ( input cash-gds.b-code
+                                          ,input {&shop}
+                                          ,input i-obj-code
+                                          ,input integer(entry(1, cash-dis-rule.charkey_one,"-"))
+                                          ,input integer(entry(2, cash-dis-rule.charkey_one,"-"))
+                                          ,input ? /*fact-order*/
+                                          ,output v-disc-price-sale
+                                          ,output v-pdf-id
+                                          ,output v-pdf-db-num ) no-error.
+      if error-status:error
+      or v-disc-price-sale = 0
+      or v-disc-price-sale = ?
+      then do:
+        /*ничего*/
+      end.
+      else do:
+        find first  cash-gds-discnt where
                   cash-gds-discnt.b-code = cash-gds.b-code
                 and  cash-gds-discnt.rule-num = cash-dis-rule.rule-num
                 and cash-gds-discnt.obj-type = parobj-type
                 and cash-gds-discnt.obj-code = parobj-code No-ERROR.
         if not available cash-gds-discnt then do:
           find first  cash-gds-discnt where
-                cash-gds-discnt.crf = (crgd + 1) No-ERROR.
-      if not available cash-gds-discnt then do:
-        create cash-gds-discnt.
-        assign
-        cash-gds-discnt.crf = crgd + 1.
-      end.
+                    cash-gds-discnt.crf = (crgd + 1) No-ERROR.
+          if not available cash-gds-discnt then do:
+            create cash-gds-discnt.
+            assign
+            cash-gds-discnt.crf = crgd + 1.
+          end.
           crgd = crgd + 1.
-      assign
-      cash-gds-discnt.b-code = cash-gds.b-code
-      cash-gds-discnt.rule-num = cash-dis-rule.rule-num
-        cash-gds-discnt.obj-type = parobj-type
-        cash-gds-discnt.obj-code = parobj-code
-      cash-gds-discnt.discnt-value = v-disc-price-sale.
+          assign
+          cash-gds-discnt.b-code = cash-gds.b-code
+          cash-gds-discnt.rule-num = cash-dis-rule.rule-num
+          cash-gds-discnt.obj-type = parobj-type
+          cash-gds-discnt.obj-code = parobj-code
+          cash-gds-discnt.discnt-value = v-disc-price-sale.
           release cash-gds-discnt.
         end.
-    end.
-  end. /*for each cash-dis-rule no-lock where*/
-end.
+      end.
+    end. /*for each cash-dis-rule no-lock where*/
+  end.
 end. /*if action = "U" then do:*/
 
 

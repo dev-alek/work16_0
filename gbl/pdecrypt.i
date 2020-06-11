@@ -20,6 +20,7 @@ Required:
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
+
 &if "{1}" eq "defproc" 
 &then
 &glob defproc_pdecrypt yes 
@@ -38,7 +39,8 @@ procedure pdecrypt :
       long-char-value = ip-value-to-dec
       op-char-value   = get-string(decrypt(base64-decode(long-char-value)),1)
       long-char-value = ""
-   .
+   no-error.
+   if error-status:error then op-char-value = ? .
    end.
 end procedure. /* pdecrypt */
 &else

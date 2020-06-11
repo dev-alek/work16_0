@@ -15,6 +15,13 @@ Creation date: 01/14/03
 
 */
 
+on alt-shift-f2 anywhere do:
+if ibs.th.gbl.gbl-var:rcode
+then
+  run gbl\inidebug.p .
+end.
+
+
 on alt-shift-f3 anywhere do:
   run proc-alt-shift-f3 in this-procedure .
 end.

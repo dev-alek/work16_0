@@ -87,6 +87,7 @@ disable triggers for load of DICTDB.curr-bank .
 disable triggers for load of DICTDB.units .
 disable triggers for load of DICTDB.tax .
 disable triggers for load of DICTDB.tax-rate .
+disable triggers for load of DICTDB.tax-rate-attr .
 disable triggers for load of DICTDB.tax-rate-value .
 disable triggers for load of DICTDB.tax-units .
 disable triggers for load of DICTDB.tax-rate-gds-grp .
@@ -1170,6 +1171,19 @@ define variable v-name as character no-undo .
       buf_firm.firm-code = 800000002
       buf_firm.ind       = 0
     .
+
+    /* Выставить атрибут Расходы отдельной строкой в yes */
+    &scop proc-name clntattr-write
+    {&run_proc_attr-lib}
+      (input  {&cmp}
+      ,input  800000002
+      ,input  {&attr-shftrep2}
+      ,input  "yes":U
+      ) no-error .
+    if error-status:error then do:
+      message return-value view-as alert-box error .
+      return error return-value.
+    end.
     
     create buf_clients.
     assign
@@ -1274,45 +1288,6 @@ define variable v-name as character no-undo .
       buf_firm.firm-code = 800000009
       buf_firm.ind       = 0
     .
-    /* Выставить атрибут Расходы отдельной строкой в yes */
-    &scop proc-name clntattr-write
-    {&run_proc_attr-lib}
-      (input  {&cmp}
-      ,input  800000002
-      ,input  {&attr-shftrep2}
-      ,input  "yes":U
-      ) no-error .
-    if error-status:error then do:
-      message return-value view-as alert-box error .
-      return error return-value.
-    end.
-    
-    create buf_clients.
-    assign
-      buf_clients.obj-type = {&cmp}
-      buf_clients.obj-code = 800000003
-      buf_clients.obj-name = "Отбор проб"
-      buf_clients.stts     = 0
-      buf_clients.grp-code = 5
-      buf_clients.grp-name = v-name
-    .
-    create buf_firm.
-    assign
-      buf_firm.firm-code = 800000003
-      buf_firm.ind       = 0
-    .
-    /* Выставить атрибут Расходы отдельной строкой в yes */
-    &scop proc-name clntattr-write
-    {&run_proc_attr-lib}
-      (input  {&cmp}
-      ,input  800000003
-      ,input  {&attr-shftrep2}
-      ,input  "yes":U
-      ) no-error .
-    if error-status:error then do:
-      message return-value view-as alert-box error .
-      return error return-value.
-    end.
 
 end procedure . /* end_of cre-cli2 */
 /*==========================================================================*/

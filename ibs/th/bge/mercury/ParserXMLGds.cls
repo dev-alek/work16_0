@@ -99,7 +99,7 @@ class ibs.th.bge.mercury.ParserXMLGds:
       DO:
         v-item = "Unit" .
       END.                  
-      IF hNoderef:NAME = "bs:uuid"    THEN assign tt-gds-merq.UUID = hText:node-value .
+      IF hNoderef:NAME = "bs:uuid" and v-item = "Product"    THEN assign tt-gds-merq.UUID = hText:node-value .
       if v-item = "ProductItem" then 
       do:            
         IF hNoderef:NAME = "bs:guid"    THEN assign tt-gds-merq.GUID_ = hText:node-value .

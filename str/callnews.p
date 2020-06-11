@@ -1703,7 +1703,18 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
      
         v-found = true.
       end. 
-    
+      when {&table_utd} then do:
+        find first ub.utd no-lock where rowid (ub.utd) = v-tbl-row.
+        if g#db-num <> 0 then do:
+          assign list-db-for-send = "0".
+        end.
+        else do:
+          find first buf_clients where buf_clients.obj-type = ub.utd.obj-type and buf_clients.obj-code = ub.utd.obj-code no-error.
+          if available (buf_clients) and not buf_clients.db-num = 0
+            then assign list-db-for-send = string (buf_clients.db-num).
+        end.
+        v-found = true.
+      end.
       otherwise do:
         assign
           v-found = false

@@ -150,6 +150,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       or p-task-type = {&btpr-type-autooxml}
       or p-task-type = {&btpr-type-autosuz}
       or p-task-type = {&btpr-type-autofree}
+      or p-task-type = {&btpr-type-hddtest}
       /*гюнтнер согласен и извещен*/
       )
          and buf_db.db-num <> buf_sys-ctrl.db-num

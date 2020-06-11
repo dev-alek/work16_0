@@ -3275,6 +3275,17 @@ procedure m-smart-ref :
 
 end procedure. /* m-hdd-ref */
 
+procedure m-hdd-ref :
+  do
+  on error undo, return error
+  :
+    
+  run ref/hdd.p ( input parparentproc, input v-cntxt-db-num) no-error.
+  
+  end.
+
+end procedure. /* m-hdd-ref */
+
 procedure m_action-item :
 
   define variable v-rid-list         as character no-undo .
@@ -3618,6 +3629,14 @@ procedure m-collection-exe :
 
 end procedure. /* m-season-exe */
 
+procedure m-marking-exe :
+  do
+  on error undo, return error return-value
+  :
+    run str/mark_hist.w (input parparentproc , input "", input "") .
+  end.
+
+end procedure. /* m-marking-exe */
 
 procedure m-assmatr-exe :
 
@@ -4660,6 +4679,19 @@ define variable v-rid-list as character no-undo .
   on error undo, return error
   :
     run ref/codelay.p ( "", "", "OsnovCorr", "Основание коррекции") no-error.
+    
+  end.
+
+end procedure. /* m-platsys-exe */
+
+procedure m-device-ref :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    
+    run ref/codelay.p ( "", "", "SpravDevice", "Справочник устройств") no-error.
     
   end.
 
@@ -7768,7 +7800,7 @@ procedure m-rep-shiftOld-exe :
   do
   on error undo, return error return-value
   :
-    run rep/g-shift.p (input parparentproc, input '') .
+    run rep/g-new-shift.p (input parparentproc, input '') .
   end.
 
 end procedure. /* m-rep-shift4-exe */
@@ -12138,6 +12170,19 @@ procedure m-group-qnty-pr-exe :
 
 end procedure. /* m-group-qnty-pr-exe */
 
+procedure m-utd-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    define variable v-rec-list as character no-undo .
+    define variable vconnect as com-handle no-undo.
+    run str/UPD.w ( parparentproc, "", 0, ?, input-output vconnect , output v-rec-list) .
+    release object vconnect no-error.
+  end.
+
+end procedure. /* m-docs-pricelists-exe */
+
 procedure m-docs-pricelists-exe :
 define variable v-ok as logical   no-undo .
 
@@ -13479,6 +13524,20 @@ define variable v-rid-list as character no-undo .
 
 end procedure. /* m_clients-enum-exe */
 
+procedure m_clients-diadok-exe :
+define variable v-rid-list as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    run cus/diadok-cli.w ( input parparentproc
+                        ,input (if v-cntxt-db-num > 0 then '':U else "b-add")
+                        ,input {&all}
+                        ,input '':U
+                        ,input-output v-rid-list) no-error.
+  end.
+
+end procedure. /* m_clients-enum-exe */
 
 procedure m_clients-gln-exe :
 define variable v-rid-list as character no-undo .

@@ -321,11 +321,11 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           and temp-chk-pay.rrn       = pychk_payline_rrn
                  no-error.
     if not available temp-chk-pay then do:
-      if (ub.chk-pay.tot-sum >= 0) NE (ub.chk-doc.netto >= 0)
+      /*if (ub.chk-pay.tot-sum >= 0) NE (ub.chk-doc.netto >= 0)
       and ub.chk-pay.tot-sum <> 0
       and abs(ub.chk-doc.netto) > 0.00000001
       then do:
-
+*/
         /*сдача*/
         find first temp-chk-pay where
                 temp-chk-pay.doc-code = ub.chk-pay.doc-code
@@ -353,7 +353,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 and abs(temp-chk-pay.tot-rubl) >= abs(ub.chk-pay.tot-rubl  )
                 and (temp-chk-pay.tot-r-b >=0) NE (ub.chk-pay.tot-sum >=0)
                 no-error.
-            if not available temp-chk-pay then do:
+            /*if not available temp-chk-pay then do:
               if not g#auto then do:
                 message
                 substitute("Не могу обработать чек &1&2&3&4 смена &5 пор.&6 касса &7 № на кассе &8"
@@ -368,11 +368,12 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 view-as alert-box error .
               end.
               next _chk-doc.
-            end.
+            end.*/
           end. /*if not available temp-chk-pay then do:*/
         end. /*if not available temp-chk-pay then do:*/
-      end. /*if (ub.chk-pay.tot-sum >= 0) NEQ (ub.chk-doc.netto >= 0) then do:*/
-      else do:
+  /*    end. /*if (ub.chk-pay.tot-sum >= 0) NEQ (ub.chk-doc.netto >= 0) then do:*/
+      else */
+      if not  avail temp-chk-pay then do:
         /*прямой платеж*/
         find first temp-chk-pay where
                   temp-chk-pay.doc-code = ub.chk-pay.doc-code
@@ -415,6 +416,30 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
   if available temp-chk-pay then RELEASE TEMP-CHK-PAY.
 
   if last-of(ub.chk-pay.doc-code) then do:
+     /* Проверим что все оплаты со знаком отличным от знака чека схлопнулись */
+    for each temp-chk-pay where
+            temp-chk-pay.doc-code = ub.chk-doc.doc-code:
+       if    (temp-chk-pay.tot-r-b  >= 0) NE (ub.chk-doc.netto >= 0)
+          and temp-chk-pay.tot-r-b <> 0
+          and abs(ub.chk-doc.netto) > 0.00000001
+       then do:
+          if not g#auto then do:
+             message
+                substitute("Не могу обработать чек &1&2&3&4 смена &5 пор.&6 касса &7 № на кассе &8"
+                          ,ub.chk-doc.doc-code
+                          ,{&new-line}
+                          ,ub.chk-doc.obj-type
+                          ,ub.chk-doc.obj-code
+                          ,ub.chk-doc.shift-date
+                          ,ub.chk-doc.shift-num
+                          ,ub.chk-doc.pay-desk
+                          ,ub.chk-doc.chk-num)
+                view-as alert-box error .
+          end.
+          next _chk-doc.
+       end.
+    end.
+    
     for each temp-chk-pay where
             temp-chk-pay.doc-code = ub.chk-doc.doc-code
     break

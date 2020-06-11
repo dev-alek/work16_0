@@ -33,6 +33,8 @@ define parameter buffer buf-sale_doc-line for ub.doc-line.
 /* создарнный документ прихода */
 define parameter buffer buf-new_trn-doc for ub.trn-doc.
 
+define variable chg-qnty      as   decimal no-undo .
+
 define variable vss-revision as character no-undo init "$Revision$":U .
 define variable vss-author as character no-undo init "$Author$":U .
 define variable vss-date as character no-undo init "$Date$":U .
@@ -342,6 +344,7 @@ run partrsrv in this-procedure
   ,buffer buf-new_trn-doc     /* buf_trn-doc     */
   ,output v-real-chg-qnty /* p-real-chg-qnty */
   ,output v-parts-recid   /* p-parts-recid   */
+  ,input  ""
   ) no-error .
 if error-status :error
 then do:

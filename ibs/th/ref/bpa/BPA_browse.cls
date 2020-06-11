@@ -1082,18 +1082,19 @@ super().
 		define variable v-rid-list as character no-undo.
       if available tt-query
       then
-      run ref/coshist.w (parparentproc,
+      run ref/coshist.w (tt-query.id, // id
+                   parparentproc,
                    0,
                    "",
                    0,
                    "",
                    "one",
-                   tt-query.id, // id
                    ?,
                    
                    "",
                    "",
                    ibs.th.gbl.gbl-var:g#db-num,
+                   ?,
                    input-output v-rid-list ).
       return.
 	end method.
@@ -1107,19 +1108,20 @@ super().
 		define variable v-rid-list as character no-undo.
       if available tt-query
       then
-      run ref/cosghist.w (parparentproc,
+      run ref/cosghist.w (tt-query.id, // id
+                   parparentproc,
                    0,
                    "",
                    0,
                    "",
                    "one",
-                   tt-query.id, // id
                    ?,
                    
                    "",
                    "",
                    ibs.th.gbl.gbl-var:g#db-num,
-                    input-output v-rid-list ).
+                   ?,
+                   input-output v-rid-list ).
       
 		return.
 

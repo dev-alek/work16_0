@@ -57,6 +57,11 @@ class ibs.th.gbl.gbl-var:
     get.
     private set.
 
+  define static property rcode as logical no-undo
+    get.
+    private set.
+
+
   constructor public gbl-var():
   
   end constructor.
@@ -80,7 +85,7 @@ class ibs.th.gbl.gbl-var:
       ibs.th.gbl.gbl-var:g#passwd = in_g#passwd
       ibs.th.gbl.gbl-var:g#esys = in_g#esys
     . 
-    
+    rcode = search("gbl\library2.r") eq ?.
     ibs.th.gbl.gbl-var:isInit =  true.
     
   end method.

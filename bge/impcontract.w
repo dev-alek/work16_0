@@ -46,6 +46,7 @@ define variable v-mode          as character no-undo.
 
 DEFINE buffer buf_clients for ub.clients .
 define buffer b_contract  for ub.contract.
+define buffer b_contract-attr for ub.contract-attr .
 define stream str-err .
 define stream str-contract .
   
@@ -63,6 +64,7 @@ define TEMP-TABLE tt-contract no-undo
     field cli-name          as character
     field user-name         as character
     field user-db-num       as integer
+    field edi               as logical
     field log-error         as LOGICAL   INIT no                
     index host-code contract-date contract-prn-code.
 
@@ -104,7 +106,7 @@ define variable vss-description as character no-undo init "Импорт контрактов".
 &Scoped-define INTERNAL-TABLES tt-contract
 
 /* Definitions for BROWSE br-contract                                   */
-&Scoped-define FIELDS-IN-QUERY-br-contract tt-contract.doc-type tt-contract.cli-type tt-contract.cli-code tt-contract.contract-prn-code tt-contract.contract-type tt-contract.contract-date tt-contract.contract-date-beg tt-contract.contract-date-end tt-contract.host-code   
+&Scoped-define FIELDS-IN-QUERY-br-contract tt-contract.doc-type tt-contract.cli-type tt-contract.cli-code tt-contract.contract-prn-code tt-contract.contract-type tt-contract.contract-date tt-contract.contract-date-beg tt-contract.contract-date-end tt-contract.host-code tt-contract.edi  
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-contract   
 &Scoped-define SELF-NAME br-contract
 &Scoped-define QUERY-STRING-br-contract FOR EACH tt-contract NO-LOCK INDEXED-REPOSITION
@@ -182,7 +184,8 @@ DEFINE BROWSE br-contract
     tt-contract.contract-date FORMAT "99/99/9999":U       LABEL "Дата"
     tt-contract.contract-date-beg FORMAT "99/99/9999":U   LABEL "Начало"
     tt-contract.contract-date-end FORMAT "99/99/9999":U   LABEL "Конец"
-    tt-contract.host-code FORMAT "999999999":U WIDTH 13.63    LABEL "Фирма"
+    tt-contract.host-code FORMAT "99999999":U WIDTH 13.63    LABEL "Фирма"
+    (if tt-contract.edi then "+":U else "-":U) format "X(1)":U LABEL "Поставки через ЭДО"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 95.5 BY 15.5 FIT-LAST-COLUMN.
@@ -286,6 +289,21 @@ ON ROW-DISPLAY OF br-contract IN FRAME Dialog-Frame
         do:
             tt-contract.doc-type:BGCOLOR in browse br-contract = red_COLOR.
         end.    
+        
+        find first clients no-lock where clients.obj-type = tt-contract.cli-type
+                                     and clients.obj-code = tt-contract.cli-code
+                                     no-error.
+        if not available clients
+        then do :
+          tt-contract.cli-code:BGCOLOR in browse br-contract = red_COLOR.
+          tt-contract.cli-type:BGCOLOR in browse br-contract = red_COLOR.
+        end.     
+        
+        find first firm no-lock where firm.firm-code = tt-contract.host-code no-error .
+        if not available firm
+        then do :
+          tt-contract.host-code:BGCOLOR in browse br-contract = red_COLOR.
+        end.                        
 
     END.
 
@@ -371,6 +389,7 @@ ON CHOOSE OF Btn_del IN FRAME Dialog-Frame /* Удалить */
 ON CHOOSE OF Btn_EXIT IN FRAME Dialog-Frame /* Сохранить */
     DO:
         run create-proc in this-procedure no-error .
+        if return-value = "cancel" then return no-apply .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -540,6 +559,16 @@ PROCEDURE proc-choose-file :
                 tt-contract.log-error = yes .
                 tt-contract.contract-type = "" .
             end.
+            
+            find first firm no-lock where firm.firm-code = tt-contract.host-code no-error .
+            if not available firm
+            then do :
+              put stream str-err unformatted
+                    "Не найдена собственная фирма с кодом  " + string(tt-contract.host-code) + "."
+                    skip .
+                tt-contract.log-error = yes .
+                tt-contract.host-code = 0 .
+            end.
         END. 
 
         INPUT CLOSE. 
@@ -571,9 +600,31 @@ PROCEDURE create-proc :
     define variable p-sys-time     as character no-undo .
     define variable p-sys-time-int as integer   no-undo .
     define variable f-code         as integer   no-undo .
+    define variable v-log          as logical   no-undo .
+    define variable bad-contract-list as character no-undo .
+    
+    find first tt-contract no-lock where tt-contract.log-error = yes no-error .
+    if available tt-contract
+    then do :
+      for each tt-contract no-lock where tt-contract.log-error = yes :
+        bad-contract-list = bad-contract-list + tt-contract.contract-prn-code + ", " .
+      end.
+      bad-contract-list = trim(bad-contract-list) .
+      bad-contract-list = trim(bad-contract-list, ",") .
+      message "Список договоров, которые НЕ будут сохранены: " skip
+              bad-contract-list skip
+              "Ошибки в файле impcontract.err" skip
+              "Продолжить?"
+      view-as alert-box question buttons yes-no update v-log .
+      if not v-log
+      then do :
+        return "cancel" .
+      end.
+    end .
 
     for each tt-contract no-lock where tt-contract.log-error = no and tt-contract.doc-type <> "":
-        find first b_contract EXCLUSIVE-LOCK where b_contract.contract-prn-code = tt-contract.contract-prn-code no-error .
+        find first b_contract EXCLUSIVE-LOCK where b_contract.contract-prn-code = tt-contract.contract-prn-code and b_contract.cli-code = tt-contract.cli-code
+        and b_contract.cli-type = tt-contract.cli-type no-error .
         if not AVAILABLE (b_contract) then 
         do:
             run gen-b-code in this-procedure ( input {&gbl-ct-code}, output f-code) no-error .
@@ -586,7 +637,11 @@ PROCEDURE create-proc :
             create b_contract .
             assign
                 b_contract.contract-code     = f-code
-                b_contract.contract-prn-code = tt-contract.contract-prn-code .
+                b_contract.contract-prn-code = tt-contract.contract-prn-code 
+                b_contract.cli-type          = tt-contract.cli-type
+                b_contract.cli-code          = tt-contract.cli-code
+                b_contract.cli-name          = tt-contract.cli-name
+                .
         end.
         assign
             b_contract.doc-type          = tt-contract.doc-type
@@ -603,7 +658,20 @@ PROCEDURE create-proc :
             b_contract.contract-date-end = tt-contract.contract-date-end
             b_contract.contract-prn-code = tt-contract.contract-prn-code
             .
-    
+      if tt-contract.edi then do:
+        find first b_contract-attr exclusive-lock where b_contract-attr.host-code = b_contract.host-code and b_contract-attr.contract-code = b_contract.contract-code
+        and b_contract-attr.attr-code = "contract-edi"  no-error .
+        if available (b_contract-attr) then b_contract-attr.attr-value = string(tt-contract.edi) .
+        else do:
+          create b_contract-attr .
+          assign
+          b_contract-attr.host-code = b_contract.host-code
+          b_contract-attr.contract-code = b_contract.contract-code
+          b_contract-attr.attr-code = "contract-edi"
+          b_contract-attr.attr-value = string (tt-contract.edi)
+          .
+        end.  
+      end.  
     end.
 
 END PROCEDURE.

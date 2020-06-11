@@ -264,6 +264,25 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       .
       { gbl/curr-r-b.i v-curr-r-b }
     end.
+    when {&edoc-proc_event_utd}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(160)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+    when {&edoc-proc_event_mark}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(165)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
+
     otherwise do:
       undo _main, return error substitute("&1 &2 &3&4Ошибка входных параметров процедуры rum-run.p&4Невернoе значение p-process = &5"
                                           ,vss-workfile
@@ -327,7 +346,9 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                                                             ,input v-curr-r-b
                                                             ,input ? /*p-cmd-proc-handle*/
                                                             ,input 0 /*temp-cmd.cmd-code пока*/
-                                                            ) no-error .
+                                                            ) .
+/* к сожалению этот код проглатывает ошибку и не пробрасывает ее на верх
+no-error .
 
         if error-status:error
         then do:
@@ -338,7 +359,8 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                                               , error-status:get-message(1)
                                               , return-value
                                                 ).
-        end. /*if error-status:error then do:*/
+
+        end. /*if error-status:error then do:*/ */
       end. /*for each buf_rule-by-call no-lock where*/
     end. /*do v-ii = 1 to */
   end. /*do v-jj*/

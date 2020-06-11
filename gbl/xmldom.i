@@ -460,7 +460,7 @@ on error undo, return error
     delete object v-doc-handle.
     return string( mverfile).
 end.
-// return yes.
+
 end . /* xmldom-load */
 /*==========================================*/
 

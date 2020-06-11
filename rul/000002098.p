@@ -224,6 +224,35 @@ if not this-procedure:persistent then do:
   run delete-procedure in this-procedure .
 end.
 
+define variable mySeqUtd as int64 no-undo init ?.
+define variable myStopGroucRec as logical no-undo init yes .
+procedure startStop:
+   myStopGroucRec = not myStopGroucRec.
+   if not myStopGroucRec
+   then
+      mySeqUtd = ?.
+end.
+procedure MySeqTable:
+   define input  parameter iTable       as character no-undo.
+   define input  parameter iseqnamehist as character no-undo.
+   define input  parameter idb-name     as character no-undo.
+   define output parameter Oseq         as int64 no-undo.
+   if myStopGroucRec
+   then
+      Oseq = ?.
+   else if iTable begins "utd"
+   then do:
+      if myseqUtd eq ?
+      then 
+         myseqUtd = dynamic-next-value(iseqnamehist,idb-name).
+      Oseq = myseqUtd.
+   end.
+   else
+      Oseq = ?. 
+   return.
+end.
+
+
 procedure proc-main :
 define variable v-ii as integer   no-undo .
 define variable v-current-b-code as integer no-undo .
@@ -269,12 +298,19 @@ run write-log  in p-log-handle (
     
   do transaction:
     v-err-message = "" .
+    subscribe "getNextseq" anywhere run-procedure "MySeqTable".
+    subscribe "startStopGroupRec" anywhere run-procedure "startStop".
+    MySeqUtd = ?.
+    
     parseSubObj = new parsesub ().
     parseSubObj:setParent(parparentproc, p-parent-handle, p-log-handle) .
 
     impSubObj = new impsubject (parseSubObj).
     parseSubObj:Parse1CRNSub(file-name).
+    unsubscribe "startStopGroupRec".
+    unsubscribe "getNextseq" .
 
+     
     &scop my-message substitute("пакет из файла &1 обработан без ошибок", file-name)
     {&display-message}.
   

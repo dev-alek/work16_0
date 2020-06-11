@@ -53,6 +53,8 @@ class ibs.th.bge.1crn.subjects.asubjects implements isubjects abstract:
   method public void Delete (iNum as int):
     
     find first ttListObj where ttListObj.iNum = iNum.
+    SubjectObjCurr = ttListObj.SubObj.
+    delete object SubjectObjCurr no-error.
     delete ttListObj.
     iNum = 0.
     for each ttListObj use-index pi:
@@ -71,4 +73,13 @@ class ibs.th.bge.1crn.subjects.asubjects implements isubjects abstract:
     return iCounter.
   end.
   
+  destructor public asubjects ( ):
+    
+      for each ttListObj:
+        SubjectObjCurr = ttListObj.SubObj.
+        delete object SubjectObjCurr no-error.
+      end.
+    
+  end destructor.
+
 end class.

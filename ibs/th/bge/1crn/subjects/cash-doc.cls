@@ -220,28 +220,34 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     sw:write-data-element ("operator", if tt-fin-doc.user-name-doc = ? then "" else user-name(tt-fin-doc.user-name-doc)).
     sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else string(tt-fin-doc.receiver-passport)).
 
-    find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
+   /* find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
     if available (tt-fin-doc-attr) then do:
-       if tt-fin-doc-attr.sumka ne ? 
+       if     tt-fin-doc-attr.sumka ne ?
+          and tt-fin-doc-attr.sumka ne ""
        then
           sw:write-data-element ("sumka", string(tt-fin-doc-attr.sumka)).
-       if tt-fin-doc-attr.banknote ne ? 
+       if     tt-fin-doc-attr.banknote ne ?
+          and tt-fin-doc-attr.banknote ne "" 
        then 
           sw:write-data-element ("banknote",  string(tt-fin-doc-attr.banknote)).
-       if tt-fin-doc-attr.bank-resive ne ? 
+       if     tt-fin-doc-attr.bank-resive ne ?
+          and tt-fin-doc-attr.bank-resive ne 0 
        then
           sw:write-data-element ("bank-resive",  string(tt-fin-doc-attr.bank-resive)).
-       if tt-fin-doc-attr.bank-deposit ne ? 
+       if     tt-fin-doc-attr.bank-deposit ne ?
+          and tt-fin-doc-attr.bank-deposit ne 0 
        then
           sw:write-data-element ("bank-deposit", string(tt-fin-doc-attr.bank-deposit)).
-       if tt-fin-doc-attr.pin ne ? 
+       if     tt-fin-doc-attr.pin ne ?
+          and tt-fin-doc-attr.pin ne "" 
        then 
           sw:write-data-element ("pin",  string(tt-fin-doc-attr.pin)).
-       if tt-fin-doc-attr.source_ ne ? 
+       if     tt-fin-doc-attr.source_ ne ?
+          and tt-fin-doc-attr.source_ ne "" 
        then
           sw:write-data-element ("source",  string(tt-fin-doc-attr.source_)).
     end.
-      
+    */ 
     sw:start-element ("ndss") .
     for each tt-fin-doc-tax no-lock where tt-fin-doc-tax.fin-doc-code = tt-fin-doc.fin-doc-code:
       sw:start-element ("nds") .

@@ -40,7 +40,7 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo". /*список клиентов через запятую, с которыми работает сокет-сервер*/
+  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
   define private variable req           as class     IRequest      no-undo.
   define private variable resp          as class     IResponse     no-undo.
@@ -51,6 +51,10 @@ class ibs.th.skt.SktServer:
     set.
 
   define public property QueryParam as character no-undo
+    get.
+    set.
+
+  define public property Path as character no-undo
     get.
     set.
 
@@ -72,6 +76,7 @@ class ibs.th.skt.SktServer:
     define variable kioskCommand  as class KioskCommand.
     define variable webCommand    as class webCommand.
     define variable atdclientcmd  as class atdclientcmd.
+    define variable AuthMarking   as class markingcmd.
 		
     clientControl = new ClientControl(). /*количество возможных комманд соответсвует кол-ву клиентов*/
     
@@ -100,7 +105,10 @@ class ibs.th.skt.SktServer:
     end.
     atdclientcmd = new atdclientcmd ().
     clientControl:SetCommandForClient(lookup("atdclient",clientList), atdclientcmd).
-
+    
+    AuthMarking = new markingcmd ().
+    clientControl:SetCommandForClient(lookup("AuthMarking",clientList), AuthMarking).
+    
   end constructor.
 
   

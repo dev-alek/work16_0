@@ -14,9 +14,14 @@ Author: Svetlana Chernova
 Creation date: 10/03/07
 
 */
+using ibs.th.str.alcohol.*.
+using ibs.th.gbl.sys.*.
+
 define input  parameter p-doc-code  like ub.trn-doc.doc-code no-undo .
 define output parameter p-err       as logical   no-undo .
 define output parameter p-mess      as character no-undo .
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -33,6 +38,7 @@ define variable vss-description as character no-undo init "Дополнительные провер
 { gbl/key-rec.i  }
 { trg/partcopy.i }
 { trg/partrsrv.i }
+{ ref/gds-attr.i }
 p-err = false .
 p-mess = "" .
 
@@ -52,9 +58,13 @@ define variable v-gds-dtl-rsrv-qnty as decimal   no-undo .
 define variable v-real-chg-qnty     as decimal   no-undo .
 define variable v-parts-recid       as integer   no-undo .
 define variable v-is-hold           as integer   no-undo .
-
+define variable v-gds-attr-value-old as character no-undo .
+define variable v-gds-attr-type      as character no-undo .
+    
 define variable v-doc-qnty as decimal   no-undo .
 define variable v-fact-qnty as decimal   no-undo .
+define variable objSrv as class objsrv no-undo .
+run gbl/getobjsrvhndl.p (input-output ObjSrv). 
 
 define variable v-fact-qnty-p as decimal   no-undo .
 define variable v-doc-qnty-p as decimal   no-undo .
@@ -225,22 +235,35 @@ on error undo, return error return-value
         v-fact-qnty = v-fact-qnty + buf_gds-dtl.fact-qnty .
         v-doc-qnty  = v-doc-qnty + buf_gds-dtl.doc-qnty .
     end.
-    
+    if ObjSrv:Env:Conf:IsMarking:IsMarking then do:
+    find first ub.goods no-lock where ub.goods.artic = buf_doc-line.artic and ub.goods.prod-code = buf_doc-line.prod-code and ub.goods.prod-type = buf_doc-line.prod-type no-error .
+    if available (ub.goods) then do:
+        RUN gds-attr-value (
+                        INPUT ub.goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT v-gds-attr-value-old,
+                        OUTPUT v-gds-attr-type
+                        ).
+    end.                        
+    end.
     find first goods no-lock where goods.artic = buf_doc-line.artic
                                and goods.prod-type = buf_doc-line.prod-type
                                and goods.prod-code = buf_doc-line.prod-code
                                .
+
     find first doc-fbr-gds no-lock where (doc-fbr-gds.out-code = buf_doc-line.doc-code or
                                           doc-fbr-gds.out-code = replace(buf_doc-line.doc-code, "=", "-") ) 
                                      and doc-fbr-gds.gds-code = goods.gds-code
                                      no-error .
     if available doc-fbr-gds
     then do :
+if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} and not ObjSrv:Env:Conf:IsMarking:GetValForType(v-gds-attr-value-old) then do:
       if v-fact-qnty-p <> v-doc-qnty  and v-fact-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по партиям и признакам для производства (fact) !!!"   .
           p-err = true .
           return.
       end.
+end.
       if v-doc-qnty-p <> v-doc-qnty and v-doc-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по партиям и признакам для производства (doc) !!!" .
           p-err = true .

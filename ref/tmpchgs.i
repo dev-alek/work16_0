@@ -35,6 +35,7 @@ field t_name as character
 field num_ as integer
 field uniq-key-rec as character
 field action as integer
+field fNotChange as logical 
 &if "{3}" = "update" &then
 field f_update as logical
 field f_can_update as logical
@@ -49,6 +50,12 @@ index pi is unique primary
 num_
 t_name
 f_name
+index
+Chan
+fnotChange  
+t_name
+f_name
+
 index imain uniq-key-rec
 .
 
@@ -389,7 +396,12 @@ PROCEDURE proc-full-temp-changes :
         end.
       &endif
 
-      if v-old-value <> v-new-value then do:
+      if v-old-value <> v-new-value
+        &if defined(VisibleKeyField) ne 0
+        &then
+        or lookup(v-field-name,v-main-pi-fld-lst) ne 0
+        &endif 
+      then do:
         create {&tt_name}.
         assign
           {&tt_name}.t_name = p-main-table
@@ -398,6 +410,7 @@ PROCEDURE proc-full-temp-changes :
           {&tt_name}.v_old  = trim( v-old-value )
           {&tt_name}.v_new  = trim( v-new-value )
           {&tt_name}.num_   = 0
+          {&tt_name}.fNotChange = v-old-value eq v-new-value
         .
       end.
     end.

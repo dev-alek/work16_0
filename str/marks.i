@@ -16,6 +16,7 @@ Creation date: 10/10/06
 
 */
 &GLOBAL-DEFINE excise-mark 'excise-mark':U
+&GLOBAL-DEFINE excise-mark-fbr 'excise-mark-fbr':U
 
 
 /* $Workfile$ e n d */

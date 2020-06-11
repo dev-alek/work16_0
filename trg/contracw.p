@@ -37,4 +37,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
 
+  run str/callnews.p (input "contract-attr", input (buffer ub.contract-attr:handle) ) no-error .
+  if error-status:error then do:
+    message
+      vss-workfile vss-revision vss-description skip   "Ошибка при передаче в новости договора" skip
+      error-status :get-message(1) skip    return-value skip     view-as alert-box error .
+    undo, return error.
+  end.
+  
+
 end. /* main-block */

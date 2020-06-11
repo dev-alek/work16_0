@@ -430,11 +430,16 @@ else do:
               , output varvalue
               , output vartype
               ) no-error .
-            /*для типа топлива СУГ работаем через кг*/
-            if varvalue = 'lgas' then 
-            do:
-              ptrlprop-inpptrl = {&calc-petrol-weight}.
-            end.
+            /*для типа топлива СУГ работаем через кг для метана через литры*/
+           case varvalue:
+             when 'lgas' then do:
+                ptrlprop-inpptrl = {&calc-petrol-weight}.
+             end.
+             when 'metan' then do:
+                ptrlprop-inpptrl = {&calc-petrol-volume}.
+             end.
+           end.
+
    
             if lookup( ptrlprop-inpptrl, "{&bef-calc-petrol-weight},{&bef-calc-petrol-weight-plus}":U ) > 0 then do:
               /* работаем через килограммы */

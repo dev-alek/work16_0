@@ -107,6 +107,9 @@ cost-rubl   ”четна€ цена в р_у_бл€х
 p-b-code    b-code на партию
 
 */
+using ibs.th.str.alcohol.*.
+using ibs.th.gbl.storage.*.
+
 define input        parameter parparentproc as widget-handle no-undo.
 define input        parameter p-action      as character no-undo .
 define parameter    buffer    rsrv-gds-dtl  for ub.gds-dtl .
@@ -114,6 +117,7 @@ define input-output parameter chg-qnty      as   decimal no-undo .
 define input-output parameter cost-base     as   decimal no-undo .
 define input-output parameter cost-rubl     as   decimal no-undo .
 define input        parameter p-b-code      as   integer no-undo .
+define input        parameter p-mark        as   character  no-undo .
 
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
@@ -130,6 +134,7 @@ define variable vss-description as character no-undo initial "ѕроцедура резервир
 { str/lib-trn.i  }
 
 define stream alc-rsrv .
+define stream tobacco-rsrv .
 
 { trg/partrqst.i }
 { trg/rsrgdsck.i }
@@ -151,7 +156,12 @@ define stream alc-rsrv .
 { trg/holdprts.i }
 { trg/partlist.i }
 
-
+&if defined(globobjSrv) eq 0
+&then 
+&glob globobjSrv yes
+def    var      objSrv          as class     ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
+&endif
 /* что резервируем: документ, товар, признак, объект */
 define variable v-obj-type   like ub.gds-dtl.obj-type  no-undo .
 define variable v-obj-code   like ub.gds-dtl.obj-code  no-undo .
@@ -192,6 +202,7 @@ define variable v-error-message        as character no-undo .
 define variable v-real-chg-qnty        as decimal   no-undo .
 define variable v-need-rsrv            as logical no-undo .
 define variable v-neg-ask as logical   no-undo .
+define variable v-mark                 as logical no-undo .
 do
 on error undo, return error return-value
 :
@@ -255,7 +266,7 @@ on error undo, return error return-value
     v-obj-type  = ub.trn-doc.obj-type
     v-obj-code  = ub.trn-doc.obj-code
   .
-
+if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-obj-type, v-obj-code):IsMarking then v-mark = yes .
   run check-input-parameters in this-procedure
     ( buffer ub.trn-doc
     ) no-error .
@@ -402,6 +413,8 @@ on error undo, return error return-value
       gds-obj совпадает с корневым prt-obj  и
       с парти€ми свободной зоны и зарезервированными из свободной зоны
   */
+  
+  if not v-mark then do:
   { gbl/gdscheck.i
     v-obj-type
     v-obj-code
@@ -425,7 +438,7 @@ on error undo, return error return-value
       view-as alert-box error .
     undo, return error return-value .
   end.
-
+  end.
 
   find ub.doc-line no-lock
     where ub.doc-line.doc-code  = v-doc-code

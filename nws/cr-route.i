@@ -687,6 +687,7 @@ PROCEDURE cre-dump-trn-doc:
     define buffer buf_doc-pl-attr          for ub.doc-pl-attr.
     define buffer buf_doc-pl-pump          for ub.doc-pl-pump.
     define buffer buf_parts-attr           for ub.parts-attr.
+    define buffer buf_marking-lines        for ub.marking-lines.
     define buffer buf_gen-attr             for ub.gen-attr.
     define buffer buf_doc-attr             for ub.doc-attr.
     define buffer buf_doc-fbr-gds          for ub.doc-fbr-gds.
@@ -695,6 +696,7 @@ PROCEDURE cre-dump-trn-doc:
     define buffer buf_chk-doc              for ub.chk-doc.
     define buffer buf_chk-gds              for ub.chk-gds.
     define buffer buf_chk-gds-attr         for ub.chk-gds-attr.
+    define buffer buf_marking-chk          for ub.marking-chk.
     define buffer buf_chk-doc-attr         for ub.chk-doc-attr.
     define buffer buf_c-chk-doc            for ub.c-chk-doc.
     define buffer buf_c-chk-gds            for ub.c-chk-gds.
@@ -766,7 +768,18 @@ PROCEDURE cre-dump-trn-doc:
            and buf_gen-attr.p-key = v-parts-uniq-key-rec
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
         run cre-route-dump( p-act-name, {&table_gen-attr}, (buffer buf_gen-attr:handle), dmp-ord, input-output rc-ord ).
-      end.                                  
+      end.
+      for each buf_marking-lines where
+            buf_marking-lines.obj-type = buf_parts.obj-type
+        and buf_marking-lines.obj-code = buf_parts.obj-code
+        and buf_marking-lines.in-code = buf_parts.in-code
+        and buf_marking-lines.out-code = buf_parts.out-code
+        and buf_marking-lines.part-code = buf_parts.part-code
+        and buf_marking-lines.prt-code = buf_parts.prt-code
+        and buf_marking-lines.gds-code = v-gds-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+        run cre-route-dump( p-act-name, {&table_marking-lines}, (buffer buf_marking-lines:handle), dmp-ord, input-output rc-ord ).        
+      end.
     end.
     for each  buf_parts-root where buf_parts-root.doc-code = buf_trn-doc.doc-code
     on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
@@ -955,6 +968,7 @@ PROCEDURE cre-dump-inkas:
     define buffer buf_c-chk-pay        for ub.c-chk-pay.
     define buffer buf_c-chk-discnt     for ub.c-chk-discnt.
     define buffer buf_c-chk-doc-attr   for ub.c-chk-doc-attr.
+    define buffer buf_marking-chk      for ub.marking-chk .
 
 
     find buf_inkas where rowid(buf_inkas) = tbl-row.
@@ -1001,6 +1015,10 @@ PROCEDURE cre-dump-inkas:
       for each  buf_chk-gds-attr where buf_chk-gds-attr.doc-code = buf_chk-doc.doc-code
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
         run cre-route-dump( p-act-name, {&table_chk-gds-attr}, (buffer buf_chk-gds-attr:handle), dmp-ord, input-output rc-ord ).
+      end.
+      for each buf_marking-chk where buf_marking-chk.doc-code = buf_chk-doc.doc-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+        run cre-route-dump( p-act-name, {&table_marking-chk}, (buffer buf_marking-chk:handle), dmp-ord, input-output rc-ord ).
       end.
       for each  buf_chk-pay where buf_chk-pay.doc-code = buf_chk-doc.doc-code
       on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
@@ -2781,5 +2799,74 @@ PROCEDURE cre-dump-layout:
 END PROCEDURE.
 
 
+PROCEDURE cre-dump-utd:
+  define input        parameter p-act-name  as   character no-undo .
+  define input        parameter tbl-row     as   rowid                  no-undo.
+  define input        parameter dmp-ord     like ub.route-dump.dump-ord no-undo.
+  define input-output parameter rc-ord      like ub.route-dump.rec-ord  no-undo.
+
+  do transaction
+  on error  undo, return error substitute( "&1 (cre-dump-utd). &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+  on stop   undo, return error substitute( "&1 (cre-dump-utd). stop", vss-include-info{&vssseq} )
+  on endkey undo, return error substitute( "&1 (cre-dump-utd). endkey", vss-include-info{&vssseq} )
+  :
+    define buffer buf_utd for ub.utd.
+    define buffer buf_utd-attr for ub.utd-attr.
+    define buffer buf_utd-lines for ub.utd-lines.
+    define buffer buf_utd-lines-attr for ub.utd-lines-attr.
+    define buffer buf_utd-marking-lines for ub.utd-marking-lines.
+    define buffer buf_utd-marking-lines-attr for ub.utd-marking-lines-attr.
+    define buffer buf_utd-err for ub.utd-err.
+    define buffer buf_utd-err-attr for ub.utd-err-attr.
+    define buffer buf_marking for ub.marking.
+    define buffer buf_marking-attr for ub.marking-attr.
+    
+    find buf_utd where rowid(buf_utd) = tbl-row.
+    
+    for each buf_utd-attr where buf_utd-attr.db-num = buf_utd.db-num and buf_utd-attr.doc-id = buf_utd.doc-id
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_utd-attr}, (buffer buf_utd-attr:handle), dmp-ord, input-output rc-ord ).
+    end.
+    
+    for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num and buf_utd-lines.doc-id = buf_utd.doc-id
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_utd-lines}, (buffer buf_utd-lines:handle), dmp-ord, input-output rc-ord ).
+    end.
+    for each buf_utd-lines-attr where buf_utd-lines-attr.db-num = buf_utd.db-num and buf_utd-lines-attr.doc-id = buf_utd.doc-id
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_utd-lines-attr}, (buffer buf_utd-lines-attr:handle), dmp-ord, input-output rc-ord ).
+    end.
+    
+    for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd.db-num and buf_utd-marking-lines.doc-id = buf_utd.doc-id
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_utd-marking-lines}, (buffer buf_utd-marking-lines:handle), dmp-ord, input-output rc-ord ).
+      for first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
+      on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+        run cre-route-dump( p-act-name, {&table_marking}, (buffer buf_marking:handle), dmp-ord, input-output rc-ord ).
+        for each buf_marking-attr where buf_marking-attr.mark = buf_marking.mark
+        on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+          run cre-route-dump( p-act-name, {&table_marking-attr}, (buffer buf_marking-attr:handle), dmp-ord, input-output rc-ord ).
+        end.
+      end.
+    end.
+
+    for each buf_utd-marking-lines-attr where buf_utd-marking-lines-attr.db-num = buf_utd.db-num and buf_utd-marking-lines-attr.doc-id = buf_utd.doc-id
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_utd-marking-lines-attr}, (buffer buf_utd-marking-lines-attr:handle), dmp-ord, input-output rc-ord ).
+    end.
+
+
+    for each buf_utd-err where buf_utd-err.db-num = buf_utd.db-num and buf_utd-err.doc-id = buf_utd.doc-id
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_utd-err}, (buffer buf_utd-err:handle), dmp-ord, input-output rc-ord ).
+    end.
+    
+    for each buf_utd-err-attr where buf_utd-err-attr.db-num = buf_utd.db-num and buf_utd-err-attr.doc-id = buf_utd.doc-id
+    on error undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) :
+      run cre-route-dump( p-act-name, {&table_utd-err-attr}, (buffer buf_utd-err-attr:handle), dmp-ord, input-output rc-ord ).
+    end.
+    
+  end.
+END PROCEDURE.
 
 /* $Workfile$   E n d */

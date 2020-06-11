@@ -46,6 +46,10 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
   define private variable userId_     as character no-undo.
   define private variable sn          as character no-undo.
   define private variable hndlSocket  as handle    no-undo.
+  define private variable duration    as integer   no-undo.
+  define private variable millisec    as integer   no-undo.
+  
+/*  define private variable isDocMarkOn as logical   no-undo.*/
   
     /*------------------------------------------------------------------------------
    Purpose:
@@ -53,10 +57,25 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
   ------------------------------------------------------------------------------*/
     
   constructor public TSDCommand (  ):
-    
+
     super ().
     
   end constructor.
+
+  method private void startStep(msg as char):
+    output to logduraton.txt append.
+    duration = etime.
+    put unformatted string (string (now) + "   " + msg + {&new-line}).
+    output close.
+  end.
+  
+  method private void endStep(msg as char):
+    output to logduraton.txt append.
+    duration = etime - duration.
+    put unformatted string ('Время выполнения шага - ' + string (int64 (duration / 1000), "HH:MM:SS") + "." + string ((duration / 1000 - int64 (duration / 1000)) * 1000) + {&new-line}).
+    put unformatted string (string (now) + "   " + msg  + {&new-line}).
+    output close.    
+  end.
 
   method public void Execute_( input req as memptr, output resp as class IResponse, hndlsocket1 as handle, list-par as char ):
     
@@ -82,7 +101,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     tsd:ObjType = entry (1, list-par, "?")
     tsd:ReqType = entry (3, list-par, "?")
     tsd:CurrDecSeparator = entry (4, list-par, "?")
-    tsd:IsAlcWB = if entry (5, list-par, "?") = "true" then true else false
+    tsd:IsMarkOn = if entry (5, list-par, "?") = "true" then true else false
     .
 
     os-command silent value( 'set pro >>procarch') .
@@ -119,6 +138,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     parseCSV().
     
     tsd:getWB().
+    tsd:getUTDDoc().
     
     delete object tsd no-error.
     
@@ -198,7 +218,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       tsd:ObjType = substring (hRoot:get-attribute("to"), 1, 3)
       tsd:ReqType = hRoot:get-attribute("item")
       tsd:CurrDecSeparator = hRoot:get-attribute("currDecSeparator")
-      tsd:IsAlcWB = if hRoot:get-attribute("MarksReg") = "true" then true else false
+      tsd:IsMarkOn = if hRoot:get-attribute("MarksReg") = "true" then true else false
       .
     hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
     case tsd:ReqType :
@@ -209,16 +229,28 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         end.
       when "TH_ALL" then 
         do:
+          startStep('Начало кеширования справочника пользователей.').
           tsd:WriteUsers().
+          endStep('Завершено кеширование справочника пользователей.').
+          startStep('Начало кеширования справочника объектов.').
           tsd:WriteObjects().
+          endStep('Завершено кеширование справочника объектов.').
+          startStep('Начало кеширования справочника контрагентов.').          
           tsd:WriteClients().
+          endStep('Завершено кеширование справочника контрагентов.').
+          startStep('Начало кеширования справочника товаров.').
           tsd:WriteGoods().
+          endStep('Завершено кеширование справочника товаров.').
+          startStep('Начало кеширования справочника штрих-кодов.').
           tsd:WriteBarcodes().
+          endStep('Завершено кеширование справочника штрих-кодов.').
           str = 'dictionaries'.
         end.
       when "TH_WB" then 
         do:
+          startStep('Начало кеширования документов.').
           tsd:GetWB().
+          endStep('Завершено кеширование справочника штрих-кодов.').
         end.
       when "TH_users" then 
         do:
@@ -366,7 +398,9 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     define buffer buf_prod-bc   for ub.prod-bc.
     define buffer buf_place     for ub.place.
     define buffer bfTempDocLine for TempDocLine.
+    define variable myflagsDoc     as class flagsdoc     no-undo.
     
+    myflagsDoc = new flagsdoc ().
 
     iDbNum = tsd:GetDbNum().
 
@@ -384,7 +418,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       import TempTrnLineMT .
     end. 
     input close.
-
+ 
     input from value(search("MT_MarkLinesSend.txt")) convert source "UTF-8".
     repeat:  
       create TempMarkLineMT.
@@ -397,7 +431,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       empty temp-table TempTrnDoc.
       empty temp-table TempDocLine.
       empty temp-table TempMarkLine.
-      
+
       case TempTrnDocMT.DocType:
         when "ExtSalesWB" then do:
           docType = {&TDEDT_Ras_Vnesh}.
@@ -414,7 +448,20 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         when "Inv" then do:
           docType = {&TDEDT_Inv}.
         end.
+        when "Introduce" then do:
+          docType = "UTD_Introduce".
+        end.
+        when "UTD" then do:
+          docType = "UTD_DOC".
+        end.
+        when "InvMarks" then do:
+          docType = "invmark".
+        end.
+        when "InvIntroduce" then do:
+          docType = "InvIntroduce".
+        end.
       end case.
+        
       userId_ = TempTrnDocMT.UserID_.
       
       find first ub.user-login where ub.user-login.db-num = iDbNum and ub.user-login.user-id = userId_ no-lock no-error.  
@@ -428,8 +475,11 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         TempTrnDoc.cli-code     = integer(TempTrnDocMT.ClientID)
         TempTrnDoc.obj-type     = TempTrnDocMT.ObjectType
         TempTrnDoc.obj-code     = TempTrnDocMT.ObjectID
-        TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + hRow:get-attribute("UserName")
+        TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + TempTrnDocMT.UserName
+        TempTrnDoc.Status_      = TempTrnDocMT.Status_
+        TempTrnDoc.Flags_       = TempTrnDocMT.Flags_
       .
+      myflagsDoc:setFlagsToInt(TempTrnDocMT.Flags_).
 
       for each TempTrnLineMT where TempTrnLineMT.docname = TempTrnDocMT.DocName:
 
@@ -440,7 +490,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
           RowSum    =  decimal (cFactQnty) * decimal (cPriceRubl)
           .
         /* для помарочного учета объеденим все линии по товару и будем резервировать количество по маркам в rsrv-dtl.p*/
-        if tsd:IsAlcWB and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
+        if myflagsDoc:isDocMarkOn and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
         then do:
           find first TempDocLine no-lock 
             where TempDocLine.gds-code = integer (TempTrnLineMT.goodsid) 
@@ -456,11 +506,13 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               TempDocLine.doc-qnty     = decimal(cDocQnty)
               TempDocLine.price-rubl   = ?
               TempDocLine.RowSum       = ?
+              TempDocLine.PartIDTH     = TempTrnLineMT.PartIDTH
               .
           end.
           else do:
             assign
               TempDocLine.fact-qnty    = TempDocLine.fact-qnty + decimal(cFactQnty)
+              TempDocLine.PartIDTH     = TempDocLine.PartIDTH + {&delim-par} + TempTrnLineMT.PartIDTH 
             .
           end.
   
@@ -480,7 +532,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         end.
       end.
       
-      for each TempMarkLineMT where TempMarkLineMT.DocName = TempMarkLine.DocName:
+      for each TempMarkLineMT where TempMarkLineMT.DocName = TempTrnDoc.ext-doc-code:
       
         create TempMarkLine.
         assign
@@ -496,6 +548,34 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         when {&TDEDT_Inv} then 
           do:
             if tsd:ImpInventory (table TempTrnDoc, table TempDocLine, userId_)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "UTD_DOC" then 
+          do:
+            if tsd:ImpUTDDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "InvIntroduce" then 
+          do:
+            if tsd:ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "invmark" then 
+          do:
+            if tsd:ImpInvMarksDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "UTD_Introduce" then 
+          do:
+            if tsd:ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
             then ErrStatus = false.
             else ErrStatus = true.
 
@@ -553,9 +633,6 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
             .
             
           end.
-          
-          
-          
           
           if tsd:ImpWB(table TempTrnDoc, table TempDocLine, table TempMarkLine, userId_)
           then ErrStatus = false.
@@ -622,6 +699,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               TempTrnDoc.obj-type     = hRow:get-attribute("ObjectType")
               TempTrnDoc.obj-code     = integer (hRow:get-attribute("ObjectID"))
               TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + hRow:get-attribute("UserName")
+              TempTrnDoc.Status_      = hRow:get-attribute("Status")
               .
             find first ub.user-login where ub.user-login.db-num = iDbNum and ub.user-login.user-id = userId_ no-lock no-error.  
             userId_ = hRow:get-attribute("UserID").
@@ -636,7 +714,8 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               .
 
             /* для помарочного учета объеденим все линии по товару и будем резервировать количество по маркам в rsrv-dtl.p*/
-            if tsd:IsAlcWB and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
+            if (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
+            and not TempTrnDoc.Status_ = "НОВ"
             then do:
               find first TempDocLine no-lock where TempDocLine.gds-code = integer (hRow:get-attribute("GoodsID")) and TempDocLine.b-code = (hRow:get-attribute("BC")) no-error.
               if not available (TempDocLine)
@@ -733,9 +812,8 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
       then assign is-ProcArch64 = true.
     input close.
-
+    startStep("Начало конвертации справочника.").
     os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
-    
     if is-ProcArch64 
     then do:
       os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
@@ -758,6 +836,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       input from value (file-info:file-name) binary no-convert.
       import mbuffer1.
       input close.
+      endStep("Завершена конвертация справочника.").
     end.
     else 
     do:
@@ -812,6 +891,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     set-size(mbuffer) = 0.
     set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
     put-string(mbuffer,1) = tempLongCh.
+    startStep("Начало отправки справочника на ТСД.").
     assign
       glog = hndlsocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
     if not glog 
@@ -826,6 +906,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
         LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
         ErrStatus = true.
       end.
+    endStep("Завершена отправка справочника на ТСД.").
     return true.
       
   end method.

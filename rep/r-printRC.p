@@ -151,7 +151,7 @@ define variable v-date_to   as character no-undo .
   if string(entry(3,string(p-date_to),"/")) >= "90" then v-date_to = "19" + string(entry(3,string(p-date_to),"/")) + "_" + string(entry(2,string(p-date_to),"/")) + "_" + string(entry(1,string(p-date_to),"/")) .
   else v-date_to = "20" + string(entry(3,string(p-date_to),"/")) + "_" + string(entry(2,string(p-date_to),"/")) + "_" + string(entry(1,string(p-date_to),"/")) .
   find first ub.db no-lock no-error .
-  v-report-name-html = session:temp-directory + "VERRC_" + string(substring (ub.db.db-key,1,4)) + "_TH_15_0_" + string(v-today,"99.99.99") + "_" + string(v-time) + ".html".
+  v-report-name-html = session:temp-directory + "VERRC_" + string(substring (ub.db.db-key,1,4)) + "_TH_16_0_" + string(v-today,"99.99.99") + "_" +  replace (string(time,"HH:MM:SS"),":","") + ".html".
   
   /*вызов процедуры печати шапки отчета*/      
   output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
@@ -350,6 +350,20 @@ if p-log then do:
     ,input v-report-name-html
     ).
 end.
+else do:
+  define variable v-report-name       as character no-undo .
+  define variable v-fill-path-RepView as character no-undo.
+    if search("exe\ReportViewer\reportviewer.exe") <> ? then
+  do:
+    v-fill-path-RepView = search("exe\ReportViewer\reportviewer.exe").
+  end.
+  else
+  do:
+    message "Не найдена программа просмотра отчёта!" view-as alert-box error.
+  end.
+
+  os-command no-wait value(v-fill-path-RepView + " false " + v-report-name-html).
+end.  
 
 end.
   

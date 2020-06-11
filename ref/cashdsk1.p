@@ -1123,7 +1123,7 @@ ON STOP UNDO, RETURN ERROR return-value :
   ub.cash-desk.remote    = p-remote
   ub.cash-desk.version   = p-version
   ub.cash-desk.autonomy  = p-autonomy
-  ub.cash-desk.is-del    = p-is-del
+  ub.cash-desk.is-del    = (if p-is-del then not ub.cash-desk.is-del else no)
   ub.cash-desk.registration-code = p-registration-code
   ub.cash-desk.serial-code = p-serial-code
   ub.cash-desk.fr-type = p-fr-type

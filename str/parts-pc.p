@@ -17,6 +17,7 @@ Creation date: 03/03/10
 Дата создания1: 03/24/06
 
 */
+using ibs.th.str.alcohol.*.
 
 define input parameter parparentproc    as widget-handle no-undo .
 define input parameter par-doc-code like ub.trn-doc.doc-code no-undo .
@@ -28,6 +29,8 @@ define input parameter par-fact-time    like ub.trn-doc.fact-time no-undo .
 define input parameter par-shift-date   like ub.trn-doc.shift-date no-undo .
 define input parameter par-shift-num   like ub.trn-doc.shift-num no-undo .
 define input parameter par-shift-name as character no-undo.
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .

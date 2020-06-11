@@ -42,6 +42,9 @@ Creation date: 05/08/07
 а значит gds-dtl.fact-qnty может быть больше gds-dtl.doc-qnty.
 
 */
+using Progress.Lang.*.
+using ibs.th.gbl.*.
+using ibs.th.gbl.sys.*.
 
 define input parameter v-doc-code like ub.trn-doc.doc-code no-undo .
 
@@ -59,6 +62,7 @@ define variable vss-description as character no-undo initial "Создание документо
 { str/trdcalib.i }
 { cmp/library.i  }
 { gbl/lineattr.i }
+{ ref/gds-attr.i }
 
 define variable same_db as logical   no-undo initial no . /* при внутренних перемещениях в одной и той же УБД */
 define variable v-today as date      no-undo.
@@ -84,7 +88,8 @@ define variable v-doc-pl-rowid      as rowid     no-undo .
 define variable v-event-code as character no-undo .
 define variable is-petrolium               as logical   no-undo .
 define variable is-pieces                  as logical   no-undo .
-
+    define variable v-gds-attr-value-old as character no-undo .
+    define variable v-gds-attr-type      as character no-undo .
 define variable v-ext-doc-type as character no-undo .
 
 define variable v-country-code as integer   no-undo .
@@ -101,6 +106,9 @@ define buffer buf-first_trn-doc for ub.trn-doc .
 define buffer buf-first_parts   for ub.parts .
 define buffer doc-obj           for ub.clients .
 define buffer buf_cliobj        for ub.clients .
+
+define variable objSrv as class objsrv no-undo .
+run gbl/getobjsrvhndl.p (input-output ObjSrv). 
 
 { str/in-vatp.i def }
 
@@ -825,7 +833,83 @@ end case .
         buf_parts.part-code = if available buf_doc-pl-attr then buf_doc-pl-attr.attr-value 
           else (if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds) then buf_parts.out-code + "," + ub.parts.part-code else ub.parts.part-code)
       .
-      
+          /*определение атрибута товара на маркирование*/
+
+    define buffer buf_marking for ub.marking .
+    define buffer buf_marking-lines for ub.marking-lines .
+
+    RUN gds-attr-value (
+                        INPUT ub.goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT v-gds-attr-value-old,
+                        OUTPUT v-gds-attr-type
+                        ).
+                            
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ub.parts.obj-type, ub.parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then do:
+      for each ub.marking-lines no-lock where ub.marking-lines.gds-code = ub.goods.gds-code
+                                            and ub.marking-lines.part-code = ub.parts.part-code
+                                            and ub.marking-lines.prt-code = ub.parts.prt-code
+                                            and ub.marking-lines.in-code = ub.parts.in-code
+                                            and ub.marking-lines.out-code = ub.parts.out-code
+                                            and ub.marking-lines.obj-code = ub.parts.obj-code
+                                            and ub.marking-lines.obj-type = ub.parts.obj-type,
+            first buf_marking exclusive-lock where buf_marking.mark = ub.marking-lines.mark:
+    
+            find first buf_marking-lines no-lock where buf_marking-lines.in-code    = buf_parts.in-code
+                                                   and buf_marking-lines.out-code   = buf_parts.out-code
+                                                   and buf_marking-lines.part-code  = buf_parts.part-code
+                                                   and buf_marking-lines.prt-code   = buf_parts.prt-code
+                                                   and buf_marking-lines.obj-code   = buf_parts.obj-code
+                                                   and buf_marking-lines.obj-type   = buf_parts.obj-type
+                                                   and buf_marking-lines.gds-code   = ub.marking-lines.gds-code
+                                                   and buf_marking-lines.mark       = ub.marking-lines.mark
+                                                   no-error .
+            if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then do: /*Если внутренний возврат*/
+                if not ub.marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then do:  /*Если марка не проверена*/
+                    if not available buf_marking-lines then do :
+                      create buf_marking-lines .
+                      buffer-copy ub.marking-lines to buf_marking-lines
+                      assign
+                        buf_marking-lines.out-code = buf_parts.out-code
+                        buf_marking-lines.obj-code = buf_parts.obj-code
+                        buf_marking-lines.obj-type = buf_parts.obj-type
+                      .
+                    end .                                                    
+                    assign
+                      buf_marking.obj-code = buf_trn-doc.obj-code
+                      buf_marking.obj-type = buf_trn-doc.obj-type
+                      buf_marking.sts      = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+                    .
+                end.
+            end.
+            else do:
+                if not available buf_marking-lines  then do :
+                  create buf_marking-lines .
+                  buffer-copy ub.marking-lines to buf_marking-lines
+                  assign
+                    buf_marking-lines.out-code = buf_parts.out-code
+                    buf_marking-lines.obj-code = buf_parts.obj-code
+                    buf_marking-lines.obj-type = buf_parts.obj-type
+                    buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB
+                  .
+                end .                                       
+                assign
+                  buf_marking.obj-code = buf_trn-doc.obj-code
+                  buf_marking.obj-type = buf_trn-doc.obj-type
+                  buf_marking.sts      = ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+                .
+                run str/callnews.p                                         
+                  (input {&table_marking}
+                  ,input (buffer buf_marking :handle)
+                  ) no-error .
+                if error-status:error then 
+                do:
+                end.
+            end.  
+        end.  /* for each ub.marking-lines */
+    end.
+           
+    
       if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Object} or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} and available (ub.alc-type-gds)) then do :
           find first ub.goods no-lock where ub.goods.artic      = buf_parts.artic
                                         and ub.goods.prod-type  = buf_parts.prod-type
@@ -1333,27 +1417,77 @@ end case .
   if error-status :error then do:
     undo, return error return-value.
   end.
+  
+  
 
-/*  if  g#news*/
-/*  and doc-obj.db-num <> 0 or clients.db-num <> 0 then do:*/
-/*    /* маршрутизируем документ для отправки в УБД */*/
-/*    /* здесь обрабатывается случай  */*/
-/*  теперь все должно уходить стандартно, так же как и с обычными документами!!! */
-/*    run str/callnews.p*/
-/*      ( input "trn-doc"*/
-/*       ,input (buffer buf_trn-doc:handle)*/
-/*      ) no-error .*/
-/*    if error-status :error*/
-/*    then do:*/
-/*      message*/
-/*        vss-workfile vss-revision vss-description skip*/
-/*        "Ошибка при отправке документа в новости" skip*/
-/*        "Документ внутреннего перемещения" buf_trn-doc.doc-code skip*/
-/*        "Объект" buf_trn-doc.obj-type buf_trn-doc.obj-code skip*/
-/*        view-as alert-box error .*/
-/*      undo, return error return-value .*/
-/*    end.*/
-/*  end.*/
+  /*  if  g#news*/
+  /*  and doc-obj.db-num <> 0 or clients.db-num <> 0 then do:*/
+  /*    /* маршрутизируем документ для отправки в УБД */*/
+  /*    /* здесь обрабатывается случай  */*/
+  /*  теперь все должно уходить стандартно, так же как и с обычными документами!!! */
+  /*    run str/callnews.p*/
+  /*      ( input "trn-doc"*/
+  /*       ,input (buffer buf_trn-doc:handle)*/
+  /*      ) no-error .*/
+  /*    if error-status :error*/
+  /*    then do:*/
+  /*      message*/
+  /*        vss-workfile vss-revision vss-description skip*/
+  /*        "Ошибка при отправке документа в новости" skip*/
+  /*        "Документ внутреннего перемещения" buf_trn-doc.doc-code skip*/
+  /*        "Объект" buf_trn-doc.obj-type buf_trn-doc.obj-code skip*/
+  /*        view-as alert-box error .*/
+  /*      undo, return error return-value .*/
+  /*    end.*/
+  /*  end.*/
+
+  /*обнуляем фактическое кол-во для приходной накладной, для продукции маркированной*/
+
+
+  define variable v-qnty as decimal no-undo .
+  if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then 
+  do:
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then 
+    do: /*Если внутренний возврат*/
+      for each ub.doc-line no-lock where ub.doc-line.doc-code = buf_trn-doc.doc-code: 
+
+        for each ub.marking-lines no-lock where ub.marking-lines.gds-code = ub.goods.gds-code
+          and ub.marking-lines.out-code = ub.trn-doc.doc-code
+          and ub.marking-lines.obj-code = ub.trn-doc.obj-code
+          and ub.marking-lines.obj-type = ub.trn-doc.obj-type,
+          first buf_marking exclusive-lock where buf_marking.mark = ub.marking-lines.mark:
+        
+          if ub.marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB then 
+          do:
+
+                                             
+            assign
+              buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB
+              .
+          end.
+
+        end.
+      end.
+    end.
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
+    do:
+      for each buf_doc-line exclusive-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code,
+        first buf_gds-dtl exclusive-lock where buf_gds-dtl.doc-code = buf_doc-line.doc-code and buf_gds-dtl.artic = buf_doc-line.artic and
+        buf_gds-dtl.prod-code = buf_doc-line.prod-code and buf_gds-dtl.prod-type = buf_doc-line.prod-type:
+        /*проверять на маркирование?*/
+        v-qnty = v-qnty + buf_doc-line.fact-qnty .
+        buf_doc-line.fact-qnty = 0 .
+        buf_gds-dtl.fact-qnty = buf_doc-line.fact-qnty .
+        for first buf_parts exclusive-lock where buf_parts.out-code = buf_doc-line.doc-code and buf_parts.artic = buf_doc-line.artic and
+          buf_parts.prod-code = buf_doc-line.prod-code and buf_parts.prod-type = buf_doc-line.prod-type and buf_parts.obj-code = buf_doc-line.obj-code and
+          buf_parts.obj-type = buf_doc-line.obj-type:
+          buf_parts.fact-qnty = buf_doc-line.fact-qnty .
+        end.  
+      end.
+      buf_trn-doc.fact-qnty = buf_trn-doc.fact-qnty - v-qnty .
+    end.   
+  end.
+/*        buf_gds-dtl.fact-qnty = 0 .*/
 end.
 
 procedure get-country-code :

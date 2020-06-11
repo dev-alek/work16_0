@@ -570,6 +570,12 @@ attr-srv-auth-ASU
 "egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys"
 attr-egais-host }
 
+/*Электронный документооборот*/
+{ cmp/cr-prep.i 1 attr-marking marking " " marking }
+{ cmp/cr-prepc.i 1 prop-list-attr-marking
+"marking-EDO,marking-type,marking-manual"
+attr-marking }
+
 /*набор опций работы с документами МЦ*/
 { cmp/cr-prep.i 1 attr-mercur                 mercur                  " " mercur }
 { cmp/cr-prepc.i 1 prop-list-attr-mercur
@@ -577,8 +583,8 @@ attr-egais-host }
 attr-mercur }
 /* сюда добавлять новые названия атрибутов объектов TH */
 
-run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn-vbrr,cpdoc,CPWithdrawal':U" ) .
-run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-name 'РРН-ВБРР,Остальные,Суммы для выдачи наличными':U" ) .
+run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-code 'rrn,cpdoc,RTA_RefundExport,CPAgreement,CPWithdrawal':U" ) .
+run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr-name 'РРН,Остальные,Перевод на моб.счет(ТСО),По аннулированному чеку,Суммы для выдачи наличными':U" ) .
 
 
 /* список атрибутов объектов TH */
@@ -642,6 +648,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
 ,{&bef-attr-mercur}~
+,{&bef-attr-marking}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list {&thbjattr-list}" ).
 
@@ -712,6 +719,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
 ,{&bef-attr-mercur}~
+,{&bef-attr-marking}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list-all {&thbjattr-list-all}" ).
 

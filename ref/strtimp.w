@@ -24,28 +24,31 @@ Creation date: 04/10/06
 
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
-DEFINE INPUT PARAMETER vattaxcd as integer no-undo.
-DEFINE INPUT PARAMETER slttaxcd as integer no-undo.
-define input parameter custvalue as character no-undo .
-define input parameter tnvedimp as logical no-undo .
-DEFINE OUTPUT PARAMETER v_os-file   AS CHAR NO-UNDO INIT "".
-DEFINE OUTPUT PARAMETER choice      AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-artic     AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-prod      AS integer NO-UNDO.  /*в виде орг5 или чел182*/
-DEFINE OUTPUT PARAMETER p-name      AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-engl-name AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-unit-base AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-VAT-code  AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-SLT-code  AS integer NO-UNDO.
-DEFINE OUTPUT PARAMETER p-struct      AS integer NO-UNDO.
-define output parameter p-tnved     as integer no-undo .
+DEFINE INPUT PARAMETER iOnlyfile     as logical no-undo.
+DEFINE INPUT PARAMETER vattaxcd      as integer no-undo.
+DEFINE INPUT PARAMETER slttaxcd      as integer no-undo.
+define input parameter custvalue     as character no-undo .
+define input parameter tnvedimp      as logical no-undo .
+DEFINE OUTPUT PARAMETER v_os-file    AS CHAR    NO-UNDO INIT "".
+DEFINE OUTPUT PARAMETER choice       AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-artic      AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-prod       AS integer NO-UNDO.  /*в виде орг5 или чел182*/
+DEFINE OUTPUT PARAMETER p-name       AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-engl-name  AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-unit-base  AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-VAT-code   AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-SLT-code   AS integer NO-UNDO.
+DEFINE OUTPUT PARAMETER p-struct     AS integer NO-UNDO.
+define output parameter p-tnved      as integer no-undo .
 define output parameter p-attrib     as integer no-undo .
 define output parameter p-destin     as integer no-undo .
-define output parameter p-sert     as integer no-undo .
-define output parameter p-user-rule     as integer no-undo .
-define output parameter p-alpha1    as integer no-undo .
-define output parameter p-grp-code  as integer no-undo .
-
+define output parameter p-sert       as integer no-undo .
+define output parameter p-user-rule  as integer no-undo .
+define output parameter p-alpha1     as integer no-undo .
+define output parameter p-grp-code   as integer no-undo .
+define output parameter p-service    as integer no-undo .
+define output parameter p-gds-code   as integer no-undo .
+define output parameter p-mark       as integer no-undo .
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":u .
@@ -81,6 +84,9 @@ DEFINE stream gds-file.
 &SCOPED-DEFINE p-prod 13
 &SCOPED-DEFINE p-alpha1 14
 &SCOPED-DEFINE p-grp-code 15
+&SCOPED-DEFINE p-service 16
+&SCOPED-DEFINE p-gds-code 17
+&SCOPED-DEFINE p-mark 18
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -99,11 +105,11 @@ DEFINE stream gds-file.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-atribut B-exit b-quit B-check B-Help ~
 B-file file-name RS-codir T-engl-name T-unit-base T-VAT-code T-SLT-code ~
-T-struct T-tnved T-destin T-attrib T-user-rule T-sert T-prod T-alpha1 T-grp-code ~
-text-string
+T-struct T-tnved T-destin T-attrib T-user-rule T-sert T-prod T-grp-code T-service T-gds-code ~
+T-mark text-string
 &Scoped-Define DISPLAYED-OBJECTS file-name T-artic RS-codir T-name ~
 T-engl-name T-unit-base T-VAT-code T-SLT-code T-struct T-tnved T-destin ~
-T-attrib T-user-rule T-sert T-prod T-alpha1 T-grp-code text-string
+T-attrib T-user-rule T-sert T-prod T-alpha1 T-grp-code T-service T-gds-code text-string T-mark
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -169,9 +175,9 @@ DEFINE VARIABLE RS-codir AS INTEGER
 
 DEFINE RECTANGLE RECT-atribut
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 41.75 BY 15.83.
+     SIZE 41.75 BY 18.83.
 
-DEFINE VARIABLE T-alpha1 AS LOGICAL INITIAL no
+DEFINE VARIABLE T-alpha1 AS LOGICAL INITIAL yes
      LABEL "Страна"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -181,10 +187,20 @@ DEFINE VARIABLE T-artic AS LOGICAL INITIAL yes
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
      
-DEFINE VARIABLE T-grp-code AS LOGICAL INITIAL no
+DEFINE VARIABLE T-grp-code AS LOGICAL INITIAL yes
      LABEL "Код группы"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE T-service AS LOGICAL INITIAL yes
+     LABEL "Услуга"
+     VIEW-AS TOGGLE-BOX
+     SIZE 29 BY 1 NO-UNDO.   
+     
+DEFINE VARIABLE T-gds-code AS LOGICAL INITIAL yes
+     LABEL "Код товара"
+     VIEW-AS TOGGLE-BOX
+     SIZE 29 BY 1 NO-UNDO.   
 
 DEFINE VARIABLE T-attrib AS LOGICAL INITIAL no
      LABEL "Характеристики товара"
@@ -196,7 +212,7 @@ DEFINE VARIABLE T-destin AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-engl-name AS LOGICAL INITIAL no
+DEFINE VARIABLE T-engl-name AS LOGICAL INITIAL yes
      LABEL "Англ. название"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -206,7 +222,7 @@ DEFINE VARIABLE T-name AS LOGICAL INITIAL yes
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-prod AS LOGICAL INITIAL no
+DEFINE VARIABLE T-prod AS LOGICAL INITIAL yes
      LABEL "Произ-ль (например орг176)"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -231,7 +247,7 @@ DEFINE VARIABLE T-tnved AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-unit-base AS LOGICAL INITIAL no
+DEFINE VARIABLE T-unit-base AS LOGICAL INITIAL yes
      LABEL "Основная единица измерения"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
@@ -241,8 +257,13 @@ DEFINE VARIABLE T-user-rule AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-VAT-code AS LOGICAL INITIAL no
+DEFINE VARIABLE T-VAT-code AS LOGICAL INITIAL yes
      LABEL "Код НДС"
+     VIEW-AS TOGGLE-BOX
+     SIZE 29 BY 1 NO-UNDO.
+
+DEFINE VARIABLE T-Mark AS LOGICAL INITIAL yes
+     LABEL "Тип маркировки"
      VIEW-AS TOGGLE-BOX
      SIZE 29 BY 1 NO-UNDO.
 
@@ -272,8 +293,11 @@ DEFINE FRAME Dialog-Frame
      T-prod AT ROW 17.08 COL 24.5
      T-alpha1 AT ROW 18.08 COL 24.5
      T-grp-code AT ROW 19.08 COL 24.5
-     ii AT ROW 20 COL 2
-     text-string AT ROW 21 COL 2.13 NO-LABEL
+     T-service AT ROW 20.08 COL 24.5
+     T-gds-code AT ROW 21.08 COL 24.5
+     T-Mark AT ROW 22.08 COL 24.5
+     ii AT ROW 23.1 COL 2
+     text-string AT ROW 24.1 COL 2.13 NO-LABEL
      "Кодировка" VIEW-AS TEXT
           SIZE 15.75 BY .92 AT ROW 4.21 COL 3.38
      "Импортируемые поля" VIEW-AS TEXT
@@ -347,10 +371,11 @@ DO:
   define variable NEN as integer No-UNDO.
   define variable p-text as char no-undo.
   define variable p-int as integer no-undo.
-  define variable vars as integer no-undo EXTENT 15.
+  define variable vars as integer no-undo EXTENT 18.
   define variable lok as logical no-undo.
   define buffer buf_country for ub.country.
   define buffer buf_gds-grp for ub.gds-grp .
+  
   assign
   file-name
   v_os-file = file-name
@@ -371,6 +396,9 @@ DO:
   T-user-rule
   T-alpha1
   T-grp-code
+  T-service
+  T-gds-code
+  T-Mark
   NEN = NEN + integer(T-artic)
   vars[{&p-artic}] = NEN
   p-artic = vars[{&p-artic}]
@@ -416,13 +444,27 @@ DO:
    NEN = NEN + integer(T-grp-code)
     vars[{&p-grp-code}] = if T-grp-code then NEN else 0
     p-grp-code = vars[{&p-grp-code}]
-
+   NEN = NEN + integer(T-service)
+    vars[{&p-service}] = if T-service then NEN else 0
+    p-service = vars[{&p-service}]
+   NEN = NEN + integer(T-gds-code)
+    vars[{&p-gds-code}] = if T-gds-code then NEN else 0
+    p-gds-code = vars[{&p-gds-code}]
+ NEN = NEN + integer(T-mark)
+    vars[{&p-mark}] = if T-mark then NEN else 0
+    p-mark = vars[{&p-mark}]
+  
   .
-
   IF v_os-file = "" or v_os-file = ? then do:
     message "Не определен файл импорта!" view-as alert-box ERROR.
     return no-apply.
   END.
+  if substring(v_os-file, length(v_os-file) - 2) = "xls"
+  or substring(v_os-file, length(v_os-file) - 3) = "xlsx"
+  then do :
+      message "Для файлов Excel проверка не возможна" view-as alert-box.
+      return no-apply .
+  end.
   IF (T-SLT-code OR T-VAt-code) AND NOT T-unit-base then do:
     message "Невозможно импортировать код НДС и/или код НП" SKIP
             "без импорта основной единицы измерения" view-as alert-box ERROR.
@@ -612,7 +654,7 @@ END.
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
   define variable NEN as integer No-UNDO.
-  define variable vars as integer no-undo EXTENT 15.
+  define variable vars as integer no-undo EXTENT 18.
   assign
   file-name
   v_os-file = file-name
@@ -633,6 +675,9 @@ DO:
   T-user-rule
   T-alpha1
   T-grp-code
+  T-service
+  T-gds-code
+  T-mark
   NEN = NEN + integer(T-artic)
   vars[{&p-artic}] = NEN
   p-artic = vars[{&p-artic}]
@@ -678,8 +723,25 @@ DO:
   p-alpha1 = vars[{&p-alpha1}]
   NEN = NEN + integer(T-grp-code)
   vars[{&p-grp-code}] = if T-grp-code then NEN else 0
-  p-alpha1 = vars[{&p-grp-code}]
+  p-grp-code = vars[{&p-grp-code}]
+  NEN = NEN + integer(T-service)
+  vars[{&p-service}] = if T-service then NEN else 0
+  p-service = vars[{&p-service}]
+  NEN = NEN + integer(T-gds-code)
+  vars[{&p-gds-code}] = if T-gds-code then NEN else 0
+  p-gds-code = vars[{&p-gds-code}]
+ NEN = NEN + integer(T-mark)
+    vars[{&p-mark}] = if T-mark then NEN else 0
+    p-mark = vars[{&p-mark}]
   .
+  if vars[{&p-gds-code}] eq 0
+     and  vars[{&p-prod}] eq 0
+  then do:
+      message
+      "В загрузке обязательно должен быть код товара или производитель."
+      view-as alert-box WARNING.
+      return no-apply.
+  end.
   if p-tnved > 0 then do:
     if custvalue = "no"  then do:
       message
@@ -730,6 +792,8 @@ define variable v-file-name-ext    as character no-undo .
         FILTERS
           " Текстовые файлы (*.gim) " "*.gim",
           " Текстовые файлы (*.txt) " "*.txt",
+          " Текстовые файлы (*.csv) " "*.csv",
+          " MS Excel (*.xls,*.xlsx) " "*.xls,*.xlsx",
           " Все файлы (*.*) "                      "*.*"
         INITIAL-DIR v-init-dir
         /*return-to-start-dir*/
@@ -835,7 +899,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                string(t-user-rule)   + {&delim-par} +
                string(t-prod)        + {&delim-par} +
                string(t-alpha1)      + {&delim-par} +
-               string(t-grp-code)
+               string(t-grp-code)    + {&delim-par} +
+               string(t-service)     + {&delim-par} +
+               string(t-gds-code)    + {&delim-par} +
+               string(t-mark)
   v-uf-Naim  = v-init-dir
  .
   run uf-set in this-procedure(
@@ -888,11 +955,17 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY file-name T-artic RS-codir T-name T-engl-name T-unit-base T-VAT-code
           T-SLT-code T-struct T-tnved T-destin T-attrib T-user-rule T-sert
-          T-prod T-alpha1 T-grp-code text-string
+          T-prod T-alpha1 T-grp-code T-service T-gds-code t-mark text-string
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-atribut B-exit b-quit B-check B-Help B-file file-name RS-codir
+  if iOnlyfile
+  then
+     ENABLE RECT-atribut B-exit b-quit B-check B-Help B-file file-name RS-codir
+         
+      WITH FRAME Dialog-Frame.
+  else
+     ENABLE RECT-atribut B-exit b-quit B-check B-Help B-file file-name RS-codir
          T-engl-name T-unit-base T-VAT-code T-SLT-code T-struct T-tnved
-         T-destin T-attrib T-user-rule T-sert T-prod T-alpha1 T-grp-code text-string
+         T-destin T-attrib T-user-rule T-sert T-prod T-grp-code T-service T-gds-code t-mark text-string
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -946,6 +1019,21 @@ run uf-get in this-procedure(
   if num-entries(v-uf-List_, {&delim-par}) >= 15 then
   assign
   T-grp-code     =  logical(entry({&p-grp-code}     ,      v-uf-list_, {&delim-par}))
+  no-error
+  .
+  if num-entries(v-uf-List_, {&delim-par}) >= 16 then
+  assign
+  T-service     =  logical(entry({&p-service}     ,      v-uf-list_, {&delim-par}))
+  no-error
+  .
+  if num-entries(v-uf-List_, {&delim-par}) >= 17 then
+  assign
+  T-gds-code     =  logical(entry({&p-gds-code}     ,      v-uf-list_, {&delim-par}))
+  no-error
+  .
+  if num-entries(v-uf-List_, {&delim-par}) >= 18 then
+  assign
+  T-mark     =  logical(entry({&p-mark}     ,      v-uf-list_, {&delim-par}))
   no-error
   .
 

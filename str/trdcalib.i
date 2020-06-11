@@ -1431,6 +1431,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-date-end true
 &glob sort-trdcattr-date-end 100
 
+/* Документ инвентаризации с первоначальным вводом марок */
+&glob fillin_width-trdcattr-inv-introduce 11
+&glob fillin_height-trdcattr-inv-introduce 1
+&glob type-trdcattr-inv-introduce {&type-log}
+&glob format-trdcattr-inv-introduce "yes/no"
+&glob label-trdcattr-inv-introduce "Документ инвентаризации с первоначальным вводом марок"
+&glob tooltip-trdcattr-inv-introduce " Документ инвентаризации с первоначальным вводом марок"
+&glob user-can-edit-trdcattr-inv-introduce false
+&glob output-display-trdcattr-inv-introduce false
+&glob other-trdcattr-inv-introduce '':u
+&glob news-trdcattr-inv-introduce false
+&glob sort-trdcattr-inv-introduce 100
+
 &if "{1}" = "class" &then
 &else
 define new global shared variable g#trdcalib as handle no-undo.

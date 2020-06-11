@@ -67,7 +67,7 @@ v-message-text =
   + "ITEM: артикул;[код-производителя];;;              [[доп-бар-код]];<цена>;<количество>;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];[цена производителя без НДС];[цена производителя с НДС]]" + {&new-line}
   + "SCALE:артикул;[код-производителя];признак;;       [[доп-бар-код]];<цена>;<количество>;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];[цена производителя без НДС];[цена производителя с НДС]]" + {&new-line}
   + "PART: артикул;[код-производителя];документ;партия;[[доп-бар-код]];<цена>;<количество>;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];[цена производителя без НДС];[цена производителя с НДС]]" + {&new-line}
-  + "CODE: код;;;;                                     доп-бар-код;цена;количество;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[ГТД][;[вес одного места];[количество мест];[срок годности];[цена производителя без НДС];[цена производителя с НДС]]"
+  + "CODE: код;;;;                                     доп-бар-код;цена;количество;[едизм];[коэффициент];[скидка];[НДС];[НСП];[[включен/выключен(yes/no)]];[Тип маркировки]"
   + {&new-line}
   + "Описание параметров:"                                                                                                     + {&new-line}
   + "ITEM - товар, SCALE - признак, PART - партию, CODE - на любое из перечисленного по коду."                                 + {&new-line}
@@ -82,6 +82,7 @@ v-message-text =
   + "НДС, НСП - проценты НДС и налога с продаж поставщика."                                                                    + {&new-line}
   + "включен/выключен(yes/no) - включен или выключен дополнительный бар-код (необходим при импорте доп. бар-кодов)"            + {&new-line}
   + "После последней строки требуется Enter."                                                                                  + {&new-line}
+  + "Тип маркировки (0 - Тип неопределен, 1 - Табак,2 - Обувь)."                                                               + {&new-line}
   + {&new-line}
   + "Импорт дополнительных БК: Параметры для режима: Доп-бар-код, едизм, коэффициент, скидка, включен/выключен."               + {&new-line}
   + "Если данный доп. БК уже есть в БД, то будут переписаны новыми значениями: едизм, коэффициент, скидка, если они указаны."  + {&new-line}
@@ -98,7 +99,7 @@ v-message-text =
   + "SCALE:арт-1;118;синий;;3249443208100;;;уп;12;5;;yes"                                                                             + {&new-line}
   + "SCALE:арт-1;118;синий/54;;3249443208100;;;уп;12;5;;yes"                                                                          + {&new-line}
   + "PART:арт-1;118;4657-500с;777;3249443208100;;;уп;12;5;;yes"                                                                       + {&new-line}
-  + "CODE:8901055006042;;;;3249443208100;;;уп;12;5;;yes"                                                                           + {&new-line}
+  + "CODE:8901055006042;;;;3249443208100;;;уп;12;5;;yes;1"                                                                            + {&new-line}
   .
 if parInputFileName <> ? then do:
   assign InputFileName = parInputFileName.
@@ -181,9 +182,14 @@ else do:
                  input 4,
                  output choice).
 end.
-
-output stream err TO value (entry (1, InputFileName, ".") + ".err").
-output stream wrn TO value (entry (1, InputFileName, ".") + ".wrn").
+define variable mFileName as character no-undo.
+define variable vi as integer no-undo.
+do vi = 1 to Num-entries(InputFileName,".") - 1:
+mFilename = mFilename + "." + entry(vi,InputFileName,".").
+end.
+mFilename = substring(mFilename,2).
+output stream err TO value (mFilename + ".err").
+output stream wrn TO value (mFilename + ".wrn").
 
 if choice = 4 then do:
   run run-choice (1) no-error.
@@ -326,7 +332,7 @@ if parInputFileName = ? then do:
   run gbl/prnfilen.w
     (input  "Ошибки"
     ,input  0
-    ,input  entry (1, InputFileName, ".") + ".err"
+    ,input  mFilename + ".err"
     ,input  7
     ,output varuser-action
     ,output varis-printed
@@ -334,7 +340,7 @@ if parInputFileName = ? then do:
   run gbl/prnfilen.w
     (input  "Замечания"
     ,input  0
-    ,input  entry (1, InputFileName, ".") + ".wrn"
+    ,input  mFilename + ".wrn"
     ,input  7
     ,output varuser-action
     ,output varis-printed

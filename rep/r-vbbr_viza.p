@@ -34,6 +34,7 @@ DEFINE TEMP-TABLE tt-podarki NO-UNDO
   field gds-code as integer
   field date_    as character
   field obj-code as integer
+  field obj-name as character
   field d-card   as character
   field gds-name as character
   field price    like ub.chk-gds.price-base
@@ -274,7 +275,8 @@ procedure report-vozvrat:
           tt-podarki.qnty     = buf_chk-gds.doc-qnty * -1
           tt-podarki.sum-sum  = if available (ub.price-list) then ub.price-list.price-sale * -1 else 0
         .      
-                assign
+        run clients-write(INPUT buf_chk-doc.obj-code, INPUT buf_chk-doc.obj-type, OUTPUT tt-podarki.obj-name) no-error .
+          assign
           v-itog-qnty    = v-itog-qnty + tt-podarki.qnty
           v-itog-sum     = v-itog-sum + tt-podarki.tot-sum
           v-itog-sum-sum = v-itog-sum-sum + tt-podarki.sum-sum
@@ -312,6 +314,7 @@ procedure report:
           tt-podarki.qnty     = buf_chk-gds.doc-qnty
           tt-podarki.sum-sum  = if available (ub.price-list) then ub.price-list.price-sale else 0
         .      
+        run clients-write(INPUT buf_chk-doc.obj-code, INPUT buf_chk-doc.obj-type, OUTPUT tt-podarki.obj-name) no-error .
                 assign
           v-itog-qnty    = v-itog-qnty + tt-podarki.qnty
           v-itog-sum     = v-itog-sum + tt-podarki.tot-sum
@@ -414,7 +417,7 @@ end procedure.
     put stream OutStr-html unformatted
       '<TR>' skip
       '<TD text_wrap="true" style="text-align: center;">' + string(buf_podarki.date_) + '</TD>' skip
-      '<TD text_wrap="true">' + string(buf_podarki.obj-code) + '</TD>' skip
+      '<TD text_wrap="true">' + string(buf_podarki.obj-name) + '</TD>' skip
       '<TD text_wrap="true" style="text-align: right;">' + string(buf_podarki.d-card) + '</TD>' skip
       '<TD text_wrap="true" style="text-align: right;">' + string(buf_podarki.gds-code) + '</TD>' skip
       '<TD text_wrap="true">' + string(buf_podarki.gds-name) + '</TD>' skip

@@ -1191,6 +1191,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define chk-doc-p
 { cmp/cr-prep.i 1 edoc-proc_event_icnt-doc             event_icnt-doc             "Документ инв. ТРК-событие"          event_icnt-doc              "ICNT-event" }
 { cmp/cr-prep.i 1 edoc-proc_event_fin-doc              event_fin-doc              "Документ финансовый-событие"        event_fin-doc               "fin-doc-event" }
 { cmp/cr-prep.i 1 edoc-proc_event_fbr-doc              event_fbr-doc              "Документ производства-событие"      event_fbr-doc               "fbr-doc-event" }
+{ cmp/cr-prep.i 1 edoc-proc_event_utd                  event_utd                  "Документ УПД"                       event_utd                   "utd-event" }
+{ cmp/cr-prep.i 1 edoc-proc_event_mark                 event_mark                 "Марки"                              event_mark                  "mark-event" }
 { cmp/cr-prep.i 1 edoc-proc_text-export_specif         text-export_specif         "Экспорт спецификации в текст.файл"  text-export_specif          "Specification export to text" }
 { cmp/cr-prep.i 1 edoc-proc_excel-export_specif        excel-export_specif        "Экспорт спецификации в Excel"       excel-export_specif         "Specification export to Excel" }
 { cmp/cr-prep.i 1 edoc-proc_text-import_specif         text-import_specif         "Импорт спецификации из текст.файла"  text-export_specif         "Specification import from text" }

@@ -28,27 +28,29 @@ class ibs.th.bge.atd.dict-atd-exp:
    define private property pAtdReg      as character no-undo get. set.
 
    define temp-table ttgoods no-undo
-      field GlobalCode as int64  
-      field LocalCode  as int64
-   index ndx GlobalCode.
+      field gcode as int64 label "GlobalCode" 
+      field lcode as int64 label "LocalCode"
+   index ndx gcode.
   
    define temp-table ttclients no-undo
-      field Name_Object as character
-      field SiteID      as int64
-      field Address     as character
-   index ndx Name_Object.
+      field objname as character label "Name_Object"
+      field objcode as int64     label "SiteID"
+      field objaddr as character label "Address"
+   index ndx objname.
    
    define temp-table ttcashdesks no-undo
-      field IP             as character 
-      field Name           as int64     
-      field NObjectId_Name as int64
-   index ndx IP.
+      field objip       as character label "IP"
+      field objname     as int64     label "Name"
+      field objsiteid   as int64     label "NObjectId_Name"
+      field cash-type   as integer   label "cash_type"
+   index ndx objip.
    
    define temp-table tttanks no-undo
-      field TankNumber as int64
-      field Grade      as int64
-      field Grade_Name as character
-   index ndx TankNumber. 
+      field objnum   as int64       label "TankNumber"
+      field objgrade as int64       label "Grade"
+      field objname  as character   label "Grade_Name"
+      field max-volume  as decimal  label "Max_volume"
+   index ndx objnum. 
    
    constructor public dict-atd-exp (iFilePath as character, 
                                     iDbNum    as int64,
@@ -168,8 +170,8 @@ class ibs.th.bge.atd.dict-atd-exp:
             no-lock:
                create ttgoods.
                assign 
-                  ttgoods.GlobalCode = bgoods.gds-code 
-                  ttgoods.LocalCode = int64(bprod-bc.b-str)
+                  ttgoods.gcode = bgoods.gds-code 
+                  ttgoods.lcode = int64(bprod-bc.b-str)
                .
          end.
       end.
@@ -202,9 +204,9 @@ class ibs.th.bge.atd.dict-atd-exp:
             
             create ttclients.
             assign 
-               ttclients.Name_Object = bclients.obj-name 
-               ttclients.SiteID      = bclients.obj-code
-               ttclients.Address     = vAddr              
+               ttclients.objname = bclients.obj-name 
+               ttclients.objcode = bclients.obj-code
+               ttclients.objaddr = vAddr              
             .
       end.
       
@@ -214,6 +216,7 @@ class ibs.th.bge.atd.dict-atd-exp:
 
       define buffer bclients    for ub.clients.
       define buffer bcash-desk  for ub.cash-desk.
+      define buffer buf_cash-desk-attr for ub.cash-desk-attr .
       
       for first bclients where bclients.obj-type = pCurObjType
                            and bclients.obj-code = pCurObjCode
@@ -226,10 +229,25 @@ class ibs.th.bge.atd.dict-atd-exp:
             
             create ttcashdesks.
             assign 
-               ttcashdesks.Name           = bcash-desk.cash-num 
-               ttcashdesks.IP             = FilterIPandPort(bcash-desk.addr-path)
-               ttcashdesks.NObjectId_Name = bclients.obj-code                
+               ttcashdesks.objname    = bcash-desk.cash-num 
+               ttcashdesks.objip      = FilterIPandPort(bcash-desk.addr-path)
+               ttcashdesks.objsiteid  = bclients.obj-code                
             .
+            
+            find first buf_cash-desk-attr no-lock
+                 where buf_cash-desk-attr.db-num   = bcash-desk.db-num
+                   and buf_cash-desk-attr.obj-code = bcash-desk.obj-code
+                   and buf_cash-desk-attr.pos-type = bcash-desk.pos-type
+                   and buf_cash-desk-attr.cash-num = bcash-desk.cash-num
+                   and buf_cash-desk-attr.upper-attr-code = bcash-desk.pos-type + "_operative":U
+                   and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
+            if available buf_cash-desk-attr
+            then do :
+              assign ttcashdesks.cash-type = buf_cash-desk-attr.attr-value-integer .
+            end .
+            else do :
+              assign ttcashdesks.cash-type = 0 .
+            end .
       end.
    end method.
 
@@ -260,20 +278,58 @@ class ibs.th.bge.atd.dict-atd-exp:
                
                create tttanks.
                assign 
-                  tttanks.TankNumber    = int64(bplace.loc1) 
-                  tttanks.Grade         = if available bprod-bc 
-                                          then int64(bprod-bc.b-str)
-                                          else bbar-code.b-code
-                  tttanks.Grade_Name    = bgoods.gds-name               
+                  tttanks.objnum    = int64(bplace.loc1) 
+                  tttanks.objgrade  = if available bprod-bc 
+                                      then int64(bprod-bc.b-str)
+                                      else bbar-code.b-code
+                  tttanks.objname   = bgoods.gds-name   
+                  tttanks.max-volume = bplace.max-qnty            
                no-error.
       end.
    end method.
    
    method private longchar ExpJson(input hTab as handle):
-      define variable vRes as longchar no-undo.
       
-      hTab:write-json ("longchar",vRes,no,"utf-8",yes,yes).
-      vRes = codepage-convert(vRes,"1251","utf-8").      
+      define variable vI    as int64    no-undo.
+      define variable vBuff as handle   no-undo.
+      define variable vQry  as handle   no-undo.
+      define variable vRes  as longchar no-undo init "". 
+      
+      if not hTab:has-records then return vRes.
+       
+ 
+      vRes = vRes + "~[".
+
+      create query vQry.
+      
+      vBuff = hTab:default-buffer-handle.
+      
+      vQry:set-buffers(vBuff). 
+      vQry:query-prepare(substitute("FOR EACH &1",hTab:name)).
+      vQry:query-open.
+      vQry:get-next().
+
+      loop:
+      repeat:
+         vRes = vRes + "~{".
+         do vI = 1 to vBuff:num-fields:
+            vRes = vRes +  
+               quoter(vBuff:buffer-field[vI]:label) + ":" +
+               quoter(vBuff:buffer-field[vI]:buffer-value).
+            if vI <> vBuff:num-fields then 
+               vRes = vRes + ",".
+         end.
+         vRes = vRes + "~}".
+         vQry:get-next().
+         if not vQry:query-off-end then vRes = vRes + ",".
+         else leave loop.
+      end.
+      
+      vQry:query-close().
+      delete object vQry.
+
+      vRes = vRes + "~]".
+      
       return vRes.
 
    end method.

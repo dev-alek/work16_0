@@ -20,13 +20,13 @@ define variable vss-workfile    as character no-undo init "$Workfile:$":U .
 define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "Просмотор процессов".
 { cmp/vssrevis.i }
-define variable mfilehelper as class ibs.th.file.filehelperth no-undo.
+define variable mAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
    define variable v-old-propath   as character        no-undo .
-   mfilehelper = new ibs.th.file.filehelperth().
+   mAsyncHelper = new ibs.th.file.AsyncHelperth().
    
-   mfilehelper:MyBachMode =no.
-   mFileHelper:MyWorkDir          = IWorkdir.
+   mAsyncHelper:MyBachMode =no.
+   mAsyncHelper:MyWorkDir          = IWorkdir.
    file-information:file-name = Iviewdir.
-   mfilehelper:AsyncProc("ref/proc-view-proc", file-information:full-pathname, 1).
-   mfilehelper:WaitFor("proc-view-proc", 1).
-   delete object mfilehelper.
+   mAsyncHelper:AsyncProc("ref/proc-view-proc", file-information:full-pathname, 1).
+   mAsyncHelper:WaitFor("proc-view-proc", 1).
+   delete object mAsyncHelper.

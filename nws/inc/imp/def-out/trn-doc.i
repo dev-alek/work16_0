@@ -21,6 +21,7 @@ define temp-table locb-inv-doc              no-undo like ub.inv-doc.
 define temp-table locb-trn-doc-sum          no-undo like ub.trn-doc-sum.
 define temp-table locb-gds-dtl              no-undo like ub.gds-dtl.
 define temp-table locb-parts                no-undo like ub.parts.
+define temp-table locb-marking-lines        no-undo like ub.marking-lines.
 define temp-table locb-doc-prts             no-undo like ub.doc-prts.
 define temp-table locb-doc-pl               no-undo like ub.doc-pl.
 define temp-table locb-doc-pl-attr          no-undo like ub.doc-pl-attr.
@@ -28,6 +29,7 @@ define temp-table locb-doc-pl-pump          no-undo like ub.doc-pl-pump.
 define temp-table locb-parts-root           no-undo like ub.parts-root.
 define temp-table locb-parts-attr           no-undo like ub.parts-attr.
 define temp-table locb-parts-supp           no-undo like ub.parts-supp.
+define temp-table locb-gen-attr             no-undo like ub.gen-attr.
 define temp-table locbt-doc-attr            no-undo like ub.doc-attr.
 define temp-table locb-doc-fbr-gds          no-undo like ub.doc-fbr-gds.
 define temp-table locb-arh-trn-doc-contract no-undo like ub.arh-trn-doc-contract.
@@ -39,6 +41,7 @@ define temp-table tdlocb-c-chk-gds          no-undo like ub.c-chk-gds.
 define temp-table tdlocb-chk-doc-attr       no-undo like ub.chk-doc-attr.
 define temp-table tdlocb-c-chk-doc-attr     no-undo like ub.c-chk-doc-attr.
 define temp-table locb-ord-chain            no-undo like ub.ord-chain.
+define temp-table tdlocb-marking-chk        no-undo like ub.marking-chk.
 define buffer locb-rc-arh-trn-doc-contract for locb-arh-trn-doc-contract.
 { str/libtfarh.i }
 { str/trdcalib.i }
@@ -52,6 +55,7 @@ define buffer buf_chk-gds-attr             for ub.chk-gds-attr.
 define buffer buf_c-chk-gds                for ub.c-chk-gds.
 define buffer buf_chk-doc-attr             for ub.chk-doc-attr.
 define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
+define buffer buf_marking-chk              for ub.marking-chk.
 
 
   do
@@ -96,6 +100,11 @@ define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
       :
         delete buf_chk-gds-attr.
       end.
+      for each buf_marking-chk where buf_marking-chk.doc-code = buf_chk-gds.doc-code and buf_marking-chk.line-num = buf_chk-gds.line-num
+      on error  undo, return error
+      :
+        delete buf_marking-chk.
+      end.
       delete buf_chk-gds.
     end.
     for each tdlocb-chk-gds where tdlocb-chk-gds.out-code = p-doc-code
@@ -111,6 +120,14 @@ define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
       :
         create buf_chk-gds-attr.
         buffer-copy tdlocb-chk-gds-attr to buf_chk-gds-attr.
+      end.
+      
+      for each tdlocb-marking-chk where tdlocb-marking-chk.doc-code = tdlocb-chk-gds.doc-code and tdlocb-marking-chk.line-num = tdlocb-chk-gds.line-num
+                            no-lock
+      on error  undo, return error
+      :
+        create buf_marking-chk.
+        buffer-copy tdlocb-marking-chk to buf_marking-chk.
       end.
       
     end.
@@ -200,6 +217,11 @@ define buffer buf_c-chk-doc-attr           for ub.c-chk-doc-attr.
     on error  undo, return error
     :
       delete tdlocb-chk-gds-attr.
+    end.
+    for each tdlocb-marking-chk
+    on error  undo, return error
+    :
+      delete tdlocb-marking-chk.
     end.
     for each tdlocb-c-chk-doc
     on error  undo, return error

@@ -43,6 +43,7 @@ on error undo, return error
   disable triggers for load of DICTDB.gds-prt.
   disable triggers for load of DICTDB.hist-nws-option.
   disable triggers for load of DICTDB.code-range.
+  disable triggers for load of DICTDB.upgrade.
 
   define buffer buf_sys-ctrl for DICTDB.sys-ctrl .
   define buffer buf_db      for DICTDB.db .

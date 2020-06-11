@@ -26,7 +26,7 @@ class ibs.th.bge.1crn.import.imptrn-fuel-doc implements ibs.th.bge.1crn.import.i
   
   { cmp/str-glbl.i class }
   
-  {ibs/th/skt/ControlledClients/TSDTT.i}
+  {ibs/th/skt/ControlledClients/TSDTT-1c.i}
   
   define buffer buf_clients for ub.clients.
   

@@ -372,7 +372,7 @@ do
     put stream OutStr-html unformatted
       '<thead>' skip.
     put stream OutStr-html unformatted
-      '<tr>' skip
+      '<tr class="set_columns">' skip
       '<td style="width: 6px;"></td>' skip
       '<td style="width: 6px;"></td>' skip
       '<td style="width: 6px;"></td>' skip
@@ -689,7 +689,7 @@ do
       '<tr>' skip
       '<td></td>' skip
       '<td colspan="10" style="text-align: left;">От кого</td>' skip
-      '<td colspan="57" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + v-firm + " " + v-hist-name + '</td>' skip
+      '<td colspan="57" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + v-hist-name + " " + v-firm + '</td>' skip
       '<td style="border-bottom: 1px solid black; border-top: 1px solid black;"></td>' skip
       '<td colspan="9" style="border-bottom: 1px solid black; border-top: 1px solid black;">счет №</td>' skip
       '<td colspan="43" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black; border-top: 1px solid black;">' + v-debt-schet + '</td>' skip
@@ -1068,7 +1068,7 @@ do
     put stream OutStr-html unformatted
       '<thead>' skip.
     put stream OutStr-html unformatted
-      '<tr>' skip
+      '<tr class="set_columns">' skip
       '<td style="width: 6px;"></td>' skip
       '<td style="width: 6px;"></td>' skip
       '<td style="width: 6px;"></td>' skip

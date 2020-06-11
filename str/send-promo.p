@@ -219,7 +219,8 @@ assign
   .
 
 { gbl/hostcode.i {&shop} i-obj-code v-host-code }
-if action = "D" then 
+if action = "D" and not g#esys and not g#news 
+then 
 do:
   message
     "Вы действительно хотите удалить с кассы записи промоакций?"

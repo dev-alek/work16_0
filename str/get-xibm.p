@@ -2079,6 +2079,7 @@ define variable v-attr-code as character no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_tt-sum-grp for tt-sum-grp.
+define buffer buf_marking-chk for ub.marking-chk .
 do
 on error undo, return error
 :
@@ -2131,23 +2132,47 @@ on error undo, return error
         /* аксцизные марки */
         v-attr-code = "mark-code":U .
       end .
-      find first ub.chk-gds-attr exclusive-lock
-           where ub.chk-gds-attr.doc-code  = ub.chk-doc.doc-code
-             and ub.chk-gds-attr.line-num  = CBCString_
-             and ub.chk-gds-attr.attr-code = v-attr-code no-error.
-      if available ub.chk-gds-attr then do:
-      CBCBarcode_ = ub.chk-gds-attr.attr-value + "," + CBCBarcode_ .
-      ub.chk-gds-attr.attr-value =  CBCBarcode_ .
-      end.  
-      else do:
-      create ub.chk-gds-attr.
-      assign
-        ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code
-        ub.chk-gds-attr.line-num = CBCString_
-        ub.chk-gds-attr.attr-code = v-attr-code
-        ub.chk-gds-attr.attr-value =  CBCBarcode_ 
-      .
-      end.
+      
+      if v-attr-code = "tobacco-mark"
+      then do :
+        find first buf_marking-chk exclusive-lock where buf_marking-chk.mark      = CBCBarcode_
+                                                    and buf_marking-chk.doc-code  = ub.chk-doc.doc-code
+                                                    and buf_marking-chk.line-num  = CBCString_
+                                                    no-error .
+        if not available buf_marking-chk
+        then do :
+          create buf_marking-chk .
+          assign
+            buf_marking-chk.mark      = CBCBarcode_         
+            buf_marking-chk.doc-code  = ub.chk-doc.doc-code 
+            buf_marking-chk.line-num  = CBCString_          
+          .
+        end .
+        assign
+          buf_marking-chk.date-modify = today
+          buf_marking-chk.time-modify = time
+        .                                                
+      end .
+      else do :
+        find first ub.chk-gds-attr exclusive-lock
+             where ub.chk-gds-attr.doc-code  = ub.chk-doc.doc-code
+               and ub.chk-gds-attr.line-num  = CBCString_
+               and ub.chk-gds-attr.attr-code = v-attr-code no-error.
+        if available ub.chk-gds-attr then do:
+          CBCBarcode_ = ub.chk-gds-attr.attr-value + "," + CBCBarcode_ .
+          ub.chk-gds-attr.attr-value =  CBCBarcode_ .
+        end.  
+        else do:
+        create ub.chk-gds-attr.
+        assign
+          ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code
+          ub.chk-gds-attr.line-num = CBCString_
+          ub.chk-gds-attr.attr-code = v-attr-code
+          ub.chk-gds-attr.attr-value =  CBCBarcode_ 
+        .
+        end.
+      end .
+
     end.
     CBCType_ = 0.
 

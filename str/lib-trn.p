@@ -2355,8 +2355,13 @@ procedure lib-trn_copy-inh :
   define variable l_place-rsrv                   as   logical                  no-undo.
   define variable is_doc-pl_rsrv                 as   logical                  no-undo initial no.
   define variable varpl-inf                      as   character                no-undo.
-  define variable v-doc-pl-rowid                 as   rowid                    no-undo .
-  define variable v-has-part as logical   no-undo .
+  define variable v-doc-pl-rowid                 as   rowid                    no-undo.
+  define variable v-has-part                     as   logical                  no-undo.
+  define variable v-gds-mark       as   logical              no-undo.
+  define variable v-gds-attr-value as   character            no-undo.
+  define variable v-gds-attr-type  as   character            no-undo.
+  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
   { str/get-pr.i def }
 
@@ -2446,6 +2451,18 @@ if error-status :error then do:
                          ).
 end. /* error */
 
+RUN gds-attr-value (
+                    INPUT ca_goods.gds-code,
+                    INPUT {&attr-mark-type},
+                    OUTPUT v-gds-attr-value,
+                    OUTPUT v-gds-attr-type
+                    ).
+if v-gds-attr-value > ""
+and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ca_trn-doc.obj-type, ca_trn-doc.obj-code):GetIsMarkingForType(v-gds-attr-value)
+then 
+  v-gds-mark = true .
+else
+  v-gds-mark = false .
 
 if l_place-rsrv = yes then do:
   if ca_lib-trn_ret-doc.obj-type = ca_trn-doc.obj-type
@@ -2866,7 +2883,8 @@ else do:
                   input-output chg-qnty,
                   input-output ca_doc-line.price-base,
                   input-output ca_doc-line.price-rubl,
-                  input        -1
+                  input        -1,
+                  input        if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
                 ) no-error.
               if error-status :error
                 or chg-qnty <> mem-qnty
@@ -2916,7 +2934,8 @@ else do:
                 input-output chg-qnty,
                 input-output ca_doc-line.price-base,
                 input-output ca_doc-line.price-rubl,
-                input        -1
+                input        -1,
+                input        if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
               ) no-error.
             if error-status :error
               or chg-qnty <> mem-qnty
@@ -2996,6 +3015,7 @@ else do:
              ,input-output ca_doc-line.price-base
              ,input-output ca_doc-line.price-rubl
              ,input -1
+             ,input if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
             ) no-error.
           if error-status :error
             or chg-qnty <> mem-qnty
@@ -3198,7 +3218,8 @@ else do:
                   input-output chg-qnty,
                   input-output ca_doc-line.price-base,
                   input-output ca_doc-line.price-rubl,
-                  input        -1
+                  input        -1,
+                  input        if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
                 ) no-error.
               if chg-qnty <> fix-qnty then do:
                 undo, return error substitute( "Не удалось скопировать полностью товар: &1 &2 &3 во внешнюю приходную накладную."
@@ -3260,8 +3281,13 @@ else do:
             assign chg-qnty = ca_lib-trn_ret-dtl.fact-qnty.
             run trg/rsrv-dtl.p (input parparentproc,
                                 {&rsrv-dtl_action_reserv} + varcst-rsrv + varlast-date-rsrv + varpart-code-rsrv,
-                            buffer ca_gds-dtl, input-output chg-qnty,
-                            input-output ca_doc-line.price-base, input-output ca_doc-line.price-rubl, -1) no-error.
+                                buffer ca_gds-dtl,
+                                input-output chg-qnty,
+                                input-output ca_doc-line.price-base,
+                                input-output ca_doc-line.price-rubl,
+                                input -1,
+                                input if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
+                                ) no-error.
             if error-status :error then undo, return error return-value.
             assign
               ca_gds-dtl.fact-qnty  = ca_gds-dtl.fact-qnty  + chg-qnty
@@ -3292,7 +3318,9 @@ else do:
                             input-output chg-qnty,
                             input-output ca_doc-line.price-base,
                             input-output ca_doc-line.price-rubl,
-                            -1) no-error.
+                            input -1,
+                            input if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
+                            )  no-error.
                 end.
 
                 if substring(ca_lib-trn_ret-doc.doc-code, 1, 6) = "import" and v-has-part = true  then do:
@@ -3343,7 +3371,8 @@ else do:
                           input-output chg-qnty,
                           input-output ca_doc-line.price-base,
                           input-output ca_doc-line.price-rubl,
-                          input        -1
+                          input        -1,
+                          input        if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
                         ) no-error.
                     end.
                 end.
@@ -3394,7 +3423,9 @@ else do:
                             input-output chg-qnty,
                             input-output ca_doc-line.price-base,
                             input-output ca_doc-line.price-rubl,
-                            -1 ) no-error.
+                            input -1,
+                            input if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
+                            ) no-error.
                         if error-status :error then do:
                             undo, return error return-value.
                         end.
@@ -3416,7 +3447,9 @@ else do:
                             input-output chg-qnty,
                             input-output ca_doc-line.price-base,
                             input-output ca_doc-line.price-rubl,
-                            -1 ) no-error.
+                            input -1,
+                            input if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
+                            ) no-error.
                         if error-status :error then do:
                             undo, return error return-value.
                         end.
@@ -3448,7 +3481,10 @@ else do:
                             buffer ca_gds-dtl,
                             input-output chg-qnty,
                             input-output ca_doc-line.price-base,
-                            input-output ca_doc-line.price-rubl, -1) no-error.
+                            input-output ca_doc-line.price-rubl,
+                            input -1,
+                            input if v-gds-mark then ("copy-ret" + {&delim-par} + ca_lib-trn_ret-doc.doc-code) else ""
+                            ) no-error.
                   if error-status :error then undo, return error return-value.
                   assign
                     ca_gds-dtl.doc-qnty  = ca_gds-dtl.doc-qnty + chg-qnty
@@ -3508,7 +3544,7 @@ else do:
            run trg/rsrv-dtl.p (input parparentproc,
                            {&rsrv-dtl_action_reserv} + varcst-rsrv + varlast-date-rsrv + varpart-code-rsrv,
                            buffer ca_gds-dtl, input-output chg-qnty,
-                                  input-output ca_doc-line.price-base, input-output ca_doc-line.price-rubl, -1) no-error.
+                                  input-output ca_doc-line.price-base, input-output ca_doc-line.price-rubl, -1, "") no-error.
            if error-status :error then do:
               undo, return error return-value.
            end.
@@ -3566,7 +3602,7 @@ else do:
             run trg/rsrv-dtl.p (input parparentproc,
                             {&rsrv-dtl_action_reserv} + varcst-rsrv + varlast-date-rsrv + varpart-code-rsrv,
                             buffer ca_gds-dtl, input-output chg-qnty,
-                            input-output ca_doc-line.price-base, input-output ca_doc-line.price-rubl,-1) no-error.
+                            input-output ca_doc-line.price-base, input-output ca_doc-line.price-rubl,-1, "") no-error.
             if error-status :error then do:
               undo, return error return-value.
             end.
@@ -4068,7 +4104,7 @@ if cs_trn-doc.doc-type = {&inventory} and
           input-output chg-qnty,
           input-output cs_doc-line.price-base,
           input-output cs_doc-line.price-rubl,
-          b-c )
+          b-c, "" )
           no-error.
     if error-status :error then do:
        undo, return error substitute ("&1 Ошибка при резервировании &2", parmes, return-value).
@@ -4175,7 +4211,7 @@ and not cs_trn-doc.flag_ then do:
       assign memexp-qnty = b-qnty.
       if cs_trn-doc.status_ <> {&inquiry} then do:
          run trg/rsrv-dtl.p (input parparentproc,
-                         {&rsrv-dtl_action_reserv} + ',' + {&rsrv-dtl_no-message} + varcst-rsrv, buffer cs_gds-dtl, input-output b-qnty, input-output cs_doc-line.price-base, input-output cs_doc-line.price-rubl, b-c) no-error.
+                         {&rsrv-dtl_action_reserv} + ',' + {&rsrv-dtl_no-message} + varcst-rsrv, buffer cs_gds-dtl, input-output b-qnty, input-output cs_doc-line.price-base, input-output cs_doc-line.price-rubl, b-c, "") no-error.
          if error-status :error then do:
             undo, return error substitute("&1 &2", parmes, return-value).
          end.
@@ -4335,7 +4371,7 @@ and not cs_trn-doc.flag_ then do:
       assign memexp-qnty = b-qnty.
       if cs_trn-doc.status_ <> {&inquiry} then do:
          run trg/rsrv-dtl.p (input parparentproc,
-                       {&rsrv-dtl_action_reserv} + ',' + {&rsrv-dtl_no-message} + varcst-rsrv,buffer cs_gds-dtl, input-output b-qnty, input-output cs_doc-line.price-base, input-output cs_doc-line.price-rubl, b-c) no-error.
+                       {&rsrv-dtl_action_reserv} + ',' + {&rsrv-dtl_no-message} + varcst-rsrv,buffer cs_gds-dtl, input-output b-qnty, input-output cs_doc-line.price-base, input-output cs_doc-line.price-rubl, b-c, "") no-error.
          if error-status :error then do:
            undo, return error substitute ("&1 &2", parmes, return-value).
          end.
@@ -4416,7 +4452,7 @@ if (can-do ({&expense_write-off_return}, cs_trn-doc.doc-type) and
   end.
   assign memexp-qnty = b-qnty.
   run trg/rsrv-dtl.p (input parparentproc,
-                 {&rsrv-dtl_action_reserv} + ',' + {&rsrv-dtl_no-message} + varcst-rsrv, buffer cs_gds-dtl,input-output b-qnty,input-output cs_doc-line.price-base,input-output cs_doc-line.price-rubl, b-c) no-error.
+                 {&rsrv-dtl_action_reserv} + ',' + {&rsrv-dtl_no-message} + varcst-rsrv, buffer cs_gds-dtl,input-output b-qnty,input-output cs_doc-line.price-base,input-output cs_doc-line.price-rubl, b-c, "") no-error.
   if error-status :error then undo, return error substitute ("&1 &2", parmes, parok).
   assign
   cs_doc-line.fact-qnty = cs_doc-line.fact-qnty + b-qnty
@@ -6803,6 +6839,11 @@ define variable is_doc-pl_rsrv   as   logical              no-undo initial no.
 define variable full-rsrv-qnty   like ub.gds-dtl.fact-qnty no-undo.
 define variable v-doc-pl-rowid   as   rowid                no-undo.
 define variable v-density        like ub.doc-line.fact-density no-undo.
+define variable v-gds-mark       as   logical              no-undo.
+define variable v-gds-attr-value as   character            no-undo.
+define variable v-gds-attr-type  as   character            no-undo.
+define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
 { gbl/getcntxt.i def }
 
@@ -7064,7 +7105,19 @@ for each tt-doc-line where tt-doc-line.doc-code = pardoc-code by tt-doc-line.lin
       .
     end.
   end.
-
+  
+  RUN gds-attr-value (
+                          INPUT crt_goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT v-gds-attr-value,
+                          OUTPUT v-gds-attr-type
+                          ).
+  if v-gds-attr-value > ""
+  and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(crt_trn-doc.obj-type, crt_trn-doc.obj-code):GetIsMarkingForType(v-gds-attr-value)
+  then 
+    v-gds-mark = true .
+  else
+    v-gds-mark = false .
   _tt-gds-dtl:
   for each tt-gds-dtl where tt-gds-dtl.prod-type = tt-doc-line.prod-type and
                             tt-gds-dtl.prod-code = tt-doc-line.prod-code and
@@ -7267,6 +7320,7 @@ for each tt-doc-line where tt-doc-line.doc-code = pardoc-code by tt-doc-line.lin
                ,input-output crt_doc-line.price-base
                ,input-output crt_doc-line.price-rubl
                ,input -1
+               ,input if v-gds-mark then ("copy-ret" + {&delim-par} + pardoc-code) else ""
               ) no-error.
             if error-status :error then do:
               undo c-l, return error return-value.
@@ -7293,6 +7347,7 @@ for each tt-doc-line where tt-doc-line.doc-code = pardoc-code by tt-doc-line.lin
                ,input-output crt_doc-line.price-base
                ,input-output crt_doc-line.price-rubl
                ,input -1
+               ,input if v-gds-mark then ("copy-ret" + {&delim-par} + pardoc-code) else ""
               ) no-error.
             if error-status :error then do:
               undo c-l, return error return-value.
@@ -7359,6 +7414,7 @@ for each tt-doc-line where tt-doc-line.doc-code = pardoc-code by tt-doc-line.lin
          ,input-output crt_doc-line.price-base
          ,input-output crt_doc-line.price-rubl
          ,input -1
+         ,input if v-gds-mark then ("copy-ret" + {&delim-par} + pardoc-code) else ""
         ) no-error.
       if error-status :error then do:
         undo c-l, return error return-value.

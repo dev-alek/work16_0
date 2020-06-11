@@ -80,41 +80,36 @@ if modetype = ? then do:
   modetype = no.
 end.
 else do:
-run gbl/d-askw.w (input "Выбор товаров для удаления",
-             input "Вы хотите удалить с кассы:",
-             input "|",
-             input "Все проходившие товары|По списку|Отказ от удаления",
-             input "||",
-             input 2,
-             input 3,
-             output choice).
-if choice = 3 then return.
-if    choice = 1 
-   or choice = 4
-then ModeType = yes.
-else ModeType = no.
-if ModeType then do:
-    if choice ne 4
-    then do:
-       g#log = no.
-       message "ВЫ ТОЧНО УВЕРЕНЫ, ЧТО ХОТИТЕ УДАЛИТЬ С КАСС ВСЕ ТОВАРЫ?" skip(0)
-               "ЭТО ЗАЙМЕТ МНОГО ВРЕМЕНИ!"
-       view-as alert-box question buttons YES-NO update g#log.
-       if not g#log then return.
-    end.
-end.
-else do:
-    run str/gds-list.w (input parparentproc, input ub.shop.host-code, input {&shop}, input abs(i-obj-code)).
-    if not can-find(first gds-list no-lock) then do:
-        message "Вы не определили список товаров для удаления!"
-        view-as alert-box WARNING.
-        return.
-    end.
-    g#log = yes.
-    message "Удалить все товары списка c касс ?"
-    view-as alert-box question buttons OK-Cancel update g#log.
-    if g#log <> true then return.
-end.
+  run gbl/d-askw.w (input "Выбор товаров для удаления",
+              input "Вы хотите удалить с кассы:",
+              input "|",
+              input "Все товары|По списку|Отказ от удаления",
+              input "||",
+              input 2,
+              input 3,
+              output choice).
+  if choice = 3 then return.
+  if choice = 1 then ModeType = yes.
+  else ModeType = no.
+  if ModeType then do:
+      g#log = no.
+      message "ВЫ ТОЧНО УВЕРЕНЫ, ЧТО ХОТИТЕ УДАЛИТЬ С КАСС ВСЕ ТОВАРЫ?" skip(0)
+              "ЭТО ЗАЙМЕТ МНОГО ВРЕМЕНИ!"
+      view-as alert-box question buttons YES-NO update g#log.
+      if not g#log then return.
+  end.
+  else do:
+      run str/gds-list.w (input parparentproc, input ub.shop.host-code, input {&shop}, input abs(i-obj-code)).
+      if not can-find(first gds-list no-lock) then do:
+          message "Вы не определили список товаров для удаления!"
+          view-as alert-box WARNING.
+          return.
+      end.
+      g#log = yes.
+      message "Удалить все товары списка c касс ?"
+      view-as alert-box question buttons OK-Cancel update g#log.
+      if g#log <> true then return.
+  end.
 end.
 
 /*PROCEDURE term-prt.*/
@@ -132,7 +127,7 @@ crgd = 0
 cr-txr = 0
 cr-ncr-dis-kat = 0
 .
-if choice = 4
+if choice = 4 or choice = 1
 then do:
    create cash-gds.
    assign

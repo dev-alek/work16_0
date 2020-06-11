@@ -117,6 +117,7 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
     define variable v-decommiss-str  as character no-undo . /* для чтения v-decommissioned */
     define variable v-begin-summer   as character no-undo . /* {&attr-cli-clim-grp}[2] = begin-summer */
     define variable v-begin-winter   as character no-undo . /* {&attr-cli-clim-grp}[3] = begin-winter */
+    define variable v-edi            as logical   no-undo .
     
     define variable objImp as class shops no-undo.
     
@@ -348,6 +349,8 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         v-begin-summer   = objImp:begin-summer when objImp:begin-summer > ""
         v-begin-winter   = objImp:begin-winter when objImp:begin-winter > ""
         v-decommissioned = (objImp:decommissioned > 0) when (objImp:decommissioned <> ?)
+        v-edi            = (objImp:edi > 0) when (objImp:edi <> ?)
+        v-KPP            = objImp:kpp when objImp:kpp > ""
       .
     end .
     else do :
@@ -405,6 +408,8 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         v-begin-summer   = objImp:begin-summer
         v-begin-winter   = objImp:begin-winter
         v-decommissioned = if objImp:decommissioned > 0 then true else ?
+        v-edi            = if objImp:edi > 0 then true else ?
+        v-KPP = if objImp:kpp >= "" then objImp:kpp else ""
       .
       
       assign
@@ -453,7 +458,6 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
         v-purch-code     = ?
         v-envd           = no
         v-pharm          = no
-        v-KPP            = ""
       .
     end.
     run adm/shop01.p
@@ -686,6 +690,37 @@ Action-role-item
     define variable v-value-integer as INTEGER no-undo .
     define variable v-value-logical AS LOGICAL no-undo .
     define variable v-tth as handle no-undo .
+    
+    v-tth = buffer thbjattr_thbj-attr:table-handle .
+    empty temp-table thbjattr_thbj-attr .
+    run adm/shattri.p (
+            input "init":U
+          , input {&shop}
+          , input v-obj-code
+          , input {&attr-marking}
+          , input "":U
+          , output v-value-character
+          , output v-value-date
+          , output v-value-decimal
+          , output v-value-integer
+          , output v-value-logical
+          , output v-param-type
+          , INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+    if error-status:error then do:
+      undo, throw new Progress.Lang.AppError(
+        substitute(  "Ошибка чтения начальных значений настроек работы со справочниками товаров в контексте объекта [&1 &2]",
+                     error-status:get-message(1), return-value  )
+      ) .
+    end .
+    FOR EACH thbjattr_thbj-attr:
+      case thbjattr_thbj-attr.prop-code :
+        when {&attr-marking_marking-EDO} then // объект работает с EDI
+          thbjattr_thbj-attr.property-value-logical = v-edi .
+      end case .
+    END .
+    thbjattr_set-section ({&shop}, v-obj-code, {&attr-marking}, input table thbjattr_thbj-attr) .
+    
     
     if v-mode = {&add-def} then do :
       v-tth = buffer thbjattr_thbj-attr:table-handle .

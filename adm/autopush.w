@@ -545,6 +545,12 @@ end.
     { adm/autotask.i ASSIGN {&btpr-type-autoarh} }
 
     { adm/autotask.i ASSIGN {&btpr-type-mercury} }
+    
+    { adm/autotask.i ASSIGN {&btpr-type-hddtest} }
+
+    { adm/autotask.i ASSIGN {&btpr-type-is_motp} }
+
+    { adm/autotask.i ASSIGN {&btpr-type-is_diadoc} }
 
     if par-is-bge = true then do:
      { adm/autotask.i ASSIGN {&btpr-type-autoexp} }

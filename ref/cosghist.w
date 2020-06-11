@@ -1,22 +1,4 @@
- 
-define input     parameter parParentProc  as widget-handle no-undo.
-/*контекст сессии*/
-define input parameter p-curr-host-code like ub.sysconf.host-code no-undo.
-define input parameter p-curr-obj-type like ub.clients.obj-type no-undo.
-define input parameter p-curr-obj-code like ub.clients.obj-code no-undo.
-
-define input parameter bttns  as char   no-undo .
-/*кнопки для нажатия*/
-
-define input parameter p-mode  as char   no-undo .
-/*может быть {&all} {&company} "one":U "subject":U */
-
 define input  parameter pid as int64 no-undo.
-define input parameter p-corr-user-db-num  like ub.c-cli-hist.corr-user-db-num no-undo .
-define input parameter p-corr-user-name  like ub.c-cli-hist.corr-user-name no-undo .
-define input parameter p-subject  like ub.c-cli-hist.subject no-undo .
-/*стартуем с текущей БД обычно*/
-define input parameter p-db-num  like ub.c-cli-hist.corr-user-db-num no-undo .
 {ref/brwhist.i &buf_obj-hist = c-goods-attr-any }  
 
 function get-subject returns character

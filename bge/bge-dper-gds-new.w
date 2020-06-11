@@ -413,26 +413,26 @@ DEFINE FRAME Dialog-Frame
      b-help AT ROW 1.5 COL 86
      v-per AT ROW 3 COL 15 COLON-ALIGNED WIDGET-ID 20
      code_pool AT ROW 3 COL 62 COLON-ALIGNED WIDGET-ID 28
-     date_from AT ROW 3.13 COL 8.25 COLON-ALIGNED
-     date_to AT ROW 3.13 COL 25.25 COLON-ALIGNED
-     time-days AT ROW 3.13 COL 28 NO-LABEL WIDGET-ID 52
-     tb-supp AT ROW 4.5 COL 10.38
-     bt-dc-card AT ROW 4.75 COL 77.5 WIDGET-ID 42
-     ed-object AT ROW 4.96 COL 20.75 NO-LABEL
-     rs-1 AT ROW 5.04 COL 3 NO-LABEL
-     v-dc-card AT ROW 6.25 COL 58.5 NO-LABEL WIDGET-ID 40
-     bt-sel-obj AT ROW 7.21 COL 17
-     ed-doc-type AT ROW 9.21 COL 16.75 NO-LABEL
-     bt-sel-doc-type AT ROW 9.21 COL 53.25
-     ed-doc-type-label AT ROW 9.25 COL 3 NO-LABEL
-     tb-inkass-pay-code AT ROW 11.5 COL 2.63
-     tb-deleted AT ROW 11.5 COL 36.63
-     v-place AT ROW 11.75 COL 59.5 NO-LABEL WIDGET-ID 22
-     tb-cst-code AT ROW 12.25 COL 2.63
-     tb-exp-checks AT ROW 12.25 COL 36.63 WIDGET-ID 2
-     tb-parts AT ROW 13 COL 2.63
-     tb-chk-pay-code AT ROW 13.75 COL 2.63
-     rs-cash-pay AT ROW 13.79 COL 40 NO-LABEL
+     date_from AT ROW 3.14 COL 8.2 COLON-ALIGNED
+     date_to AT ROW 3.14 COL 25.2 COLON-ALIGNED
+     time-days AT ROW 3.14 COL 28 NO-LABEL WIDGET-ID 52
+     tb-supp AT ROW 4.52 COL 10.4
+     bt-dc-card AT ROW 4.76 COL 77.6 WIDGET-ID 42
+     ed-object AT ROW 4.95 COL 20.8 NO-LABEL
+     rs-1 AT ROW 5.05 COL 3 NO-LABEL
+     v-dc-card AT ROW 6.24 COL 58.6 NO-LABEL WIDGET-ID 40
+     bt-sel-obj AT ROW 7.19 COL 17
+     ed-doc-type AT ROW 9.19 COL 16.8 NO-LABEL
+     bt-sel-doc-type AT ROW 9.19 COL 53.2
+     ed-doc-type-label AT ROW 9.24 COL 3 NO-LABEL
+     tb-inkass-pay-code AT ROW 11.52 COL 2.6
+     tb-deleted AT ROW 11.52 COL 36.6
+     v-place AT ROW 11.76 COL 59.6 NO-LABEL WIDGET-ID 22
+     tb-cst-code AT ROW 12.24 COL 2.6
+     tb-exp-checks AT ROW 12.24 COL 36.6 WIDGET-ID 2
+     tb-parts AT ROW 13 COL 2.6
+     tb-chk-pay-code AT ROW 13.76 COL 2.6
+     rs-cash-pay AT ROW 13.81 COL 40.7 NO-LABEL
      v-directory AT ROW 14 COL 69 COLON-ALIGNED WIDGET-ID 54
      tb-pay-desk AT ROW 14.67 COL 5.63
      bt-cash-pay AT ROW 14.71 COL 48
@@ -1575,6 +1575,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     
     run init-fields in this-procedure .
     run myenable .
+    if tb-chk-pay-code then enable rs-cash-pay with frame {&frame-name} .
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.

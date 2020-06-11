@@ -25,6 +25,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { cmp/library.i  class }
+  { utl/gtin.i class }
   { ref/extclass.i }
 
   define property Msg as character no-undo
@@ -236,6 +237,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define buffer buf_cash-desk    for ub.cash-desk .
     define buffer buf_doc-line     for ub.doc-line .
     define buffer buf_parts        for ub.parts .
+    define buffer buf_marking-chk  for ub.marking-chk .
     define variable v-is-petrolium as logical no-undo . /* true = топливо */
     define variable v-price-azs    as decimal no-undo .
     define variable v-is-pieces    as logical no-undo .
@@ -248,7 +250,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     define variable v-chk-pay-is-nds as logical no-undo . /* true: в чеке есть платёж с is-nds=1 */
     define variable v-sum-s        as decimal no-undo .
     define variable v-parts-qnty   as decimal no-undo .
-
+    define variable v-marking      as character no-undo .
+    
     insw:start-element ({&tag-message}) .
 
     /* обязательность 1-1 */
@@ -569,14 +572,19 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
           v-price-azs = decimal(buf_chk-gds-attr.attr-value) .
           insw:write-data-element (  "price-azs",  left-trim(string(v-price-azs, "->>>>>>>>9.99"))  ) . /* Розничная цена в соответствии с данными БД на АЗК/АЗС (Число 15,2) */
         end .
-        
-        find first buf_chk-gds-attr no-lock
-             where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
-               and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
-               and buf_chk-gds-attr.attr-code = "tobacco-mark":U no-error .
-        if available buf_chk-gds-attr then do:
-          insw:write-data-element (  "dm",  base64-enc(buf_chk-gds-attr.attr-value) ) . /* Datamatrix (строка) */
-        end .
+        for each buf_marking-chk no-lock where buf_marking-chk.doc-code =  buf_chk-gds.doc-code and buf_marking-chk.line-num = buf_chk-gds.line-num:
+          v-marking = GetCodeIdent(buf_marking-chk.mark).
+          /*          for first buf_marking no-lock where buf_marking.mark begins v-marking :*/
+          insw:write-data-element (  "dm",  v-marking ) . /* Datamatrix (строка) */
+/*          insw:write-data-element (  "dm",  addBracketForCode(v-marking) ) . /* Datamatrix (строка) */*/
+        end.       
+/*        find first buf_chk-gds-attr no-lock                                                                      */
+/*             where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code                                             */
+/*               and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                             */
+/*               and buf_chk-gds-attr.attr-code = "tobacco-mark":U no-error .                                      */
+/*        if available buf_chk-gds-attr then do:                                                                   */
+/*          insw:write-data-element (  "dm",  base64-enc(buf_chk-gds-attr.attr-value) ) . /* Datamatrix (строка) */*/
+/*        end .                                                                                                    */
  
         insw:end-element ({&tag-item1}) .
       end . /* end_of for each buf_chk-gds */
@@ -627,6 +635,13 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
              and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num no-error.
       if available buf_chk-pay-attr then 
       insw:write-data-element (  "cap-sum",  left-trim(string (dec(buf_chk-pay-attr.attr-value),">>>>>>>>>>>9.99") ) ) . /* CPWithdrawal (Строка) */
+      
+      find first buf_chk-pay-attr no-lock
+           where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
+             and buf_chk-pay-attr.attr-code = "CPAgreement":U
+             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num no-error.
+      if available buf_chk-pay-attr then 
+      insw:write-data-element (  "CPAgreement",  buf_chk-pay-attr.attr-value  ) . /* CPAgreement (Строка) */
       
       insw:write-data-element (  "sum",  left-trim(string(buf_chk-pay.tot-rubl, "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Сумма платежа (либо бонус в рублевом эквиваленте) (Число) */
 

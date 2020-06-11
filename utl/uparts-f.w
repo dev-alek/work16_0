@@ -6,7 +6,7 @@
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
 
-
+using ibs.th.str.alcohol.*.
 /* Temp-Table and Buffer definitions                                    */
 DEFINE TEMP-TABLE x_parts NO-UNDO LIKE parts.
 
@@ -43,6 +43,8 @@ define input  parameter p-in-code   as character no-undo .
 define input  parameter p-part-code as character no-undo .
 define input  parameter p-out-code  as character no-undo .
 define input-output  parameter table for x_parts.
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .

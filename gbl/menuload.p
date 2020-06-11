@@ -388,6 +388,35 @@ define variable vss-description as character no-undo init "Информация об объекте
 }
 { gbl/menuload.i
   {&bef-menuload_adm_function}
+  "'Утилита проверки целостности свободной зоны марок'"
+  "'rep/g-alcmarks.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Утилита отката помарочного учета'"
+  "'utl/rollback-mark.p'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Выравнивание статусов марок в свободной зоне'"
+  "'utl/free-mark.p'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Создание статусов марок в серой зоне'"
+  "'utl/gray-zone.p'"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
   "'Изменение товаров по списку'"
   "'utl/gdsuform.w'"
   " "
@@ -617,6 +646,17 @@ define variable vss-description as character no-undo init "Информация об объекте
   {&bef-menuload_adm_function}
   "'Повторная выгрузка данных для 1С ERP'"
   "'utl/send-1C.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Синхронизация счетчиков документов'"
+  "'utl/seq-sync.w'"
   " "
   " "
   " "

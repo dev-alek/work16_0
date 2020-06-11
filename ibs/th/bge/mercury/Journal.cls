@@ -42,35 +42,28 @@ class ibs.th.bge.mercury.Journal :
     field piIndex     as character
     index tt_journal-egais is primary jou-code ascending.
   
-  method public handle GetHndlTable( ):
+  method public handle GetHndlTable(input date1 as datetime, input date2 as datetime):
     
   empty temp-table tt_journal-merc .
   
   for each buf_esys-all-attr where buf_esys-all-attr.table-name = "esys-pck-sent"
-                               and buf_esys-all-attr.attr-code  = "mercury" no-lock:
+                               and buf_esys-all-attr.attr-code  = "mercury" 
+                               and datetime (buf_esys-all-attr.key4) >= date1 
+                               and datetime (buf_esys-all-attr.key4) <= date2 no-lock:
     
     create tt_journal-merc.
-        v-subject = "Some".
-        if buf_esys-all-attr.key2 = 1 then do:
-          v-subject = "Запрос ВСД по UUID".
-        end.
-        if buf_esys-all-attr.key2 = 2 then do:
-          v-subject = "Запрос на гашение ВСД".
-        end.
-/*        if buf_esys-all-attr.key2 = 3 then do:*/
-/*          v-subject = {&EGAIS-InfoVer-full}.  */
-/*        end.                                  */
-/*        if buf_esys-all-attr.key2 = 7 then do:*/
-/*          v-subject = 'Справочник справок 1'. */
-/*        end.                                  */
-        
-/*        if buf_esys-all-attr.key3 = "no" then v-status = "Запрос отправлен".*/
-/*        else v-status = "Ответ получен".                                    */
-        
-        if buf_esys-all-attr.key8 <> "" then do:
-          find first ub.user-account where ub.user-account.user-id = buf_esys-all-attr.key8 no-error.
-          v-user = ub.user-account.last-name + ' ' + ub.user-account.first-name + ' ' + ub.user-account.second-name .
-        end.
+    v-subject = "Some".
+    if buf_esys-all-attr.key2 = 1 then do:
+      v-subject = "Запрос ВСД по UUID".
+    end.
+    if buf_esys-all-attr.key2 = 2 then do:
+      v-subject = "Запрос на гашение ВСД".
+    end.
+    
+    if buf_esys-all-attr.key8 <> "" then do:
+      find first ub.user-account where ub.user-account.user-id = buf_esys-all-attr.key8 no-error.
+      v-user = ub.user-account.last-name + ' ' + ub.user-account.first-name + ' ' + ub.user-account.second-name .
+    end.
     assign
       tt_journal-merc.jou-who = v-user
       tt_journal-merc.jou-code = buf_esys-all-attr.key7
@@ -79,11 +72,11 @@ class ibs.th.bge.mercury.Journal :
       tt_journal-merc.jou-status = buf_esys-all-attr.key3
       tt_journal-merc.jou-param = replace(buf_esys-all-attr.attr-value,{&delim-par},'|')
       tt_journal-merc.piIndex = table-name + string (key1) + string (key2) + string (key3) + string (key4) + string (key5) + string (key6) +
-        string (key7) + string (key8) + attr-code.
-       .
-   end. 
+      string (key7) + string (key8) + attr-code.
+    .
+  end. 
     
-    return buffer tt_journal-merc:handle.
+  return buffer tt_journal-merc:handle.
     
   end.
 

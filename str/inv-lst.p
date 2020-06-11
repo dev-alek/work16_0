@@ -44,7 +44,7 @@ define variable line-rec as recid no-undo .
 fill-gds-list = no.
 message
 "Сформировать также и список ТОВАРОВ, мешающих инвентаризации?" skip (2)
-"YES - сформировать, NO - пропустить"
+"Да - сформировать, Нет - пропустить"
 view-as alert-box question buttons YES-NO update fill-gds-list.
 
 lst-calc:

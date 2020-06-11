@@ -89,6 +89,10 @@ class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subj
       IsInitSubForWrite = false.
     end.
   end.
+  destructor public asubject ( ):
+      ClearSub().
+  end.
+
   method abstract protected void ClearSub ().
   method abstract protected void CheckData ().
 

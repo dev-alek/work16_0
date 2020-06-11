@@ -1058,6 +1058,24 @@ create X_auto-session .
     X_auto-session.session-name = "Меркурий"
     X_auto-session.proc-name    = "adm/l-i-merc.w":U
   .
+  create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-is_motp}
+    X_auto-session.session-name = "ИС МОТП"
+    X_auto-session.proc-name    = "adm/l-i-motp.w":U
+  .
+  create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-is_diadoc}
+    X_auto-session.session-name = "ИС Diadoc"
+    X_auto-session.proc-name    = "adm/l-i-diadoc.w":U
+  .
+  create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-hddtest}
+    X_auto-session.session-name = "Мониторинг HDD"
+    X_auto-session.proc-name    = "adm/l-i-hddtest.w":U
+  .
 
 END PROCEDURE.
 
@@ -1171,7 +1189,7 @@ define buffer buf_auto-session for tt_auto-session .
         end.
         else do:
           run write-to-log in this-procedure
-            ( substitute( "Сесия '&1' (PID &2) завершила работу.", buf_auto-session.session-name, buf_auto-session.session-pid )
+            ( substitute( "Сессия '&1' (PID &2) завершила работу.", buf_auto-session.session-name, buf_auto-session.session-pid )
             ) .
           os-delete value( ATH-var-name( buf_auto-session.session-pid ) ) no-error .
           delete buf_auto-session .
@@ -1185,7 +1203,7 @@ define buffer buf_auto-session for tt_auto-session .
         ( input buf_auto-session.session-pid
         ) .
       run write-to-log in this-procedure
-        ( substitute( "Останов сесии '&1' (PID &2) для перезапуска. ", buf_auto-session.session-name, buf_auto-session.session-pid )
+        ( substitute( "Остановка сессии '&1' (PID &2) для перезапуска. ", buf_auto-session.session-name, buf_auto-session.session-pid )
         ) .
       os-delete value( ATH-var-name( buf_auto-session.session-pid ) ) no-error .
       delete buf_auto-session .
@@ -1237,8 +1255,8 @@ define input  parameter p-sess-name as character no-undo .
   do
   on error undo, return error return-value
   :
-    define variable v-command-line as character no-undo .
-
+    define variable v-command-line     as character no-undo .
+    define variable v-command-line-log as character no-undo .
     assign
       /* ковычки одинарные и двойные должны быть именно такими!!! иначе не увидит ini-файла!!! */
       v-command-line = substitute( '&1 -ininame &2 -basekey "INI" -p &3 -param "U:&4,P:&5,M:&6"'
@@ -1249,6 +1267,14 @@ define input  parameter p-sess-name as character no-undo .
                                    , g#auto-user-password
                                    , replace( p-mode, ",":U, {&delim-par} )
                                  )
+      v-command-line-log = substitute( '&1 -ininame &2 -basekey "INI" -p &3 -param "U:&4,P:&5,M:&6"'
+                                   , v-exefile
+                                   , v-inifile
+                                   , p-proc-name
+                                   , g#auto-user-login
+                                   , "***"
+                                   , replace( p-mode, ",":U, {&delim-par} )
+                                 )
     .
     run gbl/run-gpid.p
       ( input v-command-line
@@ -1256,11 +1282,11 @@ define input  parameter p-sess-name as character no-undo .
        ,output p-pid
       ) no-error .
     if error-status :error then do:
-      return error substitute( "&1&2&3&2Параметры запуска сессии: &4", error-status :get-message(1), {&new-line}, return-value, v-command-line ) .
+      return error substitute( "&1&2&3&2Параметры запуска сессии: &4", error-status :get-message(1), {&new-line}, return-value, v-command-line-log ) .
     end.
 
     run write-to-log in this-procedure
-      ( substitute( "Запуск сесии '&1' (PID &2). Cтрока запуска: &3", p-sess-name, p-pid, v-command-line )
+      ( substitute( "Запуск сессии '&1' (PID &2). Cтрока запуска: &3", p-sess-name, p-pid, v-command-line-log )
       ) .
  end.
 
@@ -1386,7 +1412,7 @@ define buffer new_auto-session for tt_auto-session .
           next block_cycl .
         end.
         run write-to-log in this-procedure
-          ( substitute( "Останов сесии '&1' (PID &2) пользователем. ", buf_auto-session.session-name, buf_auto-session.session-pid )
+          ( substitute( "Остановка сессии '&1' (PID &2) пользователем. ", buf_auto-session.session-name, buf_auto-session.session-pid )
           ) .
         os-delete value( ATH-var-name( buf_auto-session.session-pid ) ) no-error .
         delete buf_auto-session .
@@ -1482,7 +1508,7 @@ PROCEDURE view-hide-sessions :
             v-ok = true
           .
           run write-to-log in this-procedure
-            ( substitute( "Сесия '&1' (PID &2) переведена в &3видимый режим ."
+            ( substitute( "Сессия '&1' (PID &2) переведена в &3видимый режим ."
                           ,buf_auto-session.session-name
                           ,buf_auto-session.session-pid
                           ,( if lookup( "H":U, buf_auto-session.add-mode, "+":U ) = 0 then "" else "не" )

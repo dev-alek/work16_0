@@ -5,7 +5,9 @@
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME d-out-prt
-
+using Progress.Lang.*.
+using ibs.th.gbl.*.
+using ibs.th.gbl.sys.*.
 
 /* Temp-Table and Buffer definitions                                    */
 DEFINE BUFFER b-c-b FOR ub.bar-code.
@@ -52,6 +54,10 @@ define buffer g-d-b   for ub.gds-dtl.
 define buffer out-dtl for ub.gds-dtl. /* признак внутренней РН */
 define buffer bf_prod-bc for ub.prod-bc.
 define buffer in_doc-line for ub.doc-line.
+
+define buffer buf_marking for ub.marking .
+define buffer buf_marking-child for ub.marking .
+define buffer buf_marking-lines for ub.marking-lines .
 
 define new shared temp-table tt-doc-pl no-undo
 field pl-code as integer format "99999999999"
@@ -153,6 +159,12 @@ define variable pr-genmrg                  as character initial ?         no-und
 
 define variable v-is-return                as logical   no-undo initial no  .
 
+define variable objSrv as class objsrv no-undo .
+define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+define variable v-pack-qnty as integer no-undo .
+
+define variable varvalue as character no-undo .
+define variable vartype  as character no-undo .
 define temp-table tt-parts-all   no-undo like ub.parts .
 define temp-table tt-parts-split no-undo like ub.parts
   index pi is unique primary
@@ -2137,6 +2149,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define buffer buf_currency for ub.currency  .
   define buffer buf_doc-pl-attr for ub.doc-pl-attr .
   
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
+  
   if num-entries(prt-mode, {&delim-par}) = 2
   then do :
     if entry(2, prt-mode, {&delim-par}) = "return" then v-is-return = true .
@@ -2748,6 +2762,22 @@ end.
     wait-for go of frame {&FRAME-NAME} focus b-exit.
   end.
   else do: /* prt-mode <> {&lookup} */
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+    RUN gds-attr-value (
+                        INPUT buf_goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT varvalue,
+                        OUTPUT vartype
+                        ).
+    if varvalue > ""
+    and EDOParSec:GetIsMarkingForType(varvalue)
+    then do :
+      disable
+        ub.gds-dtl.fact-qnty
+        ub.gds-dtl.doc-qnty
+      with frame {&FRAME-NAME} . 
+    end .
+  
     if v-work-with-qnty = "doc":U then do:
       if t-doc.doc-type = {&expense} and input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty = 0 then do:
         if ptrlprop-expptrl = {&calc-petrol-weight}
@@ -2810,7 +2840,51 @@ end.
             end.
           end.
         end.
+/*        run gbl/inidebug.p .*/
+        if node-type begins "scan-marks" then do:
+          
+          find first buf_marking no-lock where buf_marking.mark begins entry(2,node-type,{&delim-key}) no-error .
+          if not available buf_marking
+          then do :
+            undo, return error return-value .
+          end .
+          if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+          then do :
+            message "Марка " buf_marking.mark " не в свободной зоне!" view-as alert-box .
+            undo, return error .
+          end . 
+          case buf_marking.unit-ext : 
+            when "LEVEL2"
+            then do : 
+              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 500).
+            end .
+            when "LEVEL1"
+            then do :
+              assign v-pack-qnty = 0 .
+              for each buf_marking-child no-lock where buf_marking-child.mark-parent = buf_marking.mark,
+              first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking-child.mark-parent
+                                                and buf_marking-lines.out-code = ub.gds-dtl.doc-code :
+                assign v-pack-qnty = v-pack-qnty + 1 .                                  
+              end .
+              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 10 - v-pack-qnty).
+            end .
+            otherwise do :
+              find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
+                                                     and buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                                                     no-error .
+              if not available buf_marking-lines
+              then do :                                       
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+              end .
+            end .
+          end case .
+          
+          apply "LEAVE":U to ub.gds-dtl.doc-qnty in frame {&FRAME-NAME}.
+          apply "CHOOSE":U to b-exit in frame {&FRAME-NAME}.
+        end.
+        else do:   
         wait-for go of frame {&FRAME-NAME} focus ub.gds-dtl.doc-qnty .
+        end.
       end. /* q-ty, l */
     end. /* qnty */
     else do: /* fact */
@@ -4042,10 +4116,20 @@ define variable v-chg-qnty      as decimal   no-undo .
           )
     then do: /* НЕ топливо */
       if v-work-with-qnty = "doc":U then do:
+        if node-type begins 'scan-marks' then do:
+          { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" "is-marks" entry(2,node-type,{&delim-key})}
+        end.
+        else do:  
         { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" }
       end.
+      end.
+      else do:
+        if node-type begins 'scan-marks' then do:
+          { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" "is-marks" entry(2,node-type,{&delim-key})}
+        end.
       else do:
         { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" }
+      end.
       end.
     end. /* НЕ топливо */
     else do: /* топливо */
@@ -4104,6 +4188,7 @@ define variable v-chg-qnty      as decimal   no-undo .
             , input-output ub.doc-line.price-base
             , input-output ub.doc-line.price-rubl
             , input        -1
+            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
             ) no-error .
           if error-status :error then do:
             undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .
@@ -4148,6 +4233,7 @@ define variable v-chg-qnty      as decimal   no-undo .
             , input-output ub.doc-line.price-base
             , input-output ub.doc-line.price-rubl
             , input        -1
+            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
             ) no-error .
           if error-status :error then do:
             undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .
@@ -4412,6 +4498,7 @@ define variable v-chg-qnty      as decimal   no-undo .
           , input-output ub.doc-line.price-base
           , input-output ub.doc-line.price-rubl
           , input        -1
+          , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
           ) no-error .
         if error-status :error then do:
           undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .

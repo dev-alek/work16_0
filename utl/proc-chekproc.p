@@ -1,15 +1,16 @@
 
 .session:debug-alert = yes.
 
-define variable mFileHelper as class ibs.th.file.filehelperth. 
-mFileHelper = new ibs.th.file.filehelperth().
-mFileHelper:creatProcInfo(1,1,1).
-if    not mFileHelper:FileExists("stop.txt")
-   or not mFileHelper:FileExists("param.txt")
+define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
+mAsyncHelper = new ibs.th.file.AsyncHelperth().
+mAsyncHelper:creatProcInfo(1,1,1).
+if    not mAsyncHelper:FileExists("stop.txt")
+   or not mAsyncHelper:FileExists("param.txt")
 then do:
    output to "error.log".
    put unformatted "error   Получение проверка была преврвана пользователем или по TimeOut.".
    output close.
+   delete object mAsyncHelper.
    return.
 end.
 define variable v-num-parameters as integer no-undo.
@@ -20,15 +21,15 @@ define variable MChekSum as character no-undo.
 define variable m-parameter1 as character no-undo.
 define variable m-parameter2 as character no-undo.
 define variable m-parameter3 as character no-undo.
-mProc-name = mFileHelper:GetPARAM("param.txt", "ParamProc_1").
-v-num-parameters = int(mFileHelper:GetPARAM("param.txt", "ParamProc_2")).
-mparparentproc = logical (mFileHelper:GetPARAM("param.txt", "ParamProc_3")).
-mkey  = int(mFileHelper:GetPARAM("param.txt", "ParamProc_4")).
-m-parameter1  = mFileHelper:GetPARAM("param.txt", "ParamProc_5").
-m-parameter2  = mFileHelper:GetPARAM("param.txt", "ParamProc_6").
-m-parameter3  = mFileHelper:GetPARAM("param.txt", "ParamProc_7").
+mProc-name = mAsyncHelper:GetPARAM("param.txt", "ParamProc_1").
+v-num-parameters = int(mAsyncHelper:GetPARAM("param.txt", "ParamProc_2")).
+mparparentproc = logical (mAsyncHelper:GetPARAM("param.txt", "ParamProc_3")).
+mkey  = int(mAsyncHelper:GetPARAM("param.txt", "ParamProc_4")).
+m-parameter1  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_5").
+m-parameter2  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_6").
+m-parameter3  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_7").
 
-delete object mFileHelper.
+delete object mAsyncHelper.
 if     v-num-parameters ne ? 
    and mparparentproc   ne ? 
    and mkey     ne ?

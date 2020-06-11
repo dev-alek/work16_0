@@ -80,6 +80,12 @@ define property hist-name as character no-undo
   define property decommissioned as integer no-undo 
     get. 
     private set.
+  define property kpp as character no-undo 
+    get. 
+    private set.
+  define property edi as integer no-undo 
+    get. 
+    private set.
   
   define override property InitTag as character no-undo init "azk"
     get. 
@@ -103,6 +109,8 @@ define property hist-name as character no-undo
       when "begin-summer"   then begin-summer   = if inValue >= "" then inValue else "" .
       when "begin-winter"   then begin-winter   = if inValue >= "" then inValue else "" .
       when "decommissioned" then decommissioned = if inValue >= "" then integer (inValue) else 0 .
+      when "kpp"            then kpp            = if inValue >= "" then inValue else "" .
+      when "edi"            then edi            = if inValue >= "" then integer (inValue) else 0 .
     end case.
   end method.
 
@@ -153,6 +161,8 @@ define property hist-name as character no-undo
       begin-summer   = ?
       begin-winter   = ?
       decommissioned = ?
+      kpp        = ?
+      edi        = ?
     .
   end method.
 

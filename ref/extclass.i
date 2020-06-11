@@ -94,6 +94,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob bef-extclass_code_org_code_client code_org_client
 &glob extclass_code_org_code_client '{&bef-extclass_code_org_code_client}':U
 
+&glob bef-extclass_code_id_diadok_client id_diadok_client
+&glob extclass_code_id_diadok_client '{&bef-extclass_code_id_diadok_client}':U
+
 &glob extclass_name-list '~
 ~{&bef-extclass_clients_inn}~
 ,~{&bef-extclass_clients_parus}~
@@ -116,6 +119,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,~{&bef-extclass_goods_fib}~
 ,~{&bef-extclass_code_firm_in_ext_client}~
 ,~{&bef-extclass_code_org_code_client}~
+,~{&bef-extclass_code_id_diadok_client}~
 ,~{&bef-extclass_oss-ref}~
 ,~{&bef-extclass_egais-transId}~
 ,~{&bef-extclass_FormF1_esys}~

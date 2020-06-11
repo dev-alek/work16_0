@@ -107,8 +107,9 @@ do on error undo, return error :
             tt-cash-pay.pay-code  = buf_cash-pay.cdpay-code
             tt-cash-pay.curr-code = buf_cash-pay.curr-code
             .
+        release tt-cash-pay.     
     END.
-    v-need-pay-type = CAN-FIND (FIRST tt-cash-pay) .
+    v-need-pay-type = CAN-FIND (FIRST tt-cash-pay no-lock) .
 
         { gbl/working.i }
 

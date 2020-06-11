@@ -80,7 +80,7 @@ procedure gen-key-rec :
       :
         assign
           fh = p-bh_tbl-name:buffer-field( entry( 4 + v-ind, v-inform, ",":U ) ).
-          p-key-rec = p-key-rec + {&delim-key} + substitute("&1", fh:buffer-value())
+          p-key-rec = p-key-rec + {&delim-key} + substitute("&1", replace(fh:buffer-value(),{&delim-key},{&delim-key-rep}))
         .
       end.
     end.
@@ -96,14 +96,15 @@ procedure gen-key-rec :
   return.
 end procedure. /* gen-key-rec */
 
-procedure gen-row-keyr :
+procedure gen-hn-keyr-tab :
+  define input  parameter i-tableSerach as character no-undo.
+  define input  parameter i-tablekey   as character no-undo.  
   define input  parameter p-key-rec    as character no-undo.
   define input  parameter p-key-handle as handle    no-undo . /* буфер записи которую будем искать. если ищем по key-rec то ? */
   define input  parameter p-db-name    as character no-undo .
   define input  parameter p-tt-handle  as handle    no-undo . /* буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
   define input  parameter p-stts-lock  as integer   no-undo . /* этот параметр игнорируется для временных таблиц */
-  define output parameter p-tbl-row    as rowid     no-undo.
-  define output parameter p-tbl-name   as character no-undo.
+  define output parameter o-hn         as handle    no-undo.
   do
   on error  undo, return error substitute( "&1 (gen-row-keyr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1 (gen-row-keyr). stop", vss-workfile )
@@ -122,6 +123,9 @@ procedure gen-row-keyr :
     define variable v-field-name     as character no-undo .
     define variable v-field-val      as character no-undo .
     define variable v-word-link      as character no-undo .
+    define variable vTable           as character no-undo.
+    define variable bh_tbl-key       as handle    no-undo .
+    
     assign
       p-key-rec = trim( p-key-rec )
     .
@@ -147,7 +151,7 @@ procedure gen-row-keyr :
     end.
 
     assign
-      p-tbl-name = entry( 1 , p-key-rec, {&delim-key} )
+      vTable = entry( 1 , p-key-rec, {&delim-key} )
     .
 
     if p-tt-handle <> ?
@@ -155,12 +159,12 @@ procedure gen-row-keyr :
             or p-tt-handle:type <> "buffer"
           )
     then do:
-      return error substitute( "&1 (gen-row-keyr). Ошибка задания входных параметров. &2&3Передан невалидный handle для поиска или handle не типа BUFFER", vss-include-info{&vssseq}, p-tbl-name, {&new-line} ).
+      return error substitute( "&1 (gen-row-keyr). Ошибка задания входных параметров. &2&3Передан невалидный handle для поиска или handle не типа BUFFER", vss-include-info{&vssseq}, vTable, {&new-line} ).
     end.
 
     if p-tt-handle = ? then do:
       assign
-        v-full-tbl-name = substitute( "&1.&2":U, p-db-name, p-tbl-name )
+        v-full-tbl-name = substitute( "&1.&2":U, p-db-name, vTable )
       .
       create buffer bh_tbl-name for table v-full-tbl-name .
     end.
@@ -185,14 +189,14 @@ procedure gen-row-keyr :
       or LC( entry( 1, v-inform, ",":U ) ) = "default":U
       or entry( 3, v-inform, ",":U ) <> "1":U
     then do:
-      return error substitute( "&1. Таблица &2 не имеет первичного ключа", vss-include-info{&vssseq}, p-tbl-name ).
+      return error substitute( "&1. Таблица &2 не имеет первичного ключа", vss-include-info{&vssseq}, vTable ).
     end.
 
     assign
       v-idx-field-qnty = num-entries( v-inform ) - 4
     .
     if v-idx-field-qnty < 2 then do:
-      return error substitute( "&1. Определенный первичный индекс (&2) не содержит списка полей для таблицы &3", vss-include-info{&vssseq}, v-inform, p-tbl-name ).
+      return error substitute( "&1. Определенный первичный индекс (&2) не содержит списка полей для таблицы &3", vss-include-info{&vssseq}, v-inform, vTable ).
     end.
     assign
       v-where     = "where":U
@@ -200,6 +204,25 @@ procedure gen-row-keyr :
       v-field-num = num-entries( p-key-rec, {&delim-key} ) - 1
       v-count-fld = 0
     .
+    
+    if i-tablekey ne "" and i-tablekey ne ?
+    then do:
+      assign
+        v-full-tbl-name = substitute( "&1.&2":U, p-db-name, i-tablekey )
+      .
+      create buffer bh_tbl-key for table v-full-tbl-name .
+    end.
+    
+    if i-tableSerach ne "" and i-tableSerach ne ?
+    then do:
+      delete object bh_tbl-name no-error.
+      assign
+        v-full-tbl-name = substitute( "&1.&2":U, p-db-name, i-tableSerach )
+      .
+      create buffer bh_tbl-name for table v-full-tbl-name .
+    end.
+    
+    
     block_where:
     do v-ind = 1 to v-idx-field-qnty by 2
     on error undo, return error
@@ -212,11 +235,18 @@ procedure gen-row-keyr :
       then do:
         leave block_where.
       end.
-
+      define variable VfieldKeyTable as handle no-undo.
+      
       assign
         v-field-name = entry( 4 + v-ind, v-inform, ",":U )
         fh_search    = bh_tbl-name:buffer-field( v-field-name )
       .
+      if     bh_tbl-key ne ? 
+      then do:
+         VfieldKeyTable = bh_tbl-key:buffer-field( v-field-name ) no-error.
+         if VfieldKeyTable eq ?
+         then next block_where.
+      end.
         assign
           v-where = substitute( "&1 &2 &3 =", v-where, v-word-link, v-field-name )
         .
@@ -232,7 +262,7 @@ procedure gen-row-keyr :
 /*      end.*/
       if p-key-handle = ? then do:
         assign
-          v-field-val = entry( v-count-fld + 1 , p-key-rec, {&delim-key} )
+          v-field-val = replace (entry( v-count-fld + 1 , p-key-rec, {&delim-key} ),{&delim-key-rep},{&delim-key})
         .
       end.
       else do:
@@ -280,7 +310,7 @@ procedure gen-row-keyr :
     if p-key-handle = ?
       and v-count-fld <> v-field-num
     then do:
-      return error substitute( "&1. Не совпадает количество полей первичного ключа для таблицы &2", vss-include-info{&vssseq}, p-tbl-name ).
+      return error substitute( "&1. Не совпадает количество полей первичного ключа для таблицы &2", vss-include-info{&vssseq}, vTable ).
     end.
     if p-tt-handle = ? then do:
       bh_tbl-name:find-first( v-where, p-stts-lock ) no-error .
@@ -288,21 +318,37 @@ procedure gen-row-keyr :
     else do:
       bh_tbl-name:find-first( v-where ) no-error .
     end.
-
-    if bh_tbl-name:available then do:
-      assign
-        p-tbl-row = bh_tbl-name:rowid
-      .
-    end.
-    else do:
-      assign
-        p-tbl-row = ?
-      .
-    end.
-
-    delete object bh_tbl-name.
-
+    o-hn = bh_tbl-name.
+    
   end.
+end procedure. /* gen-hn-keyr-tab */
+
+procedure gen-hn-keyr :
+  define input  parameter p-key-rec    as character no-undo.
+  define input  parameter p-key-handle as handle    no-undo . /* буфер записи которую будем искать. если ищем по key-rec то ? */
+  define input  parameter p-db-name    as character no-undo .
+  define input  parameter p-tt-handle  as handle    no-undo . /* буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+  define input  parameter p-stts-lock  as integer   no-undo . /* этот параметр игнорируется для временных таблиц */
+  define output parameter o-hn         as handle    no-undo.
+  run gen-hn-keyr-tab(?,?,p-key-rec,p-key-handle,p-db-name,p-tt-handle,p-stts-lock,output o-hn).
+end.
+
+procedure gen-row-keyr :
+  define input  parameter p-key-rec    as character no-undo.
+  define input  parameter p-key-handle as handle    no-undo . /* буфер записи которую будем искать. если ищем по key-rec то ? */
+  define input  parameter p-db-name    as character no-undo .
+  define input  parameter p-tt-handle  as handle    no-undo . /* буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+  define input  parameter p-stts-lock  as integer   no-undo . /* этот параметр игнорируется для временных таблиц */
+  define output parameter p-tbl-row    as rowid     no-undo.
+  define output parameter p-tbl-name   as character no-undo.
+  define variable vHn as handle no-undo.
+    run gen-hn-keyr-tab(?,?,p-key-rec,p-key-handle,p-db-name,p-tt-handle,p-stts-lock,output vHn).
+    p-tbl-row = if vHn:available then vHn:rowid else ?.
+/*    p-tbl-name = entry( 1 , p-key-rec, {&delim-key} ) .*/
+    p-tbl-name =  vHn:table.
+    delete object vHn no-error.
+
+  
   if p-tbl-row = ? then do:
     return substitute( "Не найдена запись таблицы &2 по ключу &3", vss-include-info{&vssseq}, p-tbl-name, p-key-rec ).
   end.
@@ -408,7 +454,7 @@ procedure gen-key-fv :
 
   end.
 
-  return.
+  
 
 end procedure. /* gen-key-fv */
 

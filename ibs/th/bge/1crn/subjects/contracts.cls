@@ -43,7 +43,9 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
     private set.    
   define property code-SCVD   as character    no-undo get. 
     private set.    
-
+  define property edi_        as integer      no-undo get. 
+    private set. 
+    
   define override property InitTag as character no-undo init "contract"
     get. 
     
@@ -104,6 +106,11 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
           assign 
             code-SCVD = inValue .
         end.
+      when "edi" then 
+        do:
+          assign 
+            edi_ = integer(inValue) .
+        end.
     end case.
   end.
 
@@ -130,6 +137,8 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
       when date_ = ?
       v-str = v-str + ",code-SCVD" 
       when code-SCVD = ?
+      v-str = v-str + ",edi" 
+      when edi_ = ?
       .
     v-str = trim (v-str, ",").
     if v-str > ''
@@ -151,6 +160,7 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
       number     = ?
       date_      = ?
       code-SCVD  = ?
+      edi_       = ?
       .
   end.
   

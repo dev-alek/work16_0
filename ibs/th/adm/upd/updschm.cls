@@ -17,7 +17,7 @@ class ibs.th.adm.upd.updschm:
 
   {cmp/str-glbl.i class}
   
-
+  
   define variable loadDFprocFile as character no-undo.
 
   /*------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ class ibs.th.adm.upd.updschm:
     private set.
   
   
-
+    
   define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
   define variable analisdfObj as class analisdf no-undo.
@@ -105,7 +105,7 @@ class ibs.th.adm.upd.updschm:
     if loadDFProcFile <> ?
     then isRcode = true.
     else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
-    if not isRcode and CurrDBShm < TargetDBShm and not IsComp
+    if not IsComp and not isRcode and CurrDBShm < TargetDBShm 
     then do:
        message "Обновить базу с версии " CurrDBShm  " до " TargetDBShm "?" view-as alert-box question 
           buttons yes-no title "[ ВНИМАНИЕ! ]" update vupd.
@@ -147,8 +147,7 @@ class ibs.th.adm.upd.updschm:
          
       then */
          disconnect value ('ub').
-         m-Batch = yes. 
-         
+/*         m-Batch = yes.*/
       do vi = 1 to num-entries(mDfUpdaLL):
          
          upddbshm-1(entry(vi,mDfUpdaLL)).
@@ -233,14 +232,17 @@ class ibs.th.adm.upd.updschm:
     
      analisdfObj = new analisdf ().
      analisdfObj:IsComp = IsComp.
+     def var m-FileDf_new as char no-undo.
      if analisdfObj:createDF(CurrDBShm)
      then do:
         m-FileDf     = analisdfObj:mFileDf.
-        if not analisdfObj:CheckTable("new_" + m-FileDf)
+        m-FileDf_new = replace (m-FileDf,"~/","~\").
+        entry(num-entries (m-FileDf_new,"~\"),m-FileDf_new,"~\") = "new_" + entry(num-entries (m-FileDf_new,"~\"),m-FileDf_new,"~\").
+        if not analisdfObj:CheckTable(m-FileDf_new)
         then do:
            IsErr = true.
            delete object analisdfObj no-error.
-           message "Поля не прошедшие проверку выгружены в файл" "new_" + m-FileDf "(" search("new_" + m-FileDf) ")" 
+           message "Поля не прошедшие проверку выгружены в файл" m-FileDf_new 
            
            view-as alert-box.
            return.
@@ -269,9 +271,18 @@ class ibs.th.adm.upd.updschm:
     then do:
       analisdfObj = new analisdf ().
       analisdfObj:IsComp = IsComp.
+      if  analisdfObj:createDF(CurrDBShm,CurrDBShm + 1)
+      then do:
+         assign
+            m-FileDf     = analisdfObj:mFileDf
+            NewCurrDBShm = analisdfObj:mUpdateTo
+         .
+      end.
+      else
+         isErr = yes.
       if not m-FileDf begins "proc:"
       then 
-         m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1).
+         m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1). 
       delete object analisdfObj no-error.
       disconnect value ('ub').
       upddbshm-1(m-FileDf).

@@ -30,6 +30,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
     { str/is-gas.i }
     { str/is-sug.i }
     { str/placelib.i }
+    { gbl/db-attr.i }
     
     define variable v-prt-car-num          as character    no-undo .
     define variable v-prt-car-vol          as character    no-undo .
@@ -323,7 +324,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable is-rvs-place   as   logical             no-undo .
 
         define variable varnum         as   integer             no-undo.
-        define variable varcur-rvs     as   logical             no-undo.
+        define variable varcur-rvs     as   integer             no-undo.
         define variable v-today        as   date                no-undo.
         define variable v-time         as   integer             no-undo.
 
@@ -336,6 +337,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-density         like ub.rvs-line.state-density          no-undo .
+        
+        define variable v-asi-ip  as character no-undo .
+        define variable v-asi-port as character no-undo .
+        define variable v-asi-type as character no-undo .
+        define variable v-attr-type as character no-undo .
 
         assign
           v-pl-code = ?
@@ -548,37 +554,58 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               tt-meas.obj-code = t-doc.obj-code
               tt-meas.pl-code  = v-pl-code
             .
-            if ptoldfilvalue = "yes":U then do:
-              run gbl/d-askw.w
-                ( input "Выбор источника данных с информацией по резервуарам"
-                ,input "Будем читать текущие данные с резервуаров или возьмем данные из файла?"
-                ,input "|^"
-                ,input "Текущие данные|Из файлов|Отмена"
-                ,input "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем"
-                ,input 1
-                ,input 3
-                ,output varnum
-                ) .
-              case varnum :
-                when 1 then do:
-                  assign
-                    varcur-rvs = yes
-                  .
+            find first sys-ctrl no-lock.
+            run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
+            run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
+            run db-attr-value(sys-ctrl.db,"AsiType",output v-asi-type,output v-attr-type).
+            if trim(v-asi-ip) <> ''
+            and trim(v-asi-port) <> ''
+            and trim(v-asi-type) <> ''
+            then do :
+              case v-asi-type :
+                when "1"
+                then do :
+                  varcur-rvs = 2 .
                 end.
-                when 2  then do:
-                  assign
-                    varcur-rvs = no
-                  .
+                when "2"
+                then do :
+                  varcur-rvs = 3 .
                 end.
-                when 3 then do:
-                  return .
-                end.
-              end case. /* varnum */
+              end case .
             end.
-            else do:
-              assign
-                varcur-rvs = yes
-              .
+            else do :
+              if ptoldfilvalue = "yes":U then do:
+                run gbl/d-askw.w
+                  ( input "Выбор источника данных с информацией по резервуарам"
+                  ,input "Будем читать текущие данные с резервуаров или возьмем данные из файла?"
+                  ,input "|^"
+                  ,input "Текущие данные|Из файлов|Отмена"
+                  ,input "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем"
+                  ,input 1
+                  ,input 3
+                  ,output varnum
+                  ) .
+                case varnum :
+                  when 1 then do:
+                    assign
+                      varcur-rvs = 1
+                    .
+                  end.
+                  when 2  then do:
+                    assign
+                      varcur-rvs = 0
+                    .
+                  end.
+                  when 3 then do:
+                    return .
+                  end.
+                end case. /* varnum */
+              end.
+              else do:
+                assign
+                  varcur-rvs = 1
+                .
+              end.
             end.
 
             { str/rvsplace.i

@@ -1169,6 +1169,9 @@ method public void parse-json (
           when "integer" then do:
             pBuff:buffer-field[vI]:buffer-value = integer(myResultObj:GetCharacter(pBuff:buffer-field[vI]:name)) no-error .
           end.
+          when "int64" then do:
+            pBuff:buffer-field[vI]:buffer-value = int64(myResultObj:GetCharacter(pBuff:buffer-field[vI]:name)) no-error .
+          end.
           when "decimal" then do:
             pBuff:buffer-field[vI]:buffer-value = decimal(myResultObj:GetCharacter(pBuff:buffer-field[vI]:name)) no-error .
           end.

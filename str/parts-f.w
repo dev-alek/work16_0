@@ -5,7 +5,8 @@
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
+using ibs.th.str.marking.sts.*.
 /*
 
 $Revision$
@@ -32,6 +33,7 @@ create: Перваков Михаил Сергеевич
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
+using ibs.th.str.alcohol.*.
 
 define input  parameter parparentproc       as widget-handle no-undo.
 define input  parameter h-call-prog         as handle    no-undo .
@@ -40,6 +42,8 @@ define input  parameter p-doc-code          as character no-undo .
 define input  parameter p-gds-code          as integer   no-undo .
 define input  parameter p-pl-code           as integer   no-undo .
 define input-output parameter p-parts-recid as recid     no-undo .
+
+define variable chg-qnty      as   decimal no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -70,8 +74,11 @@ define variable vss-description as character no-undo init "Редактирование партий
 { gbl/sel-date.i }
 { str/trdcalib.i }
 { gbl/alc-lib.i  }
+{ gbl/thbjattr.i }
 { gbl/clntattr.i }
 { gbl/lineattr.i }
+{ ref/gds-attr.i }
+{ str/temp_upd.i }
 define variable v-parts-recid as recid no-undo .
 define buffer parts for ub.parts  .
 /* поле, разрешенное для изменения */
@@ -93,6 +100,7 @@ define variable v-goods-serial             as logical   no-undo .
 define variable v-goods-twounit            as logical   no-undo .
 define variable v-goods-petroleum          as logical   no-undo .
 define variable v-alcohol-prod             as logical   no-undo .
+define variable v-marking                  as logical   no-undo .
 define variable v-pharm                    as logical   no-undo .
 define variable v-can-change-part-code     as logical   no-undo .
 define variable v-can-change-supp          as logical   no-undo .
@@ -147,7 +155,9 @@ define variable v-alc-certif-path          as character no-undo .
 define variable v-alc-imp-type             as character no-undo .
 define variable v-alc-imp-code             as integer   no-undo .
 define variable v-vat-pc as decimal   no-undo .
-
+define variable p-mark                     as character no-undo .
+define variable v-marking-value            as character no-undo .
+define variable v-marking-type            as character no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -220,7 +230,13 @@ val-price-rubl val-base-code val-price-base
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
+def var Marking as class mark no-undo .
 
+FUNCTION StatusTHName RETURNS CHARACTER
+  (input p-stsTH as integer)  .
+  
+  Return Marking:GetLabel(p-stsTH) .
+END FUNCTION .
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-add
      LABEL "&Добавить"
@@ -261,8 +277,12 @@ DEFINE BUTTON b-help
      LABEL "Помо&щь"
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-next
-     LABEL "&>>"
+DEFINE BUTTON b-marking 
+     LABEL "&Марки" 
+     SIZE 7.38 BY 1 TOOLTIP "Марки".
+
+DEFINE BUTTON b-next 
+     LABEL "&>>" 
      SIZE 4.5 BY 1.
 
 DEFINE BUTTON b-prev
@@ -511,6 +531,7 @@ DEFINE FRAME Dialog-Frame
      b-rest AT ROW 1 COL 57
      b-cst AT ROW 1 COL 70
      b-dop AT ROW 1 COL 76 WIDGET-ID 6
+     b-marking AT ROW 1 COL 86 WIDGET-ID 10
      b-alc-attr AT ROW 1 COL 86
      b-help AT ROW 1 COL 96
      ub.parts.PS AT ROW 5.92 COL 59 NO-LABEL
@@ -1380,6 +1401,96 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
   { gbl/stdbtn.i }
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-marking
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-marking Dialog-Frame
+ON CHOOSE OF b-marking IN FRAME Dialog-Frame /* Марки */
+DO:
+    define buffer buf_parts for ub.parts .
+define variable p-mode as char no-undo.
+
+p-mode = {&lookup}.
+
+if not available parts then do: 
+    message 
+    "Нет партий по товару"
+    view-as alert-box.
+    return no-apply.
+end.
+define buffer buf_goods for ub.goods .
+define buffer buf_marking-lines for ub.marking-lines .
+define buffer buf_marking for ub.marking .
+define buffer  buf_marking-lines-parent for ub.marking-lines .
+ 
+find first buf_goods no-lock where buf_goods.artic = parts.artic and buf_goods.prod-code = parts.prod-code and buf_goods.prod-type = parts.prod-type no-error .
+if available (buf_goods) then do:
+    for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code and
+                                             buf_marking-lines.in-code = parts.in-code and 
+                                             buf_marking-lines.out-code = parts.out-code and 
+                                             buf_marking-lines.part-code = parts.part-code and
+                                             buf_marking-lines.prt-code = parts.prt-code and
+                                             buf_marking-lines.obj-code = parts.obj-code and
+                                             buf_marking-lines.obj-type = parts.obj-type:
+      for each buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark :
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.stts        = StatusTHName(buf_marking.sts)
+          tt-marking-lines.gds-name    = buf_goods.gds-name
+          tt-marking-lines.mark        = buf_marking.mark
+          tt-marking-lines.mark-parent = buf_marking.mark-parent
+          tt-marking-lines.gds-code    = buf_marking-lines.gds-code
+          tt-marking-lines.sts         = buf_marking.sts 
+          tt-marking-lines.unit        = buf_marking.unit
+          tt-marking-lines.unit-ext    = buf_marking.unit-ext
+          tt-marking-lines.box-qnty    = buf_marking.box-qnty
+          tt-marking-lines.doc-level   = buf_marking-lines.doc-level
+          tt-marking-lines.in-code     = parts.in-code
+          tt-marking-lines.out-code    = parts.out-code
+          tt-marking-lines.obj-code    = parts.obj-code
+          tt-marking-lines.obj-type    = parts.obj-type
+          tt-marking-lines.prt-code    = parts.prt-code
+          .
+          if buf_marking.sts = 10
+          then do:
+            if buf_marking.mark-parent <> ""
+            then do :
+              find first buf_marking-lines-parent no-lock where buf_marking-lines-parent.mark = buf_marking.mark-parent
+                                                            and buf_marking-lines-parent.gds-code = buf_marking-lines.gds-code
+                                                            and buf_marking-lines-parent.obj-type = buf_marking-lines.obj-type
+                                                            and buf_marking-lines-parent.obj-code = buf_marking-lines.obj-code
+                                                            and buf_marking-lines-parent.in-code  = buf_marking-lines.in-code
+                                                            and buf_marking-lines-parent.out-code = buf_marking-lines.out-code
+                                                            and buf_marking-lines-parent.part-code = buf_marking-lines.part-code
+                                                            and buf_marking-lines-parent.prt-code = buf_marking-lines.prt-code 
+                                                            and buf_marking-lines-parent.doc-level > 0
+                                                            no-error .
+              if available buf_marking-lines-parent
+              then do :
+                tt-marking-lines.doc-level = 2 .
+              end .
+              else do :
+                tt-marking-lines.doc-level = 1 .
+              end .
+            end .
+            else tt-marking-lines.doc-level = 1 .  
+          end.
+          
+      end.
+    end.
+end.
+      run str/mark_browse.w (input parparentproc,
+        input-output table tt-marking-lines,
+        input "",
+        input "Марки по: " + "По партии №" + string (parts.part-code) + " по товару - " + string(buf_goods.gds-code) + " " + string (buf_goods.gds-name),
+        input 0,
+        input ""
+        ) no-error .
+        empty temp-table tt-marking-lines .
 END.
 
 /* _UIB-CODE-BLOCK-END */

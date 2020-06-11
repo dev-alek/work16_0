@@ -94,6 +94,9 @@ define buffer doc-line for ub.doc-line  .
 { str/cont-ms.i}
 {ref/imagelist.i}
 { gbl/color.i }
+{ str/temp_upd.i }
+{ibs/th/bge/egais/ab-egais.i 1 new shared}
+{ str/marks.i         }
 
 &global-define is-fuel 1
 &global-define is-lgas 2
@@ -224,6 +227,7 @@ define variable choice as integer no-undo.
 define variable isEgais  as logical   no-undo .
 define variable v-mercury-value as character no-undo .
 define variable v-mercury-type  as character no-undo .
+define variable v-is-mercury-value as logical no-undo .
 define variable vsdstrObj as class vsdtostorage no-undo.
 define variable bcol as handle extent no-undo.
 define variable hBrowse as handle no-undo.
@@ -1711,9 +1715,116 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-marks d-in-doc
 ON CHOOSE OF b-marks IN FRAME d-in-doc /* Шкала */
 DO:
+    define buffer buf_gen-attr for ub.gen-attr .
+    define variable v-parts-uniq-key-rec    as character    no-undo .
+    define buffer buf_tt-marks  for tt-marks .
+    define variable v-alcohol-prod   as logical no-undo .
+        
   {&stdbtn}
-  run str/add-marks.w (input parparentproc, input t-doc.doc-code, input pardoc-mode)  no-error.
-  if error-status :error then do: return no-apply. end.
+  if not available (ub.goods)
+    then return no-apply.
+
+  for each buf_tt-marks:
+    delete buf_tt-marks .
+  end.    
+
+  /* Является ли товар алкогольной продукцией */
+  { gbl/gdscdat.i
+    ub.goods.gds-code
+    "'alcohol-prod=request':u"
+    v-alcohol-prod
+  }
+  if error-status :error
+  then do:
+    message
+      vss-workfile vss-revision vss-description skip
+      "Ошибка при определении атрибута товара" skip
+      "Код товара" ub.goods.gds-code skip
+      'mercur_FGIS=request':u skip
+      error-status :get-message(1) skip
+      return-value skip
+      view-as alert-box error .
+    undo, return no-apply .
+  end.
+  case true:
+    when v-alcohol-prod then do:
+/*  run str/add-marks.w (input parparentproc, input t-doc.doc-code, input pardoc-mode)  no-error.*/ /*интерфейс с марками*/
+      message "Вывести марки по всем линиям?"
+        view-as alert-box question buttons YES-NO title "Вопрос" update varlog.
+      
+      for each bf_parts where bf_parts.out-code = t-doc.doc-code and 
+      (varlog or (bf_parts.artic = goods.artic and bf_parts.prod-code = goods.prod-code and bf_parts.prod-type = goods.prod-type)):
+      run gen-key-rec IN THIS-PROCEDURE (  input {&table_parts}
+        ,input (buffer bf_parts:handle)
+        ,output v-parts-uniq-key-rec).
+    
+        for each buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark} and buf_gen-attr.p-key = v-parts-uniq-key-rec:
+            find first buf_tt-marks where buf_tt-marks.mark = buf_gen-attr.attr-code no-error .
+            if not AVAILABLE buf_tt-marks then 
+            do:                                       
+                create buf_tt-marks .
+                ASSIGN
+                    buf_tt-marks.mark               = buf_gen-attr.attr-code
+                    buf_tt-marks.parts              = buf_gen-attr.p-key
+                    buf_tt-marks.reserv             = buf_gen-attr.whole-send-news
+                    buf_tt-marks.num                = ""
+                    buf_tt-marks.gds-part-position_ = ?
+                    buf_tt-marks.gds-code           =  goods.gds-code
+                    .
+            end.
+          end.
+        end.
+        run ref/egais-marks_exp.w (
+            input parparentproc, 
+            input t-doc.doc-code, 
+            input {&income}  ,
+            input-output table tt-marks) no-error.
+      if error-status :error then do: return no-apply. end.
+    end.
+    when true then do:
+      def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+      run gbl/getobjsrvhndl.p (input-output ObjSrv).
+      for each bf_parts where bf_parts.out-code = t-doc.doc-code and 
+      bf_parts.artic = goods.artic and bf_parts.prod-code = goods.prod-code and bf_parts.prod-type = goods.prod-type:
+        for each ub.marking-lines where 
+              ub.marking-lines.obj-type = bf_parts.obj-type
+          and ub.marking-lines.obj-code = bf_parts.obj-code
+          and ub.marking-lines.in-code = bf_parts.in-code
+          and ub.marking-lines.out-code = bf_parts.out-code
+          and ub.marking-lines.gds-code = ub.goods.gds-code:
+          create tt-marking-lines.
+          buffer-copy ub.marking-lines to tt-marking-lines.
+          find first ub.marking where ub.marking.mark = tt-marking-lines.mark no-error.
+          if available (ub.marking)
+          then do:
+            tt-marking-lines.sts = ub.marking.sts.
+            tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
+            tt-marking-lines.box-qnty = ub.marking.box-qnty .
+            tt-marking-lines.unit = ub.marking.unit .
+            tt-marking-lines.unit-ext = ub.marking.unit-ext .
+            tt-marking-lines.doc-level = ub.marking-lines.doc-level.
+            tt-marking-lines.gds-name = ub.goods.gds-name.
+            tt-marking-lines.mark-parent = ub.marking.mark-parent.
+          end.
+          else do:
+            message "Марка отсутсвует в справочнике марок - " + tt-marking-lines.mark view-as alert-box error.
+          end.
+        end.
+      end. 
+      run str/mark_browse.w (input parparentproc, input-output table tt-marking-lines, input {&lookup}, input "", input "", input "") .
+      for each tt-marking-lines:
+        delete tt-marking-lines.
+      end.
+    end.
+    otherwise do:
+      if not v-alcohol-prod
+      then do:
+        message "Товар не подлежит маркировке." view-as alert-box information title "Информация".
+        undo, return no-apply .
+      end.
+    end.
+  end case.
+
   run ui-on in this-procedure ( input "line" ).
 
 END.
@@ -2305,12 +2416,19 @@ assign
   v-mercury-type
   no-error
 }
+if v-mercury-value ne "no" and v-mercury-value ne "" and v-mercury-value ne ?
+then do: 
+  v-is-mercury-value = true.
+  vsdstrObj = new vsdtostorage ().
+end.
 hbrowse = browse br-dtl:handle.
 extent (bcol) = hbrowse:num-columns.
 bcol[1] = hbrowse:first-column.
 do ii = 1 to extent (bcol).  
   bcol[ii] = hbrowse:get-browse-column (ii).
 end.
+
+
 
 { gbl/conf-rd.i  "'is-ptrl'" "''" "''" 0 "''" "''" "''" no v-is-ptrl v-data-type no-error }
 if error-status :error or v-data-type <> "L" or lookup( v-is-ptrl, "yes,no" ) = 0 then do:
@@ -4082,11 +4200,17 @@ define variable varext-cycle    as logical no-undo.
 define variable v-is-petrol     as logical no-undo.
 define variable v-is-pieces     as logical no-undo.
 define variable v-log           as logical no-undo.
+define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 assign
   varlns-cnt = 1.
 cycle:
 do while varlns-cnt <= num-entries (varnotes):
+  
+  def var varvalue as character no-undo.
+  def var vartype as character no-undo.
+  
   assign  gds-rec = integer (entry (varlns-cnt, varnotes)).
   if t-doc.purch-code = {&bef-responsible-storage-code} then do:
     find first bf_goods where recid(bf_goods) = gds-rec no-lock.
@@ -4116,10 +4240,46 @@ do while varlns-cnt <= num-entries (varnotes):
       next.
     end.
   end.
+  
+  find first bf_goods where recid(bf_goods) = gds-rec no-lock.
+  run gds-attr-value in this-procedure
+    (  input bf_goods.gds-code
+    ,  input {&attr-fuel-type}
+    , output varvalue
+    , output vartype
+    ) no-error .
+  
+  if varvalue = "metan"
+  then do:
+    message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+            "нельзя приходывать в ручном режиме."
+    view-as alert-box error.
+    assign varlns-cnt = varlns-cnt + 1.
+    next.
+  end.
+  
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
+  EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+  RUN gds-attr-value (
+                      INPUT bf_goods.gds-code,
+                      INPUT {&attr-mark-type},
+                      OUTPUT varvalue,
+                      OUTPUT vartype
+                      ).
+  if varvalue > ""
+  and EDOParSec:GetIsMarkingForType(varvalue)
+  then do :
+    message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+            "нельзя добавлять в ручном режиме, так как он подлежит маркировке и должен добавляться помарочно."
+    view-as alert-box error.
+    assign varlns-cnt = varlns-cnt + 1.
+    next.
+  end .
+  
   if can-find (FIRST ub.clients-attr no-lock where (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})
                                                and ub.clients-attr.attr-value = "yes")
   then do :
-    find first bf_goods where recid(bf_goods) = gds-rec no-lock.
+/*    find first bf_goods where recid(bf_goods) = gds-rec no-lock.*/
     { str/is-petrl.i bf_goods.artic bf_goods.prod-type bf_goods.prod-code v-is-petrol v-is-pieces no-error }
     if v-is-petrol then do :
       if not can-find (FIRST ub.clients-attr no-lock where ub.clients-attr.obj-type   = t-doc.cli-type
@@ -7355,15 +7515,15 @@ FUNCTION get-vsdsts RETURNS CHARACTER
 (buffer local-doc-line for doc-line ):
   
   def var v-mercury-prod as logical no-undo.
-  def buffer bf_gds for ub.goods.
-  
-  find first bf_gds where 
-        local-doc-line.artic = bf_gds.artic
-    and local-doc-line.prod-type = bf_gds.prod-type
-    and local-doc-line.prod-code = bf_gds.prod-code.
-  
-  if lookup(v-mercury-value, 'no':u) = 0
+ 
+  if v-is-mercury-value
   then do:
+    def buffer bf_gds for ub.goods.
+    
+    find first bf_gds where 
+          local-doc-line.artic = bf_gds.artic
+      and local-doc-line.prod-type = bf_gds.prod-type
+      and local-doc-line.prod-code = bf_gds.prod-code.
     { gbl/gdscdat.i
       bf_gds.gds-code
       "'mercur_FGIS=request':u"
@@ -7384,14 +7544,11 @@ FUNCTION get-vsdsts RETURNS CHARACTER
     end.
     if v-mercury-prod
     then do:
-      vsdstrObj = new vsdtostorage ().
       if vsdstrObj:exsistvsd( buffer local-doc-line )
       then do:
-        delete object vsdstrObj no-error.
         return "+".
       end.
       else do with frame {&FRAME-NAME}:
-        delete object vsdstrObj no-error.
         return "-".
       end.
     end.
@@ -7401,7 +7558,7 @@ FUNCTION get-vsdsts RETURNS CHARACTER
   
 end function.
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-vsdsts d-in-doc 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-vat-sum d-in-doc 
 FUNCTION get-vat-sum RETURNS decimal
 (buffer local-doc-line for doc-line ):
   
@@ -7416,13 +7573,18 @@ end function.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rowdisp d-in-doc 
 procedure rowdisp :
   
-  do ii = 1 to extent (bcol).  
+  def var v-vsdsts-fail as logical no-undo. 
+  assign
+    v-vsdsts-fail = (get-vsdsts(buffer ub.doc-line) = "-").
+  
+  if v-vsdsts-fail
+  then do ii = 1 to extent (bcol):  
     if valid-handle (bcol[ii]) 
     then do:
       assign
-        bcol[ii]:bgcolor = RED_COLOR when get-vsdsts(buffer ub.doc-line) = "-".
+        bcol[ii]:bgcolor = RED_COLOR.
     end.
-  end.  
+  end.
   
 end procedure.
 

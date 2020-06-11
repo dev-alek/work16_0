@@ -24,6 +24,7 @@ FIELD artic             like ub.goods.artic
 FIELD producer-int      as integer
 FIELD b-code            like ub.bar-code.b-code
 FIELD b-str             like ub.prod-bc.b-str
+FIELD bc-on              like ub.prod-bc.bc-on
 FIELD gds-name          like ub.goods.gds-name
 FIELD gds-namelong      like ub.goods.gds-name
 FIELD gds-name1         like ub.goods.gds-name
@@ -106,7 +107,7 @@ index bc b-code
 index pbc b-str
 index igds gds-code
 index mbc obj-type obj-code main-prt-b-code
- .
+.
 
 
 define temp-table temp-dis-gds-rule no-undo

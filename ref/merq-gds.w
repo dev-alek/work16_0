@@ -448,6 +448,9 @@ PROCEDURE MyEnable :
       B-prod-type
       B-exit b-quit B-Help
       with frame {&frame-name} .
+      
+    SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
+    
     { gbl/getsect.i run v-cntxt-obj-type v-cntxt-obj-code {&attr-mercur} }
 
     for each thbjattr_thbj-attr :

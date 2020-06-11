@@ -52,6 +52,7 @@ define variable v-cont-length as integer   no-undo.
 define variable v-cont-type   as character no-undo.
 define variable v-user-agent  as character no-undo.
 define variable v-querypar    as character no-undo.
+define variable v-path    as character no-undo.
 
 { cmp/trg-def.i new }
 { cmp/showinf.i  }
@@ -188,7 +189,7 @@ DEFINE BUTTON Btn-st
      LABEL "Старт"
      SIZE 10 BY 1.
 
-DEFINE VARIABLE auto-log AS CHARACTER
+DEFINE VARIABLE auto-log AS longchar
      VIEW-AS EDITOR SCROLLBAR-VERTICAL LARGE
      SIZE 96 BY 20 NO-UNDO.
 
@@ -354,7 +355,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       g#db-num
     }
   g#language = 'RUS'.
-  run gbl/get-gbl.p.
   IF NOT THIS-PROCEDURE:PERSISTENT THEN
     WAIT-FOR CLOSE OF THIS-PROCEDURE.
 END.
@@ -431,6 +431,7 @@ PROCEDURE connproc :
     v-str = "".
     v-cont-length = 0.
     v-querypar = "".
+    v-path = "".
     set-size (mbuffer-in) = 0.
     set-size (mbuffer-out) = 0.
     set-size (mbuffer) = 0.
@@ -555,16 +556,24 @@ PROCEDURE connproc :
 
           logWrite = new LogWrite().          
           sktserv = new SktServer().
-          if v-querypar <> ""
-          then do:
-            if num-entries (v-querypar, "?") > 1
-            then do:
-              sktserv:ClientPar = entry (1, v-querypar, "?"). 
-              sktserv:QueryParam = entry (2, v-querypar, "?").
-            end.
-            else sktserv:ClientPar = v-querypar.
+          case v-path:
+          when "AuthMarking" then do:
+            sktserv:ClientPar = v-path. 
+            sktserv:QueryParam = entry (2, v-querypar, "?").            
           end.
-          
+          otherwise do:
+            if v-querypar <> ""
+            then do:
+              if num-entries (v-querypar, "?") > 1
+              then do:
+                sktserv:ClientPar = entry (1, v-querypar, "?"). 
+                sktserv:QueryParam = entry (2, v-querypar, "?").
+              end.
+              else sktserv:ClientPar = v-querypar.
+            end.
+          end.
+          end.
+
           case true:
           when sktserv:ClientPar <> '' then do:
             sktserv:RequestProcessing(v-content, hsocket) no-error.
@@ -756,18 +765,25 @@ END PROCEDURE.
 procedure parseheader:
   
   define input parameter p-header as character no-undo.
+  define variable n as integer no-undo.
   
   def var i as int no-undo.
-  
   RUN write-to-log('REQUEST-HEADER:' + p-header ).
   /*разбор шапки*/
+  n = 2.
   if p-header begins "GET" and num-entries (p-header, "/") > 1
   then do:
-    v-querypar = entry (2, p-header, "/").
+    v-querypar = entry (n, p-header, "/").
+  end.
+  if v-querypar = "AuthMarking"
+  then do:
+    v-path = v-querypar.
+    v-querypar = entry (n, p-header, "?").
+    n = 3.
   end.
   DO i = 1 TO NUM-ENTRIES(p-header,{&CRLF}):
       v-hd-line = trim(ENTRY(i,p-header,{&CRLF})).
-      v-querypar = right-trim (right-trim  (entry(2, v-header, "/"), "HTTP"), " ").
+      v-querypar = right-trim (right-trim  (entry(n, v-header, "/"), "HTTP"), " ").
       IF  v-hd-line  BEGINS "Content-Length"  THEN  do:
           v-cont-length = INT(trim(entry(1,SUBSTRING(v-hd-line,16,LENGTH(v-hd-line)),';'))).
       END.
