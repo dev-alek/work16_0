@@ -33,6 +33,7 @@ Creation date: 09/12/06
 { str/peresort.i }
 { cmp/gds-list.i gds-list def "new shared" }
 { str/get-pr.i def }
+{ ref/gds-attr.i }
 /* Parameters Definitions ---                                           */
 define input  parameter parparentproc       as   handle              no-undo.
 define input  parameter pardoc-code         like ub.trn-doc.doc-code no-undo.
@@ -1481,6 +1482,11 @@ run ref/gds-ref.p
 IF ref-list <> "":u THEN DO:
   find first bf_goods where recid (bf_goods) = integer (entry(1, ref-list)) no-lock  .
   run ver-gds in this-procedure (bf_goods.gds-code, output v-erase) no-error  .
+  if error-status:error
+  then do:
+     message return-value VIEW-AS ALERT-BOX.
+     return  error.
+  end.
   if v-erase = TRUE then do:
     MESSAGE "Вы выбрали нетоварную позицию." VIEW-AS ALERT-BOX.
     RETURN ERROR.
@@ -1548,6 +1554,11 @@ run ref/gds-ref.p
 IF ref-list <> "":u THEN DO:
   find first bf_goods where recid (bf_goods) = integer (entry(1, ref-list)) no-lock  .
   run ver-gds (bf_goods.gds-code, output v-erase) no-error  .
+  if error-status:error
+  then do:
+     message return-value VIEW-AS ALERT-BOX.
+     return  error.
+  end.
   if v-erase = TRUE  then do:
     MESSAGE "Вы выбрали нетоварную позицию." VIEW-AS ALERT-BOX.
     RETURN ERROR.
@@ -1637,6 +1648,11 @@ else do:
   end.
 
   run ver-gds in this-procedure (bf-chk_goods.gds-code, output varnabor) no-error .
+  if error-status:error
+  then do:
+     message return-value VIEW-AS ALERT-BOX.
+     return  error.
+  end.
   if varnabor = true then do:
     message "Это не товарная позиция - имеет атрибут НАБОР !!!".
     apply "entry" to varartic in frame {&frame-name}.
@@ -1890,6 +1906,11 @@ else do:
     return error.
   end.
   run ver-gds IN THIS-PROCEDURE (bf-chk_goods.gds-code, output varnabor) no-error .
+  if error-status:error
+  then do:
+     message return-value VIEW-AS ALERT-BOX.
+     return  error.
+  end.
   if varnabor = true then do:
     message "Это не товарная позиция - имеет атрибут НАБОР !!!".
     apply "entry" to varartic-plus in frame {&frame-name}.
@@ -2132,10 +2153,30 @@ END PROCEDURE.
 PROCEDURE ver-gds :
 define input  parameter p-gds-code as integer   no-undo .
 define output parameter  v-nabor   as logical   no-undo .
+
+define variable varvalue        as character no-undo .
+define variable vartype         as character no-undo .
+define variable ObjSrv          as class     ibs.th.gbl.sys.objsrv     no-undo.
+define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo .
+  
+define buffer buf_goods-attr for goods-attr.
  do
  on error undo, return error return-value
  :
-
+   
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
+  EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(parobj-type, parobj-code).
+  
+  RUN gds-attr-value (
+          INPUT p-gds-code,
+          INPUT {&attr-mark-type},
+          OUTPUT varvalue,
+          OUTPUT vartype
+          ).
+  if varvalue > ""
+  and EDOParSec:GetIsMarkingForType(varvalue)
+  then
+    return error substitute("Товар &1 с маркировкой нельзя добавлять.",p-gds-code). 
   v-nabor = false .
   run ver-gds-grp-nabor in this-procedure ( input p-gds-code, output v-nabor) .
  END.

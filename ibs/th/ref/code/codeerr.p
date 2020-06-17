@@ -1,0 +1,57 @@
+/*
+$Revision:$
+$Author:$
+$Date:$
+$Workfile:$
+$Archive:$
+
+Автор: Шкляр Елена
+Дата создания: 31 июля 2019 г.
+Author:  Shklyar Elena
+Creation date: 31 июля 2019 г.
+
+*/
+{cmp/str-glbl.i }
+{ ibs\th\ref\code\codepar.i }
+
+define variable vss-revision    as character no-undo init "$Revision:$":U .
+define variable vss-author      as character no-undo init "$Author:$":U .
+define variable vss-date        as character no-undo init "$Date:$":U .
+define variable vss-workfile    as character no-undo init "$Workfile:$":U .
+define variable vss-archive     as character no-undo init "$Archive:$":U .
+define variable vss-description as character no-undo init "".
+{ cmp/vssrevis.i }
+define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
+    
+mCodeTrg = new ibs.th.ref.code.code_trg().
+
+mCodeTrg:formLable(1, 2, "Код").
+mCodeTrg:formLable(1, 3, "Наименование").
+
+mCodeTrg:formLable(2, 2, "Код").
+mCodeTrg:formLable(2, 3, "Наименование").
+
+mCodeTrg:formLable(3, 2, "Код").
+mCodeTrg:formLable(3, 3, "Наименование").
+mCodeTrg:formLable(3, 4, "Текст").
+mCodeTrg:formLable(3, 11, "Группировка выгр.").
+mCodeTrg:formLable(3, 12, "Знач.Выгр.").
+
+
+/*mCodeTrg:formLable(1, 6, "Дата").*/
+mCodeTrg:MaxLevel = 3.
+
+mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).
+mCodeTrg:startlevel = num-entries(mCodeTrg:parent,{&delim-par}).
+find first code where code.parent eq iparent
+                  and code.code   eq icode
+                  no-lock no-error.
+if available code
+then mCodeTrg:title = code.codename.
+/*mCodeTrg:chek-erpRN = no.*/
+mCodeTrg:brwcode().
+
+
+finally:
+   delete object mCodeTrg.
+end finally. 

@@ -43,6 +43,12 @@ define variable mode-erprn as logical no-undo.
 { nws/nws-tabs.i      }
 { cmp/rest-rdb.i      }
 { nws/lib-nws.i       }
+&if defined(globobjSrv) eq 0
+&then 
+&glob globobjSrv yes
+def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
+&endif
 
 define buffer buf_rrdb-option for rrdb-option.
 define variable conf-par as character no-undo.
@@ -1577,6 +1583,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       on stop   undo, return error substitute( "&1 (ub.prod-bc). stop", vss-workfile )
       on endkey undo, return error substitute( "&1 (ub.prod-bc). endkey", vss-workfile )
       :
+        if ub.prod-bc.bc-on-type eq {&gtin}
+        then
+            l-prod-bc-global = yes.
+        else do:
         { gbl/prodbcat.i
           ub.prod-bc
           "'global=request':u"
@@ -1594,6 +1604,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             return-value skip
             view-as alert-box error .
           return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+        end.
         end.
         if l-prod-bc-global then do:
           create dst.prod-bc.
@@ -2276,6 +2287,23 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         end.
       end. /*if p-unload-history then do:*/
 
+      output stream slog to rest-rdb.txt append .
+      export stream slog "start rest-Utd " cur-time-string() .
+      output stream slog close .
+
+      run rest-Utd in this-procedure
+        ( input ub.clients.obj-type
+         ,input ub.clients.obj-code
+        )
+        no-error
+      .
+      if error-status :error then do:
+          output stream slog to rest-rdb.txt append .
+          export stream slog  error-status :get-message(1) return-value cur-time-string() .
+          output stream slog close .
+          return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+      end.
+      
       output stream slog to rest-rdb.txt append .
       export stream slog "start rest-inkas " cur-time-string() .
       output stream slog close .
@@ -3642,6 +3670,9 @@ end procedure. /* create-date-on-object */
 
 procedure process-parts :
 
+   define buffer marking-lines for ub.marking-lines.
+   define buffer buf_marking-lines for dst.marking-lines.
+
   do
   on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1. stop", vss-workfile )
@@ -3667,7 +3698,20 @@ procedure process-parts :
         view-as alert-box error .
       undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
     end.
-
+    
+    for each marking-lines where marking-lines.gds-code   = v-parts-gds-code
+                             and marking-lines.obj-type   = ub.parts.obj-type
+                             and marking-lines.obj-code   = ub.parts.obj-code
+                             and marking-lines.in-code    = ub.parts.in-code
+                             and marking-lines.out-code   = ub.parts.out-code
+                             and marking-lines.part-code  = ub.parts.part-code
+    no-lock
+    on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ):
+       create buf_marking-lines.
+       buffer-copy  marking-lines to buf_marking-lines.
+       run rest-Onemark(buf_marking-lines.mark).
+       
+    end.
     /* проверяем, есть ли у партии атрибут партии поставщика */
     find first ub.parts-supp no-lock
       where ub.parts-supp.in-code   = ub.parts.in-code
@@ -3780,6 +3824,147 @@ procedure process-c-parts :
     end.
   end.
 end procedure. /* process-c-parts */
+
+procedure rest-OneMark :
+   define input parameter p-mark as character no-undo .
+   define buffer marking          for  ub.marking.
+   define buffer buf_marking      for dst.marking.
+   define buffer marking-attr     for  ub.marking-attr.
+   define buffer buf_marking-attr for dst.marking-attr.
+   
+   find first buf_marking where buf_marking.mark eq p-mark
+   no-lock no-error.
+   if not available buf_marking
+   then do:
+      find first marking where marking.mark eq p-mark
+      no-lock no-error.
+      if available  marking
+      then do on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ):
+         create buf_marking.
+         buffer-copy marking to buf_marking.
+         if     buf_marking.obj-type eq {&shop}
+            and buf_marking.sts eq objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+         then do:
+            find dst.shop where dst.shop.obj-code = buf_marking.obj-code no-lock.
+            if not available ub.shop
+            then
+               buf_marking.sts eq objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB.
+         end.
+         for each marking-attr where marking-attr.mark eq buf_marking.mark
+         no-lock
+         on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ):
+            create buf_marking-attr.
+            buffer-copy marking-attr to buf_marking-attr.
+         end.
+      end.
+   end.
+end.
+
+procedure rest-Utd :
+   define input parameter p-obj-type as character no-undo .
+   define input parameter p-obj-code as integer   no-undo .
+  
+   define buffer utd                         for ub.utd.
+   define buffer but_utd                     for dst.utd.
+   define buffer utd-attr                    for ub.utd-attr.
+   define buffer but_utd-attr                for dst.utd-attr.
+   define buffer Utd-err                     for ub.Utd-err.
+   define buffer but_Utd-err                 for dst.Utd-err.
+   define buffer Utd-lines                   for ub.Utd-lines.
+   define buffer but_Utd-lines               for dst.Utd-lines.
+   define buffer Utd-marking-lines           for ub.Utd-marking-lines.
+   define buffer but_Utd-marking-lines       for dst.Utd-marking-lines.
+   define buffer Utd-err-attr                for ub.Utd-err-attr.
+   define buffer but_Utd-err-attr            for dst.Utd-err-attr.
+   define buffer Utd-lines-attr              for ub.Utd-lines-attr.
+   define buffer but_Utd-lines-attr          for dst.Utd-lines-attr.
+   define buffer Utd-marking-lines-attr      for ub.Utd-marking-lines-attr.
+   define buffer but_Utd-marking-lines-attr  for dst.Utd-marking-lines-attr.
+   do
+   on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+   on stop   undo, return error substitute( "&1. stop", vss-workfile )
+   on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+   :
+
+      assign
+         ind1 = 0
+         fl   = 'trn-doc':U
+      .
+
+      if transaction = true
+      then do:
+         message
+            vss-workfile vss-revision vss-description skip
+            "При выгрузке УПД активна транзакция" skip
+            "Выгрузка невозможна" skip
+         view-as alert-box error .
+         undo, return error "При выгрузке документов активна транзакция" .
+      end.
+
+      for each utd no-lock
+         where Utd.obj-type = p-obj-type
+           and UTD.obj-code = p-obj-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+      :
+         create but_utd.
+         buffer-copy utd to but_utd. 
+         assign  ind1 = ind1 + 1.
+         display ind1 count-str fl with frame ddd view-as dialog-box.
+         
+         for each utd-attr where  Utd-attr.db-num eq   Utd.db-num
+                                 and  Utd-attr.doc-id eq   Utd.doc-id
+         no-lock:
+            create but_Utd-attr.
+            buffer-copy Utd-attr to but_Utd-attr.
+         end.
+         
+         for each utd-err where  Utd-err.db-num eq   Utd.db-num
+                            and  Utd-err.doc-id eq   Utd.doc-id
+         no-lock:
+            create but_Utd-err.
+            buffer-copy Utd-err to but_Utd-err.
+         end.
+         
+         for each  Utd-lines where  Utd-lines.db-num eq   Utd.db-num
+                               and  Utd-lines.doc-id eq   Utd.doc-id
+         no-lock:
+            create but_Utd-lines.
+            buffer-copy Utd-lines to but_Utd-lines.
+         end.
+         
+         for each  Utd-marking-lines where  Utd-marking-lines.db-num eq   Utd.db-num
+                                       and  Utd-marking-lines.doc-id eq   Utd.doc-id
+         no-lock:
+            create but_Utd-marking-lines.
+            buffer-copy Utd-marking-lines to but_Utd-marking-lines.
+            run rest-OneMark(but_Utd-marking-lines.mark).
+         end.
+         
+         for each utd-err-attr where  Utd-err-attr.db-num eq   Utd.db-num
+                                 and  Utd-err-attr.doc-id eq   Utd.doc-id
+         no-lock:
+            create but_Utd-err-attr.
+            buffer-copy Utd-err-attr to but_Utd-err-attr.
+         end.
+         
+         for each  Utd-lines-attr where  Utd-lines-attr.db-num eq   Utd.db-num
+                                    and  Utd-lines-attr.doc-id eq   Utd.doc-id
+         no-lock:
+            create but_Utd-lines-attr.
+            buffer-copy Utd-lines-attr to but_Utd-lines-attr.
+         end.
+         
+         for each  Utd-marking-lines-attr where  Utd-marking-lines-attr.db-num eq   Utd.db-num
+                                            and  Utd-marking-lines-attr.doc-id eq   Utd.doc-id
+         no-lock:
+            create but_Utd-marking-lines-attr.
+            buffer-copy Utd-marking-lines-attr to but_Utd-marking-lines-attr.
+            
+         end.
+      end.
+   end.
+end.
+
 
 procedure rest-trn-doc :
   define input parameter p-trn_obj-type as character no-undo .
@@ -5030,6 +5215,13 @@ procedure rest-chk :
                                           else temp-cash-desk.last-date)
           .
         end.
+      end.
+      for each ub.marking-chk no-lock
+          where ub.marking-chk.doc-code = ub.chk-doc.doc-code
+      on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+      :
+        create dst.marking-chk.
+        buffer-copy  ub.marking-chk to dst.marking-chk.
       end.
       for each ub.chk-gds no-lock
           where ub.chk-gds.doc-code = ub.chk-doc.doc-code

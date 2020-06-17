@@ -45,6 +45,7 @@ class ibs.th.skt.Adapters.AdapterOra-i516-1c implements IAdapter:
       (
       input table TempTrnDoc,
       input table TempDocLine,
+      input table TempDocMark,
       input UserId_
       ) no-error.
     if error-status:error then
@@ -59,7 +60,7 @@ class ibs.th.skt.Adapters.AdapterOra-i516-1c implements IAdapter:
 
   end method.
 
-  method public void SetTempTable (input table TempTrnDoc, input table TempDocLine, userId_ as char):
+  method public void SetTempTable (input table TempTrnDoc, input table TempDocLine, input table TempDocMark, userId_ as char):
     
     UserId_ = userId_.
     

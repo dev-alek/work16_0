@@ -27,6 +27,7 @@ define input  parameter parparentproc as widget-handle no-undo .
 define input  parameter p-log-handle  as handle no-undo .
 define input  PARAMETER TABLE FOR  temp_trn-doc.
 define input  PARAMETER TABLE FOR  temp_doc-line.
+define input  PARAMETER TABLE FOR  temp_doc-mark.
 define output parameter p-doc-code as character   no-undo .
 define output parameter p-ok-doc as integer   no-undo .
 
@@ -933,6 +934,23 @@ assign
           end.
           assign
             tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> "".
+          if tt-parts.part-code <> ""
+          then do:
+            for each temp_doc-mark where temp_doc-mark.part-id = tt-parts.part-code :
+              create ub.marking-lines.
+              assign
+                ub.marking-lines.obj-type = tt-parts.obj-type
+                ub.marking-lines.obj-code = tt-parts.obj-code
+                ub.marking-lines.in-code = tt-parts.in-code
+                ub.marking-lines.out-code = tt-parts.out-code
+                ub.marking-lines.part-code = tt-parts.part-code
+                ub.marking-lines.gds-code = temp_doc-line.gds-code
+                ub.marking-lines.mark = temp_doc-mark.mark
+                ub.marking-lines.doc-level = 1
+              .
+            end.
+          end.
+          
           
 /*          define variable vsdObj as class ibs.th.str.mercury.vsdsub no-undo.
           define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.

@@ -30,8 +30,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   { str/marks.i         }
   { cmp/str-glbl.i class}
   { gbl/attr-lib.i class}
-  {str/lib-trn.i class}
-  { str/trdcalib.i class}
+  { str/lib-trn.i class }
   {ibs/th/skt/ControlledClients/TSDTT.i}
   
   
@@ -115,9 +114,13 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     os-delete value (search ("MT_documents.txt")) no-error.
     os-delete value (search ("MT_lines.txt")) no-error.
     os-delete value (search ("MT_MarkLines.txt")) no-error.
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
+    then do:
+      run str/trdcalib.p persistent no-error.
+    end.
+    { str/trdcalib.i class}
 		
   end constructor.
-
 
 
   define temp-table TempBCode no-undo
@@ -408,7 +411,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         {&trdcattr-inv-introduce}
         v-attr-value
         v-attr-type
-        no-error
       }
       if not error-status:error and v-attr-value = "yes" then do:
         v-is-introduce = true.
@@ -429,6 +431,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
         pos = pos + 1.
         def var v-qnty as integer no-undo.        
+        v-qnty = 0.
         if v-is-introduce
         then do:
           for each ub.utd no-lock where ub.utd.doc-code = buf_doc-line.doc-code:
@@ -442,8 +445,13 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           end.
         end.
         else do:
+          for each ub.marking-attr no-lock where (marking-attr.attr-code = "inv-doc" or marking-attr.attr-code = "inv-doc-scan")  and ub.marking-attr.attr-value = buf_doc-line.doc-code:
+            if not can-find (first ub.marking no-lock where ub.marking.mark = ub.marking-attr.mark and ub.marking.unit-ext = "UNIT" and ub.marking.gds-code = buf_goods.gds-code) 
+              then next.
+            v-qnty = v-qnty + 1.
+          end.
           decDocQnty = buf_doc-line.doc-qnty - buf_doc-line.fact-qnty.
-          decFactQnty = buf_doc-line.doc-qnty.
+          decFactQnty = v-qnty.
         end.
         
         assign
@@ -483,7 +491,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             tsdstreamopenapp("MT_MarkLines.txt").
             jj = jj + 1.
             put stream tsdstream unformatted string (jj) + {&delimiteFld} + v-doc-num + {&delimiteFld} + buf_m-l.mark + {&delimiteFld} 
-            + v-doc-num + "_" + string (buf_goods.gds-code)  + {&delimiteFld} + "UTD" + {&delimiteFld} + buf_m.mark-parent + {&delimiteFld} + string(buf_m.box-qnty) + {&delimiterLine}.
+            + v-doc-num + "_" + string (buf_goods.gds-code)  + {&delimiteFld} + "Check" + {&delimiteFld} + buf_m.mark-parent + {&delimiteFld} + string(buf_m.box-qnty) + {&delimiterLine}.
             tsdstreamclose().
           end.
         end.

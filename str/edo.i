@@ -1,4 +1,4 @@
-   
+&glob xdebug yes
 
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
@@ -1218,6 +1218,8 @@ function SaturateAndCheckUTD return logical
    define buffer marking               for marking.
    define buffer marking-lines         for marking-lines.
    define buffer Buf_utd-marking-lines for utd-marking-lines.
+   define buffer contract              for contract.
+   define buffer contract-attr         for contract-attr. 
    define variable vError as character no-undo.
    define variable vGdsCode as integer no-undo.
    
@@ -1416,8 +1418,14 @@ function SaturateAndCheckUTD return logical
          define variable VContractEdo as logical no-undo init yes.
          if available contract
          then do:
+              /* договор Едо*/
+            for first contract-attr no-lock where contract-attr.host-code     = contract.host-code 
+                                              and contract-attr.contract-code = contract.contract-code 
+                                              and contract-attr.attr-code     = "contract-edi":
+                VContractEdo = logical (contract-attr.attr-value) .
+            end.
             assign
-               VContractEdo = contract.whole-send-news eq 1 /* договор Едо*/
+               
                vcontract-code = contract.contract-code
             .
             if not VContractEdo
@@ -1574,9 +1582,25 @@ function CheckLoad returns logical
       if iDocument:Direction eq "Inbound"
       then do:
          getdesc(iDocument).
+         define variable vOrganizationid as character no-undo.
+         define variable vDocumentid as character no-undo.
+         vOrganizationid = iDocument:OrganizationId.
+         vDocumentid     = iDocument:DocumentId.
+         find first utd where utd.DocumentExt     = vDocumentid
+                    and utd.OrganizationExt = vOrganizationid
+         no-lock no-error .
+         if available utd
+         then do:
+            assign
+               vobj-type = utd.obj-type
+               vobj-code = utd.obj-code
+            .
+         end.
          vDocumentChild = iDocument:GetDynamicContent("Seller") no-error.
        
-         if vDocumentChild ne ?
+         if (vobj-code ne 0 and vobj-code ne ?)
+         then vFlag = no. 
+         else if vDocumentChild ne ?
          then do:
             vContent = vDocumentChild:UniversalTransferDocumentWithHyphens no-error. /* табличная часть счета фактуры */
             
@@ -1720,6 +1744,9 @@ function CheckLoad returns logical
       if not error-status:error and v-FlagEdo ne ? 
       then do:
          vFlag = v-FlagEdo.
+         if not vFlag
+         then
+            PutMes(substitute("На объекте &1&2 не установлен параметр работы с ЭДО.",vobj-type,vobj-code)).
       end.
    end.
    
@@ -3080,6 +3107,9 @@ procedure  SendAuto:
       view-as alert-box.
    end.
    else do:
+      for each tt-recid:
+         delete tt-recid.
+      end.
       vOrganizationList = mDiadocConnection:GetOrganizationList() no-error.
       if vOrganizationList eq ? then return error ?.
       vi = vOrganizationList:Count()no-error.

@@ -37,6 +37,7 @@ define shared variable g#auto-user-id as character no-undo .
 
 define input  parameter table for  TempTrnDoc.
 define input  parameter table for  TempDocLine.
+define input  parameter table for  TempDocMark.
 define input  parameter userId_ as character no-undo.
 
 
@@ -100,6 +101,17 @@ do:
     
   end.
   
+  for each TempDocMark no-lock:
+    
+    create temp_doc-mark.
+    
+    assign
+      temp_doc-mark.part-id = TempDocMark.prt-id
+      temp_doc-mark.mark    = TempDocMark.mark
+    .
+    
+  end.
+  
   { gbl/curdbnum.i
       iDbNum
     }
@@ -123,6 +135,7 @@ do:
       input this-procedure ,
       input table temp_trn-doc ,
       input table temp_doc-line ,
+      input table temp_doc-mark ,
       output v-doc-code,
       output num-rec-ok
       ) no-error .

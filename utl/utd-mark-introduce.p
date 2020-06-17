@@ -101,6 +101,10 @@ define variable conf-par as character no-undo .
 define variable par-type as character no-undo .
 define variable v-1C     as logical   no-undo .
 
+define temp-table tt-gds-list
+  field gds-code as integer
+.
+
 /* ***************************  Main Block  *************************** */
 
   { gbl/conf-rd.i
@@ -184,7 +188,15 @@ define variable v-1C     as logical   no-undo .
   for each buf_utd-marking-lines no-lock where  buf_utd-marking-lines.db-num = pDb-num
                                             and buf_utd-marking-lines.doc-id = pDoc-id :
     create tt-utd-marking-lines .  
-    buffer-copy buf_utd-marking-lines to tt-utd-marking-lines .                                        
+    buffer-copy buf_utd-marking-lines to tt-utd-marking-lines . 
+    find first tt-gds-list where tt-gds-list.gds-code = tt-utd-marking-lines.gds-code no-error.
+    if not available tt-gds-list
+    then do :
+      create tt-gds-list .
+      assign
+        tt-gds-list.gds-code = tt-utd-marking-lines.gds-code
+      .
+    end .                                       
   end .
   
   for each buf2_utd no-lock where buf2_utd.obj-type = buf_utd.obj-type
@@ -198,6 +210,8 @@ define variable v-1C     as logical   no-undo .
     then next .
     for each buf_utd-marking-lines no-lock where  buf_utd-marking-lines.db-num = buf2_utd.db-num
                                               and buf_utd-marking-lines.doc-id = buf2_utd.doc-id :
+      find first tt-gds-list where tt-gds-list.gds-code = buf_utd-marking-lines.gds-code no-error.
+      if not available tt-gds-list then next .
       create tt-utd-marking-lines .  
       buffer-copy buf_utd-marking-lines to tt-utd-marking-lines .                                        
     end .                            
@@ -409,25 +423,25 @@ define variable v-1C     as logical   no-undo .
           v-created-units = v-created-units + 1
           v-curr-created-units = v-curr-created-units + 1
         .
-        if v-1C
-        then do :
-          { gbl/rum-runa.i
-            ?
-            this-procedure:handle
-            ?
-            {&edoc-proc_event_mark}
-            " buffer new_marking:handle "
-            ?
-              ''
-            ''
-            no-error
-          }
-        end .
-        else do :
-          run str/callnews.p (  input {&table_marking}
-                               ,input (buffer new_marking:handle )
-                              ) no-error .
-        end . 
+/*        if v-1C                                                   */
+/*        then do :                                                 */
+/*          { gbl/rum-runa.i                                        */
+/*            ?                                                     */
+/*            this-procedure:handle                                 */
+/*            ?                                                     */
+/*            {&edoc-proc_event_mark}                               */
+/*            " buffer new_marking:handle "                         */
+/*            ?                                                     */
+/*              ''                                                  */
+/*            ''                                                    */
+/*            no-error                                              */
+/*          }                                                       */
+/*        end .                                                     */
+/*        else do :                                                 */
+/*          run str/callnews.p (  input {&table_marking}            */
+/*                               ,input (buffer new_marking:handle )*/
+/*                              ) no-error .                        */
+/*        end .                                                     */
         create tt-utd-marking-lines .
         assign
           tt-utd-marking-lines.mark = new_marking.mark

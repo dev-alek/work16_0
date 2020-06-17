@@ -314,6 +314,7 @@ assortment-matrix~
 ,wth-ser~
 ,c-wth-ser~
 ,wth-parts~
+,code~
 ':U
 table-ref-where = fill({&delim-par}, num-entries(table-ref) - 1 )
 table-ref =  table-ref + '~
@@ -341,6 +342,15 @@ table-ref =  table-ref + '~
 ,bar-code-obj-attr~
 ,c-bar-code-obj-attr~
 ,c-prop-head~
+,c-utd-head~
+,c-utd~
+,c-utd-attr~
+,c-Utd-err~
+,c-Utd-lines~
+,c-Utd-marking-lines~
+,c-Utd-err-attr~
+,c-Utd-lines-attr~
+,c-Utd-marking-lines-attr~
 ':U
 table-ref-where = table-ref-where + {&delim-par} + " ub.dis-rule.host-code = 0 and ub.dis-rule.obj-type = '' and ub.dis-rule.obj-code = 0 "
 table-ref-where = table-ref-where + {&delim-par} + " ub.dis-gds-rule.obj-type = '' and ub.dis-gds-rule.obj-code = 0 "
@@ -366,6 +376,16 @@ table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-layout-elem-
 table-ref-where = table-ref-where + {&delim-par} + substitute("ub.bar-code-obj-attr.obj-type = '' and ub.bar-code-obj-attr.obj-code = 0")
 table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-bar-code-obj-attr.obj-type = '' and ub.c-bar-code-obj-attr.obj-code = 0")
 table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-prop-head.subject > {&table_prop-ref} or ub.c-prop-head.subject < {&table_prop-ref}")
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-head.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-attr.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-err.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-lines.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-marking-lines.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-err-attr.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-lines-attr.corr-user-db-num = &1 ", p-db-num)
+table-ref-where = table-ref-where + {&delim-par} + substitute("ub.c-utd-marking-lines-attr.corr-user-db-num = &1 ", p-db-num)
+
 table-ref-if-cond = fill({&delim-par}, num-entries(table-ref) - 1)
 .
 

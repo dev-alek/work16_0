@@ -125,13 +125,15 @@ class ibs.th.bge.1crn.import.parsesub:
   
   define variable trn-gd-doc-inSubjectObj                  as class trn-gd-doc-in               no-undo.
   define variable trn-gdSubjectObj                         as class trn-gd                      no-undo.
-  define variable trn-prtSubjectObj                        as class trn-prt                      no-undo.
+  define variable trn-prtSubjectObj                        as class trn-prt                     no-undo.
+  define variable trn-markSubjectObj                       as class trn-mark                    no-undo.
   define variable imptrn-gd-docEventHndlrObj               as class imptrn-gd-doc               no-undo.
   define variable trn-gd-doc-inlistSubjectsObj             as class subjects                    no-undo.
-  define variable trn-prt-doc-inlistSubjectsObj             as class subjects                    no-undo.
+  define variable trn-prt-doc-inlistSubjectsObj            as class subjects                    no-undo.
+  define variable trn-mark-doc-inlistSubjectsObj            as class subjects                    no-undo.
 
-  define variable normlossSubjectObj                        as class normloss                  no-undo.
-  define variable impnormlossEventHndlrObj                as class impnormloss                no-undo.
+  define variable normlossSubjectObj                       as class normloss                    no-undo.
+  define variable impnormlossEventHndlrObj                 as class impnormloss                 no-undo.
   
   define variable trn-fuel-doc-inSubjectObj      as class trn-fuel-doc-in no-undo.
   define variable trn-gd-fuelSubjectObj          as class trn-gd-fuel     no-undo.
@@ -161,7 +163,7 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable promotion_giftSubjectObj              as class promotion_gift-gd       no-undo. // promotion:gifts:gd
   
   
-  define variable imppromotionEventHndlrObj                as class imppromotion                no-undo.
+  define variable imppromotionEventHndlrObj              as class imppromotion            no-undo.
 /*---------------- Объекты для скидок ---------- конец*/  
   define variable payment-systems-SubjectObj             as class subjects                no-undo. // <payment-system>
   define variable payment-system-SubjectObj              as class payment-system          no-undo. // <payment-system>
@@ -320,6 +322,7 @@ class ibs.th.bge.1crn.import.parsesub:
        - движение НП
     */
     trn-prt-doc-inlistSubjectsObj = new subjects ("prts"). // - осталось не перенесённым из документов движения СТ
+    trn-mark-doc-inlistSubjectsObj = new subjects ("marks"). // - осталось не перенесённым из документов движения СТ
     
   end constructor.
   
@@ -756,7 +759,6 @@ class ibs.th.bge.1crn.import.parsesub:
       if not good
         then next.
       iNum = iNum + 1.
-
       /* обработка элементов, вложенных в секции (классы, вложенные в коллекции или в родительские классы) */
       case hnoderef:name:
         /* ----- имена секций любого уровня вложенности ----- */
@@ -1189,25 +1191,38 @@ class ibs.th.bge.1crn.import.parsesub:
                 GetChildrenSub (hNoderef, (level + 1), payment-system-SubjectObj).
                 
                 v-need-parse = false .
-             
           end.
-          
         end.
         when "mark" then do:
           v-need-parse = true .
-          if v-need-parse and valid-object (edi-doc-SubjectObj) then do: // edi-doc:gds:gd
-            if edi-doc-SubjectObj:IsInitSubForWrite then do:
+          if v-need-parse and valid-object (edi-doc-SubjectObj) then 
+          do: // edi-doc:gds:gd
+            if edi-doc-SubjectObj:IsInitSubForWrite then 
+            do:
               edi-doc-mark-SubjectObj = new mark().
-              
+                
               edi-doc-mark-SubjectsObj:Add(  edi-doc-mark-SubjectObj  ).
               edi-doc-mark-SubjectObj:obj-load = "utd-mark".
               /*edi-doc-marks-SubjectsObj:Add(  new mark()  ).
               edi-doc-mark-SubjectObj = cast (edi-doc-mark-SubjectsObj:SubjectObjCurr, mark).*/
-              
+                
               GetChildrenSub (hNoderef, (level + 1), edi-doc-mark-SubjectObj).
               v-need-parse = false .
             end .
-          end . 
+          end .
+          if v-need-parse and valid-object (trn-gd-doc-inSubjectObj) then 
+          do: 
+            if trn-gd-doc-inSubjectObj:IsInitSubForWrite then 
+            do: 
+              /*идет запись transportSubjectObj*/
+              if not valid-object(trn-mark-doc-inlistSubjectsObj) then trn-mark-doc-inlistSubjectsObj = new subjects ("marks") .        
+              trn-mark-doc-inlistSubjectsObj:Add(new trn-mark()). /* а вот здесь уже создаем объект сущнности*/
+              trn-markSubjectObj = cast (trn-mark-doc-inlistSubjectsObj:SubjectObjCurr, trn-mark).
+              GetChildrenSub (hNoderef, (level + 1), trn-markSubjectObj).
+              trn-gd-doc-inSubjectObj:SetProp (trn-mark-doc-inlistSubjectsObj).
+              v-need-parse = false .
+            end.
+          end.
         end.
         when "gd" then do:
           v-need-parse = true .

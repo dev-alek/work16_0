@@ -56,7 +56,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     new-{&main-tbl}.LoadTime = time.
     new-{&main-tbl}.ModifyDate = date (now).
     new-{&main-tbl}.ModifyTime = time.
+    
   end.
+  if new-{&main-tbl}.DocumentExt eq "" or new-{&main-tbl}.DocumentExt eq ?
+  then
+     new-{&main-tbl}.DocumentExt = string(new-{&main-tbl}.db-num) + "-" +  string(new-{&main-tbl}.doc-id).
   if new-{&main-tbl}.Timestamp eq ?
   then
      new-{&main-tbl}.Timestamp = now.
