@@ -34,8 +34,7 @@ find last rp-by-call no-lock where
 if available rp-by-call then do:
   v-once-more = rp-by-call.once-more.
 end.
-message 88
-view-as alert-box.
+
 
 for each rule-by-profile no-lock where
         rule-by-profile.profile_id = rule-profile.profile_id
@@ -99,6 +98,14 @@ on error undo, return error :
             tt0-rule-by-call.once-more = v-once-more 
          .
       end.
+      else do:
+         for each tt0-rule-by-call where tt0-rule-by-call.codex_id eq  rule-by-profile.codex_id
+                                      and tt0-rule-by-call.ruleset_id eq rule-by-profile.ruleset_id
+         :
+            tt0-rule-by-call.can-calc =  yes.
+         end.
+      end.
+      
      /* v-found-can-calc = v-found-can-calc or rule-by-call.can-calc . */
   
       find first ruledict no-lock where
