@@ -51,6 +51,7 @@ define temp-table tt-price-doc like ub.price-doc.
 define temp-table tt-rvs like ub.rvs-doc.
 define temp-table tt-fbr like ub.fbr-doc.
 define temp-table tt-fin like ub.fin-doc.
+define temp-table tt-utd like ub.utd .
 
 DEFINE FRAME frame1
     skip
@@ -83,7 +84,7 @@ end.
 
 buffer-copy buf_shift-obj except buf_shift-obj.status_ to tt-shift  assign tt-shift.status_ = "накл". /* для имитации изменения статуса на факт */
 
-for each ub.trn-doc where ub.trn-doc.obj-type = buf_shift-obj.obj-type
+for each ub.trn-doc no-lock where ub.trn-doc.obj-type = buf_shift-obj.obj-type
     and ub.trn-doc.obj-code = buf_shift-obj.obj-code
     and ub.trn-doc.shift-date = buf_shift-obj.shift-date
     and ub.trn-doc.shift-num = buf_shift-obj.shift-num :
@@ -109,7 +110,7 @@ for each tt-trn:
 end.    
 end.
 
-for each ub.price-doc where ub.price-doc.obj-code = buf_shift-obj.obj-code and
+for each ub.price-doc no-lock where ub.price-doc.obj-code = buf_shift-obj.obj-code and
     ub.price-doc.obj-type = buf_shift-obj.obj-type and
     ub.price-doc.shift-date = buf_shift-obj.shift-date and
     ub.price-doc.shift-num = buf_shift-obj.shift-num :
@@ -138,7 +139,7 @@ end.
 
 end.
 
-for each ub.rvs-doc where ub.rvs-doc.obj-code = buf_shift-obj.obj-code and
+for each ub.rvs-doc no-lock where ub.rvs-doc.obj-code = buf_shift-obj.obj-code and
     ub.rvs-doc.obj-type = buf_shift-obj.obj-type and
     ub.rvs-doc.shift-date = buf_shift-obj.shift-date and
     ub.rvs-doc.shift-num = buf_shift-obj.shift-num:
@@ -166,7 +167,7 @@ for each tt-rvs:
 end.    
 end.
 
-for each ub.fbr-doc where ub.fbr-doc.obj-code = buf_shift-obj.obj-code and
+for each ub.fbr-doc no-lock where ub.fbr-doc.obj-code = buf_shift-obj.obj-code and
     ub.fbr-doc.obj-type = buf_shift-obj.obj-type and
     ub.fbr-doc.shift-date = buf_shift-obj.shift-date and
     ub.fbr-doc.shift-num = buf_shift-obj.shift-num:
@@ -194,7 +195,7 @@ for each tt-fbr:
 end.    
 end.
 
-for each ub.fin-doc where ub.fin-doc.obj-code = buf_shift-obj.obj-code and
+for each ub.fin-doc no-lock where ub.fin-doc.obj-code = buf_shift-obj.obj-code and
     ub.fin-doc.obj-type = buf_shift-obj.obj-type and 
     ub.fin-doc.shift-date = buf_shift-obj.shift-date and
     ub.fin-doc.shift-num = buf_shift-obj.shift-num:
@@ -223,7 +224,41 @@ for each tt-fin:
 end.    
 end.
 
+/*выгрузка УПД*/
 
+for each ub.utd no-lock where ub.utd.obj-code = buf_shift-obj.obj-code and
+                              ub.utd.obj-type = buf_shift-obj.obj-type and
+                              (ub.utd.DocumentDate >= buf_shift-obj.shift-date and (if buf_shift-obj.close-date <> ? then ub.utd.DocumentDate <= buf_shift-obj.close-date
+                              else ub.utd.DocumentDate <= today)):
+                                find last ub.c-utd no-lock where ub.c-utd.doc-code = ub.utd.doc-code
+                                                             and ub.c-utd.db-num = ub.c-utd.db-num no-error .
+buffer-copy ub.utd except ub.utd.sts ub.utd.sts-edi to tt-utd  .
+if available (ub.c-utd) then do:
+assign 
+        tt-utd.sts = ub.c-utd.sts
+        tt-utd.sts-edi = ub.c-utd.sts-edi
+. /* для имитации изменения статуса на факт */
+end.
+{ gbl/rum-runa.i
+           ?
+           this-procedure:handle
+           ?
+           {&edoc-proc_event_utd}
+           " buffer tt-utd:handle "
+           " buffer ub.utd:handle "
+           ''
+           ''
+           no-error
+       }
+if error-status:error 
+    then 
+do:
+    message return-value view-as alert-box.
+end.
+for each tt-utd:
+    delete tt-utd .
+end.    
+end.       
 /*Выгрузка смены*/
 { gbl/rum-runa.i
   ?

@@ -33,6 +33,7 @@ procedure local-proc-main:
 end.
 
 procedure local-load-ruleset-context:
+
     case p-ruleset-id:
       when {&edoc-proc_18_event_utd_160} 
       then do:
@@ -43,7 +44,7 @@ procedure local-load-ruleset-context:
           
           if    m-has-oldbh
             and m-oldbh:table <> {&table_utd} 
-/*            and m-oldbh:table <> "tt-fin"*/
+            and m-oldbh:table <> "tt-utd"
           then
             undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_utd}).
           
