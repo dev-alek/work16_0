@@ -51,9 +51,11 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     define variable objTrnDoc  as class     trn-gd-doc-in   no-undo.
     define variable objGd      as class     trn-gd          no-undo.
     define variable objPrt     as class     trn-prt         no-undo.
+    define variable objMark    as class     trn-mark        no-undo.
     define variable adapObj    as class     AdapterOra-i516-1c no-undo.
     define variable objGds     as class     subjects        no-undo.
     define variable objPrts    as class     subjects        no-undo.
+    define variable objMarks   as class     subjects        no-undo.
     
     objTrnDoc = cast (subjectObj, trn-gd-doc-in).
     
@@ -91,6 +93,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     
     objGds = objTrnDoc:GDS.
     objPrts = objTrnDoc:prts.
+    objMarks = objTrnDoc:marks.
     
     do ii = 1 to objGds:Get(ii):
       objGd = cast (objGds:SubjectObjCurr, trn-gd).
@@ -109,7 +112,6 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
             TempDocLine.part-id = objPrt:prt-id
             TempDocLine.price-rubl = round (objGd:sum / objGd:qnty-fact, 2)
             TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100. 
-          .
         end.
       end.
       if available (TempDocLine)
@@ -128,9 +130,19 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
         .
         release TempDocLine.
       end.
+      
+      if valid-object (objMarks)
+      then do jj = 1 to objMarks:Get(jj):
+        objMark = cast (objMarks:SubjectObjCurr, trn-mark).
+        create TempDocMark.
+        assign
+          TempDocMark.mark = objMark:mark-code.
+          TempDocMark.prt-id = objMark:prt-id.
+      end.
+      
     end.
     
-    adapObj:SetTempTable(table TempTrnDoc, table TempDocLine, "").
+    adapObj:SetTempTable(table TempTrnDoc, table TempDocLine, table TempDocMark, "").
     adapObj:WriteDB(output glog).
     
     

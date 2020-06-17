@@ -50,3 +50,10 @@ Creation date: 01/30/15
     line-num
     gds-code
     .
+
+  define temp-table TempDocMark no-undo
+
+    field prt-id as character
+    field mark as character
+    index pi mark.
+    

@@ -84,3 +84,8 @@ gds-code
 alc-code
 doc-qnty
 .
+
+define temp-table temp_doc-mark no-undo
+  field part-id       as character
+  field mark          as character
+  index pi mark.
