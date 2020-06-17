@@ -61,7 +61,11 @@ do:
   return .
   end.
 end.
+
+if v-mark <> "" then do:
 v-marking = GetCodeIdent(v-mark) .
+end.
+
     for each buf_marking exclusive-lock where buf_marking.sts = Marking:FreeZone:KeyIntDB and buf_marking.mark begins v-marking:
       
     
