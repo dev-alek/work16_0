@@ -46,7 +46,9 @@ run db-attr-value in this-procedure
 mdbver = int(mtxt) no-error.
 if mdbver eq ?
 then
-   mdbver = 0.  
+   mdbver = 0.
+if mdbver ne {cmp\code.ver}
+then do: 
 vimport= new ibs.th.bge.xmlimpexp().
 mtxt = "". 
 mtxt = vimport:xmldom-load-ver  ( "cmp/code.xml",mdbver ) no-error.
@@ -68,6 +70,7 @@ then do:
                                            , input {&attr-ver-code}
                                            , input string (mfilever)
                                            ) no-error .
+end.
 end.
 finally:
    if valid-object(vimport)

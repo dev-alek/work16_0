@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251" ?>
 <Root>
    <File-info>
-      <version>06</version>
+      <version>07</version>
    </File-info>
    <table-Code>
       <record-Code>
@@ -38,26 +38,21 @@
          <status_>0</status_>
       </record-Code>
 
-   <record-Code>
-			<code>CodeError</code>
-			<CodeName>Справочник ошибок</CodeName>
-			<export_>yes</export_>
-			<record-delete>yes</record-delete>
-			<status_>0</status_>
-		</record-Code>
 		<record-Code>
 			<code>CodeError</code>
 			<CodeName>Справочник ошибок</CodeName>
 			<export_>yes</export_>
 			<record-delete>no</record-delete>
+                        <procview>ibs\th\ref\code\codeerr.p</procview>
 			<status_>0</status_>
+
 		</record-Code>
 		<record-Code>
 			<code>UTD</code>
 			<CodeName>Проверка УПД после загрузки</CodeName>
 			<export_>yes</export_>
 			<parent>CodeError</parent>
-			<record-delete>no</record-delete>
+                        <record-delete>no</record-delete>
 			<status_>0</status_>
 		</record-Code>
 		<record-Code>
