@@ -246,7 +246,7 @@ DEFINE MENU POPUP-MENU-b-servis
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-cancel AUTO-GO 
+DEFINE BUTTON b-cancel AUTO-ENDKEY
      LABEL "&Отмена":L 
      SIZE 15 BY 1.
 
@@ -519,7 +519,7 @@ DEFINE VARIABLE f-supp-type-TH AS CHARACTER FORMAT "X(3)"
 
 DEFINE VARIABLE F-text AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 80.5 BY 1.25
+     SIZE 90.5 BY 1.25
      FGCOLOR 12  NO-UNDO.
 
 DEFINE VARIABLE f-total AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
@@ -1627,8 +1627,7 @@ DO:
           message return-value view-as alert-box.
         end.
 
-      if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or /*ошибка загрузки*/
-         buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+      if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
          buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
          buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then do:
            find last buf_c-utd no-lock where buf_c-utd.db-num = buf_utd.db-num and 
@@ -1647,12 +1646,14 @@ DO:
            end.  
              
       end. 
+if buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB then do:       
         oMotp = new is_motp() .
         oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
         if ERROR-STATUS:ERROR then do:
           message return-value view-as alert-box.
         end.    
         delete OBJECT oMotp .    
+end.        
     end.
 /*    run init-temp .*/
     assign
@@ -2402,8 +2403,9 @@ ON return OF c-type IN FRAME d-utd /* Марка */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
-ON any-printable OF c-type IN FRAME d-utd /* Марка */
+ON any-printable ANYWHERE /* Марка */
   DO:
+
   run proc-any-key .
   END.
 
@@ -2611,9 +2613,23 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
   THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 /* Add Trigger to equate WINDOW-CLOSE to END-ERROR                      */
-ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} 
-  APPLY "END-ERROR":U TO SELF.
-
+ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} do:
+    APPLY "CLOSE":U TO THIS-PROCEDURE.
+    if p-mode = {&add-def} and available (buf_utd) then 
+    do:
+      /*      for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num and buf_utd-lines.doc-id = buf_utd.doc-id:                                                        */
+      /*        for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id:                  */
+      /*          for each buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.obj-code = buf_utd.obj-code and buf_marking.obj-type = buf_utd.obj-type:*/
+      /*            delete buf_marking .                                                                                                                                           */
+      /*          end.                                                                                                                                                             */
+      /*          delete buf_utd-marking-lines .                                                                                                                                   */
+      /*        end.                                                                                                                                                               */
+      /*        delete buf_utd-lines .                                                                                                                                             */
+      /*      end.                                                                                                                                                                 */
+      delete buf_utd .
+    end.
+  
+end.
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
@@ -3843,7 +3859,10 @@ PROCEDURE save_mark :
     define buffer gray_utd-marking-lines for ub.utd-marking-lines .
     define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_utd-lines-attr for ub.utd-lines-attr .
-
+    if p-mode = {&lookup} then do:
+            v-mark:screen-value in frame {&frame-name} = "" .
+            v-mark = "" .
+    end .
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
       v-mark:screen-value in frame {&frame-name} = v-scan-str.
@@ -4121,17 +4140,33 @@ PROCEDURE save_mark :
         end.                                    
         else 
         do:
-          find first buf_marking no-lock where buf_marking.mark begins v-marking and buf_marking.sts < Marking:Received:KeyIntDB and buf_marking.loc-key <> "" no-error .
+          find first buf_marking no-lock where buf_marking.mark begins v-marking no-error .
           if available (buf_marking) then 
           do:
+          if buf_marking.sts < Marking:Received:KeyIntDB and buf_marking.loc-key <> "" and c-type <> objSrv:Env:Utd:EDocType:AKT:KeyIntDB then do:
+
             F-text = "                                      Марка занята" .
             display F-text with frame {&frame-name}.
             v-mark:screen-value = "" .
-            v-mark = "" .    
+            v-mark = "" .
             return.
+          end.
+          if buf_marking.sts = Marking:DeliveryControl:KeyIntDB and c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then do:
+            F-text = "               Найдено УПД на поставку данной марки. Марка не может быть принята по Акту" .
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .    
+            return.              
+          end.
+          if buf_marking.sts <> Marking:UnknowSts:KeyIntDB then do:
+            F-text = "        Марка зарегистрирована в системе. Статус марки " +  StatusTHName(buf_marking.sts).
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .    
+            return.              
+          end.          
+          end.
           end.  
-        end.  
-        /*Добавление товаров по маркам*/
 
         v-GTIN = getGtinByDM(v-marking) .
         if v-GTIN <> "" or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
@@ -4160,7 +4195,7 @@ PROCEDURE save_mark :
                 buf_utd-lines.sts      = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
                 buf_utd-lines.UnitCode = if available (buf_goods) then buf_goods.unit-base else ""
                 .
-              if available (buf_goods) then do:  
+              if available (buf_goods) or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then do:  
               create  X_utd-lines .
               buffer-copy buf_utd-lines to X_utd-lines .
               assign
@@ -4274,6 +4309,20 @@ PROCEDURE save_mark :
         end.    
       end.
     end.
+        if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
+        do:
+          find first X_utd-lines no-lock where X_utd-lines.stts <> "Проверен" no-error .
+          if available (X_utd-lines) then do:
+            F-text = "                            Просканируйте марку" .
+            f-text:screen-value = "" .
+            display F-text with frame {&frame-name} .
+          end.
+          else do:
+            F-text = "" .
+            f-text:screen-value = "" .
+            display F-text with frame {&frame-name} .
+          end.  
+        end. 
     display F-text with frame {&frame-name}.
     v-mark:screen-value = "" .
     v-mark = "" .
@@ -4358,7 +4407,11 @@ PROCEDURE proc-any-key :
             then etime(yes).
         else
             if etime > 500
-                then v-scan-str = "".
+                then 
+            do:
+                v-scan-str = "".
+                etime(yes).
+            end.
     v-scan-str = v-scan-str + last-event:label.
 end.
 

@@ -414,7 +414,7 @@ DEFINE BROWSE br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-utd d-utd _STRUCTURED
   QUERY br-utd NO-LOCK DISPLAY
       mark-string( input recid(X_utd), input v-rid-list) column-label "*" format "X(1)":U
-      X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(15)":U
+      X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(60)":U width 15
       X_utd.EDoTypeName COLUMN-LABEL "Тип" FORMAT "X(30)":U width 10
       X_utd.DocumentDate COLUMN-LABEL "Дата док-та" FORMAT "99/99/9999":U
       X_utd.obj-name COLUMN-LABEL "Объект" FORMAT "X(30)":U width 7
@@ -430,7 +430,7 @@ DEFINE BROWSE br-utd
       X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 15
       X_utd.LoadDate COLUMN-LABEL "Дата загр" FORMAT "99/99/9999":U
       X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(80)":U WIDTH 50
-      X_utd.doc-id COLUMN-LABEL "Внутр.номер" FORMAT "99999":U
+      X_utd.doc-id COLUMN-LABEL "Внутр.!номер" FORMAT "99999":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 17.63 FIT-LAST-COLUMN.
@@ -1136,6 +1136,7 @@ if log-res then do:
       end. /* */
     end.
 end.    
+v-rid-list = "" .
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1196,6 +1197,7 @@ if log-res then do:
       end.  
     end.
 end.    
+v-rid-list = "" .
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1412,6 +1414,7 @@ define variable v-rid-list as character no-undo.
       end. 
       run enable_BUTTON.
    end.
+   v-rid-list = "" .
 end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1469,6 +1472,7 @@ DO:
           reposition br-utd to rowid row_utd no-error .
       end.
     end.
+    v-rid-list = "" .
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1550,6 +1554,7 @@ DO:
             
       end.  
     end.  
+    v-rid-list = "" .
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1606,34 +1611,114 @@ ON value-changed OF br-utd IN FRAME d-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_recheck POPUP-MENU-b-servis
 ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
 DO:
+    define buffer buf_c-utd for ub.c-utd .
     if v-rid-list <> "" then 
     do:
-      do ii = 1 to num-entries (v-rid-list):
-        recid_utd = integer(entry(ii,v-rid-list)) .
-        find first x_utd where recid (x_utd) = recid_utd .
-        SaturateAndCheckUTD(X_utd.db-num, X_utd.doc-id) no-error .
-        if  error-status:error then 
-        do: 
-          return return-value .
-        end.
-      end.  
-    run init-sort in this-procedure .
-    {&OPEN-QUERY-br-utd}
+        do ii = 1 to num-entries (v-rid-list):
+            /*            recid_utd = integer(entry(ii,v-rid-list)) .*/
+            find first x_utd where recid (x_utd) = integer(entry(ii,v-rid-list)) .
+            SaturateAndCheckUTD(X_utd.db-num, X_utd.doc-id) no-error .
+            if  error-status:error then 
+            do: 
+                return return-value .
+            end.
+            if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or /*ошибка загрузки*/
+                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
+                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then 
+            do:
+                find last buf_c-utd no-lock where buf_c-utd.db-num = X_utd.db-num and 
+                    buf_c-utd.doc-id = X_utd.doc-id and 
+                    buf_c-utd.sts <> X_utd.sts and
+                    buf_c-utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB no-error .
+                if available (buf_c-utd) then 
+                do:
+                    X_utd.sts = buf_c-utd.sts .
+                    X_utd.sts-edi = buf_c-utd.sts-edi .
+                end.
+                else 
+                do:
+                    if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then 
+                        X_utd.sts = ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
+                    else X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
+                    X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB .
+                end.  
+             
+            end. 
+            find first buf_utd EXCLUSIVE-LOCK where buf_utd.doc-id = X_utd.doc-id
+                and buf_utd.db-num = X_utd.db-num .
+            assign
+                buf_utd.sts     = X_utd.sts
+                buf_utd.sts-edi = X_utd.sts-edi
+                .                                                
+            if buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB then 
+            do:       
+                oMotp = new is_motp() .
+                oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
+                if ERROR-STATUS:ERROR then 
+                do:
+                    message return-value view-as alert-box.
+                end.    
+                delete OBJECT oMotp .    
+            end.        
+        end.  
+        run init-sort in this-procedure .
+        {&OPEN-QUERY-br-utd}
     end.   
     else 
     do:
-      if available (X_utd) then 
-      do:
-        recid_utd = recid (X_utd) .
-        find first x_utd where recid (x_utd) = recid_utd .
-                SaturateAndCheckUTD(X_utd.db-num, X_utd.doc-id) no-error .        
-        if  error-status:error then 
-        do: 
-          return return-value .
-        end.
-        run init-id (X_utd.doc-id, X_utd.db-num).  
-      end.  
+        if available (X_utd) then 
+        do:
+            recid_utd = recid (X_utd) .
+            find first x_utd where recid (x_utd) = recid_utd .
+            SaturateAndCheckUTD(X_utd.db-num, X_utd.doc-id) no-error .        
+            if  error-status:error then 
+            do: 
+                return return-value .
+            end.
+            if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or /*ошибка загрузки*/
+                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
+                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then 
+            do:
+                find last buf_c-utd no-lock where buf_c-utd.db-num = X_utd.db-num and 
+                    buf_c-utd.doc-id = X_utd.doc-id and 
+                    buf_c-utd.sts <> X_utd.sts and
+                    buf_c-utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB no-error .
+                if available (buf_c-utd) then 
+                do:
+                    X_utd.sts = buf_c-utd.sts .
+                    X_utd.sts-edi = buf_c-utd.sts-edi .
+                end.
+                else 
+                do:
+                    if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then 
+                        X_utd.sts = ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
+                    else X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
+                    X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB .
+                end.  
+             
+            end. 
+            find first buf_utd EXCLUSIVE-LOCK where buf_utd.doc-id = X_utd.doc-id
+                and buf_utd.db-num = X_utd.db-num .
+            assign
+                buf_utd.sts     = X_utd.sts
+                buf_utd.sts-edi = X_utd.sts-edi
+                .                                                
+            if buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB then 
+            do:       
+                oMotp = new is_motp() .
+                oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
+                if ERROR-STATUS:ERROR then 
+                do:
+                    message return-value view-as alert-box.
+                end.    
+                delete OBJECT oMotp .    
+            end.     
+            run init-id (X_utd.doc-id, X_utd.db-num).  
+        end.  
     end.
+    v-rid-list = "" .
   END.
 
 /* _UIB-CODE-BLOCK-END */
