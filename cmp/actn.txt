@@ -1,6 +1,6 @@
-"174"
+"175"
 "action-group"
-"edi"      "EDI"                     "Работа с системой EDI"                  "chk-is-edi"
+"edi"      "EDI"                     "Работа с системой EDI"                  ""
 "action-group"
 "archive"  "Архивы"                  "Работа с системой архивов"              ""
 "action-group"
