@@ -40,7 +40,7 @@ class ibs.th.bge.1crn.subjects.exp-mark inherits ibs.th.gbl.sys.objth implements
      Связано это с тем, что если в пакет попадает несколько раз одна и таже смена,
      1С уже не понимает какой набор чеков был последний, т.к. они все валятся в один раздел.
   */
-  &scop tag-interface 'edi-docs':U
+  &scop tag-interface 'marks':U
   define property InitSecTag as character no-undo init {&tag-interface}
     get.
 
