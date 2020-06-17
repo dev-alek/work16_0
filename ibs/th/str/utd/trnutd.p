@@ -1170,130 +1170,6 @@ end.
 
           find current new_trn-doc exclusive-lock .
               new_trn-doc.tot-cli =  new_trn-doc.tot-calc.
-              
-          
-      end.
-      when {&TDEDT_Ras_Vnesh}    
-      or when {&TDEDT_Ras_Perem}
-      or when {&TDEDT_Vozvrat_Vnesh}    then do:
-          
-          if not is-egais
-          then do:
-            { str/copy-ret.i
-              this-procedure
-              new_trn-doc.doc-code
-              new_trn-doc.doc-type
-              new_trn-doc.status_
-              new_trn-doc.internal
-              new_trn-doc.cli-type
-              new_trn-doc.cli-code
-              new_trn-doc.discnt-type
-              new_trn-doc.tot-calc
-              new_trn-doc.discnt-pc
-              new_trn-doc.agnt
-              new_trn-doc.boss
-              new_trn-doc.wrkr
-              new_trn-doc.base-rate
-              new_trn-doc.base-scale
-              new_trn-doc.exch-code
-              new_trn-doc.vat-type
-              new_trn-doc.doc-code
-              no
-              new_trn-doc.discnt-pc
-              new_trn-doc.agnt
-              new_trn-doc.boss
-              new_trn-doc.wrkr
-              new_trn-doc.base-rate
-              new_trn-doc.base-scale
-              v-cntxt-cash-pay
-              v-cntxt-base-code
-              tt2-doc-line
-              tt-gds-dtl
-              tt-parts
-              no
-              yes
-              yes
-              yes
-              no-error }
-  
-              if error-status:error then do :
-                  v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
-                  run pcall-log-file in p-log-handle ( input v-end-message ) .
-                  undo, return error v-end-message.
-              end.
-            end.
-            else do:
-              for each tt2-doc-line :
-                run create-line(new_trn-doc.doc-code, input-output table tt2-doc-line).
-              end.
-            end.
-
-            if is-tsd then do:
-              
-              for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:
-              
-                find first buf_goods where ub.doc-line.artic = buf_goods.artic and
-                  ub.doc-line.prod-type = buf_goods.prod-type  and
-                  ub.doc-line.prod-code = buf_goods.prod-code
-                  no-lock no-error .
-                
-                find first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = ub.doc-line.doc-code and
-                  ub.gds-dtl.artic = buf_goods.artic and
-                  ub.gds-dtl.prod-type = buf_goods.prod-type  and
-                  ub.gds-dtl.prod-code = buf_goods.prod-code.
-  
-                find first temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code.
-                  
-                ub.gds-dtl.doc-qnty  = temp_doc-line.doc-qnty.
-                ub.gds-dtl.fact-qnty = temp_doc-line.fact-qnty.
-  
-                ub.doc-line.fact-qnty = temp_doc-line.fact-qnty.
-                ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.
-                ub.doc-line.cli-qnty = temp_doc-line.cli-qnty.
-                
-              end.
-              
-            end.
-
-            if not is-tsd then do: 
-              run gbl/calc-trn.p (  this-procedure , recid(new_trn-doc)) no-error .
-              if error-status :error then do:
-                v-end-message = substitute(" Ошибка пересчета шапки &1 &2" , error-status :get-message(1)  , return-value) .
-                run pcall-log-file in p-log-handle ( input v-end-message ) .
-                undo, return error v-end-message.
-              end.
-            end.
-
-            if v-ext-doc-type = {&TDEDT_Ras_Vnesh} and not is-tsd then do:
-            /* "Создание НАКЛ- " + caps({&expense})) . */
-            run clos-trn in this-procedure (new_trn-doc.doc-code) no-error .
-                if error-status:error then do :
-                   v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
-                   run pcall-log-file in p-log-handle ( input v-end-message ) .
-                   undo, return error v-end-message.
-                end.
-                if is-unit-error then do:
-                  new_trn-doc.flag_ = false.
-                end.
-                if temp_trn-doc.price-type   = {&pt1_cost} then do:
-                  run calc-cost-price (new_trn-doc.doc-code) no-error .
-                  if error-status :error then do:
-                      v-end-message = substitute(" Ошибка пересчета учетных цен &1 &2" , error-status :get-message(1)  , return-value) .
-                      run pcall-log-file in p-log-handle ( input v-end-message ) .
-                      undo, return error v-end-message.
-                  end.
-                end.
-
-            run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-                if error-status:error then do :
-                   v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
-                   run pcall-log-file in p-log-handle ( input v-end-message ) .
-                   undo, return error v-end-message.
-                end.
-
-            end.
-          assign
-            new_trn-doc.PS  = trim(new_trn-doc.PS) + " " + v-str-txt .
       end.
    end case.
 
@@ -1323,103 +1199,9 @@ end.
       ub.doc-attr.attr-value = temp_trn-doc.cargo-from
     .
   end.
-   run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-    if error-status:error then do :
-        v-end-message = substitute(" Ошибка при закрытиии документа &1 &2" , error-status :get-message(1)  , return-value) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
-        undo, return error v-end-message.
-    end.
-
-    if new_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}    then do:
-        v-end-message = substitute("Закрытиии внешнего возврата &1 на статус РАЗР " , new_trn-doc.doc-code) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
-        run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-        if error-status:error then do :
-            v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус РАЗР &1 &2" , error-status :get-message(1)  , return-value) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-        end.
-        if not is-egais
-        then do:
-          v-end-message = substitute("Закрытиии внешнего возврата &1 на статус ФАКТ ", new_trn-doc.doc-code ) .
-          run pcall-log-file in p-log-handle ( input v-end-message ) .
-          run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-          if error-status:error then do :
-              v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус ФАКТ &1 &2" , error-status :get-message(1)  , return-value) .
-              run pcall-log-file in p-log-handle ( input v-end-message ) .
-              undo, return error v-end-message.
-          end.
-        end.
-    end.
-
-    if is-egais then do:
-/*      objMarks = new excisemarks (new_trn-doc.obj-type, new_trn-doc.obj-code).*/
-      for each  ub.doc-line where ub.doc-line.doc-code = new_trn-doc.doc-code:
-        find first buf_goods where ub.doc-line.artic = buf_goods.artic and
-          ub.doc-line.prod-type = buf_goods.prod-type  and
-          ub.doc-line.prod-code = buf_goods.prod-code
-          no-lock no-error .
-        release temp_doc-line.
-        for each ub.parts exclusive-lock
-          where ub.parts.in-code   = new_trn-doc.doc-code
-            and ub.parts.artic     = ub.doc-line.artic
-            and ub.parts.prod-type = ub.doc-line.prod-type
-            and ub.parts.prod-code = ub.doc-line.prod-code 
-            by ub.parts.qnty:
-
-          find next temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock use-index qntyIndex no-error.
-          if not available (temp_doc-line) then do:
-            find first temp_doc-line where  temp_doc-line.gds-code = buf_goods.gds-code and temp_doc-line.doc-qnty =  ub.parts.qnty no-lock use-index qntyIndex no-error.
-          end.
-          
-          ub.parts.price-cli = temp_doc-line.price-cli.
-          ub.parts.price-rubl = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / ub.parts.cli-base-rate.
-          ub.parts.price-base = ub.parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale.
-          
-/*          run trg/partps.p ( input buf_goods.gds-code                                                                                               */
-/*                           , input parts.in-code                                                                                                    */
-/*                           , ?                                                                                                                      */
-/*                           , input parts.part-code                                                                                                  */
-/*                           , input g#db-num                                                                                                         */
-/*                           , input ?                                                                                                                */
-/*                           , input ?                                                                                                                */
-/*                           , input temp_doc-line.refA + ',' + temp_doc-line.refB + ',' + temp_doc-line.alc-code  + ',' + temp_doc-line.alc-type-code*/
-/*                           , input ""                                                                                                               */
-/*                           , input ""                                                                                                               */
-/*                           , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 1, 3) else ""                               */
-/*                           , if temp_doc-line.importer <> "" then substring (temp_doc-line.importer-th, 4) else ""                                  */
-/*                           ) no-error .                                                                                                             */
-/*          if error-status :error                                                                                                                    */
-/*          then do:                                                                                                                                  */
-/*/*            delete object objMarks no-error.*/                                                                                                    */
-/*            message                                                                                                                                 */
-/*              vss-workfile vss-revision vss-description skip                                                                                        */
-/*              "Ошибка при вызове процедуры partps.p" skip                                                                                           */
-/*              error-status :get-message(1) skip                                                                                                     */
-/*              return-value skip                                                                                                                     */
-/*              view-as alert-box error .                                                                                                             */
-/*/*            delete object objMarks no-error.*/                                                                                                    */
-/*            run waitfram-hide.                                                                                                                      */
-/*            undo, return error .                                                                                                                    */
-/*          end.                                                                                                                                      */
-/*          for each tt-excisemarks where tt-excisemarks.refB = temp_doc-line.beforRefB:*/
-/*            objMarks:CrMarkForParts(buffer ub.parts, tt-excisemarks.excisemarks).     */
-/*            if objMarks:StatusErr                                                     */
-/*            then do:                                                                  */
-/*              v-end-message = objMarks:ReturnMsg.                                     */
-/*              delete object objMarks no-error.                                        */
-/*              undo, return error v-end-message.                                       */
-/*            end.                                                                      */
-/*          end.                                                                        */
-          
-        end.      
-      end.
-/*      delete object objMarks no-error.*/
-      
-    end.
-    assign
-        v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)
-                    + {&tabulation} + "Документ:" + string(new_trn-doc.doc-code) + " / " + string(temp_trn-doc.doc-code) + {&tabulation} + string( k ) + " товаров"
+  assign
+      v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)
+                  + {&tabulation} + "Документ:" + string(new_trn-doc.doc-code) + " / " + string(temp_trn-doc.doc-code) + {&tabulation} + string( k ) + " товаров"
                     .
     run pcall-log-file in p-log-handle (input v-end-message) .
      
@@ -1427,10 +1209,7 @@ end.
     def var v-gnews as logical no-undo.
     v-gnews = g#news.
     g#news = false.
-    if new_trn-doc.status_ <> {&fact}
-    then do :
-       run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-    end.
+    run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
     
     if error-status:error
       then p-msg  = "Ошибка закрытия на факт: " + replace (replace (return-value, {&new-line}, " "), '"', "'").
@@ -1606,7 +1385,10 @@ run str/trn-stat.p (
     output varchg-inv ,
     output table gds-list)
     no-error.
-    return return-value.
+    if error-status:error
+    then do: 
+      return error return-value.
+    end.
   end.
 end procedure. /* clos-trn2 */
 
