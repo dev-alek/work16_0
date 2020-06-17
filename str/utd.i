@@ -227,6 +227,7 @@ function addMark returns logical
             find current  buf_utd-marking-line exclusive-lock no-error.
             if available buf_utd-marking-line
             then
+               
                buf_utd-marking-line.doc-level = utd-marking-lines.doc-level + 1.
          end.
       end.
@@ -236,7 +237,7 @@ function addMark returns logical
          assign
             buf_utd-marking-line.doc-level = utd-marking-lines.doc-level + 1
             buf_utd-marking-line.mark      = marking.mark
-/*            buf_utd-marking-line.sts       = marking.sts*/
+            buf_utd-marking-line.sts       = utd-marking-lines.sts
          .
          
       end.
