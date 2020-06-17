@@ -91,6 +91,7 @@ define buffer bf_rvs-doc      for ub.rvs-doc.
 define buffer bf_rvs-line     for ub.rvs-line.
 define buffer bf_store        for ub.store.
 define buffer bf_contract     for ub.contract.
+define buffer buf_contract-attr for ub.contract-attr.
 define buffer ret-doc         for ub.trn-doc.
 define buffer old-line        for ub.doc-line.
 define buffer ret-dtl         for ub.gds-dtl.
@@ -1099,7 +1100,13 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     and not available ub.utd
     then do :
       EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code).
-      if EDOParSec:IsEdo and ub.contract.whole-send-news = 1 
+      find first buf_contract-attr no-lock where buf_contract-attr.host-code = ub.contract.host-code
+                                                 and buf_contract-attr.contract-code = ub.contract.contract-code
+                                                 and buf_contract-attr.attr-code = "contract-edi"
+                                                 no-error .
+      if EDOParSec:IsEdo
+      and available buf_contract-attr
+      and logical(buf_contract-attr.attr-value) = true 
       then do :
         run waitfram-hide in this-procedure no-error.
         undo, return error ("Договор " + ub.contract.contract-name + " рассчитан на поставки через ЭДО. Ручной приход по нему невозможен!") .

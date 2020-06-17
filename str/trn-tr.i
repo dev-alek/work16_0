@@ -314,6 +314,7 @@ define buffer buf-hold_shop    for ub.shop.
 define buffer buf-hold_store   for ub.store.
 define buffer bf_clients       for ub.clients.
 define buffer bf_contract      for ub.contract.
+define buffer buf_contract-attr for ub.contract-attr.
 define buffer bf_currency      for ub.currency.
 define variable varexch-rate     like ub.trn-doc.exch-rate            no-undo.
 define variable varexch-scale    like ub.trn-doc.exch-scale           no-undo.
@@ -603,8 +604,13 @@ if ( varis-fin = "yes":u
         if t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
         then do :
           EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+          find first buf_contract-attr no-lock where buf_contract-attr.host-code = bf_contract.host-code
+                                                 and buf_contract-attr.contract-code = bf_contract.contract-code
+                                                 and buf_contract-attr.attr-code = "contract-edi"
+                                                 no-error .
           if EDOParSec:IsEdo
-          and bf_contract.whole-send-news = 1 
+          and available buf_contract-attr
+          and logical(buf_contract-attr.attr-value) = true 
           then do :
             message "Договор рассчитан на поставки через ЭДО. Ручной приход по нему невозможен!" view-as alert-box .
             return error.
