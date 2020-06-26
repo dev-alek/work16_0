@@ -1141,15 +1141,36 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         for each tt-childs no-lock where tt-childs.parent_ = v-cis :
           assign v-num-childs = v-num-childs + 1 .
         end .
-        if v-unit = "LEVEL2" and v-num-childs <> 50 then v-gray-zone = true .
+        
+        if v-unit = "LEVEL2"
+        then do :
+          if isFirstEnter
+          then do :
+            if v-num-childs <> 50 then v-err-childs = true .
+          end .
+          else do :
+            if v-num-childs <> 50 and GrayZoneQnty <> 100
+            then do:
+              if (50 - v-num-childs) <= GrayZoneQnty
+              then v-gray-zone = true .
+              else v-err-childs = true .
+            end .
+          end .
+        end .
         
         if v-unit = "LEVEL1"
         then do :
-          if v-num-childs <> 10 
-          then do:
-            if (10 - v-num-childs) <= GrayZoneQnty
-            then v-gray-zone = true .
-            else v-err-childs = true .
+          if isFirstEnter
+          then do :
+            if v-num-childs <> 10 then v-err-childs = true .
+          end .
+          else do :
+            if v-num-childs <> 10 and GrayZoneQnty <> 100
+            then do:
+              if (10 - v-num-childs) <= GrayZoneQnty
+              then v-gray-zone = true .
+              else v-err-childs = true .
+            end .
           end .
         end .
         
@@ -1179,16 +1200,6 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
             then do :
               UpdateMark(v-cis,
                          objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB,
-                         "",
-                         v-unit,
-                         v-gtin,
-                         hText:node-value) .
-            end .
-            else
-            if v-gray-zone
-            then do :
-              UpdateMark(v-cis,
-                         objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,
                          "",
                          v-unit,
                          v-gtin,
