@@ -221,8 +221,19 @@ on error undo, return error
                                and clients.stts = 0
                                break by clients.host-code :
       
-      if first-of(clients.host-code)
-      then do :                           
+/*      if first-of(clients.host-code)*/
+/*      then do :                     */
+        for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-obj}
+                                               and buf_ext-system-attr.esya-attr-value  = clients.obj-type + string(clients.obj-code)
+                                              /* and buf_ext-system-attr.db-num           = buf_db.db-num */
+                                               :
+          find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
+                                              and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
+                                              no-error .
+          if available buf_ext-system then leave .
+        end .
+        if not available buf_ext-system
+        then
         for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-host-code}
                                                and buf_ext-system-attr.esya-attr-value  = string(clients.host-code)
                                               /* and buf_ext-system-attr.db-num           = buf_db.db-num */
@@ -307,7 +318,7 @@ on error undo, return error
             assign buf_ext-system-attr.esya-attr-value = "" .
           end .
         end .
-      end .                           
+/*      end .*/
                                  
       /* По всем УТД/еДокам в статусе "Получен от поставщика" И статус ЕДО не равен Запрос аннуляции */
       for each buf_utd no-lock where buf_utd.obj-type = clients.obj-type
@@ -454,10 +465,10 @@ on error undo, return error
 /*        end .                                                                   */
       end .
       
-      if last-of (clients.host-code)
-      then do :
+/*      if last-of (clients.host-code)*/
+/*      then do :                     */
         delete object oMotp no-error .
-      end .
+/*      end .*/
       
     end . /* clients */
     
