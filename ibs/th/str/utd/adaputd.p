@@ -112,16 +112,32 @@ do:
     v-q = 0.
 /*    if buf_utd.EDocType = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB*/
 /*    then                                                       */
-    for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
-      and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
-      and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
-      :
-      
-      find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "UNIT"
-        and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
-      if available (buf_marking)
-        then v-q = v-q + 1.
+
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType("tabak")
+    then do:
+      for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+        and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+        and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+        :
+        
+        find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "UNIT"
+          and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
+        if available (buf_marking)
+          then v-q = v-q + 1.
+      end.
     end.
+    else do:
+      for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+        and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+        and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+        :
+        
+        find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "Level1"
+          and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
+        if available (buf_marking)
+          then v-q = v-q + 10.
+      end.      
+    end. 
 /*    else v-q = buf_utd-lines.Quantity.*/
     
     sum-vat = (buf_utd-lines.Total - buf_utd-lines.TotalWithVatExcluded) / buf_utd-lines.Quantity. 
