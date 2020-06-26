@@ -256,6 +256,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
   end method .
   
+  define stream cades .
+  define stream auth .
+  
   method public character authorize
   (
   input pKey as character,
@@ -273,6 +276,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable signedData2Long as longchar no-undo .
     
     define variable ii as integer no-undo .
+    define variable ix as integer no-undo .
     define variable v-found as logical no-undo .
     define variable cmd as character no-undo .
     
@@ -284,11 +288,22 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vAuthDataLong as longchar no-undo .
     define variable vToken as character no-undo .
     
+    output stream cades to value ("cadescom.log") append .
+    output stream auth to value ("auth.log") append .
+    
     create "CAdESCOM.Store" oStore .
     oStore:Open (2, "My", 0) .
+    if error-status:num-messages > 0
+    then do ix = 1 to  error-status:num-messages:
+      put stream cades unformatted now " " error-status:get-message(ix) skip .
+    end .
     
     create "CAPICOM.Certificates" oCerts . 
     oCerts = oStore:Certificates .
+    if error-status:num-messages > 0
+    then do ix = 1 to  error-status:num-messages:
+      put stream cades unformatted now " " error-status:get-message(ix) skip .
+    end .
   
     create "CAdESCOM.Certificate" oCert .
    
@@ -327,6 +342,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           assign MSG = "В личном хранилище сертификатов не найден сертификат с серийным номером " + pKey .
         end .
       end case .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error MSG .
     end.
   
@@ -359,6 +377,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                       server_
                       ).
     end. 
+    put stream auth unformatted now " command   " cmd skip .
     os-command silent value (cmd).
     
     file-info:file-name = search("AuthData_.json") no-error .
@@ -372,6 +391,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       release object oStore .
       release object oCerts .
       release object oCert .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error .
     end.
     
@@ -414,12 +436,19 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     oSignedData:Content = vData1 .
     
     signedData1Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
+    if error-status:num-messages > 0
+    then do ix = 1 to  error-status:num-messages:
+      put stream cades unformatted now " " error-status:get-message(ix) skip .
+    end .
     if signedData1Long = ?
     then do :
       assign
         MSG = "Ошибка при попытке подписания строки для получения токена авторизации!"
         StatusErr = true
       .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error .
     end .
     signedData1Long = replace(signedData1Long, chr(10), "") .
@@ -430,7 +459,22 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     then do :
       oSignedData:Content = vData2 .
       
-      signedData2Long = oSignedData:SignCades(oSigner, 1, false, 0) .
+      signedData2Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
+      if error-status:num-messages > 0
+      then do ix = 1 to  error-status:num-messages:
+        put stream cades unformatted now " " error-status:get-message(ix) skip .
+      end .
+      if signedData2Long = ?
+      then do :
+        assign
+          MSG = "Ошибка при попытке подписания строки (2) для получения токена авторизации!"
+          StatusErr = true
+        .
+        put stream auth unformatted now " " MSG skip .
+        output stream cades close .
+        output stream auth close .
+        return error .
+      end .
       signedData2Long = replace(signedData2Long, chr(10), "") .
       signedData2Long = replace(signedData2Long, chr(13), "") .
     end .
@@ -485,6 +529,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                       search ("AuthDataSigned_.json")
                       ).
     end. 
+    put stream auth unformatted now " command   " cmd skip .
     os-command silent value (cmd).
     
     file-info:file-name = search("AuthToken_.json") no-error .
@@ -495,6 +540,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         MSG = "Нет ответа от ИС МОТП"
         StatusErr = true
       .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error .
     end.
     
@@ -525,10 +573,16 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           MSG = trim(trim(substring(vStr, 17)), '"')
           StatusErr = true
         .
+        put stream auth unformatted now " " MSG skip .
+        output stream cades close .
+        output stream auth close .
         return error .
       end.
       
     end .
+    
+    output stream cades close .
+    output stream auth close .
     
     find first buf_ext-system-attr exclusive-lock where buf_ext-system-attr.db-num   = esysDbNum
                                                     and buf_ext-system-attr.esys-id  = esysId
@@ -650,15 +704,26 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       HttpStatus = integer(vHTTPstatus) .
     end.
     
-    if vHTTPstatus begins "20"
+    if HttpStatus = 401
     then do :
+      MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .
+      return false .
+    end .
+    else do :
       MSG = "Токен авторизации в ИС МОТП - ДЕЙСТВИТЕЛЕН" .
       return true .
     end .
-    else do :
-      MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .
-      return false .
-    end .    
+    
+    
+/*    if vHTTPstatus begins "20"                               */
+/*    then do :                                                */
+/*      MSG = "Токен авторизации в ИС МОТП - ДЕЙСТВИТЕЛЕН" .   */
+/*      return true .                                          */
+/*    end .                                                    */
+/*    else do :                                                */
+/*      MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .*/
+/*      return false .                                         */
+/*    end .                                                    */
     
   end method .
   
