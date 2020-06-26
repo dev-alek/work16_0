@@ -934,6 +934,7 @@ DO:
   f-date-to   = date(f-date-to:screen-value) .
         run init-sort .
     {&OPEN-QUERY-br-utd}
+   run enable_BUTTON.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1279,6 +1280,7 @@ DO:
         num-entries( v-rid-list ) @ mark-num
         with frame {&frame-name}.
     end.
+    v-rid-list = "" .
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1592,6 +1594,7 @@ if log-res then do:
     run init-sort .
     {&OPEN-QUERY-br-utd}
 end.    
+v-rid-list = "" .
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1816,6 +1819,7 @@ DO:
   end.
   run init-sort .
   {&OPEN-QUERY-br-utd}
+  run enable_BUTTON.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1849,6 +1853,7 @@ DO:
   end.
   run init-sort .
   {&OPEN-QUERY-br-utd}
+  run enable_BUTTON.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2153,14 +2158,14 @@ apply "value-changed" to F-timeToken in frame {&frame-name}.
 display
 F-timeToken
 with frame {&frame-name} .
-if available (X_utd) then do:
 
-   if mDiadocConnection <> ? then 
+   if available (X_utd) and mDiadocConnection <> ? 
+   then 
    do:
      enable
        b_anul
+       
        B-write-cancel
-       b_recEDI
        B-write-sertif
        with frame {&frame-name} .
    end. 
@@ -2168,14 +2173,15 @@ if available (X_utd) then do:
    do:
      disable
        b_anul
+       
        B-write-cancel
-       b_recEDI
        B-write-sertif
        with frame {&frame-name} .
      
    end.         
- end.   
-
+ if mDiadocConnection <> ? 
+ then enable  b_recEDI with frame {&frame-name} .
+ else disable b_recEDI with frame {&frame-name} .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

@@ -459,46 +459,46 @@ ASSIGN
 
 /* ************************  Control Triggers  ************************ */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark d-mark
-ON return OF br-mark IN FRAME d-mark
-  DO:
-  run scan-mark.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME br-mark-item
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark
-ON return OF br-mark-item IN FRAME d-mark /* Номер документа */
-  DO:
-  run scan-mark. 
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark d-mark       */
+/*ON return OF br-mark IN FRAME d-mark                           */
+/*  DO:                                                          */
+/*  run scan-mark.                                               */
+/*  END.                                                         */
+/*                                                               */
+/*/* _UIB-CODE-BLOCK-END */                                      */
+/*&ANALYZE-RESUME                                                */
+/*                                                               */
+/*&Scoped-define SELF-NAME br-mark-item                          */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark  */
+/*ON return OF br-mark-item IN FRAME d-mark /* Номер документа */*/
+/*  DO:                                                          */
+/*  run scan-mark.                                               */
+/*  END.                                                         */
+/*                                                               */
+/*/* _UIB-CODE-BLOCK-END */                                      */
+/*&ANALYZE-RESUME                                                */
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark d-mark
-ON any-printable OF br-mark IN FRAME d-mark
-  DO:
-  run proc-any-key.
-  END.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
-&Scoped-define SELF-NAME br-mark-item
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark
-ON any-printable OF br-mark-item IN FRAME d-mark /* Номер документа */
-  DO:
-  run proc-any-key.    
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark d-mark              */
+/*ON any-printable OF br-mark IN FRAME d-mark                           */
+/*  DO:                                                                 */
+/*  run proc-any-key.                                                   */
+/*  END.                                                                */
+/*                                                                      */
+/*/* _UIB-CODE-BLOCK-END */                                             */
+/*&ANALYZE-RESUME                                                       */
+/*                                                                      */
+/*&Scoped-define SELF-NAME br-mark-item                                 */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark         */
+/*ON any-printable OF br-mark-item IN FRAME d-mark /* Номер документа */*/
+/*  DO:                                                                 */
+/*  run proc-any-key.                                                   */
+/*  END.                                                                */
+/*                                                                      */
+/*/* _UIB-CODE-BLOCK-END */                                             */
+/*&ANALYZE-RESUME                                                       */
 
 
 
@@ -1252,6 +1252,15 @@ DO:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME v-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-mark
+ON any-printable OF v-mark IN FRAME d-mark /*              */
+do:
+  run proc-any-key.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define BROWSE-NAME br-mark
 &UNDEFINE SELF-NAME

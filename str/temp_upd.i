@@ -42,6 +42,9 @@ define temp-table tt-utd-lines like ub.utd-lines
   field TaxRate_  as character
   field fact-qnty as decimal
   field sts_err   as logical
+  index pi  db-num doc-id LineNum
+  index gds-code gds-code
+  index sts stts sts
   .
   
 define temp-table tt-marking-lines like ub.marking-lines
@@ -61,6 +64,10 @@ define temp-table tt-marking-lines like ub.marking-lines
   index pi  doc-level   sts
   index pi2 mark-parent sts
   index pi3 unit-ext
+  index pi4 mark obj-type obj-code gds-code in-code out-code part-code prt-code
+  index part gds-code obj-type obj-code in-code out-code part-code prt-code
+  index gds-code gds-code
+  index obj obj-code obj-type
   .
       
 define temp-table tt-mark-line like ub.marking-lines 

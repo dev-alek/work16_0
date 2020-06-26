@@ -165,8 +165,10 @@ X_utd-lines.gds-code X_utd-lines.GdsName X_utd-lines.UnitCode ~
 X_utd-lines.Quantity X_utd-lines.Article X_utd-lines.sts 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-utd 
 
-&Scoped-define QUERY-STRING-br-utd FOR EACH X_utd-lines NO-LOCK where if r-error = 2 then X_utd-lines.stts <> "Проверен" else if r-error-2 = 2 then X_utd-lines.stts = "Ошибка" else X_utd-lines.stts <> "2" INDEXED-REPOSITION
-&Scoped-define OPEN-QUERY-br-utd OPEN QUERY br-utd FOR EACH X_utd-lines no-lock where if r-error = 2 then X_utd-lines.stts <> "Проверен" else if r-error-2 = 2 then X_utd-lines.stts = "Ошибка" else X_utd-lines.stts <> "2" INDEXED-REPOSITION.
+&Scoped-define QUERY-STRING-br-utd FOR EACH X_utd-lines NO-LOCK where if r-error = 2 then X_utd-lines.stts = "Ожидает проверку" or X_utd-lines.stts = "Ошибка" else X_utd-lines.sts = 0 INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-br-utd if r-error = 2 then OPEN QUERY br-utd FOR EACH X_utd-lines no-lock where X_utd-lines.stts <> "Проверен" INDEXED-REPOSITION. else ~
+if r-error-2 = 2 then OPEN QUERY br-utd FOR EACH X_utd-lines no-lock where X_utd-lines.stts = "Ошибка" INDEXED-REPOSITION.  else ~
+OPEN QUERY br-utd FOR EACH X_utd-lines no-lock INDEXED-REPOSITION.
 
 &Scoped-define TABLES-IN-QUERY-br-utd X_utd-lines
 &Scoped-define FIRST-TABLE-IN-QUERY-br-utd X_utd-lines
@@ -175,7 +177,7 @@ X_utd-lines.Quantity X_utd-lines.Article X_utd-lines.sts
 /* Definitions for DIALOG-BOX d-utd                                     */
 &Scoped-define OPEN-BROWSERS-IN-QUERY-d-utd ~
     ~{&OPEN-QUERY-br-utd}
-
+    
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-cancel b-save b_servis b_error ~
 B_mark B_mark-utd RECT-1 R-TH f-num f-date c-type ~
@@ -402,7 +404,7 @@ DEFINE VARIABLE boss-name AS CHARACTER FORMAT "x(256)":U
      SIZE 11 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE f-agnt AS INTEGER FORMAT "9999999999":U INITIAL 0 
+DEFINE VARIABLE f-agnt AS INTEGER FORMAT ">>>>>>>>>>>9":U INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 11.25 BY 1
      BGCOLOR 15  NO-UNDO.
@@ -411,7 +413,7 @@ DEFINE VARIABLE f-agnt-name AS CHARACTER FORMAT "X(256)":U INITIAL "Исп:"
      VIEW-AS FILL-IN 
      SIZE 4.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-boss AS INTEGER FORMAT "9999999999":U INITIAL 0 
+DEFINE VARIABLE f-boss AS INTEGER FORMAT ">>>>>>>>>>>9":U INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 11.25 BY 1
      BGCOLOR 15  NO-UNDO.
@@ -432,7 +434,7 @@ DEFINE VARIABLE f-contr-name-TH AS CHARACTER FORMAT "X(100)"
      VIEW-AS FILL-IN 
      SIZE 48.5 BY 1.
 
-DEFINE VARIABLE f-contr-TH AS INTEGER FORMAT ">>>>9999999" INITIAL 0 
+DEFINE VARIABLE f-contr-TH AS INTEGER FORMAT ">>>>>>>>>>>9" INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 19.5 BY 1.
 
@@ -481,7 +483,7 @@ DEFINE VARIABLE f-num-name-2 AS CHARACTER FORMAT "X(256)":U INITIAL "№:"
      VIEW-AS FILL-IN 
      SIZE 3.25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-obj-code-TH AS INTEGER FORMAT "->>>>>>" INITIAL 0 
+DEFINE VARIABLE f-obj-code-TH AS INTEGER FORMAT ">>>>>>>>>>9" INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 14.75 BY 1.
 
@@ -505,7 +507,7 @@ DEFINE VARIABLE f-status-TH AS CHARACTER FORMAT "X(256)":U INITIAL "Статус ТН:"
      VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-supp-code-TH AS INTEGER FORMAT "->>>>>>" INITIAL 0 
+DEFINE VARIABLE f-supp-code-TH AS INTEGER FORMAT ">>>>>>>>>>9" INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 14.75 BY 1.
 
@@ -532,7 +534,7 @@ DEFINE VARIABLE f-vat AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 16.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-wrkr AS INTEGER FORMAT "9999999999":U INITIAL 0 
+DEFINE VARIABLE f-wrkr AS INTEGER FORMAT ">>>>>>>>>>>9":U INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 11.25 BY 1
      BGCOLOR 15  NO-UNDO.
@@ -1665,7 +1667,8 @@ end.
     display f-info c-status c-status-edi f-comment with frame {&frame-name} .
     run enable_UI in this-procedure .
     run mark-temp .
-  {&OPEN-QUERY-br-utd}
+        {&OPEN-QUERY-br-utd}
+
   run enable_BUTTON in this-procedure .
             END.
 
@@ -1995,7 +1998,8 @@ DO:
             end.
     end.
     run mark-temp .
-    {&OPEN-QUERY-br-utd}
+        {&OPEN-QUERY-br-utd}
+
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2375,42 +2379,41 @@ DO:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
-ON return OF br-utd IN FRAME d-utd /* Марка */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd*/
+/*ON return OF br-utd IN FRAME d-utd /* Марка */        */
+/*  DO:                                                 */
+/*  run save_mark .                                     */
+/*  END.                                                */
+/*                                                      */
+/*/* _UIB-CODE-BLOCK-END */                             */
+/*&ANALYZE-RESUME                                       */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
 ON return OF v-mark IN FRAME d-utd /* Марка */
   DO:
-  run save_mark .
+   run save_mark .
   END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
-ON return OF c-type IN FRAME d-utd /* Марка */
-  DO:
-  run save_mark .
-  END.
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd*/
+/*ON return OF c-type IN FRAME d-utd /* Марка */        */
+/*  DO:                                                 */
+/*  run save_mark .                                     */
+/*  END.                                                */
+/*                                                      */
+/*/* _UIB-CODE-BLOCK-END */                             */
+/*&ANALYZE-RESUME                                       */
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
-ON any-printable ANYWHERE /* Марка */
-  DO:
-
-  run proc-any-key .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd*/
+/*ON any-printable OF c-type IN FRAME d-utd /* Марка */ */
+/*  DO:                                                 */
+/*  run proc-any-key .                                  */
+/*  END.                                                */
+/*                                                      */
+/*/* _UIB-CODE-BLOCK-END */                             */
+/*&ANALYZE-RESUME*/
 
 &Scoped-define SELF-NAME v-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
@@ -2423,184 +2426,184 @@ end.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b_back-check
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_back-check d-utd
-ON any-printable OF b_back-check IN FRAME d-utd /* Вернуть на проверку */
-  DO:
-run proc-any-key.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_correct
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_correct d-utd
-ON any-printable OF b_correct IN FRAME d-utd /* Запрос на изменение */
-  DO:
-run proc-any-key.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b_anul
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_anul d-utd
-ON any-printable OF b_anul IN FRAME d-utd /* Аннулировать */
-  DO:
-run proc-any-key.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd
-ON any-printable OF br-utd IN FRAME d-utd /* Марка */
-  DO:
-  run proc-any-key .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b_finish
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_finish d-utd
-ON any-printable OF b_finish IN FRAME d-utd /* Ввод в оборот */
-  DO:
-run proc-any-key.
-
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_prov-finish
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_prov-finish d-utd
-ON any-printable OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
-  DO:
-run proc-any-key.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_recheck
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recheck d-utd
-ON any-printable OF b_recheck IN FRAME d-utd /* Повторно проверить */
-  DO:
-run proc-any-key.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_write-cancel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_write-cancel d-utd
-ON any-printable OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */
-  DO:
-run proc-any-key.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b_deliv-cancel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_deliv-cancel d-utd
-ON any-printable OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */
-  DO:
-run proc-any-key.
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_back-check
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_back-check d-utd
-ON return OF b_back-check IN FRAME d-utd /* Вернуть на проверку */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_correct
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_correct d-utd
-ON return OF b_correct IN FRAME d-utd /* Запрос на изменение */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b_anul
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_anul d-utd
-ON return OF b_anul IN FRAME d-utd /* Аннулировать */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b_finish
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_finish d-utd
-ON return OF b_finish IN FRAME d-utd /* Ввод в оборот */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_prov-finish
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_prov-finish d-utd
-ON return OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_recheck
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recheck d-utd
-ON return OF b_recheck IN FRAME d-utd /* Повторно проверить */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b_write-cancel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_write-cancel d-utd
-ON return OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b_deliv-cancel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_deliv-cancel d-utd
-ON return OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */
-  DO:
-  run save_mark .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME b_back-check                                     */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_back-check d-utd              */
+/*ON any-printable OF b_back-check IN FRAME d-utd /* Вернуть на проверку */ */
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_correct                                        */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_correct d-utd                 */
+/*ON any-printable OF b_correct IN FRAME d-utd /* Запрос на изменение */    */
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_anul                                           */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_anul d-utd                    */
+/*ON any-printable OF b_anul IN FRAME d-utd /* Аннулировать */              */
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-utd                    */
+/*ON any-printable OF br-utd IN FRAME d-utd /* Марка */                     */
+/*  DO:                                                                     */
+/*  run proc-any-key .                                                      */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_finish                                         */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_finish d-utd                  */
+/*ON any-printable OF b_finish IN FRAME d-utd /* Ввод в оборот */           */
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*                                                                          */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_prov-finish                                    */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_prov-finish d-utd             */
+/*ON any-printable OF b_prov-finish IN FRAME d-utd /* Проверка завершена */ */
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_recheck                                        */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recheck d-utd                 */
+/*ON any-printable OF b_recheck IN FRAME d-utd /* Повторно проверить */     */
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_write-cancel                                   */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_write-cancel d-utd            */
+/*ON any-printable OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */*/
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_deliv-cancel                                   */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_deliv-cancel d-utd            */
+/*ON any-printable OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */*/
+/*  DO:                                                                     */
+/*run proc-any-key.                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_back-check                                     */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_back-check d-utd              */
+/*ON return OF b_back-check IN FRAME d-utd /* Вернуть на проверку */        */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_correct                                        */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_correct d-utd                 */
+/*ON return OF b_correct IN FRAME d-utd /* Запрос на изменение */           */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_anul                                           */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_anul d-utd                    */
+/*ON return OF b_anul IN FRAME d-utd /* Аннулировать */                     */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_finish                                         */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_finish d-utd                  */
+/*ON return OF b_finish IN FRAME d-utd /* Ввод в оборот */                  */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_prov-finish                                    */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_prov-finish d-utd             */
+/*ON return OF b_prov-finish IN FRAME d-utd /* Проверка завершена */        */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_recheck                                        */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recheck d-utd                 */
+/*ON return OF b_recheck IN FRAME d-utd /* Повторно проверить */            */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_write-cancel                                   */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_write-cancel d-utd            */
+/*ON return OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */       */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
+/*                                                                          */
+/*&Scoped-define SELF-NAME b_deliv-cancel                                   */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_deliv-cancel d-utd            */
+/*ON return OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */       */
+/*  DO:                                                                     */
+/*  run save_mark .                                                         */
+/*  END.                                                                    */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-utd 
@@ -3617,7 +3620,9 @@ end.
     with frame {&frame-name}.
 
   run mark-temp .
-  {&OPEN-QUERY-br-utd}
+  
+        {&OPEN-QUERY-br-utd}
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3641,11 +3646,9 @@ PROCEDURE mark-temp :
   define buffer buf_utd-lines-attr    for ub.utd-lines-attr .
   define variable v-db-num as integer no-undo .
   define variable v-doc-id as integer no-undo .
-  define variable vRecKeyLine as character no-undo .
-  empty temp-table X_utd-lines .
 
   for each buf_utd-lines no-lock where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num:
-    create X_utd-lines . 
+    find first X_utd-lines EXCLUSIVE-LOCK where buf_utd-lines.doc-id = X_utd-lines.doc-id and buf_utd-lines.db-num = X_utd-lines.db-num and buf_utd-lines.LineNum = X_utd-lines.LineNum no-error . 
     buffer-copy buf_utd-lines to X_utd-lines .
 if buf_utd.EdocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then do: 
     for first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
@@ -3656,19 +3659,6 @@ if buf_utd.EdocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then do:
     X_utd-lines.fact-qnty = integer(buf_utd-lines-attr.attr-value) . 
     end.
 end.    
-
-      run gen-key-rec ("utd-lines", 
-        input  buffer X_utd-lines:handle, 
-        output vRecKeyLine).
-
-      find first buf_utd-err no-lock where buf_utd-err.doc-id = X_utd-lines.doc-id and buf_utd-err.db-num = X_utd-lines.db-num and buf_utd-err.reckey = vRecKeyLine no-error .
-      if available (buf_utd-err) then 
-      do:
-          X_utd-lines.sts_err = yes .
-      end.
-      else do:
-        X_utd-lines.sts_err = no .
-        end.
 
     /*Определить какие должны быть ошибочные статусы*/
     find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
@@ -3687,6 +3677,8 @@ end.
         if available (buf_utd-marking-lines) then  X_utd-lines.stts = "Проверен" .
       end.  
     end.
+    X_utd-lines.qnty-mark = 0 .
+    X_utd-lines.qnty-scan = 0 .
     for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
       buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum:
         find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark no-error .
@@ -3702,7 +3694,10 @@ end.
     X_utd-lines.gds-name = GdsName(X_utd-lines.gds-code) .
     X_utd-lines.taxRate_ = string(X_utd-lines.TaxRate) + " %" .
   end.    
-  empty temp-table tt-marking-lines .
+  for each X_utd-lines:
+      if not CAN-FIND (ub.utd-lines where ub.utd-lines.db-num = X_utd-lines.db-num and ub.utd-lines.doc-id = X_utd-lines.doc-id and ub.utd-lines.LineNum = X_utd-lines.LineNum) then 
+      delete X_utd-lines .
+  end.    
 
 END PROCEDURE.
 
@@ -3859,6 +3854,8 @@ PROCEDURE save_mark :
     define buffer gray_utd-marking-lines for ub.utd-marking-lines .
     define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_utd-lines-attr for ub.utd-lines-attr .
+    define variable vRecKeyLine as character no-undo .
+
     if p-mode = {&lookup} then do:
             v-mark:screen-value in frame {&frame-name} = "" .
             v-mark = "" .
@@ -3917,8 +3914,21 @@ PROCEDURE save_mark :
       do:
         find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
         if available (X_utd-lines) then
-        do:          
-          
+        do:  
+                    
+      run gen-key-rec ("utd-lines", 
+        input  buffer X_utd-lines:handle, 
+        output vRecKeyLine).
+
+      find first buf_utd-err no-lock where buf_utd-err.doc-id = X_utd-lines.doc-id and buf_utd-err.db-num = X_utd-lines.db-num and buf_utd-err.reckey = vRecKeyLine no-error .
+      if available (buf_utd-err) then 
+      do:
+          X_utd-lines.sts_err = yes .
+      end.
+      else do:
+        X_utd-lines.sts_err = no .
+        end.
+                  
           if X_utd-lines.sts_err then do:
             F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
             display F-text with frame {&frame-name}.
@@ -4005,33 +4015,37 @@ PROCEDURE save_mark :
             { gbl/brwrepos.i
               &line-num= 5
             }
-          end.    
-          else do:  
-            if buf_utd-marking-lines.doc-level > 1 then 
-            do:
-              if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then do:
-              /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
-              message "Разгруппировать упаковки?"
-                view-as alert-box question buttons yes-no update ungroup.
-              if ungroup then 
+          end.
+          else do:
+              if buf_utd-marking-lines.doc-level > 1 then 
               do:
-                if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
-                do:
-                  message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
-                    view-as alert-box.
-                end.
-              /*              end.*/
-              end.  
-            end.
-            else do:
+                  if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then 
+                  do:
+                      /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
+                      message "Разгруппировать упаковки?"
+                          view-as alert-box question buttons yes-no update ungroup.
+                      if ungroup then 
+                      do:
+                          if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                          do:
+                              message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
+                                  view-as alert-box.
+                          end.
+                      end.
+                  end.  
+                  else 
+                  do:    
+                      F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .
+                      display F-text with frame {&frame-name}.
+                      v-mark:screen-value = "" .
+                      v-mark = "" .
+                      return no-apply.
+                  end. 
+              end.
+            
 /*Проверка на серую зону*/
              
-                F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .
-                display F-text with frame {&frame-name}.
-                v-mark:screen-value = "" .
-                v-mark = "" .
-                return no-apply.
-            end.   
+  
             end.  
             if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
             do:
@@ -4051,7 +4065,7 @@ PROCEDURE save_mark :
 /*              end.                                                                             */
 /*            end.                                                                               */
           end.
-          end.
+/*          end.*/
           run mark-temp .
             find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
                 and buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB no-error .
@@ -4199,7 +4213,7 @@ PROCEDURE save_mark :
               create  X_utd-lines .
               buffer-copy buf_utd-lines to X_utd-lines .
               assign
-                X_utd-lines.stts     = StatusTHName(buf_utd-lines.sts)
+                X_utd-lines.stts     = StatusTHName(buf_utd-lines.sts).
                 X_utd-lines.gds-name = GdsName(v-gds-code)
                 .
                 
