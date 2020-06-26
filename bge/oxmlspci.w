@@ -386,19 +386,17 @@ DEFINE VARIABLE f-server-addres AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 52 BY 1 TOOLTIP "Адрес точки подключения к ИС МОТП" NO-UNDO. 
      
-DEFINE VARIABLE f-user AS character FORMAT "X(256)":U 
-     LABEL "Пользователь" 
+DEFINE VARIABLE f-obj AS character FORMAT "X(15)":U 
+     LABEL "Объект" 
      VIEW-AS FILL-IN  
-     SIZE 20 BY 1 NO-UNDO.   
+     SIZE 15 BY 1 NO-UNDO.   
      
 define variable e-mail-list as character format "X(1000)":U
      label "Список eMail"
      view-as editor
      size 50 by 3 no-undo .
      
-define variable v-user-id as character no-undo .  
-     
-DEFINE BUTTON b-user 
+DEFINE BUTTON b-obj 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
@@ -546,8 +544,8 @@ define frame motp-frame
      f-host-code at row 5 col 3
      b-host-code at row 5 col 23
      f-server-addres at row 6 col 3
-     f-user at row 7 col 3
-     b-user at row 7 col 22   
+     f-obj at row 7 col 3
+     b-obj at row 7 col 30   
      e-mail-list at row 8 col 3
      f-proxy-addres at row 12 col 3
      f-proxy-login at row 13 col 3
@@ -920,11 +918,28 @@ do :
   WITH FRAME diadoc-frame.
 end .
 
-on choose of b-user in frame motp-frame
+on choose of b-obj in frame motp-frame
 do :
+  define variable v-rid-list as character no-undo .
+  define variable v-rid-rec  as recid no-undo .
+  define buffer buf_shop for ub.shop .
   
+  v-rid-list = "" .
+  run adm/shops.w ( input parparentproc
+                   ,input "b-sel"
+                   ,input-output v-rid-list
+                   ,no ).
+  if v-rid-list = "":U then return.
+  v-rid-rec = integer(v-rid-list) no-error .
+  find first buf_shop no-lock where recid(buf_shop) = v-rid-rec no-error .
+  if available buf_shop then f-obj:screen-value = {&shop} + string(buf_shop.obj-code) .
+  assign f-obj .
 end .
 
+on value-changed of f-obj in frame motp-frame
+do :
+  assign f-obj .
+end .
 
 &Scoped-define SELF-NAME b-quit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit Dialog-Frame
@@ -1561,8 +1576,8 @@ procedure MOTP-Enable :
       when {&attr-esys-host-code} then do:
         assign f-host-code = integer(tt-ext-system-attr.esya-attr-value) .
       end.
-      when {&attr-esys-user-id} then do:
-        assign v-user-id = tt-ext-system-attr.esya-attr-value .
+      when {&attr-esys-obj} then do:
+        assign f-obj = tt-ext-system-attr.esya-attr-value .
       end.
       when {&attr-esys-server-addr} then do:
         assign f-server-addres = tt-ext-system-attr.esya-attr-value.
@@ -1599,7 +1614,7 @@ procedure MOTP-Enable :
     tt-ext-system.esys-type
     f-host-code
     f-server-addres
-    f-user
+    f-obj
     f-proxy-addres
     f-proxy-login
     f-proxy-password
@@ -1611,7 +1626,8 @@ procedure MOTP-Enable :
     b-exit when p-mode <> {&lookup}
     b-quit
     b-host-code when p-mode <> {&lookup}
-    b-user when p-mode <> {&lookup}
+    f-obj when p-mode <> {&lookup}
+    b-obj when p-mode <> {&lookup}
     tt-ext-system.esys-name when p-mode <> {&lookup}
     tt-ext-system.esys-type when p-mode <> {&lookup}
     f-server-addres when p-mode <> {&lookup}
@@ -2138,7 +2154,7 @@ frame motp-frame
 tt-ext-system.esys-name
 tt-ext-system.esys-type
 f-host-code
-f-user
+f-obj
 f-server-addres
 f-proxy-addres
 f-proxy-login
@@ -2194,10 +2210,14 @@ for each tt-ext-system-attr:
         assign
         tt-ext-system-attr.esya-attr-value = string(f-host-code).
      end.
-     when {&attr-esys-user-id} then do:
+     when {&attr-esys-obj} then do:
         assign
-        tt-ext-system-attr.esya-attr-value =  v-user-id.
+        tt-ext-system-attr.esya-attr-value = f-obj .
      end.
+/*     when {&attr-esys-user-id} then do:                 */
+/*        assign                                          */
+/*        tt-ext-system-attr.esya-attr-value =  v-user-id.*/
+/*     end.                                               */
      when {&attr-esys-server-addr} then do:
         assign
         tt-ext-system-attr.esya-attr-value = f-server-addres.

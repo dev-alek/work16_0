@@ -14304,6 +14304,17 @@ end procedure.
 &scop manual-edit-attr-esys-host-code 0
 &scop batch-edit-attr-esys-host-code 0
 
+&scop type-attr-esys-obj {&type-char}
+&scop format-attr-esys-obj "X(15)"
+&scop label-attr-esys-obj "Объект"
+&scop tooltip-attr-esys-obj "Объект"
+&scop user-can-edit-attr-esys-obj true
+&scop output-display-attr-esys-obj false
+&scop other-attr-esys-obj '':u
+&scop news-attr-esys-obj false
+&scop manual-edit-attr-esys-obj 0
+&scop batch-edit-attr-esys-obj 0
+
 &scop type-attr-esys-user-id {&type-char}
 &scop format-attr-esys-user-id "X(256)"
 &scop label-attr-esys-user-id "Пользователь"
@@ -14465,6 +14476,8 @@ procedure ext-system-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-esys-host-code
       {&attr-temp-full-code}
+      &scop attr-code attr-esys-obj
+      {&attr-temp-full-code}
       &scop attr-code attr-esys-user-id
       {&attr-temp-full-code}
       &scop attr-code attr-esys-server-addr
@@ -14535,6 +14548,8 @@ procedure ext-system-attr-tooltip :
       &scop attr-code attr-esys-AuthTokenDT
       {&attr-temp-code}
       &scop attr-code attr-esys-host-code
+      {&attr-temp-code}
+      &scop attr-code attr-esys-obj
       {&attr-temp-code}
       &scop attr-code attr-esys-user-id
       {&attr-temp-code}
@@ -14804,6 +14819,8 @@ procedure ext-system-attr-news :
       &scop attr-code attr-esys-AuthTokenDT
       {&attr-news-code}
       &scop attr-code attr-esys-host-code
+      {&attr-news-code}
+      &scop attr-code attr-esys-obj
       {&attr-news-code}
       &scop attr-code attr-esys-user-id
       {&attr-news-code}
