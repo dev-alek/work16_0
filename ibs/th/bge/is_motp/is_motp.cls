@@ -30,6 +30,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   {cmp/str-glbl.i class}
   { ref/extclass.i }
   { str/lib-trn.i class }
+  { gbl/thbj-def.i }
   
   
   define temp-table tt-childs
@@ -255,6 +256,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
   end method .
   
+  define stream cades .
+  define stream auth .
+  
   method public character authorize
   (
   input pKey as character,
@@ -272,6 +276,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable signedData2Long as longchar no-undo .
     
     define variable ii as integer no-undo .
+    define variable ix as integer no-undo .
     define variable v-found as logical no-undo .
     define variable cmd as character no-undo .
     
@@ -283,11 +288,22 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vAuthDataLong as longchar no-undo .
     define variable vToken as character no-undo .
     
+    output stream cades to value (ibs.th.gbl.gbl-inipar:logDir + "cadescom.log") append .
+    output stream auth to value (ibs.th.gbl.gbl-inipar:logDir + "auth.log") append .
+    
     create "CAdESCOM.Store" oStore .
     oStore:Open (2, "My", 0) .
+    if error-status:num-messages > 0
+    then do ix = 1 to  error-status:num-messages:
+      put stream cades unformatted now " " error-status:get-message(ix) skip .
+    end .
     
     create "CAPICOM.Certificates" oCerts . 
     oCerts = oStore:Certificates .
+    if error-status:num-messages > 0
+    then do ix = 1 to  error-status:num-messages:
+      put stream cades unformatted now " " error-status:get-message(ix) skip .
+    end .
   
     create "CAdESCOM.Certificate" oCert .
    
@@ -326,6 +342,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           assign MSG = "В личном хранилище сертификатов не найден сертификат с серийным номером " + pKey .
         end .
       end case .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error MSG .
     end.
   
@@ -358,6 +377,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                       server_
                       ).
     end. 
+    put stream auth unformatted now " command   " cmd skip .
     os-command silent value (cmd).
     
     file-info:file-name = search("AuthData_.json") no-error .
@@ -371,6 +391,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       release object oStore .
       release object oCerts .
       release object oCert .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error .
     end.
     
@@ -413,12 +436,19 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     oSignedData:Content = vData1 .
     
     signedData1Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
+    if error-status:num-messages > 0
+    then do ix = 1 to  error-status:num-messages:
+      put stream cades unformatted now " " error-status:get-message(ix) skip .
+    end .
     if signedData1Long = ?
     then do :
       assign
         MSG = "Ошибка при попытке подписания строки для получения токена авторизации!"
         StatusErr = true
       .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error .
     end .
     signedData1Long = replace(signedData1Long, chr(10), "") .
@@ -429,7 +459,22 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     then do :
       oSignedData:Content = vData2 .
       
-      signedData2Long = oSignedData:SignCades(oSigner, 1, false, 0) .
+      signedData2Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
+      if error-status:num-messages > 0
+      then do ix = 1 to  error-status:num-messages:
+        put stream cades unformatted now " " error-status:get-message(ix) skip .
+      end .
+      if signedData2Long = ?
+      then do :
+        assign
+          MSG = "Ошибка при попытке подписания строки (2) для получения токена авторизации!"
+          StatusErr = true
+        .
+        put stream auth unformatted now " " MSG skip .
+        output stream cades close .
+        output stream auth close .
+        return error .
+      end .
       signedData2Long = replace(signedData2Long, chr(10), "") .
       signedData2Long = replace(signedData2Long, chr(13), "") .
     end .
@@ -484,6 +529,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                       search ("AuthDataSigned_.json")
                       ).
     end. 
+    put stream auth unformatted now " command   " cmd skip .
     os-command silent value (cmd).
     
     file-info:file-name = search("AuthToken_.json") no-error .
@@ -494,6 +540,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         MSG = "Нет ответа от ИС МОТП"
         StatusErr = true
       .
+      put stream auth unformatted now " " MSG skip .
+      output stream cades close .
+      output stream auth close .
       return error .
     end.
     
@@ -524,10 +573,16 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           MSG = trim(trim(substring(vStr, 17)), '"')
           StatusErr = true
         .
+        put stream auth unformatted now " " MSG skip .
+        output stream cades close .
+        output stream auth close .
         return error .
       end.
       
     end .
+    
+    output stream cades close .
+    output stream auth close .
     
     find first buf_ext-system-attr exclusive-lock where buf_ext-system-attr.db-num   = esysDbNum
                                                     and buf_ext-system-attr.esys-id  = esysId
@@ -563,6 +618,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       
   end method .
   
+  define stream authTest .
+  
   method public logical authTest
   (
   input pToken as character
@@ -573,9 +630,17 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vHTTPstatus as character no-undo .
     define variable ii          as integer   no-undo .
     
+    output stream authTest to value (ibs.th.gbl.gbl-inipar:logDir + "authTest.log") append .
+    
     output to tmp.json .
       put unformatted chr(123) '"gtin":"00000046210654"}' skip .
     output close .
+    
+    put stream authTest unformatted now "  out-data:" skip .
+    output stream authTest close .
+    os-append value("tmp.json") value(ibs.th.gbl.gbl-inipar:logDir + "authTest.log") .
+    output stream authTest to value (ibs.th.gbl.gbl-inipar:logDir + "authTest.log") append .
+    
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
       if proxy-ssl
@@ -614,6 +679,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     output to tmp-cmd.bat .
     put unformatted cmd skip .
     output close .
+    put stream authTest unformatted now "  command:" skip .
+    put stream authTest unformatted now "  " cmd skip .
     os-command silent tmp-cmd.bat .
     
     file-info:file-name = search("AuthTest_.test") no-error .
@@ -624,8 +691,14 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         MSG = "Нет ответа от ИС МОТП"
         StatusErr = true
       .
+      put stream authTest unformatted now "  " MSG skip .
+      output stream authTest close .
       return false .
     end.
+    
+    put stream authTest unformatted now "  in-data:" skip .
+    output stream authTest close .
+    os-append value("AuthTest_.test") value(ibs.th.gbl.gbl-inipar:logDir + "authTest.log") .
     
     output to value (search("AuthTest_.test")) append .
     put unformatted " " skip " _ ".
@@ -649,15 +722,26 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       HttpStatus = integer(vHTTPstatus) .
     end.
     
-    if vHTTPstatus begins "20"
+    if HttpStatus = 401
     then do :
+      MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .
+      return false .
+    end .
+    else do :
       MSG = "Токен авторизации в ИС МОТП - ДЕЙСТВИТЕЛЕН" .
       return true .
     end .
-    else do :
-      MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .
-      return false .
-    end .    
+    
+    
+/*    if vHTTPstatus begins "20"                               */
+/*    then do :                                                */
+/*      MSG = "Токен авторизации в ИС МОТП - ДЕЙСТВИТЕЛЕН" .   */
+/*      return true .                                          */
+/*    end .                                                    */
+/*    else do :                                                */
+/*      MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .*/
+/*      return false .                                         */
+/*    end .                                                    */
     
   end method .
   
@@ -690,6 +774,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
   end method .
   
+  define variable GrayZoneQnty  as integer no-undo .
+  define stream cisesInfo .
+  
   method public void cisesInfo
   (
   input pToken as character,
@@ -705,10 +792,20 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable v-num-marks as integer no-undo .
     define variable vMark as character no-undo .
     
+    define variable v-value-character     as character     no-undo .
+    define variable v-value-decimal       as decimal       no-undo .
+    define variable v-value-integer       as integer       no-undo .
+    define variable v-value-logical       as logical       no-undo .
+    define variable v-value-type          as character     no-undo .
+    define variable v-value-date          as date          no-undo .
+    
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_marking for ub.marking .
     define buffer buf_marking-parent for ub.marking .
     define buffer buf_utd-err for ub.utd-err .
+    define buffer buf_utd for ub.utd .
+    
+    output stream cisesInfo to value (ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") append .
     
     if not checkINN
     then do :
@@ -720,6 +817,31 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         delete buf_utd-err .                                      
       end .
     end .
+    
+    GrayZoneQnty = 100 .
+    
+    find first buf_utd no-lock where buf_utd.db-num = pDB-num
+                                 and buf_utd.doc-id = pDoc-id
+                                 .
+                                 
+    run adm/shattri.p (
+      input "get":U
+      ,input buf_utd.obj-type
+      ,input buf_utd.obj-code
+      ,input {&attr-marking}
+      ,input "gray_zone_qnty"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    if v-value-integer <> ?
+    then
+      GrayZoneQnty = v-value-integer
+    .                             
       
     v-ok = true .
     v-num-marks = 0 .
@@ -759,6 +881,11 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     put unformatted '""' skip .
     put unformatted skip "]" skip.
     output close .
+    
+    put stream cisesInfo unformatted now "  cisesInfoReq_.json (out-data):" skip .
+    output stream cisesInfo close .
+    os-append value("cisesInfoReq_.json") value(ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") .
+    output stream cisesInfo to value (ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") append .
     
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
@@ -829,6 +956,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     output to tmp-cmd.bat .
     put unformatted cmd skip .
     output close .
+    
+    put stream cisesInfo unformatted now "  command:" skip .
+    put stream cisesInfo unformatted now "  " cmd skip .
+    
     os-command silent tmp-cmd.bat .
     
 /*    input from value (search("cisesInfoResp_.json")) .*/
@@ -847,6 +978,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       v-ok = false .
       return .
     end .
+    
+    put stream cisesInfo unformatted now "  cisesInfoResp_.json (in-data):" skip .
+    output stream cisesInfo close .
+    os-append value("cisesInfoResp_.json") value(ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") .
      
     cmd = substitute ('&1 -file=&2 >&3',
                        search("exe/json2xml.exe"),
@@ -882,6 +1017,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   define variable v-gtin as character no-undo .
   define variable v-num-childs as integer no-undo .
   define variable v-err-childs as logical no-undo .
+  define variable v-gray-zone  as logical no-undo .
   
   method private void ParseResponseInfoCises(inFileName as char):
     define variable hDoc  as handle no-undo .
@@ -940,6 +1076,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         assign
           v-num-childs = 0
           v-err-childs = false
+          v-gray-zone  = false
           v-err-code   = 0
           v-item       = ""
           v-cis        = ""
@@ -1038,8 +1175,39 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         for each tt-childs no-lock where tt-childs.parent_ = v-cis :
           assign v-num-childs = v-num-childs + 1 .
         end .
-        if v-unit = "LEVEL1" and v-num-childs <> 10 then v-err-childs = true .
-        if v-unit = "LEVEL2" and v-num-childs <> 50 then v-err-childs = true .
+        
+        if v-unit = "LEVEL2"
+        then do :
+          if isFirstEnter
+          then do :
+            if v-num-childs <> 50 then v-err-childs = true .
+          end .
+          else do :
+            if v-num-childs <> 50 and GrayZoneQnty <> 100
+            then do:
+              if (50 - v-num-childs) <= GrayZoneQnty
+              then v-gray-zone = true .
+              else v-err-childs = true .
+            end .
+          end .
+        end .
+        
+        if v-unit = "LEVEL1"
+        then do :
+          if isFirstEnter
+          then do :
+            if v-num-childs <> 10 then v-err-childs = true .
+          end .
+          else do :
+            if v-num-childs <> 10 and GrayZoneQnty <> 100
+            then do:
+              if (10 - v-num-childs) <= GrayZoneQnty
+              then v-gray-zone = true .
+              else v-err-childs = true .
+            end .
+          end .
+        end .
+        
         
         if isFirstEnter
         then do :
@@ -1065,7 +1233,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
             if v-err-childs
             then do :
               UpdateMark(v-cis,
-                         objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,
+                         objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB,
                          "",
                          v-unit,
                          v-gtin,
@@ -1096,6 +1264,16 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
             when "INTRODUCED_RETURNED"
             then do :
               if v-err-childs
+              then do :
+                UpdateMark(v-cis,
+                           objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB,
+                           "",
+                           v-unit,
+                           v-gtin,
+                           hText:node-value) .
+              end .
+              else
+              if v-gray-zone
               then do :
                 UpdateMark(v-cis,
                            objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,

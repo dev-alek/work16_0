@@ -83,7 +83,7 @@ for each buf_trn-doc no-lock
         on error undo open-doc, return error:
             unrv-qnty = - gds-dtl.doc-qnty.
             run trg/rsrv-dtl.p ( parparentproc,
-                             {&rsrv-dtl_action_reserv}, buffer gds-dtl, input-output unrv-qnty, input-output gds-dtl.price-base, input-output gds-dtl.price-rubl, -1).
+                             {&rsrv-dtl_action_reserv}, buffer gds-dtl, input-output unrv-qnty, input-output gds-dtl.price-base, input-output gds-dtl.price-rubl, -1, "").
             if unrv-qnty <> - gds-dtl.doc-qnty
             then do:
                 message "Ќе удаетс€ сн€ть резервы по артикулу:" gds-dtl.artic "признаку:" gds-dtl.prt-code skip

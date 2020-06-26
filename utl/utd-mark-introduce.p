@@ -564,17 +564,17 @@ define temp-table tt-gds-list
           end .
           if v-1C
           then do :
-            { gbl/rum-runa.i
-              ?
-              this-procedure:handle
-              ?
-              {&edoc-proc_event_mark}
-              " buffer buf_marking:handle "
-              ?
-                ''
-              ''
-              no-error
-            }
+/*            { gbl/rum-runa.i               */
+/*              ?                            */
+/*              this-procedure:handle        */
+/*              ?                            */
+/*              {&edoc-proc_event_mark}      */
+/*              " buffer buf_marking:handle "*/
+/*              ?                            */
+/*                ''                         */
+/*              ''                           */
+/*              no-error                     */
+/*            }                              */
           end .
           else do :
             run str/callnews.p (  input {&table_marking}
@@ -638,17 +638,17 @@ define temp-table tt-gds-list
               end .
               if v-1C
               then do :
-                { gbl/rum-runa.i
-                  ?
-                  this-procedure:handle
-                  ?
-                  {&edoc-proc_event_mark}
-                  " buffer buf_marking-childs:handle "
-                  ?
-                    ''
-                  ''
-                  no-error
-                }
+/*                { gbl/rum-runa.i                      */
+/*                  ?                                   */
+/*                  this-procedure:handle               */
+/*                  ?                                   */
+/*                  {&edoc-proc_event_mark}             */
+/*                  " buffer buf_marking-childs:handle "*/
+/*                  ?                                   */
+/*                    ''                                */
+/*                  ''                                  */
+/*                  no-error                            */
+/*                }                                     */
               end .
               else do :
                 run str/callnews.p (  input {&table_marking}

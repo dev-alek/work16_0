@@ -1099,6 +1099,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-AuthToken          AuthToken            " " AuthToken    }
 { cmp/cr-prep.i 1 attr-esys-AuthTokenDT        AuthTokenDT          " " AuthTokenDT  }
 { cmp/cr-prep.i 1 attr-esys-host-code          host-code            " " host-code    }
+{ cmp/cr-prep.i 1 attr-esys-obj                obj                  " " obj          }
 { cmp/cr-prep.i 1 attr-esys-user-id            user-id              " " user-id      }
 { cmp/cr-prep.i 1 attr-esys-server-addr        server-addr          " " server-addr  }
 { cmp/cr-prep.i 1 attr-esys-proxy-addr         proxy-addr           " " proxy-addr   }

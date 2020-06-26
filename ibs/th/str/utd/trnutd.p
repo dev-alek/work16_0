@@ -1013,10 +1013,10 @@ assign
               output v-type
               ).
           
-                    
-          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
+
+          if true /*ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)*/
           then do:
-            fe_:
+            fe1_:
             for each ub.utd-marking-lines where 
                 ub.utd-marking-lines.db-num = temp_doc-line.db-num
             and ub.utd-marking-lines.doc-id = temp_doc-line.doc-id
@@ -1027,7 +1027,7 @@ assign
 
               find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
               if not available (ub.marking)
-                then next fe_.
+                then next fe1_.
               
               create ub.marking-lines.
               assign
@@ -1040,9 +1040,35 @@ assign
                 ub.marking-lines.mark = ub.utd-marking-lines.mark
                 ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level
               .
-            end. 
+            end.
           end.
-          
+/*          else do:                                                                                                                                              */
+/*            fe2_:                                                                                                                                               */
+/*            for each ub.utd-marking-lines where                                                                                                                 */
+/*                ub.utd-marking-lines.db-num = temp_doc-line.db-num                                                                                              */
+/*            and ub.utd-marking-lines.doc-id = temp_doc-line.doc-id                                                                                              */
+/*            and ub.utd-marking-lines.gds-code = temp_doc-line.gds-code                                                                                          */
+/*            and ub.utd-marking-lines.LineNum = temp_doc-line.line-num                                                                                           */
+/*            :                                                                                                                                                   */
+/*              find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB*/
+/*                and ub.marking.unit-ext = "Levele1" no-error.                                                                                                   */
+/*              if not available (ub.marking)                                                                                                                     */
+/*                then next fe2_.                                                                                                                                 */
+/*                                                                                                                                                                */
+/*              create ub.marking-lines.                                                                                                                          */
+/*              assign                                                                                                                                            */
+/*                ub.marking-lines.obj-type = tt-parts.obj-type                                                                                                   */
+/*                ub.marking-lines.obj-code = tt-parts.obj-code                                                                                                   */
+/*                ub.marking-lines.in-code = tt-parts.in-code                                                                                                     */
+/*                ub.marking-lines.out-code = tt-parts.out-code                                                                                                   */
+/*                ub.marking-lines.part-code = tt-parts.part-code                                                                                                 */
+/*                ub.marking-lines.gds-code = temp_doc-line.gds-code                                                                                              */
+/*                ub.marking-lines.mark = ub.utd-marking-lines.mark                                                                                               */
+/*                ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level                                                                                     */
+/*              .                                                                                                                                                 */
+/*            end.                                                                                                                                                */
+/*          end.                                                                                                                                                  */
+/*                                                                                                                                                                */
     end.
   end.
 

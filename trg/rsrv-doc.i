@@ -837,7 +837,7 @@ procedure rsrv-doc :
       if p-mark <> "" and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
       then do:
   
-        find first buf_marking no-lock where buf_marking.mark = p-mark no-error .
+        find first buf_marking no-lock where buf_marking.mark begins p-mark no-error .
         if not available buf_marking
         then do :
           put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
@@ -1354,7 +1354,7 @@ procedure rsrv-doc :
                   v-iteration-chg-qnty = v-chg-qnty-sign * 10
                 .
               end .
-              find first buf_marking no-lock where buf_marking.mark = tt-tobacco-marks.mark no-error .
+              find first buf_marking no-lock where buf_marking.mark begins tt-tobacco-marks.mark no-error .
               if not available buf_marking
               then do :
                 put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
@@ -1616,7 +1616,7 @@ procedure rsrv-doc :
                     v-iteration-chg-qnty = v-chg-qnty-sign * 10
                   .
                 end .
-                find first buf_marking no-lock where buf_marking.mark = tt-tobacco-marks.mark no-error .
+                find first buf_marking no-lock where buf_marking.mark begins tt-tobacco-marks.mark no-error .
                 if not available buf_marking
                 then do :
                   put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
@@ -2052,7 +2052,7 @@ procedure rsrv-doc :
           ,buffer buf_trn-doc     /* buf_trn-doc     */
           ,output v-real-chg-qnty /* p-real-chg-qnty */
           ,output v-parts-recid   /* p-parts-recid   */
-          ,input (if available tt-marks then tt-marks.mark else if available tt-tobacco-marks then tt-tobacco-marks.mark else p-mark)
+          ,input (if available tt-marks then tt-marks.mark else if available buf_marking then buf_marking.mark else if available tt-tobacco-marks then tt-tobacco-marks.mark else p-mark)
           ) no-error .
         if error-status :error
         then do:

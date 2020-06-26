@@ -55,5 +55,6 @@ Creation date: 01/30/15
 
     field prt-id as character
     field mark as character
+    field gds-code as integer
     index pi mark.
     

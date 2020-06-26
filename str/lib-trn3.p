@@ -550,6 +550,7 @@ procedure lib-trn3_clr-line :
                ,input-output bf_doc-line.price-base
                ,input-output bf_doc-line.price-rubl
                ,input        -1
+               ,input ""
               ).
             if mem-pl-chg-qnty <> pl-chg-qnty then do:
               undo tr, return error substitute ("Не удалось зарезервировать товар (&1) по месту хранения &2", buf_goods.gds-code, bf_pl-gds.pl-code) .
@@ -584,6 +585,7 @@ procedure lib-trn3_clr-line :
              ,input-output bf_doc-line.price-base
              ,input-output bf_doc-line.price-rubl
              ,input        -1
+             ,input ""
            ).
         end. /* NOT v-ptrl */
         assign
@@ -1122,6 +1124,7 @@ procedure lib-trn3_delnabor :
               ,input-output buf_doc-line.price-base
               ,input-output buf_doc-line.price-rubl
               ,input        -1
+              ,input ""
               ) no-error.
             if error-status :error
             then do:

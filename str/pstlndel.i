@@ -271,7 +271,7 @@ if vardel-one-sheaf <> yes then do:
                       input-output varchg-qnty,
                       input-output bf-del_doc-line.price-base,
                       input-output bf-del_doc-line.price-rubl,
-                      -1) no-error.
+                      -1, "") no-error.
       if error-status:error then do:
         undo, return error substitute ("Ошибка при снятии резервировов по списанному товару &1 &2 &3 &4: &5.", bf-del_goods.artic, bf-del_goods.prod-type, bf-del_goods.prod-code, bf-del_goods.gds-name, return-value).
       end.
@@ -541,7 +541,7 @@ else do:
                      input-output varchg-qnty,
                      input-output bf-del_doc-line.price-base,
                      input-output bf-del_doc-line.price-rubl,
-                     -1) no-error.
+                     -1, "") no-error.
      if error-status:error then do:
        undo, return error substitute ("Ошибка при снятии резервировов по списанному товару &1 &2 &3 &4: &5.", bf-del_goods.artic, bf-del_goods.prod-type, bf-del_goods.prod-code, bf-del_goods.gds-name, return-value).
      end.

@@ -130,7 +130,7 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable imptrn-gd-docEventHndlrObj               as class imptrn-gd-doc               no-undo.
   define variable trn-gd-doc-inlistSubjectsObj             as class subjects                    no-undo.
   define variable trn-prt-doc-inlistSubjectsObj            as class subjects                    no-undo.
-  define variable trn-mark-doc-inlistSubjectsObj            as class subjects                    no-undo.
+  define variable trn-mark-doc-inlistSubjectsObj           as class subjects                    no-undo.
 
   define variable normlossSubjectObj                       as class normloss                    no-undo.
   define variable impnormlossEventHndlrObj                 as class impnormloss                 no-undo.
@@ -322,7 +322,6 @@ class ibs.th.bge.1crn.import.parsesub:
        - движение НП
     */
     trn-prt-doc-inlistSubjectsObj = new subjects ("prts"). // - осталось не перенесённым из документов движения СТ
-    trn-mark-doc-inlistSubjectsObj = new subjects ("marks"). // - осталось не перенесённым из документов движения СТ
     
   end constructor.
   
@@ -515,7 +514,7 @@ class ibs.th.bge.1crn.import.parsesub:
         end.
         when "mark":U 
         then do:
-           if level < 4 // если загрузка не из в составе edoc
+           if level < 3 // если загрузка не из в составе edoc
            then do:
               if not valid-object(mark-SubjectObj)       then mark-SubjectObj       = new mark(). // <payment-system>
               mark-SubjectObj:obj-load = hNoderef:name.
@@ -807,6 +806,17 @@ class ibs.th.bge.1crn.import.parsesub:
               v-need-parse = false .
             end .
           end .
+          if v-need-parse and valid-object (trn-gdSubjectObj) then 
+          do: 
+            if trn-gdSubjectObj:IsInitSubForWrite then 
+            do: 
+              /*идет запись transportSubjectObj*/
+              trn-mark-doc-inlistSubjectsObj = new subjects ("marks") .        
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              trn-gdSubjectObj:SetProp (trn-mark-doc-inlistSubjectsObj).
+              v-need-parse = false .
+            end.
+          end.
         end.
         when "gds" then do :
           // _SubjectObj[]: валидный только для коллекций, чьи теги присутствуют в импортируемом сейчас пакете;
@@ -1210,16 +1220,15 @@ class ibs.th.bge.1crn.import.parsesub:
               v-need-parse = false .
             end .
           end .
-          if v-need-parse and valid-object (trn-gd-doc-inSubjectObj) then 
+          if v-need-parse and valid-object (trn-gdSubjectObj) then 
           do: 
-            if trn-gd-doc-inSubjectObj:IsInitSubForWrite then 
+            if trn-gdSubjectObj:IsInitSubForWrite then 
             do: 
               /*идет запись transportSubjectObj*/
-              if not valid-object(trn-mark-doc-inlistSubjectsObj) then trn-mark-doc-inlistSubjectsObj = new subjects ("marks") .        
               trn-mark-doc-inlistSubjectsObj:Add(new trn-mark()). /* а вот здесь уже создаем объект сущнности*/
               trn-markSubjectObj = cast (trn-mark-doc-inlistSubjectsObj:SubjectObjCurr, trn-mark).
               GetChildrenSub (hNoderef, (level + 1), trn-markSubjectObj).
-              trn-gd-doc-inSubjectObj:SetProp (trn-mark-doc-inlistSubjectsObj).
+              trn-gdSubjectObj:SetProp(trn-mark-doc-inlistSubjectsObj).
               v-need-parse = false .
             end.
           end.

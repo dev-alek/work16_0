@@ -292,20 +292,23 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    
    if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.doc-code = "" and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
       and (utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB )
-   then do:
+     then 
+   do:
      def var v-file-name as character no-undo.
-     def var v-msg as character no-undo.
+     def var v-msg       as character no-undo.
      run ibs\th\str\utd\adaputd.p
        (utd.db-num, /*db-num*/
        utd.doc-id, /* doc-id*/
        ibs.th.gbl.gbl-var:g#userid /*User-Id*/
        ) no-error.
      if not error-status:error
-     then do:
-      /* run nws/cmdchgutd.p (buffer utd). */
-       v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, replace (return-value,'"',"'"), "Товары данной поставки можно продавать на кассе.").
+       then 
+     do:
+       if return-value <> ""
+         then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value).
+       else v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
      end.
-       else v-msg = substitute ('MsgBox "Докумет: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), replace (return-value,'"',"'")).
+     else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), return-value).
      
      v-file-name = string (guid(generate-uuid)) + ".vbs".
      output to value (v-file-name).
@@ -316,7 +319,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    
    end.
 
-   if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.doc-code = "" and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
+   if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
    then do:
        v-msg = substitute ('MsgBox "Докумет № &1 от &2. ", ,"Получен документ первоначального ввода"', utd.DocumentNumber, string (utd.DocumentDate)).
        v-file-name = string (guid(generate-uuid)) + ".vbs".

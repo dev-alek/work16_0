@@ -41,6 +41,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,{&bef-attr-esys-AuthToken}~
 ,{&bef-attr-esys-AuthTokenDT}~
 ,{&bef-attr-esys-host-code}~
+,{&bef-attr-esys-obj}~
 ,{&bef-attr-esys-user-id}~
 ,{&bef-attr-esys-server-addr}~
 ,{&bef-attr-esys-proxy-addr}~

@@ -181,11 +181,13 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   method public void getUTDDoc ():
     
     define buffer buf_utd         for ub.utd.
+    define buffer buf_utd-err     for ub.utd-err.
     define buffer buf_utd-m-l     for ub.utd-marking-lines.
     define buffer buf_m-l         for ub.marking-lines.
     define buffer buf_m-chi       for ub.marking.
     define buffer buf_utd-l       for ub.utd-lines.
     define buffer buf_m           for ub.marking.
+    
     
     define variable dFactSum   as decimal   no-undo.
     define variable factQnty   as character no-undo.
@@ -279,10 +281,27 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             if not available (buf_m-chi)
               then next.
           end.
+          def var v-sts as character no-undo.
+          def var vRecKey-line as character no-undo.
+          ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
+            input  buffer buf_utd-l:handle, 
+            output vRecKey-line).
+    
+          find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
+          if available (buf_utd-err) then 
+          do:
+            v-sts = "NotCorrect".
+          end.
+          else do:
+            if not buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB 
+              then v-sts = "NotCorrect".
+              else v-sts = "UTD". 
+          end.
+          
           tsdstreamopenapp("MT_MarkLines.txt").
           jj = jj + 1.
           put stream tsdstream unformatted string (jj) + {&delimiteFld} + v-doc-num + {&delimiteFld} + buf_utd-m-l.mark + {&delimiteFld} 
-          + v-doc-num + "_" + string (buf_goods.gds-code) + {&delimiteFld} + "UTD" + {&delimiteFld} + buf_m.mark-parent + {&delimiteFld} + string(buf_m.box-qnty) + {&delimiterLine}.
+          + v-doc-num + "_" + string (buf_goods.gds-code) + {&delimiteFld} + v-sts + {&delimiteFld} + buf_m.mark-parent + {&delimiteFld} + string(buf_m.box-qnty) + {&delimiterLine}.
           tsdstreamclose().
         end.
       end.      
@@ -411,6 +430,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         {&trdcattr-inv-introduce}
         v-attr-value
         v-attr-type
+        no-error
       }
       if not error-status:error and v-attr-value = "yes" then do:
         v-is-introduce = true.
@@ -559,10 +579,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       tsdstreamopenapp("MT_documents.txt"). 
         put stream tsdstream unformatted str. 
       tsdstreamclose().
-      if v-is-introduce
-      then do:
 
-      end.
     end.
   end.
 

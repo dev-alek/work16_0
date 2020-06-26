@@ -1290,6 +1290,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     /*Добавление марок не алкогольных*/
     find first marking where marking.mark begins mark
       no-lock no-error  .
+
     if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
     do:
       v-gds-code = marking.gds-code .
@@ -1457,7 +1458,8 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
           ii = ii + 1 . 
           end.
         
-        t-doc.fact-qnty = ii .                                     
+        t-doc.fact-qnty = ii .         
+                                    
         end.
 
   end.  
@@ -1534,7 +1536,7 @@ do while v-del:
       if available (buf_goods) then
       do:
 
-        if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then v-sts = ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB .
+        if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then v-sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
         else v-sts = 99 .
 
 
@@ -1651,10 +1653,10 @@ do while v-del:
             if  buf_marking.unit-ext = "UNIT" then  jj = jj + 1 .
               buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               buf_marking-lines.out-code = {&free-code} .
-              buf_marking-lines.sts = 0 .
+              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
             end.
             else do:
-              buf_marking-lines.sts = 0 .
+              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
             end.  
           end.
  
@@ -2123,6 +2125,7 @@ define variable v-recid as recid no-undo .
       and ub.doc-line.prod-code = ub.gds-dtl.prod-code
     .
   if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
   then do :
     run str/out-add.p
       ( input parparentproc
@@ -2430,6 +2433,7 @@ find first ub.goods where ub.goods.artic     = ub.gds-dtl.artic     and
                        ub.goods.prod-code = ub.gds-dtl.prod-code no-lock.
 
 if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
 then do :
   run str/out-add.p (parparentproc,
                  recid(t-doc),
@@ -3048,6 +3052,7 @@ then do :
   and t-doc.reason-code > 0
   then do :
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
       /*Возврат*/
       run local-m-outs-1-ret no-error.
@@ -5839,6 +5844,7 @@ if t-doc.reason-code <> ?
 and t-doc.reason-code > 0
 then do :
   if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
   then do :
     /*Возврат*/
     v-choice = 5.
@@ -6285,6 +6291,7 @@ define variable v-host-code     like ub.sysconf.host-code  no-undo.
          { str/pr-99.i varnew-price round-method round-base}
        end.
        if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+       and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
        then do :
          run str/out-add.p (parparentproc,
                         recid(t-doc),
@@ -6409,6 +6416,7 @@ do on stop undo, return error:
                  and ub.goods.prod-type = ub.gds-dtl.prod-type
                  and ub.goods.artic     = ub.gds-dtl.artic no-lock.
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
       run str/out-add.p (parparentproc,
                      recid(t-doc),
@@ -6542,6 +6550,9 @@ define variable v-type           as character no-undo .
 define variable v-internal       as logical   no-undo .
 define variable v-list-mode      as character no-undo .
 
+define variable v-at-value     as character no-undo .
+define variable v-at-type      as character no-undo .
+
 find first ub.clients no-lock where ub.clients.obj-type = t-doc.cli-type
                                 and ub.clients.obj-code = t-doc.cli-code .
 
@@ -6577,6 +6588,30 @@ if not available t-d-b then do:
   apply "entry" to b-add in frame {&frame-name}.
   return error.
 end.
+{ str/tdat-val.i
+  t-d-b.doc-code
+  {&trdcattr-nsf}
+  v-at-value
+  v-at-type
+}
+{ str/tdat-wrt.i
+  t-doc.doc-code
+  {&trdcattr-nsf}
+  v-at-value
+  no-error     
+}
+{ str/tdat-val.i
+  t-d-b.doc-code
+  {&trdcattr-dsf}
+  v-at-value
+  v-at-type
+}
+{ str/tdat-wrt.i
+  t-doc.doc-code
+  {&trdcattr-dsf}
+  v-at-value
+  no-error     
+}
 assign t-doc.out-code = t-d-b.doc-code .
 display t-doc.out-code with frame {&frame-name}.
 
@@ -6712,6 +6747,7 @@ do
       .
     end.
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
       run str/out-add.p
         ( input parparentproc
@@ -7000,6 +7036,7 @@ PROCEDURE select-reason :
     display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
   end.
   if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
   then do :
     disable b-cur with frame {&frame-name}.
   end.
@@ -7276,6 +7313,7 @@ if fnc = "enable" then do:
          not t-doc.flag_                                  and
          varlog = yes                                     and
          lookup( string(t-doc.reason-code), v-reasons-for-return) = 0
+         and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
          then do:
            enable b-cur with frame {&frame-name}.
          end.

@@ -76,16 +76,12 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
     get. 
     private set.
     
-  define property marks as subjects no-undo 
-    get. 
-    private set.
-    
   define override property InitTag as character no-undo init "trn-gd-doc"
     get. 
 
 
   constructor public trn-gd-doc-in ():
-    InitListTag = "gds,prts,marks".
+    InitListTag = "gds,prts".
   end constructor.
     
   method override protected void SetPropProtected(SubsObj as subjects):
@@ -98,10 +94,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
       when "prts" then
         do:
           prts = SubsObj.            
-        end.
-      when "marks" then
-        do:
-          marks = SubsObj.            
         end.
     end case.
 

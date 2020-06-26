@@ -88,4 +88,5 @@ doc-qnty
 define temp-table temp_doc-mark no-undo
   field part-id       as character
   field mark          as character
+  field gds-code      as integer
   index pi mark.

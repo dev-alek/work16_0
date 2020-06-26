@@ -1258,6 +1258,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               , input-output buf_doc-line.price-base
               , input-output buf_doc-line.price-rubl
               , input -1
+              , input ""
               ) no-error.
             if error-status :error then do:
               message
@@ -1582,6 +1583,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               , input-output buf-spi_doc-line.price-base
               , input-output buf-spi_doc-line.price-rubl
               , input -1
+              , input ""
               ) no-error.
             if error-status :error then do:
               message

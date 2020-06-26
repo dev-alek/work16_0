@@ -336,6 +336,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   { gbl/getcntxt.i get }
   run init-temp .
   run enable_UI in this-procedure .
+  if p-rid-list eq "" then
   WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
 END.
 run disable_UI in this-procedure .
@@ -415,7 +416,7 @@ create "Diadoc.DiadocClient":U mDiadocApi.
 
    vCertificates = mDiadocApi:GetPersonalCertificates(true).
    if vCertificates:count = 1 then do:
-     v-rid-list = vCertificate:GetItem(0):SerialNumber .
+     v-rid-list = vCertificates:GetItem(0):SerialNumber .
      apply "GO" to FRAME {&frame-name} .
    end.
    else do:  

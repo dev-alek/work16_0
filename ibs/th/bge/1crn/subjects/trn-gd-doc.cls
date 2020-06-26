@@ -853,6 +853,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
             buf_marking-lines.out-code = buf_parts.out-code and
             buf_marking-lines.part-code = buf_parts.part-code and
             buf_marking-lines.prt-code = buf_parts.prt-code  :
+
+              if buf_marking-lines.mark begins {&tech-mark-prefix} 
+              and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
+              then next .
             if not vAvailMarks
             then do:
                sw:start-element ("marks").
