@@ -288,8 +288,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vAuthDataLong as longchar no-undo .
     define variable vToken as character no-undo .
     
-    output stream cades to value ("cadescom.log") append .
-    output stream auth to value ("auth.log") append .
+    output stream cades to value (ibs.th.gbl.gbl-inipar:logDir + "cadescom.log") append .
+    output stream auth to value (ibs.th.gbl.gbl-inipar:logDir + "auth.log") append .
     
     create "CAdESCOM.Store" oStore .
     oStore:Open (2, "My", 0) .
@@ -618,6 +618,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       
   end method .
   
+  define stream authTest .
+  
   method public logical authTest
   (
   input pToken as character
@@ -628,9 +630,17 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vHTTPstatus as character no-undo .
     define variable ii          as integer   no-undo .
     
+    output stream authTest to value (ibs.th.gbl.gbl-inipar:logDir + "authTest.log") append .
+    
     output to tmp.json .
       put unformatted chr(123) '"gtin":"00000046210654"}' skip .
     output close .
+    
+    put stream authTest unformatted now "  out-data:" skip .
+    output stream authTest close .
+    os-append value("tmp.json") value(ibs.th.gbl.gbl-inipar:logDir + "authTest.log") .
+    output stream authTest to value (ibs.th.gbl.gbl-inipar:logDir + "authTest.log") append .
+    
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
       if proxy-ssl
@@ -669,6 +679,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     output to tmp-cmd.bat .
     put unformatted cmd skip .
     output close .
+    put stream authTest unformatted now "  command:" skip .
+    put stream authTest unformatted now "  " cmd skip .
     os-command silent tmp-cmd.bat .
     
     file-info:file-name = search("AuthTest_.test") no-error .
@@ -679,8 +691,14 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         MSG = "Нет ответа от ИС МОТП"
         StatusErr = true
       .
+      put stream authTest unformatted now "  " MSG skip .
+      output stream authTest close .
       return false .
     end.
+    
+    put stream authTest unformatted now "  in-data:" skip .
+    output stream authTest close .
+    os-append value("AuthTest_.test") value(ibs.th.gbl.gbl-inipar:logDir + "authTest.log") .
     
     output to value (search("AuthTest_.test")) append .
     put unformatted " " skip " _ ".
@@ -757,6 +775,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   end method .
   
   define variable GrayZoneQnty  as integer no-undo .
+  define stream cisesInfo .
   
   method public void cisesInfo
   (
@@ -785,6 +804,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define buffer buf_marking-parent for ub.marking .
     define buffer buf_utd-err for ub.utd-err .
     define buffer buf_utd for ub.utd .
+    
+    output stream cisesInfo to value (ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") append .
     
     if not checkINN
     then do :
@@ -861,6 +882,11 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     put unformatted skip "]" skip.
     output close .
     
+    put stream cisesInfo unformatted now "  cisesInfoReq_.json (out-data):" skip .
+    output stream cisesInfo close .
+    os-append value("cisesInfoReq_.json") value(ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") .
+    output stream cisesInfo to value (ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") append .
+    
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
       if proxy-ssl
@@ -930,6 +956,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     output to tmp-cmd.bat .
     put unformatted cmd skip .
     output close .
+    
+    put stream cisesInfo unformatted now "  command:" skip .
+    put stream cisesInfo unformatted now "  " cmd skip .
+    
     os-command silent tmp-cmd.bat .
     
 /*    input from value (search("cisesInfoResp_.json")) .*/
@@ -948,6 +978,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       v-ok = false .
       return .
     end .
+    
+    put stream cisesInfo unformatted now "  cisesInfoResp_.json (in-data):" skip .
+    output stream cisesInfo close .
+    os-append value("cisesInfoResp_.json") value(ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") .
      
     cmd = substitute ('&1 -file=&2 >&3',
                        search("exe/json2xml.exe"),
