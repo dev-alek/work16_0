@@ -514,7 +514,7 @@ class ibs.th.bge.1crn.import.parsesub:
         end.
         when "mark":U 
         then do:
-           if level < 4 // если загрузка не из в составе edoc
+           if level < 3 // если загрузка не из в составе edoc
            then do:
               if not valid-object(mark-SubjectObj)       then mark-SubjectObj       = new mark(). // <payment-system>
               mark-SubjectObj:obj-load = hNoderef:name.
