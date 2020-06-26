@@ -93,10 +93,10 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     
     objGds = objTrnDoc:GDS.
     objPrts = objTrnDoc:prts.
-    objMarks = objTrnDoc:marks.
     
     do ii = 1 to objGds:Get(ii):
       objGd = cast (objGds:SubjectObjCurr, trn-gd).
+      objMarks = objGd:marks.
     
       if valid-object (objPrts)
       then do jj = 1 to objPrts:Get(jj):
@@ -136,8 +136,9 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
         objMark = cast (objMarks:SubjectObjCurr, trn-mark).
         create TempDocMark.
         assign
-          TempDocMark.mark = objMark:mark-code.
+          TempDocMark.mark = replace (replace (objMark:mark-code, "(", "" ), ")", "").
           TempDocMark.prt-id = objMark:prt-id.
+          TempDocMark.gds-code = objGd:gd-code.
       end.
       
     end.

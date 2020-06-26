@@ -106,8 +106,9 @@ do:
     create temp_doc-mark.
     
     assign
-      temp_doc-mark.part-id = TempDocMark.prt-id
-      temp_doc-mark.mark    = TempDocMark.mark
+      temp_doc-mark.part-id  = TempDocMark.prt-id
+      temp_doc-mark.mark     = TempDocMark.mark
+      temp_doc-mark.gds-code = TempDocMark.gds-code
     .
     
   end.

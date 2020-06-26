@@ -88,11 +88,12 @@ define buffer new_trn-doc  for ub.trn-doc  .
 define buffer new_doc-line for ub.doc-line .
 define buffer new_gds-dtl  for ub.gds-dtl .
 
-define buffer t_trn-doc  for ub.trn-doc  .
-define buffer t_doc-line for ub.doc-line .
-define buffer t_gds-dtl  for ub.gds-dtl .
-define buffer buf_goods  for ub.goods .
+define buffer t_trn-doc    for ub.trn-doc  .
+define buffer t_doc-line   for ub.doc-line .
+define buffer t_gds-dtl    for ub.gds-dtl .
+define buffer buf_goods    for ub.goods .
 define buffer buf_contract for ub.contract  .
+define buffer chi_marking  for ub.marking  .
 
 define variable parrec-doc      as recid    no-undo .
 define variable parrecalc-price as logical  no-undo init false .
@@ -140,7 +141,8 @@ define variable is-tsd as logical no-undo .
 define variable is-egais as logical no-undo .
 define variable is-unit-error   as logical no-undo .
 define variable v-internal      as logical no-undo .
-
+define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
@@ -932,23 +934,47 @@ assign
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
+          find first buf_goods where tt-parts.artic = buf_goods.artic and
+            tt-parts.prod-type = buf_goods.prod-type  and
+            tt-parts.prod-code = buf_goods.prod-code
+            no-lock no-error .
           assign
             tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> "".
-          if tt-parts.part-code <> ""
-          then do:
-            for each temp_doc-mark where temp_doc-mark.part-id = tt-parts.part-code :
-              create ub.marking-lines.
-              assign
-                ub.marking-lines.obj-type = tt-parts.obj-type
-                ub.marking-lines.obj-code = tt-parts.obj-code
-                ub.marking-lines.in-code = tt-parts.in-code
-                ub.marking-lines.out-code = tt-parts.out-code
-                ub.marking-lines.part-code = tt-parts.part-code
-                ub.marking-lines.gds-code = temp_doc-line.gds-code
-                ub.marking-lines.mark = temp_doc-mark.mark
-                ub.marking-lines.doc-level = 1
-              .
-            end.
+          for each temp_doc-mark where temp_doc-mark.gds-code = buf_goods.gds-code and (temp_doc-mark.part-id = ? or temp_doc-mark.part-id = tt-parts.part-code) :
+            create ub.marking-lines.
+            assign
+              ub.marking-lines.obj-type = tt-parts.obj-type
+              ub.marking-lines.obj-code = tt-parts.obj-code
+              ub.marking-lines.in-code = tt-parts.in-code
+              ub.marking-lines.out-code = tt-parts.out-code
+              ub.marking-lines.part-code = tt-parts.part-code
+              ub.marking-lines.gds-code = temp_doc-line.gds-code
+              ub.marking-lines.mark = temp_doc-mark.mark
+            .
+            ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
+            find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
+            if available (ub.marking)
+              then do:
+                ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+                ub.marking.obj-type = ub.marking-lines.obj-type.
+                ub.marking.obj-code = ub.marking-lines.obj-code.
+                ub.marking-lines.doc-level = 1.
+                for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
+                  create ub.marking-lines.
+                  assign
+                    ub.marking-lines.obj-type = tt-parts.obj-type
+                    ub.marking-lines.obj-code = tt-parts.obj-code
+                    ub.marking-lines.in-code = tt-parts.in-code
+                    ub.marking-lines.out-code = tt-parts.out-code
+                    ub.marking-lines.part-code = tt-parts.part-code
+                    ub.marking-lines.gds-code = temp_doc-line.gds-code
+                    ub.marking-lines.mark = chi_marking.mark
+                    ub.marking-lines.doc-level = 2
+                  .
+                  chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+                  ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
+                end.
+              end.
           end.
           
           
@@ -1394,6 +1420,38 @@ end.
 
      p-ok-doc = p-ok-doc + 1.
      p-doc-code = new_trn-doc.doc-code.
+    def var chg-qnty as decimal no-undo.
+    if can-find (first temp_doc-mark no-lock)
+      then 
+    do:
+      for each ub.doc-line where ub.doc-line.doc-code = new_trn-doc.doc-code:
+
+        find first ub.gds-dtl where ub.gds-dtl.doc-code = ub.doc-line.doc-code
+          and ub.doc-line.artic = ub.gds-dtl.artic
+          and ub.doc-line.prod-type = ub.gds-dtl.prod-type
+          and ub.doc-line.prod-code = ub.gds-dtl.prod-code.
+        chg-qnty = 0 - ub.doc-line.fact-qnty.
+        run trg/rsrv-dtl.p
+          ( input        ParParentProc
+          , input        'reserv':U
+          , buffer       ub.gds-dtl
+          , input-output chg-qnty 
+          , input-output ub.doc-line.price-base
+          , input-output ub.doc-line.price-rubl
+          , input        -1
+          , input         "" ) no-error .
+        if error-status :error
+          then 
+        do:
+          undo, return error return-value .
+        end.
+        assign 
+          ub.gds-dtl.fact-qnty  = 0
+          ub.doc-line.fact-qnty = 0
+        .
+        run str/clcsumga.p ( input new_trn-doc.doc-code ).
+      end.
+    end.
 
 end.
 end.

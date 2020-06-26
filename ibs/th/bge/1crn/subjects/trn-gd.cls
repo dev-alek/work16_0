@@ -16,7 +16,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
-
+using ibs.th.bge.1crn.subjects.subjects from propath.
 
 class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject: 
 
@@ -44,11 +44,28 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property nds-code as decimal no-undo 
     get. 
     private set.  
-  
+  define property marks as subjects no-undo 
+    get. 
+    private set.  
     
   define override property InitTag as character no-undo init "gd"
     get. 
+
+  constructor public trn-gd ():
+    InitListTag = "marks".
+  end constructor.
     
+  method override protected void SetPropProtected(input SubsObj as subjects):
+
+    case SubsObj:InitTag:   
+      when "marks" then
+        do:
+          marks = SubsObj.            
+        end.
+    end case.
+
+  end.
+  
   method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "line-num" then do:
