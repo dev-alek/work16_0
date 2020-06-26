@@ -6542,6 +6542,9 @@ define variable v-type           as character no-undo .
 define variable v-internal       as logical   no-undo .
 define variable v-list-mode      as character no-undo .
 
+define variable v-at-value     as character no-undo .
+define variable v-at-type      as character no-undo .
+
 find first ub.clients no-lock where ub.clients.obj-type = t-doc.cli-type
                                 and ub.clients.obj-code = t-doc.cli-code .
 
@@ -6577,6 +6580,30 @@ if not available t-d-b then do:
   apply "entry" to b-add in frame {&frame-name}.
   return error.
 end.
+{ str/tdat-val.i
+  t-d-b.doc-code
+  {&trdcattr-nsf}
+  v-at-value
+  v-at-type
+}
+{ str/tdat-wrt.i
+  t-doc.doc-code
+  {&trdcattr-nsf}
+  v-at-value
+  no-error     
+}
+{ str/tdat-val.i
+  t-d-b.doc-code
+  {&trdcattr-dsf}
+  v-at-value
+  v-at-type
+}
+{ str/tdat-wrt.i
+  t-doc.doc-code
+  {&trdcattr-dsf}
+  v-at-value
+  no-error     
+}
 assign t-doc.out-code = t-d-b.doc-code .
 display t-doc.out-code with frame {&frame-name}.
 
