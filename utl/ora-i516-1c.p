@@ -972,6 +972,8 @@ assign
                     ub.marking-lines.doc-level = 2
                   .
                   chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+                  chi_marking.obj-type = ub.marking-lines.obj-type.
+                  chi_marking.obj-code = ub.marking-lines.obj-code.
                   ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
                 end.
               end.
