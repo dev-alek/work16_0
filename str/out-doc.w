@@ -2123,6 +2123,7 @@ define variable v-recid as recid no-undo .
       and ub.doc-line.prod-code = ub.gds-dtl.prod-code
     .
   if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
   then do :
     run str/out-add.p
       ( input parparentproc
@@ -2430,6 +2431,7 @@ find first ub.goods where ub.goods.artic     = ub.gds-dtl.artic     and
                        ub.goods.prod-code = ub.gds-dtl.prod-code no-lock.
 
 if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
 then do :
   run str/out-add.p (parparentproc,
                  recid(t-doc),
@@ -3048,6 +3050,7 @@ then do :
   and t-doc.reason-code > 0
   then do :
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
       /*Возврат*/
       run local-m-outs-1-ret no-error.
@@ -5839,6 +5842,7 @@ if t-doc.reason-code <> ?
 and t-doc.reason-code > 0
 then do :
   if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
   then do :
     /*Возврат*/
     v-choice = 5.
@@ -6285,6 +6289,7 @@ define variable v-host-code     like ub.sysconf.host-code  no-undo.
          { str/pr-99.i varnew-price round-method round-base}
        end.
        if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+       and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
        then do :
          run str/out-add.p (parparentproc,
                         recid(t-doc),
@@ -6409,6 +6414,7 @@ do on stop undo, return error:
                  and ub.goods.prod-type = ub.gds-dtl.prod-type
                  and ub.goods.artic     = ub.gds-dtl.artic no-lock.
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
       run str/out-add.p (parparentproc,
                      recid(t-doc),
@@ -6739,6 +6745,7 @@ do
       .
     end.
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
       run str/out-add.p
         ( input parparentproc
@@ -7027,6 +7034,7 @@ PROCEDURE select-reason :
     display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
   end.
   if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
   then do :
     disable b-cur with frame {&frame-name}.
   end.
@@ -7303,6 +7311,7 @@ if fnc = "enable" then do:
          not t-doc.flag_                                  and
          varlog = yes                                     and
          lookup( string(t-doc.reason-code), v-reasons-for-return) = 0
+         and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
          then do:
            enable b-cur with frame {&frame-name}.
          end.

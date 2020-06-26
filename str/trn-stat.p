@@ -1008,6 +1008,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     end.
     
     if lookup( string(bf_trn-doc.reason-code), v-reasons-for-return) > 0
+    and bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do : 
       /*Возврат через расход*/
       find first in_trn-doc no-lock where in_trn-doc.doc-code = bf_trn-doc.out-code no-error .
