@@ -2654,23 +2654,49 @@ PROCEDURE proc-Token :
     define buffer buf_ext-system-attr for ub.ext-system-attr .
      
     
-    for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-host-code}
-                                           and buf_ext-system-attr.esya-attr-value  = string(v-cntxt-host-code-obj)
-                                          /* and buf_ext-system-attr.db-num           = buf_db.db-num */
-                                           :
-      find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
-                                          and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
-                                          no-error .
-      if available buf_ext-system then leave .
-    end .                                      
-    if not available buf_ext-system 
-    then do :
-        if v-mes-Token then do:
-      message "Нет внешней системы с типом ИС МОТП" view-as alert-box .
-      return .
-      end. 
-      else return .     
-    end.     
+        for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-obj}
+                                               and buf_ext-system-attr.esya-attr-value  = v-cntxt-obj-type + string(v-cntxt-obj-code)
+                                              /* and buf_ext-system-attr.db-num           = buf_db.db-num */
+                                               :
+          find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
+                                              and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
+                                              no-error .
+        R-obj = 2 .
+        empty temp-table tt-obj-list .
+
+        create tt-obj-list .
+        assign
+        tt-obj-list.obj-code = v-cntxt-obj-code
+        tt-obj-list.obj-type = v-cntxt-obj-type
+        .
+        obj-list = v-cntxt-obj-type + " " + string(v-cntxt-obj-code) . 
+        display obj-list r-obj with frame {&frame-name} . 
+        disable bt-sel-obj with frame {&frame-name} .
+          if available buf_ext-system then leave .
+
+/*        run init-sort .         */
+/*            {&OPEN-QUERY-br-utd}*/
+        end .
+        if not available buf_ext-system
+        then
+        for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-host-code}
+                                               and buf_ext-system-attr.esya-attr-value  = string(v-cntxt-host-code-obj)
+                                              /* and buf_ext-system-attr.db-num           = buf_db.db-num */
+                                               :
+          find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
+                                              and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
+                                              no-error .
+          if available buf_ext-system then leave .
+        end .                                      
+        if not available buf_ext-system
+        then do :
+            if v-mes-Token then 
+            do:
+                message "Нет внешней системы с типом ИС МОТП" view-as alert-box .
+                return .
+            end. 
+            else return . 
+        end.    
          
     v-mes-Token = no .
     oMotp = new is_motp(buf_ext-system.db-num, buf_ext-system.esys-id) .
