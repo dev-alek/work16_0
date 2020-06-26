@@ -1290,6 +1290,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     /*Добавление марок не алкогольных*/
     find first marking where marking.mark begins mark
       no-lock no-error  .
+
     if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
     do:
       v-gds-code = marking.gds-code .
@@ -1457,7 +1458,8 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
           ii = ii + 1 . 
           end.
         
-        t-doc.fact-qnty = ii .                                     
+        t-doc.fact-qnty = ii .         
+                                    
         end.
 
   end.  
@@ -1534,7 +1536,7 @@ do while v-del:
       if available (buf_goods) then
       do:
 
-        if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then v-sts = ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB .
+        if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then v-sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
         else v-sts = 99 .
 
 
@@ -1651,10 +1653,10 @@ do while v-del:
             if  buf_marking.unit-ext = "UNIT" then  jj = jj + 1 .
               buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               buf_marking-lines.out-code = {&free-code} .
-              buf_marking-lines.sts = 0 .
+              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
             end.
             else do:
-              buf_marking-lines.sts = 0 .
+              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
             end.  
           end.
  
