@@ -398,7 +398,7 @@ if varhave-chg = yes then do:
                     input-output varchg-qnty,
                     input-output bf-chg_doc-line.price-base,
                     input-output bf-chg_doc-line.price-rubl,
-                    -1) no-error.
+                    -1, "") no-error.
     if error-status:error then do:
       undo, return error substitute ("Ошибка при резервировании по товару &1 &2 &3 &4: &5.", bf-chg_goods.artic, bf-chg_goods.prod-type, bf-chg_goods.prod-code, bf-chg_goods.gds-name, return-value).
     end.
@@ -437,7 +437,7 @@ if varhave-chg = yes then do:
                           input-output varrsrv-qnty,
                           input-output bf-chg_doc-line.price-base,
                           input-output bf-chg_doc-line.price-rubl,
-                         -1) no-error.
+                         -1, "") no-error.
           if error-status:error then do:
             undo, return error substitute ("Ошибка при резервировании по товару &1 &2 &3 &4: &5.", bf-chg_goods.artic, bf-chg_goods.prod-type, bf-chg_goods.prod-code, bf-chg_goods.gds-name, return-value).
           end.
@@ -467,7 +467,7 @@ if varhave-chg = yes then do:
                           input-output varrsrv-qnty,
                           input-output bf-chg_doc-line.price-base,
                           input-output bf-chg_doc-line.price-rubl,
-                         -1) no-error.
+                         -1, "") no-error.
           if error-status:error then do:
             undo, return error substitute ("Ошибка при резервировании по товару &1 &2 &3 &4: &5.", bf-chg_goods.artic, bf-chg_goods.prod-type, bf-chg_goods.prod-code, bf-chg_goods.gds-name, return-value).
           end.

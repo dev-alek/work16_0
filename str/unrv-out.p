@@ -79,7 +79,7 @@ do on stop undo unrv, return error on error undo unrv, return error:
     chg-qnty = - gds-dtl.doc-qnty.
     run trg/rsrv-dtl.p ( parparentproc,
                      {&rsrv-dtl_action_reserv}, buffer gds-dtl, input-output chg-qnty,
-                           input-output doc-line.price-base, input-output doc-line.price-rubl, -1).
+                           input-output doc-line.price-base, input-output doc-line.price-rubl, -1, "").
     if chg-qnty <> - gds-dtl.doc-qnty then undo unrv, return error.
     /* если это счет - отменяем подстановку новой цены при последующем резервировании */
     if old-flag then gds-dtl.ov = yes. /* нельзя написать gds-dtl.ov = old-flag, т.к. gds-dtl.ov мб = yes при ручной установке цены */

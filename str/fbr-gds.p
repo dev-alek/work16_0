@@ -719,6 +719,7 @@ define output parameter p-rsrv-qnty         like doc-line.doc-qnty      no-undo.
         , input-output v-cost-base
         , input-output v-cost-rubl
         , input -1
+        , input ""
     ) no-error.
     if error-status:error
     then do:

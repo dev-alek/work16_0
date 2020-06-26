@@ -937,7 +937,8 @@ if parstatus = {&wayb} and
                         input-output varchg-qnty,
                         input-output ln_doc-line.price-base,
                         input-output ln_doc-line.price-rubl,
-                        input        varb-c ) no-error.
+                        input        varb-c,
+                        input "" ) no-error.
        if error-status :error then do:
          return error return-value.
        end.

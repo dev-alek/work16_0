@@ -419,7 +419,7 @@ for each tt-goods-query on error undo, return error return-value :
              + "," + {&rsrv-dtl_rsrv-single-part}
              + "," + {&rsrv-dtl_rsrv-in-code}   + "=" + str-encode(bf-free_parts.in-code,   "", ",=":u)
              + "," + {&rsrv-dtl_rsrv-part-code} + "=" + str-encode(bf-free_parts.part-code, "", ",=":u)
-            , buffer bf_gds-dtl, input-output varfree-qnty, input-output bf_doc-line.price-base, input-output bf_doc-line.price-rubl, -1) no-error.
+            , buffer bf_gds-dtl, input-output varfree-qnty, input-output bf_doc-line.price-base, input-output bf_doc-line.price-rubl, -1, "") no-error.
     if error-status :error then do:
       if tt-goods-query.rsrv-qnty = ? then do:
         assign

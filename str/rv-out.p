@@ -203,7 +203,7 @@ do on stop undo req1, return error on error undo req1, return error :
           input-output chg-qnty,
           input-output ub.doc-line.price-base,
           input-output ub.doc-line.price-rubl,
-          -1)
+          -1, "")
           no-error.
           v-sumq = v-sumq + chg-qnty .
           for each ub.parts exclusive-lock where
@@ -247,7 +247,7 @@ do on stop undo req1, return error on error undo req1, return error :
           input-output chg-qnty,
           input-output ub.doc-line.price-base,
           input-output ub.doc-line.price-rubl,
-          -1)
+          -1, "")
           no-error.
       end.
 

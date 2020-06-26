@@ -2560,7 +2560,7 @@ for each tt-gds-list,
       if error-status:error then undo, next r-l.
       assign
         chg-qnty = cpl_prt-obj.fact-qnty.
-      run trg/rsrv-dtl.p (input parParentProc, {&rsrv-dtl_action_reserv}, buffer cpl_gds-dtl, input-output chg-qnty, input-output cpl_doc-line.price-base, input-output cpl_doc-line.price-rubl, -1) no-error.
+      run trg/rsrv-dtl.p (input parParentProc, {&rsrv-dtl_action_reserv}, buffer cpl_gds-dtl, input-output chg-qnty, input-output cpl_doc-line.price-base, input-output cpl_doc-line.price-rubl, -1, "") no-error.
       if error-status:error then undo c-l, return error.
       assign
         cpl_doc-line.doc-qnty  = cpl_doc-line.doc-qnty + chg-qnty

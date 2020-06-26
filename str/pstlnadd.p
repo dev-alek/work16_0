@@ -621,7 +621,7 @@ if varset = yes then do transaction on error undo, return error return-value :
                         input-output varchg-qnty,
                         input-output bf-add_doc-line.price-base,
                         input-output bf-add_doc-line.price-rubl,
-                        -1) no-error.
+                        -1, "") no-error.
         if error-status:error then do:
           undo, return error substitute ("Ошибка при резервировании по товару &1 &2 &3 &4: &5.", bf-add_goods.artic, bf-add_goods.prod-type, bf-add_goods.prod-code, bf-add_goods.gds-name, return-value).
         end.
@@ -664,7 +664,7 @@ if varset = yes then do transaction on error undo, return error return-value :
                       input-output varchg-qnty,
                       input-output bf-add_doc-line.price-base,
                       input-output bf-add_doc-line.price-rubl,
-                      -1) no-error.
+                      -1, "") no-error.
       if error-status:error then do:
         undo, return error substitute ("Ошибка при резервировании по товару &1 &2 &3 &4: &5.", bf-add_goods.artic, bf-add_goods.prod-type, bf-add_goods.prod-code, bf-add_goods.gds-name, return-value).
       end.

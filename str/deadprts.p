@@ -353,7 +353,7 @@ if available tt-minus-doc-line then do:
                 input-output varneed-rsrv-parts,
                 input-output bf_doc-line.price-base,
                 input-output bf_doc-line.price-rubl,
-                -1) no-error.
+                -1, "") no-error.
         if error-status:error then do:
           undo, return error substitute ("Ошибка при резервировании свободной зоны &1", return-value ).
         end.
@@ -385,7 +385,7 @@ if available tt-minus-doc-line then do:
                 + "," + {&rsrv-dtl_rsrv-in-code}   + "=" + str-encode(tt-in-parts.in-code,   "":u, ",=":u)
                 + "," + {&rsrv-dtl_rsrv-part-code} + "=" + str-encode(tt-in-parts.part-code, "":u, ",=":u)
                 , buffer bf_gds-dtl, input-output varneed-rsrv-parts-in,
-                input-output bf_doc-line.price-base, input-output bf_doc-line.price-rubl,-1) no-error.
+                input-output bf_doc-line.price-base, input-output bf_doc-line.price-rubl,-1, "") no-error.
             if error-status:error then do:
               undo, return error substitute ("Ошибка при резервировании свободной зоны &1", return-value ).
             end.

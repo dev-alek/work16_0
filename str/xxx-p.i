@@ -405,6 +405,7 @@ ON choose of b-del IN FRAME {&frame-name} DO:
       , input-output doc-line.price-base
       , input-output doc-line.price-rubl
       , input        -1
+      , input ""
       ) no-error .
     if error-status :error
     then do:

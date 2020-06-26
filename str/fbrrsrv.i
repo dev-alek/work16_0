@@ -216,6 +216,7 @@ on error undo, return error
                     , input-output v-cost-base
                     , input-output v-cost-rubl
                     , input -1
+                    , input ""
                 ) no-error.
                 if error-status:error
                 then do:
@@ -250,6 +251,7 @@ on error undo, return error
                 , input-output v-cost-base
                 , input-output v-cost-rubl
                 , input -1
+                , input ""
             ) no-error.
             if error-status:error
             then do:
@@ -282,6 +284,7 @@ on error undo, return error
             , input-output v-cost-base
             , input-output v-cost-rubl
             , input -1
+            , input ""
         ) no-error.
         if error-status:error
         then do:

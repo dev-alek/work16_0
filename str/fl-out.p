@@ -191,6 +191,7 @@ do on stop undo req1, return error on error undo req1, return error :
             , input-output v-price-base
             , input-output v-price-rubl
             ,   -1
+            , ""
             ) no-error.
 
           if error-status:error then do:

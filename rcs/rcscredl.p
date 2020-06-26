@@ -283,6 +283,7 @@ define input parameter p-required-qnty      as decimal   no-undo .
         , input-output p-price-cost-base
         , input-output p-price-cost-rubl
         , input -1
+        , input ""
     ) no-error.
     if error-status :error
     then do:
