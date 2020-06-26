@@ -30,6 +30,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   {cmp/str-glbl.i class}
   { ref/extclass.i }
   { str/lib-trn.i class }
+  { gbl/thbj-def.i }
   
   
   define temp-table tt-childs
@@ -690,6 +691,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
   end method .
   
+  define variable GrayZoneQnty  as integer no-undo .
+  
   method public void cisesInfo
   (
   input pToken as character,
@@ -705,10 +708,18 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable v-num-marks as integer no-undo .
     define variable vMark as character no-undo .
     
+    define variable v-value-character     as character     no-undo .
+    define variable v-value-decimal       as decimal       no-undo .
+    define variable v-value-integer       as integer       no-undo .
+    define variable v-value-logical       as logical       no-undo .
+    define variable v-value-type          as character     no-undo .
+    define variable v-value-date          as date          no-undo .
+    
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_marking for ub.marking .
     define buffer buf_marking-parent for ub.marking .
     define buffer buf_utd-err for ub.utd-err .
+    define buffer buf_utd for ub.utd .
     
     if not checkINN
     then do :
@@ -720,6 +731,31 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         delete buf_utd-err .                                      
       end .
     end .
+    
+    GrayZoneQnty = 100 .
+    
+    find first buf_utd no-lock where buf_utd.db-num = pDB-num
+                                 and buf_utd.doc-id = pDoc-id
+                                 .
+                                 
+    run adm/shattri.p (
+      input "get":U
+      ,input buf_utd.obj-type
+      ,input buf_utd.obj-code
+      ,input {&attr-marking}
+      ,input "gray_zone_qnty"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    if v-value-integer <> ?
+    then
+      GrayZoneQnty = v-value-integer
+    .                             
       
     v-ok = true .
     v-num-marks = 0 .
@@ -882,6 +918,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   define variable v-gtin as character no-undo .
   define variable v-num-childs as integer no-undo .
   define variable v-err-childs as logical no-undo .
+  define variable v-gray-zone  as logical no-undo .
   
   method private void ParseResponseInfoCises(inFileName as char):
     define variable hDoc  as handle no-undo .
@@ -940,6 +977,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         assign
           v-num-childs = 0
           v-err-childs = false
+          v-gray-zone  = false
           v-err-code   = 0
           v-item       = ""
           v-cis        = ""
@@ -1038,8 +1076,18 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         for each tt-childs no-lock where tt-childs.parent_ = v-cis :
           assign v-num-childs = v-num-childs + 1 .
         end .
-        if v-unit = "LEVEL1" and v-num-childs <> 10 then v-err-childs = true .
-        if v-unit = "LEVEL2" and v-num-childs <> 50 then v-err-childs = true .
+        if v-unit = "LEVEL2" and v-num-childs <> 50 then v-gray-zone = true .
+        
+        if v-unit = "LEVEL1"
+        then do :
+          if v-num-childs <> 10 
+          then do:
+            if (10 - v-num-childs) <= GrayZoneQnty
+            then v-gray-zone = true .
+            else v-err-childs = true .
+          end .
+        end .
+        
         
         if isFirstEnter
         then do :
@@ -1063,6 +1111,16 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           end .
           else do :
             if v-err-childs
+            then do :
+              UpdateMark(v-cis,
+                         objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB,
+                         "",
+                         v-unit,
+                         v-gtin,
+                         hText:node-value) .
+            end .
+            else
+            if v-gray-zone
             then do :
               UpdateMark(v-cis,
                          objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,
@@ -1096,6 +1154,16 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
             when "INTRODUCED_RETURNED"
             then do :
               if v-err-childs
+              then do :
+                UpdateMark(v-cis,
+                           objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB,
+                           "",
+                           v-unit,
+                           v-gtin,
+                           hText:node-value) .
+              end .
+              else
+              if v-gray-zone
               then do :
                 UpdateMark(v-cis,
                            objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,
