@@ -3868,9 +3868,8 @@ PROCEDURE save_mark :
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
       v-mark:screen-value in frame {&frame-name} = v-scan-str.
-      v-scan-str = "". 
     end.
-
+    v-scan-str = "". 
     assign 
       v-mark = v-mark:screen-value in frame {&frame-name}.
 
