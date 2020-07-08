@@ -770,10 +770,10 @@ DEFINE VARIABLE rsn-name AS CHARACTER FORMAT "x(256)":U
      SIZE 37.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE varcontract-prn-code AS CHARACTER FORMAT "X(16)" 
+DEFINE VARIABLE varcontract-prn-code AS CHARACTER FORMAT "X(48)" 
      LABEL "До&говор" 
      VIEW-AS FILL-IN 
-     SIZE 21.5 BY 1
+     SIZE 29 BY 1
      FGCOLOR 1  NO-UNDO.
 
 DEFINE VARIABLE wrkr-name AS CHARACTER FORMAT "x(256)":U
@@ -878,7 +878,7 @@ DEFINE FRAME d-in-doc
           SIZE 37 BY 1
           FGCOLOR 4
      varcontract-prn-code AT ROW 2 COL 74 COLON-ALIGNED
-     b-contr-lkp AT ROW 2 COL 97.5
+     b-contr-lkp AT ROW 2 COL 104.75
      r-clients AT ROW 2.04 COL 26
      r-currency AT ROW 3 COL 18.25
      t-doc.exch-code AT ROW 3.04 COL 7.13 COLON-ALIGNED
@@ -6725,7 +6725,7 @@ else do:
 end.
 display varcontract-prn-code with frame {&frame-name}.
 /* подвинем батончик */
-b-contr-lkp:column =  varcontract-prn-code:column + length(trim(varcontract-prn-code)) + 1 .
+/*b-contr-lkp:column =  varcontract-prn-code:column + length(trim(varcontract-prn-code)) + 1 .*/
 
 { str/psn-chk.i wrkr on t-doc ref-rec }
 { str/psn-chk.i agnt on t-doc ref-rec }

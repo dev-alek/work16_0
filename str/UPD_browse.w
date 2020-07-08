@@ -2116,6 +2116,11 @@ DO:
         do:
           find first buf_contract-attr exclusive-lock where buf_contract-attr.contract-code = buf_contract.contract-code
             and buf_contract-attr.host-code = buf_contract.host-code and buf_contract-attr.attr-code = "contract-edi" no-error .
+          if not available (buf_contract-attr) then do:
+            message "У договора " + buf_contract.contract-prn-code + " нет признака - 'Поставки через ЭДО'"
+              view-as alert-box.
+            return no-apply .
+          end.  
           if buf_contract-attr.attr-value = "yes" then 
           do:
             assign

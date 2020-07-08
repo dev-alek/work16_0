@@ -377,7 +377,7 @@ DEFINE VARIABLE cli-type AS CHARACTER FORMAT "X(3)"
 DEFINE VARIABLE contract-city AS CHARACTER FORMAT "X(20)" 
      LABEL "Город" 
      VIEW-AS FILL-IN 
-     SIZE 19 BY 1.
+     SIZE 19.5 BY 1.
 
 DEFINE VARIABLE contract-code AS INTEGER FORMAT ">>>>>>>>>" INITIAL 0 
      LABEL "Вн.№." 
@@ -405,10 +405,10 @@ DEFINE VARIABLE contract-name AS CHARACTER FORMAT "X(85)"
      VIEW-AS FILL-IN 
      SIZE 66.5 BY 1.
 
-DEFINE VARIABLE contract-prn-code AS CHARACTER FORMAT "X(16)" 
-     LABEL "Номер" 
+DEFINE VARIABLE contract-prn-code AS CHARACTER FORMAT "X(48)" 
+     LABEL "№" 
      VIEW-AS FILL-IN 
-     SIZE 15 BY 1.
+     SIZE 31 BY 1.
 
 DEFINE VARIABLE cor-acc AS CHARACTER FORMAT "X(256)":U 
      LABEL "Корреспондирующий счет" 
@@ -539,9 +539,9 @@ DEFINE FRAME Dialog-Frame
      b-hist AT ROW 1 COL 78
      B-Help AT ROW 1 COL 88
      T-edi AT ROW 1.13 COL 70 WIDGET-ID 12
-     contract-prn-code AT ROW 2.5 COL 12 COLON-ALIGNED
-     contract-date AT ROW 2.5 COL 37.5 COLON-ALIGNED
-     contract-city AT ROW 2.5 COL 59.5 COLON-ALIGNED
+     contract-prn-code AT ROW 2.5 COL 2.5 COLON-ALIGNED
+     contract-date AT ROW 2.5 COL 39.75 COLON-ALIGNED
+     contract-city AT ROW 2.5 COL 58.5 COLON-ALIGNED
      contract-name AT ROW 3.58 COL 12 COLON-ALIGNED
      BUTTON-curr AT ROW 4.5 COL 89
      contract-date-beg AT ROW 4.58 COL 12 COLON-ALIGNED
