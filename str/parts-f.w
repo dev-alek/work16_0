@@ -6519,6 +6519,7 @@ PROCEDURE update-record :
             ,buffer buf_trn-doc     /* buf_trn-doc     */
             ,output v-real-chg-qnty /* p-real-chg-qnty */
             ,output v-parts-recid   /* p-parts-recid   */
+            ,input  p-mark
             ) no-error .
           if error-status :error
           then do:
