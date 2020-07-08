@@ -602,15 +602,18 @@ assign
   temp_trn-doc.db-num = ub.utd.db-num.
   temp_trn-doc.doc-id = ub.utd.doc-id.
   
-  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "wrkr" no-error .
+  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "wrkr" 
+    and integer (utd-attr.attr-value) <> 0 or integer (utd-attr.attr-value) <> ? no-error .
   if available (utd-attr) then do:
     new_trn-doc.wrkr =  integer (utd-attr.attr-value).
   end.  
-  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "agnt" no-error .
+  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "agnt" 
+    and integer (utd-attr.attr-value) <> 0 or integer (utd-attr.attr-value) <> ? no-error
   if available (utd-attr) then do:
     new_trn-doc.agnt =  integer (utd-attr.attr-value).  
   end.  
-  find first utd-attr exclusive-lock where ub.utd.db-num = utd-attr.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "boss" no-error .
+  find first utd-attr exclusive-lock where ub.utd.db-num = utd-attr.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "boss"
+    and integer (utd-attr.attr-value) <> 0 or integer (utd-attr.attr-value) <> ? no-error
   if available (utd-attr) then do:
     new_trn-doc.boss =  integer (utd-attr.attr-value).
   end.  
