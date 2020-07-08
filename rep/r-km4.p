@@ -1311,7 +1311,7 @@ procedure Report-Viewer:            /* Запуск на выполнение RV (input Полный_пут
     define input parameter p-full-path-RepView as character no-undo.
     define input parameter v-search as character no-undo.
 
-    os-command no-wait value(p-full-path-RepView +  v-search).
+    os-command no-wait value(p-full-path-RepView + " true " + v-search).
 
 end procedure.
 
