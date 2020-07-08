@@ -226,7 +226,7 @@ END.
 &SCOP disp-list ~
  {&clmn_1 }            column-label {&label-clmn_1 } format "x(1)" ~
  {&clmn_2 }            column-label {&label-clmn_2 } format "x(4)" ~
- {&clmn_3 }            column-label {&label-clmn_3 } format "x(16)" ~
+ {&clmn_3 }            column-label {&label-clmn_3 } format "x(48)" ~
  {&clmn_4 }            column-label {&label-clmn_4 } format "99/99/99" ~
  {&clmn_5 }            column-label {&label-clmn_5 } format "x(20)"  ~
  {&clmn_6 }   @ v-type column-label {&label-clmn_6 } format "x(13)" ~

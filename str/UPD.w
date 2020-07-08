@@ -1614,6 +1614,23 @@ ON value-changed OF br-utd IN FRAME d-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_recheck POPUP-MENU-b-servis
 ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
 DO:
+    define variable Log-Res      as      logical     no-undo.
+    { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_edi-doc_recheck':U
+  {&cntxt-firm}
+  v-cntxt-host-code-obj
+  '':U
+  0
+  0
+  0
+  0
+  true
+  log-res
+}
+if log-res then do:
     define buffer buf_c-utd for ub.c-utd .
     if v-rid-list <> "" then 
     do:
@@ -1625,8 +1642,7 @@ DO:
             do: 
                 return return-value .
             end.
-            if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or /*ошибка загрузки*/
-                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+            if  X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
                 X_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
                 X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then 
             do:
@@ -1679,8 +1695,7 @@ DO:
             do: 
                 return return-value .
             end.
-            if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or /*ошибка загрузки*/
-                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+            if  X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
                 X_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
                 X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then 
             do:
@@ -1722,6 +1737,7 @@ DO:
         end.  
     end.
     v-rid-list = "" .
+    end.
   END.
 
 /* _UIB-CODE-BLOCK-END */

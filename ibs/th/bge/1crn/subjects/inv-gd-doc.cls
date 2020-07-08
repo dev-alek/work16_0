@@ -222,11 +222,12 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-b-s", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-a-s", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
-        if can-find (first bf_gen-attr no-lock where bf_gen-attr.table-name = "inv-doc-mark" and bf_gen-attr.attr-code = buf_trn-doc.doc-code)
+        if can-find (first bf_gen-attr no-lock where bf_gen-attr.table-name = "inv-doc-mark" and bf_gen-attr.attr-code = buf_trn-doc.doc-code
+          and bf_gen-attr.attr-value = string(buf_gds.gds-code) and not bf_gen-attr.p-key begins {&tech-mark-prefix})
         then do:
           sw:start-element ("marks").
           for each bf_gen-attr no-lock where bf_gen-attr.table-name = "inv-doc-mark" and bf_gen-attr.attr-code = buf_trn-doc.doc-code
-            and bf_gen-attr.attr-value = string(buf_gds.gds-code):
+            and bf_gen-attr.attr-value = string(buf_gds.gds-code) and not bf_gen-attr.p-key begins {&tech-mark-prefix}:
             sw:start-element ("mark").
     /*        write-data-element ("gd-line-num", bf_gen-attr.attr-value).*/
             write-data-element ("mark-code", bf_gen-attr.p-key).

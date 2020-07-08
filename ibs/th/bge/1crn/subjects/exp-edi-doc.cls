@@ -136,7 +136,7 @@ method public void CrContentToSW (insw as handle):
                                              and utd-marking-lines.doc-level = 1 
                no-lock:
                   insw:start-element ({&tag-item2}) .
-                  insw:write-data-element (  "mark-code",         addBracketForCode(utd-marking-lines.mark)          ) . 
+                  insw:write-data-element (  "mark-code",        repSpecSimbforXlm( addBracketForCode(utd-marking-lines.mark) )         ) . 
                   if VFlagStsMark
                   then do:
                      find first marking where marking.mark eq utd-marking-lines.mark

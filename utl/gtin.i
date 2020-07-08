@@ -19,7 +19,23 @@ function repSpecSimbforDm return char
     return iDM.
         
 end.
-
+&if "{1}" = "class"
+&then
+method private character repSpecSimbforXlm
+&else
+function repSpecSimbforXlm return char 
+&endif
+(iDM as char ):
+    define variable vReplist_new as character no-undo init "&gt;,&lt;,&amp;,&apos;,&quot;".
+    define variable vReplist_old as character no-undo init ">,<,&,~',~"".
+    define variable vi as integer no-undo.
+    
+    do vi = 1 to num-entries(vReplist_old):
+        iDM = replace(iDM,entry(vi,vReplist_old),entry(vi,vReplist_new)).
+    end.
+    return iDM.
+        
+end.
 &if "{1}" = "class"
 &then
 method private character getGtinByDM

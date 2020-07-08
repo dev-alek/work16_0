@@ -1335,7 +1335,7 @@ PROCEDURE Report-Viewer:            /* Запуск на выполнение RV (input Полный_пут
     DEFINE INPUT PARAMETER p-full-path-RepView AS CHARACTER NO-UNDO.
     DEFINE INPUT PARAMETER p-search AS CHARACTER NO-UNDO.
 
-    OS-COMMAND NO-WAIT VALUE(p-full-path-RepView +  p-search).
+    OS-COMMAND NO-WAIT VALUE(p-full-path-RepView + " true " + p-search).
 
 END PROCEDURE.
 

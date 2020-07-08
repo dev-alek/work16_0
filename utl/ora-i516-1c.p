@@ -1451,7 +1451,7 @@ end.
           ub.gds-dtl.fact-qnty  = 0
           ub.doc-line.fact-qnty = 0
         .
-        run str/clcsumga.p ( input new_trn-doc.doc-code ).
+        run gbl/calc-trn.p (input parparentproc, input recid(new_trn-doc)) no-error.
       end.
     end.
 

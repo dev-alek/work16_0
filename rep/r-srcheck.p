@@ -175,7 +175,7 @@ run create-fill-tt-chk.
   else do :
     /* Запуск программы "Просмотровщик Отчётов" - ReportViewer. */
     /* Полный_путь_имя_файла_RV + " " + Полный_путь_имя_файла_отчHTML */
-    os-command no-wait value(v-full-path-RepView + " " + v-file-name-rep-htm).
+    os-command no-wait value(v-full-path-RepView + " true " + v-file-name-rep-htm).
   end .
 */
 

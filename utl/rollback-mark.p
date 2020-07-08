@@ -67,7 +67,6 @@ v-marking = GetCodeIdent(v-mark) .
 end.
 
     for each buf_marking exclusive-lock where buf_marking.sts = Marking:FreeZone:KeyIntDB and buf_marking.mark begins v-marking:
-      
     
     for each buf_marking-lines exclusive-lock where buf_marking-lines.mark begins v-marking and buf_marking-lines.out-code = {&free-code}:
        run nws/cmd-del.p

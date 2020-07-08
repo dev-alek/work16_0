@@ -486,9 +486,7 @@ DO: /* S */
         ELSE DO:
             v-file-name-rep-htm = SEARCH(v-file-name-rep-htm).
         END.
-
-        OS-COMMAND NO-WAIT VALUE(v-fill-path-RepView + " " + SEARCH(v-file-name-rep-htm)).
-
+        os-command no-wait value(v-fill-path-RepView + " true " + v-file-name-rep-htm).
     END.
 
 END.

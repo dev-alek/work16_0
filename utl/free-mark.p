@@ -61,10 +61,12 @@ do:
   return .
   end.
 end.
-v-marking = GetCodeIdent(v-mark) .
 
+if v-mark <> "" then do:
+v-marking = GetCodeIdent(v-mark) .
+end.
     for each buf_marking-lines exclusive-lock where buf_marking-lines.mark begins v-marking and buf_marking-lines.out-code = {&free-code}:
-          for first buf_marking exclusive-lock where buf_marking.mark begins v-marking:
+          for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark:
             buf_marking.sts = Marking:FreeZone:KeyIntDB .
           end.   
     end. 

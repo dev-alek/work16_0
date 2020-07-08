@@ -243,7 +243,7 @@ DO:
 
   define frame f-db-key
       sym1 column-label ":" format "X(1)"
-      buf-prn_db.db-num COLUMN-LABEL "ÁÄ" format ">9"
+      buf-prn_db.db-num COLUMN-LABEL "ÁÄ" format ">>>9"
       sym2 column-label ":" format "X(1)"
       buf-prn_db.db-key COLUMN-LABEL "Êëþ÷ ÁÄ" format "X(12)"
       sym3 column-label ":" format "X(1)"

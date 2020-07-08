@@ -100,7 +100,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       if    not available buf_bar-code
          or buf_bar-code.gds-code ne objImp:gds-code
       then
-         undo, throw new Progress.Lang.AppError(substitute("GTIN &1 не пренадлежит товару &2 ", objImp:gtin , objImp:gds-code)) . 
+         undo, throw new Progress.Lang.AppError(substitute("GTIN &1 не принадлежит товару &2 ", objImp:gtin , objImp:gds-code)) . 
    end.
    assign
       marking.gds-code     = objImp:gds-code

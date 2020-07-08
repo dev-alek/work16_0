@@ -379,8 +379,8 @@ then do:
     ) no-error.
   if not error-status:error
   then do:
-    if return-value <> ""
-    then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate) , tb-utd.doc-code, return-value).
+    if return-value matches "*ошибка*"
+    then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate) , tb-utd.doc-code, return-value).
     else v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate) , tb-utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
   end.
     else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate), return-value).
