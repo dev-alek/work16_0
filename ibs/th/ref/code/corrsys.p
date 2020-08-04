@@ -12,6 +12,7 @@ Creation date: 31 июля 2019 г.
 
 */
 {cmp/str-glbl.i }
+{cmp\trg-def.i}
 { ibs\th\ref\code\codepar.i }
 
 define variable vss-revision    as character no-undo init "$Revision:$":U .
@@ -31,7 +32,7 @@ mCodeTrg:formLable(1, 3, "Наименование").
 /*mCodeTrg:formLable(1, 3, "Описание").*/
 mCodeTrg:MaxLevel = 1.
 mCodeTrg:Mode = imode.
-mCodeTrg:chek-erpRN = yes.
+mCodeTrg:chek-erpRN = g#db-num ne 0.
 if imode = {&select} then do:
 mCodeTrg:formLable(1, 1, "").  
 end.  
