@@ -435,6 +435,17 @@ define variable vss-description as character no-undo init "".
   "yes"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Сверка по транзакциям Яндекс'"
+  "'rep/g-yandex-rep.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 {gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Отчет для контроля возвратных операций'"

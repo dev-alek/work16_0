@@ -14,6 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 12/08/03
 
 */
+
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
@@ -26,6 +27,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
   end.
 &else  /*if subject file*/
 output stream stmxmlout close.
+
 run xml-cd-write-footer in this-procedure ( input {&cd-buffer}.pos-type, input v-xml-file-name-path
 &if "{&subject}"="db-object" &then
     , input (if {&cd-buffer}.pos-type = {&cd-type-IBM-XML}
@@ -35,6 +37,7 @@ run xml-cd-write-footer in this-procedure ( input {&cd-buffer}.pos-type, input v
     , input {&xml-cd-doc-name}
 &endif
 ).
+
 run write-log-and-file in p-log-handle (
       input 1
     , input log-file-name
@@ -53,7 +56,7 @@ or
   ({&cd-buffer}.pos-type = {&cd-type-ibm-xml}
 or ({&cd-buffer}.pos-type = {&cd-type-Autotank}
   and
-  {&cd-buffer}.autonomy = integer({&cd-self}))
+  {&cd-buffer}.autonomy = integer({&cd-manager}))
   /*ibm-xml тоже хочет нам слать ответы*/
   )))
 then do:
@@ -104,6 +107,7 @@ then do:
   or ({&cd-buffer}.pos-type = {&cd-type-autotank}
   and {&cd-buffer}.autonomy = integer({&cd-manager}))
   then do:
+      
     run str/post-xml.p
       (
        input parparentproc
@@ -151,6 +155,7 @@ then do:
     find first ub.shop no-lock where
               ub.shop.obj-code = {&cd-buffer}.obj-code.
   end.
+  
   if
   &if "{&subject}" ="file" &then
   true

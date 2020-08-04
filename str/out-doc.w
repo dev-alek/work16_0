@@ -7312,8 +7312,8 @@ if fnc = "enable" then do:
          t-doc.status_  = {&wayb}                         and
          not t-doc.flag_                                  and
          varlog = yes                                     and
-         lookup( string(t-doc.reason-code), v-reasons-for-return) = 0
-         and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+         (lookup( string(t-doc.reason-code), v-reasons-for-return) = 0
+         and t-doc.ext-doc-type <> {&TDEDT_Ras_Vnesh})
          then do:
            enable b-cur with frame {&frame-name}.
          end.

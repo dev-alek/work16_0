@@ -27,7 +27,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
   {str\utd-err.i class}
   {str\utd.i class}
-  {utl\gtin.i class}
   
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
@@ -262,9 +261,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   tt-mark.mark = utd-marking-lines.mark .
                   release utd-marking-lines.
                end.
-               if utd-lines.Quantity ne vqnty
-               then                        
-                  undo, throw new Progress.Lang.AppError(substitute("Количество &2 по линии &1 не совпадает с количеством &3 по маркам ",utd-lines.LineNum,utd-lines.Quantity,vqnty)).
+               if     v-gds-gd:stts-desc eq ?
+                  and utd-lines.Quantity ne vqnty
+               then
+                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity) + {&delim-par} + string(vqnty)).                        
+                  
    
                for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                             and utd-marking-lines.doc-id  eq utd-lines.doc-id

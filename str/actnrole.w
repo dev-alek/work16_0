@@ -830,20 +830,20 @@ ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
                     action-group.action-group-name,
                     action-item.action-item-name
                     ).
-                put stream outstr-html unformatted
+
+            end.
+    
+            get next browse-action-role.
+        end.
+        run waitfram-hide in this-procedure. 
+                  put stream outstr-html unformatted
                     substitute(
        
                     '</tbody>
       </body>
       </html>',chr(123), chr(125)
       
-                    ).
-            end.
-     
-            get next browse-action-role.
-        end.
-        run waitfram-hide in this-procedure. 
-  
+                    ). 
     
         output stream OutStr-html close.  
 
@@ -1642,21 +1642,29 @@ PROCEDURE change-items :
         IF v-changed then 
         do:
             /* проверяем удаление прав */
-            for each  buf_action-role-item
-                where buf_action-role-item.db-num            = p-db-num
-                and buf_action-role-item.action-head-code = p-action-head-code
-                and buf_action-role-item.action-role-code = p-action-role-code
-                exclusive-lock
-                on error undo, return error
-                :
-                find first temp_actntw_itemsSelected
-                    where temp_actntw_itemsSelected.itmExtKey = string( buf_action-role-item.action-item-code  )
-                    no-error.
-                if not available temp_actntw_itemsSelected
-                    then 
-                do:
-                    delete buf_action-role-item.
-                end.
+            for each  buf_action-item
+              where buf_action-item.action-head-code      = p-action-head-code
+              and buf_action-item.action-item-context   = p-action-role-context
+              no-lock
+              on error undo, return error
+              :
+              for each  buf_action-role-item
+                  where buf_action-role-item.db-num            = p-db-num
+                  and buf_action-role-item.action-head-code = p-action-head-code
+                  and buf_action-role-item.action-role-code = p-action-role-code
+                  and buf_action-role-item.action-item-code = buf_action-item.action-item-code
+                  exclusive-lock
+                  on error undo, return error
+                  :
+                  find first temp_actntw_itemsSelected
+                      where temp_actntw_itemsSelected.itmExtKey = string( buf_action-role-item.action-item-code  )
+                      no-error.
+                  if not available temp_actntw_itemsSelected
+                      then 
+                  do:
+                      delete buf_action-role-item.
+                  end.
+              end.
             end.
 
             /* проверяем установку прав */

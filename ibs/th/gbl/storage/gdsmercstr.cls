@@ -13,7 +13,7 @@ $Archive$
 Дата создания: 04/23/18
 Author: Morozov Alexandr
 Creation date: 04/23/18
-
+ 
 
 */
 
@@ -105,7 +105,7 @@ class ibs.th.gbl.storage.gdsmercstr:
   
   method public class gdsmercsubs getgdsmercs (input inGdsCode as integer ):
     
-    define variable gdsmercsObj as class gdsmercsubs.
+    define variable gdsmercsObj as class gdsmercsubs no-undo .
     gdsmercsObj = new gdsmercsubs ().
     for each buf_gdsmerc where buf_gdsmerc.gds-code = inGdsCode:
       gdsmercsObj:AddItem(getDataStorage (buffer buf_gdsmerc)).
@@ -116,7 +116,7 @@ class ibs.th.gbl.storage.gdsmercstr:
   
     method public class gdsmercsubs getguidmercs (input inGUID as character ):
     
-    define variable gdsmercsObj as class gdsmercsubs.
+    define variable gdsmercsObj as class gdsmercsubs no-undo .
     gdsmercsObj = new gdsmercsubs ().
     for each buf_gdsmerc where buf_gdsmerc.GUID = inGUID:
       gdsmercsObj:AddItem(getDataStorage (buffer buf_gdsmerc)).
@@ -143,7 +143,7 @@ class ibs.th.gbl.storage.gdsmercstr:
   
   method private class gdsmercsub getDataStorage ( buffer inbf_gdsmerc for ub.gds-mercury ):
     
-    define variable gdsmercObj  as class gdsmercsub.
+    define variable gdsmercObj  as class gdsmercsub no-undo .
       
     gdsmercObj = new gdsmercsub ().
     

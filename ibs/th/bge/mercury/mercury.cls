@@ -15,7 +15,7 @@ Creation date: 05/03/18
 
 
 */
-
+ 
 using Progress.Lang.*.
 using ibs.th.str.gds.*.
 using ibs.th.str.mercury.*.
@@ -68,6 +68,10 @@ class ibs.th.bge.mercury.mercury:
     get.
     private set.
     
+  define property proxy-ssl as logical no-undo init ?
+    get.
+    private set.  
+    
   define property esysId as integer no-undo init ?
     get.
     private set.
@@ -96,10 +100,10 @@ class ibs.th.bge.mercury.mercury:
     get.
     protected set.
     
-  define variable vsds as class vsdsubs .
-  define variable vsdStorage as class vsdtostorage .
-  define variable gdsMercsubsObj as class gdsmercsubs.
-  define variable gdsmercstrObj as class gdsmercstr.
+  define variable vsds as class vsdsubs no-undo .
+  define variable vsdStorage as class vsdtostorage no-undo .
+  define variable gdsMercsubsObj as class gdsmercsubs no-undo .
+  define variable gdsmercstrObj as class gdsmercstr no-undo .
   
   
   define buffer buf_ext-classif        for ub.ext-classif.
@@ -120,7 +124,8 @@ class ibs.th.bge.mercury.mercury:
                               inServer as int,
                               inProxyAddr as char,
                               inProxyLogin as char,
-                              inProxyPswd as char):
+                              inProxyPswd as char,
+                              inProxySSL as logical):
     
     assign
       apiKey   = inApiKey
@@ -132,6 +137,7 @@ class ibs.th.bge.mercury.mercury:
       proxy-addr = inProxyAddr
       proxy-login = inProxyLogin
       proxy-pswd = inProxyPswd
+      proxy-ssl = inProxySSL
     .
     if inServer = 1 then server_ = "https://api2.vetrf.ru:8002" .
     if inServer = 2 then server_ = "https://api.vetrf.ru" .
@@ -139,6 +145,15 @@ class ibs.th.bge.mercury.mercury:
 		vsdStat = new vsdstatustype () .
 		
   end constructor.
+  
+  destructor public mercury ( ):
+    
+    delete object vsds no-error .
+    delete object vsdStorage no-error .
+    delete object gdsMercsubsObj no-error .
+    delete object gdsmercstrObj no-error .
+    
+  end destructor.
   
   method public void GetVetDocumentByUuid
   (
@@ -199,8 +214,15 @@ class ibs.th.bge.mercury.mercury:
 
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
-      cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+      if proxy-ssl
+      then do :
+        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr).
+      end.
+      else do :
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+      end.
     end.
     else do :
       cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
@@ -237,13 +259,14 @@ class ibs.th.bge.mercury.mercury:
     define variable v-obj-ent-guid as character no-undo .
     
     define variable rd as integer no-undo .
+    define variable bi as integer no-undo .
     define variable v-util-qnty as decimal no-undo .
     define variable v-return-qnty as decimal no-undo .
     define variable jj as integer no-undo .
     define variable v-is-return as logical no-undo .
     
-    define variable unitsMercObj as class unitsubs.
-    define variable unitMercStr as class unitmercstr.
+    define variable unitsMercObj as class unitsubs no-undo .
+    define variable unitMercStr as class unitmercstr no-undo .
     
     define buffer buf_goods for ub.goods .
     define buffer buf_units-attr for ub.units-attr .
@@ -259,6 +282,9 @@ class ibs.th.bge.mercury.mercury:
       
     end.
     
+    v-obj-be-guid = inVsdSubs:VsdObjCurr:ObjBeGuid no-error .
+    v-obj-ent-guid = inVsdSubs:VsdObjCurr:ObjEntGuid no-error .
+    
     find first buf_ext-classif no-lock 
         where buf_ext-classif.classif-subject = {&table_clients}
           and buf_ext-classif.classif-name = {&extclass_clients_esys}
@@ -266,9 +292,14 @@ class ibs.th.bge.mercury.mercury:
           and buf_ext-classif.key#_one = buf_ext-system.esys-id
           and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + inVsdSubs:VsdObjCurr:ObjType + {&delim-key} + string (inVsdSubs:VsdObjCurr:ObjCode)
           no-error. 
-    v-obj-be-guid = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
-    v-obj-ent-guid = entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    if v-obj-be-guid = "" or v-obj-be-guid = ? then      
+      v-obj-be-guid = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    if v-obj-ent-guid = "" or v-obj-ent-guid = ? then
+      v-obj-ent-guid = entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
     if v-obj-be-guid = "" or v-obj-be-guid = ? then v-obj-be-guid = issuerId .
+    
+    v-cli-be-guid = inVsdSubs:VsdObjCurr:CliBeGuid no-error .
+    v-cli-ent-guid = inVsdSubs:VsdObjCurr:CliEntGuid no-error .
     
     find first buf_ext-classif no-lock 
         where buf_ext-classif.classif-subject = {&table_clients}
@@ -277,8 +308,10 @@ class ibs.th.bge.mercury.mercury:
           and buf_ext-classif.key#_one = buf_ext-system.esys-id
           and buf_ext-classif.uniq-key-rec = {&table_clients} + {&delim-key} + inVsdSubs:VsdObjCurr:CliType + {&delim-key} + string (inVsdSubs:VsdObjCurr:CliCode)
           no-error. 
-    v-cli-be-guid = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
-    v-cli-ent-guid = entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    if v-cli-be-guid = "" or v-cli-be-guid = ? then
+      v-cli-be-guid = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
+    if v-cli-ent-guid = "" or v-cli-ent-guid = ? then  
+      v-cli-ent-guid = entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
     if (v-cli-be-guid = "" or v-cli-be-guid = ?) and inVsdSubs:VsdObjCurr:CliType = 'маг' then v-cli-be-guid = issuerId .
     
     find first buf_goods no-lock where buf_goods.gds-code = inVsdSubs:VsdObjCurr:GdsCode .
@@ -449,7 +482,9 @@ class ibs.th.bge.mercury.mercury:
                       sw:end-element ("vd:secondDate") .  
                     end.
                     sw:end-element ("vd:expiryDate") .
-                    sw:write-data-element ("vd:batchID", inVsdSubs:VsdObjCurr:NumPart) .
+                    do bi = 2 to num-entries(inVsdSubs:VsdObjCurr:TTNtype, chr(4)) :
+                      sw:write-data-element ("vd:batchID", entry(bi, inVsdSubs:VsdObjCurr:NumPart, chr(4))) .
+                    end .
                     sw:write-data-element ("vd:perishable", inVsdSubs:VsdObjCurr:Perishable) .
                     sw:start-element ("vd:origin") .
                       sw:start-element ("vd:country") .
@@ -495,6 +530,10 @@ class ibs.th.bge.mercury.mercury:
                   sw:start-element ("vd:accompanyingForms") .
                     do rd = 2 to num-entries(inVsdSubs:VsdObjCurr:TTNtype, chr(4)) :
                       if entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "1"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "2"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "3"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "4"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "5"
                       then do :
                         sw:start-element ("vd:waybill") .
                           if  entry(rd, inVsdSubs:VsdObjCurr:TTNissueSeries, chr(4)) <> ""
@@ -623,7 +662,9 @@ class ibs.th.bge.mercury.mercury:
                       sw:end-element ("vd:secondDate") .  
                     end.  
                     sw:end-element ("vd:expiryDate") .
-                    sw:write-data-element ("vd:batchID", inVsdSubs:VsdObjCurr:NumPart) .
+                    do bi = 2 to num-entries(inVsdSubs:VsdObjCurr:TTNtype, chr(4)) :
+                      sw:write-data-element ("vd:batchID", entry(bi, inVsdSubs:VsdObjCurr:NumPart, chr(4))) .
+                    end .
                     sw:write-data-element ("vd:perishable", inVsdSubs:VsdObjCurr:Perishable) .
                     sw:start-element ("vd:origin") .
                       sw:start-element ("vd:country") .
@@ -668,6 +709,10 @@ class ibs.th.bge.mercury.mercury:
                   sw:start-element ("vd:accompanyingForms") .
                     do rd = 2 to num-entries(inVsdSubs:VsdObjCurr:TTNtype, chr(4)) :
                       if entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "1"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "2"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "3"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "4"
+                      or entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) = "5"
                       then do :
                         sw:start-element ("vd:waybill") .
                           if  entry(rd, inVsdSubs:VsdObjCurr:TTNissueSeries, chr(4)) <> ""
@@ -691,7 +736,11 @@ class ibs.th.bge.mercury.mercury:
                       sw:end-element ("vd:authentication") .
                     sw:end-element ("vd:vetCertificate") .
                     do rd = 2 to num-entries(inVsdSubs:VsdObjCurr:TTNtype, chr(4)) :
-                      if entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) <> "1"
+                      if  entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) <> "1"
+                      and entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) <> "2"
+                      and entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) <> "3"
+                      and entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) <> "4"
+                      and entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4)) <> "5"
                       then do :
                         sw:start-element ("vd:relatedDocument") .
                           if  entry(rd, inVsdSubs:VsdObjCurr:TTNissueSeries, chr(4)) <> ""
@@ -710,6 +759,8 @@ class ibs.th.bge.mercury.mercury:
               if inVsdSubs:VsdObjCurr:MsgErr = "MERC14561"
               or inVsdSubs:VsdObjCurr:MsgErr = "MERC14562"
               or inVsdSubs:VsdObjCurr:MsgErr = "MERC14563"
+              or inVsdSubs:VsdObjCurr:MsgErr = "MERC14258"
+              or inVsdSubs:VsdObjCurr:MsgErr = "MERC14537"
               then do :
                 sw:start-element ("merc:discrepancyReport") .
                   sw:write-data-element ("vd:description", inVsdSubs:VsdObjCurr:MsgErr ) .
@@ -726,10 +777,22 @@ class ibs.th.bge.mercury.mercury:
     
     delete object sw.
     
+    delete object gdsMercsubsObj no-error .
+    delete object gdsmercstrObj no-error .
+    delete object unitMercStr no-error.
+    delete object unitsMercObj no-error.
+    
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
-      cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+      if proxy-ssl
+      then do :
+        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr).
+      end.
+      else do :
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+      end.
     end.
     else do :
       cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
@@ -742,11 +805,6 @@ class ibs.th.bge.mercury.mercury:
     p-applicationId = applicationId .
     p-Status_ = Status_ .
     p-Msg = Msg .
-    
-    delete object gdsMercsubsObj no-error .
-    delete object gdsmercstrObj no-error .
-    delete object unitMercStr no-error.
-    delete object unitsMercObj no-error.
     
     pause 0.2 .
     
@@ -763,11 +821,11 @@ class ibs.th.bge.mercury.mercury:
    output p-Msg  as char
   ) :
     
-    define variable gdsMercsubsObj as class gdsmercsubs.
-    define variable gdsMercsubObj as class gdsmercsub.
-    define variable gdsMercstrObj as class gdsmercstr.
-    define variable unitsMercObj as class unitsubs.
-    define variable unitMercStr as class unitmercstr.
+    define variable gdsMercsubsObj as class gdsmercsubs no-undo .
+    define variable gdsMercsubObj as class gdsmercsub no-undo .
+    define variable gdsMercstrObj as class gdsmercstr no-undo .
+    define variable unitsMercObj as class unitsubs no-undo .
+    define variable unitMercStr as class unitmercstr no-undo .
     
     define variable is-err as logical no-undo .
     define variable v-found-unit as logical no-undo .
@@ -806,6 +864,7 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы товаров не совпадают." .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .
       end .
       if not valid-object(gdsMercsubsObj:GdsMercsubsCurr)
@@ -813,12 +872,14 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "В ВСД товар с GUID'ом. В TH товар не синхронизирован с ФГИС Меркурий (нет GUID'а)" .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .
       end .
       if issuerId <> vsds:VsdObjCurr:ObjBeGuid
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы хоз. субъекта получателя не совпадают." .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       
@@ -840,6 +901,7 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы предприятия получателя не совпадают." .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.    
       v-found-cli = no .
@@ -861,6 +923,7 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы хоз. субъекта и/или предприятия отправителя не совпадают." .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       
@@ -893,6 +956,7 @@ class ibs.th.bge.mercury.mercury:
       if not v-found-unit
       then do :
         Msg = Msg + chr(10) + "Не найдено соответствие единицы измерения из ВСД с единицами измерения TH." .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true . 
       end.
       if v-calc-qnty > (vsds:VsdObjCurr:Qnty * 1.05)
@@ -900,6 +964,7 @@ class ibs.th.bge.mercury.mercury:
       and v-found-unit = true
       then do :
         Msg = Msg + chr(10) + "Документарное количество в TH превосходит количество в ВСД более чем на 5%." .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       if v-calc-qnty < (vsds:VsdObjCurr:Qnty * 0.95)
@@ -907,6 +972,7 @@ class ibs.th.bge.mercury.mercury:
       and v-found-unit = true
       then do :
         Msg = Msg + chr(10) + "Документарное количество в TH меньше количества в ВСД более чем на 5%." .
+        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       
@@ -990,10 +1056,13 @@ class ibs.th.bge.mercury.mercury:
           if Msg = "MERC14561"
           or Msg = "MERC14562"
           or Msg = "MERC14563"
+          or Msg = "MERC14258"
+          or Msg = "MERC14537"
           then
             vsds:VsdObjCurr:Status_ = vsdStat:IsNeedUtilized .
           else
             vsds:VsdObjCurr:Status_ = vsdStat:IsErrUtilized .
+          
           vsds:VsdObjCurr:MsgErr = Msg .
           vsdStorage:updateDB(vsds:VsdObjCurr) .
         end.
@@ -1044,8 +1113,15 @@ class ibs.th.bge.mercury.mercury:
 
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
-      cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+      if proxy-ssl
+      then do :
+        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                        search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_, proxy-addr).
+      end.
+      else do :
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+                        search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+      end.
     end.
     else do :
       cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
@@ -1057,11 +1133,10 @@ class ibs.th.bge.mercury.mercury:
     
   end method .
   
-  method public logical ParseXML 
+  method public void ParseXML 
   (
     input p-inFileName as character
   ):
-    define variable lresult  as logical no-undo.
     define variable hHandler as handle no-undo.
     define variable hParser  as handle no-undo.
     
@@ -1096,7 +1171,6 @@ class ibs.th.bge.mercury.mercury:
     delete object hParser.
     delete procedure hHandler.
     
-    return lresult.
   end method.
 
 end class.

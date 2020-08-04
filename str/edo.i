@@ -10,20 +10,26 @@ define variable marpar-type as character no-undo.
 define variable mPublishHand as handle  no-undo.
 define variable mFlaftest as logical no-undo.
 /*define variable mdiadoc as logical no-undo.*/
-define temp-table tt-utd-mark like utd-marking-lines
-  field side as character.
+
    create "Diadoc.DiadocClient":U mDiadocApi no-error.
 /*   mdiadoc = yes.*/
 {gbl\objsrv.i}
 define variable mySeqUtd as int64 no-undo init ?.
-   
+if mDiadocApi eq ?
+then do:
+   if  log-manager:logfile-name ne ?
+   then
+      log-manager:write-message("Нетбиблиотеки Diadoc или не удалось создать объект Diadoc.DiadocClient", "EDOError"). 
+end.
+
 &if "{1}" = "class"
 &then
 &else
 { gbl/key-rec.i }
+    
 &endif
 {cmp/str-glbl.i {1}}
-{utl/gtin.i {1}}
+
 {str/utd-err.i {1} &*}
 {str/utd.i {1}}
 { gbl/attr-lib.i {1}}
@@ -39,11 +45,29 @@ function PutMes returns character
    if valid-handle(mPublishHand)
    then
       publish "PutErr" from mPublishHand (idext).
-   else
+   else do:
       if idext begins "error"
       then
-         message idext
+         message substring (idext,6)
             view-as alert-box.
+      output to "diadoc_user.log" append.
+      put unformatted now " " idext skip.
+      output close. 
+   end.
+end.
+
+&if "{1}" = "class"
+&then
+method public logical  chekStop
+&else
+function chekStop returns logical
+&endif
+( ):
+   define variable oStop as logical no-undo.
+   if valid-handle(mPublishHand)
+   then
+      publish "StopProc" from mPublishHand (output oStop).
+   return oStop.
 end.
 
 define temp-table tt-pack no-undo
@@ -77,21 +101,41 @@ function  getExtSys returns integer
 ():
    define buffer ext-system      for ext-system.
    define buffer ext-system-attr for ext-system-attr.
-   block-sys:
+   Mext-sys = ?.
+   block-sys-obj:
    for each ext-system where ext-system.esys-type eq {&bef-openxml-type-is_diadoc}
                          and ext-system.db-num    eq mdb-num-local
    no-lock:
        find first ext-system-attr where ext-system-attr.db-num  eq ext-system.db-num
                                     and ext-system-attr.esys-id eq ext-system.esys-id
-                                    and ext-system-attr.esya-attr-code eq {&attr-esys-host-code}
+                                    and ext-system-attr.esya-attr-code eq {&attr-esys-obj}
                                     
        no-lock no-error.
        if     available ext-system-attr
-          and           ext-system-attr.esya-attr-value eq string(v-cntxt-host-code-obj)
+          and           ext-system-attr.esya-attr-value eq v-cntxt-obj-type + string(v-cntxt-obj-code)
        then do:
           Mext-sys = ext-system-attr.esys-id.
-          leave block-sys.
+          leave block-sys-obj.
        end.                            
+   end.
+   if Mext-sys eq ? 
+   then do:
+      block-sys-host:
+      for each ext-system where ext-system.esys-type eq {&bef-openxml-type-is_diadoc}
+                            and ext-system.db-num    eq mdb-num-local
+      no-lock:
+          find first ext-system-attr where ext-system-attr.db-num  eq ext-system.db-num
+                                       and ext-system-attr.esys-id eq ext-system.esys-id
+                                       and ext-system-attr.esya-attr-code eq {&attr-esys-host-code}
+                                       
+          no-lock no-error.
+          if     available ext-system-attr
+             and           ext-system-attr.esya-attr-value eq string(v-cntxt-host-code-obj)
+          then do:
+             Mext-sys = ext-system-attr.esys-id.
+             leave block-sys-host.
+          end.                            
+      end.
    end.
    return Mext-sys.
 end.  
@@ -106,22 +150,27 @@ function  getExtAttr returns character
    define variable oValue as character no-undo.
    define variable vtype as character no-undo.
    define buffer ext-system for ext-system.
-   if Mext-sys eq ?
-   then
-      getExtSys ().  
-   find first ext-system no-lock where ext-system.db-num  eq mdb-num-local
-                                   and ext-system.esys-id eq Mext-sys no-error.
-   if available ext-system
+   get-key-value section "ProxyServ" key icode value oValue.
+   if oValue eq ?
    then do:
-   &scop proc-name ext-system-attr-value
-    {&run_proc_attr-lib}
-      (ext-system.esys-id,
-       mdb-num-local,
-       icode,
-       output oValue,
-       output vtype) no-error.
-    end.
-    
+   
+      if Mext-sys eq ?
+      then
+         getExtSys ().  
+      find first ext-system no-lock where ext-system.db-num  eq mdb-num-local
+                                      and ext-system.esys-id eq Mext-sys no-error.
+      if available ext-system
+      then do:
+      &scop proc-name ext-system-attr-value
+       {&run_proc_attr-lib}
+         (ext-system.esys-id,
+          mdb-num-local,
+          icode,
+          output oValue,
+          output vtype) no-error.
+       end.
+   end.
+  
    return oValue.
 end.
 
@@ -797,6 +846,7 @@ procedure SendAccept:
          vBuyerTitle:OperationContent =  vOperationContenttext. /* "содержание операции".*/
          vBuyerTitle:AcceptanceDate   = vdate. /*"Дата, чтение/запись - дата принятия товаров (результатов выполненных работ) или имущественных прав (подтверждения факта оказания услуг)" */
          /* mContentItem:Comment = "Норм".*/
+         getdesc(vBuyerTitle).
          getdesc(vBuyerTitle:Signers).
          
          vSigner = vBuyerTitle:Signers:additems().
@@ -848,6 +898,7 @@ procedure SendAccept:
         
          vSigner:SignerReference:CertificateThumbprint = mDiadocConnection:Certificate:Thumbprint.
          vSigner:SignerReference:boxid = iOrganizationId.
+         getdesc(vSigner:SignerReference).
       end.
    end.
    
@@ -945,6 +996,7 @@ procedure send:
    define variable Vmes as longchar  no-undo.
    define variable vOrganizationid as character no-undo.
    define variable vDocumentid as character no-undo.
+   define variable vi as integer no-undo.
    if iDocument ne ? 
    then do:
       case iTypeAnswer:
@@ -958,6 +1010,7 @@ procedure send:
          when "подписать товар не принят"  then vTypeAnswer =  "AcceptDocumentNotAccepted".
          otherwise vTypeAnswer = iTypeAnswer .
       end case.
+      
       vTypeAnswer_orig = vTypeAnswer.
       if    vTypeAnswer =  "AcceptDocumentWithDisc"
          or vTypeAnswer =  "AcceptDocumentNotAccepted"
@@ -992,27 +1045,34 @@ procedure send:
             then 
                icomment = "".  
                    
-         Vmes = GetErrForUtd(utd.db-num,utd.doc-id,?) .
-         Vmes = GetErrComText(icomment,Vmes).
-         if mFlaftest
+            Vmes = GetErrForUtd(utd.db-num,utd.doc-id,?) .
+            Vmes = GetErrComText(icomment,Vmes).
+            if mFlaftest
+            then do:
+               output to "SendAnswer.txt" .
+               put unformatted string(Vmes).
+               output close.
+               message "сформирован файл " search("SendAnswer.txt")
+               view-as alert-box.
+               return error "ничего не отправляем".
+            end.
+            else  
+               SendAnswer(vReplyTask,iDocument:OrganizationId, iTypeAnswer,Vmes) no-error.
+            if error-status:error
+            then
+               return error "".
+            end.
+         end.
+         if not mFlaftest
          then do:
-            output to "SendAnswer.txt" .
-            put unformatted string(Vmes).
-            output close.
-            message "сформирован файл " search("SendAnswer.txt")
-            view-as alert-box.
-            return error "ничего не отправляем".
+            vReplyTask:Send() no-error.
+            if error-status:num-messages > 0 then do:
+            do vi = 1 to error-status:num-messages:
+               PutMes(substitute("Error Ошибка при выполнение действия по документу &1 Ошибка: &2. ", vDocumentid ,error-status:get-message(vi))).
+               
+            end.
+            return error "Ошибка при выполнение дейстия с документом".
          end.
-         else  
-            SendAnswer(vReplyTask,iDocument:OrganizationId, iTypeAnswer,Vmes) no-error.
-         if error-status:error
-         then
-            return error "".
-         end.
-      end.
-      if not mFlaftest
-      then do:
-         vReplyTask:Send().
          /*do trans:
             find first utd where utd.DocumentExt     = vDocumentid
                              and utd.OrganizationExt = vOrganizationid
@@ -1157,423 +1217,30 @@ function GetFirstUTDinPack returns logical
    return ?.
 end.
 
-
-&if "{1}" = "class"
-&then
-method public logical CheckUcdForReturn
-&else
-function CheckUcdForReturn return logical 
-&endif
-(input idb-numUcd as integer,
- input idoc-idUcd as integer,
- input idb-numRet as integer,
- input idoc-idRet as integer  ):
-    for each utd-marking-lines where utd-marking-lines.db-num eq idb-numUcd
-                                 and utd-marking-lines.doc-id eq idoc-idUcd
-                                 and utd-marking-lines.doc-level eq 1
-    no-lock:
-       create tt-utd-mark.
-       buffer-copy utd-marking-lines to tt-utd-mark
-       assign
-          tt-utd-mark.side = "+"
-       .
-    end.
-    for each utd-marking-lines where utd-marking-lines.db-num eq idb-numRet
-                                 and utd-marking-lines.doc-id eq idoc-idRet
-                                 and utd-marking-lines.doc-level eq 1
-    no-lock:
-       find first tt-utd-mark where tt-utd-mark.mark eq utd-marking-lines.mark
-       no-lock no-error.
-       if available tt-utd-mark
-       then
-          tt-utd-mark.side = "".
-       else do:
-          create tt-utd-mark.
-          buffer-copy utd-marking-lines to tt-utd-mark
-          assign
-             tt-utd-mark.side = "-"
-          .
-       end.
-    end.
-    for each tt-utd-mark where  tt-utd-mark.side ne ""
-    no-lock:
-       AddUtdErrForTab(utd.db-num, utd.doc-id, "utd-marking-lines", buffer tt-utd-mark:handle, "UCDСompar", "NotMark" + tt-utd-mark.side, tt-utd-mark.mark).
-    end.
-end.
-
-&if "{1}" = "class"
-&then
-method public logical SaturateAndCheckUTD
-&else
-function SaturateAndCheckUTD return logical 
-&endif
-(input idb-num as integer,
- input idoc-id as integer  ):
-   define buffer clients-attr          for clients-attr.
-   define buffer clients               for clients.
-   define buffer Utd                   for Utd.
-   define buffer utd_ret               for ub.utd.
-   define buffer utd-lines             for utd-lines.
-   define buffer buf_utd-lines         for utd-lines.
-   define buffer marking               for marking.
-   define buffer marking-lines         for marking-lines.
-   define buffer Buf_utd-marking-lines for utd-marking-lines.
-   define buffer contract              for contract.
-   define buffer contract-attr         for contract-attr. 
-   define variable vError as character no-undo.
-   define variable vGdsCode as integer no-undo.
-   
-   define variable vcli-type as character no-undo.
-   define variable vcli-code as integer no-undo.
-   define variable vhost-code as integer no-undo.
-   define variable vcontract-code as integer no-undo.
-   define variable vobj-type as character no-undo.
-   define variable vobj-code as integer no-undo.
-   
-   define variable volddb-num as integer no-undo.
-   define variable volddoc-id as integer no-undo.
-   define variable vMark as logical no-undo.
-   define variable VUcd as logical no-undo.
-   
-   find first Utd where utd.db-num eq idb-num
-                    and utd.doc-id eq idoc-id
-   no-lock no-error. 
-   if available Utd
-   then do:
-      VUcd = utd.EDocType eq objSrv:Env:Utd:EDocType:UCD:KeyIntDB.
-      ClearUtdErr(utd.db-num,utd.doc-id,"loadUtd").
-       
-      do:
-         
-         block-line:
-         for each utd-lines where utd-lines.db-num eq utd.db-num
-                              and utd-lines.doc-id eq utd.doc-id
-         no-lock:
-            if not VUcd
-            then do:
-               find first utd-marking-lines 
-                    where utd-marking-lines.db-num  = utd-lines.db-num 
-                      and utd-marking-lines.doc-id  = utd-lines.doc-id
-                      and utd-marking-lines.LineNum = utd-lines.LineNum
-               no-lock no-error.
-               if not available utd-marking-lines
-               then do:
-                  AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum)).
-                  next block-line.
-               end.
-            end.
-            vGdsCode = ?.
-            define variable vqnty as integer no-undo.
-            vqnty = 0.
-            block-mark:
-            for each utd-marking-lines 
-               where utd-marking-lines.db-num  = utd-lines.db-num 
-                 and utd-marking-lines.doc-id  = utd-lines.doc-id
-                 and utd-marking-lines.LineNum = utd-lines.LineNum
-            no-lock:
-               vMark = yes.
-               find first marking where marking.mark eq utd-marking-lines.mark
-               
-               no-lock no-error.
-               if not available marking
-               then do:
-                  AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","NotMark",utd-marking-lines.mark).
-                  next block-mark.
-               end.
-               if utd-marking-lines.doc-level eq 1
-               then
-                  vqnty = vqnty + marking.box-qnty. 
-               if    marking.gds-code eq 0 
-                  or marking.gds-code eq ?
-                  or marking.sts eq 0
-                  or  marking.sts eq ?
-               then do:
-                  find first marking where marking.mark eq utd-marking-lines.mark
-                  exclusive-lock no-error.
-                  marking.gds-ext-id           = getGtinByDM(marking.mark).
-                  marking.gds-code             = GetGdsCodeByGtin(marking.gds-ext-id).
-                  
-                  if    marking.gds-ext-id eq ""
-                     or marking.gds-ext-id eq ?
-                  then do:
-                     marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB.
-                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","NoGtinForMark",string(utd-lines.LineNum ) + {&delim-par} + marking.mark).
-                  end.
-                  else if    marking.gds-code eq 0
-                          or marking.gds-code eq ?
-                  then
-                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","NoBarcodForGtin",string(utd-lines.LineNum ) + {&delim-par} + marking.gds-ext-id).
-                  else if     marking.sts eq 0
-                          or  marking.sts eq ?
-                  then
-                     marking.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB. 
-               end.
-               if    utd-marking-lines.gds-code eq 0 
-                  or utd-marking-lines.gds-code eq ?
-                  or utd-marking-lines.sts ne marking.sts
-               then do:
-                  find first buf_utd-marking-lines 
-                       where buf_utd-marking-lines.db-num   = utd-marking-lines.db-num 
-                         and buf_utd-marking-lines.doc-id   = utd-marking-lines.doc-id
-                         and buf_utd-marking-lines.LineNum  = utd-marking-lines.LineNum
-                         and buf_utd-marking-lines.mark     = utd-marking-lines.mark
-                  exclusive-lock no-error.
-                  if available buf_utd-marking-lines
-                  then do:
-                     buf_utd-marking-lines.gds-code = marking.gds-code.
-/*                     buf_utd-marking-lines.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.*/
-                  end. 
-               end.
-               
-               if vGdsCode eq ?
-               then
-                  vGdsCode = marking.gds-code.
-                 
-               if vGdsCode ne marking.gds-code
-               then do:
-                  vGdsCode = -1.
-                  leave block-mark.
-               end.
-                
-            end.
-            if      not vucd
-                and utd-lines.Quantity ne vqnty
-               
-            then                        
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity) + {&delim-par} + string(vqnty)).
-   
-            if  vGdsCode = -1
-            then do:
-               vGdsCode = ?.
-               
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","MultGtinForLine",string(utd-lines.LineNum )).
-   /*            vError = vError + "," + "К линии " + string(utd-lines.LineNum) + " привязаны марки от разных товаров." no-error.*/
-               leave block-line.
-            end.
-            if utd-lines.gds-code ne vGdsCode
-            then do:
-               find first  buf_utd-lines where buf_utd-lines.db-num  eq utd-lines.db-num
-                                           and buf_utd-lines.doc-id  eq utd-lines.doc-id
-                                           and buf_utd-lines.LineNum eq utd-lines.LineNum
-               exclusive-lock no-error.
-               if available buf_utd-lines
-               then
-                  buf_utd-lines.gds-code = vGdsCode.
-               
-               release buf_utd-lines.
-            end.
-            if vGdsCode eq ? and utd-lines.gds-code eq ?
-               and not VUcd
-            then
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NoBarCodeForLine",string(utd-lines.LineNum )).
-                
-         end.
-         find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
-                                  and ext-classif.charkey_three eq utd.cli-FnsParticipantId
-         no-lock no-error.
-         if available ext-classif
-         then
-            assign 
-               vcli-type = ext-classif.CharKey_One
-               vcli-code = ext-classif.Key#_One
-            .
-         else do:
-            assign 
-              vcli-type = ?
-              vcli-code = ?
-            .
-            AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoSuppForId",utd.cli-FnsParticipantId ).
-   /*          vError = vError + "," + "не найден поставщик " + utd.FnsParticipantId-cli.*/
-         end.
-         find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
-                                  and ext-classif.charkey_three eq utd.obj-FnsParticipantId
-         no-lock no-error.
-         if available ext-classif
-         then do:
-            find first clients 
-                 where clients.obj-type   = ext-classif.CharKey_One
-                   and clients.obj-code   = ext-classif.Key#_One
-            no-lock no-error .
-            define variable vvvv as logical no-undo.
-            vvvv = can-find(first ub.sysconf where ub.sysconf.host-code = clients.obj-code).
-            if available clients
-            then
-               vhost-code = if can-find(first ub.sysconf where ub.sysconf.host-code = clients.obj-code) then clients.obj-code else ?.
-            else do:
-               vhost-code = ?.
-             
-   /*                vError = vError + "," + "не найдена фирма " + utd.FnsParticipantId-firm */
-            end.
-         end.
-         else do:
-            vhost-code = ?.
-            
-   /*            vError = vError + "," + "не найдена фирма " + utd.FnsParticipantId-firm*/
-         end.
-         find first contract  where contract.host-code eq vhost-code
-                                and contract.cli-type  eq vcli-type
-                                and contract.cli-code  eq vcli-code
-                                and contract.contract-prn-code eq Utd.BaseDocumentNumber
-         no-lock no-error.
-         define variable VContractEdo as logical no-undo init yes.
-         if available contract
-         then do:
-              /* договор Едо*/
-            for first contract-attr no-lock where contract-attr.host-code     = contract.host-code 
-                                              and contract-attr.contract-code = contract.contract-code 
-                                              and contract-attr.attr-code     = "contract-edi":
-                VContractEdo = logical (contract-attr.attr-value) .
-            end.
-            assign
-               
-               vcontract-code = contract.contract-code
-            .
-            if not VContractEdo
-            then
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoEdoDoc", Utd.BaseDocumentNumber).
-         end.
-         else do:
-            vcontract-code = ?.
-            
-   /*           vError = vError + "," + "не найдена договор " + utd.BaseDocumentNumber.*/
-         end.
-         find first clients-attr 
-              where clients-attr.attr-code  = {&attr-kpp} 
-                and clients-attr.obj-type   = {&shop}
-                and clients-attr.attr-value = utd.obj-kpp
-         no-lock no-error.
-         if     available clients
-            and clients.obj-type eq {&shop}
-         then do:
-            if     available clients-attr
-               and clients-attr.obj-code ne clients.obj-code
-            then
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoContForFirmId",(if utd.host-code eq ? then "?" else string (utd.host-code)) + {&delim-par} +  utd.BaseDocumentNumber).
-            assign 
-               vobj-type = clients.obj-type
-               vobj-code = clients.obj-code
-            .
-         end.
-         else if available clients-attr 
-         then do:
-            assign 
-               vobj-type = clients-attr.obj-type
-               vobj-code = clients-attr.obj-code
-            .
-         end.
-         else assign 
-               vobj-type = ?
-               vobj-code = ?
-            .
-         
-      end.
-      
-      
-      if not GetLastUTDinPackAft (utd.db-num, utd.doc-id, volddb-num, volddoc-id)
-      then do:
-         /*ClearUtdErr(utd.db-num,utd.doc-id,"loadUtd").*/
-         AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoLastDoc",string(utd.PackageId) + {&delim-par} + string(volddb-num) + {&delim-par} + string(volddoc-id)).
-      end.
-      define variable vdoc-code as character no-undo init ?.
-      if utd.EDocType              eq objSrv:Env:Utd:EDocType:returns:KeyIntDB
-      then do:
-         find first utd_ret where utd_ret.parentDocumentExt     eq utd.parentDocumentExt
-                              and utd_ret.parentOrganizationExt eq utd.parentOrganizationExt
-                              and utd_ret.EDocType              eq objSrv:Env:Utd:EDocType:returns:KeyIntDB
-         no-lock no-error.
-         if available utd_ret 
-         then do:
-            vdoc-code = utd_ret.doc-code.
-            CheckUcdForReturn(utd.db-num,utd.doc-id,utd_ret.db-num,utd_ret.doc-id).
-         end.
-         else
-            AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoAvailDocRet", string(utd.db-num) + {&delim-par} + string(utd.doc-id)). 
-      end.                
-   end.
-   
-  
-   find current utd exclusive-lock no-error.
-   if available utd 
-   then do:
-      assign
-         utd.cli-type      = vcli-type      when vcli-type      ne ?
-         utd.cli-code      = vcli-code      when vcli-type      ne ?
-         utd.host-code     = vhost-code     when vhost-code     ne ?
-         utd.contract-code = vcontract-code when vcontract-code ne ?
-         utd.obj-type      = vobj-type      when vobj-type      ne ?
-         utd.obj-code      = vobj-code      when vobj-code      ne ?
-         utd.doc-code      = vdoc-code      when vdoc-code      ne ?
-      .
-      if    utd.contract-code eq ?
-         or utd.contract-code eq 0
-      then
-         AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoContForFirmId",(if utd.host-code eq ? then "?" else string (utd.host-code)) + {&delim-par} +  utd.BaseDocumentNumber).
-      if utd.host-code eq ?
-         or utd.host-code eq 0
-      then
-         AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoFirmForId",if utd.obj-FnsParticipantId eq ? then "?" else utd.obj-FnsParticipantId ).
-      if utd.obj-code eq ?
-         or utd.obj-code eq 0
-      then 
-         AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoShopForKpp",utd.obj-kpp).
-   end.
-   vError = GetErrForUtdstr(utd.db-num,utd.doc-id,"loadUtd").
-   if vError eq ""
-   then do:
-      if utd.sts eq 0 or utd.sts eq ?
-      then
-         utd.sts = if VUcd
-                   then ObjSrv:Env:Utd:Sts:th:ConfirmedUcd:KeyIntDB
-                   else ObjSrv:Env:Utd:Sts:th:ReceivedFromSupplier:KeyIntDB.
-      if utd.sts = ObjSrv:Env:Utd:Sts:th:LoadError:KeyIntDB
-      then
-         utd.sts = ObjSrv:Env:Utd:Sts:th:ReceivedFromSupplier:KeyIntDB.
-      
-       
-      
-          
-/*      utd.AdditInfo = "".*/
-         
-   end.
-   else do:
-      if utd.sts ne ObjSrv:Env:Utd:Sts:th:CorrectionRequested:KeyIntDB
-      then 
-         utd.sts = ObjSrv:Env:Utd:Sts:th:LoadError:KeyIntDB.
-/*      utd.AdditInfo = vError.*/
-      
-   end.
-   if     utd.sts-edi  >= ObjSrv:Env:Utd:Sts:edi:StatChangLoanOnlyBeg
-      and utd.sts-edi  <= ObjSrv:Env:Utd:Sts:edi:StatChangLoanOnlyEnd
-   then
-      utd.sts-edi = ?.
-   else if     not vMark or not VContractEdo
-           and utd.sts-edi < ObjSrv:Env:Utd:Sts:edi:StatChangLoanOnlyBeg
-   then
-      utd.sts-edi = ObjSrv:Env:Utd:Sts:edi:AutoRejected:KeyIntDB.
-   release utd.
- 
-   return vError eq "".
-end.
-
 &if "{1}" = "class"
 &then
 method public logical CheckLoad
 &else
 function CheckLoad returns logical 
 &endif
-(iDocument as component-handle):
+(iDocument as component-handle,
+ output ohost-code as integer ,
+ output oObj-type  as character  ,
+ output oObj-code  as integer ):
    define variable vFlag as logical no-undo.
    
    define variable vDocumentChild as component-handle no-undo.
    define variable vContent as component-handle no-undo.
    define variable vConsignees as component-handle no-undo.
    
-   define variable vObj-type as character no-undo.
-   define variable vObj-code as integer no-undo.
+   oObj-type  = ?.
+   oObj-code  = ?.
+   ohost-code = ?.
    
    
    define buffer ext-classif   for ext-classif. 
    define buffer clients       for clients.
+   define buffer buf_clients   for clients.
    define buffer clients-attr  for clients-attr.
    if   iDocument:type eq "UniversalTransferDocument"
      or iDocument:type eq "UniversalTransferDocumentRevision"
@@ -1587,19 +1254,32 @@ function CheckLoad returns logical
          vOrganizationid = iDocument:OrganizationId.
          vDocumentid     = iDocument:DocumentId.
          find first utd where utd.DocumentExt     = vDocumentid
-                    and utd.OrganizationExt = vOrganizationid
+                          and utd.OrganizationExt = vOrganizationid
          no-lock no-error .
          if available utd
          then do:
             assign
-               vobj-type = utd.obj-type
-               vobj-code = utd.obj-code
+               Oobj-type = utd.obj-type
+               Oobj-code = utd.obj-code
+               ohost-code = utd.host-code.
             .
          end.
          vDocumentChild = iDocument:GetDynamicContent("Seller") no-error.
        
-         if (vobj-code ne 0 and vobj-code ne ?)
-         then vFlag = no. 
+         if    (Oobj-code  ne 0 and Oobj-code  ne ?
+            and ohost-code ne 0 and ohost-code ne ?)
+         then vFlag = no.
+         if    (Oobj-code  ne 0 and Oobj-code  ne ?
+            and (ohost-code eq 0 and ohost-code eq ?))
+         then do:
+             find first clients  where clients.obj-type   = Oobj-type
+                                   and clients.obj-code   = Oobj-code
+             no-lock no-error .
+             if available clients
+             then
+                ohost-code =  clients.host-code.
+             vFlag = no.
+         end.
          else if vDocumentChild ne ?
          then do:
             vContent = vDocumentChild:UniversalTransferDocumentWithHyphens no-error. /* табличная часть счета фактуры */
@@ -1644,40 +1324,63 @@ function CheckLoad returns logical
                no-lock no-error.
                if available ext-classif
                then do:
-                  find first clients 
-                    where clients.obj-type   = ext-classif.CharKey_One
-                      and clients.obj-code   = ext-classif.Key#_One
-                      and can-find(first ub.sysconf where ub.sysconf.host-code = clients.obj-code)
-                  no-lock no-error .
-                  if not available clients
-                  then do:
-                     PutMes(substitute("По &1 получатель  &2 не наша фирма." ,iDocument:DocumentNumber, vFnsParticipantId) ).
-                     return error no.
-                  end.
-                  find first clients-attr 
-                     where clients-attr.attr-code  = {&attr-kpp} 
-                       and clients-attr.obj-type   = {&shop}
-                       and clients-attr.attr-value = vkpp
-                  no-lock no-error.
-                     
-                  if     available clients
-                     and clients.obj-type eq {&shop}
+                  if ext-classif.CharKey_One eq {&shop}
                   then do:
                      assign 
-                        vobj-type = clients.obj-type
-                        vobj-code = clients.obj-code
-                     .
-                  end.
-                  else if available clients-attr 
-                  then do:
-                     assign 
-                        vobj-type = clients-attr.obj-type
-                        vobj-code = clients-attr.obj-code
-                     .
+                           oobj-type = ext-classif.CharKey_One
+                           oobj-code = ext-classif.Key#_One
+                        .
+                     find first clients 
+                       where clients.obj-type   = ext-classif.CharKey_One
+                         and clients.obj-code   = ext-classif.Key#_One
+                     no-lock no-error .
+                     if available clients
+                     then
+                        ohost-code =  clients.host-code.
                   end.
                   else do:
-                     PutMes(substitute("По &1 не найден объект по КПП &2." ,iDocument:DocumentNumber, vkpp )).
-                     vFlag = no.
+                     find first clients 
+                       where clients.obj-type   = ext-classif.CharKey_One
+                         and clients.obj-code   = ext-classif.Key#_One
+                         and can-find(first ub.sysconf where ub.sysconf.host-code = clients.obj-code)
+                     no-lock no-error .
+                     if not available clients
+                     then do:
+                        PutMes(substitute("По &1 получатель  &2 не наша фирма." ,iDocument:DocumentNumber, vFnsParticipantId) ).
+                        return no.
+                     end.
+                     ohost-code = ext-classif.Key#_One.
+                     block-cl:
+                     for each clients-attr 
+                        where clients-attr.attr-code  = {&attr-kpp} 
+                          and clients-attr.obj-type   = {&shop}
+                          and clients-attr.attr-value = vkpp
+                          and can-find(buf_clients where buf_clients.obj-type   = clients-attr.obj-type
+                                                     and buf_clients.obj-code   = clients-attr.obj-code
+                                                     and buf_clients.host-code  = ohost-code) 
+                     no-lock :
+                        leave block-cl.
+                     end.
+                     
+                     if     available clients
+                        and clients.obj-type eq {&shop}
+                     then do:
+                        assign 
+                           oobj-type = clients.obj-type
+                           oobj-code = clients.obj-code
+                        .
+                     end.
+                     else if available clients-attr 
+                     then do:
+                        assign 
+                           oobj-type = clients-attr.obj-type
+                           oobj-code = clients-attr.obj-code
+                        .
+                     end.
+                     else do:
+                        PutMes(substitute("По &1 не найден объект по КПП &2." ,iDocument:DocumentNumber, vkpp )).
+                        vFlag = yes.
+                     end.
                   end.
                end.
                else do:
@@ -1698,6 +1401,12 @@ function CheckLoad returns logical
       end.
       else
          vFlag = yes.
+      if ohost-code eq ? or ohost-code eq 0
+      then do: 
+         PutMes(substitute("По &1 не удалось определить фирму по получателю  &2." ,iDocument:DocumentNumber, vFnsParticipantId) ).
+         return no.
+      end.
+        
    end.
    else do:
       define variable vdb-num as integer no-undo.
@@ -1710,8 +1419,9 @@ function CheckLoad returns logical
       if available utd
       then do:
          assign
-            vobj-type = utd.obj-type
-            vobj-code = utd.obj-code
+            oobj-type  = utd.obj-type
+            oobj-code  = utd.obj-code
+            ohost-code = utd.host-code
          .
       end.
       else
@@ -1729,8 +1439,8 @@ function CheckLoad returns logical
       define variable v-FlagEdo as logical no-undo.
       run adm/shattri.p (
          input "get":U
-         ,input  vobj-type /*p-obj-type*/
-         ,input   vobj-code /*p-obj-code*/
+         ,input  oobj-type /*p-obj-type*/
+         ,input   oobj-code /*p-obj-code*/
          ,input  {&attr-marking}
          ,input  {&attr-marking_marking-EDO} /*p-param-code*/
          ,output v-value-character
@@ -1746,7 +1456,7 @@ function CheckLoad returns logical
          vFlag = v-FlagEdo.
          if not vFlag
          then
-            PutMes(substitute("На объекте &1&2 не установлен параметр работы с ЭДО.",vobj-type,vobj-code)).
+            PutMes(substitute("На объекте &1&2 не установлен параметр работы с ЭДО.",oobj-type,oobj-code)).
       end.
    end.
    
@@ -1824,9 +1534,12 @@ function UpdateUTDInformOne returns logical
               )
       then do:
          PutMes(substitute("Загрузка документа  &1." ,iDocument:DocumentNumber) ).
-         if not CheckLoad(iDocument)
+         define variable vhost-code as integer   no-undo.
+         define variable vobj-type  as character no-undo.
+         define variable vobj-code  as integer   no-undo.
+         if not CheckLoad(iDocument,output vhost-code,output vobj-type,output  vobj-code )
          then do:
-            PutMes(substitute("Документа  &1 пропущен." ,iDocument:DocumentNumber) ).
+            PutMes(substitute("Документ &1 пропущен." ,iDocument:DocumentNumber) ).
             create tt-recid.
             assign
                tt-recid.orgid = vOrganizationid
@@ -1878,22 +1591,17 @@ function UpdateUTDInformOne returns logical
             .
             validate utd. /* необходимо для заполнения db-num  и doc-id */
          end.
-         
+         assign 
+            utd.host-code = vhost-code when vhost-code ne ? and vhost-code ne 0
+            utd.obj-code  = vobj-code  when vobj-code  ne ? and vobj-code  ne 0
+            utd.obj-type  = vobj-type  when vobj-type  ne ? and vobj-type  ne ""
+         .
+            
        /*  if iDocument:DocumentNumber eq "21_4"
          then
             message "222ddd"
             view-as alert-box. */
          
-         GetLastUTDinPack (utd.db-num,utd.doc-id,volddb-num,volddoc-id).
-         find first old_utd where old_utd.db-num eq volddb-num
-                              and old_utd.doc-id eq volddoc-id
-         no-lock no-error.
-         if available old_utd
-         then 
-            assign
-               utd.parentDocumentExt     = old_utd.DocumentExt
-               utd.parentOrganizationExt = old_utd.OrganizationExt
-            .
          
          
          
@@ -1923,7 +1631,7 @@ function UpdateUTDInformOne returns logical
          utd.ReceiptStatus  = iDocument:RecipientReceiptMetadata:ReceiptStatus. 
          utd.Direction      = iDocument:Direction.
          utd.ModifyDate = today.
-         utd.PackageId = iDocument:PackageId.
+/*         utd.PackageId = iDocument:PackageId.*/
          utd.flagRI     =    utd.ReceiptStatus eq "GeneralReceiptStatusNotAcceptable" or utd.ReceiptStatus eq "Finished". 
          utd.EDocType = if   iDocument:type eq "UniversalTransferDocument"
                           or iDocument:type eq "UniversalTransferDocumentRevision"
@@ -1962,9 +1670,12 @@ function UpdateUTDInformOne returns logical
                
          end.
    /*            Создание Reflector'а*/
-        
+         find first utd-lines where utd-lines.db-num     = utd.db-num
+                                and utd-lines.doc-id     = utd.doc-id
+                                no-lock no-error.
          if     (   vNewUtd 
-                 or utd.Direction ne "Inbound")
+                 or utd.Direction ne "Inbound"
+                 or not available utd-lines)
             and vDocumentChild ne ?
          then do:
             if utd.EDocType eq objSrv:Env:Utd:EDocType:UTD:KeyIntDB
@@ -2222,24 +1933,6 @@ function UpdateUTDInformOne returns logical
                   end.
                   validate utd. /* необходимо для привязки марок */
                   
-                  GetLastUTDinPackbef(utd.db-num,utd.doc-id,volddb-num,volddoc-id).
-                  find first old_utd where old_utd.db-num eq volddb-num
-                                       and old_utd.doc-id eq volddoc-id
-                     no-lock no-error.
-                  for each utd-marking-lines where utd-marking-lines.db-num eq utd.db-num
-                                               and utd-marking-lines.db-num eq utd.db-num
-                  exclusive-lock:
-                  
-                     if available old_utd
-                        and utd.db-num ne volddb-num
-                        and utd.doc-id ne volddoc-id
-                     then
-                        find first buf_utd-marking-lines where buf_utd-marking-lines.mark       = marking.mark
-                                                           and buf_utd-marking-lines.db-num     = old_utd.db-num     
-                                                           and buf_utd-marking-lines.doc-id     = old_utd.doc-id
-                        no-lock no-error.
-                      utd-marking-lines.sts = if available buf_utd-marking-lines then buf_utd-marking-lines.sts else  objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.
-                   end.
                end.
                else do:
                   PutMes("Ошибка получения данных из Диадок UniversalTransferDocumentWithHyphens").
@@ -2261,25 +1954,8 @@ function UpdateUTDInformOne returns logical
                     /* mSellerCol = mSellers:Seller. */
                   getOrganizationInfo(vContent:Seller,output utd.cli-inn,output utd.cli-kpp,utd.cli-FnsParticipantId, output vorgname, output vAddrOrg).
                   utd.cli-info = vorgname + " " + vAddrOrg.
-                  GetLastUTDinPack (utd.db-num,utd.doc-id,volddb-num,volddoc-id).
-                  find first old_utd where old_utd.db-num eq volddb-num
-                                       and old_utd.doc-id eq volddoc-id
-                  no-lock no-error.
-                  if not available old_utd
-                     or (   utd.db-num eq volddb-num
-                        and utd.doc-id eq volddoc-id)
-                  then
-                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoAvailDoc",string(utd.PackageId) + {&delim-par} + string(utd.db-num) + {&delim-par} + string(utd.doc-id)).
-                  else do:
-                      assign
-                          utd.obj-inn               = old_utd.obj-inn
-                          utd.obj-kpp               = old_utd.obj-kpp
-                          utd.obj-FnsParticipantId  = old_utd.obj-FnsParticipantId
-                          utd.obj-info              = old_utd.obj-info
-                          utd.parentDocumentExt     = old_utd.DocumentExt
-                          utd.parentOrganizationExt = old_utd.OrganizationExt
-                          utd.contract-code         = old_utd.contract-code
-                      .
+                  
+                  do:
                       vInvoiceTable = vContent:Table.
                       getdesc(vInvoiceTable).
                       
@@ -2370,11 +2046,13 @@ function UpdateUTDInformOne returns logical
                                  /* if marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB
                                   then
                                      marking.sts = ?. */
+                                     define variable vsite as character no-undo.
+                                     vsite = if     vunit:Id eq "cis" or vunit:Id eq "sscc" then "+" else "-".
                                   find first utd-marking-lines where utd-marking-lines.mark       = marking.mark
                                                                  and utd-marking-lines.db-num     = utd-lines.db-num     
                                                                  and utd-marking-lines.doc-id     = utd-lines.doc-id 
                                                                  and utd-marking-lines.Linenum    = utd-lines.Linenum        
-                                  no-lock no-error.
+                                  exclusive-lock no-error.
                                   if not available utd-marking-lines
                                   then do:
                                      create utd-marking-lines.
@@ -2383,11 +2061,21 @@ function UpdateUTDInformOne returns logical
                                         utd-marking-lines.db-num    = utd-lines.db-num     
                                         utd-marking-lines.doc-id    = utd-lines.doc-id 
                                         utd-marking-lines.Linenum   = utd-lines.Linenum
-                                        utd-marking-lines.site      = if     vunit:Id eq "cis" or vunit:Id eq "sscc" then "+" else "-"
+                                        utd-marking-lines.site      = vsite
                                         utd-marking-lines.doc-level = 1        
                                      .
                                      release utd-marking-lines. 
                                   end.
+                                  else do:
+                                     if    (vsite eq "-"
+                                        and utd-marking-lines.site eq "+")
+                                        or
+                                        (vsite eq "+"
+                                        and utd-marking-lines.site eq "-")
+                                     then 
+                                        delete utd-marking-lines.
+                                  end.
+                                  
                                end.
                             end.
                          end.
@@ -2407,8 +2095,97 @@ function UpdateUTDInformOne returns logical
                end.
             end.
             
-            SaturateAndCheckUTD( utd.db-num, utd.doc-id).
+         
+            
          end.
+         define variable vsetPAck as logical no-undo.
+         define variable vcli-type as character no-undo.
+         define variable vcli-code as integer no-undo.
+         find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
+                                  and ext-classif.charkey_three eq utd.cli-FnsParticipantId
+         no-lock no-error.
+         if available ext-classif
+         then do:
+            assign 
+               vcli-type = ext-classif.CharKey_One
+               vcli-code = ext-classif.Key#_One
+            .
+            define variable vPack as character no-undo.
+            if   iDocument:type eq "UniversalTransferDocument"
+            then
+               vPack = substitute("&1|&2|&3|&4",vcli-type,vcli-code,utd.DocumentNumber,utd.DocumentDate).
+            else if iDocument:type eq "UniversalTransferDocumentRevision"
+            then
+               vPack = substitute("&1|&2|&3|&4",vcli-type,vcli-code,iDocument:OriginalDocumentNumber,date(iDocument:OriginalDocumentDate)).
+            else
+               vPack = substitute("&1|&2|&3|&4",vcli-type,vcli-code,iDocument:OriginalInvoiceNumber,date(iDocument:OriginalInvoiceDate)).
+            if vPack ne utd.PackageId
+            then 
+               assign
+                  vsetPAck      = yes
+                  utd.PackageId = vPack
+               . 
+         end.
+         if vNewUtd or vsetPAck then do:
+            if utd.EDocType eq objSrv:Env:Utd:EDocType:UTD:KeyIntDB
+            then do:
+               if vNewUtd  then do:
+                  GetLastUTDinPackbef(utd.db-num,utd.doc-id,volddb-num,volddoc-id).
+                  find first old_utd where old_utd.db-num eq volddb-num
+                                       and old_utd.doc-id eq volddoc-id
+                     no-lock no-error.
+                  for each utd-marking-lines where utd-marking-lines.db-num eq utd.db-num
+                                               and utd-marking-lines.db-num eq utd.db-num
+                  exclusive-lock:
+                  
+                     if available old_utd
+                        and utd.db-num ne volddb-num
+                        and utd.doc-id ne volddoc-id
+                     then
+                        find first buf_utd-marking-lines where buf_utd-marking-lines.mark       = marking.mark
+                                                           and buf_utd-marking-lines.db-num     = old_utd.db-num     
+                                                           and buf_utd-marking-lines.doc-id     = old_utd.doc-id
+                        no-lock no-error.
+                     utd-marking-lines.sts = if available buf_utd-marking-lines then buf_utd-marking-lines.sts else  objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.
+                  end.
+                  SaturateAndCheckUTD( utd.db-num, utd.doc-id).
+               end.
+            end.
+            else do:
+               GetLastUTDinPack (utd.db-num,utd.doc-id,volddb-num,volddoc-id).
+               find first old_utd where old_utd.db-num eq volddb-num
+                                    and old_utd.doc-id eq volddoc-id
+               no-lock no-error.
+               if not available old_utd
+                  or (   utd.db-num eq volddb-num
+                     and utd.doc-id eq volddoc-id)
+               then
+                  AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoAvailDoc",string(utd.PackageId) + {&delim-par} + string(utd.db-num) + {&delim-par} + string(utd.doc-id)).
+               else do:
+                   assign
+                       utd.obj-inn               = old_utd.obj-inn
+                       utd.obj-kpp               = old_utd.obj-kpp
+                       utd.obj-FnsParticipantId  = old_utd.obj-FnsParticipantId
+                       utd.obj-info              = old_utd.obj-info
+                       utd.parentDocumentExt     = old_utd.DocumentExt
+                       utd.parentOrganizationExt = old_utd.OrganizationExt
+                       utd.contract-code         = old_utd.contract-code
+                   .
+               end.
+               SaturateAndCheckUTD( utd.db-num, utd.doc-id).
+            end.
+            
+         end.   
+         GetLastUTDinPack (utd.db-num,utd.doc-id,volddb-num,volddoc-id).
+         find first old_utd where old_utd.db-num eq volddb-num
+                              and old_utd.doc-id eq volddoc-id
+         no-lock no-error.
+         if available old_utd
+         then 
+            assign
+               utd.parentDocumentExt     = old_utd.DocumentExt
+               utd.parentOrganizationExt = old_utd.OrganizationExt
+            .
         /* if utd.DocumentNumber eq "1103_3"
          then
             run gbl/inidebug.p.*/
@@ -2594,6 +2371,7 @@ function UpdateUTDInform returns date
                       vDocumentList = vDocumentsTask:GetDocuments() no-error.
                       if vDocumentList ne ?
                       then do vii= 1 to vDocumentList:Count:
+                          if chekStop() then return ?.
                          vDocument = vDocumentList:GetItem(vii - 1).
 /*                         message vDocument:DocumentNumber                     view-as alert-box.*/
                          vdatelast = max(vdatelast,vDocument:DocumentDate) no-error.
@@ -2602,6 +2380,7 @@ function UpdateUTDInform returns date
                       end.
                    end.
                    for each tt-pack :
+                       if chekStop() then return ?.
                       if GetDocumforid (tt-pack.orgid, tt-pack.docid, output vDocument) eq "" /* Получим обновленный объект */
                       then
                          UpdateUTDInformOne(vDocument).    
@@ -2635,6 +2414,7 @@ procedure SendAnsver:
    define buffer utd for utd.
    if getdocum (idb-num, idoc-id, output vDocument ) eq ""
    then do:
+      PutMes(substitute("Обработка запроса &3 по документу ДБ &1 ID &2",idb-num,idoc-id,iTypeAnswer)).
       /*if     logical(vDocument:AmendmentRequested)
          and iTypeAnswer eq "CorrectionRequest"
       then 
@@ -2648,6 +2428,7 @@ procedure SendAnsver:
       if error-status:error
       then
          return error return-value.
+      PutMes(substitute("Обработка запроса &3 по документу ДБ &1 ID &2 Завершина",idb-num,idoc-id,iTypeAnswer)).
       if     vSendcode ne ?
          and vSendcode ne ""
       then
@@ -2723,7 +2504,9 @@ function SendReceiptsAsync returns logical
    define buffer utd for utd.
    if getdocum (idb-num, idoc-id, output vDocument ) eq ""
    then do:
+      PutMes(substitute("Обработка подписи ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
       vDocument:SendReceiptsAsync().
+      PutMes(substitute("Запущена асинхронная обработка ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
       find first utd where utd.db-num eq idb-num 
                        and utd.doc-id eq idoc-id
       exclusive-lock no-error.
@@ -3000,8 +2783,9 @@ function getNewUpd return character
    for each tt-recid:
       delete tt-recid.
    end.
-   
+   if chekStop() then return "Остановка пользователем".
    VLastDate = UpdateUTDInform(if VLastDate eq ? then today - 365 else VLastDate - 3,today + 1 ).
+   if chekStop() then return "Остановка пользователем".
    if VLastDate ne ?
    then
       setextAttr({&attr-esys-diadoc-lastload},string(VLastDate)).
@@ -3013,6 +2797,7 @@ function getNewUpd return character
       then do:
          for each utd where utd.PackageId eq tt-recid.parent
          no-lock break by utd.PackageId descending by utd.Timestamp descending :
+            if chekStop() then return "Остановка пользователем".
             if utd.EDocType = objSrv:Env:Utd:EDocType:UCD:KeyIntDB
             then do:
                subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
@@ -3026,20 +2811,42 @@ function getNewUpd return character
       end.
    end.
    PutMes("Обновление информации по ранее загруженным документам ").
-   for each utd where utd.sts-edi < ObjSrv:Env:Utd:Sts:edi:StatFinesh  
-                  and utd.host-code eq v-cntxt-host-code-obj
-   no-lock break by utd.OrganizationExt:
-      
-      find first tt-recid where tt-recid.orgid = utd.OrganizationExt
-                            and tt-recid.docid = utd.DocumentExt
-             no-error.
-      if     not available tt-recid
-         and getdocum (utd.db-num, utd.doc-id, output vDocument) eq "" /* Получим обновленный объект */
-      then do:
-         UpdateUTDInformOne(vDocument).
-         release object vDocument no-error.
-      end.
-   end.
+   define variable vobj as character no-undo.
+   vobj = getExtAttr({&attr-esys-host-code}).
+   if vobj ne "0"
+   then
+       for each utd where utd.sts-edi < ObjSrv:Env:Utd:Sts:edi:StatFinesh  
+                      and utd.host-code eq int(vobj)
+       no-lock break by utd.OrganizationExt:
+          if chekStop() then return "Остановка пользователем".
+          find first tt-recid where tt-recid.orgid = utd.OrganizationExt
+                                and tt-recid.docid = utd.DocumentExt
+                 no-error.
+          if     not available tt-recid
+             and getdocum (utd.db-num, utd.doc-id, output vDocument) eq "" /* Получим обновленный объект */
+          then do:
+             UpdateUTDInformOne(vDocument).
+             release object vDocument no-error.
+          end.
+       end.
+   
+   vobj = getExtAttr({&attr-esys-obj}).
+   if vobj ne ""
+   then
+       for each utd where utd.sts-edi < ObjSrv:Env:Utd:Sts:edi:StatFinesh  
+                      and utd.obj-type + string(utd.obj-code) eq vobj
+       no-lock break by utd.OrganizationExt:
+          if chekStop() then return "Остановка пользователем".
+          find first tt-recid where tt-recid.orgid = utd.OrganizationExt
+                                and tt-recid.docid = utd.DocumentExt
+                 no-error.
+          if     not available tt-recid
+             and getdocum (utd.db-num, utd.doc-id, output vDocument) eq "" /* Получим обновленный объект */
+          then do:
+             UpdateUTDInformOne(vDocument).
+             release object vDocument no-error.
+          end.
+       end.
 end.
 
 &if "{1}" = "class"
@@ -3128,12 +2935,14 @@ procedure  SendAuto:
          no-lock:
             SendReceiptsAsync(utd.db-num,utd.doc-id).
          end.
+         /*
          for each utd where utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:AutoRejected:KeyIntDB
                         and utd.host-code eq v-cntxt-host-code-obj
                         and utd.OrganizationExt eq vorgid
          no-lock:
             run SendResponse in this-procedure (utd.db-num,utd.doc-id,yes,no).
          end.
+         */
      /*    for each utd where utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:SignatureNotAccepted:KeyIntDB
                         and utd.host-code eq v-cntxt-host-code-obj
                         and utd.OrganizationExt eq vorgid

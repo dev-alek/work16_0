@@ -519,6 +519,48 @@ end.
               if ub.bar-code.gds-code = v-gds-code
               then do :
                   ub.prod-bc.bc-on = true .
+                  ub.prod-bc.bc-on-type = (if p-GdsObj:gds-type = "н" then {&loc-pt-code} else if v-barcode:barcode-type = 1 then {&gtin} else "").
+                  v-b-str = v-barcode:bcode .
+                  def var vmaken as logical no-undo.
+                  vmaken = if v-barcode:barcode-type = 2 then yes else no.
+                  find first prod-bc-attr where prod-bc-attr.b-str     eq v-b-str
+                                            and prod-bc-attr.b-code    eq bar-code.b-code
+                                           and prod-bc-attr.attr-code eq {&mark}
+                  no-lock no-error.
+                 if not available prod-bc-attr
+                 then do: 
+                    create prod-bc-attr.
+                    assign
+                       prod-bc-attr.b-str  = v-b-str
+                       prod-bc-attr.b-code = bar-code.b-code 
+                       prod-bc-attr.attr-code = {&mark}
+                       prod-bc-attr.attr-value = string(vmaken)
+                    .
+                 end.  /*  for each buf_prod-bc  */
+                 else if prod-bc-attr.attr-value ne string(vmaken)
+                 then do:
+                    find current prod-bc-attr exclusive-lock no-error.
+                    if available prod-bc-attr
+                    then
+                       prod-bc-attr.attr-value = string(vmaken).
+                 end.
+                  find first buf_prod-bc no-lock  where buf_prod-bc.b-str     eq v-b-str
+                                                    and buf_prod-bc.b-code    eq bar-code.b-code.
+                                                    
+                  v-rid-pbc = recid(buf_prod-bc).
+                  if    buf_prod-bc.bc-on
+                    and send-ref
+                  then do:
+                      run str/diallog.w
+                        (input parparentproc
+                        ,input this-procedure
+                        ,input 'str/s-prodbc.p':U
+                        ,input string(v-rid-pbc) + {&delim-par} + "U":U
+                        ,input yes /*p-auto-go*/
+                        ,input '':U
+                        ,input "Пересылка ДопБК на кассы"
+                        ) .
+                  end.
                   next ii_ .
               end. 
               else do :

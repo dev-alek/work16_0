@@ -409,7 +409,13 @@ define variable mDiadocApi as component-handle no-undo.
 /*define variable mReflector as component-handle no-undo.*/
 define variable vCertificateName  as component-handle no-undo .
 define variable vi as integer no-undo.
-create "Diadoc.DiadocClient":U mDiadocApi.
+create "Diadoc.DiadocClient":U mDiadocApi no-error.
+if mDiadocApi eq ?
+then do:
+   message "Не установлена библиотека Диадок" skip error-status:get-message(1)
+   view-as alert-box.
+   return.
+end.
 /*create "Diadoc.Reflector":U mReflector.*/
    /*Задаем параметры подлючения к серверу*/
    /*Получение списка сертификатов*/

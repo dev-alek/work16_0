@@ -542,6 +542,11 @@ define variable vss-description as character no-undo init "Информация об объекте
   " "
   "yes"
 }
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Асинхронные процессы'"
+  "'ref/procbrow.w'"
+}
 
 { gbl/menuload.i
   {&bef-menuload_adm_function}

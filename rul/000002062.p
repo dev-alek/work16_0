@@ -1209,7 +1209,7 @@ define variable v-err               as logical    no-undo .
             p-by-osnovanie       = "Перемещение денежных средств".
       end.
       else if buf_temp-fin-sum.tot-sum > 0
-      then
+      then do:
          assign
             p-by-osnovanie = ub.CashBook.RuleOsnPko 
             v-real-obj-type-save = ub.CashBook.cli-type
@@ -1218,6 +1218,16 @@ define variable v-err               as logical    no-undo .
             mosnacct               = ub.CashBook.OsnAcct
             mpayer-name          = ub.CashBook.takenfrom
          .
+         if mpayer-name eq "" or mpayer-name eq ?
+         then do:
+            find first ub.clients no-lock where ub.clients.obj-type = ub.CashBook.cli-type
+                                            and ub.clients.obj-code = ub.CashBook.cli-code
+            no-error .
+            if available ub.clients
+            then 
+               mpayer-name = ub.clients.obj-name .
+         end.
+      end.
       else
          assign
             p-by-osnovanie = ub.CashBook.RuleOsnRko 

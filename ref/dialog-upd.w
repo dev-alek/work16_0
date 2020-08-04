@@ -119,7 +119,7 @@ DEFINE BUTTON Btn_OK AUTO-GO
 
 DEFINE VARIABLE EDITOR-2 AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 79 BY 4.5 NO-UNDO.
+     SIZE 128 BY 4.5 NO-UNDO.
 
 DEFINE VARIABLE f-error AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
@@ -142,7 +142,8 @@ DEFINE BROWSE BROWSE-2
       tt-utd-err.descr FORMAT "x(256)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 79 BY 8.25 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 128 BY 8.25
+         FONT 2 .
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -157,7 +158,7 @@ DEFINE FRAME Dialog-Frame
           SIZE 27 BY .67 AT ROW 2.5 COL 2.5 WIDGET-ID 16
      "Введите комментарий:" VIEW-AS TEXT
           SIZE 20 BY .67 AT ROW 12 COL 2 WIDGET-ID 22
-     SPACE(60.49) SKIP(4.86)
+     SPACE(108.00) SKIP(4.86)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Ошибки документа"
@@ -216,7 +217,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Причина закрытия */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Ошибки документа */
 DO:
     APPLY "END-ERROR":U TO SELF.
   END.
@@ -378,7 +379,7 @@ PROCEDURE init-temp :
       assign
         tt-utd-err.CheckType = "UCDСompar"
         tt-utd-err.CheckObj  = "По товару " + string(buf_utd-marking-lines.gds-code) + " по линии " + string(buf_utd-marking-lines.LineNum)
-        tt-utd-err.CodeErr   = "NotAvailable"
+        tt-utd-err.CodeErr   = "MARKDECLINED"
         tt-utd-err.db-num    = buf_utd-marking-lines.db-num 
         tt-utd-err.doc-id    = buf_utd-marking-lines.doc-id
         tt-utd-err.reckey    = string(ii)
@@ -386,7 +387,7 @@ PROCEDURE init-temp :
         tt-utd-err.gds-code  = buf_utd-marking-lines.gds-code
         .
       status_ = StatusTHName(buf_marking.sts) .
-      tt-utd-err.descr = "Марка " + buf_marking.mark + " находится в статусе - " +  "'" + status_ + "'"
+      tt-utd-err.descr = "Ошибка № 15. В результате проверки товаров на АЗК по строке " + string(buf_utd-marking-lines.LineNum) +  " марка " + buf_utd-marking-lines.mark + " не была принята."
         .    
     end.     
 END PROCEDURE.

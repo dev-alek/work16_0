@@ -415,7 +415,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     input from value(search("MT_lineSend.txt")) convert source "UTF-8".
     repeat:  
       create TempTrnLineMT.
-      import TempTrnLineMT .
+      import TempTrnLineMT.
     end. 
     input close.
  

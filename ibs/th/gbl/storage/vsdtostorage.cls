@@ -29,7 +29,7 @@ class ibs.th.gbl.storage.vsdtostorage:
   
   { cmp/str-glbl.i class }
   
-  define property Msg as character
+  define property Msg as character no-undo
     get.
     private set.
   
@@ -82,9 +82,9 @@ class ibs.th.gbl.storage.vsdtostorage:
       no-error.
       if error-status:error
       then do:
-      exception(error-status, vsdsubObj, buffer buf_vsd:handle).
-      return.
-    end.
+        exception(error-status, vsdsubObj, buffer buf_vsd:handle).
+        return.
+      end.
     end.
     
     setDataStorage(input vsdsubObj, buffer buf_vsd).
@@ -145,7 +145,7 @@ class ibs.th.gbl.storage.vsdtostorage:
   
   method public class vsdsubs getVSDsubs (input inFieldName as character, input inValue as character ):
     
-    define variable vsdsubsObj as class vsdsubs.
+    define variable vsdsubsObj as class vsdsubs no-undo.
     vsdsubsObj = new vsdsubs ().
     
     case inFieldName:
@@ -166,11 +166,11 @@ class ibs.th.gbl.storage.vsdtostorage:
     return vsdsubsObj.
   end method.
   
-  method public class vsdsubs getVSDsubs (input  inObjType    as character,
+  method public class vsdsubs getVSDsubs (input inObjType    as character,
                                           input  inObjCode    as int64 ,
                                           input  inStatusList as character ):
   
-      define variable vsdsubsObj as class vsdsubs.
+      define variable vsdsubsObj as class vsdsubs no-undo .
       vsdsubsObj = new vsdsubs ().
       for each buf_vsd where buf_vsd.obj-type eq inObjType
                          and buf_vsd.obj-code eq inObjCode
@@ -181,8 +181,8 @@ class ibs.th.gbl.storage.vsdtostorage:
       return vsdsubsObj.
   end method.
   
-  method public class vsdsubs getVSDsubs ( buffer buf_vsd for ub.vsd ):
-    define variable vsdsubsObj as class vsdsubs.
+    method public class vsdsubs getVSDsubs ( buffer buf_vsd for ub.vsd ):
+    define variable vsdsubsObj as class vsdsubs no-undo .
     vsdsubsObj = new vsdsubs ().
     vsdsubsObj:AddItem(getDataStorage (buffer buf_vsd)).
     return vsdsubsObj.
@@ -192,7 +192,7 @@ class ibs.th.gbl.storage.vsdtostorage:
 
   method public class vsdsubs getVSDsubs ( objTHObj as class clisub, vsdStatusType as integer ):
     
-    define variable vsdsubsObj as class vsdsubs.
+    define variable vsdsubsObj as class vsdsubs no-undo .
     vsdsubsObj = new vsdsubs ().
     for each buf_vsd no-lock where buf_vsd.obj-code = objTHObj:ObjCode and buf_vsd.obj-type = objTHObj:ObjType
       and buf_vsd.status_ =  vsdStatusType:
@@ -204,7 +204,7 @@ class ibs.th.gbl.storage.vsdtostorage:
   
   method public class vsdsubs getVSDsubs (input objTHObj as class clisub ):
     
-    define variable vsdsubsObj as class vsdsubs.
+    define variable vsdsubsObj as class vsdsubs no-undo .
     vsdsubsObj = new vsdsubs ().
     for each buf_vsd no-lock where buf_vsd.obj-code = objTHObj:ObjCode and buf_vsd.obj-type = objTHObj:ObjType :
       vsdsubsObj:AddItem(getDataStorage (buffer buf_vsd)).
@@ -213,8 +213,113 @@ class ibs.th.gbl.storage.vsdtostorage:
     return vsdsubsObj.
   end method.
   
-    method public class vsdsubs getVSDsubsForVsdSub (INPUT inVsdSub    AS CLASS vsdsub ):
-        define variable vsdsubsObj as class vsdsubs.
+  
+    method public class vsdsubs getVSDsubs ( iId as integer , idb-num as integer ):
+    
+        define variable vsdsubsObj as class vsdsubs no-undo .
+        vsdsubsObj = new vsdsubs ().
+        for first buf_vsd no-lock where buf_vsd.id = iId and buf_vsd.db-num = idb-num:
+          vsdsubsObj:AddItem(getDataStorage (buffer buf_vsd)).
+        end.
+        return vsdsubsObj.
+    end.
+    
+    method public class vsdsub getVSDsub ( iId as integer , idb-num as integer ):
+    
+        define variable vsdsubObj as class vsdsub no-undo .
+        
+        for first buf_vsd no-lock where buf_vsd.id = iId and buf_vsd.db-num = idb-num:
+           vsdsubObj = getDataStorage (buffer buf_vsd).
+        end.
+        return vsdsubObj.
+    end method.
+    
+    method public handle getVSDQuery (input inObjType    as character,
+                                            input  inObjCode    as int64 ,
+                                            input inStatusList as character,
+                                            input ibegdate as date,
+                                            input ienddate as date  ):
+  
+      define variable vsdsubsObj as class vsdsubs no-undo .
+      define variable vbegdate         as datetime-tz no-undo.
+      define variable venddate         as datetime-tz no-undo.
+      define variable vliststatusquery as character no-undo.
+      define variable hQuery           as handle  no-undo .
+      define variable vi               as integer no-undo.
+      define variable vsdSts as class ibs.th.str.mercury.vsdstatustype no-undo.
+      vsdSts     = new ibs.th.str.mercury.vsdstatustype ().
+      
+         
+      vsdsubsObj = new vsdsubs ().
+      assign 
+         vbegdate = datetime-tz (ibegdate)
+         venddate = datetime-tz (ienddate + 1) - 1
+      .
+      
+      define variable vHb as handle no-undo.
+      define variable v-inform as character no-undo.
+      define variable v-ind as integer no-undo.
+      vHb = buffer buf_vsd:HANDLE.
+      v-inform = vHb:INDEX-INFORMATION(1).
+      
+      do while v-inform <> ? and not v-inform begins "objstst,"
+    on error undo, return error
+    :
+      assign
+        v-ind    = v-ind + 1
+        v-inform = vHb:index-information( v-ind )
+        
+      .
+      
+    end.
+      
+      create query hQuery.
+      hQuery:set-buffers(buffer buf_vsd:HANDLE). 
+      define variable mstrquery as character no-undo.
+      if v-inform begins "objstst,"
+      then 
+      do:
+         mstrquery = "FOR EACH buf_vsd where " .
+         do vi = 1 to num-entries(inStatusList):
+            if vi ne 1 then mstrquery = mstrquery + " or ".
+            mstrquery = mstrquery  + " (                buf_vsd.obj-type eq " + QUOTER(inObjType) +
+                                                  " and buf_vsd.obj-code eq " + QUOTER(string (inObjCode)) +
+                                                  " and buf_vsd.status_ eq " + entry(vi,inStatusList) +
+                                                  ( /*if vsdSts:PendingRepayment(int(entry(vi,inStatusList)))
+                                                  then ""
+                                                  else*/ (
+                                                    " and  buf_vsd.fact-datetime >= " + QUOTER(string (vbegdate)) +
+                                                    " and buf_vsd.fact-datetime <= " + QUOTER(string (venddate)) + " "
+                                                  )) 
+                                                  + ")". 
+          
+         end.
+      end.
+      else do:
+         /*do vi = 1 to num-entries(inStatusList):
+            if vsdSts:PendingRepayment(int(entry(vi,inStatusList)))
+            then 
+               vliststatusquery = vliststatusquery
+                                
+                              + " or buf_vsd.status_ eq " + entry(vi,inStatusList).
+         end. */
+         mstrquery = "FOR EACH buf_vsd where                buf_vsd.obj-type eq " + QUOTER(inObjType) +
+                                                      " and buf_vsd.obj-code eq " + QUOTER(string (inObjCode)) +
+                                                      " and can-do(" + QUOTER(inStatusList) + ",string (buf_vsd.status_))" +
+                                                      " and (( buf_vsd.fact-datetime >= " + QUOTER(string (vbegdate)) +
+                                                      " and buf_vsd.fact-datetime <= " + QUOTER(string (venddate)) + ") " 
+                                                      + vliststatusquery + ")".
+      end.                           
+      
+      hQuery:query-prepare(mstrquery).
+      hQuery:query-open.
+      hQuery:get-first().
+      
+      return hquery.
+  end method.
+  
+    method public class vsdsubs getVSDsubsForVsdSub (input inVsdSub    as class vsdsub ):
+        define variable vsdsubsObj as class vsdsubs no-undo .
         vsdsubsObj = new vsdsubs ().
         vsdsubsObj:AddItem(inVsdSub).
          
@@ -223,8 +328,6 @@ class ibs.th.gbl.storage.vsdtostorage:
     
   method private void setDataStorage (input invsdObj as class vsdsub, buffer inbf_vsd for ub.vsd ):
     
-    define buffer buf_vsd-attr for ub.vsd-attr .
-        
     inbf_vsd.UUID            = invsdObj:UUID.
     inbf_vsd.economic-sub    = invsdObj:EconomicSub.
     inbf_vsd.date-cr         = invsdObj:DateCr.
@@ -250,461 +353,52 @@ class ibs.th.gbl.storage.vsdtostorage:
     inbf_vsd.gds-guid        = invsdObj:GdsGuid.
     inbf_vsd.gds-name-merc   = invsdObj:GdsName.
     
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "TransportType"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "TransportType"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:TransportType . 
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "Transport"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "Transport"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:Transport .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "CarNum"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "CarNum"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:CarNum .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "ContainerNum"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "ContainerNum"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:ContainerNum .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "TrailerNum"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "TrailerNum"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:TrailerNum .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "OrigCountryGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "OrigCountryGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:OrigCountryGuid .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "ProducerGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "ProducerGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:ProducerGuid .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "ProducerRole"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "ProducerRole"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:ProducerRole .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "ProductGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "ProductGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:ProductGuid .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "SubProductGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "SubProductGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:SubProductGuid .
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "UnitGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "UnitGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:UnitGuid .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "Perishable"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "Perishable"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:Perishable .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "CLiBeGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "CLiBeGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:CLiBeGuid .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "CLiEntGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "CLiEntGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:CLiEntGuid . 
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "TTNissueSeries"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "TTNissueSeries"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:TTNissueSeries . 
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "TTNissueNumber"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "TTNissueNumber"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:TTNissueNumber .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "TTNissueDate"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "TTNissueDate"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:TTNissueDate .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "TTNtype"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "TTNtype"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:TTNtype .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "TTNrelationshipType"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "TTNrelationshipType"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:TTNrelationshipType .                                 
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "PurposeGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "PurposeGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:PurposeGuid .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "CargoInspected"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "CargoInspected"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:CargoInspected .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "CargoExpertized"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "CargoExpertized"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:CargoExpertized .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "LocationProsperity"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "LocationProsperity"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:LocationProsperity .   
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "BrokerGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "BrokerGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:BrokerGuid .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "PackageLevel"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "PackageLevel"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:PackageLevel .  
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "PackageGuid"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "PackageGuid"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:PackageGuid .   
-    
-    
-    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = inbf_vsd.ID
-                                             and buf_vsd-attr.db-num    = inbf_vsd.db-num
-                                             and buf_vsd-attr.attr-code = "PackageQnty"
-                                             no-error .
-    if not available buf_vsd-attr  
-    then do :
-      create buf_vsd-attr.
-      assign
-        buf_vsd-attr.ID        = inbf_vsd.ID
-        buf_vsd-attr.db-num    = inbf_vsd.db-num
-        buf_vsd-attr.attr-code = "PackageQnty"
-      .
-    end.
-    assign buf_vsd-attr.attr-value = invsdObj:PackageQnty . 
-    
-    
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"TransportType",invsdObj:TransportType).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"Transport",invsdObj:Transport).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"CarNum",invsdObj:CarNum).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"ContainerNum",invsdObj:ContainerNum).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"TrailerNum",invsdObj:TrailerNum).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"OrigCountryGuid",invsdObj:OrigCountryGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"ProducerGuid",invsdObj:ProducerGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"ProducerRole",invsdObj:ProducerRole).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"ProductGuid",invsdObj:ProductGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"SubProductGuid",invsdObj:SubProductGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"UnitGuid",invsdObj:UnitGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"Perishable",invsdObj:Perishable).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"CLiBeGuid",invsdObj:CLiBeGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"CLiEntGuid",invsdObj:CLiEntGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"TTNissueSeries",invsdObj:TTNissueSeries).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"TTNissueNumber",invsdObj:TTNissueNumber).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"TTNissueDate",invsdObj:TTNissueDate).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"TTNtype",invsdObj:TTNtype).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"TTNrelationshipType",invsdObj:TTNrelationshipType).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"PurposeGuid",invsdObj:PurposeGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"CargoInspected",invsdObj:CargoInspected).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"CargoExpertized",invsdObj:CargoExpertized).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"LocationProsperity",invsdObj:LocationProsperity).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"BrokerGuid",invsdObj:BrokerGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"PackageLevel",invsdObj:PackageLevel).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"PackageGuid",invsdObj:PackageGuid).
+    setAttr(inbf_vsd.ID,inbf_vsd.db-num,"PackageQnty",invsdObj:PackageQnty).
     release inbf_vsd.
-    release buf_vsd-attr.
-    
   end.
   
   method private class vsdsub getDataStorage ( buffer inbf_vsd for ub.vsd ):
     
-    define variable vsdsubObj  as class vsdsub.
-    define buffer buf_vsd-attr for ub.vsd-attr .
+    define variable vsdsubObj  as class vsdsub  no-undo .
       
     vsdsubObj = new vsdsub ().
     
     assign
       vsdsubObj:ID            = inbf_vsd.id
       vsdsubObj:DBNum         = inbf_vsd.db-num
-      vsdsubObj:UUID          = inbf_vsd.UUID             
+      vsdsubObj:UUID          = trim (inbf_vsd.UUID)             
       vsdsubObj:EconomicSub   = inbf_vsd.economic-sub     
       vsdsubObj:DateCr        = inbf_vsd.date-cr          
       vsdsubObj:DateOut       = inbf_vsd.date-out         
       vsdsubObj:TypeProd      = inbf_vsd.type-prod        
       vsdsubObj:ExpiryDate2   = inbf_vsd.expiry-date-2    
-      vsdsubObj:Qnty          = inbf_vsd.qnty             
+      vsdsubObj:Qnty          = inbf_vsd.qnty              
       vsdsubObj:ExpiryOutDate = inbf_vsd.expiry-out-date  
       vsdsubObj:NumPart       = inbf_vsd.num-part         
       vsdsubObj:Note          = inbf_vsd.note             
@@ -725,43 +419,48 @@ class ibs.th.gbl.storage.vsdtostorage:
       vsdsubObj:VsdRecid      = recid (inbf_vsd).   
     .
     
-    for each buf_vsd-attr no-lock where buf_vsd-attr.ID     = inbf_vsd.ID
-                                    and buf_vsd-attr.db-num = inbf_vsd.db-num :
-      case buf_vsd-attr.attr-code :
-        when "TransportType"    then vsdsubObj:TransportType    = buf_vsd-attr.attr-value .
-        when "Transport"        then vsdsubObj:Transport        = buf_vsd-attr.attr-value .
-        when "CarNum"           then vsdsubObj:CarNum           = buf_vsd-attr.attr-value .
-        when "ContainerNum"     then vsdsubObj:ContainerNum     = buf_vsd-attr.attr-value .
-        when "TrailerNum"       then vsdsubObj:TrailerNum       = buf_vsd-attr.attr-value .
-        when "OrigCountryGuid"  then vsdsubObj:OrigCountryGuid  = buf_vsd-attr.attr-value .
-        when "ProducerGuid"     then vsdsubObj:ProducerGuid     = buf_vsd-attr.attr-value .
-        when "ProducerRole"     then vsdsubObj:ProducerRole     = buf_vsd-attr.attr-value .
-        when "ProductGuid"      then vsdsubObj:ProductGuid      = buf_vsd-attr.attr-value .
-        when "SubProductGuid"   then vsdsubObj:SubProductGuid   = buf_vsd-attr.attr-value .
-        when "UnitGuid"         then vsdsubObj:UnitGuid         = buf_vsd-attr.attr-value .
-        when "Perishable"       then vsdsubObj:Perishable       = buf_vsd-attr.attr-value .
-        when "CliBeGuid"        then vsdsubObj:CliBeGuid        = buf_vsd-attr.attr-value .
-        when "CliEntGuid"       then vsdsubObj:CliEntGuid       = buf_vsd-attr.attr-value .
-        when "TTNissueSeries"   then vsdsubObj:TTNissueSeries   = buf_vsd-attr.attr-value .
-        when "TTNissueNumber"   then vsdsubObj:TTNissueNumber   = buf_vsd-attr.attr-value .
-        when "TTNissueDate"     then vsdsubObj:TTNissueDate     = buf_vsd-attr.attr-value .
-        when "TTNtype"          then vsdsubObj:TTNtype          = buf_vsd-attr.attr-value .
-        when "TTNrelationshipType" then vsdsubObj:TTNrelationshipType = buf_vsd-attr.attr-value .
-        when "PurposeGuid"      then vsdsubObj:PurposeGuid      = buf_vsd-attr.attr-value .
-        when "CargoInspected"   then vsdsubObj:CargoInspected   = buf_vsd-attr.attr-value .
-        when "CargoExpertized"  then vsdsubObj:CargoExpertized  = buf_vsd-attr.attr-value .
-        when "LocationProsperity"  then vsdsubObj:LocationProsperity  = buf_vsd-attr.attr-value .
-        when "BrokerGuid"       then vsdsubObj:BrokerGuid       = buf_vsd-attr.attr-value .
-        when "PackageLevel"     then vsdsubObj:PackageLevel     = buf_vsd-attr.attr-value .
-        when "PackageGuid"      then vsdsubObj:PackageGuid      = buf_vsd-attr.attr-value .
-        when "PackageQnty"      then vsdsubObj:PackageQnty      = buf_vsd-attr.attr-value .
-      end case.
-    end.
-           
     return vsdsubObj.
     
   end.
   
+  method public character  GetAttr (iID as integer, idb-num as integer ,iattrcode as character ):
+     define buffer buf_vsd-attr for ub.vsd-attr.
+     find first buf_vsd-attr where buf_vsd-attr.ID        = iID
+                               and buf_vsd-attr.db-num    = idb-num
+                               and buf_vsd-attr.attr-code = iAttrCode
+     no-lock no-error.
+     return if not available buf_vsd-attr then "" else buf_vsd-attr.attr-value.
+  end.
+  
+  method public void  setAttr (iID as integer, idb-num as integer ,iattrcode as character,iattrvalue as character  ):
+    define buffer buf_vsd-attr for ub.vsd-attr.
+    find first buf_vsd-attr exclusive-lock where buf_vsd-attr.ID        = iID
+                                             and buf_vsd-attr.db-num    = idb-num
+                                             and buf_vsd-attr.attr-code = iattrcode
+                                             no-error .
+    if not available buf_vsd-attr  
+    then do :
+      if  iattrvalue > ""
+      then do:
+          create buf_vsd-attr.
+          assign
+            buf_vsd-attr.ID        = iID
+            buf_vsd-attr.db-num    = idb-num
+            buf_vsd-attr.attr-code = iattrcode
+            buf_vsd-attr.attr-value = iattrvalue
+          .
+       end.
+    end.
+    else do:
+      if  iattrvalue > ""
+      then
+         buf_vsd-attr.attr-value = iattrvalue.
+      else
+         delete buf_vsd-attr. 
+    end.
+      
+  end.
+  /*
   method public void refreshObj (inVsdSubObj as class vsdsub):
     
     if not valid-object (inVsdSubObj)
@@ -776,19 +475,20 @@ class ibs.th.gbl.storage.vsdtostorage:
       Msg = "Не найден ВДС - " + string (inVsdSubObj:ID) + string ( inVsdSubObj:DBNum ).
       return.
     end.
+    delete object inVsdSubObj.
     getDataStorage (buffer buf_vsd).
     release buf_vsd.
     
   end.
-
+*/
   method public logical exsistuuid (inVsdSubObj as class vsdsub):
     define variable trnDoc as character no-undo.
     define variable isExsistTRN as logical no-undo. 
     return exsistuuid(inVsdSubObj, output isExsistTRN ).
   end.
-  
+    
   method public logical exsistuuidwithtrn (inVsdSubObj as class vsdsub):
-    define variable trnDoc as character no-undo.
+    define variable trnDoc as character no-undo. 
     define variable isExsistTRN as logical no-undo.
     if exsistuuid(inVsdSubObj, output isExsistTRN )
     then 
@@ -796,11 +496,12 @@ class ibs.th.gbl.storage.vsdtostorage:
         then return true.
     return false.
   end.
-
+    
   method private logical exsistuuid (inVsdSubObj as class vsdsub, output isExsistTRN as log): /* uuid проверка наличия uuid в связке с документом*/
     
     define variable trnDoc as character no-undo. 
     find first buf_vsd no-lock where recid (buf_vsd) <> inVsdSubObj:VsdRecid and buf_vsd.UUID = inVsdSubObj:UUID no-error.
+    
     if available (buf_vsd)
     then do:
       trnDoc = entry (8,buf_vsd.part-key, {&delim-key}) no-error.
@@ -821,19 +522,19 @@ class ibs.th.gbl.storage.vsdtostorage:
   method public logical exsistvsd (buffer inbf_dl for ub.doc-line):
     
     define variable keyrecObj as class keyrec no-undo.
-    define variable keyrec    as character no-undo.
+    define variable keyrec as character no-undo.
     define variable vOk       as logical no-undo.
     define buffer buf_parts for ub.parts.
     
     keyrecObj = new keyrec ().
-    
+
     block-part:
-    for each buf_parts no-lock where buf_parts.out-code  = inbf_dl.doc-code 
+    for each buf_parts no-lock where buf_parts.out-code = inbf_dl.doc-code 
                                  and buf_parts.obj-type  = inbf_dl.obj-type
                                  and buf_parts.obj-code  = inbf_dl.obj-code
-                                 and buf_parts.artic     = inbf_dl.artic
-                                 and buf_parts.prod-type = inbf_dl.prod-type
-                                 and buf_parts.prod-code = inbf_dl.prod-code:
+      and buf_parts.artic = inbf_dl.artic
+      and buf_parts.prod-type = inbf_dl.prod-type
+      and buf_parts.prod-code = inbf_dl.prod-code:
       keyrecObj:GenKeyRec({&table_parts}, buffer buf_parts:handle, output keyrec).
       vok = can-find (first buf_vsd where buf_vsd.part-key = keyrec and buf_vsd.UUID <> "" and buf_vsd.UUID <> ?) .
       if not vok then leave block-part.
@@ -846,19 +547,19 @@ class ibs.th.gbl.storage.vsdtostorage:
   method public logical exsistvsd (buffer inbf_gd-dtl for ub.gds-dtl):
     
     define variable keyrecObj as class keyrec no-undo.
-    define variable keyrec    as character no-undo.
+    define variable keyrec as character no-undo.
     define variable vOk       as logical no-undo.
     define buffer buf_parts for ub.parts.
     
     keyrecObj = new keyrec ().
-    
+
     block-part:
-    for each buf_parts no-lock where buf_parts.out-code  = inbf_gd-dtl.doc-code 
+    for each buf_parts no-lock where buf_parts.out-code = inbf_gd-dtl.doc-code 
                                  and buf_parts.obj-type  = inbf_gd-dtl.obj-type
                                  and buf_parts.obj-code  = inbf_gd-dtl.obj-code
-                                 and buf_parts.artic     = inbf_gd-dtl.artic
-                                 and buf_parts.prod-type = inbf_gd-dtl.prod-type
-                                 and buf_parts.prod-code = inbf_gd-dtl.prod-code:
+      and buf_parts.artic = inbf_gd-dtl.artic
+      and buf_parts.prod-type = inbf_gd-dtl.prod-type
+      and buf_parts.prod-code = inbf_gd-dtl.prod-code:
       
       keyrecObj:GenKeyRec({&table_parts}, buffer buf_parts:handle, output keyrec).
       

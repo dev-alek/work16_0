@@ -59,6 +59,7 @@ define variable cmd            as character no-undo .
 define variable v-proxy-login     as character no-undo .
 define variable v-proxy-pswd      as character no-undo .
 define variable v-proxy-addres    as character no-undo .
+define variable v-proxy-ssl       as logical   no-undo .
 
 define variable v-value-character as character no-undo .
 define variable v-value-decimal   as decimal   no-undo .
@@ -267,7 +268,9 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
           then do :
             {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
           end.  
-        end.            
+        end.
+      when "proxy-ssl" then 
+          v-proxy-ssl = thbjattr_thbj-attr.property-value-logical .            
     end case.
   end.
   
@@ -364,8 +367,15 @@ PROCEDURE fill-tt :
 
   if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
   then do :
-    cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/DictionaryService >&3",
-                    search ("exe/curl.exe"), search (v-get-units), "UnitList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+    if v-proxy-ssl
+    then do :
+      cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/DictionaryService >&3",
+                      search ("exe/curl.exe"), search (v-get-units), "UnitList_.xml", v-login, v-password, v-server, v-proxy-addres).
+    end.
+    else do :
+      cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/DictionaryService >&3",
+                      search ("exe/curl.exe"), search (v-get-units), "UnitList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+    end.
   end.
   else do :
     cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/DictionaryService >&3", search ("exe/curl.exe"), search (v-get-units), "UnitList_.xml", v-login, v-password, v-server).

@@ -24,7 +24,7 @@ using ibs.th.gbl.storage.*.
 using ibs.th.str.clients.*.
 using ibs.th.str.utd.*.
 using ibs.th.str.utd.sts.*.
-
+&glob prefixfile IsMotp_
 class ibs.th.bge.is_motp.is_motp inherits objth: 
   
   {cmp/str-glbl.i class}
@@ -55,6 +55,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   define property proxy-pswd as character no-undo init ?
     get.
     private set.
+  define variable CmdParamProxy    as character no-undo.
+  define variable CmdParamProxyLog as character no-undo.
     
   define property proxy-ssl as logical no-undo init ?
     get.
@@ -108,6 +110,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     get.
     protected set.
     
+  define property docDB-num as integer no-undo
+    get.
+    protected set.
+    
   define property INN as character no-undo
     get.
     protected set.
@@ -117,6 +123,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     set.
     
   define property checkINN as logical no-undo init false
+    get.
+    set.
+  
+  define property isDebug as logical no-undo init false
     get.
     set.
     
@@ -154,9 +164,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       return datetime-tz(buf_ext-system-attr.esya-attr-value) .
     end.
     protected set .
-    
+    define variable mFileAuth      as character no-undo.
+    define variable mFileCades     as character no-undo.
+    define variable mFileAuthTest  as character no-undo.
+    define variable mFilecisesInfo as character no-undo.
   constructor public is_motp (  ):
-
+ 
     define buffer buf_ext-system for ub.ext-system .
     define buffer buf_ext-system-attr for ub.ext-system-attr .
     
@@ -191,9 +204,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       return error .
     end .
     
-    setProps(buf_ext-system.db-num, buf_ext-system.esys-id) .
+    setProps(buf_ext-system.db-num, buf_ext-system.esys-id, gbl-var:g#db-num) .
     
-  end constructor .  
+  end constructor .
   
   constructor public is_motp
   (
@@ -201,18 +214,32 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   input pEsysId as integer
   ) :
     
-    setProps(pEsysDbNum, pEsysId) .                         
+    setProps(pEsysDbNum, pEsysId, gbl-var:g#db-num) .                         
+    
+  end constructor .  
+  
+  constructor public is_motp
+  (
+  input pEsysDbNum as integer,
+  input pEsysId as integer,
+  input pDbNum as integer
+  ) :
+        
+    setProps(pEsysDbNum, pEsysId, pDbNum) .                         
     
   end constructor .
   
   method private void setProps
   (
   input pEsysDbNum as integer,
-  input pEsysId as integer
+  input pEsysId as integer,
+  input pDbNum as integer
   ) :
     
     define buffer buf_ext-system for ub.ext-system .
     define buffer buf_ext-system-attr for ub.ext-system-attr .
+    
+    DB-num = pDbNum .
     
     find first buf_ext-system no-lock where buf_ext-system.db-num = pEsysDbNum
                                         and buf_ext-system.esys-id = pEsysId
@@ -230,16 +257,31 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           server_ = buf_ext-system-attr.esya-attr-value.
         end.
         when {&attr-esys-proxy-addr} then do:
-          proxy-addr = buf_ext-system-attr.esya-attr-value .
+           get-key-value section "ProxyServ" key buf_ext-system-attr.esya-attr-code value proxy-addr.
+           if proxy-addr eq ?
+           then
+              proxy-addr = buf_ext-system-attr.esya-attr-value .
         end.
         when {&attr-esys-proxy-login} then do:
-          proxy-login = buf_ext-system-attr.esya-attr-value .
+           get-key-value section "ProxyServ" key buf_ext-system-attr.esya-attr-code value proxy-login.
+           if proxy-login eq ?
+           then
+              proxy-login = buf_ext-system-attr.esya-attr-value .
         end.
         when {&attr-esys-proxy-pswd} then do:
-          proxy-pswd = buf_ext-system-attr.esya-attr-value .
+           get-key-value section "ProxyServ" key buf_ext-system-attr.esya-attr-code value proxy-pswd.
+           if proxy-pswd eq ?
+           then
+              proxy-pswd = buf_ext-system-attr.esya-attr-value .
         end.
         when {&attr-esys-proxy-ssl} then do:
-          proxy-ssl = logical(buf_ext-system-attr.esya-attr-value) .
+           define variable vtext as character no-undo.
+           get-key-value section "ProxyServ" key buf_ext-system-attr.esya-attr-code value vtext.
+           if vtext eq ?
+           then
+              proxy-ssl = logical(buf_ext-system-attr.esya-attr-value) .
+           else
+              proxy-ssl = logical(vtext) .
         end.
         when {&attr-esys-mail-list} then do:
           mail-list = buf_ext-system-attr.esya-attr-value .
@@ -252,373 +294,355 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           end .
         end.
       end case .
-    end .           
-    
-  end method .
-  
-  define stream cades .
-  define stream auth .
-  
-  method public character authorize
-  (
-  input pKey as character,
-  input pMode as character
-  ):
-    
-    define buffer buf_ext-system-attr for ub.ext-system-attr .
-    
-    define variable oStore as component-handle no-undo .
-    define variable oCerts as com-handle no-undo .
-    define variable oCert as com-handle no-undo .
-    define variable oSigner as com-handle no-undo .
-    define variable oSignedData as com-handle no-undo .
-    define variable signedData1Long as longchar no-undo .
-    define variable signedData2Long as longchar no-undo .
-    
-    define variable ii as integer no-undo .
-    define variable ix as integer no-undo .
-    define variable v-found as logical no-undo .
-    define variable cmd as character no-undo .
-    
-    define variable vData1 as character no-undo .
-    define variable vData2 as character no-undo .
-    define variable vLine  as character no-undo .
-    define variable vStr   as character no-undo .
-    
-    define variable vAuthDataLong as longchar no-undo .
-    define variable vToken as character no-undo .
-    
-    output stream cades to value (ibs.th.gbl.gbl-inipar:logDir + "cadescom.log") append .
-    output stream auth to value (ibs.th.gbl.gbl-inipar:logDir + "auth.log") append .
-    
-    create "CAdESCOM.Store" oStore .
-    oStore:Open (2, "My", 0) .
-    if error-status:num-messages > 0
-    then do ix = 1 to  error-status:num-messages:
-      put stream cades unformatted now " " error-status:get-message(ix) skip .
     end .
-    
-    create "CAPICOM.Certificates" oCerts . 
-    oCerts = oStore:Certificates .
-    if error-status:num-messages > 0
-    then do ix = 1 to  error-status:num-messages:
-      put stream cades unformatted now " " error-status:get-message(ix) skip .
-    end .
-  
-    create "CAdESCOM.Certificate" oCert .
-   
-    assign v-found = false .
-    do ii = 1 to oCerts:Count :
-      oCert = oCerts:item(ii) .
-      case pMode :
-        when "ThumbPrint"
-        then do :
-          if oCert:Thumbprint = pKey
-          then do :
-            assign v-found = true .
-            leave .
-          end .
-        end .
-        when "SerialNumber"
-        then do :
-          if oCert:SerialNumber = pKey
-          then do :
-            assign v-found = true .
-            leave .
-          end .
-        end .  
-      end case.
-    end.
-    
-    if not v-found
-    then do :
-      case pMode :
-        when "ThumbPrint"
-        then do : 
-          assign MSG = "В личном хранилище сертификатов не найден сертификат с отпечатком " + pKey .
-        end .
-        when "SerialNumber"
-        then do : 
-          assign MSG = "В личном хранилище сертификатов не найден сертификат с серийным номером " + pKey .
-        end .
-      end case .
-      put stream auth unformatted now " " MSG skip .
-      output stream cades close .
-      output stream auth close .
-      return error MSG .
-    end.
-  
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
       if proxy-ssl
-      then do :
-        cmd = substitute ('&1 -k --proxy-negotiate -x &4 -U : &3/auth/key >&2',
-                        search ("exe/curl.exe"),
-                        "AuthData_.json",
-                        server_,
-                        proxy-addr
-                        ).
+      then do:
+        assign
+          CmdParamProxy    = substitute ('-k --proxy-negotiate -x &1 -U : ',proxy-addr)
+          CmdParamProxyLog = CmdParamProxy
+        .
       end.
-      else do :
-        cmd = substitute ('&1 -x &4 -U &5:&6 &3/auth/key >&2',
-                        search ("exe/curl.exe"),
-                        "AuthData_.json",
-                        server_,
-                        proxy-addr,
-                        proxy-login,
-                        proxy-pswd
-                        ).
+      else do:
+        assign
+          CmdParamProxy     = substitute ('-x &1 -U &2:&3', proxy-addr, proxy-login, proxy-pswd )
+          CmdParamProxyLog  = substitute ('-x &1 -U &2:',   proxy-addr, proxy-login             )
+        .
       end.
     end.
-    else do :
-      cmd = substitute ('&1 &3/auth/key >&2',
-                      search ("exe/curl.exe"),
-                      "AuthData_.json",
-                      server_
-                      ).
-    end. 
-    put stream auth unformatted now " command   " cmd skip .
-    os-command silent value (cmd).
-    
-    file-info:file-name = search("AuthData_.json") no-error .
-    if search("AuthData_.json") = ?
-    or file-info:file-size = 0
-    then do :
-      assign
-        MSG = "Нет ответа от ИС МОТП"
-        StatusErr = true
+    else
+      assign 
+        CmdParamProxy    = ""
+        CmdParamProxyLog = ""
       .
-      release object oStore .
-      release object oCerts .
-      release object oCert .
-      put stream auth unformatted now " " MSG skip .
-      output stream cades close .
-      output stream auth close .
-      return error .
-    end.
-    
-    copy-lob from file(search("AuthData_.json")) to vAuthDataLong no-convert .
-    
-    output to value (search("AuthData_.json")) append .
-    put unformatted " " skip " _ ".
-    output close .
-    
-    input from value ("AuthData_.json") .
-    import unformatted vLine .
-    input close .
-    do ii = 1 to num-entries(vLine) :
-      vStr = entry(ii, vLine) .
-      vStr = trim(vStr) .
-      vStr = trim(vStr, "[") .
-      vStr = trim(vStr, "]") .
-      vStr = trim(vStr, chr(123)) .
-      vStr = trim(vStr, "}") .
       
-      if num-entries(vStr, ":") <> 2 then next .
-      
-      if vStr begins '"data"'
-      then do :
-        if ii < 3
-        then vData1 = trim(trim(entry(2, vStr, ":")), '"') .
-        else vData2 = trim(trim(entry(2, vStr, ":")), '"') .
-      end.
-      
-    end .
+    mFileAuth      = "{&prefixfile}auth_db" + string(DB-num) + ".log".
+    mFileCades     = "{&prefixfile}cadescom_db" + string(DB-num) + ".log".
+    mFileAuthTest  = "{&prefixfile}authTest_db" + string(DB-num) + ".log".
+    mFilecisesInfo = "{&prefixfile}cisesInfo_db" + string(DB-num) + ".log".              
     
-    create "CAdESCOM.CPSigner" oSigner .
+  end method .
+  
+  
+  
+   method public character authorize
+   (
+   input pKey as character,
+   input pMode as character
+   ):
     
-    create "CAdESCOM.CadesSignedData" oSignedData .
-
-    oSigner:Certificate = oCert . 
-    oSigner:TSAAddress = "http://testca2012.cryptopro.ru/tsp/tsp.srf" .
-
-    oSignedData:ContentEncoding = 0 .
-    oSignedData:Content = vData1 .
+      define buffer buf_ext-system-attr for ub.ext-system-attr .
     
-    signedData1Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
-    if error-status:num-messages > 0
-    then do ix = 1 to  error-status:num-messages:
-      put stream cades unformatted now " " error-status:get-message(ix) skip .
-    end .
-    if signedData1Long = ?
-    then do :
-      assign
-        MSG = "Ошибка при попытке подписания строки для получения токена авторизации!"
-        StatusErr = true
-      .
-      put stream auth unformatted now " " MSG skip .
-      output stream cades close .
-      output stream auth close .
-      return error .
-    end .
-    signedData1Long = replace(signedData1Long, chr(10), "") .
-    signedData1Long = replace(signedData1Long, chr(13), "") .
+      define variable oStore as component-handle no-undo .
+      define variable oCerts as com-handle no-undo .
+      define variable oCert as com-handle no-undo .
+      define variable oSigner as com-handle no-undo .
+      define variable oSignedData as com-handle no-undo .
+      define variable signedData1Long as longchar no-undo .
+      define variable signedData2Long as longchar no-undo .
     
+      define variable ii as integer no-undo .
+      define variable ix as integer no-undo .
+      define variable v-found as logical no-undo .
+      define variable cmd as character no-undo .
+      define variable cmdlog as character no-undo .
     
-    if vData2 > ""
-    then do :
-      oSignedData:Content = vData2 .
-      
-      signedData2Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
+      define variable vData1 as character no-undo .
+      define variable vData2 as character no-undo .
+      define variable vLine  as character no-undo .
+      define variable vStr   as character no-undo .
+    
+      define variable vAuthDataLong as longchar no-undo .
+      define variable vToken as character no-undo .
+    
+      MSG = "".
+      StatusErr = true.
+      create "CAdESCOM.Store" oStore no-error .
       if error-status:num-messages > 0
       then do ix = 1 to  error-status:num-messages:
-        put stream cades unformatted now " " error-status:get-message(ix) skip .
+         putcades( error-status:get-message(ix) ) .
       end .
-      if signedData2Long = ?
+      oStore:Open (2, "My", 0) no-error .
+      if error-status:num-messages > 0
+      then do ix = 1 to  error-status:num-messages:
+         putcades( error-status:get-message(ix) ) .
+      end .
+    
+      create "CAPICOM.Certificates" oCerts no-error . 
+      if error-status:num-messages > 0
+      then do ix = 1 to  error-status:num-messages:
+         putcades( error-status:get-message(ix) ). .
+      end .
+      oCerts = oStore:Certificates .
+      
+      release object oStore . 
+      .
+      create "CAdESCOM.Certificate" oCert  no-error.
+      if error-status:num-messages > 0
+      then do ix = 1 to  error-status:num-messages:
+         putcades( error-status:get-message(ix) ). .
+      end .
+   
+      assign v-found = false .
+      do ii = 1 to oCerts:Count :
+         oCert = oCerts:item(ii) .
+         case pMode :
+            when "ThumbPrint"
+            then do :
+               if oCert:Thumbprint = pKey
+               then do :
+                  v-found = true .
+                  leave .
+               end .
+            end .
+            when "SerialNumber"
+            then do :
+               if oCert:SerialNumber = pKey
+               then do :
+                  v-found = true .
+                  leave .
+               end .
+            end .  
+         end case.
+      end.
+      release object oCerts .
+      if not v-found
       then do :
-        assign
-          MSG = "Ошибка при попытке подписания строки (2) для получения токена авторизации!"
-          StatusErr = true
-        .
-        put stream auth unformatted now " " MSG skip .
-        output stream cades close .
-        output stream auth close .
-        return error .
-      end .
-      signedData2Long = replace(signedData2Long, chr(10), "") .
-      signedData2Long = replace(signedData2Long, chr(13), "") .
-    end .
+         case pMode :
+            when "ThumbPrint"
+            then
+               MSG = "В личном хранилище сертификатов не найден сертификат с отпечатком " + pKey .
+            when "SerialNumber"
+            then 
+               MSG = "В личном хранилище сертификатов не найден сертификат с серийным номером " + pKey .
+         end case .
+         putauth ( MSG ) .
+      end.
+      else do:
+         define variable vFileResult as character no-undo.
+         define variable vFileResultErr as character no-undo.
+         assign
+            vFileResult    = "{&prefixfile}AuthData_db" + string(DB-num) + ".json"
+            vFileResultErr = "{&prefixfile}AuthData_db" + string(DB-num) + ".err"
+            cmd    = substitute ('&1 &4 --stderr &5 &3/auth/key >&2', search ("exe/curl.exe"), vFileResult, server_, CmdParamProxy, vFileResultErr)
+            cmdlog = substitute ('&1 &4 --stderr &5 &3/auth/key >&2', search ("exe/curl.exe"), vFileResult, server_, CmdParamProxylog, vFileResultErr)
+         .
+         putauth(" command   " + cmdlog ).
+         os-command silent value (cmd).
+         define variable VFile as character no-undo.
+         vfile =  SearchFile(vFileResult).
+         if vfile eq ?
+         then do:
+            MSG = "Нет ответа от ИС МОТП. Не найден " + vFileResult.
+            putauth (MSG ).
+         end.
+         else do:
+            file-info:file-name = vfile .
+            if file-info:file-size = 0
+            then do :
+               MSG = "Нет ответа от ИС МОТП. Файл пустой " + vfile.
+               putauth ( MSG ).
+            end.
+            else do:
+               copy-lob from file vfile to vAuthDataLong no-convert .
     
-    release object oStore .
-    release object oCerts .
-    release object oCert .
-    release object oSigner .
-    release object oSignedData .
+               output to value (vfile) append .
+               put unformatted " " skip " _ ".
+               output close .
     
-    vAuthDataLong = replace(vAuthDataLong, vData1, signedData1Long) .
-    if vData2 > ""
-    then do :
-      vAuthDataLong = replace(vAuthDataLong, vData2, signedData2Long) .
-    end .
+               input from value (vfile) .
+               import unformatted vLine .
+               input close .
+               do ii = 1 to num-entries(vLine) :
+                  vStr = entry(ii, vLine) .
+                  vStr = trim(vStr) .
+                  vStr = trim(vStr, "[") .
+                  vStr = trim(vStr, "]") .
+                  vStr = trim(vStr, chr(123)) .
+                  vStr = trim(vStr, "}") .
+                  if num-entries(vStr, ":") <> 2 then next .
+                  if vStr begins '"data"'
+                  then do :
+                     if ii < 3
+                     then vData1 = trim(trim(entry(2, vStr, ":")), '"') .
+                     else vData2 = trim(trim(entry(2, vStr, ":")), '"') .
+                  end.
+               end .
+               create "CAdESCOM.CPSigner" oSigner no-error .
+               if error-status:num-messages > 0
+               then do ix = 1 to  error-status:num-messages:
+                  putcades( error-status:get-message(ix) ) .
+               end .
+               create "CAdESCOM.CadesSignedData" oSignedData no-error .
+               if error-status:num-messages > 0
+               then do ix = 1 to  error-status:num-messages:
+                  putcades( error-status:get-message(ix) ) .
+               end .
+               oSigner:Certificate = oCert . 
+               oSigner:TSAAddress = "http://testca2012.cryptopro.ru/tsp/tsp.srf" .
+               oSignedData:ContentEncoding = 0 .
+               oSignedData:Content = vData1 .
     
-    copy-lob vAuthDataLong to file "AuthDataSigned_.json" no-convert .
-    
+               signedData1Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
+               if error-status:num-messages > 0
+               then do ix = 1 to  error-status:num-messages:
+                  putcades( error-status:get-message(ix)).
+               end .
+               if    signedData1Long = ?
+                  or signedData1Long = ""
+               then do :
+                  MSG = "Ошибка при попытке подписания строки для получения токена авторизации!".
+                  putauth ( MSG ) .
+               end .
+               else do:
+                  signedData1Long = replace(signedData1Long, chr(10), "") .
+                  signedData1Long = replace(signedData1Long, chr(13), "") .
+                  define variable vFlagError as logical no-undo.
+                  if vData2 > ""
+                  then do :
+                     oSignedData:Content = vData2 .
+                     signedData2Long = oSignedData:SignCades(oSigner, 1, false, 0) no-error .
+                     if error-status:num-messages > 0
+                     then do ix = 1 to  error-status:num-messages:
+                        putcades( error-status:get-message(ix)) .
+                     end .
+                     if    signedData2Long = ?
+                        or signedData1Long = ""
+                     then do :
+                        MSG = "Ошибка при попытке подписания строки (2) для получения токена авторизации!".
+                        putauth ( MSG ) .
+                        vFlagError = yes.
+                     end .
+                     else do:
+                        signedData2Long = replace(signedData2Long, chr(10), "") .
+                        signedData2Long = replace(signedData2Long, chr(13), "") .
+                     end.
+                 end.
+                 if not vFlagError
+                 then do:
+                     if vData1 > ""
+                     then
+                        vAuthDataLong = replace(vAuthDataLong, vData1, signedData1Long) .
+                     if vData2 > ""
+                     then
+                        vAuthDataLong = replace(vAuthDataLong, vData2, signedData2Long) .
+                     copy-lob vAuthDataLong to file ("{&prefixfile}AuthDataSigned_db" + string(DB-num) + ".json") no-convert .
+ 
 /*    output to value(search("AuthDataSigned_.json")) append .*/
 /*      put unformatted '"}]' .                               */
 /*    output close .                                          */
-    
-    if trim(proxy-addr) <> "" and proxy-addr <> ?
-    then do :
-      if proxy-ssl
-      then do :
-        cmd = substitute ('&1 -H "Content-Type: application/json" -k --proxy-negotiate -x &4 -U : -d @&5 &3/auth/simpleSignIn >&2',
-                        search ("exe/curl.exe"),
-                        "AuthToken_.json",
-                        server_,
-                        proxy-addr,
-                        search ("AuthDataSigned_.json")
-                        ).
+                     vFileResult = "{&prefixfile}AuthToken_db" + string(DB-num) + ".json".
+                     vFileResulterr = "{&prefixfile}AuthToken_db" + string(DB-num) + ".err".
+                     cmd = substitute ('&1 -H "Content-Type: application/json" &5 -d @&4 --stderr &6 &3/auth/simpleSignIn >&2',
+                                        search ("exe/curl.exe"),
+                                        vFileResult,
+                                        server_,
+                                        searchfile ("{&prefixfile}AuthDataSigned_db" + string(DB-num) + ".json"),
+                                        CmdParamProxy,
+                                        vFileResulterr).
+                     cmdlog = substitute ('&1 -H "Content-Type: application/json" &5 -d @&4 --stderr &6 &3/auth/simpleSignIn >&2',
+                                           search ("exe/curl.exe"),
+                                           vFileResult,
+                                           server_,
+                                           searchfile ("{&prefixfile}AuthDataSigned_db" + string(DB-num) + ".json"),
+                                           CmdParamProxyLog,
+                                           vFileResulterr).
+   
+                     putauth (" command   " + cmdlog ) .
+                     os-command silent value (cmd).
+                     vfile =  SearchFile(vFileResult).
+                     if vfile eq ?
+                     then do:
+                        MSG = "Нет ответа от ИС МОТП. Не найден " + vFileResult.
+                        putauth (MSG ).
+                     end.
+                     else do:
+                        file-info:file-name = vfile .
+                        if file-info:file-size = 0
+                        then do :
+                           MSG = "Нет ответа от ИС МОТП. Файл пустой " + vfile.
+                           putauth ( MSG ).
+                        end.
+                        else do:
+                           output to value (vfile) append .
+                           put unformatted " " skip " _ ".
+                           output close .
+ 
+                           input from value (vfile) .
+                           import unformatted vLine .
+                           input close .
+                           do ii = 1 to num-entries(vLine) :
+                              vStr = entry(ii, vLine) .
+                              vStr = trim(vStr) .
+                              vStr = trim(vStr, "[") .
+                              vStr = trim(vStr, "]") .
+                              vStr = trim(vStr, chr(123)) .
+                              vStr = trim(vStr, "}") .
+                              if num-entries(vStr, '":"') < 2 then next .
+   
+                              if vStr begins '"token"'
+                              then do :
+                                vToken = trim(trim(substring(vStr, 9)), '"') .
+                              end.
+   
+                              if vStr begins '"error_message"'
+                              then do :
+                                 MSG = trim(trim(substring(vStr, 17)), '"').
+                                 putauth ( MSG ) .
+                              end.
+                              else do trans:
+                                 find first buf_ext-system-attr where buf_ext-system-attr.db-num   = esysDbNum
+                                                                  and buf_ext-system-attr.esys-id  = esysId
+                                                                  and buf_ext-system-attr.esya-attr-code = "AuthToken"
+                                 exclusive-lock no-error .
+                                 if not available buf_ext-system-attr
+                                 then do :
+                                    create buf_ext-system-attr.
+                                    assign
+                                      buf_ext-system-attr.db-num         = esysDbNum
+                                      buf_ext-system-attr.esys-id        = esysId
+                                      buf_ext-system-attr.esya-attr-code = "AuthToken"
+                                    .
+                                  end.
+                                  buf_ext-system-attr.esya-attr-value = vToken .
+ 
+                                  find first buf_ext-system-attr where buf_ext-system-attr.db-num   = esysDbNum
+                                                                   and buf_ext-system-attr.esys-id  = esysId
+                                                                   and buf_ext-system-attr.esya-attr-code = "AuthTokenDT"
+                                  exclusive-lock no-error .
+                                  if not available buf_ext-system-attr
+                                  then do :
+                                    create buf_ext-system-attr.
+                                    assign
+                                      buf_ext-system-attr.db-num         = esysDbNum
+                                      buf_ext-system-attr.esys-id        = esysId
+                                      buf_ext-system-attr.esya-attr-code = "AuthTokenDT"
+                                    .
+                                  end.
+                                  buf_ext-system-attr.esya-attr-value = string(datetime-tz(now)) .
+                              end.
+                           end.
+                        end.
+                     end.
+                  end.
+               end.
+               release object oSigner .
+               release object oSignedData .
+            end.
+         end.
       end.
-      else do :
-        cmd = substitute ('&1 -H "Content-Type: application/json" -x &4 -U &5:&6 -d @&7 &3/auth/simpleSignIn >&2',
-                        search ("exe/curl.exe"),
-                        "AuthToken_.json",
-                        server_,
-                        proxy-addr,
-                        proxy-login,
-                        proxy-pswd,
-                        search ("AuthDataSigned_.json")
-                        ).
-      end.
-    end.
-    else do :
-      cmd = substitute ('&1 -H "Content-Type: application/json" -d @&4 &3/auth/simpleSignIn >&2',
-                      search ("exe/curl.exe"),
-                      "AuthToken_.json",
-                      server_,
-                      search ("AuthDataSigned_.json")
-                      ).
-    end. 
-    put stream auth unformatted now " command   " cmd skip .
-    os-command silent value (cmd).
-    
-    file-info:file-name = search("AuthToken_.json") no-error .
-    if search("AuthToken_.json") = ?
-    or file-info:file-size = 0
-    then do :
-      assign
-        MSG = "Нет ответа от ИС МОТП"
-        StatusErr = true
-      .
-      put stream auth unformatted now " " MSG skip .
-      output stream cades close .
-      output stream auth close .
-      return error .
-    end.
-    
-    output to value (search("AuthToken_.json")) append .
-    put unformatted " " skip " _ ".
-    output close .
-    
-    input from value ("AuthToken_.json") .
-    import unformatted vLine .
-    input close .
-    do ii = 1 to num-entries(vLine) :
-      vStr = entry(ii, vLine) .
-      vStr = trim(vStr) .
-      vStr = trim(vStr, "[") .
-      vStr = trim(vStr, "]") .
-      vStr = trim(vStr, chr(123)) .
-      vStr = trim(vStr, "}") .
-      if num-entries(vStr, '":"') < 2 then next .
+      release object oCert .
       
-      if vStr begins '"token"'
-      then do :
-        vToken = trim(trim(substring(vStr, 9)), '"') .
+      if msg ne ""
+      then
+         return error msg.
+      else do:
+         StatusErr = no.
+         return vToken .
       end.
       
-      if vStr begins '"error_message"'
-      then do :
-        assign
-          MSG = trim(trim(substring(vStr, 17)), '"')
-          StatusErr = true
-        .
-        put stream auth unformatted now " " MSG skip .
-        output stream cades close .
-        output stream auth close .
-        return error .
-      end.
-      
-    end .
-    
-    output stream cades close .
-    output stream auth close .
-    
-    find first buf_ext-system-attr exclusive-lock where buf_ext-system-attr.db-num   = esysDbNum
-                                                    and buf_ext-system-attr.esys-id  = esysId
-                                                    and buf_ext-system-attr.esya-attr-code = "AuthToken"
-                                                    no-error .
-    if not available buf_ext-system-attr
-    then do :
-      create buf_ext-system-attr.
-      assign
-        buf_ext-system-attr.db-num         = esysDbNum
-        buf_ext-system-attr.esys-id        = esysId
-        buf_ext-system-attr.esya-attr-code = "AuthToken"
-      .
-    end.
-    assign buf_ext-system-attr.esya-attr-value = vToken .
-    
-    find first buf_ext-system-attr exclusive-lock where buf_ext-system-attr.db-num   = esysDbNum
-                                                    and buf_ext-system-attr.esys-id  = esysId
-                                                    and buf_ext-system-attr.esya-attr-code = "AuthTokenDT"
-                                                    no-error .
-    if not available buf_ext-system-attr
-    then do :
-      create buf_ext-system-attr.
-      assign
-        buf_ext-system-attr.db-num         = esysDbNum
-        buf_ext-system-attr.esys-id        = esysId
-        buf_ext-system-attr.esya-attr-code = "AuthTokenDT"
-      .
-    end.
-    assign buf_ext-system-attr.esya-attr-value = string(datetime-tz(now)) .
-    
-    return vToken .
-      
-  end method .
-  
-  define stream authTest .
+   end method .
   
   method public logical authTest
   (
@@ -626,112 +650,105 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   ) :
     
     define variable cmd         as character no-undo .
+    define variable cmdlog      as character no-undo .
     define variable vLine       as character no-undo .
     define variable vHTTPstatus as character no-undo .
     define variable ii          as integer   no-undo .
-    
-    output stream authTest to value (ibs.th.gbl.gbl-inipar:logDir + "authTest.log") append .
-    
-    output to tmp.json .
-      put unformatted chr(123) '"gtin":"00000046210654"}' skip .
+    define variable tmpfile     as character no-undo .
+    define variable tmpcmdfile  as character no-undo .
+    StatusErr = true.
+    tmpfile = "tmpmotp_db" + string(DB-num) + ".json" .
+    output to value(tmpfile) .
+      put unformatted  '~{"gtin":"00000046210654"}' skip .
     output close .
     
-    put stream authTest unformatted now "  out-data:" skip .
-    output stream authTest close .
-    os-append value("tmp.json") value(ibs.th.gbl.gbl-inipar:logDir + "authTest.log") .
-    output stream authTest to value (ibs.th.gbl.gbl-inipar:logDir + "authTest.log") append .
-    
-    if trim(proxy-addr) <> "" and proxy-addr <> ?
-    then do :
-      if proxy-ssl
-      then do :
-        cmd = substitute ('&1 -i -d @&6 -H "Content-Type: application/json" -H "Authorization: Bearer &5" -k --proxy-negotiate -x &4 -U : &3/cises/my >&2',
-                        search ("exe/curl.exe"),
-                        "AuthTest_.test",
-                        server_,
-                        proxy-addr,
-                        pToken,
-                        search ("tmp.json")
-                        ).
-      end.
-      else do :
-        cmd = substitute ('&1 -i -d @&8 -H "Content-Type: application/json" -H "Authorization: Bearer &7" -x &4 -U &5:&6 &3/cises/my >&2',
-                        search ("exe/curl.exe"),
-                        "AuthTest_.test",
-                        server_,
-                        proxy-addr,
-                        proxy-login,
-                        proxy-pswd,
-                        pToken,
-                        search ("tmp.json")
-                        ).
-      end.
-    end.
-    else do :
-      cmd = substitute ('&1 -i -d @&5 -H "Content-Type: application/json" -H "Authorization: Bearer &4" &3/cises/my >&2',
+    putauthTest ( "  out-data:" ) .
+    if isDebug
+    then
+      os-append value(tmpfile) value(mFileAuthTest) .
+    define variable vFileResult as character no-undo.
+    define variable vFileResultErr as character no-undo.
+    vFileResult    = "{&prefixfile}AuthTest_db" + string(DB-num) + ".test".
+    vFileResultErr = "{&prefixfile}AuthTest_db" + string(DB-num) + ".err".
+    cmd = substitute ('&1 -i -d @&5 --stderr &7 -H "Content-Type: application/json" -H "Authorization: Bearer &4" &6 &3/cises/my >&2',
                       search ("exe/curl.exe"),
-                      "AuthTest_.test",
+                      vFileResult,
                       server_,
                       pToken,
-                      search ("tmp.json")
-                      ).
-    end. 
-    output to tmp-cmd.bat .
+                      searchfile (tmpfile),
+                      CmdParamProxy,
+                      vFileResultErr).
+    cmdlog = substitute ('&1 -i -d @&5 --stderr &7 -H "Content-Type: application/json" -H "Authorization: Bearer &4" &6 &3/cises/my >&2',
+                      search ("exe/curl.exe"),
+                      vFileResult,
+                      server_,
+                      pToken,
+                      searchfile (tmpfile),
+                      CmdParamProxyLOG,
+                      vFileResultErr).
+     
+    putauthTest ( "command:" ).
+    putauthTest ( cmdLOG   ).
+    tmpcmdfile = "tmp_cmd_db" + string(DB-num) + ".bat".
+    output to value(tmpcmdfile) .
     put unformatted cmd skip .
     output close .
-    put stream authTest unformatted now "  command:" skip .
-    put stream authTest unformatted now "  " cmd skip .
-    os-command silent tmp-cmd.bat .
-    
-    file-info:file-name = search("AuthTest_.test") no-error .
-    if search("AuthTest_.test") = ?
-    or file-info:file-size = 0
-    then do :
-      assign
-        MSG = "Нет ответа от ИС МОТП"
-        StatusErr = true
-      .
-      put stream authTest unformatted now "  " MSG skip .
-      output stream authTest close .
-      return false .
+    os-command silent value(tmpcmdfile) .
+/*    os-command silent value(cmd). токен большой и не влезает в os-command*/
+    define variable vfile as character no-undo.
+    vfile =  SearchFile(vFileResult).
+    if vfile eq ?
+    then do:
+       MSG = "Нет ответа от ИС МОТП. Не найден " + vFileResult.
+       putauth (MSG ).
     end.
+    else do:
+       file-info:file-name = vfile .
+       if file-info:file-size = 0
+       then do :
+          MSG = "Нет ответа от ИС МОТП. Файл пустой " + vfile.
+          putauth ( MSG ).
+       end.
+       else do:
+          putauthTest (" in-data:" ) .
     
-    put stream authTest unformatted now "  in-data:" skip .
-    output stream authTest close .
-    os-append value("AuthTest_.test") value(ibs.th.gbl.gbl-inipar:logDir + "authTest.log") .
+          if isDebug
+          then
+            os-append value(vFileResult) value(mFileAuthTest) .
     
-    output to value (search("AuthTest_.test")) append .
-    put unformatted " " skip " _ ".
-    output close .
+          output to value (searchfile(vFileResult)) append .
+          put unformatted " " skip " _ ".
+          output close .
     
-    input from value ("AuthTest_.test") .
-    import unformatted vLine .
-    input close .
+          input from value (searchfile(vFileResult)) .
+          import unformatted vLine .
+          input close .
     
-    HttpStatus = ? .
-    assign vHTTPstatus = "unknown" .
-    if vLine begins 'HTTP/2'
-    then do :
-      vHTTPstatus = trim(substring(vLine, 8)) .
-      HttpStatus = integer(vHTTPstatus) .
+          HttpStatus = ? .
+          assign vHTTPstatus = "unknown" .
+          if vLine begins 'HTTP/2'
+          then do :
+            vHTTPstatus = trim(substring(vLine, 8)) .
+            HttpStatus = integer(vHTTPstatus) .
+          end.
+          
+          if vLine begins 'HTTP/1.1'
+          then do :
+            vHTTPstatus = trim(substring(vLine, 10,3)) .
+            HttpStatus = integer(vHTTPstatus) .
+          end.
+          StatusErr = no.
+          if HttpStatus = 401
+          then do :
+            MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .
+            return false .
+          end .
+          else do :
+            MSG = "Токен авторизации в ИС МОТП - ДЕЙСТВИТЕЛЕН" .
+            return true .
+          end .
+       end.
     end.
-    
-    if vLine begins 'HTTP/1.1'
-    then do :
-      vHTTPstatus = trim(substring(vLine, 10,3)) .
-      HttpStatus = integer(vHTTPstatus) .
-    end.
-    
-    if HttpStatus = 401
-    then do :
-      MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .
-      return false .
-    end .
-    else do :
-      MSG = "Токен авторизации в ИС МОТП - ДЕЙСТВИТЕЛЕН" .
-      return true .
-    end .
-    
     
 /*    if vHTTPstatus begins "20"                               */
 /*    then do :                                                */
@@ -775,7 +792,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   end method .
   
   define variable GrayZoneQnty  as integer no-undo .
-  define stream cisesInfo .
+  
   
   method public void cisesInfo
   (
@@ -785,8 +802,15 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   input pLevel2 as logical,
   output v-ok as logical
   ) :
-    
-    define variable cmd as character no-undo .
+    if pToken > ""
+    then .
+    else do :
+       v-ok = no.
+       return.
+       
+    end.
+    define variable cmd    as character no-undo .
+    define variable cmdlog as character no-undo .
     define variable vLine as character no-undo .
     define variable vlongJson as longchar no-undo .
     define variable v-num-marks as integer no-undo .
@@ -805,7 +829,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define buffer buf_utd-err for ub.utd-err .
     define buffer buf_utd for ub.utd .
     
-    output stream cisesInfo to value (ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") append .
+    
     
     if not checkINN
     then do :
@@ -845,7 +869,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       
     v-ok = true .
     v-num-marks = 0 .
-    output to value("cisesInfoReq_.json") .
+    define variable vfilereq as character no-undo.
+    vfilereq = "{&prefixfile}cisesInfoReq_db" + string(DB-num) + ".json".
+    output to value(vfilereq) .
     put unformatted "[" skip .
     for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = pDB-num
                                               and buf_utd-marking-lines.doc-id = pDoc-id,
@@ -882,96 +908,56 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     put unformatted skip "]" skip.
     output close .
     
-    put stream cisesInfo unformatted now "  cisesInfoReq_.json (out-data):" skip .
-    output stream cisesInfo close .
-    os-append value("cisesInfoReq_.json") value(ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") .
-    output stream cisesInfo to value (ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") append .
+    putcisesInfo (vfilereq + " (out-data):" ) .
+    if isDebug
+    then
+      os-append value(vfilereq) value(mFilecisesInfo) .
+    define variable vCmdToken as character no-undo.
+    if pToken > ""
+    then
+       vCmdToken = substitute (' -H "Authorization: Bearer &1"',pToken).
+       define variable vfileresult as character no-undo.
+       define variable vfileresulterr as character no-undo.
+    vfileresult    = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".json".
+    vfileresulterr = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".err".
+    cmd = substitute ('&1 -H "Content-Type: application/json" &5 &6 -d @&4 --stderr &7 &3/cises/info >&2',
+                      search ("exe/curl.exe"),
+                      vfileresult,
+                      server_,
+                      searchfile (vfilereq),
+                      vCmdToken,
+                      CmdParamProxy,
+                      vfileresulterr). 
+    cmdlog = substitute ('&1 -H "Content-Type: application/json" &5 &6 -d @&4 --stderr &7 &3/cises/info >&2',
+                      search ("exe/curl.exe"),
+                      vfileresult,
+                      server_,
+                      searchfile (vfilereq),
+                      vCmdToken,
+                      CmdParamProxylog,
+                      vfileresulterr).               
+     
     
-    if trim(proxy-addr) <> "" and proxy-addr <> ?
-    then do :
-      if proxy-ssl
-      then do :
-        if pToken > ""
-        then
-        cmd = substitute ('&1 -H "Content-Type: application/json" -H "Authorization: Bearer &6" -k --proxy-negotiate -x &4 -U : -d @&5 &3/cises/info >&2',
-                        search ("exe/curl.exe"),
-                        "cisesInfoResp_.json",
-                        server_,
-                        proxy-addr,
-                        search ("cisesInfoReq_.json"),
-                        pToken
-                        ).
-        else
-        cmd = substitute ('&1 -H "Content-Type: application/json" -k --proxy-negotiate -x &4 -U : -d @&5 &3/cises/info >&2',
-                        search ("exe/curl.exe"),
-                        "cisesInfoResp_.json",
-                        server_,
-                        proxy-addr,
-                        search ("cisesInfoReq_.json")
-                        ).               
-      end.
-      else do :
-        if pToken > ""
-        then
-        cmd = substitute ('&1 -H "Content-Type: application/json" -H "Authorization: Bearer &8" -x &4 -U &5:&6 -d @&7 &3/cises/info >&2',
-                        search ("exe/curl.exe"),
-                        "cisesInfoResp_.json",
-                        server_,
-                        proxy-addr,
-                        proxy-login,
-                        proxy-pswd,
-                        search ("cisesInfoReq_.json"),
-                        pToken
-                        ).
-        else
-        cmd = substitute ('&1 -H "Content-Type: application/json" -x &4 -U &5:&6 -d @&7 &3/cises/info >&2',
-                        search ("exe/curl.exe"),
-                        "cisesInfoResp_.json",
-                        server_,
-                        proxy-addr,
-                        proxy-login,
-                        proxy-pswd,
-                        search ("cisesInfoReq_.json")
-                        ).                
-      end.
-    end.
-    else do :
-      if pToken > ""
-      then
-      cmd = substitute ('&1 -H "Content-Type: application/json" -H "Authorization: Bearer &5" -d @&4 &3/cises/info >&2',
-                      search ("exe/curl.exe"),
-                      "cisesInfoResp_.json",
-                      server_,
-                      search ("cisesInfoReq_.json"),
-                      pToken
-                      ).
-      else
-      cmd = substitute ('&1 -H "Content-Type: application/json" -d @&4 &3/cises/info >&2',
-                      search ("exe/curl.exe"),
-                      "cisesInfoResp_.json",
-                      server_,
-                      search ("cisesInfoReq_.json")
-                      ).                
-    end. 
+    
+    putcisesInfo (" command:" ).
+    putcisesInfo ( cmdlog ) .
+    
     output to tmp-cmd.bat .
     put unformatted cmd skip .
     output close .
-    
-    put stream cisesInfo unformatted now "  command:" skip .
-    put stream cisesInfo unformatted now "  " cmd skip .
-    
     os-command silent tmp-cmd.bat .
     
+/*    os-command silent value(cmd). так нельзя делать такак токен большой и не влизает в команду*/
 /*    input from value (search("cisesInfoResp_.json")) .*/
 /*    import unformatted vLine .                        */
 /*    input close .                                     */
 
-    copy-lob from file "cisesInfoResp_.json" to vlongJson .
+    copy-lob from file vfileresult to vlongJson .
     vlongJson = replace(vlongJson, "&", "&amp;") .
     vlongJson = replace(vlongJson, "<", "&lt;") .
     vlongJson = replace(vlongJson, ">", "&gt;") .
     vlongJson = replace(vlongJson, ':null', ':""') .
-    copy-lob from vlongJson to file "cisesInfoResp__.json" .
+    copy-lob from vlongJson to file vfileresult .
     
     if vLine begins "<html>"
     then do :
@@ -979,21 +965,23 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       return .
     end .
     
-    put stream cisesInfo unformatted now "  cisesInfoResp_.json (in-data):" skip .
-    output stream cisesInfo close .
-    os-append value("cisesInfoResp_.json") value(ibs.th.gbl.gbl-inipar:logDir + "cisesInfo.log") .
-     
+    putcisesInfo ( vfileresult + " (in-data):") .
+    if isDebug
+    then
+      os-append value(vfileresult) value(mFilecisesInfo) .
+    define variable vfileresultxml as character no-undo.
+    vfileresultxml = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".xml".
     cmd = substitute ('&1 -file=&2 >&3',
                        search("exe/json2xml.exe"),
-                       "cisesInfoResp__.json",
-                       "cisesInfoResp_.xml"
+                       searchfile(vfileresult),
+                       vfileresultxml
                        ) .
     os-command silent value (cmd). 
     
     empty temp-table tt-childs .
     
     Doc-Id = pDoc-id .
-    db-num = pDB-num .
+    docdb-num = pDB-num .
     
 /*    for each buf_utd-err exclusive-lock where buf_utd-err.db-num = db-num        */
 /*                                          and buf_utd-err.doc-id = Doc-Id        */
@@ -1003,10 +991,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
 /*      delete buf_utd-err .                                                       */
 /*    end .                                                                        */
     
-    ParseResponseInfoCises(search("cisesInfoResp_.xml")) .   
+    ParseResponseInfoCises(searchfile(vfileresultxml)) .   
     
     Doc-Id = ? .
-    db-num = ? .              
+    docdb-num = ? .              
   
   end method .  
   
@@ -1164,7 +1152,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         if INN = hText:node-value
         then do :
           INNchecked = true .
-          updateUtdStatus(input DB-num, input Doc-Id, input ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB) .
+          updateUtdStatus(input docDB-num, input Doc-Id, input ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB) .
           return .
         end .
       end .
@@ -1190,6 +1178,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
               else v-err-childs = true .
             end .
           end .
+          if v-err-childs
+          then do :
+            MSG = "В коробе " + string(v-num-childs) + " блоков." .
+          end.
         end .
         
         if v-unit = "LEVEL1"
@@ -1206,6 +1198,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
               else v-err-childs = true .
             end .
           end .
+          if v-err-childs
+          then do :
+            MSG = "В блоке " + string(v-num-childs) + " пачек." .
+          end.
         end .
         
         
@@ -1372,7 +1368,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     or trim(pMark) = ""
     then return .
     
-    find first buf_utd no-lock where buf_utd.db-num = DB-num
+    find first buf_utd no-lock where buf_utd.db-num = docDB-num
                                  and buf_utd.doc-id = Doc-id
                                  no-error .
     
@@ -1462,9 +1458,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         end .
         if not v-found-bc
         then do :
-          run utl/upd-gtin.p (input DB-num,
+          run utl/upd-gtin.p (input docDB-num,
                               input buf_marking.gds-code,
-                              input pGtin)
+                              input pGtin,
+                              input (docDB-num = gbl-var:g#db-num))
                               no-error .
           if error-status:error
           then do :
@@ -1492,9 +1489,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           end .
           if not v-found-bc
           then do :
-            run utl/upd-gtin.p (input DB-num,
+            run utl/upd-gtin.p (input docDB-num,
                                 input buf_bar-code.b-code,
-                                input vGtin)
+                                input vGtin,
+                                input (docDB-num = gbl-var:g#db-num))
                                 no-error .
             if error-status:error
             then do :
@@ -1519,12 +1517,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     if pParent <> ""
     then do :
       find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins pMark
-                                                        and buf_utd-marking-lines.db-num = DB-num
+                                                        and buf_utd-marking-lines.db-num = docDB-num
                                                         and buf_utd-marking-lines.doc-id = Doc-Id no-error .
       if not available buf_utd-marking-lines
       then do :
         find first buf_utd-marking-lines-parent no-lock where buf_utd-marking-lines-parent.mark begins pParent
-                                                      and buf_utd-marking-lines-parent.db-num = DB-num
+                                                      and buf_utd-marking-lines-parent.db-num = docDB-num
                                                       and buf_utd-marking-lines-parent.doc-id = Doc-Id no-error .
         create buf_utd-marking-lines .
         if available buf_utd-marking-lines-parent
@@ -1538,7 +1536,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         else do :
           assign
             buf_utd-marking-lines.mark = pMark
-            buf_utd-marking-lines.db-num = DB-num
+            buf_utd-marking-lines.db-num = docDB-num
             buf_utd-marking-lines.doc-id = Doc-Id
             buf_utd-marking-lines.doc-level = 1
           .
@@ -1614,182 +1612,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   input pDoc-id as integer
   ) :
     
-    define buffer buf_utd for ub.utd .
-    define buffer buf_utd-lines for ub.utd-lines .
-    define buffer buf_utd-marking-lines for ub.utd-marking-lines .
-    define buffer buf_marking for ub.marking .
-    define buffer buf_marking-childs for ub.marking .
-    define buffer buf_contract for ub.contract .
-    define buffer buf_utd-err for ub.utd-err .
-    
-    define variable v-vattype as character no-undo .
-    define variable v-vatpc   as decimal   no-undo .
-    define variable v-comment as character no-undo .
-    define variable v-ok      as logical no-undo .
-    define variable v-price   as decimal no-undo .
-    define variable objKeyRec as class ibs.th.gbl.keyrec no-undo.
-    define variable vRecKey   as character no-undo.
-         
-    
-        
-    find first buf_utd no-lock where buf_utd.db-num = pDb-num
-                                 and buf_utd.doc-id = pDoc-id
-                                 no-error .
-     v-ok = true .                            
-    /*  какая-то сомнительная проверка если все марки в ошибке то проверка по спецификации 
-        не запустится. А что делать если у нас повторная проверка? как отлечить марки не прошедшую 
-        поверку по МОТП от других 
-
-    assign v-ok = false .
-
-    for each buf_utd-marking-lines no-lock where  buf_utd-marking-lines.db-num = pDb-num
-                                              and buf_utd-marking-lines.doc-id = pDoc-id,
-    first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark :
-      if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
-      then do :
-        assign v-ok = true .
-        leave .
-      end .                                     
-    end .     
-    
-    if not v-ok then return .                        
-       */ 
-                            
-    for first buf_contract no-lock where buf_contract.host-code = buf_utd.host-code
-                                     and buf_contract.contract-code = buf_utd.contract-code
-                                     :
-      if buf_contract.contract-date-end < buf_utd.DocumentDate
-      then do :
-        assign v-ok = false .
-        AddUtdErr(buf_utd.db-num,
-                  buf_utd.doc-id,
-                  buffer buf_contract:handle,
-                  "CheckMOTP",
-                  "ContrDate",
-                  (buf_contract.contract-name + {&delim-par} + string(buf_contract.contract-date-end)) ) .
-      end .
-      else do :
-        for each buf_utd-err exclusive-lock where buf_utd-err.db-num = buf_utd.db-num
-                                              and buf_utd-err.doc-id = buf_utd.doc-id
-                                              and buf_utd-err.CheckType = "CheckMOTP"
-                                              and buf_utd-err.CodeErr = "ContrDate"
-                                              :
-          delete buf_utd-err .                                      
-        end .
-      end .
-    end .                                                               
-    
-    if v-ok
-    then do :
-      
-      for each buf_utd-err exclusive-lock where buf_utd-err.db-num = buf_utd.db-num
-                                            and buf_utd-err.doc-id = buf_utd.doc-id
-                                            and buf_utd-err.CheckType = "CheckMOTP"
-                                            and buf_utd-err.CodeErr = "SpecifErr"
-                                            :
-        delete buf_utd-err .                                      
-      end .   
-      
-      for each buf_utd-lines no-lock where buf_utd-lines.db-num = pDb-num
-                                       and buf_utd-lines.doc-id = pDoc-id :
-        if buf_utd-lines.TaxRate <= 0
-        then do :
-          assign
-            v-vattype = "без"
-            v-vatpc = 0
-          .
-        end .
-        else do :
-          assign
-            v-vattype = "в т. ч."
-            v-vatpc = TaxRate
-          .
-        end .  
-        
-        assign v-price = buf_utd-lines.total / buf_utd-lines.Quantity .
-        {  str/ckcntspc.i
-           buf_utd.host-code
-           buf_utd.contract-code
-           buf_utd-lines.gds-code
-           v-price
-           v-vattype
-           v-vatpc
-           no-error
-        }
-        if error-status :error then 
-        do:
-          assign v-ok = false .
-          AddUtdErr(buf_utd.db-num,
-                    buf_utd.doc-id,
-                    buffer buf_utd-lines:handle,
-                    "CheckMOTP",
-                    "SpecifErr",
-                    (string(buf_utd-lines.linenum) + {&delim-par} + error-status :get-message(1) + {&delim-par} + return-value)).
-          for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num   = buf_utd-lines.db-num
-                                                   and buf_utd-marking-lines.doc-id   = buf_utd-lines.doc-id
-                                                   and buf_utd-marking-lines.LineNum  = buf_utd-lines.LineNum,
-          first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark :
-            assign
-              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
-            .
-          end .
-        end.
-        else do :
-          objKeyRec = new ibs.th.gbl.keyrec().
-          for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num   = buf_utd-lines.db-num
-                                                   and buf_utd-marking-lines.doc-id   = buf_utd-lines.doc-id
-                                                   and buf_utd-marking-lines.LineNum  = buf_utd-lines.LineNum,
-          first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark :
-             objKeyRec:GenKeyRec ( input "marking"
-                                  ,input buffer buf_marking:handle
-                                  ,output vRecKey).
-             block-utd-err:
-             for each buf_utd-err  where buf_utd-err.db-num = buf_utd.db-num
-                                     and buf_utd-err.doc-id    = buf_utd.doc-id
-                                     and buf_utd-err.CheckType = "CheckMOTP"
-                                     and buf_utd-err.CodeErr   = "MotpMarkErr"
-                                     and buf_utd-err.reckey    =  vRecKey
-             no-lock:
-                leave block-utd-err.                                
-             end .
-             assign
-                buf_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB when not available buf_utd-err
-             .
-          end .
-          delete object objKeyRec.
-        end .
-      end .
-    end .
-    
-    find current buf_utd exclusive-lock .
-    if not v-ok
-    then do :
-      assign
-        buf_utd.sts = objSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB
-        /*buf_utd.comment = v-comment*/
-      .
-    end .
-    else do :
-      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num   = buf_utd.db-num
-                                               and buf_utd-marking-lines.doc-id   = buf_utd.doc-id,
-      first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark :
-/*        for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark :*/
-/*          assign                                                                                            */
-/*            buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB                   */
-/*          .                                                                                                 */
-/*        end .                                                                                               */
-        if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then next .
-        assign
-          buf_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
-        .
-      end .
-      assign
-        buf_utd.sts = objSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB
-        buf_utd.comment = "Проверка по спецификации пройдена."
-      .
-    end .
-  
-    release buf_utd no-error .
+    run utl/utd-checkSpec.p (input pDb-num,
+                             input pDoc-id) .
     
   end method .
   
@@ -1805,6 +1629,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable v-ok            as logical no-undo .
     define variable cmd             as character no-undo .
     define variable v-out-file-name as character no-undo .
+    define variable v-out-file-name-err as character no-undo .
     define variable v-doc-code      as character no-undo .
     
     Doc-Id = pDoc-id .
@@ -1829,64 +1654,48 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       v-doc-code = buf_utd-attr.attr-value .                               
     end .
     
-    assign v-out-file-name = substitute("docinfo_&1.json", buf_utd.DocumentNumber) .
-    
-    if trim(proxy-addr) <> "" and proxy-addr <> ?
-    then do :
-      if proxy-ssl
-      then do :
-        cmd = substitute ('&1 -H "Authorization: Bearer &6" -k --proxy-negotiate -x &4 -U : &3/documents/&5/info >&2',
-                        search ("exe/curl.exe"),
-                        v-out-file-name,
-                        server_,
-                        proxy-addr,
-                        v-doc-code,
-                        pToken
-                        ).
-      end.
-      else do :
-        cmd = substitute ('&1 -H "Authorization: Bearer &8" -x &4 -U &5:&6 &3/documents/&7/info >&2',
-                        search ("exe/curl.exe"),
-                        v-out-file-name,
-                        server_,
-                        proxy-addr,
-                        proxy-login,
-                        proxy-pswd,
-                        v-doc-code,
-                        pToken
-                        ).
-      end.
-    end.
-    else do :
-      cmd = substitute ('&1 -H "Authorization: Bearer &5" &3/documents/&4/info >&2',
+    v-out-file-name     = substitute("{&prefixfile}docinfo_&1.json", buf_utd.DocumentNumber) .
+    v-out-file-name-err = substitute("{&prefixfile}docinfo_&1.err", buf_utd.DocumentNumber) .
+    cmd = substitute ('&1 -H "Authorization: Bearer &5" &6 --stderr &7 &3/documents/&4/info >&2',
                       search ("exe/curl.exe"),
                       v-out-file-name,
                       server_,
                       v-doc-code,
-                      pToken
-                      ).
-    end. 
+                      pToken,
+                      CmdParamProxy,
+                      v-out-file-name-err).
+    /* 
     output to tmp-cmd.bat .
     put unformatted cmd skip .
     output close .
     os-command silent tmp-cmd.bat .
-    
-    file-info:file-name = search(v-out-file-name) no-error .
-    if search(v-out-file-name) = ?
-    or file-info:file-size = 0
-    then do :
-      assign MSG = "Нет ответа от ИС МОТП" .
-      return error MSG .
+    */
+    os-command silent value(cmd).
+    define variable vfile as character no-undo.
+    vfile =  SearchFile(v-out-file-name).
+    if vfile eq ?
+    then do:
+       MSG = "Нет ответа от ИС МОТП. Не найден " + v-out-file-name.
+       putauth (MSG ).
     end.
-    
-    cmd = substitute ('&1 -file=&2 >&3',
-                       search("exe/json2xml.exe"),
-                       v-out-file-name,
-                       (buf_utd.DocumentNumber + ".xml")
-                       ) .
-    os-command silent value (cmd).
-    
-    ParseResponseInfoDoc(input (buf_utd.DocumentNumber + ".xml")) .
+    else do:
+       file-info:file-name = vfile .
+       if file-info:file-size = 0
+       then do :
+          MSG = "Нет ответа от ИС МОТП. Файл пустой " + vfile.
+          putauth ( MSG ).
+       end.
+       else do:
+          cmd = substitute ('&1 -file=&2 >&3',
+                             search("exe/json2xml.exe"),
+                             vfile,
+                             ("{&prefixfile}" + buf_utd.DocumentNumber + ".xml")
+                             ) .
+          os-command silent value (cmd).
+          
+          ParseResponseInfoDoc(input ("{&prefixfile}" + buf_utd.DocumentNumber + ".xml")) .
+       end.
+    end.
   
   end method .
   
@@ -1993,8 +1802,36 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     return p-ok .
     
   end method .
-  
+  define stream cades .
+  define stream auth .
+  define stream authtest .
+  define stream cisesInfo .
+  method public void putauth(input itext as character):
+    if not isDebug then return .
+    output stream auth to value (mFileauth) append .
+    put stream auth unformatted now " " itext skip .
+    output stream auth close .
+  end.
+  method public void putcades(input itext as character):
+    if not isDebug then return .
+    output stream cades to value (mFileCades) append .
+    put stream cades unformatted now " " itext skip .
+    output stream cades close .
+  end.
+  method public void putauthtest(input itext as character):
+    if not isDebug then return .
+    output stream authtest to value (mFileauthtest) append .
+    put stream authtest unformatted now " " itext skip .
+    output stream authtest close .
+  end.
+  method public void putcisesInfo(input itext as character):
+    if not isDebug then return .
+    output stream cisesInfo to value (mFilecisesInfo) append .
+    put stream cisesInfo unformatted now " " itext skip .
+    output stream cisesInfo close .
+  end.
+   
   { str/utd-err.i class }
-  { utl/gtin.i class }
-  
+  { utl/gtin.i    class }
+  { utl/search.i  class }
 end class.

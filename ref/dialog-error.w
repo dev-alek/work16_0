@@ -49,12 +49,10 @@ define variable vss-description as character no-undo init "Ошибки документа".
 {gbl/key-rec.i}
 define buffer buf_utd-err for ub.utd-err .
 define buffer utd-err for tt-utd-err .
-
-def var Marking as class mark no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
+def var Marking as class mark no-undo .
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName Dialog-Frame
 FUNCTION StatusTHName RETURNS CHARACTER
   (input p-stsTH as integer)  .
@@ -94,7 +92,7 @@ tt-utd-err.CheckObj
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel BROWSE-2 
-
+&Scoped-Define DISPLAYED-OBJECTS f-error 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -113,6 +111,10 @@ DEFINE BUTTON Btn_OK AUTO-GO
      LABEL "Выход" 
      SIZE 15 BY 1.13
      BGCOLOR 8 .
+
+
+
+
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -133,7 +135,8 @@ DEFINE BROWSE BROWSE-2
       
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 79 BY 13.5 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 128 BY 13.5
+         FONT 2 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -143,7 +146,7 @@ DEFINE FRAME Dialog-Frame
      BROWSE-2 AT ROW 3.5 COL 2 WIDGET-ID 200
      "Сформированные ошибки:" VIEW-AS TEXT
           SIZE 27 BY .67 AT ROW 2.5 COL 2.5 WIDGET-ID 16
-     SPACE(52.99) SKIP(14.36)
+     SPACE(101.62) SKIP(14.36)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Ошибки документа"
@@ -210,6 +213,16 @@ DO:
 
 
 &Scoped-define SELF-NAME Btn_OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
+ON choose OF Btn_OK IN FRAME Dialog-Frame /* Ввод */
+DO:
+
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME
 
@@ -297,8 +310,42 @@ define variable ii as integer no-undo .
 define variable status_ as character no-undo . 
 define variable vline as integer no-undo.
 define variable vHn as handle no-undo.
+define VARIABLE vRecKey-markLine as character no-undo .
 
 ii = 0 .  
+
+if p-line-num <> 0 then do:
+    vRecKey-markLine = replace(p-reckey,"utd-lines","utd-marking-lines") + {&delim-key}.
+  for each buf_utd-err no-lock where buf_utd-err.db-num = p-db-num 
+                                 and buf_utd-err.doc-id = p-doc-id 
+                                 and (buf_utd-err.reckey = p-reckey or buf_utd-err.reckey begins vRecKey-markLine):
+    create tt-utd-err .
+    buffer-copy buf_utd-err to tt-utd-err .
+    assign
+    tt-utd-err.descr = GetTextError(tt-utd-err.CheckType,tt-utd-err.CodeErr,tt-utd-err.CheckObj)
+    .
+    if buf_utd-err.reckey begins "utd-lines" or buf_utd-err.reckey begins "utd-marking-lines" 
+    or buf_utd-err.reckey begins "marking" then do:
+/*        vline  = integer (entry(4,buf_utd-err.reckey,{&delim-key})).*/
+      run gen-hn-keyr(input buf_utd-err.reckey,input ?,input "{&db-name_schema}" , input ? ,input no-lock , output vHn).
+      if vHn:available
+      then do:
+      if buf_utd-err.reckey begins "marking" then do:
+          tt-utd-err.gds-code = vHn::gds-code .
+          tt-utd-err.LineNum  = 0 . 
+      end.                
+      else do:
+          tt-utd-err.LineNum = vHn::lineNum . 
+          tt-utd-err.gds-code = vHn::gds-code .
+      end.
+      delete object vHn no-error.
+    end.     
+    end.
+  end.
+      
+end.
+else do:
+        
   for each buf_utd-err no-lock where buf_utd-err.db-num = p-db-num and buf_utd-err.doc-id = p-doc-id and buf_utd-err.reckey begins p-reckey:
     create tt-utd-err .
     buffer-copy buf_utd-err to tt-utd-err .
@@ -323,6 +370,7 @@ ii = 0 .
     end.     
     end.
   end.
+ end. 
   /*По линии*/   
   if p-line-num <> 0 then 
   do:
@@ -337,7 +385,7 @@ ii = 0 .
       assign
         tt-utd-err.CheckType = "UCDСompar"
         tt-utd-err.CheckObj  = "По товару " + string(buf_utd-marking-lines.gds-code) + " по линии " + string(buf_utd-marking-lines.LineNum)
-        tt-utd-err.CodeErr   = "NotAvailable"
+        tt-utd-err.CodeErr   = "MARKDECLINED"
         tt-utd-err.db-num    = buf_utd-marking-lines.db-num 
         tt-utd-err.doc-id    = buf_utd-marking-lines.doc-id
         tt-utd-err.reckey    = string(ii)
@@ -346,7 +394,7 @@ ii = 0 .
        
         .
       status_ = StatusTHName(buf_marking.sts) .
-      tt-utd-err.descr = "Марка " + buf_marking.mark + " находится в статусе - " +  "'" + status_ + "'"
+      tt-utd-err.descr = "Ошибка № 15. В результате проверки товаров на АЗК по строке " + string(buf_utd-marking-lines.LineNum) +  " марка " + buf_utd-marking-lines.mark + " не была принята."
         .
     end.  
   end.
@@ -362,7 +410,7 @@ ii = 0 .
       assign
         tt-utd-err.CheckType = "UCDСompar"
         tt-utd-err.CheckObj  = "По товару " + string(buf_utd-marking-lines.gds-code) + " по линии " + string(buf_utd-marking-lines.LineNum)
-        tt-utd-err.CodeErr   = "NotAvailable"
+        tt-utd-err.CodeErr   = "MARKDECLINED"
         tt-utd-err.db-num    = buf_utd-marking-lines.db-num 
         tt-utd-err.doc-id    = buf_utd-marking-lines.doc-id
         tt-utd-err.reckey    = string(ii)
@@ -371,7 +419,7 @@ ii = 0 .
         
         .
       status_ = StatusTHName(buf_marking.sts) .
-      tt-utd-err.descr = "Марка " + buf_marking.mark + " находится в статусе - " +  "'" + status_ + "'"
+      tt-utd-err.descr = "Ошибка № 15. В результате проверки товаров на АЗК по строке " + string(buf_utd-marking-lines.LineNum) +  " марка " + buf_utd-marking-lines.mark + " не была принята."
         .    
     end.      
   end.  

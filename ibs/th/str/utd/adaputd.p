@@ -130,12 +130,12 @@ do:
       for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
         and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
         and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+        and buf_utd-marking-lines.doc-level = 1
         :
-        
-        find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "Level1"
-          and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
+        find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
+                    and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and buf_marking.box-qnty <> ? no-lock no-error.
         if available (buf_marking)
-          then v-q = v-q + 10.
+          then v-q = v-q + buf_marking.box-qnty.
       end.      
     end. 
 /*    else v-q = buf_utd-lines.Quantity.*/
@@ -176,10 +176,13 @@ do:
     then do:
       return error (return-value + " " + v-msg).
     end.
-  run nws/cmdchgutd.p (buffer buf_utd) no-error.
-  if error-status:error
+  if iDbNum ne 0
   then do:
-    undo, return error return-value.
+    run nws/cmdchgutd.p (buffer buf_utd) no-error.
+    if error-status:error
+    then do:
+      undo, return error return-value.
+    end.
   end.
   return v-msg.
 

@@ -68,6 +68,7 @@ define variable v-server              as integer   no-undo .
 define variable v-proxy-login         as character no-undo .
 define variable v-proxy-pswd          as character no-undo .
 define variable v-proxy-addres        as character no-undo .
+define variable v-proxy-ssl           as logical   no-undo .
 
 define variable v-appId           as character no-undo .
 define variable v-status_         as character no-undo .
@@ -109,7 +110,6 @@ define variable glog                 as logical   no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
@@ -351,6 +351,7 @@ DO:
             {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
           end.
         end. 
+        when "proxy-ssl" then v-proxy-ssl = thbjattr_thbj-attr.property-value-logical .
       end case.
     end.
     
@@ -382,7 +383,7 @@ DO:
       next clients_.
     end.        
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl).
     
     objThObj:ObjType = clients.obj-type.
     objThObj:ObjCode = clients.obj-code.
@@ -602,6 +603,7 @@ DO:
             {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
           end.
         end. 
+        when "proxy-ssl" then v-proxy-ssl = thbjattr_thbj-attr.property-value-logical .
       end case.
     end.
     
@@ -636,7 +638,7 @@ DO:
     end. 
       
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl).
     mercury:vsdId = ub.esys-all-attr.key1.  
   
     case ub.esys-all-attr.key2 :  
@@ -703,6 +705,11 @@ DO:
             or v-Msg = "MERC14563"
             then
               message "UUID ВСД:  " ub.esys-all-attr.attr-value skip "Ошибка наименования продукции " v-Msg ". ВСД будет погашено с актом несоответсвия." view-as alert-box.
+            else
+            if v-Msg = "MERC14258"
+            or v-Msg = "MERC14537"
+            then
+              message "UUID ВСД:  " ub.esys-all-attr.attr-value skip "Ошибка номера партии/ТТН " v-Msg ". ВСД будет погашено с актом несоответсвия." view-as alert-box.
             else  
               message "UUID ВСД:  " ub.esys-all-attr.attr-value skip v-Msg view-as alert-box.
           end. 
@@ -769,15 +776,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   assign
     v-date-end = today
-    v-date-start = today - 30
-  .
-  
-  date1 = datetime(v-date-start, 0) . 
-  date2 = datetime(v-date-end, 86399999) .
-  
-  assign
-    v-date-end = today
-    v-date-start = today - 30
+    v-date-start = today
   .
   
   date1 = datetime(v-date-start, 0) . 

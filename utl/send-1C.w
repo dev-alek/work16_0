@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME gDialog
-
+{adecomm/appserv.i}
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS gDialog 
 /*
 
@@ -88,8 +88,8 @@ DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-3 b-start b-close T-1 T-2 T-3 T-4 T-5 ~
-T-6 T-7 
-&Scoped-Define DISPLAYED-OBJECTS T-1 T-2 T-3 T-4 T-5 T-6 T-7 
+T-6 T-8 T-7 
+&Scoped-Define DISPLAYED-OBJECTS T-1 T-2 T-3 T-4 T-5 T-6 T-8 T-7 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -114,7 +114,7 @@ DEFINE BUTTON b-start
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 54 BY 8.5.
+     SIZE 54 BY 9.25.
 
 DEFINE VARIABLE T-1 AS LOGICAL INITIAL no 
      LABEL "Документа (накл., инв., перес.)" 
@@ -146,10 +146,15 @@ DEFINE VARIABLE T-6 AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 38 BY .83 NO-UNDO.
 
-DEFINE VARIABLE T-7 AS LOGICAL INITIAL no 
+DEFINE VARIABLE T-8 AS LOGICAL INITIAL no 
      LABEL "Общая выгрузка" 
      VIEW-AS TOGGLE-BOX
      SIZE 38 BY .83 NO-UNDO.
+
+DEFINE VARIABLE T-7 AS LOGICAL INITIAL no 
+     LABEL "Документа электронного документооборота" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 42.5 BY .83 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -157,17 +162,18 @@ DEFINE VARIABLE T-7 AS LOGICAL INITIAL no
 DEFINE FRAME gDialog
      b-start AT ROW 1.25 COL 2 WIDGET-ID 8
      b-close AT ROW 1.25 COL 42
-     T-1 AT ROW 4 COL 16 WIDGET-ID 54
-     T-2 AT ROW 5 COL 16 WIDGET-ID 56
-     T-3 AT ROW 6 COL 16 WIDGET-ID 58
-     T-4 AT ROW 7 COL 16 WIDGET-ID 60
-     T-5 AT ROW 8 COL 16 WIDGET-ID 62
-     T-6 AT ROW 9 COL 16 WIDGET-ID 64
-     T-7 AT ROW 10 COL 16 WIDGET-ID 66
+     T-1 AT ROW 4 COL 13.5 WIDGET-ID 54
+     T-2 AT ROW 5 COL 13.5 WIDGET-ID 56
+     T-3 AT ROW 6 COL 13.5 WIDGET-ID 58
+     T-4 AT ROW 7 COL 13.5 WIDGET-ID 60
+     T-5 AT ROW 8 COL 13.5 WIDGET-ID 62
+     T-6 AT ROW 9 COL 13.5 WIDGET-ID 64
+     T-7 AT ROW 10 COL 13.5 WIDGET-ID 68
+     T-8 AT ROW 11 COL 13.5 WIDGET-ID 66
      "Выгрузка:" VIEW-AS TEXT
           SIZE 9.5 BY .67 AT ROW 3 COL 4.5 WIDGET-ID 52
      RECT-3 AT ROW 3.25 COL 3 WIDGET-ID 50
-     SPACE(2.12) SKIP(1.24)
+     SPACE(2.12) SKIP(1.49)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Повторная выгрузка данных для 1С ERP"
@@ -238,6 +244,7 @@ DO:
   t-5
   t-6
   t-7
+  t-8
     .
     
 if t-1 then do:
@@ -265,6 +272,10 @@ if t-6 then do:
 end.  
 
 if t-7 then do:
+  run utl/send7c.p.
+end.
+
+if t-8 then do:
   run utl/all-send1c.p.
 end.  
 
@@ -365,6 +376,19 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME T-8
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-8 gDialog
+ON VALUE-CHANGED OF T-8 IN FRAME gDialog /* Документа электронного документооборота */
+DO:
+  assign
+  t-8
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK gDialog 
@@ -421,9 +445,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY T-1 T-2 T-3 T-4 T-5 T-6 T-7 
+  DISPLAY T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-8 
       WITH FRAME gDialog.
-  ENABLE RECT-3 b-start b-close T-1 T-2 T-3 T-4 T-5 T-6 T-7 
+  ENABLE RECT-3 b-start b-close T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-8
       WITH FRAME gDialog.
   VIEW FRAME gDialog.
   {&OPEN-BROWSERS-IN-QUERY-gDialog}

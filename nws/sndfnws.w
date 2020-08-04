@@ -646,6 +646,7 @@ DEFINE BUFFER buf_tt-ext-file FOR tt-ext-file.
       WITH FRAME {&FRAME-NAME}.
     END.
     WHEN {&SAVE-DISK-and-run} THEN DO:
+        /*
       MESSAGE
       "ƒанный режим предназначен дл€ сотрудников IBS" SKIP
       "ѕродолжить?"
@@ -658,6 +659,7 @@ DEFINE BUFFER buf_tt-ext-file FOR tt-ext-file.
        WITH FRAME {&FRAME-NAME}.
        RETURN NO-APPLY.
       END.
+      */
       ENABLE
       rs-path-type
       f-path
@@ -690,6 +692,7 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   { gbl/getcntxt.i get }
+  /*
   MESSAGE
   "ƒанный режим предназначен дл€ сотрудников IBS" SKIP
   "ѕродолжить?"
@@ -697,6 +700,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   IF NOT glog THEN DO:
     RETURN .
   END.
+  */
   RUN Myenable IN THIS-PROCEDURE.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -717,6 +721,9 @@ DEFINE VARIABLE v-psw-buf AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-need-password AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-need-password-int AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-ii AS INTEGER NO-UNDO.
+p-ok = YES.
+
+/* «акоменнтили потому что не пон€тно зачем это закрывать на пароль
 ASSIGN
 p-file-name = LOWER(p-file-name).
 DO v-ii = 1 TO LENGTH( p-file-NAME):
@@ -734,6 +741,7 @@ v-need-password = STRING(v-need-password-int).
 /* message v-need-password view-as alert-box. */
 run ref/per-pswd.w ( output v-psw-buf ) .
 IF v-psw-buf =  v-need-password THEN p-ok = YES.
+*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1137,7 +1145,6 @@ OR rs-mode = {&save-db-and-run} THEN DO:
   IF glog = NO THEN RETURN ERROR.
 END.
 else do:
-    /* закрыли запрос всех паролей
   run cur-time in THIS-PROCEDURE ( output v-today, output v-time).
 
   RUN confirm-password IN THIS-PROCEDURE (
@@ -1152,7 +1159,6 @@ else do:
       VIEW-AS ALERT-BOX ERROR.
       UNDO, RETURN ERROR.
   END.
-  */
 end.
 
 run str/diallog.w (

@@ -644,6 +644,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         num-entries (rid-list) @ mark-num
         with frame {&frame-name}.
         
+    /*
     run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
     is-erpRN = logical(v-value) no-error .
     if error-status:error then is-erpRN = false .
@@ -656,6 +657,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         b-del
       with FRAME {&FRAME-NAME}.
     end.
+    */
     
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.

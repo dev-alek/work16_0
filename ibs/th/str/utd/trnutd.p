@@ -469,7 +469,7 @@ assign
       tt-trn-doc.office               = false
       tt-trn-doc.fact-num             = ?
       tt-trn-doc.out-code             = temp_trn-doc.doc-code
-      tt-trn-doc.PS                   = if not is-egais then substitute("&1 &2 &3 &5&4 ", temp_trn-doc.doc-code , string(temp_trn-doc.doc-date, "99/99/9999") , temp_trn-doc.creid ,temp_trn-doc.ps ,{&new-line} ) else ""
+      tt-trn-doc.PS                   = ""
       tt-trn-doc.creid                = v-cntxt-userid
       tt-trn-doc.flag_                = false
       tt-trn-doc.ext-doc-type         = v-ext-doc-type
@@ -602,18 +602,15 @@ assign
   temp_trn-doc.db-num = ub.utd.db-num.
   temp_trn-doc.doc-id = ub.utd.doc-id.
   
-  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "wrkr" 
-    and integer (utd-attr.attr-value) <> 0 or integer (utd-attr.attr-value) <> ? no-error .
+  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "wrkr" no-error .
   if available (utd-attr) then do:
     new_trn-doc.wrkr =  integer (utd-attr.attr-value).
   end.  
-  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "agnt" 
-    and integer (utd-attr.attr-value) <> 0 or integer (utd-attr.attr-value) <> ? no-error
+  find first utd-attr exclusive-lock where utd-attr.db-num = ub.utd.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "agnt" no-error .
   if available (utd-attr) then do:
     new_trn-doc.agnt =  integer (utd-attr.attr-value).  
   end.  
-  find first utd-attr exclusive-lock where ub.utd.db-num = utd-attr.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "boss"
-    and integer (utd-attr.attr-value) <> 0 or integer (utd-attr.attr-value) <> ? no-error
+  find first utd-attr exclusive-lock where ub.utd.db-num = utd-attr.db-num and utd-attr.doc-id = ub.utd.doc-id and utd-attr.attr-code = "boss" no-error .
   if available (utd-attr) then do:
     new_trn-doc.boss =  integer (utd-attr.attr-value).
   end.  
@@ -1161,32 +1158,35 @@ end.
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
-          
-          if is-tsd then do:
-            
-            for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:
-            
-              find first buf_goods where ub.doc-line.artic = buf_goods.artic and
-                ub.doc-line.prod-type = buf_goods.prod-type  and
-                ub.doc-line.prod-code = buf_goods.prod-code
-                no-lock no-error .
-              
-              find first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = ub.doc-line.doc-code and
-                ub.gds-dtl.artic = buf_goods.artic and
-                ub.gds-dtl.prod-type = buf_goods.prod-type  and
-                ub.gds-dtl.prod-code = buf_goods.prod-code.
-
-              find first temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code.
-                
-              ub.gds-dtl.doc-qnty  = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty.
-              
-
-              ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.
-              ub.doc-line.cli-qnty = temp_doc-line.doc-qnty.
-              
-            end.
-            
+          for each tt2-doc-line:
+            tt2-doc-line.fact-qnty.
           end.
+          for each doc-line where new_trn-doc.doc-code = ub.doc-line.doc-code:
+            doc-line.fact-qnty.
+          end.
+/*                                                                                                          */
+/*                                                                                                          */
+/*          for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:          */
+/*                                                                                                          */
+/*            find first buf_goods where ub.doc-line.artic = buf_goods.artic and                            */
+/*              ub.doc-line.prod-type = buf_goods.prod-type  and                                            */
+/*              ub.doc-line.prod-code = buf_goods.prod-code                                                 */
+/*              no-lock no-error .                                                                          */
+/*                                                                                                          */
+/*            find first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = ub.doc-line.doc-code and     */
+/*              ub.gds-dtl.artic = buf_goods.artic and                                                      */
+/*              ub.gds-dtl.prod-type = buf_goods.prod-type  and                                             */
+/*              ub.gds-dtl.prod-code = buf_goods.prod-code.                                                 */
+/*                                                                                                          */
+/*            find first temp_doc-line where temp_doc-line.gds-code = buf_goods.gds-code.                   */
+/*                                                                                                          */
+/*            ub.gds-dtl.doc-qnty  = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty.*/
+/*                                                                                                          */
+/*                                                                                                          */
+/*            ub.doc-line.doc-qnty = temp_doc-line.doc-qnty.                                                */
+/*            ub.doc-line.cli-qnty = temp_doc-line.doc-qnty.                                                */
+/*                                                                                                          */
+/*          end.                                                                                            */
           
           if not is-tsd then do:
             run gbl/calc-trn.p ( this-procedure  , recid(new_trn-doc)) no-error .
