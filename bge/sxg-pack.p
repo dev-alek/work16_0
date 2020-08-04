@@ -812,27 +812,35 @@ procedure file-s-g private :
       /* 11/I-2019  для импорта из 1с распаковка файлов выполняется без копирования архива */
       if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
         if v-arch then do:
-          if lookup( p-file-ext, "zip") <> 0 then v-unzip-command =
-            substitute("&1 -extract -silent -over=all &2 &3":U
-                      , v-arh-name
-                      , p-fullfile-name
-                      , p-target-dir
-                      ) .
-          else
-          if lookup( p-file-ext, "arj") <> 0 then v-unzip-command =
-            substitute("&1 e -y &2 &3":U
-                      , v-arh-name
-                      , p-fullfile-name
-                      , p-target-dir
-                      ) .
-          run write-to-log in p-parent-handle ( substitute("Команда на распаковку &1: &2"
-                                                          , p-file-ext, v-unzip-command)  ) .
-          os-command silent value( v-unzip-command ) .
-
-          /* @FUTU обосновать, что удаление архива произойдёт только после удачной распаковки */
-          run del-file ( input p-fullfile-name ) no-error .
-          if error-status :error then do:
-            return error return-value .
+          file-info:file-name = p-fullfile-name .
+          if file-info:file-size = 0
+          then do:
+            run write-to-log in p-parent-handle ( substitute("Файл &1 пустой! Пропускаем..."
+                                                            , p-fullfile-name)  ) .
+          end .
+          else do :
+            if lookup( p-file-ext, "zip") <> 0 then v-unzip-command =
+              substitute("&1 -extract -silent -over=all &2 &3":U
+                        , v-arh-name
+                        , p-fullfile-name
+                        , p-target-dir
+                        ) .
+            else
+            if lookup( p-file-ext, "arj") <> 0 then v-unzip-command =
+              substitute("&1 e -y &2 &3":U
+                        , v-arh-name
+                        , p-fullfile-name
+                        , p-target-dir
+                        ) .
+            run write-to-log in p-parent-handle ( substitute("Команда на распаковку &1: &2"
+                                                            , p-file-ext, v-unzip-command)  ) .
+            os-command silent value( v-unzip-command ) .
+  
+            /* @FUTU обосновать, что удаление архива произойдёт только после удачной распаковки */
+            run del-file ( input p-fullfile-name ) no-error .
+            if error-status :error then do:
+              return error return-value .
+            end.
           end.
         end. /*if v-arch then do:*/
         else do :
