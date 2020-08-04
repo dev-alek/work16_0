@@ -29,6 +29,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   { str/trdcalib.i class }
   { cmp/library.i  class }
   { gbl/thbj-def.i       }
+  {utl/gtin.i class      }
   
   define temp-table buf_trn-doc like ub.trn-doc.
   
@@ -230,7 +231,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
             and bf_gen-attr.attr-value = string(buf_gds.gds-code) and not bf_gen-attr.p-key begins {&tech-mark-prefix}:
             sw:start-element ("mark").
     /*        write-data-element ("gd-line-num", bf_gen-attr.attr-value).*/
-            write-data-element ("mark-code", bf_gen-attr.p-key).
+            write-data-element ("mark-code", repSpecSimbforXlm( addBracketForCode(bf_gen-attr.p-key))).
             sw:end-element ("mark").
           end.
           sw:end-element ("marks").
