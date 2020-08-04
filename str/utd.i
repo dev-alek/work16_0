@@ -3,6 +3,95 @@
 define temp-table tt-utd-mark like utd-marking-lines
   field side as character.
 {utl/gtin.i {1}}
+
+&if "{1}" = "class"
+&then
+method public logical getObgFns
+&else
+function getObgFns return logical 
+&endif
+(input iDocumentNumber   as character ,
+ input iFnsParticipantId as character ,
+ input ikpp              as character ,
+ output ohost-code       as integer,
+ output oobj-type        as character ,
+ output oobj-code        as integer ,
+ output otext            as character  ):
+    define buffer ext-classif   for ext-classif. 
+    define buffer clients       for clients.
+    define buffer buf_clients   for clients.
+    define buffer clients-attr  for clients-attr.
+    find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
+                             and ext-classif.charkey_three eq iFnsParticipantId
+    no-lock no-error.
+    if available ext-classif
+    then do:
+       if ext-classif.CharKey_One eq {&shop}
+       then do:
+          assign 
+             oobj-type = ext-classif.CharKey_One
+             oobj-code = ext-classif.Key#_One
+          .
+          find first clients 
+               where clients.obj-type   = ext-classif.CharKey_One
+                 and clients.obj-code   = ext-classif.Key#_One
+          no-lock no-error .
+          if available clients
+          then
+             ohost-code =  clients.host-code.
+       end.
+       else do:
+          find first clients 
+               where clients.obj-type   = ext-classif.CharKey_One
+                 and clients.obj-code   = ext-classif.Key#_One
+                 and can-find(first ub.sysconf where ub.sysconf.host-code = clients.obj-code)
+          no-lock no-error .
+          if not available clients
+          then do:
+             otext = substitute("По &1 получатель  &2 не наша фирма." ,iDocumentNumber, iFnsParticipantId) .
+             return no.
+          end.
+          ohost-code = ext-classif.Key#_One.
+          block-cl:
+          for each clients-attr 
+             where clients-attr.attr-code  = {&attr-kpp} 
+               and clients-attr.obj-type   = {&shop}
+               and clients-attr.attr-value = ikpp
+               and can-find(buf_clients where buf_clients.obj-type   = clients-attr.obj-type
+                                          and buf_clients.obj-code   = clients-attr.obj-code
+                                          and buf_clients.host-code  = ohost-code) 
+          no-lock :
+             leave block-cl.
+          end.
+                     
+          if     available clients
+             and clients.obj-type eq {&shop}
+          then do:
+             assign 
+                oobj-type = clients.obj-type
+                oobj-code = clients.obj-code
+             .
+          end.
+          else if available clients-attr 
+          then do:
+             assign 
+                oobj-type = clients-attr.obj-type
+                oobj-code = clients-attr.obj-code
+             .
+          end.
+          else do:
+             otext = substitute("По &1 не найден объект по КПП &2." ,iDocumentNumber, ikpp ).
+             return yes.
+          end.
+       end.
+    end.
+    else do:
+       otext = substitute("По &1 не найден получатель  &2." ,iDocumentNumber, iFnsParticipantId) .
+       return no.
+                  
+    end.
+    return ?.
+end.
 &if "{1}" = "class"
 &then
 method public logical CheckUcdForReturn
@@ -135,8 +224,13 @@ function SaturateAndCheckUTD return logical
                   next block-mark.
                end.
                if utd-marking-lines.doc-level eq 1
-               then
-                  vqnty = vqnty + marking.box-qnty. 
+               then do:
+                  if marking.box-qnty eq ?
+                  then
+                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","MarkNotFormat",string(utd-lines.LineNum ) + {&delim-par} + marking.mark).
+                  else
+                     vqnty = vqnty + marking.box-qnty. 
+               end.
                if    marking.gds-code eq 0 
                   or marking.gds-code eq ?
                   or marking.sts eq 0
@@ -191,11 +285,15 @@ function SaturateAndCheckUTD return logical
                 
             end.
             if      not vucd
-                and utd-lines.Quantity ne vqnty
-               
-            then                        
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity) + {&delim-par} + string(vqnty)).
-   
+               and vGdsCode > 0 and vGdsCode ne ? 
+            then do:
+               find first bar-code where bar-code.gds-code  eq vGdsCode
+                                     and bar-code.unit-cli eq utd-lines.UnitCode
+               no-lock no-error.
+               if utd-lines.Quantity * (if avail bar-code then bar-code.cli-base-rate else 1) ne vqnty
+               then                        
+                  AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity * (if avail bar-code then bar-code.cli-base-rate else 1)) + {&delim-par} + string(vqnty)).
+            end.
             if  vGdsCode = -1
             then do:
                vGdsCode = ?.
@@ -239,37 +337,25 @@ function SaturateAndCheckUTD return logical
             AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoSuppForId",utd.cli-FnsParticipantId ).
    /*          vError = vError + "," + "не найден поставщик " + utd.FnsParticipantId-cli.*/
          end.
-         find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
-                                  and ext-classif.charkey_three eq utd.obj-FnsParticipantId
-         no-lock no-error.
-         if available ext-classif
-         then do:
-            find first clients 
-                 where clients.obj-type   = ext-classif.CharKey_One
-                   and clients.obj-code   = ext-classif.Key#_One
-            no-lock no-error .
-            if clients.obj-type eq {&shop}
-            then do:
-               assign
-                  vobj-type = clients.obj-type   when vobj-type  eq ? or vobj-type  eq ""
-                  vobj-code = clients.obj-code   when vobj-code  eq ? or vobj-code  eq 0
-                  vhost-code = clients.host-code when vhost-code eq ? or vhost-code eq 0
-               .
-            end.
-            else if available clients
-            then
-               assign vhost-code = if can-find(first ub.sysconf where ub.sysconf.host-code = clients.obj-code) then clients.obj-code else ? when vhost-code eq ? or vhost-code eq 0.
-            else do:
-               assign vhost-code = ? when vhost-code eq ? or vhost-code eq 0.
-             
-   /*                vError = vError + "," + "не найдена фирма " + utd.FnsParticipantId-firm */
-            end.
-         end.
-         else do:
-            vhost-code = ?.
-            
-   /*            vError = vError + "," + "не найдена фирма " + utd.FnsParticipantId-firm*/
-         end.
+         
+         define variable vtext       as character no-undo.
+         define variable vhost-code1 as integer   no-undo.
+         define variable vobj-type1  as character no-undo.
+         define variable vobj-code1  as integer   no-undo.
+          getObgFns 
+                    (input utd.DocumentNumber ,
+                     input utd.obj-FnsParticipantId ,
+                     input utd.obj-kpp,
+                     output vhost-code1,
+                     output vobj-type1,
+                     output vobj-code1,
+                     output vtext ).
+         assign
+            vobj-type  = vobj-type1   when vobj-type  eq ? or vobj-type  eq ""
+            vobj-code  = vobj-code1   when vobj-code  eq ? or vobj-code  eq 0
+            vhost-code = vhost-code1  when vhost-code eq ? or vhost-code eq 0
+         .
+       
          find first contract  where contract.host-code eq vhost-code
                                 and contract.cli-type  eq vcli-type
                                 and contract.cli-code  eq vcli-code
@@ -294,38 +380,6 @@ function SaturateAndCheckUTD return logical
             vcontract-code = ?.
             
    /*           vError = vError + "," + "не найдена договор " + utd.BaseDocumentNumber.*/
-         end.
-         if    vobj-type = ? or vobj-type eq ""
-            or vobj-code = ? or vobj-code eq 0
-         then do:
-             find first clients-attr 
-                  where clients-attr.attr-code  = {&attr-kpp} 
-                    and clients-attr.obj-type   = {&shop}
-                    and clients-attr.attr-value = utd.obj-kpp
-             no-lock no-error.
-             if     available clients
-                and clients.obj-type eq {&shop}
-             then do:
-                if     available clients-attr
-                   and clients-attr.obj-code ne clients.obj-code
-                then
-                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoContForFirmId",(if utd.host-code eq ? then "?" else string (utd.host-code)) + {&delim-par} +  utd.BaseDocumentNumber).
-                assign 
-                   vobj-type = clients.obj-type
-                   vobj-code = clients.obj-code
-                .
-             end.
-             else if available clients-attr 
-             then do:
-                assign 
-                   vobj-type = clients-attr.obj-type
-                   vobj-code = clients-attr.obj-code
-                .
-             end.
-             else assign 
-                   vobj-type = ?
-                   vobj-code = ?
-                .
          end.
       end.
       
@@ -430,10 +484,13 @@ function ReCheck returns logical
    exclusive-lock no-error.
    if available buf_utd
    then do:
-      SaturateAndCheckUTD(buf_utd.db-num, buf_utd.doc-id) no-error .        
-      if  error-status:error then 
-      do: 
-         message return-value view-as alert-box.
+      if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:loaderror:KeyIntDB
+      then do:
+         SaturateAndCheckUTD(buf_utd.db-num, buf_utd.doc-id) no-error .        
+         if  error-status:error then 
+         do: 
+            message return-value view-as alert-box.
+         end.
       end.
 
       if    buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB 
@@ -716,7 +773,7 @@ end.
 
 &if "{1}" = "class"
 &then
-method public void unLockUTDMarkforbuf
+method public void unLockUTDMarkbuf
 &else
 function UnLockUTDMarkbuf returns logical 
 &endif

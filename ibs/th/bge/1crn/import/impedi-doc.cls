@@ -27,7 +27,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
   {str\utd-err.i class}
   {str\utd.i class}
-  {utl\gtin.i class}
   
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 

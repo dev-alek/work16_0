@@ -101,7 +101,7 @@ then do:
    end.
    
    /* MD5*/
-   mliststrfile = "cmp/code.xml".
+   mliststrfile = "cmp/code.xml,cmp/procasunc.xml".
    block-md5:
    do mi = 1 to num-entries(mliststrfile):
      /* пересоздаем всегда так как точно также провека происходин при загрузке */ 

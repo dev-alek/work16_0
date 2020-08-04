@@ -16,7 +16,8 @@ mliststrfile = "cmp/actn.txt,cmp/menu.txt".
                                , input mfileNew
                               ) .
    end.
-   mliststrfile = "cmp/code.xml".
+   
+   mliststrfile = "cmp/code.xml,cmp/procasunc.xml".
    do mi = 1 to num-entries(mliststrfile):
       
       mfile = entry(mi,mliststrfile).

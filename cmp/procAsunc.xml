@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <procAsunc>
+    <procid>diadoc</procid>
+    <procval>utl\proc-diadoc.p</procval>
+    <procname>Диадок</procname>
+    <procParam>
+      <procid>diadoc</procid>
+      <paramName>Номер бд для выбора ВС</paramName>
+      <numparam>1</numparam>
+      <ParamType>integer</ParamType>
+      <ParamValue>0</ParamValue>
+    </procParam>
+        <procParam>
+      <procid>diadoc</procid>
+      <paramName>Лог загрузки</paramName>
+      <numparam>2</numparam>
+      <ParamType>logical</ParamType>
+      <ParamValue>yes</ParamValue>
+    </procParam>
+
+  </procAsunc>
+  <procAsunc>
+    <procid>is_motp</procid>
+    <procval>utl\proc-anyproc.p</procval>
+    <procname>МОТП</procname>
+    <procParam>
+      <procid>is_motp</procid>
+      <paramName>Процедура</paramName>
+      <numparam>1</numparam>
+      <ParamValue>bge\auto-motp.p</ParamValue>
+      <ParamHiden>yes</ParamHiden>
+    </procParam>
+    <procParam>
+      <procid>is_motp</procid>
+      <paramName>Логин</paramName>
+      <numparam>2</numparam>
+      <ParamValue>0</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>is_motp</procid>
+      <paramName>Пароль</paramName>
+      <numparam>3</numparam>
+      <ParamValue>0</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>is_motp</procid>
+      <paramName>Список БД</paramName>
+      <numparam>4</numparam>
+      <ParamValue>0</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>is_motp</procid>
+      <paramName>Лог авторизации и запросов</paramName>
+      <numparam>5</numparam>
+      <ParamType>logical</ParamType>
+      <ParamValue>yes</ParamValue>
+    </procParam>
+  </procAsunc>
+  
+  <SesParam>
+    <parCheck>false</parCheck>
+    <parCode>clientlog</parCode>
+    <parname>Клиент лог</parname>
+    <parvalue>-clientlog  mylog.lg -logginglevel 4 -logentrytypes 4GLTrace</parvalue>
+    
+  </SesParam>
+  <SesParam>
+    <parCheck>false</parCheck>
+    <parCode>profile</parCode>
+    <parname>Профилирование</parname>
+    <parvalue>-profile ../prof.pf</parvalue>
+    <parWaitFile>prof.out</parWaitFile>
+  </SesParam>
+</root>

@@ -26,7 +26,10 @@ run adm/pswd-enc.p
     (input  encode(g#passwd)
     ,output mPwd
     ) no-error .
-IBuff::Usr = g#userid.
+find first user-login where user-login.user-id = g#userid no-lock no-error .
+      
+IBuff::Usr = if available user-login then user-login.user-login else g#userid.
+release user-account.
 IBuff::Pwd = mPwd.
 if g#userid eq ""
 then
