@@ -425,7 +425,6 @@ function ReCheck returns logical
  idoc-id as integer ):
    define buffer buf_c-utd for ub.c-utd .
    define buffer buf_utd   for ub.utd .
-   define variable oMotp       as class     ibs.th.bge.is_motp.is_motp no-undo .
    find first buf_utd where buf_utd.db-num eq idb-num
                         and buf_utd.doc-id eq idoc-id
    exclusive-lock no-error.
@@ -462,12 +461,8 @@ function ReCheck returns logical
       end. 
       if buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB 
       then do:       
-         oMotp = new ibs.th.bge.is_motp.is_motp() .
-         oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
-         if error-status:error then do:
-            message return-value view-as alert-box.
-         end.    
-         delete object oMotp .    
+         run utl/utd-checkSpec.p (input buf_utd.db-num,
+                                  input buf_utd.doc-id) .  
       end.
    end.
    release buf_utd.
