@@ -1388,34 +1388,45 @@ ON CHOOSE OF menu-item m_marks-lines  /* Марки */
             { gbl/brwrepos.i
               &line-num= 5
             }
-        run mark-temp .
-        if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
-        do:
-          find first X_utd-lines no-lock where X_utd-lines.stts <> "Проверен" no-error .
-          if available (X_utd-lines) then do:
-            F-text = "                            Просканируйте марку" .
-            f-text:screen-value = "" .
-            display F-text with frame {&frame-name} .
-          end.
-          else do:
-            F-text = "" .
-            f-text:screen-value = "" .
-            display F-text with frame {&frame-name} .
-          end.  
-        end.
-      end.
-      else 
-      do:
-        message "Нет марок"
-          view-as alert-box.
-      end.    
-      br-utd :refresh() no-error .
-      reposition br-utd to recid recid_utd no-error .
+                run mark-temp .
+                run enable_BUTTON .
+                if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
+                do:
+                    find first X_utd-lines no-lock where X_utd-lines.stts <> "Проверен" no-error .
+                    if available (X_utd-lines) then 
+                    do:
+                        F-text = "                            Просканируйте марку" .
+                        f-text:screen-value = "" .
+                        display F-text with frame {&frame-name} .
+                    end.
+                    else 
+                    do:
+                        F-text = "" .
+                        f-text:screen-value = "" .
+                        display F-text with frame {&frame-name} .
+                    end.  
+                end.
+            end.
+            else 
+            do:
+                message "Нет марок"
+                    view-as alert-box.
+            end.    
+            br-utd :refresh() no-error .
+            /*      if type_mark = 1 then  */
+            /*    do:                      */
+            /*        {&OPEN-QUERY-br-utd1}*/
+            /*    end.                     */
+            /*    else                     */
+            /*    do:                      */
+            /*        {&OPEN-QUERY-br-utd} */
+            /*    end.                     */
+            reposition br-utd to recid recid_utd no-error .
 
-    end.
-    else message "Нет марок"
-        view-as alert-box.  
-    return no-apply .
+        end.
+        else message "Нет марок"
+                view-as alert-box.  
+        return no-apply .
 
   END.
 
@@ -1658,42 +1669,56 @@ end.
 &Scoped-define SELF-NAME b_write-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_write-cancel d-utd
 ON CHOOSE OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */
-DO:
-    if available (buf_utd) then 
-    do:
-      if p-connect <> ? then 
-      do: 
-        run SendResponse( buf_utd.db-num, buf_utd.doc-id, no, no) no-error.    
-        if  error-status:error then 
-        do: 
-          return return-value .
-        end.
-      end.
-      else 
-      do: 
-        buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:RejectionUtd:KeyIntDB.
-        buf_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:AutoRejected:KeyIntDB.
-    
-      end.
-      assign
-         c-status = buf_utd.sts
-         c-status-edi = buf_utd.sts-edi 
-      .
-
-    end.
-    display c-status c-status-edi with frame {&frame-name} .     
-/*    run enable_BUTTON .*/
+    DO:
+        define variable v-ok as logical no-undo .
+        if available (buf_utd) then 
+        do:
+            run ref/dialog-upd.w (input buf_utd.comment, input buf_utd.db-num, input buf_utd.doc-id, output v-comment, output v-ok) no-error.
+            if  error-status:error then 
+            do: 
+                return return-value .
+            end.
+            if v-ok then 
+            do:
+                if buf_utd.comment <> "" then buf_utd.comment = buf_utd.comment + {&delim-cmd} + v-comment .
+                else buf_utd.comment = v-comment .
+                f-comment = buf_utd.comment .
+                display f-comment with frame {&frame-name} .
+                if p-connect <> ? then 
+                do: 
+                    run SendResponse( buf_utd.db-num, buf_utd.doc-id, no, no) no-error.    
+                    if  error-status:error then 
+                    do: 
+                        return return-value .
+                    end.
+                end.
+                else 
+                do: 
+                    buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:RejectionUtd:KeyIntDB.
+                    buf_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:AutoRejected:KeyIntDB.
+        
+                end.
+         
+            end.
+            assign
+                c-status     = buf_utd.sts
+                c-status-edi = buf_utd.sts-edi 
+                .
+            display c-status c-status-edi with frame {&frame-name} .     
+            /*    run enable_BUTTON .*/
             disable          
-          b_correct
-          b_recheck
-          b_anul
-          b_write-cancel
-          b_prov-finish
-          b_finish
-          b_back-check
-          b_deliv-cancel
-        with frame {&frame-name} .  
-  END.
+                b_correct
+                b_recheck
+                b_anul
+                b_write-cancel
+                b_prov-finish
+                b_finish
+                b_back-check
+                b_deliv-cancel
+                with frame {&frame-name} .
+        end.
+      
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1925,58 +1950,62 @@ DO:
       define variable vconnect as com-handle no-undo.
       run str/UPD.w ( parparentproc, {&select}, objSrv:Env:Utd:EDocType:AKT:KeyIntDB, "", input-output vconnect, output v-rec-list)  no-error .
   
-      find first bf_utd exclusive-lock where recid(bf_utd) = integer(v-rec-list) no-error .
-    end.  
-    if available (bf_utd) then 
-    do:
-      /*Ищем, все ли марки есть в УПД*/
-        for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
-                                                and bf_utd-marking-lines.doc-id = bf_utd.doc-id:
-          find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
-                                                     and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
-                                                     and buf_utd-marking-lines.mark = bf_utd-marking-lines.mark no-error .
-          if not available (buf_utd-marking-lines) then do:
-            message "В документе неполный состав марок. Просканируйте марки вручную." 
-            view-as alert-box.
-            return .
-          end.  
-        end. 
-        qnty-gray = 0 .
-        qnty-check = 0 .
-        for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
-                                                and bf_utd-marking-lines.doc-id = bf_utd.doc-id, 
-                   first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
-                                                                and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
-                                                                and buf_utd-marking-lines.mark = bf_utd-marking-lines.mark
-                                                                and buf_utd-marking-lines.doc-level = 1  :
-            find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:GrayZone:KeyIntDB no-error .
-            if available (buf_marking) then do:
-              qnty-gray = qnty-gray + buf_marking.box-qnty .
-            end.
-            else do:  
-            if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
-            do:
-              tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
-            end.
-            for first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark:
-              qnty-check = qnty-check + buf_marking.box-qnty .
-              buf_marking.sts = Marking:Checked_:KeyIntDB.
-              buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB.
-            end.  
-            end.
-        end.    
-        /*Запишем номер УПД в акт*/
-        bf_utd.doc-code = buf_utd.DocumentNumber .        
-        message "Проверка завершена" skip
+            find first bf_utd exclusive-lock where recid(bf_utd) = integer(v-rec-list) no-error .
+        end.  
+        if available (bf_utd) then 
+        do:
+            /*Ищем, все ли марки есть в УПД*/
+            for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
+                and bf_utd-marking-lines.doc-id = bf_utd.doc-id:
+                find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
+                    and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
+                    and buf_utd-marking-lines.mark = bf_utd-marking-lines.mark no-error .
+                if not available (buf_utd-marking-lines) then 
+                do:
+                    message "В документе неполный состав марок. Просканируйте марки вручную." 
+                        view-as alert-box.
+                    return .
+                end.  
+            end. 
+            qnty-gray = 0 .
+            qnty-check = 0 .
+            for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
+                and bf_utd-marking-lines.doc-id = bf_utd.doc-id, 
+                first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
+                and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
+                and buf_utd-marking-lines.mark = bf_utd-marking-lines.mark
+                and buf_utd-marking-lines.doc-level = 1  :
+                find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:GrayZone:KeyIntDB no-error .
+                if available (buf_marking) then 
+                do:
+                    qnty-gray = qnty-gray + buf_marking.box-qnty .
+                end.
+                else 
+                do:  
+                    if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                    do:
+                        tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                    end.
+                    for first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark:
+                        qnty-check = qnty-check + buf_marking.box-qnty .
+                        buf_marking.sts = Marking:Checked_:KeyIntDB.
+                        buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB.
+                    end.  
+                end.
+            end.    
+            /*Запишем номер УПД в акт*/
+            bf_utd.doc-code = buf_utd.DocumentNumber .        
+            message "Проверка завершена" skip
                 "Успешно проверено марок - " + string (qnty-check) skip
                 "Не проверено марок - " + string (qnty-gray) skip
-        view-as alert-box.
-            if qnty-gray <> 0 then do:
-            F-text = "                            Просканируйте марку" .
-            display F-text with frame {&frame-name} .
+                view-as alert-box.
+            if qnty-gray <> 0 then 
+            do:
+                F-text = "                            Просканируйте марку" .
+                display F-text with frame {&frame-name} .
             end.
-    end.
-    run mark-temp .
+        end.
+        run mark-temp .
         {&OPEN-QUERY-br-utd}
 
   END.
@@ -2266,44 +2295,46 @@ END.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-num d-utd
 ON leave OF F-num IN FRAME d-utd
-DO:
-    assign f-num .
-    if f-date:SCREEN-VALUE <> "" and f-num:SCREEN-VALUE <> "" then do:
-        find first ub.utd no-lock where ub.utd.DocumentNumber = f-num
-            and ub.utd.DocumentDate = f-date 
-            and (ub.utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
-            or ub.utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)no-error .
-        if AVAILABLE (ub.utd) then 
+    DO:
+        assign f-num .
+        if f-date:SCREEN-VALUE <> "" and f-num:SCREEN-VALUE <> "" then 
         do:
-            MESSAGE "Документ с № " + ub.utd.DocumentNumber + " от даты: " + string(ub.utd.DocumentDate) + " уже заведен в системе." skip
-                VIEW-AS ALERT-BOX.
-            return NO-APPLY .
-        end.    
-    end.      
-    display f-num with frame {&frame-name} .
-END.
+            find first ub.utd no-lock where ub.utd.DocumentNumber = f-num
+                and ub.utd.DocumentDate = f-date 
+                and (ub.utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
+                or ub.utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)no-error .
+            if AVAILABLE (ub.utd) then 
+            do:
+                MESSAGE "Документ с № " + ub.utd.DocumentNumber + " от даты: " + string(ub.utd.DocumentDate) + " уже заведен в системе." skip
+                    VIEW-AS ALERT-BOX.
+                return NO-APPLY .
+            end.    
+        end.      
+        display f-num with frame {&frame-name} .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date d-utd
 ON leave OF F-date IN FRAME d-utd
-DO:
-    assign f-date .
-    if f-num:SCREEN-VALUE <> "" and f-num:SCREEN-VALUE <> ? then do:
-        find first ub.utd no-lock where ub.utd.DocumentNumber = f-num
-            and ub.utd.DocumentDate = f-date 
-            and (ub.utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
-            or ub.utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)no-error .
-        if AVAILABLE (ub.utd) then 
+    DO:
+        assign f-date .
+        if f-num:SCREEN-VALUE <> "" and f-num:SCREEN-VALUE <> ? then 
         do:
-            MESSAGE "Документ с № " + ub.utd.DocumentNumber + " от даты: " + string(ub.utd.DocumentDate) + " уже заведен в системе." skip
-                VIEW-AS ALERT-BOX.
-            return NO-APPLY .
-        end.    
-    end.      
-    display f-date with frame {&frame-name} .
-END.
+            find first ub.utd no-lock where ub.utd.DocumentNumber = f-num
+                and ub.utd.DocumentDate = f-date 
+                and (ub.utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
+                or ub.utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)no-error .
+            if AVAILABLE (ub.utd) then 
+            do:
+                MESSAGE "Документ с № " + ub.utd.DocumentNumber + " от даты: " + string(ub.utd.DocumentDate) + " уже заведен в системе." skip
+                    VIEW-AS ALERT-BOX.
+                return NO-APPLY .
+            end.    
+        end.      
+        display f-date with frame {&frame-name} .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -2736,140 +2767,177 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_BUTTON d-utd 
 PROCEDURE enable_BUTTON :
-/* --------------------------------------------------------------------
-                            Purpose:     ENABLE the User Interface
-                            Parameters:  <none>
-                            Notes:       Here we display/view/enable the widgets in the
-                                         user-interface.  In addition, OPEN all queries
-                                         associated with each FRAME and BROWSE.
-                                         These statements here are based on the "Other
-                                         Settings" section of the widget Property Sheets.
-                             -------------------------------------------------------------------- */
-  if p-mode <> {&lookup} then 
-  do:
-    if (c-status < ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB or 
-      c-status = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
-      c-status = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
-      c-status = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB ) 
-      and
-    (c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or
-    c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB)
-    then do:
-      enable
-        b_deliv-cancel
-        with frame {&frame-name} .
-    end.  
-      if c-status = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or
-      c-status = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or
-      c-status = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
-      c-status = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then
-      do:
-          enable
+    /* --------------------------------------------------------------------
+                                Purpose:     ENABLE the User Interface
+                                Parameters:  <none>
+                                Notes:       Here we display/view/enable the widgets in the
+                                             user-interface.  In addition, OPEN all queries
+                                             associated with each FRAME and BROWSE.
+                                             These statements here are based on the "Other
+                                             Settings" section of the widget Property Sheets.
+                                 -------------------------------------------------------------------- */
+    define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
+    define buffer cancel_marking           for ub.marking .
+    define variable v-write-cancel as logical no-undo .
+    v-write-cancel = false .
+  
+    for each cancel_utd-marking-lines where cancel_utd-marking-lines.doc-id = p-doc-id and cancel_utd-marking-lines.db-num = p-db-num, 
+        first cancel_marking where cancel_marking.mark = cancel_utd-marking-lines.mark and (cancel_marking.sts = Marking:PendingVerification:KeyIntDB or cancel_marking.sts = Marking:DeliveryControl:KeyIntDB): 
+        v-write-cancel = true .
+        leave .
+    end.
+    if p-mode <> {&lookup} then 
+    do:
+        if (c-status < ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB or 
+            c-status = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
+            c-status = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+            c-status = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB ) 
+            and
+            (c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or
+            c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB)
+            then 
+        do:
+            enable
+                b_deliv-cancel
+                with frame {&frame-name} .
+        end.  
+        if c-status = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or
+            c-status = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or
+            c-status = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
+            c-status = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then
+        do:
+            enable
+                b_back-check
+                with frame {&frame-name} .           
+        end.     
+        case c-status:
+            when ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then /*Новый*/
+                do:
+                    enable
+                        b_prov-finish
+                        with frame {&frame-name} .
+                end.  
+            when ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then /*Ожидает поставку*/
+                do:
+                    enable
+                        b_correct
+                        b_write-cancel
+                        b_prov-finish
+                        with frame {&frame-name} .
+                    if v-write-cancel then 
+                    do:
+                        DISABLE
+                            b_correct
+                            b_write-cancel
+                            with frame {&frame-name} .
+                    end.    
+                end. 
+            when ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or /*Несоответствие договору поставки*/
+            when ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB then /*Ошибка загрузки*/
+                do:
+                    enable
+                        b_correct
+                        b_write-cancel
+                        b_recheck
+                        with frame {&frame-name} .
+                    if v-write-cancel then 
+                    do:
+                        DISABLE
+                            b_write-cancel
+                            b_correct
+                            with frame {&frame-name} .
+                    end.   
+                end.
+            when ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB or /*Пройдена проверка МОТП*/
+            when ObjSrv:Env:Utd:Sts:TH:RequiresAdjustment:KeyIntDB or /*Требуется корректировка*/
+            when ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or /*Отсутствие КМ в обороте*/
+            when ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB then /*Несоответствие кодов маркировки при поставке*/
+                do:
+                    enable
+                        b_correct
+                        b_write-cancel
+                        /*            b_back-check*/
+                        with frame {&frame-name} .
+                    if v-write-cancel then 
+                    do:
+                        DISABLE
+                            b_write-cancel
+                            b_correct
+                            with frame {&frame-name} .
+                    end.   
+                end. 
+            /*      when ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB then /*Отказ*/*/
+            /*        do:                                                       */
+            /*          enable                                                  */
+            /*            b_back-check                                          */
+            /*            with frame {&frame-name} .                            */
+            /*        end.                                                      */
+            when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB then /*Требует подписания*/
+                do:
+                    disable
+                        b_write-cancel
+                        with frame {&frame-name} .
+                end.  
+            otherwise 
+            do:
+                display
+                    b_correct
+                    b_recheck
+                    b_write-cancel
+                    b_prov-finish
+                    with frame {&frame-name} .
+            end.  
+        end case .  
+        if c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+        do:
+            disable
+                b_correct
+                b_recheck
+                b_write-cancel
+                with frame {&frame-name} .
+        end.  
+        if c-type <> objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then 
+        do:
+            disable
+                b_finish
+                with frame {&frame-name} .
+        end.  
+        if c-type = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then 
+        do:
+            disable
+                b_correct
+                b_write-cancel        
+                with frame {&frame-name} .
+            if c-status <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then 
+            do:
+                enable
+                    b_finish
+                    with frame {&frame-name} .         
+            end.
+        end.  
+        if p-connect = ? then 
+        do:
+            display
+                b_correct
+                b_recheck
+                with frame {&frame-name} .
+        end.   
+    end.
+    if v-cntxt-db-num <> 0 then 
+    do:
+        disable
+            b_write-cancel
             b_back-check
-            with frame {&frame-name} .           
-      end.     
-    case c-status:
-      when ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then /*Новый*/
-        do:
-          enable
+            b_correct
+            with frame {&frame-name} .
+    end. 
+    if not v-obj-active then 
+    do:
+        disable
+            /*      b_back-check */
             b_prov-finish
             with frame {&frame-name} .
-        end.  
-      when ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then /*Ожидает поставку*/
-        do:
-          enable
-            b_correct
-            b_write-cancel
-            b_prov-finish
-            with frame {&frame-name} .
-        end. 
-      when ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or /*Несоответствие договору поставки*/
-      when ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB then /*Ошибка загрузки*/
-        do:
-          enable
-            b_correct
-            b_write-cancel
-            b_recheck
-            with frame {&frame-name} .
-        end.
-      when ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB or /*Пройдена проверка МОТП*/
-      when ObjSrv:Env:Utd:Sts:TH:RequiresAdjustment:KeyIntDB or /*Требуется корректировка*/
-      when ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or /*Отсутствие КМ в обороте*/
-      when ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB then /*Несоответствие кодов маркировки при поставке*/
-        do:
-          enable
-            b_correct
-            b_write-cancel
-/*            b_back-check*/
-            with frame {&frame-name} .
-        end. 
-/*      when ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB then /*Отказ*/*/
-/*        do:                                                       */
-/*          enable                                                  */
-/*            b_back-check                                          */
-/*            with frame {&frame-name} .                            */
-/*        end.                                                      */
-      when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB then /*Требует подписания*/
-        do:
-          disable
-            b_write-cancel
-            with frame {&frame-name} .
-        end.  
-      otherwise 
-      do:
-        display
-          b_correct
-          b_recheck
-          b_write-cancel
-          b_prov-finish
-          with frame {&frame-name} .
-      end.  
-    end case .  
-    if c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
-    do:
-      disable
-        b_correct
-        b_recheck
-        b_write-cancel
-        with frame {&frame-name} .
-    end.  
-    if c-type <> objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then do:
-      disable
-        b_finish
-      with frame {&frame-name} .
-    end.  
-    if c-type = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then do:
-      disable
-            b_correct
-            b_write-cancel        
-      with frame {&frame-name} .
-      if c-status <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then do:
-      enable
-        b_finish
-      with frame {&frame-name} .         
-      end.
-    end.  
-    if p-connect = ? then 
-    do:
-      display
-        b_correct
-        b_recheck
-        with frame {&frame-name} .
-    end.   
-  end.
-  if v-cntxt-db-num <> 0 then do:
-    disable
-    b_write-cancel
-    b_back-check
-    b_correct
-    with frame {&frame-name} .
-  end. 
-  if not v-obj-active then do:
-      disable
-/*      b_back-check */
-      b_prov-finish
-      with frame {&frame-name} .
-  end.     
+    end.     
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3894,7 +3962,7 @@ PROCEDURE save_mark :
     v-marking = GetCodeIdent(v-mark) .
     if v-marking = "" or v-marking = ? then 
     do:
-        F-text = "            Марка не найдена, просканируйте следующую" .
+        F-text = "            Просканирован штрих код, необходимо просканировать марку" .
         display F-text with frame {&frame-name}.
         v-mark:screen-value = "" .
         v-mark = "" .
@@ -4146,10 +4214,13 @@ PROCEDURE save_mark :
                     ,input no-lock
                     ,output v-rowid
                     ,output v-tbl-name ) .
-            if v-rowid <> ? then do:
-                find first ub.utd no-lock where rowid(ub.utd) = v-rowid no-error .
-            end.    
-                F-text = "               Найдено УПД " + string(ub.utd.DocumentNumber) + " на поставку данной марки. Марка не может быть принята по Акту" .
+                if v-rowid <> ? then 
+                do:
+                    find first ub.utd no-lock where rowid(ub.utd) = v-rowid no-error .
+                    F-text = "               Найдено УПД " + string(ub.utd.DocumentNumber) + " на поставку данной марки. Марка не может быть принята по Акту" .
+                end.  
+                else  F-text = "               Марка не может быть принята по Акту. Заблокирована" + buf_marking.loc-key . 
+                /*                F-text = "               Найдено УПД " + string(ub.utd.DocumentNumber) + " на поставку данной марки. Марка не может быть принята по Акту" .*/
                 display F-text with frame {&frame-name}.
                 v-mark:screen-value = "" .
                 v-mark = "" .    
@@ -4346,11 +4417,11 @@ PROCEDURE save_mark :
         find first buf_marking no-lock where buf_marking.mark begins v-marking and buf_marking.sts >= Marking:OutZone:KeyIntDB no-error .
         if available (buf_marking) then 
         do:
-          F-text = "                      Марка есть в системе, используйте другую марку" .
-          display F-text with frame {&frame-name}.
-          v-mark:screen-value = "" .
-          v-mark = "" .    
-          return.
+            F-text = "                      Марка находится в обороте , статус марки –" + StatusTHName(buf_marking.sts) .
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .    
+            return.
         end.                                    
         else 
         do:
