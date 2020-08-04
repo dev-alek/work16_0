@@ -173,14 +173,35 @@ on error undo _main, return error return-value
       end.
     end.
   end.
+/*  cas-shft = no.*/
   if buf_cash-desk.is-del = yes then do:
-    message
-    substitute("Вы действительно хотите ОКОНЧАТЕЛЬНО удалить кассу &1?&2(Данная касса уже ЛОГИЧЕСКИ удалена)"
+/*------*/
+    if  cas-shft
+    then 
+       find first buf_shift-cash No-LOCK WHERE
+            buf_shift-cash.cash-num = buf_cash-desk.cash-num AND
+            buf_shift-cash.obj-code = buf_cash-desk.obj-code AND
+            buf_shift-cash.obj-type = {&shop} no-error .
+    if cas-shft and available buf_shift-cash
+    then do:
+       message
+          substitute("Касса &1 помечена как удаленная и на ней есть смены. Хотите востановить кассу ?"
                 , buf_cash-desk.cash-num
                 , {&new-line}
                 )
-    view-as alert-box QUESTION buttons YES-NO update glog.
-    if not glog then undo _main, return .
+       view-as alert-box QUESTION buttons YES-NO update glog.
+       if not glog then undo _main, return .
+        
+    end.
+    else if available buf_shift-cash then do:
+       message
+          substitute("Вы действительно хотите ОКОНЧАТЕЛЬНО удалить кассу &1?&2(Данная касса уже ЛОГИЧЕСКИ удалена)"
+                , buf_cash-desk.cash-num
+                , {&new-line}
+                )
+          view-as alert-box QUESTION buttons YES-NO update glog.
+       if not glog then undo _main, return .
+    end.
   end.
 
   for each ub.wth-pobj No-LOCK WHERE
@@ -210,7 +231,10 @@ on error undo _main, return error return-value
       if not v-log-del then undo _main, return.
     end.
   END.
-  if cas-shft then do:
+  if buf_cash-desk.is-del = yes
+  then 
+     v-log-del = yes.
+  else if cas-shft then do:
     find first buf_shift-cash No-LOCK WHERE
             buf_shift-cash.cash-num = buf_cash-desk.cash-num AND
             buf_shift-cash.obj-code = buf_cash-desk.obj-code AND
