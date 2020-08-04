@@ -68,7 +68,7 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { gbl/getsect.i def }
 { str/is-sug.i }
 { gbl/db-attr.i }
-
+{utl\search.i}
 define stream str-anl.
 define stream str-err.
 define stream str-log.
@@ -1391,17 +1391,30 @@ define variable      v-water-qnty as decimal no-undo.
           v_command = substitute( "&1 &2 &3 &4", v_comstring, string( anl-loc ), v_File-Name, p-obj-code)
         .
         os-command silent value( v_command ) .
-        output stream str-log to    value (  v-log-file-name  ) append .
-        put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " v_command skip .
-        if search( v_File-Name ) = ? then do:
+        run gbl/fileapnd.p
+          ( v-log-file-name
+          ,substitute("&1 &2  Запрос &3&4", string(today),string(time, "HH:MM:SS"), v_command, {&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
+        if searchfile( v_File-Name ) = ? then do:
           return error 'Файл с прибора не получен.' .
         end.
         else do: 
-          v_File-Name  = search( v_File-Name ) . 
+          v_File-Name  = searchfile( v_File-Name ) . 
         end.
-        put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
-        output stream str-log close .
+        run gbl/fileapnd.p
+          ( v-log-file-name
+          ,substitute("&1 &2  Данные &3", string(today),string(time, "HH:MM:SS"), {&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
         os-append value(v_File-Name) value(v-log-file-name).
+        
+        run gbl/fileapnd.p
+          ( v-log-file-name
+          , {&carriage-return} + {&new-line}
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
+        
         
       end.
       when 2 /* Агент */
@@ -1421,10 +1434,22 @@ define variable      v-water-qnty as decimal no-undo.
           return error return-value .
         end.
         v_File-Name = "revis.ifsf" .
-        output stream str-log to    value (  v-log-file-name  ) append .
-        put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
-        output stream str-log close .
+        run gbl/fileapnd.p
+          ( v-log-file-name
+          ,substitute("&1 &2  Данные &3", string(today),string(time, "HH:MM:SS"), {&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
+       /* if error-status:error then do:
+          return error return-value .
+        end.*/
         os-append value(v_File-Name) value(v-log-file-name).
+        
+        run gbl/fileapnd.p
+          ( v-log-file-name
+          , {&carriage-return} + {&new-line}
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
+        
       end.
     end case .
     /*
@@ -1473,9 +1498,9 @@ define variable      v-water-qnty as decimal no-undo.
     end.
 */
     v-err-file-name = substitute('&1revis.err', ibs.th.gbl.gbl-inipar:logDir) .
-    input  stream str-anl from  value (  v_File-Name  )  .
-    output stream str-err to    value (  v-err-file-name  ) .
-
+    
+    input  stream str-anl from  value (v_File-Name)   .
+    output stream str-err to     'revis.err' .
     rpt:
     repeat :
          is_FatalError = no.
