@@ -76,7 +76,7 @@ define variable v-rid-list  as character no-undo .
 define variable v-db-list   as character no-undo .
 define variable v-sertif    as character no-undo .
 define variable v-sertif_num    as character no-undo .
-define variable oMotp       as class     is_motp no-undo .
+
 define variable vToken      as character no-undo .
 define variable row_utd     as rowid   no-undo .
 define variable recid_utd   as integer   no-undo .
@@ -1023,6 +1023,7 @@ if log-res then do:
     end.
   run init-id (doc-id, db-num).
   br-utd:refresh ().
+
   reposition br-utd to rowid row_utd.
 end.  
   END.
@@ -1637,49 +1638,8 @@ if log-res then do:
         do ii = 1 to num-entries (v-rid-list):
             /*            recid_utd = integer(entry(ii,v-rid-list)) .*/
             find first x_utd where recid (x_utd) = integer(entry(ii,v-rid-list)) .
-            SaturateAndCheckUTD(X_utd.db-num, X_utd.doc-id) no-error .
-            if  error-status:error then 
-            do: 
-                return return-value .
-            end.
-            if  X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
-                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
-                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then 
-            do:
-                find last buf_c-utd no-lock where buf_c-utd.db-num = X_utd.db-num and 
-                    buf_c-utd.doc-id = X_utd.doc-id and 
-                    buf_c-utd.sts <> X_utd.sts and
-                    buf_c-utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB no-error .
-                if available (buf_c-utd) then 
-                do:
-                    X_utd.sts = buf_c-utd.sts .
-                    X_utd.sts-edi = buf_c-utd.sts-edi .
-                end.
-                else 
-                do:
-                    if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then 
-                        X_utd.sts = ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
-                    else X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
-                    X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB .
-                end.  
-             
-            end. 
-            find first buf_utd EXCLUSIVE-LOCK where buf_utd.doc-id = X_utd.doc-id
-                and buf_utd.db-num = X_utd.db-num .
-            assign
-                buf_utd.sts     = X_utd.sts
-                buf_utd.sts-edi = X_utd.sts-edi
-                .                                                
-            if buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB then 
-            do:       
-                oMotp = new is_motp() .
-                oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
-                if ERROR-STATUS:ERROR then 
-                do:
-                    message return-value view-as alert-box.
-                end.    
-                delete OBJECT oMotp .    
-            end.        
+            Recheck(X_utd.db-num, X_utd.doc-id).
+                   
         end.  
         run init-sort in this-procedure .
         {&OPEN-QUERY-br-utd}
@@ -1689,50 +1649,8 @@ if log-res then do:
         if available (X_utd) then 
         do:
             recid_utd = recid (X_utd) .
-            find first x_utd where recid (x_utd) = recid_utd .
-            SaturateAndCheckUTD(X_utd.db-num, X_utd.doc-id) no-error .        
-            if  error-status:error then 
-            do: 
-                return return-value .
-            end.
-            if  X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
-                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
-                X_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then 
-            do:
-                find last buf_c-utd no-lock where buf_c-utd.db-num = X_utd.db-num and 
-                    buf_c-utd.doc-id = X_utd.doc-id and 
-                    buf_c-utd.sts <> X_utd.sts and
-                    buf_c-utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB no-error .
-                if available (buf_c-utd) then 
-                do:
-                    X_utd.sts = buf_c-utd.sts .
-                    X_utd.sts-edi = buf_c-utd.sts-edi .
-                end.
-                else 
-                do:
-                    if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then 
-                        X_utd.sts = ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
-                    else X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
-                    X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB .
-                end.  
-             
-            end. 
-            find first buf_utd EXCLUSIVE-LOCK where buf_utd.doc-id = X_utd.doc-id
-                and buf_utd.db-num = X_utd.db-num .
-            assign
-                buf_utd.sts     = X_utd.sts
-                buf_utd.sts-edi = X_utd.sts-edi
-                .                                                
-            if buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB then 
-            do:       
-                oMotp = new is_motp() .
-                oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
-                if ERROR-STATUS:ERROR then 
-                do:
-                    message return-value view-as alert-box.
-                end.    
-                delete OBJECT oMotp .    
-            end.     
+            
+            Recheck(X_utd.db-num, X_utd.doc-id).
             run init-id (X_utd.doc-id, X_utd.db-num).  
         end.  
     end.
@@ -2122,6 +2040,7 @@ block-wait:
 
 do while not mflagExit:
 /*WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} pause vtime .*/
+
 WAIT-FOR CHOOSE OF FRAME {&frame-name}  focus {&browse-name} pause vtime .
     
     vtime = max(0,time_motp + 10500000 - now).
@@ -2627,13 +2546,16 @@ define variable vCertificateName  as component-handle no-undo .
 define variable vi as integer no-undo.
 if mDiadocApi eq ?
 then
-   create "Diadoc.DiadocClient":U mDiadocApi.
-
+   create "Diadoc.DiadocClient":U mDiadocApi no-error.
+if mDiadocApi eq ?
+then
+   return.
 if    (    p-connect eq ? 
       and (i-pack eq ? or i-pack eq "")
       )
    or iChange
 then do:
+
    vCertificates = mDiadocApi:GetPersonalCertificates(true).
       do vi = 1 to  vCertificates:count:
         vCertificate = vCertificates:GetItem(vi - 1).
@@ -2668,8 +2590,7 @@ PROCEDURE proc-Token :
                      -------------------------------------------------------------------- */
     define buffer buf_ext-system      for ub.ext-system .
     define buffer buf_ext-system-attr for ub.ext-system-attr .
-     
-    
+    define variable oMotp       as class     ibs.th.bge.is_motp.is_motp no-undo .
         for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-obj}
                                                and buf_ext-system-attr.esya-attr-value  = v-cntxt-obj-type + string(v-cntxt-obj-code)
                                               /* and buf_ext-system-attr.db-num           = buf_db.db-num */
