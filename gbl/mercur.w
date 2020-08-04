@@ -73,10 +73,10 @@ v-tthg = buffer thbjattr_thbj-attr-g:table-handle .
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit RECT-1 RECT-2 B-quit B-Help v-apikey ~
 v-login v-password v-login-is v-manual-vcd v-close r-type-connect v-qrcode ~
-cb-section v-proxy-addres v-proxy-login v-proxy-pswd 
+cb-section v-proxy-addres v-proxy-login v-proxy-pswd v-proxy-ssl 
 &Scoped-Define DISPLAYED-OBJECTS v-apikey v-login v-password v-login-is ~
 v-manual-vcd v-close r-type-connect v-qrcode cb-section v-proxy-addres ~
-v-proxy-login v-proxy-pswd 
+v-proxy-login v-proxy-pswd v-proxy-ssl 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -178,6 +178,11 @@ DEFINE VARIABLE v-manual-vcd AS LOGICAL INITIAL no
      LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 2.5 BY .83 NO-UNDO.
+     
+DEFINE VARIABLE v-proxy-ssl AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.5 BY .83 NO-UNDO.     
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -197,7 +202,8 @@ DEFINE FRAME Dialog-Frame
      cb-section AT ROW 12.5 COL 54.88 COLON-ALIGNED WIDGET-ID 34
      v-proxy-addres AT ROW 15.25 COL 22.5 COLON-ALIGNED WIDGET-ID 42
      v-proxy-login AT ROW 16.5 COL 22.5 COLON-ALIGNED WIDGET-ID 44 PASSWORD-FIELD 
-     v-proxy-pswd AT ROW 16.5 COL 54 COLON-ALIGNED WIDGET-ID 46 PASSWORD-FIELD 
+     v-proxy-pswd AT ROW 16.5 COL 54 COLON-ALIGNED WIDGET-ID 46 PASSWORD-FIELD
+     v-proxy-ssl AT ROW 15.25 COL 89 COLON-ALIGNED WIDGET-ID 48 
      "Разрешено закрывать документ без указ. ВСД:" VIEW-AS TEXT
           SIZE 44.63 BY .92 AT ROW 9.08 COL 54.51 RIGHT-ALIGNED WIDGET-ID 18
      "Параметры подключения через Прокси-сервер:" VIEW-AS TEXT
@@ -208,6 +214,8 @@ DEFINE FRAME Dialog-Frame
           SIZE 44.63 BY .92 AT ROW 10.04 COL 54.51 RIGHT-ALIGNED WIDGET-ID 28
      "  Параметры коннекта к ВЕТИС.API" VIEW-AS TEXT
           SIZE 32.5 BY .67 AT ROW 2 COL 37.5 WIDGET-ID 30
+     "SSL прокси" VIEW-AS TEXT
+          SIZE 10.63 BY .92 AT ROW 15.25 COL 88 RIGHT-ALIGNED WIDGET-ID 28     
      RECT-1 AT ROW 2.25 COL 1.5 WIDGET-ID 36
      RECT-2 AT ROW 14.5 COL 1.5 WIDGET-ID 40
      SPACE(0.24) SKIP(0.49)
@@ -354,11 +362,11 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY v-apikey v-login v-password v-login-is v-manual-vcd v-close 
           r-type-connect v-qrcode cb-section v-proxy-addres v-proxy-login 
-          v-proxy-pswd 
+          v-proxy-pswd v-proxy-ssl 
       WITH FRAME Dialog-Frame.
   ENABLE B-exit RECT-1 RECT-2 B-quit B-Help v-apikey v-login v-password 
          v-login-is v-manual-vcd v-close r-type-connect v-qrcode cb-section 
-         v-proxy-addres v-proxy-login v-proxy-pswd 
+         v-proxy-addres v-proxy-login v-proxy-pswd v-proxy-ssl 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -460,7 +468,11 @@ FOR EACH temp-thbj-attr
     IF temp-thbj-attr.prop-code = {&attr-mercur_proxy-pswd} and temp-thbj-attr.property-value-character > '' THEN DO:
         {gbl/pdecrypt.i temp-thbj-attr.property-value-character v-proxy-pswd no-error}
        display v-proxy-pswd with frame {&frame-name} .       
-    END.  
+    END. 
+    IF temp-thbj-attr.prop-code = {&attr-mercur_proxy-ssl} THEN DO:
+       v-proxy-ssl = temp-thbj-attr.property-value-logical.
+       display v-proxy-ssl with frame {&frame-name} .
+    END. 
 
 
 END.
@@ -533,6 +545,7 @@ ASSIGN FRAME {&FRAME-NAME}
     v-proxy-addres
     v-proxy-login
     v-proxy-pswd
+    v-proxy-ssl
     .
 
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_apikey} .
@@ -583,6 +596,9 @@ ASSIGN FRAME {&FRAME-NAME}
       temp-thbj-attr.property-value-character = if v-proxy-addres > '' then v-proxy-enc else "":U.
     end.
     else temp-thbj-attr.property-value-character = "":U .
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-mercur_proxy-ssl} .
+    temp-thbj-attr.property-value-logical = v-proxy-ssl.
         
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (

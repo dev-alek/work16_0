@@ -2735,6 +2735,13 @@ end.
 &scop prop-value ''
 &scop prop-code entry(v-ii, v-prop-code)
         {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-mercur_proxy-ssl}".
+      do v-ii = 1 to num-entries(v-prop-code):
+&scop ptype logical
+&scop prop-value no
+&scop prop-code entry(v-ii, v-prop-code)
+        {&create-thbj-attr}.
       end.     
     end.
 

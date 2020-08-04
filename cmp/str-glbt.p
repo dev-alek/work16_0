@@ -579,7 +579,7 @@ attr-marking }
 /*набор опций работы с документами МЦ*/
 { cmp/cr-prep.i 1 attr-mercur                 mercur                  " " mercur }
 { cmp/cr-prepc.i 1 prop-list-attr-mercur
-"apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server,proxy-addres,proxy-login,proxy-pswd"
+"apikey,login_is,login,password,manual-vcd,close,type-connect,qrcode,server,proxy-addres,proxy-login,proxy-pswd,proxy-ssl"
 attr-mercur }
 /* сюда добавлять новые названия атрибутов объектов TH */
 

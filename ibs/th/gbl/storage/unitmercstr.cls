@@ -89,7 +89,7 @@ class ibs.th.gbl.storage.unitmercstr:
   method public class unitsubs getunitmercs (input inGdsCode as integer ):
     
     define variable ii as integer no-undo .
-    define variable unitsObj as class unitsubs.
+    define variable unitsObj as class unitsubs no-undo .
     unitsObj = new unitsubs ().
     for first buf_goods-attr where buf_goods-attr.gds-code = inGdsCode
                                and buf_goods-attr.attr-code = {&attr-MercUnits}:
@@ -119,7 +119,7 @@ class ibs.th.gbl.storage.unitmercstr:
   
   method private class unitsub getDataStorage ( input inAttrValue as character ):
     
-    define variable unitObj  as class unitsub.
+    define variable unitObj  as class unitsub no-undo .
       
     unitObj = new unitsub ().
     

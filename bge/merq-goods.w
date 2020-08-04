@@ -117,8 +117,8 @@ define temp-table tt-gds like ub.gds-mercury
   field units    as character label "Ед.измерения".
 
 define temp-table tt-gds-units no-undo 
-  field GUID_    as character
-  field units    as character 
+  field GUID_ as character
+  field units as character 
   .
 
 define variable gdsMercsubsObj as class     gdsmercsubs.
@@ -130,9 +130,10 @@ define variable v-login        as character no-undo .
 define variable v-password     as character no-undo .
 define variable v-server       as character no-undo .
 
-define variable v-proxy-login     as character no-undo .
-define variable v-proxy-pswd      as character no-undo .
-define variable v-proxy-addres    as character no-undo .
+define variable v-proxy-login  as character no-undo .
+define variable v-proxy-pswd   as character no-undo .
+define variable v-proxy-addres as character no-undo .
+define variable v-proxy-ssl    as logical   no-undo .
 
 
 define variable par-type       as character no-undo.
@@ -173,8 +174,13 @@ define variable vsdStorage        as class     vsdtostorage.
 
 function get-mark returns character
   (buffer local-gds for tt-gds ):
-  if lookup (string (recid (local-gds)), select-list) > 0  then return "*".
+  if select-list <> ? or select-list <> "" then 
+  do:
+    if lookup (string (recid (local-gds)), select-list) > 0  then return "*".
+    else return "".
+  end.
   else return "".
+  
 end function.
 
 /* _UIB-CODE-BLOCK-END */
@@ -211,8 +217,9 @@ end function.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-cancel b-load b-lkp b-update b-del ~
-b-connect b-import r-type b-mark b-sel-all b-unmark rs-sort br-goods 
-&Scoped-Define DISPLAYED-OBJECTS r-type rs-sort 
+b-connect b-alt-units b-import r-type b-mark b-sel-all b-unmark rs-sort ~
+guid_ br-goods 
+&Scoped-Define DISPLAYED-OBJECTS r-type rs-sort guid_ 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -227,112 +234,117 @@ b-connect b-import r-type b-mark b-sel-all b-unmark rs-sort br-goods
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-define menu POPUP-MENU-b-import 
-  menu-item m_item_import  label "Импорт товаров"
-  menu-item m_item_send    label "Передача данных в УБД".
+DEFINE MENU POPUP-MENU-b-import 
+  MENU-ITEM m_item_import  LABEL "Импорт товаров"
+  MENU-ITEM m_item_send    LABEL "Передача данных в УБД".
 
 
 /* Definitions of the field level widgets                               */
-define button b-cancel auto-end-key 
-  label "Выход" 
-  size 13 by 1.13
-  bgcolor 8 .
+DEFINE BUTTON b-alt-units 
+  LABEL "Доп. ед. изм." 
+  SIZE 14 BY 1.13
+  BGCOLOR 8 .
 
-define button b-connect 
-  label "Связать" 
-  size 13 by 1.13
-  bgcolor 8 .
+DEFINE BUTTON b-cancel AUTO-END-KEY 
+  LABEL "Выход" 
+  SIZE 13 BY 1.13
+  BGCOLOR 8 .
 
-define button b-del 
-  label "Удалить" 
-  size 13 by 1.13
-  bgcolor 8 .
+DEFINE BUTTON b-connect 
+  LABEL "Связать" 
+  SIZE 13 BY 1.13
+  BGCOLOR 8 .
 
-define button b-import 
-  label "Сервис" 
-  size 13 by 1.13 tooltip "Импорт"
-  bgcolor 8 .
+DEFINE BUTTON b-del 
+  LABEL "Удалить" 
+  SIZE 13 BY 1.13
+  BGCOLOR 8 .
 
-define button b-lkp 
-  label "Просмотр" 
-  size 13 by 1.13
-  bgcolor 8 .
+DEFINE BUTTON b-import 
+  LABEL "Сервис" 
+  SIZE 13 BY 1.13 TOOLTIP "Импорт"
+  BGCOLOR 8 .
 
-define button b-load 
-  label "Запрос" 
-  size 13 by 1.13 tooltip "Отправить запрос в Меркурий"
-  bgcolor 8 .
+DEFINE BUTTON b-lkp 
+  LABEL "Просмотр" 
+  SIZE 13 BY 1.13
+  BGCOLOR 8 .
 
-define button b-mark 
-  label "&*" 
-  size 3 by 1.13.
-  
-define button b-alt-units 
-  label "Доп. ед. изм." 
-  size 14 by 1.13
-  bgcolor 8 .
+DEFINE BUTTON b-load 
+  LABEL "Запрос" 
+  SIZE 13 BY 1.13 TOOLTIP "Отправить запрос в Меркурий"
+  BGCOLOR 8 .
 
-define button b-prod 
-  image-up file "btn-down-arrow":U
-  image-down file "btn-down-arrow":U
-  image-insensitive file "btn-down-arrow":U
-  label "" 
-  size 3 by 1.13 tooltip "Выбор производителя".
+DEFINE BUTTON b-mark 
+  LABEL "&*" 
+  SIZE 3 BY 1.13.
 
-define button b-sel-all 
-  label "&+":L 
-  size 3 by 1.13 tooltip "Отметить все объекты".
+DEFINE BUTTON b-prod 
+  IMAGE-UP FILE "btn-down-arrow":U
+  IMAGE-DOWN FILE "btn-down-arrow":U
+  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+  LABEL "" 
+  SIZE 3 BY 1.13 TOOLTIP "Выбор производителя".
 
-define button b-spisok 
-  image-up file "btn-down-arrow":U
-  image-down file "btn-down-arrow":U
-  image-insensitive file "btn-down-arrow":U
-  label "Товары" 
-  size 3 by 1.13 tooltip "Выбор товаров".
+DEFINE BUTTON b-sel-all 
+  LABEL "&+":L 
+  SIZE 3 BY 1.13 TOOLTIP "Отметить все объекты".
 
-define button b-unmark 
-  label "&-":L 
-  size 3 by 1.13 tooltip "Снять все отметки".
+DEFINE BUTTON b-spisok 
+  IMAGE-UP FILE "btn-down-arrow":U
+  IMAGE-DOWN FILE "btn-down-arrow":U
+  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+  LABEL "Товары" 
+  SIZE 3 BY 1.13 TOOLTIP "Выбор товаров".
 
-define button b-update 
-  label "Изменить" 
-  size 13 by 1.13
-  bgcolor 8 .
+DEFINE BUTTON b-unmark 
+  LABEL "&-":L 
+  SIZE 3 BY 1.13 TOOLTIP "Снять все отметки".
 
-define variable v-prod      as character format "X(11)" 
-  label "Производитель" 
-  view-as text 
-  size 11 by .67 no-undo.
+DEFINE BUTTON b-update 
+  LABEL "Изменить" 
+  SIZE 13 BY 1.13
+  BGCOLOR 8 .
 
-define variable v-prod-name as character format "X(30)" 
-  view-as text 
-  size 30 by .67 no-undo.
+DEFINE VARIABLE guid_       AS CHARACTER FORMAT "X(256)":U 
+  LABEL "GUID" 
+  VIEW-AS FILL-IN 
+  SIZE 33.5 BY 1 NO-UNDO.
 
-define variable r-type      as integer   initial 1 
-  view-as radio-set vertical
-  radio-buttons 
+DEFINE VARIABLE v-prod      AS CHARACTER FORMAT "X(11)" 
+  LABEL "Производитель" 
+  VIEW-AS TEXT 
+  SIZE 11 BY .67 NO-UNDO.
+
+DEFINE VARIABLE v-prod-name AS CHARACTER FORMAT "X(30)" 
+  VIEW-AS TEXT 
+  SIZE 30 BY .67 NO-UNDO.
+
+DEFINE VARIABLE r-type      AS INTEGER   INITIAL 1 
+  VIEW-AS RADIO-SET VERTICAL
+  RADIO-BUTTONS 
   "По производителю", 1,
   "По списку товаров", 2
-  size 26 by 1.75 no-undo.
+  SIZE 26 BY 1.75 NO-UNDO.
 
-define variable rs-sort     as integer   initial 3 
-  view-as radio-set horizontal
-  radio-buttons 
+DEFINE VARIABLE rs-sort     AS INTEGER   INITIAL 3 
+  VIEW-AS RADIO-SET HORIZONTAL
+  RADIO-BUTTONS 
   "&связан", 1,
   "&не связан", 2,
   "&все", 3
-  size 40 by 1.13 no-undo.
+  SIZE 40 BY 1.13 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-define query br-goods for 
-  tt-gds scrolling.
+DEFINE QUERY br-goods FOR 
+  tt-gds SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
-define browse br-goods
+DEFINE BROWSE br-goods
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-goods Dialog-Frame _FREEFORM
-  query br-goods display
+  QUERY br-goods DISPLAY
   get-mark(BUFFER tt-gds) column-label "*"  format "X(1)":U
   tt-gds.gds-code column-label "Код товара" format ">>>>>>>>9"
   tt-gds.merc-name column-label "Наименование товара" format "X(100)":U width 28
@@ -351,32 +363,33 @@ define browse br-goods
 
 /* ************************  Frame Definitions  *********************** */
 
-define frame Dialog-Frame
-  b-cancel at row 1.25 col 2
-  b-load at row 1.25 col 15
-  b-lkp at row 1.25 col 28
-  b-update at row 1.25 col 41
-  b-del at row 1.25 col 54
-  b-connect at row 1.25 col 67
-  b-alt-units at row 1.25 col 80
-  b-import at row 1.25 col 94
-  r-type at row 2.5 col 2.25 no-label widget-id 20
-  b-prod at row 2.5 col 71.5
-  b-spisok at row 3.25 col 22.25 widget-id 26
-  b-mark at row 4.5 col 2
-  b-sel-all at row 4.5 col 5 widget-id 28
-  b-unmark at row 4.5 col 8 widget-id 30
-  rs-sort at row 4.54 col 28 no-label
-  br-goods at row 5.79 col 2 widget-id 200
-  v-prod at row 2.71 col 57.5 colon-aligned
-  v-prod-name at row 2.71 col 74.5 colon-aligned no-label
-  "Сортировать по:" view-as text
-  size 15 by 1.13 at row 4.54 col 12 widget-id 18
-  space(81.00) skip(20.65)
-  with view-as dialog-box keep-tab-order 
-  side-labels no-underline three-d  scrollable 
-  title "Синхронизация товаров с Меркурием"
-  default-button b-load cancel-button b-cancel widget-id 100.
+DEFINE FRAME Dialog-Frame
+  b-cancel AT ROW 1.25 COL 2
+  b-load AT ROW 1.25 COL 15
+  b-lkp AT ROW 1.25 COL 28
+  b-update AT ROW 1.25 COL 41
+  b-del AT ROW 1.25 COL 54
+  b-connect AT ROW 1.25 COL 67
+  b-alt-units AT ROW 1.25 COL 80
+  b-import AT ROW 1.25 COL 94
+  r-type AT ROW 2.5 COL 2.25 NO-LABEL WIDGET-ID 20
+  b-prod AT ROW 2.5 COL 71.5
+  b-spisok AT ROW 3.25 COL 22.25 WIDGET-ID 26
+  b-mark AT ROW 4.5 COL 2
+  b-sel-all AT ROW 4.5 COL 5 WIDGET-ID 28
+  b-unmark AT ROW 4.5 COL 8 WIDGET-ID 30
+  rs-sort AT ROW 4.54 COL 28 NO-LABEL
+  guid_ AT ROW 4.54 COL 71.25 COLON-ALIGNED WIDGET-ID 32
+  br-goods AT ROW 5.79 COL 2 WIDGET-ID 200
+  v-prod AT ROW 2.71 COL 57.5 COLON-ALIGNED
+  v-prod-name AT ROW 2.71 COL 74.5 COLON-ALIGNED NO-LABEL
+  "Сортировать по:" VIEW-AS TEXT
+  SIZE 15 BY 1.13 AT ROW 4.54 COL 12 WIDGET-ID 18
+  SPACE(81.00) SKIP(20.65)
+  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+  TITLE "Синхронизация товаров с Меркурием"
+  DEFAULT-BUTTON b-load CANCEL-BUTTON b-cancel WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -396,36 +409,36 @@ define frame Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB br-goods rs-sort Dialog-Frame */
-assign 
-  frame Dialog-Frame:SCROLLABLE = false
-  frame Dialog-Frame:HIDDEN     = true.
+/* BROWSE-TAB br-goods guid Dialog-Frame */
+ASSIGN 
+  FRAME Dialog-Frame:SCROLLABLE = FALSE
+  FRAME Dialog-Frame:HIDDEN     = TRUE.
 
-assign 
-  b-import:POPUP-MENU in frame Dialog-Frame = menu POPUP-MENU-b-import:HANDLE.
-b-import:MENU-MOUSE = 1.
+ASSIGN 
+  b-import:POPUP-MENU IN FRAME Dialog-Frame = MENU POPUP-MENU-b-import:HANDLE.
+
 /* SETTINGS FOR BUTTON b-prod IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-assign 
-  b-prod:HIDDEN in frame Dialog-Frame = true.
+ASSIGN 
+  b-prod:HIDDEN IN FRAME Dialog-Frame = TRUE.
 
 /* SETTINGS FOR BUTTON b-spisok IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-assign 
-  b-spisok:HIDDEN in frame Dialog-Frame = true.
+ASSIGN 
+  b-spisok:HIDDEN IN FRAME Dialog-Frame = TRUE.
 
-assign 
-  br-goods:COLUMN-RESIZABLE in frame Dialog-Frame = true.
+ASSIGN 
+  br-goods:COLUMN-RESIZABLE IN FRAME Dialog-Frame = TRUE.
 
 /* SETTINGS FOR FILL-IN v-prod IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE                                                 */
-assign 
-  v-prod:HIDDEN in frame Dialog-Frame = true.
+ASSIGN 
+  v-prod:HIDDEN IN FRAME Dialog-Frame = TRUE.
 
 /* SETTINGS FOR FILL-IN v-prod-name IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE                                                 */
-assign 
-  v-prod-name:HIDDEN in frame Dialog-Frame = true.
+ASSIGN 
+  v-prod-name:HIDDEN IN FRAME Dialog-Frame = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -450,7 +463,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH tt-gds.
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-on window-close of frame Dialog-Frame /* Синхронизация товаров с Меркурием */
+ON window-close OF FRAME Dialog-Frame /* Синхронизация товаров с Меркурием */
   do:
     apply "END-ERROR":U to self.
   end.
@@ -461,7 +474,7 @@ on window-close of frame Dialog-Frame /* Синхронизация товаров с Меркурием */
 
 &Scoped-define SELF-NAME b-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
-on choose of b-cancel in frame Dialog-Frame /* Выход */
+ON choose OF b-cancel IN FRAME Dialog-Frame /* Выход */
   do:
     for each tt-gds:
       delete tt-gds .
@@ -474,7 +487,7 @@ on choose of b-cancel in frame Dialog-Frame /* Выход */
 
 &Scoped-define SELF-NAME b-connect
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-connect Dialog-Frame
-on choose of b-connect in frame Dialog-Frame /* Связать */
+ON choose OF b-connect IN FRAME Dialog-Frame /* Связать */
   do:
     if not available tt-gds then 
     do:
@@ -482,11 +495,21 @@ on choose of b-connect in frame Dialog-Frame /* Связать */
       return no-apply.
     end.
     v-rid = recid (tt-gds) .
+    find first ub.goods-attr no-lock where ub.goods-attr.attr-code = {&attr-mercur_FGIS}
+      and ub.goods-attr.attr-value = "yes" and ub.goods-attr.gds-code = tt-gds.gds-code no-error .
+    if not available (ub.goods-attr) then 
+    do:
+      message
+        "У товара нет атрибута - 'Является подконтрольным ФГИС Меркурий'"
+        view-as alert-box.
+      leave .
+    end. 
     run ref/merq-connect.w (parparentproc, 
       input-output tt-gds.gds-code) no-error .
     run fill-tt .
     run refresh-query in this-procedure.
-    reposition br-goods to recid v-rid .
+    if v-rid <> ? then
+      reposition br-goods to recid v-rid .
   end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -495,7 +518,7 @@ on choose of b-connect in frame Dialog-Frame /* Связать */
 
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
-on choose of b-del in frame Dialog-Frame /* Удалить */
+ON choose OF b-del IN FRAME Dialog-Frame /* Удалить */
   do:
     define variable choice         as logical no-undo .
     define variable ii             as integer no-undo .
@@ -572,7 +595,7 @@ on choose of b-del in frame Dialog-Frame /* Удалить */
 
 &Scoped-define SELF-NAME b-lkp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lkp Dialog-Frame
-on choose of b-lkp in frame Dialog-Frame /* Просмотр */
+ON choose OF b-lkp IN FRAME Dialog-Frame /* Просмотр */
   do:
     if not available tt-gds then 
     do:
@@ -597,7 +620,7 @@ on choose of b-lkp in frame Dialog-Frame /* Просмотр */
 
 &Scoped-define SELF-NAME b-load
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-load Dialog-Frame
-on choose of b-load in frame Dialog-Frame /* Запрос */
+ON choose OF b-load IN FRAME Dialog-Frame /* Запрос */
   do:
     
     define variable cmd        as character no-undo .
@@ -659,11 +682,22 @@ on choose of b-load in frame Dialog-Frame /* Запрос */
     
 
               if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
-              then do :
-                cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
-                                search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+                then 
+              do :
+                if v-proxy-ssl
+                  then 
+                do :
+                  cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                    search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres).
+                end.
+                else 
+                do :
+                  cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                    search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+                end.
               end.
-              else do :
+              else 
+              do :
                 cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
               end.
               os-command silent value (cmd). /*закрытие окна*/
@@ -764,11 +798,22 @@ on choose of b-load in frame Dialog-Frame /* Запрос */
       sw:end-document () .
     
       if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
-      then do :
-        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
-                        search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+        then 
+      do :
+        if v-proxy-ssl
+          then 
+        do :
+          cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+            search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres).
+        end.
+        else 
+        do :
+          cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+            search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+        end.
       end.
-      else do :
+      else 
+      do :
         cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
       end.
       os-command silent value (cmd).
@@ -785,7 +830,7 @@ on choose of b-load in frame Dialog-Frame /* Запрос */
 
 &Scoped-define SELF-NAME b-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark Dialog-Frame
-on choose of b-mark in frame Dialog-Frame /* * */
+ON choose OF b-mark IN FRAME Dialog-Frame /* * */
   do:
     
     run proc-b-mark in this-procedure no-error.
@@ -798,7 +843,7 @@ on choose of b-mark in frame Dialog-Frame /* * */
 
 &Scoped-define SELF-NAME b-prod
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-prod Dialog-Frame
-on choose of b-prod in frame Dialog-Frame
+ON choose OF b-prod IN FRAME Dialog-Frame
   do:
     os-delete value( search("ItemList_.xml")) no-error .
     run sel-prod in this-procedure .
@@ -833,7 +878,7 @@ end.
 
 &Scoped-define SELF-NAME b-sel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-all Dialog-Frame
-on choose of b-sel-all in frame Dialog-Frame /* + */
+ON choose OF b-sel-all IN FRAME Dialog-Frame /* + */
   do:
     assign 
       select-list = "".
@@ -850,7 +895,7 @@ on choose of b-sel-all in frame Dialog-Frame /* + */
 
 &Scoped-define SELF-NAME b-spisok
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-spisok Dialog-Frame
-on choose of b-spisok in frame Dialog-Frame /* Товары */
+ON choose OF b-spisok IN FRAME Dialog-Frame /* Товары */
   do:
     run sel-goods in this-procedure .
     assign
@@ -866,7 +911,7 @@ on choose of b-spisok in frame Dialog-Frame /* Товары */
 
 &Scoped-define SELF-NAME b-unmark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-unmark Dialog-Frame
-on choose of b-unmark in frame Dialog-Frame /* - */
+ON choose OF b-unmark IN FRAME Dialog-Frame /* - */
   do:
     if not available tt-gds then return.
     select-list  = "".
@@ -879,15 +924,23 @@ on choose of b-unmark in frame Dialog-Frame /* - */
 
 &Scoped-define SELF-NAME b-update
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-update Dialog-Frame
-on choose of b-update in frame Dialog-Frame /* Изменить */
+ON choose OF b-update IN FRAME Dialog-Frame /* Изменить */
   do:
     if not available tt-gds then 
     do:
       message "Не выбран товар" view-as alert-box.
       return no-apply.
     end.
-    
     v-rid = recid(tt-gds) .
+    find first ub.goods-attr no-lock where ub.goods-attr.attr-code = {&attr-mercur_FGIS}
+      and ub.goods-attr.attr-value = "yes" and ub.goods-attr.gds-code = tt-gds.gds-code no-error .
+    if not available (ub.goods-attr) then 
+    do:
+      message
+        "У товара нет атрибута - 'Является подконтрольным ФГИС Меркурий'"
+        view-as alert-box.
+      return no-apply .
+    end. 
     run ref/merq-gds.w (
       parparentproc
       ,input-output tt-gds.gds-code
@@ -897,7 +950,7 @@ on choose of b-update in frame Dialog-Frame /* Изменить */
     run fill-tt .
     run refresh-query in this-procedure.
       
-    reposition br-goods to recid v-rid .
+  /*    reposition br-goods to recid v-rid .*/
 
   end.
 
@@ -905,9 +958,21 @@ on choose of b-update in frame Dialog-Frame /* Изменить */
 &ANALYZE-RESUME
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL guid_ Dialog-Frame
+ON value-changed OF guid_ IN FRAME Dialog-Frame /* GUID */
+  DO:
+    assign guid_ .
+    run fill-tt .
+    run refresh-query in this-procedure.
+  
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME m_item_import
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_item_import Dialog-Frame
-on choose of menu-item m_item_import /* Импорт товаров */
+ON choose OF MENU-ITEM m_item_import /* Импорт товаров */
   do:
     define variable jj as integer no-undo .
     v-select-list = "" .
@@ -929,7 +994,7 @@ on choose of menu-item m_item_import /* Импорт товаров */
 
 &Scoped-define SELF-NAME m_item_send
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_item_send Dialog-Frame
-on choose of menu-item m_item_send /* Передача данных в УБД */
+ON choose OF MENU-ITEM m_item_send /* Передача данных в УБД */
   do:
     for each ub.gds-mercury exclusive-lock:
       run str/callnews.p
@@ -956,7 +1021,7 @@ on choose of menu-item m_item_send /* Передача данных в УБД */
 
 &Scoped-define SELF-NAME r-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-type Dialog-Frame
-on value-changed of r-type in frame Dialog-Frame
+ON value-changed OF r-type IN FRAME Dialog-Frame
   do:
     assign
       v-prod:SCREEN-VALUE      = "" 
@@ -979,7 +1044,7 @@ on value-changed of r-type in frame Dialog-Frame
 
 &Scoped-define SELF-NAME rs-sort
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-sort Dialog-Frame
-on value-changed of rs-sort in frame Dialog-Frame
+ON value-changed OF rs-sort IN FRAME Dialog-Frame
   do:
     assign
       rs-sort
@@ -1024,7 +1089,7 @@ run disable_UI.
 /* **********************  Internal Procedures  *********************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
-procedure disable_UI :
+PROCEDURE disable_UI :
   /*------------------------------------------------------------------------------
     Purpose:     DISABLE the User Interface
     Parameters:  <none>
@@ -1034,14 +1099,14 @@ procedure disable_UI :
                  we are ready to "clean-up" after running.
   ------------------------------------------------------------------------------*/
   /* Hide all frames. */
-  hide frame Dialog-Frame.
-end procedure.
+  HIDE FRAME Dialog-Frame.
+END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
-procedure enable_UI :
+PROCEDURE enable_UI :
   /*------------------------------------------------------------------------------
     Purpose:     ENABLE the User Interface
     Parameters:  <none>
@@ -1051,25 +1116,25 @@ procedure enable_UI :
                  These statements here are based on the "Other 
                  Settings" section of the widget Property Sheets.
   ------------------------------------------------------------------------------*/
-  display r-type rs-sort 
-    with frame Dialog-Frame.
-  enable b-cancel b-load b-lkp b-update b-del b-connect b-import r-type b-mark 
-    b-sel-all b-unmark rs-sort br-goods b-alt-units
-    with frame Dialog-Frame.
-  view frame Dialog-Frame.
+  DISPLAY r-type rs-sort guid_ 
+    WITH FRAME Dialog-Frame.
+  ENABLE b-cancel b-load b-lkp b-update b-del b-connect b-alt-units b-import 
+    r-type b-mark b-sel-all b-unmark rs-sort guid_ br-goods 
+    WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-end procedure.
+END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-tt Dialog-Frame 
-procedure fill-tt :
+PROCEDURE fill-tt :
   /* -----------------------------------------------------------
-          Purpose:
-          Parameters:  <none>
-          Notes:
-        -------------------------------------------------------------*/
+            Purpose:
+            Parameters:  <none>
+            Notes:
+          -------------------------------------------------------------*/
   define buffer buf_goods       for ub.goods .
   define buffer buf_goods-attr  for ub.goods-attr .
   define buffer buf_gds-mercury for ub.gds-mercury .
@@ -1094,104 +1159,22 @@ procedure fill-tt :
         if v-prod <> "" then
         do:
           /*Товары по выбранному производителю*/
-          for each buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-mercur_FGIS}
-            and buf_goods-attr.attr-value = "yes",
-            each buf_goods no-lock where buf_goods.gds-code = buf_goods-attr.gds-code and buf_goods.prod-code = INTEGER (entry(2,v-prod)) and buf_goods.prod-type = ENTRY (1,v-prod) and buf_goods.stts = 0:
+          /*          for each buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-mercur_FGIS}*/
+          /*            and buf_goods-attr.attr-value = "yes",                                            */
+          for each buf_goods no-lock where buf_goods.prod-code = INTEGER (entry(2,v-prod)) and buf_goods.prod-type = ENTRY (1,v-prod) and buf_goods.stts = 0:
             ii = ii + 1.
 
             gdsMercsubsObj = gdsmercstrObj:getgdsmercs(buf_goods.gds-code).
 
             if valid-object (gdsMercsubsObj:GdsMercsubsCurr) then
             do:
-
-              create tt-gds .
-              do i = 1 to gdsMercsubsObj:GetItem (i):
-                find first tt-gds-units no-lock where tt-gds-units.GUID_ = gdsMercsubsObj:GdsMercsubsCurr:GUID_ no-error .
-                  if available (tt-gds-units) then tt-gds.units = tt-gds-units.units .
-                tt-gds.ID           = ii .
-                tt-gds.gds-code     = gdsMercsubsObj:GdsMercsubsCurr:GdsCode .
-                tt-gds.prod-type    = gdsMercsubsObj:GdsMercsubsCurr:ProdType .
-                tt-gds.db-num       = gdsMercsubsObj:GdsMercsubsCurr:DBNum .
-                tt-gds.gds-name     = buf_goods.gds-name .
-                tt-gds.units-th     = buf_goods.unit-base .
-                tt-gds.merc-name    = gdsMercsubsObj:GdsMercsubsCurr:MercName .
-                tt-gds.cr-date      = gdsMercsubsObj:GdsMercsubsCurr:DateCr .
-                tt-gds.update-date  = gdsMercsubsObj:GdsMercsubsCurr:DateUpdate .
-                tt-gds.GUID-type    = gdsMercsubsObj:GdsMercsubsCurr:GUIDType .
-                tt-gds.GUID-subtype = gdsMercsubsObj:GdsMercsubsCurr:GUIDSubType .
-                tt-gds.GUID         = gdsMercsubsObj:GdsMercsubsCurr:GUID_ .
-                tt-gds.UUID         = gdsMercsubsObj:GdsMercsubsCurr:UUID .
-                
-              end.
-            end.
-            else 
-            do:
-              create tt-gds .
-              tt-gds.ID = ii .
-              tt-gds.gds-code   = buf_goods.gds-code .
-              tt-gds.gds-name   = buf_goods.gds-name .
-              tt-gds.units-th   = buf_goods.unit-base .
-            end.
-          end.
-        end.
-      end.
-    when 2 then 
-      do:
-        if select-list <> "" then 
-        do:
-          select-list = trim (select-list) no-error .
-          do jj = 1 to num-entries (select-list):
-            v-list = (entry(jj, select-list)) no-error.
-            for first tt-gds exclusive-lock where recid(tt-gds) = integer(v-list):
-              for each buf_goods no-lock where buf_goods.gds-code = integer(entry(jj,v-list)),
-                first buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-mercur_FGIS}
-                and buf_goods-attr.attr-value = "yes" and buf_goods-attr.gds-code = buf_goods.gds-code:
-                gdsMercsubsObj = gdsmercstrObj:getgdsmercs(buf_goods.gds-code).
-
-                if valid-object (gdsMercsubsObj:GdsMercsubsCurr) then
-                do:
-                  do i = 1 to gdsMercsubsObj:GetItem (i):
-                    find first tt-gds-units no-lock where tt-gds-units.GUID_ = gdsMercsubsObj:GdsMercsubsCurr:GUID_ no-error .
-                    if available (tt-gds-units) then tt-gds.units = tt-gds-units.units .
-                    tt-gds.prod-type    = gdsMercsubsObj:GdsMercsubsCurr:ProdType .
-                    tt-gds.db-num       = gdsMercsubsObj:GdsMercsubsCurr:DBNum .
-                    tt-gds.gds-name     = buf_goods.gds-name .
-                    tt-gds.units-th     = buf_goods.unit-base .
-                    tt-gds.merc-name    = gdsMercsubsObj:GdsMercsubsCurr:MercName .
-                    tt-gds.cr-date      = gdsMercsubsObj:GdsMercsubsCurr:DateCr .
-                    tt-gds.update-date  = gdsMercsubsObj:GdsMercsubsCurr:DateUpdate .
-                    tt-gds.GUID-type    = gdsMercsubsObj:GdsMercsubsCurr:GUIDType .
-                    tt-gds.GUID-subtype = gdsMercsubsObj:GdsMercsubsCurr:GUIDSubType .
-                    tt-gds.GUID         = gdsMercsubsObj:GdsMercsubsCurr:GUID_ .
-                    tt-gds.UUID         = gdsMercsubsObj:GdsMercsubsCurr:UUID .
-                  end.
-                end.
-                else 
-                do:
-                  tt-gds.gds-code   = buf_goods.gds-code .
-                  tt-gds.gds-name   = buf_goods.gds-name .
-                  tt-gds.units-th   = buf_goods.unit-base .
-                end.
-              end.
-            end.
-          end.
-        end.
-        if v-select-list <> "" then 
-        do:
-          v-select-list = trim (v-select-list) no-error .
-          do jj = 1 to num-entries (v-select-list):
-            for each buf_goods no-lock where buf_goods.gds-code = integer(entry(jj,v-select-list)),
-              first buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-mercur_FGIS}
-              and buf_goods-attr.attr-value = "yes" and buf_goods-attr.gds-code = buf_goods.gds-code:
-              gdsMercsubsObj = gdsmercstrObj:getgdsmercs(buf_goods-attr.gds-code).
-
-              if valid-object (gdsMercsubsObj:GdsMercsubsCurr) then
+              if (guid_ <> "" and gdsMercsubsObj:GdsMercsubsCurr:GUID_ begins guid_) or guid_ = "" then 
               do:
+                create tt-gds .
                 do i = 1 to gdsMercsubsObj:GetItem (i):
-                  create tt-gds .
                   find first tt-gds-units no-lock where tt-gds-units.GUID_ = gdsMercsubsObj:GdsMercsubsCurr:GUID_ no-error .
                   if available (tt-gds-units) then tt-gds.units = tt-gds-units.units .
-                  tt-gds.ID           = jj .
+                  tt-gds.ID           = ii .
                   tt-gds.gds-code     = gdsMercsubsObj:GdsMercsubsCurr:GdsCode .
                   tt-gds.prod-type    = gdsMercsubsObj:GdsMercsubsCurr:ProdType .
                   tt-gds.db-num       = gdsMercsubsObj:GdsMercsubsCurr:DBNum .
@@ -1206,20 +1189,119 @@ procedure fill-tt :
                   tt-gds.UUID         = gdsMercsubsObj:GdsMercsubsCurr:UUID .
                 end.
               end.
-              else 
+            end.
+            else 
+            do:
+              if guid_ = "" then 
               do:
                 create tt-gds .
-                tt-gds.ID = jj .
-                tt-gds.gds-code  = buf_goods.gds-code .
-                tt-gds.gds-name = buf_goods.gds-name .
-                tt-gds.units-th     = buf_goods.unit-base .
+                tt-gds.ID = ii .
+                tt-gds.gds-code   = buf_goods.gds-code .
+                tt-gds.gds-name   = buf_goods.gds-name .
+                tt-gds.units-th   = buf_goods.unit-base .
+              end.
+            end.
+          end.
+        end.
+      end.
+    when 2 then 
+      do:
+        if select-list <> "" then 
+        do:
+          select-list = trim (select-list) no-error .
+          do jj = 1 to num-entries (select-list):
+            v-list = (entry(jj, select-list)) no-error.
+            for first tt-gds exclusive-lock where recid(tt-gds) = integer(v-list):
+              for each buf_goods no-lock where buf_goods.gds-code = integer(entry(jj,v-list))
+                /*                first buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-mercur_FGIS}     */
+                /*                and buf_goods-attr.attr-value = "yes" and buf_goods-attr.gds-code = buf_goods.gds-code*/
+                :
+                gdsMercsubsObj = gdsmercstrObj:getgdsmercs(buf_goods.gds-code).
+
+                if valid-object (gdsMercsubsObj:GdsMercsubsCurr) then
+                do:
+                  do i = 1 to gdsMercsubsObj:GetItem (i):
+                    if (guid_ <> "" and gdsMercsubsObj:GdsMercsubsCurr:GUID_ begins guid_) or guid_ = "" then 
+                    do:
+                      find first tt-gds-units no-lock where tt-gds-units.GUID_ = gdsMercsubsObj:GdsMercsubsCurr:GUID_ and tt-gds-units.GUID_ begins guid_ no-error .
+                      if available (tt-gds-units) then tt-gds.units = tt-gds-units.units .
+                      tt-gds.prod-type    = gdsMercsubsObj:GdsMercsubsCurr:ProdType .
+                      tt-gds.db-num       = gdsMercsubsObj:GdsMercsubsCurr:DBNum .
+                      tt-gds.gds-name     = buf_goods.gds-name .
+                      tt-gds.units-th     = buf_goods.unit-base .
+                      tt-gds.merc-name    = gdsMercsubsObj:GdsMercsubsCurr:MercName .
+                      tt-gds.cr-date      = gdsMercsubsObj:GdsMercsubsCurr:DateCr .
+                      tt-gds.update-date  = gdsMercsubsObj:GdsMercsubsCurr:DateUpdate .
+                      tt-gds.GUID-type    = gdsMercsubsObj:GdsMercsubsCurr:GUIDType .
+                      tt-gds.GUID-subtype = gdsMercsubsObj:GdsMercsubsCurr:GUIDSubType .
+                      tt-gds.GUID         = gdsMercsubsObj:GdsMercsubsCurr:GUID_ .
+                      tt-gds.UUID         = gdsMercsubsObj:GdsMercsubsCurr:UUID .
+                    end.
+                  end.
+                end.
+                else 
+                do:
+                  if guid_ = "" then 
+                  do:
+                    tt-gds.gds-code   = buf_goods.gds-code .
+                    tt-gds.gds-name   = buf_goods.gds-name .
+                    tt-gds.units-th   = buf_goods.unit-base .
+                  end.
+                end.
+              end.
+            end.
+          end.
+        end.
+        if v-select-list <> "" then 
+        do:
+          v-select-list = trim (v-select-list) no-error .
+          do jj = 1 to num-entries (v-select-list):
+            for each buf_goods no-lock where buf_goods.gds-code = integer(entry(jj,v-select-list)):
+              /*              first buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-mercur_FGIS}      */
+              /*              and buf_goods-attr.attr-value = "yes" and buf_goods-attr.gds-code = buf_goods.gds-code:*/
+              gdsMercsubsObj = gdsmercstrObj:getgdsmercs(buf_goods.gds-code).
+
+              if valid-object (gdsMercsubsObj:GdsMercsubsCurr) then
+              do:
+                do i = 1 to gdsMercsubsObj:GetItem (i):
+                  if (guid_ <> "" and gdsMercsubsObj:GdsMercsubsCurr:GUID_ begins guid_) or guid_ = "" then 
+                  do:
+                    create tt-gds .
+                    find first tt-gds-units no-lock where tt-gds-units.GUID_ = gdsMercsubsObj:GdsMercsubsCurr:GUID_ and tt-gds-units.GUID_ begins guid_ no-error .
+                    if available (tt-gds-units) then tt-gds.units = tt-gds-units.units .
+                    tt-gds.ID           = jj .
+                    tt-gds.gds-code     = gdsMercsubsObj:GdsMercsubsCurr:GdsCode .
+                    tt-gds.prod-type    = gdsMercsubsObj:GdsMercsubsCurr:ProdType .
+                    tt-gds.db-num       = gdsMercsubsObj:GdsMercsubsCurr:DBNum .
+                    tt-gds.gds-name     = buf_goods.gds-name .
+                    tt-gds.units-th     = buf_goods.unit-base .
+                    tt-gds.merc-name    = gdsMercsubsObj:GdsMercsubsCurr:MercName .
+                    tt-gds.cr-date      = gdsMercsubsObj:GdsMercsubsCurr:DateCr .
+                    tt-gds.update-date  = gdsMercsubsObj:GdsMercsubsCurr:DateUpdate .
+                    tt-gds.GUID-type    = gdsMercsubsObj:GdsMercsubsCurr:GUIDType .
+                    tt-gds.GUID-subtype = gdsMercsubsObj:GdsMercsubsCurr:GUIDSubType .
+                    tt-gds.GUID         = gdsMercsubsObj:GdsMercsubsCurr:GUID_ .
+                    tt-gds.UUID         = gdsMercsubsObj:GdsMercsubsCurr:UUID .
+                  end.
+                end.
+              end.
+              else 
+              do:
+                if guid_ = "" then 
+                do:
+                  create tt-gds .
+                  tt-gds.ID = jj .
+                  tt-gds.gds-code  = buf_goods.gds-code .
+                  tt-gds.gds-name = buf_goods.gds-name .
+                  tt-gds.units-th     = buf_goods.unit-base .
+                end.
               end.
             end.
           end.
         end. 
       end.
   end case .
-  
+
   delete object gdsMercsubsObj no-error .    
   delete object gdsmercstrObj no-error .
   
@@ -1257,12 +1339,12 @@ end procedure.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark Dialog-Frame 
-procedure local-mark :
+PROCEDURE local-mark :
   /* -----------------------------------------------------------
-          Purpose:
-          Parameters:  <none>
-          Notes:
-        -------------------------------------------------------------*/
+            Purpose:
+            Parameters:  <none>
+            Notes:
+          -------------------------------------------------------------*/
   
   if not available tt-gds then 
   do:
@@ -1279,12 +1361,12 @@ end procedure.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-mark Dialog-Frame 
-procedure proc-b-mark :
+PROCEDURE proc-b-mark :
   /* -----------------------------------------------------------
-          Purpose:
-          Parameters:  <none>
-          Notes:
-        -------------------------------------------------------------*/
+            Purpose:
+            Parameters:  <none>
+            Notes:
+          -------------------------------------------------------------*/
   define variable varlog as logical no-undo .
   if not available tt-gds then return.
   run local-mark in this-procedure.
@@ -1299,7 +1381,7 @@ end procedure.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sel-goods Dialog-Frame 
-procedure sel-goods :
+PROCEDURE sel-goods :
   v-select-list = "" .
   run str/gds-list.w (
     input parparentproc
@@ -1323,7 +1405,7 @@ end procedure.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE sel-prod Dialog-Frame 
-procedure sel-prod :
+PROCEDURE sel-prod :
   assign
     ref-list = "":U
     .
@@ -1439,17 +1521,21 @@ procedure ini_enable :
         when "proxy-login" then
           do:
             if thbjattr_thbj-attr.property-value-character <> ""
-            then do :
+              then 
+            do :
               {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-login no-error}
             end.
           end. 
         when "proxy-pswd" then
           do:
             if thbjattr_thbj-attr.property-value-character <> ""
-            then do :
+              then 
+            do :
               {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
             end.  
-          end.            
+          end. 
+        when "proxy-ssl" then 
+          v-proxy-ssl = thbjattr_thbj-attr.property-value-logical .           
       end case.
     end.
     

@@ -15,7 +15,7 @@ Author: Morozov Alexandr
 Creation date: 04/23/18
 
 
-*/
+*/ 
 
 using Progress.Lang.*.
 using ibs.th.gbl.storage.*.
@@ -23,12 +23,15 @@ using ibs.th.gbl.*.
 using ibs.th.str.clients.*.
 using ibs.th.str.mercury.*.
 
-
 class ibs.th.str.mercury.vsdsub implements ithsub: 
   
   { cmp/str-glbl.i class}
   
-  define variable vsdSts as class vsdstatustype no-undo.
+/*  define variable vsdSts     as class vsdstatustype no-undo.*/
+  define variable vsdStorage as class vsdtostorage  no-undo.
+  define variable StatusList as character init "Требует проверки,Ошибка проверки,К гашению,Ошибка гашения,Погашен,Отправлен" no-undo.
+  define variable VSDTypeList as character init "Входящий,Исходящий,Производственный,Возвратный,Транспортный" no-undo.
+  define variable PendingRepaymentList as character init "4,5" no-undo.
   define buffer bf_gdsmerc for ub.gds-mercury.
 
   define property Msg as character no-undo
@@ -70,7 +73,7 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
         setFlagChange (true).
       end.
     end.
-
+ 
   define property GdsMercGUID as character no-undo
     get:
       if available (bf_gdsmerc)
@@ -127,7 +130,13 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
 
   define property VSDTypeLbl as character no-undo
     get:
-      return vsdSts:VSDTypeLbl( input VSDType ).
+      define variable v-str as character no-undo.
+      if VSDType > 0
+      then 
+         v-str = entry (VSDType, VSDTypeList).
+      if v-str = ""
+        then v-str = "Неизвестный". 
+      return v-str.
     end.
 
   define property ObjCode as integer no-undo
@@ -299,13 +308,19 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
   
   define property StatusLbl as character no-undo
     get:
-      return vsdSts:StatusLbl(Status_).
+      define variable v-str as character no-undo.
+      v-str = entry (Status_ + 1, StatusList).
+      if v-str = ""
+        then v-str = "Неизвестный". 
+      return v-str.
     end.
     private set.
 
   define property PendingRepayment as logical no-undo
     get:
-      return vsdSts:PendingRepayment(Status_).
+      define variable v-int as integer no-undo.
+      v-int = lookup (string(Status_), PendingRepaymentList).
+      return v-int ne 0.
     end.
     private set.  
 
@@ -351,120 +366,255 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
     get.
     set.
   
-  define property TransportType as character no-undo
-    get.
+  define property TransportType as character no-undo init ?
+    get():
+        if TransportType eq ? and valid-object( vsdStorage)
+        then
+           TransportType = vsdStorage:GetAttr(id,DBNum,"TransportType").
+        return TransportType.
+    end.
     set.
    
-  define property Transport as character no-undo
-    get.
+  define property Transport as character no-undo  init ?
+    get():
+        if Transport eq ? and valid-object( vsdStorage)
+        then
+           Transport = vsdStorage:GetAttr(id,DBNum,"Transport").
+        return Transport.
+    end.
     set.
       
-  define property CarNum as character no-undo
-    get.
+  define property CarNum as character no-undo init ?
+    get():
+        if CarNum eq ? and valid-object( vsdStorage)
+        then
+           CarNum = vsdStorage:GetAttr(id,DBNum,"CarNum").
+        return CarNum.
+    end.
     set.
   
-  define property ContainerNum as character no-undo
-    get.
+  define property ContainerNum as character no-undo init ?
+    get():
+        if ContainerNum eq ? and valid-object( vsdStorage)
+        then
+           ContainerNum = vsdStorage:GetAttr(id,DBNum,"ContainerNum").
+        return ContainerNum.
+    end.
     set.
     
-  define property TrailerNum as character no-undo
-    get.
+  define property TrailerNum as character no-undo init ?
+    get():
+        if TrailerNum eq ? and valid-object( vsdStorage)
+        then
+           TrailerNum = vsdStorage:GetAttr(id,DBNum,"TrailerNum").
+        return TrailerNum.
+    end.
     set.
         
-  define property OrigCountryGuid as character no-undo
-    get.
+  define property OrigCountryGuid as character no-undo init ?
+    get():
+        if OrigCountryGuid eq ? and valid-object( vsdStorage)
+        then
+           OrigCountryGuid = vsdStorage:GetAttr(id,DBNum,"OrigCountryGuid").
+        return OrigCountryGuid.
+    end.
     set. 
     
-  define property ProducerGuid as character no-undo
-    get.
+  define property ProducerGuid as character no-undo init ?
+    get():
+        if ProducerGuid eq ? and valid-object( vsdStorage)
+        then
+           ProducerGuid = vsdStorage:GetAttr(id,DBNum,"ProducerGuid").
+        return ProducerGuid.
+    end.
     set. 
     
-  define property ProducerRole as character no-undo
+  define property ProducerRole as character no-undo init ?
+    get():
+        if ProducerRole eq ? and valid-object( vsdStorage)
+        then
+           ProducerRole = vsdStorage:GetAttr(id,DBNum,"ProducerRole").
+        return ProducerRole.
+    end.
+    set.
+    
+  define property ProductGuid as character no-undo init ?
+    get():
+        if ProductGuid eq ? and valid-object( vsdStorage)
+        then
+           ProductGuid = vsdStorage:GetAttr(id,DBNum,"ProductGuid").
+        return ProductGuid.
+    end.
+    set.
+  
+  define property SubProductGuid as character no-undo init ?
+    get():
+        if SubProductGuid eq ? and valid-object( vsdStorage)
+        then
+           SubProductGuid = vsdStorage:GetAttr(id,DBNum,"SubProductGuid").
+        return SubProductGuid.
+    end.
+    set.
+  
+  define property UnitGuid as character no-undo init ?
+    get():
+        if UnitGuid eq ? and valid-object( vsdStorage)
+        then
+           UnitGuid = vsdStorage:GetAttr(id,DBNum,"UnitGuid").
+        return UnitGuid.
+    end.
+    set.
+    
+  define property CliBeGuid as character no-undo init ?
+    get():
+        if CliBeGuid eq ? and valid-object( vsdStorage)
+        then
+           CliBeGuid = vsdStorage:GetAttr(id,DBNum,"CliBeGuid").
+        return CliBeGuid.
+    end.
+    set.
+    
+  define property CliEntGuid as character no-undo init ?
+    get():
+        if CliEntGuid eq ? and valid-object( vsdStorage)
+        then
+           CliEntGuid = vsdStorage:GetAttr(id,DBNum,"CliEntGuid").
+        return CliEntGuid.
+    end.
+    set.
+  
+  define property ObjBeGuid as character no-undo /* не хранится в базе*/
     get.
     set.
     
-  define property ProductGuid as character no-undo
+  define property ObjEntGuid as character no-undo /* не хранится в базе*/
     get.
     set.
   
-  define property SubProductGuid as character no-undo
-    get.
-    set.
-  
-  define property UnitGuid as character no-undo
-    get.
-    set.
-    
-  define property CliBeGuid as character no-undo
-    get.
-    set.
-    
-  define property CliEntGuid as character no-undo
-    get.
-    set.
-  
-  define property ObjBeGuid as character no-undo
-    get.
-    set.
-    
-  define property ObjEntGuid as character no-undo
-    get.
-    set.
-  
-  define property Perishable as character no-undo
-    get.
+  define property Perishable as character no-undo init ?
+    get():
+        if Perishable eq ? and valid-object( vsdStorage)
+        then
+           Perishable = vsdStorage:GetAttr(id,DBNum,"Perishable").
+        return Perishable.
+    end.
     set.
 
-  define property TTNissueSeries as character no-undo
-    get.
+  define property TTNissueSeries as character no-undo init ?
+    get():
+        if TTNissueSeries eq ? and valid-object( vsdStorage)
+        then
+           TTNissueSeries = vsdStorage:GetAttr(id,DBNum,"TTNissueSeries").
+        return TTNissueSeries.
+    end.
     set.
       
-  define property TTNissueNumber as character no-undo
-    get.
+  define property TTNissueNumber as character no-undo init ?
+    get():
+        if TTNissueNumber eq ? and valid-object( vsdStorage)
+        then
+           TTNissueNumber = vsdStorage:GetAttr(id,DBNum,"TTNissueNumber").
+        return TTNissueNumber.
+    end.
     set.
     
-  define property TTNissueDate as character no-undo
-    get.
+  define property TTNissueDate as character no-undo init ?
+    get():
+        if TTNissueDate eq ? and valid-object( vsdStorage)
+        then
+           TTNissueDate = vsdStorage:GetAttr(id,DBNum,"TTNissueDate").
+        return TTNissueDate.
+    end.
     set.
     
-  define property TTNtype as character no-undo
-    get.
+  define property TTNtype as character no-undo init ?
+    get():
+        if TTNtype eq ? and valid-object( vsdStorage)
+        then
+           TTNtype = vsdStorage:GetAttr(id,DBNum,"TTNtype").
+        return TTNtype.
+    end.
     set.
   
-  define property TTNrelationshipType as character no-undo
-    get.
+  define property TTNrelationshipType as character no-undo init ?
+    get():
+        if TTNrelationshipType eq ? and valid-object( vsdStorage)
+        then
+           TTNrelationshipType = vsdStorage:GetAttr(id,DBNum,"TTNrelationshipType").
+        return TTNrelationshipType.
+    end.
     set.
     
-  define property PurposeGuid as character no-undo
-    get.
+  define property PurposeGuid as character no-undo init ?
+    get():
+        if PurposeGuid eq ? and valid-object( vsdStorage)
+        then
+           PurposeGuid = vsdStorage:GetAttr(id,DBNum,"PurposeGuid").
+        return PurposeGuid.
+    end.
     set.
     
-  define property CargoInspected as character no-undo
-    get.
+  define property CargoInspected as character no-undo init ?
+    get():
+        if CargoInspected eq ? and valid-object( vsdStorage)
+        then
+           CargoInspected = vsdStorage:GetAttr(id,DBNum,"CargoInspected").
+        return CargoInspected.
+    end.
     set.
     
-  define property CargoExpertized as character no-undo
-    get.
+  define property CargoExpertized as character no-undo init ?
+    get():
+        if CargoExpertized eq ? and valid-object( vsdStorage)
+        then
+           CargoExpertized = vsdStorage:GetAttr(id,DBNum,"CargoExpertized").
+        return CargoExpertized.
+    end.
     set.
     
-  define property LocationProsperity as character no-undo
-    get.
+  define property LocationProsperity as character no-undo init ?
+    get():
+        if LocationProsperity eq ? and valid-object( vsdStorage)
+        then
+           LocationProsperity = vsdStorage:GetAttr(id,DBNum,"LocationProsperity").
+        return LocationProsperity.
+    end.
     set.
     
-  define property BrokerGuid as character no-undo
-    get.
+  define property BrokerGuid as character no-undo init ?
+    get():
+        if BrokerGuid eq ? and valid-object( vsdStorage)
+        then
+           BrokerGuid = vsdStorage:GetAttr(id,DBNum,"BrokerGuid").
+        return BrokerGuid.
+    end.
     set.
     
-  define property PackageLevel as character no-undo
-    get.
+  define property PackageLevel as character no-undo init ?
+    get():
+        if PackageLevel eq ? and valid-object( vsdStorage)
+        then
+           PackageLevel = vsdStorage:GetAttr(id,DBNum,"PackageLevel").
+        return PackageLevel.
+    end.
     set.
     
-  define property PackageGuid as character no-undo
-    get.
+  define property PackageGuid as character no-undo init ?
+    get():
+        if PackageGuid eq ? and valid-object( vsdStorage)
+        then
+           PackageGuid = vsdStorage:GetAttr(id,DBNum,"PackageGuid").
+        return PackageGuid.
+    end.
     set.
   
-  define property PackageQnty as character no-undo
-    get.
+  define property PackageQnty as character no-undo init ?
+    get():
+        if PackageQnty eq ? and valid-object( vsdStorage)
+        then
+           PackageQnty = vsdStorage:GetAttr(id,DBNum,"PackageQnty").
+        return PackageQnty.
+    end.
     set.
 
   define property TrnDoc as character no-undo
@@ -508,9 +658,17 @@ class ibs.th.str.mercury.vsdsub implements ithsub:
     prepareobj ().
   end constructor.
 
+  destructor public vsdsub (  ):
+/*    delete object vsdSts no-error.*/
+    delete object vsdStorage.
+  end destructor.
+  
   method private void prepareobj ():
-    vsdSts = new vsdstatustype ().
+/*    vsdSts     = new vsdstatustype ().*/
+    vsdStorage = new vsdtostorage().
   end.
+  
+  
 
   /*------------------------------------------------------------------------------
    Purpose:

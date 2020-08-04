@@ -34,11 +34,11 @@ define variable v-errcode as character no-undo .
 define variable v-parsesub as character no-undo .
 define variable v-parsesub2 as character no-undo .
 
-define variable vsdStorage as class vsdtostorage.
-define variable vsdsTHObj as class vsdsubs.
-define variable temp-vsdsTHObj as class vsdsubs.
-define variable vsdTHObj as class vsdsub.
-define variable vsdStsType as class vsdstatustype. 
+define variable vsdStorage as class vsdtostorage no-undo .
+define variable vsdsTHObj as class vsdsubs no-undo .
+define variable temp-vsdsTHObj as class vsdsubs no-undo .
+define variable vsdTHObj as class vsdsub no-undo .
+define variable vsdStsType as class vsdstatustype no-undo . 
 
 define variable v-statusVSD as character no-undo .
 define variable v-statusVSD2 as character no-undo .
@@ -51,6 +51,7 @@ define variable v-day as character no-undo .
 define variable v-hour as character no-undo .
 
 define variable v-ignorSect as logical no-undo initial no .
+define variable v-empty-answer as logical no-undo initial yes .
 
 define buffer buf_vsd for ub.vsd .
 
@@ -71,7 +72,7 @@ procedure getVsds:
   define output parameter p-appId as character no-undo .
   define output parameter p-status as character no-undo .
   define output parameter p-mess as character no-undo .
-  define output parameter p-Vsds as class vsdsubs.
+  define output parameter p-Vsds as class vsdsubs no-undo .
   
   assign
     p-appId = v-appId
@@ -83,6 +84,8 @@ procedure getVsds:
   if v-errcode = "MERC14561"
   or v-errcode = "MERC14562"
   or v-errcode = "MERC14563"
+  or v-errcode = "MERC14258"
+  or v-errcode = "MERC14537"
   then p-mess = v-errcode .
   
 /*  delete object vsdsTHObj no-error. */
@@ -113,6 +116,8 @@ DEFINE INPUT PARAMETER hAttributes  AS HANDLE NO-UNDO.
     then do :
       if v-ignorSect then return .
       
+      v-empty-answer = no .
+      
       if not valid-object(vsdsTHObj)
       then vsdsTHObj = new vsdsubs ().
       
@@ -124,6 +129,12 @@ DEFINE INPUT PARAMETER hAttributes  AS HANDLE NO-UNDO.
       
       v-parsesub = "vetDocument" .
     end. 
+    when "merc:getVetDocumentByUuidRequest" then v-empty-answer = no .
+    when "errors" then v-empty-answer = no .
+    when "apl:errors" then v-empty-answer = no .
+    when "ws:receiveApplicationResultRequest" then v-empty-answer = no .
+    when "receiveApplicationResultRequest" then v-empty-answer = no .
+    when "ws:submitApplicationResponse" then v-empty-answer = no .
     when "bs:uuid"
     then do :
       case v-parsesub :
@@ -213,6 +224,7 @@ PROCEDURE Characters:
             vsdsTHObj:VsdObjCurr:PackageGuid = "" .
             vsdsTHObj:VsdObjCurr:PackageLevel = "" .
             vsdsTHObj:VsdObjCurr:PackageQnty = "" .
+            vsdsTHObj:VsdObjCurr:NumPart = "" .
           end .
         end.
       end case.
@@ -308,7 +320,7 @@ PROCEDURE Characters:
     when "vd:transportStorageType" then vsdsTHObj:VsdObjCurr:TransportType = v-str .
     when "vd:transportType" then vsdsTHObj:VsdObjCurr:Transport = v-str .
     when "vd:volume" then vsdsTHObj:VsdObjCurr:Qnty = decimal(v-str) .
-    when "vd:batchId" then vsdsTHObj:VsdObjCurr:NumPart = v-str . 
+    when "vd:batchId" then vsdsTHObj:VsdObjCurr:NumPart = vsdsTHObj:VsdObjCurr:NumPart + chr(4) + v-str . 
     when "vd:productType" then vsdsTHObj:VsdObjCurr:TypeProd = v-str .
     when "dt:year" then v-year = v-str .
     when "dt:month" then v-month = v-str .
@@ -401,7 +413,7 @@ PROCEDURE Characters:
       end case .
     end.
   end case .
-END.
+end procedure .
 
 PROCEDURE EndElement:
   DEFINE INPUT PARAMETER pcNamespaceURI AS CHARACTER NO-UNDO.
@@ -463,6 +475,8 @@ PROCEDURE EndElement:
         vsdsTHObj:VsdObjCurr:MsgErr = v-mess .
       end.  
       v-parsesub = "" .
+      delete object vsdStorage no-error .
+      delete object vsdStsType no-error .
     end.
 /*    when "merc:vetDocument"*/
 /*    then do :              */
@@ -498,4 +512,14 @@ PROCEDURE EndElement:
     end.  
     when "vd:authentication" then v-parsesub2 = "" .
   end case.
-END.
+end procedure .
+
+procedure EndDocument:
+  
+  if v-empty-answer
+  then do :
+    v-status = "REJECTED" .
+    v-mess = "Пустой ответ от Ветис.API..." .
+  end.
+  
+end procedure .

@@ -24,7 +24,7 @@ using ibs.th.str.mercury.*.
 
 class ibs.th.str.mercury.unitsubs inherits asubjects: 
   
-  define property UnitObjCurr as class unitsub
+  define property UnitObjCurr as class unitsub no-undo
     get:
       return cast (SubjectObjCurr, unitsub).
     end.

@@ -60,6 +60,7 @@ define variable v-server          as character no-undo .
 define variable v-proxy-login     as character no-undo .
 define variable v-proxy-pswd      as character no-undo .
 define variable v-proxy-addres    as character no-undo .
+define variable v-proxy-ssl       as logical   no-undo .
 
 define variable par-type          as character no-undo.
 
@@ -283,6 +284,15 @@ ON CHOOSE OF B-prod-type IN FRAME Dialog-Frame
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME v-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-guid Dialog-Frame
+ON return, MOUSE-SELECT-DBLCLICK OF f-guid IN FRAME {&frame-name} DO:
+apply "leave" to f-guid in frame {&frame-name}.
+apply "choose" to B-exit in frame {&frame-name}.
+
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME f-guid
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-guid Dialog-Frame
@@ -487,7 +497,9 @@ PROCEDURE MyEnable :
             then do :
               {gbl/pdecrypt.i thbjattr_thbj-attr.property-value-character v-proxy-pswd no-error}
             end.  
-          end.      
+          end. 
+        when "proxy-ssl" then 
+          v-proxy-ssl = thbjattr_thbj-attr.property-value-logical .     
       end case.
     end.
   end.
@@ -544,7 +556,6 @@ PROCEDURE proc-save :
           RETURN NO-APPLY .
         end.
       end.
-    
       /*отправляем запрос*/
       create sax-writer sw .
     
@@ -573,8 +584,15 @@ PROCEDURE proc-save :
       
       if trim(v-proxy-addres) <> "" and v-proxy-addres <> ?
       then do :
-        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
-                        search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+        if v-proxy-ssl
+        then do :
+          cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                          search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres).
+        end.
+        else do :
+          cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                          search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
+        end.
       end.
       else do :
         cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
