@@ -86,6 +86,7 @@ define variable oMotp       as class     is_motp no-undo .
 define variable ungroup      as logical   no-undo .
 define variable vRecKey      as character no-undo .
 define variable vRecKey-line as character no-undo .
+define VARIABLE vRecKey-markLine as character no-undo .
 define variable line-num-error  as integer no-undo .
 define variable qnty-gray    as integer   no-undo .
 define variable qnty-check   as integer   no-undo .
@@ -434,7 +435,7 @@ DEFINE VARIABLE f-contr-name-TH AS CHARACTER FORMAT "X(100)"
      VIEW-AS FILL-IN 
      SIZE 48.5 BY 1.
 
-DEFINE VARIABLE f-contr-TH AS INTEGER FORMAT ">>>>>>>>>>>9" INITIAL 0 
+DEFINE VARIABLE f-contr-TH AS INTEGER FORMAT ">>>>>>>>>>>>>>>>>>>>>>9" INITIAL 0 
      VIEW-AS FILL-IN 
      SIZE 19.5 BY 1.
 
@@ -1020,6 +1021,11 @@ DO:
             buf_utd.DocumentDate   = f-date
             buf_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:RecipientResponseStatusNotAccep:KeyIntDB  
           .  
+          for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.doc-id = buf_utd.doc-id
+                                                   and buf_utd-marking-lines.db-num = buf_utd.db-num,
+                    first buf_marking EXCLUSIVE-LOCK where buf_marking.mark begins buf_utd-marking-lines.mark:
+                buf_marking.sts = Marking:PendingVerification:KeyIntDB .                                                       
+          end.                                                        
       end.  
       if c-type = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB and p-mode = {&add-def} then do:
           if buf_utd.DocumentNumber = "" then buf_utd.DocumentNumber = string(buf_utd.doc-id) .
@@ -1115,20 +1121,23 @@ DO:
       run gen-key-rec ("utd-lines", 
         input  buffer X_utd-lines:handle, 
         output vRecKey-line).
+        vRecKey-markLine = replace(vRecKey-line,"utd-lines","utd-marking-lines") + {&delim-key}.
+      menu-item m_error-lines:sensitive in menu m_error = yes.
+      for each buf_utd-err no-lock where buf_utd-err.doc-id = X_utd-lines.doc-id
+                                     and buf_utd-err.db-num = X_utd-lines.db-num
+                                     and (buf_utd-err.reckey = vRecKey-line
+                                     or buf_utd-err.reckey begins vRecKey-markLine) :
 
-      find first buf_utd-err no-lock where buf_utd-err.doc-id = X_utd-lines.doc-id and buf_utd-err.db-num = X_utd-lines.db-num and buf_utd-err.reckey = vRecKey-line no-error .
-      if available (buf_utd-err) then 
-      do:
-        line-num-error = X_utd-lines.LineNum .
-        menu-item m_error-lines:sensitive in menu m_error = yes.
+/*        menu-item m_error-lines:sensitive in menu m_error = yes.*/
+            if f-info = "" then f-info = GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj).
+            else f-info = f-info + "; " + GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj).
 
-             f-info = GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj).
-    
       end.
-      else 
-      do:
-        menu-item m_error-lines:sensitive in menu m_error = no.
-      end.     
+      line-num-error = X_utd-lines.LineNum .
+/*      else                                                     */
+/*      do:                                                      */
+/*        menu-item m_error-lines:sensitive in menu m_error = no.*/
+/*      end.                                                     */
     end.  
     display f-info with frame {&frame-name} .
   END.
@@ -1141,7 +1150,10 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_back-check d-utd
 ON CHOOSE OF b_back-check IN FRAME d-utd /* Продолжить на проверку */
   DO:
-    if c-status = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then do:
+    if c-status = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB then do:
+       c-status = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
+    end.  
+    else if c-status = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then do:
     c-status = ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
 /*    c-status-edi = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB .*/
     end.  
@@ -1601,76 +1613,43 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recheck d-utd
 ON CHOOSE OF b_recheck IN FRAME d-utd /* Повторно проверить */
 DO:
-    define variable Log-Res      as      logical     no-undo.
-    define buffer buf_c-utd for ub.c-utd .
-
+   define variable Log-Res      as      logical     no-undo.
+    
+   if available (buf_utd)
+   then do:
    /*Проверка прав */
-{ gbl/chk-actg.i
-  v-cntxt-db-num
-  v-cntxt-userid
-  {&action-head-code-main}
-  'actn_edi-doc_recheck':U
-  {&cntxt-firm}
-  v-cntxt-host-code-obj
-  '':U
-  0
-  0
-  0
-  0
-  true
-  log-res
-}
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_edi-doc_recheck':U
+        {&cntxt-firm}
+        v-cntxt-host-code-obj
+        '':U
+        0
+        0
+        0
+        0
+        true
+        log-res
+      }  
 
-    if available (buf_utd) and log-res then 
-    do:
-        SaturateAndCheckUTD(buf_utd.db-num, buf_utd.doc-id) no-error .        
-        if  error-status:error then 
-        do: 
-          message return-value view-as alert-box.
-        end.
-
-      if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
-         buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
-         buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB then do:
-           find last buf_c-utd no-lock where buf_c-utd.db-num = buf_utd.db-num and 
-                                             buf_c-utd.doc-id = buf_utd.doc-id and 
-                                             buf_c-utd.sts <> buf_utd.sts and
-                                             buf_c-utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB no-error .
-           if available (buf_c-utd) then do:
-             buf_utd.sts = buf_c-utd.sts .
-             buf_utd.sts-edi = buf_c-utd.sts-edi .
-           end.
-           else do:
-             if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then 
-             buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
-             else buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
-             buf_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB .
-           end.  
-             
-      end. 
-if buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB then do:       
-        oMotp = new is_motp() .
-        oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) no-error .
-        if ERROR-STATUS:ERROR then do:
-          message return-value view-as alert-box.
-        end.    
-        delete OBJECT oMotp .    
-end.        
-    end.
-/*    run init-temp .*/
-    assign
-    c-status = buf_utd.sts
-    c-status-edi = buf_utd.sts-edi
-/*    f-info = buf_utd.AdditInfo*/
-    f-comment = buf_utd.comment
-    .
-    display f-info c-status c-status-edi f-comment with frame {&frame-name} .
-    run enable_UI in this-procedure .
-    run mark-temp .
-        {&OPEN-QUERY-br-utd}
-
-  run enable_BUTTON in this-procedure .
-            END.
+      if log-res 
+      then do:
+         Recheck(buf_utd.db-num, buf_utd.doc-id).
+         assign
+            c-status     = buf_utd.sts
+            c-status-edi = buf_utd.sts-edi
+            f-comment    = buf_utd.comment
+         .
+         display f-info c-status c-status-edi f-comment with frame {&frame-name} .
+         run enable_UI in this-procedure .
+         run mark-temp .
+            {&OPEN-QUERY-br-utd}
+         run enable_BUTTON in this-procedure .
+      end.
+   end.
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -3297,7 +3276,7 @@ PROCEDURE enable_UI :
    
     browse br-utd:GET-BROWSE-COLUMN(12):VISIBLE = no no-error.
     browse br-utd:GET-BROWSE-COLUMN(13):VISIBLE = no no-error.
-    if p-type <> 1 then 
+    if p-type <> objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
     do:
       browse br-utd:GET-BROWSE-COLUMN(7):VISIBLE = no no-error.
     end.
@@ -3651,7 +3630,9 @@ PROCEDURE mark-temp :
   define buffer buf_utd-lines-attr    for ub.utd-lines-attr .
   define variable v-db-num as integer no-undo .
   define variable v-doc-id as integer no-undo .
-
+    define variable vRecKeyLine as character no-undo .
+    define variable vRecKeyUTDLine as character no-undo .
+        
   for each buf_utd-lines no-lock where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num:
     find first X_utd-lines EXCLUSIVE-LOCK where buf_utd-lines.doc-id = X_utd-lines.doc-id and buf_utd-lines.db-num = X_utd-lines.db-num and buf_utd-lines.LineNum = X_utd-lines.LineNum no-error . 
     buffer-copy buf_utd-lines to X_utd-lines .
@@ -3665,6 +3646,20 @@ if buf_utd.EdocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then do:
     end.
 end.    
 
+              run gen-key-rec ("utd-lines", 
+                  input  buffer X_utd-lines:handle, 
+                  output vRecKeyLine).
+
+              vRecKeyUTDLine = replace(vRecKeyLine,"utd-lines","utd-marking-lines") + {&delim-key}.  
+      
+              if CAN-FIND (first buf_utd-err no-lock where buf_utd-err.doc-id = X_utd-lines.doc-id and buf_utd-err.db-num = X_utd-lines.db-num and buf_utd-err.reckey = vRecKeyLine) then 
+                  X_utd-lines.sts_err = yes .
+              else do:
+                  if CAN-FIND (first buf_utd-err no-lock where buf_utd-err.doc-id = X_utd-lines.doc-id and buf_utd-err.db-num = X_utd-lines.db-num and buf_utd-err.reckey begins vRecKeyUTDLine) then 
+                  X_utd-lines.sts_err = yes .
+              end.    
+
+              
     /*Определить какие должны быть ошибочные статусы*/
     find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
       buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum and buf_utd-marking-lines.sts = Marking:MarkError:KeyIntDB no-error .
@@ -3698,6 +3693,7 @@ end.
     end.        
     X_utd-lines.gds-name = GdsName(X_utd-lines.gds-code) .
     X_utd-lines.taxRate_ = string(X_utd-lines.TaxRate) + " %" .
+    if X_utd-lines.sts_err then X_utd-lines.stts = "Ошибка" .
   end.    
   for each X_utd-lines:
       if not CAN-FIND (ub.utd-lines where ub.utd-lines.db-num = X_utd-lines.db-num and ub.utd-lines.doc-id = X_utd-lines.doc-id and ub.utd-lines.LineNum = X_utd-lines.LineNum) then 
@@ -3858,16 +3854,20 @@ PROCEDURE save_mark :
     define buffer gray_unit-marking  for ub.marking .
     define buffer gray_utd-marking-lines for ub.utd-marking-lines .
     define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
-    define buffer buf_utd-lines-attr for ub.utd-lines-attr .
-    define variable vRecKeyLine as character no-undo .
-
-    if p-mode = {&lookup} then do:
-            v-mark:screen-value in frame {&frame-name} = "" .
-            v-mark = "" .
+    define buffer buf_utd-lines-attr          for ub.utd-lines-attr .
+    define VARIABLE v-qnty as decimal no-undo .
+    define VARIABLE v-rowid as rowid no-undo .
+    define VARIABLE v-tbl-name as character no-undo .
+    
+    if p-mode = {&lookup} then 
+    do:
+        v-mark:screen-value in frame {&frame-name} = "" .
+        v-mark = "" .
     end .
-   if v-mark:screen-value in frame {&frame-name} = ""
-    then do:
-      v-mark:screen-value in frame {&frame-name} = v-scan-str.
+    if v-mark:screen-value in frame {&frame-name} = ""
+        then 
+    do:
+        v-mark:screen-value in frame {&frame-name} = v-scan-str.
     end.
     v-scan-str = "". 
     assign 
@@ -3892,233 +3892,429 @@ PROCEDURE save_mark :
       end.
     end.
     v-marking = GetCodeIdent(v-mark) .
-    if v-marking = "" or v-marking = ? then do:
-                  F-text = "            Марка не найдена, просканируйте следующую" .
-            display F-text with frame {&frame-name}.
-            v-mark:screen-value = "" .
-            v-mark = "" .
-            return no-apply.
-    end.  
-    if p-type = 1 then 
+    if v-marking = "" or v-marking = ? then 
     do:
-      /*Проверка марки*/
-      /*           f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .                                                                      */
-      /*      if F-text = "" then do:                                                                                                                          */
-      /*        for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-mark and buf_utd-marking-lines.db-num = buf_utd.doc-id*/
-      /*        and buf_utd-marking-lines.doc-id = buf_utd.db-num, first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum: */
-      /*          recid_utd = recid (X_utd-lines) .                                                                                                            */
-      /*          X_utd-lines.qnty-scan     = X_utd-lines.qnty-scan + 1  .                                                                                     */
-      /*                                                                                                                                                       */
-      /*      f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .*/
-      /*      if F-text = "" then do:                                               */
-
-      find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
-        and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
-      if available (buf_utd-marking-lines) then
-      do:
-        find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
-        if available (X_utd-lines) then
-        do:  
-                    
-      run gen-key-rec ("utd-lines", 
-        input  buffer X_utd-lines:handle, 
-        output vRecKeyLine).
-
-      find first buf_utd-err no-lock where buf_utd-err.doc-id = X_utd-lines.doc-id and buf_utd-err.db-num = X_utd-lines.db-num and buf_utd-err.reckey = vRecKeyLine no-error .
-      if available (buf_utd-err) then 
-      do:
-          X_utd-lines.sts_err = yes .
-      end.
-      else do:
-        X_utd-lines.sts_err = no .
-        end.
-                  
-          if X_utd-lines.sts_err then do:
-            F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
-            display F-text with frame {&frame-name}.
-            v-mark:screen-value = "" .
-            v-mark = "" .
-            return no-apply.  
-          end.  
-          if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then
-          do:
-            F-text = "            Марка уже проверена, просканируйте следующую" .
-            display F-text with frame {&frame-name}.
-            v-mark:screen-value = "" .
-            v-mark = "" .
-            return no-apply.
-          end.
-          else
-          do:
-          if can-find (buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:MarkError:KeyIntDB)
-          then do:
-              F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
-            display F-text with frame {&frame-name}.
-            v-mark:screen-value = "" .
-            v-mark = "" .
-            return no-apply.
-          end.                  
-            
-          if can-find (buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:GrayZone:KeyIntDB)
-          then do:
-/*            message "Упаковка с неполным составом марок, необходимо просканировать все индивидуальные упаковки"*/
-/*            view-as alert-box.                                                                                 */
-
-    for first gray_utd-marking-lines no-lock where gray_utd-marking-lines.db-num = X_utd-lines.db-num and gray_utd-marking-lines.doc-id = X_utd-lines.doc-id
-      and gray_utd-marking-lines.LineNum = X_utd-lines.LineNum and gray_utd-marking-lines.mark = buf_utd-marking-lines.mark:
-      for first gray_marking no-lock where gray_marking.mark = buf_utd-marking-lines.mark :
-        create tt-marking-lines .
-        assign
-          tt-marking-lines.gds-name    = GdsName(gray_utd-marking-lines.gds-code)
-          tt-marking-lines.stts-utd    = StatusTHName(gray_utd-marking-lines.sts)
-          tt-marking-lines.stts        = StatusTHName(gray_marking.sts)
-          tt-marking-lines.mark        = gray_marking.mark
-          tt-marking-lines.mark-parent = gray_marking.mark-parent
-          tt-marking-lines.gds-code    = gray_utd-marking-lines.gds-code
-          tt-marking-lines.sts         = gray_marking.sts
-          tt-marking-lines.sts-utd     = gray_utd-marking-lines.sts
-          tt-marking-lines.unit        = gray_marking.unit
-          tt-marking-lines.box-qnty    = gray_marking.box-qnty
-          tt-marking-lines.LineNum     = gray_utd-marking-lines.LineNum
-          tt-marking-lines.db-num      = gray_utd-marking-lines.db-num
-          tt-marking-lines.doc-id      = gray_utd-marking-lines.doc-id
-          tt-marking-lines.doc-level   = gray_utd-marking-lines.doc-level
-          .
-      end.   
-      for each gray_unit-marking no-lock where gray_unit-marking.mark-parent = gray_utd-marking-lines.mark:
-      for first gray_unit_utd-marking-lines no-lock where gray_unit_utd-marking-lines.db-num = X_utd-lines.db-num and gray_unit_utd-marking-lines.doc-id = X_utd-lines.doc-id
-      and gray_unit_utd-marking-lines.LineNum = X_utd-lines.LineNum and gray_unit_utd-marking-lines.mark = gray_unit-marking.mark:
-        create tt-marking-lines .
-        assign
-          tt-marking-lines.gds-name    = GdsName(gray_unit_utd-marking-lines.gds-code)
-          tt-marking-lines.stts-utd    = StatusTHName(gray_unit_utd-marking-lines.sts)
-          tt-marking-lines.stts        = StatusTHName(gray_unit-marking.sts)
-          tt-marking-lines.mark        = gray_unit-marking.mark
-          tt-marking-lines.mark-parent = gray_unit-marking.mark-parent
-          tt-marking-lines.gds-code    = gray_unit_utd-marking-lines.gds-code
-          tt-marking-lines.sts         = gray_unit-marking.sts
-          tt-marking-lines.sts-utd     = gray_unit_utd-marking-lines.sts
-          tt-marking-lines.unit        = gray_unit-marking.unit
-          tt-marking-lines.unit-ext    = gray_unit-marking.unit-ext
-          tt-marking-lines.box-qnty    = gray_unit-marking.box-qnty
-          tt-marking-lines.LineNum     = gray_unit_utd-marking-lines.LineNum
-          tt-marking-lines.db-num      = gray_unit_utd-marking-lines.db-num
-          tt-marking-lines.doc-id      = gray_unit_utd-marking-lines.doc-id
-          tt-marking-lines.doc-level   = gray_unit_utd-marking-lines.doc-level
-          .
-      end.
-      end.
+        F-text = "            Марка не найдена, просканируйте следующую" .
+        display F-text with frame {&frame-name}.
+        v-mark:screen-value = "" .
+        v-mark = "" .
+        return no-apply.
     end.  
-            run str/mark_browse.w (input parparentproc,
-              input-output table tt-marking-lines by-reference,
-              input p-mode,
-              input "Марки по товару " + string(X_utd-lines.gds-code) + " " + GdsName(X_utd-lines.gds-code) + " со статусом: " + StatusTHName(Marking:GrayZone:KeyIntDB),
-              input 6,
-              input "" /*тип продукции*/
-              ) no-error .
+    /*УПД проверка марок*/
+    if p-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
+    do:
+        /*Проверка марки*/
+        /*           f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .                                                                      */
+        /*      if F-text = "" then do:                                                                                                                          */
+        /*        for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-mark and buf_utd-marking-lines.db-num = buf_utd.doc-id*/
+        /*        and buf_utd-marking-lines.doc-id = buf_utd.db-num, first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum: */
+        /*          recid_utd = recid (X_utd-lines) .                                                                                                            */
+        /*          X_utd-lines.qnty-scan     = X_utd-lines.qnty-scan + 1  .                                                                                     */
+        /*                                                                                                                                                       */
+        /*      f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .*/
+        /*      if F-text = "" then do:                                               */
+
+        find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
+            and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
+        if available (buf_utd-marking-lines) then
+        do:
+            find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
+            if available (X_utd-lines) then
+            do:  
+             
+                if X_utd-lines.sts_err then 
+                do:
+                    F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" .
+                    return no-apply.  
+                end.  
+                if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then
+                do:
+                    F-text = "            Марка уже проверена, просканируйте следующую" .
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" .
+                    return no-apply.
+                end.
+                else
+                do:
+                    if can-find (buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:MarkError:KeyIntDB)
+                        then 
+                    do:
+                        F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
+                        display F-text with frame {&frame-name}.
+                        v-mark:screen-value = "" .
+                        v-mark = "" .
+                        return no-apply.
+                    end.                  
+            
+                    if can-find (buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:GrayZone:KeyIntDB)
+                        then 
+                    do:
+                        /*            message "Упаковка с неполным составом марок, необходимо просканировать все индивидуальные упаковки"*/
+                        /*            view-as alert-box.                                                                                 */
+
+                        for first gray_utd-marking-lines no-lock where gray_utd-marking-lines.db-num = X_utd-lines.db-num and gray_utd-marking-lines.doc-id = X_utd-lines.doc-id
+                            and gray_utd-marking-lines.LineNum = X_utd-lines.LineNum and gray_utd-marking-lines.mark = buf_utd-marking-lines.mark:
+                            for first gray_marking no-lock where gray_marking.mark = buf_utd-marking-lines.mark :
+                                create tt-marking-lines .
+                                assign
+                                    tt-marking-lines.gds-name    = GdsName(gray_utd-marking-lines.gds-code)
+                                    tt-marking-lines.stts-utd    = StatusTHName(gray_utd-marking-lines.sts)
+                                    tt-marking-lines.stts        = StatusTHName(gray_marking.sts)
+                                    tt-marking-lines.mark        = gray_marking.mark
+                                    tt-marking-lines.mark-parent = gray_marking.mark-parent
+                                    tt-marking-lines.gds-code    = gray_utd-marking-lines.gds-code
+                                    tt-marking-lines.sts         = gray_marking.sts
+                                    tt-marking-lines.sts-utd     = gray_utd-marking-lines.sts
+                                    tt-marking-lines.unit        = gray_marking.unit
+                                    tt-marking-lines.box-qnty    = gray_marking.box-qnty
+                                    tt-marking-lines.LineNum     = gray_utd-marking-lines.LineNum
+                                    tt-marking-lines.db-num      = gray_utd-marking-lines.db-num
+                                    tt-marking-lines.doc-id      = gray_utd-marking-lines.doc-id
+                                    tt-marking-lines.doc-level   = gray_utd-marking-lines.doc-level
+                                    .
+                            end.
+                            for each gray_unit-marking no-lock where gray_unit-marking.mark-parent = gray_utd-marking-lines.mark:
+                                for first gray_unit_utd-marking-lines no-lock where gray_unit_utd-marking-lines.db-num = X_utd-lines.db-num and gray_unit_utd-marking-lines.doc-id = X_utd-lines.doc-id
+                                    and gray_unit_utd-marking-lines.LineNum = X_utd-lines.LineNum and gray_unit_utd-marking-lines.mark = gray_unit-marking.mark:
+                                    create tt-marking-lines .
+                                    assign
+                                        tt-marking-lines.gds-name    = GdsName(gray_unit_utd-marking-lines.gds-code)
+                                        tt-marking-lines.stts-utd    = StatusTHName(gray_unit_utd-marking-lines.sts)
+                                        tt-marking-lines.stts        = StatusTHName(gray_unit-marking.sts)
+                                        tt-marking-lines.mark        = gray_unit-marking.mark
+                                        tt-marking-lines.mark-parent = gray_unit-marking.mark-parent
+                                        tt-marking-lines.gds-code    = gray_unit_utd-marking-lines.gds-code
+                                        tt-marking-lines.sts         = gray_unit-marking.sts
+                                        tt-marking-lines.sts-utd     = gray_unit_utd-marking-lines.sts
+                                        tt-marking-lines.unit        = gray_unit-marking.unit
+                                        tt-marking-lines.unit-ext    = gray_unit-marking.unit-ext
+                                        tt-marking-lines.box-qnty    = gray_unit-marking.box-qnty
+                                        tt-marking-lines.LineNum     = gray_unit_utd-marking-lines.LineNum
+                                        tt-marking-lines.db-num      = gray_unit_utd-marking-lines.db-num
+                                        tt-marking-lines.doc-id      = gray_unit_utd-marking-lines.doc-id
+                                        tt-marking-lines.doc-level   = gray_unit_utd-marking-lines.doc-level
+                                        .
+                                end.
+                            end.
+                        end.
+                        run str/mark_browse.w (input parparentproc,
+                            input-output table tt-marking-lines by-reference,
+                            input p-mode,
+                            input "Марки по товару " + string(X_utd-lines.gds-code) + " " + GdsName(X_utd-lines.gds-code) + " со статусом: " + StatusTHName(Marking:GrayZone:KeyIntDB),
+                            input 6,
+                            input "" /*тип продукции*/
+                            ) no-error .
             { gbl/brwrepos.i
               &line-num= 5
             }
-          end.
-          else do:
-              if buf_utd-marking-lines.doc-level > 1 then 
-              do:
-                  if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then 
-                  do:
-                      /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
-                      message "Разгруппировать упаковки?"
-                          view-as alert-box question buttons yes-no update ungroup.
-                      if ungroup then 
-                      do:
-                          if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
-                          do:
-                              message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
-                                  view-as alert-box.
-                          end.
-                      end.
-                  end.  
-                  else 
-                  do:    
-                      F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .
-                      display F-text with frame {&frame-name}.
-                      v-mark:screen-value = "" .
-                      v-mark = "" .
-                      return no-apply.
-                  end. 
-              end.
-            
-/*Проверка на серую зону*/
-             
-  
-            end.  
-            if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
-            do:
-              tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
-            end.
-            for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
-              bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id:
-              bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .  
-              X_utd-lines.qnty-scan     = X_utd-lines.qnty-scan + 1  .
-            end.  
-/*            if available (gray_marking) then do:                                               */
-/*              gray_marking.box-qnty = gray_marking.box-qnty - 1 .                              */
-/*              bf_utd-marking-lines.doc-level = bf_utd-marking-lines.doc-level - 1 .            */
-/*              if gray_marking.box-qnty = 0 then do:                                            */
-/*                    buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.*/
-/*                    buf_utd-marking-lines.doc-level = 0 .                                      */
-/*              end.                                                                             */
-/*            end.                                                                               */
-          end.
-/*          end.*/
-          run mark-temp .
-            find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
-                and buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB no-error .
-            if available (buf_utd-marking-lines) then
-            do:
-                find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
-                if available (X_utd-lines) then
+                    end.
+                    else 
+                    do:
+                        if buf_utd-marking-lines.doc-level > 1 then 
+                        do:
+                            if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then 
+                            do:
+                                /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
+                                message "Разгруппировать упаковки?"
+                                    view-as alert-box question buttons yes-no update ungroup.
+                                if ungroup then 
+                                do:
+                                    if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                    do:
+                                        message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
+                                            view-as alert-box.
+                                    end.
+                                end.
+                            end.  
+                            else 
+                            do:    
+                                F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .
+                                display F-text with frame {&frame-name}.
+                                v-mark:screen-value = "" .
+                                v-mark = "" .
+                                return no-apply.
+                            end. 
+                        end.
+                    end.  
+                    if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                    do:
+                        tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                    end.
+                    for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
+                        bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id:
+                        bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .  
+                        X_utd-lines.qnty-scan     = X_utd-lines.qnty-scan + 1  .
+                    end.  
+                /*            if available (gray_marking) then do:                                               */
+                /*              gray_marking.box-qnty = gray_marking.box-qnty - 1 .                              */
+                /*              bf_utd-marking-lines.doc-level = bf_utd-marking-lines.doc-level - 1 .            */
+                /*              if gray_marking.box-qnty = 0 then do:                                            */
+                /*                    buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.*/
+                /*                    buf_utd-marking-lines.doc-level = 0 .                                      */
+                /*              end.                                                                             */
+                /*            end.                                                                               */
+                end.
+                /*          end.*/
+                run mark-temp .
+                find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
+                    and buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB no-error .
+                if available (buf_utd-marking-lines) then
+                do:
+                    find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
+                    if available (X_utd-lines) then
           
-                    recid_utd = recid (X_utd-lines) .
-            end.
-            else do:
-                find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = 1 no-error .
-                if available (X_utd-lines) then
+                        recid_utd = recid (X_utd-lines) .
+                end.
+                else 
+                do:
+                    find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = 1 no-error .
+                    if available (X_utd-lines) then
           
-                    recid_utd = recid (X_utd-lines) .
-            end.    
+                        recid_utd = recid (X_utd-lines) .
+                end.    
 
-          br-utd :refresh() no-error.
-          reposition br-utd to recid recid_utd no-error .
-          v-mark:screen-value = "" .
-          v-mark = "" .
+                br-utd :refresh() no-error.
+                reposition br-utd to recid recid_utd no-error .
+                v-mark:screen-value = "" .
+                v-mark = "" .
+            end.
         end.
-      end.
-      else 
-      do:
-        find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num
-          and buf_utd-marking-lines.doc-id <> p-doc-id no-error .
-        if available (buf_utd-marking-lines) then 
-        do:
-          F-text = "             Товар поставлен на АЗС ранее, верните его на склад" .
-          display F-text with frame {&frame-name}.
-          v-mark:screen-value = "" .
-          v-mark = "" .    
-          return no-apply.  
-        end. 
         else 
         do:
-          F-text = "              Товар отсутствует в поставке. Верните товар поставщику" .
-          display F-text with frame {&frame-name}.
-          v-mark:screen-value = "" .
-          v-mark = "" .    
-          return no-apply.
-        end.         
-      end. 
+            find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num
+                and buf_utd-marking-lines.doc-id <> p-doc-id no-error .
+            if available (buf_utd-marking-lines) then 
+            do:
+                F-text = "             Товар поставлен на АЗС ранее, верните его на склад" .
+                display F-text with frame {&frame-name}.
+                v-mark:screen-value = "" .
+                v-mark = "" .    
+                return no-apply.  
+            end. 
+            else 
+            do:
+                F-text = "              Товар отсутствует в поставке. Верните товар поставщику" .
+                display F-text with frame {&frame-name}.
+                v-mark:screen-value = "" .
+                v-mark = "" .    
+                return no-apply.
+            end.         
+        end. 
     end.
-    else 
+    /*АКТ-приема*/
+    if p-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then 
     do:
-      if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then 
-      do:
+
+        if f-obj-type-th = "" then 
+        do:
+            message "Не выбран объект"
+                view-as alert-box.
+            v-mark:screen-value = "" .
+            v-mark = "" .    
+            return no-apply .
+        end.
+        if c-type = 0 then 
+        do:
+            message "Не выбран тип документа"
+                view-as alert-box.
+            v-mark:screen-value = "" .
+            v-mark = "" .    
+            return no-apply .
+        end. 
+  
+        if CAN-FIND (first buf_utd-marking-lines where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = buf_utd.db-num
+            and buf_utd-marking-lines.doc-id = buf_utd.doc-id ) then 
+        do:
+            F-text = "                        Марка уже просканирована в этом документе " .
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .  
+            return.
+        end.    
+        for first buf_marking no-lock where buf_marking.mark begins v-marking and buf_marking.sts > Marking:UnknowSts:KeyIntDB:
+            if buf_marking.loc-key begins "utd" then 
+            do:
+                run gen-row-keyr in this-procedure (
+                    input buf_marking.loc-key /*uniq-key-rec смены*/
+                    ,input ? /*p-key-handle буфер записи которую будем искать. если ищем по key-rec то ? */
+                    ,input "ub"
+                    ,input ? /*p-tt-handle буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+                    ,input no-lock
+                    ,output v-rowid
+                    ,output v-tbl-name ) .
+            if v-rowid <> ? then do:
+                find first ub.utd no-lock where rowid(ub.utd) = v-rowid no-error .
+            end.    
+                F-text = "               Найдено УПД " + string(ub.utd.DocumentNumber) + " на поставку данной марки. Марка не может быть принята по Акту" .
+                display F-text with frame {&frame-name}.
+                v-mark:screen-value = "" .
+                v-mark = "" .    
+                return.              
+            end.
+            if buf_marking.loc-key <> "" 
+            or buf_marking.sts = Marking:Reserved:KeyIntDB 
+            or buf_marking.sts = Marking:FreeZone:KeyIntDB 
+            or buf_marking.sts = Marking:Checked_:KeyIntDB then 
+            do:
+                F-text = "        Марка зарегистрирована в системе. Статус марки " +  StatusTHName(buf_marking.sts).
+                display F-text with frame {&frame-name}.
+                v-mark:screen-value = "" .
+                v-mark = "" .    
+                return.              
+            end.          
+
+        end.  
+/*Создание марок*/
+        v-GTIN = getGtinByDM(v-marking) .
+        if v-GTIN <> "" or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+        do:
+            v-gds-code = getGdsCodeByGtin(v-GTIN) .
+
+            find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
+          
+            if available (buf_goods) or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+            do:
+              
+                find first buf_utd-lines where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num
+                    and buf_utd-lines.gds-code = v-gds-code no-error .
+                if not available (buf_utd-lines) then 
+                do:           
+                    find last X_utd-lines no-lock no-error . 
+                    if not available (X_utd-lines) then jj = 0 .
+                    else jj = X_utd-lines.LineNum .
+                    create buf_utd-lines .
+                    assign
+                        buf_utd-lines.GdsName  = GdsName(v-gds-code)
+                        buf_utd-lines.db-num   = buf_utd.db-num
+                        buf_utd-lines.doc-id   = buf_utd.doc-id
+                        buf_utd-lines.LineNum  = jj + 1
+                        buf_utd-lines.gds-code = v-gds-code
+                        buf_utd-lines.sts      = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
+                    buf_utd-lines.UnitCode = if available (buf_goods) then buf_goods.unit-base else ""
+                        .
+                    if available (buf_goods) or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+                    do:  
+                        create  X_utd-lines .
+                        buffer-copy buf_utd-lines to X_utd-lines .
+                        assign
+                            X_utd-lines.stts = StatusTHName(buf_utd-lines.sts).
+                        X_utd-lines.gds-name = GdsName(v-gds-code)
+                            .
+                
+                        for each buf_parts no-lock where  buf_parts.artic = buf_goods.artic and
+                            buf_parts.prod-code = buf_goods.prod-code and
+                            buf_parts.prod-type = buf_goods.prod-type and 
+                            buf_parts.out-code = {&free-code} and
+                            buf_parts.obj-code = buf_utd.obj-code and
+                            buf_parts.obj-type = buf_utd.obj-type : 
+                            X_utd-lines.fact-qnty = X_utd-lines.fact-qnty + buf_parts.fact-qnty .
+                        end.       
+                    end.         
+                    find first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+                        buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+                        buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+                        buf_utd-lines-attr.attr-code = "utd-fact-qnty" no-error .
+                    if not available (buf_utd-lines-attr) then 
+                    do:
+                        create buf_utd-lines-attr .
+                        assign
+                            buf_utd-lines-attr.db-num    = X_utd-lines.db-num
+                            buf_utd-lines-attr.doc-id    = X_utd-lines.doc-id
+                            buf_utd-lines-attr.LineNum   = X_utd-lines.LineNum
+                            buf_utd-lines-attr.attr-code = "utd-fact-qnty"
+                            .
+                    end.                                              
+                    buf_utd-lines-attr.attr-value = string(X_utd-lines.fact-qnty) .                                     
+                end.  
+                recid_utd = recid(X_utd-lines) .
+                create buf_utd-marking-lines .
+                assign
+                    buf_utd-marking-lines.db-num    = buf_utd.db-num
+                    buf_utd-marking-lines.doc-id    = buf_utd.doc-id
+                    buf_utd-marking-lines.gds-code  = buf_utd-lines.gds-code
+                    buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
+                    buf_utd-marking-lines.mark      = v-marking
+                    buf_utd-marking-lines.sts       = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB
+                    buf_utd-marking-lines.doc-level = 1
+                    .
+                find first buf_marking exclusive-lock where buf_marking.mark begins v-marking no-error .
+                if not available (buf_marking) then 
+                do:            
+                    create buf_marking .
+                    assign
+                        buf_marking.gds-code   = buf_utd-marking-lines.gds-code
+                        buf_marking.mark       = v-marking
+                        buf_marking.sts        = Marking:UnknowSts:KeyIntDB
+                        buf_marking.gds-ext-id = v-GTIN
+                        buf_marking.obj-code   = buf_utd.obj-code
+                        buf_marking.obj-type   = buf_utd.obj-type
+                        .
+                    buf_marking.unit-ext  = getLevelMotpByDM(v-marking) .
+                    buf_marking.box-qnty  = getQntyUTDByDM(v-marking) .
+                    buf_marking.unit = getLevelUTDByDM(v-marking) .
+                end.
+                else 
+                do:
+                    buf_marking.sts      = Marking:UnknowSts:KeyIntDB .
+                end.    
+                if buf_marking.box-qnty = ? or buf_marking.box-qnty = 0 then 
+                do:
+                    v-qnty = 0 .
+                    run gbl/d-prompt.w (
+                        'title=':u + "Ввод количества" + '\':u
+                        + 'text1=':u + "Введите количество:" + '\':u
+                        + 'format=' + ">>>>>9.99" + '\':u
+                        + 'type=' + {&type-dec} + '\':u
+                        + 'fillin_row=3\':u
+                        + 'fillin_col=6\':u
+                        + 'fillin_width=17\':u
+                        + 'fillin_height=1\':u
+                        + 'max-chars=17\':u     /*- максимальное количество символов для редактора*/
+                        + 'readonly=no\':u
+                        , input-output v-qnty
+                        ).
+                    buf_marking.box-qnty = v-qnty .
+                    buf_marking.unit  = if available (buf_goods) then buf_goods.unit-base else "".
+                    buf_marking.unit-ext = "UNIT" .
+
+                end.
+                find first X_utd-lines exclusive-lock where X_utd-lines.gds-code = buf_utd-lines.gds-code and X_utd-lines.lineNum = buf_utd-lines.LineNum
+                    and X_utd-lines.db-num = buf_utd-lines.db-num and X_utd-lines.doc-id = buf_utd-lines.doc-id no-error .
+                buf_utd-lines.Quantity  = buf_utd-lines.Quantity  + buf_marking.box-qnty .
+                X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + buf_marking.box-qnty .
+                X_utd-lines.Quantity  = X_utd-lines.Quantity  + buf_marking.box-qnty .
+                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
+                br-utd:refresh () no-error .
+                reposition br-utd to recid recid_utd no-error . 
+                v-mark:screen-value = "" .
+                v-mark = "" .           
+            end.
+            else 
+            do:
+                F-text = "                GTIN - " + v-GTIN + " не привязан к товару в базе".
+                display F-text with frame {&frame-name}.
+                v-mark:screen-value = "" .
+                v-mark = "" .
+                return.  
+            end.    
+        end.
+        else 
+        do:
+            F-text = "                              Нет возможности получить GTIN " .
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .
+            return.  
+        end.    
+    end. /*АКТ-Приема*/
+        
+    /*Первоначальный ввод*/
+    if p-type = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then 
+    do:
 
         if f-obj-type-th = "" then 
         do:
@@ -4138,7 +4334,7 @@ PROCEDURE save_mark :
         end. 
   
         find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = buf_utd.db-num
-          and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
+            and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
         if available (buf_utd-marking-lines) then 
         do:
           F-text = "                        Марка уже просканирована в этом документе " .
@@ -4158,33 +4354,36 @@ PROCEDURE save_mark :
         end.                                    
         else 
         do:
-          find first buf_marking no-lock where buf_marking.mark begins v-marking no-error .
-          if available (buf_marking) then 
-          do:
-          if buf_marking.sts < Marking:Received:KeyIntDB and buf_marking.loc-key <> "" and c-type <> objSrv:Env:Utd:EDocType:AKT:KeyIntDB then do:
+            find first buf_marking no-lock where buf_marking.mark begins v-marking no-error .
+            if available (buf_marking) then 
+            do:
+                if buf_marking.sts < Marking:Received:KeyIntDB and buf_marking.loc-key <> "" and c-type <> objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+                do:
 
-            F-text = "                                      Марка занята" .
-            display F-text with frame {&frame-name}.
-            v-mark:screen-value = "" .
-            v-mark = "" .
-            return.
-          end.
-          if buf_marking.sts = Marking:DeliveryControl:KeyIntDB and c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then do:
-            F-text = "               Найдено УПД на поставку данной марки. Марка не может быть принята по Акту" .
-            display F-text with frame {&frame-name}.
-            v-mark:screen-value = "" .
-            v-mark = "" .    
-            return.              
-          end.
-          if buf_marking.sts <> Marking:UnknowSts:KeyIntDB then do:
-            F-text = "        Марка зарегистрирована в системе. Статус марки " +  StatusTHName(buf_marking.sts).
-            display F-text with frame {&frame-name}.
-            v-mark:screen-value = "" .
-            v-mark = "" .    
-            return.              
-          end.          
-          end.
-          end.  
+                    F-text = "                                      Марка занята" .
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" .
+                    return.
+                end.
+                if buf_marking.sts = Marking:DeliveryControl:KeyIntDB and c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+                do:
+                    F-text = "               Найдено УПД на поставку данной марки. Марка не может быть принята по Акту" .
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" .    
+                    return.              
+                end.
+                if buf_marking.sts <> Marking:UnknowSts:KeyIntDB then 
+                do:
+                    F-text = "        Марка зарегистрирована в системе. Статус марки " +  StatusTHName(buf_marking.sts).
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" .    
+                    return.              
+                end.          
+            end.
+        end.  
 
         v-GTIN = getGtinByDM(v-marking) .
         if v-GTIN <> "" or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
@@ -4196,151 +4395,154 @@ PROCEDURE save_mark :
           if available (buf_goods) or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
           do:
               
-            find first buf_utd-lines where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num
-              and buf_utd-lines.gds-code = v-gds-code no-error .
-            if not available (buf_utd-lines) then 
-            do:           
-              find last X_utd-lines no-lock no-error . 
-              if not available (X_utd-lines) then jj = 0 .
-              else jj = X_utd-lines.LineNum .
-              create buf_utd-lines .
-              assign
-                buf_utd-lines.GdsName  = GdsName(v-gds-code)
-                buf_utd-lines.db-num   = buf_utd.db-num
-                buf_utd-lines.doc-id   = buf_utd.doc-id
-                buf_utd-lines.LineNum  = jj + 1
-                buf_utd-lines.gds-code = v-gds-code
-                buf_utd-lines.sts      = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
-                buf_utd-lines.UnitCode = if available (buf_goods) then buf_goods.unit-base else ""
-                .
-              if available (buf_goods) or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then do:  
-              create  X_utd-lines .
-              buffer-copy buf_utd-lines to X_utd-lines .
-              assign
-                X_utd-lines.stts     = StatusTHName(buf_utd-lines.sts).
-                X_utd-lines.gds-name = GdsName(v-gds-code)
-                .
+                find first buf_utd-lines where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num
+                    and buf_utd-lines.gds-code = v-gds-code no-error .
+                if not available (buf_utd-lines) then 
+                do:           
+                    find last X_utd-lines no-lock no-error . 
+                    if not available (X_utd-lines) then jj = 0 .
+                    else jj = X_utd-lines.LineNum .
+                    create buf_utd-lines .
+                    assign
+                        buf_utd-lines.GdsName  = GdsName(v-gds-code)
+                        buf_utd-lines.db-num   = buf_utd.db-num
+                        buf_utd-lines.doc-id   = buf_utd.doc-id
+                        buf_utd-lines.LineNum  = jj + 1
+                        buf_utd-lines.gds-code = v-gds-code
+                        buf_utd-lines.sts      = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB .
+                    buf_utd-lines.UnitCode = if available (buf_goods) then buf_goods.unit-base else ""
+                        .
+                    if available (buf_goods) or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+                    do:  
+                        create  X_utd-lines .
+                        buffer-copy buf_utd-lines to X_utd-lines .
+                        assign
+                            X_utd-lines.stts = StatusTHName(buf_utd-lines.sts).
+                        X_utd-lines.gds-name = GdsName(v-gds-code)
+                            .
                 
-                for each buf_parts no-lock where  buf_parts.artic = buf_goods.artic and
-                                                  buf_parts.prod-code = buf_goods.prod-code and
-                                                  buf_parts.prod-type = buf_goods.prod-type and 
-                                                  buf_parts.out-code = {&free-code} and
-                                                  buf_parts.obj-code = buf_utd.obj-code and
-                                                  buf_parts.obj-type = buf_utd.obj-type : 
-                  X_utd-lines.fact-qnty = X_utd-lines.fact-qnty + buf_parts.fact-qnty .
-                end.       
-              end.         
-              find first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
-                                                                 buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
-                                                                 buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
-                                                                 buf_utd-lines-attr.attr-code = "utd-fact-qnty" no-error .
-              if not available (buf_utd-lines-attr) then do:
-                create buf_utd-lines-attr .
+                        for each buf_parts no-lock where  buf_parts.artic = buf_goods.artic and
+                            buf_parts.prod-code = buf_goods.prod-code and
+                            buf_parts.prod-type = buf_goods.prod-type and 
+                            buf_parts.out-code = {&free-code} and
+                            buf_parts.obj-code = buf_utd.obj-code and
+                            buf_parts.obj-type = buf_utd.obj-type : 
+                            X_utd-lines.fact-qnty = X_utd-lines.fact-qnty + buf_parts.fact-qnty .
+                        end.       
+                    end.         
+                    find first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+                        buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+                        buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+                        buf_utd-lines-attr.attr-code = "utd-fact-qnty" no-error .
+                    if not available (buf_utd-lines-attr) then 
+                    do:
+                        create buf_utd-lines-attr .
+                        assign
+                            buf_utd-lines-attr.db-num    = X_utd-lines.db-num
+                            buf_utd-lines-attr.doc-id    = X_utd-lines.doc-id
+                            buf_utd-lines-attr.LineNum   = X_utd-lines.LineNum
+                            buf_utd-lines-attr.attr-code = "utd-fact-qnty"
+                            .
+                    end.                                              
+                    buf_utd-lines-attr.attr-value = string(X_utd-lines.fact-qnty) .                                     
+                end.  
+                recid_utd = recid(X_utd-lines) .
+                create buf_utd-marking-lines .
                 assign
-                buf_utd-lines-attr.db-num = X_utd-lines.db-num
-                buf_utd-lines-attr.doc-id = X_utd-lines.doc-id
-                buf_utd-lines-attr.LineNum = X_utd-lines.LineNum
-                buf_utd-lines-attr.attr-code = "utd-fact-qnty"
-                .
-              end.                                              
-              buf_utd-lines-attr.attr-value = string(X_utd-lines.fact-qnty) .                                     
-            end.  
-            recid_utd = recid(X_utd-lines) .
-            create buf_utd-marking-lines .
-            assign
-              buf_utd-marking-lines.db-num    = buf_utd.db-num
-              buf_utd-marking-lines.doc-id    = buf_utd.doc-id
-              buf_utd-marking-lines.gds-code  = buf_utd-lines.gds-code
-              buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
-              buf_utd-marking-lines.mark      = v-marking
-              buf_utd-marking-lines.sts       = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB
-              buf_utd-marking-lines.doc-level = 1
-              .
-            find first buf_marking exclusive-lock where buf_marking.mark begins v-marking no-error .
-            if not available (buf_marking) then 
-            do:            
-              create buf_marking .
-              assign
-                buf_marking.gds-code   = buf_utd-marking-lines.gds-code
-                buf_marking.mark       = v-marking
-                buf_marking.sts        = Marking:PendingVerification:KeyIntDB
-                buf_marking.gds-ext-id = v-GTIN
-                buf_marking.obj-code   = buf_utd.obj-code
-                buf_marking.obj-type   = buf_utd.obj-type
-                .
-              buf_marking.unit-ext  = getLevelMotpByDM(v-marking) .
-              buf_marking.box-qnty  = getQntyUTDByDM(v-marking) .
-              buf_marking.unit = getLevelUTDByDM(v-marking) .
+                    buf_utd-marking-lines.db-num    = buf_utd.db-num
+                    buf_utd-marking-lines.doc-id    = buf_utd.doc-id
+                    buf_utd-marking-lines.gds-code  = buf_utd-lines.gds-code
+                    buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
+                    buf_utd-marking-lines.mark      = v-marking
+                    buf_utd-marking-lines.sts       = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB
+                    buf_utd-marking-lines.doc-level = 1
+                    .
+                find first buf_marking exclusive-lock where buf_marking.mark begins v-marking no-error .
+                if not available (buf_marking) then 
+                do:            
+                    create buf_marking .
+                    assign
+                        buf_marking.gds-code   = buf_utd-marking-lines.gds-code
+                        buf_marking.mark       = v-marking
+                        buf_marking.sts        = Marking:PendingVerification:KeyIntDB
+                        buf_marking.gds-ext-id = v-GTIN
+                        buf_marking.obj-code   = buf_utd.obj-code
+                        buf_marking.obj-type   = buf_utd.obj-type
+                        .
+                    buf_marking.unit-ext  = getLevelMotpByDM(v-marking) .
+                    buf_marking.box-qnty  = getQntyUTDByDM(v-marking) .
+                    buf_marking.unit = getLevelUTDByDM(v-marking) .
+                end.
+                else 
+                do:
+                    buf_marking.sts      = Marking:PendingVerification:KeyIntDB .
+                end.    
+                if buf_marking.box-qnty = ? or buf_marking.box-qnty = 0 then 
+                do:
+                    v-qnty = 0 .   
+                    run gbl/d-prompt.w (
+                        'title=':u + "Ввод количества" + '\':u
+                        + 'text1=':u + "Введите количество:" + '\':u
+                        + 'format=' + ">>>>>9.99" + '\':u
+                        + 'type=' + {&type-dec} + '\':u
+                        + 'fillin_row=3\':u
+                        + 'fillin_col=6\':u
+                        + 'fillin_width=17\':u
+                        + 'fillin_height=1\':u
+                        + 'max-chars=17\':u     /*- максимальное количество символов для редактора*/
+                        + 'readonly=no\':u
+                        , input-output v-qnty
+                        ).
+                    buf_marking.box-qnty = v-qnty .
+                    buf_marking.unit  = if available (buf_goods) then buf_goods.unit-base else "".
+                    buf_marking.unit-ext = "UNIT" .
+
+                end.
+                find first X_utd-lines exclusive-lock where X_utd-lines.gds-code = buf_utd-lines.gds-code and X_utd-lines.lineNum = buf_utd-lines.LineNum
+                    and X_utd-lines.db-num = buf_utd-lines.db-num and X_utd-lines.doc-id = buf_utd-lines.doc-id no-error .
+                buf_utd-lines.Quantity  = buf_utd-lines.Quantity  + buf_marking.box-qnty .
+                X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + buf_marking.box-qnty .
+                X_utd-lines.Quantity  = X_utd-lines.Quantity  + buf_marking.box-qnty .
+                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
+                br-utd:refresh () no-error .
+                reposition br-utd to recid recid_utd no-error . 
+                v-mark:screen-value = "" .
+                v-mark = "" .           
             end.
             else 
             do:
-              buf_marking.sts      = Marking:PendingVerification:KeyIntDB .
+                F-text = "                GTIN - " + v-GTIN + " не привязан к товару в базе".
+                display F-text with frame {&frame-name}.
+                v-mark:screen-value = "" .
+                v-mark = "" .
+                return.  
             end.    
-            if buf_marking.box-qnty = ? or buf_marking.box-qnty = 0 then 
-            do:
-              define var v-qnty as decimal no-undo .
-              run gbl/d-prompt.w (
-                'title=':u + "Ввод количества" + '\':u
-                + 'text1=':u + "Введите количество:" + '\':u
-                + 'format=' + ">>>>>9.99" + '\':u
-                + 'type=' + {&type-dec} + '\':u
-                + 'fillin_row=3\':u
-                + 'fillin_col=6\':u
-                + 'fillin_width=17\':u
-                + 'fillin_height=1\':u
-                + 'max-chars=17\':u     /*- максимальное количество символов для редактора*/
-                + 'readonly=no\':u
-                , input-output v-qnty
-                ).
-              buf_marking.box-qnty = v-qnty .
-              buf_marking.unit  = if available (buf_goods) then buf_goods.unit-base else "".
-              buf_marking.unit-ext = "UNIT" .
-
-            end.
-            find first X_utd-lines exclusive-lock where X_utd-lines.gds-code = buf_utd-lines.gds-code and X_utd-lines.lineNum = buf_utd-lines.LineNum
-              and X_utd-lines.db-num = buf_utd-lines.db-num and X_utd-lines.doc-id = buf_utd-lines.doc-id no-error .
-            buf_utd-lines.Quantity  = buf_utd-lines.Quantity  + buf_marking.box-qnty .
-            X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + buf_marking.box-qnty .
-            X_utd-lines.Quantity  = X_utd-lines.Quantity  + buf_marking.box-qnty .
-            X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-            br-utd:refresh () no-error .
-            reposition br-utd to recid recid_utd no-error . 
-            v-mark:screen-value = "" .
-            v-mark = "" .           
-          end.
-          else 
-          do:
-            F-text = "                GTIN - " + v-GTIN + " не привязан к товару в базе".
+        end.
+        else 
+        do:
+            F-text = "                              Нет возможности получить GTIN " .
             display F-text with frame {&frame-name}.
             v-mark:screen-value = "" .
             v-mark = "" .
             return.  
-          end.    
-        end.
-        else 
-        do:
-          F-text = "                              Нет возможности получить GTIN " .
-          display F-text with frame {&frame-name}.
-          v-mark:screen-value = "" .
-          v-mark = "" .
-          return.  
         end.    
-      end.
-    end.
-        if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
+    end. /*Первоначальный ввод*/
+    if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
+    do:
+        find first X_utd-lines no-lock where X_utd-lines.stts <> "Проверен" no-error .
+        if available (X_utd-lines) then 
         do:
-          find first X_utd-lines no-lock where X_utd-lines.stts <> "Проверен" no-error .
-          if available (X_utd-lines) then do:
             F-text = "                            Просканируйте марку" .
             f-text:screen-value = "" .
             display F-text with frame {&frame-name} .
-          end.
-          else do:
+        end.
+        else 
+        do:
             F-text = "" .
             f-text:screen-value = "" .
             display F-text with frame {&frame-name} .
-          end.  
-        end. 
+        end.  
+    end. 
     display F-text with frame {&frame-name}.
     v-mark:screen-value = "" .
     v-mark = "" .
