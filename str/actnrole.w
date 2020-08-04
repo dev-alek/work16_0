@@ -830,20 +830,20 @@ ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
                     action-group.action-group-name,
                     action-item.action-item-name
                     ).
-                put stream outstr-html unformatted
+
+            end.
+    
+            get next browse-action-role.
+        end.
+        run waitfram-hide in this-procedure. 
+                  put stream outstr-html unformatted
                     substitute(
        
                     '</tbody>
       </body>
       </html>',chr(123), chr(125)
       
-                    ).
-            end.
-     
-            get next browse-action-role.
-        end.
-        run waitfram-hide in this-procedure. 
-  
+                    ). 
     
         output stream OutStr-html close.  
 
