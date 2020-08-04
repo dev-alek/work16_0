@@ -28,6 +28,7 @@ define variable vss-description as character no-undo init "Обновление gtin'а (из
 define input parameter p-db-num as integer no-undo .
 define input parameter p-b-code like ub.bar-code.b-code no-undo .
 define input parameter p-gtin   like ub.prod-bc.b-str no-undo .
+define input parameter p-send   as logical no-undo .
 
 define variable parparentproc as widget-handle no-undo .
 define variable v-cntxt-db-num        as integer   no-undo . /* текущая БД            */
@@ -63,7 +64,7 @@ run trg/prod-bc2.p (
                     ,input yes /*p-silent*/
                     ,input ? /* dif-pdbc */
                     ,input ? /*pbc-veto*/
-                    ,input send-ref
+                    ,input (send-ref and p-send)
                     ,input {&gtin}
                     ,input ""
                     ,buffer buf_goods
@@ -86,6 +87,7 @@ else do:
         where recid(buf_prod-bc) = v-rid-pbc.
   if  buf_prod-bc.bc-on
   and send-ref
+  and p-send
   then do:
     run str/diallog.w
       (input parparentproc

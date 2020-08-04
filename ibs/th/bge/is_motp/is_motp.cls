@@ -110,6 +110,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     get.
     protected set.
     
+  define property docDB-num as integer no-undo
+    get.
+    protected set.
+    
   define property INN as character no-undo
     get.
     protected set.
@@ -119,6 +123,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     set.
     
   define property checkINN as logical no-undo init false
+    get.
+    set.
+  
+  define property isDebug as logical no-undo init false
     get.
     set.
     
@@ -161,13 +169,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable mFileAuthTest  as character no-undo.
     define variable mFilecisesInfo as character no-undo.
   constructor public is_motp (  ):
-    
-  mFileAuth      = "{&prefixfile}auth.log".
  
-  mFileCades     = "{&prefixfile}cadescom.log".
-  mFileAuthTest  = "{&prefixfile}authTest.log".
-  mFilecisesInfo = "{&prefixfile}cisesInfo.log".
-
     define buffer buf_ext-system for ub.ext-system .
     define buffer buf_ext-system-attr for ub.ext-system-attr .
     
@@ -202,33 +204,42 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       return error .
     end .
     
-    setProps(buf_ext-system.db-num, buf_ext-system.esys-id) .
+    setProps(buf_ext-system.db-num, buf_ext-system.esys-id, gbl-var:g#db-num) .
     
-  end constructor .  
+  end constructor .
   
   constructor public is_motp
   (
   input pEsysDbNum as integer,
   input pEsysId as integer
   ) :
-     mFileAuth      =  "{&prefixfile}auth.log".
- 
-     mFileCades     =  "{&prefixfile}cadescom.log".
-     mFileAuthTest  =  "{&prefixfile}authTest.log".
-     mFilecisesInfo = "{&prefixfile}cisesInfo.log".
     
-    setProps(pEsysDbNum, pEsysId) .                         
+    setProps(pEsysDbNum, pEsysId, gbl-var:g#db-num) .                         
+    
+  end constructor .  
+  
+  constructor public is_motp
+  (
+  input pEsysDbNum as integer,
+  input pEsysId as integer,
+  input pDbNum as integer
+  ) :
+        
+    setProps(pEsysDbNum, pEsysId, pDbNum) .                         
     
   end constructor .
   
   method private void setProps
   (
   input pEsysDbNum as integer,
-  input pEsysId as integer
+  input pEsysId as integer,
+  input pDbNum as integer
   ) :
     
     define buffer buf_ext-system for ub.ext-system .
     define buffer buf_ext-system-attr for ub.ext-system-attr .
+    
+    DB-num = pDbNum .
     
     find first buf_ext-system no-lock where buf_ext-system.db-num = pEsysDbNum
                                         and buf_ext-system.esys-id = pEsysId
@@ -286,26 +297,30 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     end .
     if trim(proxy-addr) <> "" and proxy-addr <> ?
     then do :
-       if proxy-ssl
-       then do:
-          assign
-             CmdParamProxy    = substitute ('-k --proxy-negotiate -x &1 -U : ',proxy-addr)
-             CmdParamProxyLog = CmdParamProxy
-          .
-        end.
-        else do:
-           assign
-              CmdParamProxy     = substitute ('-x &1 -U &2:&3', proxy-addr, proxy-login, proxy-pswd )
-              CmdParamProxyLog  = substitute ('-x &1 -U &2:',   proxy-addr, proxy-login             )
-           .
-        end.
-     end.
-     else
-        assign 
-           CmdParamProxy    = ""
-           CmdParamProxyLog = ""
+      if proxy-ssl
+      then do:
+        assign
+          CmdParamProxy    = substitute ('-k --proxy-negotiate -x &1 -U : ',proxy-addr)
+          CmdParamProxyLog = CmdParamProxy
         .
-                  
+      end.
+      else do:
+        assign
+          CmdParamProxy     = substitute ('-x &1 -U &2:&3', proxy-addr, proxy-login, proxy-pswd )
+          CmdParamProxyLog  = substitute ('-x &1 -U &2:',   proxy-addr, proxy-login             )
+        .
+      end.
+    end.
+    else
+      assign 
+        CmdParamProxy    = ""
+        CmdParamProxyLog = ""
+      .
+      
+    mFileAuth      = "{&prefixfile}auth_db" + string(DB-num) + ".log".
+    mFileCades     = "{&prefixfile}cadescom_db" + string(DB-num) + ".log".
+    mFileAuthTest  = "{&prefixfile}authTest_db" + string(DB-num) + ".log".
+    mFilecisesInfo = "{&prefixfile}cisesInfo_db" + string(DB-num) + ".log".              
     
   end method .
   
@@ -408,12 +423,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
          define variable vFileResult as character no-undo.
          define variable vFileResultErr as character no-undo.
          assign
-            vFileResult    = "{&prefixfile}AuthData_.json"
-            vFileResultErr = "{&prefixfile}AuthData_.err"
-            cmd    = substitute ('&1 &4 --stderr &5 &3/auth/key >&2', search ("exe/curl.exe"), vFileResult, server_, CmdParamProxy,vFileResultErr)
-            cmdlog = substitute ('&1 &4 --stderr &5 &3/auth/key >&2', search ("exe/curl.exe"), vFileResult, server_, CmdParamProxylog,vFileResultErr)
+            vFileResult    = "{&prefixfile}AuthData_db" + string(DB-num) + ".json"
+            vFileResultErr = "{&prefixfile}AuthData_db" + string(DB-num) + ".err"
+            cmd    = substitute ('&1 &4 --stderr &5 &3/auth/key >&2', search ("exe/curl.exe"), vFileResult, server_, CmdParamProxy, vFileResultErr)
+            cmdlog = substitute ('&1 &4 --stderr &5 &3/auth/key >&2', search ("exe/curl.exe"), vFileResult, server_, CmdParamProxylog, vFileResultErr)
          .
-         putauth(" command   " + cmd ).
+         putauth(" command   " + cmdlog ).
          os-command silent value (cmd).
          define variable VFile as character no-undo.
          vfile =  SearchFile(vFileResult).
@@ -512,25 +527,25 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                      if vData2 > ""
                      then
                         vAuthDataLong = replace(vAuthDataLong, vData2, signedData2Long) .
-                     copy-lob vAuthDataLong to file "{&prefixfile}AuthDataSigned_.json" no-convert .
+                     copy-lob vAuthDataLong to file ("{&prefixfile}AuthDataSigned_db" + string(DB-num) + ".json") no-convert .
  
 /*    output to value(search("AuthDataSigned_.json")) append .*/
 /*      put unformatted '"}]' .                               */
 /*    output close .                                          */
-                     vFileResult = "{&prefixfile}AuthToken_.json".
-                     vFileResulterr = "{&prefixfile}AuthToken_.err".
+                     vFileResult = "{&prefixfile}AuthToken_db" + string(DB-num) + ".json".
+                     vFileResulterr = "{&prefixfile}AuthToken_db" + string(DB-num) + ".err".
                      cmd = substitute ('&1 -H "Content-Type: application/json" &5 -d @&4 --stderr &6 &3/auth/simpleSignIn >&2',
                                         search ("exe/curl.exe"),
                                         vFileResult,
                                         server_,
-                                        searchfile ("{&prefixfile}AuthDataSigned_.json"),
+                                        searchfile ("{&prefixfile}AuthDataSigned_db" + string(DB-num) + ".json"),
                                         CmdParamProxy,
                                         vFileResulterr).
                      cmdlog = substitute ('&1 -H "Content-Type: application/json" &5 -d @&4 --stderr &6 &3/auth/simpleSignIn >&2',
                                            search ("exe/curl.exe"),
                                            vFileResult,
                                            server_,
-                                           searchfile ("{&prefixfile}AuthDataSigned_.json"),
+                                           searchfile ("{&prefixfile}AuthDataSigned_db" + string(DB-num) + ".json"),
                                            CmdParamProxyLog,
                                            vFileResulterr).
    
@@ -639,23 +654,28 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vLine       as character no-undo .
     define variable vHTTPstatus as character no-undo .
     define variable ii          as integer   no-undo .
+    define variable tmpfile     as character no-undo .
+    define variable tmpcmdfile  as character no-undo .
     StatusErr = true.
-    output to tmp.json .
+    tmpfile = "tmpmotp_db" + string(DB-num) + ".json" .
+    output to value(tmpfile) .
       put unformatted  '~{"gtin":"00000046210654"}' skip .
     output close .
     
     putauthTest ( "  out-data:" ) .
-    os-append value("tmp.json") value(mFileAuthTest) .
+    if isDebug
+    then
+      os-append value(tmpfile) value(mFileAuthTest) .
     define variable vFileResult as character no-undo.
     define variable vFileResultErr as character no-undo.
-    vFileResult    = "{&prefixfile}AuthTest_.test".
-    vFileResultErr = "{&prefixfile}AuthTest_.err".
+    vFileResult    = "{&prefixfile}AuthTest_db" + string(DB-num) + ".test".
+    vFileResultErr = "{&prefixfile}AuthTest_db" + string(DB-num) + ".err".
     cmd = substitute ('&1 -i -d @&5 --stderr &7 -H "Content-Type: application/json" -H "Authorization: Bearer &4" &6 &3/cises/my >&2',
                       search ("exe/curl.exe"),
                       vFileResult,
                       server_,
                       pToken,
-                      searchfile ("tmp.json"),
+                      searchfile (tmpfile),
                       CmdParamProxy,
                       vFileResultErr).
     cmdlog = substitute ('&1 -i -d @&5 --stderr &7 -H "Content-Type: application/json" -H "Authorization: Bearer &4" &6 &3/cises/my >&2',
@@ -663,17 +683,18 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                       vFileResult,
                       server_,
                       pToken,
-                      searchfile ("tmp.json"),
+                      searchfile (tmpfile),
                       CmdParamProxyLOG,
                       vFileResultErr).
      
     putauthTest ( "command:" ).
     putauthTest ( cmdLOG   ).
-    output to tmp-cmd.bat .
+    tmpcmdfile = "tmp_cmd_db" + string(DB-num) + ".bat".
+    output to value(tmpcmdfile) .
     put unformatted cmd skip .
     output close .
-    os-command silent tmp-cmd.bat .
-/*    os-command silent value(cmd). токен большой и не влизает в os-command*/
+    os-command silent value(tmpcmdfile) .
+/*    os-command silent value(cmd). токен большой и не влезает в os-command*/
     define variable vfile as character no-undo.
     vfile =  SearchFile(vFileResult).
     if vfile eq ?
@@ -691,7 +712,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
        else do:
           putauthTest (" in-data:" ) .
     
-          os-append value(vFileResult) value(mFileAuthTest) .
+          if isDebug
+          then
+            os-append value(vFileResult) value(mFileAuthTest) .
     
           output to value (searchfile(vFileResult)) append .
           put unformatted " " skip " _ ".
@@ -847,7 +870,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     v-ok = true .
     v-num-marks = 0 .
     define variable vfilereq as character no-undo.
-    vfilereq = "{&prefixfile}cisesInfoReq_.json".
+    vfilereq = "{&prefixfile}cisesInfoReq_db" + string(DB-num) + ".json".
     output to value(vfilereq) .
     put unformatted "[" skip .
     for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = pDB-num
@@ -886,15 +909,17 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     output close .
     
     putcisesInfo (vfilereq + " (out-data):" ) .
-    os-append value(vfilereq) value(mFilecisesInfo) .
+    if isDebug
+    then
+      os-append value(vfilereq) value(mFilecisesInfo) .
     define variable vCmdToken as character no-undo.
     if pToken > ""
     then
        vCmdToken = substitute (' -H "Authorization: Bearer &1"',pToken).
        define variable vfileresult as character no-undo.
        define variable vfileresulterr as character no-undo.
-    vfileresult    = "{&prefixfile}cisesInfoResp_.json".
-    vfileresulterr = "{&prefixfile}cisesInfoResp_.err".
+    vfileresult    = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".json".
+    vfileresulterr = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".err".
     cmd = substitute ('&1 -H "Content-Type: application/json" &5 &6 -d @&4 --stderr &7 &3/cises/info >&2',
                       search ("exe/curl.exe"),
                       vfileresult,
@@ -915,7 +940,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
     
     putcisesInfo (" command:" ).
-    putcisesInfo ( cmd ) .
+    putcisesInfo ( cmdlog ) .
     
     output to tmp-cmd.bat .
     put unformatted cmd skip .
@@ -941,13 +966,14 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     end .
     
     putcisesInfo ( vfileresult + " (in-data):") .
-    
-    os-append value(vfileresult) value(mFilecisesInfo) .
+    if isDebug
+    then
+      os-append value(vfileresult) value(mFilecisesInfo) .
     define variable vfileresultxml as character no-undo.
-    vfileresultxml = "{&prefixfile}cisesInfoResp_.xml".
+    vfileresultxml = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".xml".
     cmd = substitute ('&1 -file=&2 >&3',
                        search("exe/json2xml.exe"),
-                       vfileresult,
+                       searchfile(vfileresult),
                        vfileresultxml
                        ) .
     os-command silent value (cmd). 
@@ -955,7 +981,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     empty temp-table tt-childs .
     
     Doc-Id = pDoc-id .
-    db-num = pDB-num .
+    docdb-num = pDB-num .
     
 /*    for each buf_utd-err exclusive-lock where buf_utd-err.db-num = db-num        */
 /*                                          and buf_utd-err.doc-id = Doc-Id        */
@@ -968,7 +994,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     ParseResponseInfoCises(searchfile(vfileresultxml)) .   
     
     Doc-Id = ? .
-    db-num = ? .              
+    docdb-num = ? .              
   
   end method .  
   
@@ -1126,7 +1152,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         if INN = hText:node-value
         then do :
           INNchecked = true .
-          updateUtdStatus(input DB-num, input Doc-Id, input ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB) .
+          updateUtdStatus(input docDB-num, input Doc-Id, input ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB) .
           return .
         end .
       end .
@@ -1334,7 +1360,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     or trim(pMark) = ""
     then return .
     
-    find first buf_utd no-lock where buf_utd.db-num = DB-num
+    find first buf_utd no-lock where buf_utd.db-num = docDB-num
                                  and buf_utd.doc-id = Doc-id
                                  no-error .
     
@@ -1424,9 +1450,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         end .
         if not v-found-bc
         then do :
-          run utl/upd-gtin.p (input DB-num,
+          run utl/upd-gtin.p (input docDB-num,
                               input buf_marking.gds-code,
-                              input pGtin)
+                              input pGtin,
+                              input (docDB-num = g#db-num))
                               no-error .
           if error-status:error
           then do :
@@ -1454,9 +1481,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
           end .
           if not v-found-bc
           then do :
-            run utl/upd-gtin.p (input DB-num,
+            run utl/upd-gtin.p (input docDB-num,
                                 input buf_bar-code.b-code,
-                                input vGtin)
+                                input vGtin,
+                                input (docDB-num = g#db-num))
                                 no-error .
             if error-status:error
             then do :
@@ -1481,12 +1509,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     if pParent <> ""
     then do :
       find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins pMark
-                                                        and buf_utd-marking-lines.db-num = DB-num
+                                                        and buf_utd-marking-lines.db-num = docDB-num
                                                         and buf_utd-marking-lines.doc-id = Doc-Id no-error .
       if not available buf_utd-marking-lines
       then do :
         find first buf_utd-marking-lines-parent no-lock where buf_utd-marking-lines-parent.mark begins pParent
-                                                      and buf_utd-marking-lines-parent.db-num = DB-num
+                                                      and buf_utd-marking-lines-parent.db-num = docDB-num
                                                       and buf_utd-marking-lines-parent.doc-id = Doc-Id no-error .
         create buf_utd-marking-lines .
         if available buf_utd-marking-lines-parent
@@ -1500,7 +1528,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         else do :
           assign
             buf_utd-marking-lines.mark = pMark
-            buf_utd-marking-lines.db-num = DB-num
+            buf_utd-marking-lines.db-num = docDB-num
             buf_utd-marking-lines.doc-id = Doc-Id
             buf_utd-marking-lines.doc-level = 1
           .
@@ -1597,7 +1625,15 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     find first buf_utd no-lock where buf_utd.db-num = pDb-num
                                  and buf_utd.doc-id = pDoc-id
                                  no-error .
-     v-ok = true .                            
+    v-ok = true .     
+    
+    find first buf_contract no-lock where buf_contract.host-code = buf_utd.host-code
+                                      and buf_contract.contract-code = buf_utd.contract-code   
+                                      no-error .
+    if not available buf_contract
+    then do :
+      assign v-ok = false .
+    end .                                                      
     /*  какая-то сомнительная проверка если все марки в ошибке то проверка по спецификации 
         не запустится. А что делать если у нас повторная проверка? как отлечить марки не прошедшую 
         поверку по МОТП от других 
@@ -1944,25 +1980,29 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   define stream auth .
   define stream authtest .
   define stream cisesInfo .
-  method public character putauth(input itext as character):
-     output stream auth to value (mFileauth) append .
-     put stream auth unformatted now " " itext skip .
-     output stream auth close .
+  method public void putauth(input itext as character):
+    if not isDebug then return .
+    output stream auth to value (mFileauth) append .
+    put stream auth unformatted now " " itext skip .
+    output stream auth close .
   end.
-  method public character putcades(input itext as character):
-     output stream cades to value (mFileCades) append .
-     put stream cades unformatted now " " itext skip .
-     output stream cades close .
+  method public void putcades(input itext as character):
+    if not isDebug then return .
+    output stream cades to value (mFileCades) append .
+    put stream cades unformatted now " " itext skip .
+    output stream cades close .
   end.
-  method public character putauthtest(input itext as character):
-     output stream authtest to value (mFileauthtest) append .
-     put stream authtest unformatted now " " itext skip .
-     output stream authtest close .
+  method public void putauthtest(input itext as character):
+    if not isDebug then return .
+    output stream authtest to value (mFileauthtest) append .
+    put stream authtest unformatted now " " itext skip .
+    output stream authtest close .
   end.
-  method public character putcisesInfo(input itext as character):
-     output stream cisesInfo to value (mFilecisesInfo) append .
-     put stream cisesInfo unformatted now " " itext skip .
-     output stream cisesInfo close .
+  method public void putcisesInfo(input itext as character):
+    if not isDebug then return .
+    output stream cisesInfo to value (mFilecisesInfo) append .
+    put stream cisesInfo unformatted now " " itext skip .
+    output stream cisesInfo close .
   end.
    
   { str/utd-err.i class }
