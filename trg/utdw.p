@@ -334,6 +334,47 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         run nws/cmdchgutd.p (buffer new-{&main-tbl}).
       end.
     end.
+
+  end.
+  find first ub.clients where ub.clients.obj-type = new-{&main-tbl}.obj-type and ub.clients.obj-code = new-{&main-tbl}.obj-code and
+    ub.clients.db-num = g#db-num no-error.  
+  if available (ub.clients) and (new-{&main-tbl}.sts <> old-utd.sts) and
+    ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news)) and new-{&main-tbl}.doc-code = "" and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
+    and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
+  then do:
+    def var v-file-name as character no-undo.
+    def var v-msg as character no-undo.
+    run ibs\th\str\utd\adaputd.p
+      (new-{&main-tbl}.db-num, /*db-num*/
+      new-{&main-tbl}.doc-id, /* doc-id*/
+      g#userid /*User-Id*/
+      ) no-error.
+    if not error-status:error
+    then do:
+      if return-value matches "*ошибка*"
+      then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &4", ,"Получен УПД"', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value).
+      else v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
+    end.
+      else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate), return-value).
+    
+    v-file-name = string (guid(generate-uuid)) + ".vbs".
+    output to value (v-file-name).
+    put unformatted v-msg. 
+    output close.
+    file-info:file-name = (v-file-name).    
+    os-command no-wait value (file-info:full-pathname).
+  
+  end.
+  
+  if g#db-num ne 0 and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
+  then do:
+      v-msg = substitute ('MsgBox "Документ № &1 от &2. &3Обратитесь в Техническую поддержку.", ,"Получен документ первоначального ввода."', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate),  '" & vbCrLf &  "').
+      v-file-name = string (guid(generate-uuid)) + ".vbs".
+      output to value (v-file-name).
+      put unformatted v-msg. 
+      output close.
+      file-info:file-name = (v-file-name).    
+      os-command no-wait value (file-info:full-pathname).
   end.
 
 

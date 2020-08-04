@@ -365,47 +365,6 @@ validate tb-utd no-error.
      return error return-value.
 unsubscribe "getNextseq".
 
-define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-if g#db-num ne 0 and tb-utd.doc-code = "" and tb-utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
-  and (tb-utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
-then do:
-  def var v-file-name as character no-undo.
-  def var v-msg as character no-undo.
-  run ibs\th\str\utd\adaputd.p
-    (tb-utd.db-num, /*db-num*/
-    tb-utd.doc-id, /* doc-id*/
-    g#userid /*User-Id*/
-    ) no-error.
-  if not error-status:error
-  then do:
-    if return-value matches "*ошибка*"
-    then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate) , tb-utd.doc-code, return-value).
-    else v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate) , tb-utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
-  end.
-    else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', tb-utd.DocumentNumber, string (tb-utd.DocumentDate), return-value).
-  
-  v-file-name = string (guid(generate-uuid)) + ".vbs".
-  output to value (v-file-name).
-  put unformatted v-msg. 
-  output close.
-  file-info:file-name = (v-file-name).    
-  os-command no-wait value (file-info:full-pathname).
-
-end.
-
-if g#db-num ne 0 and tb-utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and tb-utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
-then do:
-    v-msg = substitute ('MsgBox "Документ № &1 от &2. &3Обратитесь в Техническую поддержку.", ,"Получен документ первоначального ввода."', tb-utd.DocumentNumber, string (tb-utd.DocumentDate),  '" & vbCrLf &  "').
-    v-file-name = string (guid(generate-uuid)) + ".vbs".
-    output to value (v-file-name).
-    put unformatted v-msg. 
-    output close.
-    file-info:file-name = (v-file-name).    
-    os-command no-wait value (file-info:full-pathname).
-end.
-
-
 /*------------------------- почиcтим за cобой ----------------------------------------------- */
 
 for each locb-utd-lines
