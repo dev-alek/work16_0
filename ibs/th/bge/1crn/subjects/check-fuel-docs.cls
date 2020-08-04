@@ -193,11 +193,17 @@ sw = insw .
         BUFFER-COPY buf_c-rvs-line to tt-rvs-line .
         for each buf_c-rvs-line-pump no-lock where buf_c-rvs-line-pump.gds-code = tt-rvs-line.gds-code and buf_c-rvs-line-pump.pl-code = tt-rvs-line.pl-code
           and buf_c-rvs-line-pump.rvs-code = tt-rvs-line.rvs-code and buf_c-rvs-line-pump.obj-code = tt-rvs-line.obj-code and buf_c-rvs-line-pump.obj-type = tt-rvs-line.obj-type
-          and buf_c-rvs-line-pump.chip-num = tt-rvs-line.chip-num  :
-            
-          create tt-rvs-line-pump .      
-          BUFFER-COPY buf_c-rvs-line-pump to tt-rvs-line-pump .
-
+          and buf_c-rvs-line-pump.chip-num = tt-rvs-line.chip-num
+          break
+          by buf_c-rvs-line-pump.pump-code
+          by buf_c-rvs-line-pump.nozzle-code  :
+          
+          if first-of(buf_c-rvs-line-pump.nozzle-code)
+          then do:  
+            create tt-rvs-line-pump .      
+            BUFFER-COPY buf_c-rvs-line-pump to tt-rvs-line-pump .
+          end.
+          
         end.
       end.    
     end.  
