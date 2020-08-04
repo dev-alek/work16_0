@@ -971,7 +971,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     enable  s-artic with frame {&frame-name}.
     Hide      s-name  s-name-cnt in frame {&frame-name}.
     display s-artic with frame {&frame-name}.
-    
+    /*
     run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
     is-erpRN = logical(v-value) no-error .
     if error-status:error then is-erpRN = false .
@@ -985,7 +985,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       with FRAME {&FRAME-NAME}.
       menu-item m_item2:sensitive = false .
     end.
-
+    */
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 run disable_UI in this-procedure .
