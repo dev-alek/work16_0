@@ -57,6 +57,57 @@ on delete of this-procedure do:
   .
 end.
 define stream str-err.
+procedure libbcrcn_dm-rcnz:
+define input  parameter parparentproc as widget-handle no-undo .
+define input  parameter parstr-code as character                no-undo.
+define input  parameter parprice    like ub.doc-line.price-base no-undo.
+define input  parameter parobj-type like ub.clients.obj-type    no-undo.
+define input  parameter parobj-code like ub.clients.obj-code    no-undo.
+define input  parameter parwith-chs as logical                  no-undo.
+define input  parameter paronly-b-code as logical               no-undo.
+Define input  parameter parscales-pref as character             no-undo.
+Define input  parameter parpgscales-pref as character             no-undo.
+define output parameter parresult   as character                no-undo.
+define output parameter partype-bc  as character                no-undo.
+define output parameter parweight   as decimal                  no-undo.
+define parameter buffer bf_bar-code for ub.bar-code.
+define parameter buffer bf_prod-bc  for ub.prod-bc.
+define parameter buffer bf_place    for ub.place.
+      
+      if    length(parstr-code) > 14
+      then do:  
+         if    (length(parstr-code) eq 14 + 7 + 4 + 4
+             or length(parstr-code) eq 14 + 7 + 4 )
+         then 
+            parstr-code = substring(parstr-code,1,14).
+         else if parstr-code begins "01"
+         then
+            parstr-code = substring(parstr-code,3,14).
+         else do:
+            return.
+         end.
+      end.
+      
+{ str/bc-rcnz.i
+          parparentproc
+          parstr-code
+          parprice
+          parobj-type
+          parobj-code
+          parwith-chs
+          paronly-b-code
+          parscales-pref
+          parpgscales-pref
+          parresult
+          partype-bc
+          parweight
+          bf_bar-code
+          bf_prod-bc
+          bf_place
+          no-error
+        }
+end procedure.
+
 procedure libbcrcn_bc-rcnz:
 define input  parameter parparentproc as widget-handle no-undo .
 define input  parameter parstr-code as character                no-undo.
@@ -158,8 +209,36 @@ if not paronly-b-code then do:
     {&add-bc-ass}
   end.
   else do:
-    assign
-    varrid = ?.
+      define variable vtxt as character no-undo.
+      vtxt = parstr-code.
+      if    length(vtxt) > 14
+      then do:  
+         if    (length(vtxt) eq 14 + 7 + 4 + 4
+             or length(vtxt) eq 14 + 7 + 4 )
+         then 
+            vtxt = substring(vtxt,1,14).
+         else if vtxt begins "01"
+         then
+            vtxt = substring(vtxt,3,14).
+         else do:
+            vtxt = "". 
+         end.
+         if vtxt ne ""
+         then
+            find first bf_prod-bc where
+                 bf_prod-bc.b-str = vtxt and
+                 bf_prod-bc.bc-on = yes                                 no-lock no-error.
+      end.
+       if available bf_prod-bc then do:
+        /* найден включенный дополнительный баркод */
+        assign
+        varrid    = recid (bf_prod-bc)
+        parresult = "gtin".
+      end.
+      else do:
+        assign
+        varrid = ?.
+      end.
   end.
   assign
     varpovtor = no.
@@ -203,14 +282,14 @@ if not paronly-b-code then do:
         /* выбор правильного или отказ */
         define variable varrid1 as recid no-undo .
         varrid1 = varrid .
-          run ref/bc-rcnz.w (input parparentproc,
-                        input parobj-type,
-                        input parobj-code,
-                        input parstr-code,
-                        input parprice,
-                        input "choose",
-                        input-output varrid).
-        /* bc-rcnz.w может вернуть ?, если не подходит ни один из повторных */
+        run ref/bc-rcnz.w (input parparentproc,
+                       input parobj-type,
+                       input parobj-code,
+                       input parstr-code,
+                       input parprice,
+                       input "choose",
+                       input-output varrid).
+      /* bc-rcnz.w может вернуть ?, если не подходит ни один из повторных */
       end.
     end.
     if varrid = ? then varrid = varrid1 .
@@ -219,6 +298,7 @@ if not paronly-b-code then do:
       assign
         partype-bc = partype-bc + (if bf_prod-bc.bc-on = yes then " (включен) " else " (выключен) ").
     end.
+    
   end.
 end. /*if not paronly-b-code*/
 if available bf_prod-bc then do:

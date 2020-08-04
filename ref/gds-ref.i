@@ -10,7 +10,7 @@ $Archive$
 
 Автор: Бахтадзе Наталья Викторовна
 Дата создания: 09/09/05
-Author: Bakhtadze NatalyaC:\work16_0hg\ref\gds-ref.i
+Author: Bakhtadze Natalya
 Creation date: 09/09/05
 
 {1} = goo-doc : browse строится по goods. Фильтр : {&all}.
@@ -365,8 +365,9 @@ define shared variable a-n-c as character view-as radio-set horizontal radio-but
 "Артик","art",
 "Нач.назв","name",
 "Нач.слова","context",
-"Код","code"
-size 34 by 1    fgcolor 0 /* bgcolor 8 */ no-undo.
+"Код","code",
+"DM","DataMatrix"
+size 39 by 1    fgcolor 0 /* bgcolor 8 */ no-undo.
 
 DEFINE MENU m-add
        MENU-ITEM m-add-1 LABEL "Товар"   ACCELERATOR "ALT-1"
@@ -498,7 +499,6 @@ FUNCTION Get-good RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &SCOPED-DEFINE BROWSE-NAME br-gds
 
 
@@ -537,6 +537,8 @@ DEFINE BROWSE {&BROWSE-NAME} QUERY {&BROWSE-NAME} NO-LOCK DISPLAY
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD Get-good Dialog-Frame
 FUNCTION Get-good RETURNS CHARACTER
   ( buffer loc-goods for goo-doc, buffer loc-gds-obj for gob-doc )  FORWARD.
+
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -585,6 +587,7 @@ DEFINE RECTANGLE RECT-cond
 DEFINE RECTANGLE RECT-gds-ref-fi
      EDGE-PIXELS 3 GRAPHIC-EDGE  NO-FILL
      SIZE 98 BY 4.5.
+     
 /*DEFINE RECTANGLE RECT-image
      EDGE-PIXELS 1 GRAPHIC-EDGE  NO-FILL
      SIZE 16.88 /*12.75*/ /*9.63*/ BY 4.25.*/
@@ -644,7 +647,7 @@ DEFINE FRAME {&FRAME-NAME}
   NameContext AT ROW 4 COL 56 COLON-ALIGNED label "Контекст" format "x(40)":U
   loc-art AT ROW 4 COL 56 COLON-ALIGNED no-label /* "Начало артикула" */
   loc-name AT ROW 4 COL 56 COLON-ALIGNED label "Нач. назв." format "x(40)":U
-  loc-code AT ROW 4 COL 56 COLON-ALIGNED label "Код(весь)":U format "x(16)":U
+  loc-code AT ROW 4 COL 59 COLON-ALIGNED label "Код(весь)":U format "x(30)":U
   goo-doc.gds-code at row 4 col 82  colon-aligned label "Код" fgcolor 4 format "9999999999":U
   {&BROWSE-NAME} AT ROW 5 COL 1
   rect-gds-ref-fi at row 16.1 COL 1
@@ -656,7 +659,7 @@ DEFINE FRAME {&FRAME-NAME}
   fi-5 at row 18.6 col 5 No-LABEL
   fi-6 at row 18.6 col 51 No-LABEL
   fi-7 at row 19.4 col 5 No-LABEL
-  fi-8 at row 19.4 col 51 No-LABEL
+  fi-8 at row 19.4 col 51 NO-LABEL
   rect-list at row 20.7 col 1
   rect-cond at row 20.7 col 50
   /*rect-image AT ROW 16.22 COL 81.75 /*85.88*/ /*89*/ */
@@ -1275,6 +1278,7 @@ DO:
     DEFINE VARIABLE v-main-code LIKE ub.bar-code.b-code NO-UNDO.
     RUN ref/imagelist.w (parParentProc, "":U, goo-doc.gds-code, {&lookup}).
 END.
+
 /* ***************************  Main Block  *************************** */
 
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
@@ -1541,7 +1545,7 @@ PROCEDURE buttons :
   end.
   if is-fbr = yes then do:
     enable
-    b-recip
+      b-recip
     with frame {&FRAME-NAME}.
   end.
   else do:
@@ -2241,6 +2245,7 @@ FUNCTION Get-good RETURNS CHARACTER
   DEFINE VARIABLE vImageList AS CHARACTER  NO-UNDO.
   DEFINE VARIABLE vCh        AS CHARACTER  NO-UNDO.
   mphcol = NO.
+
 &if "{1}" = "gob-doc"  &then
     FIND FIRST loc-goods NO-LOCK WHERE
                loc-goods.artic     = loc-gds-obj.artic     AND
@@ -2271,6 +2276,9 @@ FUNCTION Get-good RETURNS CHARACTER
       .
       RETURN MARK.
     END.
+ 
+
+
     assign
       e-name = loc-goods.engl-name
       gds-t  = ( if loc-goods.gds-type = {&gds-goods} then "-" else "+" )

@@ -158,7 +158,9 @@ PROCEDURE proc-valchg-a-n-c:
       &endif
       apply "entry" to loc-name in frame {&frame-name}.
     end. /*when name*/
-    when "code" then do:
+    when "code"  
+ or when "DataMatrix" then
+    do:
       enable loc-code with frame {&frame-name}.
       disp loc-code with frame {&frame-name}.
       hide loc-art loc-name
@@ -259,27 +261,54 @@ define buffer buf_place for ub.place.
 
   assign
   frame {&frame-name}
-  loc-code.
+  loc-code
+  a-n-c.
 &if "{1}" = "gob-doc" or "{1}" = "goo-doc" or "{5}" = "sale" &then
-
-  { str/bc-rcnz.i
-    parparentproc
-    loc-code
-    ?
-    p-obj-type
-    p-obj-code
-    yes
-    no
-    varscales-pref{&vssseq}
-    varpgscales-pref{&vssseq}
-    varresult
-    vartype-bc
-    varweight
-    buf_bar-code
-    buf_prod-bc
-    buf_place
-    no-error
-  }
+  if a-n-c = "datamatrix"
+  then do:
+     { str/dm-rcnz.i
+       parparentproc
+       loc-code
+       ?
+       p-obj-type
+       p-obj-code
+       yes
+       no
+       varscales-pref{&vssseq}
+       varpgscales-pref{&vssseq}
+       varresult
+       vartype-bc
+       varweight
+       buf_bar-code
+       buf_prod-bc
+       buf_place
+       no-error
+     }
+     if varresult eq "prod-bc"
+     then
+        loc-code:screen-value in frame {&frame-name} = buf_prod-bc.b-str.
+  end.
+  else do:
+     { str/bc-rcnz.i
+       parparentproc
+       loc-code
+       ?
+       p-obj-type
+       p-obj-code
+       yes
+       no
+       varscales-pref{&vssseq}
+       varpgscales-pref{&vssseq}
+       varresult
+       vartype-bc
+       varweight
+       buf_bar-code
+       buf_prod-bc
+       buf_place
+       no-error
+     }
+  end.
+  
 &elseif "{1}" = "bb-list"  or "{1}" = "scnblist"  &then
     find first l-bar-code no-lock where
           l-bar-code.b-code = integer(loc-code) no-error.
@@ -290,25 +319,50 @@ define buffer buf_place for ub.place.
 &if defined(store-code) = 0 &then
 &global-define store-code store-code
 &endif
-
-  { str/bc-rcnz.i
-    parparentproc
-    loc-code
-    ?
-    {&store-type}
-    {&store-code}
-    yes
-    no
-    varscales-pref{&vssseq}
-    varpgscales-pref{&vssseq}
-    varresult
-    vartype-bc
-    varweight
-    buf_bar-code
-    buf_prod-bc
-    buf_place
-    no-error
+  if a-n-c = "datamatrix"
+  then do:
+     { str/dm-rcnz.i
+       parparentproc
+       loc-code
+       ?
+       {&store-type}
+       {&store-code}
+       yes
+       no
+       varscales-pref{&vssseq}
+       varpgscales-pref{&vssseq}
+       varresult
+       vartype-bc
+       varweight
+       buf_bar-code
+       buf_prod-bc
+       buf_place
+       no-error
+     }
+     if varresult eq "prod-bc"
+     then
+        loc-code:screen-value in frame {&frame-name} = buf_prod-bc.b-str.
+  end.
+  else do:
+     { str/bc-rcnz.i
+       parparentproc
+       loc-code
+       ?
+       {&store-type}
+       {&store-code}
+       yes
+       no
+       varscales-pref{&vssseq}
+       varpgscales-pref{&vssseq}
+       varresult
+       vartype-bc
+       varweight
+       buf_bar-code
+       buf_prod-bc
+       buf_place
+       no-error
   }
+end.
 &endif
   &if "{1}" = "bb-list"  or "{1}" = "scnblist"  &then
   if available l-bar-code then do:
