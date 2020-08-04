@@ -33,6 +33,7 @@ define input parameter p-tog-prod      as logical no-undo.
 { cmp/str-glbl.i }
 { cmp/r-page1.i }
 { cmp/r-pril.i new }
+{ gbl/prn-lib.i     }
 
 define variable g#report-num as integer no-undo .
   { gbl/getcntxt.i def }
@@ -164,8 +165,12 @@ run create-fill-tt-chk.
                             ,input tog-uchet-html
                             ,input tog-raz-html
                         ).
-  
-  ibs.th.gbl.gbl-inipar:prn-lib-reportviewer-report-name(v-file-name-rep-htm) .
+/*  run gbl/inidebug.p.*/
+      run prn-lib-reportviewer-report-name in this-procedure (
+        input THIS-PROCEDURE
+        ,input v-file-name-rep-htm
+        ).
+/*  ibs.th.gbl.gbl-inipar:prn-lib-reportviewer-report-name(v-file-name-rep-htm) .*/
 /* 20/VIII-2018
   /* Только проверка, есть файл отчёта HTML или нет(тогда вывод сбщ-ош) */
   v-file-name-rep-htm = search(v-file-name-rep-htm) .
