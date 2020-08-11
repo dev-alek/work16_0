@@ -254,7 +254,15 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   if utd-marking-lines.doc-level eq 1
                   then
                      vqnty = vqnty + marking.box-qnty.
-                  utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
+                  define variable vsts as integer no-undo.
+                  vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
+                  if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB
+                     or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB
+                  then
+                     utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:PendingVerification:KeyIntDB.
+                  else 
+                     utd-marking-lines.sts = vsts.
+                  
                   if v-marks-mark:stts-desc ne ?
                   then
                      AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"Load1C","stts-desc-mark",v-marks-mark:stts-desc + {&delim-par} + string( utd-lines.LineNum) + {&delim-par} +  vmark).
