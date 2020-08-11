@@ -3891,7 +3891,7 @@ PROCEDURE temp-mark :
     else 
     do:
         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num and buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.mark <> "",
-            first buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark:
+            each buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark:
             create tt-marking-lines .
             assign
                 tt-marking-lines.gds-name    = GdsName(buf_utd-marking-lines.gds-code)
@@ -4160,28 +4160,62 @@ PROCEDURE save_mark :
                     do:
                         if buf_utd-marking-lines.doc-level > 1 then 
                         do:
-                            if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then 
+                            /*                            if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then*/
+                            /*                            do:                                                                                                               */
+                            /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
+                            find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark no-error .
+                            if available (buf_marking) then 
                             do:
-                                /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
-                                message "Разгруппировать упаковки?"
-                                    view-as alert-box question buttons yes-no update ungroup.
-                                if ungroup then 
+                                if can-find (ub.marking where ub.marking.mark = buf_marking.mark-parent and ub.marking.sts <> Marking:GrayZone:KeyIntDB) then 
                                 do:
-                                    if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                    message "Разгруппировать упаковки?"
+                                        view-as alert-box question buttons yes-no update ungroup.
+                                    if ungroup then 
                                     do:
-                                        message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
-                                            view-as alert-box.
+                                        if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                        do:
+                                            message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
+                                                view-as alert-box.
+                                        end.
+                                    end.
+                                    else 
+                                    do:
+                                        F-text = "                            Просканируйте марку" .
+                                        display F-text with frame {&frame-name} .
+                                        v-mark:screen-value = "" .
+                                        v-mark = "" .
+                                        return no-apply.
                                     end.
                                 end.
-                            end.  
-                            else 
-                            do:    
-                                F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .
-                                display F-text with frame {&frame-name}.
-                                v-mark:screen-value = "" .
-                                v-mark = "" .
-                                return no-apply.
-                            end. 
+                                else
+                                do:
+                                    message " Марка входит в состав упаковки c серой зоной, разгруппировать упаковки?"
+                                        view-as alert-box question buttons yes-no update ungroup.
+                                    if ungroup then 
+                                    do:
+                                        if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                        do:
+                                            message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
+                                                view-as alert-box.
+                                        end.
+                                        
+                                    end.
+                                    /*                                F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .*/
+                                    /*                                display F-text with frame {&frame-name}.                                             */
+                                    /*                                v-mark:screen-value = "" .                                                           */
+                                    /*                                v-mark = "" .                                                                        */
+                                    /*                                return no-apply.                                                                     */
+
+                                    else 
+                                    do:
+                                        F-text = "                            Просканируйте марку" .
+                                        display F-text with frame {&frame-name} .
+                                        v-mark:screen-value = "" .
+                                        v-mark = "" .
+                                        return no-apply.
+                                    end.
+                                end.
+                            end.
                         end.
                     end.  
                     if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
