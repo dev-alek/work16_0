@@ -9,16 +9,23 @@ method private character repSpecSimbforDm
 function repSpecSimbforDm return char 
 &endif
 (iDM as char ):
-    define variable vReplist_old as character no-undo init "),(,&gt;,&lt;,&amp;,&apos;,&quot;".
-    define variable vReplist_new as character no-undo init  ",,>,<,&,~',~"".
+    define variable vReplist_old as character no-undo init "),(,&gt;,&lt;,&apos;,&quot;,&amp;".
+    define variable vReplist_new as character no-undo init  ",,>,<,~',~",&".
+    define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
+    define variable vteg as character no-undo.
     define variable vi as integer no-undo.
     
     do vi = 1 to num-entries(vReplist_old):
         iDM = replace(iDM,entry(vi,vReplist_old),entry(vi,vReplist_new)).
     end.
+    do vi = 1 to num-entries(vTeglist):
+       vTeg = entry(vi,vTeglist).
+       iDM = replace(iDM,"(" + vTeg + ")",vTeg).
+    end.
     return iDM.
         
 end.
+
 &if "{1}" = "class"
 &then
 method private character repSpecSimbforXlm
@@ -220,7 +227,8 @@ function GetCodeIdent return character
       and not iDm begins "01"
       and not iDm begins "02"
    then
-      oCodeIdent = substring(iDm,1,21).
+      
+      oCodeIdent = substring(iDm,1,if mMRCCode then 25 else 21 ).
    else  if     length(iDm) eq 25
             and not iDm begins "01"
             and not iDm begins "02"

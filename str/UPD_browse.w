@@ -1982,9 +1982,11 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Проверить по Акту приема-передачи */
             /*Ищем, все ли марки есть в УПД*/
             for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
                 and bf_utd-marking-lines.doc-id = bf_utd.doc-id:
+                define variable vmark as character no-undo.
+                vmark = getcodeident(bf_utd-marking-lines.mark).
                 find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
                     and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
-                    and buf_utd-marking-lines.mark begins bf_utd-marking-lines.mark no-error .
+                    and buf_utd-marking-lines.mark begins vmark no-error .
                 if not available (buf_utd-marking-lines) then 
                 do:
                     message "В документе неполный состав марок. Просканируйте марки вручную." 
@@ -1992,6 +1994,7 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Проверить по Акту приема-передачи */
                     return .
                 end.  
             end. 
+            
             qnty-gray = 0 .
             qnty-check = 0 .
             for each bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
@@ -2041,7 +2044,39 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Проверить по Акту приема-передачи */
                     end.
                 end.  
             end.
-        end.    
+            
+        end.   
+        for each buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
+                and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
+                and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB
+                and buf_utd-marking-lines.doc-level = 1  ,
+            first  bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
+                and bf_utd-marking-lines.doc-id = bf_utd.doc-id
+                and bf_utd-marking-lines.mark begins buf_utd-marking-lines.mark:
+                
+                if length (buf_utd-marking-lines.mark) < length(bf_utd-marking-lines.mark)
+                then do:
+                   find first bf_marking where bf_marking.mark eq buf_utd-marking-lines.mark
+                   no-lock no-error.
+                   if available bf_marking
+                   then do:
+                      find first bf_marking where bf_marking.mark eq bf_utd-marking-lines.mark
+                      exclusive-lock no-error.
+                      if available bf_marking
+                      then do:
+                         g#auto = yes.
+                         delete bf_marking.
+                         g#auto = no.
+                      end.
+                   end.
+                   bf_utd-marking-lines.mark = buf_utd-marking-lines.mark.
+                end.
+                for first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark:
+                        qnty-check = qnty-check + buf_marking.box-qnty .
+                        buf_marking.sts = Marking:Checked_:KeyIntDB.
+                        buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB.
+                end.
+           end. 
             /*Запишем номер УПД в акт*/
             bf_utd.doc-code = buf_utd.DocumentNumber .        
             message "Проверка завершена" skip
@@ -3856,7 +3891,7 @@ PROCEDURE temp-mark :
     else 
     do:
         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num and buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.mark <> "",
-            each buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark:
+            first buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark:
             create tt-marking-lines .
             assign
                 tt-marking-lines.gds-name    = GdsName(buf_utd-marking-lines.gds-code)
@@ -3998,7 +4033,9 @@ PROCEDURE save_mark :
             return no-apply.  
         end.
     end.
+    mMRCCode  = yes.
     v-marking = GetCodeIdent(v-mark) .
+    mMRCCode = no.
     if v-marking = "" or v-marking = ? then 
     do:
         F-text = "            Просканирован штрих код, необходимо просканировать марку" .
