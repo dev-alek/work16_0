@@ -25,8 +25,12 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер удаления {&main-tbl}".
-message " попытка удаления марки" view-as alert-box. 
-return error " попытка удаления марки".
+{cmp\trg-def.i}
+if not g#auto
+then do:
+   message " попытка удаления марки" view-as alert-box. 
+   return error " попытка удаления марки".
+end.
 /*{ trg/trghistnws.i 
   &hist = yes 
   &seqnamehist = "s-promo-chip"
