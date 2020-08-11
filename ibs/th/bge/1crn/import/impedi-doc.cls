@@ -216,7 +216,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                v-i-counter2 = v-objlistmark:iCounter .
                if v-i-counter2 < 1
                then
-                  undo, throw new Progress.Lang.AppError(substitute("По линии &1 нет марок",utd-lines.LineNum)).
+                  AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
+                  
                for each tt-mark:
                   delete tt-mark.
                end.
@@ -286,7 +287,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                release utd-lines.
             end. //
             else
-               undo, throw new Progress.Lang.AppError(substitute("По линии &1 нет марок",utd-lines.LineNum)).
+               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
          end.
       end.
    end.
