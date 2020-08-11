@@ -635,14 +635,14 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
              and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num no-error.
       if available buf_chk-pay-attr then 
       insw:write-data-element (  "cap-sum",  left-trim(string (dec(buf_chk-pay-attr.attr-value),">>>>>>>>>>>9.99") ) ) . /* CPWithdrawal (Строка) */
-      
+      /*
       find first buf_chk-pay-attr no-lock
            where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
              and buf_chk-pay-attr.attr-code = "CPAgreement":U
              and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num no-error.
       if available buf_chk-pay-attr then 
       insw:write-data-element (  "CPAgreement",  buf_chk-pay-attr.attr-value  ) . /* CPAgreement (Строка) */
-      
+      */
       insw:write-data-element (  "sum",  left-trim(string(buf_chk-pay.tot-rubl, "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Сумма платежа (либо бонус в рублевом эквиваленте) (Число) */
 
       /* 15/XI-2018 С учетом того, что НДС с кассы приходит во всех чеках,
