@@ -162,6 +162,7 @@ DEFINE INPUT PARAMETER hAttributes  AS HANDLE NO-UNDO.
     when "vd:producer" then v-parsesub2 = "producer" .
     when "vd:referencedDocument" then v-parsesub2 = "referencedDocument" .
     when "vd:authentication" then v-parsesub2 = "authentication" .
+    when "vd:origin" then v-parsesub2 = "origin" .
     when "vd:firstDate"
     then do :
       v-parsesub = "firstDate" .
@@ -269,7 +270,9 @@ PROCEDURE Characters:
         end.
         when "productItem"
         then do :
-          vsdsTHObj:VsdObjCurr:GdsGuid = v-str .
+          if v-parsesub2 <> "origin"
+          then
+            vsdsTHObj:VsdObjCurr:GdsGuid = v-str .
         end.
         when "product"
         then do :
@@ -498,6 +501,9 @@ PROCEDURE EndElement:
     when "vd:consignor" then v-parsesub2 = "" .
     when "vd:consignee" then v-parsesub2 = "" .
     when "vd:producer" then v-parsesub2 = "" .
+    when "vd:referencedDocument" then v-parsesub2 = "" .
+    when "vd:authentication" then v-parsesub2 = "" .
+    when "vd:origin" then v-parsesub2 = "" .
     when "vd:referencedDocument"
     then do :
       v-parsesub2 = "" .

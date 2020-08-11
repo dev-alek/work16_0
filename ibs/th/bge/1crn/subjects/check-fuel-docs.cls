@@ -177,12 +177,24 @@ sw = insw .
       for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = tt-rvs-doc.rvs-code:
         create tt-rvs-line . 
         BUFFER-COPY buf_rvs-line to tt-rvs-line .
-        for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.gds-code = tt-rvs-line.gds-code and buf_rvs-line-pump.pl-code = tt-rvs-line.pl-code
-          and buf_rvs-line-pump.rvs-code = tt-rvs-line.rvs-code and buf_rvs-line-pump.obj-code = tt-rvs-line.obj-code and buf_rvs-line-pump.obj-type = tt-rvs-line.obj-type:
-            
-          create tt-rvs-line-pump .      
-          BUFFER-COPY buf_rvs-line-pump to tt-rvs-line-pump .
-
+      end.
+      for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = tt-rvs-doc.rvs-code
+                                           and buf_rvs-line-pump.obj-code = tt-rvs-doc.obj-code
+                                           and buf_rvs-line-pump.obj-type = tt-rvs-doc.obj-type
+                                           break
+                                           by buf_rvs-line-pump.pump-code
+                                           by buf_rvs-line-pump.nozzle-code:
+        if first-of(buf_rvs-line-pump.nozzle-code)
+        then do :  
+          find first tt-rvs-line-pump where tt-rvs-line-pump.pump-code    = buf_rvs-line-pump.pump-code
+                                        and tt-rvs-line-pump.nozzle-code  = buf_rvs-line-pump.nozzle-code
+                                        and tt-rvs-line-pump.pl-code      = buf_rvs-line-pump.pl-code
+                                        no-error .
+          if not available tt-rvs-line-pump
+          then do :                              
+            create tt-rvs-line-pump .      
+            BUFFER-COPY buf_rvs-line-pump to tt-rvs-line-pump .
+          end.
         end.
       end.      
     end.
@@ -191,19 +203,24 @@ sw = insw .
       for each buf_c-rvs-line no-lock where buf_c-rvs-line.rvs-code = tt-rvs-doc.rvs-code and buf_c-rvs-line.chip-num = tt-rvs-doc.chip-num:
         create tt-rvs-line . 
         BUFFER-COPY buf_c-rvs-line to tt-rvs-line .
-        for each buf_c-rvs-line-pump no-lock where buf_c-rvs-line-pump.gds-code = tt-rvs-line.gds-code and buf_c-rvs-line-pump.pl-code = tt-rvs-line.pl-code
-          and buf_c-rvs-line-pump.rvs-code = tt-rvs-line.rvs-code and buf_c-rvs-line-pump.obj-code = tt-rvs-line.obj-code and buf_c-rvs-line-pump.obj-type = tt-rvs-line.obj-type
-          and buf_c-rvs-line-pump.chip-num = tt-rvs-line.chip-num
-          break
-          by buf_c-rvs-line-pump.pump-code
-          by buf_c-rvs-line-pump.nozzle-code  :
-          
-          if first-of(buf_c-rvs-line-pump.nozzle-code)
-          then do:  
+      end.
+      for each buf_c-rvs-line-pump no-lock where buf_c-rvs-line-pump.rvs-code = tt-rvs-doc.rvs-code
+                                             and buf_c-rvs-line-pump.obj-code = tt-rvs-doc.obj-code
+                                             and buf_c-rvs-line-pump.obj-type = tt-rvs-doc.obj-type
+                                             break
+                                             by buf_c-rvs-line-pump.pump-code
+                                             by buf_c-rvs-line-pump.nozzle-code:
+        if first-of(buf_c-rvs-line-pump.nozzle-code)
+        then do :  
+          find first tt-rvs-line-pump where tt-rvs-line-pump.pump-code    = buf_c-rvs-line-pump.pump-code
+                                        and tt-rvs-line-pump.nozzle-code  = buf_c-rvs-line-pump.nozzle-code
+                                        and tt-rvs-line-pump.pl-code      = buf_c-rvs-line-pump.pl-code
+                                        no-error .
+          if not available tt-rvs-line-pump
+          then do :                              
             create tt-rvs-line-pump .      
             BUFFER-COPY buf_c-rvs-line-pump to tt-rvs-line-pump .
           end.
-          
         end.
       end.    
     end.  

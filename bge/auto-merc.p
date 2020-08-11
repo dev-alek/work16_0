@@ -264,7 +264,7 @@ on error undo, return error
     end. 
       
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl, buf_db.db-num).
     mercury:vsdId = buf_esys-all-attr.key1.
   
     case buf_esys-all-attr.key2 :  
@@ -423,7 +423,7 @@ on error undo, return error
         next clients_.
       end.    
       v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-      mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl).
+      mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl, buf_db.db-num).
       
       objThObj:ObjType = clients.obj-type.
       objThObj:ObjCode = clients.obj-code.

@@ -1,4 +1,4 @@
-&glob xdebug yes
+define variable mDebug as logical no-undo.
 
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
@@ -204,15 +204,26 @@ end.
 /* получение описания объекта */
 &if "{1}" = "class"
 &then
+method private logical putloggetdesc
+&else
+function  putloggetdesc returns logical
+&endif
+(is1 as character ,is2 as character ,
+is3 as character ):
+end.
+/* получение описания объекта */
+&if "{1}" = "class"
+&then
 method private logical getdesc
 &else
 function  getdesc returns logical
 &endif
 (input iObj as component-handle):
    if iObj eq ? then return false.
-   &if defined(debug)
-   &then
-   output stream File-stream to "c:\temp\diadoc_load.txt" append.
+   if mdebug
+   then do:
+   output stream File-stream to "diadoc_load.txt" append.
+   
    define variable vReflector as component-handle no-undo.
    define variable vDescobj  as component-handle no-undo.
    define variable vPropertyNames  as component-handle no-undo.
@@ -230,7 +241,8 @@ function  getdesc returns logical
    define variable vPropertyName as character no-undo.
    define variable vPropertyType as character no-undo.
    .
-   
+   putloggetdesc(vDescobj:GetInterfaceName(),"","").
+   putloggetdesc("property","","").
    define variable vi as integer no-undo.
    define variable vii as integer no-undo.
   put stream File-stream  unformatted skip "property" skip.
@@ -243,6 +255,7 @@ function  getdesc returns logical
       vPropertyName  = vPropertyNames:GetItem(vi - 1) no-error.
       vPropertyType  = vDescobj:GetPropertyType(vPropertyName) no-error .
       vPropertyValue = substring((vDescobj:GetProperty(vPropertyName)),1,4000) no-error.
+      putloggetdesc(vPropertyName,vPropertyType,vPropertyValue).
      put stream File-stream  unformatted vPropertyName " " vPropertyType  " " vPropertyValue skip.
    end.
    put stream File-stream  unformatted skip "method" skip.
@@ -253,18 +266,20 @@ function  getdesc returns logical
       vMethodDesc = "".
       vMethodsName = vMethodsNames:GetItem(vi - 1)no-error.
       vMethodDesc  = vDescobj:GetMethodDesc(vMethodsName)no-error.
+      putloggetdesc("method",vMethodsName, vMethodDesc:RetVal).
       put stream File-stream  unformatted vMethodsName  " retval " vMethodDesc:RetVal skip.
       do vii  = 1 to vMethodDesc:args:count:
          define variable varg as character no-undo.
          varg = "".
          varg = vMethodDesc:args:GetItem(vii - 1) no-error.
          put stream File-stream  unformatted " args " varg  skip .
+         putloggetdesc(" args ",varg, "").
       end. 
    end.
    put stream File-stream  unformatted "end---------------------------------------" skip.
    output stream File-stream close.
    release object vReflector.
-   &endif
+   end.
    return true.
 end.
 
@@ -290,9 +305,9 @@ function getxsddocum returns logical
    define variable vii as integer no-undo.
    define variable viii as integer no-undo.
    define variable viiii as integer no-undo.
-   &if defined(debug)
-   &then
-   output stream File-stream to "c:\temp\diadoc_doc.txt" append.
+   if mdebug
+   then do:
+   output stream File-stream to "diadoc_doc.txt" append.
    vDocumentTypes = iOrganization:GetDocumentTypes().
    do vi =1 to vDocumentTypes:count:
       vDocumentType = vDocumentTypes:GetItem(vi - 1).
@@ -326,7 +341,7 @@ function getxsddocum returns logical
    /* mOrganization.SaveUserDataXSD(TitleName, mFunction:name, Version, DocflowSide, FilePath).*/ 
    put stream File-stream  unformatted "--------------------------------------------------- " skip.
   output stream File-stream close.
-  &endif
+  end.
    return true.
   
 end.
@@ -368,15 +383,15 @@ function crcode returns character
              + "ReconciliationAct|"
              + "Contract|"
              + "ProformaInvoice|"
-             + "ServiceDetails|"
-             + "UniversalTransferDocument|"
+             + "ServiceDetails|" */
+              "UniversalTransferDocument|"
              + "UniversalTransferDocumentRevision|"
-/*             + "UniversalCorrectionDocumen|"*/
-/*             + "UniversalCorrectionDocumentRevision|"*/
-             + "AnyInvoiceDocumentType|"
+             + "UniversalCorrectionDocument|"
+             + "UniversalCorrectionDocumentRevision"
+           /*  + "AnyInvoiceDocumentType|"
              + "AnyBilateralDocumentType|"
              + "AnyUnilateralDocumentType|"
-             +*/ "Any"
+             + "Any" */
              .
    vtypename = /*"неформализованный документ|"
              + "счет-фактура|"
@@ -393,15 +408,15 @@ function crcode returns character
              + "акт сверки|"
              + "договор|"
              + "счет на оплату|"
-             + "детализация|"
-             + "УПД|"
-             + "исправление УПД|"
+             + "детализация|" */
+              "УПД|"
+             + "Исправление УПД|"
              + "УКД|"
-             + "исправление УКД|"
-             + "соответствует набору из четырех типов документов: Invoice, InvoiceRevision, InvoiceCorrection, InvoiceCorrectionRevision|"
+             + "Исправление УКД"
+         /*    + "соответствует набору из четырех типов документов: Invoice, InvoiceRevision, InvoiceCorrection, InvoiceCorrectionRevision|"
              + "соответствует любому типу двусторонних документов: Nonformalized, Torg12, AcceptanceCertificate, XmlTorg12, XmlAcceptanceCertificate, TrustConnectionRequest, PriceList, PriceListAgreement CertificateRegistry ReconciliationAct Contract Torg13|"
              + "соответствует любому типу односторонних документов: ProformaInvoice, ServiceDetails|"
-             +*/ "любому типу документа|"
+             + "любому типу документа|"*/
              .
           
           
@@ -780,6 +795,7 @@ procedure SendAccept:
          getdesc(vContentItem).
          release object vBuyerTitle no-error.
          vBuyerTitle = vContentItem:UniversalTransferDocumentBuyerTitle no-error.
+         getdesc(vBuyerTitle).
          if vBuyerTitle eq ?
          then do:
             vBuyerTitle = vContentItem:UniversalCorrectionDocumentBuyerTitle.
@@ -818,7 +834,7 @@ procedure SendAccept:
       /*         vEmployee:EmployeeInfo     = /* иные сведения, идентифицирующие физическое лицо */   */
                vEmployee:EmployeeBase     = "Должностные обязанности". /* основание полномочий представителя */ 
             end.
-            
+            getdesc(vEmployee).
             getdesc(mDiadocConnection:Certificate).
    
             
@@ -1044,9 +1060,15 @@ procedure send:
                 and vTypeAnswer ne  "RejectDocument"
             then 
                icomment = "".  
-                   
-            Vmes = GetErrForUtd(utd.db-num,utd.doc-id,?) .
-            Vmes = GetErrComText(icomment,Vmes).
+            if vTypeAnswer eq  "RejectDocument"
+            then do:
+               if icomment eq ? or icomment eq "" then icomment = utd.comment.
+               Vmes = (if icomment ne ? and icomment ne "" then icomment + "," else "" ) + GetErrForUtdStr(utd.db-num,utd.doc-id,?).
+            end.
+            else do:
+                Vmes = GetErrForUtd(utd.db-num,utd.doc-id,?) .
+                Vmes = GetErrComText(icomment,Vmes).
+            end.
             if mFlaftest
             then do:
                output to "SendAnswer.txt" .
@@ -1246,9 +1268,15 @@ function CheckLoad returns logical
      or iDocument:type eq "UniversalTransferDocumentRevision"
    then main-block :
    do on error undo main-block, return error:
+      getdesc(iDocument).
+      if not iDocument:filename  begins "ON_NSCHFDOPPRMARK_"
+      then do:
+         PutMes(substitute('По &1 файл &2 не начинается с "ON_NSCHFDOPPRMARK_".' ,iDocument:DocumentNumber, iDocument:filename) ).
+         return no.
+      end.
       if iDocument:Direction eq "Inbound"
       then do:
-         getdesc(iDocument).
+         
          define variable vOrganizationid as character no-undo.
          define variable vDocumentid as character no-undo.
          vOrganizationid = iDocument:OrganizationId.
@@ -1265,7 +1293,7 @@ function CheckLoad returns logical
             .
          end.
          vDocumentChild = iDocument:GetDynamicContent("Seller") no-error.
-       
+         getdesc(vDocumentChild).
          if    (Oobj-code  ne 0 and Oobj-code  ne ?
             and ohost-code ne 0 and ohost-code ne ?)
          then vFlag = no.
@@ -1282,21 +1310,41 @@ function CheckLoad returns logical
          end.
          else if vDocumentChild ne ?
          then do:
-            vContent = vDocumentChild:UniversalTransferDocumentWithHyphens no-error. /* табличная часть счета фактуры */
+            if iDocument:version  eq "utd820_05_01_01"
+            then do:
+               vContent = vDocumentChild:UniversalTransferDocument no-error.
+               
+            end.
+            else
+               vContent = vDocumentChild:UniversalTransferDocumentWithHyphens no-error. /* табличная часть счета фактуры */
             
             if vContent ne ?
             then do:
+               getdesc(vContent).
                define variable vFnsParticipantId as character no-undo.
                define variable vinn as character no-undo.
                define variable vkpp as character no-undo.
                define variable vorgname as character no-undo.
                define variable vAddrOrg as character no-undo.
                
-               vConsignees = vContent:Consignees.
-               if vConsignees:Consignee:count > 0
-               then
-                  getOrganizationInfo(vConsignees:Consignee:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
-               vFnsParticipantId =  vContent:SenderFnsParticipantId.
+               
+               
+               if iDocument:version  eq "utd820_05_01_01"
+               then do:
+                 /* getdesc(vContent:Shippers).
+                  getdesc(vContent:Shippers:Shipper).
+                  getdesc(vContent:Shippers:Shipper:OrganizationInfo).*/
+                  getdesc(vContent:Sellers).
+                  getdesc(vContent:Sellers:Seller).
+                  getdesc(vContent:Sellers:Seller:GetItem(0)).
+                  getdesc(vContent:Sellers:Seller:GetItem(0):OrganizationDetails).
+                  getOrganizationInfo(vContent:Sellers:Seller:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
+                  /*vFnsParticipantId =  vContent:Sellers:Seller:GetItem(0):OrganizationDetails:FnsParticipantId no-error.
+                  vKpp              =  vContent:Sellers:Seller:GetItem(0):OrganizationDetails:kpp no-error.*/
+               end.
+               else do:
+                  vFnsParticipantId =  vContent:SenderFnsParticipantId.
+               end.
                find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
                                         and ext-classif.charkey_three eq vFnsParticipantId
                no-lock no-error.
@@ -1318,79 +1366,44 @@ function CheckLoad returns logical
                   return no.
                   
                end.
-               vFnsParticipantId = vContent:RecipientFnsParticipantId.
-               find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
-                                        and ext-classif.charkey_three eq vFnsParticipantId
-               no-lock no-error.
-               if available ext-classif
+               if iDocument:version  eq "utd820_05_01_01"
                then do:
-                  if ext-classif.CharKey_One eq {&shop}
-                  then do:
-                     assign 
-                           oobj-type = ext-classif.CharKey_One
-                           oobj-code = ext-classif.Key#_One
-                        .
-                     find first clients 
-                       where clients.obj-type   = ext-classif.CharKey_One
-                         and clients.obj-code   = ext-classif.Key#_One
-                     no-lock no-error .
-                     if available clients
-                     then
-                        ohost-code =  clients.host-code.
-                  end.
-                  else do:
-                     find first clients 
-                       where clients.obj-type   = ext-classif.CharKey_One
-                         and clients.obj-code   = ext-classif.Key#_One
-                         and can-find(first ub.sysconf where ub.sysconf.host-code = clients.obj-code)
-                     no-lock no-error .
-                     if not available clients
-                     then do:
-                        PutMes(substitute("По &1 получатель  &2 не наша фирма." ,iDocument:DocumentNumber, vFnsParticipantId) ).
-                        return no.
-                     end.
-                     ohost-code = ext-classif.Key#_One.
-                     block-cl:
-                     for each clients-attr 
-                        where clients-attr.attr-code  = {&attr-kpp} 
-                          and clients-attr.obj-type   = {&shop}
-                          and clients-attr.attr-value = vkpp
-                          and can-find(buf_clients where buf_clients.obj-type   = clients-attr.obj-type
-                                                     and buf_clients.obj-code   = clients-attr.obj-code
-                                                     and buf_clients.host-code  = ohost-code) 
-                     no-lock :
-                        leave block-cl.
-                     end.
-                     
-                     if     available clients
-                        and clients.obj-type eq {&shop}
-                     then do:
-                        assign 
-                           oobj-type = clients.obj-type
-                           oobj-code = clients.obj-code
-                        .
-                     end.
-                     else if available clients-attr 
-                     then do:
-                        assign 
-                           oobj-type = clients-attr.obj-type
-                           oobj-code = clients-attr.obj-code
-                        .
-                     end.
-                     else do:
-                        PutMes(substitute("По &1 не найден объект по КПП &2." ,iDocument:DocumentNumber, vkpp )).
-                        vFlag = yes.
-                     end.
-                  end.
-               end.
-               else do:
-                  PutMes(substitute("По &1 не найден получатель  &2." ,iDocument:DocumentNumber, vFnsParticipantId) ).
-                  return no.
+                  getdesc(vContent:Buyers).
+                  getdesc(vContent:Buyers:Buyer).
+                  getdesc(vContent:Buyers:Buyer:GetItem(0)).
+                  getOrganizationInfo(vContent:Buyers:Buyer:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
                   
+               end.   
+               else do:
+                  vConsignees = vContent:Consignees.
+                  getdesc(vConsignees).
+                  getdesc(vConsignees:Consignee).
+                  if vConsignees:Consignee:count > 0
+                  then do:
+                     getdesc(vConsignees:Consignee:GetItem(0)).
+                     getOrganizationInfo(vConsignees:Consignee:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
+                  end.
+                  vFnsParticipantId = vContent:RecipientFnsParticipantId.
                end.
+               define variable otext as character no-undo.
+               vFlag = getObgFns 
+                          (input iDocument:DocumentNumber ,
+                           input vFnsParticipantId ,
+                           input vkpp,
+                           output ohost-code,
+                           output oobj-type,
+                           output oobj-code,
+                           output otext ).
+               if otext ne "" and otext ne ?
+               then 
+                  PutMes( otext).
+               if vFlag  ne ?
+               then 
+                  return vFlag .
+               
             end.
             else do:
-               PutMes("Error Ошибка получения данных из Диадок UniversalTransferDocumentWithHyphens").
+               PutMes("Error Ошибка получения данных из Диадок UniversalTransferDocument" + if iDocument:version  eq "utd820_05_01_01" then "" else "WithHyphens").
                return no.
             end.
          end.
@@ -1524,6 +1537,7 @@ function UpdateUTDInformOne returns logical
                          and tt-recid.docid eq vDocumentid
    
    no-lock no-error.
+   
    if not available tt-recid
    then do trans:   
       if iDocument  ne ?
@@ -1681,7 +1695,13 @@ function UpdateUTDInformOne returns logical
             if utd.EDocType eq objSrv:Env:Utd:EDocType:UTD:KeyIntDB
             then do:
                 
-               vContent = vDocumentChild:UniversalTransferDocumentWithHyphens no-error. /* табличная часть счета фактуры */
+               if iDocument:version  eq "utd820_05_01_01"
+               then do:
+                  vContent = vDocumentChild:UniversalTransferDocument no-error.
+                  
+               end.
+               else
+                  vContent = vDocumentChild:UniversalTransferDocumentWithHyphens no-error. /* табличная часть счета фактуры */
                if vContent ne ?
                then do:
                   getdesc(vContent).
@@ -1700,7 +1720,7 @@ function UpdateUTDInformOne returns logical
                      utd.BaseDocumentName   = vTransferBase:BaseDocumentName.
                      utd.BaseDocumentDate   = date(vTransferBase:BaseDocumentDate).
                   end.
-                  
+                 
                   vSellers = vContent:Sellers.
                   getdesc(vSellers).
                   
@@ -1708,18 +1728,27 @@ function UpdateUTDInformOne returns logical
                   if vSellers:Seller:count > 0
                   then
                      getOrganizationInfo(vSellers:Seller:GetItem(0),output utd.cli-inn,output utd.cli-kpp,utd.cli-FnsParticipantId, output vorgname, output vAddrOrg).
-                  utd.cli-FnsParticipantId = vContent:SenderFnsParticipantId.
-                  utd.cli-info = vorgname + " " + vAddrOrg.
-                  vConsignees = vContent:Consignees.
-                  getdesc(vConsignees).
-                    /* mBuyerCol = mBuyers:Buyer. */
-         /*         getdesc(vBuyers:Buyer:getitem(0)).*/
-                  if vConsignees:Consignee:count > 0
+                  if iDocument:version  ne "utd820_05_01_01"
                   then
-                     getOrganizationInfo(vConsignees:Consignee:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAddrOrg).
+                     utd.cli-FnsParticipantId = vContent:SenderFnsParticipantId.
+                  utd.cli-info = vorgname + " " + vAddrOrg.
+                  if iDocument:version  eq "utd820_05_01_01"
+                  then do:
+                     getOrganizationInfo(vContent:Buyers:Buyer:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAddrOrg).
+                  end.
+                  else do:
+                     vConsignees = vContent:Consignees.
+                     getdesc(vConsignees).
+                       /* mBuyerCol = mBuyers:Buyer. */
+            /*         getdesc(vBuyers:Buyer:getitem(0)).*/
+                     if vConsignees:Consignee:count > 0
+                     then
+                        getOrganizationInfo(vConsignees:Consignee:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAddrOrg).
+                     utd.obj-FnsParticipantId = vContent:RecipientFnsParticipantId.
+                  end.
                   utd.obj-info = vorgname + " " + vAddrOrg + " ИНН: " + utd.obj-inn + " КПП: " + utd.obj-kpp.
                   
-                  utd.obj-FnsParticipantId = vContent:RecipientFnsParticipantId.
+                  
                   vInvoiceTable = vContent:Table.
                   getdesc(vInvoiceTable).
                   vItems = vInvoiceTable:Item.
@@ -1931,7 +1960,7 @@ function UpdateUTDInformOne returns logical
                      end.
                      release utd-lines.   
                   end.
-                  validate utd. /* необходимо для привязки марок */
+                  
                   
                end.
                else do:
@@ -2082,7 +2111,7 @@ function UpdateUTDInformOne returns logical
                          release utd-lines.   
                       end.
                   end.
-                  validate utd. /* необходимо для привязки марок */
+                 
                end.
                else do:
                   create tt-recid.
@@ -2135,7 +2164,7 @@ function UpdateUTDInformOne returns logical
                                        and old_utd.doc-id eq volddoc-id
                      no-lock no-error.
                   for each utd-marking-lines where utd-marking-lines.db-num eq utd.db-num
-                                               and utd-marking-lines.db-num eq utd.db-num
+                                               and utd-marking-lines.doc-id eq utd.doc-id
                   exclusive-lock:
                   
                      if available old_utd
@@ -2148,6 +2177,7 @@ function UpdateUTDInformOne returns logical
                         no-lock no-error.
                      utd-marking-lines.sts = if available buf_utd-marking-lines then buf_utd-marking-lines.sts else  objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.
                   end.
+                  validate utd. /* необходимо для привязки марок */
                   SaturateAndCheckUTD( utd.db-num, utd.doc-id).
                end.
             end.
@@ -2172,6 +2202,7 @@ function UpdateUTDInformOne returns logical
                        utd.contract-code         = old_utd.contract-code
                    .
                end.
+               validate utd. /* необходимо для привязки марок */
                SaturateAndCheckUTD( utd.db-num, utd.doc-id).
             end.
             
@@ -2375,6 +2406,7 @@ function UpdateUTDInform returns date
                          vDocument = vDocumentList:GetItem(vii - 1).
 /*                         message vDocument:DocumentNumber                     view-as alert-box.*/
                          vdatelast = max(vdatelast,vDocument:DocumentDate) no-error.
+                         vdatelast = min(vdatelast,today).
                          packetupdd(vOrganization, vDocument).
                          
                       end.
@@ -2392,6 +2424,39 @@ function UpdateUTDInform returns date
    end.
    return vdatelast.
    /*pause 60.*/
+end.
+
+&if "{1}" = "class"
+&then
+method public void SendReceiptsAsync
+&else
+function SendReceiptsAsync returns logical 
+&endif
+(idb-num as integer ,
+ idoc-id as integer  ):
+   define variable vDocument as component-handle no-undo.
+   define buffer utd for utd.
+   if getdocum (idb-num, idoc-id, output vDocument ) eq ""
+   then do:
+      PutMes(substitute("Обработка подписи ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
+      vDocument:SendReceiptsAsync().
+      PutMes(substitute("Запущена асинхронная обработка ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
+      find first utd where utd.db-num eq idb-num 
+                       and utd.doc-id eq idoc-id
+      exclusive-lock no-error.
+      if available utd
+      then do:
+         if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
+         then
+            UpdateUTDInformOne(vDocument).
+         utd.flagRI = yes.
+         SaturateAndCheckUTD( utd.db-num, utd.doc-id).
+      end.
+      if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
+      then
+         UpdateUTDInformOne(vDocument).
+   end.
+
 end.
 
 &if "{1}" = "class"
@@ -2415,6 +2480,7 @@ procedure SendAnsver:
    if getdocum (idb-num, idoc-id, output vDocument ) eq ""
    then do:
       PutMes(substitute("Обработка запроса &3 по документу ДБ &1 ID &2",idb-num,idoc-id,iTypeAnswer)).
+      SendReceiptsAsync(idb-num,idoc-id).
       /*if     logical(vDocument:AmendmentRequested)
          and iTypeAnswer eq "CorrectionRequest"
       then 
@@ -2492,38 +2558,7 @@ procedure SendAnsver:
       end.
    end.
 end.
-&if "{1}" = "class"
-&then
-method public void SendReceiptsAsync
-&else
-function SendReceiptsAsync returns logical 
-&endif
-(idb-num as integer ,
- idoc-id as integer  ):
-   define variable vDocument as component-handle no-undo.
-   define buffer utd for utd.
-   if getdocum (idb-num, idoc-id, output vDocument ) eq ""
-   then do:
-      PutMes(substitute("Обработка подписи ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
-      vDocument:SendReceiptsAsync().
-      PutMes(substitute("Запущена асинхронная обработка ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
-      find first utd where utd.db-num eq idb-num 
-                       and utd.doc-id eq idoc-id
-      exclusive-lock no-error.
-      if available utd
-      then do:
-         if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
-         then
-            UpdateUTDInformOne(vDocument).
-         utd.flagRI = yes.
-         SaturateAndCheckUTD( utd.db-num, utd.doc-id).
-      end.
-      if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
-      then
-         UpdateUTDInformOne(vDocument).
-   end.
 
-end.
 &if "{1}" = "class"
 &then
 method public void SendResponse
@@ -2665,7 +2700,7 @@ procedure  SendResponse :
        end.
        else if utd.sts-edi eq  ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB /*"Ожидается ответное действие получателя"*/
        then do:
-          
+          vreturn = yes.
           if iAccept
           then do:
              if itestMod
@@ -2743,7 +2778,16 @@ procedure  SendResponse :
              end.   
           end.
        end.
-
+       if itestmod and not vreturn
+       then do:
+          PutMes (substitute('Error Документ с № "&5" в.н. "&2" по БД "&1" в статусе "&3" выполнить операцию "&4" не возможно.',
+                             utd.db-num,
+                             utd.doc-id,
+                             ObjSrv:Env:Utd:Sts:EDI:GetLabel(utd.sts-edi),
+                             if iAccept then "Подписать" else "Отказать",
+                             utd.DocumentNumber)
+                             ).
+       end.
     end.
     return string(vreturn).
 end.

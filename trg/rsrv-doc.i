@@ -242,6 +242,7 @@ procedure rsrv-doc :
     run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
     empty temp-table tt-alc-codes .
+    output stream tobacco-rsrv to value ("tobacco-rsrv.log") .
     
     if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}
     and buf_doc-line.unit-cli > ""
@@ -394,12 +395,15 @@ procedure rsrv-doc :
       else
       if tt-marks.qnty <> 1
       then do :
-        message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка задания входных параметров" skip
-        "Не правильное количество по марке - " string(tt-marks.qnty) skip
-        "Марка " tt-marks.mark skip
-        view-as alert-box error .
+        if not g#auto
+        then do :
+          message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка задания входных параметров" skip
+          "Не правильное количество по марке - " string(tt-marks.qnty) skip
+          "Марка " tt-marks.mark skip
+          view-as alert-box error .
+        end .
         undo, return error return-value .
       end.
     end.      
@@ -541,13 +545,13 @@ procedure rsrv-doc :
       else
       if tt-tobacco-marks.qnty <> 1
       then do :
-        message
-        vss-workfile vss-revision vss-description skip
-        "Неправильное количество по марке - " string(tt-tobacco-marks.qnty) skip
-        "Марка " tt-tobacco-marks.mark skip
-        "Вероятно она была продана, возвращена, и снова продана." skip
-        "В этом случае товар зарезервируется при закрытии продажи" skip
-        view-as alert-box error .
+/*        message                                                                 */
+/*        vss-workfile vss-revision vss-description skip                          */
+/*        "Неправильное количество по марке - " string(tt-tobacco-marks.qnty) skip*/
+/*        "Марка " tt-tobacco-marks.mark skip                                     */
+/*        "Вероятно она была продана, возвращена, и снова продана." skip          */
+/*        "В этом случае товар зарезервируется при закрытии продажи" skip         */
+/*        view-as alert-box error .                                               */
         undo, return error return-value .
       end.
     end.
@@ -1178,7 +1182,7 @@ procedure rsrv-doc :
     .
     
     output stream alc-rsrv to value ("alc-rsrv.log") .
-    output stream tobacco-rsrv to value ("tobacco-rsrv.log") .
+    
 /*run gbl/inidebug.p .*/
     rsrv_cycle:
     do while p-chg-qnty <> 0
@@ -1210,7 +1214,10 @@ procedure rsrv-doc :
               find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
                                                 and buf_gen-attr.attr-code = (if available tt-marks then tt-marks.mark else p-mark)
                                                 and num-entries(buf_gen-attr.p-key, {&delim-key}) >= 8
-                                                and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code no-error .
+                                                and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code
+                                                and entry(2, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.obj-type
+                                                and integer(entry(3, buf_gen-attr.p-key, {&delim-key})) = buf_doc-line.obj-code
+                                                no-error .
               
               
               
@@ -1452,7 +1459,10 @@ procedure rsrv-doc :
                   find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
                                                     and buf_gen-attr.attr-code = (if available tt-marks then tt-marks.mark else p-mark)
                                                     and num-entries(buf_gen-attr.p-key, {&delim-key}) >= 8
-                                                    and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code no-error .
+                                                    and entry(8, buf_gen-attr.p-key, {&delim-key}) = v-rsrv-code
+                                                    and entry(2, buf_gen-attr.p-key, {&delim-key}) = buf_doc-line.obj-type
+                                                    and integer(entry(3, buf_gen-attr.p-key, {&delim-key})) = buf_doc-line.obj-code
+                                                    no-error .
                   if available buf_gen-attr
                   then do :
                     

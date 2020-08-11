@@ -76,6 +76,10 @@ class ibs.th.bge.mercury.mercury:
     get.
     private set.
     
+  define property DbNum as integer no-undo init ?
+    get.
+    private set.
+    
   define property server_ as character no-undo init ?
     get.
     private set.
@@ -125,7 +129,8 @@ class ibs.th.bge.mercury.mercury:
                               inProxyAddr as char,
                               inProxyLogin as char,
                               inProxyPswd as char,
-                              inProxySSL as logical):
+                              inProxySSL as logical,
+                              inDbNum as int):
     
     assign
       apiKey   = inApiKey
@@ -138,6 +143,7 @@ class ibs.th.bge.mercury.mercury:
       proxy-login = inProxyLogin
       proxy-pswd = inProxyPswd
       proxy-ssl = inProxySSL
+      DbNum = inDbNum
     .
     if inServer = 1 then server_ = "https://api2.vetrf.ru:8002" .
     if inServer = 2 then server_ = "https://api.vetrf.ru" .
@@ -166,7 +172,10 @@ class ibs.th.bge.mercury.mercury:
     
     define variable cmd as character no-undo .
     define variable sw as handle no-undo .
-    define variable v-file  as character no-undo initial "GetVetDocumentByUuid_.xml".
+    define variable v-file  as character no-undo .
+    v-file = "GetVetDocumentByUuid_DB" + string(DbNum) + ".xml" .
+    define variable v-resp-file as character no-undo .
+    v-resp-file = "ApplicationResponse_DB" + string(DbNum) + ".xml" .
     
     create sax-writer sw .
     
@@ -217,20 +226,20 @@ class ibs.th.bge.mercury.mercury:
       if proxy-ssl
       then do :
         cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr).
+                        search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr).
       end.
       else do :
         cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+                        search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
       end.
     end.
     else do :
       cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_).
+                      search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_).
     end. 
     os-command silent value (cmd).
     
-    ParseXML(input search("ApplicationResponse_.xml")) .
+    ParseXML(input SearchFile(v-resp-file)) .
     
     p-applicationId = applicationId .
     p-Status_ = Status_ .
@@ -252,7 +261,10 @@ class ibs.th.bge.mercury.mercury:
     
     define variable cmd as character no-undo .
     define variable sw as handle no-undo .
-    define variable v-file  as character no-undo initial "processIncomingConsignment_.xml".
+    define variable v-file  as character no-undo .
+    v-file = "processIncomingConsignment_DB" + string(DbNum) + ".xml" .
+    define variable v-resp-file as character no-undo .
+    v-resp-file = "ApplicationResponse_DB" + string(DbNum) + ".xml" .
     define variable v-cli-be-guid as character no-undo .
     define variable v-cli-ent-guid as character no-undo .
     define variable v-obj-be-guid as character no-undo .
@@ -787,20 +799,20 @@ class ibs.th.bge.mercury.mercury:
       if proxy-ssl
       then do :
         cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr).
+                        search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr).
       end.
       else do :
         cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                        search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+                        search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
       end.
     end.
     else do :
       cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search (v-file), "ApplicationResponse_.xml", login, password, server_).
+                      search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_).
     end.
     os-command silent value (cmd).
     
-    ParseXML(input search("ApplicationResponse_.xml")) .
+    ParseXML(input SearchFile(v-resp-file)) .
     
     p-applicationId = applicationId .
     p-Status_ = Status_ .
@@ -833,6 +845,9 @@ class ibs.th.bge.mercury.mercury:
     define variable v-calc-qnty as decimal no-undo .
     define variable jj as integer no-undo .
     
+    define variable v-resp-file as character no-undo .
+    v-resp-file = "VetDocumentByUuidResponse_DB" + string(DbNum) + ".xml" .
+    
     define buffer buf_ext-classif for ext-classif .
     define buffer buf_goods for ub.goods .
     define buffer buf_units-attr for ub.units-attr .
@@ -850,7 +865,7 @@ class ibs.th.bge.mercury.mercury:
     is-err = false .
     v-found-unit = false .
     
-    receiveApplicationResult ("VetDocumentByUuidResponse_.xml", inApplicationId) .
+    receiveApplicationResult (v-resp-file, inApplicationId) .
     
     if Status_ = "COMPLETED"
     then 
@@ -1015,12 +1030,15 @@ class ibs.th.bge.mercury.mercury:
    output p-Msg  as char
   ) :
     
+    define variable v-resp-file as character no-undo .
+    v-resp-file = "IncomingConsignmentResponse_DB" + string(DbNum) + ".xml" .
+    
     define buffer buf_vsd for ub.vsd .
     
     vsds = new vsdsubs() .
     vsdStorage = new vsdtostorage ().
     
-    receiveApplicationResult ("IncomingConsignmentResponse_.xml", inApplicationId) .
+    receiveApplicationResult (v-resp-file, inApplicationId) .
     
     if Status_ = "COMPLETED"
     then
@@ -1083,7 +1101,8 @@ class ibs.th.bge.mercury.mercury:
   ) :
     define variable cmd as character no-undo .
     define variable sw as handle no-undo .
-    define variable v-file  as character no-undo initial "receiveApplicationResult_.xml".
+    define variable v-file  as character no-undo .
+    v-file = "receiveApplicationResult_DB" + string(DbNum) + ".xml" .
     
     create sax-writer sw .
     
@@ -1116,20 +1135,20 @@ class ibs.th.bge.mercury.mercury:
       if proxy-ssl
       then do :
         cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                        search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_, proxy-addr).
+                        search ("exe/curl.exe"), SearchFile(v-file), v-result-file, login, password, server_, proxy-addr).
       end.
       else do :
         cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                        search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
+                        search ("exe/curl.exe"), SearchFile(v-file), v-result-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
       end.
     end.
     else do :
       cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
-                      search ("exe/curl.exe"), search ("receiveApplicationResult_.xml"), v-result-file, login, password, server_).
+                      search ("exe/curl.exe"), SearchFile(v-file), v-result-file, login, password, server_).
     end.
     os-command silent value (cmd).
     
-    ParseXML(input search(v-result-file)) .
+    ParseXML(input SearchFile(v-result-file)) .
     
   end method .
   
@@ -1156,12 +1175,12 @@ class ibs.th.bge.mercury.mercury:
   
     iNum = 0.
     hParser:sax-parse ( ).
-    if p-inFileName = search("ApplicationResponse_.xml")
+    if p-inFileName = SearchFile("ApplicationResponse_DB" + string(DbNum) + ".xml")
     then do :
       run getData in hHandler (output applicationId, output Status_, output Msg).
     end.
-    if p-inFileName = search("VetDocumentByUuidResponse_.xml")
-    or p-inFileName = search("IncomingConsignmentResponse_.xml")
+    if p-inFileName = SearchFile("VetDocumentByUuidResponse_DB" + string(DbNum) + ".xml")
+    or p-inFileName = SearchFile("IncomingConsignmentResponse_DB" + string(DbNum) + ".xml")
     then do :
      
       run getVsds in hHandler (output applicationId, output Status_, output Msg, output vsds).
@@ -1172,5 +1191,7 @@ class ibs.th.bge.mercury.mercury:
     delete procedure hHandler.
     
   end method.
+  
+  { utl/search.i  class }
 
 end class.

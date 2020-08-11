@@ -383,7 +383,7 @@ DO:
       next clients_.
     end.        
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl, clients.db-num).
     
     objThObj:ObjType = clients.obj-type.
     objThObj:ObjCode = clients.obj-code.
@@ -633,12 +633,12 @@ DO:
             no-error.  
     if not available buf_ext-classif
     then do :
-      message "Фирма орг" string (clients.host-code) " не синхронизирована с ФГИС Меркурий (Нет GUID'а ХЗ)" view-as alert-box .
+      message "Фирма орг" string (buf_clients.host-code) " не синхронизирована с ФГИС Меркурий (Нет GUID'а ХЗ)" view-as alert-box .
       next.
     end. 
       
     v-issuerId = entry(1, buf_ext-classif.charKey_Two, {&delim-cmd}) .        
-    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl).
+    mercury = new mercury(v-apiKey, v-issuerId, v-login, v-password, v-login_is, buf_ext-system.esys-id, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd, v-proxy-ssl, buf_clients.db-num).
     mercury:vsdId = ub.esys-all-attr.key1.  
   
     case ub.esys-all-attr.key2 :  

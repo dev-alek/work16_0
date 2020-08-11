@@ -48,11 +48,11 @@ then do:
   run nws/cmd-del.p
       ( input {&table_utd}
       ,input (buffer {&main-tbl}:handle)
-      ,input ""
+      ,input v-list-db
       ) no-error .
   if error-status :error
   then do:
-    return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+    undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
   end.
 end.
 

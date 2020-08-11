@@ -357,7 +357,7 @@ SIZE 32.5 BY 1 FGCOLOR 0 /* BGCOLOR 8 */ NO-UNDO.
 
 define shared variable loc-art  as character view-as fill-in size 18 by 1 fgcolor 12 no-undo format "x(16)":U.
 define shared variable loc-name as character view-as fill-in size 20 by 1 fgcolor 12 no-undo.
-define shared variable loc-code as character view-as fill-in size 20 by 1 fgcolor 12 no-undo.
+define shared variable loc-code as character view-as fill-in size 17 by 1 fgcolor 12 no-undo.
 
 define variable NameContext as character view-as fill-in size 20 by 1 fgcolor 12 no-undo.
 

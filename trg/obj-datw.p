@@ -99,6 +99,7 @@ on error undo main-block, return error
     /* проверяем, что нельзя открывать закрытую дату */
     if  old-obj-date.status_ = {&objdt-closed}
     and ub.obj-date.status_  <> {&objdt-closed}
+    and not g#news
     then do:
       message
         vss-workfile vss-revision vss-description skip
@@ -124,6 +125,8 @@ on error undo main-block, return error
     no-error .
     if available next_obj-date
       then do:
+          if g#news then next_obj-date.status_  = {&objdt-closed} .
+          else do:         
         message
           vss-workfile vss-revision vss-description
           skip "На объекте обнаружена текущая дата: " next_obj-date.sys-date
@@ -133,6 +136,7 @@ on error undo main-block, return error
           skip return-value
         view-as alert-box error .
         undo, return error .
+          end.
     end.
   end.        /* if ub.obj-date.status_ = {&objdt-current} */
 
