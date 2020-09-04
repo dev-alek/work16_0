@@ -1772,7 +1772,8 @@ function UpdateUTDInformOne returns logical
                      end.
                      utd-lines.ProductCode = vExtendedInvoiceItem:Product.
                      utd-lines.UnitCode    = vExtendedInvoiceItem:UnitnAME.
-                     utd-lines.Quantity    = vExtendedInvoiceItem:Quantity.
+                     setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(vExtendedInvoiceItem:Quantity)).
+                     
                      utd-lines.Price       = vExtendedInvoiceItem:Price.
                      utd-lines.TotalWithVatExcluded   = vExtendedInvoiceItem:SubtotalWithVatExcluded.
          /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -2028,7 +2029,8 @@ function UpdateUTDInformOne returns logical
                          utd-lines.ProductCode = vExtendedInvoiceItem:Product.
 /*                         utd-lines.UnitCode    = vExtendedInvoiceItem:UnitnAME.*/
                          vValues = vExtendedInvoiceItem:CorrectedValues.
-                         utd-lines.Quantity    = vValues:Quantity.
+                         define variable vQuantity as decimal no-undo.
+                         vQuantity    = vValues:Quantity.
                          utd-lines.Price       = vValues:Price.
                          utd-lines.TotalWithVatExcluded   = vValues:SubtotalWithVatExcluded.
              /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -2037,7 +2039,8 @@ function UpdateUTDInformOne returns logical
                          utd-lines.Total     = vValues:Subtotal.
 /*                         utd-lines.Article   = vExtendedInvoiceItem:ItemVendorCode. /* ??? */*/
                          vValues = vExtendedInvoiceItem:OriginalValues.
-                         utd-lines.Quantity    = utd-lines.Quantity - vValues:Quantity.
+                         vQuantity    = vQuantity - vValues:Quantity.
+                         setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(vQuantity)).
                          utd-lines.Price       = utd-lines.Price - vValues:Price.
                          utd-lines.Vat       = utd-lines.Vat - vValues:Vat.
                          utd-lines.Total     = utd-lines.Total  - vValues:Subtotal.

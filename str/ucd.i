@@ -135,29 +135,7 @@ function CheckEdoc returns character
    end.
    
 end.
-&if "{1}" = "class"
-&then
-method public char getattrUtdlines
-&else
-function getattrUtdlines returns char 
-&endif
-(idb-num   as integer,
- idoc-id   as integer,
- ilinenum  as integer, 
- iattrcode as character ):
-   define buffer utd-attr for utd-attr.
-   find first utd-lines-attr where utd-lines-attr.db-num    eq idb-num
-                               and utd-lines-attr.doc-id    eq idoc-id
-                               and utd-lines-attr.lineNum   eq ilineNum
-                               and utd-lines-attr.attr-code eq iattrcode
-   no-lock no-error.
-   if  available utd-lines-attr
-   then 
-      return
-         utd-lines-attr.attr-value
-      . 
-   
-end.
+
 &if "{1}" = "class"
 &then
 method private void CrEdoc
@@ -215,7 +193,7 @@ function CrEdoc returns character
       vdb-num = utd.db-num.
       vdoc-id = utd.doc-id.
       
-      buffer-copy utd except doc-id db-num DocumentExt OrganizationExt to edoc
+      buffer-copy utd except doc-id db-num DocumentExt OrganizationExt comment to edoc
       assign
          edoc.EDocType = objSrv:Env:Utd:EDocType:edoc:KeyIntDB
          edoc.Timestamp = iTimestamp + 1

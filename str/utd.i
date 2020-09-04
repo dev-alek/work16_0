@@ -4,6 +4,25 @@ define temp-table tt-utd-mark like utd-marking-lines
   field side as character.
 {utl/gtin.i {1}}
 
+&if "{1}" ne "class"
+&then
+function GetAttrUtdlines returns char 
+
+(idb-num   as integer,
+ idoc-id   as integer,
+ ilinenum  as integer, 
+ iattrcode as character ) forward.
+
+function setAttrUtdlines returns logical 
+
+(idb-num    as integer,
+ idoc-id    as integer,
+ ilinenum   as integer, 
+ iattrcode  as character,
+ iattrvalue as character ) forward.
+
+&endif
+
 &if "{1}" = "class"
 &then
 method public logical getObgFns
@@ -231,10 +250,15 @@ function SaturateAndCheckUTD return logical
                   else
                      vqnty = vqnty + marking.box-qnty. 
                end.
+               define variable vnewGdsCode as integer no-undo.
+               vnewGdsCode = getGdsCodeByDM(marking.mark).
                if    marking.gds-code eq 0 
                   or marking.gds-code eq ?
                   or marking.sts eq 0
                   or  marking.sts eq ?
+                  or (marking.gds-code ne vnewGdsCode
+                      and vnewGdsCode ne ?
+                      and vnewGdsCode ne 0)
                then do:
                   find first marking where marking.mark eq utd-marking-lines.mark
                   exclusive-lock no-error.
@@ -259,6 +283,7 @@ function SaturateAndCheckUTD return logical
                if    utd-marking-lines.gds-code eq 0 
                   or utd-marking-lines.gds-code eq ?
                   or utd-marking-lines.sts ne marking.sts
+                  or utd-marking-lines.gds-code ne marking.gds-code
                then do:
                   find first buf_utd-marking-lines 
                        where buf_utd-marking-lines.db-num   = utd-marking-lines.db-num 
@@ -287,10 +312,32 @@ function SaturateAndCheckUTD return logical
             if      not vucd
                and vGdsCode > 0 and vGdsCode ne ? 
             then do:
+               define variable vValText as character no-undo.
+               define variable vValDec  as decimal no-undo.
+               VValText = GetAttrUtdlines (utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity").
+               if VValText = ?
+               then do:
+                  vValDec = utd-lines.Quantity.
+                  setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(utd-lines.Quantity)).
+               end.
+               else
+                  vValDec = dec(VValText).         
                find first bar-code where bar-code.gds-code  eq vGdsCode
                                      and bar-code.unit-cli eq utd-lines.UnitCode
                no-lock no-error.
-               if utd-lines.Quantity * (if avail bar-code then bar-code.cli-base-rate else 1) ne vqnty
+               if utd-lines.Quantity ne vValDec * (if avail bar-code then bar-code.cli-base-rate else 1)
+               then do:
+                  find first  buf_utd-lines where buf_utd-lines.db-num  eq utd-lines.db-num
+                                              and buf_utd-lines.doc-id  eq utd-lines.doc-id
+                                              and buf_utd-lines.LineNum eq utd-lines.LineNum
+                  exclusive-lock no-error.
+                  if available buf_utd-lines
+                  then do:
+                     buf_utd-lines.Quantity = vValDec * (if avail bar-code then bar-code.cli-base-rate else 1).
+                     release buf_utd-lines.
+                  end.
+               end.
+               if utd-lines.Quantity  ne vqnty
                then                        
                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity * (if avail bar-code then bar-code.cli-base-rate else 1)) + {&delim-par} + string(vqnty)).
             end.
@@ -966,6 +1013,27 @@ function setattrUtd returns logical
       end.
    end.     
 end.
+
+
+&if "{1}" = "class"
+&then
+method public char GetAttrUtdlines
+&else
+function GetAttrUtdlines returns char 
+&endif
+(idb-num   as integer,
+ idoc-id   as integer,
+ ilinenum  as integer, 
+ iattrcode as character ):
+   define buffer utd-lines-attr for utd-lines-attr.
+   find first utd-lines-attr where utd-lines-attr.db-num    eq idb-num
+                               and utd-lines-attr.doc-id    eq idoc-id
+                               and utd-lines-attr.lineNum   eq ilineNum
+                               and utd-lines-attr.attr-code eq iattrcode
+   no-lock no-error.
+   return if not available utd-lines-attr  then ?    else  utd-lines-attr.attr-value.     
+end.
+
 
 &if "{1}" = "class"
 &then

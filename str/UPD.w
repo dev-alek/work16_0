@@ -99,24 +99,24 @@ define VARIABLE v-mes-Token             as LOGICAL     no-undo .
 define buffer buf_utd     for ub.utd .
 define buffer buf_clients for ub.clients .
 define temp-table tt-obj-list no-undo
-  field obj-code as integer
-  field obj-type as character
-  .
+    field obj-code as integer
+    field obj-type as character
+    .
 
 define temp-table tt-sertif no-undo
-  field Name_                          as character
-  field BeginDate                      as datetime
-  field EndDate                        as datetime
-  field Thumbprint                     as character
-  field IssuerName                     as character
-  field OrganizationName               as character 
-  field SerialNumber                   as character
-  field IsQualifiedElectronicSignature as character
-  field INN                            as character 
-  field KPP                            as character 
-  field JobTitle                       as character 
-  field CanEncrypt                     as character
-  .
+    field Name_                          as character
+    field BeginDate                      as datetime
+    field EndDate                        as datetime
+    field Thumbprint                     as character
+    field IssuerName                     as character
+    field OrganizationName               as character 
+    field SerialNumber                   as character
+    field IsQualifiedElectronicSignature as character
+    field INN                            as character 
+    field KPP                            as character 
+    field JobTitle                       as character 
+    field CanEncrypt                     as character
+    .
 define variable StatusTH  as class ibs.th.str.utd.sts.th   no-undo .
 define variable StatusEDI as class ibs.th.str.utd.sts.edi  no-undo .
 define variable EdocType  as class ibs.th.str.utd.edoctype no-undo .
@@ -178,32 +178,39 @@ mark-num
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD CliName d-utd 
 FUNCTION CliName RETURNS CHARACTER
-  (input p-cli-code as integer, input p-cli-type as character)  FORWARD.
+    (input p-cli-code as integer, input p-cli-type as character)  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD EdoTypeName d-utd 
 FUNCTION EdoTypeName RETURNS CHARACTER
-  ( input p-stsTH as integer )  FORWARD.
+    ( input p-stsTH as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusEDIName d-utd 
 FUNCTION StatusEDIName RETURNS CHARACTER
-  ( input p-stsEDI as integer )  FORWARD.
+    ( input p-stsEDI as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName d-utd 
 FUNCTION StatusTHName RETURNS CHARACTER
-  ( input p-stsTH as integer )  FORWARD.
+    ( input p-stsTH as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName d-utd 
+FUNCTION checkmark RETURNS logical
+    ( input idb-num as integer,
+      input idoc-id as integer )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -211,226 +218,226 @@ FUNCTION StatusTHName RETURNS CHARACTER
 
 /* Menu Definitions                                                     */
 DEFINE MENU POPUP-MENU-b-print 
-  MENU-ITEM m_akt          LABEL "Акт приема-передачи".
+    MENU-ITEM m_akt          LABEL "Акт приема-передачи".
 
 DEFINE MENU POPUP-MENU-b-servis 
-  MENU-ITEM m___Token      LABEL "Отключить запрос Token"
-  MENU-ITEM m_nakl         LABEL "Формирование накладной"
-  MENU-ITEM m_recheck      LABEL "Повторно проверить"
-  MENU-ITEM m_oneUtd       LABEL "Получение данных из Диадок".
+    MENU-ITEM m___Token      LABEL "Отключить запрос Token"
+    MENU-ITEM m_nakl         LABEL "Формирование накладной"
+    MENU-ITEM m_recheck      LABEL "Повторно проверить"
+    MENU-ITEM m_oneUtd       LABEL "Получение данных из Диадок".
 
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-add 
-  LABEL "&Добавить":L 
-  SIZE 10 BY 1.
+    LABEL "&Добавить":L 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-choose-sertif 
-  LABEL "Выбор" 
-  SIZE 10 BY 1.
+    LABEL "Выбор" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-del 
-  LABEL "&Удалить":L 
-  SIZE 10 BY 1.
+    LABEL "&Удалить":L 
+    SIZE 10 BY 1.
      
 DEFINE BUTTON b-pack 
-  LABEL "Пакет":L 
-  SIZE 10 BY 1.
+    LABEL "Пакет":L 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
-  LABEL "&Выход ":L 
-  SIZE 10 BY 1.
+    LABEL "&Выход ":L 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-hist 
-  IMAGE-UP FILE "cmp/b-hist.bmp":U
-  IMAGE-DOWN FILE "cmp/b-hist.bmp":U
-  IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
-  LABEL "Ис&тория" 
-  SIZE 3 BY 1.
+    IMAGE-UP FILE "cmp/b-hist.bmp":U
+    IMAGE-DOWN FILE "cmp/b-hist.bmp":U
+    IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
+    LABEL "Ис&тория" 
+    SIZE 3 BY 1.
 
 DEFINE BUTTON b-mark 
-  LABEL "&*" 
-  SIZE 3 BY 1.
+    LABEL "&*" 
+    SIZE 3 BY 1.
 
 DEFINE BUTTON b-print 
-  IMAGE-UP FILE "cmp/b-print.bmp":U
-  IMAGE-DOWN FILE "cmp/b-print.bmp":U
-  IMAGE-INSENSITIVE FILE "cmp/b-print.bmp":U NO-CONVERT-3D-COLORS
-  LABEL "Печать" 
-  SIZE 3 BY 1.
+    IMAGE-UP FILE "cmp/b-print.bmp":U
+    IMAGE-DOWN FILE "cmp/b-print.bmp":U
+    IMAGE-INSENSITIVE FILE "cmp/b-print.bmp":U NO-CONVERT-3D-COLORS
+    LABEL "Печать" 
+    SIZE 3 BY 1.
 
 DEFINE BUTTON B-refresh 
-  LABEL "Обновить" 
-  SIZE 10 BY 1.
+    LABEL "Обновить" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-sel AUTO-GO 
-  LABEL "&Выбор":L 
-  SIZE 10 BY 1.
+    LABEL "&Выбор":L 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-servis 
-  LABEL "Сервис" 
-  SIZE 10 BY 1.
+    LABEL "Сервис" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-update 
-  LABEL "&Изменить":L 
-  SIZE 10 BY 1.
+    LABEL "&Изменить":L 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-utd 
-  LABEL "&Просмотр":L 
-  SIZE 10 BY 1.
+    LABEL "&Просмотр":L 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON B-write-cancel 
-  LABEL "Отказать в подписи" 
-  SIZE 27 BY 1.13.
+    LABEL "Отказать в подписи" 
+    SIZE 27 BY 1.13.
 
 DEFINE BUTTON B-write-sertif 
-  LABEL "Подписать" 
-  SIZE 27 BY 1.13.
+    LABEL "Подписать" 
+    SIZE 27 BY 1.13.
 
 DEFINE BUTTON B-write-Token 
-  LABEL "Получить Token" 
-  SIZE 27 BY 1.13.
+    LABEL "Получить Token" 
+    SIZE 27 BY 1.13.
 
 DEFINE BUTTON bt-not-sel-all 
-  LABEL "+" 
-  SIZE 3 BY 1 TOOLTIP "Выбрать все".
+    LABEL "+" 
+    SIZE 3 BY 1 TOOLTIP "Выбрать все".
 
 DEFINE BUTTON bt-not-sel-desel-all 
-  LABEL "-" 
-  SIZE 3 BY 1 TOOLTIP "Отменить выбор".
+    LABEL "-" 
+    SIZE 3 BY 1 TOOLTIP "Отменить выбор".
 
 DEFINE BUTTON bt-sel-obj 
-  IMAGE-UP FILE "btn-down-arrow":U
-  IMAGE-DOWN FILE "btn-down-arrow":U
-  IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-  LABEL "..." 
-  SIZE 3.5 BY 1.04.
+    IMAGE-UP FILE "btn-down-arrow":U
+    IMAGE-DOWN FILE "btn-down-arrow":U
+    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+    LABEL "..." 
+    SIZE 3.5 BY 1.04.
 
 DEFINE BUTTON b_anul 
-  LABEL "Аннуляция" 
-  SIZE 27 BY 1.13.
+    LABEL "Аннуляция" 
+    SIZE 27 BY 1.13.
 
 DEFINE BUTTON b_recEDI 
-  LABEL "Получить данные ЭДО" 
-  SIZE 27 BY 1.13.
+    LABEL "Получить данные ЭДО" 
+    SIZE 27 BY 1.13.
 
 DEFINE VARIABLE c-status         AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
-  LABEL "Статус ТН" 
-  VIEW-AS COMBO-BOX INNER-LINES 5
-  LIST-ITEM-PAIRS "Все","0",
-  "Получен от поставщика","2",
-  "Требует корректировки","3",
-  "Ожидает поставки","4",
-  "Требует подписания","5"
-  DROP-DOWN-LIST
-  SIZE 55.5 BY 1 NO-UNDO.
+    LABEL "Статус ТН" 
+    VIEW-AS COMBO-BOX INNER-LINES 5
+    LIST-ITEM-PAIRS "Все","0",
+    "Получен от поставщика","2",
+    "Требует корректировки","3",
+    "Ожидает поставки","4",
+    "Требует подписания","5"
+    DROP-DOWN-LIST
+    SIZE 55.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE c-status-edi     AS INTEGER   FORMAT "-999":U INITIAL 0 
-  LABEL "Статус EDI" 
-  VIEW-AS COMBO-BOX INNER-LINES 5
-  LIST-ITEM-PAIRS "Все",1,
-  "Получен от поставщика",2,
-  "Требует корректировки",3,
-  "Ожидает поставки",4,
-  "Требует подписания",5
-  DROP-DOWN-LIST
-  SIZE 55.5 BY 1 NO-UNDO.
+    LABEL "Статус EDI" 
+    VIEW-AS COMBO-BOX INNER-LINES 5
+    LIST-ITEM-PAIRS "Все",1,
+    "Получен от поставщика",2,
+    "Требует корректировки",3,
+    "Ожидает поставки",4,
+    "Требует подписания",5
+    DROP-DOWN-LIST
+    SIZE 55.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE c-type           AS INTEGER   FORMAT "-999":U INITIAL 0 
-  LABEL "Тип" 
-  VIEW-AS COMBO-BOX INNER-LINES 5
-  LIST-ITEM-PAIRS "Все",0,
-  "Получен от поставщика",2,
-  "Требует корректировки",3,
-  "Ожидает поставки",4,
-  "Требует подписания",5
-  DROP-DOWN-LIST
-  SIZE 55.5 BY 1 NO-UNDO.
+    LABEL "Тип" 
+    VIEW-AS COMBO-BOX INNER-LINES 5
+    LIST-ITEM-PAIRS "Все",0,
+    "Получен от поставщика",2,
+    "Требует корректировки",3,
+    "Ожидает поставки",4,
+    "Требует подписания",5
+    DROP-DOWN-LIST
+    SIZE 55.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE F-date-from      AS DATE      FORMAT "99/99/9999":U 
-  VIEW-AS FILL-IN 
-  SIZE 10.88 BY 1 NO-UNDO.
+    VIEW-AS FILL-IN 
+    SIZE 10.88 BY 1 NO-UNDO.
 
 DEFINE VARIABLE F-date-to        AS DATE      FORMAT "99/99/9999":U 
-  LABEL "За период с" 
-  VIEW-AS FILL-IN 
-  SIZE 10.88 BY 1 NO-UNDO.
+    LABEL "За период с" 
+    VIEW-AS FILL-IN 
+    SIZE 10.88 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-DocumentNumber AS CHARACTER FORMAT "X(256)":U 
-  LABEL "Номер документа" 
-  VIEW-AS FILL-IN 
-  SIZE 28 BY 1 NO-UNDO.
+    LABEL "Номер документа" 
+    VIEW-AS FILL-IN 
+    SIZE 28 BY 1 NO-UNDO.
 
 DEFINE VARIABLE F-sertif         AS CHARACTER FORMAT "X(256)":U 
-  LABEL "Сертификат" 
-  VIEW-AS FILL-IN 
-  SIZE 41.13 BY 1
-  BGCOLOR 15 NO-UNDO.
+    LABEL "Сертификат" 
+    VIEW-AS FILL-IN 
+    SIZE 41.13 BY 1
+    BGCOLOR 15 NO-UNDO.
 
 DEFINE VARIABLE F-timeToken      AS Character FORMAT "X(256)":U INITIAL ? 
-  VIEW-AS FILL-IN 
-  SIZE 20 BY 1 NO-UNDO.
+    VIEW-AS FILL-IN 
+    SIZE 20 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mark-num         AS INTEGER   FORMAT "->>>9":U INITIAL 0 
-  VIEW-AS TEXT 
-  SIZE 4 BY 1
-  FGCOLOR 7 NO-UNDO.
+    VIEW-AS TEXT 
+    SIZE 4 BY 1
+    FGCOLOR 7 NO-UNDO.
 
 DEFINE VARIABLE obj-list         AS CHARACTER FORMAT "X(256)":U 
-  VIEW-AS FILL-IN 
-  SIZE 18.38 BY 1 NO-UNDO.
+    VIEW-AS FILL-IN 
+    SIZE 18.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE R-obj            AS INTEGER 
-  VIEW-AS RADIO-SET HORIZONTAL
-  RADIO-BUTTONS 
-  "Все", 1,
-  "Выборочно", 2
-  SIZE 18.5 BY 1 NO-UNDO.
+    VIEW-AS RADIO-SET HORIZONTAL
+    RADIO-BUTTONS 
+    "Все", 1,
+    "Выборочно", 2
+    SIZE 18.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE RADIO-SET-1      AS INTEGER 
-  VIEW-AS RADIO-SET HORIZONTAL
-  RADIO-BUTTONS 
-  "Все", 0,
-  "В работе", 2,
-  "Требуется корректировка", 1
-  SIZE 52.5 BY 1.25 NO-UNDO.
+    VIEW-AS RADIO-SET HORIZONTAL
+    RADIO-BUTTONS 
+    "Все", 0,
+    "В работе", 2,
+    "Требуется корректировка", 1
+    SIZE 52.5 BY 1.25 NO-UNDO.
 
 DEFINE VARIABLE RADIO-SET-2      AS INTEGER 
-  VIEW-AS RADIO-SET HORIZONTAL
-  RADIO-BUTTONS 
-  "Все", 0,
-  "Требуется подпись", 1,
-  "Подписано", 2
-  SIZE 47 BY 1.25 NO-UNDO.
+    VIEW-AS RADIO-SET HORIZONTAL
+    RADIO-BUTTONS 
+    "Все", 0,
+    "Требуется подпись", 1,
+    "Подписано", 2
+    SIZE 47 BY 1.25 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY br-utd FOR 
-  X_utd SCROLLING.
+    X_utd SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-utd d-utd _STRUCTURED
-  QUERY br-utd NO-LOCK DISPLAY
-  mark-string( input recid(X_utd), input v-rid-list) column-label "*" format "X(1)":U
-  X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(60)":U width 15
-  X_utd.EDoTypeName COLUMN-LABEL "Тип" FORMAT "X(30)":U width 10
-  X_utd.DocumentDate COLUMN-LABEL "Дата док-та" FORMAT "99/99/9999":U
-  X_utd.obj-name COLUMN-LABEL "Объект" FORMAT "X(30)":U width 7
-  X_utd.cli-code COLUMN-LABEL "Код! пост-ка" FORMAT ">>>>9999999":U
-  X_utd.cli-name COLUMN-LABEL "Название!поставщика" FORMAT "X(30)":U width 19
-  X_utd.total COLUMN-LABEL "Сумма" FORMAT "->>>>>>>>>>99.99":U width 9
-  X_utd.vat COLUMN-LABEL "Сумма! НДС" FORMAT "->>>>>>>>>>99.99":U width 9
-  X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(40)":U width 16
-  X_utd.stts-edi COLUMN-LABEL "Статус EDI" FORMAT "X(40)":U width 16
-  (if X_utd.AmendmentRequested then "+":U else "") format "X(1)":U LABEL "И"
-  X_utd.ModifyTime_ column-label "Время!послед.!измен." format "X(7)":U
-  X_utd.doc-code COLUMN-LABEL "Номер!документа ТН" FORMAT "x(15)":U width 15
-  X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 15
-  X_utd.LoadDate COLUMN-LABEL "Дата загр" FORMAT "99/99/9999":U
-  X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(80)":U WIDTH 50
-  X_utd.doc-id COLUMN-LABEL "Внутр.!номер" FORMAT "99999":U
+    QUERY br-utd NO-LOCK DISPLAY
+    mark-string( input recid(X_utd), input v-rid-list) column-label "*" format "X(1)":U
+    X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(60)":U width 15
+    X_utd.EDoTypeName COLUMN-LABEL "Тип" FORMAT "X(30)":U width 10
+    X_utd.DocumentDate COLUMN-LABEL "Дата док-та" FORMAT "99/99/9999":U
+    X_utd.obj-name COLUMN-LABEL "Объект" FORMAT "X(30)":U width 7
+    X_utd.cli-code COLUMN-LABEL "Код! пост-ка" FORMAT ">>>>9999999":U
+    X_utd.cli-name COLUMN-LABEL "Название!поставщика" FORMAT "X(30)":U width 19
+    X_utd.total COLUMN-LABEL "Сумма" FORMAT "->>>>>>>>>>99.99":U width 9
+    X_utd.vat COLUMN-LABEL "Сумма! НДС" FORMAT "->>>>>>>>>>99.99":U width 9
+    X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(40)":U width 16
+    X_utd.stts-edi COLUMN-LABEL "Статус EDI" FORMAT "X(40)":U width 16
+    (if X_utd.AmendmentRequested then "+":U else "") format "X(1)":U LABEL "И"
+    X_utd.ModifyTime_ column-label "Время!послед.!измен." format "X(7)":U
+    X_utd.doc-code COLUMN-LABEL "Номер!документа ТН" FORMAT "x(15)":U width 15
+    X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 15
+    X_utd.LoadDate COLUMN-LABEL "Дата загр" FORMAT "99/99/9999":U
+    X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(80)":U WIDTH 50
+    X_utd.doc-id COLUMN-LABEL "Внутр.!номер" FORMAT "99999":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 17.63 FIT-LAST-COLUMN.
@@ -439,51 +446,51 @@ DEFINE BROWSE br-utd
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-utd
-  b-exit AT ROW 1 COL 1.5
-  b-update AT ROW 1 COL 11.5 WIDGET-ID 222
-  b-sel AT ROW 1 COL 11.5 WIDGET-ID 222
-  b-utd AT ROW 1 COL 21.5 WIDGET-ID 230
-  b-add AT ROW 1 COL 31.5 WIDGET-ID 266
-  b-del AT ROW 1 COL 41.5 WIDGET-ID 280
-  b-pack AT ROW 1 COL 51.5 WIDGET-ID 284
-  B-refresh AT ROW 1 COL 106 WIDGET-ID 286
-  b-servis AT ROW 1 COL 116 WIDGET-ID 288
-  b-print AT ROW 1 COL 126.13 WIDGET-ID 62
-  b-hist AT ROW 1 COL 129 WIDGET-ID 64
-  F-date-to AT ROW 2.29 COL 13.5 COLON-ALIGNED WIDGET-ID 238
-  F-date-from AT ROW 2.29 COL 28 COLON-ALIGNED NO-LABEL WIDGET-ID 36
-  F-sertif AT ROW 2.29 COL 78.5 COLON-ALIGNED WIDGET-ID 232 NO-TAB-STOP 
-  b-choose-sertif AT ROW 2.29 COL 121.88 WIDGET-ID 234
-  obj-list AT ROW 3.5 COL 47.38 RIGHT-ALIGNED NO-LABEL WIDGET-ID 30
-  bt-sel-obj AT ROW 3.5 COL 48.38 WIDGET-ID 28
-  f-DocumentNumber AT ROW 3.5 COL 120.5 RIGHT-ALIGNED WIDGET-ID 276
-  R-obj AT ROW 3.54 COL 11.5 NO-LABEL WIDGET-ID 290
-  RADIO-SET-1 AT ROW 4.75 COL 2.5 NO-LABEL WIDGET-ID 250
-  c-status AT ROW 5.08 COL 74.5 COLON-ALIGNED WIDGET-ID 228
-  RADIO-SET-2 AT ROW 5.88 COL 2.5 NO-LABEL WIDGET-ID 282
-  c-status-edi AT ROW 6.13 COL 74.5 COLON-ALIGNED WIDGET-ID 248
-  c-type AT ROW 7.17 COL 74.5 COLON-ALIGNED WIDGET-ID 278
-  bt-not-sel-all AT ROW 7.21 COL 5.5 WIDGET-ID 10 NO-TAB-STOP 
-  bt-not-sel-desel-all AT ROW 7.21 COL 8.5 WIDGET-ID 12 NO-TAB-STOP 
-  b-mark AT ROW 7.21 COL 11.5 WIDGET-ID 4 NO-TAB-STOP 
-  br-utd AT ROW 8.21 COL 1.5
-  B-write-sertif AT ROW 26.38 COL 4 WIDGET-ID 236
-  B-write-cancel AT ROW 26.38 COL 36.25 WIDGET-ID 70
-  b_anul AT ROW 26.38 COL 68.75 WIDGET-ID 246
-  b_recEDI AT ROW 26.38 COL 101.63 WIDGET-ID 254
-  B-write-Token AT ROW 27.67 COL 4 WIDGET-ID 240
-  F-timeToken AT ROW 27.67 COL 128 RIGHT-ALIGNED NO-LABEL WIDGET-ID 294
-  mark-num AT ROW 7.21 COL 1.5 NO-LABEL WIDGET-ID 8
-  "Время Token:" VIEW-AS TEXT
-  SIZE 12.5 BY .75 AT ROW 27.75 COL 96.5 WIDGET-ID 298
-  "по" VIEW-AS TEXT
-  SIZE 2.5 BY .67 AT ROW 2.46 COL 27 WIDGET-ID 38
-  "Объекты:" VIEW-AS TEXT
-  SIZE 8 BY .67 AT ROW 3.71 COL 2.63 WIDGET-ID 296
-  SPACE(121.87) SKIP(24.65)
-  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-  TITLE "Список УПД":L.
+    b-exit AT ROW 1 COL 1.5
+    b-update AT ROW 1 COL 11.5 WIDGET-ID 222
+    b-sel AT ROW 1 COL 11.5 WIDGET-ID 222
+    b-utd AT ROW 1 COL 21.5 WIDGET-ID 230
+    b-add AT ROW 1 COL 31.5 WIDGET-ID 266
+    b-del AT ROW 1 COL 41.5 WIDGET-ID 280
+    b-pack AT ROW 1 COL 51.5 WIDGET-ID 284
+    B-refresh AT ROW 1 COL 106 WIDGET-ID 286
+    b-servis AT ROW 1 COL 116 WIDGET-ID 288
+    b-print AT ROW 1 COL 126.13 WIDGET-ID 62
+    b-hist AT ROW 1 COL 129 WIDGET-ID 64
+    F-date-to AT ROW 2.29 COL 13.5 COLON-ALIGNED WIDGET-ID 238
+    F-date-from AT ROW 2.29 COL 28 COLON-ALIGNED NO-LABEL WIDGET-ID 36
+    F-sertif AT ROW 2.29 COL 78.5 COLON-ALIGNED WIDGET-ID 232 NO-TAB-STOP 
+    b-choose-sertif AT ROW 2.29 COL 121.88 WIDGET-ID 234
+    obj-list AT ROW 3.5 COL 47.38 RIGHT-ALIGNED NO-LABEL WIDGET-ID 30
+    bt-sel-obj AT ROW 3.5 COL 48.38 WIDGET-ID 28
+    f-DocumentNumber AT ROW 3.5 COL 120.5 RIGHT-ALIGNED WIDGET-ID 276
+    R-obj AT ROW 3.54 COL 11.5 NO-LABEL WIDGET-ID 290
+    RADIO-SET-1 AT ROW 4.75 COL 2.5 NO-LABEL WIDGET-ID 250
+    c-status AT ROW 5.08 COL 74.5 COLON-ALIGNED WIDGET-ID 228
+    RADIO-SET-2 AT ROW 5.88 COL 2.5 NO-LABEL WIDGET-ID 282
+    c-status-edi AT ROW 6.13 COL 74.5 COLON-ALIGNED WIDGET-ID 248
+    c-type AT ROW 7.17 COL 74.5 COLON-ALIGNED WIDGET-ID 278
+    bt-not-sel-all AT ROW 7.21 COL 5.5 WIDGET-ID 10 NO-TAB-STOP 
+    bt-not-sel-desel-all AT ROW 7.21 COL 8.5 WIDGET-ID 12 NO-TAB-STOP 
+    b-mark AT ROW 7.21 COL 11.5 WIDGET-ID 4 NO-TAB-STOP 
+    br-utd AT ROW 8.21 COL 1.5
+    B-write-sertif AT ROW 26.38 COL 4 WIDGET-ID 236
+    B-write-cancel AT ROW 26.38 COL 36.25 WIDGET-ID 70
+    b_anul AT ROW 26.38 COL 68.75 WIDGET-ID 246
+    b_recEDI AT ROW 26.38 COL 101.63 WIDGET-ID 254
+    B-write-Token AT ROW 27.67 COL 4 WIDGET-ID 240
+    F-timeToken AT ROW 27.67 COL 128 RIGHT-ALIGNED NO-LABEL WIDGET-ID 294
+    mark-num AT ROW 7.21 COL 1.5 NO-LABEL WIDGET-ID 8
+    "Время Token:" VIEW-AS TEXT
+    SIZE 12.5 BY .75 AT ROW 27.75 COL 96.5 WIDGET-ID 298
+    "по" VIEW-AS TEXT
+    SIZE 2.5 BY .67 AT ROW 2.46 COL 27 WIDGET-ID 38
+    "Объекты:" VIEW-AS TEXT
+    SIZE 8 BY .67 AT ROW 3.71 COL 2.63 WIDGET-ID 296
+    SPACE(121.87) SKIP(24.65)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+    TITLE "Список УПД":L.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -506,18 +513,18 @@ DEFINE FRAME d-utd
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-utd b-mark d-utd */
 ASSIGN 
-  FRAME d-utd:SCROLLABLE = FALSE.
+    FRAME d-utd:SCROLLABLE = FALSE.
 
 ASSIGN 
-  b-print:POPUP-MENU IN FRAME d-utd = MENU POPUP-MENU-b-print:HANDLE.
+    b-print:POPUP-MENU IN FRAME d-utd = MENU POPUP-MENU-b-print:HANDLE.
 ASSIGN 
-  b-print:MENU-MOUSE = 1.
+    b-print:MENU-MOUSE = 1.
 ASSIGN 
-  b-servis:POPUP-MENU IN FRAME d-utd = MENU POPUP-MENU-b-servis:HANDLE.
+    b-servis:POPUP-MENU IN FRAME d-utd = MENU POPUP-MENU-b-servis:HANDLE.
 ASSIGN 
-  b-servis:MENU-MOUSE = 1.
+    b-servis:MENU-MOUSE = 1.
 ASSIGN 
-  br-utd:COLUMN-RESIZABLE IN FRAME d-utd = TRUE.
+    br-utd:COLUMN-RESIZABLE IN FRAME d-utd = TRUE.
 
 /* SETTINGS FOR BUTTON bt-not-sel-all IN FRAME d-utd
    NO-ENABLE                                                            */
@@ -577,9 +584,9 @@ ASSIGN
 &Scoped-define SELF-NAME d-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL d-utd d-utd
 ON GO OF FRAME d-utd /* Список УПД */
-  DO:
-  /*    p-rid-list = v-rid-list.*/
-  END.
+    DO:
+    /*    p-rid-list = v-rid-list.*/
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -588,11 +595,11 @@ ON GO OF FRAME d-utd /* Список УПД */
 &Scoped-define SELF-NAME b-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add d-utd
 ON choose OF b-add IN FRAME d-utd /* Добавить */
-  DO:
-    define variable Log-Res as logical no-undo.
+    DO:
+        define variable Log-Res as logical no-undo.
 
-    /*Проверка прав */
-    { gbl/chk-actg.i
+        /*Проверка прав */
+        { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -607,22 +614,22 @@ ON choose OF b-add IN FRAME d-utd /* Добавить */
   true
   log-res
 }
-    if log-res then 
-    do:
-      subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
-      MySeqUtd = ?.
-      run str/upd_browse.w (input parparentproc,
-        input ?,
-        input ?,
-        input 2,
-        input {&add-def},
-        input mDiadocConnection
-        ) no-error.
-      run init-sort .
-      unsubscribe "getNextseq".
-      {&OPEN-QUERY-br-utd}
-    end.      
-  END.
+        if log-res then 
+        do:
+            subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
+            MySeqUtd = ?.
+            run str/upd_browse.w (input parparentproc,
+                input ?,
+                input ?,
+                input 2,
+                input {&add-def},
+                input mDiadocConnection
+                ) no-error.
+            run init-sort .
+            unsubscribe "getNextseq".
+            {&OPEN-QUERY-br-utd}
+        end.      
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -631,167 +638,167 @@ ON choose OF b-add IN FRAME d-utd /* Добавить */
 &Scoped-define SELF-NAME b-choose-sertif
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choose-sertif d-utd
 ON CHOOSE OF b-choose-sertif IN FRAME d-utd /* Выбор */
-  DO:
-    /*Задаем параметры подлючения к серверу*/
-    /*Получение списка сертификатов*/
-    run str/sertif.w (input parparentproc,
-      output v-sertif_num
-      ) no-error .
-    if v-sertif_num <> "" then 
-    do:
-      run proc-sertif (yes).
-    end.
-    run enable_BUTTON .
+    DO:
+        /*Задаем параметры подлючения к серверу*/
+        /*Получение списка сертификатов*/
+        run str/sertif.w (input parparentproc,
+            output v-sertif_num
+            ) no-error .
+        if v-sertif_num <> "" then 
+        do:
+            run proc-sertif (yes).
+        end.
+        run enable_BUTTON .
 
-    F-sertif = v-sertif_num .
-    if f-sertif <> "" then 
-    do:
-      enable       B-write-Token with frame {&frame-name} .
-    end.
-    else 
-    do:
-      disable       B-write-Token with frame {&frame-name} .
-    end.  
-    display
-      F-sertif
-      with frame {&frame-name} .  
-  /*Подключение по сертификату*/
+        F-sertif = v-sertif_num .
+        if f-sertif <> "" then 
+        do:
+            enable       B-write-Token with frame {&frame-name} .
+        end.
+        else 
+        do:
+            disable       B-write-Token with frame {&frame-name} .
+        end.  
+        display
+            F-sertif
+            with frame {&frame-name} .  
+    /*Подключение по сертификату*/
 
-  END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON ROW-DISPLAY OF br-utd IN FRAME d-utd
-  DO:
-    if AVAILABLE (X_utd) then 
-    do:      
-      /*    if X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:HaveToCreateReceipt:KeyIntDB or      */
-      /*       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:RequestsMyRevocation:KeyIntDB or     */
-      /*       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:WaitingForRecipientSignature:KeyIntDB*/
-      /*    then do:                                                                       */
-      /*          X_utd.DocumentNumber:fGCOLOR in browse br-utd = CYAN_COLOR.              */
-      /*          X_utd.EDoTypeName:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
-      /*          X_utd.DocumentDate:fGCOLOR in browse br-utd = CYAN_COLOR.                */
-      /*          X_utd.cli-code:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
-      /*          X_utd.cli-name:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
-      /*          X_utd.total:fGCOLOR in browse br-utd = CYAN_COLOR.                       */
-      /*          X_utd.vat:fGCOLOR in browse br-utd = CYAN_COLOR.                         */
-      /*          X_utd.stts:fGCOLOR in browse br-utd = CYAN_COLOR.                        */
-      /*          X_utd.stts-edi:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
-      /*          X_utd.ModifyTime_:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
-      /*          X_utd.doc-code:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
-      /*          X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.                   */
-      /*          X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
-      /*          X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
-      /*          X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.                      */
-      /*    end.                                                                           */
-      if X_utd.GrayZone then 
-      do:
-        X_utd.DocumentNumber:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.EDoTypeName:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.DocumentDate:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.cli-code:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.cli-name:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.total:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.vat:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.stts:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.stts-edi:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.ModifyTime_:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.doc-code:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.orig-code:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.LoadDate:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.DocumentExt:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.doc-id:bGCOLOR in browse br-utd = GRAY_COLOR.
-        X_utd.obj-name:bGCOLOR in browse br-utd = GRAY_COLOR.        
-      end.  
-      if X_utd.edoctype = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
-      do:
-        case X_utd.sts:
-          when ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or
-          when ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or
-          when ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
-          when ObjSrv:Env:Utd:Sts:TH:edocError:KeyIntDB then
+    DO:
+        if AVAILABLE (X_utd) then 
+        do:      
+            /*    if X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:HaveToCreateReceipt:KeyIntDB or      */
+            /*       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:RequestsMyRevocation:KeyIntDB or     */
+            /*       X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:WaitingForRecipientSignature:KeyIntDB*/
+            /*    then do:                                                                       */
+            /*          X_utd.DocumentNumber:fGCOLOR in browse br-utd = CYAN_COLOR.              */
+            /*          X_utd.EDoTypeName:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
+            /*          X_utd.DocumentDate:fGCOLOR in browse br-utd = CYAN_COLOR.                */
+            /*          X_utd.cli-code:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+            /*          X_utd.cli-name:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+            /*          X_utd.total:fGCOLOR in browse br-utd = CYAN_COLOR.                       */
+            /*          X_utd.vat:fGCOLOR in browse br-utd = CYAN_COLOR.                         */
+            /*          X_utd.stts:fGCOLOR in browse br-utd = CYAN_COLOR.                        */
+            /*          X_utd.stts-edi:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+            /*          X_utd.ModifyTime_:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
+            /*          X_utd.doc-code:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+            /*          X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.                   */
+            /*          X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.                    */
+            /*          X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.                 */
+            /*          X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.                      */
+            /*    end.                                                                           */
+            if X_utd.GrayZone then 
             do:
-              X_utd.DocumentNumber:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.EDoTypeName:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.DocumentDate:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.cli-code:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.cli-name:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.total:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.vat:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.stts:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.stts-edi:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.ModifyTime_:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.doc-code:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.orig-code:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.LoadDate:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.DocumentExt:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.doc-id:fGCOLOR in browse br-utd = RED_COLOR.
-              X_utd.obj-name:fGCOLOR in browse br-utd = RED_COLOR.
+                X_utd.DocumentNumber:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.EDoTypeName:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.DocumentDate:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.cli-code:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.cli-name:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.total:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.vat:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.stts:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.stts-edi:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.ModifyTime_:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.doc-code:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.orig-code:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.LoadDate:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.DocumentExt:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.doc-id:bGCOLOR in browse br-utd = GRAY_COLOR.
+                X_utd.obj-name:bGCOLOR in browse br-utd = GRAY_COLOR.        
+            end.  
+            if X_utd.edoctype = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
+            do:
+                case X_utd.sts:
+                    when ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or
+                    when ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or
+                    when ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+                    when ObjSrv:Env:Utd:Sts:TH:edocError:KeyIntDB then
+                        do:
+                            X_utd.DocumentNumber:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.EDoTypeName:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.DocumentDate:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.cli-code:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.cli-name:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.total:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.vat:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.stts:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.stts-edi:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.ModifyTime_:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.doc-code:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.orig-code:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.LoadDate:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.DocumentExt:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.doc-id:fGCOLOR in browse br-utd = RED_COLOR.
+                            X_utd.obj-name:fGCOLOR in browse br-utd = RED_COLOR.
+                        end.
+                    when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB or
+                    when ObjSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB
+                    then 
+                        do:
+                            X_utd.DocumentNumber:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.EDoTypeName:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.DocumentDate:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.cli-code:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.cli-name:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.total:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.vat:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.stts:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.stts-edi:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.ModifyTime_:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.doc-code:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            X_utd.obj-name:fGCOLOR in browse br-utd = CYAN_COLOR.        
+                        end.               
+                    when ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB
+                    then
+                        do:
+                            X_utd.DocumentNumber:fGCOLOR in browse br-utd = 13.
+                            X_utd.EDoTypeName:fGCOLOR in browse br-utd = 13.
+                            X_utd.DocumentDate:fGCOLOR in browse br-utd = 13.
+                            X_utd.cli-code:fGCOLOR in browse br-utd = 13.
+                            X_utd.cli-name:fGCOLOR in browse br-utd = 13.
+                            X_utd.total:fGCOLOR in browse br-utd = 13.
+                            X_utd.vat:fGCOLOR in browse br-utd = 13.
+                            X_utd.stts:fGCOLOR in browse br-utd = 13.
+                            X_utd.stts-edi:fGCOLOR in browse br-utd = 13.
+                            X_utd.ModifyTime_:fGCOLOR in browse br-utd = 13.
+                            X_utd.doc-code:fGCOLOR in browse br-utd = 13.
+                            X_utd.orig-code:fGCOLOR in browse br-utd = 13.
+                            X_utd.LoadDate:fGCOLOR in browse br-utd = 13.
+                            X_utd.DocumentExt:fGCOLOR in browse br-utd = 13.
+                            X_utd.doc-id:fGCOLOR in browse br-utd = 13.
+                            X_utd.obj-name:fGCOLOR in browse br-utd = 13.
+                        end.        
+                end.
             end.
-          when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB or
-          when ObjSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB
-          then 
-            do:
-              X_utd.DocumentNumber:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.EDoTypeName:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.DocumentDate:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.cli-code:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.cli-name:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.total:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.vat:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.stts:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.stts-edi:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.ModifyTime_:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.doc-code:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.
-              X_utd.obj-name:fGCOLOR in browse br-utd = CYAN_COLOR.        
-            end.               
-          when ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB
-          then
-            do:
-              X_utd.DocumentNumber:fGCOLOR in browse br-utd = 13.
-              X_utd.EDoTypeName:fGCOLOR in browse br-utd = 13.
-              X_utd.DocumentDate:fGCOLOR in browse br-utd = 13.
-              X_utd.cli-code:fGCOLOR in browse br-utd = 13.
-              X_utd.cli-name:fGCOLOR in browse br-utd = 13.
-              X_utd.total:fGCOLOR in browse br-utd = 13.
-              X_utd.vat:fGCOLOR in browse br-utd = 13.
-              X_utd.stts:fGCOLOR in browse br-utd = 13.
-              X_utd.stts-edi:fGCOLOR in browse br-utd = 13.
-              X_utd.ModifyTime_:fGCOLOR in browse br-utd = 13.
-              X_utd.doc-code:fGCOLOR in browse br-utd = 13.
-              X_utd.orig-code:fGCOLOR in browse br-utd = 13.
-              X_utd.LoadDate:fGCOLOR in browse br-utd = 13.
-              X_utd.DocumentExt:fGCOLOR in browse br-utd = 13.
-              X_utd.doc-id:fGCOLOR in browse br-utd = 13.
-              X_utd.obj-name:fGCOLOR in browse br-utd = 13.
-            end.        
         end.
-      end.
-    end.
-  end. 
+    end. 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME         
       
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del d-utd
 ON choose OF b-del IN FRAME d-utd /* Удалить */
-  DO:
-    define buffer bf_utd               for ub.utd .
-    define buffer bf_utd-lines         for ub.utd-lines .
-    define buffer bf_utd-marking-lines for ub.utd-marking-lines .
-    define buffer bf_marking           for ub.marking .
-    define variable Log-Res as logical no-undo.
-    if AVAILABLE (X_utd) then 
-    do:
-      /*Проверка прав */
-      { gbl/chk-actg.i
+    DO:
+        define buffer bf_utd               for ub.utd .
+        define buffer bf_utd-lines         for ub.utd-lines .
+        define buffer bf_utd-marking-lines for ub.utd-marking-lines .
+        define buffer bf_marking           for ub.marking .
+        define variable Log-Res as logical no-undo.
+        if AVAILABLE (X_utd) then 
+        do:
+            /*Проверка прав */
+            { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -806,33 +813,33 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
   true
   log-res
 }
-      if log-res then 
-      do:    
-        if X_utd.sts = 0 then 
-        do:
-          find first bf_utd exclusive-lock where bf_utd.db-num = X_utd.db-num and bf_utd.doc-id = X_utd.doc-id no-error .
-          /*        for each bf_utd-marking-lines where bf_utd-marking-lines.db-num = X_utd.db-num and bf_utd-marking-lines.doc-id = X_utd.doc-id:*/
-          /*          for each bf_marking where bf_marking.mark = bf_utd-marking-lines.mark:                                                      */
-          /*            delete bf_marking .                                                                                                       */
-          /*          end.                                                                                                                        */
-          /*     end.                                                                                                                             */
-          delete bf_utd .
+            if log-res then 
+            do:    
+                if X_utd.sts = 0 then 
+                do:
+                    find first bf_utd exclusive-lock where bf_utd.db-num = X_utd.db-num and bf_utd.doc-id = X_utd.doc-id no-error .
+                    /*        for each bf_utd-marking-lines where bf_utd-marking-lines.db-num = X_utd.db-num and bf_utd-marking-lines.doc-id = X_utd.doc-id:*/
+                    /*          for each bf_marking where bf_marking.mark = bf_utd-marking-lines.mark:                                                      */
+                    /*            delete bf_marking .                                                                                                       */
+                    /*          end.                                                                                                                        */
+                    /*     end.                                                                                                                             */
+                    delete bf_utd .
+                end.
+                else 
+                do:
+                    message "Документ не может быть удален"
+                        view-as alert-box.
+                end.    
+                run init-sort .
+                {&OPEN-QUERY-br-utd}
+            end.   
         end.
         else 
         do:
-          message "Документ не может быть удален"
-            view-as alert-box.
-        end.    
-        run init-sort .
-        {&OPEN-QUERY-br-utd}
-      end.   
-    end.
-    else 
-    do:
-      message "Нет документа для удаления"
-        view-as alert-box.
-    end.     
-  END.
+            message "Нет документа для удаления"
+                view-as alert-box.
+        end.     
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -841,34 +848,34 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-utd
 ON CHOOSE OF b-exit IN FRAME d-utd /* Выход  */
-  DO:
-    if v-current-sort-string <> "" then 
-    do:
-      c-status = string(entry(1,v-current-sort-string,{&delim-key})) .
-      c-status-edi = integer(entry(2,v-current-sort-string,{&delim-key})) . 
-      c-type = integer(entry(3,v-current-sort-string,{&delim-key})) .
-      RADIO-SET-1 = integer(entry(4,v-current-sort-string,{&delim-key})) .
-      RADIO-SET-2 = integer(entry(4,v-current-sort-string,{&delim-key})) .
-    end.  
-    v-current-sort-string =c-status + {&delim-key} + string(c-status-edi) + {&delim-key} + string(c-type) +
-      {&delim-key} + string(RADIO-SET-1) + {&delim-key} + string (RADIO-SET-2).
-    v-current-sertif-string = v-sertif_num.
-    run uf-set(
-      input {&uf-UPD}
-      , input v-cntxt-userid
-      , input v-current-sertif-string
-      , input v-current-sort-string
-      , input no
-      , input no
-      , input no
-      , input no
-      ) no-error.
+    DO:
+        if v-current-sort-string <> "" then 
+        do:
+            c-status = string(entry(1,v-current-sort-string,{&delim-key})) .
+            c-status-edi = integer(entry(2,v-current-sort-string,{&delim-key})) . 
+            c-type = integer(entry(3,v-current-sort-string,{&delim-key})) .
+            RADIO-SET-1 = integer(entry(4,v-current-sort-string,{&delim-key})) .
+            RADIO-SET-2 = integer(entry(4,v-current-sort-string,{&delim-key})) .
+        end.  
+        v-current-sort-string =c-status + {&delim-key} + string(c-status-edi) + {&delim-key} + string(c-type) +
+            {&delim-key} + string(RADIO-SET-1) + {&delim-key} + string (RADIO-SET-2).
+        v-current-sertif-string = v-sertif_num.
+        run uf-set(
+            input {&uf-UPD}
+            , input v-cntxt-userid
+            , input v-current-sertif-string
+            , input v-current-sort-string
+            , input no
+            , input no
+            , input no
+            , input no
+            ) no-error.
    
    
-    assign
-      mflagExit = yes
-      .
-  END.
+        assign
+            mflagExit = yes
+            .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -877,30 +884,30 @@ ON CHOOSE OF b-exit IN FRAME d-utd /* Выход  */
 &Scoped-define SELF-NAME b-hist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist d-utd
 ON choose OF b-hist IN FRAME d-utd /* История */
-  DO:
-    define variable v-rid-list as character no-undo.
-    if available (X_utd) then 
-    do:
-      row_utd = rowid (X_utd) .
-      run ref/cutdhist.w (
-        X_utd.db-num, 
-        X_utd.doc-id,
-        parparentproc,
-        0,
-        "",
-        0,
-        "",
-        "one",
-        ?,
-        "",
-        "" ,
-        v-cntxt-db-num,
-        ?,
-        input-output v-rid-list ) .
-      br-utd:refresh ().
-      reposition br-utd to rowid row_utd.
-    end.
-  END.
+    DO:
+        define variable v-rid-list as character no-undo.
+        if available (X_utd) then 
+        do:
+            row_utd = rowid (X_utd) .
+            run ref/cutdhist.w (
+                X_utd.db-num, 
+                X_utd.doc-id,
+                parparentproc,
+                0,
+                "",
+                0,
+                "",
+                "one",
+                ?,
+                "",
+                "" ,
+                v-cntxt-db-num,
+                ?,
+                input-output v-rid-list ) .
+            br-utd:refresh ().
+            reposition br-utd to rowid row_utd.
+        end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -909,35 +916,35 @@ ON choose OF b-hist IN FRAME d-utd /* История */
 &Scoped-define SELF-NAME b-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-utd
 ON CHOOSE OF b-mark IN FRAME d-utd /* * */
-  DO:
-    define variable loc#log as logical no-undo .
+    DO:
+        define variable loc#log as logical no-undo .
       
-    if available X_utd then 
-    do:
-      { gbl/markstrn.i X_utd v-rid-list }
-      row_utd = rowid(X_utd).
-      loc#log = {&browse-name}:refresh() .
-      reposition br-utd to rowid row_utd.
+        if available X_utd then 
+        do:
+            { gbl/markstrn.i X_utd v-rid-list }
+            row_utd = rowid(X_utd).
+            loc#log = {&browse-name}:refresh() .
+            reposition br-utd to rowid row_utd.
 
-      if last-event:function <> "MOUSE-SELECT-DBLCLICK" then 
-      do:
-        loc#log = {&browse-name}:select-next-row ().
-        apply "VALUE-CHANGED" to {&browse-name} in frame {&frame-name}.
-      end.
-      if num-entries( v-rid-list ) = 0 then 
-      do:
-        hide mark-num in frame {&frame-name}.
-      end.
-      else 
-      do:
-        display
-          num-entries( v-rid-list ) @ mark-num
-          with frame {&frame-name}.
-      end.
-    end.
-    apply "entry" to {&browse-name} in frame {&frame-name}.
+            if last-event:function <> "MOUSE-SELECT-DBLCLICK" then 
+            do:
+                loc#log = {&browse-name}:select-next-row ().
+                apply "VALUE-CHANGED" to {&browse-name} in frame {&frame-name}.
+            end.
+            if num-entries( v-rid-list ) = 0 then 
+            do:
+                hide mark-num in frame {&frame-name}.
+            end.
+            else 
+            do:
+                display
+                    num-entries( v-rid-list ) @ mark-num
+                    with frame {&frame-name}.
+            end.
+        end.
+        apply "entry" to {&browse-name} in frame {&frame-name}.
 
-  END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -946,33 +953,32 @@ ON CHOOSE OF b-mark IN FRAME d-utd /* * */
 &Scoped-define SELF-NAME B-refresh
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-refresh d-utd
 ON CHOOSE OF B-refresh IN FRAME d-utd /* Обновить */
-  DO:
-    f-date-from = date(f-date-from:screen-value) .
-    f-date-to   = date(f-date-to:screen-value) .
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
-    run enable_BUTTON.
-  END.
+    DO:
+        f-date-from = date(f-date-from:screen-value) .
+        f-date-to   = date(f-date-to:screen-value) .
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
+        run enable_BUTTON.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel d-utd
 ON CHOOSE OF b-sel IN FRAME d-utd /* Выбор */
-  DO:
-    define buffer buf_utd for ub.utd .
-    if v-rid-list = "" then 
-    do:
-      if available (X_utd) then 
-      do:
-        find first buf_utd no-lock where buf_utd.doc-id = X_utd.doc-id and buf_utd.db-num = X_utd.db-num no-error .
-        v-rid-list = string(recid(buf_utd)) .
-      end.  
-    end.  
-    p-rid-list = v-rid-list .
-  END.
+    DO:
+        define buffer buf_utd for ub.utd .
+        if v-rid-list = "" then 
+        do:
+            if available (X_utd) then 
+            do:
+                find first buf_utd no-lock where buf_utd.doc-id = X_utd.doc-id and buf_utd.db-num = X_utd.db-num no-error .
+                v-rid-list = string(recid(buf_utd)) .
+            end.  
+        end.  
+        p-rid-list = v-rid-list .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -981,15 +987,15 @@ ON CHOOSE OF b-sel IN FRAME d-utd /* Выбор */
 &Scoped-define SELF-NAME b-update
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-update d-utd
 ON CHOOSE OF b-update IN FRAME d-utd /* Изменить */
-  DO:
-    define var      doc-id   like ub.utd.doc-id no-undo .
-    define var      db-num   like ub.utd.db-num no-undo .
-    define var      EDocType like ub.utd.EDocType no-undo .
-    define variable Log-Res  as logical no-undo.
-    if available (x_utd) then 
-    do:
-      /*Проверка прав */
-      { gbl/chk-actg.i
+    DO:
+        define var      doc-id   like ub.utd.doc-id no-undo .
+        define var      db-num   like ub.utd.db-num no-undo .
+        define var      EDocType like ub.utd.EDocType no-undo .
+        define variable Log-Res  as logical no-undo.
+        if available (x_utd) then 
+        do:
+            /*Проверка прав */
+            { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -1004,52 +1010,52 @@ ON CHOOSE OF b-update IN FRAME d-utd /* Изменить */
   true
   log-res
 }
-      if log-res then 
-      do:  
+            if log-res then 
+            do:  
 
-        row_utd = rowid(X_utd) . 
-        assign
-          doc-id   = x_utd.doc-id
-          db-num   = x_utd.db-num
-          EDocType = x_utd.EDocType
-          .
-        subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
-        MySeqUtd = ?.
-        if v-obj-active or X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or X_utd.EDocType = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
-        do: 
+                row_utd = rowid(X_utd) . 
+                assign
+                    doc-id   = x_utd.doc-id
+                    db-num   = x_utd.db-num
+                    EDocType = x_utd.EDocType
+                    .
+                subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
+                MySeqUtd = ?.
+                if v-obj-active or X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or X_utd.EDocType = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+                do: 
 
-          run str/upd_browse.w (input parparentproc,
-            input x_utd.doc-id,
-            input x_utd.db-num,
-            input x_utd.EDocType,
-            input {&update},
-            input mDiadocConnection
-            )  .
-        end.
-        else 
-        do:
-          run str/upd_browse.w (input parparentproc,
-            input x_utd.doc-id,
-            input x_utd.db-num,
-            input x_utd.EDocType,
-            input {&lookup},
-            input mDiadocConnection
-            )  .
-        end.
-        unsubscribe "getNextseq".  
-      end.
-      else 
-      do: 
-        message "Не выбран УПД"
-          view-as alert-box.  
-        return no-apply .
-      end.
-      run init-id (doc-id, db-num).
-      br-utd:refresh ().
+                    run str/upd_browse.w (input parparentproc,
+                        input x_utd.doc-id,
+                        input x_utd.db-num,
+                        input x_utd.EDocType,
+                        input {&update},
+                        input mDiadocConnection
+                        )  .
+                end.
+                else 
+                do:
+                    run str/upd_browse.w (input parparentproc,
+                        input x_utd.doc-id,
+                        input x_utd.db-num,
+                        input x_utd.EDocType,
+                        input {&lookup},
+                        input mDiadocConnection
+                        )  .
+                end.
+                unsubscribe "getNextseq".  
+            end.
+            else 
+            do: 
+                message "Не выбран УПД"
+                    view-as alert-box.  
+                return no-apply .
+            end.
+            run init-id (doc-id, db-num).
+            br-utd:refresh ().
 
-      reposition br-utd to rowid row_utd.
-    end.  
-  END.
+            reposition br-utd to rowid row_utd.
+        end.  
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1058,12 +1064,12 @@ ON CHOOSE OF b-update IN FRAME d-utd /* Изменить */
 &Scoped-define SELF-NAME b-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-utd d-utd
 ON choose OF b-utd IN FRAME d-utd /* Просмотр */
-  DO:
-    define variable Log-Res as logical no-undo.
-    if available (x_utd) then 
-    do:
-      /*Проверка прав */
-      { gbl/chk-actg.i
+    DO:
+        define variable Log-Res as logical no-undo.
+        if available (x_utd) then 
+        do:
+            /*Проверка прав */
+            { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -1078,33 +1084,33 @@ ON choose OF b-utd IN FRAME d-utd /* Просмотр */
   true
   log-res
 }
-      if log-res then 
-      do:    
+            if log-res then 
+            do:    
 
-        row_utd = rowid (X_utd) .
-        subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
-        MySeqUtd = ?.
+                row_utd = rowid (X_utd) .
+                subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
+                MySeqUtd = ?.
      
-        run str/upd_browse.w (input parparentproc,
-          input x_utd.doc-id,
-          input x_utd.db-num,
-          input x_utd.EDocType,
-          input {&lookup},
-          input mDiadocConnection
-          ) no-error .
-        unsubscribe "getNextseq".
+                run str/upd_browse.w (input parparentproc,
+                    input x_utd.doc-id,
+                    input x_utd.db-num,
+                    input x_utd.EDocType,
+                    input {&lookup},
+                    input mDiadocConnection
+                    ) no-error .
+                unsubscribe "getNextseq".
     
     
-      end.
-      else 
-      do: 
-        message "Не выбран УПД"
-          view-as alert-box.  
-        return no-apply .
-      end.
-      reposition br-utd to rowid row_utd no-error .
-    end.      
-  END.
+            end.
+            else 
+            do: 
+                message "Не выбран УПД"
+                    view-as alert-box.  
+                return no-apply .
+            end.
+            reposition br-utd to rowid row_utd no-error .
+        end.      
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1113,11 +1119,11 @@ ON choose OF b-utd IN FRAME d-utd /* Просмотр */
 &Scoped-define SELF-NAME B-write-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-write-cancel d-utd
 ON CHOOSE OF B-write-cancel IN FRAME d-utd /* Отказать в подписи */
-  DO:
-    define variable Log-Res as logical no-undo.
+    DO:
+        define variable Log-Res as logical no-undo.
 
-    /*Проверка прав */
-    { gbl/chk-actg.i
+        /*Проверка прав */
+        { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -1132,41 +1138,41 @@ ON CHOOSE OF B-write-cancel IN FRAME d-utd /* Отказать в подписи */
   true
   log-res
 }
-    if log-res then 
-    do:
-      if v-rid-list <> "" then 
-      do:
-        do ii = 1 to num-entries (v-rid-list):
-          recid_utd = integer(entry(ii,v-rid-list)) .
-          find first x_utd where recid (x_utd) = recid_utd .
-          run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
-          if  error-status:error then 
-          do: 
-            return return-value .
-          end.
-        end.  
-        run init-sort in this-procedure .
-        {&OPEN-QUERY-br-utd}
-      end.   
-      else 
-      do:
-        if available (X_utd) then 
+        if log-res then 
         do:
-          row_utd = rowid (X_utd) .
-          find first x_utd where rowid (x_utd) = row_utd .
-          run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
-          if  error-status:error then 
-          do: 
-            return return-value .
-          end.
-          run init-id (X_utd.doc-id, X_utd.db-num).  
-          br-utd:refresh () no-error.
-          reposition br-utd to rowid row_utd no-error .
-        end. /* */
-      end.
-    end.    
-    v-rid-list = "" .
-  END.
+            if v-rid-list <> "" then 
+            do:
+                do ii = 1 to num-entries (v-rid-list):
+                    recid_utd = integer(entry(ii,v-rid-list)) .
+                    find first x_utd where recid (x_utd) = recid_utd .
+                    run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
+                    if  error-status:error then 
+                    do: 
+                        return return-value .
+                    end.
+                end.  
+                run init-sort in this-procedure .
+                {&OPEN-QUERY-br-utd}
+            end.   
+            else 
+            do:
+                if available (X_utd) then 
+                do:
+                    row_utd = rowid (X_utd) .
+                    find first x_utd where rowid (x_utd) = row_utd .
+                    run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
+                    if  error-status:error then 
+                    do: 
+                        return return-value .
+                    end.
+                    run init-id (X_utd.doc-id, X_utd.db-num).  
+                    br-utd:refresh () no-error.
+                    reposition br-utd to rowid row_utd no-error .
+                end. /* */
+            end.
+        end.    
+        v-rid-list = "" .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1175,11 +1181,11 @@ ON CHOOSE OF B-write-cancel IN FRAME d-utd /* Отказать в подписи */
 &Scoped-define SELF-NAME B-write-sertif
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-write-sertif d-utd
 ON CHOOSE OF B-write-sertif IN FRAME d-utd /* Подписать */
-  DO:
-    define variable Log-Res as logical no-undo.
+    DO:
+        define variable Log-Res as logical no-undo.
 
-    /*Проверка прав */
-    { gbl/chk-actg.i
+        /*Проверка прав */
+        { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -1194,41 +1200,47 @@ ON CHOOSE OF B-write-sertif IN FRAME d-utd /* Подписать */
   true
   log-res
 }
-    if log-res then 
-    do:    
-      if v-rid-list <> "" then 
-      do:
-        do ii = 1 to num-entries (v-rid-list):
-          recid_utd = integer(entry(ii,v-rid-list)) .
-          find first x_utd where recid (x_utd) = recid_utd .
-          run SendResponse( X_utd.db-num, X_utd.doc-id, yes, no) no-error.          
-          if  error-status:error then 
-          do: 
-            return return-value .
-          end.
-        end. 
-        run init-sort in this-procedure .
-        {&OPEN-QUERY-br-utd} 
-      end.   
-      else 
-      do:
-        if available (X_utd) then 
-        do:
-          row_utd = rowid (X_utd) .
-          find first x_utd where rowid (x_utd) = row_utd .
-          run SendResponse( X_utd.db-num, X_utd.doc-id, yes, no) no-error.        
-          if  error-status:error then 
-          do: 
-            return return-value .
-          end.
-          run init-id (X_utd.doc-id, X_utd.db-num).  
-          br-utd:refresh () no-error.
-          reposition br-utd to rowid row_utd no-error .
-        end.  
-      end.
-    end.    
-    v-rid-list = "" .
-  END.
+        if log-res then 
+        do:    
+            if v-rid-list <> "" then 
+            do:
+                do ii = 1 to num-entries (v-rid-list):
+                    recid_utd = integer(entry(ii,v-rid-list)) .
+                    find first x_utd where recid (x_utd) = recid_utd .
+                    if checkMark(x_utd.db-num,x_utd.doc-id)
+                    then do:
+                       run SendResponse( X_utd.db-num, X_utd.doc-id, yes, no) no-error.          
+                       if  error-status:error then 
+                       do: 
+                           return return-value .
+                       end.
+                    end.
+                end. 
+                run init-sort in this-procedure .
+                {&OPEN-QUERY-br-utd} 
+            end.   
+            else 
+            do:
+                if available (X_utd) then 
+                do:
+                    row_utd = rowid (X_utd) .
+                    find first x_utd where rowid (x_utd) = row_utd .
+                    if checkMark(x_utd.db-num,x_utd.doc-id)
+                    then do:
+                       run SendResponse( X_utd.db-num, X_utd.doc-id, yes, no) no-error.        
+                       if  error-status:error then 
+                       do: 
+                           return return-value .
+                       end.
+                       run init-id (X_utd.doc-id, X_utd.db-num).  
+                       br-utd:refresh () no-error.
+                       reposition br-utd to rowid row_utd no-error .
+                    end.
+                end.  
+            end.
+        end.    
+        v-rid-list = "" .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1237,20 +1249,20 @@ ON CHOOSE OF B-write-sertif IN FRAME d-utd /* Подписать */
 &Scoped-define SELF-NAME B-write-Token
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-write-Token d-utd
 ON choose OF B-write-Token IN FRAME d-utd /* Получить Token */
-  DO:
-    define buffer buf_ext-system      for ub.ext-system .
-    define buffer buf_ext-system-attr for ub.ext-system-attr .
+    DO:
+        define buffer buf_ext-system      for ub.ext-system .
+        define buffer buf_ext-system-attr for ub.ext-system-attr .
     
-    if v-sertif_num = "" then 
-    do: 
-      message "Сертификат не выбран"
-        view-as alert-box.
-      return .
-    end.       
-    v-mes-Token = yes .
-    run proc-Token .
-    run enable_BUTTON .
-  END.
+        if v-sertif_num = "" then 
+        do: 
+            message "Сертификат не выбран"
+                view-as alert-box.
+            return .
+        end.       
+        v-mes-Token = yes .
+        run proc-Token .
+        run enable_BUTTON .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1260,13 +1272,13 @@ ON choose OF B-write-Token IN FRAME d-utd /* Получить Token */
 &Scoped-define SELF-NAME br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON entry OF br-utd IN FRAME d-utd
-  DO:
-    /*  f-DocumentNumber = "" .                            */
-    /*  display f-DocumentNumber with frame {&frame-name} .*/
-    /*  run init-sort .                                    */
-    /*  {&OPEN-QUERY-br-utd}                               */
-    run enable_BUTTON .  
-  END.
+    DO:
+        /*  f-DocumentNumber = "" .                            */
+        /*  display f-DocumentNumber with frame {&frame-name} .*/
+        /*  run init-sort .                                    */
+        /*  {&OPEN-QUERY-br-utd}                               */
+        run enable_BUTTON .  
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1274,19 +1286,19 @@ ON entry OF br-utd IN FRAME d-utd
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON mouse-select-dblclick OF br-utd IN FRAME d-utd
-  DO:
-    if AVAILABLE (X_utd) then 
-    do:         
-      if v-obj-active or X_utd.EDocType = EdocType:UTD:KeyIntDB or X_utd.EDocType = EdocType:UCD:KeyIntDB then 
-      do: 
-        apply "Choose" to b-update in frame {&frame-name}.
-      end.
-      else 
-      do:
-        apply "Choose" to b-utd in frame {&frame-name}.
-      end.  
-    end.  
-  END.
+    DO:
+        if AVAILABLE (X_utd) then 
+        do:         
+            if v-obj-active or X_utd.EDocType = EdocType:UTD:KeyIntDB or X_utd.EDocType = EdocType:UCD:KeyIntDB then 
+            do: 
+                apply "Choose" to b-update in frame {&frame-name}.
+            end.
+            else 
+            do:
+                apply "Choose" to b-utd in frame {&frame-name}.
+            end.  
+        end.  
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1295,25 +1307,25 @@ ON mouse-select-dblclick OF br-utd IN FRAME d-utd
 &Scoped-define SELF-NAME bt-not-sel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-all d-utd
 ON CHOOSE OF bt-not-sel-all IN FRAME d-utd /* + */
-  DO:
-    define variable loc#log as logical no-undo .
+    DO:
+        define variable loc#log as logical no-undo .
 
-    if available X_utd then 
-    do:
-      v-rid-list = "" .
-      for each X_utd no-lock:
-        { gbl/markstrn.i X_utd v-rid-list }
-        loc#log = {&browse-name}:refresh() .
-      end.
-    end.
-    if num-entries( v-rid-list ) <> 0 then 
-    do:
-      display
-        num-entries( v-rid-list ) @ mark-num
-        with frame {&frame-name}.
-    end.
-    v-rid-list = "" .
-  END.
+        if available X_utd then 
+        do:
+            v-rid-list = "" .
+            for each X_utd no-lock:
+                { gbl/markstrn.i X_utd v-rid-list }
+                loc#log = {&browse-name}:refresh() .
+            end.
+        end.
+        if num-entries( v-rid-list ) <> 0 then 
+        do:
+            display
+                num-entries( v-rid-list ) @ mark-num
+                with frame {&frame-name}.
+        end.
+        v-rid-list = "" .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1322,12 +1334,12 @@ ON CHOOSE OF bt-not-sel-all IN FRAME d-utd /* + */
 &Scoped-define SELF-NAME bt-not-sel-desel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-desel-all d-utd
 ON CHOOSE OF bt-not-sel-desel-all IN FRAME d-utd /* - */
-  DO:
-    define variable loc#log as logical no-undo .
-    v-rid-list = "" .
-    loc#log = {&browse-name}:refresh() .
-    hide mark-num in frame {&frame-name}.
-  END.
+    DO:
+        define variable loc#log as logical no-undo .
+        v-rid-list = "" .
+        loc#log = {&browse-name}:refresh() .
+        hide mark-num in frame {&frame-name}.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1336,16 +1348,16 @@ ON CHOOSE OF bt-not-sel-desel-all IN FRAME d-utd /* - */
 &Scoped-define SELF-NAME bt-sel-obj
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-sel-obj d-utd
 ON CHOOSE OF bt-sel-obj IN FRAME d-utd /* ... */
-  DO:
-    define variable v-obj-list         as character no-undo.
-    define variable v-exclude-obj-list as character no-undo.
+    DO:
+        define variable v-obj-list         as character no-undo.
+        define variable v-exclude-obj-list as character no-undo.
 
-    define variable v-object-available as logical   no-undo.
+        define variable v-object-available as logical   no-undo.
 
    
-    {gbl/uobjclr.i}
+        {gbl/uobjclr.i}
     
-    {gbl/usobjava.i
+        {gbl/usobjava.i
      v-cntxt-db-num
      {&action-head-code-main}
      v-cntxt-userid
@@ -1354,25 +1366,25 @@ ON CHOOSE OF bt-sel-obj IN FRAME d-utd /* ... */
      v-object-available
      no-error}
      
-    if error-status :error then 
-    do:
-      message vss-workfile vss-revision vss-description skip
-        "Ошибка при вызове процедуры gbl/usobjava.i" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error.
-      undo, return no-apply.
-    end. /* if error-status */
+        if error-status :error then 
+        do:
+            message vss-workfile vss-revision vss-description skip
+                "Ошибка при вызове процедуры gbl/usobjava.i" skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error.
+            undo, return no-apply.
+        end. /* if error-status */
 
-    if v-object-available = true then 
-    do:
-      {gbl/uobjapnd.i
+        if v-object-available = true then 
+        do:
+            {gbl/uobjapnd.i
          v-cntxt-obj-type
          v-cntxt-obj-code}
-    end.
+        end.
 
-    define variable v-user-select as logical no-undo.
-    {gbl/uobjsman.i
+        define variable v-user-select as logical no-undo.
+        {gbl/uobjsman.i
      parparentproc
      v-cntxt-db-num
      v-cntxt-userid
@@ -1381,32 +1393,32 @@ ON CHOOSE OF bt-sel-obj IN FRAME d-utd /* ... */
      v-cntxt-obj-code
      v-user-select}
      
-    if v-user-select <> true then 
-    do:
-      message "Объект не выбран" view-as alert-box information.
-    end.
-    else 
-    do:
-      v-obj-list = "" .
-      empty temp-table tt-obj-list .
+        if v-user-select <> true then 
+        do:
+            message "Объект не выбран" view-as alert-box information.
+        end.
+        else 
+        do:
+            v-obj-list = "" .
+            empty temp-table tt-obj-list .
 
-      for each userobjs_temp-user-obj:
-        create tt-obj-list .
-        assign
-          tt-obj-list.obj-code = userobjs_temp-user-obj.obj-code
-          tt-obj-list.obj-type = userobjs_temp-user-obj.obj-type
-          .
-        v-obj-list = v-obj-list + (if v-obj-list <> "" then ", " else "")
-          + userobjs_temp-user-obj.obj-type + " " + string( userobjs_temp-user-obj.obj-code).
-      /*        for first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type:*/
-      /*          v-db-list = v-db-list + "," + string( ub.clients.db-num).                                                                                        */
-      /*        end.                                                                                                                                               */
-      end. /* for each userobjs_temp-user-obj */
-    end.
-    obj-list:screen-value = v-obj-list.
-    run init-sort in this-procedure .
-    {&OPEN-QUERY-br-utd}
-  END.
+            for each userobjs_temp-user-obj:
+                create tt-obj-list .
+                assign
+                    tt-obj-list.obj-code = userobjs_temp-user-obj.obj-code
+                    tt-obj-list.obj-type = userobjs_temp-user-obj.obj-type
+                    .
+                v-obj-list = v-obj-list + (if v-obj-list <> "" then ", " else "")
+                    + userobjs_temp-user-obj.obj-type + " " + string( userobjs_temp-user-obj.obj-code).
+            /*        for first ub.clients no-lock where ub.clients.obj-code = userobjs_temp-user-obj.obj-code and ub.clients.obj-type = userobjs_temp-user-obj.obj-type:*/
+            /*          v-db-list = v-db-list + "," + string( ub.clients.db-num).                                                                                        */
+            /*        end.                                                                                                                                               */
+            end. /* for each userobjs_temp-user-obj */
+        end.
+        obj-list:screen-value = v-obj-list.
+        run init-sort in this-procedure .
+        {&OPEN-QUERY-br-utd}
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1414,106 +1426,106 @@ ON CHOOSE OF bt-sel-obj IN FRAME d-utd /* ... */
 &Scoped-define SELF-NAME b-pack
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-pack d-utd
 ON CHOOSE OF b-pack IN FRAME d-utd /* Аннуляция */
-  DO:
+    DO:
    
-    define variable v-rid-list as character no-undo.
-    if available X_utd
-      then 
-    do:
-      v-current-sertif-string = v-sertif_num.
-      run uf-set(
-        input {&uf-UPD}
-        , input v-cntxt-userid
-        , input v-current-sertif-string
-        , input v-current-sort-string
-        , input no
-        , input no
-        , input no
-        , input no
-        ) no-error.
-      run str\upd.w (parparentproc, p-mode, p-type, X_utd.PackageId,input-output mDiadocConnection, output v-rid-list).
-      run uf-get (
-        input {&uf-UPD}
-        , input  v-cntxt-userid
-        , output v-current-sertif-string
-        , output v-current-sort-string
-        , output v-void-logical
-        , output v-void-logical
-        , output v-void-logical
-        , output v-void-logical
-        ) no-error.
-      if v-current-sertif-string <> "" then 
-      do:
-        F-sertif = v-current-sertif-string .
-        v-sertif_num = v-current-sertif-string .
-        display F-sertif with frame {&frame-name} .
-      end. 
-      run enable_BUTTON.
+        define variable v-rid-list as character no-undo.
+        if available X_utd
+            then 
+        do:
+            v-current-sertif-string = v-sertif_num.
+            run uf-set(
+                input {&uf-UPD}
+                , input v-cntxt-userid
+                , input v-current-sertif-string
+                , input v-current-sort-string
+                , input no
+                , input no
+                , input no
+                , input no
+                ) no-error.
+            run str\upd.w (parparentproc, p-mode, p-type, X_utd.PackageId,input-output mDiadocConnection, output v-rid-list).
+            run uf-get (
+                input {&uf-UPD}
+                , input  v-cntxt-userid
+                , output v-current-sertif-string
+                , output v-current-sort-string
+                , output v-void-logical
+                , output v-void-logical
+                , output v-void-logical
+                , output v-void-logical
+                ) no-error.
+            if v-current-sertif-string <> "" then 
+            do:
+                F-sertif = v-current-sertif-string .
+                v-sertif_num = v-current-sertif-string .
+                display F-sertif with frame {&frame-name} .
+            end. 
+            run enable_BUTTON.
+        end.
+        v-rid-list = "" .
     end.
-    v-rid-list = "" .
-  end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b_anul
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_anul d-utd
 ON CHOOSE OF b_anul IN FRAME d-utd /* Аннуляция */
-  DO:
-    define variable load-sts as logical no-undo .
-    if v-rid-list <> "" then
-    do:
-      do ii = 1 to num-entries (v-rid-list):
-        recid_utd = integer(entry(ii,v-rid-list)) .
-        find first x_utd where recid (x_utd) = recid_utd .
-        if X_utd.sts = 8 or X_utd.sts = 6 then 
+    DO:
+        define variable load-sts as logical no-undo .
+        if v-rid-list <> "" then
         do:
-          message "Документ с номером: " + X_utd.DocumentNumber + " " + string(X_utd.DocumentDate) + " подписан и обработан в системе." skip
-            "Убедитесь, что товар не оприходован в системе." skip
-            "Вы уверены, что хотите подписать аннуляцию?" skip
-            view-as alert-box question buttons yes-no update load-sts.
-          if load-sts <> true then 
-          do:
-            return .
-          end.  
+            do ii = 1 to num-entries (v-rid-list):
+                recid_utd = integer(entry(ii,v-rid-list)) .
+                find first x_utd where recid (x_utd) = recid_utd .
+                if X_utd.sts = 8 or X_utd.sts = 6 then 
+                do:
+                    message "Документ с номером: " + X_utd.DocumentNumber + " " + string(X_utd.DocumentDate) + " подписан и обработан в системе." skip
+                        "Убедитесь, что товар не оприходован в системе." skip
+                        "Вы уверены, что хотите подписать аннуляцию?" skip
+                        view-as alert-box question buttons yes-no update load-sts.
+                    if load-sts <> true then 
+                    do:
+                        return .
+                    end.  
+                end.
+                run Sendansver( X_utd.db-num, X_utd.doc-id, "RevocationRequest","") no-error.
+                if  error-status:error then
+                do:
+                    return return-value .
+                end.
+            end.
+            run init-sort in this-procedure .
+            {&OPEN-QUERY-br-utd}
         end.
-        run Sendansver( X_utd.db-num, X_utd.doc-id, "RevocationRequest","") no-error.
-        if  error-status:error then
+        else
         do:
-          return return-value .
+            if available (X_utd) then
+            do:
+                row_utd = rowid (X_utd) .
+                find first x_utd where rowid (x_utd) = row_utd .
+                if X_utd.sts = 8 or X_utd.sts = 6 then 
+                do:
+                    message "Документ с номером: " + X_utd.DocumentNumber + "подписан и обработан в системе." skip
+                        "Убедитесь, что товар не оприходован в системе." skip
+                        "Вы уверены, что хотите подписать аннуляцию?" skip
+                        view-as alert-box question buttons yes-no update load-sts.
+                    if load-sts <> true then 
+                    do:
+                        return .
+                    end.  
+                end.  
+                run Sendansver( X_utd.db-num, X_utd.doc-id, "RevocationRequest","") no-error.
+                if  error-status:error then
+                do:
+                    return return-value .
+                end.
+                run init-id (X_utd.doc-id, X_utd.db-num).  
+                br-utd:refresh () no-error.
+                reposition br-utd to rowid row_utd no-error .
+            end.
         end.
-      end.
-      run init-sort in this-procedure .
-      {&OPEN-QUERY-br-utd}
-    end.
-    else
-    do:
-      if available (X_utd) then
-      do:
-        row_utd = rowid (X_utd) .
-        find first x_utd where rowid (x_utd) = row_utd .
-        if X_utd.sts = 8 or X_utd.sts = 6 then 
-        do:
-          message "Документ с номером: " + X_utd.DocumentNumber + "подписан и обработан в системе." skip
-            "Убедитесь, что товар не оприходован в системе." skip
-            "Вы уверены, что хотите подписать аннуляцию?" skip
-            view-as alert-box question buttons yes-no update load-sts.
-          if load-sts <> true then 
-          do:
-            return .
-          end.  
-        end.  
-        run Sendansver( X_utd.db-num, X_utd.doc-id, "RevocationRequest","") no-error.
-        if  error-status:error then
-        do:
-          return return-value .
-        end.
-        run init-id (X_utd.doc-id, X_utd.db-num).  
-        br-utd:refresh () no-error.
-        reposition br-utd to rowid row_utd no-error .
-      end.
-    end.
-    v-rid-list = "" .
-  END.
+        v-rid-list = "" .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1521,21 +1533,21 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* Аннуляция */
 &Scoped-define SELF-NAME m_akt
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_akt POPUP-MENU-b-print
 ON CHOOSE OF menu-item m_akt /* Печать акт  приема-передачи */
-  DO:
-    if available (X_utd) then 
-    do:
-      if X_utd.edoctype = EdocType:UTD:KeyIntDB or 
-        X_utd.edoctype = EdocType:AKT:KeyIntDB then 
-      do:
-        run rep/akt-utd.p (parparentproc, X_utd.db-num, X_utd.doc-id) no-error .
-      end.  
-      else 
-      do:
-        message "Акт приема-передачи не печатается для данного типа документа"
-          view-as alert-box.
-      end.  
-    end.  
-  END.
+    DO:
+        if available (X_utd) then 
+        do:
+            if X_utd.edoctype = EdocType:UTD:KeyIntDB or 
+                X_utd.edoctype = EdocType:AKT:KeyIntDB then 
+            do:
+                run rep/akt-utd.p (parparentproc, X_utd.db-num, X_utd.doc-id) no-error .
+            end.  
+            else 
+            do:
+                message "Акт приема-передачи не печатается для данного типа документа"
+                    view-as alert-box.
+            end.  
+        end.  
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1543,62 +1555,62 @@ ON CHOOSE OF menu-item m_akt /* Печать акт  приема-передачи */
 &Scoped-define SELF-NAME m_nakl
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_nakl POPUP-MENU-b-servis
 ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
-  DO:
-    define variable v-check-db-num  as integer no-undo .
-    define variable v-check-user-id as integer no-undo .
+    DO:
+        define variable v-check-db-num  as integer no-undo .
+        define variable v-check-user-id as integer no-undo .
    
-    { gbl/getcurus.i
+        { gbl/getcurus.i
     v-check-db-num
     v-check-user-id
     no-error
   }
 
-    if v-rid-list <> "" then 
-    do:
-      do ii = 1 to num-entries (v-rid-list):
-        for first buf_utd no-lock where recid(buf_utd) = integer(entry(ii,v-rid-list)):
-          run ibs\th\str\utd\adaputd.p
-            (buf_utd.db-num, /*DocumentID*/
-            buf_utd.doc-id, /* OrganizationId*/
-            v-check-user-id /*User-Id*/
-            ) no-error .
-          if error-status:error then
-          do:
-            message return-value view-as alert-box.
-            return .
-          end.
+        if v-rid-list <> "" then 
+        do:
+            do ii = 1 to num-entries (v-rid-list):
+                for first buf_utd no-lock where recid(buf_utd) = integer(entry(ii,v-rid-list)):
+                    run ibs\th\str\utd\adaputd.p
+                        (buf_utd.db-num, /*DocumentID*/
+                        buf_utd.doc-id, /* OrganizationId*/
+                        v-check-user-id /*User-Id*/
+                        ) no-error .
+                    if error-status:error then
+                    do:
+                        message return-value view-as alert-box.
+                        return .
+                    end.
+                end.  
+            end.
+            message "Накладные сформированы"
+                view-as alert-box.   
+            run init-sort in this-procedure .
+            {&OPEN-QUERY-br-utd}
         end.  
-      end.
-      message "Накладные сформированы"
-        view-as alert-box.   
-      run init-sort in this-procedure .
-      {&OPEN-QUERY-br-utd}
-    end.  
-    else 
-    do:
-      if available (X_utd) then 
-      do:
-        v-rid-list = string(recid(X_utd)) .
-        run ibs\th\str\utd\adaputd.p
-          (X_utd.db-num, /*DocumentID*/
-          X_utd.doc-id, /* OrganizationId*/
-          v-check-user-id /*User-Id*/
-          )  no-error.
-        if  error-status:error then 
-          if error-status:error then
-          do:
-            message return-value view-as alert-box.
-            return .
-          end.
-        run init-id (X_utd.doc-id, X_utd.db-num).
-        find first ub.utd no-lock where ub.utd.doc-id = X_utd.doc-id and ub.utd.db-num = X_utd.db-num no-error .
-        message "Накладная " +  ub.utd.doc-code + " сформирована"
-          view-as alert-box.
+        else 
+        do:
+            if available (X_utd) then 
+            do:
+                v-rid-list = string(recid(X_utd)) .
+                run ibs\th\str\utd\adaputd.p
+                    (X_utd.db-num, /*DocumentID*/
+                    X_utd.doc-id, /* OrganizationId*/
+                    v-check-user-id /*User-Id*/
+                    )  no-error.
+                if  error-status:error then 
+                    if error-status:error then
+                    do:
+                        message return-value view-as alert-box.
+                        return .
+                    end.
+                run init-id (X_utd.doc-id, X_utd.db-num).
+                find first ub.utd no-lock where ub.utd.doc-id = X_utd.doc-id and ub.utd.db-num = X_utd.db-num no-error .
+                message "Накладная " +  ub.utd.doc-code + " сформирована"
+                    view-as alert-box.
             
-      end.  
-    end.  
-    v-rid-list = "" .
-  END.
+            end.  
+        end.  
+        v-rid-list = "" .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1607,11 +1619,11 @@ ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
 &Scoped-define SELF-NAME b_recEDI
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recEDI d-utd
 ON CHOOSE OF b_recEDI IN FRAME d-utd /* Получить данные ЭДО */
-  DO:
-    define variable Log-Res as logical no-undo.
+    DO:
+        define variable Log-Res as logical no-undo.
 
-    /*Проверка прав */
-    { gbl/chk-actg.i
+        /*Проверка прав */
+        { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -1626,29 +1638,29 @@ ON CHOOSE OF b_recEDI IN FRAME d-utd /* Получить данные ЭДО */
   true
   log-res
 }
-    if log-res then 
-    do:
-      getNewupd() no-error.
-      if error-status:error then 
-      do:
-        return return-value .
-      end.  
-      run init-sort .
-      {&OPEN-QUERY-br-utd}
-    end.    
-    v-rid-list = "" .
-  END.
+        if log-res then 
+        do:
+            getNewupd() no-error.
+            if error-status:error then 
+            do:
+                return return-value .
+            end.  
+            run init-sort .
+            {&OPEN-QUERY-br-utd}
+        end.    
+        v-rid-list = "" .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON value-changed OF br-utd IN FRAME d-utd
-  DO:
-    run enable_BUTTON .
-    b-pack:visible = (i-pack eq ? or i-pack eq "")
-      and available X_utd and   X_utd.PackageId ne "" and X_utd.PackageId ne ? .
-  END.
+    DO:
+        run enable_BUTTON .
+        b-pack:visible = (i-pack eq ? or i-pack eq "")
+            and available X_utd and   X_utd.PackageId ne "" and X_utd.PackageId ne ? .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1656,9 +1668,9 @@ ON value-changed OF br-utd IN FRAME d-utd
 &Scoped-define SELF-NAME m_recheck
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_recheck POPUP-MENU-b-servis
 ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
-  DO:
-    define variable Log-Res as logical no-undo.
-    { gbl/chk-actg.i
+    DO:
+        define variable Log-Res as logical no-undo.
+        { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -1673,33 +1685,41 @@ ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
   true
   log-res
 }
-    if log-res then 
-    do:
-      define buffer buf_c-utd for ub.c-utd .
-      if v-rid-list <> "" then 
-      do:
-        do ii = 1 to num-entries (v-rid-list):
-          /*            recid_utd = integer(entry(ii,v-rid-list)) .*/
-          find first x_utd where recid (x_utd) = integer(entry(ii,v-rid-list)) .
-          Recheck(X_utd.db-num, X_utd.doc-id).
-                   
-        end.  
-        run init-sort in this-procedure .
-        {&OPEN-QUERY-br-utd}
-      end.   
-      else 
-      do:
-        if available (X_utd) then 
+        if log-res then 
         do:
-          recid_utd = recid (X_utd) .
+                
+            define buffer buf_c-utd for ub.c-utd .
+            if v-rid-list <> "" then 
+            do:
+                do ii = 1 to num-entries (v-rid-list):
+                    /*            recid_utd = integer(entry(ii,v-rid-list)) .*/
+                    find first x_utd where recid (x_utd) = integer(entry(ii,v-rid-list)) .
+                    subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
+                    MySeqUtd = ?.
             
-          Recheck(X_utd.db-num, X_utd.doc-id).
-          run init-id (X_utd.doc-id, X_utd.db-num).  
-        end.  
-      end.
-      v-rid-list = "" .
-    end.
-  END.
+                    Recheck(X_utd.db-num, X_utd.doc-id).
+                    unsubscribe "getNextseq".
+                end.  
+                run init-sort in this-procedure .
+                {&OPEN-QUERY-br-utd}
+            end.   
+            else 
+            do:
+                if available (X_utd) then 
+                do:
+                    recid_utd = recid (X_utd) .
+                    subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
+                    MySeqUtd = ?.
+            
+                    Recheck(X_utd.db-num, X_utd.doc-id).
+                    unsubscribe "getNextseq".
+                    run init-id (X_utd.doc-id, X_utd.db-num).
+                       
+                end.  
+            end.
+            v-rid-list = "" .
+        end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1707,22 +1727,22 @@ ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
 &Scoped-define SELF-NAME m_oneUtd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_oneUtd POPUP-MENU-b-servis
 ON CHOOSE OF MENU-ITEM m_oneUtd /* Повторно проверить */
-  DO:
+    DO:
 
-    if available (X_utd) then 
-    do:
-      recid_utd = recid (X_utd) .
-      find first x_utd where recid (x_utd) = recid_utd .
-      updOneUTD(X_utd.db-num, X_utd.doc-id ) no-error  .       
-      if  error-status:error then 
-      do: 
-        return return-value .
-      end.
-      run init-id (X_utd.doc-id, X_utd.db-num).  
-    end.  
+        if available (X_utd) then 
+        do:
+            recid_utd = recid (X_utd) .
+            find first x_utd where recid (x_utd) = recid_utd .
+            updOneUTD(X_utd.db-num, X_utd.doc-id ) no-error  .       
+            if  error-status:error then 
+            do: 
+                return return-value .
+            end.
+            run init-id (X_utd.doc-id, X_utd.db-num).  
+        end.  
   
-    {&OPEN-QUERY-br-utd}
-  END.
+        {&OPEN-QUERY-br-utd}
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1730,12 +1750,12 @@ ON CHOOSE OF MENU-ITEM m_oneUtd /* Повторно проверить */
 &Scoped-define SELF-NAME c-status
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-status d-utd
 ON VALUE-CHANGED OF c-status IN FRAME d-utd /* Статус ТН */
-  DO:
-    assign c-status .
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
+    DO:
+        assign c-status .
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
   
-  END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1744,12 +1764,12 @@ ON VALUE-CHANGED OF c-status IN FRAME d-utd /* Статус ТН */
 &Scoped-define SELF-NAME c-status-edi
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-status-edi d-utd
 ON VALUE-CHANGED OF c-status-edi IN FRAME d-utd /* Статус EDI */
-  DO:
-    assign c-status-edi .
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
+    DO:
+        assign c-status-edi .
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
   
-  END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1758,12 +1778,12 @@ ON VALUE-CHANGED OF c-status-edi IN FRAME d-utd /* Статус EDI */
 &Scoped-define SELF-NAME c-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-type d-utd
 ON VALUE-CHANGED OF c-type IN FRAME d-utd /* Тип */
-  DO:
-    assign c-type .
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
+    DO:
+        assign c-type .
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
   
-  END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1772,10 +1792,10 @@ ON VALUE-CHANGED OF c-type IN FRAME d-utd /* Тип */
 &Scoped-define SELF-NAME F-date-from
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-from d-utd
 ON RETURN OF F-date-from IN FRAME d-utd
-  DO:
-    apply "TAB":U to self .
-    return no-apply .
-  END.
+    DO:
+        apply "TAB":U to self .
+        return no-apply .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1783,21 +1803,21 @@ ON RETURN OF F-date-from IN FRAME d-utd
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-from d-utd
 ON TAB OF F-date-from IN FRAME d-utd
-  DO:
-    if string(F-date-from) <> F-date-from:screen-value then 
-    do:
-      assign F-date-from .
-    end.
-    if F-date-from < F-date-to then 
-    do:
-      message "Дата начала не может быть больше конечной даты"
-        view-as alert-box.
-      return no-apply .       
-    end.
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
-    run enable_BUTTON.
-  END.
+    DO:
+        if string(F-date-from) <> F-date-from:screen-value then 
+        do:
+            assign F-date-from .
+        end.
+        if F-date-from < F-date-to then 
+        do:
+            message "Дата начала не может быть больше конечной даты"
+                view-as alert-box.
+            return no-apply .       
+        end.
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
+        run enable_BUTTON.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1806,10 +1826,10 @@ ON TAB OF F-date-from IN FRAME d-utd
 &Scoped-define SELF-NAME F-date-to
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-to d-utd
 ON RETURN OF F-date-to IN FRAME d-utd /* За период с */
-  DO:
-    apply "TAB":U to self .
-    return no-apply .
-  END.
+    DO:
+        apply "TAB":U to self .
+        return no-apply .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1817,21 +1837,21 @@ ON RETURN OF F-date-to IN FRAME d-utd /* За период с */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-to d-utd
 ON TAB OF F-date-to IN FRAME d-utd /* За период с */
-  DO:
-    if string(F-date-from) <> F-date-from:screen-value then 
-    do:
-      assign F-date-to .
-    end.
-    if F-date-from < F-date-to then 
-    do:
-      message "Дата начала не может быть больше конечной даты"
-        view-as alert-box.
-      return no-apply .       
-    end.
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
-    run enable_BUTTON.
-  END.
+    DO:
+        if string(F-date-from) <> F-date-from:screen-value then 
+        do:
+            assign F-date-to .
+        end.
+        if F-date-from < F-date-to then 
+        do:
+            message "Дата начала не может быть больше конечной даты"
+                view-as alert-box.
+            return no-apply .       
+        end.
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
+        run enable_BUTTON.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1840,11 +1860,11 @@ ON TAB OF F-date-to IN FRAME d-utd /* За период с */
 &Scoped-define SELF-NAME f-DocumentNumber
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-DocumentNumber d-utd
 ON value-changed OF f-DocumentNumber IN FRAME d-utd /* Номер документа */
-  DO:
-    assign f-DocumentNumber .
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
-  END.
+    DO:
+        assign f-DocumentNumber .
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1853,17 +1873,17 @@ ON value-changed OF f-DocumentNumber IN FRAME d-utd /* Номер документа */
 &Scoped-define SELF-NAME m___Token
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m___Token d-utd
 ON CHOOSE OF MENU-ITEM m___Token /* Отключить запрос Token */
-  DO:
-    define variable v-ok as logical no-undo .
-    if F-sertif <> "" then v-ok = yes . 
-    else v-ok = no .
-    run str/dialog-Token.w (input v-ok, input-output v-flag) no-error .
+    DO:
+        define variable v-ok as logical no-undo .
+        if F-sertif <> "" then v-ok = yes . 
+        else v-ok = no .
+        run str/dialog-Token.w (input v-ok, input-output v-flag) no-error .
 
-    if not v-flag then 
-    do:
-      run enable_BUTTON .
-    end.  
-  END.
+        if not v-flag then 
+        do:
+            run enable_BUTTON .
+        end.  
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1872,11 +1892,11 @@ ON CHOOSE OF MENU-ITEM m___Token /* Отключить запрос Token */
 &Scoped-define SELF-NAME RADIO-SET-1
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-1 d-utd
 ON value-changed OF RADIO-SET-1 IN FRAME d-utd
-  DO:
-    assign RADIO-SET-1 .
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
-  END.
+    DO:
+        assign RADIO-SET-1 .
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1884,30 +1904,30 @@ ON value-changed OF RADIO-SET-1 IN FRAME d-utd
 &Scoped-define SELF-NAME R-obj
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL R-obj d-utd
 ON value-changed OF R-obj IN FRAME d-utd
-  DO:
-    assign R-obj .
-    if R-obj = 1 then 
-    do:
-      hide
-        bt-sel-obj
-        obj-list
-        in frame {&frame-name} .
-      empty temp-table tt-obj-list .
-    end.
-    else 
-    do:
-      enable
-        bt-sel-obj
-        with frame {&frame-name} .      
-      display
-        obj-list
-        with frame {&frame-name} .      
-      apply "choose" to bt-sel-obj in frame {&frame-name}. 
-    end.
+    DO:
+        assign R-obj .
+        if R-obj = 1 then 
+        do:
+            hide
+                bt-sel-obj
+                obj-list
+                in frame {&frame-name} .
+            empty temp-table tt-obj-list .
+        end.
+        else 
+        do:
+            enable
+                bt-sel-obj
+                with frame {&frame-name} .      
+            display
+                obj-list
+                with frame {&frame-name} .      
+            apply "choose" to bt-sel-obj in frame {&frame-name}. 
+        end.
         
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
-  END.
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1915,11 +1935,11 @@ ON value-changed OF R-obj IN FRAME d-utd
 &Scoped-define SELF-NAME RADIO-SET-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RADIO-SET-2 d-utd
 ON value-changed OF RADIO-SET-2 IN FRAME d-utd
-  DO:
-    assign RADIO-SET-2 .
-    run init-sort .
-    {&OPEN-QUERY-br-utd}
-  END.
+    DO:
+        assign RADIO-SET-2 .
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1927,26 +1947,26 @@ ON value-changed OF RADIO-SET-2 IN FRAME d-utd
 &Scoped-define SELF-NAME RADIO-SET-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-timeToken d-utd
 ON value-changed OF F-timeToken IN FRAME d-utd
-  DO:
-    if v-Token-error then 
-    do:
-      if v-sertif_num <> "" then 
-      do:
-        F-timeToken:fgcolor = 12 .
-        F-timeToken = "не получено" .
-      end.
-      else F-timeToken = "" .
-    end.
-    else 
-    do:
-      if time_motp <> ? then 
-      do:
-        F-timeToken:fgcolor = 0 .
-        F-timeToken = string(time_motp,"99/99/9999 HH:MM:SS") .
-      end.
-      else F-timeToken = "" . 
-    end.
-  END.
+    DO:
+        if v-Token-error then 
+        do:
+            if v-sertif_num <> "" then 
+            do:
+                F-timeToken:fgcolor = 12 .
+                F-timeToken = "не получено" .
+            end.
+            else F-timeToken = "" .
+        end.
+        else 
+        do:
+            if time_motp <> ? then 
+            do:
+                F-timeToken:fgcolor = 0 .
+                F-timeToken = string(time_motp,"99/99/9999 HH:MM:SS") .
+            end.
+            else F-timeToken = "" . 
+        end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1960,34 +1980,34 @@ ON value-changed OF F-timeToken IN FRAME d-utd
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-  THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+    THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 /* Add Trigger to equate WINDOW-CLOSE to END-ERROR                      */
 ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} 
-  APPLY "END-ERROR":U TO SELF.
+    APPLY "END-ERROR":U TO SELF.
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-  ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  { gbl/brwrepos.i
+    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+    { gbl/brwrepos.i
   &line-num= 9
 }
 
-  { gbl/getcntxt.i get }
-  { gbl/ed_date.i f-date-from }
-  { gbl/ed_date.i f-date-to }
+    { gbl/getcntxt.i get }
+    { gbl/ed_date.i f-date-from }
+    { gbl/ed_date.i f-date-to }
 
 
-  { gbl/objat.i
+    { gbl/objat.i
       v-cntxt-obj-type
       v-cntxt-obj-code
       "'active=request'"
       v-obj-active
 }
 
-  { gbl/chk-actg.i
+    { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -2003,8 +2023,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   log-res-Token
 }
 
-  /*Проверка прав */
-  { gbl/chk-actg.i
+    /*Проверка прав */
+    { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -2020,7 +2040,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   log-res-recheck
 }
 
-  { gbl/chk-actg.i
+    { gbl/chk-actg.i
                   v-cntxt-db-num
                   v-cntxt-userid
                   {&action-head-code-main}
@@ -2035,21 +2055,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                   false
                   varlog
                 }
-  run uf-get (
-    input {&uf-UPD}
-    , input  v-cntxt-userid
-    , output v-current-sertif-string
-    , output v-current-sort-string
-    , output v-void-logical
-    , output v-void-logical
-    , output v-void-logical
-    , output v-void-logical
-    ) no-error.
-  if v-current-sertif-string <> "" then 
-  do:
-    F-sertif = v-current-sertif-string .
-  end. 
-  Marking = ObjSrv:Env:Marking:Sts:Mark.
+    run uf-get (
+        input {&uf-UPD}
+        , input  v-cntxt-userid
+        , output v-current-sertif-string
+        , output v-current-sort-string
+        , output v-void-logical
+        , output v-void-logical
+        , output v-void-logical
+        , output v-void-logical
+        ) no-error.
+    if v-current-sertif-string <> "" then 
+    do:
+        F-sertif = v-current-sertif-string .
+    end. 
+    Marking = ObjSrv:Env:Marking:Sts:Mark.
 
   { gbl/conf-rd.i
         "'is-erpRN'"
@@ -2067,52 +2087,53 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
   else mode-erprn = no.
 
-  StatusTH = ObjSrv:Env:Utd:Sts:TH.
-  StatusEDI = ObjSrv:Env:Utd:Sts:EDI.
-  EdocType = ObjSrv:Env:Utd:EDocType.      
-  F-date-to = today - 7.
-  F-date-from = today .
+    StatusTH = ObjSrv:Env:Utd:Sts:TH.
+    StatusEDI = ObjSrv:Env:Utd:Sts:EDI.
+    EdocType = ObjSrv:Env:Utd:EDocType.      
 
-  if v-current-sertif-string <> "" then 
-  do:
-    F-sertif = v-current-sertif-string .
-  end.  
-  run init-temp in this-procedure .
-  { gbl/diasize.i }
-  run diasize_init in this-procedure .
-  run enable_UI in this-procedure .
-  apply "value-changed" to br-utd IN FRAME {&frame-name}.
-  if time_motp <> ? then 
-  do:
+    F-date-to = today - 7.
+    F-date-from = today .
 
-    if v-sertif <> "" and mode-erprn = false then 
+    if v-current-sertif-string <> "" then 
     do:
-      vtime = max(1,time_motp + 10500000 - now).
-      block-wait:  
+        F-sertif = v-current-sertif-string .
+    end.  
+    run init-temp in this-procedure .
+    { gbl/diasize.i }
+    run diasize_init in this-procedure .
+    run enable_UI in this-procedure .
+    apply "value-changed" to br-utd IN FRAME {&frame-name}.
+    if time_motp <> ? then 
+    do:
 
-      do while not mflagExit:
-        /*WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} pause vtime .*/
+        if v-sertif <> "" and mode-erprn = false then 
+        do:
+            vtime = max(1,time_motp + 10500000 - now).
+            block-wait:  
 
-        WAIT-FOR CHOOSE OF FRAME {&frame-name}  focus {&browse-name} pause vtime .
+            do while not mflagExit:
+                /*WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} pause vtime .*/
+
+                WAIT-FOR CHOOSE OF FRAME {&frame-name}  focus {&browse-name} pause vtime .
     
-        vtime = max(0,time_motp + 10500000 - now).
-        if vtime = 0 and not v-flag then
-          run proc-Token no-error .
-        vtime = max(60000,time_motp + 10500000 - now).
+                vtime = max(0,time_motp + 10500000 - now).
+                if vtime = 0 and not v-flag then
+                    run proc-Token no-error .
+                vtime = max(60000,time_motp + 10500000 - now).
    
-      end.
+            end.
+        end.
+        else 
+        do:
+
+            WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} .
+        end.  
     end.
     else 
     do:
 
-      WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} .
+        WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} .
     end.  
-  end.
-  else 
-  do:
-
-    WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} .
-  end.  
 END.
 run disable_UI in this-procedure .
 
@@ -2124,16 +2145,16 @@ run disable_UI in this-procedure .
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-utd  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-  /*------------------------------------------------------------------------------
-    Purpose:     DISABLE the User Interface
-    Parameters:  <none>
-    Notes:       Here we clean-up the user-interface by deleting
-                 dynamic widgets we have created and/or hide 
-                 frames.  This procedure is usually called when
-                 we are ready to "clean-up" after running.
-  ------------------------------------------------------------------------------*/
-  /* Hide all frames. */
-  HIDE FRAME d-utd.
+    /*------------------------------------------------------------------------------
+      Purpose:     DISABLE the User Interface
+      Parameters:  <none>
+      Notes:       Here we clean-up the user-interface by deleting
+                   dynamic widgets we have created and/or hide 
+                   frames.  This procedure is usually called when
+                   we are ready to "clean-up" after running.
+    ------------------------------------------------------------------------------*/
+    /* Hide all frames. */
+    HIDE FRAME d-utd.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2142,194 +2163,229 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_BUTTON d-utd 
 PROCEDURE enable_BUTTON :
-  define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
-  define buffer cancel_marking           for ub.marking .
-  define variable v-write-cancel as logical no-undo .
-  v-write-cancel = false .
-  
+    
 
-  F-timeToken = string(time_motp) .
-  apply "value-changed" to F-timeToken in frame {&frame-name}.
-  display
-    F-timeToken
-    with frame {&frame-name} .
-
-  if available (X_utd) and mDiadocConnection <> ? 
-    then 
-  do:
-    for each cancel_utd-marking-lines where cancel_utd-marking-lines.doc-id = X_utd.doc-id and cancel_utd-marking-lines.db-num = X_utd.db-num, 
-      first cancel_marking where cancel_marking.mark = cancel_utd-marking-lines.mark and (cancel_marking.sts = Marking:PendingVerification:KeyIntDB or cancel_marking.sts = Marking:DeliveryControl:KeyIntDB): 
-      v-write-cancel = true .
-      leave .
-    end.       
-    enable
-      b_anul
-       
-      B-write-cancel
-      B-write-sertif
-      with frame {&frame-name} .
-    if v-write-cancel then 
-    do:
-      DISABLE
-        b-write-cancel
-        B-write-sertif
+    F-timeToken = string(time_motp) .
+    apply "value-changed" to F-timeToken in frame {&frame-name}.
+    display
+        F-timeToken
         with frame {&frame-name} .
-    end.  
-  end. 
-  else 
-  do:
-    disable
-      b_anul
-       
-      B-write-cancel
-      B-write-sertif
-      with frame {&frame-name} .
+
+    if available (X_utd) and mDiadocConnection <> ? 
+        then 
+    do:
+         
+               
+        enable
+            b_anul
+            B-write-cancel
+            B-write-sertif
+            with frame {&frame-name} .
+    end. 
+    else 
+    do:
+        if AVAILABLE (X_utd) and (X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:AutoRejected:KeyIntDB or X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:SignatureNotAccepted:KeyIntDB) then 
+        do:
+            enable
+                B-write-sertif
+                with frame {&frame-name} .
+        end.
+        else 
+        do:
+            DISABLE
+                B-write-sertif
+                with frame {&frame-name} .
+
+        end.        
+        disable
+            b_anul
+            B-write-cancel
+            with frame {&frame-name} .
      
-  end.         
-  if mDiadocConnection <> ? 
-    then enable  b_recEDI with frame {&frame-name} .
-  else disable b_recEDI with frame {&frame-name} .
+    end.         
+    if mDiadocConnection <> ? 
+        then enable  b_recEDI with frame {&frame-name} .
+    else disable b_recEDI with frame {&frame-name} .
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _Function checkMark d-utd 
+function checkMark returns logical 
+   (idb-num as integer, 
+    idoc-id as integer ):
+   define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
+   define buffer cancel_marking           for ub.marking .
+   define buffer X_utd                    for X_utd .
+   define variable v-write-cancel as logical no-undo .
+   v-write-cancel = false .
+   define variable vpen as integer no-undo.
+   define variable vdel as integer no-undo.
+   vpen = Marking:PendingVerification:KeyIntDB.
+   vdel = Marking:DeliveryControl:KeyIntDB.
+   for each cancel_utd-marking-lines where cancel_utd-marking-lines.doc-id = idoc-id and cancel_utd-marking-lines.db-num = idb-num no-lock, 
+            first cancel_marking where cancel_marking.mark = cancel_utd-marking-lines.mark and (cancel_marking.sts = vpen 
+                                                                                             or cancel_marking.sts = vdel) no-lock: 
+            v-write-cancel = true .
+            leave .
+   end.
+   if     v-write-cancel 
+   then do:
+      find first utd where utd.db-num eq idb-num
+                       and utd.doc-id eq idoc-id
+      no-lock no-error.
+      if available  utd
+         and utd.sts-edi <> ObjSrv:Env:Utd:Sts:EDI:AutoRejected:KeyIntDB 
+         and utd.sts-edi <> ObjSrv:Env:Utd:Sts:EDI:SignatureNotAccepted:KeyIntDB
+      then
+         return no.
+      else
+         return yes.
+   end.
+   else
+      return yes.
+END function.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-utd 
 PROCEDURE enable_UI :
-  /* --------------------------------------------------------------------
-                        Purpose:     ENABLE the User Interface
-                        Parameters:  <none>
-                        Notes:       Here we display/view/enable the widgets in the
-                                     user-interface.  In addition, OPEN all queries
-                                     associated with each FRAME and BROWSE.
-                                     These statements here are based on the "Other
-                                     Settings" section of the widget Property Sheets.
-                         -------------------------------------------------------------------- */
-  if p-mode = "" then 
-  do:
-    ENABLE
-      br-utd
-      b-pack
-      b-exit
-      b-update
-      R-obj
-      b-utd
-      b-hist
-      b-print
-      b-del
-      b-refresh
-      c-status
-      c-status-edi
-      RADIO-SET-1
-      c-type
-      F-date-from
-      F-date-to
-      b-mark
-      bt-not-sel-all
-      b-servis
-      f-DocumentNumber
-      radio-set-2
-      bt-not-sel-desel-all
-      WITH FRAME {&frame-name}.
-    display
-      B-write-Token
-      b_anul
-      B-write-cancel
-      b_recEDI
-      B-write-sertif
-      F-sertif
-      mark-num
-      F-date-from
-      F-date-to
-      with frame {&frame-name} .
-    enable
-      b-choose-sertif
-      with frame {&frame-name} .   
-    hide b-sel in frame {&frame-name} . 
-    if v-obj-active then enable b-add with frame {&frame-name} .    
-  end.
-  if p-mode = {&select} then 
-  do:
-    ENABLE
-      b-mark
-      bt-not-sel-all
-      b-sel
-      br-utd
-      b-exit
-      b-utd
-      bt-not-sel-desel-all
-      R-obj
-      radio-set-2
-      c-status
-      c-status-edi
-      RADIO-SET-1
-      c-type
-      F-date-from
-      F-date-to
-      f-DocumentNumber
-      WITH FRAME {&frame-name}.
-    display     F-date-from
-      F-date-to
-      with frame {&frame-name} .
-    disable
-      b-hist
-      b-print
-      b-del
-      b-refresh
-      b-servis
-      B-write-Token
-      b_anul
-      B-write-cancel
-      b_recEDI
-      B-write-sertif
-      F-sertif
-      mark-num
-      b-choose-sertif
-      with frame {&frame-name} .    
-    hide b-update in frame {&Frame-name} .
-  end.  
-  if log-res-Token then 
-  do:
-    menu-item m___Token:sensitive in menu POPUP-MENU-b-servis = yes.
-  end.
-  else 
-  do:
-    menu-item m___Token:sensitive in menu POPUP-MENU-b-servis = no.  
-  end.
-  if log-res-recheck then 
-  do:
-    menu-item m_recheck:sensitive in menu POPUP-MENU-b-servis = yes .
-  end.
-  else 
-  do:
-    menu-item m_recheck:sensitive in menu POPUP-MENU-b-servis = no .
-  end.     
-  if varlog then 
-  do:
-    menu-item m_nakl:sensitive in menu POPUP-MENU-b-servis = yes .
-  end.
-  else 
-  do:
-    menu-item m_nakl:sensitive in menu POPUP-MENU-b-servis = no .
-  end.  
-  if v-current-sertif-string <> "" then 
-  do:
-    v-sertif_num =  v-current-sertif-string .
-    run proc-sertif (no).
-    F-sertif = v-sertif_num .
-    if f-sertif <> "" then 
+    /* --------------------------------------------------------------------
+                          Purpose:     ENABLE the User Interface
+                          Parameters:  <none>
+                          Notes:       Here we display/view/enable the widgets in the
+                                       user-interface.  In addition, OPEN all queries
+                                       associated with each FRAME and BROWSE.
+                                       These statements here are based on the "Other
+                                       Settings" section of the widget Property Sheets.
+                           -------------------------------------------------------------------- */
+    if p-mode = "" then 
     do:
-      enable       B-write-Token with frame {&frame-name} .
+        ENABLE
+            br-utd
+            b-pack
+            b-exit
+            b-update
+            R-obj
+            b-utd
+            b-hist
+            b-print
+            b-del
+            b-refresh
+            c-status
+            c-status-edi
+            RADIO-SET-1
+            c-type
+            F-date-from
+            F-date-to
+            b-mark
+            bt-not-sel-all
+            b-servis
+            f-DocumentNumber
+            radio-set-2
+            bt-not-sel-desel-all
+            WITH FRAME {&frame-name}.
+        display
+            B-write-Token
+            b_anul
+            B-write-cancel
+            b_recEDI
+            B-write-sertif
+            F-sertif
+            mark-num
+            F-date-from
+            F-date-to
+            with frame {&frame-name} .
+        enable
+            b-choose-sertif
+            with frame {&frame-name} .   
+        hide b-sel in frame {&frame-name} . 
+        if v-obj-active then enable b-add with frame {&frame-name} .    
+    end.
+    if p-mode = {&select} then 
+    do:
+        ENABLE
+            b-mark
+            bt-not-sel-all
+            b-sel
+            br-utd
+            b-exit
+            b-utd
+            bt-not-sel-desel-all
+            R-obj
+            radio-set-2
+            c-status
+            c-status-edi
+            RADIO-SET-1
+            c-type
+            F-date-from
+            F-date-to
+            f-DocumentNumber
+            WITH FRAME {&frame-name}.
+        display     F-date-from
+            F-date-to
+            with frame {&frame-name} .
+        disable
+            b-hist
+            b-print
+            b-del
+            b-refresh
+            b-servis
+            B-write-Token
+            b_anul
+            B-write-cancel
+            b_recEDI
+            B-write-sertif
+            F-sertif
+            mark-num
+            b-choose-sertif
+            with frame {&frame-name} .    
+        hide b-update in frame {&Frame-name} .
+    end.  
+    if log-res-Token then 
+    do:
+        menu-item m___Token:sensitive in menu POPUP-MENU-b-servis = yes.
     end.
     else 
     do:
-      disable       B-write-Token with frame {&frame-name} .
+        menu-item m___Token:sensitive in menu POPUP-MENU-b-servis = no.  
+    end.
+    if log-res-recheck then 
+    do:
+        menu-item m_recheck:sensitive in menu POPUP-MENU-b-servis = yes .
+    end.
+    else 
+    do:
+        menu-item m_recheck:sensitive in menu POPUP-MENU-b-servis = no .
+    end.     
+    if varlog then 
+    do:
+        menu-item m_nakl:sensitive in menu POPUP-MENU-b-servis = yes .
+    end.
+    else 
+    do:
+        menu-item m_nakl:sensitive in menu POPUP-MENU-b-servis = no .
     end.  
-    display
-      F-sertif
-      with frame {&frame-name} .  
-    run enable_BUTTON .
-  end. 
+    if v-current-sertif-string <> "" then 
+    do:
+        v-sertif_num =  v-current-sertif-string .
+        run proc-sertif (no).
+        F-sertif = v-sertif_num .
+        if f-sertif <> "" then 
+        do:
+            enable       B-write-Token with frame {&frame-name} .
+        end.
+        else 
+        do:
+            disable       B-write-Token with frame {&frame-name} .
+        end.  
+        display
+            F-sertif
+            with frame {&frame-name} .  
+        run enable_BUTTON .
+    end. 
   
   if mode-erprn then 
   do:
@@ -2346,41 +2402,41 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-id d-utd 
 PROCEDURE init-id :
-  /* --------------------------------------------------------------------
-                      Purpose:     ENABLE the User Interface
-                      Parameters:  <none>
-                      Notes:       Here we display/view/enable the widgets in the
-                                   user-interface.  In addition, OPEN all queries
-                                   associated with each FRAME and BROWSE.
-                                   These statements here are based on the "Other
-                                   Settings" section of the widget Property Sheets.
-                       -------------------------------------------------------------------- */
-  define input parameter p-doc-id as integer no-undo .
-  define input parameter p-db-num as integer no-undo .
-  define buffer buf_utd-marking-lines for ub.utd-marking-lines .
-  define buffer buf_marking           for ub.marking .
+    /* --------------------------------------------------------------------
+                        Purpose:     ENABLE the User Interface
+                        Parameters:  <none>
+                        Notes:       Here we display/view/enable the widgets in the
+                                     user-interface.  In addition, OPEN all queries
+                                     associated with each FRAME and BROWSE.
+                                     These statements here are based on the "Other
+                                     Settings" section of the widget Property Sheets.
+                         -------------------------------------------------------------------- */
+    define input parameter p-doc-id as integer no-undo .
+    define input parameter p-db-num as integer no-undo .
+    define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+    define buffer buf_marking           for ub.marking .
 
-  find first X_utd exclusive-lock where X_utd.doc-id = p-doc-id and X_utd.db-num = p-db-num no-error .
-  if available (X_utd) then 
-  do: 
-    X_utd.GrayZone = no .
-    FOR EACH buf_utd NO-LOCK where buf_utd.doc-id = p-doc-id and buf_utd.db-num = p-db-num:
-      X_utd.sts = buf_utd.sts .
-      X_utd.sts-edi = buf_utd.sts-edi .
-      X_utd.stts = StatusTHName(buf_utd.sts).
-      X_utd.stts-edi = StatusEDIName(buf_utd.sts-edi).
-      if v-cntxt-db-num <> 0 then 
-      do:
-        for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
-          and buf_utd-marking-lines.doc-id = buf_utd.doc-id,
-          first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
-          and buf_marking.sts = Marking:GrayZone:KeyIntDB:
-          X_utd.GrayZone = yes .
-          leave .                                                                                                
-        end.                                             
-      end.  
+    find first X_utd exclusive-lock where X_utd.doc-id = p-doc-id and X_utd.db-num = p-db-num no-error .
+    if available (X_utd) then 
+    do: 
+        X_utd.GrayZone = no .
+        FOR EACH buf_utd NO-LOCK where buf_utd.doc-id = p-doc-id and buf_utd.db-num = p-db-num:
+            X_utd.sts = buf_utd.sts .
+            X_utd.sts-edi = buf_utd.sts-edi .
+            X_utd.stts = StatusTHName(buf_utd.sts).
+            X_utd.stts-edi = StatusEDIName(buf_utd.sts-edi).
+            if v-cntxt-db-num <> 0 then 
+            do:
+                for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
+                    and buf_utd-marking-lines.doc-id = buf_utd.doc-id,
+                    first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
+                    and buf_marking.sts = Marking:GrayZone:KeyIntDB:
+                    X_utd.GrayZone = yes .
+                    leave .                                                                                                
+                end.                                             
+            end.  
+        end.
     end.
-  end.
     
 END PROCEDURE.
 
@@ -2389,171 +2445,171 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-sort d-utd 
 PROCEDURE init-sort :
-  /* --------------------------------------------------------------------
-                      Purpose:     ENABLE the User Interface
-                      Parameters:  <none>
-                      Notes:       Here we display/view/enable the widgets in the
-                                   user-interface.  In addition, OPEN all queries
-                                   associated with each FRAME and BROWSE.
-                                   These statements here are based on the "Other
-                                   Settings" section of the widget Property Sheets.
-                       -------------------------------------------------------------------- */
+    /* --------------------------------------------------------------------
+                        Purpose:     ENABLE the User Interface
+                        Parameters:  <none>
+                        Notes:       Here we display/view/enable the widgets in the
+                                     user-interface.  In addition, OPEN all queries
+                                     associated with each FRAME and BROWSE.
+                                     These statements here are based on the "Other
+                                     Settings" section of the widget Property Sheets.
+                         -------------------------------------------------------------------- */
 
-  define variable p-ok    as logical no-undo .
-  define variable v-days  as integer no-undo .
-  define variable v-days1 as integer no-undo .
-  define variable v-days2 as integer no-undo .
-  define buffer buf_utd-marking-lines for ub.utd-marking-lines .
-  define buffer buf_marking           for ub.marking .
-  if AVAILABLE (X_utd) then empty temp-table X_utd .
-  /*  if v-current-sort-string <> "" then do:                                */
-  /*    c-status = string(entry(1,v-current-sort-string,{&delim-key})) .     */
-  /*    c-status-edi = integer(entry(2,v-current-sort-string,{&delim-key})) .*/
-  /*    c-type = integer(entry(3,v-current-sort-string,{&delim-key})) .      */
-  /*    RADIO-SET-1 = integer(entry(4,v-current-sort-string,{&delim-key})) . */
-  /*    RADIO-SET-2 = integer(entry(4,v-current-sort-string,{&delim-key})) . */
-  /*  end.                                                                   */
+    define variable p-ok    as logical no-undo .
+    define variable v-days  as integer no-undo .
+    define variable v-days1 as integer no-undo .
+    define variable v-days2 as integer no-undo .
+    define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+    define buffer buf_marking           for ub.marking .
+    if AVAILABLE (X_utd) then empty temp-table X_utd .
+    /*  if v-current-sort-string <> "" then do:                                */
+    /*    c-status = string(entry(1,v-current-sort-string,{&delim-key})) .     */
+    /*    c-status-edi = integer(entry(2,v-current-sort-string,{&delim-key})) .*/
+    /*    c-type = integer(entry(3,v-current-sort-string,{&delim-key})) .      */
+    /*    RADIO-SET-1 = integer(entry(4,v-current-sort-string,{&delim-key})) . */
+    /*    RADIO-SET-2 = integer(entry(4,v-current-sort-string,{&delim-key})) . */
+    /*  end.                                                                   */
   
-  define variable mQuery as handle    no-undo.
-  define variable vqry   as character no-undo.
-  create query mQuery.
-  mQuery:set-buffers(buffer buf_utd:HANDLE).
+    define variable mQuery as handle    no-undo.
+    define variable vqry   as character no-undo.
+    create query mQuery.
+    mQuery:set-buffers(buffer buf_utd:HANDLE).
   
-  if       i-Pack ne "" 
-    and i-pack ne ?
-    then
-    vqry = substitute("FOR EACH buf_utd where buf_utd.PackageId eq '&1'" ,  i-pack).
-     
-  else
-    vqry = substitute("FOR EACH buf_utd where buf_utd.host-code = &1 and buf_utd.DocumentDate >= &2 and buf_utd.DocumentDate <= &3" ,  v-cntxt-host-code-obj,f-date-to,f-date-from).
-  mQuery:query-prepare(vqry).
-  mQuery:query-open ().
-  mQuery:get-first ().
-                                                                         
-  /*  FOR EACH buf_utd NO-LOCK where buf_utd.host-code = v-cntxt-host-code-obj and buf_utd.DocumentDate >= f-date-to and buf_utd.DocumentDate <= f-date-from :*/
-  do while not mQuery:query-off-end:
     if       i-Pack ne "" 
-      and i-pack ne ?
-      and buf_utd.DocumentDate < f-date-to
-      then 
-    do:
-      f-date-to = buf_utd.DocumentDate.
-      display f-date-to. 
-    end.
-    
-    create X_utd .
-    buffer-copy buf_utd to X_utd . 
-    X_utd.stts = StatusTHName(X_utd.sts).
-    X_utd.stts-edi = StatusEDIName(X_utd.sts-edi).
-    X_utd.cli-name = CliName(X_utd.cli-code, X_utd.cli-type).
-    X_utd.EdoTypeName = EdoTypeName(X_utd.EDocType).
-    X_utd.GrayZone = no .
-    X_utd.obj-name = buf_utd.obj-type + " " + string(buf_utd.obj-code) .
-    for first ub.utd no-lock where ub.utd.DocumentExt = buf_utd.parentDocumentExt and ub.utd.OrganizationExt = buf_utd.parentOrganizationExt:
-      if ub.utd.DocumentNumber <> buf_utd.documentNumber then 
-        X_utd.orig-code = ub.utd.DocumentNumber .
-    end.     
-   
-    if X_utd.sts <> 8 and X_utd.sts <> 10 and X_utd.sts <> 11 then 
-    do:
-      if X_utd.ModifyDate <> ? and X_utd.ModifyTime <> ? and X_utd.ModifyTime <> 0 then 
-      do:
-        if today = X_utd.ModifyDate then 
+        and i-pack ne ?
+        then
+     vqry = substitute("FOR EACH buf_utd where buf_utd.PackageId eq '&1' no-lock" ,  i-pack).
+     
+    else
+        vqry = substitute("FOR EACH buf_utd where buf_utd.host-code = &1 and buf_utd.DocumentDate >= &2 and buf_utd.DocumentDate <= &3 no-lock" ,  v-cntxt-host-code-obj,f-date-to,f-date-from).
+    mQuery:query-prepare(vqry).
+    mQuery:query-open ().
+    mQuery:get-first ().
+                                                                         
+    /*  FOR EACH buf_utd NO-LOCK where buf_utd.host-code = v-cntxt-host-code-obj and buf_utd.DocumentDate >= f-date-to and buf_utd.DocumentDate <= f-date-from :*/
+    do while not mQuery:query-off-end:
+        if       i-Pack ne "" 
+            and i-pack ne ?
+            and buf_utd.DocumentDate < f-date-to
+            then 
         do:
-          X_utd.ModifyTime_ = string((time - X_utd.ModifyTime), "HH:MM") .
+            f-date-to = buf_utd.DocumentDate.
+            display f-date-to. 
         end.
-        else 
+    
+        create X_utd .
+        buffer-copy buf_utd to X_utd . 
+        X_utd.stts = StatusTHName(X_utd.sts).
+        X_utd.stts-edi = StatusEDIName(X_utd.sts-edi).
+        X_utd.cli-name = CliName(X_utd.cli-code, X_utd.cli-type).
+        X_utd.EdoTypeName = EdoTypeName(X_utd.EDocType).
+        X_utd.GrayZone = no .
+        X_utd.obj-name = buf_utd.obj-type + " " + string(buf_utd.obj-code) .
+        for first ub.utd no-lock where ub.utd.DocumentExt = buf_utd.parentDocumentExt and ub.utd.OrganizationExt = buf_utd.parentOrganizationExt:
+            if ub.utd.DocumentNumber <> buf_utd.documentNumber then 
+                X_utd.orig-code = ub.utd.DocumentNumber .
+        end.     
+   
+        if X_utd.sts <> 8 and X_utd.sts <> 10 and X_utd.sts <> 11 then 
         do:
-          if time < X_utd.ModifyTime then X_utd.ModifyTime_ = string((time * 3600 - X_utd.ModifyTime), "HH:MM") .
-          else X_utd.ModifyTime_ = "> суток" .
-        end.    
-      end.
-    end.
+            if X_utd.ModifyDate <> ? and X_utd.ModifyTime <> ? and X_utd.ModifyTime <> 0 then 
+            do:
+                if today = X_utd.ModifyDate then 
+                do:
+                    X_utd.ModifyTime_ = string((time - X_utd.ModifyTime), "HH:MM") .
+                end.
+                else 
+                do:
+                    if time < X_utd.ModifyTime then X_utd.ModifyTime_ = string((time - X_utd.ModifyTime), "HH:MM") .
+                    else X_utd.ModifyTime_ = "> суток" .
+                end.    
+            end.
+        end.
 
-    if v-cntxt-db-num <> 0 then 
+        if v-cntxt-db-num <> 0 then 
+        do:
+            for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = X_utd.db-num 
+                and buf_utd-marking-lines.doc-id = X_utd.doc-id,
+                first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
+                and buf_marking.sts = Marking:GrayZone:KeyIntDB:
+                X_utd.GrayZone = yes .
+                leave .                                                                                                
+            end.                                             
+        end. 
+        mQuery:get-next ().
+    end.
+    delete object mQuery.
+    find first tt-obj-list no-error .
+    if available (tt-obj-list) then 
     do:
-      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = X_utd.db-num 
-        and buf_utd-marking-lines.doc-id = X_utd.doc-id,
-        first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
-        and buf_marking.sts = Marking:GrayZone:KeyIntDB:
-        X_utd.GrayZone = yes .
-        leave .                                                                                                
-      end.                                             
-    end. 
-    mQuery:get-next ().
-  end.
-  delete object mQuery.
-  find first tt-obj-list no-error .
-  if available (tt-obj-list) then 
-  do:
-    for each X_utd:
-      p-ok = false .
-      for each tt-obj-list:
-        if X_utd.obj-code = tt-obj-list.obj-code and X_utd.obj-type = tt-obj-list.obj-type then p-ok = true.
-      end.
-      if p-ok <> true then delete X_utd .  
-    end.  
-  end.
-  if c-status <> "-1" then 
-  do:
-    for each X_utd where X_utd.sts <> integer(c-status):
-      delete X_utd .
-    end.  
-  end.    
-  if c-status-edi <> 0 then 
-  do:
-    for each X_utd where X_utd.sts-edi <> c-status-edi:
-      delete X_utd .
-    end.  
-  end.
-  case RADIO-SET-1:
-    when 1 then 
-      do:
+        for each X_utd:
+            p-ok = false .
+            for each tt-obj-list:
+                if X_utd.obj-code = tt-obj-list.obj-code and X_utd.obj-type = tt-obj-list.obj-type then p-ok = true.
+            end.
+            if p-ok <> true then delete X_utd .  
+        end.  
+    end.
+    if c-status <> "-1" then 
+    do:
+        for each X_utd where X_utd.sts <> integer(c-status):
+            delete X_utd .
+        end.  
+    end.    
+    if c-status-edi <> 0 then 
+    do:
+        for each X_utd where X_utd.sts-edi <> c-status-edi:
+            delete X_utd .
+        end.  
+    end.
+    case RADIO-SET-1:
+        when 1 then 
+            do:
+                for each X_utd :
+                    if StatusTH:CheckStsErr(X_utd.sts)
+                        then next.
+                    delete X_utd .
+                end.  
+            end.  
+        when 2 then 
+            do:
+                for each X_utd where X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or
+                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Canceled:KeyIntDB or 
+                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ConfirmedUcd:KeyIntDB or
+                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB:
+                    delete X_utd .
+                end.  
+            end.  
+    end case.
+    case RADIO-SET-2:
+        when 1 then 
+            do:
+                for each X_utd where X_utd.sts-edi > 100 :
+                    delete X_utd .
+                end.  
+            end.  
+        when 2 then 
+            do:
+                for each X_utd where X_utd.sts-edi < 100 :
+                    delete X_utd .
+                end.  
+            end.  
+    end case.  
+    if c-type <> 0 then
+    do:
+        for each X_utd where X_utd.EDocType <> c-type:
+            delete X_utd .
+        end.
+    end.
+    if f-DocumentNumber <> "" then 
+    do:
         for each X_utd :
-          if StatusTH:CheckStsErr(X_utd.sts)
-            then next.
-          delete X_utd .
-        end.  
-      end.  
-    when 2 then 
-      do:
-        for each X_utd where X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or
-          X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Canceled:KeyIntDB or 
-          X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ConfirmedUcd:KeyIntDB or
-          X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB:
-          delete X_utd .
-        end.  
-      end.  
-  end case.
-  case RADIO-SET-2:
-    when 1 then 
-      do:
-        for each X_utd where X_utd.sts-edi > 100 :
-          delete X_utd .
-        end.  
-      end.  
-    when 2 then 
-      do:
-        for each X_utd where X_utd.sts-edi < 100 :
-          delete X_utd .
-        end.  
-      end.  
-  end case.  
-  if c-type <> 0 then
-  do:
-    for each X_utd where X_utd.EDocType <> c-type:
-      delete X_utd .
-    end.
-  end.
-  if f-DocumentNumber <> "" then 
-  do:
-    for each X_utd :
-      if X_utd.DocumentNumber begins f-DocumentNumber
-        then next.
-      delete X_utd .
-    end.
-  end.  
-  apply "value-changed" to br-utd IN FRAME {&frame-name}.
+            if X_utd.DocumentNumber begins f-DocumentNumber
+                then next.
+            delete X_utd .
+        end.
+    end.  
+    apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2561,61 +2617,61 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-temp d-utd 
 PROCEDURE init-temp :
-  /* --------------------------------------------------------------------
-                      Purpose:     ENABLE the User Interface
-                      Parameters:  <none>
-                      Notes:       Here we display/view/enable the widgets in the
-                                   user-interface.  In addition, OPEN all queries
-                                   associated with each FRAME and BROWSE.
-                                   These statements here are based on the "Other
-                                   Settings" section of the widget Property Sheets.
-                       -------------------------------------------------------------------- */
+    /* --------------------------------------------------------------------
+                        Purpose:     ENABLE the User Interface
+                        Parameters:  <none>
+                        Notes:       Here we display/view/enable the widgets in the
+                                     user-interface.  In addition, OPEN all queries
+                                     associated with each FRAME and BROWSE.
+                                     These statements here are based on the "Other
+                                     Settings" section of the widget Property Sheets.
+                         -------------------------------------------------------------------- */
 
-  define variable ii         as integer   no-undo .
-  define variable Status_    as character no-undo .
-  define variable Status_EDI as character no-undo .
-  define variable Edoc_type  as character no-undo .
+    define variable ii         as integer   no-undo .
+    define variable Status_    as character no-undo .
+    define variable Status_EDI as character no-undo .
+    define variable Edoc_type  as character no-undo .
 
-  Status_ = "Все" + {&comma-char} + '-1':U .
+    Status_ = "Все" + {&comma-char} + '-1':U .
 
-  do ii = 1 to StatusTH:THMap:GetItem(ii):
-    Status_ = Status_ + {&comma-char} + StatusTH:CurrTHMapProp:Label_ + {&comma-char} + string(StatusTH:CurrTHMapProp:KeyIntDB) .
-  end.
+    do ii = 1 to StatusTH:THMap:GetItem(ii):
+        Status_ = Status_ + {&comma-char} + StatusTH:CurrTHMapProp:Label_ + {&comma-char} + string(StatusTH:CurrTHMapProp:KeyIntDB) .
+    end.
 
-  Status_EDI = "Все" + {&comma-char} + '0':U .
+    Status_EDI = "Все" + {&comma-char} + '0':U .
 
-  do ii = 1 to StatusEDI:EDIMap:GetItem(ii):
-    Status_EDI = Status_EDI + {&comma-char} + replace(StatusEDI:CurrEDIMapProp:Label_,",","") + {&comma-char} + string(StatusEDI:CurrEDIMapProp:NameProp) .
-  end.
+    do ii = 1 to StatusEDI:EDIMap:GetItem(ii):
+        Status_EDI = Status_EDI + {&comma-char} + replace(StatusEDI:CurrEDIMapProp:Label_,",","") + {&comma-char} + string(StatusEDI:CurrEDIMapProp:NameProp) .
+    end.
   
-  Edoc_Type = "Все" + {&comma-char} + '0':U .
+    Edoc_Type = "Все" + {&comma-char} + '0':U .
   
-  do ii = 1 to EdocType:EDocTypeMap:GetItem(ii):
-    Edoc_type = Edoc_type + {&comma-char} + EdocType:CurrEDocTypeMapProp:Label_ + {&comma-char} + string(EdocType:CurrEDocTypeMapProp:NameProp) .
-  end.
+    do ii = 1 to EdocType:EDocTypeMap:GetItem(ii):
+        Edoc_type = Edoc_type + {&comma-char} + EdocType:CurrEDocTypeMapProp:Label_ + {&comma-char} + string(EdocType:CurrEDocTypeMapProp:NameProp) .
+    end.
 
-  ASSIGN
-    c-status-edi:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_EDI .
-  ASSIGN
-    c-status:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_ .
-  ASSIGN
-    c-type:LIST-ITEM-PAIRS  in frame {&frame-name} = Edoc_type .
+    ASSIGN
+        c-status-edi:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_EDI .
+    ASSIGN
+        c-status:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_ .
+    ASSIGN
+        c-type:LIST-ITEM-PAIRS  in frame {&frame-name} = Edoc_type .
 
-  c-status = "-1" .
-  c-status-edi = 0 . 
-  RADIO-SET-1 = 2 .  
-  radio-set-1:screen-value = "2" .
-  if p-mode = {&select} and p-type <> 0 then 
-  do:
-    c-type = integer(p-type) .
-    c-type:screen-value = string(c-type) .
-  end.  
-  if not mode-erprn then 
-  do:
-    run proc-Token .  
-  end.
-  run init-sort .
-  {&OPEN-QUERY-br-utd}
+    c-status = "-1" .
+    c-status-edi = 0 . 
+    RADIO-SET-1 = 2 .  
+    radio-set-1:screen-value = "2" .
+    if p-mode = {&select} and p-type <> 0 then 
+    do:
+        c-type = integer(p-type) .
+        c-type:screen-value = string(c-type) .
+    end.  
+    if not mode-erprn then 
+    do:
+    run proc-Token .
+    end.
+    run init-sort .
+    {&OPEN-QUERY-br-utd}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2623,52 +2679,52 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-sertif d-utd 
 PROCEDURE proc-sertif :
-  /* --------------------------------------------------------------------
-                      Purpose:     ENABLE the User Interface
-                      Parameters:  <none>
-                      Notes:       Here we display/view/enable the widgets in the
-                                   user-interface.  In addition, OPEN all queries
-                                   associated with each FRAME and BROWSE.
-                                   These statements here are based on the "Other
-                                   Settings" section of the widget Property Sheets.
-                       -------------------------------------------------------------------- */
-  define input  parameter iChange as logical no-undo.
-  define variable vCertificates    as component-handle no-undo.
-  define variable vCertificate     as component-handle no-undo.
-  define variable mDiadocApi       as component-handle no-undo.
-  define variable mReflector       as component-handle no-undo.
-  define variable vCertificateName as component-handle no-undo .
-  define variable vi               as integer          no-undo.
-  if mDiadocApi eq ?
-    then
-    create "Diadoc.DiadocClient":U mDiadocApi no-error.
-  if mDiadocApi eq ?
-    then
-    return.
-  if    (    p-connect eq ? 
-    and (i-pack eq ? or i-pack eq "")
-    )
-    or iChange
-    then 
-  do:
+    /* --------------------------------------------------------------------
+                        Purpose:     ENABLE the User Interface
+                        Parameters:  <none>
+                        Notes:       Here we display/view/enable the widgets in the
+                                     user-interface.  In addition, OPEN all queries
+                                     associated with each FRAME and BROWSE.
+                                     These statements here are based on the "Other
+                                     Settings" section of the widget Property Sheets.
+                         -------------------------------------------------------------------- */
+    define input  parameter iChange as logical no-undo.
+    define variable vCertificates    as component-handle no-undo.
+    define variable vCertificate     as component-handle no-undo.
+    define variable mDiadocApi       as component-handle no-undo.
+    define variable mReflector       as component-handle no-undo.
+    define variable vCertificateName as component-handle no-undo .
+    define variable vi               as integer          no-undo.
+    if mDiadocApi eq ?
+        then
+        create "Diadoc.DiadocClient":U mDiadocApi no-error.
+    if mDiadocApi eq ?
+        then
+        return.
+    if    (    p-connect eq ? 
+        and (i-pack eq ? or i-pack eq "")
+        )
+        or iChange
+        then 
+    do:
 
-    vCertificates = mDiadocApi:GetPersonalCertificates(true).
-    do vi = 1 to  vCertificates:count:
-      vCertificate = vCertificates:GetItem(vi - 1).
-      if vCertificate:SerialNumber = v-sertif_num then 
-        v-sertif = vCertificate:Thumbprint .
+        vCertificates = mDiadocApi:GetPersonalCertificates(true).
+        do vi = 1 to  vCertificates:count:
+            vCertificate = vCertificates:GetItem(vi - 1).
+            if vCertificate:SerialNumber = v-sertif_num then 
+                v-sertif = vCertificate:Thumbprint .
+        end.
+        conectbyCertif(v-sertif) .
+        p-connect = mDiadocConnection.
+        if mDiadocConnection eq ?
+            then message "Не удалось подключиться к Диадок" view-as alert-box.
+        else run SendAuto.
     end.
-    conectbyCertif(v-sertif) .
-    p-connect = mDiadocConnection.
-    if mDiadocConnection eq ?
-      then message "Не удалось подключиться к Диадок" view-as alert-box.
-    else run SendAuto.
-  end.
-  else 
-  do:
-    mDiadocConnection = p-connect.
-    if mDiadocConnection ne ? then run SendAuto.
-  end.
+    else 
+    do:
+        mDiadocConnection = p-connect.
+        if mDiadocConnection ne ? then run SendAuto.
+    end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2676,134 +2732,134 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-Token d-utd 
 PROCEDURE proc-Token :
-  /* --------------------------------------------------------------------
-                      Purpose:     ENABLE the User Interface
-                      Parameters:  <none>
-                      Notes:       Here we display/view/enable the widgets in the
-                                   user-interface.  In addition, OPEN all queries
-                                   associated with each FRAME and BROWSE.
-                                   These statements here are based on the "Other
-                                   Settings" section of the widget Property Sheets.
-                       -------------------------------------------------------------------- */
-  define buffer buf_ext-system      for ub.ext-system .
-  define buffer buf_ext-system-attr for ub.ext-system-attr .
-  define variable oMotp as class ibs.th.bge.is_motp.is_motp no-undo .
-  for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-obj}
-    and buf_ext-system-attr.esya-attr-value  = v-cntxt-obj-type + string(v-cntxt-obj-code)
-    /* and buf_ext-system-attr.db-num           = buf_db.db-num */
-    :
-    find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
-      and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
-      no-error .
-    R-obj = 2 .
-    empty temp-table tt-obj-list .
+    /* --------------------------------------------------------------------
+                        Purpose:     ENABLE the User Interface
+                        Parameters:  <none>
+                        Notes:       Here we display/view/enable the widgets in the
+                                     user-interface.  In addition, OPEN all queries
+                                     associated with each FRAME and BROWSE.
+                                     These statements here are based on the "Other
+                                     Settings" section of the widget Property Sheets.
+                         -------------------------------------------------------------------- */
+    define buffer buf_ext-system      for ub.ext-system .
+    define buffer buf_ext-system-attr for ub.ext-system-attr .
+    define variable oMotp as class ibs.th.bge.is_motp.is_motp no-undo .
+    for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-obj}
+        and buf_ext-system-attr.esya-attr-value  = v-cntxt-obj-type + string(v-cntxt-obj-code)
+        /* and buf_ext-system-attr.db-num           = buf_db.db-num */
+        :
+        find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
+            and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
+            no-error .
+        R-obj = 2 .
+        empty temp-table tt-obj-list .
 
-    create tt-obj-list .
-    assign
-      tt-obj-list.obj-code = v-cntxt-obj-code
-      tt-obj-list.obj-type = v-cntxt-obj-type
-      .
-    obj-list = v-cntxt-obj-type + " " + string(v-cntxt-obj-code) . 
-    display obj-list r-obj with frame {&frame-name} . 
-    disable bt-sel-obj with frame {&frame-name} .
-    if available buf_ext-system then leave .
+        create tt-obj-list .
+        assign
+            tt-obj-list.obj-code = v-cntxt-obj-code
+            tt-obj-list.obj-type = v-cntxt-obj-type
+            .
+        obj-list = v-cntxt-obj-type + " " + string(v-cntxt-obj-code) . 
+        display obj-list r-obj with frame {&frame-name} . 
+        disable bt-sel-obj with frame {&frame-name} .
+        if available buf_ext-system then leave .
 
-  /*        run init-sort .         */
-  /*            {&OPEN-QUERY-br-utd}*/
-  end .
-  if not available buf_ext-system
-    then
-    for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-host-code}
-      and buf_ext-system-attr.esya-attr-value  = string(v-cntxt-host-code-obj)
-      /* and buf_ext-system-attr.db-num           = buf_db.db-num */
-      :
-      find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
-        and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
-        no-error .
-      if available buf_ext-system then leave .
-    end .                                      
-  if not available buf_ext-system
-    then 
-  do :
-    if v-mes-Token then 
-    do:
-      message "Нет внешней системы с типом ИС МОТП" view-as alert-box .
-      return .
-    end. 
-    else return . 
-  end.    
+    /*        run init-sort .         */
+    /*            {&OPEN-QUERY-br-utd}*/
+    end .
+    if not available buf_ext-system
+        then
+        for each buf_ext-system-attr no-lock where buf_ext-system-attr.esya-attr-code   = {&attr-esys-host-code}
+            and buf_ext-system-attr.esya-attr-value  = string(v-cntxt-host-code-obj)
+            /* and buf_ext-system-attr.db-num           = buf_db.db-num */
+            :
+            find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp})
+                and buf_ext-system.esys-id   = buf_ext-system-attr.esys-id 
+                no-error .
+            if available buf_ext-system then leave .
+        end .                                      
+    if not available buf_ext-system
+        then 
+    do :
+        if v-mes-Token then 
+        do:
+            message "Нет внешней системы с типом ИС МОТП" view-as alert-box .
+            return .
+        end. 
+        else return . 
+    end.    
          
-  v-mes-Token = no .
-  oMotp = new is_motp(buf_ext-system.db-num, buf_ext-system.esys-id) .
-  time_motp = oMotp:currTokenDT .
-  /*vToken = oMotp:authorize(input pKey, input pMode) .                                                        */
-  /*                                                                                                           */
-  /*pKey - ключ, по которому ищется сертификат.                                                                */
-  /*pMode - что за ключ. Сейчас реализованы отпечаток сертификата (ThumbPrint) и серийный номер (SerialNumber).*/
-  /*                                                                                                           */
-  /*Для авторизации по серийному номеру будет так:                                                             */
-  /*vToken = oMotp:authorize(input “01957BD10043AB1685421BAAE6508FB175”, input ”SerialNumber”) .               */
+    v-mes-Token = no .
+    oMotp = new is_motp(buf_ext-system.db-num, buf_ext-system.esys-id) .
+    time_motp = oMotp:currTokenDT .
+    /*vToken = oMotp:authorize(input pKey, input pMode) .                                                        */
+    /*                                                                                                           */
+    /*pKey - ключ, по которому ищется сертификат.                                                                */
+    /*pMode - что за ключ. Сейчас реализованы отпечаток сертификата (ThumbPrint) и серийный номер (SerialNumber).*/
+    /*                                                                                                           */
+    /*Для авторизации по серийному номеру будет так:                                                             */
+    /*vToken = oMotp:authorize(input “01957BD10043AB1685421BAAE6508FB175”, input ”SerialNumber”) .               */
 
-  /*Для авторизации по отпечатку:*/
-  if v-sertif <> ? and v-sertif <> "" then 
-  do:
-
-    vToken = oMotp:authorize(input v-sertif, input "ThumbPrint") no-error .
-    if error-status:error
-      then 
+    /*Для авторизации по отпечатку:*/
+    if v-sertif <> ? and v-sertif <> "" then 
     do:
-      /*      time_motp = datetime-tz(now - 10500000) .*/
-      time_motp = oMotp:currTokenDT .
-      vtime = max(0,time_motp + 10500000 - now).
-      if vtime = 0 then v-Token-error = true .
-      else v-Token-error = false .
 
-      /*      v-Token-error = true .         */
-      /*      time_motp = oMotp:currTokenDT .*/
-      message oMotp:MSG view-as alert-box .  
-    end.  
+        vToken = oMotp:authorize(input v-sertif, input "ThumbPrint") no-error .
+        if error-status:error
+            then 
+        do:
+            /*      time_motp = datetime-tz(now - 10500000) .*/
+            time_motp = oMotp:currTokenDT .
+            vtime = max(0,time_motp + 10500000 - now).
+            if vtime = 0 then v-Token-error = true .
+            else v-Token-error = false .
+
+            /*      v-Token-error = true .         */
+            /*      time_motp = oMotp:currTokenDT .*/
+            message oMotp:MSG view-as alert-box .  
+        end.  
+        else 
+        do:
+            time_motp = oMotp:currTokenDT . 
+            v-Token-error = false.
+        end.
+
+    end.
     else 
     do:
-      time_motp = oMotp:currTokenDT . 
-      v-Token-error = false.
+        time_motp = oMotp:currTokenDT .
+        vtime = max(0,time_motp + 10500000 - now).
+        if vtime = 0 then v-Token-error = true .
+        else v-Token-error = false .
+    end.     
+    apply "value-changed" to F-timeToken IN FRAME {&frame-name}.              
+    /* Это теперь внутри метода autorize. Там же обновляется время (атрибут AuthTokenDT)
+    find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp}) no-error.
+    if not available buf_ext-system
+      then 
+    do :
+      message "Внешняя система не найдена с типом: " + {&openxml-type-is_motp}
+        view-as alert-box.    
+      return .
     end.
 
-  end.
-  else 
-  do:
-    time_motp = oMotp:currTokenDT .
-    vtime = max(0,time_motp + 10500000 - now).
-    if vtime = 0 then v-Token-error = true .
-    else v-Token-error = false .
-  end.     
-  apply "value-changed" to F-timeToken IN FRAME {&frame-name}.              
-  /* Это теперь внутри метода autorize. Там же обновляется время (атрибут AuthTokenDT)
-  find first buf_ext-system no-lock where buf_ext-system.esys-type = integer({&openxml-type-is_motp}) no-error.
-  if not available buf_ext-system
-    then 
-  do :
-    message "Внешняя система не найдена с типом: " + {&openxml-type-is_motp}
-      view-as alert-box.    
-    return .
-  end.
-
-  find first buf_ext-system-attr exclusive-lock where buf_ext-system-attr.db-num   = buf_ext-system.db-num
-    and buf_ext-system-attr.esys-id  = buf_ext-system.esys-id
-    and buf_ext-system-attr.esya-attr-code = "AuthToken"
-    no-error .
-  if not available buf_ext-system-attr
-    then 
-  do :
-    create buf_ext-system-attr.
-    assign
-      buf_ext-system-attr.db-num         = buf_ext-system.db-num
-      buf_ext-system-attr.esys-id        = buf_ext-system.esys-id
-      buf_ext-system-attr.esya-attr-code = "AuthToken"
-      .
-  end.
-  buf_ext-system-attr.esya-attr-value = vToken .
-  */
-  delete object oMotp.
+    find first buf_ext-system-attr exclusive-lock where buf_ext-system-attr.db-num   = buf_ext-system.db-num
+      and buf_ext-system-attr.esys-id  = buf_ext-system.esys-id
+      and buf_ext-system-attr.esya-attr-code = "AuthToken"
+      no-error .
+    if not available buf_ext-system-attr
+      then 
+    do :
+      create buf_ext-system-attr.
+      assign
+        buf_ext-system-attr.db-num         = buf_ext-system.db-num
+        buf_ext-system-attr.esys-id        = buf_ext-system.esys-id
+        buf_ext-system-attr.esya-attr-code = "AuthToken"
+        .
+    end.
+    buf_ext-system-attr.esya-attr-value = vToken .
+    */
+    delete object oMotp.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2813,16 +2869,16 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION CliName d-utd 
 FUNCTION CliName RETURNS CHARACTER
-  (input p-cli-code as integer, input p-cli-type as character) :
-  /*------------------------------------------------------------------------------
-    Purpose:  
-      Notes:  
-  ------------------------------------------------------------------------------*/
-  define variable v-cli-name as character no-undo .
-  find first buf_clients no-lock where buf_clients.obj-code = p-cli-code
-    and buf_clients.obj-type = p-cli-type no-error .
-  if available (buf_clients) then v-cli-name = buf_clients.obj-name .
-  RETURN v-cli-name.   /* Function return value. */
+    (input p-cli-code as integer, input p-cli-type as character) :
+    /*------------------------------------------------------------------------------
+      Purpose:  
+        Notes:  
+    ------------------------------------------------------------------------------*/
+    define variable v-cli-name as character no-undo .
+    find first buf_clients no-lock where buf_clients.obj-code = p-cli-code
+        and buf_clients.obj-type = p-cli-type no-error .
+    if available (buf_clients) then v-cli-name = buf_clients.obj-name .
+    RETURN v-cli-name.   /* Function return value. */
 
 END FUNCTION.
 
@@ -2831,13 +2887,13 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION EdoTypeName d-utd 
 FUNCTION EdoTypeName RETURNS CHARACTER
-  ( input p-stsTH as integer ) :
-  /*------------------------------------------------------------------------------
-    Purpose:  
-      Notes:  
-  ------------------------------------------------------------------------------*/
+    ( input p-stsTH as integer ) :
+    /*------------------------------------------------------------------------------
+      Purpose:  
+        Notes:  
+    ------------------------------------------------------------------------------*/
 
-  RETURN EdocType:GetLabel(p-stsTH) .   /* Function return value. */
+    RETURN EdocType:GetLabel(p-stsTH) .   /* Function return value. */
 
 END FUNCTION.
 
@@ -2846,43 +2902,43 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION StatusEDIName d-utd 
 FUNCTION StatusEDIName RETURNS CHARACTER
-  ( input p-stsEDI as integer ) :
-  /*------------------------------------------------------------------------------
-    Purpose:  
-      Notes:  
-  ------------------------------------------------------------------------------*/
-  define variable v-status-name as character no-undo .
-  define buffer buf_utd-attr for ub.utd-attr .
+    ( input p-stsEDI as integer ) :
+    /*------------------------------------------------------------------------------
+      Purpose:  
+        Notes:  
+    ------------------------------------------------------------------------------*/
+    define variable v-status-name as character no-undo .
+    define buffer buf_utd-attr for ub.utd-attr .
   
-  if p-stsEDI = ObjSrv:Env:Utd:Sts:EDI:WithRecipientSignature:KeyIntDB then 
-  do:
-
-    find first buf_utd-attr no-lock where buf_utd-attr.doc-id = buf_utd.doc-id and
-      buf_utd-attr.db-num = buf_utd.db-num and
-      buf_utd-attr.attr-code = "sendcode"  no-error .
-    if available (buf_utd-attr) then 
+    if p-stsEDI = ObjSrv:Env:Utd:Sts:EDI:WithRecipientSignature:KeyIntDB then 
     do:
-      case buf_utd-attr.attr-value:
-        when "2" then 
-          do:
-            v-status-name = "(С расхождением)" .
-          end.
-        when "3" then 
-          do:
-            v-status-name = "(Не принято)" .
-          end.
-        otherwise 
+
+        find first buf_utd-attr no-lock where buf_utd-attr.doc-id = buf_utd.doc-id and
+            buf_utd-attr.db-num = buf_utd.db-num and
+            buf_utd-attr.attr-code = "sendcode"  no-error .
+        if available (buf_utd-attr) then 
         do:
-          v-status-name = "" .
-        end.       
-      end case .   
-    end.           
-    RETURN StatusEdi:GetLabel(p-stsEDI) + " " + v-status-name.   /* Function return value. */
-  end.
-  else 
-  do:  
-    RETURN StatusEdi:GetLabel(p-stsEDI).   /* Function return value. */
-  end.
+            case buf_utd-attr.attr-value:
+                when "2" then 
+                    do:
+                        v-status-name = "(С расхождением)" .
+                    end.
+                when "3" then 
+                    do:
+                        v-status-name = "(Не принято)" .
+                    end.
+                otherwise 
+                do:
+                    v-status-name = "" .
+                end.       
+            end case .   
+        end.           
+        RETURN StatusEdi:GetLabel(p-stsEDI) + " " + v-status-name.   /* Function return value. */
+    end.
+    else 
+    do:  
+        RETURN StatusEdi:GetLabel(p-stsEDI).   /* Function return value. */
+    end.
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2890,13 +2946,13 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION StatusTHName d-utd 
 FUNCTION StatusTHName RETURNS CHARACTER
-  ( input p-stsTH as integer ) :
-  /*------------------------------------------------------------------------------
-    Purpose:  
-      Notes:  
-  ------------------------------------------------------------------------------*/
+    ( input p-stsTH as integer ) :
+    /*------------------------------------------------------------------------------
+      Purpose:  
+        Notes:  
+    ------------------------------------------------------------------------------*/
 
-  RETURN StatusTH:GetLabel(p-stsTH) .   /* Function return value. */
+    RETURN StatusTH:GetLabel(p-stsTH) .   /* Function return value. */
 
 END FUNCTION.
 
