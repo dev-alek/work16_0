@@ -2167,64 +2167,72 @@ ON CHOOSE OF r-boss IN FRAME d-utd /* r-acc */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-contr-TH d-utd
 ON CHOOSE OF r-contr-TH IN FRAME d-utd
     DO:
-        define buffer buf_contract for contract.
-        define variable agnt-list as character no-undo .
-        if f-supp-code-TH <> 0 then 
+    define buffer buf_contract for ub.contract.
+    define buffer buf_contract-attr for ub.contract-attr .
+    define variable agnt-list as character no-undo .
+    if f-supp-code-TH <> 0 then 
+    do:
+      /*Если есть поставщик*/
+      run str/cont-all.w ( input  parParentProc, input v-cntxt-host-code-obj, input "b-sel":U, input {&company}, input f-supp-type-TH, input f-supp-code-TH, input  ?, input  ?, input  "current", input {&income} , input-output agnt-list   ) no-error .
+      find first buf_contract no-lock where RECID(buf_contract) = int (agnt-list) no-error.
+      if not available buf_contract then 
+      do:
+        assign
+          f-contr-TH      = 0
+          /*      v-contr-host = 0*/
+          f-contr-name-TH = ""
+          .
+        display f-contr-TH f-contr-name-TH  with frame {&frame-name}.
+        return.
+      end.
+      /*Если АКТ*/
+      if c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+      do:
+        define variable v-tth             as handle    no-undo .
+        define variable v-value-character as character no-undo.
+        define variable v-value-date      as date      no-undo.
+        define variable v-value-decimal   as decimal   no-undo.
+        define variable v-value-integer   as integer   no-undo.
+        define variable v-param-type      as character no-undo.
+        define variable v-FlagEdo         as logical   no-undo.
+        run adm/shattri.p (
+          input "get":U
+          ,input  buf_utd.obj-type /*p-obj-type*/
+          ,input  buf_utd.obj-code /*p-obj-code*/
+          ,input  {&attr-marking}
+          ,input  {&attr-marking_marking-EDO} /*p-param-code*/
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-FlagEdo
+          ,output v-param-type
+          ,input-output table-handle v-tth
+          ) no-error .
+ /*Если есть параметр*/
+        if v-FlagEdo then 
         do:
-            /*Если есть поставщик*/
-            run str/cont-all.w ( input  parParentProc, input v-cntxt-host-code-obj, input "b-sel":U, input {&company}, input f-supp-type-TH, input f-supp-code-TH, input  ?, input  ?, input  "current", input {&income} , input-output agnt-list   ) no-error .
-            find first buf_contract no-lock where RECID(buf_contract) = int (agnt-list) no-error.
-            if not available buf_contract then 
-            do:
-                assign
-                    f-contr-TH      = 0
-                    /*      v-contr-host = 0*/
-                    f-contr-name-TH = ""
-                    .
-                display f-contr-TH f-contr-name-TH  with frame {&frame-name}.
-                return.
-            end.
-            /*Если АКТ*/
-            if c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
-            do:
-                define variable v-tth             as handle    no-undo .
-                define variable v-value-character as character no-undo.
-                define variable v-value-date      as date      no-undo.
-                define variable v-value-decimal   as decimal   no-undo.
-                define variable v-value-integer   as integer   no-undo.
-                define variable v-param-type      as character no-undo.
-                define variable v-FlagEdo         as logical   no-undo.
-                run adm/shattri.p (
-                    input "get":U
-                    ,input  buf_utd.obj-type /*p-obj-type*/
-                    ,input  buf_utd.obj-code /*p-obj-code*/
-                    ,input  {&attr-marking}
-                    ,input  {&attr-marking_marking-EDO} /*p-param-code*/
-                    ,output v-value-character
-                    ,output v-value-date
-                    ,output v-value-decimal
-                    ,output v-value-integer
-                    ,output v-FlagEdo
-                    ,output v-param-type
-                    ,input-output table-handle v-tth
-                    ) no-error .
-                /*Если есть параметр*/
-                if v-FlagEdo then 
-                do:
-                    if buf_contract.whole-send-news = 1 then 
-                    do:
-                        assign
-                            f-contr-TH      = buf_contract.contract-code
-                            /*    v-contr-host   = buf_contract.host-code*/
-                            f-contr-name-TH = buf_contract.contract-prn-code + " от " + string(buf_contract.contract-date,"99/99/9999")
-                            .
-                    end.
-                    else 
-                    do:
-                        message "У договора " + buf_contract.contract-prn-code + " нет признака - 'Поставки через ЭДО'"
-                            view-as alert-box.
-                        return no-apply .
-                    end.    
+          find first buf_contract-attr exclusive-lock where buf_contract-attr.contract-code = buf_contract.contract-code
+            and buf_contract-attr.host-code = buf_contract.host-code and buf_contract-attr.attr-code = "contract-edi" no-error .
+          if not available (buf_contract-attr) then do:
+            message "У договора " + buf_contract.contract-prn-code + " нет признака - 'Поставки через ЭДО'"
+              view-as alert-box.
+            return no-apply .
+          end.  
+          if buf_contract-attr.attr-value = "yes" then 
+          do:
+            assign
+              f-contr-TH      = buf_contract.contract-code
+              /*    v-contr-host   = buf_contract.host-code*/
+              f-contr-name-TH = buf_contract.contract-prn-code + " от " + string(buf_contract.contract-date,"99/99/9999")
+              .
+          end.
+          else 
+          do:
+            message "У договора " + buf_contract.contract-prn-code + " нет признака - 'Поставки через ЭДО'"
+              view-as alert-box.
+            return no-apply .
+          end.    
       
         end.  
         else 
