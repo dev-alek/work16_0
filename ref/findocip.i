@@ -831,8 +831,8 @@ PROCEDURE check-obj :
       /*  (if v-head-position <> ''                        */
       /*  then " - ":U + v-head-position                   */
       /*  else '')                                         */
-      tt-fin-doc.payer-sign2
-      tt-fin-doc.payer-sign3
+/*      tt-fin-doc.payer-sign2*/
+/*      tt-fin-doc.payer-sign3*/
     
       with frame {&frame-name} .
         
