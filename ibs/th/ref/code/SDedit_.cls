@@ -101,7 +101,7 @@ class ibs.th.ref.code.SDedit_ inherits Form:
     this-object:label3:Name = "label3".
     this-object:label3:Size = new System.Drawing.Size(100, 23).
     this-object:label3:TabIndex = 15.
-    this-object:label3:Text = "IP".
+    this-object:label3:Text = "Адрес".
     this-object:label3:UseCompatibleTextRendering = true.
     /*  */
     /* textBox3 */

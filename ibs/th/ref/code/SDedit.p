@@ -50,7 +50,7 @@ do:
      end. 
       ub.Code.status_ = 0.
       if num-entries(ub.cash-desk.addr-path, {&delim-par}) > 1 then v-ip = entry(2,ub.cash-desk.addr-path,{&delim-par}) .
-      if num-entries (v-ip,":") > 1 then ub.Code.misc1 = entry(1,v-ip,":") + ":" + "8009" . else ub.Code.misc1 = v-ip .  
+      if num-entries (v-ip,":") > 1 then ub.Code.misc1 = entry(1,v-ip,":") + ":" + "8000/hddsmart" . else ub.Code.misc1 = v-ip .  
   
 end.  
   mSDedit = new ibs.th.ref.code.SDedit_(iMode).
