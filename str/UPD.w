@@ -1477,7 +1477,7 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* Аннуляция */
             do ii = 1 to num-entries (v-rid-list):
                 recid_utd = integer(entry(ii,v-rid-list)) .
                 find first x_utd where recid (x_utd) = recid_utd .
-                if X_utd.sts = 8 or X_utd.sts = 6 then 
+                if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or X_utd.sts = ObjSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB then 
                 do:
                     message "Документ с номером: " + X_utd.DocumentNumber + " " + string(X_utd.DocumentDate) + " подписан и обработан в системе." skip
                         "Убедитесь, что товар не оприходован в системе." skip
@@ -1503,7 +1503,7 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* Аннуляция */
             do:
                 row_utd = rowid (X_utd) .
                 find first x_utd where rowid (x_utd) = row_utd .
-                if X_utd.sts = 8 or X_utd.sts = 6 then 
+                if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or X_utd.sts = ObjSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB then 
                 do:
                     message "Документ с номером: " + X_utd.DocumentNumber + "подписан и обработан в системе." skip
                         "Убедитесь, что товар не оприходован в системе." skip
@@ -1640,7 +1640,7 @@ ON CHOOSE OF b_recEDI IN FRAME d-utd /* Получить данные ЭДО */
 }
         if log-res then 
         do:
-            getNewupd() no-error.
+            run getNewupd no-error.
             if error-status:error then 
             do:
                 return return-value .
@@ -1733,7 +1733,7 @@ ON CHOOSE OF MENU-ITEM m_oneUtd /* Повторно проверить */
         do:
             recid_utd = recid (X_utd) .
             find first x_utd where recid (x_utd) = recid_utd .
-            updOneUTD(X_utd.db-num, X_utd.doc-id ) no-error  .       
+            run updOneUTD(X_utd.db-num, X_utd.doc-id ) no-error  .       
             if  error-status:error then 
             do: 
                 return return-value .
@@ -2239,12 +2239,12 @@ function checkMark returns logical
          and utd.sts-edi <> ObjSrv:Env:Utd:Sts:EDI:AutoRejected:KeyIntDB 
          and utd.sts-edi <> ObjSrv:Env:Utd:Sts:EDI:SignatureNotAccepted:KeyIntDB
       then
-         return no.
-      else
          return yes.
+      else
+         return no.
    end.
    else
-      return yes.
+      return no.
 END function.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2389,8 +2389,9 @@ PROCEDURE enable_UI :
   
   if mode-erprn then 
   do:
-    disable
-      b-choose-sertif
+     DISABLE
+        B-write-sertif
+        b-choose-sertif
       with frame {&frame-name} .
     browse br-utd:GET-BROWSE-COLUMN(11):VISIBLE = no no-error.
   end.  
@@ -2510,7 +2511,9 @@ PROCEDURE init-sort :
                 X_utd.orig-code = ub.utd.DocumentNumber .
         end.     
    
-        if X_utd.sts <> 8 and X_utd.sts <> 10 and X_utd.sts <> 11 then 
+        if X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and 
+        X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Canceled:KeyIntDB and 
+        X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB then 
         do:
             if X_utd.ModifyDate <> ? and X_utd.ModifyTime <> ? and X_utd.ModifyTime <> 0 then 
             do:

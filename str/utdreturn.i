@@ -101,6 +101,8 @@ function  crUtdReturn returns logical
                                      and marking-lines.in-code    = parts.in-code
                                      and marking-lines.out-code   = parts.out-code
                                      and marking-lines.part-code  = parts.part-code
+                                     and marking-lines.prt-code   = parts.prt-code
+                                     and marking-lines.doc-level  = 1
             no-lock no-error.
             if available marking-lines
             then do trans:
@@ -149,6 +151,8 @@ function  crUtdReturn returns logical
                                            and marking-lines.in-code    = parts.in-code
                                            and marking-lines.out-code   = parts.out-code
                                            and marking-lines.part-code  = parts.part-code
+                                           and marking-lines.prt-code   = parts.prt-code
+                                           and marking-lines.doc-level  = 1 
                   no-lock:
                      find first utd-marking-lines where utd-marking-lines.db-num eq utd.db-num
                                                     and utd-marking-lines.doc-id eq utd.doc-id
@@ -254,6 +258,8 @@ function  crUtdReturn returns logical
                                            and marking-lines.in-code    = parts.in-code
                                            and marking-lines.out-code   = parts.out-code
                                            and marking-lines.part-code  = parts.part-code
+                                           and marking-lines.prt-code   = parts.prt-code
+                                           and marking-lines.doc-level  = 1
                   no-lock:
                      create buf_utd-marking-lines.
                      assign

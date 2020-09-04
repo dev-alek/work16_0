@@ -83,6 +83,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                          and buf_utd.EDocType    eq objSrv:Env:Utd:EDocType:ucd:KeyIntDB
                          and buf_utd.Timestamp   le new-{&main-tbl}.Timestamp
                          and buf_utd.sts-edi     ne utdEDISts:WithRecipientSignature:KeyIntDB
+                         and buf_utd.sts-edi     ne utdEDISts:RecipientSignatureRequestReject:KeyIntDB
         no-lock:
            assign 
               new-{&main-tbl}.sts-edi = old-{&main-tbl}.sts-edi
@@ -167,8 +168,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                                     and utd-attr.db-num = new-{&main-tbl}.db-num 
                                                     and utd-attr.attr-code = "sendcode"
                                                     and utd-attr.attr-value = "3")
-         then
+         then do:
             new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
+            UnLockUTDMark(new-{&main-tbl}.db-num ,new-{&main-tbl}.doc-id, yes ).
+         end.
          else if new-{&main-tbl}.sts     = utdTHSts:SignatureRequired:KeyIntDB
          then
             new-{&main-tbl}.sts = utdTHSts:AwaitingConfirmation:KeyIntDB.
@@ -228,16 +231,21 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       and new-{&main-tbl}.sts eq utdTHSts:CorrectionRequested:KeyIntDB    
    then
       setattrutd (new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id,"ststhbeforeCorrection",string(old-{&main-tbl}.sts)).
-   for each ub.utd-marking-lines 
-               where ub.utd-marking-lines.db-num  = new-{&main-tbl}.db-num 
-                 and ub.utd-marking-lines.doc-id  = new-{&main-tbl}.doc-id
-   no-lock:
-      addMark(buffer ub.utd-marking-lines ).
-   end.
    SetLockUTDMark(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id).
    
    changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RevocationStatus , new-{&main-tbl}.RevocationStatus).
-   changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RecipientResponseStatus , new-{&main-tbl}.RecipientResponseStatus). 
+   changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RecipientResponseStatus , new-{&main-tbl}.RecipientResponseStatus).
+   
+   
+   for each utd-lines where utd-lines.db-num eq  new-{&main-tbl}.db-num
+                        and utd-lines.doc-id eq  new-{&main-tbl}.doc-id
+                        and utd-lines.gds-code eq 0
+   exclusive-lock:                    
+       utd-lines.gds-code = ?.
+       
+   end.
+   
+       
 &Glob main-tbl utd
 { trg/trghistnws.i 
   &hist = yes 

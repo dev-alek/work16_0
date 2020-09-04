@@ -309,8 +309,7 @@ function SaturateAndCheckUTD return logical
                end.
                 
             end.
-            if      not vucd
-               and vGdsCode > 0 and vGdsCode ne ? 
+            if vGdsCode > 0 and vGdsCode ne ? 
             then do:
                define variable vValText as character no-undo.
                define variable vValDec  as decimal no-undo.
@@ -337,7 +336,10 @@ function SaturateAndCheckUTD return logical
                      release buf_utd-lines.
                   end.
                end.
-               if utd-lines.Quantity  ne vqnty
+               vValDec  = decimal(getAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity_old")) no-error.
+               setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity_old_new",string(vValDec * (if avail bar-code then bar-code.cli-base-rate else 1))).
+               if     not VUcd 
+                  and utd-lines.Quantity  ne vqnty
                then                        
                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity * (if avail bar-code then bar-code.cli-base-rate else 1)) + {&delim-par} + string(vqnty)).
             end.
@@ -824,7 +826,8 @@ method public void unLockUTDMarkbuf
 &else
 function UnLockUTDMarkbuf returns logical 
 &endif
-(buffer old_utd for utd ):
+(buffer old_utd for utd,
+ iAll as logical ):
    define variable voldkey    as character no-undo.
    &if "{1}" = "class"
    &then
@@ -842,8 +845,13 @@ function UnLockUTDMarkbuf returns logical
    &endif
    for each marking where marking.loc-key eq voldkey
    exclusive-lock:
+      if    iAll
+         or (    marking.sts eq  ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+             and marking.sts eq  ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB )
+      then do:
       marking.loc-key = "".
       marking.sts =  ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB.
+   end.
    end.
    
 end.
@@ -854,7 +862,7 @@ method public void unLockUTDMark
 &else
 function UnLockUTDMark returns logical 
 &endif
-(idb-num as integer ,idoc-id as integer ):
+(idb-num as integer ,idoc-id as integer ,iall as logical):
    define buffer old_utd for utd.
    
  /* снимаем старую блокировку */
@@ -863,7 +871,7 @@ function UnLockUTDMark returns logical
    no-lock no-error.
    if available old_utd
    then do:
-      UnLockUTDMarkbuf(buffer old_utd).
+      UnLockUTDMarkbuf(buffer old_utd,iall).
    end.
 end.
 
@@ -881,9 +889,16 @@ function changSts returns logical
    if     old_sts_edo ne new_sts_edo
       and ( new_sts_edo eq "RevocationAccepted"
            or  new_sts_edo eq "RecipientSignatureRequestRejected"
+           
            )
    then
-      UnLockUTDMark(idb-num,idoc-id).
+      UnLockUTDMark(idb-num,idoc-id,yes).
+   
+   if     old_sts_edo ne new_sts_edo
+      and ( new_sts_edo eq "WithRecipientSignature"
+           )
+   then
+      UnLockUTDMark(idb-num,idoc-id,no).
 end.
 &if "{1}" = "class"
 &then
@@ -954,7 +969,7 @@ function SetLockUTDMark returns logical
          end.
          
       end.
-      UnLockUTDMark(old_utd.db-num,old_utd.doc-id).
+      UnLockUTDMark(old_utd.db-num,old_utd.doc-id,yes).
    end.
    
    

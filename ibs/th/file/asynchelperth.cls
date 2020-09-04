@@ -150,13 +150,15 @@ get.
       delworkdir().
       
    end destructor.
-   
    method public character  SaveArh ():
+      return SaveArh("").
+   end.
+   method public character  SaveArh (itext as character ):
       define variable mDir as character no-undo.
       define variable marh as character no-undo.
       
       mdir = trim(MyWorkDir,v-path-tls-dir-delim).
-      marh = mdir + ".zip".
+      marh = mdir + itext + ".zip".
       run utl\arh7z.p(marh,mdir).
       marh =objExists(marh,"F").
       return marh .
