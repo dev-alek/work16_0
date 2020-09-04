@@ -510,7 +510,7 @@ procedure rsrv-doc :
           if not available tt-tobacco-marks
           then do :
             create tt-tobacco-marks.
-            tt-tobacco-marks.mark = buf_marking-lines.mark  .
+            tt-tobacco-marks.mark = buf_marking.mark  .
             tt-tobacco-marks.qnty = 1 .
           end .
           if available buf_marking then tt-tobacco-marks.unit = buf_marking.unit-ext .                                     

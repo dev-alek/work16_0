@@ -3411,14 +3411,14 @@ vartechproliv = no
               run waitfram-hide in this-procedure no-error.
               undo, return error return-value.
         end.
-
+/*
         { str/corrsprc.i
           "'+'"
           bf_trn-doc.doc-code
           v-mess
         }
         if v-mess <> "" then message v-mess  view-as alert-box information TITLE "Сверка со с спецификацией договора".
-
+*/
 
         if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}  then do:
         run cus/edocsord.p (  input parParentProc

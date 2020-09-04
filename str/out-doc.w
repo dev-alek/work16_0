@@ -4584,7 +4584,12 @@ PROCEDURE proc-m-outs-9 :
                             input-output cpl_doc-line.price-rubl,
                             -1,
                             input ("copy-utd-line" + {&delim-par} + string(recid(buf_utd-lines)))) no-error.
-        if error-status :error then undo c-l, return error.
+        if error-status:error
+        then do :
+          message ("Ошибка при копировании товара " + string(cpl_goods.gds-code) + "  " + cpl_goods.gds-name + {&new-line} + return-value)
+          view-as alert-box .
+          undo c-l, return error.
+        end .
         assign
           cpl_doc-line.doc-qnty  = cpl_doc-line.doc-qnty + chg-qnty
           cpl_gds-dtl.doc-qnty   = cpl_gds-dtl.doc-qnty  + chg-qnty

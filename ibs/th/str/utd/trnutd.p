@@ -1014,7 +1014,7 @@ assign
               ).
           
 
-          if true /*ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)*/
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
           then do:
             fe1_:
             for each ub.utd-marking-lines where 
