@@ -822,7 +822,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
 
   if varerr = true
   then do:
-    if g#auto <> yes then do:
+    if g#auto <> yes and not g#esys then do:
       run gbl/prnfilen.w
         (input  "Ошибки по соответствию товаров в накладной и Ассортиментной политике"
         ,input  0
@@ -1538,7 +1538,7 @@ vartechproliv = no
             if varerr = yes
             then do:
               if v-not_ver-spec = false then do:
-              if g#auto <> yes then do:
+              if g#auto <> yes and not g#esys then do:
 
                 run gbl/prnfilen.w
                   (input  "Ошибки по соответствию товаров в накладной и спецификации к договору"
@@ -2403,7 +2403,7 @@ vartechproliv = no
             if varerr = yes
             then do:
               if v-not_ver-spec = false then do:
-              if g#auto <> yes then do:
+              if g#auto <> yes and not g#esys then do:
 
                 run gbl/prnfilen.w
                   (input  "Ошибки по соответствию товаров в накладной и спецификации к договору"
