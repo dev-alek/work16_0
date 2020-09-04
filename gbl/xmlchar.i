@@ -257,7 +257,7 @@ on error undo, return error
             end.
             else do:
                 assign
-                    p-out-string = p-out-string + substring( p-in-string, v-position )
+                    p-out-string = p-out-string + substring( p-in-string, v-position + 1 )
                 .
             end.
             leave replace-cycle.
@@ -316,14 +316,14 @@ on error undo, return error
                     then do:
                         assign
                             p-out-string = p-out-string + "<":U
-                            v-position   = v-position   + 4
+                            v-position   = v-position   + 3
                         .
                     end.        /* when "lt;":U */
                     when "gt;":U
                     then do:
                         assign
                             p-out-string = p-out-string + ">":U
-                            v-position   = v-position   + 4
+                            v-position   = v-position   + 3
                         .
                     end.        /* when "gt;":U */
                     otherwise do:
@@ -331,7 +331,7 @@ on error undo, return error
                         then do:
                             assign
                                 p-out-string = p-out-string + "&":U
-                                v-position   = v-position   + 5
+                                v-position   = v-position   + 4
                             .
                         end.        /* if substring( p-in-string, v-position + 1, 4 ) = "amp;":U */
                         else do:
@@ -341,14 +341,14 @@ on error undo, return error
                                 then do:
                                     assign
                                         p-out-string = p-out-string + '"':U
-                                        v-position   = v-position   + 6
+                                        v-position   = v-position   + 5
                                     .
                                 end.        /* when "quot;":U */
                                 when "apos;":U
                                 then do:
                                     assign
                                         p-out-string = p-out-string + "'":U
-                                        v-position   = v-position   + 6
+                                        v-position   = v-position   + 5
                                     .
                                 end.        /* when "apos;":U */
                                 otherwise do:
