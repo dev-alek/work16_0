@@ -121,7 +121,8 @@ method public void CrContentToSW (insw as handle):
             insw:write-data-element (  "gd-code",      string(utd-lines.gds-code)        ) . 
             insw:write-data-element (  "price-nonds",      string(utd-lines.Price)        ) . 
             insw:write-data-element (  "qnty-ttn",   string(utd-lines.Quantity)  ) . 
-            insw:write-data-element (  "sum",  string(utd-lines.Total)                 ) . 
+            insw:write-data-element (  "sum",  string(utd-lines.Total)                 ) .
+            insw:write-data-element (  "sum-nds",  string(utd-lines.vat)                 ) .  
             find first utd-marking-lines  where utd-marking-lines.db-num  = utd-lines.db-num
                                             and utd-marking-lines.doc-id  = utd-lines.doc-id
                                             and utd-marking-lines.LineNum = utd-lines.LineNum

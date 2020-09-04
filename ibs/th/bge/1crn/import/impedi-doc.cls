@@ -200,11 +200,21 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                utd-lines.gds-code  = goods.gds-cod
                utd-lines.UnitCode  = goods.unit-base
                utd-lines.GdsName   = goods.gds-name
-               utd-lines.Price  = v-gds-gd:price-nonds
+               utd-lines.Price     = v-gds-gd:price-nonds
                utd-lines.Quantity  = v-gds-gd:qnty-ttn
-               utd-lines.Total  = v-gds-gd:sum
-               utd-lines.TotalWithVatExcluded  = utd-lines.Price * utd-lines.Quantity
+               utd-lines.Total     = v-gds-gd:sum
             .
+            if v-gds-gd:sum-nds eq ?
+            then
+               assign
+                  utd-lines.TotalWithVatExcluded  = utd-lines.Price * utd-lines.Quantity
+               .
+            else
+               assign
+                  utd-lines.Vat                   = v-gds-gd:sum-nds 
+                  utd-lines.TotalWithVatExcluded  = utd-lines.Total - utd-lines.Vat
+               .
+            
             if v-gds-gd:stts-desc ne ?
             then
                AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"Load1C","stts-desc-line",v-gds-gd:stts-desc + {&delim-par} + string( utd-lines.LineNum)).
