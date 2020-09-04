@@ -910,6 +910,7 @@ if vsdsubsObj:GetItem(v-page-current) = 0
       Note:screen-value = vsdsubCurr:Note
       NumberVSD:screen-value = vsdsubCurr:VsdNum
       Qnty:screen-value = string (vsdsubCurr:Qnty).
+      NumPart:screen-value = string (vsdsubCurr:NumPart).
       SubGrp:screen-value = string (vsdsubCurr:SubProductGuid).
       StatusChar:screen-value = string (vsdsubCurr:StatusLbl).
     EDITOR-1 = vsdsubCurr:MsgErr.
