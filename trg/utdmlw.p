@@ -27,7 +27,15 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
+{ trg/trghistnws.i } 
+{str/utd-err.i}
+{str/utd.i}
 
+if     not g#news
+   and new new-{&main-tbl}
+   and new-{&main-tbl}.doc-level eq 1
+then
+   addMark(buffer new-{&main-tbl} ).
 { trg/trghistnws.i 
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"

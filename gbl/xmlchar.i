@@ -23,30 +23,55 @@ define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
 
 /*==========================================================================*/
+&if "{1}" = "class"
+&then
+method private void xmlchar-test (input  p-in-string          as character,
+                                  output p-out-string-enc     as character,
+                                  output p-out-string-dec    as character):
+&else
 procedure xmlchar-test :
 define input parameter p-in-string          as character        no-undo.
 define output parameter p-out-string-enc    as character        no-undo.
 define output parameter p-out-string-dec    as character        no-undo.
-
+&endif
 do
 on error undo, return error
 :
-    run xmlchar-encode in this-procedure (
+    &if "{1}" = "class"
+    &then 
+       xmlchar-encode
+    &else
+       run xmlchar-encode in this-procedure 
+    &endif
+    (
           input p-in-string
         , output p-out-string-enc
     ).
-    run xmlchar-decode in this-procedure (
+    &if "{1}" = "class"
+    &then
+       xmlchar-decode   
+    &else
+       run xmlchar-decode in this-procedure 
+    &endif
+    (
           input p-out-string-enc
         , output p-out-string-dec
     ).
+
 end.
-end procedure. /* xmlchar-test */
+end . /* xmlchar-test */
 
 /*==========================================================================*/
+&if "{1}" = "class"
+&then
+method private void xmlchar-encode (input  p-in-string          as character,
+                                  output p-out-string         as character):
+&else
+
 procedure xmlchar-encode :
 define input parameter p-in-string      as character        no-undo.
 define output parameter p-out-string    as character        no-undo.
-
+&endif
     define variable v-position      as integer      no-undo.
     define variable v-current-char  as character    no-undo.
 do
@@ -107,6 +132,66 @@ on error undo, return error
                             p-out-string = p-out-string + "&quot;":U
                         .
                     end.        /* when '"':U */
+                    when chr(1)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(1) */
+                    when chr(2)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(2) */
+                    when chr(3)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(3) */
+                    when chr(4)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(4) */
+                    when chr(5)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(5) */
+                    when chr(6)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(6) */
+                    when chr(7)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(7) */
+                    when chr(8)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(8) */
+                    when chr(9)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(9) */
+                    when chr(29)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + "":U
+                        .
+                    end.        /* when chr(29) */
                     when chr(10)
                     then do:
                         assign
@@ -129,13 +214,19 @@ on error undo, return error
         end.        /* otherwise */
     end case.       /* case p-in-string */
 end.
-end procedure. /* xmlchar-encode */
+end . /* xmlchar-encode */
 
 /*==========================================================================*/
+&if "{1}" = "class"
+&then
+method private void xmlchar-decode (input  p-in-string          as character,
+                                  output p-out-string         as character):
+&else
+
 procedure xmlchar-decode :
 define input parameter p-in-string      as character        no-undo.
 define output parameter p-out-string    as character        no-undo.
-
+&endif
     define variable v-position      as integer      no-undo.
     define variable v-last-position as integer      no-undo.
     define variable v-temp-integer  as integer      no-undo.
@@ -166,7 +257,7 @@ on error undo, return error
             end.
             else do:
                 assign
-                    p-out-string = p-out-string + substring( p-in-string, v-position )
+                    p-out-string = p-out-string + substring( p-in-string, v-position + 1 )
                 .
             end.
             leave replace-cycle.
@@ -184,7 +275,13 @@ on error undo, return error
                 .
                 if v-last-position > 0
                 then do:
-                    run xmlchar-read-integer in this-procedure (
+                    &if "{1}" = "class"
+                    &then
+                    xmlchar-read-integer
+                    &else
+                    run xmlchar-read-integer in this-procedure 
+                    &endif
+                     (
                           input substring( p-in-string, v-position + 2, v-last-position - v-position - 2 )
                         , output v-temp-integer
                         , output v-success
@@ -219,14 +316,14 @@ on error undo, return error
                     then do:
                         assign
                             p-out-string = p-out-string + "<":U
-                            v-position   = v-position   + 4
+                            v-position   = v-position   + 3
                         .
                     end.        /* when "lt;":U */
                     when "gt;":U
                     then do:
                         assign
                             p-out-string = p-out-string + ">":U
-                            v-position   = v-position   + 4
+                            v-position   = v-position   + 3
                         .
                     end.        /* when "gt;":U */
                     otherwise do:
@@ -234,7 +331,7 @@ on error undo, return error
                         then do:
                             assign
                                 p-out-string = p-out-string + "&":U
-                                v-position   = v-position   + 5
+                                v-position   = v-position   + 4
                             .
                         end.        /* if substring( p-in-string, v-position + 1, 4 ) = "amp;":U */
                         else do:
@@ -244,14 +341,14 @@ on error undo, return error
                                 then do:
                                     assign
                                         p-out-string = p-out-string + '"':U
-                                        v-position   = v-position   + 6
+                                        v-position   = v-position   + 5
                                     .
                                 end.        /* when "quot;":U */
                                 when "apos;":U
                                 then do:
                                     assign
                                         p-out-string = p-out-string + "'":U
-                                        v-position   = v-position   + 6
+                                        v-position   = v-position   + 5
                                     .
                                 end.        /* when "apos;":U */
                                 otherwise do:
@@ -268,13 +365,21 @@ on error undo, return error
         end.        /* NOT ( if v-last-position = 0 ) */
     end.
 end.
-end procedure. /* xmlchar-encode */
+end . /* xmlchar-encode */
 
 /*==========================================================================*/
+&if "{1}" = "class"
+&then
+method private void xmlchar-read-integer (input  p-input-string       as character,
+                                          output p-output-integer     as integer,
+                                          output p-success            as logical):
+&else
+
 procedure xmlchar-read-integer :
 define input parameter p-input-string      as character        no-undo.
 define output parameter p-output-integer   as integer          no-undo.
 define output parameter p-success       as logical          no-undo.
+&endif
 do
 on error undo, return error
 :
@@ -294,7 +399,7 @@ on error undo, return error
         .
     end.
 end.
-end procedure. /* read-integer */
+end. /* read-integer */
 
 
 

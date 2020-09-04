@@ -1400,7 +1400,8 @@ function CheckLoad returns logical
                if vFlag  ne ?
                then 
                   return vFlag .
-               
+               else
+                  vFlag = no.
             end.
             else do:
                PutMes("Error Ошибка получения данных из Диадок UniversalTransferDocument" + if iDocument:version  eq "utd820_05_01_01" then "" else "WithHyphens").
@@ -1480,11 +1481,12 @@ end.
 
 &if "{1}" = "class"
 &then
-method public void UpdateUTDInformOne
+method public void UpdateUTDInformOne (iDocument as component-handle):
 &else
-function UpdateUTDInformOne returns logical 
+procedure  UpdateUTDInformOne : 
+   define input  parameter iDocument as component-handle no-undo.
 &endif
-(iDocument as component-handle):
+
    define variable vOrganizationid as character no-undo.
    define variable vDocumentId as character no-undo.
    define variable vi as integer no-undo.
@@ -1526,7 +1528,7 @@ function UpdateUTDInformOne returns logical
    define variable vNewUtd as logical          no-undo.
    if iDocument eq ?
    then
-     return no.
+     return.
    vOrganizationid = iDocument:OrganizationId.
    vDocumentid     = iDocument:DocumentId.
    find first utd where utd.DocumentExt     = vDocumentid
@@ -1559,7 +1561,7 @@ function UpdateUTDInformOne returns logical
                tt-recid.orgid = vOrganizationid
                tt-recid.docid = vDocumentid
             . 
-            return no. 
+            return. 
          end.
       
          
@@ -1587,7 +1589,7 @@ function UpdateUTDInformOne returns logical
             
             then do:
                PutMes(substitute("Документ &1 заблокирован и будет пропущен." ,iDocument:DocumentNumber )).
-               return false.
+               return.
             end.
          end.
          subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
@@ -1638,7 +1640,7 @@ function UpdateUTDInformOne returns logical
          utd.cli-code         = 0.
        */  
          
-         
+         utd.sts-edi = ?.
          utd.DocumentNumber = iDocument:DocumentNumber.
          utd.DocumentDate   = date(iDocument:DocumentDate).
          utd.Timestamp      = datetime(iDocument:Timestamp) .
@@ -1772,7 +1774,8 @@ function UpdateUTDInformOne returns logical
                      end.
                      utd-lines.ProductCode = vExtendedInvoiceItem:Product.
                      utd-lines.UnitCode    = vExtendedInvoiceItem:UnitnAME.
-                     utd-lines.Quantity    = vExtendedInvoiceItem:Quantity.
+                     setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(vExtendedInvoiceItem:Quantity)).
+                     
                      utd-lines.Price       = vExtendedInvoiceItem:Price.
                      utd-lines.TotalWithVatExcluded   = vExtendedInvoiceItem:SubtotalWithVatExcluded.
          /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -1965,7 +1968,7 @@ function UpdateUTDInformOne returns logical
                end.
                else do:
                   PutMes("Ошибка получения данных из Диадок UniversalTransferDocumentWithHyphens").
-                  return error no.
+                  return error "Ошибка получения данных из Диадок UniversalTransferDocumentWithHyphens".
                end.
                
             end. /*упд*/
@@ -2028,7 +2031,8 @@ function UpdateUTDInformOne returns logical
                          utd-lines.ProductCode = vExtendedInvoiceItem:Product.
 /*                         utd-lines.UnitCode    = vExtendedInvoiceItem:UnitnAME.*/
                          vValues = vExtendedInvoiceItem:CorrectedValues.
-                         utd-lines.Quantity    = vValues:Quantity.
+                         define variable vQuantity as decimal no-undo.
+                         vQuantity    = vValues:Quantity.
                          utd-lines.Price       = vValues:Price.
                          utd-lines.TotalWithVatExcluded   = vValues:SubtotalWithVatExcluded.
              /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -2037,7 +2041,8 @@ function UpdateUTDInformOne returns logical
                          utd-lines.Total     = vValues:Subtotal.
 /*                         utd-lines.Article   = vExtendedInvoiceItem:ItemVendorCode. /* ??? */*/
                          vValues = vExtendedInvoiceItem:OriginalValues.
-                         utd-lines.Quantity    = utd-lines.Quantity - vValues:Quantity.
+                         vQuantity    = vQuantity - vValues:Quantity.
+                         setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(vQuantity)).
                          utd-lines.Price       = utd-lines.Price - vValues:Price.
                          utd-lines.Vat       = utd-lines.Vat - vValues:Vat.
                          utd-lines.Total     = utd-lines.Total  - vValues:Subtotal.
@@ -2120,7 +2125,7 @@ function UpdateUTDInformOne returns logical
                      tt-recid.docid = vDocumentid
                   .
                   PutMes("Error Ошибка получения данных из Диадок UniversalCorrectionDocument").
-                  return error no.
+                  return error "Ошибка получения данных из Диадок UniversalCorrectionDocument".
                end.
             end.
             
@@ -2315,25 +2320,27 @@ end.
 
 &if "{1}" = "class"
 &then
-method public date UpdateUTDInform
+method public void UpdateUTDInform (ibeg-date as date,iend-date as date,output odatelast as date):
 &else
-function UpdateUTDInform returns date 
+procedure UpdateUTDInform:
+   define input  parameter ibeg-date as date no-undo.
+   define input  parameter iend-date as date no-undo.
+   define output parameter odatelast as date no-undo. 
 &endif
-(ibeg-date as date,iend-date as date):
+
    define variable vOrganizationList as component-handle no-undo.
    define variable vOrganization as component-handle no-undo.
    define variable vDocumentsTask as component-handle no-undo.
    define variable vDocumentList  as component-handle no-undo.
    define variable vDocumentchildList  as component-handle no-undo.
    define variable vDocument       as component-handle no-undo.
-   define variable vdatelast as date no-undo.
    
    define buffer ext-classif_obj for ext-classif.
    define buffer ext-classif_Cli  for ext-classif.
    
    define variable vi  as integer no-undo.
    define variable vii as integer no-undo.
-   vdatelast = ibeg-date.
+   odatelast = ibeg-date.
    vOrganizationList = mDiadocConnection:GetOrganizationList() no-error.
    if vOrganizationList eq ? then return error ?.
    vi = vOrganizationList:Count()no-error.
@@ -2405,8 +2412,8 @@ function UpdateUTDInform returns date
                           if chekStop() then return ?.
                          vDocument = vDocumentList:GetItem(vii - 1).
 /*                         message vDocument:DocumentNumber                     view-as alert-box.*/
-                         vdatelast = max(vdatelast,vDocument:DocumentDate) no-error.
-                         vdatelast = min(vdatelast,today).
+                         odatelast = max(odatelast,vDocument:DocumentDate) no-error.
+                         odatelast = min(odatelast,today).
                          packetupdd(vOrganization, vDocument).
                          
                       end.
@@ -2415,25 +2422,32 @@ function UpdateUTDInform returns date
                        if chekStop() then return ?.
                       if GetDocumforid (tt-pack.orgid, tt-pack.docid, output vDocument) eq "" /* Получим обновленный объект */
                       then
+                         &if "{1}" = "class"
+                         &then
                          UpdateUTDInformOne(vDocument).    
+                         &else
+                            run UpdateUTDInformOne(vDocument). 
+                         &endif   
                   end.
               /*  end.
              end.
           end.
       end.*/
    end.
-   return vdatelast.
    /*pause 60.*/
 end.
 
 &if "{1}" = "class"
 &then
 method public void SendReceiptsAsync
-&else
-function SendReceiptsAsync returns logical 
-&endif
 (idb-num as integer ,
  idoc-id as integer  ):
+&else
+procedure SendReceiptsAsync :
+define input  parameter idb-num as integer no-undo.
+define input  parameter idoc-id as integer no-undo. 
+&endif
+
    define variable vDocument as component-handle no-undo.
    define buffer utd for utd.
    if getdocum (idb-num, idoc-id, output vDocument ) eq ""
@@ -2448,13 +2462,23 @@ function SendReceiptsAsync returns logical
       then do:
          if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
          then
+            &if "{1}" = "class"
+            &then
             UpdateUTDInformOne(vDocument).
+            &else
+                run UpdateUTDInformOne(vDocument). 
+            &endif
          utd.flagRI = yes.
          SaturateAndCheckUTD( utd.db-num, utd.doc-id).
       end.
       if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
       then
+         &if "{1}" = "class"
+         &then
          UpdateUTDInformOne(vDocument).
+         &else
+             run UpdateUTDInformOne(vDocument). 
+         &endif
    end.
 
 end.
@@ -2480,7 +2504,12 @@ procedure SendAnsver:
    if getdocum (idb-num, idoc-id, output vDocument ) eq ""
    then do:
       PutMes(substitute("Обработка запроса &3 по документу ДБ &1 ID &2",idb-num,idoc-id,iTypeAnswer)).
+      &if "{1}" = "class"
+      &then
       SendReceiptsAsync(idb-num,idoc-id).
+      &else
+          run SendReceiptsAsync(idb-num,idoc-id).
+      &endif
       /*if     logical(vDocument:AmendmentRequested)
          and iTypeAnswer eq "CorrectionRequest"
       then 
@@ -2503,7 +2532,12 @@ procedure SendAnsver:
       then do:
          if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
          then
+            &if "{1}" = "class"
+            &then
             UpdateUTDInformOne(vDocument).
+            &else
+                run UpdateUTDInformOne(vDocument). 
+            &endif
          if    iTypeAnswer eq "CorrectionRequest" /* запрошена коректировка */ 
             or iTypeAnswer eq "AcceptRevocation" /* подпись ануляции */
             or iTypeAnswer eq "RejectRevocation" /* отказано ануляции */
@@ -2514,7 +2548,12 @@ procedure SendAnsver:
          then do:
             if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
             then
+               &if "{1}" = "class"
+               &then
                UpdateUTDInformOne(vDocument).
+               &else
+                   run UpdateUTDInformOne(vDocument). 
+               &endif
             if   not mFlaftest  
                
             then do trans:
@@ -2596,7 +2635,9 @@ procedure  SendResponse :
                 for each buf_utd where buf_utd.PackageId eq utd.PackageId
                                    and buf_utd.EDocType  eq objSrv:Env:Utd:EDocType:ucd:KeyIntDB
                                    and buf_utd.Timestamp     <= utd.Timestamp
-                                   and buf_utd.sts-edi     ne objSrv:Env:Utd:sts:edi:WithRecipientSignature:KeyIntDB
+                                   and (     buf_utd.sts-edi   eq objSrv:Env:Utd:sts:edi:WaitingForRecipientSignature:KeyIntDB
+                                         or  buf_utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:HaveToCreateReceipt:KeyIntDB
+                                         or  buf_utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:Verification:KeyIntDB)
                 no-lock :
                    &if "{1}" = "class"
                    &then
@@ -2645,7 +2686,12 @@ procedure  SendResponse :
              vreturn = yes.
              if itestMod
              then
+                &if "{1}" = "class"
+                &then
                 SendReceiptsAsync(idb-num,idoc-id).
+                &else
+                    run SendReceiptsAsync(idb-num,idoc-id).
+                &endif
           end.
           /*else
              vreturn = no.*/
@@ -2795,11 +2841,14 @@ end.
 &if "{1}" = "class"
 &then
 method public void updOneUTD
-&else
-function updOneUTD returns logical 
-&endif
 (idb-num as integer ,
  idoc-id as integer  ):
+&else
+procedure updOneUTD:
+   define input  parameter idb-num as integer no-undo. 
+   define input  parameter idoc-id as integer no-undo.
+&endif
+
    define variable vDocument as component-handle no-undo.
    define buffer utd for utd.
    for each tt-recid:
@@ -2807,17 +2856,22 @@ function updOneUTD returns logical
    end.
    if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
    then
+      &if "{1}" = "class"
+      &then
       UpdateUTDInformOne(vDocument).
+      &else
+          run UpdateUTDInformOne(vDocument). 
+      &endif
    
 end.
 
 &if "{1}" = "class"
 &then
-method public void getNewUpd
+method public void getNewUpd ():
 &else
-function getNewUpd return character
+procedure getNewUpd :
 &endif 
-():
+
    define variable VLastDate as date no-undo init ?.
    define variable vOrganization as component-handle no-undo.
    define variable vDocument     as component-handle no-undo.
@@ -2828,7 +2882,12 @@ function getNewUpd return character
       delete tt-recid.
    end.
    if chekStop() then return "Остановка пользователем".
-   VLastDate = UpdateUTDInform(if VLastDate eq ? then today - 365 else VLastDate - 3,today + 1 ).
+   &if "{1}" = "class"
+   &then
+       UpdateUTDInform(if VLastDate eq ? then today - 365 else VLastDate - 3,today + 1,output VLastDate).
+   &else
+       run UpdateUTDInform(if VLastDate eq ? then today - 365 else VLastDate - 3,today + 1,output VLastDate).
+   &endif
    if chekStop() then return "Остановка пользователем".
    if VLastDate ne ?
    then
@@ -2869,7 +2928,12 @@ function getNewUpd return character
           if     not available tt-recid
              and getdocum (utd.db-num, utd.doc-id, output vDocument) eq "" /* Получим обновленный объект */
           then do:
+             &if "{1}" = "class"
+             &then
              UpdateUTDInformOne(vDocument).
+             &else
+                run UpdateUTDInformOne(vDocument). 
+             &endif
              release object vDocument no-error.
           end.
        end.
@@ -2887,7 +2951,12 @@ function getNewUpd return character
           if     not available tt-recid
              and getdocum (utd.db-num, utd.doc-id, output vDocument) eq "" /* Получим обновленный объект */
           then do:
+             &if "{1}" = "class"
+             &then
              UpdateUTDInformOne(vDocument).
+             &else
+                run UpdateUTDInformOne(vDocument). 
+             &endif
              release object vDocument no-error.
           end.
        end.
@@ -2977,7 +3046,12 @@ procedure  SendAuto:
                         and utd.host-code eq v-cntxt-host-code-obj
                         and utd.OrganizationExt eq vorgid
          no-lock:
+            &if "{1}" = "class"
+            &then
             SendReceiptsAsync(utd.db-num,utd.doc-id).
+            &else
+                run SendReceiptsAsync(utd.db-num,utd.doc-id).
+            &endif
          end.
          /*
          for each utd where utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:AutoRejected:KeyIntDB
@@ -2998,7 +3072,12 @@ procedure  SendAuto:
                         and utd.host-code eq v-cntxt-host-code-obj
                         and utd.OrganizationExt eq vorgid
          no-lock:
+            &if "{1}" = "class"
+            &then
             updOneUTD(utd.db-num,utd.doc-id).
+            &else
+                run updOneUTD(utd.db-num,utd.doc-id).
+            &endif
          end.
       end.
    end.

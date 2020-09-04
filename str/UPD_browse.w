@@ -629,7 +629,6 @@ DEFINE BROWSE br-utd
     X_utd-lines.ProductCode COLUMN-LABEL "Наименование" FORMAT "x(40)":U width 25
     X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(40)":U width 25
     X_utd-lines.Quantity COLUMN-LABEL "Кол-во!марк. прод-ции" FORMAT "->>,>>9.999":U
-    X_utd-lines.UnitCode COLUMN-LABEL "ед.!изм" FORMAT "x(5)":U
     X_utd-lines.Price COLUMN-LABEL "Цена!(без НДC)" FORMAT "->>>>>>>>>>99.99":U width 10
     X_utd-lines.Total COLUMN-LABEL "Сумма!(с НДС)" FORMAT "->>>>>>>>>>>>>>99.99":U width 10
     X_utd-lines.TaxRate_ COLUMN-LABEL "НДС" FORMAT "X(5)":U
@@ -637,6 +636,7 @@ DEFINE BROWSE br-utd
     X_utd-lines.qnty-mark COLUMN-LABEL "Кол-во!марок" FORMAT "->>>9":U
     X_utd-lines.qnty-scan COLUMN-LABEL "Кол-во!проскан." FORMAT "->>>9":U
     X_utd-lines.stts COLUMN-LABEL "Статус" FORMAT "x(20)":U WIDTH 18.13
+    X_utd-lines.UnitCode COLUMN-LABEL "ед.!изм" FORMAT "x(5)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 147.5 BY 10.88 FIT-LAST-COLUMN.
@@ -1143,8 +1143,11 @@ ON VALUE-CHANGED OF br-utd IN FRAME d-utd
                 or buf_utd-err.reckey begins vRecKey-markLine or buf_utd-err.reckey = vRecKey):
 
                 /*        menu-item m_error-lines:sensitive in menu m_error = yes.*/
-                if f-info = "" then f-info = GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} .
-                else f-info = f-info + GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line}.
+                if f-info = "" then f-info = GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} no-error.
+                else do:
+                    if length (f-info) >= 2000 then leave .
+                f-info = f-info + GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} no-error.
+                end.
 
             end.
             line-num-error = X_utd-lines.LineNum .
@@ -1406,6 +1409,7 @@ ON CHOOSE OF menu-item m_marks-lines  /* Марки */
                 { gbl/brwrepos.i
               &line-num= 5
             }
+            empty temp-table tt-marking-lines .
                 run mark-temp .
                 run enable_BUTTON .
                 if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
@@ -1461,7 +1465,7 @@ ON CHOOSE OF menu-item m_marks-utd /* Марки по документу */
                 input type_mark,
                 input "" /*тип продукции*/
                 ) no-error .
-        
+            empty temp-table tt-marking-lines .
             run mark-temp .
             run enable_BUTTON .
             if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
@@ -2020,19 +2024,11 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Проверить по Акту приема-передачи */
                    end.
                    bf_utd-marking-lines.mark = buf_utd-marking-lines.mark.
                 end.
-                find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:GrayZone:KeyIntDB no-error .
-                if available (buf_marking) then 
+                find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark 
+                                                 and (   buf_marking.sts = Marking:GrayZone:KeyIntDB
+                                                      or buf_marking.sts = Marking:MarkError:KeyIntDB) no-error .
+                if not available (buf_marking) then 
                 do:
-                    qnty-gray = qnty-gray + buf_marking.box-qnty .
-                end.
-                else 
-                do:  
-                    find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:MarkError:KeyIntDB no-error .
-                    if available (buf_marking) then 
-                    do:
-                        qnty-gray = qnty-gray + buf_marking.box-qnty .
-                    end.   
-                    else do: 
                     if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
                     do:
                         tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
@@ -2041,42 +2037,52 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Проверить по Акту приема-передачи */
                         qnty-check = qnty-check + buf_marking.box-qnty .
                         buf_marking.sts = Marking:Checked_:KeyIntDB.
                         buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB.
-                    end.
-                end.  
-            end.
-            
-        end.   
-        for each buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
-                and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
-                and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB
-                and buf_utd-marking-lines.doc-level = 1  ,
-            first  bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
-                and bf_utd-marking-lines.doc-id = bf_utd.doc-id
-                and bf_utd-marking-lines.mark begins buf_utd-marking-lines.mark:
-                
-                if length (buf_utd-marking-lines.mark) < length(bf_utd-marking-lines.mark)
-                then do:
-                   find first bf_marking where bf_marking.mark eq buf_utd-marking-lines.mark
-                   no-lock no-error.
-                   if available bf_marking
-                   then do:
-                      find first bf_marking where bf_marking.mark eq bf_utd-marking-lines.mark
-                      exclusive-lock no-error.
-                      if available bf_marking
-                      then do:
-                         g#auto = yes.
-                         delete bf_marking.
-                         g#auto = no.
-                      end.
-                   end.
-                   bf_utd-marking-lines.mark = buf_utd-marking-lines.mark.
+                    
+                    end.  
                 end.
-                for first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark:
-                        qnty-check = qnty-check + buf_marking.box-qnty .
-                        buf_marking.sts = Marking:Checked_:KeyIntDB.
-                        buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB.
-                end.
-           end. 
+            end.   
+            for each buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 
+                 and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
+                 and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB
+                 and buf_utd-marking-lines.doc-level = 1  :
+               find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark no-error.
+               find first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.db-num = bf_utd.db-num 
+                      and bf_utd-marking-lines.doc-id = bf_utd.doc-id
+                      and bf_utd-marking-lines.mark begins buf_utd-marking-lines.mark.
+               if not available bf_utd-marking-lines
+               then do:
+                  qnty-gray = qnty-gray + buf_marking.box-qnty .
+               end.
+               else do:
+                  if length (buf_utd-marking-lines.mark) < length(bf_utd-marking-lines.mark)
+                  then do:
+                     find first bf_marking where bf_marking.mark eq buf_utd-marking-lines.mark
+                        no-lock no-error.
+                     if available bf_marking
+                     then do:
+                        find first bf_marking where bf_marking.mark eq bf_utd-marking-lines.mark
+                        exclusive-lock no-error.
+                        if available bf_marking
+                        then do:
+                           g#auto = yes.
+                           delete bf_marking.
+                           g#auto = no.
+                        end.
+                     end.
+                     bf_utd-marking-lines.mark = buf_utd-marking-lines.mark.
+                  end.
+                  if    buf_marking.sts = Marking:GrayZone:KeyIntDB
+                     or buf_marking.sts = Marking:MarkError:KeyIntDB 
+                  then do:
+                     qnty-gray = qnty-gray + buf_marking.box-qnty .
+                  end.
+                  else do:
+                     qnty-check = qnty-check + buf_marking.box-qnty .
+                     buf_marking.sts = Marking:Checked_:KeyIntDB.
+                     buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB.
+                  end.
+               end.
+            end. 
             /*Запишем номер УПД в акт*/
             bf_utd.doc-code = buf_utd.DocumentNumber .        
             message "Проверка завершена" skip
@@ -2160,7 +2166,7 @@ ON CHOOSE OF r-boss IN FRAME d-utd /* r-acc */
 &Scoped-define SELF-NAME r-contr-TH
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-contr-TH d-utd
 ON CHOOSE OF r-contr-TH IN FRAME d-utd
-DO:
+    DO:
     define buffer buf_contract for ub.contract.
     define buffer buf_contract-attr for ub.contract-attr .
     define variable agnt-list as character no-undo .
@@ -2285,6 +2291,7 @@ ON CHOOSE OF r-obj-TH IN FRAME d-utd
             .
         display f-obj-code-TH f-obj-type-TH f-obj-name-TH  with frame {&frame-name}.
         disable r-obj-TH with frame {&frame-name} .
+        run enable_BUTTON .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2317,6 +2324,7 @@ ON CHOOSE OF r-supp-TH IN FRAME d-utd
         display f-supp-type-TH f-supp-code-TH f-supp-name-TH with frame {&frame-name} .
         if c-type <> objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
             disable r-supp-TH with frame {&frame-name} .
+            run enable_BUTTON .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2874,9 +2882,36 @@ PROCEDURE enable_BUTTON :
             c-status = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB or
             c-status = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB then
         do:
-            enable
-                b_back-check
-                with frame {&frame-name} .           
+            if f-contr-TH <> 0 and f-obj-code-TH <> 0 and f-supp-code-TH <> 0 then 
+            do:
+                find first ub.utd-err-attr no-lock where ub.utd-err.db-num = p-db-num and ub.utd-err.doc-id = p-doc-id
+                    and (ub.utd-err.CodeErr = "NoSuppForId" 
+                    or ub.utd-err.CodeErr = "NoFirmForId"
+                    or ub.utd-err.CodeErr = "NoContForFirmId" 
+                    or ub.utd-err.CodeErr = "NoShopForKpp"
+                    or ub.utd-err.CodeErr = "NoEdoDoc" 
+                    or ub.utd-err.CodeErr = "SpecifErr"
+                    or ub.utd-err.CodeErr = "ContrDate") no-error .
+                if not available (ub.utd-err) then 
+                do:
+                    enable
+                        b_back-check
+                        with frame {&frame-name} .
+                end.
+                else 
+                do:
+                    disable
+                        b_back-check
+                        with frame {&frame-name} .                      
+                end.                            
+            end.
+            else 
+            do:
+                disable
+                    b_back-check
+                    with frame {&frame-name} .                        
+            end. 
+         
         end.     
         case c-status:
             when ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then /*Новый*/
@@ -3170,6 +3205,8 @@ PROCEDURE enable_UI :
                         b_write-cancel
                         with frame {&frame-name} .
                 end.  
+                if p-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then
+                menu-item m_check-akt:sensitive in menu POPUP-MENU-b-servis = no.
             end.
         when {&lookup} then 
             do:
@@ -3410,11 +3447,11 @@ PROCEDURE enable_UI :
         enable R-error-2 with frame {&frame-name} .
         hide R-error in frame {&frame-name} .
    
+        browse br-utd:GET-BROWSE-COLUMN(11):VISIBLE = no no-error.
         browse br-utd:GET-BROWSE-COLUMN(12):VISIBLE = no no-error.
-        browse br-utd:GET-BROWSE-COLUMN(13):VISIBLE = no no-error.
         if p-type <> objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
         do:
-            browse br-utd:GET-BROWSE-COLUMN(7):VISIBLE = no no-error.
+            browse br-utd:GET-BROWSE-COLUMN(6):VISIBLE = no no-error.
         end.
         hide
             v-mark
@@ -3891,7 +3928,7 @@ PROCEDURE temp-mark :
     else 
     do:
         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num and buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.mark <> "",
-            each buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark:
+            first buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark:
             create tt-marking-lines .
             assign
                 tt-marking-lines.gds-name    = GdsName(buf_utd-marking-lines.gds-code)

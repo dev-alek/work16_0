@@ -343,12 +343,12 @@ DEFINE BROWSE br-mark
   X_marking.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
   X_marking.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  X_marking.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
   X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
   X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
   X_marking.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U
   X_marking.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U
   X_marking.site COLUMN-LABEL "" FORMAT "X(1)":U
+  X_marking.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 123.5 BY 11 FIT-LAST-COLUMN.
@@ -361,11 +361,11 @@ DEFINE BROWSE br-mark-item
   X_marking-line.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  X_marking-line.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
   X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
   X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
   X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U
   X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U
+  X_marking-line.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
   
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -517,15 +517,23 @@ DO:
         find first X_marking where recid (X_marking) = recid_mark no-error.
         if available (X_marking) then 
         do:
-          X_marking.sts-utd = c-status .
-          X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
-          X_marking.sts = c-status .
-          X_marking.stts =  StatusTHName(X_marking.sts).
           find first buf_marking exclusive-lock where buf_marking.mark = X_marking.mark no-error .
-          if available (buf_marking) then buf_marking.sts = X_marking.sts .
-          find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
-            buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
-          if available (buf_utd-marking-lines) then buf_utd-marking-lines.sts = X_marking.sts-utd .
+           if available (buf_marking) 
+           then do: 
+              buf_marking.sts = c-status .
+              validate buf_marking.
+              X_marking.sts = buf_marking.sts .
+              X_marking.stts =  StatusTHName(X_marking.sts).
+           end.
+           find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
+             buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
+           if available (buf_utd-marking-lines) 
+           then do: 
+              buf_utd-marking-lines.sts = c-status .
+              validate buf_utd-marking-lines.
+              X_marking.sts-utd = buf_utd-marking-lines.sts .
+              X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
+           end.
         end.
 
       end.  
@@ -536,15 +544,25 @@ DO:
       find first X_marking where recid (X_marking) = recid_mark no-error.
       if available (X_marking) then 
       do:
-        X_marking.sts-utd = c-status .
-        X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
-        X_marking.sts = c-status .
-        X_marking.stts =  StatusTHName(X_marking.sts).
+        
+        
         find first buf_marking exclusive-lock where buf_marking.mark = X_marking.mark no-error .
-        if available (buf_marking) then buf_marking.sts = X_marking.sts .
+        if available (buf_marking) 
+        then do: 
+           buf_marking.sts = c-status .
+           validate buf_marking.
+           X_marking.sts = buf_marking.sts .
+           X_marking.stts =  StatusTHName(X_marking.sts).
+        end.
         find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
           buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
-        if available (buf_utd-marking-lines) then buf_utd-marking-lines.sts = X_marking.sts-utd .
+        if available (buf_utd-marking-lines) 
+        then do: 
+           buf_utd-marking-lines.sts = c-status .
+           validate buf_utd-marking-lines.
+           X_marking.sts-utd = buf_utd-marking-lines.sts .
+           X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
+        end.
       end.                  
       
     end.  
@@ -1441,8 +1459,8 @@ PROCEDURE enable_UI :
   end.  
   if p-type = 0 then 
   do:
-    browse br-mark:GET-BROWSE-COLUMN(8):VISIBLE = no.
-    browse br-mark-item:GET-BROWSE-COLUMN(8):VISIBLE = no.
+    browse br-mark:GET-BROWSE-COLUMN(7):VISIBLE = no.
+    browse br-mark-item:GET-BROWSE-COLUMN(7):VISIBLE = no.
     hide 
       Status_
       v-mark
@@ -1661,7 +1679,8 @@ define variable v_list      as character no-undo .
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer X_utd-lines for tt-utd-lines .
     define buffer buf_utd-err for ub.utd-err .
-
+    define buffer un_utd-marking-lines    for ub.utd-marking-lines .
+    
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
       v-mark:screen-value in frame {&frame-name} = v-scan-str.
@@ -1673,7 +1692,7 @@ define variable v_list      as character no-undo .
     
     f-text = "" .
     f-text:screen-value = "" .
-    if v-marking = "" or v-marking = ? then RETurn no-apply .
+/*    if v-marking = "" or v-marking = ? then RETurn no-apply .*/
     ASSIGN 
       v_list = 'Ё,Й,Ц,У,К,Е,Н,Г,Ш,Щ,З,Х,Ъ,Ф,Ы,В,А,П,Р,О,Л,Д,Ж,Э,Я,Ч,С,М,И,Т,Ь,Б,Ю':U .
 
@@ -1688,7 +1707,15 @@ define variable v_list      as character no-undo .
         return .  
       end.
     end.
-
+    v-marking = GetCodeIdent(v-mark) .
+    if v-marking = "" or v-marking = ? then 
+    do:
+        F-text = "            Просканирован штрих код, необходимо просканировать марку" .
+        display F-text with frame {&frame-name}.
+        v-mark:screen-value = "" .
+        v-mark = "" .
+        return no-apply.
+    end.  
     if p-mode <> {&lookup} then 
     do:
       /*Режим Серая зона*/

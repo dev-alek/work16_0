@@ -1084,6 +1084,14 @@ do:
             tt-fin-doc.cor-acc       = buf_sysconf.cor-acc-in-cash
             tt-fin-doc.cor-acc1      = buf_sysconf.cor-acc1-in-cash
             .
+          if available (ub.CashBook)
+          and ub.CashBook.CorrPko <> "" then 
+          do:
+            for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrPko
+              and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+              tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+            end.
+          end.
         end.
       end.
     when {&FDEDT_Expense_Cash} then 

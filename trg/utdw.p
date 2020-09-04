@@ -83,6 +83,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                          and buf_utd.EDocType    eq objSrv:Env:Utd:EDocType:ucd:KeyIntDB
                          and buf_utd.Timestamp   le new-{&main-tbl}.Timestamp
                          and buf_utd.sts-edi     ne utdEDISts:WithRecipientSignature:KeyIntDB
+                         and buf_utd.sts-edi     ne utdEDISts:RecipientSignatureRequestReject:KeyIntDB
         no-lock:
            assign 
               new-{&main-tbl}.sts-edi = old-{&main-tbl}.sts-edi
@@ -167,8 +168,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                                     and utd-attr.db-num = new-{&main-tbl}.db-num 
                                                     and utd-attr.attr-code = "sendcode"
                                                     and utd-attr.attr-value = "3")
-         then
+         then do:
             new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
+            UnLockUTDMark(new-{&main-tbl}.db-num ,new-{&main-tbl}.doc-id, yes ).
+         end.
          else if new-{&main-tbl}.sts     = utdTHSts:SignatureRequired:KeyIntDB
          then
             new-{&main-tbl}.sts = utdTHSts:AwaitingConfirmation:KeyIntDB.
@@ -228,16 +231,21 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       and new-{&main-tbl}.sts eq utdTHSts:CorrectionRequested:KeyIntDB    
    then
       setattrutd (new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id,"ststhbeforeCorrection",string(old-{&main-tbl}.sts)).
-   for each ub.utd-marking-lines 
-               where ub.utd-marking-lines.db-num  = new-{&main-tbl}.db-num 
-                 and ub.utd-marking-lines.doc-id  = new-{&main-tbl}.doc-id
-   no-lock:
-      addMark(buffer ub.utd-marking-lines ).
-   end.
    SetLockUTDMark(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id).
    
    changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RevocationStatus , new-{&main-tbl}.RevocationStatus).
-   changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RecipientResponseStatus , new-{&main-tbl}.RecipientResponseStatus). 
+   changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RecipientResponseStatus , new-{&main-tbl}.RecipientResponseStatus).
+   
+   
+   for each utd-lines where utd-lines.db-num eq  new-{&main-tbl}.db-num
+                        and utd-lines.doc-id eq  new-{&main-tbl}.doc-id
+                        and utd-lines.gds-code eq 0
+   exclusive-lock:                    
+       utd-lines.gds-code = ?.
+       
+   end.
+   
+       
 &Glob main-tbl utd
 { trg/trghistnws.i 
   &hist = yes 
@@ -336,11 +344,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
 
   end.
-  find first ub.clients where ub.clients.obj-type = new-{&main-tbl}.obj-type and ub.clients.obj-code = new-{&main-tbl}.obj-code and
+  
+  find first ub.clients no-lock  where ub.clients.obj-type = new-{&main-tbl}.obj-type and ub.clients.obj-code = new-{&main-tbl}.obj-code no-error.
+   /*
     ub.clients.db-num = g#db-num no-error.  
   if available (ub.clients) and (new-{&main-tbl}.sts <> old-utd.sts) and
     ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news)) and new-{&main-tbl}.doc-code = "" and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
     and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
+ */   
+  if    (new-{&main-tbl}.doc-code = "" or new-{&main-tbl}.doc-code eq ?) 
+    and  (new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB  and new-{&main-tbl}.sts <> old-{&main-tbl}.sts)
+    and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
+    and ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news))
+    and ub.clients.db-num = g#db-num
   then do:
     def var v-file-name as character no-undo.
     def var v-msg as character no-undo.
@@ -365,7 +381,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     os-command no-wait value (file-info:full-pathname).
   
   end.
-  
+  else if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB and g#db-num > 0 then do:
+      def var v-mes as char no-undo.
+      v-mes = substitute("DB&1,gnews&2,stts&3,old-stts&4,clientdb&5",g#db-num,g#news,new-{&main-tbl}.sts,old-{&main-tbl}.sts,ub.clients.db-num).
+       
+      if  log-manager:logfile-name ne ?
+   then log-manager:write-message(v-mes, "UTDWError"). 
+   else do:
+       output to c:\temp\utdwerr.txt append.
+       put v-mes skip.
+       output close.
+   end.       
+  end.
   if g#db-num ne 0 and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
   then do:
       v-msg = substitute ('MsgBox "Документ № &1 от &2. &3Обратитесь в Техническую поддержку.", ,"Получен документ первоначального ввода."', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate),  '" & vbCrLf &  "').

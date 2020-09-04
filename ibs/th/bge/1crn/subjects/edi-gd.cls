@@ -27,7 +27,8 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property nds-code        as decimal      no-undo get. private set.
   define property price-nonds     as decimal      no-undo get. private set.
   define property stts-desc       as character    no-undo get. private set.
-
+  define property sum-nds          as decimal      no-undo get. private set.
+  
   define property del-l         as integer      no-undo get. private set.
   define property del-f         as integer      no-undo get. private set.
 
@@ -63,6 +64,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       when "nds-code"     then nds-code         = {&attr-dec} .
       when "price-nonds"  then price-nonds      = {&attr-dec} .
       when "stts-desc"    then stts-desc        = {&attr-str} .
+      when "sum-nds"     then sum-nds           = {&attr-dec} .
       
     end case.
     catch exProErrors as class Progress.Lang.ProError :
@@ -113,6 +115,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       price-nonds        = ?
       gds-code           = ?
       stts-desc          = ?
+      sum-nds            = ?
     .
     if valid-object(marks)        then delete object marks .
   end method.

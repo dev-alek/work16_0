@@ -149,7 +149,7 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
 &Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark v-mark-2 Btn_rn br-mark ~
 Btn_pn 
 &Scoped-Define DISPLAYED-OBJECTS v-mark v-mark-2 f-status f-GTIN f-gds-code ~
-f-gds-name f-obj-code f-obj-type f-rn f-unit f-unit-2 f-pn 
+f-gds-name f-obj-code f-obj-type f-loc-key f-rn f-unit f-unit-2 f-pn 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -217,6 +217,11 @@ DEFINE VARIABLE f-GTIN AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 44 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-loc-key AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Блокировка марки" 
+     VIEW-AS FILL-IN 
+     SIZE 44 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-obj-code AS INTEGER FORMAT ">>>>>>>>>>>9":U INITIAL 0 
      LABEL "Объект" 
      VIEW-AS FILL-IN 
@@ -239,8 +244,7 @@ DEFINE VARIABLE f-rn AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE f-status AS CHARACTER FORMAT "X(256)":U 
      LABEL "Статус" 
      VIEW-AS FILL-IN 
-     SIZE 44 BY 1 
-     NO-UNDO.
+     SIZE 44 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-unit AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ед.изм. EDO" 
@@ -308,8 +312,9 @@ DEFINE FRAME d-mark
      f-gds-name AT ROW 4.75 COL 62 COLON-ALIGNED WIDGET-ID 222
      f-obj-code AT ROW 5.88 COL 10.5 COLON-ALIGNED WIDGET-ID 256
      f-obj-type AT ROW 5.88 COL 18.75 COLON-ALIGNED NO-LABEL WIDGET-ID 258
+     f-loc-key AT ROW 5.92 COL 62 COLON-ALIGNED WIDGET-ID 260
      f-rn AT ROW 7 COL 10.5 COLON-ALIGNED WIDGET-ID 246
-     Btn_rn AT ROW 7 COL 32.75 WIDGET-ID 250
+     Btn_rn AT ROW 7 COL 34.13 WIDGET-ID 250
      f-unit AT ROW 7 COL 81.13 COLON-ALIGNED WIDGET-ID 226
      f-unit-2 AT ROW 7 COL 107 RIGHT-ALIGNED WIDGET-ID 254
      br-mark AT ROW 8 COL 1.5 WIDGET-ID 200
@@ -349,6 +354,8 @@ ASSIGN
 /* SETTINGS FOR FILL-IN f-gds-name IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-GTIN IN FRAME d-mark
+   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN f-loc-key IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-obj-code IN FRAME d-mark
    NO-ENABLE                                                            */
@@ -538,6 +545,7 @@ PROCEDURE enable_mark :
     f-unit-2
     f-GTIN
     v-mark-2
+    f-loc-key
     with frame {&frame-name} .
   if available (buf_marking) and buf_marking.sts = Marking:MarkError:KeyIntDB then do:
     f-status:fgcolor in frame {&frame-name} = 12.
@@ -634,6 +642,7 @@ PROCEDURE enable_UI :
     f-unit-2
     f-GTIN
     v-mark-2
+    f-loc-key
     with frame {&frame-name} .    
     
 END PROCEDURE.
@@ -677,6 +686,7 @@ PROCEDURE init-temp :
       f-unit-2   = buf_marking.unit . 
       f-obj-code = buf_marking.obj-code .
       f-obj-type = buf_marking.obj-type .
+      f-loc-key = buf_marking.loc-key .
     
       for each buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark:
         /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
@@ -720,7 +730,8 @@ PROCEDURE init-temp :
       f-unit     = "" .     
       f-unit-2   = "" . 
       f-obj-code = ? .
-      f-obj-type = "" .        
+      f-obj-type = "" .     
+      f-loc-key = "" .   
     end.  
   end.   
   else do:
@@ -733,6 +744,7 @@ PROCEDURE init-temp :
       f-unit-2   = "" . 
       f-obj-code = ? .
       f-obj-type = "" .   
+      f-loc-key = "".
 
   end. 
   end.  
@@ -747,6 +759,7 @@ PROCEDURE init-temp :
       f-obj-code = ? .
       f-obj-type = "" .   
       v-mark-2 = "" .
+      f-loc-key = "" .
   end.      
   {&OPEN-QUERY-br-mark}
 END PROCEDURE.

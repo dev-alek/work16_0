@@ -51,7 +51,6 @@ do:
   define variable num-rec-ok as logical no-undo.
   define variable ii         as integer no-undo.
 /*  define variable logWrite   as class   LogWrite no-undo.*/
-  
   def buffer buf_utd for ub.utd.
   def buffer buf_utd-lines for ub.utd-lines.
   def buffer buf_utd-marking-lines for ub.utd-marking-lines.
@@ -70,6 +69,11 @@ do:
   if buf_utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
   then do:
     undo, return error "Неверный статус документа УТД " + string(p-db-num) + "," +  string(p-doc-id) + " - " + objSrv:Env:Utd:Sts:TH:GetLabel(buf_utd.sts).
+  end.
+
+  if buf_utd.EDocType ne objSrv:Env:Utd:EDocType:UTD:KeyIntDB
+  then do:
+    undo, return error "Неверный тип документа УТД " + string(p-db-num) + "," +  string(p-doc-id) + " - " + objSrv:Env:Utd:EDocType:GetLabel(buf_utd.EDocType).
   end.
   
   if buf_utd.doc-code <> "" and can-find (first ub.trn-doc where ub.trn-doc.doc-code = buf_utd.doc-code)
@@ -106,7 +110,8 @@ do:
   for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num and
   buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.sts ne objSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB
   no-lock:
-    
+    if buf_utd-lines.gds-code eq ?
+      then next fe_.
     def var sum-vat as decimal no-undo.
     def var v-q as decimal no-undo.
     v-q = 0.
@@ -137,13 +142,13 @@ do:
         if available (buf_marking)
           then v-q = v-q + buf_marking.box-qnty.
       end.      
-    end. 
-/*    else v-q = buf_utd-lines.Quantity.*/
+    end.
+    if v-q = 0
+      then next fe_.
     
     sum-vat = (buf_utd-lines.Total - buf_utd-lines.TotalWithVatExcluded) / buf_utd-lines.Quantity. 
     
     create temp_doc-line.
-    
     assign
       temp_doc-line.line-num   = buf_utd-lines.LineNum
       temp_doc-line.db-num = buf_utd-lines.db-num
@@ -158,6 +163,12 @@ do:
       .
     
   end.
+  
+  if not can-find (first temp_doc-line no-lock)
+  then do:
+    return error substitute ("В УПД &1 от &2 нет позиций для включения в приходную накладную", buf_utd.DocumentNumber, buf_utd.DocumentDate).
+  end.
+  
   { gbl/curdbnum.i
       iDbNum
     }

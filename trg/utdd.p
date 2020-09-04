@@ -31,10 +31,20 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
   &histheadtbl = "c-utd-head"
   &del  = yes
 }
-
+{str\utd-err.i}
+{str\utd.i}
+define variable v-msg as character no-undo.
 if not g#news 
 then do:
   define variable v-list-db as char no-undo.
+  
+  if {&main-tbl}.db-num ne g#db-num and not g#esys
+  then do:
+    v-msg = substitute( "&1. Ошибка при удалении документа. Запрещено удалять документ не своей БД.", vss-workfile ).
+    message v-msg view-as alert-box information title "Информация".
+    undo, return error v-msg.
+  end.
+  
   if g#db-num = 0
   then do:
     find first ub.clients no-lock where ub.clients.obj-type = {&main-tbl}.obj-type and ub.clients.obj-code = {&main-tbl}.obj-code no-error.
@@ -45,17 +55,20 @@ then do:
   else do:
     v-list-db = "0".
   end.
-  run nws/cmd-del.p
-      ( input {&table_utd}
-      ,input (buffer {&main-tbl}:handle)
-      ,input v-list-db
-      ) no-error .
-  if error-status :error
+  if not g#db-num = 0
   then do:
-    undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+    run nws/cmd-del.p
+        ( input {&table_utd}
+        ,input (buffer {&main-tbl}:handle)
+        ,input v-list-db
+        ) no-error .
+    if error-status :error
+    then do:
+      undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+    end.
   end.
 end.
-
+UnLockUTDMarkbuf(buffer {&main-tbl},yes).
 for each utd-err where {&main-tbl}-err.db-num eq  {&main-tbl}.db-num
                    and {&main-tbl}-err.doc-id eq  {&main-tbl}.doc-id
 exclusive-lock:

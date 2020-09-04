@@ -835,6 +835,10 @@ method private void addFieldHist(iTableName as character ):
          vPOSITION = max(vPOSITION,int({&prefixtt}FIELD.{&prefixfil}POSITION ))
       .
    end.
+   assign
+      vORDER    = max(vORDER,1000)
+      vPOSITION = max(vPOSITION,100)
+   .
    /* ADD FIELD "chip-num" OF "c-PromoCriterion" AS integer*/
    create {&prefixtt}FIELD.
    assign

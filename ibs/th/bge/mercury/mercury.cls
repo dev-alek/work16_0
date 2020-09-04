@@ -494,7 +494,7 @@ class ibs.th.bge.mercury.mercury:
                       sw:end-element ("vd:secondDate") .  
                     end.
                     sw:end-element ("vd:expiryDate") .
-                    do bi = 2 to num-entries(inVsdSubs:VsdObjCurr:TTNtype, chr(4)) :
+                    do bi = 2 to num-entries(inVsdSubs:VsdObjCurr:NumPart, chr(4)) :
                       sw:write-data-element ("vd:batchID", entry(bi, inVsdSubs:VsdObjCurr:NumPart, chr(4))) .
                     end .
                     sw:write-data-element ("vd:perishable", inVsdSubs:VsdObjCurr:Perishable) .
@@ -674,7 +674,7 @@ class ibs.th.bge.mercury.mercury:
                       sw:end-element ("vd:secondDate") .  
                     end.  
                     sw:end-element ("vd:expiryDate") .
-                    do bi = 2 to num-entries(inVsdSubs:VsdObjCurr:TTNtype, chr(4)) :
+                    do bi = 2 to num-entries(inVsdSubs:VsdObjCurr:NumPart, chr(4)) :
                       sw:write-data-element ("vd:batchID", entry(bi, inVsdSubs:VsdObjCurr:NumPart, chr(4))) .
                     end .
                     sw:write-data-element ("vd:perishable", inVsdSubs:VsdObjCurr:Perishable) .
@@ -879,7 +879,7 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы товаров не совпадают." .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .
       end .
       if not valid-object(gdsMercsubsObj:GdsMercsubsCurr)
@@ -887,14 +887,14 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "В ВСД товар с GUID'ом. В TH товар не синхронизирован с ФГИС Меркурий (нет GUID'а)" .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .
       end .
       if issuerId <> vsds:VsdObjCurr:ObjBeGuid
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы хоз. субъекта получателя не совпадают." .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       
@@ -916,7 +916,7 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы предприятия получателя не совпадают." .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.    
       v-found-cli = no .
@@ -938,7 +938,7 @@ class ibs.th.bge.mercury.mercury:
       and vsds:VsdObjCurr:Status_ <> vsdStat:IsUtilized
       then do :
         Msg = Msg + chr(10) + "GUID'ы хоз. субъекта и/или предприятия отправителя не совпадают." .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       
@@ -971,7 +971,7 @@ class ibs.th.bge.mercury.mercury:
       if not v-found-unit
       then do :
         Msg = Msg + chr(10) + "Не найдено соответствие единицы измерения из ВСД с единицами измерения TH." .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true . 
       end.
       if v-calc-qnty > (vsds:VsdObjCurr:Qnty * 1.05)
@@ -979,7 +979,7 @@ class ibs.th.bge.mercury.mercury:
       and v-found-unit = true
       then do :
         Msg = Msg + chr(10) + "Документарное количество в TH превосходит количество в ВСД более чем на 5%." .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       if v-calc-qnty < (vsds:VsdObjCurr:Qnty * 0.95)
@@ -987,7 +987,7 @@ class ibs.th.bge.mercury.mercury:
       and v-found-unit = true
       then do :
         Msg = Msg + chr(10) + "Документарное количество в TH меньше количества в ВСД более чем на 5%." .
-        os-copy value(search("VetDocumentByUuidResponse_.xml")) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
+        os-copy value(search(v-resp-file)) value ("ERR_vetDoc_" + inUUID + ".xml" ) .
         is-err = true .  
       end.
       

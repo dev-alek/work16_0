@@ -135,29 +135,7 @@ function CheckEdoc returns character
    end.
    
 end.
-&if "{1}" = "class"
-&then
-method public char getattrUtdlines
-&else
-function getattrUtdlines returns char 
-&endif
-(idb-num   as integer,
- idoc-id   as integer,
- ilinenum  as integer, 
- iattrcode as character ):
-   define buffer utd-attr for utd-attr.
-   find first utd-lines-attr where utd-lines-attr.db-num    eq idb-num
-                               and utd-lines-attr.doc-id    eq idoc-id
-                               and utd-lines-attr.lineNum   eq ilineNum
-                               and utd-lines-attr.attr-code eq iattrcode
-   no-lock no-error.
-   if  available utd-lines-attr
-   then 
-      return
-         utd-lines-attr.attr-value
-      . 
-   
-end.
+
 &if "{1}" = "class"
 &then
 method private void CrEdoc
@@ -215,7 +193,7 @@ function CrEdoc returns character
       vdb-num = utd.db-num.
       vdoc-id = utd.doc-id.
       
-      buffer-copy utd except doc-id db-num DocumentExt OrganizationExt to edoc
+      buffer-copy utd except doc-id db-num DocumentExt OrganizationExt comment to edoc
       assign
          edoc.EDocType = objSrv:Env:Utd:EDocType:edoc:KeyIntDB
          edoc.Timestamp = iTimestamp + 1
@@ -281,6 +259,12 @@ function CrEdoc returns character
                      and utd.EDocType  eq objSrv:Env:Utd:EDocType:Ucd:KeyIntDB
                      and utd.Timestamp gt vTimestamp
                      and utd.Timestamp le iTimestamp
+                     and (    utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB
+                          or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:sendRecipient:KeyIntDB
+                          or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:WithRecipientSignature:KeyIntDB
+                          or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:WithRecipientSignature:KeyIntDB
+                          or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:HaveToCreateReceipt:KeyIntDB
+                          or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:Verification:KeyIntDB)
 /*                     and utd.sts-edi ne*/
       no-lock by utd.PackageId by utd.EDocType by utd.Timestamp:
          edoc.Total = edoc.Total + utd.total.
@@ -292,6 +276,27 @@ function CrEdoc returns character
                               and utd-lines.doc-id     = utd.doc-id
                                 
          no-lock:
+            block-mark:
+            for each utd-marking-lines where utd-marking-lines.db-num eq utd-lines.db-num 
+                                         and utd-marking-lines.doc-id eq utd-lines.doc-id
+                                         and utd-marking-lines.LineNum eq utd-lines.LineNum
+                                         and utd-marking-lines.site eq "-"
+                                         no-lock:
+               find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc.db-num 
+                                               and edoc-marking-lines.doc-id eq edoc.doc-id
+                                               and edoc-marking-lines.mark   eq utd-marking-lines.mark
+                  no-lock no-error.
+               if available edoc-marking-lines
+               then do:
+                  find first edoc-lines where edoc-lines.db-num      = edoc-marking-lines.db-num
+                                    and edoc-lines.doc-id            = edoc-marking-lines.doc-id
+                                    and edoc-lines.LineNum           = edoc-marking-lines.LineNum
+                  exclusive-lock no-error.
+                  leave block-mark.
+               end.
+            end.
+            if not available edoc-lines
+            then                              
             find first edoc-lines where edoc-lines.db-num      = edoc.db-num
                                     and edoc-lines.doc-id      = edoc.doc-id
                                     and edoc-lines.ProductCode = utd-lines.ProductCode
@@ -315,7 +320,7 @@ function CrEdoc returns character
                assign
                   edoc-lines.Vat       = dec(getattrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"Vat_old") )  + utd-lines.Vat
                   edoc-lines.Total     = dec(getattrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"Total_old") )   + utd-lines.Total
-                  edoc-lines.Quantity  = edoc-lines.Quantity + utd-lines.Quantity.
+                  edoc-lines.Quantity  = dec(getattrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"Quantity_old_new") )  + utd-lines.Quantity.
                   edoc-lines.TotalWithVatExcluded = edoc-lines.Total - edoc-lines.Vat.
                .
             for each utd-marking-lines where utd-marking-lines.db-num eq utd-lines.db-num 
@@ -355,6 +360,7 @@ function CrEdoc returns character
                      AddUtdErr(edoc.db-num,edoc.doc-id,buffer edoc-lines:handle,"Edoc","Mark" + utd-marking-lines.site,utd-marking-lines.mark).
                end.
             end.
+            release edoc-lines.
          end.
       end.
       CheckEdoc (vdb-num,vdoc-id,edoc.db-num,edoc.doc-id) .
