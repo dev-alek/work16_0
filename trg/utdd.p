@@ -45,14 +45,17 @@ then do:
   else do:
     v-list-db = "0".
   end.
-  run nws/cmd-del.p
-      ( input {&table_utd}
-      ,input (buffer {&main-tbl}:handle)
-      ,input v-list-db
-      ) no-error .
-  if error-status :error
+  if not g#db-num = 0
   then do:
-    undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+    run nws/cmd-del.p
+        ( input {&table_utd}
+        ,input (buffer {&main-tbl}:handle)
+        ,input v-list-db
+        ) no-error .
+    if error-status :error
+    then do:
+      undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+    end.
   end.
 end.
 
