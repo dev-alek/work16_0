@@ -1,6 +1,7 @@
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 {cmp\str-glbl.i {1}}
+{gbl\xmlchar.i {1}}
 define variable mMRCCode as logical no-undo.
 &if "{1}" = "class"
 &then
@@ -9,15 +10,35 @@ method private character repSpecSimbforDm
 function repSpecSimbforDm return char 
 &endif
 (iDM as char ):
-    define variable vReplist_old as character no-undo init "),(,&gt;,&lt;,&apos;,&quot;,&amp;".
-    define variable vReplist_new as character no-undo init  ",,>,<,~',~",&".
     define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
     define variable vteg as character no-undo.
+    define variable oDM as character no-undo. 
     define variable vi as integer no-undo.
     
-    do vi = 1 to num-entries(vReplist_old):
-        iDM = replace(iDM,entry(vi,vReplist_old),entry(vi,vReplist_new)).
+  &if "{1}" <> "class"
+  &then
+  run
+  &endif 
+    xmlchar-encode(iDM, output oDM).
+    do vi = 1 to num-entries(vTeglist):
+       vTeg = entry(vi,vTeglist).
+       oDM = replace(oDM,"(" + vTeg + ")",vTeg).
     end.
+    return oDM.
+        
+end.
+
+&if "{1}" = "class"
+&then
+method private character repSpecSimbforDm1C
+&else
+function repSpecSimbforDm1C return char 
+&endif
+(iDM like marking.mark ):
+/*(iDM as char ):*/
+define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
+    define variable vteg as character no-undo.
+    define variable vi as integer no-undo.
     do vi = 1 to num-entries(vTeglist):
        vTeg = entry(vi,vTeglist).
        iDM = replace(iDM,"(" + vTeg + ")",vTeg).
@@ -25,6 +46,7 @@ function repSpecSimbforDm return char
     return iDM.
         
 end.
+
 
 &if "{1}" = "class"
 &then
@@ -325,13 +347,11 @@ method private integer getlevelByCodId
 &else
 function getlevelByCodId return int 
 &endif
-(iDm as char):
+(iCode as char):
    define variable vLength as int no-undo.
    define variable vLevel  as int no-undo.
-   define variable vCode as character no-undo.
-
-   vcode = replace(replace(idm,"(",""),")","").
-   vLength = length(vcode).
+ 
+   vLength = length(iCode).
    if    vLength eq 18
       or vLength eq 20
    then 
@@ -341,7 +361,7 @@ function getlevelByCodId return int
       Vlevel = 1.
    else if vLength eq 25 /* табак */
    then do:
-      if  iDm begins "01"
+      if  iCode begins "01"
       then
          Vlevel = 3.
       else
@@ -350,11 +370,11 @@ function getlevelByCodId return int
    else if     vLength >= 26
            and vLength <= 46
    then do:
-      if    substring(iDm,17,2) eq "11" /*табак*/
-         or substring(iDm,17,2) eq "13"
-         or (    substring(iDm,17,2) eq "21"
+      if    substring(iCode,17,2) eq "11" /*табак*/
+         or substring(iCode,17,2) eq "13"
+         or (    substring(iCode,17,2) eq "21"
              and vLength >= 33
-             and substring(iDm,26,4) ne "8005")
+             and substring(iCode,26,4) ne "8005")
       then
          Vlevel = 4.
       else if    vLength eq 31
