@@ -1081,8 +1081,15 @@ with frame a :
                 and chk-doc.chk-time  ge v-time)
                 or   chk-doc.chk-date gt v-date
              then do:
-                do vi = 1 to num-entries(chk-doc.office):
+                
+                if chk-doc.office eq ?
+                then do:
+                   delete chk-doc.
+                   next block-del.
+                end.
+                else do vi = 1 to num-entries(chk-doc.office):
                    if can-do({&chk-err-list},entry(vi,chk-doc.office))
+                    
                    then do:
                       delete chk-doc.
                       next block-del.
