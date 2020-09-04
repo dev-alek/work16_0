@@ -1143,8 +1143,11 @@ ON VALUE-CHANGED OF br-utd IN FRAME d-utd
                 or buf_utd-err.reckey begins vRecKey-markLine or buf_utd-err.reckey = vRecKey):
 
                 /*        menu-item m_error-lines:sensitive in menu m_error = yes.*/
-                if f-info = "" then f-info = GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} .
-                else f-info = f-info + GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line}.
+                if f-info = "" then f-info = GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} no-error.
+                else do:
+                    if length (f-info) >= 2000 then leave .
+                f-info = f-info + GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} no-error.
+                end.
 
             end.
             line-num-error = X_utd-lines.LineNum .

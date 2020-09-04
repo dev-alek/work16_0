@@ -795,6 +795,7 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
         define buffer bf_utd-marking-lines for ub.utd-marking-lines .
         define buffer bf_marking           for ub.marking .
         define variable Log-Res as logical no-undo.
+        define variable undelete as logical no-undo .
         if AVAILABLE (X_utd) then 
         do:
             /*Проверка прав */
@@ -814,31 +815,66 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
   log-res
 }
             if log-res then 
-            do:    
-                if X_utd.sts = 0 then 
+            do: 
+                if X_utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB or X_utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB  
+                    then 
                 do:
-                    find first bf_utd exclusive-lock where bf_utd.db-num = X_utd.db-num and bf_utd.doc-id = X_utd.doc-id no-error .
-                    /*        for each bf_utd-marking-lines where bf_utd-marking-lines.db-num = X_utd.db-num and bf_utd-marking-lines.doc-id = X_utd.doc-id:*/
-                    /*          for each bf_marking where bf_marking.mark = bf_utd-marking-lines.mark:                                                      */
-                    /*            delete bf_marking .                                                                                                       */
-                    /*          end.                                                                                                                        */
-                    /*     end.                                                                                                                             */
-                    delete bf_utd .
-                end.
+                    if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then 
+                    do:
+                        message "Удалить документ " + X_utd.DocumentNumber + "?"
+                            view-as alert-box question buttons yes-no update undelete.
+                        if undelete then 
+                        do:
+                            find first bf_utd exclusive-lock where bf_utd.db-num = X_utd.db-num and bf_utd.doc-id = X_utd.doc-id no-error .
+                            /*        for each bf_utd-marking-lines where bf_utd-marking-lines.db-num = X_utd.db-num and bf_utd-marking-lines.doc-id = X_utd.doc-id:*/
+                            /*          for each bf_marking where bf_marking.mark = bf_utd-marking-lines.mark:                                                      */
+                            /*            delete bf_marking .                                                                                                       */
+                            /*          end.                                                                                                                        */
+                            /*     end.                                                                                                                             */
+                            delete bf_utd .
+                        end. /*if undelete then*/
+                    end. /*if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then*/
+                    else 
+                    do:
+                        message "Документ " + string (X_utd.DocumentNumber) + " не может быть удален"
+                            view-as alert-box.
+                    end. 
+                end. /*if X_utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB or X_utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB*/
                 else 
                 do:
-                    message "Документ не может быть удален"
-                        view-as alert-box.
-                end.    
+                    if X_utd.db-num = v-cntxt-db-num and 
+                        X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and 
+                        X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB then 
+                    do:
+                        message "Удалить документ " + X_utd.DocumentNumber + "?"
+                            view-as alert-box question buttons yes-no update undelete.
+                        if undelete then 
+                        do:                            
+                            find first bf_utd exclusive-lock where bf_utd.db-num = X_utd.db-num and bf_utd.doc-id = X_utd.doc-id no-error .
+                            /*        for each bf_utd-marking-lines where bf_utd-marking-lines.db-num = X_utd.db-num and bf_utd-marking-lines.doc-id = X_utd.doc-id:*/
+                            /*          for each bf_marking where bf_marking.mark = bf_utd-marking-lines.mark:                                                      */
+                            /*            delete bf_marking .                                                                                                       */
+                            /*          end.                                                                                                                        */
+                            /*     end.                                                                                                                             */
+                            delete bf_utd .
+                        end. /*if undelete then*/
+                    end.
+                    else 
+                    do:
+                        message "Документ " + string (X_utd.DocumentNumber) + " не может быть удален"
+                            view-as alert-box.
+                    end.                     
+                end.         
                 run init-sort .
                 {&OPEN-QUERY-br-utd}
-            end.   
+            end.   /*if log-res then*/
         end.
+
         else 
         do:
             message "Нет документа для удаления"
                 view-as alert-box.
-        end.     
+        end.    
     END.
 
 /* _UIB-CODE-BLOCK-END */
