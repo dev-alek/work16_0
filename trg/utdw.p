@@ -344,11 +344,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
 
   end.
-  find first ub.clients where ub.clients.obj-type = new-{&main-tbl}.obj-type and ub.clients.obj-code = new-{&main-tbl}.obj-code and
+  
+  find first ub.clients no-lock  where ub.clients.obj-type = new-{&main-tbl}.obj-type and ub.clients.obj-code = new-{&main-tbl}.obj-code no-error.
+   /*
     ub.clients.db-num = g#db-num no-error.  
   if available (ub.clients) and (new-{&main-tbl}.sts <> old-utd.sts) and
     ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news)) and new-{&main-tbl}.doc-code = "" and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
     and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
+ */   
+  if    (new-{&main-tbl}.doc-code = "" or new-{&main-tbl}.doc-code eq ?) 
+    and  (new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB  and new-{&main-tbl}.sts <> old-{&main-tbl}.sts)
+    and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
+    and ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news))
+    and ub.clients.db-num = g#db-num
   then do:
     def var v-file-name as character no-undo.
     def var v-msg as character no-undo.
@@ -373,7 +381,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     os-command no-wait value (file-info:full-pathname).
   
   end.
-  
+  else if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB and g#db-num > 0 then do:
+      def var v-mes as char no-undo.
+      v-mes = substitute("DB&1,gnews&2,stts&3,old-stts&4,clientdb&5",g#db-num,g#news,new-{&main-tbl}.sts,old-{&main-tbl}.sts,ub.clients.db-num).
+       
+      if  log-manager:logfile-name ne ?
+   then log-manager:write-message(v-mes, "UTDWError"). 
+   else do:
+       output to c:\temp\utdwerr.txt append.
+       put v-mes skip.
+       output close.
+   end.       
+  end.
   if g#db-num ne 0 and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
   then do:
       v-msg = substitute ('MsgBox "Документ № &1 от &2. &3Обратитесь в Техническую поддержку.", ,"Получен документ первоначального ввода."', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate),  '" & vbCrLf &  "').

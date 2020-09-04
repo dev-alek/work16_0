@@ -157,13 +157,13 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
       then delete ub.utd.
   end.
   else do:
-    find first ub.utd exclusive-lock where ub.utd.doc-code = ub.trn-doc.doc-code no-error.
+    /*find first ub.utd exclusive-lock where ub.utd.doc-code = ub.trn-doc.doc-code no-error.
     for each ub.utd-marking-lines where ub.utd-marking-lines.doc-id =  ub.utd.doc-id and ub.utd-marking-lines.db-num = ub.utd.db-num:
       find first ub.marking where ub.marking.mark = ub.utd-marking-lines.mark no-error.
-      if not ub.marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+      if not available (ub.marking) or not ub.marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
         then next.
       ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
-    end.    
+    end.*/    
   end.
   /* удаляем суммы по документу */
   for each ub.trn-doc-sum exclusive-lock where
