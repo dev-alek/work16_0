@@ -1414,6 +1414,7 @@ case pardoc-mode :
           if can-find( first tt-pump-nozzle ) then do:
             run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
             if varcur-data = 1
+            or ptoldfilvalue <> "yes":u
             then do :
               { str/rvs-pump.i
                 parParentProc
