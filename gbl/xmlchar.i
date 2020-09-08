@@ -354,7 +354,6 @@ on error undo, return error
                                 otherwise do:
                                     assign
                                         p-out-string = p-out-string + "&":U
-                                        v-position   = v-position   + 1
                                     .
                                 end.        /* otherwise */
                             end case.       /* case substring( p-in-string, v-position + 1, 5 ) */
