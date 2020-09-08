@@ -800,19 +800,21 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
   if  bf_trn-doc.status_ = {&wayb} and bf_trn-doc.flag_ = false
   then do :
   varerr = false .
-   for each bf_doc-line no-lock where
+  for each bf_doc-line no-lock where
             bf_doc-line.doc-code =  bf_trn-doc.doc-code
             :
        v-kol-e = v-kol-e + 1.
-       run verify-assort-pol
-       ( bf_doc-line.artic ,
-         bf_doc-line.prod-type ,
-         bf_doc-line.prod-code ) no-error .
-          if error-status :error
-          then do:
-            assign
-              varerr = true .
-          end.
+       if g#auto <> yes and not g#esys then do:
+         run verify-assort-pol
+         ( bf_doc-line.artic ,
+           bf_doc-line.prod-type ,
+           bf_doc-line.prod-code ) no-error .
+            if error-status :error
+            then do:
+              assign
+                varerr = true .
+            end.
+       end.
   end.
 
   if v-kol-e = 0 then do:
@@ -822,20 +824,19 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
 
   if varerr = true
   then do:
-    if g#auto <> yes and not g#esys then do:
-      run gbl/prnfilen.w
-        (input  "Ошибки по соответствию товаров в накладной и Ассортиментной политике"
-        ,input  0
-        ,input  replace(bf_trn-doc.doc-code, "*", "$") + ".err"
-        ,input  7
-        ,output v-user-action
-        ,output v-printed
-        ).
-    end.
+    run gbl/prnfilen.w
+      (input  "Ошибки по соответствию товаров в накладной и Ассортиментной политике"
+      ,input  0
+      ,input  replace(bf_trn-doc.doc-code, "*", "$") + ".err"
+      ,input  7
+      ,output v-user-action
+      ,output v-printed
+      ).
     run waitfram-hide in this-procedure no-error.
     return error substitute( 'Ошибки по соответствию товаров в накладной и Ассортиментной политике. ' +
                              'Смотри файл "&1.err"'
                             , replace( bf_trn-doc.doc-code, "*", "$" ) ).
+    
   end.
   end.
   assign

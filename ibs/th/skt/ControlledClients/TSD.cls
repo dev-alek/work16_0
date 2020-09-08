@@ -492,7 +492,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       
       find first buf_gds-obj where buf_gds-obj.gds-code = buf_goods.gds-code no-lock no-error.
       if not available (buf_gds-obj)
-        then next cicle.
+      then do:
+        find first ub.utd-lines where ub.utd-lines.gds-code = buf_goods.gds-code no-lock no-error.
+        if not available (ub.utd-lines)
+          then next cicle.
+      end.
       
 /*      find first buf_bar-code where buf_bar-code.gds-code = buf_goods.gds-code and buf_bar-code.stts = 0 no-lock use-index prt-parts no-error.*/
       
@@ -1276,8 +1280,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define buffer buf_utd         for ub.utd.
     define buffer buf_utd-err     for ub.utd-err.
     define buffer buf_utd-m-l     for ub.utd-marking-lines.
+    define buffer buf_utd-m-l-par for ub.utd-marking-lines.
     define buffer buf_m-l         for ub.marking-lines.
     define buffer buf_m-chi       for ub.marking.
+    define buffer buf_m-par       for ub.marking.
     define buffer buf_utd-l       for ub.utd-lines.
     define buffer buf_m           for ub.marking.
     
@@ -1360,30 +1366,39 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           factQnty  = if available buf_gds-obj and buf_gds-obj.fact-qnty > -1 and buf_gds-obj.fact-qnty < 1 then replace (factQnty, ".", "0" + CurrDecSeparatorTH) else replace (factQnty, ".", CurrDecSeparatorTH)
         .
         
-
-        tsdstreamopenapp("MT_lines.txt"). 
-          jjm = jjm + 1.
-          put stream tsdstream unformatted string (jjm) + {&delimiteFld} + v-doc-num + {&delimiteFld} + string (pos) + {&delimiteFld} + string (buf_goods.gds-code) + {&delimiteFld} 
-          + string (buf_goods.gds-name) + {&delimiteFld} + buf_goods.unit-base + {&delimiteFld} + full-b-code + {&delimiteFld} + 
-          priceSale + {&delimiteFld} + docQnty + {&delimiteFld} + 
-          factQnty + {&delimiteFld} + string (buf_goods.gds-code) + {&delimiteFld} + 
-          v-doc-num + "_" + string (buf_goods.gds-code) + "_" + string(pos) + {&delimiteFld} + string(myflagsDocLine:FlagsToInt) + {&delimiterLine}.
-        tsdstreamclose().
-
         for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id and buf_utd-m-l.LineNum = buf_utd-l.LineNum no-lock
           :
-          find first buf_m no-lock where buf_m.mark = buf_utd-m-l.mark.
-          if not buf_m.unit-ext = "UNIT" and not buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB and ObjSrv:Env:Conf:IsMarking:IsMarking
+          find first buf_m no-lock where buf_m.mark = buf_utd-m-l.mark no-error.
+          if not available (buf_m) and not buf_m.unit-ext = "LEVEL1" and not buf_m.unit-ext = "UNIT" 
           then do:
-            find first buf_m-chi no-lock where buf_m-chi.mark-parent = buf_m.mark
-              and buf_m-chi.unit-ext = "UNIT" no-error.
-            if not available (buf_m-chi)
-              then next.
+/*            find first buf_m-chi no-lock where buf_m-chi.mark-parent = buf_m.mark*/
+/*              and buf_m-chi.unit-ext = "UNIT" no-error.                          */
+/*            if not available (buf_m-chi)                                         */
+/*              then next.                                                         */
+            next.
           end.
-          else do:
-            if buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
-              then decFactQnty = decFactQnty + 1.
+/*          else do:                                                                                                                         */
+/*            if buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB*/
+/*              then decFactQnty = decFactQnty + 1.                                                                                          */
+/*          end.                                                                                                                             */
+          
+          if available (buf_m) and buf_m.unit-ext = "LEVEL1" and (buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
+            then do: 
+              decFactQnty = decFactQnty + buf_m.box-qnty.
+            end. 
+
+          if available (buf_m) and buf_m.unit-ext = "UNIT" and (buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
+          then do:
+            if not can-find 
+                (first buf_m-par where buf_m-par.mark = buf_m.mark-parent 
+                and buf_m-par.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
+              and 
+              not can-find 
+                (first buf_utd-m-l-par where buf_utd-m-l-par.mark = buf_m.mark-parent 
+                and buf_utd-m-l-par.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
+            then decFactQnty = decFactQnty + buf_m.box-qnty.
           end.
+          
           def var v-sts as character no-undo.
           def var vRecKey-line as character no-undo.
           ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
@@ -1414,8 +1429,17 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           + v-doc-num + "_" + string (buf_goods.gds-code) + "_" + string(pos) + {&delimiteFld} + v-sts + {&delimiteFld} + buf_m.mark-parent + {&delimiteFld} + string(buf_m.box-qnty) + {&delimiterLine}.
           tsdstreamclose().
         end.
+        factQnty  = string (decFactQnty).
+        tsdstreamopenapp("MT_lines.txt"). 
+          jjm = jjm + 1.
+          put stream tsdstream unformatted string (jjm) + {&delimiteFld} + v-doc-num + {&delimiteFld} + string (pos) + {&delimiteFld} + string (buf_goods.gds-code) + {&delimiteFld} 
+          + string (buf_goods.gds-name) + {&delimiteFld} + buf_goods.unit-base + {&delimiteFld} + full-b-code + {&delimiteFld} + 
+          priceSale + {&delimiteFld} + docQnty + {&delimiteFld} + 
+          factQnty + {&delimiteFld} + string (buf_goods.gds-code) + {&delimiteFld} + 
+          v-doc-num + "_" + string (buf_goods.gds-code) + "_" + string(pos) + {&delimiteFld} + string(myflagsDocLine:FlagsToInt) + {&delimiterLine}.
+        tsdstreamclose().
         
-      end.      
+      end.
       
       FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
 
