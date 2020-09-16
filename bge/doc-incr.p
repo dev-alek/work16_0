@@ -3917,6 +3917,19 @@ on error undo, return error
     then do:
       run safe-wp-xmltagput in this-procedure ( input 3, input "techfuel":U  , input "yes":u, input 1 ).
     end. /* if p-ext-doc-type = {&TDEDT_Pri_Vnesh} */
+    if p-ext-doc-type = {&TDEDT_Pri_Vnesh}
+    then do:
+      { str/tdat-val.i
+        p-doc-code
+        {&trdcattr-is-lgas-corr}
+        v-attr-value
+        v-attr-type
+        no-error
+      }
+      if not error-status:error and v-attr-value = "yes" then do:
+        run wp-xmltagput( input 3, input "lgascorr"  ,  input "yes", input 0 ).
+      end.
+    end.
 end.
 end procedure. /* write-doc-header */
 

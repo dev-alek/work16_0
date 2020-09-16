@@ -176,7 +176,7 @@ do :
 /*                       */
 /*    return no-apply .  */
 /*  end.                 */
-  p-mark = f-mark .
+  p-mark = vCodeIdent .
   p-ok = true .
 end .
 

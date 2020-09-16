@@ -1986,7 +1986,7 @@ ON value-changed OF F-timeToken IN FRAME d-utd
     DO:
         if v-Token-error then 
         do:
-            if v-sertif_num <> "" then 
+            if v-sertif_num <> "" or v-cntxt-db-num = 0 then 
             do:
                 F-timeToken:fgcolor = 12 .
                 F-timeToken = "не получено" .

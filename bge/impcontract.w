@@ -59,12 +59,12 @@ define TEMP-TABLE tt-contract no-undo
     field contract-date     as DATE                    
     field contract-date-beg as date                
     field contract-date-end as date                
-    field host-code         as integer    
+    field host-code         as integer
+    field edi               as logical    
     field contract-code     as integer
     field cli-name          as character
     field user-name         as character
     field user-db-num       as integer
-    field edi               as logical
     field log-error         as LOGICAL   INIT no                
     index host-code contract-date contract-prn-code.
 
@@ -479,6 +479,7 @@ PROCEDURE proc-choose-file :
           Notes:       
         ------------------------------------------------------------------------------*/
     /* Âûבמנ פאיכא */
+
     if search (v-proc-name-err) <> ? then 
     do:
         os-delete value(v-proc-name-err).
@@ -496,13 +497,15 @@ PROCEDURE proc-choose-file :
         USE-FILENAME UPDATE vLg.
     IF vCh <> "" THEN
     DO:
+
         output stream str-err to value(v-proc-name-err)   .
         INPUT FROM value(vCh). 
         
         REPEAT: 
             create tt-contract .
-            import DELIMITER ";" tt-contract.
+            import DELIMITER ";" tt-contract no-error.
  
+            tt-contract.doc-type = trim(tt-contract.doc-type) .
             if tt-contract.doc-type <> {&income} and tt-contract.doc-type <> {&expense} and tt-contract.doc-type <> "" then 
             do:
                 put stream str-err unformatted
@@ -512,6 +515,7 @@ PROCEDURE proc-choose-file :
                 tt-contract.doc-type = "" .
 
             end.
+            tt-contract.cli-type = trim(tt-contract.cli-type) .
             if tt-contract.cli-type <> {&prs} and tt-contract.cli-type <> {&cmp} and tt-contract.cli-type <> "" then 
             do:
                 put stream str-err unformatted
@@ -536,6 +540,7 @@ PROCEDURE proc-choose-file :
                     tt-contract.cli-name = buf_clients.obj-name .
                 end.    
             end.
+            tt-contract.contract-prn-code = trim(tt-contract.contract-prn-code) .
             if tt-contract.cli-code <>  0 and tt-contract.cli-type <> "" and tt-contract.doc-type <> "" and (tt-contract.contract-prn-code = "" or tt-contract.contract-prn-code = ?) then 
             do:
                 put stream str-err unformatted
@@ -544,6 +549,7 @@ PROCEDURE proc-choose-file :
                 tt-contract.log-error = yes .
                 tt-contract.contract-prn-code = "".
             end.
+            tt-contract.contract-type = trim(tt-contract.contract-type) .
             if tt-contract.contract-type <> {&contr-buy-sale}
                 and tt-contract.contract-type <> {&contr-comiss}
                 and tt-contract.contract-type <> {&contr-resp-store}
@@ -645,13 +651,9 @@ PROCEDURE create-proc :
         end.
         assign
             b_contract.doc-type          = tt-contract.doc-type
-            
             b_contract.host-code         = tt-contract.host-code
             b_contract.contract-type     = tt-contract.contract-type
             b_contract.status_           = {&current-contr}
-            b_contract.cli-type          = tt-contract.cli-type
-            b_contract.cli-code          = tt-contract.cli-code
-            b_contract.cli-name          = tt-contract.cli-name
             b_contract.user-db-num       = tt-contract.user-db-num   
             b_contract.contract-date     = tt-contract.contract-date
             b_contract.contract-date-beg = tt-contract.contract-date-beg

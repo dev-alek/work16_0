@@ -89,16 +89,13 @@ on error undo, return error
   define buffer buf_esys-all-attr     for ub.esys-all-attr .
   define buffer buf_db                for ub.db .
   define buffer buf_utd               for ub.utd .
+  define buffer buf_utd-err           for ub.utd-err .
   define buffer upd_utd               for ub.utd .
   define buffer locked_utd            for ub.utd .
   define buffer buf_marking           for ub.marking .
   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+  define buffer buf_utd-lines         for ub.utd-lines .
   
-/*  define variable mercury       as class ibs.th.bge.mercury.mercury       no-undo.*/
-/*  define variable vsdStorage    as class ibs.th.gbl.storage.vsdtostorage  no-undo.*/
-/*  define variable vsdsTHObj     as class ibs.th.str.mercury.vsdsubs       no-undo.*/
-/*  define variable vsdTHObj      as class ibs.th.str.mercury.vsdsub        no-undo.*/
-/*  define variable vsdStsType    as class ibs.th.str.mercury.vsdstatustype no-undo.*/
   define variable objThObj      as class ibs.th.str.clients.clisub        no-undo.
   define variable objKeyRec     as class ibs.th.gbl.keyrec                no-undo.
   
@@ -108,6 +105,7 @@ on error undo, return error
   define variable oMotp as class is_motp no-undo .
   define variable v-ok as logical no-undo .
   define variable v-found as logical no-undo .
+  define variable vRecKey   as character no-undo.
    
   
   define variable ii as integer no-undo.
@@ -162,6 +160,7 @@ on error undo, return error
 
   assign
     g#auto                = true
+    g#esys                = true
     v-num-entries-db-list = num-entries( p-list-db )
   .
   run gbl/set-gbl.p
@@ -182,6 +181,7 @@ on error undo, return error
   end.
   assign
     g#auto = true
+    g#esys = true
   .
   
   run gbl/getobjsrvhndl.p (input-output ObjSrv).
@@ -250,6 +250,10 @@ on error undo, return error
           run write-to-log( "Нет внешней системы с типом ИС МОТП, привязанной к фирме Орг" + string(clients.host-code) ) .
           next clients_ .
         end.
+        
+        assign
+          g#esys-source-esys = buf_ext-system.esys-id
+        .
         
         assign vToken = "" .
         find first buf_ext-system-attr no-lock where buf_ext-system-attr.db-num   = buf_ext-system.db-num
@@ -355,26 +359,42 @@ on error undo, return error
                 oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, true, output v-ok) .
                 if not v-ok
                 then do :
-                  run write-to-log( "Запрос не выполнен") .
+                  run write-to-log( oMotp:Msg ) .
                   next .
                 end .
               end .     
               oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
               if not v-ok
               then do :
-                run write-to-log( "Запрос не выполнен") .
+                run write-to-log( oMotp:Msg ) .
                 next .
               end .                         
               /* Смена статуса документа на основании статусов марок */   
               
               v-found = false .
-              for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
-                                                 and buf_utd-marking-lines.doc-id = buf_utd.doc-id,
-              first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
-                                          and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB :
-                v-found = true .
-                leave .                                   
+              objKeyRec = new ibs.th.gbl.keyrec().
+              lines_ :
+              for each buf_utd-lines no-lock where buf_utd-lines.db-num = buf_utd.db-num
+                                               and buf_utd-lines.doc-id = buf_utd.doc-id:
+                objKeyRec:GenKeyRec ( input "utd-lines"
+                                     ,input buffer buf_utd-lines:handle
+                                     ,output vRecKey).
+                if can-find (first buf_utd-err  where buf_utd-err.db-num = buf_utd.db-num
+                                                  and buf_utd-err.doc-id    = buf_utd.doc-id
+                                                  and buf_utd-err.CheckType = "LoadUtd"
+                                                  and buf_utd-err.reckey    =  vRecKey)
+                then next lines_ .                                
+                for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                                         and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                                         and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum,
+                first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
+                                            and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB :
+                                              
+                  v-found = true .
+                  leave .                                   
+                end .
               end .
+              delete object objKeyRec.
               
               if not v-found
               then do :
@@ -432,6 +452,11 @@ on error undo, return error
           oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
           oMotp:checkINN = false .
           release locked_utd no-error .
+          if not v-ok
+          then do :
+            run write-to-log( oMotp:Msg ) .
+            next .
+          end .
         end .
       
       
@@ -452,7 +477,7 @@ on error undo, return error
           oMotp:isFirstEnter = false .        
           if not v-ok
           then do :
-            run write-to-log( "Запрос не выполнен") .
+            run write-to-log( oMotp:Msg ) .
             next .
           end .   
           for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
