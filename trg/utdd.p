@@ -25,6 +25,7 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер удаления {&main-tbl}". 
+define variable v-msg as character no-undo.
 { trg/trghistnws.i 
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"
@@ -33,12 +34,12 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
 }
 {str\utd-err.i}
 {str\utd.i}
-define variable v-msg as character no-undo.
+
 if not g#news 
 then do:
   define variable v-list-db as char no-undo.
   
-  if {&main-tbl}.db-num ne g#db-num and not g#esys
+  if {&main-tbl}.db-num ne g#db-num and not g#esys and not g#auto
   then do:
     v-msg = substitute( "&1. Ошибка при удалении документа. Запрещено удалять документ не своей БД.", vss-workfile ).
     message v-msg view-as alert-box information title "Информация".
@@ -55,17 +56,14 @@ then do:
   else do:
     v-list-db = "0".
   end.
-  if not g#db-num = 0
+  run nws/cmd-del.p
+      ( input {&table_utd}
+      ,input (buffer {&main-tbl}:handle)
+      ,input v-list-db
+      ) no-error .
+  if error-status :error
   then do:
-    run nws/cmd-del.p
-        ( input {&table_utd}
-        ,input (buffer {&main-tbl}:handle)
-        ,input v-list-db
-        ) no-error .
-    if error-status :error
-    then do:
-      undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
-    end.
+    undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
   end.
 end.
 UnLockUTDMarkbuf(buffer {&main-tbl},yes).
