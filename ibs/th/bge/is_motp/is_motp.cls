@@ -34,7 +34,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   
   
   define temp-table tt-childs
-    field mark    as character
+    field mark    as character case-sensitive
     field parent_ as character
     index pi as primary unique
       mark parent_
@@ -134,6 +134,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     get.
     protected set.
     
+  define property BadAuth as logical no-undo init false
+    get.
+    protected set.
+    
   define property currToken as character no-undo
     get :
       define buffer buf_ext-system-attr for ub.ext-system-attr .
@@ -164,10 +168,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       return datetime-tz(buf_ext-system-attr.esya-attr-value) .
     end.
     protected set .
-    define variable mFileAuth      as character no-undo.
-    define variable mFileCades     as character no-undo.
-    define variable mFileAuthTest  as character no-undo.
-    define variable mFilecisesInfo as character no-undo.
+    
+  define variable mFileAuth      as character no-undo.
+  define variable mFileCades     as character no-undo.
+  define variable mFileAuthTest  as character no-undo.
+  define variable mFilecisesInfo as character no-undo.
+    
   constructor public is_motp (  ):
  
     define buffer buf_ext-system for ub.ext-system .
@@ -529,9 +535,6 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                         vAuthDataLong = replace(vAuthDataLong, vData2, signedData2Long) .
                      copy-lob vAuthDataLong to file ("{&prefixfile}AuthDataSigned_db" + string(DB-num) + ".json") no-convert .
  
-/*    output to value(search("AuthDataSigned_.json")) append .*/
-/*      put unformatted '"}]' .                               */
-/*    output close .                                          */
                      vFileResult = "{&prefixfile}AuthToken_db" + string(DB-num) + ".json".
                      vFileResulterr = "{&prefixfile}AuthToken_db" + string(DB-num) + ".err".
                      cmd = substitute ('&1 -H "Content-Type: application/json" &5 -d @&4 --stderr &6 &3/auth/simpleSignIn >&2',
@@ -743,6 +746,11 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
             MSG = "Токен авторизации в ИС МОТП - НЕ ДЕЙСТВИТЕЛЕН" .
             return false .
           end .
+          else if HttpStatus = 502
+          then do :
+            MSG = "Невозможно определить валидность токена. Ответ от МОТП - 502 Bad Gateway. Пробуем работать с текущим" .
+            return true .
+          end .
           else do :
             MSG = "Токен авторизации в ИС МОТП - ДЕЙСТВИТЕЛЕН" .
             return true .
@@ -806,8 +814,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     then .
     else do :
        v-ok = no.
+       MSG = "Запрос не выполнен. Нет токена для авторизации" .
        return.
-       
     end.
     define variable cmd    as character no-undo .
     define variable cmdlog as character no-undo .
@@ -823,7 +831,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable v-value-type          as character     no-undo .
     define variable v-value-date          as date          no-undo .
     
+    define variable vRecKeyLine    as character no-undo .
+    define variable vRecKeyUTDLine as character no-undo .
+    define variable objKeyRec as class ibs.th.gbl.keyrec no-undo.
+    
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+    define buffer buf_utd-lines for ub.utd-lines .
     define buffer buf_marking for ub.marking .
     define buffer buf_marking-parent for ub.marking .
     define buffer buf_utd-err for ub.utd-err .
@@ -867,46 +880,73 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       GrayZoneQnty = v-value-integer
     .                             
       
+    objKeyRec = new ibs.th.gbl.keyrec().
     v-ok = true .
     v-num-marks = 0 .
     define variable vfilereq as character no-undo.
     vfilereq = "{&prefixfile}cisesInfoReq_db" + string(DB-num) + ".json".
+    os-delete value (searchFile(vfilereq)) no-error .
+    if searchFile(vfilereq) = ?
+    then do : end .
+    else do :
+      v-ok = false .
+      Msg = "Запрос не выполнен! Не могу удалить файл-запрос " + vfilereq .
+      return .
+    end .
     output to value(vfilereq) .
     put unformatted "[" skip .
-    for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = pDB-num
-                                              and buf_utd-marking-lines.doc-id = pDoc-id,
-    first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
-                                             break by  buf_utd-marking-lines.doc-id :
-      if v-num-marks = 999 then leave .
-      if pLevel2 and buf_marking.unit-ext <> "LEVEL2" then next .
-      if not pLevel2 and buf_marking.unit-ext = "LEVEL2" then next .
-      if checkINN and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then next .
-      if buf_marking.unit-ext = "UNIT"
-      then do :
-        find first buf_marking-parent no-lock where buf_marking-parent.mark = buf_marking.mark-parent
-                                                and (buf_marking-parent.sts  = objSrv:Env:Marking:Sts:Mark:CheckContr:KeyIntDB
-                                                   or buf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB)
-                                                no-error .
-        if available buf_marking-parent then next .                                        
+    lines_:
+    for each buf_utd-lines no-lock where buf_utd-lines.db-num = pDB-num
+                                     and buf_utd-lines.doc-id = pDoc-id
+                                     :
+      objKeyRec:GenKeyRec ( input "utd-lines"
+                            ,input buffer buf_utd-lines:handle
+                            ,output vRecKeyLine).
+      vRecKeyUTDLine = replace(vRecKeyLine,"utd-lines","utd-marking-lines") + {&delim-key}. 
+      
+      if can-find (first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-lines.doc-id
+                                               and buf_utd-err.db-num = buf_utd-lines.db-num
+                                               and buf_utd-err.reckey = vRecKeyLine)
+      then next lines_ .
+      else
+      if can-find (first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-lines.doc-id
+                                               and buf_utd-err.db-num = buf_utd-lines.db-num
+                                               and buf_utd-err.reckey begins vRecKeyUTDLine)
+      then next lines_ . 
+            
+      
+      marks_:
+      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                               and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                               and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum,
+      first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
+                                               break by  buf_utd-marking-lines.doc-id :
+        if v-num-marks = 999 then leave lines_ .
+        if pLevel2 and buf_marking.unit-ext <> "LEVEL2" then next marks_ .
+        if not pLevel2 and buf_marking.unit-ext = "LEVEL2" then next marks_ .
+        if checkINN and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then next marks_ .
+        if buf_marking.unit-ext = "UNIT"
+        then do :
+          find first buf_marking-parent no-lock where buf_marking-parent.mark = buf_marking.mark-parent
+                                                  and (buf_marking-parent.sts  = objSrv:Env:Marking:Sts:Mark:CheckContr:KeyIntDB
+                                                     or buf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB)
+                                                  no-error .
+          if available buf_marking-parent then next marks_ .                                        
+        end .
+        vMark = GetCodeIdent(buf_utd-marking-lines.mark) .
+        vMark = replace(vMark, '\', '\\') .
+        vMark = replace(vMark, '/', '\/') .
+        vMark = replace(vMark, '"', '\"') .
+        put unformatted '"' vMark '"' .
+        v-num-marks = v-num-marks + 1 .
+        put unformatted ',' skip .
       end .
-/*      if buf_marking.unit-ext = "LEVEL1"                                                                                                                                                                                      */
-/*      then do :                                                                                                                                                                                                               */
-/*        put unformatted '"(' substring(buf_utd-marking-lines.mark, 1, 2) ')' substring(buf_utd-marking-lines.mark, 3, 14) '(' substring(buf_utd-marking-lines.mark, 17, 2) ')' substring(buf_utd-marking-lines.mark, 19) '"' .*/
-/*      end .                                                                                                                                                                                                                   */
-/*      else do :                                                                                                                                                                                                               */
-/*        put unformatted '"' buf_utd-marking-lines.mark '"' .                                                                                                                                                                  */
-/*      end .                                                                                                                                                                                                                   */
-      vMark = GetCodeIdent(buf_utd-marking-lines.mark) .
-      vMark = replace(vMark, '\', '\\') .
-      vMark = replace(vMark, '/', '\/') .
-      vMark = replace(vMark, '"', '\"') .
-      put unformatted '"' vMark '"' .
-      v-num-marks = v-num-marks + 1 .
-      put unformatted ',' skip .
-    end.
+    end .
     put unformatted '""' skip .
     put unformatted skip "]" skip.
     output close .
+    
+    delete object objKeyRec.
     
     putcisesInfo (vfilereq + " (out-data):" ) .
     if isDebug
@@ -920,6 +960,16 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
        define variable vfileresulterr as character no-undo.
     vfileresult    = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".json".
     vfileresulterr = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".err".
+    
+    os-delete value (searchFile(vfileresult)) no-error .
+    if searchFile(vfileresult) = ?
+    then do : end .
+    else do :
+      v-ok = false .
+      Msg = "Запрос не выполнен! Не могу удалить файл-ответ " + vfileresult .
+      return .
+    end .
+    
     cmd = substitute ('&1 -H "Content-Type: application/json" &5 &6 -d @&4 --stderr &7 &3/cises/info >&2',
                       search ("exe/curl.exe"),
                       vfileresult,
@@ -965,12 +1015,31 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       return .
     end .
     
+    file-info:file-name = search(vfileresult) .
+    if file-info:file-size = 0
+    then do :
+      v-ok = false .
+      MSG = "Запрос не выполнен! Файл-ответ из МОТП " + search(vfileresult) + " пустой (размер 0 байт)." .
+      return .
+    end .
+    
+    
     putcisesInfo ( vfileresult + " (in-data):") .
     if isDebug
     then
       os-append value(vfileresult) value(mFilecisesInfo) .
     define variable vfileresultxml as character no-undo.
     vfileresultxml = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".xml".
+    
+    os-delete value (searchFile(vfileresultxml)) no-error .
+    if searchFile(vfileresultxml) = ?
+    then do : end .
+    else do :
+      v-ok = false .
+      Msg = "Запрос не выполнен! Не могу удалить сконвертированный в xml файл-ответ " + vfileresultxml .
+      return .
+    end .
+    
     cmd = substitute ('&1 -file=&2 >&3',
                        search("exe/json2xml.exe"),
                        searchfile(vfileresult),
@@ -978,12 +1047,20 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                        ) .
     os-command silent value (cmd). 
     
+    file-info:file-name = search(vfileresultxml) .
+    if file-info:file-size = 0
+    then do :
+      v-ok = false .
+      MSG = "Запрос не выполнен! Ошибка при конвертации json в XML. Файл " + search(vfileresultxml) + " пустой (размер 0 байт)." .
+      return .
+    end .
+    
     empty temp-table tt-childs .
     
     Doc-Id = pDoc-id .
     docdb-num = pDB-num .
     
-/*    for each buf_utd-err exclusive-lock where buf_utd-err.db-num = db-num        */
+/*    for each buf_utd-err exclusive-lock where buf_utd-err.db-num = docdb-num     */
 /*                                          and buf_utd-err.doc-id = Doc-Id        */
 /*                                          and buf_utd-err.CheckType = "CheckMOTP"*/
 /*                                          and buf_utd-err.CodeErr = "MotpMarkErr"*/
@@ -994,7 +1071,22 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     ParseResponseInfoCises(searchfile(vfileresultxml)) .   
     
     Doc-Id = ? .
-    docdb-num = ? .              
+    docdb-num = ? .
+    
+    if Msg = "empty_file"
+    then do :
+      v-ok = false .
+      MSG = "Запрос не выполнен! Файл " + search(vfileresultxml) + " пустой (размер 0 байт)." .
+      return .
+    end .
+    
+    if BadAuth
+    then do :
+      v-ok = false .
+      MSG = "Запрос не выполнен! Авторизация не пройдена. Попробуйте запросить новый токен." .
+      return .
+    end .
+                  
   
   end method .  
   
@@ -1017,11 +1109,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     hDoc:load("file", inFileName, false) no-error.
     if inFileName = ? then 
     do:
-      Msg = "Файл не найден" .   
+      Msg = "empty_file" .   
       return .   
     end.  
     
     INNchecked = false .
+    BadAuth = false .
            
     hDoc:get-document-element(hRoot).
             
@@ -1321,6 +1414,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       
       if hNoderef:name = "errorCode" then 
       do:
+        BadAuth = false .
+        if integer(hText:node-value) = 401
+        then do :
+          BadAuth = true .
+          return .
+        end .
         if trim(v-cis) = ""
         or v-cis = ?
         then next .
@@ -1328,11 +1427,22 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         v-err-code = integer(hText:node-value) no-error .
       end .
       
+      if hNoderef:name = "error_message" then 
+      do:
+        if hText:node-value = "Для доступа к этому ресурсу требуется полная аутентификация"
+        then do :
+          BadAuth = true .
+          return .
+        end .
+      end .
+      
       if INNchecked then return .
+      if BadAuth then return .
       
       GetChildrenInfoCises(hNoderef, (level + 1)) .
       
       if INNchecked then return .
+      if BadAuth then return .
       
     end.
         
@@ -1410,6 +1520,14 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
       buf_marking.box-qnty = 10 when pUnit = "LEVEL1"
       buf_marking.box-qnty = 1 when pUnit = "UNIT"
     .
+    
+    find first buf_marking-parent no-lock where buf_marking-parent.mark = buf_marking.mark-parent and buf_marking.mark-parent <> "" no-error .
+    if available buf_marking-parent
+    then do :
+      assign
+        buf_marking.gds-code    = buf_marking-parent.gds-code
+      .
+    end .
     
     if pMOTPsts > ""
     then do :
