@@ -228,6 +228,8 @@ define buffer buf_ext-classif     for ub.ext-classif.
 define buffer buf_alc-type-gds    for ub.alc-type-gds .
 define buffer buf_alc-type        for ub.alc-type .
 
+define temp-table tt-ot-line no-undo like ub.ot-line.
+
 /*определение таблиц необходимых для разбивки чеков по платежам*/
 { ref/cp-attr.i }
 { rep/cpapcep.i  "NEW SHARED" }
@@ -757,35 +759,74 @@ on error undo, return error
             end.      /* for each temp_cost_cat-id_ot-supp-tot */
             run wp-xmltagclose( 3,  "paySum" ).
         end.        /* if p-pay-code = yes */
+        def var f as log no-undo.
+        def var l as log no-undo.
         for each buf_ot-line-crsa-loop no-lock
-           where buf_ot-line-crsa-loop.doc-code = v-doc-code
-             and buf_ot-line-crsa-loop.sum-type = {&arh-crsa}
+          where buf_ot-line-crsa-loop.doc-code = v-doc-code
+          and buf_ot-line-crsa-loop.sum-type = {&arh-crsa}
+          break
+          by buf_ot-line-crsa-loop.artic
+          by buf_ot-line-crsa-loop.prod-type
+          by buf_ot-line-crsa-loop.prod-code
+          
         on error undo, return error
-        :
-            run export-document-lines in this-procedure (
-                  input recid( buf_ot-line-crsa-loop )
-                  
-                , input v-exists-before
-                , input v-exists-after
-                , input v-doc-code
-                , input v-ot-tot-sale-exists
-                , input v-ot-tot-cost-exists
-                , input v-ot-tot-crsa-exists
-                , input v-trn-doc-out-code
-                , input v-is-envd_
-            ).
+        :                          
+          assign
+          f = first-of (buf_ot-line-crsa-loop.artic) or first-of (buf_ot-line-crsa-loop.prod-type) or first-of (buf_ot-line-crsa-loop.prod-code)
+          l = last-of (buf_ot-line-crsa-loop.artic) or last-of (buf_ot-line-crsa-loop.prod-type) or last-of (buf_ot-line-crsa-loop.prod-code).
+            if f
+            then do:
+              create tt-ot-line.
+              buffer-copy buf_ot-line-crsa-loop except buf_ot-line-crsa-loop.cat-id
+                  to tt-ot-line.
+            end.
+            if (l and not f) or (not l and not f)
+            then do:
+              assign
+                tt-ot-line.sum-base         =	tt-ot-line.sum-base        +	buf_ot-line-crsa-loop.sum-base      
+                tt-ot-line.sum-rubl         =	tt-ot-line.sum-rubl        +	buf_ot-line-crsa-loop.sum-rubl      
+                tt-ot-line.VAT-base         =	tt-ot-line.VAT-base        +	buf_ot-line-crsa-loop.VAT-base      
+                tt-ot-line.VAT-rubl         =	tt-ot-line.VAT-rubl        +	buf_ot-line-crsa-loop.VAT-rubl      
+                tt-ot-line.SLT-base         =	tt-ot-line.SLT-base        +	buf_ot-line-crsa-loop.SLT-base      
+                tt-ot-line.SLT-rubl         =	tt-ot-line.SLT-rubl        +	buf_ot-line-crsa-loop.SLT-rubl      
+                tt-ot-line.road-tax-base    =	tt-ot-line.road-tax-base   +	buf_ot-line-crsa-loop.road-tax-base 
+                tt-ot-line.road-tax-rubl    =	tt-ot-line.road-tax-rubl   +	buf_ot-line-crsa-loop.road-tax-rubl 
+                tt-ot-line.transport-base   =	tt-ot-line.transport-base  +	buf_ot-line-crsa-loop.transport-base
+                tt-ot-line.transport-rubl   =	tt-ot-line.transport-rubl  +	buf_ot-line-crsa-loop.transport-rubl
+                tt-ot-line.other-base       =	tt-ot-line.other-base      +	buf_ot-line-crsa-loop.other-base    
+                tt-ot-line.other-rubl       =	tt-ot-line.other-rubl      +	buf_ot-line-crsa-loop.other-rubl    
+                tt-ot-line.excise-base      =	tt-ot-line.excise-base     +	buf_ot-line-crsa-loop.excise-base   
+                tt-ot-line.excise-rubl      =	tt-ot-line.excise-rubl     +	buf_ot-line-crsa-loop.excise-rubl   
+                tt-ot-line.fact-qnty        =	tt-ot-line.fact-qnty       +	buf_ot-line-crsa-loop.fact-qnty     
+                .
+            end.
+            if l
+            then do:
+              run export-document-lines in this-procedure (
+                    input recid( tt-ot-line )
+                  , input v-exists-before
+                  , input v-exists-after
+                  , input v-doc-code
+                  , input v-ot-tot-sale-exists
+                  , input v-ot-tot-cost-exists
+                  , input v-ot-tot-crsa-exists
+                  , input v-trn-doc-out-code 
+                  , input v-is-envd_
+              ).
+              empty temp-table tt-ot-line.
+            end.
         end.        /* for each buf_ot-line-crsa-loop no-lock */
         for each buf_ot-line-crsa-loop no-lock
            where buf_ot-line-crsa-loop.doc-code = v-doc-code
              and buf_ot-line-crsa-loop.sum-type = {&arh-crsa-service}
         on error undo, return error
         :
+            create tt-ot-line.
+            buffer-copy buf_ot-line-crsa-loop
+                to tt-ot-line.
             run export-document-lines in this-procedure (
-                  input recid( buf_ot-line-crsa-loop )
-                  
+                  input recid( tt-ot-line )
                 , input v-exists-before
-                
-                
                 , input v-exists-after
                 , input v-doc-code
                 , input v-ot-tot-sale-exists
@@ -794,6 +835,7 @@ on error undo, return error
                 , input v-trn-doc-out-code
                 , input v-is-envd_
             ).
+            empty temp-table tt-ot-line.
         end.        /* for each buf_ot-line-crsa-loop no-lock */
         if p-need-chk = yes
         then do:
@@ -884,7 +926,6 @@ define input parameter p-is-envd_               as logical          no-undo.
     define variable v-found-paycard         as logical      no-undo.
     define variable v-petrol-density        as decimal      no-undo.
 
-    define buffer buf_ot-line-crsa-loop     for ub.ot-line.
     define buffer buf_doc-line              for ub.doc-line.
     
     define buffer buf_doc-pl                for ub.doc-pl .
@@ -918,7 +959,10 @@ define input parameter p-is-envd_               as logical          no-undo.
     define variable v-tankweight         as decimal no-undo.
     define variable v-sum-line           as decimal no-undo .
         
+    define buffer buf_ot-line-crsa-loop     for tt-ot-line.
     define buffer buf_parts-root            for parts-root.
+
+    
     find first buf_ot-line-crsa-loop no-lock
          where recid( buf_ot-line-crsa-loop ) = p-ot-line-loop-recid
     .
@@ -3091,6 +3135,19 @@ on error undo, return error
     then do:
       run safe-wp-xmltagput in this-procedure ( input 3, input "techfuel":U  , input "yes":u, input 1 ).
     end. /* if p-ext-doc-type = {&TDEDT_Pri_Vnesh} */
+    if p-ext-doc-type = {&TDEDT_Pri_Vnesh}
+    then do:
+      { str/tdat-val.i
+        p-doc-code
+        {&trdcattr-is-lgas-corr}
+        v-attr-value
+        v-attr-type
+        no-error
+      }
+      if not error-status:error and v-attr-value = "yes" then do:
+        run wp-xmltagput( input 3, input "lgascorr"  ,  input "yes", input 0 ).
+      end.
+    end.
 end.
 end procedure. /* export-header */
 
@@ -3577,6 +3634,7 @@ on error undo, return error
            and buf_ot-line.prod-type   = p-prod-type
            and buf_ot-line.prod-code   = p-prod-code
            and buf_ot-line.sum-type    = p-sum-type
+           and buf_ot-line.sum-rubl    <> 0
     no-error.
     if available buf_ot-line
     then do:
