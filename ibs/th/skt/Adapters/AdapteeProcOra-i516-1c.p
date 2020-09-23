@@ -52,6 +52,10 @@ do:
   define variable v-doc-code as character no-undo.
 
   logWrite = new LogWrite().
+
+  empty temp-table temp_trn-doc.
+  empty temp-table temp_doc-line.
+  empty temp-table temp_doc-mark. 
   
   for each TempTrnDoc no-lock:
     

@@ -57,6 +57,10 @@ class ibs.th.bge.1crn.import.imptrn-fuel-doc implements ibs.th.bge.1crn.import.i
     
     find first ub.sys-ctrl.
     
+    empty temp-table TempTrnDoc.
+    empty temp-table TempDocLine.
+    empty temp-table TempDocMark.
+    
     find first buf_clients where buf_clients.db-num = ub.sys-ctrl.db-num.
     create TempTrnDoc.
     assign
