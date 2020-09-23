@@ -62,10 +62,10 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     adapObj = new AdapterOra-i516-1c ().
     
     find first ub.sys-ctrl.
-    
     find first buf_clients where buf_clients.db-num = ub.sys-ctrl.db-num.
     empty temp-table TempTrnDoc.
     empty temp-table TempDocLine.
+    empty temp-table TempDocMark.
     
     create TempTrnDoc.
     assign
