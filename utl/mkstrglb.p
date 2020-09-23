@@ -57,13 +57,13 @@ on stop  undo, leave
   run waitfram-show in this-procedure
     (input "Создание файла определений cmp/str-glbl.i"
     ) .
-  define variable mfile as character no-undo.  
+  define variable mFileStr as character no-undo.  
   define variable mdir as character no-undo.
   define variable vi as integer no-undo.
-  mfile = replace (search ("cmp/str-glbl.p"), "\","/").
+  mFileStr = replace (search ("cmp/str-glbl.p"), "\","/").
   
-  do vi = 1 to num-entries(mfile,"/") - 2:
-     mdir = mdir + entry(vi,mfile,"/") + "/".
+  do vi = 1 to num-entries(mFileStr,"/") - 2:
+     mdir = mdir + entry(vi,mFileStr,"/") + "/".
       
   end.
   
