@@ -26,11 +26,20 @@ Creation date: 01/30/15
 using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
 
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Импорт накладных из временной таблицы".
+
+{ cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { utl/tt516-1c.i}
 {ibs/th/skt/ControlledClients/TSDTT-1c.i}
 { gbl/getcntxt.i def }
+{ str/doc-code.i }
 
 define shared variable g#auto-user-id as character no-undo .
 
@@ -61,6 +70,16 @@ do:
     
     ii = ii + 1.
 
+    if TempTrnDoc.ext-doc-code = ? or TempTrnDoc.ext-doc-code = ""
+    then do:
+      run doc-code in this-procedure
+        ( input  "main":U,
+          input  TempTrnDoc.obj-type,
+          input  TempTrnDoc.obj-code,
+          input  ? ,
+          output TempTrnDoc.ext-doc-code ) no-error.
+    end.
+
     create temp_trn-doc.
     assign
       temp_trn-doc.line-num      = ii
@@ -75,11 +94,31 @@ do:
       temp_trn-doc.exch-code     = 0
       temp_trn-doc.exch-rate     = 1
       temp_trn-doc.exch-scale    = 1
-      temp_trn-doc.contract-code = ?
+      temp_trn-doc.contract-code = if TempTrnDoc.dog-code <> ? then integer (TempTrnDoc.dog-code) else 0
       temp_trn-doc.price-type    = if TempTrnDoc.ext-doc-type = {&TDEDT_Ras_Vnesh } then "TSFTSD" else ""
       temp_trn-doc.doc-code      = TempTrnDoc.ext-doc-code
       temp_trn-doc.doc-id        = TempTrnDoc.doc-id
       .
+    
+    if TempTrnDoc.source-doc ne ? and TempTrnDoc.source-doc ne ""
+    then do:
+      find first ub.doc-attr no-lock where ub.doc-attr.attr-code = {&trdcattr-nids} and ub.doc-attr.attr-value = TempTrnDoc.source-doc no-error.
+      
+      find first ub.trn-doc no-lock where ub.trn-doc.doc-code = ub.doc-attr.doc-code no-error.
+      
+      if available (ub.doc-attr) and available (ub.trn-doc)
+      then do:
+        assign
+          temp_trn-doc.cli-type = ub.trn-doc.cli-type
+          temp_trn-doc.cli-code = ub.trn-doc.cli-code
+          temp_trn-doc.out-code = ub.doc-attr.doc-code
+          temp_trn-doc.contract-code = ub.trn-doc.contract-code.
+      end.
+      else do:
+        if error-status:error 
+          then return error "Не найдена накладная-источник внешней системы с ИД  - " + TempTrnDoc.source-doc .
+      end.
+    end.
     
   end.
 
@@ -149,19 +188,25 @@ do:
   end.
   find first ub.trn-doc no-lock where ub.trn-doc.doc-code  = v-doc-code no-error.
   case ub.trn-doc.ext-doc-type:
-    when {&TDEDT_Pri_Vnesh} then do trans:
-      disable triggers for load of ub.trn-doc.
-      find current ub.trn-doc exclusive-lock .  
-      ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}.
-      ub.trn-doc.internal = true.
-      ub.trn-doc.discnt-type = {&percent}.
+    when {&TDEDT_Pri_Vnesh} then do:
+      if ub.trn-doc.cli-type = 'маг' 
+      then do:
+        disable triggers for load of ub.trn-doc.
+        find current ub.trn-doc exclusive-lock .  
+        ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}.
+        ub.trn-doc.internal = true.
+        ub.trn-doc.discnt-type = {&percent}.
+      end.
     end.
-    when {&TDEDT_Vozvrat_Vnesh} then do trans:
-      disable triggers for load of ub.trn-doc.
-      find current ub.trn-doc exclusive-lock .  
-      ub.trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem}.
-      ub.trn-doc.internal = true.
-      ub.trn-doc.discnt-type = {&percent}.
+    when {&TDEDT_Vozvrat_Vnesh} then do:
+      if ub.trn-doc.cli-type = 'маг' 
+      then do:
+        disable triggers for load of ub.trn-doc.
+        find current ub.trn-doc exclusive-lock .  
+        ub.trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem}.
+        ub.trn-doc.internal = true.
+        ub.trn-doc.discnt-type = {&percent}.
+      end.
     end.
   end case.  
   

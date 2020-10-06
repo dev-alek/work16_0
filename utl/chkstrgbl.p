@@ -20,6 +20,7 @@ define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "Процедура обновления str-gbl в автоматическом режиме для разработчиков".
 { cmp/vssrevis.i }
 */
+
 { utl/param.i }
 &global-define fileparam filesize.txt 
 define variable mliststrfile as character no-undo.
@@ -56,7 +57,7 @@ then do:
    mliststrfile = "cmp/str-glb2.p,cmp/str-glb3.p,cmp/str-glb4.p,cmp/str-glb5.p,cmp/str-glbl.p,cmp/str-glbt.p".
    block-file:
    do mi = 1 to num-entries(mliststrfile):
-      &if "iscompil" eq ""
+      &if "{&iscompil}" eq ""
       &then
       mfile = entry(mi,mliststrfile).
       if search (mfile ) = ? 
@@ -149,7 +150,7 @@ then do:
       run SaveFileList (mfile,mfileNew).
       mfile = search(mfile).
       
-      &if "iscompil" eq ""
+      &if "{&iscompil}" eq ""
       &then
       create tt-file-ver.
       tt-file-ver.filename = mfile.
@@ -195,7 +196,7 @@ then do:
       
    end.
    
-   &if "iscompil" eq ""
+   &if "{&iscompil}" eq ""
    &then
    if    changstr
       or chancript

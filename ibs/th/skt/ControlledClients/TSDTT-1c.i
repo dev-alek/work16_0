@@ -28,6 +28,8 @@ Creation date: 01/30/15
     field obj-code      as integer
     field ps            as character
     field doc-id        as character
+    field dog-code      as character
+    field source-doc    as character
     index pi line-num ext-doc-code .
 
   define temp-table TempDocLine no-undo

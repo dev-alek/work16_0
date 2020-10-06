@@ -47,6 +47,7 @@ field hold-obj-code as integer
 field ship-num as character
 field ship-date as date
 field doc-id as character
+field out-code as character
 
 index pi line-num doc-code .
 

@@ -270,8 +270,8 @@ for each  temp_trn-doc :
      end.
 
 
-
-    temp_trn-doc.contract-code =  0 .
+    
+    /*temp_trn-doc.contract-code =  0 .*/
 
    v-specif = false .
 
@@ -460,6 +460,7 @@ assign
       tt-trn-doc.print-rubl           = v-print-rubl
       tt-trn-doc.hold-doc-code-child  = "no-hold":u
       tt-trn-doc.hold-doc-code-parent = "no-hold":u
+      tt-trn-doc.out-code             = temp_trn-doc.out-code
     .
     { gbl/hostcode.i
       tt-trn-doc.obj-type
@@ -554,6 +555,12 @@ assign
       v-end-message = substitute(" Ошибка &1" , error-status :get-message(1)  , return-value) .
       run pcall-log-file in p-log-handle ( input v-end-message ) .
       undo, return error v-end-message.
+    end.
+    
+    if new_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} 
+    then do:
+      new_trn-doc.reason-code = 23.
+      new_trn-doc.out-code = tt-trn-doc.out-code.
     end.
 
     assign
@@ -1332,34 +1339,6 @@ end.
       ub.doc-attr.attr-value = temp_trn-doc.cargo-from
     .
   end.
-   run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-    if error-status:error then do :
-        v-end-message = substitute(" Ошибка при закрытиии документа &1 &2" , error-status :get-message(1)  , return-value) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
-        undo, return error v-end-message.
-    end.
-
-    if new_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}    then do:
-        v-end-message = substitute("Закрытиии внешнего возврата &1 на статус РАЗР " , new_trn-doc.doc-code) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
-        run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-        if error-status:error then do :
-            v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус РАЗР &1 &2" , error-status :get-message(1)  , return-value) .
-            run pcall-log-file in p-log-handle ( input v-end-message ) .
-            undo, return error v-end-message.
-        end.
-        if not is-egais
-        then do:
-          v-end-message = substitute("Закрытиии внешнего возврата &1 на статус ФАКТ ", new_trn-doc.doc-code ) .
-          run pcall-log-file in p-log-handle ( input v-end-message ) .
-          run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-          if error-status:error then do :
-              v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус ФАКТ &1 &2" , error-status :get-message(1)  , return-value) .
-              run pcall-log-file in p-log-handle ( input v-end-message ) .
-              undo, return error v-end-message.
-          end.
-        end.
-    end.
 
     if is-egais then do:
       for each  ub.doc-line where ub.doc-line.doc-code = new_trn-doc.doc-code:
@@ -1458,6 +1437,52 @@ end.
 end.
 end.
 
+do trans:
+  run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+  if error-status:error then do :
+      v-end-message = substitute(" Ошибка при закрытиии документа &1 &2" , error-status :get-message(1)  , return-value) .
+      run pcall-log-file in p-log-handle ( input v-end-message ) .
+      return.
+  end.
+  if new_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}    then do:
+    run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+    if error-status:error then do :
+        v-end-message = substitute(" Ошибка при закрытиии внешнего прихода &1 на факт: &2" , error-status :get-message(1)  , return-value) .
+        run pcall-log-file in p-log-handle ( input v-end-message ) .
+        return.
+    end.
+  end.
+  if new_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh}    then do:
+      v-end-message = substitute("Закрытиии внешнего возврата &1 на статус РАЗР " , new_trn-doc.doc-code) .
+      run pcall-log-file in p-log-handle ( input v-end-message ) .
+      run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+      if error-status:error then do :
+          v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус РАЗР &1 &2" , error-status :get-message(1)  , return-value) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          undo, return error v-end-message.
+      end.
+      if not is-egais
+      then do:
+        v-end-message = substitute("Закрытиии внешнего возврата &1 на статус ФАКТ ", new_trn-doc.doc-code ) .
+        run pcall-log-file in p-log-handle ( input v-end-message ) .
+        run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+        if error-status:error then do :
+            v-end-message = substitute(" Ошибка при закрытиии внешнего возврата на статус ФАКТ &1 &2" , error-status :get-message(1)  , return-value) .
+            run pcall-log-file in p-log-handle ( input v-end-message ) .
+            undo, return error v-end-message.
+        end.
+      end.
+  end.
+  if new_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}    then do:
+    new_trn-doc.fact-date = now.
+    run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
+    if error-status:error then do :
+        v-end-message = substitute(" Ошибка при закрытиии &1 на факт: &2" , error-status :get-message(1)  , return-value) .
+        run pcall-log-file in p-log-handle ( input v-end-message ) .
+        return.
+    end.
+  end.
+end.
 
 /* перевод запроса в накл - */
 procedure clos-trn :
@@ -1560,7 +1585,7 @@ run str/trn-stat.p (
     if error-status:error then do :
         v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
-        undo, return error v-end-message.
+        return error v-end-message.
     end.
 
   end.
@@ -1608,7 +1633,44 @@ define variable varcopystatus      like ub.trn-doc.status_  no-undo.
 define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
+define variable v-root-b-code like ub.bar-code.b-code no-undo .
+{ str/get-pr.i def }
+{ str/getctxtp.i get this-procedure }
 
+if v-cntxp-no-eq
+then do:
+  for each ub.doc-line no-lock where ub.doc-line.doc-code = p-trn-code:
+    find first ub.goods where ub.doc-line.artic = ub.goods.artic and
+      ub.doc-line.prod-type = ub.goods.prod-type  and
+      ub.doc-line.prod-code = ub.goods.prod-code
+      no-lock no-error . 
+    
+    { gbl/gdsbcode.i
+      ub.goods.gds-code
+      ?
+      v-root-b-code }
+  
+    { gbl/bcodeprc.i
+      ub.doc-line.obj-type
+      ub.doc-line.obj-code
+      v-root-b-code
+      0
+      0
+      gp-doc-num
+      gp-price-sale
+      gp-road-tax
+      gp-excise
+      no-error }
+      
+      if gp-price-sale = ?
+      then do:
+        v-end-message = "Артикул:" + ub.goods.artic + "Производитель:" + ub.goods.prod-type + string (ub.goods.prod-code) +
+        ub.goods.gds-name + "Продажная цена отсутствует запрещено закрывать такой приход. Сделайте переоценку по этой накладной.".
+      run pcall-log-file in p-log-handle ( input v-end-message ) .
+      return v-end-message.            
+    end.
+  end.
+end.
 
 run str/trn-stat.p (
     input  parparentproc ,
@@ -1628,7 +1690,7 @@ run str/trn-stat.p (
     if error-status:error then do :
         v-end-message = substitute(" Ошибка &1 &2" , error-status :get-message(1)  , return-value) .
         run pcall-log-file in p-log-handle ( input v-end-message ) .
-        undo, return error v-end-message.
+        return error v-end-message.
     end.
   end.
   

@@ -79,6 +79,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
   define override property InitTag as character no-undo init "trn-gd-doc"
     get. 
 
+  define property source-doc as character no-undo 
+    get. 
+    private set.
 
   constructor public trn-gd-doc-in ():
     InitListTag = "gds,prts".
@@ -140,6 +143,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
       when "doc-id" then do:
         assign doc-id = inValue .
       end.
+      when "source-doc" then do:
+        assign source-doc = inValue .
+      end.
     end case.
   end.
 
@@ -175,7 +181,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
       ttn-date     = ? 
       contr-code   = ? 
       dog-code     = ? 
-      fuel-st-code = ? 
+      fuel-st-code = ?
+      source-doc   = ? 
     .
     delete object gds no-error.
     delete object prts no-error.
