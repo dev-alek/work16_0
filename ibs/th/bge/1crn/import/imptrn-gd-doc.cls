@@ -71,19 +71,33 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     assign
       TempTrnDoc.obj-type = buf_clients.obj-type
       TempTrnDoc.obj-code = buf_clients.obj-code
-      TempTrnDoc.cli-code = integer (objTrnDoc:fuel-st-code)
-      TempTrnDoc.cli-type = "маг"
       TempTrnDoc.doc-date = objTrnDoc:doc-date
-      TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "=").
       TempTrnDoc.doc-id = objTrnDoc:doc-id
+      TempTrnDoc.dog-code = objTrnDoc:dog-code
+      TempTrnDoc.source-doc = objTrnDoc:source-doc
     .
+    
+    if trim (objTrnDoc:doc-type, '0') = '1' 
+      then assign 
+        TempTrnDoc.ext-doc-code = objTrnDoc:doc-code
+        TempTrnDoc.cli-type = "орг"
+        TempTrnDoc.cli-code = integer (objTrnDoc:contr-code)
+        .
+      else assign
+        TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "=") 
+        TempTrnDoc.cli-type = "маг"
+        TempTrnDoc.cli-code = integer (objTrnDoc:fuel-st-code)
+        .
 
     case trim (objTrnDoc:doc-type, '0'):
-      when '4' then do:
+      when '4' or when '1' then do:
         TempTrnDoc.ext-doc-type = {&TDEDT_Pri_Vnesh} .
       end.
       when '8' then do:
         TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} .
+      end.
+      when '2' then do:
+        TempTrnDoc.ext-doc-type = {&TDEDT_Ras_Vnesh} .
       end.
       otherwise do:
         Msg = "Не поддерживаемый тип документа на загрузку: " + objTrnDoc:doc-type.
