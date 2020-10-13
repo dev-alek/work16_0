@@ -1066,6 +1066,7 @@ define variable v-err               as logical    no-undo .
                 buf_temp-tax.cashbookId       = buf_new_temp-fin-sum.cashbookid
                 buf_temp-tax.is-expense_cash  = buf_new_temp-fin-sum.is-expense_cash
                 buf_temp-tax.num-expense_cash = buf_new_temp-fin-sum.num-expense_cash
+                buf_temp-tax.pay-type         = buf_new_temp-fin-sum.pay-type
                 buf_temp-tax.sum-rubl = msum
                 buf_temp-tax.sum-base = msum
                 buf_temp-tax.sum-doc  = msum
@@ -1094,6 +1095,7 @@ define variable v-err               as logical    no-undo .
                 buf_temp-tax.cashbookId       = buf_new_temp-fin-sum.cashbookid
                 buf_temp-tax.is-expense_cash  = buf_new_temp-fin-sum.is-expense_cash
                 buf_temp-tax.num-expense_cash = buf_new_temp-fin-sum.num-expense_cash
+                buf_temp-tax.pay-type         = buf_new_temp-fin-sum.pay-type
                 buf_temp-tax.sum-rubl = msum
                 buf_temp-tax.sum-base = msum
                 buf_temp-tax.sum-doc  = msum
@@ -1175,6 +1177,7 @@ define variable v-err               as logical    no-undo .
       then do :
         find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
       end.
+
       assign
       mreceiver-name = ""
       mpayer-name    = ""
