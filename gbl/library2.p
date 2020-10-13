@@ -34,9 +34,6 @@ define variable vss-description as character no-undo initial "Библиотека  процед
 { ref/xobjgrp.i  }
 { gbl/getsect.i def }
 
-define new  shared variable g#auto as logical no-undo.
-define new  shared variable g#esys as logical no-undo.
-
 if valid-handle (g#library2)
 and g#library2 <> this-procedure :handle
 and g#library2 :get-signature('library2_testproc':u) <> ""
@@ -1785,6 +1782,10 @@ procedure chk-acps :
     do
     on error undo, leave
     :
+
+      run gbl\get-gbl2.p (output p-ok ) no-error.
+      if p-ok then return.
+      
       /* поиск должности */
       find first buf_action-post no-lock
         where buf_action-post.db-num           = p-db-num
@@ -2211,10 +2212,8 @@ define variable v-mess as character no-undo .
   p-Ok = true .
   p-mess = "".
   
-  if not g#auto or not g#esys
-  then do:
-    return.
-  end.
+  run gbl\get-gbl2.p (output p-ok ) no-error.
+  if p-ok then return.
   
   find first ub.goods no-lock where ub.goods.gds-code = p-gds-code no-error .
   if error-status :error then return error.
