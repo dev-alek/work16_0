@@ -617,13 +617,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.         
      end. /* not mode-erprn */ 
      else do: /* Для интеграционного решения принудительно создаем максимальные диапазоны для справочников, которые импортируются в УБД */
+        &scope minvalue 1000000000	
         create dst.code-range.
         assign
           dst.code-range.range-type = {&gbl-bc-code}
           dst.code-range.PS         = "FOR ERP"
           dst.code-range.beg-date   = today
-          dst.code-range.first-code = 1
-          dst.code-range.last-code  = 999999999
+          dst.code-range.first-code = {&minvalue}
+          dst.code-range.last-code  = {&minvalue} * 2
           dst.code-range.db-num = p-db-num
           dst.code-range.stts = "a":U
         .  
