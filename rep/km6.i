@@ -129,9 +129,9 @@ and ub.inkas.obj-type =  {&shop} and ub.inkas.shift-date = x-date-start and ub.i
          .
               end.
               else do:
-                  assign
-                    temp-str.person = "Продавец № " + string ( buf_chk-doc.cashier )
-               .
+                    if temp-str.person begins "Продавец" then
+                    temp-str.person = "Продавец № " + string ( buf_chk-doc.cashier ) .
+
               end.
 end. /*for each buf_chk-doc*/
 find first temp-str  /*ищем номер предыдущего чека, если не было продаж*/
