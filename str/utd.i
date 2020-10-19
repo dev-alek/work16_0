@@ -439,10 +439,11 @@ function SaturateAndCheckUTD return logical
          AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoLastDoc",string(utd.PackageId) + {&delim-par} + string(volddb-num) + {&delim-par} + string(volddoc-id)).
       end.
       define variable vdoc-code as character no-undo init ?.
-      if utd.EDocType              eq objSrv:Env:Utd:EDocType:returns:KeyIntDB
+      if utd.EDocType              eq objSrv:Env:Utd:EDocType:Ucd:KeyIntDB
       then do:
          find first utd_ret where utd_ret.parentDocumentExt     eq utd.parentDocumentExt
                               and utd_ret.parentOrganizationExt eq utd.parentOrganizationExt
+                              and utd_ret.Timestamp             le utd.Timestamp
                               and utd_ret.EDocType              eq objSrv:Env:Utd:EDocType:returns:KeyIntDB
          no-lock no-error.
          if available utd_ret 
@@ -450,9 +451,8 @@ function SaturateAndCheckUTD return logical
             vdoc-code = utd_ret.doc-code.
             CheckUcdForReturn(utd.db-num,utd.doc-id,utd_ret.db-num,utd_ret.doc-id).
          end.
-         else
-            AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoAvailDocRet", string(utd.db-num) + {&delim-par} + string(utd.doc-id)). 
-      end.                
+      end.
+                      
    end.
    
   

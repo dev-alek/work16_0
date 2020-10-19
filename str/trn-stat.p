@@ -2626,11 +2626,11 @@ vartechproliv = no
           assign
             bf_trn-doc.status_ = varstatus
             bf_trn-doc.flag_   = varflag.
-          if     bf_trn-doc.status_ eq {&wayb} 
+            if     bf_trn-doc.status_ eq {&fact} 
                    and bf_trn-doc.flag_
-                then do:
-                   crUtdReturn(bf_trn-doc.doc-code).
-                end.
+            then do:
+               crUtdReturn(bf_trn-doc.doc-code).
+            end.
            /* На внутренний приходный запрос создадим внутренний расходный запрос Если Контрагент АКТИВЕН
              , если нет то  и в новостях */
            if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem } and
@@ -3025,6 +3025,11 @@ vartechproliv = no
                   bf_trn-doc.status_ = varstatus
                   bf_trn-doc.flag_   = fact-ok
                 .
+                if     bf_trn-doc.status_ eq {&fact} 
+                   and bf_trn-doc.flag_
+                then do:
+                   crUtdReturn(bf_trn-doc.doc-code).
+                end.
                 run cus/rcvsttr.p  ( parparentproc , recid(bf_trn-doc) ) no-error .
                 if error-status :error
                 then do:

@@ -1,7 +1,7 @@
 
 &if "{1}" = "class"
 &then
-method public logical CheckUcdForReturn
+method public logical CheckedocMark
 &else
 function CheckedocMark return logical 
 &endif
@@ -149,6 +149,7 @@ function CrEdoc returns character
    
    define buffer utd  for ub.utd.
    define buffer edoc for ub.utd.
+   define buffer utd_ret   for ub.utd.
    define buffer utd-attr  for ub.utd-attr.
    define buffer edoc-attr for ub.utd-attr.
    define buffer utd-lines  for ub.utd-lines.
@@ -363,7 +364,14 @@ function CrEdoc returns character
             release edoc-lines.
          end.
       end.
-      CheckEdoc (vdb-num,vdoc-id,edoc.db-num,edoc.doc-id) .
+      find first utd_ret where utd_ret.parentDocumentExt     eq utd.parentDocumentExt
+                              and utd_ret.parentOrganizationExt eq utd.parentOrganizationExt
+                              and utd_ret.Timestamp             le utd.Timestamp
+                              and utd_ret.EDocType              eq objSrv:Env:Utd:EDocType:returns:KeyIntDB
+         no-lock no-error.
+      if not avail utd_ret
+      then
+         CheckEdoc (vdb-num,vdoc-id,edoc.db-num,edoc.doc-id) .
       for each utd where utd.PackageId eq iPack
                      and utd.EDocType  eq objSrv:Env:Utd:EDocType:edoc:KeyIntDB
                      and utd.Timestamp < iTimestamp

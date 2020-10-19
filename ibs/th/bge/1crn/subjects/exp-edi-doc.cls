@@ -100,6 +100,9 @@ method public void CrContentToSW (insw as handle):
       insw:write-data-element (  "comment":U,       if utd.comment = ? then "" else utd.comment   ).
       insw:write-data-element (  "sum":U,       string(utd.total)   ).
       insw:write-data-element (  "sum-nonds":U,       string(utd.total - utd.vat )    ).
+      if utd.EDocType        = objSrv:Env:Utd:EDocType:returns:KeyIntDB
+      then
+         insw:write-data-element (  "trn-doc-code":U,      utd.doc-code ).
       find first utd-lines  where utd-lines.db-num = utd.db-num
                               and utd-lines.doc-id = utd.doc-id 
       no-lock no-error.

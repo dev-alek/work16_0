@@ -2744,7 +2744,8 @@ procedure  SendResponse :
              end.
           end.
        end.
-       else if utd.sts-edi eq  ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB /*"Ожидается ответное действие получателя"*/
+       else if   utd.sts-edi eq  ObjSrv:Env:Utd:Sts:edi:Changed:KeyIntDB
+              or utd.sts-edi eq  ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB  /*"Ожидается ответное действие получателя"*/
        then do:
           vreturn = yes.
           if iAccept
