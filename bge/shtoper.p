@@ -1234,10 +1234,14 @@ procedure export-CorrChk :
   define buffer buf_goods        for ub.goods.
   define buffer buf_chk-gds      for ub.chk-gds.
   define buffer buf_chk-pay      for ub.chk-pay.
+  define buffer buf_chk-pay-attr for ub.chk-pay-attr.
   DEFINE buffer buf_chk-doc      for ub.chk-doc.
   define buffer buf_temp_chk-doc for temp_chk-doc.
   define buffer buf_temp_chk-gds for temp_chk-gds.
   define buffer buf_bar-code     for ub.bar-code.
+  
+  define variable v-RRN               as character no-undo.
+  
   do
     for  buf_chk-gds
     , buf_chk-pay
@@ -1324,6 +1328,24 @@ procedure export-CorrChk :
         run wp-xmltagopen( input 4, input "CheckPay", input "" ).
         run wp-xmltagput( input 5, "ChkPayCode", input string( buf_chk-pay.pay-code ), input 0 ).
         run wp-xmltagput( input 5, "ChkPaySum" , input string( buf_chk-pay.tot-sum ), input 0 ).
+        v-RRN = '' .
+        for first buf_chk-pay-attr no-lock
+            where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code 
+            and buf_chk-pay-attr.attr-code = "CPDOC" 
+            and buf_chk-pay-attr.line-num = buf_chk-pay.line-num  :
+            v-RRN = buf_chk-pay-attr.attr-value .
+        end.       
+        if v-RRN = '' 
+        then 
+        do: 
+            for first buf_chk-pay-attr no-lock
+                where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code 
+                and buf_chk-pay-attr.attr-code = "RRN"
+                and buf_chk-pay-attr.line-num = buf_chk-pay.line-num:
+                v-RRN = buf_chk-pay-attr.attr-value .
+            end.
+        end.
+        run wp-xmltagput( input 5, input "OperationCode", input v-RRN                              , input 0 ).
         run wp-xmltagclose( input 4, input "CheckPay").
       end . 
       run wp-xmltagclose( input 3, input "Check").
