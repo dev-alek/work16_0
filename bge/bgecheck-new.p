@@ -402,7 +402,11 @@ end .
         run wp-xmltagput   in this-procedure ( input 3, input "checktype"     , input string( buf_chk-doc.chk-type   ), input 0 ).            
         run wp-xmltagput   in this-procedure ( input 3, input "chekShiftDate" , input string( buf_chk-doc.shift-date ), input 0 ).            
         run wp-xmltagput   in this-procedure ( input 3, input "chekShiftNum"  , input string( buf_chk-doc.shift-num  ), input 0 ).   
-        run wp-xmltagput   in this-procedure ( input 3, input "checkTotDoc"   , input string( buf_chk-doc.netto      ), input 0 ).                                    
+        run wp-xmltagput   in this-procedure ( input 3, input "checkTotDoc"   , input string( buf_chk-doc.netto      ), input 0 ). 
+        run wp-xmltagput   in this-procedure ( input 3, input "checkBruttoDoc", input string( buf_chk-doc.tot-doc    ), input 0 ).
+        if buf_chk-doc.chk-type <> integer({&income-corr})
+        and buf_chk-doc.chk-type <> integer({&expense-corr})       
+        then                            
         run wp-xmltagput   in this-procedure ( input 3, input "Reference-num" , input string( buf_chk-doc.doc-num2   ), input 1 ).
         run wp-xmltagput   in this-procedure ( input 3, input "Z-num"         , input string( buf_chk-doc.z-number   ), input 1 ).
         if buf_chk-doc.chk-type = integer({&income-corr})
