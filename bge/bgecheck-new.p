@@ -215,7 +215,9 @@ end .
     define buffer buf_chk-pay      for ub.chk-pay .
     define buffer buf_tt-cash-pay  for tt-cash-pay .
     define buffer buf_c-chk-doc    for ub.c-chk-doc .
-
+    define buffer buf_chk-discnt   for ub.chk-discnt .
+    define variable v-discnt-t-round  as logical no-undo .
+    
     if p-pack-lim > 0 then 
       p-pack-lim = p-pack-lim * 1024 * 1024 . /* 90 * 1024 * 1024 = 94371840 байт */
 
@@ -383,8 +385,13 @@ end .
             undo, return error.
           end.
           v-must-open = false.
-        end. /* end_of v-must-open */
-      
+        end. /* end_of v-must-open */    
+
+        find first buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-doc.doc-code
+        and buf_chk-discnt.discnt-type = integer({&discnt-t-cashround}) no-error .
+        if available (buf_chk-discnt) then v-discnt-t-round = yes .
+        else v-discnt-t-round = no .
+          
         /* заголовок чека */
         v-d-card = if v-trim-zero = "yes":U then left-trim(buf_chk-doc.d-card, "0":U) else buf_chk-doc.d-card .
         
@@ -404,6 +411,12 @@ end .
         run wp-xmltagput   in this-procedure ( input 3, input "chekShiftNum"  , input string( buf_chk-doc.shift-num  ), input 0 ).   
         run wp-xmltagput   in this-procedure ( input 3, input "checkTotDoc"   , input string( buf_chk-doc.netto      ), input 0 ). 
         run wp-xmltagput   in this-procedure ( input 3, input "checkBruttoDoc", input string( buf_chk-doc.tot-doc    ), input 0 ).
+        if v-discnt-t-round then do:
+          run wp-xmltagput   in this-procedure ( input 3, input "checkNettoSPL", input string( buf_chk-doc.tot-doc    ), input 0 ).
+        end.
+        else do:
+          run wp-xmltagput   in this-procedure ( input 3, input "checkNettoSPL", input string( buf_chk-doc.netto    ), input 0 ).
+        end.    
         if buf_chk-doc.chk-type <> integer({&income-corr})
         and buf_chk-doc.chk-type <> integer({&expense-corr})       
         then                            
