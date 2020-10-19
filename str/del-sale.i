@@ -47,6 +47,10 @@ on error undo _main, return error substitute("Ошибка при удалении/отвязывании че
       end.
       else do:
         ub.chk-gds.out-code = ? .
+        for each ub.marking-chk where ub.marking-chk.doc-code = ub.chk-gds.doc-code
+                                  and ub.marking-chk.line-num = ub.chk-gds.line-num :
+          ub.marking-chk.sts = 0 .                       
+        end .
       end.
     END .
     FOR EACH ub.chk-pay WHERE
