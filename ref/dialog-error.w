@@ -226,6 +226,7 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
 ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
 DO:
+
    run rep\r-print-error.p (
    input p-doc-id,
    input p-db-num,
@@ -309,7 +310,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE Btn_OK BROWSE-2 
+  ENABLE Btn_OK BROWSE-2 b-print
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
