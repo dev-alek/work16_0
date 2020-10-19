@@ -35,7 +35,7 @@ run rep/d-report.w
     ( input parparentproc
     , input 'rep/e-regdoc.w'
     , input 'Реестр документов расширенный':U
-    , input 5
+    , input 4
     , input '{&g-all},{&g-grp},{&g-prod},{&g-choice},{&g-one},{&g-grp-prod}':U
     , input '{&o-firm},{&o-currency},{&o-choice},{&o-all}'
     , input ''

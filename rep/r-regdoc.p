@@ -134,6 +134,14 @@ define variable v-gds-sel    as character  no-undo.
 define variable v-str-excel  as character  no-undo.
 define variable v-str-excel1 as character  no-undo.
 
+define variable pobj-type             like ub.shift-obj.obj-type   no-undo .
+define variable pobj-code             like ub.shift-obj.obj-code   no-undo .
+define variable pshift-date           like ub.shift-obj.shift-date no-undo .
+define variable pshift-num            like ub.shift-obj.shift-num  no-undo .
+DEFINE variable pshift-date1          like shift-obj.shift-date    no-undo .
+DEFINE variable pshift-num1           like shift-obj.shift-num     no-undo .
+define variable p-previous-shift-date as   date                    no-undo .
+
 define temp-table tt-all no-undo
    field col01-doc-date              as date
    field col02-num                   as character
@@ -209,6 +217,12 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
    define variable parparentproc  as handle  no-undo .
 
    assign parparentproc = my-handle .
+    assign
+        pshift-date  = x-date-start 
+        pshift-num   = x-shift-start 
+        pshift-date1 = x-date-end 
+        pshift-num1  = x-shift-end 
+        . 
 
   /* !!! смены */
   run day-begin-fact-order in this-procedure ( input x-date-start      , output v-fact-order-start ). /*Поиск нач fact-order*/
@@ -828,9 +842,14 @@ on error undo, return error
          if NOT CAN-find( first g#post-f )
          then do :
 
-            for EACH obj-list
-               ,
-               EACH  buf_trn-doc
+            for EACH obj-list:
+                if x-TOG-Shift then 
+                do:
+                    run factshift (obj-list.obj-code, obj-list.obj-type) .
+
+                end.        
+               
+              for EACH  buf_trn-doc
                where buf_trn-doc.obj-type     = obj-list.obj-type
                  and buf_trn-doc.obj-code     = obj-list.obj-code
                  and buf_trn-doc.ext-doc-type = tdedt.id
@@ -856,13 +875,18 @@ on error undo, return error
                                                  , INPUT buf_trn-doc.base-scale
                                                  ) .
             end.
+            end.
          end. /* все поставщики */
          /* выбраны поставщики */
          else do :
-            for EACH obj-list
-               ,
-               EACH g#post-f
-               ,
+            for EACH obj-list:
+                if x-TOG-Shift then 
+                do:
+                    run factshift (obj-list.obj-code, obj-list.obj-type) .
+
+                end.  
+                for EACH g#post-f
+                    ,
                EACH  buf_trn-doc
                where buf_trn-doc.obj-type     = obj-list.obj-type
                  and buf_trn-doc.obj-code     = obj-list.obj-code
@@ -893,6 +917,7 @@ on error undo, return error
                                                  ) .
 
             end.
+            end.
          end. /* выбраны поставщики */
       end. /* each tdedt */
 
@@ -903,9 +928,14 @@ on error undo, return error
 
          if NOT CAN-find( first g#post-f )
          then do :
-            for EACH obj-list
-               ,
-               EACH  buf_price-doc
+            for EACH obj-list:
+                if x-TOG-Shift then 
+                do:
+                    run factshift (obj-list.obj-code, obj-list.obj-type) .
+
+                end.                  
+               
+               for EACH  buf_price-doc
                where buf_price-doc.obj-type     = obj-list.obj-type
                  and buf_price-doc.obj-code     = obj-list.obj-code
                  and buf_price-doc.fact-order  >= v-fact-order-start
@@ -923,6 +953,7 @@ on error undo, return error
                                                  , INPUT 0
                                                  , INPUT 0
                                                  ) .
+            end.
             end.
          end. /* все поставщики */
          /* выбраны поставщики
@@ -961,6 +992,11 @@ on error undo, return error
    else do :
       for EACH obj-list
          :
+          if x-TOG-Shift then 
+          do:
+              run factshift (obj-list.obj-code, obj-list.obj-type) .
+
+          end.  
          /* выбранные типы документов */
          for each tdedt
          where tdedt.id <> {&TDEDT_Overturn}
@@ -2692,9 +2728,13 @@ do
 on error undo, return error
 :
 
-   for EACH obj-list
-       ,
-       EACH tt-gds
+   for EACH obj-list:
+       if x-TOG-Shift then 
+       do:
+           run factshift (obj-list.obj-code, obj-list.obj-type) .
+
+       end.  
+       for EACH tt-gds
        :
          { gbl/hostcode.i obj-list.obj-type obj-list.obj-code v-host-code }
          /* ищем свободные партии по товару на объекте на начальную дату */
@@ -2857,6 +2897,7 @@ on error undo, return error
 /*                                 , input temp-parts.fact-qnty * varprice-sale * varcur-vat-pc / 100*/
                                  ) .
       end. /* each temp-parts */
+      end.
    end. /* each obj-list, tt-gds */
    /*
    run put-stick in this-procedure.
@@ -3043,6 +3084,20 @@ end procedure. /* update-ost-line */
         ) .
  end procedure.
 /*==========================================================================*/
+
+procedure factshift:
+define input parameter p-obj-code as integer no-undo .
+define input parameter p-obj-type as character no-undo .  
+
+assign
+pobj-code = p-obj-code .
+pobj-type = p-obj-type .
+
+{ rep/r-shftfo.i attr-arh-detail-date }
+v-fact-order-start = prev-fo.
+v-fact-order-end = fo .
+    
+end procedure .    
 procedure display-title :
 assign
   num#str# = 1
