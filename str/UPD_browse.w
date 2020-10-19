@@ -4279,7 +4279,9 @@ PROCEDURE save_mark :
                 /*          end.*/
                 run mark-temp .
                 find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
-                    and buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB no-error .
+                    and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
+/*                    and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB*/
+                     no-error .
                 if available (buf_utd-marking-lines) then
                 do:
                     find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
