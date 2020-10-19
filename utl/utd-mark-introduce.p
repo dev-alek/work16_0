@@ -71,6 +71,7 @@ define variable v-ok          as logical no-undo .
 define variable v-parts-qnty  as decimal no-undo .
 define variable v-marks-qnty  as integer no-undo .
 define variable v-delta-qnty  as integer no-undo .
+define variable v-num-childs  as integer no-undo .
 define variable ii            as integer no-undo .
 
 define variable v-err-gds       as integer no-undo .
@@ -583,10 +584,17 @@ define temp-table tt-gds-list
           end .                    
           if buf_marking.unit-ext = "LEVEL1"
           then do :
+            assign v-num-childs = 0 .
+            for each buf_marking-childs no-lock where buf_marking-childs.mark-parent = buf_marking.mark,
+            first buf_utd-marking-lines-childs no-lock where buf_utd-marking-lines-childs.gds-code = buf_goods.gds-code
+                                                         and buf_utd-marking-lines-childs.mark = buf_marking-childs.mark
+                                                         :
+              assign v-num-childs = v-num-childs + 1 .                                          
+            end .
             for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark,
             first buf_utd-marking-lines-childs exclusive-lock where buf_utd-marking-lines-childs.gds-code = buf_goods.gds-code
                                                                 and buf_utd-marking-lines-childs.mark = buf_marking-childs.mark
-                                                                break by buf_utd-marking-lines-childs.mark :
+                                                                :
               find first buf_marking-lines-childs no-lock where buf_marking-lines-childs.gds-code    = buf_utd-marking-lines-childs.gds-code
                                                             and buf_marking-lines-childs.mark        = buf_utd-marking-lines-childs.mark
                                                             and buf_marking-lines-childs.obj-type    = buf_utd.obj-type
@@ -659,9 +667,10 @@ define temp-table tt-gds-list
                 v-parts-qnty = v-parts-qnty - 1
                 v-marks-qnty = v-marks-qnty - 1
               .    
-              v-ok-units = v-ok-units + 1 .
+              assign v-ok-units = v-ok-units + 1 .
               delete buf_utd-marking-lines-childs no-error . 
-              if last-of(buf_utd-marking-lines-childs.mark)
+              assign v-num-childs = v-num-childs - 1 .
+              if v-num-childs = 0
               then do :
                 delete tt-utd-marking-lines no-error .
               end .
